@@ -13,13 +13,14 @@ const MOCK_LOCATION = '/dev/null';
 function runPlugin(
   input: string,
   transformOpts: TransformOptions = {},
-  pluginOpts: ReanimatedPluginOptions = {}
+  pluginOpts: ReanimatedPluginOptions = {},
+  filename: string = MOCK_LOCATION
 ) {
   const transformed = transformSync(input.replace(/<\/?script[^>]*>/g, ''), {
     // Our babel presets require us to specify a filename here
     // but it is never used so we put in '/dev/null'
     // as a safe fallback.
-    filename: MOCK_LOCATION,
+    filename,
     compact: false,
     plugins: [[plugin, pluginOpts]],
     babelrc: false,
@@ -148,7 +149,109 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toMatch(/const foo_null[0-9]*=this._recur;/gm);
+      expect(code).toMatch(/const foo_null[0-9]+=this._recur;/gm);
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('names', () => {
+    it('unnamed ArrowFunctionExpression', () => {
+      const input = html`<script>
+        () => {
+          'worklet';
+          return 1;
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toMatch(/function null[0-9]+\(\)/gm);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('unnamed FunctionExpression', () => {
+      const input = html`<script>
+        [
+          function () {
+            'worklet';
+            return 1;
+          },
+        ]();
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toMatch(/function null[0-9]+\(\)/gm);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('names ObjectMethod with expression key', () => {
+      const input = html`<script>
+        const obj = {
+          ['foo']() {
+            'worklet';
+          },
+        };
+      </script>`;
+
+      // TODO: this is an edge case that wasn't ever handled.
+      expect(() => runPlugin(input)).toThrow();
+      // const { code } = runPlugin(input);
+      // expect(code).toMatch(/function foo_null[0-9]+\(\)/gm);
+      // expect(code).toMatchSnapshot();
+    });
+
+    it('appends file name to function name', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          return 1;
+        }
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { disableSourceMaps: true },
+        'source.js'
+      );
+      expect(code).toMatch(/function foo_sourceJs[0-9]+\(\)/gm);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('appends library name to function name', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          return 1;
+        }
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        { disableSourceMaps: true },
+        'node_modules/library/source.js'
+      );
+      expect(code).toMatch(/function foo_library_sourceJs[0-9]+\(\)/gm);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('handles names with illegal characters', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          return 1;
+        }
+      </script>`;
+
+      const { code } = runPlugin(
+        input,
+        {},
+        {
+          disableSourceMaps: true,
+        },
+        '-source.js'
+      );
+      expect(code).toMatch(/function foo_SourceJs[0-9]+\(\)/gm);
       expect(code).toMatchSnapshot();
     });
   });
@@ -277,7 +380,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, undefined, { globals: ['foo'] });
-      expect(code).toMatch(/f_null[0-9]*\.__closure = \{\}/gm);
+      expect(code).toMatch(/f_null[0-9]+\.__closure = \{\}/gm);
       expect(code).toMatchSnapshot();
     });
 
@@ -290,7 +393,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toMatch(/f_null[0-9]*\.__closure = \{\}/gm);
+      expect(code).toMatch(/f_null[0-9]+\.__closure = \{\}/gm);
       expect(code).toMatchSnapshot();
     });
 
@@ -1068,7 +1171,7 @@ describe('babel plugin', () => {
     });
   });
 
-  describe('is indempotent', () => {
+  describe('is idempotent', () => {
     it('for common cases', () => {
       function resultIsIdempotent(input: string) {
         const firstResult = runPlugin(input).code;
@@ -1614,7 +1717,7 @@ describe('babel plugin', () => {
       const input = html`<script>
         function foo() {
           'worklet';
-          var foo = 'bar';
+          var bar = 'bar';
         }
       </script>`;
 
@@ -1699,7 +1802,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toMatch(
-        /var foo_null[0-9]* = function\* foo_null[0-9]*\(\) {/gm
+        /var foo_null[0-9]+ = function\* foo_null[0-9]+\(\) {/gm
       );
 
       expect(code).toMatchSnapshot();
@@ -1716,7 +1819,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toMatch(
-        /code: "function\*foo_null[0-9]*\(\){yield'hello';yield'world';}"/gm
+        /code: "function\*foo_null[0-9]+\(\){yield'hello';yield'world';}"/gm
       );
       expect(code).toMatchSnapshot();
     });
@@ -1746,7 +1849,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toMatch(
-        /code: "async function foo_null[0-9]*\(\){await Promise.resolve\(\);}"/gm
+        /code: "async function foo_null[0-9]+\(\){await Promise.resolve\(\);}"/gm
       );
       expect(code).toMatchSnapshot();
     });

@@ -29,12 +29,13 @@ import { strict as assert } from 'assert';
 import * as convertSourceMap from 'convert-source-map';
 import * as fs from 'fs';
 import { isRelease } from './utils';
-import type { WorkletizableFunction } from './types';
+import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 
 const MOCK_SOURCE_MAP = 'mock source map';
 
 export function buildWorkletString(
   fun: BabelFile,
+  state: ReanimatedPluginPass,
   closureVariables: Array<Identifier>,
   newName: string,
   inputMap: BabelFileResult['map']
@@ -74,7 +75,7 @@ export function buildWorkletString(
 
   assert(inputMap, '[Reanimated] `inputMap` is undefined.');
 
-  const includeSourceMap = !isRelease();
+  const includeSourceMap = !(isRelease() || state.opts.disableSourceMaps);
 
   if (includeSourceMap) {
     // Clear contents array (should be empty anyways)

@@ -15,63 +15,63 @@ exports[`babel plugin for DirectiveLiterals doesn't transform functions without 
 `;
 
 exports[`babel plugin for DirectiveLiterals doesn't transform string literals 1`] = `
-"var _worklet_15273818068489_init_data = {
-  code: "function foo_null9(x){const bar='worklet';const baz=\\"worklet\\";}",
+"var _worklet_7224155149057_init_data = {
+  code: "function foo_null1(x){const bar='worklet';const baz=\\"worklet\\";}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null9 = function foo_null9(x) {
+  var foo_null1 = function foo_null1(x) {
     var bar = 'worklet';
     var baz = "worklet";
   };
-  foo_null9.__closure = {};
-  foo_null9.__workletHash = 15273818068489;
-  foo_null9.__initData = _worklet_15273818068489_init_data;
-  foo_null9.__stackDetails = _e;
-  return foo_null9;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 7224155149057;
+  foo_null1.__initData = _worklet_7224155149057_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
 exports[`babel plugin for DirectiveLiterals removes "worklet"; directive from worklets 1`] = `
-"var _worklet_16837913657535_init_data = {
-  code: "function foo_null7(x){return x+2;}",
+"var _worklet_2156194750585_init_data = {
+  code: "function foo_null1(x){return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null7 = function foo_null7(x) {
+  var foo_null1 = function foo_null1(x) {
     return x + 2;
   };
-  foo_null7.__closure = {};
-  foo_null7.__workletHash = 16837913657535;
-  foo_null7.__initData = _worklet_16837913657535_init_data;
-  foo_null7.__stackDetails = _e;
-  return foo_null7;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 2156194750585;
+  foo_null1.__initData = _worklet_2156194750585_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
 exports[`babel plugin for DirectiveLiterals removes 'worklet'; directive from worklets 1`] = `
-"var _worklet_4206853764688_init_data = {
-  code: "function foo_null8(x){return x+2;}",
+"var _worklet_2156194750585_init_data = {
+  code: "function foo_null1(x){return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null8 = function foo_null8(x) {
+  var foo_null1 = function foo_null1(x) {
     return x + 2;
   };
-  foo_null8.__closure = {};
-  foo_null8.__workletHash = 4206853764688;
-  foo_null8.__initData = _worklet_4206853764688_init_data;
-  foo_null8.__stackDetails = _e;
-  return foo_null8;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 2156194750585;
+  foo_null1.__initData = _worklet_2156194750585_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
@@ -136,256 +136,256 @@ exports[`babel plugin for Layout Animations doesn't workletize callback function
 `;
 
 exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after 1`] = `
-"var _worklet_5391734716613_init_data = {
-  code: "function null82(){console.log('FadeIn with build after');}",
+"var _worklet_7317097572766_init_data = {
+  code: "function null1(){console.log('FadeIn with build after');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 FadeIn.withCallback(function () {
   var _e = [new global.Error(), 1, -27];
-  var null82 = function null82() {
+  var null1 = function null1() {
     console.log('FadeIn with build after');
   };
-  null82.__closure = {};
-  null82.__workletHash = 5391734716613;
-  null82.__initData = _worklet_5391734716613_init_data;
-  null82.__stackDetails = _e;
-  return null82;
+  null1.__closure = {};
+  null1.__workletHash = 7317097572766;
+  null1.__initData = _worklet_7317097572766_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }()).build();"
 `;
 
 exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after with new keyword 1`] = `
-"var _worklet_16912011277956_init_data = {
-  code: "function null83(){console.log('FadeIn with build after');}",
+"var _worklet_7317097572766_init_data = {
+  code: "function null1(){console.log('FadeIn with build after');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 new FadeIn().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
-  var null83 = function null83() {
+  var null1 = function null1() {
     console.log('FadeIn with build after');
   };
-  null83.__closure = {};
-  null83.__workletHash = 16912011277956;
-  null83.__initData = _worklet_16912011277956_init_data;
-  null83.__stackDetails = _e;
-  return null83;
+  null1.__closure = {};
+  null1.__workletHash = 7317097572766;
+  null1.__initData = _worklet_7317097572766_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }()).build();"
 `;
 
 exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before 1`] = `
-"var _worklet_6718392882618_init_data = {
-  code: "function null80(){console.log('FadeIn with build before');}",
+"var _worklet_12678290670659_init_data = {
+  code: "function null1(){console.log('FadeIn with build before');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 FadeIn.build().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
-  var null80 = function null80() {
+  var null1 = function null1() {
     console.log('FadeIn with build before');
   };
-  null80.__closure = {};
-  null80.__workletHash = 6718392882618;
-  null80.__initData = _worklet_6718392882618_init_data;
-  null80.__stackDetails = _e;
-  return null80;
+  null1.__closure = {};
+  null1.__workletHash = 12678290670659;
+  null1.__initData = _worklet_12678290670659_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }());"
 `;
 
 exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before with new keyword 1`] = `
-"var _worklet_7554294082171_init_data = {
-  code: "function null81(){console.log('FadeIn with build before');}",
+"var _worklet_12678290670659_init_data = {
+  code: "function null1(){console.log('FadeIn with build before');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 new FadeIn().build().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
-  var null81 = function null81() {
+  var null1 = function null1() {
     console.log('FadeIn with build before');
   };
-  null81.__closure = {};
-  null81.__workletHash = 7554294082171;
-  null81.__initData = _worklet_7554294082171_init_data;
-  null81.__stackDetails = _e;
-  return null81;
+  null1.__closure = {};
+  null1.__workletHash = 12678290670659;
+  null1.__initData = _worklet_12678290670659_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }());"
 `;
 
 exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects 1`] = `
-"var _worklet_16307718789989_init_data = {
-  code: "function null86(){console.log('FadeIn with build');}",
+"var _worklet_11557425704826_init_data = {
+  code: "function null1(){console.log('FadeIn with build');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 FadeIn.build().duration().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
-  var null86 = function null86() {
+  var null1 = function null1() {
     console.log('FadeIn with build');
   };
-  null86.__closure = {};
-  null86.__workletHash = 16307718789989;
-  null86.__initData = _worklet_16307718789989_init_data;
-  null86.__stackDetails = _e;
-  return null86;
+  null1.__closure = {};
+  null1.__workletHash = 11557425704826;
+  null1.__initData = _worklet_11557425704826_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }());"
 `;
 
 exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects with new keyword 1`] = `
-"var _worklet_6698812114596_init_data = {
-  code: "function null87(){console.log('FadeIn with build');}",
+"var _worklet_11557425704826_init_data = {
+  code: "function null1(){console.log('FadeIn with build');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 new FadeIn().build().duration().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
-  var null87 = function null87() {
+  var null1 = function null1() {
     console.log('FadeIn with build');
   };
-  null87.__closure = {};
-  null87.__workletHash = 6698812114596;
-  null87.__initData = _worklet_6698812114596_init_data;
-  null87.__stackDetails = _e;
-  return null87;
+  null1.__closure = {};
+  null1.__workletHash = 11557425704826;
+  null1.__initData = _worklet_11557425704826_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }());"
 `;
 
 exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after 1`] = `
-"var _worklet_8207796506672_init_data = {
-  code: "function null84(){console.log('FadeIn with AmogusIn after');}",
+"var _worklet_6642833765517_init_data = {
+  code: "function null1(){console.log('FadeIn with AmogusIn after');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 FadeIn.withCallback(function () {
   var _e = [new global.Error(), 1, -27];
-  var null84 = function null84() {
+  var null1 = function null1() {
     console.log('FadeIn with AmogusIn after');
   };
-  null84.__closure = {};
-  null84.__workletHash = 8207796506672;
-  null84.__initData = _worklet_8207796506672_init_data;
-  null84.__stackDetails = _e;
-  return null84;
+  null1.__closure = {};
+  null1.__workletHash = 6642833765517;
+  null1.__initData = _worklet_6642833765517_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }()).AmogusIn();"
 `;
 
 exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after with new keyword 1`] = `
-"var _worklet_220222170353_init_data = {
-  code: "function null85(){console.log('FadeIn with AmogusIn after');}",
+"var _worklet_6642833765517_init_data = {
+  code: "function null1(){console.log('FadeIn with AmogusIn after');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 new FadeIn().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
-  var null85 = function null85() {
+  var null1 = function null1() {
     console.log('FadeIn with AmogusIn after');
   };
-  null85.__closure = {};
-  null85.__workletHash = 220222170353;
-  null85.__initData = _worklet_220222170353_init_data;
-  null85.__stackDetails = _e;
-  return null85;
+  null1.__closure = {};
+  null1.__workletHash = 6642833765517;
+  null1.__initData = _worklet_6642833765517_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }()).AmogusIn();"
 `;
 
 exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically 1`] = `
-"var _worklet_5410384459664_init_data = {
-  code: "function null78(){console.log('FadeIn');}",
+"var _worklet_5714930700718_init_data = {
+  code: "function null1(){console.log('FadeIn');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 FadeIn.withCallback(function () {
   var _e = [new global.Error(), 1, -27];
-  var null78 = function null78() {
+  var null1 = function null1() {
     console.log('FadeIn');
   };
-  null78.__closure = {};
-  null78.__workletHash = 5410384459664;
-  null78.__initData = _worklet_5410384459664_init_data;
-  null78.__stackDetails = _e;
-  return null78;
+  null1.__closure = {};
+  null1.__workletHash = 5714930700718;
+  null1.__initData = _worklet_5714930700718_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }());"
 `;
 
 exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically with new keyword 1`] = `
-"var _worklet_16069472535057_init_data = {
-  code: "function null79(){console.log('FadeIn');}",
+"var _worklet_5714930700718_init_data = {
+  code: "function null1(){console.log('FadeIn');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 new FadeIn().withCallback(function () {
   var _e = [new global.Error(), 1, -27];
-  var null79 = function null79() {
+  var null1 = function null1() {
     console.log('FadeIn');
   };
-  null79.__closure = {};
-  null79.__workletHash = 16069472535057;
-  null79.__initData = _worklet_16069472535057_init_data;
-  null79.__stackDetails = _e;
-  return null79;
+  null1.__closure = {};
+  null1.__workletHash = 5714930700718;
+  null1.__initData = _worklet_5714930700718_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }());"
 `;
 
 exports[`babel plugin for async functions makes an async worklet factory 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
-var _worklet_1426610456770_init_data = {
-  code: "async function foo_null111(){await Promise.resolve();}",
+var _worklet_14005565322850_init_data = {
+  code: "async function foo_null1(){await Promise.resolve();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null111 = function () {
+  var foo_null1 = function () {
     var _ref = (0, _asyncToGenerator2.default)(function* () {
       yield Promise.resolve();
     });
-    return function foo_null111() {
+    return function foo_null1() {
       return _ref.apply(this, arguments);
     };
   }();
-  foo_null111.__closure = {};
-  foo_null111.__workletHash = 1426610456770;
-  foo_null111.__initData = _worklet_1426610456770_init_data;
-  foo_null111.__stackDetails = _e;
-  return foo_null111;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 14005565322850;
+  foo_null1.__initData = _worklet_14005565322850_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
 exports[`babel plugin for async functions makes an async worklet string 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
-var _worklet_11405296948001_init_data = {
-  code: "async function foo_null112(){await Promise.resolve();}",
+var _worklet_14005565322850_init_data = {
+  code: "async function foo_null1(){await Promise.resolve();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null112 = function () {
+  var foo_null1 = function () {
     var _ref = (0, _asyncToGenerator2.default)(function* () {
       yield Promise.resolve();
     });
-    return function foo_null112() {
+    return function foo_null1() {
       return _ref.apply(this, arguments);
     };
   }();
-  foo_null112.__closure = {};
-  foo_null112.__workletHash = 11405296948001;
-  foo_null112.__initData = _worklet_11405296948001_init_data;
-  foo_null112.__stackDetails = _e;
-  return foo_null112;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 14005565322850;
+  foo_null1.__initData = _worklet_14005565322850_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
@@ -393,8 +393,8 @@ exports[`babel plugin for class worklets workletizes class field 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _worklet_14991916226807_init_data = {
-  code: "function null24(x){return x+2;}",
+var _worklet_2294411833184_init_data = {
+  code: "function null1(x){return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -403,14 +403,14 @@ var Foo = (0, _createClass2.default)(function Foo() {
   (0, _classCallCheck2.default)(this, Foo);
   this.bar = function () {
     var _e = [new global.Error(), 1, -27];
-    var null24 = function null24(x) {
+    var null1 = function null1(x) {
       return x + 2;
     };
-    null24.__closure = {};
-    null24.__workletHash = 14991916226807;
-    null24.__initData = _worklet_14991916226807_init_data;
-    null24.__stackDetails = _e;
-    return null24;
+    null1.__closure = {};
+    null1.__workletHash = 2294411833184;
+    null1.__initData = _worklet_2294411833184_init_data;
+    null1.__stackDetails = _e;
+    return null1;
   }();
 });"
 `;
@@ -419,25 +419,25 @@ exports[`babel plugin for class worklets workletizes constructor 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
-var _worklet_16983517082425_init_data = {
-  code: "function Foo_null26(x){const Foo_null26=this._recur;const{_classCallCheck}=this.__closure;_classCallCheck(this,Foo_null26);this.x=x;}",
+var _worklet_8889327806636_init_data = {
+  code: "function Foo_null1(x){const Foo_null1=this._recur;const{_classCallCheck}=this.__closure;_classCallCheck(this,Foo_null1);this.x=x;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var Foo = (0, _createClass2.default)(function () {
   var _e = [new global.Error(), -2, -27];
-  var Foo_null26 = function Foo_null26(x) {
+  var Foo_null1 = function Foo_null1(x) {
     (0, _classCallCheck2.default)(this, Foo);
     this.x = x;
   };
-  Foo_null26.__closure = {
+  Foo_null1.__closure = {
     _classCallCheck: _classCallCheck2.default
   };
-  Foo_null26.__workletHash = 16983517082425;
-  Foo_null26.__initData = _worklet_16983517082425_init_data;
-  Foo_null26.__stackDetails = _e;
-  return Foo_null26;
+  Foo_null1.__workletHash = 8889327806636;
+  Foo_null1.__initData = _worklet_8889327806636_init_data;
+  Foo_null1.__stackDetails = _e;
+  return Foo_null1;
 }());"
 `;
 
@@ -445,8 +445,8 @@ exports[`babel plugin for class worklets workletizes getter 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _worklet_7293485548612_init_data = {
-  code: "function get_null22(){const{x}=this.__closure;return x+2;}",
+var _worklet_13515258128853_init_data = {
+  code: "function get_null1(){const{x}=this.__closure;return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -459,16 +459,16 @@ var Foo = function () {
     key: "bar",
     get: function () {
       var _e = [new global.Error(), -2, -27];
-      var get_null22 = function get_null22() {
+      var get_null1 = function get_null1() {
         return x + 2;
       };
-      get_null22.__closure = {
+      get_null1.__closure = {
         x: x
       };
-      get_null22.__workletHash = 7293485548612;
-      get_null22.__initData = _worklet_7293485548612_init_data;
-      get_null22.__stackDetails = _e;
-      return get_null22;
+      get_null1.__workletHash = 13515258128853;
+      get_null1.__initData = _worklet_13515258128853_init_data;
+      get_null1.__stackDetails = _e;
+      return get_null1;
     }()
   }]);
 }();"
@@ -478,8 +478,8 @@ exports[`babel plugin for class worklets workletizes instance method 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _worklet_5482892427805_init_data = {
-  code: "function bar_null20(x){return x+2;}",
+var _worklet_10686480819086_init_data = {
+  code: "function bar_null1(x){return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -492,14 +492,14 @@ var Foo = function () {
     key: "bar",
     value: function () {
       var _e = [new global.Error(), 1, -27];
-      var bar_null20 = function bar_null20(x) {
+      var bar_null1 = function bar_null1(x) {
         return x + 2;
       };
-      bar_null20.__closure = {};
-      bar_null20.__workletHash = 5482892427805;
-      bar_null20.__initData = _worklet_5482892427805_init_data;
-      bar_null20.__stackDetails = _e;
-      return bar_null20;
+      bar_null1.__closure = {};
+      bar_null1.__workletHash = 10686480819086;
+      bar_null1.__initData = _worklet_10686480819086_init_data;
+      bar_null1.__stackDetails = _e;
+      return bar_null1;
     }()
   }]);
 }();"
@@ -509,8 +509,8 @@ exports[`babel plugin for class worklets workletizes setter 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _worklet_3696695132842_init_data = {
-  code: "function set_null23(x){this.x=x+2;}",
+var _worklet_14784735859354_init_data = {
+  code: "function set_null1(x){this.x=x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -523,14 +523,14 @@ var Foo = function () {
     key: "bar",
     set: function () {
       var _e = [new global.Error(), 1, -27];
-      var set_null23 = function set_null23(x) {
+      var set_null1 = function set_null1(x) {
         this.x = x + 2;
       };
-      set_null23.__closure = {};
-      set_null23.__workletHash = 3696695132842;
-      set_null23.__initData = _worklet_3696695132842_init_data;
-      set_null23.__stackDetails = _e;
-      return set_null23;
+      set_null1.__closure = {};
+      set_null1.__workletHash = 14784735859354;
+      set_null1.__initData = _worklet_14784735859354_init_data;
+      set_null1.__stackDetails = _e;
+      return set_null1;
     }()
   }]);
 }();"
@@ -543,22 +543,22 @@ var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/cl
 var Foo = (0, _createClass2.default)(function Foo() {
   (0, _classCallCheck2.default)(this, Foo);
 });
-var _worklet_14156015027254_init_data = {
-  code: "function null25(x){return x+2;}",
+var _worklet_2294411833184_init_data = {
+  code: "function null1(x){return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 Foo.bar = function () {
   var _e = [new global.Error(), 1, -27];
-  var null25 = function null25(x) {
+  var null1 = function null1(x) {
     return x + 2;
   };
-  null25.__closure = {};
-  null25.__workletHash = 14156015027254;
-  null25.__initData = _worklet_14156015027254_init_data;
-  null25.__stackDetails = _e;
-  return null25;
+  null1.__closure = {};
+  null1.__workletHash = 2294411833184;
+  null1.__initData = _worklet_2294411833184_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }();"
 `;
 
@@ -566,8 +566,8 @@ exports[`babel plugin for class worklets workletizes static method 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
 var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
-var _worklet_8078789619036_init_data = {
-  code: "function bar_null21(x){return x+2;}",
+var _worklet_10686480819086_init_data = {
+  code: "function bar_null1(x){return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -580,14 +580,14 @@ var Foo = function () {
     key: "bar",
     value: function () {
       var _e = [new global.Error(), 1, -27];
-      var bar_null21 = function bar_null21(x) {
+      var bar_null1 = function bar_null1(x) {
         return x + 2;
       };
-      bar_null21.__closure = {};
-      bar_null21.__workletHash = 8078789619036;
-      bar_null21.__initData = _worklet_8078789619036_init_data;
-      bar_null21.__stackDetails = _e;
-      return bar_null21;
+      bar_null1.__closure = {};
+      bar_null1.__workletHash = 10686480819086;
+      bar_null1.__initData = _worklet_10686480819086_init_data;
+      bar_null1.__stackDetails = _e;
+      return bar_null1;
     }()
   }]);
 }();"
@@ -598,88 +598,88 @@ exports[`babel plugin for closure capturing captures worklets environment 1`] = 
 var objX = {
   x: x
 };
-var _worklet_16974853640101_init_data = {
-  code: "function f_null10(){const{x,objX}=this.__closure;return{res:x+objX.x};}",
+var _worklet_10550735168277_init_data = {
+  code: "function f_null1(){const{x,objX}=this.__closure;return{res:x+objX.x};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var f = function () {
   var _e = [new global.Error(), -3, -27];
-  var f_null10 = function f_null10() {
+  var f_null1 = function f_null1() {
     return {
       res: x + objX.x
     };
   };
-  f_null10.__closure = {
+  f_null1.__closure = {
     x: x,
     objX: objX
   };
-  f_null10.__workletHash = 16974853640101;
-  f_null10.__initData = _worklet_16974853640101_init_data;
-  f_null10.__stackDetails = _e;
-  return f_null10;
+  f_null1.__workletHash = 10550735168277;
+  f_null1.__initData = _worklet_10550735168277_init_data;
+  f_null1.__stackDetails = _e;
+  return f_null1;
 }();"
 `;
 
 exports[`babel plugin for closure capturing doesn't capture arguments 1`] = `
-"var _worklet_5206962744069_init_data = {
-  code: "function f_null13(a,b,c){console.log(arguments);}",
+"var _worklet_11756143316246_init_data = {
+  code: "function f_null1(a,b,c){console.log(arguments);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var f = function () {
   var _e = [new global.Error(), 1, -27];
-  var f_null13 = function f_null13(a, b, c) {
+  var f_null1 = function f_null1(a, b, c) {
     console.log(arguments);
   };
-  f_null13.__closure = {};
-  f_null13.__workletHash = 5206962744069;
-  f_null13.__initData = _worklet_5206962744069_init_data;
-  f_null13.__stackDetails = _e;
-  return f_null13;
+  f_null1.__closure = {};
+  f_null1.__workletHash = 11756143316246;
+  f_null1.__initData = _worklet_11756143316246_init_data;
+  f_null1.__stackDetails = _e;
+  return f_null1;
 }();"
 `;
 
 exports[`babel plugin for closure capturing doesn't capture custom globals 1`] = `
 "var foo = 42;
-var _worklet_2191343171170_init_data = {
-  code: "function f_null12(){console.log(foo);}",
+var _worklet_11658370598384_init_data = {
+  code: "function f_null1(){console.log(foo);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var f = function () {
   var _e = [new global.Error(), 1, -27];
-  var f_null12 = function f_null12() {
+  var f_null1 = function f_null1() {
     console.log(foo);
   };
-  f_null12.__closure = {};
-  f_null12.__workletHash = 2191343171170;
-  f_null12.__initData = _worklet_2191343171170_init_data;
-  f_null12.__stackDetails = _e;
-  return f_null12;
+  f_null1.__closure = {};
+  f_null1.__workletHash = 11658370598384;
+  f_null1.__initData = _worklet_11658370598384_init_data;
+  f_null1.__stackDetails = _e;
+  return f_null1;
 }();"
 `;
 
 exports[`babel plugin for closure capturing doesn't capture default globals 1`] = `
-"var _worklet_9760015875505_init_data = {
-  code: "function f_null11(){console.log('test');}",
+"var _worklet_9451494835104_init_data = {
+  code: "function f_null1(){console.log('test');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var f = function () {
   var _e = [new global.Error(), 1, -27];
-  var f_null11 = function f_null11() {
+  var f_null1 = function f_null1() {
     console.log('test');
   };
-  f_null11.__closure = {};
-  f_null11.__workletHash = 9760015875505;
-  f_null11.__initData = _worklet_9760015875505_init_data;
-  f_null11.__stackDetails = _e;
-  return f_null11;
+  f_null1.__closure = {};
+  f_null1.__workletHash = 9451494835104;
+  f_null1.__initData = _worklet_9451494835104_init_data;
+  f_null1.__stackDetails = _e;
+  return f_null1;
 }();"
 `;
 
@@ -687,120 +687,120 @@ exports[`babel plugin for closure capturing doesn't capture objects' properties 
 "var foo = {
   bar: 42
 };
-var _worklet_15048373309281_init_data = {
-  code: "function f_null14(){const{foo}=this.__closure;console.log(foo.bar);}",
+var _worklet_239990909653_init_data = {
+  code: "function f_null1(){const{foo}=this.__closure;console.log(foo.bar);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var f = function () {
   var _e = [new global.Error(), -2, -27];
-  var f_null14 = function f_null14() {
+  var f_null1 = function f_null1() {
     console.log(foo.bar);
   };
-  f_null14.__closure = {
+  f_null1.__closure = {
     foo: foo
   };
-  f_null14.__workletHash = 15048373309281;
-  f_null14.__initData = _worklet_15048373309281_init_data;
-  f_null14.__stackDetails = _e;
-  return f_null14;
+  f_null1.__workletHash = 239990909653;
+  f_null1.__initData = _worklet_239990909653_init_data;
+  f_null1.__stackDetails = _e;
+  return f_null1;
 }();"
 `;
 
 exports[`babel plugin for debugging does inject location for worklets in dev builds 1`] = `
-"var _worklet_11136583165363_init_data = {
-  code: "function null88(){const x=1;}",
+"var _worklet_8623346549410_init_data = {
+  code: "function null1(){const x=1;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = useAnimatedStyle(function () {
   var _e = [new global.Error(), 1, -27];
-  var null88 = function null88() {
+  var null1 = function null1() {
     var x = 1;
   };
-  null88.__closure = {};
-  null88.__workletHash = 11136583165363;
-  null88.__initData = _worklet_11136583165363_init_data;
-  null88.__stackDetails = _e;
-  return null88;
+  null1.__closure = {};
+  null1.__workletHash = 8623346549410;
+  null1.__initData = _worklet_8623346549410_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }());"
 `;
 
 exports[`babel plugin for debugging doesn't inject location for worklets in production builds 1`] = `
-"var _worklet_2770900144370_init_data = {
-  code: "function null89(){const x=1;}"
+"var _worklet_8623346549410_init_data = {
+  code: "function null1(){const x=1;}"
 };
 var foo = useAnimatedStyle(function () {
-  var null89 = function null89() {
+  var null1 = function null1() {
     var x = 1;
   };
-  null89.__closure = {};
-  null89.__workletHash = 2770900144370;
-  null89.__initData = _worklet_2770900144370_init_data;
-  return null89;
+  null1.__closure = {};
+  null1.__workletHash = 8623346549410;
+  null1.__initData = _worklet_8623346549410_init_data;
+  return null1;
 }());"
 `;
 
 exports[`babel plugin for debugging doesn't inject version for worklets in production builds 1`] = `
-"var _worklet_7643960857946_init_data = {
-  code: "function null90(){const x=1;}"
+"var _worklet_8623346549410_init_data = {
+  code: "function null1(){const x=1;}"
 };
 var foo = useAnimatedStyle(function () {
-  var null90 = function null90() {
+  var null1 = function null1() {
     var x = 1;
   };
-  null90.__closure = {};
-  null90.__workletHash = 7643960857946;
-  null90.__initData = _worklet_7643960857946_init_data;
-  return null90;
+  null1.__closure = {};
+  null1.__workletHash = 8623346549410;
+  null1.__initData = _worklet_8623346549410_init_data;
+  return null1;
 }());"
 `;
 
 exports[`babel plugin for explicit worklets workletizes ArrowFunctionExpression 1`] = `
-"var _worklet_8452693095126_init_data = {
-  code: "function null16(x){return x+2;}",
+"var _worklet_2294411833184_init_data = {
+  code: "function null1(x){return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var null16 = function null16(x) {
+  var null1 = function null1(x) {
     return x + 2;
   };
-  null16.__closure = {};
-  null16.__workletHash = 8452693095126;
-  null16.__initData = _worklet_8452693095126_init_data;
-  null16.__stackDetails = _e;
-  return null16;
+  null1.__closure = {};
+  null1.__workletHash = 2294411833184;
+  null1.__initData = _worklet_2294411833184_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }();"
 `;
 
 exports[`babel plugin for explicit worklets workletizes FunctionDeclaration 1`] = `
-"var _worklet_5289264639820_init_data = {
-  code: "function foo_null15(x){return x+2;}",
+"var _worklet_2156194750585_init_data = {
+  code: "function foo_null1(x){return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null15 = function foo_null15(x) {
+  var foo_null1 = function foo_null1(x) {
     return x + 2;
   };
-  foo_null15.__closure = {};
-  foo_null15.__workletHash = 5289264639820;
-  foo_null15.__initData = _worklet_5289264639820_init_data;
-  foo_null15.__stackDetails = _e;
-  return foo_null15;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 2156194750585;
+  foo_null1.__initData = _worklet_2156194750585_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
 exports[`babel plugin for explicit worklets workletizes ObjectMethod 1`] = `
-"var _worklet_9370089318455_init_data = {
-  code: "function bar_null19(x){return x+2;}",
+"var _worklet_10686480819086_init_data = {
+  code: "function bar_null1(x){return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -808,187 +808,187 @@ exports[`babel plugin for explicit worklets workletizes ObjectMethod 1`] = `
 var foo = {
   bar: function () {
     var _e = [new global.Error(), 1, -27];
-    var bar_null19 = function bar_null19(x) {
+    var bar_null1 = function bar_null1(x) {
       return x + 2;
     };
-    bar_null19.__closure = {};
-    bar_null19.__workletHash = 9370089318455;
-    bar_null19.__initData = _worklet_9370089318455_init_data;
-    bar_null19.__stackDetails = _e;
-    return bar_null19;
+    bar_null1.__closure = {};
+    bar_null1.__workletHash = 10686480819086;
+    bar_null1.__initData = _worklet_10686480819086_init_data;
+    bar_null1.__stackDetails = _e;
+    return bar_null1;
   }()
 };"
 `;
 
 exports[`babel plugin for explicit worklets workletizes named FunctionExpression 1`] = `
-"var _worklet_1281328162305_init_data = {
-  code: "function foo_null18(x){return x+2;}",
+"var _worklet_2156194750585_init_data = {
+  code: "function foo_null1(x){return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null18 = function foo_null18(x) {
+  var foo_null1 = function foo_null1(x) {
     return x + 2;
   };
-  foo_null18.__closure = {};
-  foo_null18.__workletHash = 1281328162305;
-  foo_null18.__initData = _worklet_1281328162305_init_data;
-  foo_null18.__stackDetails = _e;
-  return foo_null18;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 2156194750585;
+  foo_null1.__initData = _worklet_2156194750585_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
 exports[`babel plugin for explicit worklets workletizes unnamed FunctionExpression 1`] = `
-"var _worklet_5811834437463_init_data = {
-  code: "function null17(x){return x+2;}",
+"var _worklet_2294411833184_init_data = {
+  code: "function null1(x){return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var null17 = function null17(x) {
+  var null1 = function null1(x) {
     return x + 2;
   };
-  null17.__closure = {};
-  null17.__workletHash = 5811834437463;
-  null17.__initData = _worklet_5811834437463_init_data;
-  null17.__stackDetails = _e;
-  return null17;
+  null1.__closure = {};
+  null1.__workletHash = 2294411833184;
+  null1.__initData = _worklet_2294411833184_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }();"
 `;
 
 exports[`babel plugin for function hooks workletizes hook wrapped ArrowFunctionExpression automatically 1`] = `
-"var _worklet_4530239782514_init_data = {
-  code: "function null27(){return{width:50};}",
+"var _worklet_1392490775014_init_data = {
+  code: "function null1(){return{width:50};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new global.Error(), 1, -27];
-  var null27 = function null27() {
+  var null1 = function null1() {
     return {
       width: 50
     };
   };
-  null27.__closure = {};
-  null27.__workletHash = 4530239782514;
-  null27.__initData = _worklet_4530239782514_init_data;
-  null27.__stackDetails = _e;
-  return null27;
+  null1.__closure = {};
+  null1.__workletHash = 1392490775014;
+  null1.__initData = _worklet_1392490775014_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }());"
 `;
 
 exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 1`] = `
-"var _worklet_12546090599397_init_data = {
-  code: "function foo_null29(){return{width:50};}",
+"var _worklet_9984171279103_init_data = {
+  code: "function foo_null1(){return{width:50};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null29 = function foo_null29() {
+  var foo_null1 = function foo_null1() {
     return {
       width: 50
     };
   };
-  foo_null29.__closure = {};
-  foo_null29.__workletHash = 12546090599397;
-  foo_null29.__initData = _worklet_12546090599397_init_data;
-  foo_null29.__stackDetails = _e;
-  return foo_null29;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 9984171279103;
+  foo_null1.__initData = _worklet_9984171279103_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }());"
 `;
 
 exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 1`] = `
-"var _worklet_1578799831485_init_data = {
-  code: "function null28(){return{width:50};}",
+"var _worklet_1392490775014_init_data = {
+  code: "function null1(){return{width:50};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var animatedStyle = useAnimatedStyle(function () {
   var _e = [new global.Error(), 1, -27];
-  var null28 = function null28() {
+  var null1 = function null1() {
     return {
       width: 50
     };
   };
-  null28.__closure = {};
-  null28.__workletHash = 1578799831485;
-  null28.__initData = _worklet_1578799831485_init_data;
-  null28.__stackDetails = _e;
-  return null28;
+  null1.__closure = {};
+  null1.__workletHash = 1392490775014;
+  null1.__initData = _worklet_1392490775014_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }());"
 `;
 
 exports[`babel plugin for function hooks workletizes hook wrapped worklet reference automatically 1`] = `
-"var _worklet_9311293966698_init_data = {
-  code: "function style_null30(){return{color:'red',backgroundColor:'blue'};}",
+"var _worklet_3038192071896_init_data = {
+  code: "function style_null1(){return{color:'red',backgroundColor:'blue'};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var style = function () {
   const _e = [new global.Error(), 1, -27];
-  const style_null30 = function () {
+  const style_null1 = function () {
     return {
       color: 'red',
       backgroundColor: 'blue'
     };
   };
-  style_null30.__closure = {};
-  style_null30.__workletHash = 9311293966698;
-  style_null30.__initData = _worklet_9311293966698_init_data;
-  style_null30.__stackDetails = _e;
-  return style_null30;
+  style_null1.__closure = {};
+  style_null1.__workletHash = 3038192071896;
+  style_null1.__initData = _worklet_3038192071896_init_data;
+  style_null1.__stackDetails = _e;
+  return style_null1;
 }();
 var animatedStyle = useAnimatedStyle(style);"
 `;
 
 exports[`babel plugin for generators makes a generator worklet factory 1`] = `
-"var _worklet_7595577673042_init_data = {
-  code: "function*foo_null109(){yield'hello';yield'world';}",
+"var _worklet_4135278281851_init_data = {
+  code: "function*foo_null1(){yield'hello';yield'world';}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null109 = function* foo_null109() {
+  var foo_null1 = function* foo_null1() {
     yield 'hello';
     yield 'world';
   };
-  foo_null109.__closure = {};
-  foo_null109.__workletHash = 7595577673042;
-  foo_null109.__initData = _worklet_7595577673042_init_data;
-  foo_null109.__stackDetails = _e;
-  return foo_null109;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 4135278281851;
+  foo_null1.__initData = _worklet_4135278281851_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
 exports[`babel plugin for generators makes a generator worklet string 1`] = `
-"var _worklet_17026597760570_init_data = {
-  code: "function*foo_null110(){yield'hello';yield'world';}",
+"var _worklet_4135278281851_init_data = {
+  code: "function*foo_null1(){yield'hello';yield'world';}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null110 = function* foo_null110() {
+  var foo_null1 = function* foo_null1() {
     yield 'hello';
     yield 'world';
   };
-  foo_null110.__closure = {};
-  foo_null110.__workletHash = 17026597760570;
-  foo_null110.__initData = _worklet_17026597760570_init_data;
-  foo_null110.__stackDetails = _e;
-  return foo_null110;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 4135278281851;
+  foo_null1.__initData = _worklet_4135278281851_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
@@ -1056,40 +1056,40 @@ exports[`babel plugin for object hooks supports empty object in useAnimatedGestu
 exports[`babel plugin for object hooks supports empty object in useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler({});"`;
 
 exports[`babel plugin for object hooks transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler 1`] = `
-"var _worklet_16977934047965_init_data = {
-  code: "function null47(event){console.log(event);}",
+"var _worklet_6572201563503_init_data = {
+  code: "function null1(event){console.log(event);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 useAnimatedScrollHandler(function () {
   var _e = [new global.Error(), 1, -27];
-  var null47 = function null47(event) {
+  var null1 = function null1(event) {
     console.log(event);
   };
-  null47.__closure = {};
-  null47.__workletHash = 16977934047965;
-  null47.__initData = _worklet_16977934047965_init_data;
-  null47.__stackDetails = _e;
-  return null47;
+  null1.__closure = {};
+  null1.__workletHash = 6572201563503;
+  null1.__initData = _worklet_6572201563503_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }());"
 `;
 
 exports[`babel plugin for object hooks transforms each object property in useAnimatedGestureHandler 1`] = `
-"var _worklet_1310286192403_init_data = {
-  code: "function null39(){}",
+"var _worklet_17107900483944_init_data = {
+  code: "function null1(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_718786507453_init_data = {
-  code: "function null40(){}",
+var _worklet_15612771346699_init_data = {
+  code: "function null2(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_1126108962300_init_data = {
-  code: "function null41(){}",
+var _worklet_3001796818986_init_data = {
+  code: "function null3(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1097,61 +1097,61 @@ var _worklet_1126108962300_init_data = {
 useAnimatedGestureHandler({
   onStart: function () {
     var _e = [new global.Error(), 1, -27];
-    var null39 = function null39() {};
-    null39.__closure = {};
-    null39.__workletHash = 1310286192403;
-    null39.__initData = _worklet_1310286192403_init_data;
-    null39.__stackDetails = _e;
-    return null39;
+    var null1 = function null1() {};
+    null1.__closure = {};
+    null1.__workletHash = 17107900483944;
+    null1.__initData = _worklet_17107900483944_init_data;
+    null1.__stackDetails = _e;
+    return null1;
   }(),
   onUpdate: function () {
     var _e = [new global.Error(), 1, -27];
-    var null40 = function null40() {};
-    null40.__closure = {};
-    null40.__workletHash = 718786507453;
-    null40.__initData = _worklet_718786507453_init_data;
-    null40.__stackDetails = _e;
-    return null40;
+    var null2 = function null2() {};
+    null2.__closure = {};
+    null2.__workletHash = 15612771346699;
+    null2.__initData = _worklet_15612771346699_init_data;
+    null2.__stackDetails = _e;
+    return null2;
   }(),
   onEnd: function () {
     var _e = [new global.Error(), 1, -27];
-    var null41 = function null41() {};
-    null41.__closure = {};
-    null41.__workletHash = 1126108962300;
-    null41.__initData = _worklet_1126108962300_init_data;
-    null41.__stackDetails = _e;
-    return null41;
+    var null3 = function null3() {};
+    null3.__closure = {};
+    null3.__workletHash = 3001796818986;
+    null3.__initData = _worklet_3001796818986_init_data;
+    null3.__stackDetails = _e;
+    return null3;
   }()
 });"
 `;
 
 exports[`babel plugin for object hooks transforms each object property in useAnimatedScrollHandler 1`] = `
-"var _worklet_10361975598015_init_data = {
-  code: "function null42(){}",
+"var _worklet_17107900483944_init_data = {
+  code: "function null1(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_1996292577022_init_data = {
-  code: "function null43(){}",
+var _worklet_15612771346699_init_data = {
+  code: "function null2(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_12526336819897_init_data = {
-  code: "function null44(){}",
+var _worklet_3001796818986_init_data = {
+  code: "function null3(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_12937954242040_init_data = {
-  code: "function null45(){}",
+var _worklet_14370141256397_init_data = {
+  code: "function null4(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_4577339866043_init_data = {
-  code: "function null46(){}",
+var _worklet_16301592545772_init_data = {
+  code: "function null5(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1159,95 +1159,95 @@ var _worklet_4577339866043_init_data = {
 useAnimatedScrollHandler({
   onScroll: function () {
     var _e = [new global.Error(), 1, -27];
-    var null42 = function null42() {};
-    null42.__closure = {};
-    null42.__workletHash = 10361975598015;
-    null42.__initData = _worklet_10361975598015_init_data;
-    null42.__stackDetails = _e;
-    return null42;
+    var null1 = function null1() {};
+    null1.__closure = {};
+    null1.__workletHash = 17107900483944;
+    null1.__initData = _worklet_17107900483944_init_data;
+    null1.__stackDetails = _e;
+    return null1;
   }(),
   onBeginDrag: function () {
     var _e = [new global.Error(), 1, -27];
-    var null43 = function null43() {};
-    null43.__closure = {};
-    null43.__workletHash = 1996292577022;
-    null43.__initData = _worklet_1996292577022_init_data;
-    null43.__stackDetails = _e;
-    return null43;
+    var null2 = function null2() {};
+    null2.__closure = {};
+    null2.__workletHash = 15612771346699;
+    null2.__initData = _worklet_15612771346699_init_data;
+    null2.__stackDetails = _e;
+    return null2;
   }(),
   onEndDrag: function () {
     var _e = [new global.Error(), 1, -27];
-    var null44 = function null44() {};
-    null44.__closure = {};
-    null44.__workletHash = 12526336819897;
-    null44.__initData = _worklet_12526336819897_init_data;
-    null44.__stackDetails = _e;
-    return null44;
+    var null3 = function null3() {};
+    null3.__closure = {};
+    null3.__workletHash = 3001796818986;
+    null3.__initData = _worklet_3001796818986_init_data;
+    null3.__stackDetails = _e;
+    return null3;
   }(),
   onMomentumBegin: function () {
     var _e = [new global.Error(), 1, -27];
-    var null45 = function null45() {};
-    null45.__closure = {};
-    null45.__workletHash = 12937954242040;
-    null45.__initData = _worklet_12937954242040_init_data;
-    null45.__stackDetails = _e;
-    return null45;
+    var null4 = function null4() {};
+    null4.__closure = {};
+    null4.__workletHash = 14370141256397;
+    null4.__initData = _worklet_14370141256397_init_data;
+    null4.__stackDetails = _e;
+    return null4;
   }(),
   onMomentumEnd: function () {
     var _e = [new global.Error(), 1, -27];
-    var null46 = function null46() {};
-    null46.__closure = {};
-    null46.__workletHash = 4577339866043;
-    null46.__initData = _worklet_4577339866043_init_data;
-    null46.__stackDetails = _e;
-    return null46;
+    var null5 = function null5() {};
+    null5.__closure = {};
+    null5.__workletHash = 16301592545772;
+    null5.__initData = _worklet_16301592545772_init_data;
+    null5.__stackDetails = _e;
+    return null5;
   }()
 });"
 `;
 
 exports[`babel plugin for object hooks transforms named FunctionExpression as argument of useAnimatedScrollHandler 1`] = `
-"var _worklet_7173357772234_init_data = {
-  code: "function foo_null49(event){console.log(event);}",
+"var _worklet_13903338421046_init_data = {
+  code: "function foo_null1(event){console.log(event);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 useAnimatedScrollHandler(function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null49 = function foo_null49(event) {
+  var foo_null1 = function foo_null1(event) {
     console.log(event);
   };
-  foo_null49.__closure = {};
-  foo_null49.__workletHash = 7173357772234;
-  foo_null49.__initData = _worklet_7173357772234_init_data;
-  foo_null49.__stackDetails = _e;
-  return foo_null49;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 13903338421046;
+  foo_null1.__initData = _worklet_13903338421046_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }());"
 `;
 
 exports[`babel plugin for object hooks transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler 1`] = `
-"var _worklet_3065587220882_init_data = {
-  code: "function null48(event){console.log(event);}",
+"var _worklet_6572201563503_init_data = {
+  code: "function null1(event){console.log(event);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 useAnimatedScrollHandler(function () {
   var _e = [new global.Error(), 1, -27];
-  var null48 = function null48(event) {
+  var null1 = function null1(event) {
     console.log(event);
   };
-  null48.__closure = {};
-  null48.__workletHash = 3065587220882;
-  null48.__initData = _worklet_3065587220882_init_data;
-  null48.__stackDetails = _e;
-  return null48;
+  null1.__closure = {};
+  null1.__workletHash = 6572201563503;
+  null1.__initData = _worklet_6572201563503_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }());"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped ArrowFunctionExpression automatically 1`] = `
-"var _worklet_12749359923900_init_data = {
-  code: "function null31(event){console.log(event);}",
+"var _worklet_6572201563503_init_data = {
+  code: "function null1(event){console.log(event);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1255,21 +1255,21 @@ exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wra
 useAnimatedGestureHandler({
   onStart: function () {
     var _e = [new global.Error(), 1, -27];
-    var null31 = function null31(event) {
+    var null1 = function null1(event) {
       console.log(event);
     };
-    null31.__closure = {};
-    null31.__workletHash = 12749359923900;
-    null31.__initData = _worklet_12749359923900_init_data;
-    null31.__stackDetails = _e;
-    return null31;
+    null1.__closure = {};
+    null1.__workletHash = 6572201563503;
+    null1.__initData = _worklet_6572201563503_init_data;
+    null1.__stackDetails = _e;
+    return null1;
   }()
 });"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped ObjectMethod automatically 1`] = `
-"var _worklet_11429666379652_init_data = {
-  code: "function onStart_null37(event){console.log(event);}",
+"var _worklet_6368412250705_init_data = {
+  code: "function onStart_null1(event){console.log(event);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1277,21 +1277,21 @@ exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wra
 useAnimatedGestureHandler({
   onStart: function () {
     var _e = [new global.Error(), 1, -27];
-    var onStart_null37 = function onStart_null37(event) {
+    var onStart_null1 = function onStart_null1(event) {
       console.log(event);
     };
-    onStart_null37.__closure = {};
-    onStart_null37.__workletHash = 11429666379652;
-    onStart_null37.__initData = _worklet_11429666379652_init_data;
-    onStart_null37.__stackDetails = _e;
-    return onStart_null37;
+    onStart_null1.__closure = {};
+    onStart_null1.__workletHash = 6368412250705;
+    onStart_null1.__initData = _worklet_6368412250705_init_data;
+    onStart_null1.__stackDetails = _e;
+    return onStart_null1;
   }()
 });"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped named FunctionExpression automatically 1`] = `
-"var _worklet_4430797995526_init_data = {
-  code: "function onStart_null35(event){console.log(event);}",
+"var _worklet_6368412250705_init_data = {
+  code: "function onStart_null1(event){console.log(event);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1299,21 +1299,21 @@ exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wra
 useAnimatedGestureHandler({
   onStart: function () {
     var _e = [new global.Error(), 1, -27];
-    var onStart_null35 = function onStart_null35(event) {
+    var onStart_null1 = function onStart_null1(event) {
       console.log(event);
     };
-    onStart_null35.__closure = {};
-    onStart_null35.__workletHash = 4430797995526;
-    onStart_null35.__initData = _worklet_4430797995526_init_data;
-    onStart_null35.__stackDetails = _e;
-    return onStart_null35;
+    onStart_null1.__closure = {};
+    onStart_null1.__workletHash = 6368412250705;
+    onStart_null1.__initData = _worklet_6368412250705_init_data;
+    onStart_null1.__stackDetails = _e;
+    return onStart_null1;
   }()
 });"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wrapped unnamed FunctionExpression automatically 1`] = `
-"var _worklet_15804524046654_init_data = {
-  code: "function null33(event){console.log(event);}",
+"var _worklet_6572201563503_init_data = {
+  code: "function null1(event){console.log(event);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1321,21 +1321,21 @@ exports[`babel plugin for object hooks workletizes useAnimatedGestureHandler wra
 useAnimatedGestureHandler({
   onStart: function () {
     var _e = [new global.Error(), 1, -27];
-    var null33 = function null33(event) {
+    var null1 = function null1(event) {
       console.log(event);
     };
-    null33.__closure = {};
-    null33.__workletHash = 15804524046654;
-    null33.__initData = _worklet_15804524046654_init_data;
-    null33.__stackDetails = _e;
-    return null33;
+    null1.__closure = {};
+    null1.__workletHash = 6572201563503;
+    null1.__initData = _worklet_6572201563503_init_data;
+    null1.__stackDetails = _e;
+    return null1;
   }()
 });"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically 1`] = `
-"var _worklet_14960678389823_init_data = {
-  code: "function null32(event){console.log(event);}",
+"var _worklet_6572201563503_init_data = {
+  code: "function null1(event){console.log(event);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1343,21 +1343,21 @@ exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrap
 useAnimatedScrollHandler({
   onScroll: function () {
     var _e = [new global.Error(), 1, -27];
-    var null32 = function null32(event) {
+    var null1 = function null1(event) {
       console.log(event);
     };
-    null32.__closure = {};
-    null32.__workletHash = 14960678389823;
-    null32.__initData = _worklet_14960678389823_init_data;
-    null32.__stackDetails = _e;
-    return null32;
+    null1.__closure = {};
+    null1.__workletHash = 6572201563503;
+    null1.__initData = _worklet_6572201563503_init_data;
+    null1.__stackDetails = _e;
+    return null1;
   }()
 });"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically 1`] = `
-"var _worklet_8379725690630_init_data = {
-  code: "function onScroll_null38(event){console.log(event);}",
+"var _worklet_11162089192476_init_data = {
+  code: "function onScroll_null1(event){console.log(event);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1365,21 +1365,21 @@ exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrap
 useAnimatedGestureHandler({
   onScroll: function () {
     var _e = [new global.Error(), 1, -27];
-    var onScroll_null38 = function onScroll_null38(event) {
+    var onScroll_null1 = function onScroll_null1(event) {
       console.log(event);
     };
-    onScroll_null38.__closure = {};
-    onScroll_null38.__workletHash = 8379725690630;
-    onScroll_null38.__initData = _worklet_8379725690630_init_data;
-    onScroll_null38.__stackDetails = _e;
-    return onScroll_null38;
+    onScroll_null1.__closure = {};
+    onScroll_null1.__workletHash = 11162089192476;
+    onScroll_null1.__initData = _worklet_11162089192476_init_data;
+    onScroll_null1.__stackDetails = _e;
+    return onScroll_null1;
   }()
 });"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically 1`] = `
-"var _worklet_13381105020872_init_data = {
-  code: "function onScroll_null36(event){console.log(event);}",
+"var _worklet_11162089192476_init_data = {
+  code: "function onScroll_null1(event){console.log(event);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1387,21 +1387,21 @@ exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrap
 useAnimatedScrollHandler({
   onScroll: function () {
     var _e = [new global.Error(), 1, -27];
-    var onScroll_null36 = function onScroll_null36(event) {
+    var onScroll_null1 = function onScroll_null1(event) {
       console.log(event);
     };
-    onScroll_null36.__closure = {};
-    onScroll_null36.__workletHash = 13381105020872;
-    onScroll_null36.__initData = _worklet_13381105020872_init_data;
-    onScroll_null36.__stackDetails = _e;
-    return onScroll_null36;
+    onScroll_null1.__closure = {};
+    onScroll_null1.__workletHash = 11162089192476;
+    onScroll_null1.__initData = _worklet_11162089192476_init_data;
+    onScroll_null1.__stackDetails = _e;
+    return onScroll_null1;
   }()
 });"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically 1`] = `
-"var _worklet_1710281084601_init_data = {
-  code: "function null34(event){console.log(event);}",
+"var _worklet_6572201563503_init_data = {
+  code: "function null1(event){console.log(event);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1409,14 +1409,14 @@ exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrap
 useAnimatedScrollHandler({
   onScroll: function () {
     var _e = [new global.Error(), 1, -27];
-    var null34 = function null34(event) {
+    var null1 = function null1(event) {
       console.log(event);
     };
-    null34.__closure = {};
-    null34.__workletHash = 1710281084601;
-    null34.__initData = _worklet_1710281084601_init_data;
-    null34.__stackDetails = _e;
-    return null34;
+    null1.__closure = {};
+    null1.__workletHash = 6572201563503;
+    null1.__initData = _worklet_6572201563503_init_data;
+    null1.__stackDetails = _e;
+    return null1;
   }()
 });"
 `;
@@ -1450,82 +1450,82 @@ function App() {
 `;
 
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for arrays 1`] = `
-"var _worklet_7545395711848_init_data = {
-  code: "function foo_null53(){const bar=[4,5];const baz=[1,...[2,3],...bar];}",
+"var _worklet_10797201137439_init_data = {
+  code: "function foo_null1(){const bar=[4,5];const baz=[1,...[2,3],...bar];}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null53 = function foo_null53() {
+  var foo_null1 = function foo_null1() {
     var bar = [4, 5];
     var baz = [1].concat([2, 3], bar);
   };
-  foo_null53.__closure = {};
-  foo_null53.__workletHash = 7545395711848;
-  foo_null53.__initData = _worklet_7545395711848_init_data;
-  foo_null53.__stackDetails = _e;
-  return foo_null53;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 10797201137439;
+  foo_null1.__initData = _worklet_10797201137439_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for function arguments 1`] = `
-"var _worklet_9250844319177_init_data = {
-  code: "function foo_null55(...args){console.log(args);}",
+"var _worklet_7564534166424_init_data = {
+  code: "function foo_null1(...args){console.log(args);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null55 = function foo_null55() {
+  var foo_null1 = function foo_null1() {
     for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
     }
     console.log(args);
   };
-  foo_null55.__closure = {};
-  foo_null55.__workletHash = 9250844319177;
-  foo_null55.__initData = _worklet_9250844319177_init_data;
-  foo_null55.__stackDetails = _e;
-  return foo_null55;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 7564534166424;
+  foo_null1.__initData = _worklet_7564534166424_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for function calls 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _toConsumableArray2 = _interopRequireDefault(require("@babel/runtime/helpers/toConsumableArray"));
-var _worklet_10252308677258_init_data = {
-  code: "function foo_null56(arg){console.log(...arg);}",
+var _worklet_14662302952728_init_data = {
+  code: "function foo_null1(arg){console.log(...arg);}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null56 = function foo_null56(arg) {
+  var foo_null1 = function foo_null1(arg) {
     var _console;
     (_console = console).log.apply(_console, (0, _toConsumableArray2.default)(arg));
   };
-  foo_null56.__closure = {};
-  foo_null56.__workletHash = 10252308677258;
-  foo_null56.__initData = _worklet_10252308677258_init_data;
-  foo_null56.__stackDetails = _e;
-  return foo_null56;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 14662302952728;
+  foo_null1.__initData = _worklet_14662302952728_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for objects 1`] = `
-"var _worklet_2988677773140_init_data = {
-  code: "function foo_null54(){const bar={d:4,e:5};const baz={a:1,...{b:2,c:3},...bar};}",
+"var _worklet_4831123253572_init_data = {
+  code: "function foo_null1(){const bar={d:4,e:5};const baz={a:1,...{b:2,c:3},...bar};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null54 = function foo_null54() {
+  var foo_null1 = function foo_null1() {
     var bar = {
       d: 4,
       e: 5
@@ -1537,63 +1537,63 @@ var foo = function () {
       c: 3
     }, bar);
   };
-  foo_null54.__closure = {};
-  foo_null54.__workletHash = 2988677773140;
-  foo_null54.__initData = _worklet_2988677773140_init_data;
-  foo_null54.__stackDetails = _e;
-  return foo_null54;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 4831123253572;
+  foo_null1.__initData = _worklet_4831123253572_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
 exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `
-"var _worklet_15510190106013_init_data = {
-  code: "function null50(){console.log('onBegin');}",
+"var _worklet_13539781966089_init_data = {
+  code: "function null1(){console.log('onBegin');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_8787973697480_init_data = {
-  code: "function null51(_event){console.log('onStart');}",
+var _worklet_16446448315454_init_data = {
+  code: "function null2(_event){console.log('onStart');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_11787665531796_init_data = {
-  code: "function null52(_event,_success){console.log('onEnd');}",
+var _worklet_16462958026656_init_data = {
+  code: "function null3(_event,_success){console.log('onEnd');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
   var _e = [new global.Error(), 1, -27];
-  var null50 = function null50() {
+  var null1 = function null1() {
     console.log('onBegin');
   };
-  null50.__closure = {};
-  null50.__workletHash = 15510190106013;
-  null50.__initData = _worklet_15510190106013_init_data;
-  null50.__stackDetails = _e;
-  return null50;
+  null1.__closure = {};
+  null1.__workletHash = 13539781966089;
+  null1.__initData = _worklet_13539781966089_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }()).onStart(function () {
   var _e = [new global.Error(), 1, -27];
-  var null51 = function null51(_event) {
+  var null2 = function null2(_event) {
     console.log('onStart');
   };
-  null51.__closure = {};
-  null51.__workletHash = 8787973697480;
-  null51.__initData = _worklet_8787973697480_init_data;
-  null51.__stackDetails = _e;
-  return null51;
+  null2.__closure = {};
+  null2.__workletHash = 16446448315454;
+  null2.__initData = _worklet_16446448315454_init_data;
+  null2.__stackDetails = _e;
+  return null2;
 }()).onEnd(function () {
   var _e = [new global.Error(), 1, -27];
-  var null52 = function null52(_event, _success) {
+  var null3 = function null3(_event, _success) {
     console.log('onEnd');
   };
-  null52.__closure = {};
-  null52.__workletHash = 11787665531796;
-  null52.__initData = _worklet_11787665531796_init_data;
-  null52.__stackDetails = _e;
-  return null52;
+  null3.__closure = {};
+  null3.__workletHash = 16462958026656;
+  null3.__initData = _worklet_16462958026656_init_data;
+  null3.__stackDetails = _e;
+  return null3;
 }());"
 `;
 
@@ -1601,22 +1601,22 @@ exports[`babel plugin for referenced worklets prefers AssignmentExpression over 
 "var styleFactory = function styleFactory() {
   return 1;
 };
-var _worklet_168826902690_init_data = {
-  code: "function styleFactory_null124(){return'AssignmentExpression';}",
+var _worklet_7165463824996_init_data = {
+  code: "function styleFactory_null1(){return'AssignmentExpression';}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 styleFactory = function () {
   const _e = [new global.Error(), 1, -27];
-  const styleFactory_null124 = function () {
+  const styleFactory_null1 = function () {
     return 'AssignmentExpression';
   };
-  styleFactory_null124.__closure = {};
-  styleFactory_null124.__workletHash = 168826902690;
-  styleFactory_null124.__initData = _worklet_168826902690_init_data;
-  styleFactory_null124.__stackDetails = _e;
-  return styleFactory_null124;
+  styleFactory_null1.__closure = {};
+  styleFactory_null1.__workletHash = 7165463824996;
+  styleFactory_null1.__initData = _worklet_7165463824996_init_data;
+  styleFactory_null1.__stackDetails = _e;
+  return styleFactory_null1;
 }();
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
@@ -1624,22 +1624,22 @@ animatedStyle = useAnimatedStyle(styleFactory);"
 exports[`babel plugin for referenced worklets prefers FunctionDeclaration over AssignmentExpression 1`] = `
 "var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 var _readOnlyError2 = _interopRequireDefault(require("@babel/runtime/helpers/readOnlyError"));
-var _worklet_8085140706726_init_data = {
-  code: "function styleFactory_null123(){return'FunctionDeclaration';}",
+var _worklet_2619465543015_init_data = {
+  code: "function styleFactory_null1(){return'FunctionDeclaration';}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var styleFactory = function () {
   var _e = [new global.Error(), 1, -27];
-  var styleFactory_null123 = function styleFactory_null123() {
+  var styleFactory_null1 = function styleFactory_null1() {
     return 'FunctionDeclaration';
   };
-  styleFactory_null123.__closure = {};
-  styleFactory_null123.__workletHash = 8085140706726;
-  styleFactory_null123.__initData = _worklet_8085140706726_init_data;
-  styleFactory_null123.__stackDetails = _e;
-  return styleFactory_null123;
+  styleFactory_null1.__closure = {};
+  styleFactory_null1.__workletHash = 2619465543015;
+  styleFactory_null1.__initData = _worklet_2619465543015_init_data;
+  styleFactory_null1.__stackDetails = _e;
+  return styleFactory_null1;
 }();
 (function styleFactory() {
   return 'AssignmentExpression';
@@ -1649,43 +1649,43 @@ animatedStyle = useAnimatedStyle(styleFactory);"
 
 exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its AssignmentExpression 1`] = `
 "var styleFactory;
-var _worklet_1620102588934_init_data = {
-  code: "function styleFactory_null114(){return{};}",
+var _worklet_17388574355683_init_data = {
+  code: "function styleFactory_null1(){return{};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 styleFactory = function () {
   const _e = [new global.Error(), 1, -27];
-  const styleFactory_null114 = function () {
+  const styleFactory_null1 = function () {
     return {};
   };
-  styleFactory_null114.__closure = {};
-  styleFactory_null114.__workletHash = 1620102588934;
-  styleFactory_null114.__initData = _worklet_1620102588934_init_data;
-  styleFactory_null114.__stackDetails = _e;
-  return styleFactory_null114;
+  styleFactory_null1.__closure = {};
+  styleFactory_null1.__workletHash = 17388574355683;
+  styleFactory_null1.__initData = _worklet_17388574355683_init_data;
+  styleFactory_null1.__stackDetails = _e;
+  return styleFactory_null1;
 }();
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its VariableDeclarator 1`] = `
-"var _worklet_13619166954945_init_data = {
-  code: "function styleFactory_null113(){return{};}",
+"var _worklet_17388574355683_init_data = {
+  code: "function styleFactory_null1(){return{};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var styleFactory = function () {
   const _e = [new global.Error(), 1, -27];
-  const styleFactory_null113 = function () {
+  const styleFactory_null1 = function () {
     return {};
   };
-  styleFactory_null113.__closure = {};
-  styleFactory_null113.__workletHash = 13619166954945;
-  styleFactory_null113.__initData = _worklet_13619166954945_init_data;
-  styleFactory_null113.__stackDetails = _e;
-  return styleFactory_null113;
+  styleFactory_null1.__closure = {};
+  styleFactory_null1.__workletHash = 17388574355683;
+  styleFactory_null1.__initData = _worklet_17388574355683_init_data;
+  styleFactory_null1.__stackDetails = _e;
+  return styleFactory_null1;
 }();
 var animatedStyle = useAnimatedStyle(styleFactory);"
 `;
@@ -1695,86 +1695,86 @@ exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpressio
 styleFactory = function styleFactory() {
   return 1;
 };
-var _worklet_16978554738048_init_data = {
-  code: "function styleFactory_null115(){return'AssignmentExpression';}",
+var _worklet_7165463824996_init_data = {
+  code: "function styleFactory_null1(){return'AssignmentExpression';}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 styleFactory = function () {
   const _e = [new global.Error(), 1, -27];
-  const styleFactory_null115 = function () {
+  const styleFactory_null1 = function () {
     return 'AssignmentExpression';
   };
-  styleFactory_null115.__closure = {};
-  styleFactory_null115.__workletHash = 16978554738048;
-  styleFactory_null115.__initData = _worklet_16978554738048_init_data;
-  styleFactory_null115.__stackDetails = _e;
-  return styleFactory_null115;
+  styleFactory_null1.__closure = {};
+  styleFactory_null1.__workletHash = 7165463824996;
+  styleFactory_null1.__initData = _worklet_7165463824996_init_data;
+  styleFactory_null1.__stackDetails = _e;
+  return styleFactory_null1;
 }();
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes FunctionDeclaration 1`] = `
-"var _worklet_10064911298763_init_data = {
-  code: "function styleFactory_null119(){return{};}",
+"var _worklet_17388574355683_init_data = {
+  code: "function styleFactory_null1(){return{};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var styleFactory = function () {
   var _e = [new global.Error(), 1, -27];
-  var styleFactory_null119 = function styleFactory_null119() {
+  var styleFactory_null1 = function styleFactory_null1() {
     return {};
   };
-  styleFactory_null119.__closure = {};
-  styleFactory_null119.__workletHash = 10064911298763;
-  styleFactory_null119.__initData = _worklet_10064911298763_init_data;
-  styleFactory_null119.__stackDetails = _e;
-  return styleFactory_null119;
+  styleFactory_null1.__closure = {};
+  styleFactory_null1.__workletHash = 17388574355683;
+  styleFactory_null1.__initData = _worklet_17388574355683_init_data;
+  styleFactory_null1.__stackDetails = _e;
+  return styleFactory_null1;
 }();
 var animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes FunctionExpression on its AssignmentExpression 1`] = `
 "var styleFactory;
-var _worklet_12083510159045_init_data = {
-  code: "function styleFactory_null117(){return{};}",
+var _worklet_17388574355683_init_data = {
+  code: "function styleFactory_null1(){return{};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 styleFactory = function () {
   const _e = [new global.Error(), 1, -27];
-  const styleFactory_null117 = function () {
+  const styleFactory_null1 = function () {
     return {};
   };
-  styleFactory_null117.__closure = {};
-  styleFactory_null117.__workletHash = 12083510159045;
-  styleFactory_null117.__initData = _worklet_12083510159045_init_data;
-  styleFactory_null117.__stackDetails = _e;
-  return styleFactory_null117;
+  styleFactory_null1.__closure = {};
+  styleFactory_null1.__workletHash = 17388574355683;
+  styleFactory_null1.__initData = _worklet_17388574355683_init_data;
+  styleFactory_null1.__stackDetails = _e;
+  return styleFactory_null1;
 }();
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes FunctionExpression on its VariableDeclarator 1`] = `
-"var _worklet_10780997019652_init_data = {
-  code: "function styleFactory_null116(){return{};}",
+"var _worklet_17388574355683_init_data = {
+  code: "function styleFactory_null1(){return{};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var styleFactory = function () {
   const _e = [new global.Error(), 1, -27];
-  const styleFactory_null116 = function () {
+  const styleFactory_null1 = function () {
     return {};
   };
-  styleFactory_null116.__closure = {};
-  styleFactory_null116.__workletHash = 10780997019652;
-  styleFactory_null116.__initData = _worklet_10780997019652_init_data;
-  styleFactory_null116.__stackDetails = _e;
-  return styleFactory_null116;
+  styleFactory_null1.__closure = {};
+  styleFactory_null1.__workletHash = 17388574355683;
+  styleFactory_null1.__initData = _worklet_17388574355683_init_data;
+  styleFactory_null1.__stackDetails = _e;
+  return styleFactory_null1;
 }();
 var animatedStyle = useAnimatedStyle(styleFactory);"
 `;
@@ -1784,30 +1784,30 @@ exports[`babel plugin for referenced worklets workletizes FunctionExpression onl
 styleFactory = function styleFactory() {
   return 1;
 };
-var _worklet_1624585813837_init_data = {
-  code: "function styleFactory_null118(){return'AssignmentExpression';}",
+var _worklet_7165463824996_init_data = {
+  code: "function styleFactory_null1(){return'AssignmentExpression';}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 styleFactory = function () {
   const _e = [new global.Error(), 1, -27];
-  const styleFactory_null118 = function () {
+  const styleFactory_null1 = function () {
     return 'AssignmentExpression';
   };
-  styleFactory_null118.__closure = {};
-  styleFactory_null118.__workletHash = 1624585813837;
-  styleFactory_null118.__initData = _worklet_1624585813837_init_data;
-  styleFactory_null118.__stackDetails = _e;
-  return styleFactory_null118;
+  styleFactory_null1.__closure = {};
+  styleFactory_null1.__workletHash = 7165463824996;
+  styleFactory_null1.__initData = _worklet_7165463824996_init_data;
+  styleFactory_null1.__stackDetails = _e;
+  return styleFactory_null1;
 }();
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes ObjectExpression on its AssignmentExpression 1`] = `
 "var handler;
-var _worklet_10859328660664_init_data = {
-  code: "function onScroll_null121(){}",
+var _worklet_10431207809979_init_data = {
+  code: "function onScroll_null1(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1815,20 +1815,20 @@ var _worklet_10859328660664_init_data = {
 handler = {
   onScroll: function () {
     const _e = [new global.Error(), 1, -27];
-    const onScroll_null121 = function () {};
-    onScroll_null121.__closure = {};
-    onScroll_null121.__workletHash = 10859328660664;
-    onScroll_null121.__initData = _worklet_10859328660664_init_data;
-    onScroll_null121.__stackDetails = _e;
-    return onScroll_null121;
+    const onScroll_null1 = function () {};
+    onScroll_null1.__closure = {};
+    onScroll_null1.__workletHash = 10431207809979;
+    onScroll_null1.__initData = _worklet_10431207809979_init_data;
+    onScroll_null1.__stackDetails = _e;
+    return onScroll_null1;
   }()
 };
 var scrollHandler = useAnimatedScrollHandler(handler);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes ObjectExpression on its VariableDeclarator 1`] = `
-"var _worklet_3960776840569_init_data = {
-  code: "function onScroll_null120(){}",
+"var _worklet_10431207809979_init_data = {
+  code: "function onScroll_null1(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1836,12 +1836,12 @@ exports[`babel plugin for referenced worklets workletizes ObjectExpression on it
 var handler = {
   onScroll: function () {
     const _e = [new global.Error(), 1, -27];
-    const onScroll_null120 = function () {};
-    onScroll_null120.__closure = {};
-    onScroll_null120.__workletHash = 3960776840569;
-    onScroll_null120.__initData = _worklet_3960776840569_init_data;
-    onScroll_null120.__stackDetails = _e;
-    return onScroll_null120;
+    const onScroll_null1 = function () {};
+    onScroll_null1.__closure = {};
+    onScroll_null1.__workletHash = 10431207809979;
+    onScroll_null1.__initData = _worklet_10431207809979_init_data;
+    onScroll_null1.__stackDetails = _e;
+    return onScroll_null1;
   }()
 };
 var scrollHandler = useAnimatedScrollHandler(handler);"
@@ -1854,8 +1854,8 @@ handler = {
     return 1;
   }
 };
-var _worklet_9899737572523_init_data = {
-  code: "function onScroll_null122(){return'AssignmentExpression';}",
+var _worklet_3006312818667_init_data = {
+  code: "function onScroll_null1(){return'AssignmentExpression';}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1863,14 +1863,14 @@ var _worklet_9899737572523_init_data = {
 handler = {
   onScroll: function () {
     const _e = [new global.Error(), 1, -27];
-    const onScroll_null122 = function () {
+    const onScroll_null1 = function () {
       return 'AssignmentExpression';
     };
-    onScroll_null122.__closure = {};
-    onScroll_null122.__workletHash = 9899737572523;
-    onScroll_null122.__initData = _worklet_9899737572523_init_data;
-    onScroll_null122.__stackDetails = _e;
-    return onScroll_null122;
+    onScroll_null1.__closure = {};
+    onScroll_null1.__workletHash = 3006312818667;
+    onScroll_null1.__initData = _worklet_3006312818667_init_data;
+    onScroll_null1.__stackDetails = _e;
+    return onScroll_null1;
   }()
 };
 var scrollHandler = useAnimatedScrollHandler(handler);"
@@ -1881,49 +1881,49 @@ exports[`babel plugin for referenced worklets workletizes assigments that appear
   return {};
 };
 animatedStyle = useAnimatedStyle(styleFactory);
-var _worklet_553022402632_init_data = {
-  code: "function null127(){return'AssignmentAfterUse';}",
+var _worklet_506044013293_init_data = {
+  code: "function null1(){return'AssignmentAfterUse';}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 styleFactory = function () {
   var _e = [new global.Error(), 1, -27];
-  var null127 = function null127() {
+  var null1 = function null1() {
     return 'AssignmentAfterUse';
   };
-  null127.__closure = {};
-  null127.__workletHash = 553022402632;
-  null127.__initData = _worklet_553022402632_init_data;
-  null127.__stackDetails = _e;
-  return null127;
+  null1.__closure = {};
+  null1.__workletHash = 506044013293;
+  null1.__initData = _worklet_506044013293_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }();"
 `;
 
 exports[`babel plugin for referenced worklets workletizes in immediate scope 1`] = `
-"var _worklet_11773936606628_init_data = {
-  code: "function styleFactory_null125(){return{};}",
+"var _worklet_17388574355683_init_data = {
+  code: "function styleFactory_null1(){return{};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var styleFactory = function () {
   const _e = [new global.Error(), 1, -27];
-  const styleFactory_null125 = function () {
+  const styleFactory_null1 = function () {
     return {};
   };
-  styleFactory_null125.__closure = {};
-  styleFactory_null125.__workletHash = 11773936606628;
-  styleFactory_null125.__initData = _worklet_11773936606628_init_data;
-  styleFactory_null125.__stackDetails = _e;
-  return styleFactory_null125;
+  styleFactory_null1.__closure = {};
+  styleFactory_null1.__workletHash = 17388574355683;
+  styleFactory_null1.__initData = _worklet_17388574355683_init_data;
+  styleFactory_null1.__stackDetails = _e;
+  return styleFactory_null1;
 }();
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes in nested scope 1`] = `
-"var _worklet_5687433024935_init_data = {
-  code: "function styleFactory_null126(){return{};}",
+"var _worklet_17388574355683_init_data = {
+  code: "function styleFactory_null1(){return{};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1931,14 +1931,14 @@ exports[`babel plugin for referenced worklets workletizes in nested scope 1`] = 
 function outerScope() {
   var styleFactory = function () {
     const _e = [new global.Error(), 1, -27];
-    const styleFactory_null126 = function () {
+    const styleFactory_null1 = function () {
       return {};
     };
-    styleFactory_null126.__closure = {};
-    styleFactory_null126.__workletHash = 5687433024935;
-    styleFactory_null126.__initData = _worklet_5687433024935_init_data;
-    styleFactory_null126.__stackDetails = _e;
-    return styleFactory_null126;
+    styleFactory_null1.__closure = {};
+    styleFactory_null1.__workletHash = 17388574355683;
+    styleFactory_null1.__initData = _worklet_17388574355683_init_data;
+    styleFactory_null1.__stackDetails = _e;
+    return styleFactory_null1;
   }();
   function innerScope() {
     animatedStyle = useAnimatedStyle(styleFactory);
@@ -1955,8 +1955,8 @@ exports[`babel plugin for sequence expressions supports SequenceExpression 1`] =
 `;
 
 exports[`babel plugin for sequence expressions supports SequenceExpression, many arguments 1`] = `
-"var _worklet_3206526446379_init_data = {
-  code: "function onStart_null59(){}",
+"var _worklet_8764176270806_init_data = {
+  code: "function onStart_null1(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1965,20 +1965,20 @@ function App() {
   (0, 3, fun)({
     onStart: function () {
       var _e = [new global.Error(), 1, -27];
-      var onStart_null59 = function onStart_null59() {};
-      onStart_null59.__closure = {};
-      onStart_null59.__workletHash = 3206526446379;
-      onStart_null59.__initData = _worklet_3206526446379_init_data;
-      onStart_null59.__stackDetails = _e;
-      return onStart_null59;
+      var onStart_null1 = function onStart_null1() {};
+      onStart_null1.__closure = {};
+      onStart_null1.__workletHash = 8764176270806;
+      onStart_null1.__initData = _worklet_8764176270806_init_data;
+      onStart_null1.__stackDetails = _e;
+      return onStart_null1;
     }()
   }, []);
 }"
 `;
 
 exports[`babel plugin for sequence expressions supports SequenceExpression, with objectHook 1`] = `
-"var _worklet_2074151206181_init_data = {
-  code: "function onStart_null57(){}",
+"var _worklet_8764176270806_init_data = {
+  code: "function onStart_null1(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -1987,20 +1987,20 @@ function App() {
   (0, useAnimatedGestureHandler)({
     onStart: function () {
       var _e = [new global.Error(), 1, -27];
-      var onStart_null57 = function onStart_null57() {};
-      onStart_null57.__closure = {};
-      onStart_null57.__workletHash = 2074151206181;
-      onStart_null57.__initData = _worklet_2074151206181_init_data;
-      onStart_null57.__stackDetails = _e;
-      return onStart_null57;
+      var onStart_null1 = function onStart_null1() {};
+      onStart_null1.__closure = {};
+      onStart_null1.__workletHash = 8764176270806;
+      onStart_null1.__initData = _worklet_8764176270806_init_data;
+      onStart_null1.__stackDetails = _e;
+      return onStart_null1;
     }()
   }, []);
 }"
 `;
 
 exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet 1`] = `
-"var _worklet_3819764367018_init_data = {
-  code: "function onStart_null58(){}",
+"var _worklet_8764176270806_init_data = {
+  code: "function onStart_null1(){}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -2009,20 +2009,20 @@ function App() {
   (0, fun)({
     onStart: function () {
       var _e = [new global.Error(), 1, -27];
-      var onStart_null58 = function onStart_null58() {};
-      onStart_null58.__closure = {};
-      onStart_null58.__workletHash = 3819764367018;
-      onStart_null58.__initData = _worklet_3819764367018_init_data;
-      onStart_null58.__stackDetails = _e;
-      return onStart_null58;
+      var onStart_null1 = function onStart_null1() {};
+      onStart_null1.__closure = {};
+      onStart_null1.__workletHash = 8764176270806;
+      onStart_null1.__initData = _worklet_8764176270806_init_data;
+      onStart_null1.__stackDetails = _e;
+      return onStart_null1;
     }()
   }, []);
 }"
 `;
 
 exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet closure 1`] = `
-"var _worklet_2774082723472_init_data = {
-  code: "function onStart_null60(){const{obj}=this.__closure;const a=obj.a;}",
+"var _worklet_10926786553639_init_data = {
+  code: "function onStart_null1(){const{obj}=this.__closure;const a=obj.a;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -2035,42 +2035,42 @@ function App() {
   (0, fun)({
     onStart: function () {
       var _e = [new global.Error(), -2, -27];
-      var onStart_null60 = function onStart_null60() {
+      var onStart_null1 = function onStart_null1() {
         var a = obj.a;
       };
-      onStart_null60.__closure = {
+      onStart_null1.__closure = {
         obj: obj
       };
-      onStart_null60.__workletHash = 2774082723472;
-      onStart_null60.__initData = _worklet_2774082723472_init_data;
-      onStart_null60.__stackDetails = _e;
-      return onStart_null60;
+      onStart_null1.__workletHash = 10926786553639;
+      onStart_null1.__initData = _worklet_10926786553639_init_data;
+      onStart_null1.__stackDetails = _e;
+      return onStart_null1;
     }()
   }, []);
 }"
 `;
 
 exports[`babel plugin for web configuration doesn't substitute isWeb and shouldBeUseWeb in worklets 1`] = `
-"var _worklet_1908927161224_init_data = {
-  code: "function foo_null108(){const{isWeb,shouldBeUseWeb}=this.__closure;const x=isWeb();const y=shouldBeUseWeb();}",
+"var _worklet_8645270621312_init_data = {
+  code: "function foo_null1(){const{isWeb,shouldBeUseWeb}=this.__closure;const x=isWeb();const y=shouldBeUseWeb();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), -3, -27];
-  var foo_null108 = function foo_null108() {
+  var foo_null1 = function foo_null1() {
     var x = true;
     var y = true;
   };
-  foo_null108.__closure = {
+  foo_null1.__closure = {
     isWeb: isWeb,
     shouldBeUseWeb: shouldBeUseWeb
   };
-  foo_null108.__workletHash = 1908927161224;
-  foo_null108.__initData = _worklet_1908927161224_init_data;
-  foo_null108.__stackDetails = _e;
-  return foo_null108;
+  foo_null1.__workletHash = 8645270621312;
+  foo_null1.__initData = _worklet_8645270621312_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
@@ -2085,35 +2085,35 @@ var y = shouldBeUseWeb();"
 `;
 
 exports[`babel plugin for web configuration includes initData when omitNativeOnlyData option is set to false 1`] = `
-"var _worklet_4811362207856_init_data = {
-  code: "function foo_null107(){var foo_null107='bar';}",
+"var _worklet_8266917884050_init_data = {
+  code: "function foo_null1(){var bar='bar';}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null107 = function foo_null107() {
-    var foo = 'bar';
+  var foo_null1 = function foo_null1() {
+    var bar = 'bar';
   };
-  foo_null107.__closure = {};
-  foo_null107.__workletHash = 4811362207856;
-  foo_null107.__initData = _worklet_4811362207856_init_data;
-  foo_null107.__stackDetails = _e;
-  return foo_null107;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 8266917884050;
+  foo_null1.__initData = _worklet_8266917884050_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
 exports[`babel plugin for web configuration skips initData when omitNativeOnlyData option is set to true 1`] = `
 "var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null106 = function foo_null106() {
+  var foo_null1 = function foo_null1() {
     var foo = 'bar';
   };
-  foo_null106.__closure = {};
-  foo_null106.__workletHash = 16267808771056;
-  foo_null106.__stackDetails = _e;
-  return foo_null106;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 7087145691632;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
@@ -2123,340 +2123,340 @@ var y = true;"
 `;
 
 exports[`babel plugin for worklet nesting doesn't process nested worklets when disabled 1`] = `
-"var _worklet_3118723897416_init_data = {
-  code: "function foo_null91(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
+"var _worklet_16658893781105_init_data = {
+  code: "function foo_null1(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_17165404534196_init_data = {
-  code: "function bar_null92(x){return x+2;}",
+var _worklet_17260955035117_init_data = {
+  code: "function bar_null2(x){return x+2;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), 1, -27];
-  var foo_null91 = function foo_null91(x) {
+  var foo_null1 = function foo_null1(x) {
     var bar = function () {
       var _e = [new global.Error(), 1, -27];
-      var bar_null92 = function bar_null92(x) {
+      var bar_null2 = function bar_null2(x) {
         return x + 2;
       };
-      bar_null92.__closure = {};
-      bar_null92.__workletHash = 17165404534196;
-      bar_null92.__initData = _worklet_17165404534196_init_data;
-      bar_null92.__stackDetails = _e;
-      return bar_null92;
+      bar_null2.__closure = {};
+      bar_null2.__workletHash = 17260955035117;
+      bar_null2.__initData = _worklet_17260955035117_init_data;
+      bar_null2.__stackDetails = _e;
+      return bar_null2;
     }();
     return bar(x) + 1;
   };
-  foo_null91.__closure = {};
-  foo_null91.__workletHash = 3118723897416;
-  foo_null91.__initData = _worklet_3118723897416_init_data;
-  foo_null91.__stackDetails = _e;
-  return foo_null91;
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 16658893781105;
+  foo_null1.__initData = _worklet_16658893781105_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
 exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnJS in runOnUI 1`] = `
-"var _worklet_1418934077724_init_data = {
-  code: "function null98(){console.log('Hello from JS thread');}",
+"var _worklet_5655279400236_init_data = {
+  code: "function null1(){console.log('Hello from JS thread');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_1280927952180_init_data = {
-  code: "function null99(){const{runOnJS,_worklet_1418934077724_init_data}=this.__closure;console.log('Hello from UI thread');runOnJS(function(){const _e=[new global.Error(),1,-27];const null98=function(){console.log('Hello from JS thread');};null98.__closure={};null98.__workletHash=1418934077724;null98.__initData=_worklet_1418934077724_init_data;null98.__stackDetails=_e;return null98;}())();}",
+var _worklet_8060856534633_init_data = {
+  code: "function null2(){const{runOnJS,_worklet_5655279400236_init_data}=this.__closure;console.log('Hello from UI thread');runOnJS(function(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Hello from JS thread');};null1.__closure={};null1.__workletHash=5655279400236;null1.__initData=_worklet_5655279400236_init_data;null1.__stackDetails=_e;return null1;}())();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 runOnUI(function () {
   var _e = [new global.Error(), -3, -27];
-  var null99 = function null99() {
+  var null2 = function null2() {
     console.log('Hello from UI thread');
     runOnJS(function () {
       var _e = [new global.Error(), 1, -27];
-      var null98 = function null98() {
+      var null1 = function null1() {
         console.log('Hello from JS thread');
       };
-      null98.__closure = {};
-      null98.__workletHash = 1418934077724;
-      null98.__initData = _worklet_1418934077724_init_data;
-      null98.__stackDetails = _e;
-      return null98;
+      null1.__closure = {};
+      null1.__workletHash = 5655279400236;
+      null1.__initData = _worklet_5655279400236_init_data;
+      null1.__stackDetails = _e;
+      return null1;
     }())();
   };
-  null99.__closure = {
+  null2.__closure = {
     runOnJS: runOnJS,
-    _worklet_1418934077724_init_data: _worklet_1418934077724_init_data
+    _worklet_5655279400236_init_data: _worklet_5655279400236_init_data
   };
-  null99.__workletHash = 1280927952180;
-  null99.__initData = _worklet_1280927952180_init_data;
-  null99.__stackDetails = _e;
-  return null99;
+  null2.__workletHash = 8060856534633;
+  null2.__initData = _worklet_8060856534633_init_data;
+  null2.__stackDetails = _e;
+  return null2;
 }())();"
 `;
 
 exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI 1`] = `
-"var _worklet_11431144935663_init_data = {
-  code: "function null100(){const{runOnUI}=this.__closure;console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();}",
+"var _worklet_7185083753711_init_data = {
+  code: "function null1(){const{runOnUI}=this.__closure;console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_12630566079067_init_data = {
-  code: "function null101(){const{runOnJS,runOnUI,_worklet_11431144935663_init_data}=this.__closure;console.log('Hello from UI thread');runOnJS(function(){const _e=[new global.Error(),-2,-27];const null100=function(){console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();};null100.__closure={runOnUI:runOnUI};null100.__workletHash=11431144935663;null100.__initData=_worklet_11431144935663_init_data;null100.__stackDetails=_e;return null100;}())();}",
+var _worklet_3809176378244_init_data = {
+  code: "function null2(){const{runOnJS,runOnUI,_worklet_7185083753711_init_data}=this.__closure;console.log('Hello from UI thread');runOnJS(function(){const _e=[new global.Error(),-2,-27];const null1=function(){console.log('Hello from JS thread');runOnUI(function(){console.log('Hello from UI thread again');})();};null1.__closure={runOnUI:runOnUI};null1.__workletHash=7185083753711;null1.__initData=_worklet_7185083753711_init_data;null1.__stackDetails=_e;return null1;}())();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_7181953415179_init_data = {
-  code: "function null102(){console.log('Hello from UI thread again');}",
+var _worklet_2520605269387_init_data = {
+  code: "function null3(){console.log('Hello from UI thread again');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 runOnUI(function () {
   var _e = [new global.Error(), -4, -27];
-  var null101 = function null101() {
+  var null2 = function null2() {
     console.log('Hello from UI thread');
     runOnJS(function () {
       var _e = [new global.Error(), -2, -27];
-      var null100 = function null100() {
+      var null1 = function null1() {
         console.log('Hello from JS thread');
         runOnUI(function () {
           var _e = [new global.Error(), 1, -27];
-          var null102 = function null102() {
+          var null3 = function null3() {
             console.log('Hello from UI thread again');
           };
-          null102.__closure = {};
-          null102.__workletHash = 7181953415179;
-          null102.__initData = _worklet_7181953415179_init_data;
-          null102.__stackDetails = _e;
-          return null102;
+          null3.__closure = {};
+          null3.__workletHash = 2520605269387;
+          null3.__initData = _worklet_2520605269387_init_data;
+          null3.__stackDetails = _e;
+          return null3;
         }())();
       };
-      null100.__closure = {
+      null1.__closure = {
         runOnUI: runOnUI
       };
-      null100.__workletHash = 11431144935663;
-      null100.__initData = _worklet_11431144935663_init_data;
-      null100.__stackDetails = _e;
-      return null100;
+      null1.__workletHash = 7185083753711;
+      null1.__initData = _worklet_7185083753711_init_data;
+      null1.__stackDetails = _e;
+      return null1;
     }())();
   };
-  null101.__closure = {
+  null2.__closure = {
     runOnJS: runOnJS,
     runOnUI: runOnUI,
-    _worklet_11431144935663_init_data: _worklet_11431144935663_init_data
+    _worklet_7185083753711_init_data: _worklet_7185083753711_init_data
   };
-  null101.__workletHash = 12630566079067;
-  null101.__initData = _worklet_12630566079067_init_data;
-  null101.__stackDetails = _e;
-  return null101;
+  null2.__workletHash = 3809176378244;
+  null2.__initData = _worklet_3809176378244_init_data;
+  null2.__stackDetails = _e;
+  return null2;
 }())();"
 `;
 
 exports[`babel plugin for worklet nesting transpiles nested worklets when enabled 1`] = `
-"var _worklet_7953136471589_init_data = {
-  code: "function null93(){console.log('bar');}",
+"var _worklet_8064116599518_init_data = {
+  code: "function null1(){console.log('bar');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_2879795308557_init_data = {
-  code: "function null94(){const{_worklet_7953136471589_init_data}=this.__closure;const bar=function(){const _e=[new global.Error(),1,-27];const null93=function(){console.log('bar');};null93.__closure={};null93.__workletHash=7953136471589;null93.__initData=_worklet_7953136471589_init_data;null93.__stackDetails=_e;return null93;}();bar();}",
+var _worklet_1516424759965_init_data = {
+  code: "function null2(){const{_worklet_8064116599518_init_data}=this.__closure;const bar=function(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('bar');};null1.__closure={};null1.__workletHash=8064116599518;null1.__initData=_worklet_8064116599518_init_data;null1.__stackDetails=_e;return null1;}();bar();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), -2, -27];
-  var null94 = function null94() {
+  var null2 = function null2() {
     var bar = function () {
       var _e = [new global.Error(), 1, -27];
-      var null93 = function null93() {
+      var null1 = function null1() {
         console.log('bar');
       };
-      null93.__closure = {};
-      null93.__workletHash = 7953136471589;
-      null93.__initData = _worklet_7953136471589_init_data;
-      null93.__stackDetails = _e;
-      return null93;
+      null1.__closure = {};
+      null1.__workletHash = 8064116599518;
+      null1.__initData = _worklet_8064116599518_init_data;
+      null1.__stackDetails = _e;
+      return null1;
     }();
     bar();
   };
-  null94.__closure = {
-    _worklet_7953136471589_init_data: _worklet_7953136471589_init_data
+  null2.__closure = {
+    _worklet_8064116599518_init_data: _worklet_8064116599518_init_data
   };
-  null94.__workletHash = 2879795308557;
-  null94.__initData = _worklet_2879795308557_init_data;
-  null94.__stackDetails = _e;
-  return null94;
+  null2.__workletHash = 1516424759965;
+  null2.__initData = _worklet_1516424759965_init_data;
+  null2.__stackDetails = _e;
+  return null2;
 }();"
 `;
 
 exports[`babel plugin for worklet nesting transpiles nested worklets when enabled with depth 3 1`] = `
-"var _worklet_5378874050149_init_data = {
-  code: "function null95(){console.log('foobar');}",
+"var _worklet_3230974749144_init_data = {
+  code: "function null1(){console.log('foobar');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_15717765215973_init_data = {
-  code: "function null96(){const{_worklet_5378874050149_init_data}=this.__closure;const foobar=function(){const _e=[new global.Error(),1,-27];const null95=function(){console.log('foobar');};null95.__closure={};null95.__workletHash=5378874050149;null95.__initData=_worklet_5378874050149_init_data;null95.__stackDetails=_e;return null95;}();}",
+var _worklet_6327850153424_init_data = {
+  code: "function null2(){const{_worklet_3230974749144_init_data}=this.__closure;const foobar=function(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__closure={};null1.__workletHash=3230974749144;null1.__initData=_worklet_3230974749144_init_data;null1.__stackDetails=_e;return null1;}();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_12964440333919_init_data = {
-  code: "function null97(){const{_worklet_5378874050149_init_data,_worklet_15717765215973_init_data}=this.__closure;const bar=function(){const _e=[new global.Error(),-2,-27];const null96=function(){const foobar=function(){const _e=[new global.Error(),1,-27];const null95=function(){console.log('foobar');};null95.__closure={};null95.__workletHash=5378874050149;null95.__initData=_worklet_5378874050149_init_data;null95.__stackDetails=_e;return null95;}();};null96.__closure={_worklet_5378874050149_init_data:_worklet_5378874050149_init_data};null96.__workletHash=15717765215973;null96.__initData=_worklet_15717765215973_init_data;null96.__stackDetails=_e;return null96;}();bar();}",
+var _worklet_2612038668792_init_data = {
+  code: "function null3(){const{_worklet_3230974749144_init_data,_worklet_6327850153424_init_data}=this.__closure;const bar=function(){const _e=[new global.Error(),-2,-27];const null2=function(){const foobar=function(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('foobar');};null1.__closure={};null1.__workletHash=3230974749144;null1.__initData=_worklet_3230974749144_init_data;null1.__stackDetails=_e;return null1;}();};null2.__closure={_worklet_3230974749144_init_data:_worklet_3230974749144_init_data};null2.__workletHash=6327850153424;null2.__initData=_worklet_6327850153424_init_data;null2.__stackDetails=_e;return null2;}();bar();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), -3, -27];
-  var null97 = function null97() {
+  var null3 = function null3() {
     var bar = function () {
       var _e = [new global.Error(), -2, -27];
-      var null96 = function null96() {
+      var null2 = function null2() {
         var foobar = function () {
           var _e = [new global.Error(), 1, -27];
-          var null95 = function null95() {
+          var null1 = function null1() {
             console.log('foobar');
           };
-          null95.__closure = {};
-          null95.__workletHash = 5378874050149;
-          null95.__initData = _worklet_5378874050149_init_data;
-          null95.__stackDetails = _e;
-          return null95;
+          null1.__closure = {};
+          null1.__workletHash = 3230974749144;
+          null1.__initData = _worklet_3230974749144_init_data;
+          null1.__stackDetails = _e;
+          return null1;
         }();
       };
-      null96.__closure = {
-        _worklet_5378874050149_init_data: _worklet_5378874050149_init_data
+      null2.__closure = {
+        _worklet_3230974749144_init_data: _worklet_3230974749144_init_data
       };
-      null96.__workletHash = 15717765215973;
-      null96.__initData = _worklet_15717765215973_init_data;
-      null96.__stackDetails = _e;
-      return null96;
+      null2.__workletHash = 6327850153424;
+      null2.__initData = _worklet_6327850153424_init_data;
+      null2.__stackDetails = _e;
+      return null2;
     }();
     bar();
   };
-  null97.__closure = {
-    _worklet_5378874050149_init_data: _worklet_5378874050149_init_data,
-    _worklet_15717765215973_init_data: _worklet_15717765215973_init_data
+  null3.__closure = {
+    _worklet_3230974749144_init_data: _worklet_3230974749144_init_data,
+    _worklet_6327850153424_init_data: _worklet_6327850153424_init_data
   };
-  null97.__workletHash = 12964440333919;
-  null97.__initData = _worklet_12964440333919_init_data;
-  null97.__stackDetails = _e;
-  return null97;
+  null3.__workletHash = 2612038668792;
+  null3.__initData = _worklet_2612038668792_init_data;
+  null3.__stackDetails = _e;
+  return null3;
 }();"
 `;
 
 exports[`babel plugin for worklet nesting transpiles worklets with functions defined on UI thread to run them on JS 1`] = `
-"var _worklet_12520107923889_init_data = {
-  code: "function null103(){console.log('Good morning from JS thread!');}",
+"var _worklet_12864992966034_init_data = {
+  code: "function null1(){console.log('Good morning from JS thread!');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_16849097936205_init_data = {
-  code: "function null104(){console.log('Good afternoon from JS thread');}",
+var _worklet_4437925222314_init_data = {
+  code: "function null2(){console.log('Good afternoon from JS thread');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_12625243463072_init_data = {
-  code: "function null105(){const{_worklet_12520107923889_init_data,_worklet_16849097936205_init_data,runOnJS}=this.__closure;const a=function(){const _e=[new global.Error(),1,-27];const null103=function(){console.log('Good morning from JS thread!');};null103.__closure={};null103.__workletHash=12520107923889;null103.__initData=_worklet_12520107923889_init_data;null103.__stackDetails=_e;return null103;}();const b=function(){const _e=[new global.Error(),1,-27];const null104=function(){console.log('Good afternoon from JS thread');};null104.__closure={};null104.__workletHash=16849097936205;null104.__initData=_worklet_16849097936205_init_data;null104.__stackDetails=_e;return null104;}();const func=Math.random()<0.5?a:b;runOnJS(func)();}",
+var _worklet_10266484047832_init_data = {
+  code: "function null3(){const{_worklet_12864992966034_init_data,_worklet_4437925222314_init_data,runOnJS}=this.__closure;const a=function(){const _e=[new global.Error(),1,-27];const null1=function(){console.log('Good morning from JS thread!');};null1.__closure={};null1.__workletHash=12864992966034;null1.__initData=_worklet_12864992966034_init_data;null1.__stackDetails=_e;return null1;}();const b=function(){const _e=[new global.Error(),1,-27];const null2=function(){console.log('Good afternoon from JS thread');};null2.__closure={};null2.__workletHash=4437925222314;null2.__initData=_worklet_4437925222314_init_data;null2.__stackDetails=_e;return null2;}();const func=Math.random()<0.5?a:b;runOnJS(func)();}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 runOnUI(function () {
   var _e = [new global.Error(), -4, -27];
-  var null105 = function null105() {
+  var null3 = function null3() {
     var a = function () {
       var _e = [new global.Error(), 1, -27];
-      var null103 = function null103() {
+      var null1 = function null1() {
         console.log('Good morning from JS thread!');
       };
-      null103.__closure = {};
-      null103.__workletHash = 12520107923889;
-      null103.__initData = _worklet_12520107923889_init_data;
-      null103.__stackDetails = _e;
-      return null103;
+      null1.__closure = {};
+      null1.__workletHash = 12864992966034;
+      null1.__initData = _worklet_12864992966034_init_data;
+      null1.__stackDetails = _e;
+      return null1;
     }();
     var b = function () {
       var _e = [new global.Error(), 1, -27];
-      var null104 = function null104() {
+      var null2 = function null2() {
         console.log('Good afternoon from JS thread');
       };
-      null104.__closure = {};
-      null104.__workletHash = 16849097936205;
-      null104.__initData = _worklet_16849097936205_init_data;
-      null104.__stackDetails = _e;
-      return null104;
+      null2.__closure = {};
+      null2.__workletHash = 4437925222314;
+      null2.__initData = _worklet_4437925222314_init_data;
+      null2.__stackDetails = _e;
+      return null2;
     }();
     var func = Math.random() < 0.5 ? a : b;
     runOnJS(func)();
   };
-  null105.__closure = {
-    _worklet_12520107923889_init_data: _worklet_12520107923889_init_data,
-    _worklet_16849097936205_init_data: _worklet_16849097936205_init_data,
+  null3.__closure = {
+    _worklet_12864992966034_init_data: _worklet_12864992966034_init_data,
+    _worklet_4437925222314_init_data: _worklet_4437925222314_init_data,
     runOnJS: runOnJS
   };
-  null105.__workletHash = 12625243463072;
-  null105.__initData = _worklet_12625243463072_init_data;
-  null105.__stackDetails = _e;
-  return null105;
+  null3.__workletHash = 10266484047832;
+  null3.__initData = _worklet_10266484047832_init_data;
+  null3.__stackDetails = _e;
+  return null3;
 }())();"
 `;
 
 exports[`babel plugin generally removes comments from worklets 1`] = `
-"var _worklet_5905499609227_init_data = {
-  code: "function null5(){return true;}",
+"var _worklet_5099191671055_init_data = {
+  code: "function null1(){return true;}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var f = function () {
   var _e = [new global.Error(), 1, -27];
-  var null5 = function null5() {
+  var null1 = function null1() {
     return true;
   };
-  null5.__closure = {};
-  null5.__workletHash = 5905499609227;
-  null5.__initData = _worklet_5905499609227_init_data;
-  null5.__stackDetails = _e;
-  return null5;
+  null1.__closure = {};
+  null1.__workletHash = 5099191671055;
+  null1.__initData = _worklet_5099191671055_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }();"
 `;
 
 exports[`babel plugin generally supports recursive calls 1`] = `
 "var a = 1;
-var _worklet_6107791632120_init_data = {
-  code: "function foo_null6(t){const foo_null6=this._recur;const{a}=this.__closure;if(t>0){return a+foo_null6(t-1);}}",
+var _worklet_12624627966719_init_data = {
+  code: "function foo_null1(t){const foo_null1=this._recur;const{a}=this.__closure;if(t>0){return a+foo_null1(t-1);}}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = function () {
   var _e = [new global.Error(), -2, -27];
-  var foo_null6 = function foo_null6(t) {
+  var foo_null1 = function foo_null1(t) {
     if (t > 0) {
       return a + foo(t - 1);
     }
   };
-  foo_null6.__closure = {
+  foo_null1.__closure = {
     a: a
   };
-  foo_null6.__workletHash = 6107791632120;
-  foo_null6.__initData = _worklet_6107791632120_init_data;
-  foo_null6.__stackDetails = _e;
-  return foo_null6;
+  foo_null1.__workletHash = 12624627966719;
+  foo_null1.__initData = _worklet_12624627966719_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
 }();"
 `;
 
@@ -2501,4 +2501,101 @@ function Box() {
     })]
   });
 }"
+`;
+
+exports[`babel plugin names appends file name to function name 1`] = `
+"var _worklet_3008648901742_init_data = {
+  code: "function foo_sourceJs1(){return 1;}",
+  location: "/Users/bigpoppe/swmansion/reanimated/main/react-native-reanimated/packages/react-native-reanimated/source.js",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo_sourceJs1 = function foo_sourceJs1() {
+    return 1;
+  };
+  foo_sourceJs1.__closure = {};
+  foo_sourceJs1.__workletHash = 3008648901742;
+  foo_sourceJs1.__initData = _worklet_3008648901742_init_data;
+  foo_sourceJs1.__stackDetails = _e;
+  return foo_sourceJs1;
+}();"
+`;
+
+exports[`babel plugin names appends library name to function name 1`] = `
+"var _worklet_1237424241422_init_data = {
+  code: "function foo_library_sourceJs1(){return 1;}",
+  location: "/Users/bigpoppe/swmansion/reanimated/main/react-native-reanimated/packages/react-native-reanimated/node_modules/library/source.js",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo_library_sourceJs1 = function foo_library_sourceJs1() {
+    return 1;
+  };
+  foo_library_sourceJs1.__closure = {};
+  foo_library_sourceJs1.__workletHash = 1237424241422;
+  foo_library_sourceJs1.__initData = _worklet_1237424241422_init_data;
+  foo_library_sourceJs1.__stackDetails = _e;
+  return foo_library_sourceJs1;
+}();"
+`;
+
+exports[`babel plugin names handles names with illegal characters 1`] = `
+"var _worklet_16115589986830_init_data = {
+  code: "function foo_SourceJs1(){return 1;}",
+  location: "/Users/bigpoppe/swmansion/reanimated/main/react-native-reanimated/packages/react-native-reanimated/-source.js",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo_SourceJs1 = function foo_SourceJs1() {
+    return 1;
+  };
+  foo_SourceJs1.__closure = {};
+  foo_SourceJs1.__workletHash = 16115589986830;
+  foo_SourceJs1.__initData = _worklet_16115589986830_init_data;
+  foo_SourceJs1.__stackDetails = _e;
+  return foo_SourceJs1;
+}();"
+`;
+
+exports[`babel plugin names unnamed ArrowFunctionExpression 1`] = `
+"var _worklet_1420107288296_init_data = {
+  code: "function null1(){return 1;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+(function () {
+  var _e = [new global.Error(), 1, -27];
+  var null1 = function null1() {
+    return 1;
+  };
+  null1.__closure = {};
+  null1.__workletHash = 1420107288296;
+  null1.__initData = _worklet_1420107288296_init_data;
+  null1.__stackDetails = _e;
+  return null1;
+})();"
+`;
+
+exports[`babel plugin names unnamed FunctionExpression 1`] = `
+"var _worklet_1420107288296_init_data = {
+  code: "function null1(){return 1;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+[function () {
+  var _e = [new global.Error(), 1, -27];
+  var null1 = function null1() {
+    return 1;
+  };
+  null1.__closure = {};
+  null1.__workletHash = 1420107288296;
+  null1.__initData = _worklet_1420107288296_init_data;
+  null1.__stackDetails = _e;
+  return null1;
+}()]();"
 `;

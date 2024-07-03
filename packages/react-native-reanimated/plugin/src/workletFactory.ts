@@ -33,6 +33,7 @@ import {
   objectProperty,
   returnStatement,
   stringLiteral,
+  toIdentifier,
   variableDeclaration,
   variableDeclarator,
 } from '@babel/types';
@@ -120,6 +121,7 @@ export function makeWorkletFactory(
 
   let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
+    state,
     variables,
     functionName,
     transformed.map
@@ -325,44 +327,38 @@ function hash(str: string): number {
   return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
 }
 
-let functionId = 1;
-
 function makeWorkletName(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
 ): string {
-  let source = 'unknown_file';
+  let source = 'unknownFile';
 
   if (state.file.opts.filename) {
     const filepath = state.file.opts.filename;
-    // Take the file name without extension.
-    source = basename(filepath).split('.')[0];
-    const splitFilepath = filepath.split('/');
+    source = basename(filepath);
+
     // Get the library name from the path.
+    const splitFilepath = filepath.split('/');
     const nodeModulesIndex = splitFilepath.indexOf('node_modules');
     if (nodeModulesIndex !== -1) {
-      // Remove all non-alphanumeric characters.
-      const libraryName = splitFilepath[nodeModulesIndex + 1].replace(
-        /\W/g,
-        ''
-      );
+      const libraryName = splitFilepath[nodeModulesIndex + 1];
       source = libraryName + '_' + source;
     }
   }
 
-  const suffix = source + functionId++;
+  const suffix = source + state.workletNumber++;
   if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
-    return fun.node.key.name + '_' + suffix;
+    return toIdentifier(fun.node.key.name + '_' + suffix);
   }
   if (isFunctionDeclaration(fun.node) && isIdentifier(fun.node.id)) {
-    return fun.node.id.name + '_' + suffix;
+    return toIdentifier(fun.node.id.name + '_' + suffix);
   }
   if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
-    return fun.node.id.name + '_' + suffix;
+    return toIdentifier(fun.node.id.name + '_' + suffix);
   }
 
   // Fallback for ArrowFunctionExpression and unnamed FunctionExpression.
-  return suffix;
+  return toIdentifier(suffix);
 }
 
 function makeArrayFromCapturedBindings(
