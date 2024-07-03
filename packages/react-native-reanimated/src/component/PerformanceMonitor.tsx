@@ -8,8 +8,8 @@ import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
 
-type CircularAccumulator = ReturnType<typeof contructCircularAccumulator>;
-const contructCircularAccumulator = (length: number, expectedFps: number) => {
+type CircularAccumulator = ReturnType<typeof constructCircularAccumulator>;
+const constructCircularAccumulator = (length: number, expectedFps: number) => {
   'worklet';
   return {
     mainAccumulator: 0 as number,
@@ -166,7 +166,7 @@ function JsPerformance({
 }: PerformanceProps) {
   const jsFps = useSharedValue<string | null>(null);
   const circularAccumulator = useRef<CircularAccumulator>(
-    contructCircularAccumulator(smoothingCoefficient, expectedFps)
+    constructCircularAccumulator(smoothingCoefficient, expectedFps)
   );
 
   useEffect(() => {
@@ -208,7 +208,7 @@ function UiPerformance({
   useFrameCallback(({ timeSincePreviousFrame }: FrameInfo) => {
     'worklet';
     if (circularAccumulator.value === null) {
-      circularAccumulator.value = contructCircularAccumulator(
+      circularAccumulator.value = constructCircularAccumulator(
         smoothingCoefficient,
         expectedFps
       );
