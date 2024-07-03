@@ -9,7 +9,7 @@ import { createAnimatedComponent } from '../createAnimatedComponent';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
 
 type CircularAccumulator = ReturnType<typeof contructCircularAccumulator>;
-const contructCircularAccumulator = (length: number) => {
+const contructCircularAccumulator = (length: number, expectedFps: number) => {
   'worklet';
   return {
     mainAccumulator: 0 as number,
@@ -21,6 +21,7 @@ const contructCircularAccumulator = (length: number) => {
     length,
 
     previousTimestamp: 0 as number,
+    expectedFps,
 
     arrayEndHandler() {
       this.errorRateAccumulator += this.memoryAccumulator;
@@ -63,8 +64,6 @@ const contructCircularAccumulator = (length: number) => {
   };
 };
 
-const DEFAULT_BUFFER_SIZE = 20;
-
 addWhitelistedNativeProps({ text: true });
 const AnimatedTextInput = createAnimatedComponent(TextInput);
 
@@ -85,10 +84,18 @@ function loopAnimationFrame(fn: (lastTime: number, time: number) => void) {
   loop();
 }
 
-function JsPerformance() {
+type PerformanceProps = {
+  expectedFps: number;
+  smoothingCoefficient: number;
+};
+
+function JsPerformance({
+  expectedFps,
+  smoothingCoefficient,
+}: PerformanceProps) {
   const jsFps = useSharedValue<string | null>(null);
   const circularAccumulator = useRef<CircularAccumulator>(
-    contructCircularAccumulator(DEFAULT_BUFFER_SIZE)
+    contructCircularAccumulator(smoothingCoefficient, expectedFps)
   );
 
   useEffect(() => {
@@ -120,15 +127,20 @@ function JsPerformance() {
   );
 }
 
-function UiPerformance() {
+function UiPerformance({
+  expectedFps,
+  smoothingCoefficient,
+}: PerformanceProps) {
   const uiFps = useSharedValue<string | null>(null);
   const circularAccumulator = useSharedValue<CircularAccumulator | null>(null);
 
   useFrameCallback(({ timeSincePreviousFrame }: FrameInfo) => {
     'worklet';
     if (circularAccumulator.value === null) {
-      circularAccumulator.value =
-        contructCircularAccumulator(DEFAULT_BUFFER_SIZE);
+      circularAccumulator.value = contructCircularAccumulator(
+        smoothingCoefficient,
+        expectedFps
+      );
     }
     if (!timeSincePreviousFrame) {
       return;
@@ -159,11 +171,27 @@ function UiPerformance() {
   );
 }
 
-export function PerformanceMonitor() {
+const DEFAULT_EXPECTED_FPS = 60;
+const DEFAULT_BUFFER_SIZE = 20;
+
+export type PerformanceMonitorProps = {
+  expectedFps?: number;
+  smoothingCoefficient?: number;
+};
+export function PerformanceMonitor({
+  expectedFps,
+  smoothingCoefficient,
+}: PerformanceMonitorProps) {
   return (
     <View style={styles.monitor}>
-      <JsPerformance />
-      <UiPerformance />
+      <JsPerformance
+        expectedFps={expectedFps ?? DEFAULT_EXPECTED_FPS}
+        smoothingCoefficient={smoothingCoefficient ?? DEFAULT_BUFFER_SIZE}
+      />
+      <UiPerformance
+        expectedFps={expectedFps ?? DEFAULT_EXPECTED_FPS}
+        smoothingCoefficient={smoothingCoefficient ?? DEFAULT_BUFFER_SIZE}
+      />
     </View>
   );
 }
