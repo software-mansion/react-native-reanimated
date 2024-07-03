@@ -32,6 +32,8 @@ target 'FabricExample' do
     # Pods for testing
   end
 
+  pod 'RNFlashList', :path => '../../../node_modules/@shopify/flash-list'
+
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(

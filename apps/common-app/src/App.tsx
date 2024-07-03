@@ -33,6 +33,8 @@ function isFabric(): boolean {
   return !!(global as Record<string, unknown>)._IS_FABRIC;
 }
 
+const noop = () => undefined;
+
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;
 };
@@ -200,7 +202,7 @@ export default function App() {
     };
 
     if (!isReady) {
-      restoreState();
+      restoreState().catch(noop);
     }
   }, [isReady]);
 
@@ -219,9 +221,11 @@ export default function App() {
       <NavigationContainer
         linking={linking}
         initialState={initialState}
-        onStateChange={(state) =>
-          AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
-        }>
+        onStateChange={(state) => {
+          AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state)).catch(
+            noop
+          );
+        }}>
         <Stack.Navigator>
           <Stack.Screen
             name="Home"

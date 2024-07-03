@@ -45,6 +45,7 @@
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "@react-navigation/stack": "^6.3.18",
+    "@shopify/flash-list": "^1.6.4",
     "@stylexjs/babel-plugin": "^0.7.0",
     "@tsconfig/react-native": "^3.0.0",
     "@types/d3-shape": "^3.1.1",

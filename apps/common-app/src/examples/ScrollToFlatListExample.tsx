@@ -3,18 +3,19 @@ import Animated, {
   scrollTo,
   useAnimatedRef,
 } from 'react-native-reanimated';
+import type { ListRenderItem } from 'react-native';
 import { Button, StyleSheet, Switch, Text, View } from 'react-native';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
-export default function ScrollToExample() {
+export default function ScrollToFlatListExample() {
   const [animated, setAnimated] = React.useState(true);
 
-  const aref = useAnimatedRef<Animated.ScrollView>();
+  const aref = useAnimatedRef<Animated.FlatList<number>>();
 
   const scrollFromJS = () => {
     console.log(_WORKLET);
-    aref.current?.scrollTo({ y: Math.random() * 2000, animated });
+    aref.current?.scrollToOffset({ offset: Math.random() * 2000, animated });
   };
 
   const scrollFromUI = () => {
@@ -23,6 +24,11 @@ export default function ScrollToExample() {
       scrollTo(aref, 0, Math.random() * 2000, animated);
     })();
   };
+
+  const renderItem = useCallback<ListRenderItem<number>>(
+    ({ item }) => <Text style={styles.text}>{item}</Text>,
+    []
+  );
 
   return (
     <>
@@ -35,13 +41,12 @@ export default function ScrollToExample() {
         <Button onPress={scrollFromJS} title="Scroll from JS" />
         <Button onPress={scrollFromUI} title="Scroll from UI" />
       </View>
-      <Animated.ScrollView ref={aref} style={styles.scrollView}>
-        {[...Array(100)].map((_, i) => (
-          <Text key={i} style={styles.text}>
-            {i}
-          </Text>
-        ))}
-      </Animated.ScrollView>
+      <Animated.FlatList
+        ref={aref}
+        renderItem={renderItem}
+        data={[...Array(100).keys()]}
+        style={styles.flatList}
+      />
     </>
   );
 }
@@ -55,7 +60,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     alignItems: 'center',
   },
-  scrollView: {
+  flatList: {
     flex: 1,
     width: '100%',
   },

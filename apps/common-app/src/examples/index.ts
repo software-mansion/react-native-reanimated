@@ -95,7 +95,9 @@ import TransitionRestartExample from './SharedElementTransitions/TransitionResta
 import ScreenStackExample from './ScreenStackExample';
 import ScreenStackHeaderConfigBackgroundColorExample from './ScreenStackHeaderConfigBackgroundColorExample';
 import ScrollEventExample from './ScrollEventExample';
-import ScrollToExample from './ScrollToExample';
+import ScrollToScrollViewExample from './ScrollToScrollViewExample';
+import ScrollToFlatListExample from './ScrollToFlatListExample';
+import ScrollToFlashListExample from './ScrollToFlashListExample';
 import ScrollViewExample from './ScrollViewExample';
 import ScrollViewOffsetExample from './ScrollViewOffsetExample';
 import ScrollableViewExample from './ScrollableViewExample';
@@ -354,10 +356,20 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'useAnimatedScrollHandler',
     screen: ScrollViewExample,
   },
-  ScrollToExample: {
+  ScrollToScrollViewExample: {
     icon: '🦘',
-    title: 'scrollTo',
-    screen: ScrollToExample,
+    title: 'scrollTo - ScrollView',
+    screen: ScrollToScrollViewExample,
+  },
+  ScrollToFlatListExample: {
+    icon: '🦆',
+    title: 'scrollTo - FlatList',
+    screen: ScrollToFlatListExample,
+  },
+  ScrollToFlashListExample: {
+    icon: '⚡',
+    title: 'scrollTo - FlashList',
+    screen: ScrollToFlashListExample,
   },
   ScrollViewOffsetExample: {
     icon: '𝌍',
