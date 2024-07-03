@@ -48,7 +48,7 @@ const contructCircularAccumulator = (length: number, expectedFps: number) => {
       }
 
       for (
-        let step = this.frameWeightScalingTable.length / 2;
+        let step = Math.floor(this.frameWeightScalingTable.length / 2);
         step > 1;
         step = Math.floor(step / 2)
       ) {
@@ -98,7 +98,7 @@ const contructCircularAccumulator = (length: number, expectedFps: number) => {
       return bestWeightValue;
     },
 
-    pushTimeDelta(timeDelta: number) {
+    pushTimeDelta(timeDelta: number, repetitions?: number) {
       if (this.iterator >= this.length) {
         this.arrayEndHandler();
       }
@@ -107,10 +107,18 @@ const contructCircularAccumulator = (length: number, expectedFps: number) => {
         return;
       }
 
+      if (repetitions === undefined) {
+        repetitions = this.getDynamicIterationWeight(timeDelta);
+      }
+
       this.mainAccumulator += timeDelta;
       this.memoryAccumulator -= this.circularArray[this.iterator];
       this.circularArray[this.iterator] = timeDelta;
       this.iterator += 1;
+
+      if (repetitions > 1) {
+        this.pushTimeDelta(timeDelta, repetitions - 1);
+      }
     },
 
     pushTimestamp(time: number) {
