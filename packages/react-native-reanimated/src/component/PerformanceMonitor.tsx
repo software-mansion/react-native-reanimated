@@ -39,8 +39,8 @@ const contructCircularAccumulator = (length: number, expectedFps: number) => {
       // issue: at 60fps, 20 smoothing, one complete buffer fill takes 0.33s
       //        at 10fps, 20 smoothing, one complete buffer fill takes 2s
       // solution: scale frame weight on smoothing linearly to how much it takes.
-      //        at 60fps, 20 smoothing, 1 frame will fill 1 element - 0.33s per fill
-      //        at 10fps, 20 smoothing, 1 frame will fill 6 elements - 0.33s per fill
+      //        at 60fps, 20 smoothing, 1 frame will set 1 element - 0.33s per fill
+      //        at 10fps, 20 smoothing, 1 frame will set 6 elements - 0.33s per fill
       // fill lookup table from weights 1 to 'length'
       for (let weight = 1; weight < this.length; weight++) {
         const minActivationTime = (1000 / this.expectedFps) * weight;
@@ -52,7 +52,6 @@ const contructCircularAccumulator = (length: number, expectedFps: number) => {
         step > 1;
         step = Math.floor(step / 2)
       ) {
-        console.log('STEP:', step, 'LEN:', this.frameWeightScalingTable.length);
         this.frameWeightScalingLookupSteps.push(step);
       }
     },
@@ -64,17 +63,16 @@ const contructCircularAccumulator = (length: number, expectedFps: number) => {
         return 1;
       }
 
-      let previousIndex = 0;
       let bestWeightValue = this.frameWeightScalingTable[0].weight;
       let bestWeightMinTime = this.frameWeightScalingTable[0].time;
+      let previousIndex = 0;
+      let previousMinTime = bestWeightMinTime;
       for (let i = 0; i < this.frameWeightScalingLookupSteps.length; i++) {
         const step = this.frameWeightScalingLookupSteps[i];
         const checkedIndex =
-          bestWeightMinTime < timeDelta
+          previousMinTime < timeDelta
             ? previousIndex + step
             : previousIndex - step;
-
-        previousIndex = checkedIndex;
 
         if (
           checkedIndex > this.frameWeightScalingTable.length ||
@@ -93,6 +91,9 @@ const contructCircularAccumulator = (length: number, expectedFps: number) => {
           bestWeightValue = currentWeightScalingObject.weight;
           bestWeightMinTime = currentWeightScalingObject.time;
         }
+
+        previousIndex = checkedIndex;
+        previousMinTime = currentWeightScalingObject.time;
       }
 
       return bestWeightValue;
