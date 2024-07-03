@@ -24,7 +24,7 @@ const constructCircularAccumulator = (length: number, expectedFps: number) => {
     // divisions are expensive, use lookup tables for them
     frameWeightScalingTable: [] as { time: number; weight: number }[],
     frameWeightScalingLookupSteps: [] as number[],
-    previousWeightScalingIndex: 0 as number, // optimalisation - previous weight most likely to be the current one as well.
+    previousWeightScalingIndex: 0 as number, // optimization - previous weight most likely to be the current one as well.
     expectedFps,
 
     arrayEndHandler() {
