@@ -6232,20 +6232,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shopify/flash-list@npm:^1.6.4":
-  version: 1.6.4
-  resolution: "@shopify/flash-list@npm:1.6.4"
-  dependencies:
-    recyclerlistview: "npm:4.2.0"
-    tslib: "npm:2.4.0"
-  peerDependencies:
-    "@babel/runtime": "*"
-    react: "*"
-    react-native: "*"
-  checksum: 10/8411d375d3471defcf52c205a7f4055fe99552031e9bcbcca85ced00a8df8a816e4019d09c70e67b48877cd2d91465d8ccbc4bbd3a39513559e326f158b56248
-  languageName: node
-  linkType: hard
-
 "@sideway/address@npm:^4.1.5":
   version: 4.1.5
   resolution: "@sideway/address@npm:4.1.5"
@@ -8895,7 +8881,6 @@ __metadata:
     "@react-navigation/native": "npm:^6.1.9"
     "@react-navigation/native-stack": "npm:^6.9.17"
     "@react-navigation/stack": "npm:^6.3.18"
-    "@shopify/flash-list": "npm:^1.6.4"
     "@stylexjs/babel-plugin": "npm:^0.7.0"
     "@tsconfig/react-native": "npm:^3.0.0"
     "@types/d3-shape": "npm:^3.1.1"
@@ -14639,7 +14624,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash.debounce@npm:4.0.8, lodash.debounce@npm:^4.0.8":
+"lodash.debounce@npm:^4.0.8":
   version: 4.0.8
   resolution: "lodash.debounce@npm:4.0.8"
   checksum: 10/cd0b2819786e6e80cb9f5cda26b1a8fc073daaf04e48d4cb462fa4663ec9adb3a5387aa22d7129e48eed1afa05b482e2a6b79bfc99b86886364449500cbb00fd
@@ -16868,7 +16853,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prop-types@npm:15.8.1, prop-types@npm:^15.7.2, prop-types@npm:^15.8.1":
+"prop-types@npm:^15.7.2, prop-types@npm:^15.8.1":
   version: 15.8.1
   resolution: "prop-types@npm:15.8.1"
   dependencies:
@@ -17736,20 +17721,6 @@ __metadata:
   dependencies:
     resolve: "npm:^1.1.6"
   checksum: 10/fe76bf9c21875ac16e235defedd7cbd34f333c02a92546142b7911a0f7c7059d2e16f441fe6fb9ae203f459c05a31b2bcf26202896d89e390eda7514d5d2702b
-  languageName: node
-  linkType: hard
-
-"recyclerlistview@npm:4.2.0":
-  version: 4.2.0
-  resolution: "recyclerlistview@npm:4.2.0"
-  dependencies:
-    lodash.debounce: "npm:4.0.8"
-    prop-types: "npm:15.8.1"
-    ts-object-utils: "npm:0.0.5"
-  peerDependencies:
-    react: ">= 15.2.1"
-    react-native: ">= 0.30.0"
-  checksum: 10/84c2fc1ee7d109e21ca30813f646a5d490a33fa789d1fb3f7f7854c191895de010109563ba1c67a35ec28340a872a039ceb6233a57053480098c48205fc147e9
   languageName: node
   linkType: hard
 
@@ -19625,13 +19596,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-object-utils@npm:0.0.5":
-  version: 0.0.5
-  resolution: "ts-object-utils@npm:0.0.5"
-  checksum: 10/83c48fbdaba392fb2c01cea53b267ed5538d2bb44fc6c3eecc10bcfabc1780bfa6ec8569b52bbf0140d9b521d9049d5f15884e12286918244d463d854dbc73cb
-  languageName: node
-  linkType: hard
-
 "ts-prune@npm:^0.10.3":
   version: 0.10.3
   resolution: "ts-prune@npm:0.10.3"
@@ -19657,13 +19621,6 @@ __metadata:
     minimist: "npm:^1.2.6"
     strip-bom: "npm:^3.0.0"
   checksum: 10/2041beaedc6c271fc3bedd12e0da0cc553e65d030d4ff26044b771fac5752d0460944c0b5e680f670c2868c95c664a256cec960ae528888db6ded83524e33a14
-  languageName: node
-  linkType: hard
-
-"tslib@npm:2.4.0":
-  version: 2.4.0
-  resolution: "tslib@npm:2.4.0"
-  checksum: 10/d8379e68b36caf082c1905ec25d17df8261e1d68ddc1abfd6c91158a064f6e4402039ae7c02cf4c81d12e3a2a2c7cd8ea2f57b233eb80136a2e3e7279daf2911
   languageName: node
   linkType: hard
 
