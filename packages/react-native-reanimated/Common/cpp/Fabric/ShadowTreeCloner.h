@@ -5,8 +5,8 @@
 #include <react/renderer/uimanager/UIManager.h>
 
 #include <memory>
-#include <unordered_set>
 #include <unordered_map>
+#include <vector>
 
 using namespace facebook;
 using namespace react;
@@ -15,7 +15,9 @@ namespace reanimated {
 
 ShadowNode::Unshared cloneShadowTreeWithNewProps(
     const ShadowNode::Shared &oldRootNode,
-    std::unordered_map<const ShadowNodeFamily*, std::vector<std::shared_ptr<RawProps>>> &propsMap);
+    std::unordered_map<
+        const ShadowNodeFamily *,
+        std::vector<std::shared_ptr<RawProps>>> &propsMap);
 
 } // namespace reanimated
 

@@ -1,6 +1,8 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <react/renderer/core/ComponentDescriptor.h>
+#include <unordered_map>
+#include <vector>
 
 #include "ReanimatedCommitHook.h"
 #include "ReanimatedCommitMarker.h"
@@ -38,7 +40,10 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   // ShadowTree not commited by Reanimated, apply updates from PropsRegistry
 
   auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
-  std::unordered_map<const ShadowNodeFamily*, std::vector<std::shared_ptr<RawProps>>> propsMap;
+  std::unordered_map<
+      const ShadowNodeFamily *,
+      std::vector<std::shared_ptr<RawProps>>>
+      propsMap;
 
   {
     auto lock = propsRegistry_->createLock();
@@ -47,8 +52,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
         [&](const ShadowNodeFamily &family, const folly::dynamic &props) {
           propsMap[&family].push_back(std::make_shared<RawProps>(props));
         });
-    
-    rootNode = std::static_pointer_cast<RootShadowNode>(cloneShadowTreeWithNewProps(rootNode, propsMap));
+
+    rootNode = std::static_pointer_cast<RootShadowNode>(
+        cloneShadowTreeWithNewProps(rootNode, propsMap));
   }
 
   // If the commit comes from React Native then skip one commit from Reanimated

@@ -720,24 +720,28 @@ void NativeReanimatedModule::performOperations() {
     shadowTree.commit(
         [&](RootShadowNode const &oldRootShadowNode)
             -> RootShadowNode::Unshared {
-          std::unordered_map<const ShadowNodeFamily*, std::vector<std::shared_ptr<RawProps>>> propsMap;
+          std::unordered_map<
+              const ShadowNodeFamily *,
+              std::vector<std::shared_ptr<RawProps>>>
+              propsMap;
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
-              for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-                auto family = &shadowNode->getFamily();
-                propsMap[family].push_back(std::make_shared<RawProps>(rt, *props));
-                
+          for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+            auto family = &shadowNode->getFamily();
+            propsMap[family].push_back(std::make_shared<RawProps>(rt, *props));
+
 #if REACT_NATIVE_MINOR_VERSION >= 73
-                // Fix for catching nullptr returned from commit hook was
-                // introduced in 0.72.4 but we have only check for minor version
-                // of React Native so enable that optimization in React Native >=
-                // 0.73
-                if (propsRegistry_->shouldReanimatedSkipCommit()) {
-                  return nullptr;
-                }
+            // Fix for catching nullptr returned from commit hook was
+            // introduced in 0.72.4 but we have only check for minor version
+            // of React Native so enable that optimization in React Native >=
+            // 0.73
+            if (propsRegistry_->shouldReanimatedSkipCommit()) {
+              return nullptr;
+            }
 #endif
-              }
-          return std::static_pointer_cast<RootShadowNode>(cloneShadowTreeWithNewProps(rootNode, propsMap));
+          }
+          return std::static_pointer_cast<RootShadowNode>(
+              cloneShadowTreeWithNewProps(rootNode, propsMap));
         },
         { /* .enableStateReconciliation = */
           false,
