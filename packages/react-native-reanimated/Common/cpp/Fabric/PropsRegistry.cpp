@@ -25,10 +25,10 @@ void PropsRegistry::update(
 }
 
 void PropsRegistry::for_each(std::function<void(
-                                 const ShadowNodeFamily &family,
+                                 const ShadowNode::Shared &shadowNode,
                                  const folly::dynamic &props)> callback) const {
   for (const auto &[_, value] : map_) {
-    callback(value.first->getFamily(), value.second);
+    callback(value.first, value.second);
   }
 }
 

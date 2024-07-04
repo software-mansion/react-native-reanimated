@@ -38,22 +38,16 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   // ShadowTree not commited by Reanimated, apply updates from PropsRegistry
 
   auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
+  std::vector<ShadowNode::Shared> nodes;
+  std::unordered_map<const ShadowNodeFamily*, std::vector<std::shared_ptr<RawProps>>> propsMap;
 
   {
     auto lock = propsRegistry_->createLock();
 
     propsRegistry_->for_each(
-        [&](const ShadowNodeFamily &family, const folly::dynamic &props) {
-          auto newRootNode =
-              cloneShadowTreeWithNewProps(rootNode, family, RawProps(props));
-
-          if (newRootNode == nullptr) {
-            // this happens when React removed the component but Reanimated
-            // still tries to animate it, let's skip update for this specific
-            // component
-            return;
-          }
-          rootNode = newRootNode;
+        [&](const ShadowNode::Shared &shadowNode, const folly::dynamic &props) {
+          propsMap[&shadowNode->getFamily()].push_back(std::make_shared<RawProps>(props));
+          nodes.push_back(shadowNode);
         });
   }
 
@@ -63,7 +57,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   // applied in ReanimatedCommitHook by iterating over PropsRegistry.
   propsRegistry_->pleaseSkipReanimatedCommit();
 
-  return std::static_pointer_cast<RootShadowNode>(rootNode);
+  return std::static_pointer_cast<RootShadowNode>(cloneShadowTreeWithNewProps(rootNode, nodes, propsMap));
 }
 
 } // namespace reanimated

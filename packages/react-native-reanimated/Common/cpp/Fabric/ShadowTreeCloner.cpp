@@ -6,60 +6,57 @@
 
 namespace reanimated {
 
+ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(std::unordered_map<const ShadowNodeFamily*, std::unordered_set<int>> &childrenMap, const ShadowNode::Shared &shadowNode, std::unordered_map<const ShadowNodeFamily*, std::vector<std::shared_ptr<RawProps>>> &propsMap){
+  auto family = &shadowNode->getFamily();
+  auto children = shadowNode->getChildren();
+  auto& childrenSet = childrenMap[family];
+  
+  for (auto& index: childrenSet){
+    children[index] = cloneShadowTreeWithNewPropsRecursive(childrenMap, children[index], propsMap);
+  }
+  
+  Props::Shared newProps = nullptr;
+  
+  if (propsMap.contains(family)){
+    PropsParserContext propsParserContext{shadowNode->getSurfaceId(), *shadowNode->getContextContainer()};
+    newProps = shadowNode->getProps();
+    for (auto& props: propsMap[family]){
+      newProps = shadowNode->getComponentDescriptor().cloneProps(propsParserContext, newProps, std::move(*props));
+    }
+  }
+  
+  auto result = shadowNode->clone(
+      {newProps ? newProps : ShadowNodeFragment::propsPlaceholder(),
+       std::make_shared<ShadowNode::ListOfShared>(children),
+        shadowNode->getState()});
+  
+  return result;
+}
+
 ShadowNode::Unshared cloneShadowTreeWithNewProps(
     const ShadowNode::Shared &oldRootNode,
-    const ShadowNodeFamily &family,
-    RawProps &&rawProps) {
-  // adapted from ShadowNode::cloneTree
-
-  auto ancestors = family.getAncestors(*oldRootNode);
-
-  if (ancestors.empty()) {
-    return ShadowNode::Unshared{nullptr};
-  }
-
-  auto &parent = ancestors.back();
-  auto &source = parent.first.get().getChildren().at(parent.second);
-
-  PropsParserContext propsParserContext{
-      source->getSurfaceId(), *source->getContextContainer()};
-  const auto props = source->getComponentDescriptor().cloneProps(
-      propsParserContext, source->getProps(), std::move(rawProps));
-
-  auto newChildNode = source->clone(
-      {/* .props = */ props,
-       ShadowNodeFragment::childrenPlaceholder(),
-       source->getState()});
-
-  for (auto it = ancestors.rbegin(); it != ancestors.rend(); ++it) {
-    auto &parentNode = it->first.get();
-    auto childIndex = it->second;
-
-    auto children = parentNode.getChildren();
-    const auto &oldChildNode = *children.at(childIndex);
-    react_native_assert(ShadowNode::sameFamily(oldChildNode, *newChildNode));
-
-    if (!parentNode.getSealed()) {
-      // Optimization: if a ShadowNode is unsealed, we can directly update its
-      // children instead of cloning the whole path to the root node.
-      auto &parentNodeNonConst = const_cast<ShadowNode &>(parentNode);
-      parentNodeNonConst.replaceChild(oldChildNode, newChildNode, childIndex);
-      // Unfortunately, `replaceChild` does not update Yoga nodes, so we need to
-      // update them manually here.
-      static_cast<YogaLayoutableShadowNode *>(&parentNodeNonConst)
-          ->updateYogaChildren();
-      return std::const_pointer_cast<ShadowNode>(oldRootNode);
+    std::vector<ShadowNode::Shared> nodes,
+    std::unordered_map<const ShadowNodeFamily*, std::vector<std::shared_ptr<RawProps>>> &propsMap) {
+  std::unordered_map<const ShadowNodeFamily*, std::unordered_set<int>> childrenMap;
+  
+  for (auto &node: nodes){
+    auto ancestors = node->getFamily().getAncestors(*oldRootNode);
+    
+    for (auto it = ancestors.rbegin(); it != ancestors.rend(); ++it) {
+      auto& parentNode = it->first.get();
+      auto index = it->second;
+      auto family = &parentNode.getFamily();
+      auto& childrenSet = childrenMap[family];
+      
+      childrenSet.insert(index);
+      
+      if (childrenSet.size() > 1){
+        break;
+      }
     }
-
-    children[childIndex] = newChildNode;
-
-    newChildNode = parentNode.clone(
-        {ShadowNodeFragment::propsPlaceholder(),
-         std::make_shared<ShadowNode::ListOfShared>(children),
-         parentNode.getState()});
   }
 
-  return std::const_pointer_cast<ShadowNode>(newChildNode);
+  return cloneShadowTreeWithNewPropsRecursive(childrenMap, oldRootNode, propsMap);
 }
 
 } // namespace reanimated
