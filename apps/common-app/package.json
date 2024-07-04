@@ -19,6 +19,7 @@
     "@react-navigation/native": "*",
     "@react-navigation/native-stack": "*",
     "@react-navigation/stack": "*",
+    "@shopify/flash-list": "*",
     "@stylexjs/babel-plugin": "*",
     "d3-shape": "*",
     "react": "*",
