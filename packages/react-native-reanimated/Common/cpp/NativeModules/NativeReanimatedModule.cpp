@@ -720,7 +720,6 @@ void NativeReanimatedModule::performOperations() {
     shadowTree.commit(
         [&](RootShadowNode const &oldRootShadowNode)
             -> RootShadowNode::Unshared {
-          std::vector<ShadowNode::Shared> nodes;
           std::unordered_map<const ShadowNodeFamily*, std::vector<std::shared_ptr<RawProps>>> propsMap;
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
@@ -737,9 +736,8 @@ void NativeReanimatedModule::performOperations() {
                   return nullptr;
                 }
 #endif
-                nodes.push_back(shadowNode);
               }
-          return std::static_pointer_cast<RootShadowNode>(cloneShadowTreeWithNewProps(rootNode, nodes, propsMap));
+          return std::static_pointer_cast<RootShadowNode>(cloneShadowTreeWithNewProps(rootNode, propsMap));
         },
         { /* .enableStateReconciliation = */
           false,

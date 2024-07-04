@@ -6,12 +6,12 @@
 
 namespace reanimated {
 
-ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(std::unordered_map<const ShadowNodeFamily*, std::unordered_set<int>> &childrenMap, const ShadowNode::Shared &shadowNode, std::unordered_map<const ShadowNodeFamily*, std::vector<std::shared_ptr<RawProps>>> &propsMap){
+ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(std::unordered_map<const ShadowNodeFamily*, std::vector<int>> &childrenMap, const ShadowNode::Shared &shadowNode, std::unordered_map<const ShadowNodeFamily*, std::vector<std::shared_ptr<RawProps>>> &propsMap){
   auto family = &shadowNode->getFamily();
   auto children = shadowNode->getChildren();
-  auto& childrenSet = childrenMap[family];
+  auto& affectedChildren = childrenMap[family];
   
-  for (auto& index: childrenSet){
+  for (auto& index: affectedChildren){
     children[index] = cloneShadowTreeWithNewPropsRecursive(childrenMap, children[index], propsMap);
   }
   
@@ -35,22 +35,21 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(std::unordered_map<con
 
 ShadowNode::Unshared cloneShadowTreeWithNewProps(
     const ShadowNode::Shared &oldRootNode,
-    std::vector<ShadowNode::Shared> nodes,
     std::unordered_map<const ShadowNodeFamily*, std::vector<std::shared_ptr<RawProps>>> &propsMap) {
-  std::unordered_map<const ShadowNodeFamily*, std::unordered_set<int>> childrenMap;
+  std::unordered_map<const ShadowNodeFamily*, std::vector<int>> childrenMap;
   
-  for (auto &node: nodes){
-    auto ancestors = node->getFamily().getAncestors(*oldRootNode);
+  for (auto &[family, _]: propsMap){
+    auto ancestors = family->getAncestors(*oldRootNode);
     
     for (auto it = ancestors.rbegin(); it != ancestors.rend(); ++it) {
       auto& parentNode = it->first.get();
       auto index = it->second;
-      auto family = &parentNode.getFamily();
-      auto& childrenSet = childrenMap[family];
+      auto parentFamily = &parentNode.getFamily();
+      auto& affectedChildren = childrenMap[parentFamily];
       
-      childrenSet.insert(index);
+      affectedChildren.push_back(index);
       
-      if (childrenSet.size() > 1){
+      if (affectedChildren.size() > 1){
         break;
       }
     }

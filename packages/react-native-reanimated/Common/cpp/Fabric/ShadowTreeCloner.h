@@ -15,7 +15,6 @@ namespace reanimated {
 
 ShadowNode::Unshared cloneShadowTreeWithNewProps(
     const ShadowNode::Shared &oldRootNode,
-    std::vector<ShadowNode::Shared> nodes,
     std::unordered_map<const ShadowNodeFamily*, std::vector<std::shared_ptr<RawProps>>> &propsMap);
 
 } // namespace reanimated
