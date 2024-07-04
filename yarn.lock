@@ -6232,17 +6232,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shopify/flash-list@npm:^1.6.4":
-  version: 1.6.4
-  resolution: "@shopify/flash-list@npm:1.6.4"
+"@shopify/flash-list@npm:^1.7.0":
+  version: 1.7.0
+  resolution: "@shopify/flash-list@npm:1.7.0"
   dependencies:
-    recyclerlistview: "npm:4.2.0"
-    tslib: "npm:2.4.0"
+    recyclerlistview: "npm:4.2.1"
+    tslib: "npm:2.6.3"
   peerDependencies:
     "@babel/runtime": "*"
     react: "*"
     react-native: "*"
-  checksum: 10/8411d375d3471defcf52c205a7f4055fe99552031e9bcbcca85ced00a8df8a816e4019d09c70e67b48877cd2d91465d8ccbc4bbd3a39513559e326f158b56248
+  checksum: 10/91b2d66fa8d997e0dfccce431ab8436b12d628c0425925de50039b1db6cc8af0a7e7ca10214ff7a66023a1975542a0458d15e1ae2b9ef1a7f0011cd592cbf921
   languageName: node
   linkType: hard
 
@@ -8895,7 +8895,7 @@ __metadata:
     "@react-navigation/native": "npm:^6.1.9"
     "@react-navigation/native-stack": "npm:^6.9.17"
     "@react-navigation/stack": "npm:^6.3.18"
-    "@shopify/flash-list": "npm:^1.6.4"
+    "@shopify/flash-list": "npm:^1.7.0"
     "@stylexjs/babel-plugin": "npm:^0.7.0"
     "@tsconfig/react-native": "npm:^3.0.0"
     "@types/d3-shape": "npm:^3.1.1"
@@ -11403,6 +11403,7 @@ __metadata:
     "@react-native/typescript-config": "npm:0.74.81"
     "@react-navigation/native": "npm:^6.1.9"
     "@react-navigation/native-stack": "npm:^6.9.17"
+    "@shopify/flash-list": "npm:^1.7.0"
     "@types/react": "npm:^18.2.6"
     "@types/react-test-renderer": "npm:^18.0.0"
     babel-jest: "npm:^29.6.3"
@@ -16309,6 +16310,7 @@ __metadata:
     "@react-native/typescript-config": "npm:0.74.81"
     "@react-navigation/native": "npm:^6.1.9"
     "@react-navigation/native-stack": "npm:^6.9.17"
+    "@shopify/flash-list": "npm:^1.7.0"
     "@types/jest": "npm:^29.2.1"
     "@types/react": "npm:^18.2.6"
     "@types/react-test-renderer": "npm:^18.0.0"
@@ -17740,9 +17742,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"recyclerlistview@npm:4.2.0":
-  version: 4.2.0
-  resolution: "recyclerlistview@npm:4.2.0"
+"recyclerlistview@npm:4.2.1":
+  version: 4.2.1
+  resolution: "recyclerlistview@npm:4.2.1"
   dependencies:
     lodash.debounce: "npm:4.0.8"
     prop-types: "npm:15.8.1"
@@ -17750,7 +17752,7 @@ __metadata:
   peerDependencies:
     react: ">= 15.2.1"
     react-native: ">= 0.30.0"
-  checksum: 10/84c2fc1ee7d109e21ca30813f646a5d490a33fa789d1fb3f7f7854c191895de010109563ba1c67a35ec28340a872a039ceb6233a57053480098c48205fc147e9
+  checksum: 10/9c5080bfeb59a5b3127bf7b66338278b7fbc40a56aa1644add7e3de280a1f24458c49fdb08299058041f3afe49a085d06cfdfc997852345c4e9090ef48d27da6
   languageName: node
   linkType: hard
 
@@ -19661,10 +19663,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:2.4.0":
-  version: 2.4.0
-  resolution: "tslib@npm:2.4.0"
-  checksum: 10/d8379e68b36caf082c1905ec25d17df8261e1d68ddc1abfd6c91158a064f6e4402039ae7c02cf4c81d12e3a2a2c7cd8ea2f57b233eb80136a2e3e7279daf2911
+"tslib@npm:2.6.3":
+  version: 2.6.3
+  resolution: "tslib@npm:2.6.3"
+  checksum: 10/52109bb681f8133a2e58142f11a50e05476de4f075ca906d13b596ae5f7f12d30c482feb0bff167ae01cfc84c5803e575a307d47938999246f5a49d174fc558c
   languageName: node
   linkType: hard
 
