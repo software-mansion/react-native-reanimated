@@ -33,7 +33,10 @@ public class TabNavigatorObserver {
             .getParentFragmentManager()
             .registerFragmentLifecycleCallbacks(new FragmentLifecycleCallbacks(fragment), true);
       }
-    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+    } catch (NoSuchMethodException
+        | InvocationTargetException
+        | IllegalAccessException
+        | IllegalArgumentException e) {
       String message = e.getMessage() != null ? e.getMessage() : "Unable to get screen fragment";
       Log.e("[Reanimated]", message);
     }
@@ -53,7 +56,10 @@ public class TabNavigatorObserver {
         View screen = (View) getScreen.invoke(fragment);
         getActivityState = screen.getClass().getMethod("getActivityState");
         addScreenListener(screen);
-      } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+      } catch (IllegalAccessException
+          | InvocationTargetException
+          | NoSuchMethodException
+          | IllegalArgumentException e) {
         String message =
             e.getMessage() != null ? e.getMessage() : "Unable to get screen activity state";
         Log.e("[Reanimated]", message);
@@ -108,7 +114,7 @@ public class TabNavigatorObserver {
           nextTransition.add(firstScreen);
         }
         firstScreen = null;
-      } catch (IllegalAccessException | InvocationTargetException e) {
+      } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
         String message = e.getMessage() != null ? e.getMessage() : "Unable to get screen view";
         Log.e("[Reanimated]", message);
       }
