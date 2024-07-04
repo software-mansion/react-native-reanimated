@@ -59,6 +59,8 @@ export function makeUIMutable<Value>(initial: Value): Mutable<Value> {
 
 export function makeMutable<Value>(initial: Value): Mutable<Value> {
   let value: Value = initial;
+  let dirty = false;
+
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
@@ -71,6 +73,7 @@ export function makeMutable<Value>(initial: Value): Mutable<Value> {
     : undefined;
   const mutable: Mutable<Value> = {
     set value(newValue) {
+      dirty = true;
       if (SHOULD_BE_USE_WEB) {
         valueSetter(mutable, newValue);
       } else {
@@ -83,6 +86,11 @@ export function makeMutable<Value>(initial: Value): Mutable<Value> {
       if (SHOULD_BE_USE_WEB) {
         return value;
       }
+      if (dirty) {
+        console.warn(
+          '[Reanimated] You are reading an outdated value of mutable on the JS thread. Consider using the `worklet` to read the latest value.'
+        );
+      }
       const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
         return sv.value;
       });
@@ -94,6 +102,7 @@ export function makeMutable<Value>(initial: Value): Mutable<Value> {
           '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
         );
       }
+      dirty = false;
       value = newValue;
       listeners!.forEach((listener) => {
         listener(newValue);
