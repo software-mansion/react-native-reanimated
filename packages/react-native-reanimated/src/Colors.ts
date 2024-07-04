@@ -9,7 +9,7 @@
 /* eslint no-bitwise: 0 */
 import type { StyleProps } from './commonTypes';
 import { makeShareable } from './core';
-import { isAndroid, isWeb } from './PlatformChecker';
+import { isAndroid } from './PlatformChecker';
 
 interface RGB {
   r: number;
