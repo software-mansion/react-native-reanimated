@@ -142,7 +142,7 @@
     "madge": "^5.0.1",
     "prettier": "2.8.8",
     "react": "19.0.0-rc-fb9a90fa48-20240614",
-    "react-native": "0.75.0-rc.2",
+    "react-native": "0.75.0-rc.3",
     "react-native-builder-bob": "^0.18.3",
     "react-native-gesture-handler": "^2.16.2",
     "react-native-web": "0.19.11",

@@ -23,6 +23,6 @@
     "typescript": "~5.3.0"
   },
   "resolutions": {
-    "@react-native/codegen": "0.75.0-rc.2"
+    "@react-native/codegen": "0.75.0-rc.3"
   }
 }
