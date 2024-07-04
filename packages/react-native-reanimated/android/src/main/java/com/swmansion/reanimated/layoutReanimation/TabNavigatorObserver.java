@@ -33,10 +33,7 @@ public class TabNavigatorObserver {
             .getParentFragmentManager()
             .registerFragmentLifecycleCallbacks(new FragmentLifecycleCallbacks(fragment), true);
       }
-    } catch (NoSuchMethodException
-        | InvocationTargetException
-        | IllegalAccessException
-        | IllegalArgumentException e) {
+    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
       String message = e.getMessage() != null ? e.getMessage() : "Unable to get screen fragment";
       Log.e("[Reanimated]", message);
     }
@@ -50,16 +47,16 @@ public class TabNavigatorObserver {
     private final List<View> nextTransition = new ArrayList<>();
 
     public FragmentLifecycleCallbacks(Fragment fragment) {
+      if (!ScreensHelper.isScreenFragment(fragment)) {
+        return;
+      }
       try {
         Class<?> screenFragmentClass = fragment.getClass();
         getScreen = screenFragmentClass.getMethod("getScreen");
         View screen = (View) getScreen.invoke(fragment);
         getActivityState = screen.getClass().getMethod("getActivityState");
         addScreenListener(screen);
-      } catch (IllegalAccessException
-          | InvocationTargetException
-          | NoSuchMethodException
-          | IllegalArgumentException e) {
+      } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
         String message =
             e.getMessage() != null ? e.getMessage() : "Unable to get screen activity state";
         Log.e("[Reanimated]", message);
@@ -94,6 +91,9 @@ public class TabNavigatorObserver {
     }
 
     private void onFragmentUpdate(Fragment fragment, boolean isAttaching) {
+      if (!ScreensHelper.isScreenFragment(fragment)) {
+        return;
+      }
       try {
         View screen = (View) getScreen.invoke(fragment);
         if (getActivityState.invoke(screen) == null) {
@@ -114,7 +114,7 @@ public class TabNavigatorObserver {
           nextTransition.add(firstScreen);
         }
         firstScreen = null;
-      } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
+      } catch (IllegalAccessException | InvocationTargetException e) {
         String message = e.getMessage() != null ? e.getMessage() : "Unable to get screen view";
         Log.e("[Reanimated]", message);
       }
