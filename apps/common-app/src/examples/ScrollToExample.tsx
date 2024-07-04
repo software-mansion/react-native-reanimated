@@ -7,7 +7,12 @@ import Animated, {
 import type { ListRenderItem as FlatListRenderItem } from 'react-native';
 import { Button, StyleSheet, Switch, Text, View } from 'react-native';
 
-import React, { forwardRef, useCallback } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+} from 'react';
 import type {
   FlashListProps,
   ListRenderItem as FlashListRenderItem,
@@ -16,28 +21,25 @@ import { FlashList } from '@shopify/flash-list';
 
 const DATA = [...Array(100).keys()];
 
+const randomOffset = () => {
+  'worklet';
+  return Math.random() * 2000;
+};
+
 const AnimatedFlashList = Animated.createAnimatedComponent(
   FlashList
 ) as React.ComponentClass<AnimatedProps<FlashListProps<number>>>;
+
+type Scrollable = {
+  scrollFromJS: () => void;
+  scrollFromUI: () => void;
+};
 
 export default function ScrollToExample() {
   const [currentExample, setCurrentExample] = React.useState(0);
   const [animated, setAnimated] = React.useState(true);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const aref = useAnimatedRef<any>();
-
-  const scrollFromJS = () => {
-    console.log(_WORKLET);
-    aref.current?.scrollTo({ y: Math.random() * 2000, animated });
-  };
-
-  const scrollFromUI = () => {
-    runOnUI(() => {
-      console.log(_WORKLET);
-      scrollTo(aref, 0, Math.random() * 2000, animated);
-    })();
-  };
+  const ref = useRef<Scrollable>(null);
 
   const examples = [
     {
@@ -69,72 +71,136 @@ export default function ScrollToExample() {
         ))}
       </View>
       <View style={styles.buttons}>
-        <Switch
-          value={animated}
-          onValueChange={setAnimated}
-          style={styles.switch}
+        <View style={styles.optionsRow}>
+          <Text style={styles.switchLabel}>Animated</Text>
+          <Switch value={animated} onValueChange={setAnimated} />
+        </View>
+        <Button
+          onPress={() => ref.current?.scrollFromJS()}
+          title="Scroll from JS"
         />
-        <Button onPress={scrollFromJS} title="Scroll from JS" />
-        <Button onPress={scrollFromUI} title="Scroll from UI" />
+        <Button
+          onPress={() => ref.current?.scrollFromUI()}
+          title="Scroll from UI"
+        />
       </View>
-      <Example ref={aref} />
+      <Example ref={ref} animated={animated} />
     </>
   );
 }
 
-const ScrollViewExample = forwardRef<Animated.ScrollView>((_, aref) => (
-  <Animated.ScrollView ref={aref} style={styles.fill}>
-    {DATA.map((_, i) => (
-      <Text key={i} style={styles.text}>
-        {i}
-      </Text>
-    ))}
-  </Animated.ScrollView>
-));
+type ExampleProps = {
+  animated: boolean;
+};
 
-const FlatListExample = forwardRef<Animated.FlatList<number>>((_, aref) => {
-  const renderItem = useCallback<FlatListRenderItem<number>>(
-    ({ item }) => <Text style={styles.text}>{item}</Text>,
-    []
-  );
+const ScrollViewExample = forwardRef<Scrollable, ExampleProps>(
+  ({ animated }, ref) => {
+    const aref = useAnimatedRef<Animated.ScrollView>();
 
-  return (
-    <Animated.FlatList
-      ref={aref as React.RefObject<Animated.FlatList<number>>}
-      renderItem={renderItem}
-      data={DATA}
-      style={styles.fill}
-    />
-  );
-});
+    useImperativeHandle(ref, () => ({
+      scrollFromJS: () => {
+        console.log(_WORKLET);
+        aref.current?.scrollTo({ y: randomOffset(), animated });
+      },
+      scrollFromUI: () => {
+        runOnUI(() => {
+          console.log(_WORKLET);
+          scrollTo(aref, 0, randomOffset(), animated);
+        })();
+      },
+    }));
 
-const FlashListExample = forwardRef<Animated.FlatList<number>>((_, aref) => {
-  const renderItem = useCallback<FlashListRenderItem<number>>(
-    ({ item }) => <Text style={styles.text}>{item}</Text>,
-    []
-  );
+    return (
+      <Animated.ScrollView ref={aref} style={styles.fill}>
+        {DATA.map((_, i) => (
+          <Text key={i} style={styles.text}>
+            {i}
+          </Text>
+        ))}
+      </Animated.ScrollView>
+    );
+  }
+);
 
-  return (
-    <AnimatedFlashList
-      ref={aref as React.RefObject<FlashList<number>>}
-      estimatedItemSize={60}
-      renderItem={renderItem}
-      data={DATA}
-    />
-  );
-});
+const FlatListExample = forwardRef<Scrollable, ExampleProps>(
+  ({ animated }, ref) => {
+    const aref = useAnimatedRef<Animated.FlatList<number>>();
+
+    useImperativeHandle(ref, () => ({
+      scrollFromJS: () => {
+        console.log(_WORKLET);
+        aref.current?.scrollToOffset({ offset: randomOffset(), animated });
+      },
+      scrollFromUI: () => {
+        runOnUI(() => {
+          console.log(_WORKLET);
+          scrollTo(aref, 0, randomOffset(), animated);
+        })();
+      },
+    }));
+
+    const renderItem = useCallback<FlatListRenderItem<number>>(
+      ({ item }) => <Text style={styles.text}>{item}</Text>,
+      []
+    );
+
+    return (
+      <Animated.FlatList
+        ref={aref}
+        renderItem={renderItem}
+        data={DATA}
+        style={styles.fill}
+      />
+    );
+  }
+);
+
+const FlashListExample = forwardRef<Scrollable, ExampleProps>(
+  ({ animated }, ref) => {
+    const aref = useAnimatedRef<FlashList<number>>();
+
+    useImperativeHandle(ref, () => ({
+      scrollFromJS: () => {
+        console.log(_WORKLET);
+        aref.current?.scrollToOffset({ offset: randomOffset(), animated });
+      },
+      scrollFromUI: () => {
+        runOnUI(() => {
+          console.log(_WORKLET);
+          scrollTo(aref, 0, randomOffset(), animated);
+        })();
+      },
+    }));
+
+    const renderItem = useCallback<FlashListRenderItem<number>>(
+      ({ item }) => <Text style={styles.text}>{item}</Text>,
+      []
+    );
+
+    return (
+      <AnimatedFlashList
+        ref={aref}
+        estimatedItemSize={60}
+        renderItem={renderItem}
+        data={DATA}
+      />
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   optionsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
     gap: 10,
+    marginVertical: 10,
   },
-  switch: {
-    marginBottom: 10,
+  switchLabel: {
+    fontSize: 20,
   },
   buttons: {
-    marginTop: 80,
+    marginTop: 20,
     marginBottom: 40,
     alignItems: 'center',
   },
