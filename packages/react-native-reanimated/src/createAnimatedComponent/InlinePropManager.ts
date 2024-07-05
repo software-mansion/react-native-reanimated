@@ -8,14 +8,11 @@ import type {
 } from './commonTypes';
 import { flattenArray } from './utils';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
-import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
+import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { adaptViewConfig } from '../ConfigHelper';
 import updateProps from '../UpdateProps';
 import { stopMapper, startMapper } from '../mappers';
 import { isSharedValue } from '../isSharedValue';
-import { shouldBeUseWeb } from '../PlatformChecker';
-
-const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {
@@ -160,13 +157,10 @@ export class InlinePropManager implements IInlinePropManager {
       const shareableViewDescriptors =
         this._inlinePropsViewDescriptors.shareableViewDescriptors;
 
-      const maybeViewRef = SHOULD_BE_USE_WEB
-        ? ({ items: new Set([animatedComponent]) } as ViewRefSet<unknown>) // see makeViewsRefSet
-        : undefined;
       const updaterFunction = () => {
         'worklet';
         const update = getInlinePropsUpdate(newInlineProps);
-        updateProps(shareableViewDescriptors, update, maybeViewRef);
+        updateProps(shareableViewDescriptors, update);
       };
       this._inlineProps = newInlineProps;
       if (this._inlinePropsMapperId) {

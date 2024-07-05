@@ -10,5 +10,5 @@ export function setNativeProps<T extends Component>(
   updates: StyleProps
 ) {
   const component = animatedRef() as ReanimatedHTMLElement;
-  _updatePropsJS(updates, { _component: component });
+  _updatePropsJS(updates, component);
 }

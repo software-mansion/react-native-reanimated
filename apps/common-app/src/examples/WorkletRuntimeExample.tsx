@@ -74,7 +74,8 @@ function CreateWorkletRuntimeDemo() {
     const runtime = createWorkletRuntime('foo');
     console.log(runtime);
     console.log(runtime.name);
-    console.log(`${runtime.name}`);
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
+    console.log(`${runtime}`);
     console.log(String(runtime));
   };
 
