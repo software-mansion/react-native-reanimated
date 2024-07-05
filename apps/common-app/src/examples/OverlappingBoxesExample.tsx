@@ -1,4 +1,5 @@
 import Animated, {
+  runOnUI,
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
@@ -15,7 +16,9 @@ export default function OverlappingBoxesExample() {
   }));
 
   const handlePress = () => {
-    sv.value = sv.value === 1 ? 3 : 1;
+    runOnUI(() => {
+      sv.value = sv.value === 1 ? 3 : 1;
+    })();
   };
 
   return (

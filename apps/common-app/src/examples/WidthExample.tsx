@@ -2,6 +2,7 @@ import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
 import Animated, {
+  runOnUI,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -14,7 +15,9 @@ export default function WidthExample() {
   const sv = useSharedValue(0);
 
   const handleAnimateWidth = () => {
-    sv.value = withTiming(Math.random(), { duration: 300 });
+    runOnUI(() => {
+      sv.value = withTiming(Math.random(), { duration: 300 });
+    })();
   };
 
   const handleIncreasePadding = () => {

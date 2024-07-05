@@ -41,7 +41,8 @@ function getComponentOrScrollable(component: MaybeScrollableComponent) {
 export function useAnimatedRef<
   TComponent extends Component
 >(): AnimatedRef<TComponent> {
-  const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
+  const tagRef = useRef<number | ShadowNodeWrapper | null>(-1);
+  const tagValue = useSharedValue<number | ShadowNodeWrapper | null>(-1);
   const viewName = useSharedValue<string | null>(null);
 
   const ref = useRef<AnimatedRef<TComponent>>();
@@ -62,7 +63,7 @@ export function useAnimatedRef<
             : getTagValueFunction(getComponentOrScrollable(component));
         };
 
-        tag.value = getTagOrShadowNodeWrapper();
+        tagRef.current = tagValue.value = getTagOrShadowNodeWrapper();
 
         // On Fabric we have to unwrap the tag from the shadow node wrapper
         fun.getTag = isFabric()
@@ -77,7 +78,7 @@ export function useAnimatedRef<
               ?.uiViewClassName || 'RCTView';
         }
       }
-      return tag.value;
+      return tagRef.current;
     });
 
     fun.current = null;
@@ -85,7 +86,7 @@ export function useAnimatedRef<
     const animatedRefShareableHandle = makeShareableCloneRecursive({
       __init: () => {
         'worklet';
-        const f: AnimatedRefOnUI = () => tag.value;
+        const f: AnimatedRefOnUI = () => tagValue.value;
         f.viewName = viewName;
         return f;
       },

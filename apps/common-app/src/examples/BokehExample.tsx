@@ -1,5 +1,6 @@
 import Animated, {
   Easing,
+  runOnUI,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -11,6 +12,7 @@ import React, { useState } from 'react';
 const { width, height } = Dimensions.get('window');
 
 function randBetween(min: number, max: number) {
+  'worklet';
   return min + Math.random() * (max - min);
 }
 
@@ -29,9 +31,11 @@ function Circle() {
   const hue = useSharedValue(randBetween(100, 200));
 
   const update = () => {
-    left.value = withTiming(left.value + randBetween(-100, 100), config);
-    top.value = withTiming(top.value + randBetween(-100, 100), config);
-    hue.value = withTiming(hue.value + randBetween(0, 100), config);
+    runOnUI(() => {
+      left.value = withTiming(left.value + randBetween(-100, 100), config);
+      top.value = withTiming(top.value + randBetween(-100, 100), config);
+      hue.value = withTiming(hue.value + randBetween(0, 100), config);
+    })();
   };
 
   React.useEffect(() => {

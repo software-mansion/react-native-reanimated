@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { cancelAnimation } from '../animation';
 import type { SharedValue } from '../commonTypes';
-import { makeMutable } from '../core';
+import { makeMutable, runOnUI } from '../core';
 
 /**
  * Lets you define [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) in your components.
@@ -15,7 +15,9 @@ export function useSharedValue<Value>(initialValue: Value): SharedValue<Value> {
   const [mutable] = useState(() => makeMutable(initialValue));
   useEffect(() => {
     return () => {
-      cancelAnimation(mutable);
+      runOnUI(() => {
+        cancelAnimation(mutable);
+      })();
     };
   }, [mutable]);
   return mutable;

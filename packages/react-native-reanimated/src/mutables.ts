@@ -88,7 +88,7 @@ export function makeMutable<Value>(initial: Value): Mutable<Value> {
       }
       if (dirty) {
         console.warn(
-          '[Reanimated] You are reading an outdated value of mutable on the JS thread. Consider using the `worklet` to read the latest value.'
+          '[Reanimated] You are reading an outdated value of mutable on the JS thread. If you need to read the latest value, consider wrapping your code in runOnUI.'
         );
       }
       const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {

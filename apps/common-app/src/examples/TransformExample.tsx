@@ -35,8 +35,6 @@ export default function TransformExample() {
     setCount((c) => c + 1);
   };
 
-  console.log('render');
-
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.box, animatedStyle]}>

@@ -2,6 +2,7 @@ import { Button, StyleSheet, View } from 'react-native';
 
 import React, { useState } from 'react';
 import Animated, {
+  runOnUI,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -23,7 +24,9 @@ export default function NonLayoutPropAndRenderExample() {
   });
 
   const toggleColor = () => {
-    sv.value = !sv.value;
+    runOnUI(() => {
+      sv.value = !sv.value;
+    })();
   };
 
   const size = state ? 200 : 100;

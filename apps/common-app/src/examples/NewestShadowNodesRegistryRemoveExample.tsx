@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import React from 'react';
 import Animated, {
+  runOnUI,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -23,7 +24,9 @@ export default function NewestShadowNodesRegistryRemoveExample() {
   const handleAnimate = (e: GestureResponderEvent) => {
     e?.stopPropagation();
     ref.current = 1 - ref.current;
-    sv.value = withTiming(ref.current, { duration: 1500 });
+    runOnUI((value: number) => {
+      sv.value = withTiming(value, { duration: 1500 });
+    })(ref.current);
   };
 
   const handleToggle = (e: GestureResponderEvent) => {
