@@ -46,7 +46,7 @@ const constructCircularAccumulator = (length: number, expectedFps: number) => {
 
       for (
         let step = Math.floor(this.frameWeightScalingTable.length / 2);
-        step > 1;
+        step > 0;
         step = Math.floor(step / 2)
       ) {
         this.frameWeightScalingLookupSteps.push(step);
@@ -64,12 +64,8 @@ const constructCircularAccumulator = (length: number, expectedFps: number) => {
       let bestWeightMinTime = this.frameWeightScalingTable[0].time;
       let previousIndex = 0;
       let previousMinTime = bestWeightMinTime;
-      for (let i = 0; ; i++) {
-        const clampedIterator = Math.min(
-          i,
-          this.frameWeightScalingLookupSteps.length - 1
-        );
-        const step = this.frameWeightScalingLookupSteps[clampedIterator];
+      for (let i = 0; i < this.frameWeightScalingLookupSteps.length; i++) {
+        const step = this.frameWeightScalingLookupSteps[i];
         const checkedIndex =
           previousMinTime < timeDelta
             ? previousIndex + step
