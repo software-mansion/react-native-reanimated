@@ -83,14 +83,10 @@ LinearTransition.delay(500)
 ```
 
 - `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '300'.
-- `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+- `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
-
-### Remarks
-
-- Just as in [withSpring](/docs/animations/withSpring/) config, spring-based modifiers can be physics-based (has `mass` and `damping` modifiers) or duration-based (has `duration` and `dampingRatio` modifiers). You need to decide whether you want to use physics or duration based animation.
 
 ### Example
 
@@ -139,7 +135,7 @@ SequencedTransition.duration(1000)
 ```
 
 - `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '500'.
-- `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+- `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.reverse()` determines if the animation should run in reverse. Defaults to `false`.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
@@ -190,7 +186,7 @@ FadingTransition.duration(1000)
 ```
 
 - `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '500'.
-- `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+- `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
@@ -240,7 +236,7 @@ JumpingTransition.duration(1000)
 ```
 
 - `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '300'.
-- `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+- `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
@@ -266,7 +262,7 @@ JumpingTransition.duration(1000)
 
 ## Curved Transition
 
-Curved transition enables to animate each position and dimension with different easing. It makes animation look curved.
+Curved transition enables to animate each position and dimension with different easing. It makes component movement path look curved.
 
 ### Reference
 
@@ -294,7 +290,7 @@ CurvedTransiton.duration(1000)
 ```
 
 - `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '300'.
-- `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+- `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.easingX(easing: EasingFunction)` defines easing animation for x-position.
 - `.easingY(easing: EasingFunction)` defines easing animation for y-position.
 - `.easingWidth(easing: EasingFunction)` defines easing animation for width.
@@ -324,7 +320,7 @@ CurvedTransiton.duration(1000)
 
 ## Entry/Exit Transition
 
-Entry/Exit transition lets you choose layout animations for entering and exiting. Moreover, instead of picking currently available animations, you are welcome to create your own one.
+Entry/Exit transition lets you choose layout animations for entering and exiting. It combines both of them into a single one and applies to the layout. Moreover, instead of picking currently available animations, you are welcome to create your own one.
 
 ### Reference
 
@@ -348,7 +344,7 @@ EntryExitTransition.duration(1000)
 ```
 
 - `.duration(duration: number)` sets length of the animation (in milliseconds). Default depends on entry/exit animation.
-- `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
+- `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.exiting(animation)` determines animation shown when element is removed from position. Defaults to `FadeOut`.
 - `.entering(animation)` determines animation shown when element is added to new position. Defaults to `FadeIn`.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
