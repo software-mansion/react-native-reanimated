@@ -1,8 +1,13 @@
-import { View, Button, StyleSheet, Text } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import type { ReactNode } from 'react';
 import React, { useEffect, useState } from 'react';
 import { runTests, configure } from './RuntimeTestsApi';
 import type { LockObject } from './types';
+
+interface ImportButton {
+  testSuiteName: string;
+  importTest: () => void;
+}
 
 let renderLock: LockObject = { lock: false };
 export class ErrorBoundary extends React.Component<
@@ -28,8 +33,37 @@ export class ErrorBoundary extends React.Component<
   }
 }
 
-export default function RuntimeTestsRunner() {
+function ImportButtons({ importButtons }: { importButtons: Array<ImportButton> }) {
+  const [importedTests, setImportedTests] = useState<Array<string>>([]);
+
+  return (
+    <View>
+      {importButtons.map(({ testSuiteName, importTest }) => {
+        return (
+          <TouchableOpacity
+            key={testSuiteName}
+            onPress={() => {
+              importTest();
+              if (!importedTests.includes(testSuiteName)) {
+                setImportedTests([...importedTests, testSuiteName]);
+              }
+            }}
+            style={
+              importedTests.includes(testSuiteName)
+                ? [styles.importButton, styles.importButtonImported]
+                : styles.importButton
+            }>
+            <Text style={styles.buttonText}>{testSuiteName}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+export default function RuntimeTestsRunner({ importButtons }: { importButtons: Array<ImportButton> }) {
   const [component, setComponent] = useState<ReactNode | null>(null);
+  const [started, setStarted] = useState<boolean>(false);
   useEffect(() => {
     if (renderLock) {
       renderLock.lock = false;
@@ -37,14 +71,20 @@ export default function RuntimeTestsRunner() {
   }, [component]);
   return (
     <View style={styles.container}>
-      <Button
-        title="Run tests"
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onPress={async () => {
-          renderLock = configure({ render: setComponent });
-          await runTests();
-        }}
-      />
+      {started ? null : <ImportButtons importButtons={importButtons} />}
+      {started ? null : (
+        <TouchableOpacity
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          onPress={async () => {
+            setStarted(true);
+            renderLock = configure({ render: setComponent });
+            await runTests();
+          }}
+          style={styles.button}>
+          <Text style={styles.buttonTextWhite}>Run tests</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Don't render anything if component is undefined to prevent blinking */}
       {component || null}
     </View>
@@ -55,5 +95,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
+  },
+  importButton: {
+    height: 40,
+    borderWidth: 2,
+    marginHorizontal: 40,
+    marginVertical: 5,
+    borderRadius: 10,
+    borderColor: 'navy',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  importButtonImported: {
+    backgroundColor: 'pink',
+  },
+  button: {
+    height: 40,
+    marginVertical: 10,
+    backgroundColor: 'navy',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontSize: 20,
+    color: 'navy',
+  },
+  buttonTextWhite: {
+    fontSize: 20,
+    color: 'white',
   },
 });
