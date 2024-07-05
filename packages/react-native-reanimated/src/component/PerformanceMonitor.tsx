@@ -244,16 +244,40 @@ function UiPerformance({
 const DEFAULT_EXPECTED_FPS = 60;
 const DEFAULT_BUFFER_SIZE = 30;
 
-export function PerformanceMonitor() {
+export type PerformanceMonitorProps = {
+  /**
+   * DEFAULT: 60
+   *
+   * Sets the highest expected fps value.
+   *
+   * Affects dynamic smoothing rate, but isn't critical to component's operation.
+   */
+  expectedFps?: number;
+
+  /**
+   * DEFAULT: 20
+   *
+   * Sets amount of previous frames used for smoothing at highest expectedFps.
+   *
+   * Automatically scales down at lower frame rates.
+   *
+   * Affects jumpiness of the FPS measurements value.
+   */
+  smoothingCoefficient?: number;
+};
+export function PerformanceMonitor({
+  expectedFps = DEFAULT_EXPECTED_FPS,
+  smoothingCoefficient = DEFAULT_BUFFER_SIZE,
+}: PerformanceMonitorProps) {
   return (
     <View style={styles.monitor}>
       <JsPerformance
-        expectedFps={DEFAULT_EXPECTED_FPS / 2} // /2 due to 2x lower sampling rate on JS due to performance issues
-        smoothingCoefficient={DEFAULT_BUFFER_SIZE}
+        expectedFps={expectedFps / 2} // /2 due to 2x lower sampling rate on JS due to performance issues
+        smoothingCoefficient={smoothingCoefficient}
       />
       <UiPerformance
-        expectedFps={DEFAULT_EXPECTED_FPS}
-        smoothingCoefficient={DEFAULT_BUFFER_SIZE}
+        expectedFps={expectedFps}
+        smoothingCoefficient={smoothingCoefficient}
       />
     </View>
   );
