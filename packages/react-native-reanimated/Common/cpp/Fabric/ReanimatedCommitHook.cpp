@@ -47,7 +47,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
     propsRegistry_->for_each(
         [&](const ShadowNodeFamily &family, const folly::dynamic &props) {
-          propsMap[&family].push_back(std::make_shared<RawProps>(props));
+          propsMap[&family].emplace_back(std::make_unique<RawProps>(props));
         });
 
     rootNode = std::static_pointer_cast<RootShadowNode>(

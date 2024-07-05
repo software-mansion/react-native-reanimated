@@ -725,7 +725,7 @@ void NativeReanimatedModule::performOperations() {
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
           for (const auto &[shadowNode, props] : copiedOperationsQueue) {
             auto family = &shadowNode->getFamily();
-            propsMap[family].push_back(std::make_shared<RawProps>(rt, *props));
+            propsMap[family].emplace_back(std::make_unique<RawProps>(rt, *props));
 
 #if REACT_NATIVE_MINOR_VERSION >= 73
             // Fix for catching nullptr returned from commit hook was
