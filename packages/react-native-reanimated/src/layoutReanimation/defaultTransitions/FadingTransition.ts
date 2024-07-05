@@ -29,8 +29,7 @@ export class FadingTransition
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
     const delay = this.getDelay();
-    const duration = this.durationV ?? 500;
-    const halfDuration = duration / 2;
+    const halfDuration = (this.durationV ?? 500) / 2;
 
     return (values) => {
       'worklet';
@@ -51,19 +50,19 @@ export class FadingTransition
             )
           ),
           originX: withDelay(
-            delay + duration,
+            delay + halfDuration,
             withTiming(values.targetOriginX, { duration: 0 })
           ),
           originY: withDelay(
-            delay + duration,
+            delay + halfDuration,
             withTiming(values.targetOriginY, { duration: 0 })
           ),
           width: withDelay(
-            delay + duration,
+            delay + halfDuration,
             withTiming(values.targetWidth, { duration: 0 })
           ),
           height: withDelay(
-            delay + duration,
+            delay + halfDuration,
             withTiming(values.targetHeight, { duration: 0 })
           ),
         },
