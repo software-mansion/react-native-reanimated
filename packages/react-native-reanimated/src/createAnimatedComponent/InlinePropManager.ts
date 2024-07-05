@@ -107,9 +107,9 @@ export function hasInlineStyles(style: StyleProps): boolean {
 
 export function getInlineStyle(
   style: Record<string, unknown>,
-  shouldGetInitialStyle: boolean
+  isFirstRender: boolean
 ) {
-  if (shouldGetInitialStyle) {
+  if (isFirstRender) {
     return getInlinePropsUpdate(style);
   }
   const newStyle: StyleProps = {};
