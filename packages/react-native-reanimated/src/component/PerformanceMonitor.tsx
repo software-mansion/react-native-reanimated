@@ -246,8 +246,6 @@ const DEFAULT_BUFFER_SIZE = 30;
 
 export type PerformanceMonitorProps = {
   /**
-   * DEFAULT: 60
-   *
    * Sets the highest expected fps value.
    *
    * Affects dynamic smoothing rate, but isn't critical to component's operation.
@@ -255,8 +253,6 @@ export type PerformanceMonitorProps = {
   expectedFps?: number;
 
   /**
-   * DEFAULT: 20
-   *
    * Sets amount of previous frames used for smoothing at highest expectedFps.
    *
    * Automatically scales down at lower frame rates.
@@ -265,6 +261,13 @@ export type PerformanceMonitorProps = {
    */
   smoothingCoefficient?: number;
 };
+
+/**
+ * A component that lets you measure fps values on JS and UI threads on both the Paper and Fabric architectures.
+ *
+ * @param expectedFps - Uses the highest fps value that you expect to adjust dynamic smoothing at lower framerates.
+ * @param smoothingCoefficient - Determines amount of cached frames which will be used for fps value smoothing.
+ */
 export function PerformanceMonitor({
   expectedFps = DEFAULT_EXPECTED_FPS,
   smoothingCoefficient = DEFAULT_BUFFER_SIZE,
