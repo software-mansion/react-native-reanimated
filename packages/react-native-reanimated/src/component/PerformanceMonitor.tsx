@@ -242,7 +242,7 @@ function UiPerformance({
 }
 
 const DEFAULT_EXPECTED_FPS = 60;
-const DEFAULT_BUFFER_SIZE = 20;
+const DEFAULT_BUFFER_SIZE = 30;
 
 export type PerformanceMonitorProps = {
   /**
