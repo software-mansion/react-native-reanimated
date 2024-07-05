@@ -40,10 +40,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   // ShadowTree not commited by Reanimated, apply updates from PropsRegistry
 
   auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
-  std::unordered_map<
-      const ShadowNodeFamily *,
-      std::vector<std::shared_ptr<RawProps>>>
-      propsMap;
+  PropsMap propsMap;
 
   {
     auto lock = propsRegistry_->createLock();

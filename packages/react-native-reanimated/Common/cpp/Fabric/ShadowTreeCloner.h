@@ -13,11 +13,12 @@ using namespace react;
 
 namespace reanimated {
 
+using PropsMap = std::unordered_map<const ShadowNodeFamily *, std::vector<std::shared_ptr<RawProps>>>;
+using ChildrenMap = std::unordered_map<const ShadowNodeFamily *, std::vector<int>>;
+
 ShadowNode::Unshared cloneShadowTreeWithNewProps(
     const ShadowNode::Shared &oldRootNode,
-    std::unordered_map<
-        const ShadowNodeFamily *,
-        std::vector<std::shared_ptr<RawProps>>> &propsMap);
+    PropsMap &propsMap);
 
 } // namespace reanimated
 

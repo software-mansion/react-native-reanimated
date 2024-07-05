@@ -7,11 +7,9 @@
 namespace reanimated {
 
 ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
-    std::unordered_map<const ShadowNodeFamily *, std::vector<int>> &childrenMap,
+    ChildrenMap &childrenMap,
     const ShadowNode::Shared &shadowNode,
-    std::unordered_map<
-        const ShadowNodeFamily *,
-        std::vector<std::shared_ptr<RawProps>>> &propsMap) {
+    PropsMap &propsMap) {
   auto family = &shadowNode->getFamily();
   auto children = shadowNode->getChildren();
   auto &affectedChildren = childrenMap[family];
@@ -43,10 +41,8 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
 
 ShadowNode::Unshared cloneShadowTreeWithNewProps(
     const ShadowNode::Shared &oldRootNode,
-    std::unordered_map<
-        const ShadowNodeFamily *,
-        std::vector<std::shared_ptr<RawProps>>> &propsMap) {
-  std::unordered_map<const ShadowNodeFamily *, std::vector<int>> childrenMap;
+    PropsMap &propsMap) {
+  ChildrenMap childrenMap;
 
   for (auto &[family, _] : propsMap) {
     auto ancestors = family->getAncestors(*oldRootNode);
