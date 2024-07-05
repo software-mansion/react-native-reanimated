@@ -64,33 +64,37 @@ const constructCircularAccumulator = (length: number, expectedFps: number) => {
       let bestWeightMinTime = this.frameWeightScalingTable[0].time;
       let previousIndex = 0;
       let previousMinTime = bestWeightMinTime;
-      for (let i = 0; i < this.frameWeightScalingLookupSteps.length; i++) {
-        const step = this.frameWeightScalingLookupSteps[i];
+      for (let i = 0; ; i++) {
+        const clampedIterator = Math.min(
+          i,
+          this.frameWeightScalingLookupSteps.length - 1
+        );
+        const step = this.frameWeightScalingLookupSteps[clampedIterator];
         const checkedIndex =
           previousMinTime < timeDelta
             ? previousIndex + step
             : previousIndex - step;
 
         if (
-          checkedIndex > this.frameWeightScalingTable.length ||
-          checkedIndex < 0
+          checkedIndex < 0 ||
+          checkedIndex >= this.frameWeightScalingTable.length
         ) {
           break;
         }
 
-        const currentWeightScalingObject =
+        const checkedWeightScalingObject =
           this.frameWeightScalingTable[checkedIndex];
 
         if (
-          currentWeightScalingObject.time < timeDelta &&
-          currentWeightScalingObject.weight > bestWeightValue
+          checkedWeightScalingObject.time < timeDelta &&
+          checkedWeightScalingObject.weight > bestWeightValue
         ) {
-          bestWeightValue = currentWeightScalingObject.weight;
-          bestWeightMinTime = currentWeightScalingObject.time;
+          bestWeightValue = checkedWeightScalingObject.weight;
+          bestWeightMinTime = checkedWeightScalingObject.time;
         }
 
         previousIndex = checkedIndex;
-        previousMinTime = currentWeightScalingObject.time;
+        previousMinTime = checkedWeightScalingObject.time;
       }
 
       return bestWeightValue;
@@ -272,7 +276,7 @@ export function PerformanceMonitor({
   return (
     <View style={styles.monitor}>
       <JsPerformance
-        expectedFps={expectedFps ?? DEFAULT_EXPECTED_FPS}
+        expectedFps={(expectedFps ?? DEFAULT_EXPECTED_FPS) / 2} // /2 due to 2x lower sampling rate on JS due to performance issues
         smoothingCoefficient={smoothingCoefficient ?? DEFAULT_BUFFER_SIZE}
       />
       <UiPerformance
