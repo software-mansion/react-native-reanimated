@@ -62,6 +62,8 @@ export interface CustomConfig {
   callbackV?: AnimationCallback;
   reversed?: boolean;
   definitions?: KeyframeDefinitions;
+  enteringV?: any;
+  exitingV?: any;
 }
 
 export enum TransitionType {
@@ -69,6 +71,7 @@ export enum TransitionType {
   SEQUENCED,
   FADING,
   JUMPING,
+  ENTRY_EXIT,
 }
 
 export const AnimationsData: Record<string, AnimationData> = {

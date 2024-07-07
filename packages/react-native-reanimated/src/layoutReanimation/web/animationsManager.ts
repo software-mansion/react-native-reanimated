@@ -214,12 +214,18 @@ export function tryActivateLayoutTransition<
     return;
   }
 
+  const enteringAnimation = (props.layout as CustomConfig).enteringV
+    ?.presetName;
+  const exitingAnimation = (props.layout as CustomConfig).exitingV?.presetName;
+
   const transitionData: TransitionData = {
     translateX: snapshot.x - rect.x,
     translateY: snapshot.y - rect.y,
     scaleX: snapshot.width / rect.width,
     scaleY: snapshot.height / rect.height,
     reversed: false, // This field is used only in `SequencedTransition`, so by default it will be false
+    entering: enteringAnimation,
+    exiting: exitingAnimation,
   };
 
   startWebLayoutAnimation(
