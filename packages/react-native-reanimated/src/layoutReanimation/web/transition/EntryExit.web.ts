@@ -21,7 +21,10 @@ export function EntryExitTransition(
 
   const keyframeData: AnimationData = {
     name: name,
-    style: {},
+    style:
+      '0' in exitingAnimationData.style
+        ? {}
+        : { 0: { transform: [additionalData] } },
     duration: 300,
   };
 
@@ -30,6 +33,8 @@ export function EntryExitTransition(
   )) {
     if (styles.transform !== undefined) {
       styles.transform.unshift(additionalData);
+    } else {
+      styles.transform = [additionalData];
     }
 
     const newTimestamp = parseInt(timestamp) / 2;
