@@ -6,13 +6,9 @@ sidebar_label: 'About'
 
 # Reanimated Babel Plugin
 
-This article will explain what exactly is Reanimated Babel Plugin, what are its features and limitations, without going into unnecessary details.
-
 ## What is Reanimated Babel Plugin?
 
-Reanimated Babel Plugin is the part of Reanimated that allows you to employ the second JavaScript runtime created by Reanimated, called the UI/Worklet runtime. The plugin transforms your code, injects all the necessary data into it, so that the Worklet runtime can execute the code. This data comes from _worklets_. The process of worklet transformation is called _workletization_.
-
-## What is a worklet?
+The Reanimated Babel Plugin transforms your code so that it can run on the [UI thread](/docs/fundamentals/glossary#ui-thread). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize).
 
 A worklet is:
 
@@ -29,7 +25,7 @@ function foo() {
 
 ```ts
 useAnimatedStyle(() => {
-  // This function will be ran on the Worklet Runtime,
+  // This function will be ran on the UI thread,
   // hence it's in a workletizable context and will be
   // autoworkletized. You don't need to add the 'worklet' directive here.
   return {
@@ -41,15 +37,6 @@ useAnimatedStyle(() => {
 ## What can be a worklet?
 
 Currently, Reanimated Babel Plugin supports the following constructs as worklets:
-
-- Arrow Function Expressions
-
-```ts
-const foo = () => {
-  'worklet';
-  console.log('Hello from ArrowFunctionExpression');
-};
-```
 
 - Function Declarations
 
@@ -69,6 +56,15 @@ const foo = function () {
 };
 ```
 
+- Arrow Function Expressions
+
+```ts
+const foo = () => {
+  'worklet';
+  console.log('Hello from ArrowFunctionExpression');
+};
+```
+
 - Object Methods
 
 ```ts
@@ -82,27 +78,36 @@ const obj = {
 
 ## Autoworkletization
 
-To reduce boilerplate code and relieve the user from knowing the internals of Reanimated, Reanimated Babel Plugin tries to detect automatically whether a function should be workletized. For example, all callbacks in Reanimated API that are ran on the Worklet runtime are autoworkletized, such as:
+To reduce boilerplate code and provide a safer API, Reanimated Babel Plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
 
-- `useAnimatedStyle`
-- `useAnimatedProps`
-- `runOnUI`
+```ts
+const style = useAnimatedStyle(() => {
+  // You don't need to add the 'worklet' directive here,
+  // since plugin detects this callback as autoworkletizable.
+  return {
+    width: 100,
+  };
+});
+```
 
-etc.
+This isn't limited to `useAnimatedStyle` hook - Reanimated Babel Plugin autoworkletizes all callbacks for the API of Reanimated. The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/plugin/src/autoworkletization.ts).
 
-Thanks to that, you don't need to add the `'worklet'` directive to your code when you're not exploring any advanced use cases.
+Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet.
 
 ### Referencing worklets
 
-You can define worklets before they are used, and the plugin will autoworkletize them too:
+You can define worklets **before** they are used and the plugin will autoworkletize them too:
 
 ```ts
 function foo() {
-  // You don't need to mark it as a worklet.
+  // You don't need to add
+  // the 'worklet' directive here.
   return { width: 100 };
 }
 
-const style = useAnimatedStyle(foo); // You don't need to define an inline function here.
+// You don't need to define an inline function here,
+// a reference is enough.
+const style = useAnimatedStyle(foo);
 ```
 
 ### Objects aggregating worklets
@@ -131,15 +136,15 @@ You can mark a file as a workletizable file by adding the `'worklet'` directive 
 'worklet';
 
 function foo() {
-  // This function will be autoworkletized.
+  // Function 'foo' will be autoworkletized.
   return { width: 100 };
 }
 
 function bar() {
-  // This function will be autoworkletized.
+  // Function 'bar' will be autoworkletized.
   function foobar() {
-    // This function won't since it's not defined in top-level scope.
-    console.log('Hello from worklet');
+    // Function 'foobar' won't since it's not defined in top-level scope.
+    console.log("I'm not a worklet");
   }
   return { width: 100 };
 }
@@ -173,7 +178,7 @@ Currently Reanimated hasn't exposed APIs that would allow you to register your c
 
 ### Expressions
 
-When the worklet is a result of an expression, it won't get autoworkletized hence you need to add the `'worklet'` directive to it manually:
+A function won't get automatically workletized when it's a result of an expression. You have to add the `"worklet";` directive to make it work:
 
 ```ts
 const foo = someCondition
@@ -189,18 +194,20 @@ const foo = someCondition
 const style = useAnimatedStyle(foo);
 ```
 
-In such cases we recommend you to handle the conditional logic in the worklet itself or to refactor your code to avoid the need for conditional worklets.
+In such cases we recommend either handling the conditional logic in the worklet itself or refactoring your code to eliminate the need for conditional worklets.
 
 ## Pitfalls
 
-There are some patterns that won't work with the plugin, regardless of whether they are autoworkletizable or not.
+There are some patterns that won't work with the plugin.
 
 ### Hoisting worklets
 
-Worklets are not hoisted. This means that you can't use worklets before they are defined. For example:
+Worklets aren't hoisted. This means that you can't use worklets before they are defined:
 
 ```ts
-const style = useAnimatedStyle(foo); // Crashes, even though 'foo' is marked as a worklet.
+// The following line crashes,
+// even though 'foo' is marked as a worklet.
+const style = useAnimatedStyle(foo);
 
 function foo() {
   'worklet';
@@ -210,7 +217,22 @@ function foo() {
 
 ### Classes
 
-Class methods can be marked as worklets, but classes themselves cannot be used on the Worklet runtime.
+You can't use classes on the UI thread:
+
+```ts
+class Clazz {
+  foo() {
+    'worklet';
+    return { width: 100 };
+  }
+}
+
+const clazz = new Clazz();
+
+// The following line crashes,
+// even though 'foo' is marked as a worklet.
+const style = useAnimatedStyle(clazz.foo());
+```
 
 ## Notes
 
