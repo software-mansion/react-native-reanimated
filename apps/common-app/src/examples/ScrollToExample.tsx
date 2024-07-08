@@ -21,10 +21,10 @@ import { FlashList } from '@shopify/flash-list';
 
 const DATA = [...Array(100).keys()];
 
-const randomOffset = () => {
+function getRandomOffset() {
   'worklet';
   return Math.random() * 2000;
-};
+}
 
 const AnimatedFlashList = Animated.createAnimatedComponent(
   FlashList
@@ -98,14 +98,14 @@ const ScrollViewExample = forwardRef<Scrollable, ExampleProps>(
     const aref = useAnimatedRef<Animated.ScrollView>();
 
     useImperativeHandle(ref, () => ({
-      scrollFromJS: () => {
+      scrollFromJS() {
         console.log(_WORKLET);
-        aref.current?.scrollTo({ y: randomOffset(), animated });
+        aref.current?.scrollTo({ y: getRandomOffset(), animated });
       },
-      scrollFromUI: () => {
+      scrollFromUI() {
         runOnUI(() => {
           console.log(_WORKLET);
-          scrollTo(aref, 0, randomOffset(), animated);
+          scrollTo(aref, 0, getRandomOffset(), animated);
         })();
       },
     }));
@@ -127,14 +127,14 @@ const FlatListExample = forwardRef<Scrollable, ExampleProps>(
     const aref = useAnimatedRef<Animated.FlatList<number>>();
 
     useImperativeHandle(ref, () => ({
-      scrollFromJS: () => {
+      scrollFromJS() {
         console.log(_WORKLET);
-        aref.current?.scrollToOffset({ offset: randomOffset(), animated });
+        aref.current?.scrollToOffset({ offset: getRandomOffset(), animated });
       },
-      scrollFromUI: () => {
+      scrollFromUI() {
         runOnUI(() => {
           console.log(_WORKLET);
-          scrollTo(aref, 0, randomOffset(), animated);
+          scrollTo(aref, 0, getRandomOffset(), animated);
         })();
       },
     }));
@@ -160,14 +160,14 @@ const FlashListExample = forwardRef<Scrollable, ExampleProps>(
     const aref = useAnimatedRef<FlashList<number>>();
 
     useImperativeHandle(ref, () => ({
-      scrollFromJS: () => {
+      scrollFromJS() {
         console.log(_WORKLET);
-        aref.current?.scrollToOffset({ offset: randomOffset(), animated });
+        aref.current?.scrollToOffset({ offset: getRandomOffset(), animated });
       },
-      scrollFromUI: () => {
+      scrollFromUI() {
         runOnUI(() => {
           console.log(_WORKLET);
-          scrollTo(aref, 0, randomOffset(), animated);
+          scrollTo(aref, 0, getRandomOffset(), animated);
         })();
       },
     }));

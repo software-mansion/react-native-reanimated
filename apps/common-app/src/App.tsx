@@ -19,21 +19,27 @@ import type { HeaderBackButtonProps } from '@react-navigation/elements';
 import { HeaderBackButton } from '@react-navigation/elements';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type { NavigationProp, PathConfigMap } from '@react-navigation/native';
+import type {
+  NavigationProp,
+  NavigationState,
+  PathConfigMap,
+} from '@react-navigation/native';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXAMPLES } from './examples';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
 
 function isFabric(): boolean {
   return !!(global as Record<string, unknown>)._IS_FABRIC;
 }
 
-const noop = () => undefined;
+function noop() {
+  // do nothing
+}
 
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;
@@ -206,6 +212,10 @@ export default function App() {
     }
   }, [isReady]);
 
+  const persistNavigationState = useCallback((state?: NavigationState) => {
+    AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state)).catch(noop);
+  }, []);
+
   const shouldReduceMotion = useReducedMotion();
 
   if (!isReady) {
@@ -221,11 +231,7 @@ export default function App() {
       <NavigationContainer
         linking={linking}
         initialState={initialState}
-        onStateChange={(state) => {
-          AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state)).catch(
-            noop
-          );
-        }}>
+        onStateChange={persistNavigationState}>
         <Stack.Navigator>
           <Stack.Screen
             name="Home"
