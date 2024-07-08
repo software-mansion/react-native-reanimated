@@ -18,7 +18,7 @@ using ChildrenMap = std::unordered_map<const ShadowNodeFamily *, std::vector<int
 
 ShadowNode::Unshared cloneShadowTreeWithNewProps(
     const ShadowNode::Shared &oldRootNode,
-    PropsMap &propsMap);
+    const PropsMap &propsMap);
 
 } // namespace reanimated
 
