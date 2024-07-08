@@ -26,7 +26,7 @@ export class ErrorBoundary extends React.Component<
 
   render() {
     if (this.state.hasError) {
-      return <Text>Something went wrong.</Text>;
+      return <Text>Unable to render component</Text>;
     }
 
     return this.props.children;
@@ -48,11 +48,7 @@ function ImportButtons({ importButtons }: { importButtons: Array<ImportButton> }
                 setImportedTests([...importedTests, testSuiteName]);
               }
             }}
-            style={
-              importedTests.includes(testSuiteName)
-                ? [styles.importButton, styles.importButtonImported]
-                : styles.importButton
-            }>
+            style={[styles.importButton, importedTests.includes(testSuiteName) ? styles.importButtonImported : {}]}>
             <Text style={styles.buttonText}>{testSuiteName}</Text>
           </TouchableOpacity>
         );
