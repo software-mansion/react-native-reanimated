@@ -569,10 +569,11 @@ export class TestRunner {
     });
   }
 
-  public waitForAnimationUpdates(snapshot: Array<any>) {
+  public waitForAnimationUpdates(snapshot: Array<any>): Promise<boolean> {
     const updatesCount = snapshot.length;
     const flag = makeMutable(false);
-    return new Promise(resolve => {
+    return new Promise<boolean>(resolve => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       const interval = setInterval(async () => {
         await this.runOnUIBlocking(() => {
           'worklet';
