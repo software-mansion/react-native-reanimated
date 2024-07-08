@@ -342,19 +342,19 @@ function makeWorkletName(
     const nodeModulesIndex = splitFilepath.indexOf('node_modules');
     if (nodeModulesIndex !== -1) {
       const libraryName = splitFilepath[nodeModulesIndex + 1];
-      source = libraryName + '_' + source;
+      source = `${libraryName}_${source}`;
     }
   }
 
   const suffix = source + state.workletNumber++;
   if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
-    return toIdentifier(fun.node.key.name + '_' + suffix);
+    return toIdentifier(`${fun.node.key.name}_${suffix}`);
   }
   if (isFunctionDeclaration(fun.node) && isIdentifier(fun.node.id)) {
-    return toIdentifier(fun.node.id.name + '_' + suffix);
+    return toIdentifier(`${fun.node.id.name}_${suffix}`);
   }
   if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
-    return toIdentifier(fun.node.id.name + '_' + suffix);
+    return toIdentifier(`${fun.node.id.name}_${suffix}`);
   }
 
   // Fallback for ArrowFunctionExpression and unnamed FunctionExpression.

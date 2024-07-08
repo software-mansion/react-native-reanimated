@@ -478,18 +478,18 @@ var require_workletFactory = __commonJS({
         const nodeModulesIndex = splitFilepath.indexOf("node_modules");
         if (nodeModulesIndex !== -1) {
           const libraryName = splitFilepath[nodeModulesIndex + 1];
-          source = libraryName + "_" + source;
+          source = `${libraryName}_${source}`;
         }
       }
       const suffix = source + state.workletNumber++;
       if ((0, types_12.isObjectMethod)(fun.node) && (0, types_12.isIdentifier)(fun.node.key)) {
-        return (0, types_12.toIdentifier)(fun.node.key.name + "_" + suffix);
+        return (0, types_12.toIdentifier)(`${fun.node.key.name}_${suffix}`);
       }
       if ((0, types_12.isFunctionDeclaration)(fun.node) && (0, types_12.isIdentifier)(fun.node.id)) {
-        return (0, types_12.toIdentifier)(fun.node.id.name + "_" + suffix);
+        return (0, types_12.toIdentifier)(`${fun.node.id.name}_${suffix}`);
       }
       if ((0, types_12.isFunctionExpression)(fun.node) && (0, types_12.isIdentifier)(fun.node.id)) {
-        return (0, types_12.toIdentifier)(fun.node.id.name + "_" + suffix);
+        return (0, types_12.toIdentifier)(`${fun.node.id.name}_${suffix}`);
       }
       return (0, types_12.toIdentifier)(suffix);
     }
