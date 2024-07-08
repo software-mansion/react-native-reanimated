@@ -23,16 +23,13 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
       - name: Create React Native App
-        run: npx react-native init App
+        run: npx react-native init app
       - name: Install dependencies
-        working-directory: App
+        working-directory: app
         run: yarn
-      - name: Download Reanimated from commit
-        working-directory: App
-        run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
       - name: Install Reanimated
-        working-directory: App
-        run: yarn add react-native-reanimated@file:./react-native-reanimated-${{ github.sha }}.tar.gz
+        working-directory: app
+        run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
       - name: Build Android App
-        working-directory: App/android
+        working-directory: app/android
         run: ./gradlew assembleDebug --console=plain

@@ -4,7 +4,7 @@ on:
     paths:
       - .github/workflows/check-react-native-nightly.yml
   schedule:
-    - cron: "37 19 * * *"
+    - cron: '37 19 * * *'
   workflow_dispatch:
 
 jobs:
@@ -13,28 +13,37 @@ jobs:
     runs-on: macos-14
     strategy:
       matrix:
-        react-native-architecture: ["Paper", "Fabric"]
+        react-native-architecture: ['Paper', 'Fabric']
       fail-fast: false
     concurrency:
       group: ios-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
+      # Sometimes `npx react-native init` fails due to dependency mismatches or other
+      # rather vague errors. This is a workaround for that.
+      - name: Setup Yarn
+        run: corepack enable && yarn init
       - name: Create app
-        run: npx react-native init app --skip-install --version nightly
-      - name: Download Reanimated from commit
+        run: |
+          if npm view react-native dist-tags | grep -q 'next:' ; then 
+            yarn add react-native@next && yarn react-native init app --skip-install --version next
+          else 
+            yarn add react-native@nightly && yarn react-native init app --skip-install --version nightly
+          fi
+      - name: Enable Yarn in app
         working-directory: app
-        run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
+        run: touch yarn.lock
       - name: Install Reanimated
         working-directory: app
-        run: yarn add react-native-reanimated@file:./react-native-reanimated-${{ github.sha }}.tar.gz
+        run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios
-        run: pod install
+        run: bundle install && bundle exec pod install
       - name: Install Fabric Pods
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         working-directory: app/ios
-        run: export RCT_NEW_ARCH_ENABLED=1 && pod install
+        run: RCT_NEW_ARCH_ENABLED=1 bundle install && bundle exec pod install
       - name: Build app
         working-directory: app
         run: yarn react-native run-ios --simulator='iPhone 14'
@@ -44,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        react-native-architecture: ["Paper", "Fabric"]
+        react-native-architecture: ['Paper', 'Fabric']
       fail-fast: false
     concurrency:
       group: android-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
@@ -53,16 +62,25 @@ jobs:
       - name: Set up JDK 18
         uses: actions/setup-java@v3
         with:
-          distribution: "zulu"
-          java-version: "18"
+          distribution: 'zulu'
+          java-version: '18'
+      # Sometimes `npx react-native init` fails due to dependency mismatches or other
+      # rather vague errors. This is a workaround for that.
+      - name: Setup Yarn
+        run: corepack enable && yarn init
       - name: Create app
-        run: npx react-native init app --skip-install --version nightly
-      - name: Download Reanimated from commit
+        run: |
+          if npm view react-native dist-tags | grep -q 'next:' ; then 
+            yarn add react-native@next && yarn react-native init app --skip-install --version next
+          else 
+            yarn add react-native@nightly && yarn react-native init app --skip-install --version nightly
+          fi
+      - name: Enable Yarn in app
         working-directory: app
-        run: curl -LJO https://codeload.github.com/software-mansion/react-native-reanimated/tar.gz/${{ github.sha }}
+        run: touch yarn.lock
       - name: Install Reanimated
         working-directory: app
-        run: yarn add react-native-reanimated@file:./react-native-reanimated-${{ github.sha }}.tar.gz
+        run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
       - name: Setup Fabric
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         working-directory: app/android
