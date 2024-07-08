@@ -571,7 +571,7 @@ export class TestRunner {
 
     const incrementJS = () => {
       counterJS++;
-    }
+    };
     const mockedConsoleFunction = (message: string) => {
       'worklet';
       if (_WORKLET) {
@@ -597,7 +597,7 @@ export class TestRunner {
         console.error = originalError;
         console.warn = originalWarning;
       });
-    }
+    };
 
     const checkErrors = async () => {
       if (testCase.decorator != TestDecorator.WARN && testCase.decorator != TestDecorator.FAILING) {
@@ -606,7 +606,7 @@ export class TestRunner {
       const count = counterUI.value + counterJS;
       this.expect(count).toBe(1);
       this.expect(recordedMessage.value).toBe(testCase.warningMessage);
-    }
+    };
 
     return [restoreConsole, checkErrors];
   }
