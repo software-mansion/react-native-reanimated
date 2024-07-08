@@ -1162,6 +1162,43 @@ var require_file = __commonJS({
   }
 });
 
+// lib/contextObject.js
+var require_contextObject = __commonJS({
+  "lib/contextObject.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processIfWorkletContextObject = void 0;
+    var types_12 = require("@babel/types");
+    function processIfWorkletContextObject(path, state) {
+      let isWorkletContextObject = false;
+      path.traverse({
+        ObjectProperty(subPath) {
+          if ((0, types_12.isIdentifier)(subPath.node.key) && subPath.node.key.name === "__workletObject") {
+            isWorkletContextObject = true;
+            subPath.stop();
+          }
+        }
+      });
+      if (isWorkletContextObject) {
+        processWorkletContextObject(path, state);
+      }
+      return isWorkletContextObject;
+    }
+    exports2.processIfWorkletContextObject = processIfWorkletContextObject;
+    function processWorkletContextObject(path, _state) {
+      path.traverse({
+        ObjectProperty(subPath) {
+          if ((0, types_12.isIdentifier)(subPath.node.key) && subPath.node.key.name === "__workletObject") {
+            subPath.remove();
+          }
+        }
+      });
+      const workletObjectFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([(0, types_12.returnStatement)((0, types_12.cloneNode)(path.node))], [(0, types_12.directive)((0, types_12.directiveLiteral)("worklet"))]));
+      path.node.properties.push((0, types_12.objectProperty)((0, types_12.identifier)("__workletObjectFactory"), workletObjectFactory));
+    }
+  }
+});
+
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var autoworkletization_1 = require_autoworkletization();
@@ -1172,6 +1209,7 @@ var utils_1 = require_utils();
 var globals_1 = require_globals();
 var webOptimization_1 = require_webOptimization();
 var file_1 = require_file();
+var contextObject_1 = require_contextObject();
 module.exports = function() {
   function runWithTaggedExceptions(fun) {
     try {
@@ -1202,6 +1240,13 @@ module.exports = function() {
         enter(path, state) {
           runWithTaggedExceptions(() => {
             (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state);
+          });
+        }
+      },
+      ObjectExpression: {
+        enter(path, state) {
+          runWithTaggedExceptions(() => {
+            (0, contextObject_1.processIfWorkletContextObject)(path, state);
           });
         }
       },

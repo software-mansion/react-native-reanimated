@@ -2047,4 +2047,70 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
   });
+
+  describe('for context objects', () => {
+    it('removes marker', () => {
+      const input = html`<script>
+        const foo = {
+          bar() {
+            return 'bar';
+          },
+          __workletObject: true,
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).not.toMatch(/__workletObject:\s*/g);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('creates factories', () => {
+      const input = html`<script>
+        const foo = {
+          bar() {
+            return 'bar';
+          },
+          __workletObject: true,
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('__workletObjectFactory');
+      expect(code).toHaveWorkletData();
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes regardless of marker value', () => {
+      const input = html`<script>
+        const foo = {
+          bar() {
+            return 'bar';
+          },
+          __workletObject: new RegExp('foo'),
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toMatchSnapshot();
+    });
+
+    it('preserves bindings', () => {
+      const input = html`<script>
+        const foo = {
+          bar() {
+            return 'bar';
+          },
+          foobar() {
+            return this.bar();
+          },
+          __workletObject: true,
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toIncludeInWorkletString('this.bar()');
+      expect(code).toMatchSnapshot();
+    });
+  });
 });
