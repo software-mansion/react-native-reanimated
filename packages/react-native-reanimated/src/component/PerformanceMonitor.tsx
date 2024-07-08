@@ -22,7 +22,10 @@ const constructCircularAccumulator = (length: number, expectedFps: number) => {
     previousTimestamp: 0 as number,
 
     // divisions are expensive, use lookup tables for them
-    frameWeightScalingTable: [] as { time: number; weight: number }[],
+    frameWeightScalingTable: [] as {
+      minimalActivationTime: number;
+      weight: number;
+    }[],
     frameWeightScalingLookupSteps: [] as number[],
     expectedFps,
 
@@ -40,8 +43,11 @@ const constructCircularAccumulator = (length: number, expectedFps: number) => {
       //        at 10fps, 20 smoothing, 1 frame will set 6 elements - 0.33s per fill
       // fill lookup table from weights 1 to 'length'
       for (let weight = 1; weight < this.length; weight++) {
-        const minActivationTime = (1000 / this.expectedFps) * weight;
-        this.frameWeightScalingTable.push({ weight, time: minActivationTime });
+        const minimalActivationTime = (1000 / this.expectedFps) * weight;
+        this.frameWeightScalingTable.push({
+          weight,
+          minimalActivationTime,
+        });
       }
 
       for (
@@ -61,13 +67,14 @@ const constructCircularAccumulator = (length: number, expectedFps: number) => {
       }
 
       let bestWeightValue = this.frameWeightScalingTable[0].weight;
-      let bestWeightMinTime = this.frameWeightScalingTable[0].time;
+      let bestWeightTime =
+        this.frameWeightScalingTable[0].minimalActivationTime;
       let previousIndex = 0;
-      let previousMinTime = bestWeightMinTime;
+      let previousMinimalActivationTime = bestWeightTime;
       for (let i = 0; i < this.frameWeightScalingLookupSteps.length; i++) {
         const step = this.frameWeightScalingLookupSteps[i];
         const checkedIndex =
-          previousMinTime < timeDelta
+          previousMinimalActivationTime < timeDelta
             ? previousIndex + step
             : previousIndex - step;
 
@@ -82,15 +89,16 @@ const constructCircularAccumulator = (length: number, expectedFps: number) => {
           this.frameWeightScalingTable[checkedIndex];
 
         if (
-          checkedWeightScalingObject.time < timeDelta &&
+          checkedWeightScalingObject.minimalActivationTime < timeDelta &&
           checkedWeightScalingObject.weight > bestWeightValue
         ) {
           bestWeightValue = checkedWeightScalingObject.weight;
-          bestWeightMinTime = checkedWeightScalingObject.time;
+          bestWeightTime = checkedWeightScalingObject.minimalActivationTime;
         }
 
         previousIndex = checkedIndex;
-        previousMinTime = checkedWeightScalingObject.time;
+        previousMinimalActivationTime =
+          checkedWeightScalingObject.minimalActivationTime;
       }
 
       return bestWeightValue;
