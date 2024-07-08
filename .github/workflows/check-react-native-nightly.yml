@@ -43,7 +43,7 @@ jobs:
       - name: Install Fabric Pods
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         working-directory: app/ios
-        run: export RCT_NEW_ARCH_ENABLED=1 && bundle install && bundle exec pod install
+        run: RCT_NEW_ARCH_ENABLED=1 bundle install && bundle exec pod install
       - name: Build app
         working-directory: app
         run: yarn react-native run-ios --simulator='iPhone 14'
