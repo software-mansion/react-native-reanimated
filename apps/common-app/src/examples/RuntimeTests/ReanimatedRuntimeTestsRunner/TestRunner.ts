@@ -16,11 +16,18 @@ import type {
 import { ComparisonMode, DescribeDecorator, TestDecorator } from './types';
 import { TestComponent } from './TestComponent';
 import { EMPTY_LOG_PLACEHOLDER, applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
-import type { SharedValue } from 'react-native-reanimated';
+import type {
+  SharedValue,
+  LayoutAnimationStartFunction,
+  LayoutAnimationType,
+  SharedTransitionAnimationsValues,
+  LayoutAnimation,
+} from 'react-native-reanimated';
 import { makeMutable, runOnUI, runOnJS } from 'react-native-reanimated';
 import { Matchers, nullableMatch } from './matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
+export { Presets } from './Presets';
 
 let callTrackerRegistryJS: Record<string, number> = {};
 const callTrackerRegistryUI = makeMutable<Record<string, number>>({});
@@ -555,6 +562,51 @@ export class TestRunner {
       if (global.mockedAnimationTimestamp) {
         global.mockedAnimationTimestamp = undefined;
       }
+    });
+  }
+
+  public async unmockWindowSize() {
+    await this.runOnUIBlocking(() => {
+      'worklet';
+      if (global._LayoutAnimationsManager) {
+        global.LayoutAnimationsManager = global._LayoutAnimationsManager;
+      }
+    });
+  }
+
+  public async mockWindowSize() {
+    await this.runOnUIBlocking(() => {
+      'worklet';
+      const originalCreateAnimatedComponent = global.LayoutAnimationsManager;
+
+      const createAnimatedComponentOnStart: LayoutAnimationStartFunction = (
+        tag: number,
+        type: LayoutAnimationType,
+        _yogaValues: Partial<SharedTransitionAnimationsValues>,
+        config: (arg: Partial<SharedTransitionAnimationsValues>) => LayoutAnimation,
+      ) => {
+        originalCreateAnimatedComponent.start(
+          tag,
+          type,
+          {
+            targetGlobalOriginX: 40,
+            targetGlobalOriginY: 175.3333346048991,
+            targetHeight: 80.00000762939453,
+            targetOriginX: 40,
+            targetOriginY: 40,
+            targetWidth: 313,
+            windowHeight: 852,
+            windowWidth: 393,
+          },
+          config,
+        );
+      };
+
+      global._LayoutAnimationsManager = originalCreateAnimatedComponent;
+      global.LayoutAnimationsManager = {
+        start: createAnimatedComponentOnStart,
+        stop: originalCreateAnimatedComponent.stop,
+      };
     });
   }
 

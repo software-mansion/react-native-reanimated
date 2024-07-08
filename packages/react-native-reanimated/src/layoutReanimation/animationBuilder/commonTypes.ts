@@ -80,7 +80,7 @@ export type LayoutAnimationStartFunction = (
   tag: number,
   type: LayoutAnimationType,
   yogaValues: Partial<SharedTransitionAnimationsValues>,
-  config: LayoutAnimationFunction
+  config: (arg: Partial<SharedTransitionAnimationsValues>) => LayoutAnimation
 ) => void;
 
 export interface ILayoutAnimationBuilder {
