@@ -306,35 +306,10 @@ export class TestRunner {
     }
 
     if (testCase.decorator === TestDecorator.FAILING || testCase.decorator === TestDecorator.WARN) {
-      const consoleTrackerRef = testCase.decorator === TestDecorator.FAILING ? 'console.error' : 'console.warn';
-      const message = makeMutable('');
-
-      const newConsoleFuncJS = (warning: string) => {
-        this.callTracker(consoleTrackerRef);
-        message.value = warning.split('\n\nThis error is located at:')[0];
-      };
-      console.error = newConsoleFuncJS;
-      console.warn = newConsoleFuncJS;
-
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      const callTrackerCopy = this.callTracker;
-
-      runOnUI(() => {
-        'worklet';
-        const newConsoleFuncUI = (warning: string) => {
-          callTrackerCopy(consoleTrackerRef);
-          message.value = warning.split('\n\nThis error is located at:')[0];
-        };
-        console.error = newConsoleFuncUI;
-        console.warn = newConsoleFuncUI;
-      })();
-
+      const [restoreConsole, checkErrors] = await this.mockConsole(testCase);
       await testCase.run();
-
-      this.expect(this.getTrackerCallCount(consoleTrackerRef)).toBeCalled(1);
-      if (testCase.warningMessage) {
-        this.expect(message.value).toBe(testCase.warningMessage, ComparisonMode.STRING);
-      }
+      await restoreConsole();
+      await checkErrors();
     } else {
       await testCase.run();
     }
@@ -584,5 +559,47 @@ export class TestRunner {
       console.log('✅ All tests passed!');
     }
     console.log('\n');
+  }
+
+  private async mockConsole(testCase: TestCase) {
+    const counter = makeMutable(0);
+    const recordedMessage = makeMutable('');
+
+    const originalError = console.error;
+    const originalWarning = console.warn;
+
+    const consoleLogMock = (message: string) => {
+      'worklet';
+      counter.value++;
+      recordedMessage.value = message.split('\n\nThis error is located at:')[0];
+    };
+    console.error = consoleLogMock;
+    console.warn = consoleLogMock;
+    await this.runOnUIBlocking(() => {
+      'worklet';
+      console.error = consoleLogMock;
+      console.warn = consoleLogMock;
+    });
+
+    const self = this;
+    async function restoreConsole() {
+      console.error = originalError;
+      console.warn = originalWarning;
+      await self.runOnUIBlocking(() => {
+        'worklet';
+        console.error = originalError;
+        console.warn = originalWarning;
+      });
+    }
+    
+    async function checkErrors() {
+      if (testCase.decorator != TestDecorator.WARN && testCase.decorator != TestDecorator.FAILING) {
+        return;
+      }
+      self.expect(counter.value).toBe(1);
+      self.expect(recordedMessage.value).toBe(testCase.warningMessage);
+    }
+
+    return [restoreConsole, checkErrors];
   }
 }

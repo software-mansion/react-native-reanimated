@@ -262,4 +262,8 @@ describe.skip('Tests of Test Framework', () => {
     await waitForNotify('notifyUI');
     expect(await component.getAnimatedStyle('width')).toBe('100');
   });
+
+  test.warn('warning test', 'message', async () => {
+    console.warn('message');
+  });
 });
