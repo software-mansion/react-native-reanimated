@@ -64,6 +64,8 @@ var require_globals = __commonJS({
       "decodeURIComponent",
       "encodeURI",
       "encodeURIComponent",
+      "escape",
+      "unescape",
       "Object",
       "Function",
       "Boolean",
@@ -120,8 +122,6 @@ var require_globals = __commonJS({
       "null",
       "this",
       "global",
-      "window",
-      "globalThis",
       "console",
       "performance",
       "queueMicrotask",
@@ -239,22 +239,6 @@ var require_workletStringCode = __commonJS({
       const expression = (0, types_12.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
       (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
       (0, assert_1.strict)((0, types_12.isBlockStatement)(expression.body), "[Reanimated] `expression.body` is not a `BlockStatement`");
-      const parsedClasses = /* @__PURE__ */ new Set();
-      (0, core_1.traverse)(fun, {
-        NewExpression(path) {
-          const constructorName = path.node.callee.name;
-          if (!closureVariables.some((variable) => variable.name === constructorName) || parsedClasses.has(constructorName)) {
-            return;
-          }
-          const index = closureVariables.findIndex((variable) => variable.name === constructorName);
-          closureVariables.splice(index, 1);
-          closureVariables.push((0, types_12.identifier)(constructorName + "ClassFactory"));
-          expression.body.body.unshift((0, types_12.variableDeclaration)("const", [
-            (0, types_12.variableDeclarator)((0, types_12.identifier)(constructorName), (0, types_12.callExpression)((0, types_12.identifier)(constructorName + "ClassFactory"), []))
-          ]));
-          parsedClasses.add(constructorName);
-        }
-      });
       const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(name), expression.params, expression.body, expression.generator, expression.async);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
@@ -427,7 +411,7 @@ var require_workletFactory = __commonJS({
         (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(functionIdentifier, funExpression)
         ]),
-        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)(functionIdentifier, (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(variables.map((variable) => variable.name.endsWith("ClassFactory") ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, "ClassFactory".length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), variable, false, true))))),
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)(functionIdentifier, (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(variables.map((variable) => (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), variable, false, true))))),
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)(functionIdentifier, (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
       if (shouldIncludeInitData) {
@@ -1130,10 +1114,12 @@ var require_file = __commonJS({
     exports2.processIfWorkletFile = void 0;
     var types_12 = require("@babel/types");
     function processIfWorkletFile(path, state) {
-      if (path.node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
-        processWorkletFile(path, state);
-        path.node.directives = path.node.directives.filter((functionDirective) => functionDirective.value.value !== "worklet");
+      if (!path.node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
+        return false;
       }
+      processWorkletFile(path, state);
+      path.node.directives = path.node.directives.filter((functionDirective) => functionDirective.value.value !== "worklet");
+      return true;
     }
     exports2.processIfWorkletFile = processIfWorkletFile;
     function processWorkletFile(path, _state) {
