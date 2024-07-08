@@ -1,7 +1,6 @@
 import type { NodePath } from '@babel/core';
 import {
   blockStatement,
-  callExpression,
   cloneNode,
   directive,
   directiveLiteral,
