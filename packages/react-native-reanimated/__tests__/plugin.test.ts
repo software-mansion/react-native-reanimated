@@ -1960,4 +1960,91 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
   });
+
+  describe('for file workletization', () => {
+    it('workletizes FunctionDeclaration', () => {
+      const input = html`<script>
+        'worklet';
+        function foo() {
+          return 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes FunctionExpression', () => {
+      const input = html`<script>
+        'worklet';
+        const foo = function () {
+          return 'bar';
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ArrowFunctionExpression', () => {
+      const input = html`<script>
+        'worklet';
+        const foo = () => {
+          return 'bar';
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ObjectMethod', () => {
+      const input = html`<script>
+        'worklet';
+        const foo = {
+          bar() {
+            return 'bar';
+          },
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes multiple functions', () => {
+      const input = html`<script>
+        'worklet';
+        function foo() {
+          return 'bar';
+        }
+        const bar = () => {
+          return 'foobar';
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(2);
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't workletize function outside of top level scope", () => {
+      const input = html`<script>
+        'worklet';
+        {
+          function foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).not.toHaveWorkletData();
+      expect(code).toMatchSnapshot();
+    });
+  });
 });
