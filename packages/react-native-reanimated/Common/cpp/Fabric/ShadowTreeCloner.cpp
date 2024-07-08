@@ -15,9 +15,10 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
   const auto propsIt = propsMap.find(family);
   auto children = shadowNode->getChildren();
 
-  if (affectedChildrenIt != childrenMap.end()){
+  if (affectedChildrenIt != childrenMap.end()) {
     for (const auto index : affectedChildrenIt->second) {
-      children[index] = cloneShadowTreeWithNewPropsRecursive(childrenMap, children[index], propsMap);
+      children[index] = cloneShadowTreeWithNewPropsRecursive(
+          childrenMap, children[index], propsMap);
     }
   }
 
