@@ -13,7 +13,7 @@ import type {
   TestValue,
   TrackerCallCount,
 } from './types';
-import { ComparisonMode, DescribeDecorator, TestDecorator } from './types';
+import { DescribeDecorator, TestDecorator } from './types';
 import { TestComponent } from './TestComponent';
 import { EMPTY_LOG_PLACEHOLDER, applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
 import type { SharedValue } from 'react-native-reanimated';
@@ -309,7 +309,7 @@ export class TestRunner {
       const [restoreConsole, checkErrors] = await this.mockConsole(testCase);
       await testCase.run();
       await restoreConsole();
-      await checkErrors();
+      checkErrors();
     } else {
       await testCase.run();
     }
@@ -561,7 +561,7 @@ export class TestRunner {
     console.log('\n');
   }
 
-  private async mockConsole(testCase: TestCase) {
+  private async mockConsole(testCase: TestCase): Promise<[() => Promise<void>, () => void]> {
     const counterUI = makeMutable(0);
     let counterJS = 0;
     const recordedMessage = makeMutable('');
@@ -599,8 +599,8 @@ export class TestRunner {
       });
     };
 
-    const checkErrors = async () => {
-      if (testCase.decorator != TestDecorator.WARN && testCase.decorator != TestDecorator.FAILING) {
+    const checkErrors = () => {
+      if (testCase.decorator !== TestDecorator.WARN && testCase.decorator !== TestDecorator.FAILING) {
         return;
       }
       const count = counterUI.value + counterJS;
