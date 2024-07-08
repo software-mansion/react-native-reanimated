@@ -562,15 +562,23 @@ export class TestRunner {
   }
 
   private async mockConsole(testCase: TestCase) {
-    const counter = makeMutable(0);
+    const counterUI = makeMutable(0);
+    let counterJS = 0;
     const recordedMessage = makeMutable('');
 
     const originalError = console.error;
     const originalWarning = console.warn;
 
+    const incrementJS = () => {
+      counterJS++;
+    }
     const consoleLogMock = (message: string) => {
       'worklet';
-      counter.value++;
+      if (_WORKLET) {
+        counterUI.value++;
+      } else {
+        incrementJS();
+      }
       recordedMessage.value = message.split('\n\nThis error is located at:')[0];
     };
     console.error = consoleLogMock;
@@ -581,23 +589,23 @@ export class TestRunner {
       console.warn = consoleLogMock;
     });
 
-    const self = this;
-    async function restoreConsole() {
+    const restoreConsole = async () => {
       console.error = originalError;
       console.warn = originalWarning;
-      await self.runOnUIBlocking(() => {
+      await this.runOnUIBlocking(() => {
         'worklet';
         console.error = originalError;
         console.warn = originalWarning;
       });
     }
-    
-    async function checkErrors() {
+
+    const checkErrors = async () => {
       if (testCase.decorator != TestDecorator.WARN && testCase.decorator != TestDecorator.FAILING) {
         return;
       }
-      self.expect(counter.value).toBe(1);
-      self.expect(recordedMessage.value).toBe(testCase.warningMessage);
+      const count = counterUI.value + counterJS;
+      this.expect(count).toBe(1);
+      this.expect(recordedMessage.value).toBe(testCase.warningMessage);
     }
 
     return [restoreConsole, checkErrors];
