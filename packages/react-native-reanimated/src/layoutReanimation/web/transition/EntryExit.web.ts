@@ -20,7 +20,7 @@ export function EntryExitTransition(
   };
 
   const keyframeData: AnimationData = {
-    name: name,
+    name,
     style:
       '0' in exitingAnimationData.style
         ? {}
