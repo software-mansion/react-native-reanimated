@@ -190,7 +190,7 @@ function JsPerformance({
 
   const animatedProps = useAnimatedProps(() => {
     'worklet';
-    const text = 'JS: ' + jsFps.value ?? 'N/A' + ' ';
+    const text = 'JS: ' + (jsFps.value ?? 'N/A') + ' ';
     return { text, defaultValue: text };
   });
 
@@ -234,7 +234,7 @@ function UiPerformance({
 
   const animatedProps = useAnimatedProps(() => {
     'worklet';
-    const text = 'UI: ' + uiFps.value ?? 'N/A' + ' ';
+    const text = 'UI: ' + (uiFps.value ?? 'N/A') + ' ';
     return { text, defaultValue: text };
   });
 
