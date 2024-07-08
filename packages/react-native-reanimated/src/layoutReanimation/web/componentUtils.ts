@@ -228,37 +228,6 @@ export function handleLayoutTransition(
       break;
   }
 
-  if (animationType === TransitionType.ENTRY_EXIT) {
-    const styleTag = document.createElement('style');
-    const className = `dynamicClass${Date.now()}`;
-    styleTag.innerHTML = `
-        .${className}{
-          transform: translateX(${transitionData.translateX}px) translateY(${transitionData.translateY}) scale(${transitionData.scaleX},${transitionData.scaleY});
-        }
-    `;
-
-    document.head.appendChild(styleTag);
-
-    element.classList.add(className);
-
-    const exitingConfig = { ...animationConfig };
-    exitingConfig.animationName = transitionData.exiting;
-
-    setElementAnimation(element, exitingConfig);
-
-    element.onanimationend = () => {
-      element.classList.remove(className);
-      const enteringConfig = { ...animationConfig };
-      enteringConfig.animationName = transitionData.entering;
-
-      setElementAnimation(element, enteringConfig);
-
-      element.onanimationend = () => (styleTag.innerHTML = '');
-    };
-
-    return;
-  }
-
   animationConfig.animationName = TransitionGenerator(
     animationType,
     transitionData

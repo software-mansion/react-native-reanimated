@@ -14,6 +14,7 @@ import { SequencedTransition } from './transition/Sequenced.web';
 import { FadingTransition } from './transition/Fading.web';
 import { JumpingTransition } from './transition/Jumping.web';
 import { insertWebAnimation } from './domUtils';
+import { EntryExitTransition } from './transition/EntryExit.web';
 
 type TransformType = NonNullable<TransformsStyle['transform']>;
 
@@ -108,9 +109,14 @@ export function TransitionGenerator(
         transitionData
       );
       break;
-
     case TransitionType.JUMPING:
       transitionObject = JumpingTransition(
+        transitionKeyframeName,
+        transitionData
+      );
+      break;
+    case TransitionType.ENTRY_EXIT:
+      transitionObject = EntryExitTransition(
         transitionKeyframeName,
         transitionData
       );
