@@ -122,6 +122,8 @@ var require_globals = __commonJS({
       "null",
       "this",
       "global",
+      "window",
+      "globalThis",
       "console",
       "performance",
       "queueMicrotask",
