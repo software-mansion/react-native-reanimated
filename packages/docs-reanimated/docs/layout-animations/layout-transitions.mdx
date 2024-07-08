@@ -42,13 +42,19 @@ LinearTransition.easing(Easing.ease);
 - `.easing(easingFunction: EasingFunction)` is an easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`
 
 :::note
-The `.easing( ... )` modifier have no effect when `.springify()` is used.
+The `.easing(...)` modifier have no effect when `.springify()` is used.
 :::
 
 #### Spring-based <Optional/>
 
 Spring-based modifiers relay on [`withSpring`](/docs/animations/withSpring) function.
-Just as in withSpring config, spring-based modifiers can be physics-based (has `mass` and `damping` modifiers) or duration-based (has `duration` and `dampingRatio` modifiers). Usage of any time-based spring modifiers erases the effect of any physics-based spring modifier. Defaults to physics-based.
+Just as in withSpring config, spring-based modifiers can be physics-based (has `mass` and `damping` modifiers) or duration-based (has `duration` and `dampingRatio` modifiers).
+
+:::info
+The `mass` and `damping` (physics-based) properties can't be used at the same time as `duration` and `dampingRatio` (duration-based).
+
+When used together `duration` and `dampingRatio` overrides `mass` and `damping` props.
+:::
 
 ```javascript
 LinearTransition.springify()
@@ -84,7 +90,7 @@ LinearTransition.delay(500)
 
 - `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '300'.
 - `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
-- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
 - `.withInitialValues(values: StyleProps)` allows to override the initial config of the animation.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
@@ -97,16 +103,6 @@ LinearTransition.delay(500)
     ios: '/react-native-reanimated/recordings/layout_transitions/ios_linear_transition.mov',
   }}
 />
-
-### Platform compatibility
-
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
 
 ## Sequenced Transition
 
@@ -137,7 +133,7 @@ SequencedTransition.duration(1000)
 - `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '500'.
 - `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.reverse()` determines if the animation should run in reverse. Defaults to `false`.
-- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example
@@ -149,16 +145,6 @@ SequencedTransition.duration(1000)
     ios: '/react-native-reanimated/recordings/layout_transitions/ios_sequenced_transition.mov',
   }}
 />
-
-### Platform compatibility
-
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
 
 ## Fading Transition
 
@@ -187,7 +173,7 @@ FadingTransition.duration(1000)
 
 - `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '500'.
 - `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
-- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example
@@ -199,16 +185,6 @@ FadingTransition.duration(1000)
     ios: '/react-native-reanimated/recordings/layout_transitions/ios_fading_transition.mov',
   }}
 />
-
-### Platform compatibility
-
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
 
 ## Jumping Transition
 
@@ -237,7 +213,7 @@ JumpingTransition.duration(1000)
 
 - `.duration(duration: number)` sets length of the animation (in milliseconds). Defaults to '300'.
 - `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
-- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example
@@ -249,16 +225,6 @@ JumpingTransition.duration(1000)
     ios: '/react-native-reanimated/recordings/layout_transitions/ios_jumping_transition.mov',
   }}
 />
-
-### Platform compatibility
-
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
 
 ## Curved Transition
 
@@ -295,7 +261,7 @@ CurvedTransiton.duration(1000)
 - `.easingY(easing: EasingFunction)` defines easing animation for y-position.
 - `.easingWidth(easing: EasingFunction)` defines easing animation for width.
 - `.easingHeight(easing: EasingFunction)` defines easing animation for height.
-- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Example
@@ -307,16 +273,6 @@ CurvedTransiton.duration(1000)
     ios: '/react-native-reanimated/recordings/layout_transitions/ios_curved_transition.mov',
   }}
 />
-
-### Platform compatibility
-
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ❌  |
-
-</div>
 
 ## Entry/Exit Transition
 
@@ -347,7 +303,7 @@ EntryExitTransition.duration(1000)
 - `.delay(duration: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.exiting(animation)` determines animation shown when element is removed from position. Defaults to `FadeOut`.
 - `.entering(animation)` determines animation shown when element is added to new position. Defaults to `FadeIn`.
-- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
+- `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion [accessibility](/docs/guides/accessibility) setting.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ### Remarks
@@ -364,12 +320,12 @@ EntryExitTransition.duration(1000)
   }}
 />
 
-### Platform compatibility
+## Platform compatibility
 
 <div className="platform-compatibility">
 
 | Android | iOS | Web |
 | ------- | --- | --- |
-| ✅      | ✅  | ❌  |
+| ✅      | ✅  | ✅  |
 
 </div>
