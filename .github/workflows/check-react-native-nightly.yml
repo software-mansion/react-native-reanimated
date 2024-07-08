@@ -26,9 +26,9 @@ jobs:
       - name: Create app
         run: |
           if npm view react-native dist-tags | grep -q 'next:' ; then 
-            yarn install react-native@next && yarn react-native init app --skip-install --version next
+            yarn add react-native@next && yarn react-native init app --skip-install --version next
           else 
-            yarn install react-native@nightly && yarn react-native init app --skip-install --version nightly
+            yarn add react-native@nightly && yarn react-native init app --skip-install --version nightly
           fi
       - name: Install Reanimated
         working-directory: app
