@@ -1169,11 +1169,12 @@ var require_contextObject = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processIfWorkletContextObject = void 0;
     var types_12 = require("@babel/types");
+    var contextObjectMarker = "__workletObject";
     function processIfWorkletContextObject(path, state) {
       let isWorkletContextObject = false;
       path.traverse({
         ObjectProperty(subPath) {
-          if ((0, types_12.isIdentifier)(subPath.node.key) && subPath.node.key.name === "__workletObject") {
+          if ((0, types_12.isIdentifier)(subPath.node.key) && subPath.node.key.name === contextObjectMarker) {
             isWorkletContextObject = true;
             subPath.stop();
           }
@@ -1188,7 +1189,7 @@ var require_contextObject = __commonJS({
     function processWorkletContextObject(path, _state) {
       path.traverse({
         ObjectProperty(subPath) {
-          if ((0, types_12.isIdentifier)(subPath.node.key) && subPath.node.key.name === "__workletObject") {
+          if ((0, types_12.isIdentifier)(subPath.node.key) && subPath.node.key.name === contextObjectMarker) {
             subPath.remove();
           }
         }
