@@ -24,7 +24,6 @@ jobs:
       - name: Setup Yarn
         run: corepack enable && yarn init
       - name: Create app
-        working-directory: App
         run: |
           if npm view react-native dist-tags | grep -q 'next:' ; then 
             yarn install react-native@next && yarn react-native init app --skip-install --version next
