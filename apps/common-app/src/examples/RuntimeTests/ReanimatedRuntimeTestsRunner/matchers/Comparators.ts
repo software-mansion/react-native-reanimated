@@ -1,3 +1,4 @@
+import { isColor, processColor } from 'react-native-reanimated';
 import type { TestValue, ValidPropNames } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
 
@@ -18,19 +19,10 @@ const COMPARATORS: {
   },
 
   [ComparisonMode.COLOR]: (expected, value) => {
-    if (typeof value !== 'string' || typeof expected !== 'string') {
+    if (!isColor(expected) || !isColor(value)) {
       return false;
     }
-
-    const expectedLowerCase = expected.toLowerCase();
-    const [opaqueColorRe, transparencyColorRe] = [6, 8].map(length => new RegExp(`^#?([A-Fa-f0-9]{${length}})$`));
-    const shouldAddTransparency = opaqueColorRe.test(expectedLowerCase);
-    const expectedUnified = shouldAddTransparency ? `${expectedLowerCase}ff` : expectedLowerCase;
-
-    if (!transparencyColorRe.test(expectedUnified)) {
-      throw Error(`Invalid color format "${expectedUnified}", please use hex color (like #123abc)`);
-    }
-    return value === expectedUnified;
+    return processColor(expected) === processColor(value);
   },
 
   [ComparisonMode.DISTANCE]: (expected, value) => {
