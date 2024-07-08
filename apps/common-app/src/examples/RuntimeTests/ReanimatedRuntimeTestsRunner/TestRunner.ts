@@ -572,7 +572,7 @@ export class TestRunner {
     const incrementJS = () => {
       counterJS++;
     }
-    const consoleLogMock = (message: string) => {
+    const mockedConsoleFunction = (message: string) => {
       'worklet';
       if (_WORKLET) {
         counterUI.value++;
@@ -581,12 +581,12 @@ export class TestRunner {
       }
       recordedMessage.value = message.split('\n\nThis error is located at:')[0];
     };
-    console.error = consoleLogMock;
-    console.warn = consoleLogMock;
+    console.error = mockedConsoleFunction;
+    console.warn = mockedConsoleFunction;
     await this.runOnUIBlocking(() => {
       'worklet';
-      console.error = consoleLogMock;
-      console.warn = consoleLogMock;
+      console.error = mockedConsoleFunction;
+      console.warn = mockedConsoleFunction;
     });
 
     const restoreConsole = async () => {
