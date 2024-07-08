@@ -42,7 +42,7 @@ jobs:
       - name: Lint react-native-reanimated
         working-directory: packages/react-native-reanimated
         run: yarn lint:js
-      - name: Lint app-common
+      - name: Lint common-app
         working-directory: apps/common-app
         run: yarn lint
       - name: Find unused code
