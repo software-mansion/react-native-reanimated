@@ -18,6 +18,12 @@ const COMPARATORS: {
     return bothAreNaNs || ((bothAreNumbers || bothAreBigInts) && value === expected);
   },
 
+  [ComparisonMode.FLOAT]: (expected, value) => {
+    const bothAreNumbers = typeof value === 'number' && typeof expected === 'number';
+    const bothAreNaNs = bothAreNumbers && isNaN(value) && isNaN(expected);
+    return bothAreNaNs || Math.abs(Number(value) - Number(expected)) < Number.EPSILON;
+  },
+
   [ComparisonMode.COLOR]: (expected, value) => {
     if (!isColor(expected) || !isColor(value)) {
       return false;
@@ -28,6 +34,12 @@ const COMPARATORS: {
   [ComparisonMode.DISTANCE]: (expected, value) => {
     const valueAsNumber = Number(value);
     return !isNaN(valueAsNumber) && Math.abs(valueAsNumber - Number(expected)) < DISTANCE_TOLERANCE;
+  },
+
+  [ComparisonMode.CLOSE_DISTANCE]: (expected, value) => {
+    const bothAreNumbers = typeof value === 'number' && typeof expected === 'number';
+    const bothAreNaNs = bothAreNumbers && isNaN(value) && isNaN(expected);
+    return bothAreNaNs || Math.abs(Number(value) - Number(expected)) < 0.00001;
   },
 
   [ComparisonMode.ARRAY]: (expected, value) => {
@@ -95,7 +107,7 @@ export function getComparator(mode: ComparisonMode) {
 export function getComparisonModeForProp(prop: ValidPropNames): ComparisonMode {
   const propToComparisonModeDict = {
     zIndex: ComparisonMode.NUMBER,
-    opacity: ComparisonMode.NUMBER,
+    opacity: ComparisonMode.CLOSE_DISTANCE,
     width: ComparisonMode.DISTANCE,
     height: ComparisonMode.DISTANCE,
     top: ComparisonMode.DISTANCE,

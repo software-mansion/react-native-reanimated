@@ -76,7 +76,9 @@ export function isValidPropName(propName: string): propName is ValidPropNames {
 export enum ComparisonMode {
   STRING = 'STRING',
   DISTANCE = 'DISTANCE',
+  CLOSE_DISTANCE = 'CLOSE_DISTANCE',
   NUMBER = 'NUMBER',
+  FLOAT = 'FLOAT',
   COLOR = 'COLOR',
   ARRAY = 'ARRAY',
   OBJECT = 'OBJECT',
