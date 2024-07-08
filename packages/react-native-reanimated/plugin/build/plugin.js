@@ -1106,60 +1106,6 @@ var require_webOptimization = __commonJS({
   }
 });
 
-// lib/file.js
-var require_file = __commonJS({
-  "lib/file.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.processIfWorkletFile = void 0;
-    var types_12 = require("@babel/types");
-    function processIfWorkletFile(path, state) {
-      if (!path.node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
-        return false;
-      }
-      processWorkletFile(path, state);
-      path.node.directives = path.node.directives.filter((functionDirective) => functionDirective.value.value !== "worklet");
-      return true;
-    }
-    exports2.processIfWorkletFile = processIfWorkletFile;
-    function processWorkletFile(path, _state) {
-      path.get("body").forEach((bodyPath) => {
-        if (bodyPath.isVariableDeclaration()) {
-          processVariableDeclaration(bodyPath);
-        }
-        if (bodyPath.isFunctionDeclaration()) {
-          appendWorkletDirective(bodyPath.node.body);
-        }
-      });
-    }
-    function processVariableDeclaration(path) {
-      path.get("declarations").forEach((declaration) => {
-        const initPath = declaration.get("init");
-        if (initPath.isFunctionExpression()) {
-          appendWorkletDirective(initPath.node.body);
-        } else if (initPath.isArrowFunctionExpression()) {
-          const bodyPath = initPath.get("body");
-          if (!bodyPath.isBlockStatement()) {
-            bodyPath.replaceWith((0, types_12.blockStatement)([(0, types_12.returnStatement)(bodyPath.node)]));
-          }
-          appendWorkletDirective(bodyPath.node);
-        } else if (initPath.isObjectExpression()) {
-          initPath.node.properties.forEach((property) => {
-            if (property.type === "ObjectMethod") {
-              appendWorkletDirective(property.body);
-            }
-          });
-        }
-      });
-    }
-    function appendWorkletDirective(node) {
-      if (!node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
-        node.directives.push((0, types_12.directive)((0, types_12.directiveLiteral)("worklet")));
-      }
-    }
-  }
-});
-
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var autoworkletization_1 = require_autoworkletization();
@@ -1169,7 +1115,6 @@ var inlineStylesWarning_1 = require_inlineStylesWarning();
 var utils_1 = require_utils();
 var globals_1 = require_globals();
 var webOptimization_1 = require_webOptimization();
-var file_1 = require_file();
 module.exports = function() {
   function runWithTaggedExceptions(fun) {
     try {
@@ -1200,13 +1145,6 @@ module.exports = function() {
         enter(path, state) {
           runWithTaggedExceptions(() => {
             (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state) || (0, autoworkletization_1.processIfAutoworkletizableCallback)(path, state);
-          });
-        }
-      },
-      Program: {
-        enter(path, state) {
-          runWithTaggedExceptions(() => {
-            (0, file_1.processIfWorkletFile)(path, state);
           });
         }
       },
