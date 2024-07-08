@@ -22,11 +22,11 @@ jobs:
       # Sometimes `npx react-native init` fails due to dependency mismatches or other
       # rather vague errors. This is a workaround for that.
       - name: Setup Yarn
-        run: yarn init
+        run: corepack enable && yarn init
       - name: Create app
-        working-directory: ExpoApp
+        working-directory: App
         run: |
-          if npm view expo dist-tags | grep -q 'next:' ; then 
+          if npm view react-native dist-tags | grep -q 'next:' ; then 
             yarn install react-native@next && yarn react-native init app --skip-install --version next
           else 
             yarn install react-native@nightly && yarn react-native init app --skip-install --version nightly
