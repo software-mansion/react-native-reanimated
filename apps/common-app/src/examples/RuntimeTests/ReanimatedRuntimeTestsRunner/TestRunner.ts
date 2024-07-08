@@ -494,6 +494,7 @@ export class TestRunner {
         }
         return global.mockedAnimationTimestamp;
       };
+      global.framesCount = 0;
 
       const originalRequestAnimationFrame = global.requestAnimationFrame;
       global.originalRequestAnimationFrame = originalRequestAnimationFrame;
@@ -509,6 +510,7 @@ export class TestRunner {
         global.mockedAnimationTimestamp! += 16;
         global.__frameTimestamp = global.mockedAnimationTimestamp;
         global.originalFlushAnimationFrame!(global.mockedAnimationTimestamp!);
+        global.framesCount!++;
       };
     });
   }
@@ -555,12 +557,33 @@ export class TestRunner {
       if (global.mockedAnimationTimestamp) {
         global.mockedAnimationTimestamp = undefined;
       }
+      if (global.framesCount) {
+        global.framesCount = undefined;
+      }
     });
   }
 
   public wait(delay: number) {
     return new Promise(resolve => {
       setTimeout(resolve, delay);
+    });
+  }
+
+  public waitForAnimationUpdates(snapshot: Array<any>) {
+    const updatesCount = snapshot.length;
+    const flag = makeMutable(false);
+    return new Promise(resolve => {
+      const interval = setInterval(async () => {
+        await this.runOnUIBlocking(() => {
+          'worklet';
+          assertMockedAnimationTimestamp(global.framesCount);
+          flag.value = global.framesCount >= updatesCount - 1;
+        });
+        if (flag.value) {
+          clearInterval(interval);
+          resolve(true);
+        }
+      }, 20);
     });
   }
 
