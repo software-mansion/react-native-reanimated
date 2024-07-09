@@ -90,7 +90,7 @@ export function Bezier(
   mX2: number,
   mY2: number
 ): (x: number) => number {
-  ('worklet');
+  'worklet';
 
   function LinearEasing(x: number): number {
     'worklet';
