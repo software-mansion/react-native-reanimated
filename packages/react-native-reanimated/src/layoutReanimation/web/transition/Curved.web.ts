@@ -12,7 +12,7 @@ export function CurvedTransition(
         transform: [
           {
             translateX: `${transitionData.translateX}px`,
-            // scale: `${transitionData.scaleX},${transitionData.scaleY}`,
+            scale: `${transitionData.scaleX},${transitionData.scaleY}`,
           },
         ],
         easing: transitionData.easingX,
@@ -28,7 +28,7 @@ export function CurvedTransition(
         transform: [
           {
             translateY: `${transitionData.translateY}px`,
-            // scale: `${transitionData.scaleX},${transitionData.scaleY}`,
+            scale: `${transitionData.scaleX},${transitionData.scaleY}`,
           },
         ],
         easing: transitionData.easingY,
