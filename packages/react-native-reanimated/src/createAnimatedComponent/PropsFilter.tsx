@@ -38,7 +38,6 @@ export class PropsFilter implements IPropsFilter {
         const processedStyle: StyleProps = styles.map((style) => {
           if (style && style.viewDescriptors) {
             // this is how we recognize styles returned by useAnimatedStyle
-            style.viewsRef?.add(component);
             if (component._isFirstRender) {
               this._initialStyle = {
                 ...style.initial.value,
@@ -62,7 +61,6 @@ export class PropsFilter implements IPropsFilter {
           Object.keys(animatedProp.initial.value).forEach((initialValueKey) => {
             props[initialValueKey] =
               animatedProp.initial?.value[initialValueKey];
-            animatedProp.viewsRef?.add(component);
           });
         }
       } else if (
