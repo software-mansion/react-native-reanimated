@@ -55,6 +55,8 @@ export interface AnimationConfig {
 
 export interface CustomConfig {
   easingV?: () => number;
+  easingXV?: () => number;
+  easingYV?: () => number;
   durationV?: number;
   delayV?: number;
   randomizeDelay?: boolean;
