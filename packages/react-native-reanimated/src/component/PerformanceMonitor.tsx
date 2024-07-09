@@ -4,7 +4,6 @@ import React, { useEffect, useRef } from 'react';
 import { TextInput, StyleSheet, View } from 'react-native';
 
 import type { FrameInfo } from '../frameCallback';
-import type { SharedValue } from '../commonTypes';
 import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
@@ -46,7 +45,7 @@ function createCircularDoublesBuffer(size: number) {
   };
 }
 
-const DEFAULT_BUFFER_SIZE = 60;
+const DEFAULT_BUFFER_SIZE = 20;
 addWhitelistedNativeProps({ text: true });
 const AnimatedTextInput = createAnimatedComponent(TextInput);
 
@@ -71,33 +70,18 @@ function getFps(renderTimeInMs: number): number {
   return 1000 / renderTimeInMs;
 }
 
-function getTimeDelta(
-  timestamp: number,
-  previousTimestamp: number | null
-): number {
-  'worklet';
-  return previousTimestamp !== null ? timestamp - previousTimestamp : 0;
-}
-
 function completeBufferRoutine(
   buffer: CircularBuffer,
-  timestamp: number,
-  previousTimestamp: number,
-  totalRenderTime: SharedValue<number>
+  timestamp: number
 ): number {
   'worklet';
   timestamp = Math.round(timestamp);
-  previousTimestamp = Math.round(previousTimestamp) ?? timestamp;
 
-  const droppedTimestamp = buffer.push(timestamp);
-  const nextToDrop = buffer.back()!;
+  const droppedTimestamp = buffer.push(timestamp) ?? timestamp;
 
-  const delta = getTimeDelta(timestamp, previousTimestamp);
-  const droppedDelta = getTimeDelta(nextToDrop, droppedTimestamp);
+  const measuredRangeDuration = timestamp - droppedTimestamp;
 
-  totalRenderTime.value += delta - droppedDelta;
-
-  return getFps(totalRenderTime.value / buffer.count);
+  return getFps(measuredRangeDuration / buffer.count);
 }
 
 function JsPerformance() {
@@ -110,20 +94,17 @@ function JsPerformance() {
   useEffect(() => {
     loopAnimationFrame((_, timestamp) => {
       timestamp = Math.round(timestamp);
-      const previousTimestamp = circularBuffer.current.front() ?? timestamp;
 
       const currentFps = completeBufferRoutine(
         circularBuffer.current,
-        timestamp,
-        previousTimestamp,
-        totalRenderTime
+        timestamp
       );
 
       // JS fps have to be measured every 2nd frame,
       // thus 2x multiplication has to occur here
       jsFps.value = (currentFps * 2).toFixed(0);
     });
-  }, []);
+  }, [jsFps, totalRenderTime]);
 
   const animatedProps = useAnimatedProps(() => {
     const text = 'JS: ' + jsFps.value ?? 'N/A';
@@ -143,7 +124,6 @@ function JsPerformance() {
 
 function UiPerformance() {
   const uiFps = useSharedValue<string | null>(null);
-  const totalRenderTime = useSharedValue(0);
   const circularBuffer = useSharedValue<CircularBuffer | null>(null);
 
   useFrameCallback(({ timestamp }: FrameInfo) => {
@@ -152,14 +132,8 @@ function UiPerformance() {
     }
 
     timestamp = Math.round(timestamp);
-    const previousTimestamp = circularBuffer.value.front() ?? timestamp;
 
-    const currentFps = completeBufferRoutine(
-      circularBuffer.value,
-      timestamp,
-      previousTimestamp,
-      totalRenderTime
-    );
+    const currentFps = completeBufferRoutine(circularBuffer.value, timestamp);
 
     uiFps.value = currentFps.toFixed(0);
   });
