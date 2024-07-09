@@ -119,7 +119,8 @@ export function TransitionGenerator(
       );
       break;
 
-    case TransitionType.CURVED:
+    // Here code block with {} is necessary because of eslint
+    case TransitionType.CURVED: {
       dummyTransitionKeyframeName = generateNextCustomKeyframeName();
 
       const { firstKeyframeObj, secondKeyframeObj } = CurvedTransition(
@@ -134,6 +135,9 @@ export function TransitionGenerator(
         convertAnimationObjectToKeyframes(secondKeyframeObj);
 
       insertWebAnimation(dummyTransitionKeyframeName, dummyKeyframe);
+
+      break;
+    }
   }
 
   const transitionKeyframe =
