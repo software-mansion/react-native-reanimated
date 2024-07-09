@@ -10,9 +10,12 @@ import type {
 } from './config';
 import { WebEasings } from './Easing.web';
 import type { WebEasingsNames } from './Easing.web';
-import type { TransitionData } from './animationParser';
+import {
+  convertAnimationObjectToKeyframes,
+  type TransitionData,
+} from './animationParser';
 import { TransitionGenerator } from './createAnimation';
-import { scheduleAnimationCleanup } from './domUtils';
+import { insertWebAnimation, scheduleAnimationCleanup } from './domUtils';
 import { _updatePropsJS } from '../../js-reanimated';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
@@ -21,6 +24,7 @@ import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Keyframe } from '../animationBuilder';
+import { CurvedTransition } from './transition/Curved.web';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName =
@@ -152,7 +156,10 @@ export function setElementAnimation(
     element.style.animationName = animationName;
     element.style.animationDuration = `${duration}s`;
     element.style.animationDelay = `${delay}s`;
-    element.style.animationTimingFunction = easing;
+
+    if (easing !== null) {
+      element.style.animationTimingFunction = easing;
+    }
   };
 
   if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
@@ -220,17 +227,62 @@ export function handleLayoutTransition(
     case 'JumpingTransition':
       animationType = TransitionType.JUMPING;
       break;
+    case 'CurvedTransition':
+      animationType = TransitionType.CURVED;
+      break;
     default:
       animationType = TransitionType.LINEAR;
       break;
   }
 
-  animationConfig.animationName = TransitionGenerator(
-    animationType,
-    transitionData
-  );
+  const { transitionKeyframeName, cloneTransitionKeyframeName } =
+    TransitionGenerator(animationType, transitionData);
 
+  if (animationType !== TransitionType.CURVED) {
+    animationConfig.animationName = transitionKeyframeName;
+    setElementAnimation(element, animationConfig);
+
+    return;
+  }
+
+  animationConfig.animationName = transitionKeyframeName;
+  animationConfig.easing = null;
+
+  const cloneAnimationConfig: AnimationConfig = {
+    animationName: cloneTransitionKeyframeName,
+    animationType: LayoutAnimationType.LAYOUT,
+    duration: animationConfig.duration,
+    delay: animationConfig.delay,
+    easing: null,
+    callback: null,
+    reversed: false,
+  };
+
+  const clone = element.cloneNode(true) as HTMLElement;
+  clone.style.animationName = '';
+  clone.style.position = 'absolute';
+  clone.style.top = '0px';
+  clone.style.left = '0px';
+  clone.style.margin = '0px';
+  clone.style.width = '100%';
+  clone.style.height = '100%';
+
+  const originalBackgroundColor = element.style.backgroundColor;
+  element.style.backgroundColor = 'transparent';
+  element.appendChild(clone);
+
+  setElementAnimation(clone, cloneAnimationConfig);
   setElementAnimation(element, animationConfig);
+
+  const animationEndCallback = () => {
+    if (element.contains(clone)) {
+      element.removeChild(clone);
+    }
+    element.style.backgroundColor = originalBackgroundColor;
+    element.removeEventListener('animationend', animationEndCallback);
+  };
+
+  element.addEventListener('animationend', animationEndCallback);
 }
 
 function getElementScrollValue(element: HTMLElement): ScrollOffsets {

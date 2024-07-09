@@ -14,6 +14,7 @@ import { SequencedTransition } from './transition/Sequenced.web';
 import { FadingTransition } from './transition/Fading.web';
 import { JumpingTransition } from './transition/Jumping.web';
 import { insertWebAnimation } from './domUtils';
+import { CurvedTransition } from './transition/Curved.web';
 
 type TransformType = NonNullable<TransformsStyle['transform']>;
 
@@ -87,7 +88,13 @@ export function TransitionGenerator(
   transitionData: TransitionData
 ) {
   const transitionKeyframeName = generateNextCustomKeyframeName();
+  const cloneTransitionKeyframeName =
+    transitionType === TransitionType.CURVED
+      ? generateNextCustomKeyframeName()
+      : '';
+
   let transitionObject;
+  let cloneTransitionObject;
 
   switch (transitionType) {
     case TransitionType.LINEAR:
@@ -115,6 +122,16 @@ export function TransitionGenerator(
         transitionData
       );
       break;
+
+    case TransitionType.CURVED:
+      const { firstKeyframeObj, secondKeyframeObj } = CurvedTransition(
+        transitionKeyframeName,
+        cloneTransitionKeyframeName,
+        transitionData
+      );
+
+      transitionObject = firstKeyframeObj;
+      cloneTransitionObject = secondKeyframeObj;
   }
 
   const transitionKeyframe =
@@ -122,5 +139,15 @@ export function TransitionGenerator(
 
   insertWebAnimation(transitionKeyframeName, transitionKeyframe);
 
-  return transitionKeyframeName;
+  if (transitionType === TransitionType.CURVED) {
+    const cloneKeyframe = convertAnimationObjectToKeyframes(
+      cloneTransitionObject!
+    );
+
+    insertWebAnimation(cloneTransitionKeyframeName, cloneKeyframe);
+
+    console.log(transitionKeyframe, cloneKeyframe);
+  }
+
+  return { transitionKeyframeName, cloneTransitionKeyframeName };
 }

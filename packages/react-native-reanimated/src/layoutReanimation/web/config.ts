@@ -48,7 +48,7 @@ export interface AnimationConfig {
   animationType: LayoutAnimationType;
   duration: number;
   delay: number;
-  easing: string;
+  easing: string | null;
   callback: AnimationCallback;
   reversed: boolean;
 }
@@ -69,6 +69,7 @@ export enum TransitionType {
   SEQUENCED,
   FADING,
   JUMPING,
+  CURVED,
 }
 
 export const AnimationsData: Record<string, AnimationData> = {
