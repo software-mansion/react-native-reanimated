@@ -1,4 +1,4 @@
-import { TransitionData } from '../animationParser';
+import type { TransitionData } from '../animationParser';
 
 export function CurvedTransition(
   keyframeXName: string,
