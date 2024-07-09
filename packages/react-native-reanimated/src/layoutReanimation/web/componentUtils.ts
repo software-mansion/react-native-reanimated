@@ -307,7 +307,7 @@ function handleCurvedTransition(
   setElementAnimation(dummy, dummyAnimationConfig);
   setElementAnimation(element, animationConfig);
 
-  const animationEndCallback = () => {
+  const onFinalize = () => {
     if (element.contains(dummy)) {
       element.removeChild(dummy);
     }
@@ -315,10 +315,20 @@ function handleCurvedTransition(
     showChildren(element, childrenDisplayProperty, true);
 
     element.style.backgroundColor = originalBackgroundColor;
+  };
+
+  const animationCancelCallback = () => {
+    onFinalize();
+    element.removeEventListener('animationcancel', animationCancelCallback);
+  };
+
+  const animationEndCallback = () => {
+    onFinalize();
     element.removeEventListener('animationend', animationEndCallback);
   };
 
   element.addEventListener('animationend', animationEndCallback);
+  element.addEventListener('animationcancel', animationCancelCallback);
 }
 
 function getElementScrollValue(element: HTMLElement): ScrollOffsets {
