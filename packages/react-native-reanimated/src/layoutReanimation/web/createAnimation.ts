@@ -145,8 +145,6 @@ export function TransitionGenerator(
     );
 
     insertWebAnimation(cloneTransitionKeyframeName, cloneKeyframe);
-
-    console.log(transitionKeyframe, cloneKeyframe);
   }
 
   return { transitionKeyframeName, cloneTransitionKeyframeName };

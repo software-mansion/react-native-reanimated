@@ -269,6 +269,15 @@ export function handleLayoutTransition(
 
   const originalBackgroundColor = element.style.backgroundColor;
   element.style.backgroundColor = 'transparent';
+
+  const childrenDisplayProperty = new Map<HTMLElement, string>();
+
+  for (let i = 0; i < element.children.length; ++i) {
+    const child = element.children[i] as HTMLElement;
+    childrenDisplayProperty.set(child, child.style.display);
+    child.style.display = 'none';
+  }
+
   element.appendChild(clone);
 
   setElementAnimation(clone, cloneAnimationConfig);
@@ -278,6 +287,12 @@ export function handleLayoutTransition(
     if (element.contains(clone)) {
       element.removeChild(clone);
     }
+
+    for (let i = 0; i < element.children.length; ++i) {
+      const child = element.children[i] as HTMLElement;
+      child.style.display = childrenDisplayProperty.get(child)!;
+    }
+
     element.style.backgroundColor = originalBackgroundColor;
     element.removeEventListener('animationend', animationEndCallback);
   };
