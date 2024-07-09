@@ -10,12 +10,9 @@ import type {
 } from './config';
 import { WebEasings } from './Easing.web';
 import type { WebEasingsNames } from './Easing.web';
-import {
-  convertAnimationObjectToKeyframes,
-  type TransitionData,
-} from './animationParser';
+import { type TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
-import { insertWebAnimation, scheduleAnimationCleanup } from './domUtils';
+import { scheduleAnimationCleanup } from './domUtils';
 import { _updatePropsJS } from '../../js-reanimated';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
@@ -24,7 +21,6 @@ import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Keyframe } from '../animationBuilder';
-import { CurvedTransition } from './transition/Curved.web';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName =
