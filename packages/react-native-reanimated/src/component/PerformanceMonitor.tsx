@@ -84,11 +84,11 @@ function completeBufferRoutine(
   return getFps(measuredRangeDuration / buffer.count);
 }
 
-function JsPerformance() {
+function JsPerformance({ smoothingFrames }: { smoothingFrames: number }) {
   const jsFps = useSharedValue<string | null>(null);
   const totalRenderTime = useSharedValue(0);
   const circularBuffer = useRef<CircularBuffer>(
-    createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE)
+    createCircularDoublesBuffer(smoothingFrames)
   );
 
   useEffect(() => {
@@ -122,13 +122,13 @@ function JsPerformance() {
   );
 }
 
-function UiPerformance() {
+function UiPerformance({ smoothingFrames }: { smoothingFrames: number }) {
   const uiFps = useSharedValue<string | null>(null);
   const circularBuffer = useSharedValue<CircularBuffer | null>(null);
 
   useFrameCallback(({ timestamp }: FrameInfo) => {
     if (circularBuffer.value === null) {
-      circularBuffer.value = createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE);
+      circularBuffer.value = createCircularDoublesBuffer(smoothingFrames);
     }
 
     timestamp = Math.round(timestamp);
@@ -154,11 +154,29 @@ function UiPerformance() {
   );
 }
 
-export function PerformanceMonitor() {
+export type PerformanceMonitorProps = {
+  /**
+   * Sets amount of previous frames used for smoothing at highest expectedFps.
+   *
+   * Automatically scales down at lower frame rates.
+   *
+   * Affects jumpiness of the FPS measurements value.
+   */
+  smoothingFrames?: number;
+};
+
+/**
+ * A component that lets you measure fps values on JS and UI threads on both the Paper and Fabric architectures.
+ *
+ * @param smoothingFrames - Determines amount of saved frames which will be used for fps value smoothing.
+ */
+export function PerformanceMonitor({
+  smoothingFrames = DEFAULT_BUFFER_SIZE,
+}: PerformanceMonitorProps) {
   return (
     <View style={styles.monitor}>
-      <JsPerformance />
-      <UiPerformance />
+      <JsPerformance smoothingFrames={smoothingFrames} />
+      <UiPerformance smoothingFrames={smoothingFrames} />
     </View>
   );
 }
