@@ -88,13 +88,9 @@ export function TransitionGenerator(
   transitionData: TransitionData
 ) {
   const transitionKeyframeName = generateNextCustomKeyframeName();
-  const cloneTransitionKeyframeName =
-    transitionType === TransitionType.CURVED
-      ? generateNextCustomKeyframeName()
-      : '';
+  let cloneTransitionKeyframeName;
 
   let transitionObject;
-  let cloneTransitionObject;
 
   switch (transitionType) {
     case TransitionType.LINEAR:
@@ -124,6 +120,8 @@ export function TransitionGenerator(
       break;
 
     case TransitionType.CURVED:
+      cloneTransitionKeyframeName = generateNextCustomKeyframeName();
+
       const { firstKeyframeObj, secondKeyframeObj } = CurvedTransition(
         transitionKeyframeName,
         cloneTransitionKeyframeName,
@@ -131,21 +129,17 @@ export function TransitionGenerator(
       );
 
       transitionObject = firstKeyframeObj;
-      cloneTransitionObject = secondKeyframeObj;
+
+      const cloneKeyframe =
+        convertAnimationObjectToKeyframes(secondKeyframeObj);
+
+      insertWebAnimation(cloneTransitionKeyframeName, cloneKeyframe);
   }
 
   const transitionKeyframe =
     convertAnimationObjectToKeyframes(transitionObject);
 
   insertWebAnimation(transitionKeyframeName, transitionKeyframe);
-
-  if (transitionType === TransitionType.CURVED) {
-    const cloneKeyframe = convertAnimationObjectToKeyframes(
-      cloneTransitionObject!
-    );
-
-    insertWebAnimation(cloneTransitionKeyframeName, cloneKeyframe);
-  }
 
   return { transitionKeyframeName, cloneTransitionKeyframeName };
 }

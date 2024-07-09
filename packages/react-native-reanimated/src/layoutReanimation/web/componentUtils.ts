@@ -245,7 +245,7 @@ export function handleLayoutTransition(
   animationConfig.easing = null;
 
   const cloneAnimationConfig: AnimationConfig = {
-    animationName: cloneTransitionKeyframeName,
+    animationName: cloneTransitionKeyframeName!, // In `CurvedTransition` it cannot be undefined
     animationType: LayoutAnimationType.LAYOUT,
     duration: animationConfig.duration,
     delay: animationConfig.delay,
