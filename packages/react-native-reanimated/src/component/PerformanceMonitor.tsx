@@ -107,7 +107,7 @@ function JsPerformance() {
   }, [jsFps, totalRenderTime]);
 
   const animatedProps = useAnimatedProps(() => {
-    const text = 'JS: ' + jsFps.value ?? 'N/A';
+    const text = 'JS: ' + (jsFps.value ?? 'N/A') + ' ';
     return { text, defaultValue: text };
   });
 
@@ -139,7 +139,7 @@ function UiPerformance() {
   });
 
   const animatedProps = useAnimatedProps(() => {
-    const text = 'UI: ' + uiFps.value ?? 'N/A';
+    const text = 'UI: ' + (uiFps.value ?? 'N/A') + ' ';
     return { text, defaultValue: text };
   });
 
