@@ -589,12 +589,7 @@ export class TestRunner {
           tag,
           type,
           {
-            targetGlobalOriginX: 40,
-            targetGlobalOriginY: 175.3333346048991,
-            targetHeight: 80.00000762939453,
-            targetOriginX: 40,
-            targetOriginY: 40,
-            targetWidth: 313,
+            ..._yogaValues,
             windowHeight: 852,
             windowWidth: 393,
           },
