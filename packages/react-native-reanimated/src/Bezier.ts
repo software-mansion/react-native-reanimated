@@ -90,7 +90,7 @@ export function Bezier(
   mX2: number,
   mY2: number
 ): (x: number) => number {
-  'worklet';
+  ('worklet');
 
   function LinearEasing(x: number): number {
     'worklet';
@@ -105,12 +105,12 @@ export function Bezier(
     return LinearEasing;
   }
 
-  // Precompute samples table
   const float32ArraySupported = typeof Float32Array === 'function';
   const sampleValues = float32ArraySupported
     ? new Float32Array(kSplineTableSize)
     : new Array(kSplineTableSize);
 
+  // Precompute samples table
   for (let i = 0; i < kSplineTableSize; ++i) {
     sampleValues[i] = calcBezier(i * kSampleStepSize, mX1, mX2);
   }
