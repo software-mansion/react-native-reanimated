@@ -10,7 +10,7 @@ import type {
 } from './config';
 import { WebEasings } from './Easing.web';
 import type { WebEasingsNames } from './Easing.web';
-import { type TransitionData } from './animationParser';
+import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
 import { _updatePropsJS } from '../../js-reanimated';
