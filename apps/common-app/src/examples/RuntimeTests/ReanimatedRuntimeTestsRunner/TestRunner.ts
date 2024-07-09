@@ -565,7 +565,7 @@ export class TestRunner {
     });
   }
 
-  public async unmockWindowSize() {
+  public async unmockWindowDimensions() {
     await this.runOnUIBlocking(() => {
       'worklet';
       if (global._LayoutAnimationsManager) {
@@ -574,7 +574,7 @@ export class TestRunner {
     });
   }
 
-  public async mockWindowSize() {
+  public async mockWindowDimensions() {
     await this.runOnUIBlocking(() => {
       'worklet';
       const originalCreateAnimatedComponent = global.LayoutAnimationsManager;
