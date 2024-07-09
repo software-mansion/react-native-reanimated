@@ -21,7 +21,7 @@
     "format:android": "find android/src/ -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:common": "find Common/ -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:docs": "cd docs && yarn format",
-    "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error  ",
+    "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error",
     "type:check:src": "yarn tsc --noEmit",
     "type:check:plugin": "cd plugin && yarn type:check:src && cd ..",
     "type:check:app": "./scripts/test-ts.sh ../../apps/common-app/src/App.tsx",
