@@ -105,10 +105,7 @@ export function Bezier(
     return LinearEasing;
   }
 
-  const float32ArraySupported = typeof Float32Array === 'function';
-  const sampleValues = float32ArraySupported
-    ? new Float32Array(kSplineTableSize)
-    : new Array(kSplineTableSize);
+  const sampleValues = new Array(kSplineTableSize);
 
   // Precompute samples table
   for (let i = 0; i < kSplineTableSize; ++i) {
