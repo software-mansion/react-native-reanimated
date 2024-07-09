@@ -47,6 +47,9 @@ public class TabNavigatorObserver {
     private final List<View> nextTransition = new ArrayList<>();
 
     public FragmentLifecycleCallbacks(Fragment fragment) {
+      if (!ScreensHelper.isScreenFragment(fragment)) {
+        return;
+      }
       try {
         Class<?> screenFragmentClass = fragment.getClass();
         getScreen = screenFragmentClass.getMethod("getScreen");
@@ -88,6 +91,9 @@ public class TabNavigatorObserver {
     }
 
     private void onFragmentUpdate(Fragment fragment, boolean isAttaching) {
+      if (!ScreensHelper.isScreenFragment(fragment)) {
+        return;
+      }
       try {
         View screen = (View) getScreen.invoke(fragment);
         if (getActivityState.invoke(screen) == null) {

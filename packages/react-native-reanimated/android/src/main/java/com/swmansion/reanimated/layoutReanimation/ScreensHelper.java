@@ -77,6 +77,10 @@ public class ScreensHelper {
     return isInstanceOf(maybeView, "ScreensCoordinatorLayout");
   }
 
+  public static boolean isScreenFragment(Object maybeView) {
+    return isInstanceOf(maybeView, "ScreenFragment");
+  }
+
   private static boolean isInstanceOf(Object maybeView, String className) {
     return maybeView != null && maybeView.getClass().getSimpleName().equals(className);
   }
