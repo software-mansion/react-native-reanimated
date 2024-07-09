@@ -237,15 +237,55 @@ export function handleLayoutTransition(
   if (animationType !== TransitionType.CURVED) {
     animationConfig.animationName = transitionKeyframeName;
     setElementAnimation(element, animationConfig);
-
-    return;
+  } else {
+    handleCurvedTransition(
+      element,
+      animationConfig,
+      transitionKeyframeName,
+      cloneTransitionKeyframeName! // In `CurvedTransition` it cannot be undefined
+    );
   }
+}
 
+function handleCurvedTransition(
+  element: HTMLElement,
+  animationConfig: AnimationConfig,
+  transitionKeyframeName: string,
+  cloneTransitionKeyframeName: string
+) {
+  const resetStyle = (component: HTMLElement) => {
+    component.style.animationName = ''; // This line prevents unwanted entering animation
+    component.style.position = 'absolute';
+    component.style.top = '0px';
+    component.style.left = '0px';
+    component.style.margin = '0px';
+    component.style.width = '100%';
+    component.style.height = '100%';
+  };
+
+  const showChildren = (
+    parent: HTMLElement,
+    childrenDisplayProperty: Map<HTMLElement, string>,
+    shouldShow: boolean
+  ) => {
+    for (let i = 0; i < parent.children.length; ++i) {
+      const child = parent.children[i] as HTMLElement;
+
+      if (shouldShow) {
+        child.style.display = childrenDisplayProperty.get(child)!;
+      } else {
+        childrenDisplayProperty.set(child, child.style.display);
+        child.style.display = 'none';
+      }
+    }
+  };
+
+  // Adjust configs for `CurvedTransition` and create config object for dummy
   animationConfig.animationName = transitionKeyframeName;
   animationConfig.easing = null;
 
   const cloneAnimationConfig: AnimationConfig = {
-    animationName: cloneTransitionKeyframeName!, // In `CurvedTransition` it cannot be undefined
+    animationName: cloneTransitionKeyframeName,
     animationType: LayoutAnimationType.LAYOUT,
     duration: animationConfig.duration,
     delay: animationConfig.delay,
@@ -255,25 +295,13 @@ export function handleLayoutTransition(
   };
 
   const clone = element.cloneNode(true) as HTMLElement;
-  clone.style.animationName = '';
-  clone.style.position = 'absolute';
-  clone.style.top = '0px';
-  clone.style.left = '0px';
-  clone.style.margin = '0px';
-  clone.style.width = '100%';
-  clone.style.height = '100%';
+  resetStyle(clone);
+
+  const childrenDisplayProperty = new Map<HTMLElement, string>();
+  showChildren(element, childrenDisplayProperty, false);
 
   const originalBackgroundColor = element.style.backgroundColor;
   element.style.backgroundColor = 'transparent';
-
-  const childrenDisplayProperty = new Map<HTMLElement, string>();
-
-  for (let i = 0; i < element.children.length; ++i) {
-    const child = element.children[i] as HTMLElement;
-    childrenDisplayProperty.set(child, child.style.display);
-    child.style.display = 'none';
-  }
-
   element.appendChild(clone);
 
   setElementAnimation(clone, cloneAnimationConfig);
@@ -284,10 +312,7 @@ export function handleLayoutTransition(
       element.removeChild(clone);
     }
 
-    for (let i = 0; i < element.children.length; ++i) {
-      const child = element.children[i] as HTMLElement;
-      child.style.display = childrenDisplayProperty.get(child)!;
-    }
+    showChildren(element, childrenDisplayProperty, true);
 
     element.style.backgroundColor = originalBackgroundColor;
     element.removeEventListener('animationend', animationEndCallback);
