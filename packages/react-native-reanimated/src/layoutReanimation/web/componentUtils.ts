@@ -231,7 +231,7 @@ export function handleLayoutTransition(
       break;
   }
 
-  const { transitionKeyframeName, cloneTransitionKeyframeName } =
+  const { transitionKeyframeName, dummyTransitionKeyframeName } =
     TransitionGenerator(animationType, transitionData);
 
   if (animationType !== TransitionType.CURVED) {
@@ -242,7 +242,7 @@ export function handleLayoutTransition(
       element,
       animationConfig,
       transitionKeyframeName,
-      cloneTransitionKeyframeName! // In `CurvedTransition` it cannot be undefined
+      dummyTransitionKeyframeName! // In `CurvedTransition` it cannot be undefined
     );
   }
 }
@@ -251,7 +251,7 @@ function handleCurvedTransition(
   element: HTMLElement,
   animationConfig: AnimationConfig,
   transitionKeyframeName: string,
-  cloneTransitionKeyframeName: string
+  dummyTransitionKeyframeName: string
 ) {
   const resetStyle = (component: HTMLElement) => {
     component.style.animationName = ''; // This line prevents unwanted entering animation
@@ -284,8 +284,8 @@ function handleCurvedTransition(
   animationConfig.animationName = transitionKeyframeName;
   animationConfig.easing = null;
 
-  const cloneAnimationConfig: AnimationConfig = {
-    animationName: cloneTransitionKeyframeName,
+  const dummyAnimationConfig: AnimationConfig = {
+    animationName: dummyTransitionKeyframeName,
     animationType: LayoutAnimationType.LAYOUT,
     duration: animationConfig.duration,
     delay: animationConfig.delay,
@@ -294,22 +294,22 @@ function handleCurvedTransition(
     reversed: false,
   };
 
-  const clone = element.cloneNode(true) as HTMLElement;
-  resetStyle(clone);
+  const dummy = element.cloneNode(true) as HTMLElement;
+  resetStyle(dummy);
 
   const childrenDisplayProperty = new Map<HTMLElement, string>();
   showChildren(element, childrenDisplayProperty, false);
 
   const originalBackgroundColor = element.style.backgroundColor;
   element.style.backgroundColor = 'transparent';
-  element.appendChild(clone);
+  element.appendChild(dummy);
 
-  setElementAnimation(clone, cloneAnimationConfig);
+  setElementAnimation(dummy, dummyAnimationConfig);
   setElementAnimation(element, animationConfig);
 
   const animationEndCallback = () => {
-    if (element.contains(clone)) {
-      element.removeChild(clone);
+    if (element.contains(dummy)) {
+      element.removeChild(dummy);
     }
 
     showChildren(element, childrenDisplayProperty, true);
