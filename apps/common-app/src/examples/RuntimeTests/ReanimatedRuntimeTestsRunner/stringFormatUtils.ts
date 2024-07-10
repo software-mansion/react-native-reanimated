@@ -4,14 +4,36 @@ export function indentNestingLevel(nestingLevel: number) {
   return `  ${'   '.repeat(nestingLevel)}`;
 }
 
-export function adjustStringToLength(message: undefined | string | number, length: number) {
-  const messageStr = message ? message.toString() : '';
-  const messageLen = messageStr.length;
+function valueToPrettyString(message: NullableTestValue): string {
+  if (message === undefined) {
+    return 'undefined';
+  } else if (message === null) {
+    return 'null';
+  } else if (typeof message === 'object') {
+    return JSON.stringify(message);
+  } else if (typeof message === 'number') {
+    const digitsAfterDot = message.toString().split('.')?.[1]?.length || 0;
+
+    for (let i = 0; i < digitsAfterDot; i++) {
+      if (Math.abs(message - Number(message.toFixed(i))) < 0.00001) {
+        return '≈' + message.toFixed(i);
+      }
+    }
+    return String(message);
+  } else {
+    return message?.toString();
+  }
+}
+
+function adjustValueToLength(value: NullableTestValue, length: number) {
+  const valueStr = valueToPrettyString(value);
+
+  const messageLen = valueStr.length;
   if (length > messageLen) {
     const indentSize = length - messageLen;
-    return `${messageStr}${' '.repeat(indentSize)}`;
+    return `${valueStr}${' '.repeat(indentSize)}`;
   } else {
-    return messageStr.slice(0, length);
+    return valueStr.slice(0, length);
   }
 }
 
@@ -112,11 +134,83 @@ export function formatString(template: string, variableObject: unknown, index: n
   return testName;
 }
 
-export function formatSnapshotMismatch(mismatches: Array<Mismatch>, native: boolean) {
-  /**      | HEIGHT             | WIDTH              |
-   index | EXPECTED | ACTUAL  | EXPECTED | ACTUAL  |
-   */
+const VALUE_COLUMN_WIDTH = 15;
+const INDEX_COLUMN_WIDTH = 7;
 
+const VERTICAL_LINE = '│';
+const VERTICAL_LINE_DOUBLE = '║';
+const HORIZONTAL_LINE = '─';
+
+function getBorderLine(keys: Array<string>, type: 'top' | 'bottom' | 'mid') {
+  const leftEdge = { top: '╭', mid: '├', bottom: '╰' };
+  const rightEdge = { top: '╮', mid: '┤', bottom: '╯' };
+  const doubleLineJoint = { top: '╥', mid: '╫', bottom: '╨' };
+  const singleLineJoint = { top: '┬', mid: '┴', bottom: HORIZONTAL_LINE };
+
+  return (
+    leftEdge[type] +
+    HORIZONTAL_LINE.repeat(INDEX_COLUMN_WIDTH) +
+    doubleLineJoint[type] +
+    keys
+      .map(
+        _key =>
+          HORIZONTAL_LINE.repeat(VALUE_COLUMN_WIDTH) +
+          singleLineJoint[type] +
+          HORIZONTAL_LINE.repeat(VALUE_COLUMN_WIDTH),
+      )
+      .join(doubleLineJoint[type]) +
+    rightEdge[type]
+  );
+}
+
+function getUpperTableHeader(keys: Array<string>) {
+  return (
+    ' '.repeat(INDEX_COLUMN_WIDTH) +
+    VERTICAL_LINE_DOUBLE +
+    keys
+      .map(
+        key =>
+          adjustValueToLength(key, VALUE_COLUMN_WIDTH) + VERTICAL_LINE + adjustValueToLength(key, VALUE_COLUMN_WIDTH),
+      )
+      .join(VERTICAL_LINE_DOUBLE)
+  );
+}
+
+function getLowerTableHeader(keys: Array<string>, native: boolean) {
+  const columnPair =
+    adjustValueToLength(native ? 'native' : 'expected', VALUE_COLUMN_WIDTH) +
+    VERTICAL_LINE +
+    adjustValueToLength(native ? 'js' : 'captured', VALUE_COLUMN_WIDTH);
+
+  return adjustValueToLength('index', INDEX_COLUMN_WIDTH) + VERTICAL_LINE_DOUBLE + keys.map(_ => columnPair).join('║');
+}
+
+function withSideBorders(line: string) {
+  return VERTICAL_LINE + line + VERTICAL_LINE;
+}
+
+function getComparisonRow(mismatch: Mismatch, keys: Array<string>) {
+  const { index, capturedSnapshot, expectedSnapshot } = mismatch;
+  const indexColumn = adjustValueToLength(index.toString(), INDEX_COLUMN_WIDTH);
+  const formattedCells = keys.map(key => {
+    const expectedValue = expectedSnapshot[key as keyof typeof expectedSnapshot];
+    const capturedValue = capturedSnapshot[key as keyof typeof capturedSnapshot];
+
+    const match = expectedValue === capturedValue;
+
+    const expectedAdjusted = adjustValueToLength(expectedValue, VALUE_COLUMN_WIDTH);
+    const capturedAdjusted = adjustValueToLength(capturedValue, VALUE_COLUMN_WIDTH);
+
+    const expectedColored = match ? expectedAdjusted : green(expectedAdjusted);
+    const capturedColored = match ? capturedAdjusted : red(capturedAdjusted);
+
+    return expectedColored + '┊' + capturedColored;
+  });
+
+  return indexColumn + VERTICAL_LINE_DOUBLE + formattedCells.join(VERTICAL_LINE_DOUBLE);
+}
+
+export function formatSnapshotMismatch(mismatches: Array<Mismatch>, native: boolean) {
   const keysToPrint: Array<string> = [];
   mismatches.forEach(({ expectedSnapshot, capturedSnapshot }) => {
     Object.keys(expectedSnapshot).forEach(key => {
@@ -131,45 +225,14 @@ export function formatSnapshotMismatch(mismatches: Array<Mismatch>, native: bool
     });
   });
 
-  const valueColumnWidth = 15;
-  const indexColumnWidth = 7;
+  const topLine = getBorderLine(keysToPrint, 'top');
+  const upperHeader = withSideBorders(getUpperTableHeader(keysToPrint));
+  const lowerHeader = withSideBorders(getLowerTableHeader(keysToPrint, native));
+  const separatorLine = getBorderLine(keysToPrint, 'mid');
+  const mismatchRows = mismatches.map(mismatch => withSideBorders(getComparisonRow(mismatch, keysToPrint)));
+  const bottomLine = getBorderLine(keysToPrint, 'bottom');
 
-  const row1 =
-    ' '.repeat(indexColumnWidth) +
-    '|' +
-    keysToPrint.map(key => adjustStringToLength(key, 2 * valueColumnWidth + 1)).join('|');
-
-  const row2 =
-    adjustStringToLength('index', indexColumnWidth) +
-    '|' +
-    keysToPrint
-      .map(
-        _ =>
-          adjustStringToLength(native ? 'native' : 'expected', valueColumnWidth) +
-          '|' +
-          adjustStringToLength(native ? 'js' : 'captured', valueColumnWidth),
-      )
-      .join('|');
-
-  const emptyRow =
-    '-'.repeat(indexColumnWidth) +
-    ('+' + '-'.repeat(valueColumnWidth) + '+' + '-'.repeat(valueColumnWidth)).repeat(keysToPrint.length);
-
-  const remainingRows = mismatches.map(
-    ({ index, expectedSnapshot, capturedSnapshot }) =>
-      adjustStringToLength(index.toString(), indexColumnWidth) +
-      '|' +
-      keysToPrint
-        .map(
-          key =>
-            green(adjustStringToLength(expectedSnapshot[key as keyof typeof expectedSnapshot], valueColumnWidth)) +
-            '|' +
-            red(adjustStringToLength(capturedSnapshot[key as keyof typeof capturedSnapshot], valueColumnWidth)),
-        )
-        .join('|'),
-  );
-
-  return [row1, row2, emptyRow, ...remainingRows].join('\n');
+  return [topLine, upperHeader, lowerHeader, separatorLine, ...mismatchRows, bottomLine].join('\n');
 }
 
 export const EMPTY_LOG_PLACEHOLDER = color(applyMarkdown('***   ***'), 'lightGray');
