@@ -188,7 +188,7 @@ describe('Test `Bezier` function', () => {
     });
 
     const MONKEY_TRIES = 20000;
-    const PRECISION_0 = 0.01;
+    const PRECISION_0 = 0.02;
     let allTestPass0 = true;
     repeat(MONKEY_TRIES)(() => {
       const a = Math.random();

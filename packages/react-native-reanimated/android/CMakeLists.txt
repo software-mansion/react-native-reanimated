@@ -15,14 +15,14 @@ add_compile_options(${folly_FLAGS})
 
 string(APPEND CMAKE_CXX_FLAGS " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION} -DREANIMATED_VERSION=${REANIMATED_VERSION} -DHERMES_ENABLE_DEBUGGER=${HERMES_ENABLE_DEBUGGER}")
 
-string(APPEND CMAKE_CXX_FLAGS " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all -std=c++${CMAKE_CXX_STANDARD} -Wall -Wpedantic -Werror")
+string(APPEND CMAKE_CXX_FLAGS " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     string(APPEND CMAKE_CXX_FLAGS " -DRCT_NEW_ARCH_ENABLED")
 endif()
 
 if(${IS_REANIMATED_EXAMPLE_APP})
-    string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP")
+    string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
 endif()
 
 if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")

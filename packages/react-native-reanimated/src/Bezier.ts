@@ -105,16 +105,9 @@ export function Bezier(
     return LinearEasing;
   }
 
-  // FIXME: Float32Array is not available in Hermes right now
-  //
-  // var float32ArraySupported = typeof Float32Array === 'function';
-  // const sampleValues = float32ArraySupported
-  // ? new Float32Array(kSplineTableSize)
-  // : new Array(kSplineTableSize);
-
-  // Precompute samples table
   const sampleValues = new Array(kSplineTableSize);
 
+  // Precompute samples table
   for (let i = 0; i < kSplineTableSize; ++i) {
     sampleValues[i] = calcBezier(i * kSampleStepSize, mX1, mX2);
   }
