@@ -4,43 +4,20 @@ sidebar_position: 4
 
 # getRelativeCoords
 
-import DocsCompatibilityInfo from '../_shared/_docs_compatibility_info.mdx';
+`getRelativeCoords` determines the location on the screen, relative to the given view.
 
-<DocsCompatibilityInfo />
+## Reference
 
-Determines the location on the screen, relative to the given view. It might be useful when there are only absolute coordinates available and you need coordinates relative to the parent.
+```tsx
+import { getRelativeCoords } from 'react-native-reanimated';
 
-### Arguments
-
-#### animatedRef
-
-The product of [`useAnimatedRef`](/docs/core/useAnimatedRef) is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread). This ref should be passed as a prop to the view relative to which we want to know coordinates.
-
-#### x
-
-Absolute `x` coordinate.
-
-#### y
-
-Absolute `y` coordinate
-
-### Returns
-
-Object which contains relative coordinates
-
-- `x`
-- `y`
-
-### Example
-
-```js
 const Comp = () => {
-  const aref = useAnimatedRef();
+  const animatedRef = useAnimatedRef();
   // ...
 
   const gestureHandler = useAnimatedGestureHandler({
     onEnd: (event) => {
-      getRelativeCoords(aref, event.absoluteX, event.absoluteY);
+      getRelativeCoords(animatedRef, event.absoluteX, event.absoluteY);
     },
   });
 
@@ -53,3 +30,59 @@ const Comp = () => {
   );
 };
 ```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function getRelativeCoords(
+  animatedRef: AnimatedRef<Component>,
+  absoluteX: number,
+  absoluteY: number
+): ComponentCoords | null;
+
+interface ComponentCoords {
+  x: number;
+  y: number;
+}
+```
+
+</details>
+
+### Arguments
+
+#### `animatedRef`
+
+[Animated ref](/docs/core/useAnimatedRef#returns) connected to the ScrollView (or other scrollable) component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+
+#### `absoluteX`
+
+Number which is an absolute `x` coordinate.
+
+#### `absoluteY`
+
+Number which is an absolute `y` coordinate.
+
+### Returns
+
+Object which contains relative coordinates
+
+- `x`
+- `y`
+
+### Example
+
+import RelativeCoords from '@site/src/examples/RelativeCoords';
+import RelativeCoordsSrc from '!!raw-loader!@site/src/examples/RelativeCoords';
+
+<InteractiveExample src={RelativeCoordsSrc} component={RelativeCoords} />
+
+## Platform compatibility
+
+<div className="platform-compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>
