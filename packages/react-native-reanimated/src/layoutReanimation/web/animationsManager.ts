@@ -139,7 +139,7 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
   }
 
   if (hasInitialValues) {
-    createAnimationWithInitialValues(
+    animationName = createAnimationWithInitialValues(
       animationName,
       (config as CustomConfig).initialValues
     );
@@ -147,7 +147,7 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
 
   const shouldFail = checkUndefinedAnimationFail(
     animationName,
-    isLayoutTransition || isCustomKeyframe
+    isLayoutTransition || isCustomKeyframe || hasInitialValues
   );
 
   if (shouldFail) {

@@ -125,9 +125,19 @@ export function createAnimationWithInitialValues(
     };
   }
 
-  console.log(animationStyle);
+  const keyframeName = generateNextCustomKeyframeName();
 
-  return;
+  const animationObject: AnimationData = {
+    name: keyframeName,
+    style: animationStyle,
+    duration: AnimationsData[animationName].duration,
+  };
+
+  const keyframe = convertAnimationObjectToKeyframes(animationObject);
+
+  insertWebAnimation(keyframeName, keyframe);
+
+  return keyframeName;
 }
 
 let customKeyframeCounter = 0;
