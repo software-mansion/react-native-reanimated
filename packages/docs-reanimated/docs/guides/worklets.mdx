@@ -1,0 +1,49 @@
+---
+id: worklets
+sidebar_label: Worklets
+sidebar_position: 1
+---
+
+# Worklets
+
+Worklets are short-running JavaScript functions that can be run on the [UI thread](/docs/fundamentals/glossary#ui-thread). They can also be run on a JavaScript thread just as you would run a function in your code.
+
+You can create your own worklets using the `"worklet";` directive at the top of a function.
+
+```javascript
+function myWorklet() {
+  'worklet';
+  console.log('Running on the UI thread');
+}
+```
+
+The Reanimated Babel Plugin looks for functions marked with the `"worklet"` directive and coverts them into serializable objects. These objects can then be copied and run over on the UI thread. We call this process [workletization](/docs/fundamentals/glossary#to-workletize).
+
+[`runOnUI`](/docs/threading/runOnUI) lets you manually run worklets on the UI thread:
+
+```javascript
+function myWorklet(greeting) {
+  'worklet';
+  console.log(`${greeting} from the UI thread`);
+}
+
+function onPress() {
+  // highlight-next-line
+  runOnUI(myWorklet)('Howdy');
+}
+```
+
+this can lead to performance issues.
+
+Most of the time when working with Reanimated the code is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and run on the UI thread by default.
+
+```javascript
+import { useAnimatedStyle } from 'react-native-reanimated';
+
+function App() {
+  const style = useAnimatedStyle(() => {
+    console.log('Running on the UI thread');
+    return { opacity: 0.5 };
+  });
+}
+```
