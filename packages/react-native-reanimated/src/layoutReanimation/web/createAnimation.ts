@@ -1,6 +1,6 @@
 'use strict';
 
-import { TransitionType } from './config';
+import { AnimationsData, TransitionType } from './config';
 import type { KeyframeDefinitions } from './config';
 import { convertAnimationObjectToKeyframes } from './animationParser';
 import type {
@@ -67,6 +67,67 @@ export function createCustomKeyFrameAnimation(
   insertWebAnimation(animationData.name, parsedKeyframe);
 
   return animationData.name;
+}
+
+export function createAnimationWithInitialValues(
+  animationName: string,
+  initialValues: any
+) {
+  let animationStyle;
+
+  if ('0' in AnimationsData[animationName].style) {
+    animationStyle = structuredClone(AnimationsData[animationName].style);
+
+    const existingTransform = structuredClone(animationStyle['0'].transform);
+    const { opacity, transform, ...rest } = initialValues;
+
+    const transformWithPx = addPxToTranslate(transform);
+
+    if (opacity) {
+      animationStyle['0'].opacity = opacity;
+    }
+
+    if (transform) {
+      if (!existingTransform) {
+        animationStyle['0'].transform = transform;
+      } else {
+        const transformStyle = new Map<string, any>();
+
+        for (const rule of existingTransform) {
+          for (const [key, value] of Object.entries(rule)) {
+            transformStyle.set(key, value);
+          }
+        }
+
+        for (const rule of transformWithPx) {
+          for (const [key, value] of Object.entries(rule)) {
+            transformStyle.set(key, value);
+          }
+        }
+
+        animationStyle['0'].transform = Array.from(
+          transformStyle,
+          ([key, value]) => ({
+            [key]: value,
+          })
+        );
+      }
+    }
+
+    animationStyle['0'] = {
+      ...animationStyle['0'],
+      ...rest,
+    };
+  } else {
+    animationStyle = {
+      '0': initialValues,
+      ...structuredClone(AnimationsData[animationName].style),
+    };
+  }
+
+  console.log(animationStyle);
+
+  return;
 }
 
 let customKeyframeCounter = 0;
