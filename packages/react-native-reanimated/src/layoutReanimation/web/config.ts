@@ -62,7 +62,7 @@ export interface CustomConfig {
   callbackV?: AnimationCallback;
   reversed?: boolean;
   definitions?: KeyframeDefinitions;
-  initialValues?: any;
+  initialValues?: Record<string, unknown>;
 }
 
 export enum TransitionType {
