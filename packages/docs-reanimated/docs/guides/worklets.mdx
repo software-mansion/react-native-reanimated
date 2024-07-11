@@ -6,7 +6,7 @@ sidebar_position: 1
 
 # Worklets
 
-Worklets are short-running JavaScript functions that can be run on the [UI thread](/docs/fundamentals/glossary#ui-thread). They can also be run on a JavaScript thread just as you would run a function in your code.
+Worklets are short-running JavaScript functions that can be run on the [UI thread](/docs/fundamentals/glossary#ui-thread). Reanimated uses worklets to update view properties and react to events on the UI thread.
 
 You can create your own worklets using the `"worklet";` directive at the top of a function.
 
@@ -17,9 +17,37 @@ function myWorklet() {
 }
 ```
 
-The Reanimated Babel Plugin looks for functions marked with the `"worklet"` directive and coverts them into serializable objects. These objects can then be copied and run over on the UI thread. We call this process [workletization](/docs/fundamentals/glossary#to-workletize).
+The [Reanimated Babel Plugin](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-reanimated/plugin/README-dev.md#basics) looks for functions marked with the `"worklet"` directive and coverts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
 
-[`runOnUI`](/docs/threading/runOnUI) lets you manually run worklets on the UI thread:
+Most of the time when working with Reanimated and [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) the code is automatically workletized and run on the UI thread by default.
+
+```javascript
+import { useAnimatedStyle } from 'react-native-reanimated';
+
+function App() {
+  const style = useAnimatedStyle(() => {
+    // Running on the UI thread
+    return { opacity: 0.5 };
+  });
+}
+```
+
+The `"worklet";` directive has no effect on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread). Worklets on the JavaScript thread are just functions.
+
+You can use [`runOnUI`](/docs/threading/runOnUI) to manually run worklets on the UI thread:
+
+```javascript
+function myWorklet() {
+  'worklet';
+  console.log('Hello from the UI thread');
+}
+
+function onPress() {
+  runOnUI(myWorklet)();
+}
+```
+
+You can pass data as arguments to worklets.
 
 ```javascript
 function myWorklet(greeting) {
@@ -28,22 +56,86 @@ function myWorklet(greeting) {
 }
 
 function onPress() {
-  // highlight-next-line
   runOnUI(myWorklet)('Howdy');
 }
 ```
 
-this can lead to performance issues.
-
-Most of the time when working with Reanimated the code is automatically [workletized](/docs/fundamentals/glossary#to-workletize) and run on the UI thread by default.
+Worklets are [closures](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures). They can access variables declared outside of it's own scope. Only variables referenced in the worklet body will be captured inside the worklet scope.
 
 ```javascript
-import { useAnimatedStyle } from 'react-native-reanimated';
+const width = 135.5;
+
+function otherWorklet() {
+  'worklet';
+  console.log('Captured width is', width);
+}
+```
+
+Capturing big JavaScript objects inside of a worklet can lead to performance issues.
+
+```javascript
+const theme = {...}; // theme is a big object
+
+function myWorklet() {
+  console.log(theme.color); // 🚨 referenced `color` but captured the whole `theme` object
+}
+```
+
+You can get around this problem by first assigning the prop you want to use to a separate variable .
+
+```javascript
+const theme = {...};
+const color = theme.color;
+
+function myWorklet() {
+  'worklet';
+  console.log(color); // ✅ captured only `color`
+}
+```
+
+Worklets can return data within the same thread.
+
+```javascript
+function returningWorklet() {
+  'worklet';
+  return "I'm back"; // on the UI thread
+}
+
+function someWorklet() {
+  'worklet';
+  let what = returningWorklet(); // still on the UI thread
+  console.log('On the UI thread, other worklet says', what);
+}
+```
+
+To pass data between UI and JS thread we use [shared values](/docs/fundamentals/glossary#shared-value).
+
+```javascript
+import { useSharedValue } from 'react-native-reanimated';
 
 function App() {
-  const style = useAnimatedStyle(() => {
-    console.log('Running on the UI thread');
-    return { opacity: 0.5 };
+  const width = useSharedValue(100);
+
+  function myWorklet() {
+    'worklet';
+    width.value += 50;
+  }
+
+  width.value; // available on both JS and UI thread
+}
+```
+
+You can run functions on the JS thread from UI thread with [`runOnJS`](/docs/threading/runOnJS). Most frequently used to call function that aren't marked with a `"worklet";` directive (i.e. most 3rd party libraries) or to update the React state.
+
+```javascript
+import { router } from 'expo-router';
+import { Gesture } from 'react-native-gesture-handler';
+
+function App() {
+  const tap = Gesture.Tap().onEnd(() => {
+    // i'm a worklet too!
+    // highlight-next-line
+    runOnJS(router.back)();
   });
 }
 ```
