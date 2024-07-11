@@ -2,6 +2,8 @@ package com.swmansion.reanimated;
 
 import android.graphics.drawable.Drawable;
 import android.view.View;
+
+import com.facebook.react.uimanager.LengthPercentage;
 import com.facebook.react.uimanager.drawable.CSSBackgroundDrawable;
 import com.facebook.react.uimanager.style.BorderRadiusProp;
 import com.facebook.react.uimanager.style.ComputedBorderRadius;
@@ -10,6 +12,7 @@ import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 public class ReactNativeUtils {
 
@@ -33,10 +36,11 @@ public class ReactNativeUtils {
     if (view.getBackground() != null) {
       Drawable background = view.getBackground();
       if (background instanceof CSSBackgroundDrawable drawable) {
+        LengthPercentage uniform = drawable.getBorderRadius().getUniform();
+        float full = uniform != null ? uniform.resolve(view.getWidth(), view.getHeight()) : Float.NaN;
         ComputedBorderRadius computedBorderRadius = drawable.getComputedBorderRadius();
         return new BorderRadii(
-                // TODO: get full border radius
-                computedBorderRadius.getTopLeft(),
+                full,
                 computedBorderRadius.getTopLeft(),
                 computedBorderRadius.getTopRight(),
                 computedBorderRadius.getBottomLeft(),
