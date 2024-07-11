@@ -5,7 +5,6 @@ import type { KeyframeDefinitions } from './config';
 import { convertAnimationObjectToKeyframes } from './animationParser';
 import type {
   AnimationData,
-  AnimationStyle,
   ReanimatedWebTransformProperties,
   TransitionData,
 } from './animationParser';
@@ -15,7 +14,7 @@ import { SequencedTransition } from './transition/Sequenced.web';
 import { FadingTransition } from './transition/Fading.web';
 import { JumpingTransition } from './transition/Jumping.web';
 import { insertWebAnimation } from './domUtils';
-import { StyleProps } from '../..';
+import type { StyleProps } from '../..';
 
 type TransformType = NonNullable<TransformsStyle['transform']>;
 
@@ -132,7 +131,7 @@ export function createAnimationWithInitialValues(
 
   const animationObject: AnimationData = {
     name: keyframeName,
-    style: animationStyle as Record<number, AnimationStyle>,
+    style: animationStyle,
     duration: AnimationsData[animationName].duration,
   };
 
