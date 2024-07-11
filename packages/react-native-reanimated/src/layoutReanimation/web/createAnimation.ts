@@ -75,40 +75,43 @@ export function createAnimationWithInitialValues(
 ) {
   let animationStyle;
 
+  // If first keyframe is not defined we can simply assign `initialValues` to it.
+  // If not, we have more work to do.
   if ('0' in AnimationsData[animationName].style) {
     animationStyle = structuredClone(AnimationsData[animationName].style);
+    const firstAnimationKeyframe = animationStyle['0'];
 
-    const existingTransform = structuredClone(animationStyle['0'].transform);
+    const existingTransform = structuredClone(firstAnimationKeyframe.transform);
     const { opacity, transform, ...rest } = initialValues;
 
     const transformWithPx = addPxToTranslate(transform);
 
     if (opacity) {
-      animationStyle['0'].opacity = opacity;
+      firstAnimationKeyframe.opacity = opacity;
     }
 
     if (transform) {
       if (!existingTransform) {
-        animationStyle['0'].transform = transform;
+        firstAnimationKeyframe.transform = transform;
       } else {
         const transformStyle = new Map<string, any>();
 
         for (const rule of existingTransform) {
-          for (const [key, value] of Object.entries(rule)) {
-            transformStyle.set(key, value);
+          for (const [property, value] of Object.entries(rule)) {
+            transformStyle.set(property, value);
           }
         }
 
         for (const rule of transformWithPx) {
-          for (const [key, value] of Object.entries(rule)) {
-            transformStyle.set(key, value);
+          for (const [property, value] of Object.entries(rule)) {
+            transformStyle.set(property, value);
           }
         }
 
-        animationStyle['0'].transform = Array.from(
+        firstAnimationKeyframe.transform = Array.from(
           transformStyle,
-          ([key, value]) => ({
-            [key]: value,
+          ([property, value]) => ({
+            [property]: value,
           })
         );
       }
