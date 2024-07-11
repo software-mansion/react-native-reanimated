@@ -13,11 +13,11 @@ You can create your own worklets using the `"worklet";` directive at the top of 
 ```javascript
 function myWorklet() {
   'worklet';
-  console.log('Running on the UI thread');
+  console.log('Hello from a worklet');
 }
 ```
 
-The [Reanimated Babel Plugin](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-reanimated/plugin/README-dev.md#basics) looks for functions marked with the `"worklet"` directive and coverts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
+The [Reanimated Babel Plugin](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-reanimated/plugin/README-dev.md#basics) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
 
 Most of the time when working with Reanimated and [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) the code is automatically workletized and run on the UI thread by default.
 
@@ -32,7 +32,7 @@ function App() {
 }
 ```
 
-The `"worklet";` directive has no effect on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread). Worklets on the JavaScript thread are just functions.
+The `'worklet';` directive has no effect on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread). Worklets on the JavaScript thread are just functions.
 
 You can use [`runOnUI`](/docs/threading/runOnUI) to manually run worklets on the UI thread:
 
@@ -60,7 +60,7 @@ function onPress() {
 }
 ```
 
-Worklets are [closures](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures). They can access variables declared outside of it's own scope. Only variables referenced in the worklet body will be captured inside the worklet scope.
+Worklets are [closures](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures). They can access variables declared outside of their own scope. Only variables referenced in the worklet body will be captured inside the worklet scope.
 
 ```javascript
 const width = 135.5;
@@ -71,7 +71,7 @@ function otherWorklet() {
 }
 ```
 
-Capturing big JavaScript objects inside of a worklet can lead to performance issues.
+Capturing large JavaScript objects inside of a worklet can lead to performance issues.
 
 ```javascript
 const theme = {...}; // theme is a big object
@@ -82,7 +82,7 @@ function myWorklet() {
 }
 ```
 
-You can get around this problem by first assigning the prop you want to use to a separate variable .
+You can get around this problem by first assigning the prop you want to use to a separate variable.
 
 ```javascript
 const theme = {...};
@@ -104,7 +104,7 @@ function returningWorklet() {
 
 function someWorklet() {
   'worklet';
-  let what = returningWorklet(); // still on the UI thread
+  const what = returningWorklet(); // still on the UI thread
   console.log('On the UI thread, other worklet says', what);
 }
 ```
@@ -126,7 +126,7 @@ function App() {
 }
 ```
 
-You can run functions on the JS thread from UI thread with [`runOnJS`](/docs/threading/runOnJS). Most frequently used to call function that aren't marked with a `"worklet";` directive (i.e. most 3rd party libraries) or to update the React state.
+You can run functions on the JS thread from the UI thread with [`runOnJS`](/docs/threading/runOnJS). Most frequently used to call functions that aren't marked with a `'worklet';` directive (i.e. most third-party libraries) or to update the React state.
 
 ```javascript
 import { router } from 'expo-router';

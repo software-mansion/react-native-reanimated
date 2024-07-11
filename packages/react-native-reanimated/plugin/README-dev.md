@@ -31,7 +31,7 @@ If you want to build the plugin but without using explicit `yarn`, do `yarn gene
 
 ### Why do we need this plugin?
 
-Reanimated is all about executing the code directly on the UI thread whenever possible to avoid expensive and troublesome communication between those two threads. Since UI and JS (React-Native) contexts are separate, we somehow need to pass the functions (and their arguments) from the JS thread to the UI thread. That's why we need **worklets**. If you haven't yet, we strongly recommend reading [the official documentation on worklets](https://docs.swmansion.com/react-native-reanimated/docs/guides/worklets) first.
+Reanimated is all about executing the code directly on the UI thread whenever possible to avoid expensive and troublesome communication between these two threads. Since UI and JS (React-Native) contexts are separate, we somehow need to pass the functions (and their arguments) from the JS thread to the UI thread. That's why we need **worklets**. If you haven't yet, we strongly recommend reading [the official documentation on worklets](https://docs.swmansion.com/react-native-reanimated/docs/guides/worklets) first.
 
 ### What is a worklet?
 
