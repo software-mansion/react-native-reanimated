@@ -78,61 +78,57 @@ export function createAnimationWithInitialValues(
   animationName: string,
   initialValues: StyleProps
 ) {
-  let animationStyle;
+  const animationStyle = structuredClone(AnimationsData[animationName].style);
+  const firstAnimationStep = animationStyle['0'];
+  const predefinedTransform = structuredClone(firstAnimationStep.transform);
 
-  // If first keyframe is not defined we can simply assign `initialValues` to it.
-  // If not, we have more work to do.
-  if ('0' in AnimationsData[animationName].style) {
-    animationStyle = structuredClone(AnimationsData[animationName].style);
-    const firstAnimationStep = animationStyle['0'];
+  const { opacity, transform, ...rest } = initialValues;
+  const transformWithPx = addPxToTransform(transform as TransformType);
 
-    const predefinedTransform = structuredClone(firstAnimationStep.transform);
-    const { opacity, transform, ...rest } = initialValues;
-
-    const transformWithPx = addPxToTransform(transform as TransformType);
-
-    if (opacity) {
-      firstAnimationStep.opacity = opacity as number;
-    }
-
-    if (transform) {
-      if (!predefinedTransform) {
-        firstAnimationStep.transform = transformWithPx;
-      } else {
-        const transformStyle = new Map<string, any>();
-
-        for (const rule of predefinedTransform) {
-          for (const [property, value] of Object.entries(rule)) {
-            transformStyle.set(property, value);
-          }
-        }
-
-        for (const rule of transformWithPx) {
-          for (const [property, value] of Object.entries(rule)) {
-            transformStyle.set(property, value);
-          }
-        }
-
-        firstAnimationStep.transform = Array.from(
-          transformStyle,
-          ([property, value]) => ({
-            [property]: value,
-          })
-        );
-      }
-    }
-
-    animationStyle['0'] = {
-      ...animationStyle['0'],
-      ...rest,
-    };
-  } else {
-    animationStyle = {
-      '0': initialValues,
-      ...structuredClone(AnimationsData[animationName].style),
-    };
+  if (opacity) {
+    firstAnimationStep.opacity = opacity as number;
   }
 
+  if (transform) {
+    // If there was no predefined transform, we can simply assign transform from `initialValues`.
+    if (!predefinedTransform) {
+      firstAnimationStep.transform = transformWithPx;
+    } else {
+      // Othwerwise we have to merge predefined transform with the one provided in `initialValues`.
+      // To do that, we create `Map` that will contain final transform.
+      const transformStyle = new Map<string, any>();
+
+      // First we assign all of the predefined rules
+      for (const rule of predefinedTransform) {
+        // In most cases there will be just one iteration
+        for (const [property, value] of Object.entries(rule)) {
+          transformStyle.set(property, value);
+        }
+      }
+
+      // Then we either add new rule, or override one that already exists.
+      for (const rule of transformWithPx) {
+        for (const [property, value] of Object.entries(rule)) {
+          transformStyle.set(property, value);
+        }
+      }
+
+      // Finally, we convert `Map` with final transform back into array of objects.
+      firstAnimationStep.transform = Array.from(
+        transformStyle,
+        ([property, value]) => ({
+          [property]: value,
+        })
+      );
+    }
+  }
+
+  animationStyle['0'] = {
+    ...animationStyle['0'],
+    ...rest,
+  };
+
+  // TODO: Maybe we can extract the logic below into separate function
   const keyframeName = generateNextCustomKeyframeName();
 
   const animationObject: AnimationData = {
