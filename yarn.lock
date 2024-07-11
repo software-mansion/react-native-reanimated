@@ -9421,7 +9421,7 @@ __metadata:
     react-native-safe-area-context: "npm:4.10.8"
     react-native-screens: "npm:3.31.0-rc.1"
     react-native-svg: "npm:^15.2.0-rc.0"
-    react-strict-dom: "npm:^0.0.17"
+    react-strict-dom: "npm:0.0.18"
     typescript: "npm:~5.3.0"
   peerDependencies:
     "@fortawesome/fontawesome-svg-core": "*"
@@ -18249,9 +18249,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-strict-dom@npm:^0.0.17":
-  version: 0.0.17
-  resolution: "react-strict-dom@npm:0.0.17"
+"react-strict-dom@npm:0.0.18":
+  version: 0.0.18
+  resolution: "react-strict-dom@npm:0.0.18"
   dependencies:
     "@stylexjs/stylex": "npm:^0.7.0"
     css-mediaquery: "npm:0.1.2"
@@ -18260,7 +18260,7 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
     react-native: ^0.73.2
-  checksum: 10/80750fcef76c351eb1aa476d0e85bc5bc3fc20994911d9d869736c04cda8a7f86175a0c41daabfe5346c5ca545c3de16ffd301288c9d2f7fd7e0374ff90f0555
+  checksum: 10/cd0f4a6c530702332b559d3502a7e367247f84a3f613050670fc5bc06f6ae8ed95e0d1a13a28d3da70dcfa2a08564d8f2ae4435c38ea1181e4a44b75539d0592
   languageName: node
   linkType: hard
 
