@@ -84,24 +84,24 @@ export function createAnimationWithInitialValues(
   // If not, we have more work to do.
   if ('0' in AnimationsData[animationName].style) {
     animationStyle = structuredClone(AnimationsData[animationName].style);
-    const firstAnimationKeyframe = animationStyle['0'];
+    const firstAnimationStep = animationStyle['0'];
 
-    const existingTransform = structuredClone(firstAnimationKeyframe.transform);
+    const predefinedTransform = structuredClone(firstAnimationStep.transform);
     const { opacity, transform, ...rest } = initialValues;
 
     const transformWithPx = addPxToTransform(transform as TransformType);
 
     if (opacity) {
-      firstAnimationKeyframe.opacity = opacity as number;
+      firstAnimationStep.opacity = opacity as number;
     }
 
     if (transform) {
-      if (!existingTransform) {
-        firstAnimationKeyframe.transform = transformWithPx;
+      if (!predefinedTransform) {
+        firstAnimationStep.transform = transformWithPx;
       } else {
         const transformStyle = new Map<string, any>();
 
-        for (const rule of existingTransform) {
+        for (const rule of predefinedTransform) {
           for (const [property, value] of Object.entries(rule)) {
             transformStyle.set(property, value);
           }
@@ -113,7 +113,7 @@ export function createAnimationWithInitialValues(
           }
         }
 
-        firstAnimationKeyframe.transform = Array.from(
+        firstAnimationStep.transform = Array.from(
           transformStyle,
           ([property, value]) => ({
             [property]: value,
