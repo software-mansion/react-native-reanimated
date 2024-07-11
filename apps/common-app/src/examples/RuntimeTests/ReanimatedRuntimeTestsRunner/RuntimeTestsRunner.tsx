@@ -2,9 +2,9 @@ import { View, Button, StyleSheet, Text } from 'react-native';
 import type { ReactNode } from 'react';
 import React, { useEffect, useState } from 'react';
 import { runTests, configure } from './RuntimeTestsApi';
-import type { LockObject } from './types';
+import { RenderLock } from './TestRunner';
 
-let renderLock: LockObject = { lock: false };
+let renderLock: RenderLock = new RenderLock();
 export class ErrorBoundary extends React.Component<
   { children: React.JSX.Element | Array<React.JSX.Element> },
   { hasError: boolean }
@@ -32,7 +32,7 @@ export default function RuntimeTestsRunner() {
   const [component, setComponent] = useState<ReactNode | null>(null);
   useEffect(() => {
     if (renderLock) {
-      renderLock.lock = false;
+      renderLock.unlockRender();
     }
   }, [component]);
   return (
