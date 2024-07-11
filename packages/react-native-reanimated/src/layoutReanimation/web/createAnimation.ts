@@ -80,7 +80,6 @@ export function createAnimationWithInitialValues(
 ) {
   const animationStyle = structuredClone(AnimationsData[animationName].style);
   const firstAnimationStep = animationStyle['0'];
-  const predefinedTransform = structuredClone(firstAnimationStep.transform);
 
   const { opacity, transform, ...rest } = initialValues;
   const transformWithPx = addPxToTransform(transform as TransformType);
@@ -91,7 +90,7 @@ export function createAnimationWithInitialValues(
 
   if (transform) {
     // If there was no predefined transform, we can simply assign transform from `initialValues`.
-    if (!predefinedTransform) {
+    if (!firstAnimationStep.transform) {
       firstAnimationStep.transform = transformWithPx;
     } else {
       // Othwerwise we have to merge predefined transform with the one provided in `initialValues`.
@@ -99,7 +98,7 @@ export function createAnimationWithInitialValues(
       const transformStyle = new Map<string, any>();
 
       // First we assign all of the predefined rules
-      for (const rule of predefinedTransform) {
+      for (const rule of firstAnimationStep.transform) {
         // In most cases there will be just one iteration
         for (const [property, value] of Object.entries(rule)) {
           transformStyle.set(property, value);
