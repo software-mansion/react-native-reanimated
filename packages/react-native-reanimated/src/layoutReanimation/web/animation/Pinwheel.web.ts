@@ -23,6 +23,10 @@ export const PinwheelData = {
   PinwheelOut: {
     name: 'PinwheelOut',
     style: {
+      0: {
+        transform: [{ rotate: '0rad', scale: 1 }],
+        opacity: 1,
+      },
       100: {
         transform: [{ rotate: '5rad', scale: 0 }],
         opacity: 0,
