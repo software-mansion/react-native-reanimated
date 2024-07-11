@@ -131,6 +131,7 @@ import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import FreezingShareablesExample from './ShareableFreezingExample';
 import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
 import StrictDOMExample from './StrictDOMExample';
+import MakeMutableExample from './MakeMutableExample';
 
 interface Example {
   icon?: string;
@@ -165,6 +166,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🪛',
     title: 'Modify',
     screen: ModifyExample,
+  },
+  MakeMutableExample: {
+    icon: '🔒',
+    title: 'Make mutable',
+    screen: MakeMutableExample,
   },
   JSPropsExample: {
     icon: '🟨',

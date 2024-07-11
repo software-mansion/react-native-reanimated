@@ -1022,6 +1022,29 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - react-native-skia (1.3.8):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React
+    - React-callinvoker
+    - React-Codegen
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - react-native-slider (4.5.2):
     - DoubleConversion
     - glog
@@ -1524,6 +1547,7 @@ DEPENDENCIES:
   - React-Mapbuffer (from `../../../node_modules/react-native/ReactCommon`)
   - react-native-pager-view (from `../../../node_modules/react-native-pager-view`)
   - react-native-safe-area-context (from `../../../node_modules/react-native-safe-area-context`)
+  - "react-native-skia (from `../../../node_modules/@shopify/react-native-skia`)"
   - "react-native-slider (from `../../../node_modules/@react-native-community/slider`)"
   - React-nativeconfig (from `../../../node_modules/react-native/ReactCommon`)
   - React-NativeModulesApple (from `../../../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -1628,6 +1652,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native-pager-view"
   react-native-safe-area-context:
     :path: "../../../node_modules/react-native-safe-area-context"
+  react-native-skia:
+    :path: "../../../node_modules/@shopify/react-native-skia"
   react-native-slider:
     :path: "../../../node_modules/@react-native-community/slider"
   React-nativeconfig:
@@ -1728,6 +1754,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 5e05d78fe6505f4a054b86f415733d4ad02dd314
   react-native-pager-view: 6fb22588f900b5999bfb6d79fd8bad9aa4d4d6db
   react-native-safe-area-context: fc0424ee0e1ae0c321c7aeb19c215e75da465676
+  react-native-skia: 645df4df012d57a33b2508896af82c28a0bd1249
   react-native-slider: 42583bbf96c3476ed6faf6ea12e182b6e4604307
   React-nativeconfig: 951ec32f632e81cbd7d40aebb3211313251c092e
   React-NativeModulesApple: 0b3a42ca90069119ef79d8b2327d01441d71abd4
