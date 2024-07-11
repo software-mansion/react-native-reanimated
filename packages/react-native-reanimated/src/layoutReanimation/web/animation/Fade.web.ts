@@ -52,7 +52,7 @@ export const FadeInData = {
       },
       100: {
         opacity: 1,
-        transform: [{ translateX: '0px' }],
+        transform: [{ translateY: '0px' }],
       },
     },
     duration: DEFAULT_FADE_TIME,
@@ -67,7 +67,7 @@ export const FadeInData = {
       },
       100: {
         opacity: 1,
-        transform: [{ translateX: '0px' }],
+        transform: [{ translateY: '0px' }],
       },
     },
     duration: DEFAULT_FADE_TIME,
@@ -119,7 +119,7 @@ export const FadeOutData = {
     style: {
       0: {
         opacity: 1,
-        transform: [{ translateX: '0px' }],
+        transform: [{ translateY: '0px' }],
       },
       100: {
         opacity: 0,
@@ -134,7 +134,7 @@ export const FadeOutData = {
     style: {
       0: {
         opacity: 1,
-        transform: [{ translateX: '0px' }],
+        transform: [{ translateY: '0px' }],
       },
       100: {
         opacity: 0,
