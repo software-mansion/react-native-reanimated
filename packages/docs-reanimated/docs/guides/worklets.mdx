@@ -77,6 +77,7 @@ Capturing big JavaScript objects inside of a worklet can lead to performance iss
 const theme = {...}; // theme is a big object
 
 function myWorklet() {
+  'worklet';
   console.log(theme.color); // 🚨 referenced `color` but captured the whole `theme` object
 }
 ```
