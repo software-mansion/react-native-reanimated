@@ -10,26 +10,28 @@ If you want to build the plugin but without using explicit `yarn`, do `yarn gene
 
 ## Table of contents:
 
-1. [Basics](#basics)
-   1. [Why do we need this plugin?](#why-do-we-need-this-plugin)
-   1. [What is a worklet?](#what-is-a-worklet)
-   1. [How does a worklet work?](#how-does-a-worklet-work)
-   1. [Why transform worklets?](#why-transform-worklets)
-   1. [Automatic workletization](#automatic-workletization)
-   1. [Something doesn't work!](#something-doesnt-work-in-reanimated-plugin)
-1. [Plugin's applications](#plugins-applications)
-   1. [What can be a worklet?](#what-can-be-a-worklet)
-   1. [Inline styles support](#inline-styles-support)
-   1. [How to debug?](#how-to-debug-reanimated-babel-plugin)
-1. [Implementation](#implementation)
-   1. [Logic flowchart](#reanimated-babel-plugin-flowchart)
-   1. [Plugin's dependencies](#dependencies-of-reanimated-babel-plugin)
+- [Reanimated Babel plugin](#reanimated-babel-plugin)
+  - [Table of contents:](#table-of-contents)
+  - [Basics](#basics)
+    - [Why do we need this plugin?](#why-do-we-need-this-plugin)
+    - [What is a worklet?](#what-is-a-worklet)
+    - [How does a worklet work?](#how-does-a-worklet-work)
+    - [Why transform worklets?](#why-transform-worklets)
+    - [Automatic workletization](#automatic-workletization)
+    - [Something doesn't work in Reanimated Plugin!](#something-doesnt-work-in-reanimated-plugin)
+  - [Plugin's applications](#plugins-applications)
+    - [What can be a worklet?](#what-can-be-a-worklet)
+    - [Inline styles support](#inline-styles-support)
+    - [How to debug Reanimated Babel plugin?](#how-to-debug-reanimated-babel-plugin)
+  - [Implementation](#implementation)
+    - [Reanimated Babel plugin flowchart](#reanimated-babel-plugin-flowchart)
+    - [Dependencies of Reanimated Babel plugin](#dependencies-of-reanimated-babel-plugin)
 
 ## Basics
 
 ### Why do we need this plugin?
 
-Reanimated is all about executing the code directly on the UI thread whenever possible to avoid expensive and troublesome communication between those two threads. Since UI and JS (React-Native) contexts are separate, we somehow need to pass the functions (and their arguments) from the JS thread to the UI thread. That's why we need **worklets**. If you haven't yet, we strongly recommend reading [the official documentation on worklets](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#worklet) first.
+Reanimated is all about executing the code directly on the UI thread whenever possible to avoid expensive and troublesome communication between those two threads. Since UI and JS (React-Native) contexts are separate, we somehow need to pass the functions (and their arguments) from the JS thread to the UI thread. That's why we need **worklets**. If you haven't yet, we strongly recommend reading [the official documentation on worklets](https://docs.swmansion.com/react-native-reanimated/docs/guides/worklets) first.
 
 ### What is a worklet?
 
