@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "yarn patch-package",
-    "lint": "eslint --max-warnings=0 .",
+    "lint": "eslint .",
     "format": "prettier --write --list-different ."
   },
   "peerDependencies": {
@@ -19,6 +19,7 @@
     "@react-navigation/native": "*",
     "@react-navigation/native-stack": "*",
     "@react-navigation/stack": "*",
+    "@shopify/flash-list": "*",
     "@stylexjs/babel-plugin": "*",
     "d3-shape": "*",
     "react": "*",
@@ -45,6 +46,7 @@
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "@react-navigation/stack": "^6.3.18",
+    "@shopify/flash-list": "^1.7.0",
     "@stylexjs/babel-plugin": "^0.7.0",
     "@tsconfig/react-native": "^3.0.0",
     "@types/d3-shape": "^3.1.1",

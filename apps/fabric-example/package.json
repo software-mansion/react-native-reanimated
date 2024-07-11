@@ -20,6 +20,7 @@
     "@react-native-picker/picker": "^2.7.0",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
+    "@shopify/flash-list": "^1.7.0",
     "common-app": "workspace:*",
     "react": "19.0.0-rc-fb9a90fa48-20240614",
     "react-native": "0.75.0-rc.4",

@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.12.0",
+  "version": "3.14.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "test": "yarn format:js && yarn lint:js && yarn test:unit",
@@ -21,7 +21,7 @@
     "format:android": "find android/src/ -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:common": "find Common/ -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:docs": "cd docs && yarn format",
-    "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error  ",
+    "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error",
     "type:check:src": "yarn tsc --noEmit",
     "type:check:plugin": "cd plugin && yarn type:check:src && cd ..",
     "type:check:app": "./scripts/test-ts.sh ../../apps/common-app/src/App.tsx",
@@ -168,8 +168,9 @@
     }
   },
   "sideEffects": [
-    "./lib/reanimated2/core",
-    "./lib/index"
+    "./lib/module/reanimated2/layoutReanimation/animationsManager.js",
+    "./lib/module/reanimated2/core.js",
+    "./lib/module/index.js"
   ],
   "packageManager": "yarn@4.1.1"
 }

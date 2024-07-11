@@ -109,14 +109,13 @@ import SwipeableListExample from './SwipeableListExample';
 import TransformExample from './TransformExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
 import VolumeExample from './VolumeExample';
-import WaterfallGridExample from './LayoutAnimations/WaterfallGridExample';
+import LayoutTransitionExample from './LayoutAnimations/LayoutTransitionExample';
 import WidthExample from './WidthExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
-import DynamicStylesExample from './DynamicStylesExample';
 import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
@@ -491,11 +490,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Log test',
     screen: LogExample,
   },
-  DynamicStylesExample: {
-    icon: '🧨',
-    title: 'Dynamically appending/removing styles',
-    screen: DynamicStylesExample,
-  },
   WorkletFactoryCrash: {
     icon: '🏭',
     title: 'Worklet factory crash',
@@ -641,7 +635,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   DefaultTransitions: {
     title: '[LA] Default layout transitions',
-    screen: WaterfallGridExample,
+    screen: LayoutTransitionExample,
   },
   KeyframeAnimation: {
     title: '[LA] Keyframe animation',
