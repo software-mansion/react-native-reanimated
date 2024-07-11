@@ -5,6 +5,7 @@ import type { KeyframeDefinitions } from './config';
 import { convertAnimationObjectToKeyframes } from './animationParser';
 import type {
   AnimationData,
+  AnimationStyle,
   ReanimatedWebTransformProperties,
   TransitionData,
 } from './animationParser';
@@ -14,6 +15,7 @@ import { SequencedTransition } from './transition/Sequenced.web';
 import { FadingTransition } from './transition/Fading.web';
 import { JumpingTransition } from './transition/Jumping.web';
 import { insertWebAnimation } from './domUtils';
+import { StyleProps } from '../..';
 
 type TransformType = NonNullable<TransformsStyle['transform']>;
 
@@ -74,7 +76,7 @@ export function createCustomKeyFrameAnimation(
 
 export function createAnimationWithInitialValues(
   animationName: string,
-  initialValues: any
+  initialValues: StyleProps
 ) {
   let animationStyle;
 
@@ -87,10 +89,10 @@ export function createAnimationWithInitialValues(
     const existingTransform = structuredClone(firstAnimationKeyframe.transform);
     const { opacity, transform, ...rest } = initialValues;
 
-    const transformWithPx = addPxToTransform(transform);
+    const transformWithPx = addPxToTransform(transform as TransformType);
 
     if (opacity) {
-      firstAnimationKeyframe.opacity = opacity;
+      firstAnimationKeyframe.opacity = opacity as number;
     }
 
     if (transform) {
@@ -135,7 +137,7 @@ export function createAnimationWithInitialValues(
 
   const animationObject: AnimationData = {
     name: keyframeName,
-    style: animationStyle,
+    style: animationStyle as Record<number, AnimationStyle>,
     duration: AnimationsData[animationName].duration,
   };
 

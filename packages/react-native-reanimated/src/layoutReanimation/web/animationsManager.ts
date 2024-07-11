@@ -27,6 +27,7 @@ import { areDOMRectsEqual } from './domUtils';
 import type { TransitionData } from './animationParser';
 import { Keyframe } from '../animationBuilder';
 import { makeElementVisible } from './componentStyle';
+import { StyleProps } from '../..';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,
@@ -141,7 +142,7 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
   if (hasInitialValues) {
     animationName = createAnimationWithInitialValues(
       animationName,
-      (config as CustomConfig).initialValues
+      (config as CustomConfig).initialValues as StyleProps
     );
   }
 

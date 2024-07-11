@@ -1,5 +1,5 @@
 'use strict';
-import type { ReduceMotion } from '../../commonTypes';
+import type { ReduceMotion, StyleProps } from '../../commonTypes';
 import type { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import {
   BounceIn,
@@ -62,7 +62,7 @@ export interface CustomConfig {
   callbackV?: AnimationCallback;
   reversed?: boolean;
   definitions?: KeyframeDefinitions;
-  initialValues?: Record<string, unknown>;
+  initialValues?: StyleProps;
 }
 
 export enum TransitionType {
