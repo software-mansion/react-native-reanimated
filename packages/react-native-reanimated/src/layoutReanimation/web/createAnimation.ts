@@ -22,7 +22,7 @@ type TransformType = NonNullable<TransformsStyle['transform']>;
 // that are present inside transform.
 //
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function addPxToTranslate(transform: TransformType) {
+function addPxToTransform(transform: TransformType) {
   type RNTransformProp = (typeof transform)[number];
 
   // @ts-ignore `existingTransform` cannot be string because in that case
@@ -30,7 +30,10 @@ function addPxToTranslate(transform: TransformType) {
   const newTransform = transform.map((transformProp: RNTransformProp) => {
     const newTransformProp: ReanimatedWebTransformProperties = {};
     for (const [key, value] of Object.entries(transformProp)) {
-      if (key.includes('translate') && typeof value === 'number') {
+      if (
+        (key.includes('translate') || key.includes('perspective')) &&
+        typeof value === 'number'
+      ) {
         // @ts-ignore After many trials we decided to ignore this error - it says that we cannot use 'key' to index this object.
         // Sadly it doesn't go away after using cast `key as keyof TransformProperties`.
         newTransformProp[key] = `${value}px`;
@@ -50,7 +53,7 @@ export function createCustomKeyFrameAnimation(
 ) {
   for (const value of Object.values(keyframeDefinitions)) {
     if (value.transform) {
-      value.transform = addPxToTranslate(value.transform as TransformType);
+      value.transform = addPxToTransform(value.transform as TransformType);
     }
   }
 
@@ -84,7 +87,7 @@ export function createAnimationWithInitialValues(
     const existingTransform = structuredClone(firstAnimationKeyframe.transform);
     const { opacity, transform, ...rest } = initialValues;
 
-    const transformWithPx = addPxToTranslate(transform);
+    const transformWithPx = addPxToTransform(transform);
 
     if (opacity) {
       firstAnimationKeyframe.opacity = opacity;
@@ -92,7 +95,7 @@ export function createAnimationWithInitialValues(
 
     if (transform) {
       if (!existingTransform) {
-        firstAnimationKeyframe.transform = transform;
+        firstAnimationKeyframe.transform = transformWithPx;
       } else {
         const transformStyle = new Map<string, any>();
 
