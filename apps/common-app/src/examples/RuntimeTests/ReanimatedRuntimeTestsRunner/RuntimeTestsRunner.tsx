@@ -2,7 +2,7 @@ import { View, Button, StyleSheet, Text } from 'react-native';
 import type { ReactNode } from 'react';
 import React, { useEffect, useState } from 'react';
 import { runTests, configure } from './RuntimeTestsApi';
-import { RenderLock } from './TestRunner';
+import { RenderLock } from './SyncUIRunner';
 
 let renderLock: RenderLock = new RenderLock();
 export class ErrorBoundary extends React.Component<

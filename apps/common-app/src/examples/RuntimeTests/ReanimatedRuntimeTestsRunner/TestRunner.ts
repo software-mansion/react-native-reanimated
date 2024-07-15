@@ -2,7 +2,6 @@ import type { Component, MutableRefObject, ReactElement } from 'react';
 import { useRef } from 'react';
 import type {
   BuildFunction,
-  LockObject,
   NullableTestValue,
   Operation,
   SharedValueSnapshot,
@@ -21,7 +20,7 @@ import { makeMutable, runOnJS } from 'react-native-reanimated';
 import { Matchers, nullableMatch } from './matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
-import { SyncUIRunner } from './SyncUIRunner';
+import { RenderLock, SyncUIRunner } from './SyncUIRunner';
 
 let callTrackerRegistryJS: Record<string, number> = {};
 const callTrackerRegistryUI = makeMutable<Record<string, number>>({});
@@ -35,32 +34,6 @@ function callTrackerJS(name: string) {
 const notificationRegistry: Record<string, boolean> = {};
 function notifyJS(name: string) {
   notificationRegistry[name] = true;
-}
-
-export class RenderLock {
-  private _renderLock: LockObject = { lock: false };
-
-  public lockRender() {
-    this._renderLock = { lock: true };
-  }
-
-  public unlockRender() {
-    this._renderLock = { lock: false };
-  }
-
-  public waitForUnlock(maxWaitTime?: number) {
-    return new Promise(resolve => {
-      const startTime = performance.now();
-      const interval = setInterval(() => {
-        const currentTime = performance.now();
-        const waitTimeExceeded = maxWaitTime && maxWaitTime < currentTime - startTime;
-        if (this._renderLock.lock !== true || waitTimeExceeded) {
-          clearInterval(interval);
-          resolve(this._renderLock.lock);
-        }
-      }, 10);
-    });
-  }
 }
 
 export class TestRunner {
