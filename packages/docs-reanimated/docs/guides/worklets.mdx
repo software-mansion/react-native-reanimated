@@ -6,7 +6,7 @@ sidebar_position: 1
 
 # Worklets
 
-Worklets are short-running JavaScript functions that can be run on the [UI thread](/docs/fundamentals/glossary#ui-thread). Reanimated uses worklets to calculate view styles and react to events on the UI thread.
+Worklets are short-running JavaScript functions that can run on the [UI thread](/docs/fundamentals/glossary#ui-thread). Reanimated uses worklets to calculate view styles and react to events on the UI thread.
 
 You can create your own worklets using the `'worklet';` directive at the top of a function.
 
@@ -142,3 +142,7 @@ function App() {
   });
 }
 ```
+
+Worklets can run in other runtimes than the one provided by Reanimated. For example [VisionCamera](https://github.com/mrousavy/react-native-vision-camera) and [LiveMarkdown](https://github.com/Expensify/react-native-live-markdown) create their own worklet runtimes.
+
+You can create your own worklet runtimes with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime) function.
