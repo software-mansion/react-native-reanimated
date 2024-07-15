@@ -80,7 +80,7 @@ export class TestRunner {
     return this._renderLock;
   }
 
-  public render(component: ReactElement<Component> | null) {
+  public async render(component: ReactElement<Component> | null) {
     if (!component && this._wasRenderedNull) {
       return;
     }
