@@ -35,13 +35,13 @@ function App() {
 
 #### `definitions`
 
-An object, passed as an argument to the Keyframe's constructor. It contains definitions of your animation.
+An object, passed as a first argument that contains definitions of your animation.
 The object keys should be within range `0-100` and correspond to animation progress.
-The object values should consist of style props and/or [easing](/docs/animations/withTiming/#easing) function.
+The object values should consist of style props and/or [easing](/docs/animations/withTiming/#easing) function. If easing property is not provided, it defaults to `Easing.linear`.
 
 - `0` or `from`: Initial state of the object.
-- `100` or `to`: Final state of the object.
 - Middle points (e.g., `45`): Intermediate states of the object.
+- `100` or `to`: Final state of the object.
 
 To `0` assign the style, you want for your object at the beginning of the animation and to `100` assign the style you want for your object to have at the end of the animation.
 
@@ -51,7 +51,6 @@ To `0` assign the style, you want for your object at the beginning of the animat
 - Ensure you provide the initial value for all style properties you want to animate in other keyframes.
 - Do not provide both `0` and `from`, or `100` and `to` keyframes, as it will result in a parsing conflict.
 - If you want to animate transform style, make sure that all properties in the transformation array are in the same order in all keyframes.
-- If easing property is not provided, it defaults to `Easing.linear`.
 
 ## Modifiers
 
