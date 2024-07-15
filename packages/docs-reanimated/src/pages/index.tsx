@@ -8,7 +8,7 @@ import Animations from '@site/src/components/Animations';
 import Testimonials from '@site/src/components/Testimonials';
 import FooterBackground from '../components/FooterBackground';
 import Sponsors from '@site/src/components/Sponsors';
-import HireUsSection from '../components/HireUsSection';
+import { HireUsSection } from '@swmansion/t-rex-ui';
 
 export default function Home(): JSX.Element {
   return (
@@ -19,7 +19,9 @@ export default function Home(): JSX.Element {
         <Animations />
         <Testimonials />
         <Sponsors />
-        <HireUsSection />
+        <div className={styles.hireUsContainer}>
+          <HireUsSection />
+        </div>
       </div>
       <FooterBackground />
     </Layout>
