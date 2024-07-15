@@ -5,18 +5,20 @@ sidebar_position: 8
 # makeMutable
 
 :::caution
-
 The usage of `makeMutable` is discouraged in most cases. It's recommended to use the [`useSharedValue`](/docs/core/useSharedValue) hook instead unless you know what you're doing and you are aware of the consequences (see the [Remarks](#remarks) section).
 
 `makeMutable` is used internally and its behavior may change over time.
-
 :::
 
 `makeMutable` is a function internally used by the [`useSharedValue`](/docs/core/useSharedValue) hook to create a [shared value](/docs/fundamentals/glossary#shared-value).
 
-It makes it possible to create shared values without the use of the hook, which can be useful in some cases (e.g. in the global scope, as an array of shared values, etc.).
+It makes it possible to create mutable values without the use of the hook, which can be useful in some cases (e.g. in the global scope, as an array of mutable values, etc.).
 
 The created object is, in fact, the same as the one returned by `useSharedValue` hook, so the further usage is the same.
+
+:::info
+We use `mutable value` name for an object created by `makeMutable` to distinguish it from the `shared value` created by `useSharedValue`. Technically, `shared value` is a `mutable value` with an automatic cleanup.
+:::
 
 ## Reference
 
@@ -53,9 +55,9 @@ The value you want to be initially stored to a `.value` property. It can be any 
 
 ### Returns
 
-`makeMutable` returns a shared value with a single `value` property initially set to the `initial`.
+`makeMutable` returns a mutable value with a single `value` property initially set to the `initial`.
 
-Values stored in shared values can be accessed and modified by their `.value` property.
+Values stored in mutable values can be accessed and modified by their `.value` property.
 
 ## Example
 
@@ -68,14 +70,14 @@ import MakeMutableSrc from '!!raw-loader!@site/src/examples/MakeMutable';
 
 - All remarks from the [useSharedValue](/docs/core/useSharedValue) hook apply to `makeMutable` as well.
 
-- Don't use `makeMutable` directly in the component scope. When component re-renders, it will create the completely new object (with the new `initial` value if it was changed) and the state of the previous shared value will be lost.
+- Don't use `makeMutable` directly in the component scope. When component re-renders, it will create the completely new object (with the new `initial` value if it was changed) and the state of the previous mutable value will be lost.
 
 <Indent>
 
 ```javascript
 function App() {
   const [counter, setCounter] = useState(0);
-  const mv = makeMutable(counter); // creates a new shared value on each render
+  const mv = makeMutable(counter); // creates a new mutable value on each render
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -98,7 +100,7 @@ function App() {
 
 </Indent>
 
-- Use `cancelAnimation` to stop all animations running on the shared value if it's no longer needed and there are still some animations running. Be super careful with infinite animations, as they will never stop unless you cancel them manually.
+- Use `cancelAnimation` to stop all animations running on the mutable value if it's no longer needed and there are still some animations running. Be super careful with infinite animations, as they will never stop unless you cancel them manually.
 
 <Indent>
 
@@ -134,13 +136,13 @@ function App() {
 
 ### Comparison with `useSharedValue`
 
-| `makeMutable`                                                                       | `useSharedValue`                                                                                           |
-| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Creates a new shared value object on each call                                      | Reuses the same shared value object on each call                                                           |
-| If `initial` value changes, a new shared value object with the new value is created | If `initialValue` value changes, the initially created shared value object is returned without any changes |
-| Can be used outside of the component scope                                          | Can be used only inside the component scope                                                                |
-| Can be used in loops (also when the number of iterations is not constant)           | Can be used in loops only if the number of rendered hooks (`useSharedValue` calls) is constant             |
-| Doesn't automatically cancel animations when the component is unmounted             | Automatically cancels animations when the component is unmounted                                           |
+| `makeMutable`                                                             | `useSharedValue`                                                                               |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Creates a new object on each call                                         | Reuses the same object on each call                                                            |
+| If `initial` value changes, a new object with the new value is created    | If `initialValue` value changes, the initially created object is returned without any changes  |
+| Can be used outside of the component scope                                | Can be used only inside the component scope                                                    |
+| Can be used in loops (also when the number of iterations is not constant) | Can be used in loops only if the number of rendered hooks (`useSharedValue` calls) is constant |
+| Doesn't automatically cancel animations when the component is unmounted   | Automatically cancels animations when the component is unmounted                               |
 
 ## Platform compatibility
 
