@@ -1,12 +1,13 @@
 import { color } from '../stringFormatUtils';
 import type { TestCase, TestValue, NullableTestValue } from '../types';
-import type { Matcher, MatcherArguments } from './rawMatchers';
+import type { AsyncMatcher, AsyncMatcherArguments, Matcher, SyncMatcherArguments } from './rawMatchers';
 import {
   toBeMatcher,
   toBeWithinRangeMatcher,
   toBeCalledMatcher,
   toBeCalledUIMatcher,
   toBeCalledJSMatcher,
+  toThrowMatcher,
 } from './rawMatchers';
 import type { SingleViewSnapshot } from './snapshotMatchers';
 import { compareSnapshots } from './snapshotMatchers';
@@ -21,7 +22,7 @@ export class Matchers {
     return this;
   }
 
-  private decorateMatcher<MatcherArgs extends MatcherArguments>(matcher: Matcher<MatcherArgs>) {
+  private decorateMatcher<MatcherArgs extends SyncMatcherArguments>(matcher: Matcher<MatcherArgs>) {
     return (...args: MatcherArgs) => {
       const { pass, message } = matcher(this._currentValue, this._negation, ...args);
       if ((!pass && !this._negation) || (pass && this._negation)) {
@@ -30,8 +31,18 @@ export class Matchers {
     };
   }
 
+  private decorateAsyncMatcher<MatcherArgs extends AsyncMatcherArguments>(matcher: AsyncMatcher<MatcherArgs>) {
+    return async (...args: MatcherArgs) => {
+      const { pass, message } = await matcher(this._currentValue, this._negation, ...args);
+      if ((!pass && !this._negation) || (pass && this._negation)) {
+        this._testCase.errors.push(message);
+      }
+    };
+  }
+
   public toBe = this.decorateMatcher(toBeMatcher);
   public toBeWithinRange = this.decorateMatcher(toBeWithinRangeMatcher);
+  public toThrow = this.decorateAsyncMatcher(toThrowMatcher);
   public toBeCalled = this.decorateMatcher(toBeCalledMatcher);
   public toBeCalledUI = this.decorateMatcher(toBeCalledUIMatcher);
   public toBeCalledJS = this.decorateMatcher(toBeCalledJSMatcher);

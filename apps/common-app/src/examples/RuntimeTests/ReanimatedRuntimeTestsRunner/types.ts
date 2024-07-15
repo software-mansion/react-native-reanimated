@@ -104,7 +104,8 @@ export type TestValue =
   | null
   | undefined
   | boolean
-  | OperationUpdate;
+  | OperationUpdate
+  | (() => unknown);
 
 export type NullableTestValue = TestValue | null | undefined;
 
