@@ -86,13 +86,13 @@ function App() {
       clearInterval(interval);
     };
   }, [mv]);
-  
+
   useAnimatedReaction(
     () => mv.value,
     (value) => {
       console.log(value); // prints 0, 1, 2, ...
-    },
-  )
+    }
+  );
 }
 ```
 
@@ -132,16 +132,15 @@ function App() {
 
 </Indent>
 
-
 ### Comparison with `useSharedValue`
 
-| `makeMutable` | `useSharedValue` |
-| ------------- | ---------------- |
-| Creates a new shared value object on each call | Reuses the same shared value object on each call |
+| `makeMutable`                                                                       | `useSharedValue`                                                                                           |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Creates a new shared value object on each call                                      | Reuses the same shared value object on each call                                                           |
 | If `initial` value changes, a new shared value object with the new value is created | If `initialValue` value changes, the initially created shared value object is returned without any changes |
-| Can be used outside of the component scope | Can be used only inside the component scope |
-| Can be used in loops (also when the number of iterations is not constant) | Can be used in loops only if the number of rendered hooks (`useSharedValue` calls) is constant |
-| Doesn't automatically cancel animations when the component is unmounted | Automatically cancels animations when the component is unmounted |
+| Can be used outside of the component scope                                          | Can be used only inside the component scope                                                                |
+| Can be used in loops (also when the number of iterations is not constant)           | Can be used in loops only if the number of rendered hooks (`useSharedValue` calls) is constant             |
+| Doesn't automatically cancel animations when the component is unmounted             | Automatically cancels animations when the component is unmounted                                           |
 
 ## Platform compatibility
 

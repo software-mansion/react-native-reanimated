@@ -1,4 +1,10 @@
-import { Text, StyleSheet, View, TouchableOpacity, Button, Alert, useColorScheme } from 'react-native';
+import {
+  Text,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  useColorScheme,
+} from 'react-native';
 
 import React, { useCallback, useMemo, useState } from 'react';
 import Animated, {
