@@ -64,7 +64,7 @@ export type ReanimatedEvent<Event extends object> = ReanimatedPayload &
     ? NativeEvent
     : Event);
 
-export type EventPayload<Event extends object> = Event extends {
+type EventPayload<Event extends object> = Event extends {
   nativeEvent: infer NativeEvent extends object;
 }
   ? NativeEvent
