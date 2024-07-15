@@ -85,7 +85,7 @@ export class TestRunner {
       return;
     }
     this._wasRenderedNull = !component;
-    this._renderLock.lockRender();
+    this._renderLock.lock();
 
     try {
       this._renderHook(component);

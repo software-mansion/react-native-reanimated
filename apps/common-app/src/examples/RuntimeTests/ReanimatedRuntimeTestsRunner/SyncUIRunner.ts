@@ -39,11 +39,11 @@ export class SyncUIRunner extends WaitForUnlock {
 }
 
 export class RenderLock extends WaitForUnlock {
-  public lockRender() {
+  public lock() {
     this._setLock(true);
   }
 
-  public unlockRender() {
+  public unlock() {
     this._setLock(false);
   }
 

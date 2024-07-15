@@ -32,7 +32,7 @@ export default function RuntimeTestsRunner() {
   const [component, setComponent] = useState<ReactNode | null>(null);
   useEffect(() => {
     if (renderLock) {
-      renderLock.unlockRender();
+      renderLock.unlock();
     }
   }, [component]);
   return (
