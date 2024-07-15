@@ -24,10 +24,7 @@ export function EntryExitTransition(
 
   const keyframeData: AnimationData = {
     name,
-    style:
-      '0' in exitingAnimationData.style
-        ? {}
-        : { 0: { transform: [additionalData] } },
+    style: {},
     duration: 300,
   };
 
