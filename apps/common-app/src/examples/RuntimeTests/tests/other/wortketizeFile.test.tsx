@@ -13,7 +13,7 @@ import { getThree } from './wortketizeFileUtils';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
-describe.only('Test workletization', () => {
+describe('Test workletization', () => {
   const ExampleComponent = () => {
     const output = useSharedValue<number | null>(null);
     registerValue(SHARED_VALUE_REF, output);
