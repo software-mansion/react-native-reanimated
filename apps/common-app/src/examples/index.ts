@@ -131,7 +131,7 @@ import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import FreezingShareablesExample from './ShareableFreezingExample';
 import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
 import StrictDOMExample from './StrictDOMExample';
-import MakeMutableExample from './MakeMutableExample';
+import MakeMutableExample from './MakeMutable/MakeMutable';
 
 interface Example {
   icon?: string;
