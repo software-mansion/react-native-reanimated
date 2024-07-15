@@ -29,7 +29,7 @@ async function getSnapshotUpdates(fromColor: string, toColor: string, snapshot: 
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent fromColor={fromColor} toColor={toColor} />);
-  await waitForAnimationUpdates(snapshot);
+  await waitForAnimationUpdates(snapshot.length);
   const updates = updatesContainer.getUpdates();
   const nativeUpdates = await updatesContainer.getNativeSnapshots();
   return [updates, nativeUpdates];

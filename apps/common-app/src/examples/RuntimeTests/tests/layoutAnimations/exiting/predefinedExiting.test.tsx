@@ -107,7 +107,7 @@ async function getSnapshotUpdates(exiting: any, snapshot: Array<any>, duration: 
 
   await render(<ExitingComponent exiting={componentExiting} />);
 
-  await waitForAnimationUpdates(snapshot);
+  await waitForAnimationUpdates(snapshot.length);
   const updates = updatesContainer.getUpdates();
   await unmockAnimationTimer();
   await clearRenderOutput();

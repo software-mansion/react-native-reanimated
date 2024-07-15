@@ -108,7 +108,7 @@ async function getSnapshotUpdates(entering: any, snapshot: Array<any>, duration:
   const componentEntering = duration ? springEntering.duration(duration) : springEntering;
 
   await render(<EnteringOnMountComponent entering={componentEntering} />);
-  await waitForAnimationUpdates(snapshot);
+  await waitForAnimationUpdates(snapshot.length);
   const updates = updatesContainer.getUpdates();
   await unmockAnimationTimer();
   await clearRenderOutput();

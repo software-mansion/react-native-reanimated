@@ -41,7 +41,7 @@ async function getSnapshotUpdates(layout: any, direction: Direction, snapshot: A
   } else {
     await render(<TransitionLeftOrRight layout={layout} direction={direction} />);
   }
-  await waitForAnimationUpdates(snapshot);
+  await waitForAnimationUpdates(snapshot.length);
   const component = getTestComponent(TRANSITION_REF);
   const updates = updatesContainer.getUpdates(component);
   await unmockAnimationTimer();
