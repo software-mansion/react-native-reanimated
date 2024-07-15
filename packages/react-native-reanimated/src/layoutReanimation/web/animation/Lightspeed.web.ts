@@ -37,6 +37,10 @@ export const LightSpeedOutData = {
   LightSpeedOutRight: {
     name: 'LightSpeedOutRight',
     style: {
+      0: {
+        transform: [{ translateX: '0vw', skewX: '0deg' }],
+        opacity: 1,
+      },
       100: {
         transform: [{ translateX: '100vw', skewX: '-45deg' }],
         opacity: 0,
@@ -48,6 +52,10 @@ export const LightSpeedOutData = {
   LightSpeedOutLeft: {
     name: 'LightSpeedOutLeft',
     style: {
+      0: {
+        transform: [{ translateX: '0vw', skew: '0deg' }],
+        opacity: 1,
+      },
       100: {
         transform: [{ translateX: '-100vw', skew: '45deg' }],
         opacity: 0,
