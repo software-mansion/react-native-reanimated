@@ -28,7 +28,6 @@ import { areDOMRectsEqual } from './domUtils';
 import type { TransitionData } from './animationParser';
 import { Keyframe } from '../animationBuilder';
 import { makeElementVisible } from './componentStyle';
-import type { StyleProps } from '../..';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,

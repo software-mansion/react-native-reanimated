@@ -14,7 +14,6 @@ import { SequencedTransition } from './transition/Sequenced.web';
 import { FadingTransition } from './transition/Fading.web';
 import { JumpingTransition } from './transition/Jumping.web';
 import { insertWebAnimation } from './domUtils';
-import type { StyleProps } from '../..';
 
 type TransformType = NonNullable<TransformsStyle['transform']>;
 
