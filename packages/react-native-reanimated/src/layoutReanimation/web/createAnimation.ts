@@ -1,7 +1,7 @@
 'use strict';
 
-import { TransitionType } from './config';
-import type { KeyframeDefinitions } from './config';
+import { AnimationsData, TransitionType } from './config';
+import type { InitialValuesStyleProps, KeyframeDefinitions } from './config';
 import { convertAnimationObjectToKeyframes } from './animationParser';
 import type {
   AnimationData,
@@ -23,7 +23,7 @@ type TransformType = NonNullable<TransformsStyle['transform']>;
 // that are present inside transform.
 //
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function addPxToTranslate(transform: TransformType) {
+function addPxToTransform(transform: TransformType) {
   type RNTransformProp = (typeof transform)[number];
 
   // @ts-ignore `existingTransform` cannot be string because in that case
@@ -31,7 +31,10 @@ function addPxToTranslate(transform: TransformType) {
   const newTransform = transform.map((transformProp: RNTransformProp) => {
     const newTransformProp: ReanimatedWebTransformProperties = {};
     for (const [key, value] of Object.entries(transformProp)) {
-      if (key.includes('translate') && typeof value === 'number') {
+      if (
+        (key.includes('translate') || key.includes('perspective')) &&
+        typeof value === 'number'
+      ) {
         // @ts-ignore After many trials we decided to ignore this error - it says that we cannot use 'key' to index this object.
         // Sadly it doesn't go away after using cast `key as keyof TransformProperties`.
         newTransformProp[key] = `${value}px`;
@@ -51,7 +54,7 @@ export function createCustomKeyFrameAnimation(
 ) {
   for (const value of Object.values(keyframeDefinitions)) {
     if (value.transform) {
-      value.transform = addPxToTranslate(value.transform as TransformType);
+      value.transform = addPxToTransform(value.transform as TransformType);
     }
   }
 
@@ -68,6 +71,71 @@ export function createCustomKeyFrameAnimation(
   insertWebAnimation(animationData.name, parsedKeyframe);
 
   return animationData.name;
+}
+
+export function createAnimationWithInitialValues(
+  animationName: string,
+  initialValues: InitialValuesStyleProps
+) {
+  const animationStyle = structuredClone(AnimationsData[animationName].style);
+  const firstAnimationStep = animationStyle['0'];
+
+  const { transform, ...rest } = initialValues;
+  const transformWithPx = addPxToTransform(transform as TransformType);
+
+  if (transform) {
+    // If there was no predefined transform, we can simply assign transform from `initialValues`.
+    if (!firstAnimationStep.transform) {
+      firstAnimationStep.transform = transformWithPx;
+    } else {
+      // Othwerwise we have to merge predefined transform with the one provided in `initialValues`.
+      // To do that, we create `Map` that will contain final transform.
+      const transformStyle = new Map<string, any>();
+
+      // First we assign all of the predefined rules
+      for (const rule of firstAnimationStep.transform) {
+        // In most cases there will be just one iteration
+        for (const [property, value] of Object.entries(rule)) {
+          transformStyle.set(property, value);
+        }
+      }
+
+      // Then we either add new rule, or override one that already exists.
+      for (const rule of transformWithPx) {
+        for (const [property, value] of Object.entries(rule)) {
+          transformStyle.set(property, value);
+        }
+      }
+
+      // Finally, we convert `Map` with final transform back into array of objects.
+      firstAnimationStep.transform = Array.from(
+        transformStyle,
+        ([property, value]) => ({
+          [property]: value,
+        })
+      );
+    }
+  }
+
+  animationStyle['0'] = {
+    ...animationStyle['0'],
+    ...rest,
+  };
+
+  // TODO: Maybe we can extract the logic below into separate function
+  const keyframeName = generateNextCustomKeyframeName();
+
+  const animationObject: AnimationData = {
+    name: keyframeName,
+    style: animationStyle,
+    duration: AnimationsData[animationName].duration,
+  };
+
+  const keyframe = convertAnimationObjectToKeyframes(animationObject);
+
+  insertWebAnimation(keyframeName, keyframe);
+
+  return keyframeName;
 }
 
 let customKeyframeCounter = 0;

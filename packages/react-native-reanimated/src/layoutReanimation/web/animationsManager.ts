@@ -4,6 +4,7 @@ import type {
   AnimationConfig,
   AnimationNames,
   CustomConfig,
+  InitialValuesStyleProps,
   KeyframeDefinitions,
 } from './config';
 import { Animations } from './config';
@@ -12,7 +13,10 @@ import type {
   LayoutAnimationStaticContext,
 } from '../../createAnimatedComponent/commonTypes';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
-import { createCustomKeyFrameAnimation } from './createAnimation';
+import {
+  createAnimationWithInitialValues,
+  createCustomKeyFrameAnimation,
+} from './createAnimation';
 import {
   getProcessedConfig,
   handleExitingAnimation,
@@ -120,6 +124,7 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
 
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
   const isCustomKeyframe = config instanceof Keyframe;
+  const hasInitialValues = (config as CustomConfig).initialValues !== undefined;
 
   let animationName;
 
@@ -134,9 +139,16 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
       .presetName;
   }
 
+  if (hasInitialValues) {
+    animationName = createAnimationWithInitialValues(
+      animationName,
+      (config as CustomConfig).initialValues as InitialValuesStyleProps
+    );
+  }
+
   const shouldFail = checkUndefinedAnimationFail(
     animationName,
-    isLayoutTransition || isCustomKeyframe
+    isLayoutTransition || isCustomKeyframe || hasInitialValues
   );
 
   if (shouldFail) {
