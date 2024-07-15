@@ -4,12 +4,19 @@ sidebar_position: 8
 
 # makeMutable
 
+:::caution
+
+The usage of makeMutable is discouraged in most cases. It's recommended to use the [useSharedValue](/docs/core/useSharedValue) hook instead unless you know what you're doing and are aware of the consequences (see the [Remarks](#remarks) section).
+
+makeMutable is used internally and its behavior may change over time.
+
+:::
+
 `makeMutable` is a function internally used by the [useSharedValue](/docs/core/useSharedValue) hook to create a [shared value](/docs/fundamentals/glossary#shared-value).
 
 It makes it possible to create shared values without the use of the hook, which can be useful in some cases (e.g. in the global scope, as an array of shared values, etc.).
 
 The created object is, in fact, the same as the one returned by `useSharedValue` hook, so the further usage is the same.
-
 
 ## Reference
 
@@ -44,11 +51,18 @@ function makeMutable<Value>(initial: Value): SharedValue<Value>;
 
 The value you want to be initially stored to a `.value` property. It can be any JavaScript value like `number`, `string` or `boolean` but also data structures such as `array` and `object`.
 
-#### Returns
+### Returns
 
 `makeMutable` returns a shared value with a single `value` property initially set to the `initial`.
 
 Values stored in shared values can be accessed and modified by their `.value` property.
+
+## Example
+
+import MakeMutable from '@site/src/examples/MakeMutable';
+import MakeMutableSrc from '!!raw-loader!@site/src/examples/MakeMutable';
+
+<InteractiveExample src={MakeMutableSrc} component={MakeMutable} showCode />
 
 ## Remarks
 
