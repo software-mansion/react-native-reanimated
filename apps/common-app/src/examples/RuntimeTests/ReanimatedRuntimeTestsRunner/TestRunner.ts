@@ -512,9 +512,8 @@ export class TestRunner {
     });
   }
 
-  public waitForAnimationUpdates(snapshot: Array<any>): Promise<boolean> {
+  public waitForAnimationUpdates(updatesCount: number): Promise<boolean> {
     const CHECK_INTERVAL = 20;
-    const updatesCount = snapshot.length;
     const flag = makeMutable(false);
     return new Promise<boolean>(resolve => {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises

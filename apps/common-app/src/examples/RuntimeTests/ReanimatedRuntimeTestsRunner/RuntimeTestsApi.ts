@@ -145,8 +145,8 @@ export async function wait(delay: number) {
   return testRunner.wait(delay);
 }
 
-export async function waitForAnimationUpdates(snapshot: Array<any>) {
-  return testRunner.waitForAnimationUpdates(snapshot);
+export async function waitForAnimationUpdates(updatesCount: number) {
+  return testRunner.waitForAnimationUpdates(updatesCount);
 }
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
