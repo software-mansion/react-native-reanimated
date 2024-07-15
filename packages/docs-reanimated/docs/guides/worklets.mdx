@@ -143,6 +143,18 @@ function App() {
 }
 ```
 
+Functions passed to `runOnJS` must be defined in the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. This code won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](/docs/fundamentals/glossary#ui-thread):
+
+```javascript
+function App() {
+  const tap = Gesture.Tap().onEnd(() => {
+    // myFunction is defined on the UI thread 🚨
+    const myFunction = () => {};
+    runOnJS(myFunction)(); // 💥
+  });
+}
+```
+
 Worklets can run in other runtimes than the one provided by Reanimated. For example [VisionCamera](https://github.com/mrousavy/react-native-vision-camera) and [LiveMarkdown](https://github.com/Expensify/react-native-live-markdown) create their own worklet runtimes.
 
 You can create your own worklet runtimes with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime) function.
