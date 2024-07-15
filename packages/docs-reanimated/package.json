@@ -34,6 +34,7 @@
     "babel-preset-expo": "^9.2.2",
     "babel-preset-react-native": "^4.0.1",
     "clsx": "^1.2.1",
+    "glob": "^10.4.2",
     "raf": "^3.4.1",
     "raw-loader": "^4.0.2",
     "react": "^17.0.2",
