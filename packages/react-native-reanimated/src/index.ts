@@ -261,10 +261,8 @@ export {
   getAnimatedStyle,
 } from './jestUtils';
 export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
-export {
-  PerformanceMonitor,
-  type PerformanceMonitorProps,
-} from './component/PerformanceMonitor';
+export { PerformanceMonitor } from './component/PerformanceMonitor';
+export type { PerformanceMonitorProps } from './component/PerformanceMonitor';
 export type {
   Adaptable,
   AdaptTransforms,
