@@ -9,6 +9,8 @@ import {
 import React, { useCallback, useMemo, useState } from 'react';
 import Animated, {
   makeMutable,
+  runOnJS,
+  runOnUI,
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
@@ -30,11 +32,13 @@ function CheckListSelector({ items, onSubmit }: CheckListSelectorProps) {
   );
 
   const handleSubmit = useCallback(() => {
-    const selectedItems = checkListItemProps
-      .filter((props) => props.selected.value)
-      .map((props) => props.item);
+    runOnUI(() => {
+      const selectedItems = checkListItemProps
+        .filter((props) => props.selected.value)
+        .map((props) => props.item);
 
-    onSubmit(selectedItems);
+      runOnJS(onSubmit)(selectedItems);
+    })();
   }, [checkListItemProps, onSubmit]);
 
   return (
@@ -60,7 +64,9 @@ function CheckListItem({ item, selected }: CheckListItemProps) {
     // highlight-start
     // No need to update the array of selected items, just toggle
     // the selected value thanks to separate shared values
-    selected.value = !selected.value;
+    runOnUI(() => {
+      selected.value = !selected.value;
+    })();
     // highlight-end
   }, [selected]);
 
