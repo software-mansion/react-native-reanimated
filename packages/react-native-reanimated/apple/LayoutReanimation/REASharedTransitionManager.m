@@ -191,6 +191,10 @@ static BOOL _isConfigured = NO;
     currentTargetViewSnapshot.values[@"originXByParent"] = @(frameData.x);
     currentTargetViewSnapshot.values[@"originYByParent"] = @(frameData.y);
     sharedElement.sourceViewSnapshot = newSourceViewSnapshot;
+    
+    if (sharedElement.animationType == SHARED_ELEMENT_TRANSITION_PROGRESS){
+      continue;
+    }
 
     [self disableCleaningForViewTag:sourceView.reactTag];
     [self disableCleaningForViewTag:targetView.reactTag];
