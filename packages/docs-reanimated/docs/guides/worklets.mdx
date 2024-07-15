@@ -8,7 +8,7 @@ sidebar_position: 1
 
 Worklets are short-running JavaScript functions that can be run on the [UI thread](/docs/fundamentals/glossary#ui-thread). Reanimated uses worklets to update view properties and react to events on the UI thread.
 
-You can create your own worklets using the `"worklet";` directive at the top of a function.
+You can create your own worklets using the `'worklet';` directive at the top of a function.
 
 ```javascript
 function myWorklet() {
@@ -74,7 +74,7 @@ function otherWorklet() {
 Capturing large JavaScript objects inside of a worklet can lead to performance issues.
 
 ```javascript
-const theme = {...}; // theme is a big object
+const theme = {...}; // theme is a large object
 
 function myWorklet() {
   'worklet';
@@ -122,7 +122,9 @@ function App() {
     width.value += 50;
   }
 
-  width.value; // available on both JS and UI thread
+  useEffect(() => {
+    console.log(width.value); // available on both JS and UI thread
+  }, []);
 }
 ```
 
