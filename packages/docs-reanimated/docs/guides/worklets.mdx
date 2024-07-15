@@ -32,7 +32,7 @@ function App() {
 }
 ```
 
-The `'worklet';` directive has no effect on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread). Worklets on the JavaScript thread are just functions.
+Functions marked with `'worklet';` aren't [hoisted](https://developer.mozilla.org/en-US/docs/Glossary/Hoisting). Besides affecting hoisting, the `'worklet';` directive has no effect on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread).
 
 You can use [`runOnUI`](/docs/threading/runOnUI) to manually run worklets on the UI thread:
 
