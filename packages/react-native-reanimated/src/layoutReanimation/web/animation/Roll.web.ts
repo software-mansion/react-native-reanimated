@@ -10,6 +10,9 @@ export const RollInData = {
       0: {
         transform: [{ translateX: '-100vw', rotate: '-180deg' }],
       },
+      100: {
+        transform: [{ translateX: '0vw', rotate: '0deg' }],
+      },
     },
     duration: DEFAULT_ROLL_TIME,
   },
@@ -20,6 +23,9 @@ export const RollInData = {
       0: {
         transform: [{ translateX: '100vw', rotate: '180deg' }],
       },
+      100: {
+        transform: [{ translateX: '0vw', rotate: '0deg' }],
+      },
     },
     duration: DEFAULT_ROLL_TIME,
   },
@@ -29,6 +35,9 @@ export const RollOutData = {
   RollOutLeft: {
     name: 'RollOutLeft',
     style: {
+      0: {
+        transform: [{ translateX: '0vw', rotate: '0deg' }],
+      },
       100: {
         transform: [{ translateX: '-100vw', rotate: '-180deg' }],
       },
@@ -39,6 +48,9 @@ export const RollOutData = {
   RollOutRight: {
     name: 'RollOutRight',
     style: {
+      0: {
+        transform: [{ translateX: '0vw', rotate: '0deg' }],
+      },
       100: {
         transform: [{ translateX: '100vw', rotate: '180deg' }],
       },

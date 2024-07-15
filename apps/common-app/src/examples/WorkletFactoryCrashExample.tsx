@@ -6,8 +6,9 @@ export default function App() {
   function handleOnPress() {
     function badWorklet() {
       'worklet';
-      // @ts-expect-error
-      unexistingVariable;
+      // @ts-expect-error This is an expected error
+      // eslint-disable-next-line no-unused-expressions
+      nonExistingVariable;
     }
   }
 
@@ -16,7 +17,7 @@ export default function App() {
       <Text style={styles.text}>
         Clicking the button below should give a RedBox with stack trace that
         denotes the error in `badWorklet` function, pointing to
-        `unexistingVariable` usage.
+        `nonExistingVariable` usage.
       </Text>
       <Button title="Crash me" onPress={handleOnPress} />
     </View>
