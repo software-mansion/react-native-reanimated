@@ -146,6 +146,11 @@ const LayoutAnimation = () => {
   );
 };
 
+function WarningComponent() {
+  console.warn('message');
+  return <View />;
+}
+
 describe.skip('Tests of Test Framework', () => {
   test('withTiming - expect error', async () => {
     await render(<AnimatedComponent />);
@@ -261,5 +266,9 @@ describe.skip('Tests of Test Framework', () => {
     await waitForNotify('notifyJS');
     await waitForNotify('notifyUI');
     expect(await component.getAnimatedStyle('width')).toBe('100');
+  });
+
+  test.warn('warning test', 'message', async () => {
+    await render(<WarningComponent />);
   });
 });

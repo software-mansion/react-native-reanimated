@@ -17,6 +17,7 @@
     "@react-navigation/native": "^6.1.10",
     "@react-navigation/native-stack": "^6.9.18",
     "@react-navigation/stack": "^6.3.21",
+    "@shopify/flash-list": "^1.7.0",
     "common-app": "workspace:*",
     "react": "18.2.0",
     "react-native": "0.73.4",
