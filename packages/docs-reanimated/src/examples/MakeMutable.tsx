@@ -19,7 +19,7 @@ type CheckListSelectorProps = {
 };
 
 function CheckListSelector({ items, onSubmit }: CheckListSelectorProps) {
-  const checListItemProps = useMemo(
+  const checkListItemProps = useMemo(
     () =>
       items.map((item) => ({
         item,
@@ -30,16 +30,16 @@ function CheckListSelector({ items, onSubmit }: CheckListSelectorProps) {
   );
 
   const handleSubmit = useCallback(() => {
-    const selectedItems = checListItemProps
+    const selectedItems = checkListItemProps
       .filter((props) => props.selected.value)
       .map((props) => props.item);
 
     onSubmit(selectedItems);
-  }, [checListItemProps, onSubmit]);
+  }, [checkListItemProps, onSubmit]);
 
   return (
     <View style={styles.checkList}>
-      {checListItemProps.map((props) => (
+      {checkListItemProps.map((props) => (
         <CheckListItem key={props.item} {...props} />
       ))}
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
