@@ -67,16 +67,32 @@ export class PropsFilter implements IPropsFilter {
         has('workletEventHandler', value) &&
         value.workletEventHandler instanceof WorkletEventHandler
       ) {
-        if (value.workletEventHandler.eventNames.length > 0) {
-          value.workletEventHandler.eventNames.forEach((eventName) => {
-            props[eventName] = has('listeners', value.workletEventHandler)
-              ? (
-                  value.workletEventHandler.listeners as Record<string, unknown>
-                )[eventName]
-              : dummyListener;
-          });
+        const handler = value.workletEventHandler;
+        const isWebHandler = has('listeners', handler);
+        const hasJSHandlers = Object.keys(handler.JSHandlers).length > 0;
+
+        if (hasJSHandlers) {
+          if (isWebHandler) {
+            // on web, our and JS handlers are merged in listeners object
+            Object.keys(handler.listeners).forEach((eventName) => {
+              props[eventName] = handler.listeners[eventName];
+            });
+          } else {
+            // on mobile platforms, we just set the JS handlers to the props
+            Object.keys(handler.JSHandlers).forEach((eventName) => {
+              props[eventName] = handler.JSHandlers[eventName];
+            });
+          }
         } else {
-          props[key] = dummyListener;
+          if (handler.eventNames.length > 0) {
+            handler.eventNames.forEach((eventName) => {
+              props[eventName] = isWebHandler
+                ? (handler.listeners as Record<string, unknown>)[eventName]
+                : dummyListener;
+            });
+          } else {
+            props[key] = dummyListener;
+          }
         }
       } else if (isSharedValue(value)) {
         if (component._isFirstRender) {

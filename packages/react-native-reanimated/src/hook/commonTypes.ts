@@ -80,6 +80,12 @@ export type RNNativeScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
 
 export type ReanimatedScrollEvent = ReanimatedEvent<RNNativeScrollEvent>;
 
+export type JSEvent<Event extends object> = NativeSyntheticEvent<
+  EventPayload<Event>
+>;
+
+export type JSHandler<Event extends object> = (event: JSEvent<Event>) => void;
+
 export interface IWorkletEventHandler<Event extends object> {
   updateEventHandler: (
     newWorklet: (event: ReanimatedEvent<Event>) => void,
@@ -114,3 +120,10 @@ export type UseAnimatedStyleInternal<Style extends DefaultStyle> = (
     | null,
   isAnimatedProps?: boolean
 ) => AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style>;
+
+export type UseEventInternal<Event extends object, Context> = {
+  handler: (event: ReanimatedEvent<Event>, context?: Context) => void;
+  eventNames: string[];
+  rebuild: boolean;
+  JSHandlers: Record<string, JSHandler<Event>>;
+};

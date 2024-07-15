@@ -1,7 +1,11 @@
 'use strict';
 import { useRef } from 'react';
 import { WorkletEventHandler } from '../WorkletEventHandler';
-import type { IWorkletEventHandler, ReanimatedEvent } from './commonTypes';
+import type {
+  IWorkletEventHandler,
+  JSHandler,
+  ReanimatedEvent,
+} from './commonTypes';
 
 /**
  * Worklet to provide as an argument to `useEvent` hook.
@@ -46,13 +50,15 @@ export function useEvent<
 export function useEvent<Event extends object, Context = never>(
   handler: (event: ReanimatedEvent<Event>, context?: Context) => void,
   eventNames: string[] = [],
-  rebuild = false
+  rebuild = false,
+  JSHandlers: Record<string, JSHandler<Event>> = {}
 ): EventHandlerInternal<Event> {
   const initRef = useRef<EventHandlerInternal<Event>>(null!);
   if (initRef.current === null) {
     const workletEventHandler = new WorkletEventHandler<Event>(
       handler,
-      eventNames
+      eventNames,
+      JSHandlers
     );
     initRef.current = { workletEventHandler };
   } else if (rebuild) {
