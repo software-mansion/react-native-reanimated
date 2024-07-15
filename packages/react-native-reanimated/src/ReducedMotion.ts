@@ -8,7 +8,7 @@ export function isReducedMotionEnabledInSystem() {
   return isWeb()
     ? isWindowAvailable()
       ? // @ts-ignore Fallback if `window` is undefined.
-        !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
       : false
     : !!(global as localGlobal)._REANIMATED_IS_REDUCED_MOTION;
 }
