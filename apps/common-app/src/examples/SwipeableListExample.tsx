@@ -9,11 +9,11 @@ import Animated, {
   Easing,
   runOnJS,
 } from 'react-native-reanimated';
+import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import {
   PanGestureHandler,
   TouchableOpacity,
   FlatList,
-  PanGestureHandlerGestureEvent,
 } from 'react-native-gesture-handler';
 
 const windowDimensions = Dimensions.get('window');

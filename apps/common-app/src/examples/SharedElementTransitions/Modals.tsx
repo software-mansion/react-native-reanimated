@@ -1,9 +1,7 @@
 import * as React from 'react';
 import { TouchableNativeFeedback, StyleSheet } from 'react-native';
-import {
-  createNativeStackNavigator,
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated, {
   runOnJS,
   useAnimatedGestureHandler,
@@ -11,10 +9,8 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import {
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 
 type ParamList = {
   Screen1?: object;
@@ -41,7 +37,7 @@ function Card({
 }: CardProps) {
   const goNext = (screenName: keyof ParamList) => {
     navigation.navigate(screenName, {
-      title: title,
+      title,
       sharedTransitionTag: transitionTag,
     });
   };

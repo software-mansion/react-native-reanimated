@@ -13,7 +13,7 @@ import type {
   TestValue,
   TrackerCallCount,
 } from './types';
-import { ComparisonMode, DescribeDecorator, TestDecorator } from './types';
+import { DescribeDecorator, TestDecorator } from './types';
 import { TestComponent } from './TestComponent';
 import { EMPTY_LOG_PLACEHOLDER, applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
 import type { SharedValue } from 'react-native-reanimated';
@@ -306,35 +306,10 @@ export class TestRunner {
     }
 
     if (testCase.decorator === TestDecorator.FAILING || testCase.decorator === TestDecorator.WARN) {
-      const consoleTrackerRef = testCase.decorator === TestDecorator.FAILING ? 'console.error' : 'console.warn';
-      const message = makeMutable('');
-
-      const newConsoleFuncJS = (warning: string) => {
-        this.callTracker(consoleTrackerRef);
-        message.value = warning.split('\n\nThis error is located at:')[0];
-      };
-      console.error = newConsoleFuncJS;
-      console.warn = newConsoleFuncJS;
-
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      const callTrackerCopy = this.callTracker;
-
-      runOnUI(() => {
-        'worklet';
-        const newConsoleFuncUI = (warning: string) => {
-          callTrackerCopy(consoleTrackerRef);
-          message.value = warning.split('\n\nThis error is located at:')[0];
-        };
-        console.error = newConsoleFuncUI;
-        console.warn = newConsoleFuncUI;
-      })();
-
+      const [restoreConsole, checkErrors] = await this.mockConsole(testCase);
       await testCase.run();
-
-      this.expect(this.getTrackerCallCount(consoleTrackerRef)).toBeCalled(1);
-      if (testCase.warningMessage) {
-        this.expect(message.value).toBe(testCase.warningMessage, ComparisonMode.STRING);
-      }
+      await restoreConsole();
+      checkErrors();
     } else {
       await testCase.run();
     }
@@ -584,5 +559,55 @@ export class TestRunner {
       console.log('✅ All tests passed!');
     }
     console.log('\n');
+  }
+
+  private async mockConsole(testCase: TestCase): Promise<[() => Promise<void>, () => void]> {
+    const counterUI = makeMutable(0);
+    let counterJS = 0;
+    const recordedMessage = makeMutable('');
+
+    const originalError = console.error;
+    const originalWarning = console.warn;
+
+    const incrementJS = () => {
+      counterJS++;
+    };
+    const mockedConsoleFunction = (message: string) => {
+      'worklet';
+      if (_WORKLET) {
+        counterUI.value++;
+      } else {
+        incrementJS();
+      }
+      recordedMessage.value = message.split('\n\nThis error is located at:')[0];
+    };
+    console.error = mockedConsoleFunction;
+    console.warn = mockedConsoleFunction;
+    await this.runOnUIBlocking(() => {
+      'worklet';
+      console.error = mockedConsoleFunction;
+      console.warn = mockedConsoleFunction;
+    });
+
+    const restoreConsole = async () => {
+      console.error = originalError;
+      console.warn = originalWarning;
+      await this.runOnUIBlocking(() => {
+        'worklet';
+        console.error = originalError;
+        console.warn = originalWarning;
+      });
+    };
+
+    const checkErrors = () => {
+      if (testCase.decorator !== TestDecorator.WARN && testCase.decorator !== TestDecorator.FAILING) {
+        return;
+      }
+      const count = counterUI.value + counterJS;
+      this.expect(count).toBe(1);
+      this.expect(recordedMessage.value).toBe(testCase.warningMessage);
+    };
+
+    return [restoreConsole, checkErrors];
   }
 }

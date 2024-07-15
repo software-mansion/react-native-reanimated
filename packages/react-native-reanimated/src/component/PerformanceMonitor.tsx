@@ -4,7 +4,6 @@ import React, { useEffect, useRef } from 'react';
 import { TextInput, StyleSheet, View } from 'react-native';
 
 import type { FrameInfo } from '../frameCallback';
-import type { SharedValue } from '../commonTypes';
 import { useSharedValue, useAnimatedProps, useFrameCallback } from '../hook';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import { addWhitelistedNativeProps } from '../ConfigHelper';
@@ -46,7 +45,7 @@ function createCircularDoublesBuffer(size: number) {
   };
 }
 
-const DEFAULT_BUFFER_SIZE = 60;
+const DEFAULT_BUFFER_SIZE = 20;
 addWhitelistedNativeProps({ text: true });
 const AnimatedTextInput = createAnimatedComponent(TextInput);
 
@@ -71,62 +70,44 @@ function getFps(renderTimeInMs: number): number {
   return 1000 / renderTimeInMs;
 }
 
-function getTimeDelta(
-  timestamp: number,
-  previousTimestamp: number | null
-): number {
-  'worklet';
-  return previousTimestamp !== null ? timestamp - previousTimestamp : 0;
-}
-
 function completeBufferRoutine(
   buffer: CircularBuffer,
-  timestamp: number,
-  previousTimestamp: number,
-  totalRenderTime: SharedValue<number>
+  timestamp: number
 ): number {
   'worklet';
   timestamp = Math.round(timestamp);
-  previousTimestamp = Math.round(previousTimestamp) ?? timestamp;
 
-  const droppedTimestamp = buffer.push(timestamp);
-  const nextToDrop = buffer.back()!;
+  const droppedTimestamp = buffer.push(timestamp) ?? timestamp;
 
-  const delta = getTimeDelta(timestamp, previousTimestamp);
-  const droppedDelta = getTimeDelta(nextToDrop, droppedTimestamp);
+  const measuredRangeDuration = timestamp - droppedTimestamp;
 
-  totalRenderTime.value += delta - droppedDelta;
-
-  return getFps(totalRenderTime.value / buffer.count);
+  return getFps(measuredRangeDuration / buffer.count);
 }
 
-function JsPerformance() {
+function JsPerformance({ smoothingFrames }: { smoothingFrames: number }) {
   const jsFps = useSharedValue<string | null>(null);
   const totalRenderTime = useSharedValue(0);
   const circularBuffer = useRef<CircularBuffer>(
-    createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE)
+    createCircularDoublesBuffer(smoothingFrames)
   );
 
   useEffect(() => {
     loopAnimationFrame((_, timestamp) => {
       timestamp = Math.round(timestamp);
-      const previousTimestamp = circularBuffer.current.front() ?? timestamp;
 
       const currentFps = completeBufferRoutine(
         circularBuffer.current,
-        timestamp,
-        previousTimestamp,
-        totalRenderTime
+        timestamp
       );
 
       // JS fps have to be measured every 2nd frame,
       // thus 2x multiplication has to occur here
       jsFps.value = (currentFps * 2).toFixed(0);
     });
-  }, []);
+  }, [jsFps, totalRenderTime]);
 
   const animatedProps = useAnimatedProps(() => {
-    const text = 'JS: ' + jsFps.value ?? 'N/A';
+    const text = 'JS: ' + (jsFps.value ?? 'N/A') + ' ';
     return { text, defaultValue: text };
   });
 
@@ -141,31 +122,24 @@ function JsPerformance() {
   );
 }
 
-function UiPerformance() {
+function UiPerformance({ smoothingFrames }: { smoothingFrames: number }) {
   const uiFps = useSharedValue<string | null>(null);
-  const totalRenderTime = useSharedValue(0);
   const circularBuffer = useSharedValue<CircularBuffer | null>(null);
 
   useFrameCallback(({ timestamp }: FrameInfo) => {
     if (circularBuffer.value === null) {
-      circularBuffer.value = createCircularDoublesBuffer(DEFAULT_BUFFER_SIZE);
+      circularBuffer.value = createCircularDoublesBuffer(smoothingFrames);
     }
 
     timestamp = Math.round(timestamp);
-    const previousTimestamp = circularBuffer.value.front() ?? timestamp;
 
-    const currentFps = completeBufferRoutine(
-      circularBuffer.value,
-      timestamp,
-      previousTimestamp,
-      totalRenderTime
-    );
+    const currentFps = completeBufferRoutine(circularBuffer.value, timestamp);
 
     uiFps.value = currentFps.toFixed(0);
   });
 
   const animatedProps = useAnimatedProps(() => {
-    const text = 'UI: ' + uiFps.value ?? 'N/A';
+    const text = 'UI: ' + (uiFps.value ?? 'N/A') + ' ';
     return { text, defaultValue: text };
   });
 
@@ -180,11 +154,29 @@ function UiPerformance() {
   );
 }
 
-export function PerformanceMonitor() {
+export type PerformanceMonitorProps = {
+  /**
+   * Sets amount of previous frames used for smoothing at highest expectedFps.
+   *
+   * Automatically scales down at lower frame rates.
+   *
+   * Affects jumpiness of the FPS measurements value.
+   */
+  smoothingFrames?: number;
+};
+
+/**
+ * A component that lets you measure fps values on JS and UI threads on both the Paper and Fabric architectures.
+ *
+ * @param smoothingFrames - Determines amount of saved frames which will be used for fps value smoothing.
+ */
+export function PerformanceMonitor({
+  smoothingFrames = DEFAULT_BUFFER_SIZE,
+}: PerformanceMonitorProps) {
   return (
     <View style={styles.monitor}>
-      <JsPerformance />
-      <UiPerformance />
+      <JsPerformance smoothingFrames={smoothingFrames} />
+      <UiPerformance smoothingFrames={smoothingFrames} />
     </View>
   );
 }

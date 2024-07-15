@@ -148,10 +148,20 @@ export function setElementAnimation(
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
-  element.style.animationName = animationName;
-  element.style.animationDuration = `${duration}s`;
-  element.style.animationDelay = `${delay}s`;
-  element.style.animationTimingFunction = easing;
+  const configureAnimation = () => {
+    element.style.animationName = animationName;
+    element.style.animationDuration = `${duration}s`;
+    element.style.animationDelay = `${delay}s`;
+    element.style.animationTimingFunction = easing;
+  };
+
+  if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
+    // On chrome sometimes entering animations flicker. This is most likely caused by animation being interrupted
+    // by already started tasks. To avoid flickering, we use `requestAnimationFrame`, which will run callback right before repaint.
+    requestAnimationFrame(configureAnimation);
+  } else {
+    configureAnimation();
+  }
 
   element.onanimationend = () => {
     if (shouldSavePosition) {
@@ -172,7 +182,7 @@ export function setElementAnimation(
     if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
       _updatePropsJS(
         { visibility: 'initial' },
-        { _component: element as ReanimatedHTMLElement }
+        element as ReanimatedHTMLElement
       );
     }
 

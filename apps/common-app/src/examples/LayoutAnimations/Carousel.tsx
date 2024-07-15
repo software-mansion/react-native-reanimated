@@ -1,12 +1,6 @@
 import Animated, { SlideInLeft, SlideOutRight } from 'react-native-reanimated';
-import {
-  Button,
-  Image,
-  ImageSourcePropType,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import type { ImageSourcePropType } from 'react-native';
+import { Button, Image, StyleSheet, Text, View } from 'react-native';
 import React, { useState } from 'react';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);

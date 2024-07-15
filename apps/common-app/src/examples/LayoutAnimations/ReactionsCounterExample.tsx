@@ -1,6 +1,8 @@
-import Animated, {
+import type {
   EntryAnimationsValues,
   ExitAnimationsValues,
+} from 'react-native-reanimated';
+import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,

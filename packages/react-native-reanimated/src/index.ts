@@ -262,6 +262,7 @@ export {
 } from './jestUtils';
 export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
 export { PerformanceMonitor } from './component/PerformanceMonitor';
+export type { PerformanceMonitorProps } from './component/PerformanceMonitor';
 export { ReducedMotionConfig } from './component/ReducedMotionConfig';
 export type {
   Adaptable,
