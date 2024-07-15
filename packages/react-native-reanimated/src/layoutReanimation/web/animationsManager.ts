@@ -4,6 +4,7 @@ import type {
   AnimationConfig,
   AnimationNames,
   CustomConfig,
+  InitialValuesStyleProps,
   KeyframeDefinitions,
 } from './config';
 import { Animations } from './config';
@@ -142,7 +143,7 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
   if (hasInitialValues) {
     animationName = createAnimationWithInitialValues(
       animationName,
-      (config as CustomConfig).initialValues as StyleProps
+      (config as CustomConfig).initialValues as InitialValuesStyleProps
     );
   }
 

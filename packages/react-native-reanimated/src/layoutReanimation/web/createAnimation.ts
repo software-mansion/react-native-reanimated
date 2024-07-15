@@ -1,7 +1,7 @@
 'use strict';
 
 import { AnimationsData, TransitionType } from './config';
-import type { KeyframeDefinitions } from './config';
+import type { InitialValuesStyleProps, KeyframeDefinitions } from './config';
 import { convertAnimationObjectToKeyframes } from './animationParser';
 import type {
   AnimationData,
@@ -75,17 +75,13 @@ export function createCustomKeyFrameAnimation(
 
 export function createAnimationWithInitialValues(
   animationName: string,
-  initialValues: StyleProps
+  initialValues: InitialValuesStyleProps
 ) {
   const animationStyle = structuredClone(AnimationsData[animationName].style);
   const firstAnimationStep = animationStyle['0'];
 
-  const { opacity, transform, ...rest } = initialValues;
+  const { transform, ...rest } = initialValues;
   const transformWithPx = addPxToTransform(transform as TransformType);
-
-  if (opacity) {
-    firstAnimationStep.opacity = opacity as number;
-  }
 
   if (transform) {
     // If there was no predefined transform, we can simply assign transform from `initialValues`.
