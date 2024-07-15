@@ -45,12 +45,3 @@ export function isWindowAvailable() {
   // @ts-ignore Fallback if `window` is undefined.
   return typeof window !== 'undefined';
 }
-
-export function isReducedMotion() {
-  return isWeb()
-    ? isWindowAvailable()
-      ? // @ts-ignore Fallback if `window` is undefined.
-        !window.matchMedia('(prefers-reduced-motion: no-preference)').matches
-      : false
-    : !!(global as localGlobal)._REANIMATED_IS_REDUCED_MOTION;
-}
