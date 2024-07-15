@@ -7,6 +7,7 @@ import type { LockObject } from './types';
 interface ImportButton {
   testSuiteName: string;
   importTest: () => void;
+  testOfTests?: boolean;
 }
 
 let renderLock: LockObject = { lock: false };
@@ -35,24 +36,47 @@ export class ErrorBoundary extends React.Component<
 
 function ImportButtons({ importButtons }: { importButtons: Array<ImportButton> }) {
   const [importedTests, setImportedTests] = useState<Array<string>>([]);
+  const [importedAll, setImportedAll] = useState(false);
 
+  const handleImportAllClick = () => {
+    setImportedAll(true);
+    for (const button of importButtons) {
+      if (!button.testOfTests) {
+        button.importTest();
+      }
+    }
+    setImportedTests(importButtons.filter(button => !button.testOfTests).map(button => button.testSuiteName));
+  };
+
+  const handleImportClick = (button: ImportButton) => {
+    button.importTest();
+    if (!importedTests.includes(button.testSuiteName)) {
+      setImportedTests([...importedTests, button.testSuiteName]);
+    }
+  };
   return (
     <View>
-      {importButtons.map(({ testSuiteName, importTest }) => {
-        return (
-          <TouchableOpacity
-            key={testSuiteName}
-            onPress={() => {
-              importTest();
-              if (!importedTests.includes(testSuiteName)) {
-                setImportedTests([...importedTests, testSuiteName]);
-              }
-            }}
-            style={[styles.importButton, importedTests.includes(testSuiteName) ? styles.importButtonImported : {}]}>
-            <Text style={styles.buttonText}>{testSuiteName}</Text>
-          </TouchableOpacity>
-        );
-      })}
+      <TouchableOpacity
+        onPress={handleImportAllClick}
+        style={[styles.importButton, styles.importAllButton, importedAll ? styles.importButtonImported : {}]}>
+        <Text style={styles.buttonText}>Import all reanimated tests</Text>
+      </TouchableOpacity>
+
+      <View style={styles.importButtonsFrame}>
+        {importButtons.map(importButton => {
+          const { testSuiteName } = importButton;
+          return (
+            <TouchableOpacity
+              key={testSuiteName}
+              onPress={() => {
+                handleImportClick(importButton);
+              }}
+              style={[styles.importButton, importedTests.includes(testSuiteName) ? styles.importButtonImported : {}]}>
+              <Text style={styles.buttonText}>{testSuiteName}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -92,12 +116,23 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
   },
+  importAllButton: {
+    marginHorizontal: 20,
+    marginTop: 20,
+  },
+  importButtonsFrame: {
+    borderRadius: 10,
+    backgroundColor: 'lightblue',
+    margin: 20,
+    paddingHorizontal: 40,
+    paddingVertical: 10,
+  },
   importButton: {
     height: 40,
     borderWidth: 2,
-    marginHorizontal: 40,
     marginVertical: 5,
     borderRadius: 10,
+    backgroundColor: 'white',
     borderColor: 'navy',
     justifyContent: 'center',
     alignItems: 'center',
@@ -107,7 +142,6 @@ const styles = StyleSheet.create({
   },
   button: {
     height: 40,
-    marginVertical: 10,
     backgroundColor: 'navy',
     justifyContent: 'center',
     alignItems: 'center',
