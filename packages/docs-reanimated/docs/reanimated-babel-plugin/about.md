@@ -90,7 +90,7 @@ const style = useAnimatedStyle(() => {
 });
 ```
 
-This isn't limited to `useAnimatedStyle` hook - Reanimated Babel Plugin autoworkletizes all callbacks for the API of Reanimated. The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/plugin/src/autoworkletization.ts).
+This isn't limited to `useAnimatedStyle` hook - Reanimated Babel Plugin autoworkletizes all callbacks for the API of Reanimated. The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-reanimated/plugin/src/autoworkletization.ts).
 
 Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet.
 
@@ -130,9 +130,17 @@ const handler = useAnimatedScrollHandler(handlerObject);
 
 ### Workletizing whole files (experimental)
 
-You can mark a file as a workletizable file by adding the `'worklet'` directive to the top of the file. This will make all _top-level_ entities workletized. This can come in handy for files that contain multiple worklets.
+You can mark a file as a workletizable file by adding the `'worklet'` directive to the top of the file.
+
+This will make all _top-level_
+
+- Functions
+- Objects aggregating worklets
+
+workletized automatically. This can come in handy for files that contain multiple worklets.
 
 ```ts
+// file.ts
 'worklet';
 
 function foo() {
@@ -159,17 +167,18 @@ The plugin cannot infer whether a function is autoworkletizable or not in some c
 When importing a function from another file or a module and using it as a worklet, you must manually add the `'worklet'` directive to the function:
 
 ```ts
-// foo.js
-export function foo() {
+// foo.ts
+import { bar } from './bar';
+// ...
+const style = useAnimatedStyle(bar);
+
+// bar.ts
+export function bar() {
   'worklet'; // Won't work without it.
   return {
     width: 100,
   };
 }
-
-// bar.ts
-import { foo } from './foo';
-const style = useAnimatedStyle(foo);
 ```
 
 ### Custom hooks
