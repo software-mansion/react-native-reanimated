@@ -34,7 +34,7 @@ function App() {
 
 Functions marked with `'worklet';` aren't [hoisted](https://developer.mozilla.org/en-US/docs/Glossary/Hoisting). Besides affecting hoisting, the `'worklet';` directive has no effect on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread).
 
-You can use [`runOnUI`](/docs/threading/runOnUI) to manually run worklets on the UI thread:
+You can use [`runOnUI`](/docs/threading/runOnUI) to manually schedule worklet execution on the UI thread:
 
 ```javascript
 function myWorklet() {
@@ -47,7 +47,7 @@ function onPress() {
 }
 ```
 
-You can pass data as arguments to worklets.
+You can pass arguments to worklets.
 
 ```javascript
 function myWorklet(greeting) {
