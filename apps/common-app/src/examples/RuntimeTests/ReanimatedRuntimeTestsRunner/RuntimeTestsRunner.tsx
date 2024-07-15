@@ -40,12 +40,16 @@ function ImportButtons({ importButtons }: { importButtons: Array<ImportButton> }
 
   const handleImportAllClick = () => {
     setImportedAll(true);
+    let newImportedTests = [...importedTests];
     for (const button of importButtons) {
       if (!button.testOfTests) {
         button.importTest();
+        if (!importedTests.includes(button.testSuiteName)) {
+          newImportedTests = [...newImportedTests, button.testSuiteName];
+        }
       }
     }
-    setImportedTests(importButtons.filter(button => !button.testOfTests).map(button => button.testSuiteName));
+    setImportedTests(newImportedTests);
   };
 
   const handleImportClick = (button: ImportButton) => {
