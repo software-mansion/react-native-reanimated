@@ -346,7 +346,7 @@ function makeWorkletName(
     }
   }
 
-  const suffix = source + state.workletNumber++;
+  const suffix = `${source}${state.workletNumber++}`;
   if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
     return toIdentifier(`${fun.node.key.name}_${suffix}`);
   }
