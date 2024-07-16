@@ -9,7 +9,6 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 const RelativeCoords = () => {
   const animatedRef = useAnimatedRef();
   const [coords, setCoords] = useState({ x: 0, y: 0 });
-  const [boxCoords, setBoxCoords] = useState({ x: 0, y: 0 });
 
   const tapGesture = Gesture.Tap().onEnd((event) => {
     const relativeCoords = getRelativeCoords(
@@ -17,7 +16,6 @@ const RelativeCoords = () => {
       event.absoluteX,
       event.absoluteY
     );
-    setBoxCoords({ x: event.x, y: event.y });
     if (relativeCoords) {
       setCoords(relativeCoords);
     }
@@ -29,11 +27,6 @@ const RelativeCoords = () => {
       <Text style={[styles.coordsData, styles.coords]}>
         x={coords.x.toFixed()} y=
         {coords.y.toFixed()}
-      </Text>
-      <Text style={styles.coordsData}>Coordinates inside box:</Text>
-      <Text style={[styles.coordsData, styles.coords]}>
-        x={boxCoords.x.toFixed()} y=
-        {boxCoords.y.toFixed()}
       </Text>
       <GestureDetector gesture={tapGesture}>
         <Animated.View ref={animatedRef} style={styles.innerView}>

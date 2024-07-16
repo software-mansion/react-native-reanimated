@@ -17,7 +17,11 @@ const Comp = () => {
 
   const gestureHandler = useAnimatedGestureHandler({
     onEnd: (event) => {
-      getRelativeCoords(animatedRef, event.absoluteX, event.absoluteY);
+      const coords = getRelativeCoords(
+        animatedRef,
+        event.absoluteX,
+        event.absoluteY
+      );
     },
   });
 
@@ -53,7 +57,7 @@ interface ComponentCoords {
 
 #### `animatedRef`
 
-[Animated ref](/docs/core/useAnimatedRef#returns) connected to the ScrollView (or other scrollable) component you'd want to scroll on. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+The product of [`useAnimatedRef`](/docs/core/useAnimatedRef) is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread). This ref should be passed as a prop to the view relative to which we want to know coordinates.
 
 #### `absoluteX`
 
