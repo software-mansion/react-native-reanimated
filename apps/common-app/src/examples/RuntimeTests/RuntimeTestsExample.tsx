@@ -78,7 +78,7 @@ export default function RuntimeTestsExample() {
         {
           testSuiteName: 'babelPlugin',
           importTest: () => {
-            require('./tests/babelPlugin/fileWorkletization.test');
+            require('./tests/plugin/fileWorkletization.test');
           },
         },
       ]}
