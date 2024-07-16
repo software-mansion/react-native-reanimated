@@ -2,6 +2,7 @@
 sidebar_position: 2
 ---
 
+import Keyframe from '@site/src/examples/KeyframeAnimation';
 import KeyframeSrc from '!!raw-loader!@site/src/examples/KeyframeAnimation';
 
 # Keyframe animations
@@ -70,6 +71,8 @@ keyframe
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
 
 ## Example
+
+<InteractiveExample src={KeyframeSrc} component={Keyframe} />
 
 <ExampleVideo
   sources={{
