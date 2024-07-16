@@ -141,7 +141,7 @@ declare global {
     start: LayoutAnimationStartFunction;
     stop: (tag: number) => void;
   };
-  var _LayoutAnimationsManager: {
+  var originalLayoutAnimationsManager: {
     start: LayoutAnimationStartFunction;
     stop: (tag: number) => void;
   };

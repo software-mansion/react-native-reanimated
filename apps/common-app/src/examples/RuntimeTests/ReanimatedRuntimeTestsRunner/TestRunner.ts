@@ -511,7 +511,7 @@ export class TestRunner {
   public async unmockWindowDimensions() {
     await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
-      if (global._LayoutAnimationsManager) {
+      if (global.originalLayoutAnimationsManager) {
         global.LayoutAnimationsManager = global._LayoutAnimationsManager;
       }
     });
@@ -540,7 +540,7 @@ export class TestRunner {
         );
       };
 
-      global._LayoutAnimationsManager = originalLayoutAnimationsManager;
+      global.originalLayoutAnimationsManager = originalLayoutAnimationsManager;
       global.LayoutAnimationsManager = {
         start: startLayoutAnimation,
         stop: originalLayoutAnimationsManager.stop,
