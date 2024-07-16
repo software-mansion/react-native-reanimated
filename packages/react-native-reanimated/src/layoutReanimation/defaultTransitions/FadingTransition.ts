@@ -29,7 +29,7 @@ export class FadingTransition
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
     const delay = this.getDelay();
-    const duration = (this.durationV ?? 500) / 2;
+    const halfDuration = (this.durationV ?? 500) / 2;
 
     return (values) => {
       'worklet';
@@ -45,24 +45,24 @@ export class FadingTransition
           opacity: delayFunction(
             delay,
             withSequence(
-              withTiming(0, { duration }),
-              withTiming(1, { duration })
+              withTiming(0, { duration: halfDuration }),
+              withTiming(1, { duration: halfDuration })
             )
           ),
           originX: withDelay(
-            delay + duration,
+            delay + halfDuration,
             withTiming(values.targetOriginX, { duration: 0 })
           ),
           originY: withDelay(
-            delay + duration,
+            delay + halfDuration,
             withTiming(values.targetOriginY, { duration: 0 })
           ),
           width: withDelay(
-            delay + duration,
+            delay + halfDuration,
             withTiming(values.targetWidth, { duration: 0 })
           ),
           height: withDelay(
-            delay + duration,
+            delay + halfDuration,
             withTiming(values.targetHeight, { duration: 0 })
           ),
         },

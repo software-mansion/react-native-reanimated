@@ -1,10 +1,10 @@
 import { makeMutable } from 'react-native-reanimated';
 import type { Operation, OperationUpdate } from './types';
 import { isValidPropName } from './types';
-import type { TestRunner } from './TestRunner';
 import type { MultiViewSnapshot, SingleViewSnapshot } from './matchers/snapshotMatchers';
 import { convertDecimalColor } from './util';
 import type { TestComponent } from './TestComponent';
+import { SyncUIRunner } from './SyncUIRunner';
 
 type JsUpdate = {
   tag: number;
@@ -18,7 +18,7 @@ type NativeUpdate = {
   jsUpdateIndex: number;
 };
 
-export function createUpdatesContainer(testRunner: TestRunner) {
+export function createUpdatesContainer() {
   const jsUpdates = makeMutable<Array<JsUpdate>>([]);
   const nativeSnapshots = makeMutable<Array<NativeUpdate>>([]);
 
@@ -151,7 +151,7 @@ export function createUpdatesContainer(testRunner: TestRunner) {
     const nativeSnapshotsCount = nativeSnapshots.value.length;
     const jsUpdatesCount = jsUpdates.value.length;
     if (jsUpdatesCount === nativeSnapshotsCount) {
-      await testRunner.runOnUIBlocking(() => {
+      await new SyncUIRunner().runOnUIBlocking(() => {
         'worklet';
         const lastSnapshot = nativeSnapshots.value[nativeSnapshotsCount - 1];
         if (lastSnapshot) {
