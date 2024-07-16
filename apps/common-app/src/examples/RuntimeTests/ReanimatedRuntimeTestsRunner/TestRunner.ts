@@ -522,7 +522,7 @@ export class TestRunner {
       'worklet';
       const originalLayoutAnimationsManager = global.LayoutAnimationsManager;
 
-      const createAnimatedComponentOnStart: LayoutAnimationStartFunction = (
+      const startLayoutAnimation: LayoutAnimationStartFunction = (
         tag: number,
         type: LayoutAnimationType,
         _yogaValues: Partial<SharedTransitionAnimationsValues>,
@@ -542,7 +542,7 @@ export class TestRunner {
 
       global._LayoutAnimationsManager = originalLayoutAnimationsManager;
       global.LayoutAnimationsManager = {
-        start: createAnimatedComponentOnStart,
+        start: startLayoutAnimation,
         stop: originalLayoutAnimationsManager.stop,
       };
     });
