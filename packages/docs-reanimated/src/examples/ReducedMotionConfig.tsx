@@ -61,7 +61,6 @@ const styles = StyleSheet.create({
   text: {
     marginRight: 10,
     fontFamily: 'Aeonik',
-    color: 'var(--swm-navy-light-100)',
     fontSize: 16,
   },
   lightText: {
