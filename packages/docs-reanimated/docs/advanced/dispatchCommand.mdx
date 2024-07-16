@@ -4,11 +4,34 @@ sidebar_position: 7
 
 # dispatchCommand
 
-import DocsCompatibilityInfo from '../_shared/_docs_compatibility_info.mdx';
+import DispatchCommand from '@site/src/examples/DispatchCommand';
+import DispatchCommandSrc from '!!raw-loader!@site/src/examples/DispatchCommand';
 
-<DocsCompatibilityInfo />
+`dispatchCommand` allows you to dispatch command on a native component. It happens synchronously from the UI thread.
 
-Allows to dispatch command on a native component synchronously from the UI thread.
+## Reference
+
+```javascript
+import { dispatchCommand } from 'react-native-reanimated';
+
+function App() {
+  const animatedRef = useAnimatedRef()
+
+  const gesture = Gesture.Tap().onStart(() => {
+    dispatchCommand(animatedRef, 'focus)
+  })
+
+  return (
+    <>
+      <AnimatedTextInput ref={aref} style={styles.input} />
+      <GestureDetector gesture={gesture}>
+        <Button title="Focus" />
+      </GestureDetector>
+    </>
+  )
+
+}
+```
 
 ### Arguments
 
@@ -16,11 +39,11 @@ Allows to dispatch command on a native component synchronously from the UI threa
 
 The product of [`useAnimatedRef`](/docs/core/useAnimatedRef) which is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread).
 
-#### `commandName` [String]
+#### `commandName`
 
 The name of the command to execute, e.g. `focus` or `scrollToEnd`.
 
-#### `args` [Array<any\>]
+#### `args` <Optional />
 
 The array of command arguments. Defaults to an empty array.
 
@@ -29,6 +52,8 @@ The array of command arguments. Defaults to an empty array.
 `void`
 
 ### Example
+
+<InteractiveExample src={DispatchCommandSrc} component={DispatchCommand} />
 
 ```ts
 import Animated, {
