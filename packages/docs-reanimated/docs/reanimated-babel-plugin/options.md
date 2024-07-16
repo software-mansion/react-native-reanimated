@@ -1,7 +1,7 @@
 ---
 id: plugin-options
-title: 'Options for Reanimated Babel Plugin'
-sidebar_label: 'Options for Reanimated Babel Plugin'
+title: 'Options'
+sidebar_label: 'Options'
 ---
 
 # Options for Reanimated Babel Plugin

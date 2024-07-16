@@ -34,6 +34,8 @@ export interface TransitionData {
   scaleX: number;
   scaleY: number;
   reversed?: boolean;
+  entering?: any;
+  exiting?: any;
 }
 
 export function convertAnimationObjectToKeyframes(

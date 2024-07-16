@@ -1,5 +1,5 @@
 'use strict';
-import type { ReduceMotion } from '../../commonTypes';
+import type { ReduceMotion, StyleProps } from '../../commonTypes';
 import type { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import {
   BounceIn,
@@ -43,6 +43,10 @@ export type AnimationCallback = ((finished: boolean) => void) | null;
 
 export type KeyframeDefinitions = Record<number, AnimationStyle>;
 
+export type InitialValuesStyleProps = Omit<StyleProps, 'opacity'> & {
+  opacity?: number;
+};
+
 export interface AnimationConfig {
   animationName: string;
   animationType: LayoutAnimationType;
@@ -62,6 +66,9 @@ export interface CustomConfig {
   callbackV?: AnimationCallback;
   reversed?: boolean;
   definitions?: KeyframeDefinitions;
+  enteringV?: any;
+  exitingV?: any;
+  initialValues?: StyleProps;
 }
 
 export enum TransitionType {
@@ -69,6 +76,7 @@ export enum TransitionType {
   SEQUENCED,
   FADING,
   JUMPING,
+  ENTRY_EXIT,
 }
 
 export const AnimationsData: Record<string, AnimationData> = {
