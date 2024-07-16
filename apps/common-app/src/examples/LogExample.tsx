@@ -58,7 +58,7 @@ export default function LogExample() {
           bar?: string;
         };
 
-        let a: RecursiveObject = {};
+        const a: RecursiveObject = {};
         a.foo = a;
         a.bar = 'bar';
         test(a, '{"foo": {...}, "bar": "bar"}');
@@ -66,7 +66,7 @@ export default function LogExample() {
       {
         type RecursiveArray = (number | RecursiveArray)[];
 
-        let b: RecursiveArray = [];
+        const b: RecursiveArray = [];
         b.push(1);
         b.push(b);
         test(b, '[1, [...]]');
@@ -102,7 +102,7 @@ export default function LogExample() {
       test(new Date(0), 'Thu Jan 01 1970 01:00:00 GMT+0100');
       test(new Error('foo'), '[Error: foo]');
       test(new TypeError('foo'), '[TypeError: foo]');
-      test(new RegExp('foo'), '/foo/');
+      test(/foo/, '/foo/');
       test(String('foo'), 'foo');
 
       // @ts-ignore _log function is registered for UI runtime

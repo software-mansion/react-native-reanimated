@@ -111,6 +111,12 @@ public class NativeProxy extends NativeProxyCommon {
             public void checkDuplicateSharedTag(int viewTag, int screenTag) {
                 // NOT IMPLEMENTED
             }
+
+            @Override
+            public int[] getSharedGroup(int viewTag) {
+                // NOT IMPLEMENTED
+                return new int[]{};
+            }
         };
     }
 }

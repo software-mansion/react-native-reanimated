@@ -1,13 +1,15 @@
 'use strict';
 
-import { Animations, TransitionType, WebEasings } from './config';
+import { Animations, TransitionType } from './config';
 import type {
   AnimationCallback,
   AnimationConfig,
   AnimationNames,
   CustomConfig,
-  WebEasingsNames,
+  KeyframeDefinitions,
 } from './config';
+import { WebEasings } from './Easing.web';
+import type { WebEasingsNames } from './Easing.web';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
@@ -16,8 +18,9 @@ import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
-import { setDummyPosition, snapshots } from './componentStyle';
-import { IS_REDUCED_MOTION } from '../../hook/useReducedMotion';
+import { setElementPosition, snapshots } from './componentStyle';
+import { Keyframe } from '../animationBuilder';
+import { ReducedMotionManager } from '../../ReducedMotion';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName =
@@ -48,7 +51,7 @@ function getDelayFromConfig(config: CustomConfig): number {
 
 export function getReducedMotionFromConfig(config: CustomConfig) {
   if (!config.reduceMotionV) {
-    return IS_REDUCED_MOTION.value;
+    return ReducedMotionManager.jsValue;
   }
 
   switch (config.reduceMotionV) {
@@ -57,18 +60,21 @@ export function getReducedMotionFromConfig(config: CustomConfig) {
     case ReduceMotion.Always:
       return true;
     default:
-      return IS_REDUCED_MOTION.value;
+      return ReducedMotionManager.jsValue;
   }
 }
 
 function getDurationFromConfig(
   config: CustomConfig,
-  isLayoutTransition: boolean,
-  animationName: AnimationNames
+  animationName: string
 ): number {
-  const defaultDuration = isLayoutTransition
-    ? 0.3
-    : Animations[animationName].duration;
+  // Duration in keyframe has to be in seconds. However, when using `.duration()` modifier we pass it in miliseconds.
+  // If `duration` was specified in config, we have to divide it by `1000`, otherwise we return value that is already in seconds.
+
+  const defaultDuration =
+    animationName in Animations
+      ? Animations[animationName as AnimationNames].duration
+      : 0.3;
 
   return config.durationV !== undefined
     ? config.durationV / 1000
@@ -86,22 +92,39 @@ function getReversedFromConfig(config: CustomConfig) {
 export function getProcessedConfig(
   animationName: string,
   animationType: LayoutAnimationType,
-  config: CustomConfig,
-  initialAnimationName: AnimationNames
+  config: CustomConfig
 ): AnimationConfig {
   return {
     animationName,
     animationType,
-    duration: getDurationFromConfig(
-      config,
-      animationType === LayoutAnimationType.LAYOUT,
-      initialAnimationName
-    ),
+    duration: getDurationFromConfig(config, animationName),
     delay: getDelayFromConfig(config),
     easing: getEasingFromConfig(config),
     callback: getCallbackFromConfig(config),
     reversed: getReversedFromConfig(config),
   };
+}
+
+export function maybeModifyStyleForKeyframe(
+  element: HTMLElement,
+  config: CustomConfig
+) {
+  if (!(config instanceof Keyframe)) {
+    return;
+  }
+
+  // We need to set `animationFillMode` to `forwards`, otherwise component will go back to its position.
+  // This will result in wrong snapshot
+  element.style.animationFillMode = 'forwards';
+
+  for (const timestampRules of Object.values(
+    config.definitions as KeyframeDefinitions
+  )) {
+    if ('originX' in timestampRules || 'originY' in timestampRules) {
+      element.style.position = 'absolute';
+      return;
+    }
+  }
 }
 
 export function saveSnapshot(element: HTMLElement) {
@@ -120,16 +143,31 @@ export function saveSnapshot(element: HTMLElement) {
 
 export function setElementAnimation(
   element: HTMLElement,
-  animationConfig: AnimationConfig
+  animationConfig: AnimationConfig,
+  shouldSavePosition = false
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
-  element.style.animationName = animationName;
-  element.style.animationDuration = `${duration}s`;
-  element.style.animationDelay = `${delay}s`;
-  element.style.animationTimingFunction = easing;
+  const configureAnimation = () => {
+    element.style.animationName = animationName;
+    element.style.animationDuration = `${duration}s`;
+    element.style.animationDelay = `${delay}s`;
+    element.style.animationTimingFunction = easing;
+  };
+
+  if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
+    // On chrome sometimes entering animations flicker. This is most likely caused by animation being interrupted
+    // by already started tasks. To avoid flickering, we use `requestAnimationFrame`, which will run callback right before repaint.
+    requestAnimationFrame(configureAnimation);
+  } else {
+    configureAnimation();
+  }
 
   element.onanimationend = () => {
+    if (shouldSavePosition) {
+      saveSnapshot(element);
+    }
+
     animationConfig.callback?.(true);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
@@ -144,7 +182,7 @@ export function setElementAnimation(
     if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
       _updatePropsJS(
         { visibility: 'initial' },
-        { _component: element as ReanimatedHTMLElement }
+        element as ReanimatedHTMLElement
       );
     }
 
@@ -152,7 +190,11 @@ export function setElementAnimation(
   };
 
   if (!(animationName in Animations)) {
-    scheduleAnimationCleanup(animationName, duration + delay);
+    scheduleAnimationCleanup(animationName, duration + delay, () => {
+      if (shouldSavePosition) {
+        setElementPosition(element, snapshots.get(element)!);
+      }
+    });
   }
 }
 
@@ -261,7 +303,7 @@ export function handleExitingAnimation(
 
   snapshots.set(dummy, snapshot);
 
-  setDummyPosition(dummy, snapshot);
+  setElementPosition(dummy, snapshot);
 
   const originalOnAnimationEnd = dummy.onanimationend;
 

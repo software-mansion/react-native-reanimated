@@ -3,7 +3,9 @@
   || (RCT_NEW_ARCH_ENABLED && __has_include(<RNScreens/RNSScreen.h>) && __cplusplus))
 
 #if LOAD_SCREENS_HEADERS
+#import <RNScreens/RNSEnums.h>
 #import <RNScreens/RNSScreen.h>
+#import <RNScreens/RNSScreenNavigationContainer.h>
 #import <RNScreens/RNSScreenStack.h>
 #endif
 
@@ -17,5 +19,9 @@
 + (REAUIView *)getScreenWrapper:(REAUIView *)view;
 + (int)getScreenType:(REAUIView *)screen;
 + (bool)isRNSScreenType:(REAUIView *)screen;
++ (REAUIView *)findTopScreenInChildren:(REAUIView *)screen;
++ (REAUIView *)getActiveTabForTabNavigator:(REAUIView *)tabNavigator;
++ (bool)isView:(REAUIView *)view DescendantOfScreen:(REAUIView *)screen;
++ (bool)isViewOnTopOfScreenStack:(REAUIView *)view;
 
 @end

@@ -3,12 +3,14 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
+import type {
+  GestureUpdateEvent,
+  PanGestureChangeEventPayload,
+} from 'react-native-gesture-handler';
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
-  GestureUpdateEvent,
-  PanGestureChangeEventPayload,
 } from 'react-native-gesture-handler';
 import {
   Screen,

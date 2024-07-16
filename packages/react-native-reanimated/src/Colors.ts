@@ -9,7 +9,7 @@
 /* eslint no-bitwise: 0 */
 import type { StyleProps } from './commonTypes';
 import { makeShareable } from './core';
-import { isAndroid, isWeb } from './PlatformChecker';
+import { isAndroid } from './PlatformChecker';
 
 interface RGB {
   r: number;
@@ -511,9 +511,6 @@ export const blue = (c: number): number => {
   return c & 255;
 };
 
-const IS_WEB = isWeb();
-const IS_ANDROID = isAndroid();
-
 export const rgbaColor = (
   r: number,
   g: number,
@@ -521,20 +518,9 @@ export const rgbaColor = (
   alpha = 1
 ): number | string => {
   'worklet';
-  if (IS_WEB || !_WORKLET) {
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  }
-
-  const c =
-    Math.round(alpha * 255) * (1 << 24) +
-    Math.round(r) * (1 << 16) +
-    Math.round(g) * (1 << 8) +
-    Math.round(b);
-  if (IS_ANDROID) {
-    // on Android color is represented as signed 32 bit int
-    return c < (1 << 31) >>> 0 ? c : c - 4294967296; // 4294967296 == Math.pow(2, 32);
-  }
-  return c;
+  // Replace tiny values like 1.234e-11 with 0:
+  const safeAlpha = alpha < 0.001 ? 0 : alpha;
+  return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
 };
 
 /**
@@ -656,6 +642,8 @@ export function isColor(value: unknown): boolean {
   return processColorInitially(value) != null;
 }
 
+const IS_ANDROID = isAndroid();
+
 export function processColor(color: unknown): number | null | undefined {
   'worklet';
   let normalizedColor = processColorInitially(color);
@@ -701,9 +689,10 @@ export function convertToRGBA(color: unknown): ParsedColorArray {
 
 export function rgbaArrayToRGBAColor(RGBA: ParsedColorArray): string {
   'worklet';
+  const alpha = RGBA[3] < 0.001 ? 0 : RGBA[3];
   return `rgba(${Math.round(RGBA[0] * 255)}, ${Math.round(
     RGBA[1] * 255
-  )}, ${Math.round(RGBA[2] * 255)}, ${RGBA[3]})`;
+  )}, ${Math.round(RGBA[2] * 255)}, ${alpha})`;
 }
 
 export function toLinearSpace(

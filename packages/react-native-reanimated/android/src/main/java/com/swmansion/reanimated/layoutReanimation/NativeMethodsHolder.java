@@ -18,4 +18,6 @@ public interface NativeMethodsHolder {
   int findPrecedingViewTagForTransition(int tag);
 
   void checkDuplicateSharedTag(int viewTag, int screenTag);
+
+  int[] getSharedGroup(int viewTag);
 }

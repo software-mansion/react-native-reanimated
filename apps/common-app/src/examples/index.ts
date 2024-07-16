@@ -109,14 +109,13 @@ import SwipeableListExample from './SwipeableListExample';
 import TransformExample from './TransformExample';
 import UpdatePropsPerfExample from './UpdatePropsPerfExample';
 import VolumeExample from './VolumeExample';
-import WaterfallGridExample from './LayoutAnimations/WaterfallGridExample';
+import LayoutTransitionExample from './LayoutAnimations/LayoutTransitionExample';
 import WidthExample from './WidthExample';
 import WithoutBabelPluginExample from './WithoutBabelPluginExample';
 import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
-import DynamicStylesExample from './DynamicStylesExample';
 import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
@@ -130,6 +129,8 @@ import ComposedHandlerDifferentEventsExample from './ComposedHandlerDifferentEve
 import ComposedHandlerInternalMergingExample from './ComposedHandlerInternalMergingExample';
 import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import FreezingShareablesExample from './ShareableFreezingExample';
+import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
+import StrictDOMExample from './StrictDOMExample';
 
 interface Example {
   icon?: string;
@@ -489,11 +490,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Log test',
     screen: LogExample,
   },
-  DynamicStylesExample: {
-    icon: '🧨',
-    title: 'Dynamically appending/removing styles',
-    screen: DynamicStylesExample,
-  },
   WorkletFactoryCrash: {
     icon: '🏭',
     title: 'Worklet factory crash',
@@ -528,6 +524,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '💀',
     title: 'BB',
     screen: BBExample,
+  },
+  StrictDOMExample: {
+    icon: '👮‍♂️',
+    title: 'React Strict DOM',
+    screen: StrictDOMExample,
   },
 
   // Old examples
@@ -634,7 +635,7 @@ export const EXAMPLES: Record<string, Example> = {
   },
   DefaultTransitions: {
     title: '[LA] Default layout transitions',
-    screen: WaterfallGridExample,
+    screen: LayoutTransitionExample,
   },
   KeyframeAnimation: {
     title: '[LA] Keyframe animation',
@@ -771,13 +772,21 @@ export const EXAMPLES: Record<string, Example> = {
   ChangeThemeSharedExample: {
     title: '[SET] Change theme',
     screen: ChangeThemeSharedExample,
+    missingOnFabric: true,
   },
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
+    missingOnFabric: true,
   },
   BorderRadiiExample: {
     title: '[SET] Border Radii',
     screen: BorderRadiiExample,
+    missingOnFabric: true,
+  },
+  TabNavigatorExample: {
+    title: '[SET] Tab Navigator',
+    screen: TabNavigatorExample,
+    missingOnFabric: true,
   },
 } as const;

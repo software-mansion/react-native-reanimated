@@ -15,32 +15,30 @@ import {
   GestureHandlerRootView,
   RectButton,
 } from 'react-native-gesture-handler';
-import {
-  HeaderBackButton,
-  HeaderBackButtonProps,
-} from '@react-navigation/elements';
-import {
-  NativeStackNavigationProp,
-  createNativeStackNavigator,
-} from '@react-navigation/native-stack';
-import {
-  NavigationContainer,
+import type { HeaderBackButtonProps } from '@react-navigation/elements';
+import { HeaderBackButton } from '@react-navigation/elements';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import type {
   NavigationProp,
+  NavigationState,
   PathConfigMap,
-  useNavigation,
 } from '@react-navigation/native';
-import {
-  StackNavigationProp,
-  createStackNavigator,
-} from '@react-navigation/stack';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import { createStackNavigator } from '@react-navigation/stack';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXAMPLES } from './examples';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
 
 function isFabric(): boolean {
   return !!(global as Record<string, unknown>)._IS_FABRIC;
+}
+
+function noop() {
+  // do nothing
 }
 
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
@@ -53,7 +51,7 @@ interface HomeScreenProps {
     | NativeStackNavigationProp<RootStackParamList, 'Home'>;
 }
 
-const EXAMPLES_NAMES = Object.keys(EXAMPLES) as (keyof typeof EXAMPLES)[];
+const EXAMPLES_NAMES = Object.keys(EXAMPLES);
 
 function findExamples(search: string) {
   if (search === '') {
@@ -181,7 +179,7 @@ function BackButton(props: HeaderBackButtonProps) {
 const PERSISTENCE_KEY = 'NAVIGATION_STATE_V1';
 
 export default function App() {
-  const [isReady, setIsReady] = React.useState(__DEV__ ? false : true);
+  const [isReady, setIsReady] = React.useState(!__DEV__);
   const [initialState, setInitialState] = React.useState();
 
   React.useEffect(() => {
@@ -210,9 +208,13 @@ export default function App() {
     };
 
     if (!isReady) {
-      restoreState();
+      restoreState().catch(noop);
     }
   }, [isReady]);
+
+  const persistNavigationState = useCallback((state?: NavigationState) => {
+    AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state)).catch(noop);
+  }, []);
 
   const shouldReduceMotion = useReducedMotion();
 
@@ -229,9 +231,7 @@ export default function App() {
       <NavigationContainer
         linking={linking}
         initialState={initialState}
-        onStateChange={(state) =>
-          AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
-        }>
+        onStateChange={persistNavigationState}>
         <Stack.Navigator>
           <Stack.Screen
             name="Home"

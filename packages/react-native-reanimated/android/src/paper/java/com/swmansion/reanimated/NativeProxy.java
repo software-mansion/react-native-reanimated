@@ -135,6 +135,14 @@ public class NativeProxy extends NativeProxyCommon {
                     layoutAnimations.checkDuplicateSharedTag(viewTag, screenTag);
                 }
             }
+
+            public int[] getSharedGroup(int viewTag) {
+                LayoutAnimations layoutAnimations = weakLayoutAnimations.get();
+                if (layoutAnimations != null) {
+                    return layoutAnimations.getSharedGroup(viewTag);
+                }
+                return new int[]{};
+            }
         };
     }
 }

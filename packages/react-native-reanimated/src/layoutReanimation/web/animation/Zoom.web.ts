@@ -81,6 +81,7 @@ export const ZoomOutData = {
   ZoomOut: {
     name: 'ZoomOut',
     style: {
+      0: { transform: [{ scale: 1 }] },
       100: { transform: [{ scale: 0 }] },
     },
     duration: DEFAULT_ZOOM_TIME,
@@ -89,6 +90,7 @@ export const ZoomOutData = {
   ZoomOutRotate: {
     name: 'ZoomOutRotate',
     style: {
+      0: { transform: [{ scale: 1, rotate: '0rad' }] },
       100: { transform: [{ scale: 0, rotate: '0.3rad' }] },
     },
     duration: DEFAULT_ZOOM_TIME,
@@ -97,6 +99,7 @@ export const ZoomOutData = {
   ZoomOutRight: {
     name: 'ZoomOutRight',
     style: {
+      0: { transform: [{ translateX: '0vw', scale: 1 }] },
       100: { transform: [{ translateX: '100vw', scale: 0 }] },
     },
     duration: DEFAULT_ZOOM_TIME,
@@ -105,7 +108,8 @@ export const ZoomOutData = {
   ZoomOutLeft: {
     name: 'ZoomOutLeft',
     style: {
-      100: { transform: [{ translateX: '-100vw', scale: 1 }] },
+      0: { transform: [{ translateX: '0vw', scale: 1 }] },
+      100: { transform: [{ translateX: '-100vw', scale: 0 }] },
     },
     duration: DEFAULT_ZOOM_TIME,
   },
@@ -113,6 +117,7 @@ export const ZoomOutData = {
   ZoomOutUp: {
     name: 'ZoomOutUp',
     style: {
+      0: { transform: [{ translateX: '0vh', scale: 1 }] },
       100: { transform: [{ translateY: '-100vh', scale: 0 }] },
     },
     duration: DEFAULT_ZOOM_TIME,
@@ -121,6 +126,7 @@ export const ZoomOutData = {
   ZoomOutDown: {
     name: 'ZoomOutDown',
     style: {
+      0: { transform: [{ translateX: '0vh', scale: 1 }] },
       100: { transform: [{ translateY: '100vh', scale: 0 }] },
     },
     duration: DEFAULT_ZOOM_TIME,
@@ -129,6 +135,7 @@ export const ZoomOutData = {
   ZoomOutEasyUp: {
     name: 'ZoomOutEasyUp',
     style: {
+      0: { transform: [{ translateY: '0%', scale: 1 }] },
       100: { transform: [{ translateY: '-100%', scale: 0 }] },
     },
     duration: DEFAULT_ZOOM_TIME,
@@ -137,6 +144,7 @@ export const ZoomOutData = {
   ZoomOutEasyDown: {
     name: 'ZoomOutEasyDown',
     style: {
+      0: { transform: [{ translateY: '0%', scale: 1 }] },
       100: { transform: [{ translateY: '100%', scale: 0 }] },
     },
     duration: DEFAULT_ZOOM_TIME,

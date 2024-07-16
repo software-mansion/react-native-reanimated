@@ -2,14 +2,12 @@ import Animated, { SlideOutLeft, SlideOutRight } from 'react-native-reanimated';
 import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
-import {
-  NativeStackScreenProps,
-  createNativeStackNavigator,
-} from '@react-navigation/native-stack';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 type ParamList = {
-  First?: {};
-  Second?: {};
+  First?: React.Component;
+  Second?: React.Component;
 };
 
 const Stack = createNativeStackNavigator<ParamList>();

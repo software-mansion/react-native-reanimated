@@ -10,6 +10,7 @@
 - (void)setFindPrecedingViewTagForTransitionBlock:
     (REAFindPrecedingViewTagForTransitionBlock)findPrecedingViewTagForTransition;
 - (void)setCancelAnimationBlock:(REACancelAnimationBlock)cancelAnimationBlock;
+- (void)setGetSharedGroupBlock:(REAGetSharedGroupBlock)getSharedGroupBlock;
 - (instancetype)initWithAnimationsManager:(REAAnimationsManager *)animationManager;
 - (REAUIView *)getTransitioningView:(NSNumber *)tag;
 - (NSDictionary *)prepareDataForWorklet:(NSMutableDictionary *)currentValues

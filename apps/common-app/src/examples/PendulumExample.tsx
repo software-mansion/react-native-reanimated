@@ -3,15 +3,23 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { StyleSheet, TextInput, Text, TouchableOpacity } from 'react-native';
-import { View } from 'react-native';
-import React, { Dispatch, SetStateAction, useState } from 'react';
+import {
+  StyleSheet,
+  TextInput,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import type { Dispatch, SetStateAction } from 'react';
+import React, { useState } from 'react';
+import type {
+  GestureStateManager,
+  GestureTouchEvent,
+} from 'react-native-gesture-handler';
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
-  GestureStateManager,
-  GestureTouchEvent,
 } from 'react-native-gesture-handler';
 
 const NAVY = '#001A72';

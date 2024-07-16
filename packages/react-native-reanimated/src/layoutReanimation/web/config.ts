@@ -1,5 +1,5 @@
 'use strict';
-import type { ReduceMotion } from '../../commonTypes';
+import type { ReduceMotion, StyleProps } from '../../commonTypes';
 import type { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import {
   BounceIn,
@@ -37,9 +37,15 @@ import {
 } from './animation/Stretch.web';
 import { ZoomIn, ZoomInData, ZoomOut, ZoomOutData } from './animation/Zoom.web';
 
-import type { AnimationData } from './animationParser';
+import type { AnimationData, AnimationStyle } from './animationParser';
 
 export type AnimationCallback = ((finished: boolean) => void) | null;
+
+export type KeyframeDefinitions = Record<number, AnimationStyle>;
+
+export type InitialValuesStyleProps = Omit<StyleProps, 'opacity'> & {
+  opacity?: number;
+};
 
 export interface AnimationConfig {
   animationName: string;
@@ -59,6 +65,8 @@ export interface CustomConfig {
   reduceMotionV?: ReduceMotion;
   callbackV?: AnimationCallback;
   reversed?: boolean;
+  definitions?: KeyframeDefinitions;
+  initialValues?: StyleProps;
 }
 
 export enum TransitionType {
@@ -112,18 +120,5 @@ export const Animations = {
   ...RollOut,
 };
 
-// Those are the easings that can be implemented using Bezier curves.
-// Others should be done as CSS animations
-export const WebEasings = {
-  linear: [0, 0, 1, 1],
-  ease: [0.42, 0, 1, 1],
-  quad: [0.11, 0, 0.5, 0],
-  cubic: [0.32, 0, 0.67, 0],
-  sin: [0.12, 0, 0.39, 0],
-  circle: [0.55, 0, 1, 0.45],
-  exp: [0.7, 0, 0.84, 0],
-};
-
 export type AnimationNames = keyof typeof Animations;
 export type LayoutTransitionsNames = keyof typeof AnimationsData;
-export type WebEasingsNames = keyof typeof WebEasings;

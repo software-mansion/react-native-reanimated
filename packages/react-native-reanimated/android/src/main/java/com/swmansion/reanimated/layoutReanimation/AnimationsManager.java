@@ -494,7 +494,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   public boolean hasAnimationForTag(int tag, int type) {
-    return mNativeMethodsHolder.hasAnimation(tag, type);
+    return mNativeMethodsHolder != null && mNativeMethodsHolder.hasAnimation(tag, type);
   }
 
   public boolean isLayoutAnimationEnabled() {
@@ -680,7 +680,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
-  private View resolveView(int tag) {
+  protected View resolveView(int tag) {
     if (mExitingViews.containsKey(tag)) {
       return mExitingViews.get(tag);
     } else {
@@ -716,6 +716,14 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   public void screenDidLayout(View view) {
     mSharedTransitionManager.screenDidLayout(view);
+  }
+
+  public void navigationTabChanged(View previousTab, View newTab) {
+    mSharedTransitionManager.navigationTabChanged(previousTab, newTab);
+  }
+
+  public void visitNativeTreeAndMakeSnapshot(View view) {
+    mSharedTransitionManager.visitNativeTreeAndMakeSnapshot(view);
   }
 
   public void viewDidLayout(View view) {

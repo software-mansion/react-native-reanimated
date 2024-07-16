@@ -11,7 +11,7 @@ import Animated, {
   withSpring,
   withSequence,
   ReduceMotion,
-  ReduceMotionConfig,
+  ReducedMotionConfig,
 } from 'react-native-reanimated';
 import {
   Gesture,
@@ -131,13 +131,17 @@ export default function ReducedMotionExample() {
   const { component, exampleList } = EXAMPLES[currentExample];
 
   function handleReduceMotionModeChange() {
-    setReduceMotion(reduceMotion === ReduceMotion.System ? ReduceMotion.Never : ReduceMotion.System);
+    setReduceMotion(
+      reduceMotion === ReduceMotion.System
+        ? ReduceMotion.Never
+        : ReduceMotion.System
+    );
   }
 
   return (
     <View style={styles.container}>
-      <Button 
-        onPress={handleReduceMotionModeChange} 
+      <Button
+        onPress={handleReduceMotionModeChange}
         title={`Overwrite reduce motion: ${reduceMotion}`}
       />
       {EXAMPLES.map((example, i) => (
@@ -147,7 +151,7 @@ export default function ReducedMotionExample() {
           title={example.title}
         />
       ))}
-      <ReduceMotionConfig mode={reduceMotion} />
+      <ReducedMotionConfig mode={reduceMotion} />
       {component}
       <View key={currentExample}>
         {exampleList.map((example, i) => {

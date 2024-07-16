@@ -1,8 +1,6 @@
-import { ParamListBase } from '@react-navigation/native';
-import {
-  NativeStackScreenProps,
-  createNativeStackNavigator,
-} from '@react-navigation/native-stack';
+import type { ParamListBase } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import { StyleSheet, TouchableNativeFeedback, View, Text } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';

@@ -1,8 +1,7 @@
 'use strict';
-import { isReducedMotion } from '../PlatformChecker';
-import { makeMutable } from '../core';
+import { isReducedMotionEnabledInSystem } from '../ReducedMotion';
 
-export const IS_REDUCED_MOTION = makeMutable(isReducedMotion());
+const IS_REDUCED_MOTION_ENABLED_IN_SYSTEM = isReducedMotionEnabledInSystem();
 
 /**
  * Lets you query the reduced motion system setting.
@@ -13,5 +12,5 @@ export const IS_REDUCED_MOTION = makeMutable(isReducedMotion());
  * @see https://docs.swmansion.com/react-native-reanimated/docs/device/useReducedMotion
  */
 export function useReducedMotion() {
-  return IS_REDUCED_MOTION.value;
+  return IS_REDUCED_MOTION_ENABLED_IN_SYSTEM;
 }

@@ -1,12 +1,12 @@
 import React from 'react';
 import { Platform, Pressable, StyleSheet, View, Text } from 'react-native';
+import type { AnimatedProps } from 'react-native-reanimated';
 import Animated, {
   FadeInLeft,
   FadeInDown,
   ZoomIn,
   LightSpeedInLeft,
   BounceIn,
-  AnimatedProps,
   FadeOut,
 } from 'react-native-reanimated';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
