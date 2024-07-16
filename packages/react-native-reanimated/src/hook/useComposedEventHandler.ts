@@ -64,9 +64,9 @@ export function useComposedEventHandler<
     }, false);
   }
 
-  const JSHandlers = handlers
+  const JSHandlers: JSHandlersObject<Event>[] = handlers
     .filter((h) => h !== null)
-    .filter((h) => isJSHandler(h));
+    .filter((h) => isJSHandler(h)) as JSHandlersObject<Event>[];
 
   // Setup the JSHandlersRecord object
   if (JSHandlers) {
