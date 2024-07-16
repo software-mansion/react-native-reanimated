@@ -1,28 +1,37 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Switch, View, Text } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
-  ReduceMotionConfig,
+  ReducedMotionConfig,
   ReduceMotion,
 } from 'react-native-reanimated';
 
 export default function App() {
+  const [isReduceMotionDisabled, setIsReduceMotionDisabled] = useState(false);
   const sv = useSharedValue<number>(0);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${sv.value}deg` }],
   }));
 
   useEffect(() => {
+    sv.value = 0;
     sv.value = withRepeat(withTiming(360, { duration: 2000 }), -1, true);
   });
 
   return (
     <View style={styles.container}>
-      {/* I'll uncomment if after merge of ReduceMotionConfig to main and new nightly release, because now component is unavailable */}
-      {/* <ReduceMotionConfig mode={ReduceMotion.Never} /> */}
+      <View style={styles.row}>
+        <Text>Disable reduced motion</Text>
+        <Switch
+          value={isReduceMotionDisabled}
+          onValueChange={setIsReduceMotionDisabled}
+          style={styles.switch}
+        />
+      </View>
+      <ReducedMotionConfig mode={isReduceMotionDisabled ? ReduceMotion.Never : ReduceMotion.System} />
       <Animated.View style={[styles.box, animatedStyle]} />
     </View>
   );
@@ -39,4 +48,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
+  row: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  switch: {
+    marginLeft: 10,
+  }
 });
