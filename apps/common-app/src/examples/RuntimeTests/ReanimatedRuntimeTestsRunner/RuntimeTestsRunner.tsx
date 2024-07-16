@@ -7,7 +7,7 @@ import { RenderLock } from './SyncUIRunner';
 interface ImportButton {
   testSuiteName: string;
   importTest: () => void;
-  testOfTests?: boolean;
+  skipByDefault?: boolean;
 }
 
 let renderLock: RenderLock = new RenderLock();
@@ -40,12 +40,12 @@ function ImportButtons({ importButtons }: { importButtons: Array<ImportButton> }
 
   const handleImportAllClick = () => {
     setImportedAll(true);
-    let newImportedTests = [...importedTests];
+    const newImportedTests = importedTests;
     for (const button of importButtons) {
-      if (!button.testOfTests) {
+      if (!button.skipByDefault) {
         button.importTest();
         if (!importedTests.includes(button.testSuiteName)) {
-          newImportedTests = [...newImportedTests, button.testSuiteName];
+          newImportedTests.push(button.testSuiteName);
         }
       }
     }
@@ -72,9 +72,7 @@ function ImportButtons({ importButtons }: { importButtons: Array<ImportButton> }
           return (
             <TouchableOpacity
               key={testSuiteName}
-              onPress={() => {
-                handleImportClick(importButton);
-              }}
+              onPress={() => handleImportClick(importButton)}
               style={[styles.importButton, importedTests.includes(testSuiteName) ? styles.importButtonImported : {}]}>
               <Text style={styles.buttonText}>{testSuiteName}</Text>
             </TouchableOpacity>

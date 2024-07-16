@@ -7,7 +7,7 @@ export default function RuntimeTestsExample() {
     <RuntimeTestsRunner
       importButtons={[
         {
-          testOfTests: true,
+          skipByDefault: true,
           testSuiteName: 'Tests of testing framework',
           importTest: () => {
             require('./tests/TestsOfTestingFramework.test');
