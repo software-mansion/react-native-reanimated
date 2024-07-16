@@ -21,7 +21,7 @@ export default function App() {
   useEffect(() => {
     sv.value = 0;
     sv.value = withRepeat(withTiming(360, { duration: 2000 }), -1, true);
-  });
+  }, [colorScheme, isReduceMotionDisabled]);
 
   const textColor =
     colorScheme === 'light' ? styles.darkText : styles.lightText;
