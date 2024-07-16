@@ -22,6 +22,7 @@ export interface ReanimatedPluginOptions {
   omitNativeOnlyData?: boolean;
   globals?: string[];
   substituteWebPlatformChecks?: boolean;
+  disableSourceMaps?: boolean;
 }
 
 export interface ReanimatedPluginPass {
@@ -32,6 +33,7 @@ export interface ReanimatedPluginPass {
   filename: string | undefined;
   get(key: unknown): unknown;
   set(key: unknown, value: unknown): void;
+  workletNumber: number;
   [key: string]: unknown;
 }
 

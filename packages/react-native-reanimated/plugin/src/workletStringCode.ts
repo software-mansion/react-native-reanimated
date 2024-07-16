@@ -1,5 +1,5 @@
 import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
-import { transformSync } from '@babel/core';
+import { transformSync, traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   File as BabelFile,
@@ -29,16 +29,19 @@ import { strict as assert } from 'assert';
 import * as convertSourceMap from 'convert-source-map';
 import * as fs from 'fs';
 import { isRelease } from './utils';
-import type { WorkletizableFunction } from './types';
+import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 
 const MOCK_SOURCE_MAP = 'mock source map';
 
 export function buildWorkletString(
   fun: BabelFile,
+  state: ReanimatedPluginPass,
   closureVariables: Array<Identifier>,
-  name: string,
+  nameWithSource: string,
   inputMap: BabelFileResult['map']
 ): Array<string | null | undefined> {
+  restoreRecursiveCalls(fun, nameWithSource);
+
   const draftExpression = (fun.program.body.find((obj) =>
     isFunctionDeclaration(obj)
   ) ||
@@ -61,7 +64,7 @@ export function buildWorkletString(
   );
 
   const workletFunction = functionExpression(
-    identifier(name),
+    identifier(nameWithSource),
     expression.params,
     expression.body,
     expression.generator,
@@ -72,7 +75,7 @@ export function buildWorkletString(
 
   assert(inputMap, '[Reanimated] `inputMap` is undefined.');
 
-  const includeSourceMap = !isRelease();
+  const includeSourceMap = !(isRelease() || state.opts.disableSourceMaps);
 
   if (includeSourceMap) {
     // Clear contents array (should be empty anyways)
@@ -114,6 +117,24 @@ export function buildWorkletString(
   }
 
   return [transformed.code, JSON.stringify(sourceMap)];
+}
+
+/**
+ * Function that restores recursive calls after the name of the worklet has changed.
+ */
+function restoreRecursiveCalls(file: BabelFile, newName: string): void {
+  traverse(file, {
+    FunctionExpression(path) {
+      if (!path.node.id) {
+        // Function wasn't named, hence it couldn't have had recursive calls by its name.
+        path.stop();
+        return;
+      }
+      const oldName = path.node.id.name;
+      const scope = path.scope;
+      scope.rename(oldName, newName);
+    },
+  });
 }
 
 function shouldMockSourceMap() {
