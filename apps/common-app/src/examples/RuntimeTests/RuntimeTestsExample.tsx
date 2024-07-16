@@ -2,8 +2,6 @@ import React from 'react';
 import RuntimeTestsRunner from './ReanimatedRuntimeTestsRunner/RuntimeTestsRunner';
 import { describe } from './ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 
-import './tests/plugin/fileWorkletization.test';
-
 export default function RuntimeTestsExample() {
   return (
     <RuntimeTestsRunner
@@ -75,6 +73,12 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/advancedAPI/useFrameCallback.test');
             // require('./tests/advancedAPI/measure.test'); // crash on Android
+          },
+        },
+        {
+          testSuiteName: 'babelPlugin',
+          importTest: () => {
+            require('./tests/babelPlugin/fileWorkletization.test');
           },
         },
       ]}
