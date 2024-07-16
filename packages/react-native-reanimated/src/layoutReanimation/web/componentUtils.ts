@@ -220,6 +220,9 @@ export function handleLayoutTransition(
     case 'JumpingTransition':
       animationType = TransitionType.JUMPING;
       break;
+    case 'EntryExitTransition':
+      animationType = TransitionType.ENTRY_EXIT;
+      break;
     default:
       animationType = TransitionType.LINEAR;
       break;
