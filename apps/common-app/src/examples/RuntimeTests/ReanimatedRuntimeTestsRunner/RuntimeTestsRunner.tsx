@@ -2,7 +2,7 @@ import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import type { ReactNode } from 'react';
 import React, { useEffect, useState } from 'react';
 import { runTests, configure } from './RuntimeTestsApi';
-import type { LockObject } from './types';
+import { RenderLock } from './SyncUIRunner';
 
 interface ImportButton {
   testSuiteName: string;
@@ -10,7 +10,7 @@ interface ImportButton {
   testOfTests?: boolean;
 }
 
-let renderLock: LockObject = { lock: false };
+let renderLock: RenderLock = new RenderLock();
 export class ErrorBoundary extends React.Component<
   { children: React.JSX.Element | Array<React.JSX.Element> },
   { hasError: boolean }
@@ -90,7 +90,7 @@ export default function RuntimeTestsRunner({ importButtons }: { importButtons: A
   const [started, setStarted] = useState<boolean>(false);
   useEffect(() => {
     if (renderLock) {
-      renderLock.lock = false;
+      renderLock.unlock();
     }
   }, [component]);
   return (
