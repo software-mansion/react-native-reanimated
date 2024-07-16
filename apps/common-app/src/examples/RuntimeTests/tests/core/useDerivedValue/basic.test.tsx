@@ -123,7 +123,7 @@ describe('Test useDerivedValue changing width', () => {
         const waitTime =
           animationType === AnimationType.NONE ? 50 : animationType === AnimationType.TIMING ? 350 : 1800;
         await wait(waitTime);
-        expect(await testComponent.getAnimatedStyle('width')).toBe(derivedFun(finalWidth), ComparisonMode.DISTANCE);
+        expect(await testComponent.getAnimatedStyle('width')).toBe(derivedFun(finalWidth), ComparisonMode.PIXEL);
         const updates = updatesContainerActive.getUpdates();
         const naiveUpdates = await updatesContainerActive.getNativeSnapshots();
         await unmockAnimationTimer();
