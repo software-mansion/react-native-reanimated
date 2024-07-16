@@ -233,14 +233,14 @@ var require_workletStringCode = __commonJS({
     var fs = __importStar(require("fs"));
     var utils_12 = require_utils();
     var MOCK_SOURCE_MAP = "mock source map";
-    function buildWorkletString(fun, state, closureVariables, newName, inputMap) {
-      restoreRecursiveCalls(fun, newName);
+    function buildWorkletString(fun, state, closureVariables, nameWithSource, inputMap) {
+      restoreRecursiveCalls(fun, nameWithSource);
       const draftExpression = fun.program.body.find((obj) => (0, types_12.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_12.isExpressionStatement)(obj)) || void 0;
       (0, assert_1.strict)(draftExpression, "[Reanimated] `draftExpression` is undefined.");
       const expression = (0, types_12.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
       (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
       (0, assert_1.strict)((0, types_12.isBlockStatement)(expression.body), "[Reanimated] `expression.body` is not a `BlockStatement`");
-      const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(newName), expression.params, expression.body, expression.generator, expression.async);
+      const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(nameWithSource), expression.params, expression.body, expression.generator, expression.async);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
       const includeSourceMap = !((0, utils_12.isRelease)() || state.opts.disableSourceMaps);
@@ -481,7 +481,7 @@ var require_workletFactory = __commonJS({
           source = `${libraryName}_${source}`;
         }
       }
-      const suffix = source + state.workletNumber++;
+      const suffix = `${source}${state.workletNumber++}`;
       if ((0, types_12.isObjectMethod)(fun.node) && (0, types_12.isIdentifier)(fun.node.key)) {
         return (0, types_12.toIdentifier)(`${fun.node.key.name}_${suffix}`);
       }
