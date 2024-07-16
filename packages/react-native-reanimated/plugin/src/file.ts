@@ -2,22 +2,28 @@ import {
   blockStatement,
   directive,
   directiveLiteral,
+  isArrowFunctionExpression,
+  isBlockStatement,
+  isExportDefaultDeclaration,
+  isExportNamedDeclaration,
+  isExpression,
+  isVariableDeclaration,
   returnStatement,
 } from '@babel/types';
 
 import type {
-  Expression,
   Program,
   BlockStatement,
   VariableDeclaration,
   ArrowFunctionExpression,
   ObjectExpression,
   Statement,
+  Node as BabelNode,
 } from '@babel/types';
 import type { NodePath } from '@babel/core';
 import {
-  isWorkletizableFunctionType,
-  isWorkletizableObjectType,
+  isWorkletizableFunctionNode,
+  isWorkletizableObjectNode,
 } from './types';
 import type { ReanimatedPluginPass } from './types';
 
@@ -48,54 +54,57 @@ function processWorkletFile(
   path: NodePath<Program>,
   _state: ReanimatedPluginPass
 ) {
-  path.get('body').forEach((bodyPath) => {
-    const candidatePath = getNodePathCandidate(bodyPath);
-    if (isWorkletizableFunctionType(candidatePath)) {
-      if (candidatePath.isArrowFunctionExpression()) {
-        replaceImplicitReturnWithBlock(candidatePath);
-      }
-      appendWorkletDirective(candidatePath.node.body as BlockStatement);
-    } else if (isWorkletizableObjectType(candidatePath)) {
-      processObjectExpression(candidatePath);
-    } else if (candidatePath.isVariableDeclaration()) {
-      processVariableDeclaration(candidatePath);
+  path.node.body.forEach((statement) => {
+    const candidate = getNodeCandidate(statement);
+    if (candidate === null || candidate === undefined) {
+      return;
     }
+    processWorkletizableEntity(candidate);
   });
 }
 
-function getNodePathCandidate(path: NodePath<Statement>): NodePath<unknown> {
-  if (path.isExportNamedDeclaration() || path.isExportDefaultDeclaration()) {
-    return path.get('declaration') as NodePath<typeof path.node.declaration>;
+function getNodeCandidate(statement: Statement) {
+  if (
+    isExportNamedDeclaration(statement) ||
+    isExportDefaultDeclaration(statement)
+  ) {
+    return statement.declaration;
   } else {
-    return path;
+    return statement;
   }
 }
 
-function processWorkletizableEntity(path: NodePath) {
-  if (isWorkletizableFunctionType(path)) {
-    if (path.isArrowFunctionExpression()) {
-      replaceImplicitReturnWithBlock(path);
+function processWorkletizableEntity(node: BabelNode) {
+  if (isWorkletizableFunctionNode(node)) {
+    if (isArrowFunctionExpression(node)) {
+      replaceImplicitReturnWithBlock(node);
     }
-
-    appendWorkletDirective(path.node.body as BlockStatement);
-  } else if (isWorkletizableObjectType(path)) {
-    processObjectExpression(path);
+    appendWorkletDirective(node.body as BlockStatement);
+  } else if (isWorkletizableObjectNode(node)) {
+    processObjectExpression(node);
+  } else if (isVariableDeclaration(node)) {
+    processVariableDeclaration(node);
   }
 }
 
-function processVariableDeclaration(path: NodePath<VariableDeclaration>) {
-  path.get('declarations').forEach((declaration) => {
-    const initPath = declaration.get('init');
-    if (initPath.isExpression()) {
-      processWorkletizableEntity(initPath);
+function processVariableDeclaration(variableDeclaration: VariableDeclaration) {
+  variableDeclaration.declarations.forEach((declaration) => {
+    const init = declaration.init;
+    if (isExpression(init)) {
+      processWorkletizableEntity(init);
     }
   });
 }
 
-function processObjectExpression(path: NodePath<ObjectExpression>) {
-  path.node.properties.forEach((property) => {
+function processObjectExpression(object: ObjectExpression) {
+  object.properties.forEach((property) => {
     if (property.type === 'ObjectMethod') {
       appendWorkletDirective(property.body);
+    } else if (property.type === 'ObjectProperty') {
+      const value = property.value;
+      if (isWorkletizableFunctionNode(value)) {
+        processWorkletizableEntity(value);
+      }
     }
   });
 }
@@ -107,14 +116,9 @@ function processObjectExpression(path: NodePath<ObjectExpression>) {
  *
  * This is necessary because the worklet directive is only allowed on block statements.
  */
-function replaceImplicitReturnWithBlock(
-  path: NodePath<ArrowFunctionExpression>
-) {
-  const bodyPath = path.get('body');
-  if (!bodyPath.isBlockStatement()) {
-    bodyPath.replaceWith(
-      blockStatement([returnStatement(bodyPath.node as Expression)])
-    );
+function replaceImplicitReturnWithBlock(path: ArrowFunctionExpression) {
+  if (!isBlockStatement(path.body)) {
+    path.body = blockStatement([returnStatement(path.body)]);
   }
 }
 

@@ -8,8 +8,9 @@ import {
   getRegisteredValue,
   registerValue,
   test,
+  expect,
 } from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { getThree } from './wortketizeFileUtils';
+import { getThree } from './fileWorkletization';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
@@ -27,10 +28,10 @@ describe('Test workletization', () => {
     return <View />;
   };
 
-  test('Test top level workletization', async () => {
+  test('Test file workletization', async () => {
     await render(<ExampleComponent />);
     await wait(100);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-    expect(sharedValue).toBe(3);
+    expect(sharedValue.onUI).toBe(3);
   });
 });

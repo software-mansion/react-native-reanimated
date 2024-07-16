@@ -25,7 +25,7 @@ import './tests/core/useAnimatedStyle/reuseAnimatedStyle.test';
 import './tests/core/useDerivedValue/basic.test';
 import './tests/core/useDerivedValue/chain.test';
 
-import './tests/other/wortketizeFile.test';
+import './tests/plugin/fileWorkletization.test';
 
 export default function RuntimeTestsExample() {
   return <RuntimeTestsRunner />;
