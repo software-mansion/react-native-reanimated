@@ -32,26 +32,36 @@ function App() {
 }
 ```
 
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+class Keyframe {
+  constructor(definitions: Record<string, KeyframeProps>);
+  duration(durationMs: number): Keyframe;
+  delay(delayMs: number): Keyframe;
+  reduceMotion(reduceMotionV: ReduceMotion): Keyframe;
+  withCallback(callback: (finished: boolean) => void): Keyframe;
+}
+```
+
+</details>
+
 ### Arguments
 
 #### `definitions`
 
-An object, passed as a first argument that contains definitions of your animation.
+An object, that contains definitions of your animation.
 The object keys should be within range `0-100` and correspond to animation progress.
-The object values should consist of style props and/or [easing](/docs/animations/withTiming/#easing) function. If easing property is not provided, it defaults to `Easing.linear`.
+The object values should consist of style props and/or [easing function](/docs/animations/withTiming/#easing). If easing property is not provided, it defaults to `Easing.linear`.
+
+The keys take the following values:
 
 - `0` or `from`: Initial state of the object.
 - Middle points (e.g., `45`): Intermediate states of the object.
 - `100` or `to`: Final state of the object.
 
-To `0` assign the style, you want for your object at the beginning of the animation and to `100` assign the style you want for your object to have at the end of the animation.
-
-## Remarks
-
-- Providing keyframe `0` or `from` is required as it contains the initial state of the object you want to animate.
-- Ensure you provide the initial value for all style properties you want to animate in other keyframes.
-- Do not provide both `0` and `from`, or `100` and `to` keyframes, as it will result in a parsing conflict.
-- If you want to animate transform style, make sure that all properties in the transformation array are in the same order in all keyframes.
+The key `0` (or `from`) should be assigned the style that you want for your object at the beginning of the animation. The key `100` (or `to`) should be assigned the style that you want for your object at the end of the animation.
 
 ## Modifiers
 
@@ -69,6 +79,13 @@ keyframe
 - `.delay(durationMs: number)` is the delay before the animation starts (in milliseconds). Defaults to `0`.
 - `.reduceMotion(reduceMotion: ReduceMotion)` determines how the animation responds to the device's reduced motion accessibility setting.
 - `.withCallback(callback: (finished: boolean) => void)` is the callback that will fire after the animation ends. Sets `finished` to `true` when animation ends without interruptions, and `false` otherwise.
+
+## Remarks
+
+- Providing keyframe `0` or `from` is required as it contains the initial state of the object you want to animate.
+- Ensure you provide the initial value for all style properties you want to animate in other keyframes.
+- Do not provide both `0` and `from`, or `100` and `to` keyframes, as it will result in a parsing conflict.
+- If you want to animate transform style, make sure that all properties in the transformation array are in the same order in all keyframes.
 
 ## Example
 
