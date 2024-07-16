@@ -4,6 +4,7 @@ import static java.lang.Float.NaN;
 
 import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.View;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.GuardedRunnable;
@@ -141,17 +142,29 @@ public class NodesManager implements EventDispatcherListener {
     compatibility.registerFabricEventListener(this);
   }
 
-  private final class NativeUpdateOperation {
+  private abstract static class UpdateOperation {
     public int mViewTag;
-    public WritableMap mNativeProps;
+    public WritableMap mProps;
 
-    public NativeUpdateOperation(int viewTag, WritableMap nativeProps) {
+    public UpdateOperation(int viewTag, WritableMap props) {
       mViewTag = viewTag;
-      mNativeProps = nativeProps;
+      mProps = props;
     }
   }
 
-  private Queue<NativeUpdateOperation> mOperationsInBatch = new LinkedList<>();
+  private static final class NativeUpdateOperation extends UpdateOperation {
+    public NativeUpdateOperation(int viewTag, WritableMap props) {
+      super(viewTag, props);
+    }
+  }
+
+  private static final class UIUpdateOperation extends UpdateOperation {
+    public UIUpdateOperation(int viewTag, WritableMap props) {
+      super(viewTag, props);
+    }
+  }
+
+  private Queue<UpdateOperation> mOperationsInBatch = new LinkedList<>();
   private boolean mTryRunBatchUpdatesSynchronously = false;
 
   public NodesManager(ReactContext context) {
@@ -227,7 +240,7 @@ public class NodesManager implements EventDispatcherListener {
         mNativeProxy.performOperations();
       }
     } else if (!mOperationsInBatch.isEmpty()) {
-      final Queue<NativeUpdateOperation> copiedOperationsQueue = mOperationsInBatch;
+      final Queue<UpdateOperation> copiedOperationsQueue = mOperationsInBatch;
       mOperationsInBatch = new LinkedList<>();
       final boolean trySynchronously = mTryRunBatchUpdatesSynchronously;
       mTryRunBatchUpdatesSynchronously = false;
@@ -242,14 +255,24 @@ public class NodesManager implements EventDispatcherListener {
               if (!shouldDispatchUpdates) {
                 semaphore.release();
               }
-              while (!copiedOperationsQueue.isEmpty()) {
-                NativeUpdateOperation op = copiedOperationsQueue.remove();
-                ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
-                if (shadowNode != null) {
-                  ((UIManagerModule) mUIManager)
-                      .updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
+
+              if (isThereAnyNativeThreadOperation(copiedOperationsQueue)) {
+                while (!copiedOperationsQueue.isEmpty()) {
+                  UpdateOperation op = copiedOperationsQueue.remove();
+                  ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
+                  if (shadowNode != null) {
+                    ((UIManagerModule) mUIManager)
+                        .updateView(op.mViewTag, shadowNode.getViewClass(), op.mProps);
+                  }
+                }
+              } else {
+                while (!copiedOperationsQueue.isEmpty()) {
+                  UpdateOperation op = copiedOperationsQueue.remove();
+                  mUIImplementation.synchronouslyUpdateViewOnUIThread(
+                      op.mViewTag, new ReactStylesDiffMap(op.mProps));
                 }
               }
+
               if (queueWasEmpty) {
                 mUIImplementation.dispatchViewUpdates(-1); // no associated batchId
               }
@@ -267,6 +290,15 @@ public class NodesManager implements EventDispatcherListener {
         }
       }
     }
+  }
+
+  private boolean isThereAnyNativeThreadOperation(Queue<UpdateOperation> operations) {
+    for (UpdateOperation operation : operations) {
+      if (operation instanceof NativeUpdateOperation) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
@@ -315,6 +347,10 @@ public class NodesManager implements EventDispatcherListener {
       mTryRunBatchUpdatesSynchronously = true;
     }
     mOperationsInBatch.add(new NativeUpdateOperation(viewTag, nativeProps));
+  }
+
+  public void enqueueUpdateViewOnUIThread(int viewTag, WritableMap uiProps) {
+    mOperationsInBatch.add(new UIUpdateOperation(viewTag, uiProps));
   }
 
   public void configureProps(Set<String> uiPropsSet, Set<String> nativePropsSet) {
@@ -410,8 +446,7 @@ public class NodesManager implements EventDispatcherListener {
 
     if (viewTag != View.NO_ID) {
       if (hasUIProps) {
-        mUIImplementation.synchronouslyUpdateViewOnUIThread(
-            viewTag, new ReactStylesDiffMap(newUIProps));
+        enqueueUpdateViewOnUIThread(viewTag, newUIProps);
       }
       if (hasNativeProps) {
         enqueueUpdateViewOnNativeThread(viewTag, newNativeProps, true);
