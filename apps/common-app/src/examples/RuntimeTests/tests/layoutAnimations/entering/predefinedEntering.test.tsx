@@ -51,7 +51,6 @@ import {
   unmockAnimationTimer,
   clearRenderOutput,
   waitForAnimationUpdates,
-  beforeEach,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import {
   DurationEnteringSnapshots,
@@ -100,7 +99,12 @@ const EnteringOnMountComponent = ({ entering }: { entering: any }) => {
   );
 };
 
-async function getSnapshotUpdates(entering: any, snapshot: Array<any>, duration: number | undefined, springify = false) {
+async function getSnapshotUpdates(
+  entering: any,
+  snapshot: Array<any>,
+  duration: number | undefined,
+  springify = false,
+) {
   await mockAnimationTimer();
 
   const updatesContainer = await recordAnimationUpdates();

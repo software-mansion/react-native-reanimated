@@ -51,7 +51,6 @@ import {
   waitForAnimationUpdates,
   unmockAnimationTimer,
   clearRenderOutput,
-  wait,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { DurationExitingSnapshots, NoModifierExitingSnapshots, SpringifyExitingSnapshots } from './exiting.snapshot';
 

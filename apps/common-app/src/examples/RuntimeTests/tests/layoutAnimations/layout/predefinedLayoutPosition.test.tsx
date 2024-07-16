@@ -51,7 +51,7 @@ async function getSnapshotUpdates(layout: any, direction: Direction, snapshot: A
 }
 
 describe('Test predefined layout transitions', () => {
-  test.each(TRANSITIONS)('%p', async (transition) => {
+  test.each(TRANSITIONS)('%p', async transition => {
     for (const direction of Object.values(Direction)) {
       const snapshotName = `${transition.name}_${direction}` as keyof typeof TransitionSnapshotNoModifiers;
       const snapshot = TransitionSnapshotNoModifiers[snapshotName];
@@ -62,17 +62,14 @@ describe('Test predefined layout transitions', () => {
 });
 
 describe('Test predefined layout transitions,  duration = 200ms', () => {
-  test.each(TRANSITIONS)(
-    'Test transition %p, duration = 200ms',
-    async transition => {
-      for (const direction of Object.values(Direction)) {
-        const snapshotName = `${transition.name}_${direction}` as keyof typeof TransitionSnapshot200ms;
-        const snapshot = TransitionSnapshot200ms[snapshotName];
-        const updates = await getSnapshotUpdates(transition.duration(200), direction, snapshot);
-        expect(updates).toMatchSnapshots(snapshot);
-      }
-    },
-  );
+  test.each(TRANSITIONS)('Test transition %p, duration = 200ms', async transition => {
+    for (const direction of Object.values(Direction)) {
+      const snapshotName = `${transition.name}_${direction}` as keyof typeof TransitionSnapshot200ms;
+      const snapshot = TransitionSnapshot200ms[snapshotName];
+      const updates = await getSnapshotUpdates(transition.duration(200), direction, snapshot);
+      expect(updates).toMatchSnapshots(snapshot);
+    }
+  });
 });
 
 describe('Test LINEAR transition modifiers', () => {

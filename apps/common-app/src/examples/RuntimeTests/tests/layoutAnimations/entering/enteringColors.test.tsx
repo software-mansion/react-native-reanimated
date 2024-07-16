@@ -1,4 +1,4 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Animated, { withDelay, withTiming } from 'react-native-reanimated';
 import React from 'react';
 import {
