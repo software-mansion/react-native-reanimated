@@ -121,6 +121,7 @@ export type Mismatch = {
 /* eslint-disable no-var */
 declare global {
   var mockedAnimationTimestamp: number | undefined;
+  var framesCount: number | undefined;
   var originalRequestAnimationFrame: ((callback: (timestamp: number) => void) => void) | undefined;
   var originalGetAnimationTimestamp: (() => number) | undefined;
   var originalUpdateProps: ((operations: Operation[]) => void) | undefined;

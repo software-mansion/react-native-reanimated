@@ -3,7 +3,6 @@ import { useRef } from 'react';
 import type {
   BuildFunction,
   NullableTestValue,
-  LockObject,
   Operation,
   SharedValueSnapshot,
   TestCase,
@@ -17,10 +16,11 @@ import { DescribeDecorator, TestDecorator } from './types';
 import { TestComponent } from './TestComponent';
 import { EMPTY_LOG_PLACEHOLDER, applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
 import type { SharedValue } from 'react-native-reanimated';
-import { makeMutable, runOnUI, runOnJS } from 'react-native-reanimated';
+import { makeMutable, runOnJS } from 'react-native-reanimated';
 import { Matchers, nullableMatch } from './matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
+import { RenderLock, SyncUIRunner } from './SyncUIRunner';
 
 let callTrackerRegistryJS: Record<string, number> = {};
 const callTrackerRegistryUI = makeMutable<Record<string, number>>({});
@@ -41,10 +41,11 @@ export class TestRunner {
   private _currentTestSuite: TestSuite | null = null;
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
-  private _renderLock: LockObject = { lock: false };
   private _valueRegistry: Record<string, SharedValue> = {};
   private _wasRenderedNull: boolean = false;
   private _includesOnly: boolean = false;
+  private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
+  private _renderLock: RenderLock = new RenderLock();
   private _summary: TestSummary = {
     passed: 0,
     failed: 0,
@@ -52,10 +53,6 @@ export class TestRunner {
     failedTests: [] as Array<string>,
     startTime: Date.now(),
     endTime: 0,
-  };
-
-  private _threadLock: LockObject = {
-    lock: false,
   };
 
   public notify(name: string) {
@@ -88,13 +85,14 @@ export class TestRunner {
       return;
     }
     this._wasRenderedNull = !component;
-    this._renderLock.lock = true;
+    this._renderLock.lock();
+
     try {
       this._renderHook(component);
     } catch (e) {
       console.log(e);
     }
-    return this.waitForPropertyValueChange(this._renderLock, 'lock');
+    return this._renderLock.waitForUnlock();
   }
 
   public async clearRenderOutput() {
@@ -207,7 +205,7 @@ export class TestRunner {
     const jsValue = this._valueRegistry[name].value;
     const sharedValue = this._valueRegistry[name];
     const valueContainer = makeMutable<unknown>(null);
-    await this.runOnUIBlocking(() => {
+    await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       valueContainer.value = sharedValue.value;
     }, 1000);
@@ -379,42 +377,12 @@ export class TestRunner {
     this._currentTestSuite.afterEach = job;
   }
 
-  private waitForPropertyValueChange(
-    targetObject: LockObject,
-    targetProperty: 'lock',
-    initialValue = true,
-    maxWaitTime?: number,
-  ) {
-    return new Promise(resolve => {
-      const startTime = performance.now();
-      const interval = setInterval(() => {
-        const currentTime = performance.now();
-        const waitTimeExceeded = maxWaitTime && maxWaitTime < currentTime - startTime;
-        if (targetObject[targetProperty] !== initialValue || waitTimeExceeded) {
-          clearInterval(interval);
-          resolve(targetObject[targetProperty]);
-        }
-      }, 10);
-    });
-  }
-
-  public async runOnUIBlocking(worklet: () => void, maxWaitTime?: number) {
-    const unlock = () => (this._threadLock.lock = false);
-    this._threadLock.lock = true;
-    runOnUI(() => {
-      'worklet';
-      worklet();
-      runOnJS(unlock)();
-    })();
-    await this.waitForPropertyValueChange(this._threadLock, 'lock', true, maxWaitTime);
-  }
-
   public async recordAnimationUpdates() {
-    const updatesContainer = createUpdatesContainer(this);
+    const updatesContainer = createUpdatesContainer();
     const recordAnimationUpdates = updatesContainer.pushAnimationUpdates;
     const recordLayoutAnimationUpdates = updatesContainer.pushLayoutAnimationUpdates;
 
-    await this.runOnUIBlocking(() => {
+    await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       const originalUpdateProps = global._IS_FABRIC ? global._updatePropsFabric : global._updatePropsPaper;
       global.originalUpdateProps = originalUpdateProps;
@@ -441,7 +409,7 @@ export class TestRunner {
   }
 
   public async stopRecordingAnimationUpdates() {
-    await this.runOnUIBlocking(() => {
+    await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       if (global.originalUpdateProps) {
         if (global._IS_FABRIC) {
@@ -459,7 +427,7 @@ export class TestRunner {
   }
 
   public async mockAnimationTimer() {
-    await this.runOnUIBlocking(() => {
+    await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       global.mockedAnimationTimestamp = 0;
       global.originalGetAnimationTimestamp = global._getAnimationTimestamp;
@@ -469,6 +437,7 @@ export class TestRunner {
         }
         return global.mockedAnimationTimestamp;
       };
+      global.framesCount = 0;
 
       const originalRequestAnimationFrame = global.requestAnimationFrame;
       global.originalRequestAnimationFrame = originalRequestAnimationFrame;
@@ -484,12 +453,13 @@ export class TestRunner {
         global.mockedAnimationTimestamp! += 16;
         global.__frameTimestamp = global.mockedAnimationTimestamp;
         global.originalFlushAnimationFrame!(global.mockedAnimationTimestamp!);
+        global.framesCount!++;
       };
     });
   }
 
   public async setAnimationTimestamp(timestamp: number) {
-    await this.runOnUIBlocking(() => {
+    await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
       global.mockedAnimationTimestamp = timestamp;
@@ -497,7 +467,7 @@ export class TestRunner {
   }
 
   public async advanceAnimationByTime(time: number) {
-    await this.runOnUIBlocking(() => {
+    await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
       global.mockedAnimationTimestamp += time;
@@ -505,7 +475,7 @@ export class TestRunner {
   }
 
   public async advanceAnimationByFrames(frameCount: number) {
-    await this.runOnUIBlocking(() => {
+    await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
       global.mockedAnimationTimestamp += frameCount * 16;
@@ -513,7 +483,7 @@ export class TestRunner {
   }
 
   public async unmockAnimationTimer() {
-    await this.runOnUIBlocking(() => {
+    await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       if (global.originalGetAnimationTimestamp) {
         global._getAnimationTimestamp = global.originalGetAnimationTimestamp;
@@ -530,12 +500,34 @@ export class TestRunner {
       if (global.mockedAnimationTimestamp) {
         global.mockedAnimationTimestamp = undefined;
       }
+      if (global.framesCount) {
+        global.framesCount = undefined;
+      }
     });
   }
 
   public wait(delay: number) {
     return new Promise(resolve => {
       setTimeout(resolve, delay);
+    });
+  }
+
+  public waitForAnimationUpdates(updatesCount: number): Promise<boolean> {
+    const CHECK_INTERVAL = 20;
+    const flag = makeMutable(false);
+    return new Promise<boolean>(resolve => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      const interval = setInterval(async () => {
+        await new SyncUIRunner().runOnUIBlocking(() => {
+          'worklet';
+          assertMockedAnimationTimestamp(global.framesCount);
+          flag.value = global.framesCount >= updatesCount - 1;
+        });
+        if (flag.value) {
+          clearInterval(interval);
+          resolve(true);
+        }
+      }, CHECK_INTERVAL);
     });
   }
 
@@ -583,7 +575,7 @@ export class TestRunner {
     };
     console.error = mockedConsoleFunction;
     console.warn = mockedConsoleFunction;
-    await this.runOnUIBlocking(() => {
+    await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       console.error = mockedConsoleFunction;
       console.warn = mockedConsoleFunction;
@@ -592,7 +584,7 @@ export class TestRunner {
     const restoreConsole = async () => {
       console.error = originalError;
       console.warn = originalWarning;
-      await this.runOnUIBlocking(() => {
+      await this._syncUIRunner.runOnUIBlocking(() => {
         'worklet';
         console.error = originalError;
         console.warn = originalWarning;
