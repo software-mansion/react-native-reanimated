@@ -1113,6 +1113,7 @@ var require_file = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processIfWorkletFile = void 0;
     var types_12 = require("@babel/types");
+    var types_2 = require_types();
     function processIfWorkletFile(path, state) {
       if (!path.node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
         return false;
@@ -1124,33 +1125,56 @@ var require_file = __commonJS({
     exports2.processIfWorkletFile = processIfWorkletFile;
     function processWorkletFile(path, _state) {
       path.get("body").forEach((bodyPath) => {
-        if (bodyPath.isVariableDeclaration()) {
-          processVariableDeclaration(bodyPath);
-        }
-        if (bodyPath.isFunctionDeclaration()) {
-          appendWorkletDirective(bodyPath.node.body);
+        const candidatePath = getNodePathCandidate(bodyPath);
+        if ((0, types_2.isWorkletizableFunctionType)(candidatePath)) {
+          if (candidatePath.isArrowFunctionExpression()) {
+            replaceImplicitReturnWithBlock(candidatePath);
+          }
+          appendWorkletDirective(candidatePath.node.body);
+        } else if ((0, types_2.isWorkletizableObjectType)(candidatePath)) {
+          processObjectExpression(candidatePath);
+        } else if (candidatePath.isVariableDeclaration()) {
+          processVariableDeclaration(candidatePath);
         }
       });
+    }
+    function getNodePathCandidate(path) {
+      if (path.isExportNamedDeclaration() || path.isExportDefaultDeclaration()) {
+        return path.get("declaration");
+      } else {
+        return path;
+      }
+    }
+    function processWorkletizableEntity(path) {
+      if ((0, types_2.isWorkletizableFunctionType)(path)) {
+        if (path.isArrowFunctionExpression()) {
+          replaceImplicitReturnWithBlock(path);
+        }
+        appendWorkletDirective(path.node.body);
+      } else if ((0, types_2.isWorkletizableObjectType)(path)) {
+        processObjectExpression(path);
+      }
     }
     function processVariableDeclaration(path) {
       path.get("declarations").forEach((declaration) => {
         const initPath = declaration.get("init");
-        if (initPath.isFunctionExpression()) {
-          appendWorkletDirective(initPath.node.body);
-        } else if (initPath.isArrowFunctionExpression()) {
-          const bodyPath = initPath.get("body");
-          if (!bodyPath.isBlockStatement()) {
-            bodyPath.replaceWith((0, types_12.blockStatement)([(0, types_12.returnStatement)(bodyPath.node)]));
-          }
-          appendWorkletDirective(bodyPath.node);
-        } else if (initPath.isObjectExpression()) {
-          initPath.node.properties.forEach((property) => {
-            if (property.type === "ObjectMethod") {
-              appendWorkletDirective(property.body);
-            }
-          });
+        if (initPath.isExpression()) {
+          processWorkletizableEntity(initPath);
         }
       });
+    }
+    function processObjectExpression(path) {
+      path.node.properties.forEach((property) => {
+        if (property.type === "ObjectMethod") {
+          appendWorkletDirective(property.body);
+        }
+      });
+    }
+    function replaceImplicitReturnWithBlock(path) {
+      const bodyPath = path.get("body");
+      if (!bodyPath.isBlockStatement()) {
+        bodyPath.replaceWith((0, types_12.blockStatement)([(0, types_12.returnStatement)(bodyPath.node)]));
+      }
     }
     function appendWorkletDirective(node) {
       if (!node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {

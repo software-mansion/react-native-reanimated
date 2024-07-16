@@ -10,8 +10,15 @@ import type {
   Program,
   BlockStatement,
   VariableDeclaration,
+  ArrowFunctionExpression,
+  ObjectExpression,
+  Statement,
 } from '@babel/types';
 import type { NodePath } from '@babel/core';
+import {
+  isWorkletizableFunctionType,
+  isWorkletizableObjectType,
+} from './types';
 import type { ReanimatedPluginPass } from './types';
 
 export function processIfWorkletFile(
@@ -35,44 +42,80 @@ export function processIfWorkletFile(
 }
 
 /**
- * Adds a worklet directive to each top-level function in the file.
+ * Adds a worklet directive to each viable top-level entity in the file.
  */
 function processWorkletFile(
   path: NodePath<Program>,
   _state: ReanimatedPluginPass
 ) {
   path.get('body').forEach((bodyPath) => {
-    if (bodyPath.isVariableDeclaration()) {
-      processVariableDeclaration(bodyPath);
-    }
-    if (bodyPath.isFunctionDeclaration()) {
-      appendWorkletDirective(bodyPath.node.body);
+    const candidatePath = getNodePathCandidate(bodyPath);
+    if (isWorkletizableFunctionType(candidatePath)) {
+      if (candidatePath.isArrowFunctionExpression()) {
+        replaceImplicitReturnWithBlock(candidatePath);
+      }
+      appendWorkletDirective(candidatePath.node.body as BlockStatement);
+    } else if (isWorkletizableObjectType(candidatePath)) {
+      processObjectExpression(candidatePath);
+    } else if (candidatePath.isVariableDeclaration()) {
+      processVariableDeclaration(candidatePath);
     }
   });
+}
+
+function getNodePathCandidate(path: NodePath<Statement>): NodePath<unknown> {
+  if (path.isExportNamedDeclaration() || path.isExportDefaultDeclaration()) {
+    return path.get('declaration') as NodePath<typeof path.node.declaration>;
+  } else {
+    return path;
+  }
+}
+
+function processWorkletizableEntity(path: NodePath) {
+  if (isWorkletizableFunctionType(path)) {
+    if (path.isArrowFunctionExpression()) {
+      replaceImplicitReturnWithBlock(path);
+    }
+
+    appendWorkletDirective(path.node.body as BlockStatement);
+  } else if (isWorkletizableObjectType(path)) {
+    processObjectExpression(path);
+  }
 }
 
 function processVariableDeclaration(path: NodePath<VariableDeclaration>) {
   path.get('declarations').forEach((declaration) => {
     const initPath = declaration.get('init');
-    if (initPath.isFunctionExpression()) {
-      appendWorkletDirective(initPath.node.body);
-    } else if (initPath.isArrowFunctionExpression()) {
-      const bodyPath = initPath.get('body');
-      // In case of arrow function with no body, i.e. () => 1.
-      if (!bodyPath.isBlockStatement()) {
-        bodyPath.replaceWith(
-          blockStatement([returnStatement(bodyPath.node as Expression)])
-        );
-      }
-      appendWorkletDirective(bodyPath.node as BlockStatement);
-    } else if (initPath.isObjectExpression()) {
-      initPath.node.properties.forEach((property) => {
-        if (property.type === 'ObjectMethod') {
-          appendWorkletDirective(property.body);
-        }
-      });
+    if (initPath.isExpression()) {
+      processWorkletizableEntity(initPath);
     }
   });
+}
+
+function processObjectExpression(path: NodePath<ObjectExpression>) {
+  path.node.properties.forEach((property) => {
+    if (property.type === 'ObjectMethod') {
+      appendWorkletDirective(property.body);
+    }
+  });
+}
+
+/**
+ * Replaces implicit return statements with a block statement i.e.:
+ *
+ * `() => 1` becomes `() => { return 1 }`
+ *
+ * This is necessary because the worklet directive is only allowed on block statements.
+ */
+function replaceImplicitReturnWithBlock(
+  path: NodePath<ArrowFunctionExpression>
+) {
+  const bodyPath = path.get('body');
+  if (!bodyPath.isBlockStatement()) {
+    bodyPath.replaceWith(
+      blockStatement([returnStatement(bodyPath.node as Expression)])
+    );
+  }
 }
 
 function appendWorkletDirective(node: BlockStatement) {
