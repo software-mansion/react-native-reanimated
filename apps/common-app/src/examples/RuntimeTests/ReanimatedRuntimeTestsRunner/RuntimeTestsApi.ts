@@ -145,6 +145,10 @@ export async function wait(delay: number) {
   return testRunner.wait(delay);
 }
 
+export async function waitForAnimationUpdates(updatesCount: number) {
+  return testRunner.waitForAnimationUpdates(updatesCount);
+}
+
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const testRunnerNotifyFn = testRunner.notify;
 export function notify(name: string) {

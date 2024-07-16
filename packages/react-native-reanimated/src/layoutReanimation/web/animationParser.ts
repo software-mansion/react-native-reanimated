@@ -36,6 +36,8 @@ export interface TransitionData {
   reversed?: boolean;
   easingX?: string;
   easingY?: string;
+  entering?: any;
+  exiting?: any;
 }
 
 export function convertAnimationObjectToKeyframes(
