@@ -191,6 +191,11 @@ static BOOL _isConfigured = NO;
     currentTargetViewSnapshot.values[@"originXByParent"] = @(frameData.x);
     currentTargetViewSnapshot.values[@"originYByParent"] = @(frameData.y);
     sharedElement.sourceViewSnapshot = newSourceViewSnapshot;
+    // progress transition cleanups are triggered by RNSScreens events,
+    // so incrementing their counters would prevent some cleanups
+    if (sharedElement.animationType == SHARED_ELEMENT_TRANSITION_PROGRESS) {
+      continue;
+    }
 
     [self disableCleaningForViewTag:sourceView.reactTag];
     [self disableCleaningForViewTag:targetView.reactTag];

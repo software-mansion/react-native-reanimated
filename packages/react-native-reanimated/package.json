@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.13.0",
+  "version": "3.14.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "test": "yarn format:js && yarn lint:js && yarn test:unit",
@@ -32,7 +32,9 @@
     "build": "yarn build:plugin && bob build",
     "build:plugin": "cd plugin && yarn install && yarn build",
     "circular-dependency-check": "yarn madge --extensions js,ts,tsx --circular src lib",
-    "use-strict-check": "node ./scripts/validate-use-strict.js"
+    "use-strict-check": "node ./scripts/validate-use-strict.js",
+    "prepack": "cp ../../README.md ./README.md",
+    "postpack": "rm ./README.md"
   },
   "main": "lib/module/index",
   "module": "lib/module/index",
