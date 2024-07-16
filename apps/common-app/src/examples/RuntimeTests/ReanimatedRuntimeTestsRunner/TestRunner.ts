@@ -517,7 +517,7 @@ export class TestRunner {
     await this._syncUIRunner.runOnUIBlocking(() => {
       'worklet';
       if (global.originalLayoutAnimationsManager) {
-        global.LayoutAnimationsManager = global._LayoutAnimationsManager;
+        global.LayoutAnimationsManager = global.originalLayoutAnimationsManager;
       }
     });
   }
