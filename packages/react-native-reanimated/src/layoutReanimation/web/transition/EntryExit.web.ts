@@ -69,7 +69,7 @@ function hideComponentBetweenAnimations(
   for (const [step, opacity] of opacityInStep) {
     keyframeStyleData[step] = {
       ...keyframeStyleData[step],
-      opacity: opacity,
+      opacity,
     };
   }
 }
