@@ -151,7 +151,7 @@ function WarningComponent() {
   return <View />;
 }
 
-describe.skip('Tests of Test Framework', () => {
+describe('Tests of Test Framework', () => {
   test('withTiming - expect error', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('BrownComponent');
