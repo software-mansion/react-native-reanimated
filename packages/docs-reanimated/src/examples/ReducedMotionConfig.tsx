@@ -23,7 +23,8 @@ export default function App() {
     sv.value = withRepeat(withTiming(360, { duration: 2000 }), -1, true);
   });
 
-  const textColor = colorScheme === 'light' ? styles.darkText : styles.lightText;
+  const textColor =
+    colorScheme === 'light' ? styles.darkText : styles.lightText;
 
   return (
     <View style={styles.container}>
@@ -34,7 +35,9 @@ export default function App() {
           onValueChange={setIsReduceMotionDisabled}
         />
       </View>
-      <ReducedMotionConfig mode={isReduceMotionDisabled ? ReduceMotion.Never : ReduceMotion.System} />
+      <ReducedMotionConfig
+        mode={isReduceMotionDisabled ? ReduceMotion.Never : ReduceMotion.System}
+      />
       <Animated.View style={[styles.box, animatedStyle]} />
     </View>
   );
@@ -66,5 +69,5 @@ const styles = StyleSheet.create({
   },
   darkText: {
     color: 'var(--swm-navy-light-100)',
-  }
+  },
 });
