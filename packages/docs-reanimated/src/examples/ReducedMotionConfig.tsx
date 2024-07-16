@@ -1,3 +1,4 @@
+import { useColorScheme } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Switch, View, Text } from 'react-native';
 import Animated, {
@@ -10,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export default function App() {
+  const { colorScheme } = useColorScheme();
   const [isReduceMotionDisabled, setIsReduceMotionDisabled] = useState(false);
   const sv = useSharedValue<number>(0);
   const animatedStyle = useAnimatedStyle(() => ({
@@ -21,14 +23,15 @@ export default function App() {
     sv.value = withRepeat(withTiming(360, { duration: 2000 }), -1, true);
   });
 
+  const textColor = colorScheme === 'light' ? styles.darkText : styles.lightText;
+
   return (
     <View style={styles.container}>
       <View style={styles.row}>
-        <Text>Disable reduced motion</Text>
+        <Text style={[styles.text, textColor]}>Disable reduced motion</Text>
         <Switch
           value={isReduceMotionDisabled}
           onValueChange={setIsReduceMotionDisabled}
-          style={styles.switch}
         />
       </View>
       <ReducedMotionConfig mode={isReduceMotionDisabled ? ReduceMotion.Never : ReduceMotion.System} />
@@ -52,7 +55,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 20,
   },
-  switch: {
-    marginLeft: 10,
+  text: {
+    marginRight: 10,
+    fontFamily: 'Aeonik',
+    color: 'var(--swm-navy-light-100)',
+    fontSize: 16,
+  },
+  lightText: {
+    color: 'var(--swm-off-white)',
+  },
+  darkText: {
+    color: 'var(--swm-navy-light-100)',
   }
 });
