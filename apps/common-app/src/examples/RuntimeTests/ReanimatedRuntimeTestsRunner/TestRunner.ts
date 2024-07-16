@@ -444,6 +444,7 @@ export class TestRunner {
         }
         return global.mockedAnimationTimestamp;
       };
+      global.framesCount = 0;
 
       const originalRequestAnimationFrame = global.requestAnimationFrame;
       global.originalRequestAnimationFrame = originalRequestAnimationFrame;
@@ -459,6 +460,7 @@ export class TestRunner {
         global.mockedAnimationTimestamp! += 16;
         global.__frameTimestamp = global.mockedAnimationTimestamp;
         global.originalFlushAnimationFrame!(global.mockedAnimationTimestamp!);
+        global.framesCount!++;
       };
     });
   }
@@ -504,6 +506,9 @@ export class TestRunner {
       }
       if (global.mockedAnimationTimestamp) {
         global.mockedAnimationTimestamp = undefined;
+      }
+      if (global.framesCount) {
+        global.framesCount = undefined;
       }
     });
   }
@@ -551,6 +556,25 @@ export class TestRunner {
   public wait(delay: number) {
     return new Promise(resolve => {
       setTimeout(resolve, delay);
+    });
+  }
+
+  public waitForAnimationUpdates(updatesCount: number): Promise<boolean> {
+    const CHECK_INTERVAL = 20;
+    const flag = makeMutable(false);
+    return new Promise<boolean>(resolve => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      const interval = setInterval(async () => {
+        await new SyncUIRunner().runOnUIBlocking(() => {
+          'worklet';
+          assertMockedAnimationTimestamp(global.framesCount);
+          flag.value = global.framesCount >= updatesCount - 1;
+        });
+        if (flag.value) {
+          clearInterval(interval);
+          resolve(true);
+        }
+      }, CHECK_INTERVAL);
     });
   }
 
