@@ -45,6 +45,7 @@ interface ReanimatedFlatListPropsWithLayout<T>
   extends AnimatedProps<FlatListProps<T>> {
   /**
    * Lets you pass layout animation directly to the FlatList item.
+   * (Works only with a single-column Animated.FlatList - when numColumns is not greater than 1)
    */
   itemLayoutAnimation?: ILayoutAnimationBuilder;
   /**
