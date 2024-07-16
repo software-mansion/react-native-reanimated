@@ -20,7 +20,11 @@ export default function Home(): JSX.Element {
         <Testimonials />
         <Sponsors />
         <div className={styles.hireUsContainer}>
-          <HireUsSection />
+          <HireUsSection
+            href={
+              'https://swmansion.com/contact/projects?utm_source=reanimated&utm_medium=docs'
+            }
+          />
         </div>
       </div>
       <FooterBackground />
