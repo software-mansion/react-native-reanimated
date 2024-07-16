@@ -16,11 +16,11 @@ import { scheduleAnimationCleanup } from './domUtils';
 import { _updatePropsJS } from '../../js-reanimated';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
-import { isReducedMotion } from '../../PlatformChecker';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Keyframe } from '../animationBuilder';
+import { ReducedMotionManager } from '../../ReducedMotion';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName =
@@ -51,7 +51,7 @@ function getDelayFromConfig(config: CustomConfig): number {
 
 export function getReducedMotionFromConfig(config: CustomConfig) {
   if (!config.reduceMotionV) {
-    return isReducedMotion();
+    return ReducedMotionManager.jsValue;
   }
 
   switch (config.reduceMotionV) {
@@ -60,7 +60,7 @@ export function getReducedMotionFromConfig(config: CustomConfig) {
     case ReduceMotion.Always:
       return true;
     default:
-      return isReducedMotion();
+      return ReducedMotionManager.jsValue;
   }
 }
 
