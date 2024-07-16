@@ -138,19 +138,19 @@ const VALUE_COLUMN_WIDTH = 15;
 const INDEX_COLUMN_WIDTH = 7;
 
 const VERTICAL_LINE = '│';
-const VERTICAL_LINE_DOUBLE = '║';
-const HORIZONTAL_LINE = '─';
+const VERTICAL_LINE_DOUBLE = '┃';
+const HORIZONTAL_LINE = '━';
 
 function getBorderLine(keys: Array<string>, type: 'top' | 'bottom' | 'mid') {
   const leftEdge = { top: '╭', mid: '├', bottom: '╰' };
   const rightEdge = { top: '╮', mid: '┤', bottom: '╯' };
-  const doubleLineJoint = { top: '╥', mid: '╫', bottom: '╨' };
-  const singleLineJoint = { top: '┬', mid: '┴', bottom: HORIZONTAL_LINE };
+  const boldLineJoint = { top: '┳', mid: '╋', bottom: '┻' };
+  const singleLineJoint = { top: '┯', mid: '┷', bottom: HORIZONTAL_LINE };
 
   return (
     leftEdge[type] +
     HORIZONTAL_LINE.repeat(INDEX_COLUMN_WIDTH) +
-    doubleLineJoint[type] +
+    boldLineJoint[type] +
     keys
       .map(
         _key =>
@@ -158,7 +158,7 @@ function getBorderLine(keys: Array<string>, type: 'top' | 'bottom' | 'mid') {
           singleLineJoint[type] +
           HORIZONTAL_LINE.repeat(VALUE_COLUMN_WIDTH),
       )
-      .join(doubleLineJoint[type]) +
+      .join(boldLineJoint[type]) +
     rightEdge[type]
   );
 }
@@ -182,7 +182,11 @@ function getLowerTableHeader(keys: Array<string>, native: boolean) {
     VERTICAL_LINE +
     adjustValueToLength(native ? 'js' : 'captured', VALUE_COLUMN_WIDTH);
 
-  return adjustValueToLength('index', INDEX_COLUMN_WIDTH) + VERTICAL_LINE_DOUBLE + keys.map(_ => columnPair).join('║');
+  return (
+    adjustValueToLength('index', INDEX_COLUMN_WIDTH) +
+    VERTICAL_LINE_DOUBLE +
+    keys.map(_ => columnPair).join(VERTICAL_LINE_DOUBLE)
+  );
 }
 
 function withSideBorders(line: string) {
@@ -204,7 +208,7 @@ function getComparisonRow(mismatch: Mismatch, keys: Array<string>) {
     const expectedColored = match ? expectedAdjusted : green(expectedAdjusted);
     const capturedColored = match ? capturedAdjusted : red(capturedAdjusted);
 
-    return expectedColored + '┊' + capturedColored;
+    return expectedColored + color(VERTICAL_LINE, 'gray') + capturedColored;
   });
 
   return indexColumn + VERTICAL_LINE_DOUBLE + formattedCells.join(VERTICAL_LINE_DOUBLE);
