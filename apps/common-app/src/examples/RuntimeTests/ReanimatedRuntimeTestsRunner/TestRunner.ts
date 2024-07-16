@@ -25,7 +25,7 @@ import type {
 import { Matchers, nullableMatch } from './matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
-import { makeMutable, runOnJS, makeMutable, runOnJS } from 'react-native-reanimated';
+import { makeMutable, runOnJS } from 'react-native-reanimated';
 import { RenderLock, SyncUIRunner } from './SyncUIRunner';
 export { Presets } from './Presets';
 
