@@ -10,12 +10,12 @@ import type {
 } from './commonTypes';
 import type { WorkletFunction } from '../commonTypes';
 import type { EventHandlerProcessed, EventHandlerInternal } from './useEvent';
+import { has } from '../createAnimatedComponent/utils';
 
 /**
- * Lets you compose multiple event handlers based on [useEvent](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent) hook.
+ * Lets you compose multiple event handlers.
  *
- * @param handlers - An array of event handlers created using [useEvent](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent) hook.
- * @param JSHandlers - An array of JS event handlers, similar to [useAnimatedScrollHandler argument](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler#scrollhandlerorhandlersobject-object-with-worklets)
+ * @param handlers - An array of either event handlers created using [useEvent hook](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent) or JS event handlers, similar to [useAnimatedScrollHandler argument](https://docs.swmansion.com/react-native-reanimated/docs/scroll/useAnimatedScrollHandler#scrollhandlerorhandlersobject-object-with-worklets).
  * @returns An object you need to pass to a coresponding "onEvent" prop on an `Animated` component (for example handlers responsible for `onScroll` event go to `onScroll` prop).
  * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/useComposedEventHandler
  */
@@ -24,16 +24,22 @@ export function useComposedEventHandler<
   Event extends object,
   Context extends Record<string, unknown>
 >(
-  handlers?: (EventHandlerProcessed<Event, Context> | null)[],
-  JSHandlers?: JSHandlersObject<Event>[]
+  handlers: (
+    | EventHandlerProcessed<Event, Context>
+    | JSHandlersObject<Event>
+    | null
+  )[]
 ): ComposedHandlerProcessed<Event, Context>;
 
 export function useComposedEventHandler<
   Event extends object,
   Context extends Record<string, unknown>
 >(
-  handlers?: (EventHandlerProcessed<Event, Context> | null)[],
-  JSHandlers?: JSHandlersObject<Event>[]
+  handlers: (
+    | EventHandlerProcessed<Event, Context>
+    | JSHandlersObject<Event>
+    | null
+  )[]
 ) {
   // Record of handlers' worklets to calculate deps diffs. We use the record type to match the useHandler API requirements
   const workletsRecord: Record<string, WorkletFunction> = {};
@@ -51,6 +57,16 @@ export function useComposedEventHandler<
   const JSHandlersMap: Partial<
     Record<JSScrollEventsInput, JSHandler<Event>[]>
   > = {};
+
+  function isJSHandler(handler: unknown): handler is JSHandlersObject<Event> {
+    return Object.keys(JSScrollEventsPropMap).reduce((acc, val) => {
+      return acc || has(val, handler);
+    }, false);
+  }
+
+  const JSHandlers = handlers
+    .filter((h) => h !== null)
+    .filter((h) => isJSHandler(h));
 
   // Setup the JSHandlersRecord object
   if (JSHandlers) {
@@ -108,30 +124,39 @@ export function useComposedEventHandler<
     });
   }
 
-  if (handlers) {
-    handlers
-      .filter((h) => h !== null)
-      .forEach((handler) => {
-        // EventHandlerProcessed is the return type of useEvent and has to be force casted to EventHandlerInternal, because we need WorkletEventHandler object
-        const { workletEventHandler } =
-          handler as unknown as EventHandlerInternal<Context>;
-        if (workletEventHandler instanceof WorkletEventHandler) {
-          workletEventHandler.eventNames.forEach((eventName) => {
-            composedEventNames.add(eventName);
-
-            if (workletsMap[eventName]) {
-              workletsMap[eventName].push(workletEventHandler.worklet);
-            } else {
-              workletsMap[eventName] = [workletEventHandler.worklet];
-            }
-
-            const handlerName = eventName + `${workletsMap[eventName].length}`;
-            workletsRecord[handlerName] =
-              workletEventHandler.worklet as WorkletFunction;
-          });
-        }
-      });
+  function isWorkletEventHandler(
+    handler: unknown
+  ): handler is EventHandlerProcessed<Event, Context> {
+    return (
+      has('workletEventHandler', handler) &&
+      handler.workletEventHandler instanceof WorkletEventHandler
+    );
   }
+
+  const workletHandlers = handlers
+    .filter((h) => h !== null)
+    .filter((h) => isWorkletEventHandler(h));
+
+  workletHandlers.forEach((handler) => {
+    // EventHandlerProcessed is the return type of useEvent and has to be force casted to EventHandlerInternal, because we need WorkletEventHandler object
+    const { workletEventHandler } =
+      handler as unknown as EventHandlerInternal<Context>;
+    if (workletEventHandler instanceof WorkletEventHandler) {
+      workletEventHandler.eventNames.forEach((eventName) => {
+        composedEventNames.add(eventName);
+
+        if (workletsMap[eventName]) {
+          workletsMap[eventName].push(workletEventHandler.worklet);
+        } else {
+          workletsMap[eventName] = [workletEventHandler.worklet];
+        }
+
+        const handlerName = eventName + `${workletsMap[eventName].length}`;
+        workletsRecord[handlerName] =
+          workletEventHandler.worklet as WorkletFunction;
+      });
+    }
+  });
 
   const { doDependenciesDiffer } = useHandler(workletsRecord);
   // TODO: ADD DEPS BASED ON JS HANDLERS
