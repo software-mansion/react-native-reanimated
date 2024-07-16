@@ -577,7 +577,7 @@ export class TestRunner {
   public async mockWindowDimensions() {
     await this.runOnUIBlocking(() => {
       'worklet';
-      const originalCreateAnimatedComponent = global.LayoutAnimationsManager;
+      const originalLayoutAnimationsManager = global.LayoutAnimationsManager;
 
       const createAnimatedComponentOnStart: LayoutAnimationStartFunction = (
         tag: number,
@@ -585,7 +585,7 @@ export class TestRunner {
         _yogaValues: Partial<SharedTransitionAnimationsValues>,
         config: (arg: Partial<SharedTransitionAnimationsValues>) => LayoutAnimation,
       ) => {
-        originalCreateAnimatedComponent.start(
+        originalLayoutAnimationsManager.start(
           tag,
           type,
           {
@@ -597,10 +597,10 @@ export class TestRunner {
         );
       };
 
-      global._LayoutAnimationsManager = originalCreateAnimatedComponent;
+      global._LayoutAnimationsManager = originalLayoutAnimationsManager;
       global.LayoutAnimationsManager = {
         start: createAnimatedComponentOnStart,
-        stop: originalCreateAnimatedComponent.stop,
+        stop: originalLayoutAnimationsManager.stop,
       };
     });
   }
