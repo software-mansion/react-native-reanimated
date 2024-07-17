@@ -23,6 +23,8 @@ export default function App({ width, options }: Props) {
   const shouldReduceMotion =
     options.reduceMotion === ReduceMotion.Always ||
     (options.reduceMotion === ReduceMotion.System && reduceMotion);
+  const [buttonDisabled, setButtonDisabled] = useState(false);
+
   const callback = (isFinished) => {
     setTimeout(
       () => {
@@ -34,7 +36,6 @@ export default function App({ width, options }: Props) {
       shouldReduceMotion ? 1000 : options.duration
     );
   };
-  const [buttonDisabled, setButtonDisabled] = useState(false);
 
   const animatedStyles = useAnimatedStyle(() => {
     return {

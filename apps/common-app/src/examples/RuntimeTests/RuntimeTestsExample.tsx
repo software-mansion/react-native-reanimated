@@ -5,14 +5,7 @@ import { describe } from './ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 export default function RuntimeTestsExample() {
   return (
     <RuntimeTestsRunner
-      importButtons={[
-        {
-          skipByDefault: true,
-          testSuiteName: 'Tests of testing framework',
-          importTest: () => {
-            require('./tests/TestsOfTestingFramework.test');
-          },
-        },
+      tests={[
         {
           testSuiteName: 'animations',
           importTest: () => {
@@ -69,7 +62,7 @@ export default function RuntimeTestsExample() {
           },
         },
         {
-          testSuiteName: 'advancedAPI',
+          testSuiteName: 'advanced API',
           importTest: () => {
             require('./tests/advancedAPI/useFrameCallback.test');
             // require('./tests/advancedAPI/measure.test'); // crash on Android
@@ -79,6 +72,13 @@ export default function RuntimeTestsExample() {
           testSuiteName: 'babelPlugin',
           importTest: () => {
             require('./tests/plugin/fileWorkletization.test');
+          },
+        },
+        {
+          skipByDefault: true,
+          testSuiteName: 'self-tests',
+          importTest: () => {
+            require('./tests/TestsOfTestingFramework.test');
           },
         },
       ]}
