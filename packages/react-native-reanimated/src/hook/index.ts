@@ -8,6 +8,7 @@ export type {
 export { useAnimatedProps } from './useAnimatedProps';
 export { useWorkletCallback } from './useWorkletCallback';
 export { useSharedValue } from './useSharedValue';
+export { useSharedValues } from './useSharedValues';
 export { useReducedMotion } from './useReducedMotion';
 export { useAnimatedStyle } from './useAnimatedStyle';
 export { useAnimatedGestureHandler } from './useAnimatedGestureHandler';

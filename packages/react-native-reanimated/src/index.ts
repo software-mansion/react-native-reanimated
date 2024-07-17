@@ -39,6 +39,7 @@ export {
   useHandler,
   useWorkletCallback,
   useSharedValue,
+  useSharedValues,
   useReducedMotion,
   useAnimatedStyle,
   useAnimatedGestureHandler,

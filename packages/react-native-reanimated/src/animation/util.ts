@@ -539,3 +539,13 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   // setting the current value cancels the animation if one is currently running
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
 }
+
+/**
+ * Lets you cancel multiple running animations paired to shared values.
+ * 
+ * @param sharedValues - The array of shared values of running animations that you want to cancel.
+ */
+export function cancelAnimations(sharedValues: Array<SharedValue>): void {
+  'worklet';
+  sharedValues.forEach(cancelAnimation);
+}
