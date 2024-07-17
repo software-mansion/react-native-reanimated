@@ -131,16 +131,16 @@ describe('WithSequence animation of number', () => {
       await wait(DELAY / 2);
       // TODO The condition below is not fulfilled, decide whether its bug or expected behavior
       // expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[0], ComparisonMode.DISTANCE);
-      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[0], ComparisonMode.DISTANCE);
+      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[0], ComparisonMode.PIXEL);
       await wait(200 + DELAY);
-      expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[1], ComparisonMode.DISTANCE);
-      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[1], ComparisonMode.DISTANCE);
+      expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[1], ComparisonMode.PIXEL);
+      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[1], ComparisonMode.PIXEL);
       await wait(300 + DELAY);
-      expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[2], ComparisonMode.DISTANCE);
-      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[2], ComparisonMode.DISTANCE);
+      expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[2], ComparisonMode.PIXEL);
+      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[2], ComparisonMode.PIXEL);
       await wait(200 + DELAY);
-      expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[3], ComparisonMode.DISTANCE);
-      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[3], ComparisonMode.DISTANCE);
+      expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[3], ComparisonMode.PIXEL);
+      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[3], ComparisonMode.PIXEL);
     },
   );
 });

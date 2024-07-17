@@ -35,7 +35,11 @@ export default function GetViewPropExample() {
   return (
     <View style={styles.container}>
       <Animated.View ref={animatedRef} style={[animatedStyle, styles.box]} />
-      <Button title="Press me" onPress={handlePress} />
+      <Button
+        title="Press me"
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        onPress={handlePress}
+      />
     </View>
   );
 }
