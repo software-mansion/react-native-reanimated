@@ -16,15 +16,15 @@ To be precise how to animate positions and dimensions of components. What's impo
 ### 1. Import chosen transition
 
 ```js
-// Transition is just an example and should be replaced by real animation. For Instance Layout
-import { Transition } from 'react-native-reanimated';
+// LinearTransition is just an example and should be replaced by real animation. For Instance Layout
+import { LinearTransition } from 'react-native-reanimated';
 ```
 
 ### 2. Choose Animated Component which layout you want to animate
 
 ```js
     // AnimatedComponent - component created by createAnimatedComponent or imported from Reanimated
-    <AnimatedComponent layout={Transition} >
+    <AnimatedComponent layout={LinearTransition} >
 ```
 
 ### 3. Customize the animation
@@ -32,7 +32,7 @@ import { Transition } from 'react-native-reanimated';
 Different type of layout transitions can be customized differently. For the complete list of option please refer to the paragraph specific to the particular animation type. We recommend using builders outside of components or with `useMemo` to ensure the best performance.
 
 ```js
-const transition = Transition.duration(3000).otherModifier();
+const transition = LinearTransition.duration(3000).otherModifier();
 
 function App() {
   return <AnimatedComponent layout={transition} />;

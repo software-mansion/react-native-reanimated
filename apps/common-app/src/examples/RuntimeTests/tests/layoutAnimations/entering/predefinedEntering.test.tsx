@@ -48,9 +48,9 @@ import {
   mockAnimationTimer,
   recordAnimationUpdates,
   render,
-  wait,
   unmockAnimationTimer,
   clearRenderOutput,
+  waitForAnimationUpdates,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import {
   DurationEnteringSnapshots,
@@ -78,17 +78,17 @@ const ZOOM_ENTERING = [
   ZoomInUp,
 ];
 
-const ENTERING_SETS: Array<[string, unknown[], number]> = [
-  ['Fade', FADE_ENTERING, 1350],
-  ['Bounce', BOUNCE_ENTERING, 650],
-  ['Flip', FLIP_ENTERING, 1750],
-  ['LightSpeed', LIGHTSPEED_ENTERING, 1600],
-  ['Pinwheel', PINWHEEL_ENTERING, 1000],
-  ['Roll', ROLL_ENTERING, 1750],
-  ['Rotate', ROTATE_ENTERING, 1600],
-  ['Slide', SLIDE_ENTERING, 1800],
-  ['Stretch', STRETCH_ENTERING, 1000],
-  ['Zoom', ZOOM_ENTERING, 1800],
+const ENTERING_SETS: Array<[string, unknown[]]> = [
+  ['Fade', FADE_ENTERING],
+  ['Bounce', BOUNCE_ENTERING],
+  ['Flip', FLIP_ENTERING],
+  ['LightSpeed', LIGHTSPEED_ENTERING],
+  ['Pinwheel', PINWHEEL_ENTERING],
+  ['Roll', ROLL_ENTERING],
+  ['Rotate', ROTATE_ENTERING],
+  ['Slide', SLIDE_ENTERING],
+  ['Stretch', STRETCH_ENTERING],
+  ['Zoom', ZOOM_ENTERING],
 ];
 
 const EnteringOnMountComponent = ({ entering }: { entering: any }) => {
@@ -99,7 +99,12 @@ const EnteringOnMountComponent = ({ entering }: { entering: any }) => {
   );
 };
 
-async function getSnapshotUpdates(entering: any, waitTime: number, duration: number | undefined, springify = false) {
+async function getSnapshotUpdates(
+  entering: any,
+  snapshot: Array<any>,
+  duration: number | undefined,
+  springify = false,
+) {
   await mockAnimationTimer();
 
   const updatesContainer = await recordAnimationUpdates();
@@ -107,7 +112,7 @@ async function getSnapshotUpdates(entering: any, waitTime: number, duration: num
   const componentEntering = duration ? springEntering.duration(duration) : springEntering;
 
   await render(<EnteringOnMountComponent entering={componentEntering} />);
-  await wait(waitTime);
+  await waitForAnimationUpdates(snapshot.length);
   const updates = updatesContainer.getUpdates();
   await unmockAnimationTimer();
   await clearRenderOutput();
@@ -117,38 +122,34 @@ async function getSnapshotUpdates(entering: any, waitTime: number, duration: num
 
 describe('Test predefined entering', () => {
   describe('Entering on mount, no modifiers', () => {
-    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, waitTime]) => {
+    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
-        const snapshotName = (entering as any).name;
-        const updates = await getSnapshotUpdates(entering, waitTime, undefined);
-        expect(updates).toMatchSnapshots(
-          NoModifierEnteringSnapshots[snapshotName as keyof typeof NoModifierEnteringSnapshots],
-        );
+        const snapshotName = (entering as any).name as keyof typeof NoModifierEnteringSnapshots;
+        const snapshot = NoModifierEnteringSnapshots[snapshotName];
+        const updates = await getSnapshotUpdates(entering, snapshot, undefined, false);
+        expect(updates).toMatchSnapshots(snapshot);
       }
     });
   });
 
   describe('Entering on mount, duration 100', () => {
-    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, _waitTime]) => {
+    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
-        const enteringName: string = (entering as any).name;
-        const updates = await getSnapshotUpdates(entering, 105, 100);
-        expect(updates).toMatchSnapshots(
-          DurationEnteringSnapshots[enteringName as keyof typeof DurationEnteringSnapshots],
-        );
+        const enteringName = (entering as any).name as keyof typeof DurationEnteringSnapshots;
+        const snapshot = DurationEnteringSnapshots[enteringName];
+        const updates = await getSnapshotUpdates(entering, snapshot, 100);
+        expect(updates).toMatchSnapshots(snapshot);
       }
     });
   });
 
   describe('Entering on mount, springify', () => {
-    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet, waitTime]) => {
-      const timeToWait = _setName === 'Bounce' ? 650 : waitTime * 0.3;
+    test.each(ENTERING_SETS)('Test suite of ${0}In', async ([_setName, enteringSet]) => {
       for (const entering of enteringSet) {
-        const snapshotName = (entering as any).name;
-        const updates = await getSnapshotUpdates(entering, timeToWait, undefined, true);
-        expect(updates).toMatchSnapshots(
-          SpringifyEnteringSnapshots[snapshotName as keyof typeof SpringifyEnteringSnapshots],
-        );
+        const snapshotName = (entering as any).name as keyof typeof SpringifyEnteringSnapshots;
+        const snapshot = SpringifyEnteringSnapshots[snapshotName];
+        const updates = await getSnapshotUpdates(entering, snapshot, undefined, true);
+        expect(updates).toMatchSnapshots(snapshot);
       }
     });
   });

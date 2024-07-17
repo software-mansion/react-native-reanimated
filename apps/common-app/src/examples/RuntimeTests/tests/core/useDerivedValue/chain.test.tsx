@@ -148,7 +148,7 @@ describe('Test chained useDerivedValue', () => {
     });
 
     for (let i = 0; i < 10; i++) {
-      expect(await components[i].getAnimatedStyle('width')).toBe(expectedValues[i], ComparisonMode.DISTANCE);
+      expect(await components[i].getAnimatedStyle('width')).toBe(expectedValues[i], ComparisonMode.PIXEL);
     }
   });
 });

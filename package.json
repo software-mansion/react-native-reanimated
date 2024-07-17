@@ -6,6 +6,7 @@
     "packages": [
       "packages/react-native-reanimated",
       "packages/eslint-plugin-reanimated",
+      "packages/react-native-reanimated/plugin",
       "apps/*"
     ]
   },

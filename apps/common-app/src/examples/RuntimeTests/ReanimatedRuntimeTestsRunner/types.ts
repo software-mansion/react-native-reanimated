@@ -75,8 +75,10 @@ export function isValidPropName(propName: string): propName is ValidPropNames {
 
 export enum ComparisonMode {
   STRING = 'STRING',
-  DISTANCE = 'DISTANCE',
+  PIXEL = 'PIXEL',
+  FLOAT_DISTANCE = 'FLOAT_DISTANCE',
   NUMBER = 'NUMBER',
+  FLOAT = 'FLOAT',
   COLOR = 'COLOR',
   ARRAY = 'ARRAY',
   OBJECT = 'OBJECT',
@@ -121,6 +123,7 @@ export type Mismatch = {
 /* eslint-disable no-var */
 declare global {
   var mockedAnimationTimestamp: number | undefined;
+  var framesCount: number | undefined;
   var originalRequestAnimationFrame: ((callback: (timestamp: number) => void) => void) | undefined;
   var originalGetAnimationTimestamp: (() => number) | undefined;
   var originalUpdateProps: ((operations: Operation[]) => void) | undefined;

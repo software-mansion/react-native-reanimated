@@ -4,14 +4,14 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Button, StyleSheet, View } from 'react-native';
-
+import type { RefObject } from 'react';
 import React from 'react';
 
 export type ChildHandle = {
   toggleState: () => void;
 };
 
-type ChildProps = {};
+type ChildProps = { ref: RefObject<ChildHandle> };
 
 const Child = React.forwardRef<ChildHandle, ChildProps>((_, ref) => {
   const [state, setState] = React.useState(0);

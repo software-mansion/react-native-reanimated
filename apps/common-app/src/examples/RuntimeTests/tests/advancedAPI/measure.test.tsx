@@ -169,7 +169,7 @@ describe('Test measuring component during the animation', () => {
     const observedWidths = (await getRegisteredValue(OBSERVED_WIDTHS_REF)).onJS as Array<[number, number]>;
     observedWidths.forEach(([width, timeSinceFirstFrame]) => {
       const expectedWidth = Math.min(FINAL_WIDTH, (timeSinceFirstFrame * FINAL_WIDTH) / DURATION);
-      expect(width).toBe(expectedWidth, ComparisonMode.DISTANCE);
+      expect(width).toBe(expectedWidth, ComparisonMode.PIXEL);
     });
   });
 });
