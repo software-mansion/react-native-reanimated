@@ -14,6 +14,15 @@ export type SharedValuesObjectsFactoryParams = {
   index: number;
 };
 
+/**
+ * 
+ * Lets you define an array of objects which props can be shared values.
+ * 
+ * @param count - The number of objects in the array.
+ * @param factory - A function that returns an object with props that can be shared values.
+ * @param dependencies - An optional array of dependencies that will trigger the re-creation of shared values objects when changed (empty array by default).
+ * @returns An array of objects with specific props as shared values.
+ */
 export function useSharedValuesObjects<Obj extends Record<string, any>>(
   count: number,
   factory: (params: SharedValuesObjectsFactoryParams) => Obj,

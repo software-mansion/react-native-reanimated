@@ -78,7 +78,7 @@ export function makeSharedValuesObjectRecursive<
  *
  * @param factory - A function that returns an object with props that can be shared values.
  * @param dependencies - An optional array of dependencies that will trigger the creation of a new shared values object (empty array by default).
- * @returns An object with props that can be shared values.
+ * @returns An object with specific props as shared values.
  */
 export function useSharedValuesObject<Obj extends Record<string, any>>(
   factory: (params: SharedValuesObjectFactoryParams) => Obj,
