@@ -52,7 +52,7 @@ export interface AnimationConfig {
   animationType: LayoutAnimationType;
   duration: number;
   delay: number;
-  easing: string | null;
+  easing: string;
   callback: AnimationCallback;
   reversed: boolean;
 }

@@ -22,13 +22,17 @@ import { setElementPosition, snapshots } from './componentStyle';
 import { Keyframe } from '../animationBuilder';
 import { ReducedMotionManager } from '../../ReducedMotion';
 
+function getEasingByName(easingName: WebEasingsNames) {
+  return `cubic-bezier(${WebEasings[easingName].toString()})`;
+}
+
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName =
     config.easingV && config.easingV.name in WebEasings
       ? (config.easingV.name as WebEasingsNames)
       : 'linear';
 
-  return `cubic-bezier(${WebEasings[easingName].toString()})`;
+  return getEasingByName(easingName);
 }
 
 function getRandomDelay(maxDelay = 1000) {
@@ -152,10 +156,7 @@ export function setElementAnimation(
     element.style.animationName = animationName;
     element.style.animationDuration = `${duration}s`;
     element.style.animationDelay = `${delay}s`;
-
-    if (easing !== null) {
-      element.style.animationTimingFunction = easing;
-    }
+    element.style.animationTimingFunction = easing;
   };
 
   if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
@@ -244,6 +245,7 @@ export function handleLayoutTransition(
     handleCurvedTransition(
       element,
       animationConfig,
+      transitionData,
       transitionKeyframeName,
       dummyTransitionKeyframeName! // In `CurvedTransition` it cannot be undefined
     );
@@ -253,6 +255,7 @@ export function handleLayoutTransition(
 function handleCurvedTransition(
   element: HTMLElement,
   animationConfig: AnimationConfig,
+  transitionData: TransitionData,
   transitionKeyframeName: string,
   dummyTransitionKeyframeName: string
 ) {
@@ -285,14 +288,16 @@ function handleCurvedTransition(
 
   // Adjust configs for `CurvedTransition` and create config object for dummy
   animationConfig.animationName = transitionKeyframeName;
-  animationConfig.easing = null;
+  animationConfig.easing = getEasingByName(
+    transitionData.easingX as WebEasingsNames
+  );
 
   const dummyAnimationConfig: AnimationConfig = {
     animationName: dummyTransitionKeyframeName,
     animationType: LayoutAnimationType.LAYOUT,
     duration: animationConfig.duration,
     delay: animationConfig.delay,
-    easing: null,
+    easing: getEasingByName(transitionData.easingY as WebEasingsNames),
     callback: null,
     reversed: false,
   };
