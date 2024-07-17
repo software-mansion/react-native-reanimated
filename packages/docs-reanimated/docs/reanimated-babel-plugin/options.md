@@ -19,6 +19,7 @@ interface ReanimatedPluginOptions {
   omitNativeOnlyData?: boolean;
   globals?: string[];
   substituteWebPlatformChecks?: boolean;
+  disableSourceMaps?: boolean;
 }
 ```
 
@@ -189,4 +190,12 @@ There is a [huge list of identifiers whitelisted by default](https://github.com/
 
 ### substituteWebPlatformChecks
 
+Defaults to `false`.
+
 This option can also be useful for Web apps. In Reanimated, we have numerous checks to determine the right function implementation for a specific target platform. Enabling this option changes all the checks that identify if the target is a Web app to `true`. This alteration can aid in tree-shaking and contribute to reducing the bundle size.
+
+### disableSourceMaps
+
+Defaults to `false`.
+
+This option turns off the source map generation for worklets. Mostly used for testing purposes.

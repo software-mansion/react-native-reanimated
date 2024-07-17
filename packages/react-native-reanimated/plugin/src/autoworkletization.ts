@@ -2,8 +2,8 @@ import type { NodePath } from '@babel/core';
 import type { CallExpression } from '@babel/types';
 import { isSequenceExpression } from '@babel/types';
 import {
-  isWorkletizableFunctionType,
-  isWorkletizableObjectType,
+  isWorkletizableFunctionPath,
+  isWorkletizableObjectPath,
 } from './types';
 import type {
   WorkletizableFunction,
@@ -120,9 +120,9 @@ function processArgs(
     if (!maybeWorklet) {
       return;
     }
-    if (isWorkletizableFunctionType(maybeWorklet)) {
+    if (isWorkletizableFunctionPath(maybeWorklet)) {
       processWorklet(maybeWorklet, state);
-    } else if (isWorkletizableObjectType(maybeWorklet)) {
+    } else if (isWorkletizableObjectPath(maybeWorklet)) {
       processWorkletizableObject(maybeWorklet, state);
     }
   });
@@ -133,10 +133,10 @@ function findWorklet(
   acceptWorkletizableFunction: boolean,
   acceptObject: boolean
 ): NodePath<WorkletizableFunction> | NodePath<WorkletizableObject> | undefined {
-  if (acceptWorkletizableFunction && isWorkletizableFunctionType(arg)) {
+  if (acceptWorkletizableFunction && isWorkletizableFunctionPath(arg)) {
     return arg;
   }
-  if (acceptObject && isWorkletizableObjectType(arg)) {
+  if (acceptObject && isWorkletizableObjectPath(arg)) {
     return arg;
   }
   if (arg.isReferencedIdentifier() && arg.isIdentifier()) {
