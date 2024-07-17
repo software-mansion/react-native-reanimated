@@ -724,7 +724,7 @@ void NativeReanimatedModule::performOperations() {
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
           for (auto &[shadowNode, props] : copiedOperationsQueue) {
-            auto family = &shadowNode->getFamily();            
+            auto family = &shadowNode->getFamily();
             propsMap[family].emplace_back(std::make_unique<JsiValuePropsWrapper>(rt, std::move(props)));
 
 #if REACT_NATIVE_MINOR_VERSION >= 73
