@@ -131,6 +131,7 @@ import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import FreezingShareablesExample from './ShareableFreezingExample';
 import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
 import StrictDOMExample from './StrictDOMExample';
+import BottomTabsExample from './LayoutAnimations/BottomTabs';
 
 interface Example {
   icon?: string;
@@ -700,6 +701,10 @@ export const EXAMPLES: Record<string, Example> = {
   ChangeTheme: {
     title: '[LA] Change theme',
     screen: ChangeThemeExample,
+  },
+  BottomTabs: {
+    title: '[LA] Bottom Tabs',
+    screen: BottomTabsExample,
   },
 
   // Shared Element Transitions
