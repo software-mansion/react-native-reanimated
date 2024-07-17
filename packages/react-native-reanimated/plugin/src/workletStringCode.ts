@@ -9,6 +9,7 @@ import type {
   VariableDeclaration,
 } from '@babel/types';
 import {
+  callExpression,
   functionExpression,
   identifier,
   isArrowFunctionExpression,
@@ -62,6 +63,38 @@ export function buildWorkletString(
     isBlockStatement(expression.body),
     '[Reanimated] `expression.body` is not a `BlockStatement`'
   );
+
+  const parsedClasses = new Set<string>();
+
+  traverse(fun, {
+    NewExpression(path) {
+      // @ts-ignore fix me later
+      const constructorName = path.node.callee.name;
+      if (
+        !closureVariables.some(
+          (variable) => variable.name === constructorName
+        ) ||
+        parsedClasses.has(constructorName)
+      ) {
+        return;
+      }
+      const index = closureVariables.findIndex(
+        (variable) => variable.name === constructorName
+      );
+      closureVariables.splice(index, 1);
+      closureVariables.push(identifier(constructorName + 'ClassFactory'));
+      // @ts-ignore fix me later
+      expression.body.body.unshift(
+        variableDeclaration('const', [
+          variableDeclarator(
+            identifier(constructorName),
+            callExpression(identifier(constructorName + 'ClassFactory'), [])
+          ),
+        ])
+      );
+      parsedClasses.add(constructorName);
+    },
+  });
 
   const workletFunction = functionExpression(
     identifier(nameWithSource),

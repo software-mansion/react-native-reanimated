@@ -28,6 +28,7 @@ import {
   isWorkletizableObjectPath,
 } from './types';
 import type { ReanimatedPluginPass } from './types';
+import { processClass } from './class';
 import { contextObjectMarker } from './contextObject';
 
 export function processIfWorkletFile(
@@ -55,16 +56,15 @@ export function processIfWorkletFile(
  */
 function processWorkletFile(
   programPath: NodePath<Program>,
-  _state: ReanimatedPluginPass
+  state: ReanimatedPluginPass
 ) {
   const statements = programPath.get('body');
   statements.forEach((statement) => {
     const candidatePath = getCandidate(statement);
-    if (candidatePath.node) {
-      processWorkletizableEntity(
-        candidatePath as NodePath<NonNullable<typeof candidatePath.node>>
-      );
-    }
+    processWorkletizableEntity(
+      candidatePath as NodePath<NonNullable<typeof candidatePath.node>>,
+      state
+    );
   });
 }
 
@@ -81,7 +81,10 @@ function getCandidate(statementPath: NodePath<Statement>) {
   }
 }
 
-function processWorkletizableEntity(nodePath: NodePath<BabelNode>) {
+function processWorkletizableEntity(
+  nodePath: NodePath<unknown>,
+  state: ReanimatedPluginPass
+) {
   if (isWorkletizableFunctionPath(nodePath)) {
     if (nodePath.isArrowFunctionExpression()) {
       replaceImplicitReturnWithBlock(nodePath.node);
@@ -91,33 +94,39 @@ function processWorkletizableEntity(nodePath: NodePath<BabelNode>) {
     if (isImplicitContextObject(nodePath)) {
       appendWorkletContextObjectMarker(nodePath.node);
     } else {
-      processWorkletAggregator(nodePath);
+      processWorkletAggregator(nodePath, state);
     }
   } else if (nodePath.isVariableDeclaration()) {
-    processVariableDeclaration(nodePath);
+    processVariableDeclaration(nodePath, state);
+  } else if (nodePath.isClassDeclaration()) {
+    processClass(nodePath, state);
   }
 }
 
 function processVariableDeclaration(
-  variableDeclarationPath: NodePath<VariableDeclaration>
+  variableDeclarationPath: NodePath<VariableDeclaration>,
+  state: ReanimatedPluginPass
 ) {
   const declarations = variableDeclarationPath.get('declarations');
   declarations.forEach((declaration) => {
     const initPath = declaration.get('init');
     if (initPath.isExpression()) {
-      processWorkletizableEntity(initPath);
+      processWorkletizableEntity(initPath, state);
     }
   });
 }
 
-function processWorkletAggregator(objectPath: NodePath<ObjectExpression>) {
+function processWorkletAggregator(
+  objectPath: NodePath<ObjectExpression>,
+  state: ReanimatedPluginPass
+) {
   const properties = objectPath.get('properties');
   properties.forEach((property) => {
     if (property.isObjectMethod()) {
       appendWorkletDirective(property.node.body);
     } else if (property.isObjectProperty()) {
       const valuePath = property.get('value');
-      processWorkletizableEntity(valuePath);
+      processWorkletizableEntity(valuePath, state);
     }
   });
 }

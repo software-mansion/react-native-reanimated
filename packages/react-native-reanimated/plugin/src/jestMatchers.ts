@@ -70,11 +70,12 @@ expect.extend({
 
   toIncludeInWorkletString(received: string, expected: string) {
     // Regular expression pattern to match the code field
-    const pattern = /code: "((?:[^"\\]|\\.)*)"/s;
-    const match = received.match(pattern);
+    // @ts-ignore This regex works well in Jest.
+    const pattern = /code: "((?:[^"\\]|\\.)*)"/gs;
+    const matches = received.match(pattern);
 
     // If a match was found and the match group 1 (content within quotes) includes the expected string
-    if (match && match[1].includes(expected)) {
+    if (matches && matches.some((match) => match.includes(expected))) {
       // return true;
       return {
         message: () => `Reanimated: found ${expected} in worklet string`,
@@ -86,7 +87,7 @@ expect.extend({
     // return false;
     return {
       message: () =>
-        `Reanimated: expected to find ${expected} in worklet string, but it's not present`,
+        `Reanimated: expected to find ${expected} in worklet string, but it's not present.`,
       pass: false,
     };
   },

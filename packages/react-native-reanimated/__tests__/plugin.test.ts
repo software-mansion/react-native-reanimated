@@ -2405,4 +2405,80 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
   });
+
+  describe('for classes', () => {
+    it('creates factories', () => {
+      const input = html`<script>
+        'worklet';
+        class Clazz {
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var ClazzClassFactory = function ()');
+      expect(code).toIncludeInWorkletString('ClazzClassFactory');
+      expect(code).toContain('Clazz.ClazzClassFactory = ClazzClassFactory');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('injects class factory into worklets', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          const clazz = new Clazz();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('ClazzClassFactory');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('modifies closures', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          const clazz = new Clazz();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('ClazzClassFactory: Clazz.ClazzClassFactory');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('keeps "this" binding', () => {
+      const input = html`<script>
+        'worklet';
+        class Clazz {
+          member = 1;
+          foo() {
+            return this.member;
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toIncludeInWorkletString('this.member');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('appends necessary polyfills', () => {
+      const input = html`<script>
+        'worklet';
+        class Clazz {
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('createClass');
+      expect(code).toMatchSnapshot();
+    });
+  });
 });
