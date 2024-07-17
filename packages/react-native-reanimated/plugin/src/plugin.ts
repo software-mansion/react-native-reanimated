@@ -1,5 +1,10 @@
 import type { PluginItem, NodePath } from '@babel/core';
-import type { CallExpression } from '@babel/types';
+import type {
+  CallExpression,
+  JSXAttribute,
+  Program,
+  ObjectExpression,
+} from '@babel/types';
 import {
   processIfAutoworkletizableCallback,
   processCalleesAutoworkletizableCallbacks,
@@ -11,6 +16,8 @@ import { processInlineStylesWarning } from './inlineStylesWarning';
 import { addCustomGlobals } from './utils';
 import { initializeGlobals } from './globals';
 import { substituteWebCallExpression } from './webOptimization';
+import { processIfWorkletFile } from './file';
+import { processIfWorkletContextObject } from './contextObject';
 
 module.exports = function (): PluginItem {
   function runWithTaggedExceptions(fun: () => void) {
@@ -22,8 +29,10 @@ module.exports = function (): PluginItem {
   }
 
   return {
-    pre() {
+    pre(state: ReanimatedPluginPass) {
       runWithTaggedExceptions(() => {
+        // Initialize worklet number.
+        state.workletNumber = 1;
         initializeGlobals();
         addCustomGlobals.call(this);
       });
@@ -50,8 +59,24 @@ module.exports = function (): PluginItem {
           });
         },
       },
+      ObjectExpression: {
+        enter(path: NodePath<ObjectExpression>, state: ReanimatedPluginPass) {
+          runWithTaggedExceptions(() => {
+            processIfWorkletContextObject(path, state);
+          });
+        },
+      },
+      Program: {
+        enter(path: NodePath<Program>, state: ReanimatedPluginPass) {
+          runWithTaggedExceptions(() => {
+            // Reset worklet number.
+            state.workletNumber = 1;
+            processIfWorkletFile(path, state);
+          });
+        },
+      },
       JSXAttribute: {
-        enter(path, state) {
+        enter(path: NodePath<JSXAttribute>, state: ReanimatedPluginPass) {
           runWithTaggedExceptions(() =>
             processInlineStylesWarning(path, state)
           );
