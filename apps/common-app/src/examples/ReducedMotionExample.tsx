@@ -24,14 +24,14 @@ const toValue = 100;
 const initialValue = -100;
 
 const SIMPLE_EXAMPLES = [
-  { animation: withTiming(toValue, { duration }), text: 'withTiming' },
-  { animation: withSpring(toValue, { duration }), text: 'withSpring' },
+  { animation: () => withTiming(toValue, { duration }), text: 'withTiming' },
+  { animation: () => withSpring(toValue, { duration }), text: 'withSpring' },
   {
-    animation: withDelay(1000, withTiming(toValue, { duration })),
+    animation: () => withDelay(1000, withTiming(toValue, { duration })),
     text: 'withDelay',
   },
   {
-    animation: withSequence(
+    animation: () => withSequence(
       withTiming((toValue + initialValue) / 2, { duration }),
       withSpring(toValue, { duration })
     ),
@@ -41,47 +41,47 @@ const SIMPLE_EXAMPLES = [
 
 const REPEAT_EXAMPLES = [
   {
-    animation: withRepeat(withTiming(toValue, { duration }), -1, true),
+    animation: () => withRepeat(withTiming(toValue, { duration }), -1, true),
     text: 'withRepeat (infinite)',
   },
   {
-    animation: withRepeat(withTiming(toValue, { duration }), 4, true),
+    animation: () => withRepeat(withTiming(toValue, { duration }), 4, true),
     text: 'withRepeat (even)',
   },
   {
-    animation: withRepeat(withTiming(toValue, { duration }), 3, true),
+    animation: () => withRepeat(withTiming(toValue, { duration }), 3, true),
     text: 'withRepeat (odd)',
   },
   {
-    animation: withRepeat(withTiming(toValue, { duration }), 4, false),
+    animation: () => withRepeat(withTiming(toValue, { duration }), 4, false),
     text: 'withRepeat\n(no reverse)',
   },
 ];
 
 const CONFIG_EXAMPLES = [
   {
-    animation: withTiming(toValue, {
+    animation: () => withTiming(toValue, {
       reduceMotion: ReduceMotion.Always,
       duration,
     }),
     text: 'always\nreduce',
   },
   {
-    animation: withTiming(toValue, {
+    animation: () => withTiming(toValue, {
       reduceMotion: ReduceMotion.Never,
       duration,
     }),
     text: 'never\nreduce',
   },
   {
-    animation: withTiming(toValue, {
+    animation: () => withTiming(toValue, {
       reduceMotion: ReduceMotion.System,
       duration,
     }),
     text: 'system\nreduce',
   },
   {
-    animation: withSequence(
+    animation: () => withSequence(
       ReduceMotion.Always,
       withTiming(initialValue + (toValue - initialValue) / 3, { duration }),
       withTiming(initialValue + (2 * (toValue - initialValue)) / 3, {
@@ -93,7 +93,7 @@ const CONFIG_EXAMPLES = [
     text: 'nested sequence',
   },
   {
-    animation: withRepeat(
+    animation: () => withRepeat(
       withTiming(toValue, { duration }),
       3,
       true,
@@ -187,7 +187,7 @@ function HookExample() {
   );
 }
 
-function Example(props: { animation: number; text: string }) {
+function Example(props: { animation: () => number; text: string }) {
   const sv = useSharedValue(initialValue);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -195,7 +195,7 @@ function Example(props: { animation: number; text: string }) {
   }));
 
   const handlePress = () => {
-    sv.value = props.animation;
+    sv.value = props.animation();
   };
 
   return (
