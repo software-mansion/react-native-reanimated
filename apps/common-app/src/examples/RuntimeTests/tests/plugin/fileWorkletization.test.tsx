@@ -10,28 +10,46 @@ import {
   test,
   expect,
 } from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { getThree } from './fileWorkletization';
+import { getThree, implicitContextObject } from './fileWorkletization';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
-describe('Test workletization', () => {
-  const ExampleComponent = () => {
-    const output = useSharedValue<number | null>(null);
-    registerValue(SHARED_VALUE_REF, output);
+describe('Test file workletization', () => {
+  test('Functions and methods are workletized', async () => {
+    const ExampleComponent = () => {
+      const output = useSharedValue<number | null>(null);
+      registerValue(SHARED_VALUE_REF, output);
 
-    useEffect(() => {
-      runOnUI(() => {
-        output.value = getThree();
-      })();
-    });
+      useEffect(() => {
+        runOnUI(() => {
+          output.value = getThree();
+        })();
+      });
 
-    return <View />;
-  };
-
-  test('Test file workletization', async () => {
+      return <View />;
+    };
     await render(<ExampleComponent />);
     await wait(100);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValue.onUI).toBe(3);
+  });
+
+  test('WorkletContextObjects are workletized', async () => {
+    const ExampleComponent = () => {
+      const output = useSharedValue<number | null>(null);
+      registerValue(SHARED_VALUE_REF, output);
+
+      useEffect(() => {
+        runOnUI(() => {
+          output.value = implicitContextObject.getFive();
+        })();
+      });
+
+      return <View />;
+    };
+    await render(<ExampleComponent />);
+    await wait(100);
+    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe(5);
   });
 });
