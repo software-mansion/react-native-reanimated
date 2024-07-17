@@ -708,6 +708,128 @@ var f = function () {
 }();"
 `;
 
+exports[`babel plugin for context objects creates factories 1`] = `
+"var _worklet_14630842371699_init_data = {
+  code: "function __workletObjectFactory_null1(){return{bar:function(){return'bar';}};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = {
+  bar: function bar() {
+    return 'bar';
+  },
+  __workletObjectFactory: function () {
+    var _e = [new global.Error(), 1, -27];
+    var __workletObjectFactory_null1 = function __workletObjectFactory_null1() {
+      return {
+        bar: function bar() {
+          return 'bar';
+        }
+      };
+    };
+    __workletObjectFactory_null1.__closure = {};
+    __workletObjectFactory_null1.__workletHash = 14630842371699;
+    __workletObjectFactory_null1.__initData = _worklet_14630842371699_init_data;
+    __workletObjectFactory_null1.__stackDetails = _e;
+    return __workletObjectFactory_null1;
+  }()
+};"
+`;
+
+exports[`babel plugin for context objects preserves bindings 1`] = `
+"var _worklet_13432710970622_init_data = {
+  code: "function __workletObjectFactory_null1(){return{bar:function(){return'bar';},foobar:function(){return this.bar();}};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = {
+  bar: function bar() {
+    return 'bar';
+  },
+  foobar: function foobar() {
+    return this.bar();
+  },
+  __workletObjectFactory: function () {
+    var _e = [new global.Error(), 1, -27];
+    var __workletObjectFactory_null1 = function __workletObjectFactory_null1() {
+      return {
+        bar: function bar() {
+          return 'bar';
+        },
+        foobar: function foobar() {
+          return this.bar();
+        }
+      };
+    };
+    __workletObjectFactory_null1.__closure = {};
+    __workletObjectFactory_null1.__workletHash = 13432710970622;
+    __workletObjectFactory_null1.__initData = _worklet_13432710970622_init_data;
+    __workletObjectFactory_null1.__stackDetails = _e;
+    return __workletObjectFactory_null1;
+  }()
+};"
+`;
+
+exports[`babel plugin for context objects removes marker 1`] = `
+"var _worklet_14630842371699_init_data = {
+  code: "function __workletObjectFactory_null1(){return{bar:function(){return'bar';}};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = {
+  bar: function bar() {
+    return 'bar';
+  },
+  __workletObjectFactory: function () {
+    var _e = [new global.Error(), 1, -27];
+    var __workletObjectFactory_null1 = function __workletObjectFactory_null1() {
+      return {
+        bar: function bar() {
+          return 'bar';
+        }
+      };
+    };
+    __workletObjectFactory_null1.__closure = {};
+    __workletObjectFactory_null1.__workletHash = 14630842371699;
+    __workletObjectFactory_null1.__initData = _worklet_14630842371699_init_data;
+    __workletObjectFactory_null1.__stackDetails = _e;
+    return __workletObjectFactory_null1;
+  }()
+};"
+`;
+
+exports[`babel plugin for context objects workletizes regardless of marker value 1`] = `
+"var _worklet_14630842371699_init_data = {
+  code: "function __workletObjectFactory_null1(){return{bar:function(){return'bar';}};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = {
+  bar: function bar() {
+    return 'bar';
+  },
+  __workletObjectFactory: function () {
+    var _e = [new global.Error(), 1, -27];
+    var __workletObjectFactory_null1 = function __workletObjectFactory_null1() {
+      return {
+        bar: function bar() {
+          return 'bar';
+        }
+      };
+    };
+    __workletObjectFactory_null1.__closure = {};
+    __workletObjectFactory_null1.__workletHash = 14630842371699;
+    __workletObjectFactory_null1.__initData = _worklet_14630842371699_init_data;
+    __workletObjectFactory_null1.__stackDetails = _e;
+    return __workletObjectFactory_null1;
+  }()
+};"
+`;
+
 exports[`babel plugin for debugging does inject location for worklets in dev builds 1`] = `
 "var _worklet_8623346549410_init_data = {
   code: "function null1(){const x=1;}",
