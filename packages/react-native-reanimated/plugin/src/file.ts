@@ -102,9 +102,7 @@ function processObjectExpression(object: ObjectExpression) {
       appendWorkletDirective(property.body);
     } else if (property.type === 'ObjectProperty') {
       const value = property.value;
-      if (isWorkletizableFunctionNode(value)) {
-        processWorkletizableEntity(value);
-      }
+      processWorkletizableEntity(value);
     }
   });
 }

@@ -1200,9 +1200,7 @@ var require_file = __commonJS({
           appendWorkletDirective(property.body);
         } else if (property.type === "ObjectProperty") {
           const value = property.value;
-          if ((0, types_2.isWorkletizableFunctionNode)(value)) {
-            processWorkletizableEntity(value);
-          }
+          processWorkletizableEntity(value);
         }
       });
     }
