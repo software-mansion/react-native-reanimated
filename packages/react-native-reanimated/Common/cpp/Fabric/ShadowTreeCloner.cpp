@@ -30,7 +30,7 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
     newProps = shadowNode->getProps();
     for (const auto &props : propsIt->second) {
       newProps = shadowNode->getComponentDescriptor().cloneProps(
-          propsParserContext, newProps, std::move(*props));
+          propsParserContext, newProps, props->getRawProps());
     }
   }
 
