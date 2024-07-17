@@ -132,6 +132,7 @@ import FreezingShareablesExample from './ShareableFreezingExample';
 import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
 import StrictDOMExample from './StrictDOMExample';
 import SharedValuesArrayExample from './SharedValuesArray';
+import SharedValuesObjectExample from './SharedValuesObject';
 
 interface Example {
   icon?: string;
@@ -166,6 +167,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '📦',
     title: 'Shared values array',
     screen: SharedValuesArrayExample,
+  },
+  SharedValuesObject: {
+    icon: '📦',
+    title: 'Shared values object',
+    screen: SharedValuesObjectExample,
   },
   ModifyExample: {
     icon: '🪛',

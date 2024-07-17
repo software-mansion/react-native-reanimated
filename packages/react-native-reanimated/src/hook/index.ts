@@ -9,6 +9,8 @@ export { useAnimatedProps } from './useAnimatedProps';
 export { useWorkletCallback } from './useWorkletCallback';
 export { useSharedValue } from './useSharedValue';
 export { useSharedValues } from './useSharedValues';
+export { useSharedValuesObject } from './useSharedValuesObject';
+export type { SharedValuesObjectFactoryParams } from './useSharedValuesObject';
 export { useReducedMotion } from './useReducedMotion';
 export { useAnimatedStyle } from './useAnimatedStyle';
 export { useAnimatedGestureHandler } from './useAnimatedGestureHandler';

@@ -32,6 +32,7 @@ export type {
   EventHandlerProcessed,
   UseHandlerContext,
   ReanimatedEvent,
+  SharedValuesObjectFactoryParams,
 } from './hook';
 export {
   useAnimatedProps,
@@ -40,6 +41,7 @@ export {
   useWorkletCallback,
   useSharedValue,
   useSharedValues,
+  useSharedValuesObject,
   useReducedMotion,
   useAnimatedStyle,
   useAnimatedGestureHandler,
