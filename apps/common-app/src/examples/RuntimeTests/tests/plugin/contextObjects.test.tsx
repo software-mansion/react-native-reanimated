@@ -14,7 +14,7 @@ import {
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
 describe('Test context objects', () => {
-  test('methods are workletized', async () => {
+  test('non-context methods are workletized', async () => {
     const ExampleComponent = () => {
       const output = useSharedValue<number | null>(null);
       registerValue(SHARED_VALUE_REF, output);
@@ -39,7 +39,7 @@ describe('Test context objects', () => {
     expect(sharedValue.onUI).toBe(1);
   });
 
-  test('properties are workletized', async () => {
+  test('non-context properties are workletized', async () => {
     const ExampleComponent = () => {
       const output = useSharedValue<number | null>(null);
       registerValue(SHARED_VALUE_REF, output);
