@@ -1,13 +1,13 @@
 import {
   blockStatement,
+  booleanLiteral,
   directive,
   directiveLiteral,
-  isArrowFunctionExpression,
+  identifier,
   isBlockStatement,
-  isExportDefaultDeclaration,
-  isExportNamedDeclaration,
-  isExpression,
-  isVariableDeclaration,
+  isIdentifier,
+  isObjectProperty,
+  objectProperty,
   returnStatement,
 } from '@babel/types';
 
@@ -19,13 +19,16 @@ import type {
   ObjectExpression,
   Statement,
   Node as BabelNode,
+  ThisExpression,
+  ObjectMethod,
 } from '@babel/types';
 import type { NodePath } from '@babel/core';
 import {
-  isWorkletizableFunctionNode,
-  isWorkletizableObjectNode,
+  isWorkletizableFunctionPath,
+  isWorkletizableObjectPath,
 } from './types';
 import type { ReanimatedPluginPass } from './types';
+import { contextObjectMarker } from './contextObject';
 
 export function processIfWorkletFile(
   path: NodePath<Program>,
@@ -51,58 +54,70 @@ export function processIfWorkletFile(
  * Adds a worklet directive to each viable top-level entity in the file.
  */
 function processWorkletFile(
-  path: NodePath<Program>,
+  programPath: NodePath<Program>,
   _state: ReanimatedPluginPass
 ) {
-  path.node.body.forEach((statement) => {
-    const candidate = getNodeCandidate(statement);
-    if (candidate === null || candidate === undefined) {
-      return;
+  const statements = programPath.get('body');
+  statements.forEach((statement) => {
+    const candidatePath = getCandidate(statement);
+    if (candidatePath.node) {
+      processWorkletizableEntity(
+        candidatePath as NodePath<NonNullable<typeof candidatePath.node>>
+      );
     }
-    processWorkletizableEntity(candidate);
   });
 }
 
-function getNodeCandidate(statement: Statement) {
+function getCandidate(statementPath: NodePath<Statement>) {
   if (
-    isExportNamedDeclaration(statement) ||
-    isExportDefaultDeclaration(statement)
+    statementPath.isExportNamedDeclaration() ||
+    statementPath.isExportDefaultDeclaration()
   ) {
-    return statement.declaration;
+    return statementPath.get('declaration') as NodePath<
+      typeof statementPath.node.declaration
+    >;
   } else {
-    return statement;
+    return statementPath;
   }
 }
 
-function processWorkletizableEntity(node: BabelNode) {
-  if (isWorkletizableFunctionNode(node)) {
-    if (isArrowFunctionExpression(node)) {
-      replaceImplicitReturnWithBlock(node);
+function processWorkletizableEntity(nodePath: NodePath<BabelNode>) {
+  if (isWorkletizableFunctionPath(nodePath)) {
+    if (nodePath.isArrowFunctionExpression()) {
+      replaceImplicitReturnWithBlock(nodePath.node);
     }
-    appendWorkletDirective(node.body as BlockStatement);
-  } else if (isWorkletizableObjectNode(node)) {
-    processObjectExpression(node);
-  } else if (isVariableDeclaration(node)) {
-    processVariableDeclaration(node);
+    appendWorkletDirective(nodePath.node.body as BlockStatement);
+  } else if (isWorkletizableObjectPath(nodePath)) {
+    if (isImplicitContextObject(nodePath)) {
+      appendWorkletContextObjectMarker(nodePath.node);
+    } else {
+      processWorkletAggregator(nodePath);
+    }
+  } else if (nodePath.isVariableDeclaration()) {
+    processVariableDeclaration(nodePath);
   }
 }
 
-function processVariableDeclaration(variableDeclaration: VariableDeclaration) {
-  variableDeclaration.declarations.forEach((declaration) => {
-    const init = declaration.init;
-    if (isExpression(init)) {
-      processWorkletizableEntity(init);
+function processVariableDeclaration(
+  variableDeclarationPath: NodePath<VariableDeclaration>
+) {
+  const declarations = variableDeclarationPath.get('declarations');
+  declarations.forEach((declaration) => {
+    const initPath = declaration.get('init');
+    if (initPath.isExpression()) {
+      processWorkletizableEntity(initPath);
     }
   });
 }
 
-function processObjectExpression(object: ObjectExpression) {
-  object.properties.forEach((property) => {
-    if (property.type === 'ObjectMethod') {
-      appendWorkletDirective(property.body);
-    } else if (property.type === 'ObjectProperty') {
-      const value = property.value;
-      processWorkletizableEntity(value);
+function processWorkletAggregator(objectPath: NodePath<ObjectExpression>) {
+  const properties = objectPath.get('properties');
+  properties.forEach((property) => {
+    if (property.isObjectMethod()) {
+      appendWorkletDirective(property.node.body);
+    } else if (property.isObjectProperty()) {
+      const valuePath = property.get('value');
+      processWorkletizableEntity(valuePath);
     }
   });
 }
@@ -128,4 +143,48 @@ function appendWorkletDirective(node: BlockStatement) {
   ) {
     node.directives.push(directive(directiveLiteral('worklet')));
   }
+}
+
+function appendWorkletContextObjectMarker(objectExpression: ObjectExpression) {
+  if (
+    objectExpression.properties.some(
+      (value) =>
+        isObjectProperty(value) &&
+        isIdentifier(value.key) &&
+        value.key.name === contextObjectMarker
+    )
+  ) {
+    return;
+  }
+
+  objectExpression.properties.push(
+    objectProperty(identifier(`${contextObjectMarker}`), booleanLiteral(true))
+  );
+}
+
+export function isImplicitContextObject(
+  path: NodePath<ObjectExpression>
+): boolean {
+  const propertyPaths = path.get('properties');
+
+  return propertyPaths.some((propertyPath) => {
+    if (!propertyPath.isObjectMethod()) {
+      return false;
+    }
+
+    return hasThisExpression(propertyPath);
+  });
+}
+
+function hasThisExpression(path: NodePath<ObjectMethod>): boolean {
+  let result = false;
+
+  path.traverse({
+    ThisExpression(thisPath: NodePath<ThisExpression>) {
+      result = true;
+      thisPath.stop();
+    },
+  });
+
+  return result;
 }

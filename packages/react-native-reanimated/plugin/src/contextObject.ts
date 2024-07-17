@@ -7,66 +7,63 @@ import {
   functionExpression,
   identifier,
   isIdentifier,
+  isObjectProperty,
   objectProperty,
   returnStatement,
 } from '@babel/types';
 import type { ObjectExpression } from '@babel/types';
 import type { ReanimatedPluginPass } from './types';
 
-const contextObjectMarker = '__workletObject';
+export const contextObjectMarker = '__workletContextObject';
 
 export function processIfWorkletContextObject(
   path: NodePath<ObjectExpression>,
-  state: ReanimatedPluginPass
+  _state: ReanimatedPluginPass
 ): boolean {
-  let isWorkletContextObject = false;
-
-  path.traverse({
-    ObjectProperty(subPath) {
-      if (
-        isIdentifier(subPath.node.key) &&
-        subPath.node.key.name === contextObjectMarker
-      ) {
-        isWorkletContextObject = true;
-        subPath.stop();
-      }
-    },
-  });
-
-  if (isWorkletContextObject) {
-    processWorkletContextObject(path, state);
+  if (!isContextObject(path.node)) {
+    return false;
   }
 
-  return isWorkletContextObject;
+  removeContextObjectMarker(path.node);
+  processWorkletContextObject(path.node);
+  return true;
 }
 
-function processWorkletContextObject(
-  path: NodePath<ObjectExpression>,
-  _state: ReanimatedPluginPass
-): void {
-  path.traverse({
-    ObjectProperty(subPath) {
-      if (
-        isIdentifier(subPath.node.key) &&
-        subPath.node.key.name === contextObjectMarker
-      ) {
-        // We need to remove the marker so that we won't process it again.
-        subPath.remove();
-      }
-    },
-  });
+export function isContextObject(objectExpression: ObjectExpression): boolean {
+  return objectExpression.properties.some(
+    (property) =>
+      isObjectProperty(property) &&
+      isIdentifier(property.key) &&
+      property.key.name === contextObjectMarker
+  );
+}
 
+function processWorkletContextObject(objectExpression: ObjectExpression): void {
   // A simple factory function that returns the context object.
   const workletObjectFactory = functionExpression(
     null,
     [],
     blockStatement(
-      [returnStatement(cloneNode(path.node))],
+      [returnStatement(cloneNode(objectExpression))],
       [directive(directiveLiteral('worklet'))]
     )
   );
 
-  path.node.properties.push(
-    objectProperty(identifier('__workletObjectFactory'), workletObjectFactory)
+  objectExpression.properties.push(
+    objectProperty(
+      identifier(`${contextObjectMarker}Factory`),
+      workletObjectFactory
+    )
+  );
+}
+
+function removeContextObjectMarker(objectExpression: ObjectExpression): void {
+  objectExpression.properties = objectExpression.properties.filter(
+    (property) =>
+      !(
+        isObjectProperty(property) &&
+        isIdentifier(property.key) &&
+        property.key.name === contextObjectMarker
+      )
   );
 }

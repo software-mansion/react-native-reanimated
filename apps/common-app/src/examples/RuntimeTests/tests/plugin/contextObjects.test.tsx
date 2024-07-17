@@ -22,7 +22,7 @@ describe('Test context objects', () => {
         foo() {
           return 1;
         },
-        __workletObject: true,
+        __workletContextObject: true,
       };
 
       useEffect(() => {
@@ -45,7 +45,7 @@ describe('Test context objects', () => {
       registerValue(SHARED_VALUE_REF, output);
       const contextObject = {
         foo: () => 1,
-        __workletObject: true,
+        __workletContextObject: true,
       };
 
       useEffect(() => {
@@ -73,7 +73,7 @@ describe('Test context objects', () => {
         bar() {
           return this.foo() + 1;
         },
-        __workletObject: true,
+        __workletContextObject: true,
       };
 
       useEffect(() => {
@@ -101,7 +101,7 @@ describe('Test context objects', () => {
         bar() {
           return this.foo.call(contextObject) + 1;
         },
-        __workletObject: true,
+        __workletContextObject: true,
       };
 
       useEffect(() => {
@@ -127,7 +127,7 @@ describe('Test context objects', () => {
         bar() {
           this.foo += 1;
         },
-        __workletObject: true,
+        __workletContextObject: true,
       };
 
       useEffect(() => {
@@ -154,7 +154,7 @@ describe('Test context objects', () => {
         bar() {
           this.foo += 1;
         },
-        __workletObject: true,
+        __workletContextObject: true,
       };
 
       useEffect(() => {

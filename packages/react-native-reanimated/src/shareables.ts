@@ -149,12 +149,15 @@ export function makeShareableCloneRecursive<T>(
         // then recreate new host object wrapping the same instance on the UI thread.
         // there is no point of iterating over keys as we do for regular objects.
         toAdapt = value;
-      } else if (isPlainJSObject(value) && value.__workletObjectFactory) {
-        const workletObjectFactory = value.__workletObjectFactory;
+      } else if (
+        isPlainJSObject(value) &&
+        value.__workletContextObjectFactory
+      ) {
+        const workletContextObjectFactory = value.__workletContextObjectFactory;
         const handle = makeShareableCloneRecursive({
           __init: () => {
             'worklet';
-            return workletObjectFactory();
+            return workletContextObjectFactory();
           },
         });
         shareableMappingCache.set(value, handle);
