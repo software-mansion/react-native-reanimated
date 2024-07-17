@@ -69,6 +69,7 @@ export const BounceOutData = {
   BounceOut: {
     name: 'BounceOut',
     style: {
+      0: { transform: [{ scale: 1 }] },
       15: { transform: [{ scale: 1.1 }] },
       30: { transform: [{ scale: 0.9 }] },
       45: { transform: [{ scale: 1.2 }] },
@@ -80,6 +81,7 @@ export const BounceOutData = {
   BounceOutRight: {
     name: 'BounceOutRight',
     style: {
+      0: { transform: [{ translateX: '0px' }] },
       15: { transform: [{ translateX: '-10px' }] },
       30: { transform: [{ translateX: '10px' }] },
       45: { transform: [{ translateX: '-20px' }] },
@@ -91,6 +93,7 @@ export const BounceOutData = {
   BounceOutLeft: {
     name: 'BounceOutLeft',
     style: {
+      0: { transform: [{ translateX: '0px' }] },
       15: { transform: [{ translateX: '10px' }] },
       30: { transform: [{ translateX: '-10px' }] },
       45: { transform: [{ translateX: '20px' }] },
@@ -102,6 +105,7 @@ export const BounceOutData = {
   BounceOutUp: {
     name: 'BounceOutUp',
     style: {
+      0: { transform: [{ translateY: '0px' }] },
       15: { transform: [{ translateY: '10px' }] },
       30: { transform: [{ translateY: '-10px' }] },
       45: { transform: [{ translateY: '20px' }] },
@@ -113,6 +117,7 @@ export const BounceOutData = {
   BounceOutDown: {
     name: 'BounceOutDown',
     style: {
+      0: { transform: [{ translateY: '0px' }] },
       15: { transform: [{ translateY: '-10px' }] },
       30: { transform: [{ translateY: '10px' }] },
       45: { transform: [{ translateY: '-20px' }] },

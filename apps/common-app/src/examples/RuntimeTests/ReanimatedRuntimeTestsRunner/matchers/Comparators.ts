@@ -18,6 +18,12 @@ const COMPARATORS: {
     return bothAreNaNs || ((bothAreNumbers || bothAreBigInts) && value === expected);
   },
 
+  [ComparisonMode.FLOAT]: (expected, value) => {
+    const bothAreNumbers = typeof value === 'number' && typeof expected === 'number';
+    const bothAreNaNs = bothAreNumbers && isNaN(value) && isNaN(expected);
+    return bothAreNaNs || Math.abs(Number(value) - Number(expected)) < Number.EPSILON;
+  },
+
   [ComparisonMode.COLOR]: (expected, value) => {
     if (!isColor(expected) || !isColor(value)) {
       return false;
@@ -25,9 +31,15 @@ const COMPARATORS: {
     return processColor(expected) === processColor(value);
   },
 
-  [ComparisonMode.DISTANCE]: (expected, value) => {
+  [ComparisonMode.PIXEL]: (expected, value) => {
     const valueAsNumber = Number(value);
     return !isNaN(valueAsNumber) && Math.abs(valueAsNumber - Number(expected)) < DISTANCE_TOLERANCE;
+  },
+
+  [ComparisonMode.FLOAT_DISTANCE]: (expected, value) => {
+    const bothAreNumbers = typeof value === 'number' && typeof expected === 'number';
+    const bothAreNaNs = bothAreNumbers && isNaN(value) && isNaN(expected);
+    return bothAreNaNs || Math.abs(Number(value) - Number(expected)) < 0.00001;
   },
 
   [ComparisonMode.ARRAY]: (expected, value) => {
@@ -73,7 +85,7 @@ const COMPARATORS: {
 
   [ComparisonMode.AUTO]: (expected, value) => {
     if (typeof expected === 'number') {
-      return COMPARATORS[ComparisonMode.DISTANCE](expected, value);
+      return COMPARATORS[ComparisonMode.PIXEL](expected, value);
     }
     if (typeof expected === 'string') {
       return COMPARATORS[ComparisonMode.STRING](expected, value);
@@ -95,11 +107,11 @@ export function getComparator(mode: ComparisonMode) {
 export function getComparisonModeForProp(prop: ValidPropNames): ComparisonMode {
   const propToComparisonModeDict = {
     zIndex: ComparisonMode.NUMBER,
-    opacity: ComparisonMode.NUMBER,
-    width: ComparisonMode.DISTANCE,
-    height: ComparisonMode.DISTANCE,
-    top: ComparisonMode.DISTANCE,
-    left: ComparisonMode.DISTANCE,
+    opacity: ComparisonMode.FLOAT_DISTANCE,
+    width: ComparisonMode.PIXEL,
+    height: ComparisonMode.PIXEL,
+    top: ComparisonMode.PIXEL,
+    left: ComparisonMode.PIXEL,
     backgroundColor: ComparisonMode.COLOR,
   };
   return propToComparisonModeDict[prop];

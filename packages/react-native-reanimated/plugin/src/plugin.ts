@@ -22,8 +22,10 @@ module.exports = function (): PluginItem {
   }
 
   return {
-    pre() {
+    pre(state: ReanimatedPluginPass) {
       runWithTaggedExceptions(() => {
+        // Initialize worklet number.
+        state.workletNumber = 1;
         initializeGlobals();
         addCustomGlobals.call(this);
       });
@@ -47,6 +49,14 @@ module.exports = function (): PluginItem {
           runWithTaggedExceptions(() => {
             processIfWithWorkletDirective(path, state) ||
               processIfAutoworkletizableCallback(path, state);
+          });
+        },
+      },
+      Program: {
+        enter(_path, state) {
+          runWithTaggedExceptions(() => {
+            // Reset worklet number.
+            state.workletNumber = 1;
           });
         },
       },

@@ -105,7 +105,7 @@ describe('withTiming animation of ARRAY', () => {
       for (const component of components) {
         expect(await component.getAnimatedStyle('width')).toBe(
           startWidths[index] * scalars[index],
-          ComparisonMode.DISTANCE,
+          ComparisonMode.PIXEL,
         );
         index += 1;
       }
@@ -114,7 +114,7 @@ describe('withTiming animation of ARRAY', () => {
       for (const component of components) {
         expect(await component.getAnimatedStyle('width')).toBe(
           finalWidths[index] * scalars[index],
-          ComparisonMode.DISTANCE,
+          ComparisonMode.PIXEL,
         );
         index += 1;
       }

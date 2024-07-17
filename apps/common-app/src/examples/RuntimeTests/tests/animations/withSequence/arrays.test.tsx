@@ -113,17 +113,17 @@ describe('withSequence animation of number', () => {
       const margin = 30;
 
       await wait(200 + DELAY / 2);
-      expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + margin, ComparisonMode.DISTANCE);
-      expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + margin, ComparisonMode.DISTANCE);
-      expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + margin, ComparisonMode.DISTANCE);
+      expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + margin, ComparisonMode.PIXEL);
+      expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + margin, ComparisonMode.PIXEL);
+      expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + margin, ComparisonMode.PIXEL);
       await wait(300 + DELAY / 2);
-      expect(await componentOne.getAnimatedStyle('left')).toBe(middleValues[0] + margin, ComparisonMode.DISTANCE);
-      expect(await componentTwo.getAnimatedStyle('left')).toBe(middleValues[1] + margin, ComparisonMode.DISTANCE);
-      expect(await componentThree.getAnimatedStyle('left')).toBe(middleValues[2] + margin, ComparisonMode.DISTANCE);
+      expect(await componentOne.getAnimatedStyle('left')).toBe(middleValues[0] + margin, ComparisonMode.PIXEL);
+      expect(await componentTwo.getAnimatedStyle('left')).toBe(middleValues[1] + margin, ComparisonMode.PIXEL);
+      expect(await componentThree.getAnimatedStyle('left')).toBe(middleValues[2] + margin, ComparisonMode.PIXEL);
       await wait(200 + DELAY);
-      expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + 20 + margin, ComparisonMode.DISTANCE);
-      expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + 20 + margin, ComparisonMode.DISTANCE);
-      expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + 20 + margin, ComparisonMode.DISTANCE);
+      expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + 20 + margin, ComparisonMode.PIXEL);
+      expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + 20 + margin, ComparisonMode.PIXEL);
+      expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + 20 + margin, ComparisonMode.PIXEL);
     },
   );
 });
