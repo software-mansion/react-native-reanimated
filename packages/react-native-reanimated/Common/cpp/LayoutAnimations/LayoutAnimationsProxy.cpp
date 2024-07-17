@@ -138,7 +138,7 @@ void LayoutAnimationsProxy::parseRemoveMutations(
   std::set<Tag> deletedViews;
   std::unordered_map<Tag, std::vector<std::shared_ptr<MutationNode>>>
       childrenForTag, unflattenedChildrenForTag;
-      
+
   std::vector<std::shared_ptr<MutationNode>> mutationNodes;
 
   // iterate from the end, so that parents appear before children
@@ -209,21 +209,21 @@ void LayoutAnimationsProxy::parseRemoveMutations(
   }
 
   for (auto &[parentTag, children] : childrenForTag) {
-    auto& parent = nodeForTag_[parentTag];
+    auto &parent = nodeForTag_[parentTag];
     parent->insertChildren(children);
-    for (auto& child: children){
+    for (auto &child : children) {
       child->parent = parent;
     }
   }
   for (auto &[unflattenedParentTag, children] : unflattenedChildrenForTag) {
-    auto& unflattenedParent = nodeForTag_[unflattenedParentTag];
+    auto &unflattenedParent = nodeForTag_[unflattenedParentTag];
     unflattenedParent->insertUnflattenedChildren(children);
-    for (auto& child: children){
+    for (auto &child : children) {
       child->unflattenedParent = unflattenedParent;
     }
   }
-      
-  for (auto& mutationNode: mutationNodes){
+
+  for (auto &mutationNode : mutationNodes) {
     if (!mutationNode->unflattenedParent->isMutationMode()) {
       roots.push_back(mutationNode);
     }
@@ -711,7 +711,7 @@ void LayoutAnimationsProxy::transferConfigFromNativeID(
     auto nativeId = stoi(nativeIdString);
     layoutAnimationsManager_->transferConfigFromNativeID(nativeId, tag);
   } catch (std::invalid_argument) {
-  } catch (std::out_of_range){
+  } catch (std::out_of_range) {
   }
 }
 
