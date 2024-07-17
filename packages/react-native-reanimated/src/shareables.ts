@@ -17,7 +17,7 @@ import {
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
 // instead of shareable references, because of the fact that we don't have to deal with
-// runnning the code on separate VMs.
+// running the code on separate VMs.
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 const MAGIC_KEY = 'REANIMATED_MAGIC_KEY';
@@ -109,7 +109,7 @@ export function makeShareableCloneRecursive<T>(
   }
   if (depth >= DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
     // if we reach certain recursion depth we suspect that we are dealing with a cyclic object.
-    // this type of objects are not supported and cannot be trasferred as shareable, so we
+    // this type of objects are not supported and cannot be transferred as shareable, so we
     // implement a simple detection mechanism that remembers the value at a given depth and
     // tests whether we try reenter this method later on with the same value. If that happens
     // we throw an appropriate error.
@@ -149,6 +149,19 @@ export function makeShareableCloneRecursive<T>(
         // then recreate new host object wrapping the same instance on the UI thread.
         // there is no point of iterating over keys as we do for regular objects.
         toAdapt = value;
+      } else if (
+        isPlainJSObject(value) &&
+        value.__workletContextObjectFactory
+      ) {
+        const workletContextObjectFactory = value.__workletContextObjectFactory;
+        const handle = makeShareableCloneRecursive({
+          __init: () => {
+            'worklet';
+            return workletContextObjectFactory();
+          },
+        });
+        shareableMappingCache.set(value, handle);
+        return handle as ShareableRef<T>;
       } else if (isPlainJSObject(value) || isTypeFunction) {
         toAdapt = {};
         if (isWorkletFunction(value)) {
@@ -173,7 +186,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
           }
           // to save on transferring static __initData field of worklet structure
           // we request shareable value to persist its UI counterpart. This means
-          // that the __initData field that contains long strings represeting the
+          // that the __initData field that contains long strings representing the
           // worklet code, source map, and location, will always be
           // serialized/deserialized once.
           toAdapt.__initData = makeShareableCloneRecursive(
