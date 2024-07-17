@@ -709,8 +709,8 @@ var f = function () {
 `;
 
 exports[`babel plugin for context objects creates factories 1`] = `
-"var _worklet_11500194505350_init_data = {
-  code: "function __workletObjectFactory(){return{bar:function(){return'bar';}};}",
+"var _worklet_14630842371699_init_data = {
+  code: "function __workletObjectFactory_null1(){return{bar:function(){return'bar';}};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -721,25 +721,25 @@ var foo = {
   },
   __workletObjectFactory: function () {
     var _e = [new global.Error(), 1, -27];
-    var __workletObjectFactory = function __workletObjectFactory() {
+    var __workletObjectFactory_null1 = function __workletObjectFactory_null1() {
       return {
         bar: function bar() {
           return 'bar';
         }
       };
     };
-    __workletObjectFactory.__closure = {};
-    __workletObjectFactory.__workletHash = 11500194505350;
-    __workletObjectFactory.__initData = _worklet_11500194505350_init_data;
-    __workletObjectFactory.__stackDetails = _e;
-    return __workletObjectFactory;
+    __workletObjectFactory_null1.__closure = {};
+    __workletObjectFactory_null1.__workletHash = 14630842371699;
+    __workletObjectFactory_null1.__initData = _worklet_14630842371699_init_data;
+    __workletObjectFactory_null1.__stackDetails = _e;
+    return __workletObjectFactory_null1;
   }()
 };"
 `;
 
 exports[`babel plugin for context objects preserves bindings 1`] = `
-"var _worklet_16547253310795_init_data = {
-  code: "function __workletObjectFactory(){return{bar:function(){return'bar';},foobar:function(){return this.bar();}};}",
+"var _worklet_13432710970622_init_data = {
+  code: "function __workletObjectFactory_null1(){return{bar:function(){return'bar';},foobar:function(){return this.bar();}};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -753,7 +753,7 @@ var foo = {
   },
   __workletObjectFactory: function () {
     var _e = [new global.Error(), 1, -27];
-    var __workletObjectFactory = function __workletObjectFactory() {
+    var __workletObjectFactory_null1 = function __workletObjectFactory_null1() {
       return {
         bar: function bar() {
           return 'bar';
@@ -763,18 +763,18 @@ var foo = {
         }
       };
     };
-    __workletObjectFactory.__closure = {};
-    __workletObjectFactory.__workletHash = 16547253310795;
-    __workletObjectFactory.__initData = _worklet_16547253310795_init_data;
-    __workletObjectFactory.__stackDetails = _e;
-    return __workletObjectFactory;
+    __workletObjectFactory_null1.__closure = {};
+    __workletObjectFactory_null1.__workletHash = 13432710970622;
+    __workletObjectFactory_null1.__initData = _worklet_13432710970622_init_data;
+    __workletObjectFactory_null1.__stackDetails = _e;
+    return __workletObjectFactory_null1;
   }()
 };"
 `;
 
 exports[`babel plugin for context objects removes marker 1`] = `
-"var _worklet_11500194505350_init_data = {
-  code: "function __workletObjectFactory(){return{bar:function(){return'bar';}};}",
+"var _worklet_14630842371699_init_data = {
+  code: "function __workletObjectFactory_null1(){return{bar:function(){return'bar';}};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -785,25 +785,25 @@ var foo = {
   },
   __workletObjectFactory: function () {
     var _e = [new global.Error(), 1, -27];
-    var __workletObjectFactory = function __workletObjectFactory() {
+    var __workletObjectFactory_null1 = function __workletObjectFactory_null1() {
       return {
         bar: function bar() {
           return 'bar';
         }
       };
     };
-    __workletObjectFactory.__closure = {};
-    __workletObjectFactory.__workletHash = 11500194505350;
-    __workletObjectFactory.__initData = _worklet_11500194505350_init_data;
-    __workletObjectFactory.__stackDetails = _e;
-    return __workletObjectFactory;
+    __workletObjectFactory_null1.__closure = {};
+    __workletObjectFactory_null1.__workletHash = 14630842371699;
+    __workletObjectFactory_null1.__initData = _worklet_14630842371699_init_data;
+    __workletObjectFactory_null1.__stackDetails = _e;
+    return __workletObjectFactory_null1;
   }()
 };"
 `;
 
 exports[`babel plugin for context objects workletizes regardless of marker value 1`] = `
-"var _worklet_11500194505350_init_data = {
-  code: "function __workletObjectFactory(){return{bar:function(){return'bar';}};}",
+"var _worklet_14630842371699_init_data = {
+  code: "function __workletObjectFactory_null1(){return{bar:function(){return'bar';}};}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -814,18 +814,18 @@ var foo = {
   },
   __workletObjectFactory: function () {
     var _e = [new global.Error(), 1, -27];
-    var __workletObjectFactory = function __workletObjectFactory() {
+    var __workletObjectFactory_null1 = function __workletObjectFactory_null1() {
       return {
         bar: function bar() {
           return 'bar';
         }
       };
     };
-    __workletObjectFactory.__closure = {};
-    __workletObjectFactory.__workletHash = 11500194505350;
-    __workletObjectFactory.__initData = _worklet_11500194505350_init_data;
-    __workletObjectFactory.__stackDetails = _e;
-    return __workletObjectFactory;
+    __workletObjectFactory_null1.__closure = {};
+    __workletObjectFactory_null1.__workletHash = 14630842371699;
+    __workletObjectFactory_null1.__initData = _worklet_14630842371699_init_data;
+    __workletObjectFactory_null1.__stackDetails = _e;
+    return __workletObjectFactory_null1;
   }()
 };"
 `;
