@@ -1,5 +1,5 @@
 import type { LayoutChangeEvent, StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, View, SafeAreaView } from 'react-native';
+import { StyleSheet, View, SafeAreaView, Text } from 'react-native';
 
 import React, { useEffect, useCallback, useState } from 'react';
 import Animated, {
@@ -10,7 +10,6 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
-  useAnimatedStyle,
 } from 'react-native-reanimated';
 
 import Svg, { G, Rect } from 'react-native-svg';
@@ -27,7 +26,82 @@ export type PulseEffectProps = {
 const HEIGHT_MLTR = 1.5;
 const WIDTH_MLTR = 1.2;
 
-const Pulse = ({ children, style, borderRadius = 0 }: PulseEffectProps) => {
+const PulseView = ({ children, style, borderRadius = 0 }: PulseEffectProps) => {
+  const [layout, setLayout] = useState({ width: 0, height: 0 });
+  const animation = useSharedValue(0);
+  useEffect(() => {
+    animation.value = withRepeat(
+      withSequence(
+        withTiming(1, {
+          duration: 5000,
+          easing: Easing.inOut(Easing.ease),
+        }),
+        withTiming(0, { duration: 0 })
+      ),
+      -1
+    );
+  }, [layout, animation]);
+
+  const onLayout = useCallback((event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    setLayout({ width, height });
+  }, []);
+
+  const childAnimatedStyle = useAnimatedProps(() => {
+    const scaledW = interpolate(
+      animation.value,
+      [0, 1],
+      [layout.width, layout.width * WIDTH_MLTR]
+    );
+    const scaledH = interpolate(
+      animation.value,
+      [0, 1],
+      [layout.height, layout.height * HEIGHT_MLTR]
+    );
+    const diffX = layout.width * WIDTH_MLTR - layout.width;
+    const diffY = layout.height * HEIGHT_MLTR - layout.height;
+    const x = interpolate(animation.value, [0, 1], [diffX / 2, 0]);
+    const y = interpolate(animation.value, [0, 1], [diffY / 2, 0]);
+    return {
+      width: scaledW,
+      height: scaledH,
+      borderRadius,
+      transform: [{ translateX: x }, { translateY: y }],
+    };
+  });
+
+  const parentAnimatedStyle = useAnimatedProps(() => ({
+    opacity: interpolate(animation.value, [0, 1], [0.5, 0]),
+  }));
+
+  const svgWidth = layout.width * WIDTH_MLTR;
+  const svgHeight = layout.height * HEIGHT_MLTR;
+
+  return (
+    <View style={style} onLayout={onLayout}>
+      {layout.width > 0 && layout.height > 0 && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.effect,
+            { top: -(svgHeight - layout.height) / 2 },
+            { left: -(svgWidth - layout.width) / 2 },
+            {
+              width: svgWidth,
+              height: svgHeight,
+            },
+          ]}>
+          <Animated.View style={parentAnimatedStyle}>
+            <Animated.View style={[styles.child, childAnimatedStyle]} />
+          </Animated.View>
+        </View>
+      )}
+      {children}
+    </View>
+  );
+};
+
+const PulseSvg = ({ children, style, borderRadius = 0 }: PulseEffectProps) => {
   const [layout, setLayout] = useState({ width: 0, height: 0 });
   const animation = useSharedValue(0);
   useEffect(() => {
@@ -105,9 +179,19 @@ const Pulse = ({ children, style, borderRadius = 0 }: PulseEffectProps) => {
 export default function App() {
   return (
     <SafeAreaView style={styles.container}>
-      <Pulse>
-        <View style={styles.rect} />
-      </Pulse>
+      <View>
+        <Text style={styles.text}>Animated View</Text>
+        <PulseSvg>
+          <View style={styles.rect} />
+        </PulseSvg>
+      </View>
+
+      <View>
+        <Text style={styles.text}>Animated SVG</Text>
+        <PulseView>
+          <View style={styles.rect} />
+        </PulseView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -118,7 +202,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#ecf0f1',
+    gap: 32,
     padding: 8,
+  },
+  text: {
+    color: '#333333',
+  },
+  child: {
+    backgroundColor: 'red',
   },
   rect: {
     width: 100,
