@@ -1,8 +1,8 @@
 import type { NodePath } from '@babel/core';
 import type { AssignmentExpression, Identifier } from '@babel/types';
 import {
-  isWorkletizableFunctionType,
-  isWorkletizableObjectType,
+  isWorkletizableFunctionPath,
+  isWorkletizableObjectPath,
 } from './types';
 import type { WorkletizableFunction, WorkletizableObject } from './types';
 import type { Binding } from '@babel/traverse';
@@ -53,10 +53,10 @@ function findReferencedWorkletFromVariableDeclarator(
   }
   const worklet = workletDeclaration.get('init');
 
-  if (acceptWorkletizableFunction && isWorkletizableFunctionType(worklet)) {
+  if (acceptWorkletizableFunction && isWorkletizableFunctionPath(worklet)) {
     return worklet;
   }
-  if (acceptObject && isWorkletizableObjectType(worklet)) {
+  if (acceptObject && isWorkletizableObjectPath(worklet)) {
     return worklet;
   }
   return undefined;
@@ -73,9 +73,9 @@ function findReferencedWorkletFromAssignmentExpression(
       (constantViolation) =>
         constantViolation.isAssignmentExpression() &&
         ((acceptWorkletizableFunction &&
-          isWorkletizableFunctionType(constantViolation.get('right'))) ||
+          isWorkletizableFunctionPath(constantViolation.get('right'))) ||
           (acceptObject &&
-            isWorkletizableObjectType(constantViolation.get('right'))))
+            isWorkletizableObjectPath(constantViolation.get('right'))))
     ) as NodePath<AssignmentExpression> | undefined;
 
   if (!workletDeclaration || !workletDeclaration.isAssignmentExpression()) {
@@ -86,11 +86,11 @@ function findReferencedWorkletFromAssignmentExpression(
 
   if (
     acceptWorkletizableFunction &&
-    isWorkletizableFunctionType(workletDefinition)
+    isWorkletizableFunctionPath(workletDefinition)
   ) {
     return workletDefinition;
   }
-  if (acceptObject && isWorkletizableObjectType(workletDefinition)) {
+  if (acceptObject && isWorkletizableObjectPath(workletDefinition)) {
     return workletDefinition;
   }
   return undefined;

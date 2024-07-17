@@ -1,10 +1,18 @@
 import type { BabelFile, NodePath } from '@babel/core';
+import {
+  isArrowFunctionExpression,
+  isFunctionDeclaration,
+  isFunctionExpression,
+  isObjectMethod,
+  isObjectExpression,
+} from '@babel/types';
 import type {
   FunctionDeclaration,
   FunctionExpression,
   ObjectMethod,
   ArrowFunctionExpression,
   ObjectExpression,
+  Node as BabelNode,
 } from '@babel/types';
 
 export interface ReanimatedPluginOptions {
@@ -42,7 +50,7 @@ export type WorkletizableObject = ObjectExpression;
 
 export const WorkletizableObject = 'ObjectExpression';
 
-export function isWorkletizableFunctionType(
+export function isWorkletizableFunctionPath(
   path: NodePath<unknown>
 ): path is NodePath<WorkletizableFunction> {
   return (
@@ -53,8 +61,25 @@ export function isWorkletizableFunctionType(
   );
 }
 
-export function isWorkletizableObjectType(
+export function isWorkletizableFunctionNode(
+  node: BabelNode | null | undefined
+): node is WorkletizableFunction {
+  return (
+    isFunctionDeclaration(node) ||
+    isFunctionExpression(node) ||
+    isArrowFunctionExpression(node) ||
+    isObjectMethod(node)
+  );
+}
+
+export function isWorkletizableObjectPath(
   path: NodePath<unknown>
 ): path is NodePath<WorkletizableObject> {
   return path.isObjectExpression();
+}
+
+export function isWorkletizableObjectNode(
+  node: BabelNode | null | undefined
+): node is WorkletizableObject {
+  return isObjectExpression(node);
 }

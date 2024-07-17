@@ -2066,4 +2066,220 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
   });
+
+  describe('for file workletization', () => {
+    it('workletizes FunctionDeclaration', () => {
+      const input = html`<script>
+        'worklet';
+        function foo() {
+          return 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes assigned FunctionDeclaration', () => {
+      const input = html`<script>
+        'worklet';
+        const foo = function foo() {
+          return 'bar';
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes FunctionDeclaration in named export', () => {
+      const input = html`<script>
+        'worklet';
+        export function foo() {
+          return 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toContain('exports.foo = function');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes FunctionDeclaration in default export', () => {
+      const input = html`<script>
+        'worklet';
+        export default function foo() {
+          return 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toContain('exports.default = function');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes FunctionExpression', () => {
+      const input = html`<script>
+        'worklet';
+        const foo = function () {
+          return 'bar';
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes FunctionExpression in named export', () => {
+      const input = html`<script>
+        'worklet';
+        export const foo = function () {
+          return 'bar';
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toContain('exports.foo = function');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes FunctionExpression in default export', () => {
+      const input = html`<script>
+        'worklet';
+        export default function () {
+          return 'bar';
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toContain('exports.default = function');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ArrowFunctionExpression', () => {
+      const input = html`<script>
+        'worklet';
+        const foo = () => {
+          return 'bar';
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ArrowFunctionExpression in named export', () => {
+      const input = html`<script>
+        'worklet';
+        export const foo = () => {
+          return 'bar';
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toContain('exports.foo = function');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ArrowFunctionExpression in default export', () => {
+      const input = html`<script>
+        'worklet';
+        export default () => {
+          return 'bar';
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toContain('exports.default = function');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ObjectMethod', () => {
+      const input = html`<script>
+        'worklet';
+        const foo = {
+          bar() {
+            return 'bar';
+          },
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ObjectMethod in named export', () => {
+      const input = html`<script>
+        'worklet';
+        export const foo = {
+          bar() {
+            return 'bar';
+          },
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toContain('exports.foo = {');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ObjectMethod in default export', () => {
+      const input = html`<script>
+        'worklet';
+        export default {
+          bar() {
+            return 'bar';
+          },
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData();
+      expect(code).toContain('exports.default = {');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes multiple functions', () => {
+      const input = html`<script>
+        'worklet';
+        function foo() {
+          return 'bar';
+        }
+        const bar = () => {
+          return 'foobar';
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(2);
+      expect(code).toMatchSnapshot();
+    });
+
+    it("doesn't workletize function outside of top level scope", () => {
+      const input = html`<script>
+        'worklet';
+        {
+          function foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).not.toHaveWorkletData();
+      expect(code).toMatchSnapshot();
+    });
+  });
 });

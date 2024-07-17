@@ -860,6 +860,349 @@ var foo = function () {
 }();"
 `;
 
+exports[`babel plugin for file workletization doesn't workletize function outside of top level scope 1`] = `
+"{
+  function foo() {
+    return 'bar';
+  }
+}"
+`;
+
+exports[`babel plugin for file workletization workletizes ArrowFunctionExpression 1`] = `
+"var _worklet_2420910284744_init_data = {
+  code: "function null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var null1 = function null1() {
+    return 'bar';
+  };
+  null1.__closure = {};
+  null1.__workletHash = 2420910284744;
+  null1.__initData = _worklet_2420910284744_init_data;
+  null1.__stackDetails = _e;
+  return null1;
+}();"
+`;
+
+exports[`babel plugin for file workletization workletizes ArrowFunctionExpression in default export 1`] = `
+"Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _worklet_2420910284744_init_data = {
+  code: "function null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _default = exports.default = function () {
+  var _e = [new global.Error(), 1, -27];
+  var null1 = function null1() {
+    return 'bar';
+  };
+  null1.__closure = {};
+  null1.__workletHash = 2420910284744;
+  null1.__initData = _worklet_2420910284744_init_data;
+  null1.__stackDetails = _e;
+  return null1;
+}();"
+`;
+
+exports[`babel plugin for file workletization workletizes ArrowFunctionExpression in named export 1`] = `
+"Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.foo = void 0;
+var _worklet_2420910284744_init_data = {
+  code: "function null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = exports.foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var null1 = function null1() {
+    return 'bar';
+  };
+  null1.__closure = {};
+  null1.__workletHash = 2420910284744;
+  null1.__initData = _worklet_2420910284744_init_data;
+  null1.__stackDetails = _e;
+  return null1;
+}();"
+`;
+
+exports[`babel plugin for file workletization workletizes FunctionDeclaration 1`] = `
+"var _worklet_5253890412305_init_data = {
+  code: "function foo_null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo_null1 = function foo_null1() {
+    return 'bar';
+  };
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 5253890412305;
+  foo_null1.__initData = _worklet_5253890412305_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
+}();"
+`;
+
+exports[`babel plugin for file workletization workletizes FunctionDeclaration in default export 1`] = `
+"Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _worklet_5253890412305_init_data = {
+  code: "function foo_null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _default = exports.default = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo_null1 = function foo_null1() {
+    return 'bar';
+  };
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 5253890412305;
+  foo_null1.__initData = _worklet_5253890412305_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
+}();"
+`;
+
+exports[`babel plugin for file workletization workletizes FunctionDeclaration in named export 1`] = `
+"Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.foo = void 0;
+var _worklet_5253890412305_init_data = {
+  code: "function foo_null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = exports.foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo_null1 = function foo_null1() {
+    return 'bar';
+  };
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 5253890412305;
+  foo_null1.__initData = _worklet_5253890412305_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
+}();"
+`;
+
+exports[`babel plugin for file workletization workletizes FunctionExpression 1`] = `
+"var _worklet_2420910284744_init_data = {
+  code: "function null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var null1 = function null1() {
+    return 'bar';
+  };
+  null1.__closure = {};
+  null1.__workletHash = 2420910284744;
+  null1.__initData = _worklet_2420910284744_init_data;
+  null1.__stackDetails = _e;
+  return null1;
+}();"
+`;
+
+exports[`babel plugin for file workletization workletizes FunctionExpression in default export 1`] = `
+"Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _worklet_2420910284744_init_data = {
+  code: "function null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _default = exports.default = function () {
+  var _e = [new global.Error(), 1, -27];
+  var null1 = function null1() {
+    return 'bar';
+  };
+  null1.__closure = {};
+  null1.__workletHash = 2420910284744;
+  null1.__initData = _worklet_2420910284744_init_data;
+  null1.__stackDetails = _e;
+  return null1;
+}();"
+`;
+
+exports[`babel plugin for file workletization workletizes FunctionExpression in named export 1`] = `
+"Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.foo = void 0;
+var _worklet_2420910284744_init_data = {
+  code: "function null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = exports.foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var null1 = function null1() {
+    return 'bar';
+  };
+  null1.__closure = {};
+  null1.__workletHash = 2420910284744;
+  null1.__initData = _worklet_2420910284744_init_data;
+  null1.__stackDetails = _e;
+  return null1;
+}();"
+`;
+
+exports[`babel plugin for file workletization workletizes ObjectMethod 1`] = `
+"var _worklet_17582834634406_init_data = {
+  code: "function bar_null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = {
+  bar: function () {
+    var _e = [new global.Error(), 1, -27];
+    var bar_null1 = function bar_null1() {
+      return 'bar';
+    };
+    bar_null1.__closure = {};
+    bar_null1.__workletHash = 17582834634406;
+    bar_null1.__initData = _worklet_17582834634406_init_data;
+    bar_null1.__stackDetails = _e;
+    return bar_null1;
+  }()
+};"
+`;
+
+exports[`babel plugin for file workletization workletizes ObjectMethod in default export 1`] = `
+"Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _worklet_17582834634406_init_data = {
+  code: "function bar_null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _default = exports.default = {
+  bar: function () {
+    var _e = [new global.Error(), 1, -27];
+    var bar_null1 = function bar_null1() {
+      return 'bar';
+    };
+    bar_null1.__closure = {};
+    bar_null1.__workletHash = 17582834634406;
+    bar_null1.__initData = _worklet_17582834634406_init_data;
+    bar_null1.__stackDetails = _e;
+    return bar_null1;
+  }()
+};"
+`;
+
+exports[`babel plugin for file workletization workletizes ObjectMethod in named export 1`] = `
+"Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.foo = void 0;
+var _worklet_17582834634406_init_data = {
+  code: "function bar_null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = exports.foo = {
+  bar: function () {
+    var _e = [new global.Error(), 1, -27];
+    var bar_null1 = function bar_null1() {
+      return 'bar';
+    };
+    bar_null1.__closure = {};
+    bar_null1.__workletHash = 17582834634406;
+    bar_null1.__initData = _worklet_17582834634406_init_data;
+    bar_null1.__stackDetails = _e;
+    return bar_null1;
+  }()
+};"
+`;
+
+exports[`babel plugin for file workletization workletizes assigned FunctionDeclaration 1`] = `
+"var _worklet_5253890412305_init_data = {
+  code: "function foo_null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo_null1 = function foo_null1() {
+    return 'bar';
+  };
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 5253890412305;
+  foo_null1.__initData = _worklet_5253890412305_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
+}();"
+`;
+
+exports[`babel plugin for file workletization workletizes multiple functions 1`] = `
+"var _worklet_5253890412305_init_data = {
+  code: "function foo_null1(){return'bar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo_null1 = function foo_null1() {
+    return 'bar';
+  };
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 5253890412305;
+  foo_null1.__initData = _worklet_5253890412305_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
+}();
+var _worklet_17530869641357_init_data = {
+  code: "function null2(){return'foobar';}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var bar = function () {
+  var _e = [new global.Error(), 1, -27];
+  var null2 = function null2() {
+    return 'foobar';
+  };
+  null2.__closure = {};
+  null2.__workletHash = 17530869641357;
+  null2.__initData = _worklet_17530869641357_init_data;
+  null2.__stackDetails = _e;
+  return null2;
+}();"
+`;
+
 exports[`babel plugin for function hooks workletizes hook wrapped ArrowFunctionExpression automatically 1`] = `
 "var _worklet_1392490775014_init_data = {
   code: "function null1(){return{width:50};}",

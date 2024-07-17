@@ -69,6 +69,12 @@ export default function RuntimeTestsExample() {
           },
         },
         {
+          testSuiteName: 'babelPlugin',
+          importTest: () => {
+            require('./tests/plugin/fileWorkletization.test');
+          },
+        },
+        {
           skipByDefault: true,
           testSuiteName: 'self-tests',
           importTest: () => {

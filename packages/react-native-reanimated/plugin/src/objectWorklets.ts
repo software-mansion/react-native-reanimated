@@ -1,5 +1,5 @@
 import type { NodePath } from '@babel/core';
-import { isWorkletizableFunctionType } from './types';
+import { isWorkletizableFunctionPath } from './types';
 import type { WorkletizableObject, ReanimatedPluginPass } from './types';
 import { processWorklet } from './workletSubstitution';
 
@@ -13,7 +13,7 @@ export function processWorkletizableObject(
       processWorklet(property, state);
     } else if (property.isObjectProperty()) {
       const value = property.get('value');
-      if (isWorkletizableFunctionType(value)) {
+      if (isWorkletizableFunctionPath(value)) {
         processWorklet(value, state);
       }
     } else {
