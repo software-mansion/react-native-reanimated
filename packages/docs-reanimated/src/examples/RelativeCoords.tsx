@@ -4,10 +4,12 @@ import Animated, {
   useAnimatedRef,
   getRelativeCoords,
 } from 'react-native-reanimated';
+import { useColorScheme } from '@mui/material';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 const RelativeCoords = () => {
   const animatedRef = useAnimatedRef();
+  const { colorScheme } = useColorScheme();
   const [coords, setCoords] = useState({ x: 0, y: 0 });
 
   const tapGesture = Gesture.Tap().onEnd((event) => {
@@ -21,10 +23,15 @@ const RelativeCoords = () => {
     }
   });
 
+  const textColor =
+    colorScheme === 'light' ? styles.darkText : styles.lightText;
+
   return (
     <View style={styles.container}>
-      <Text style={styles.coordsData}>Relative coordinates to parent:</Text>
-      <Text style={[styles.coordsData, styles.coords]}>
+      <Text style={[styles.coordsData, textColor]}>
+        Relative coordinates to parent:
+      </Text>
+      <Text style={[styles.coordsData, styles.coords, textColor]}>
         x={coords.x.toFixed()} y=
         {coords.y.toFixed()}
       </Text>
@@ -66,6 +73,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Aeonik',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  lightText: {
+    color: 'var(--swm-off-white)',
+  },
+  darkText: {
+    color: 'var(--swm-navy-light-100)',
   },
 });
 
