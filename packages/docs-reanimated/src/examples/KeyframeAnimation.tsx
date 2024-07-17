@@ -48,17 +48,16 @@ export default function KeyframeExample() {
     },
     50: {
       opacity: 0.5,
-      transform: [{ translateY: -200 }, { rotateZ: '60deg' }],
+      transform: [{ translateY: -100 }, { rotateZ: '60deg' }],
     },
     100: {
       opacity: 0,
-      transform: [{ translateY: -500 }, { rotateZ: '120deg' }],
+      transform: [{ translateY: -300 }, { rotateZ: '120deg' }],
     },
   }).duration(1000);
 
   return (
     <View style={styles.container}>
-      <Button title="Animate box" onPress={() => setVisible(!visible)} />
       {visible && (
         <Animated.View
           entering={enteringAnimation}
@@ -70,16 +69,16 @@ export default function KeyframeExample() {
           />
         </Animated.View>
       )}
+      <Button title="Animate box" onPress={() => setVisible(!visible)} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    height: '50%',
+    height: 250,
     flex: 1,
-    justifyContent: 'space-between',
-    marginVertical: 80,
+    justifyContent: 'flex-end',
     alignItems: 'center',
   },
   button: {
@@ -89,9 +88,10 @@ const styles = StyleSheet.create({
   box: {
     width: 100,
     height: 100,
-    backgroundColor: 'skyblue',
+    backgroundColor: '#b58df1',
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 48,
   },
 });
