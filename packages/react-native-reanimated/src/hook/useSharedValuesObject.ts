@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useRef } from "react";
-import type { SharedValue } from "../commonTypes";
-import { cancelAnimations } from "../animation/util";
-import { shouldBeUseWeb } from "../PlatformChecker";
-import { makeMutable } from "../mutables";
+import { useEffect, useRef } from 'react';
+import type { SharedValue } from '../commonTypes';
+import { cancelAnimations } from '../animation/util';
+import { shouldBeUseWeb } from '../PlatformChecker';
+import { makeMutable } from '../mutables';
+import type { DependencyList } from './commonTypes';
 
 const SHOULD_USE_WEB = shouldBeUseWeb();
 const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
@@ -15,7 +16,7 @@ class Mutable<V> {
   }
 }
 
-function mutable<Value>(value: Value): Mutable<Value> {
+export function mutable<Value>(value: Value): Mutable<Value> {
   return new Mutable(value);
 }
 
@@ -23,28 +24,32 @@ export type SharedValuesObjectFactoryParams = {
   mutable: typeof mutable;
 };
 
-type SharedValuesObject<Obj extends Record<string, any>> = {
+export type SharedValuesObject<Obj extends Record<string, any>> = {
   [K in keyof Obj]: Obj[K] extends Mutable<infer V> ? SharedValue<V> : Obj[K];
 };
 
-type Simplify<T> = {
+export type Simplify<T> = {
   [K in keyof T]: T[K];
   // eslint-disable-next-line @typescript-eslint/ban-types
 } & {};
 
-function makeSharedValuesObjectRecursive<Obj extends Record<string, any>>(
+export function makeSharedValuesObjectRecursive<
+  Obj extends Record<string, any>
+>(
   obj: Obj,
-  mutableValues: SharedValue[],
+  mutableValues: Array<SharedValue>,
   depth = 0
 ): {
   result: SharedValuesObject<Obj>;
-  mutableValues: SharedValue[];
+  mutableValues: Array<SharedValue>;
 } {
   if (SHOULD_USE_WEB) {
     return { result: obj, mutableValues };
   }
   if (depth > DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
-    throw new Error('[Reanimated] Trying to create a shared value object from a cyclic object. This is not supported.');
+    throw new Error(
+      '[Reanimated] Trying to create a shared value object from a cyclic object. This is not supported.'
+    );
   }
 
   const result = {} as SharedValuesObject<Obj>;
@@ -55,7 +60,7 @@ function makeSharedValuesObjectRecursive<Obj extends Record<string, any>>(
       const sharedValue = makeMutable(value.value);
       mutableValues.push(sharedValue);
       result[key] = sharedValue as any;
-    } else if (typeof value === "object") {
+    } else if (typeof value === 'object') {
       const { result: deepResult, mutableValues: deepMutableValues } =
         makeSharedValuesObjectRecursive(value, mutableValues);
       result[key] = deepResult as any;
@@ -70,16 +75,18 @@ function makeSharedValuesObjectRecursive<Obj extends Record<string, any>>(
 
 /**
  * Lets you define an object which props can be shared values.
- * 
+ *
  * @param factory - A function that returns an object with props that can be shared values.
+ * @param dependencies - An optional array of dependencies that will trigger the creation of a new shared values object (empty array by default).
  * @returns An object with props that can be shared values.
  */
 export function useSharedValuesObject<Obj extends Record<string, any>>(
-  factory: (params: SharedValuesObjectFactoryParams) => Obj
+  factory: (params: SharedValuesObjectFactoryParams) => Obj,
+  dependencies: DependencyList = []
 ): Simplify<SharedValuesObject<Obj>> {
-  const factoryRef = useRef<typeof factory>();
   const resultRef = useRef<SharedValuesObject<Obj>>();
-  const mutableValuesRef = useRef<SharedValue[]>([]);
+  const mutableValuesRef = useRef<Array<SharedValue>>([]);
+  const prevDependenciesRef = useRef<DependencyList>();
 
   useEffect(() => {
     return () => {
@@ -87,9 +94,12 @@ export function useSharedValuesObject<Obj extends Record<string, any>>(
     };
   }, []);
 
-  if (factoryRef.current !== factory) {
+  if (
+    dependencies.some((dep, i) => dep !== prevDependenciesRef.current?.[i]) ||
+    !resultRef.current
+  ) {
+    prevDependenciesRef.current = dependencies;
     cancelAnimations(mutableValuesRef.current);
-    factoryRef.current = factory;
     const { result, mutableValues } = makeSharedValuesObjectRecursive(
       factory({ mutable }),
       []
@@ -98,5 +108,5 @@ export function useSharedValuesObject<Obj extends Record<string, any>>(
     resultRef.current = result;
   }
 
-  return resultRef.current!;
+  return resultRef.current;
 }

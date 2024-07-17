@@ -11,6 +11,8 @@ export { useSharedValue } from './useSharedValue';
 export { useSharedValues } from './useSharedValues';
 export { useSharedValuesObject } from './useSharedValuesObject';
 export type { SharedValuesObjectFactoryParams } from './useSharedValuesObject';
+export { useSharedValuesObjects } from './useSharedValuesObjects';
+export type { SharedValuesObjectsFactoryParams } from './useSharedValuesObjects';
 export { useReducedMotion } from './useReducedMotion';
 export { useAnimatedStyle } from './useAnimatedStyle';
 export { useAnimatedGestureHandler } from './useAnimatedGestureHandler';

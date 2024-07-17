@@ -542,7 +542,7 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
 
 /**
  * Lets you cancel multiple running animations paired to shared values.
- * 
+ *
  * @param sharedValues - The array of shared values of running animations that you want to cancel.
  */
 export function cancelAnimations(sharedValues: Array<SharedValue>): void {

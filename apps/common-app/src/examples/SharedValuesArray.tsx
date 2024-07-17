@@ -5,6 +5,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   useSharedValues,
+  FadeIn,
 } from 'react-native-reanimated';
 import { Button, Dimensions, StyleSheet, View } from 'react-native';
 
@@ -22,7 +23,10 @@ function Box({ opacity }: BoxProps) {
   }));
 
   return (
-    <Animated.View style={styles.boxWrapper} exiting={FadeOut}>
+    <Animated.View
+      style={styles.boxWrapper}
+      exiting={FadeOut}
+      entering={FadeIn}>
       <Animated.View style={[styles.box, animatedStyle]} />
     </Animated.View>
   );
@@ -32,7 +36,11 @@ export default function SharedValuesArrayExample() {
   const [count, setCount] = useState(getCount);
   const [reset, setReset] = useState(false);
 
-  const svs = useSharedValues(count, 0, reset);
+  const svs = useSharedValues(
+    count,
+    ({ index }) => (count - index) / count, // can be also a value, like 0
+    reset ? [count] : []
+  );
 
   const animateRandomOpacity = useCallback(() => {
     svs.forEach((sv) => {
@@ -42,7 +50,6 @@ export default function SharedValuesArrayExample() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('change count');
       setCount(getCount());
     }, 3000);
 

@@ -33,6 +33,7 @@ export type {
   UseHandlerContext,
   ReanimatedEvent,
   SharedValuesObjectFactoryParams,
+  SharedValuesObjectsFactoryParams,
 } from './hook';
 export {
   useAnimatedProps,
@@ -42,6 +43,7 @@ export {
   useSharedValue,
   useSharedValues,
   useSharedValuesObject,
+  useSharedValuesObjects,
   useReducedMotion,
   useAnimatedStyle,
   useAnimatedGestureHandler,

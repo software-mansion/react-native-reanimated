@@ -142,10 +142,3 @@ export function makeMutable<Value>(initial: Value): Mutable<Value> {
   shareableMappingCache.set(mutable, handle);
   return mutable;
 }
-
-export function makeMutables<Value>(
-  count: number,
-  initialValue: Value
-): Mutable<Value>[] {
-  return Array.from({ length: count }, () => makeMutable(initialValue));
-}
