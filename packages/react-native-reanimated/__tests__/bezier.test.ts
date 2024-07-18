@@ -9,8 +9,23 @@ import { getSeededRandom } from './utils/pseudoRandom';
  */
 // spell-checker:enable
 
-const seededRandom = getSeededRandom(0);
+function splitMix32(seed: number) {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x9e3779b9) | 0;
+    let t = seed ^ (seed >>> 16);
+    t = Math.imul(t, 0x21f0aaad);
+    t = t ^ (t >>> 15);
+    t = Math.imul(t, 0x735a2d97);
+    return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296;
+  };
+}
 
+function getSeededRandom(seed: number) {
+  return splitMix32(seed);
+}
+
+const seededRandom = getSeededRandom(2);
 function repeat(n: number) {
   return (f: () => void) => {
     for (let i = 0; i < n; ++i) {
