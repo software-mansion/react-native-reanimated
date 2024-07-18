@@ -108,7 +108,6 @@ export default function ListItemLayoutAnimation() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fcfcfe',
   },
   contentContainer: {
     padding: 16,
@@ -142,6 +141,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   infoText: {
+    paddingTop: 16,
     color: '#222534',
     fontSize: 18,
   },
