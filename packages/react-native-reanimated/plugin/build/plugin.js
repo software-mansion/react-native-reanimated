@@ -1089,159 +1089,6 @@ var require_contextObject = __commonJS({
   }
 });
 
-// lib/class.js
-var require_class = __commonJS({
-  "lib/class.js"(exports2) {
-    "use strict";
-    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
-      return mod && mod.__esModule ? mod : { "default": mod };
-    };
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.processClass = void 0;
-    var core_1 = require("@babel/core");
-    var types_12 = require("@babel/types");
-    var generator_1 = __importDefault(require("@babel/generator"));
-    var types_2 = require_types();
-    var traverse_1 = __importDefault(require("@babel/traverse"));
-    var assert_1 = require("assert");
-    function processClass(path, state) {
-      if (!path.node.id) {
-        return;
-      }
-      const className = path.node.id.name;
-      const code = (0, generator_1.default)(path.node).code;
-      const transformedCode = (0, core_1.transformSync)(code, {
-        plugins: [
-          "@babel/plugin-transform-class-properties",
-          "@babel/plugin-transform-classes",
-          "@babel/plugin-transform-unicode-regex"
-        ],
-        filename: state.file.opts.filename,
-        ast: true,
-        babelrc: false,
-        configFile: false
-      });
-      (0, assert_1.strict)(transformedCode);
-      (0, assert_1.strict)(transformedCode.ast);
-      const ast = transformedCode.ast;
-      let factory;
-      let hasHandledClass = false;
-      (0, traverse_1.default)(ast, {
-        [types_2.WorkletizableFunction]: {
-          enter: (functionPath) => {
-            if (functionPath.parentPath.isObjectProperty()) {
-              return;
-            }
-            const workletDirective = (0, types_12.directive)((0, types_12.directiveLiteral)("worklet"));
-            if (functionPath.parentPath.isCallExpression() && !hasHandledClass) {
-              const factoryCopy = (0, types_12.cloneNode)(functionPath.node, true);
-              factoryCopy.id = (0, types_12.identifier)(className + "ClassFactory");
-              factoryCopy.body.directives.push(workletDirective);
-              factory = (0, types_12.variableDeclaration)("const", [
-                (0, types_12.variableDeclarator)((0, types_12.identifier)(className + "ClassFactory"), factoryCopy)
-              ]);
-              hasHandledClass = true;
-              return;
-            }
-            const bodyPath = functionPath.get("body");
-            if (!bodyPath.isBlockStatement()) {
-              bodyPath.replaceWith((0, types_12.blockStatement)([(0, types_12.returnStatement)(bodyPath.node)]));
-            }
-            functionPath.node.body.directives.push(workletDirective);
-          }
-        }
-      });
-      const body = ast.program.body;
-      body.push(factory);
-      body.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(className), (0, types_12.identifier)(className + "ClassFactory")), (0, types_12.identifier)(className + "ClassFactory"))));
-      sortPolyfills(ast);
-      const transformedNewCode = (0, core_1.transformSync)((0, generator_1.default)(ast).code, {
-        ast: true,
-        filename: state.file.opts.filename
-      });
-      (0, assert_1.strict)(transformedNewCode);
-      (0, assert_1.strict)(transformedNewCode.ast);
-      const parent = path.parent;
-      const index = parent.body.findIndex((node) => node === path.node);
-      parent.body.splice(index, 1, ...transformedNewCode.ast.program.body);
-    }
-    exports2.processClass = processClass;
-    function sortPolyfills(ast) {
-      const toSort = getPolyfillsToSort(ast);
-      const sorted = topoSort(toSort);
-      const toSortIndices = toSort.map((element) => element.index);
-      const sortedIndices = sorted.map((element) => element.index);
-      const statements = ast.program.body;
-      const oldStatements = [...statements];
-      for (let i = 0; i < toSort.length; i++) {
-        const sourceIndex = sortedIndices[i];
-        const targetIndex = toSortIndices[i];
-        const source = oldStatements[sourceIndex];
-        statements[targetIndex] = source;
-      }
-    }
-    function getPolyfillsToSort(ast) {
-      const polyfills = [];
-      (0, traverse_1.default)(ast, {
-        Program: {
-          enter: (functionPath) => {
-            const statements = functionPath.get("body");
-            statements.forEach((statement, index) => {
-              var _a;
-              const bindingIdentifiers = statement.getBindingIdentifiers();
-              if (!statement.isFunctionDeclaration() || !((_a = statement.node.id) === null || _a === void 0 ? void 0 : _a.name)) {
-                return;
-              }
-              const element = {
-                name: statement.node.id.name,
-                index,
-                dependencies: /* @__PURE__ */ new Set()
-              };
-              polyfills.push(element);
-              statement.traverse({
-                Identifier(path) {
-                  if (!path.isReferencedIdentifier() || path.node.name in bindingIdentifiers || statement.scope.hasOwnBinding(path.node.name) || !statement.scope.hasReference(path.node.name)) {
-                    return;
-                  }
-                  element.dependencies.add(path.node.name);
-                  console.log(path.node.name);
-                }
-              });
-            });
-          }
-        }
-      });
-      return polyfills;
-    }
-    function topoSort(toSort) {
-      const sorted = [];
-      const stack = /* @__PURE__ */ new Set();
-      for (const element of toSort) {
-        recursiveTopoSort(element, toSort, sorted, stack);
-      }
-      return sorted;
-    }
-    function recursiveTopoSort(current, toSort, sorted, stack) {
-      if (stack.has(current.name)) {
-        throw new Error("Cycle detected. This should never happen.");
-      }
-      if (sorted.find((element) => element.name === current.name)) {
-        return;
-      }
-      stack.add(current.name);
-      for (const dependency of current.dependencies) {
-        if (!sorted.find((element) => element.name === dependency)) {
-          const next = toSort.find((element) => element.name === dependency);
-          (0, assert_1.strict)(next);
-          recursiveTopoSort(next, toSort, sorted, stack);
-        }
-      }
-      sorted.push(current);
-      stack.delete(current.name);
-    }
-  }
-});
-
 // lib/file.js
 var require_file = __commonJS({
   "lib/file.js"(exports2) {
@@ -1250,14 +1097,13 @@ var require_file = __commonJS({
     exports2.isImplicitContextObject = exports2.processIfWorkletFile = void 0;
     var types_12 = require("@babel/types");
     var types_2 = require_types();
-    var class_1 = require_class();
     var contextObject_12 = require_contextObject();
     function processIfWorkletFile(path, state) {
       if (!path.node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
         return false;
       }
-      processWorkletFile(path, state);
       path.node.directives = path.node.directives.filter((functionDirective) => functionDirective.value.value !== "worklet");
+      processWorkletFile(path, state);
       return true;
     }
     exports2.processIfWorkletFile = processIfWorkletFile;
@@ -1290,7 +1136,7 @@ var require_file = __commonJS({
       } else if (nodePath.isVariableDeclaration()) {
         processVariableDeclaration(nodePath, state);
       } else if (nodePath.isClassDeclaration()) {
-        (0, class_1.processClass)(nodePath, state);
+        appendWorkletClassMarker(nodePath.node.body);
       }
     }
     function processVariableDeclaration(variableDeclarationPath, state) {
@@ -1348,6 +1194,9 @@ var require_file = __commonJS({
         }
       });
       return result;
+    }
+    function appendWorkletClassMarker(classBody) {
+      classBody.body.push((0, types_12.classProperty)((0, types_12.identifier)("__workletClass"), (0, types_12.booleanLiteral)(true)));
     }
   }
 });
@@ -1453,6 +1302,207 @@ var require_webOptimization = __commonJS({
   }
 });
 
+// lib/class.js
+var require_class = __commonJS({
+  "lib/class.js"(exports2) {
+    "use strict";
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processIfWorkletClass = void 0;
+    var core_1 = require("@babel/core");
+    var types_12 = require("@babel/types");
+    var generator_1 = __importDefault(require("@babel/generator"));
+    var types_2 = require_types();
+    var traverse_1 = __importDefault(require("@babel/traverse"));
+    var assert_1 = require("assert");
+    var classWorkletMarker = "__workletClass";
+    function processIfWorkletClass(classPath, state) {
+      if (!classPath.node.id) {
+        return false;
+      }
+      if (!hasWorkletClassMarker(classPath.node.body)) {
+        return false;
+      }
+      const parentPath = classPath.parentPath;
+      const className = classPath.node.id.name;
+      classPath = splitClassExports(classPath, parentPath, className);
+      removeWorkletClassMarker(classPath.node.body);
+      processClass(classPath, state);
+      classPath.skip();
+      return true;
+    }
+    exports2.processIfWorkletClass = processIfWorkletClass;
+    function splitClassExports(classPath, parentPath, className) {
+      if (parentPath.isExportDefaultDeclaration()) {
+        return splitDefaultExportClassDeclaration(parentPath, className);
+      } else if (parentPath.isExportNamedDeclaration()) {
+        return splitNamedExportClassDeclaration(parentPath, className);
+      } else {
+        return classPath;
+      }
+    }
+    function splitDefaultExportClassDeclaration(exportPath, name) {
+      const identifierExport = (0, types_12.exportDefaultDeclaration)((0, types_12.identifier)(name));
+      const newClassPath = exportPath.replaceWithMultiple([
+        exportPath.node.declaration,
+        identifierExport
+      ])[0];
+      return newClassPath;
+    }
+    function splitNamedExportClassDeclaration(exportPath, name) {
+      const identifierExport = (0, types_12.exportNamedDeclaration)(null, [
+        (0, types_12.exportSpecifier)((0, types_12.identifier)(name), (0, types_12.identifier)(name))
+      ]);
+      const newClassPath = exportPath.replaceWithMultiple([
+        exportPath.node.declaration,
+        identifierExport
+      ])[0];
+      return newClassPath;
+    }
+    function hasWorkletClassMarker(classBody) {
+      return classBody.body.some((statement) => (0, types_12.isClassProperty)(statement) && (0, types_12.isIdentifier)(statement.key) && statement.key.name === classWorkletMarker);
+    }
+    function removeWorkletClassMarker(classBody) {
+      classBody.body = classBody.body.filter((statement) => !(0, types_12.isClassProperty)(statement) || !(0, types_12.isIdentifier)(statement.key) || statement.key.name !== classWorkletMarker);
+    }
+    function processClass(classPath, state) {
+      if (!classPath.node.id) {
+        return;
+      }
+      const className = classPath.node.id.name;
+      const code = (0, generator_1.default)(classPath.node).code;
+      const transformedCode = (0, core_1.transformSync)(code, {
+        plugins: [
+          "@babel/plugin-transform-class-properties",
+          "@babel/plugin-transform-classes",
+          "@babel/plugin-transform-unicode-regex"
+        ],
+        filename: state.file.opts.filename,
+        ast: true,
+        babelrc: false,
+        configFile: false
+      });
+      (0, assert_1.strict)(transformedCode);
+      (0, assert_1.strict)(transformedCode.ast);
+      const ast = transformedCode.ast;
+      let factory;
+      let hasHandledClass = false;
+      (0, traverse_1.default)(ast, {
+        [types_2.WorkletizableFunction]: {
+          enter: (functionPath) => {
+            if (functionPath.parentPath.isObjectProperty()) {
+              return;
+            }
+            const workletDirective = (0, types_12.directive)((0, types_12.directiveLiteral)("worklet"));
+            if (functionPath.parentPath.isCallExpression() && !hasHandledClass) {
+              const factoryCopy = (0, types_12.cloneNode)(functionPath.node, true);
+              factoryCopy.id = (0, types_12.identifier)(className + "ClassFactory");
+              factoryCopy.body.directives.push(workletDirective);
+              factory = (0, types_12.variableDeclaration)("const", [
+                (0, types_12.variableDeclarator)((0, types_12.identifier)(className + "ClassFactory"), factoryCopy)
+              ]);
+              hasHandledClass = true;
+              return;
+            }
+            const bodyPath = functionPath.get("body");
+            if (!bodyPath.isBlockStatement()) {
+              bodyPath.replaceWith((0, types_12.blockStatement)([(0, types_12.returnStatement)(bodyPath.node)]));
+            }
+            functionPath.node.body.directives.push(workletDirective);
+          }
+        }
+      });
+      const body = ast.program.body;
+      body.push(factory);
+      body.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(className), (0, types_12.identifier)(className + "ClassFactory")), (0, types_12.identifier)(className + "ClassFactory"))));
+      sortPolyfills(ast);
+      const transformedNewCode = (0, core_1.transformSync)((0, generator_1.default)(ast).code, {
+        ast: true,
+        filename: state.file.opts.filename
+      });
+      (0, assert_1.strict)(transformedNewCode);
+      (0, assert_1.strict)(transformedNewCode.ast);
+      const parent = classPath.parent;
+      const index = parent.body.findIndex((node) => node === classPath.node);
+      parent.body.splice(index, 1, ...transformedNewCode.ast.program.body);
+    }
+    function sortPolyfills(ast) {
+      const toSort = getPolyfillsToSort(ast);
+      const sorted = topoSort(toSort);
+      const toSortIndices = toSort.map((element) => element.index);
+      const sortedIndices = sorted.map((element) => element.index);
+      const statements = ast.program.body;
+      const oldStatements = [...statements];
+      for (let i = 0; i < toSort.length; i++) {
+        const sourceIndex = sortedIndices[i];
+        const targetIndex = toSortIndices[i];
+        const source = oldStatements[sourceIndex];
+        statements[targetIndex] = source;
+      }
+    }
+    function getPolyfillsToSort(ast) {
+      const polyfills = [];
+      (0, traverse_1.default)(ast, {
+        Program: {
+          enter: (functionPath) => {
+            const statements = functionPath.get("body");
+            statements.forEach((statement, index) => {
+              var _a;
+              const bindingIdentifiers = statement.getBindingIdentifiers();
+              if (!statement.isFunctionDeclaration() || !((_a = statement.node.id) === null || _a === void 0 ? void 0 : _a.name)) {
+                return;
+              }
+              const element = {
+                name: statement.node.id.name,
+                index,
+                dependencies: /* @__PURE__ */ new Set()
+              };
+              polyfills.push(element);
+              statement.traverse({
+                Identifier(path) {
+                  if (!path.isReferencedIdentifier() || path.node.name in bindingIdentifiers || statement.scope.hasOwnBinding(path.node.name) || !statement.scope.hasReference(path.node.name)) {
+                    return;
+                  }
+                  element.dependencies.add(path.node.name);
+                }
+              });
+            });
+          }
+        }
+      });
+      return polyfills;
+    }
+    function topoSort(toSort) {
+      const sorted = [];
+      const stack = /* @__PURE__ */ new Set();
+      for (const element of toSort) {
+        recursiveTopoSort(element, toSort, sorted, stack);
+      }
+      return sorted;
+    }
+    function recursiveTopoSort(current, toSort, sorted, stack) {
+      if (stack.has(current.name)) {
+        throw new Error("Cycle detected. This should never happen.");
+      }
+      if (sorted.find((element) => element.name === current.name)) {
+        return;
+      }
+      stack.add(current.name);
+      for (const dependency of current.dependencies) {
+        if (!sorted.find((element) => element.name === dependency)) {
+          const next = toSort.find((element) => element.name === dependency);
+          (0, assert_1.strict)(next);
+          recursiveTopoSort(next, toSort, sorted, stack);
+        }
+      }
+      sorted.push(current);
+      stack.delete(current.name);
+    }
+  }
+});
+
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var autoworkletization_1 = require_autoworkletization();
@@ -1464,6 +1514,7 @@ var types_1 = require_types();
 var utils_1 = require_utils();
 var webOptimization_1 = require_webOptimization();
 var workletSubstitution_1 = require_workletSubstitution();
+var class_1 = require_class();
 module.exports = function() {
   function runWithTaggedExceptions(fun) {
     try {
@@ -1502,6 +1553,13 @@ module.exports = function() {
         enter(path, state) {
           runWithTaggedExceptions(() => {
             (0, contextObject_1.processIfWorkletContextObject)(path, state);
+          });
+        }
+      },
+      ClassDeclaration: {
+        enter(path, state) {
+          runWithTaggedExceptions(() => {
+            (0, class_1.processIfWorkletClass)(path, state);
           });
         }
       },

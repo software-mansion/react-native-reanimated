@@ -10,7 +10,7 @@ import {
   test,
   expect,
 } from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { getThree, implicitContextObject } from './fileWorkletization';
+import { ImplicitWorkletClass, getThree, implicitContextObject } from './fileWorkletization';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
@@ -51,5 +51,24 @@ describe('Test file workletization', () => {
     await wait(100);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValue.onUI).toBe(5);
+  });
+
+  test('WorkletClass are workletized', async () => {
+    const ExampleComponent = () => {
+      const output = useSharedValue<number | null>(null);
+      registerValue(SHARED_VALUE_REF, output);
+
+      useEffect(() => {
+        runOnUI(() => {
+          output.value = new ImplicitWorkletClass().getSeven();
+        })();
+      });
+
+      return <View />;
+    };
+    await render(<ExampleComponent />);
+    await wait(100);
+    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe(7);
   });
 });

@@ -2308,6 +2308,59 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
+    it('workletizes ClassDeclaration', () => {
+      const input = html`<script>
+        'worklet';
+        class Clazz {
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var ClazzClassFactory = function ()');
+      expect(code).toIncludeInWorkletString('ClazzClassFactory');
+      expect(code).toContain('Clazz.ClazzClassFactory = ClazzClassFactory');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ClassDeclaration in named export', () => {
+      const input = html`<script>
+        'worklet';
+        export class Clazz {
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var Clazz = exports.Clazz = function ()');
+      expect(code).toContain('var ClazzClassFactory = function ()');
+      expect(code).toIncludeInWorkletString('ClazzClassFactory');
+      expect(code).toContain('Clazz.ClazzClassFactory = ClazzClassFactory');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ClassDeclaration in default export', () => {
+      const input = html`<script>
+        'worklet';
+        export default class Clazz {
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var Clazz = exports.default = function ()');
+      expect(code).toContain('var ClazzClassFactory = function ()');
+      expect(code).toIncludeInWorkletString('ClazzClassFactory');
+      expect(code).toContain('Clazz.ClazzClassFactory = ClazzClassFactory');
+      expect(code).toMatchSnapshot();
+    });
+
     it('workletizes multiple functions', () => {
       const input = html`<script>
         'worklet';
@@ -2406,11 +2459,11 @@ describe('babel plugin', () => {
     });
   });
 
-  describe('for classes', () => {
-    it('creates factories', () => {
+  describe('for worklet classes', () => {
+    it('removes marker', () => {
       const input = html`<script>
-        'worklet';
         class Clazz {
+          __workletClass = true;
           foo() {
             return 'bar';
           }
@@ -2418,9 +2471,39 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('var ClazzClassFactory = function ()');
-      expect(code).toIncludeInWorkletString('ClazzClassFactory');
-      expect(code).toContain('Clazz.ClazzClassFactory = ClazzClassFactory');
+      expect(code).not.toMatch(/__workletClass:\s*/g);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('creates factories', () => {
+      const input = html`<script>
+        class Clazz {
+          __workletClass = true;
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('ClazzClassFactory');
+      expect(code).toHaveWorkletData(7);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes regardless of marker value', () => {
+      const input = html`<script>
+        class Clazz {
+          __workletClass = new RegExp('foo');
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('ClazzClassFactory');
+      expect(code).toHaveWorkletData(7);
       expect(code).toMatchSnapshot();
     });
 
@@ -2450,10 +2533,10 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('keeps "this" binding', () => {
+    it('keeps this binding', () => {
       const input = html`<script>
-        'worklet';
         class Clazz {
+          __workletClass = true;
           member = 1;
           foo() {
             return this.member;
@@ -2463,13 +2546,15 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toIncludeInWorkletString('this.member');
+      expect(code).toHaveWorkletData(8);
       expect(code).toMatchSnapshot();
     });
 
     it('appends necessary polyfills', () => {
       const input = html`<script>
-        'worklet';
         class Clazz {
+          __workletClass = true;
+
           foo() {
             return 'bar';
           }

@@ -593,222 +593,6 @@ var Foo = function () {
 }();"
 `;
 
-exports[`babel plugin for classes creates factories 1`] = `
-"var _worklet_4914514148035_init_data = {
-  code: "function _toPrimitive(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var _toPrimitive = function () {
-  var _e = [new global.Error(), 1, -27];
-  var _toPrimitive = function _toPrimitive(t, r) {
-    if ("object" != typeof t || !t) return t;
-    var e = t[Symbol.toPrimitive];
-    if (void 0 !== e) {
-      var i = e.call(t, r || "default");
-      if ("object" != typeof i) return i;
-      throw new TypeError("@@toPrimitive must return a primitive value.");
-    }
-    return ("string" === r ? String : Number)(t);
-  };
-  _toPrimitive.__closure = {};
-  _toPrimitive.__workletHash = 4914514148035;
-  _toPrimitive.__initData = _worklet_4914514148035_init_data;
-  _toPrimitive.__stackDetails = _e;
-  return _toPrimitive;
-}();
-var _worklet_14183653944217_init_data = {
-  code: "function _toPropertyKey(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var _toPropertyKey = function () {
-  var _e = [new global.Error(), -2, -27];
-  var _toPropertyKey = function _toPropertyKey(t) {
-    var i = _toPrimitive(t, "string");
-    return "symbol" == typeof i ? i : i + "";
-  };
-  _toPropertyKey.__closure = {
-    _toPrimitive: _toPrimitive
-  };
-  _toPropertyKey.__workletHash = 14183653944217;
-  _toPropertyKey.__initData = _worklet_14183653944217_init_data;
-  _toPropertyKey.__stackDetails = _e;
-  return _toPropertyKey;
-}();
-var _worklet_17099703587270_init_data = {
-  code: "function _classCallCheck(instance,Constructor){if(!(instance instanceof Constructor)){throw new TypeError(\\"Cannot call a class as a function\\");}}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var _classCallCheck = function () {
-  var _e = [new global.Error(), 1, -27];
-  var _classCallCheck = function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  };
-  _classCallCheck.__closure = {};
-  _classCallCheck.__workletHash = 17099703587270;
-  _classCallCheck.__initData = _worklet_17099703587270_init_data;
-  _classCallCheck.__stackDetails = _e;
-  return _classCallCheck;
-}();
-var _worklet_7208792264399_init_data = {
-  code: "function _defineProperties(target,props){const{_toPropertyKey}=this.__closure;for(var i=0;i<props.length;i++){var descriptor=props[i];descriptor.enumerable=descriptor.enumerable||false;descriptor.configurable=true;if(\\"value\\"in descriptor)descriptor.writable=true;Object.defineProperty(target,_toPropertyKey(descriptor.key),descriptor);}}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var _defineProperties = function () {
-  var _e = [new global.Error(), -2, -27];
-  var _defineProperties = function _defineProperties(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
-    }
-  };
-  _defineProperties.__closure = {
-    _toPropertyKey: _toPropertyKey
-  };
-  _defineProperties.__workletHash = 7208792264399;
-  _defineProperties.__initData = _worklet_7208792264399_init_data;
-  _defineProperties.__stackDetails = _e;
-  return _defineProperties;
-}();
-var _worklet_10605373819257_init_data = {
-  code: "function _createClass(Constructor,protoProps,staticProps){const{_defineProperties}=this.__closure;if(protoProps)_defineProperties(Constructor.prototype,protoProps);if(staticProps)_defineProperties(Constructor,staticProps);Object.defineProperty(Constructor,\\"prototype\\",{writable:false});return Constructor;}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var _createClass = function () {
-  var _e = [new global.Error(), -2, -27];
-  var _createClass = function _createClass(Constructor, protoProps, staticProps) {
-    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) _defineProperties(Constructor, staticProps);
-    Object.defineProperty(Constructor, "prototype", {
-      writable: false
-    });
-    return Constructor;
-  };
-  _createClass.__closure = {
-    _defineProperties: _defineProperties
-  };
-  _createClass.__workletHash = 10605373819257;
-  _createClass.__initData = _worklet_10605373819257_init_data;
-  _createClass.__stackDetails = _e;
-  return _createClass;
-}();
-var _worklet_2086847118055_init_data = {
-  code: "function Clazz(){const Clazz=this._recur;const{_classCallCheck}=this.__closure;_classCallCheck(this,Clazz);}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var Clazz = function () {
-  var Clazz = function () {
-    var _e = [new global.Error(), -2, -27];
-    var Clazz = function Clazz() {
-      _classCallCheck(this, Clazz);
-    };
-    Clazz.__closure = {
-      _classCallCheck: _classCallCheck
-    };
-    Clazz.__workletHash = 2086847118055;
-    Clazz.__initData = _worklet_2086847118055_init_data;
-    Clazz.__stackDetails = _e;
-    return Clazz;
-  }();
-  return _createClass(Clazz, [{
-    key: "foo",
-    value: function foo() {
-      return 'bar';
-    }
-  }]);
-}();
-var _worklet_16819682277204_init_data = {
-  code: "function ClazzClassFactory(){const{_classCallCheck,_createClass}=this.__closure;function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function foo(){return'bar';}}]);}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var ClazzClassFactory = function () {
-  var _e = [new global.Error(), -3, -27];
-  var ClazzClassFactory = function ClazzClassFactory() {
-    function Clazz() {
-      _classCallCheck(this, Clazz);
-    }
-    return _createClass(Clazz, [{
-      key: "foo",
-      value: function foo() {
-        return 'bar';
-      }
-    }]);
-  };
-  ClazzClassFactory.__closure = {
-    _classCallCheck: _classCallCheck,
-    _createClass: _createClass
-  };
-  ClazzClassFactory.__workletHash = 16819682277204;
-  ClazzClassFactory.__initData = _worklet_16819682277204_init_data;
-  ClazzClassFactory.__stackDetails = _e;
-  return ClazzClassFactory;
-}();
-Clazz.ClazzClassFactory = ClazzClassFactory;"
-`;
-
-exports[`babel plugin for classes injects class factory into worklets 1`] = `
-"var _worklet_6226780449930_init_data = {
-  code: "function foo(){const{ClazzClassFactory}=this.__closure;const Clazz=ClazzClassFactory();const clazz=new Clazz();}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var foo = function () {
-  var _e = [new global.Error(), -2, -27];
-  var foo = function foo() {
-    var clazz = new Clazz();
-  };
-  foo.__closure = {
-    ClazzClassFactory: Clazz.ClazzClassFactory
-  };
-  foo.__workletHash = 6226780449930;
-  foo.__initData = _worklet_6226780449930_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}();"
-`;
-
-exports[`babel plugin for classes modifies closures 1`] = `
-"var _worklet_376621464214_init_data = {
-  code: "function foo(){const{ClazzClassFactory}=this.__closure;const Clazz=ClazzClassFactory();const clazz=new Clazz();clazz.foo();}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var foo = function () {
-  var _e = [new global.Error(), -2, -27];
-  var foo = function foo() {
-    var clazz = new Clazz();
-    clazz.foo();
-  };
-  foo.__closure = {
-    ClazzClassFactory: Clazz.ClazzClassFactory
-  };
-  foo.__workletHash = 376621464214;
-  foo.__initData = _worklet_376621464214_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}();"
-`;
-
 exports[`babel plugin for closure capturing captures worklets environment 1`] = `
 "var x = 5;
 var objX = {
@@ -1272,6 +1056,530 @@ var foo = exports.foo = function () {
   null1.__stackDetails = _e;
   return null1;
 }();"
+`;
+
+exports[`babel plugin for file workletization workletizes ClassDeclaration 1`] = `
+"var _worklet_4985973100755_init_data = {
+  code: "function _classCallCheck_null1(instance,Constructor){if(!(instance instanceof Constructor)){throw new TypeError(\\"Cannot call a class as a function\\");}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _classCallCheck = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _classCallCheck_null1 = function _classCallCheck_null1(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  };
+  _classCallCheck_null1.__closure = {};
+  _classCallCheck_null1.__workletHash = 4985973100755;
+  _classCallCheck_null1.__initData = _worklet_4985973100755_init_data;
+  _classCallCheck_null1.__stackDetails = _e;
+  return _classCallCheck_null1;
+}();
+var _worklet_12814759901173_init_data = {
+  code: "function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPrimitive = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _toPrimitive_null2 = function _toPrimitive_null2(t, r) {
+    if ("object" != typeof t || !t) return t;
+    var e = t[Symbol.toPrimitive];
+    if (void 0 !== e) {
+      var i = e.call(t, r || "default");
+      if ("object" != typeof i) return i;
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === r ? String : Number)(t);
+  };
+  _toPrimitive_null2.__closure = {};
+  _toPrimitive_null2.__workletHash = 12814759901173;
+  _toPrimitive_null2.__initData = _worklet_12814759901173_init_data;
+  _toPrimitive_null2.__stackDetails = _e;
+  return _toPrimitive_null2;
+}();
+var _worklet_10645339112046_init_data = {
+  code: "function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPropertyKey = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _toPropertyKey_null3 = function _toPropertyKey_null3(t) {
+    var i = _toPrimitive(t, "string");
+    return "symbol" == typeof i ? i : i + "";
+  };
+  _toPropertyKey_null3.__closure = {
+    _toPrimitive: _toPrimitive
+  };
+  _toPropertyKey_null3.__workletHash = 10645339112046;
+  _toPropertyKey_null3.__initData = _worklet_10645339112046_init_data;
+  _toPropertyKey_null3.__stackDetails = _e;
+  return _toPropertyKey_null3;
+}();
+var _worklet_712232292287_init_data = {
+  code: "function _defineProperties_null4(target,props){const{_toPropertyKey}=this.__closure;for(var i=0;i<props.length;i++){var descriptor=props[i];descriptor.enumerable=descriptor.enumerable||false;descriptor.configurable=true;if(\\"value\\"in descriptor)descriptor.writable=true;Object.defineProperty(target,_toPropertyKey(descriptor.key),descriptor);}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _defineProperties = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _defineProperties_null4 = function _defineProperties_null4(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
+    }
+  };
+  _defineProperties_null4.__closure = {
+    _toPropertyKey: _toPropertyKey
+  };
+  _defineProperties_null4.__workletHash = 712232292287;
+  _defineProperties_null4.__initData = _worklet_712232292287_init_data;
+  _defineProperties_null4.__stackDetails = _e;
+  return _defineProperties_null4;
+}();
+var _worklet_6195256852552_init_data = {
+  code: "function _createClass_null5(Constructor,protoProps,staticProps){const{_defineProperties}=this.__closure;if(protoProps)_defineProperties(Constructor.prototype,protoProps);if(staticProps)_defineProperties(Constructor,staticProps);Object.defineProperty(Constructor,\\"prototype\\",{writable:false});return Constructor;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _createClass = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _createClass_null5 = function _createClass_null5(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    Object.defineProperty(Constructor, "prototype", {
+      writable: false
+    });
+    return Constructor;
+  };
+  _createClass_null5.__closure = {
+    _defineProperties: _defineProperties
+  };
+  _createClass_null5.__workletHash = 6195256852552;
+  _createClass_null5.__initData = _worklet_6195256852552_init_data;
+  _createClass_null5.__stackDetails = _e;
+  return _createClass_null5;
+}();
+var _worklet_13489230457045_init_data = {
+  code: "function Clazz_null6(){const Clazz_null6=this._recur;const{_classCallCheck}=this.__closure;_classCallCheck(this,Clazz_null6);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Clazz = function () {
+  var Clazz = function () {
+    var _e = [new global.Error(), -2, -27];
+    var Clazz_null6 = function Clazz_null6() {
+      _classCallCheck(this, Clazz);
+    };
+    Clazz_null6.__closure = {
+      _classCallCheck: _classCallCheck
+    };
+    Clazz_null6.__workletHash = 13489230457045;
+    Clazz_null6.__initData = _worklet_13489230457045_init_data;
+    Clazz_null6.__stackDetails = _e;
+    return Clazz_null6;
+  }();
+  return _createClass(Clazz, [{
+    key: "foo",
+    value: function foo() {
+      return 'bar';
+    }
+  }]);
+}();
+var _worklet_11402422575750_init_data = {
+  code: "function ClazzClassFactory_null7(){const{_classCallCheck,_createClass}=this.__closure;function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function ClazzClassFactory_null7(){return'bar';}}]);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var ClazzClassFactory = function () {
+  var _e = [new global.Error(), -3, -27];
+  var ClazzClassFactory_null7 = function ClazzClassFactory_null7() {
+    function Clazz() {
+      _classCallCheck(this, Clazz);
+    }
+    return _createClass(Clazz, [{
+      key: "foo",
+      value: function foo() {
+        return 'bar';
+      }
+    }]);
+  };
+  ClazzClassFactory_null7.__closure = {
+    _classCallCheck: _classCallCheck,
+    _createClass: _createClass
+  };
+  ClazzClassFactory_null7.__workletHash = 11402422575750;
+  ClazzClassFactory_null7.__initData = _worklet_11402422575750_init_data;
+  ClazzClassFactory_null7.__stackDetails = _e;
+  return ClazzClassFactory_null7;
+}();
+Clazz.ClazzClassFactory = ClazzClassFactory;"
+`;
+
+exports[`babel plugin for file workletization workletizes ClassDeclaration in default export 1`] = `
+"Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _worklet_4985973100755_init_data = {
+  code: "function _classCallCheck_null1(instance,Constructor){if(!(instance instanceof Constructor)){throw new TypeError(\\"Cannot call a class as a function\\");}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _classCallCheck = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _classCallCheck_null1 = function _classCallCheck_null1(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  };
+  _classCallCheck_null1.__closure = {};
+  _classCallCheck_null1.__workletHash = 4985973100755;
+  _classCallCheck_null1.__initData = _worklet_4985973100755_init_data;
+  _classCallCheck_null1.__stackDetails = _e;
+  return _classCallCheck_null1;
+}();
+var _worklet_12814759901173_init_data = {
+  code: "function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPrimitive = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _toPrimitive_null2 = function _toPrimitive_null2(t, r) {
+    if ("object" != typeof t || !t) return t;
+    var e = t[Symbol.toPrimitive];
+    if (void 0 !== e) {
+      var i = e.call(t, r || "default");
+      if ("object" != typeof i) return i;
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === r ? String : Number)(t);
+  };
+  _toPrimitive_null2.__closure = {};
+  _toPrimitive_null2.__workletHash = 12814759901173;
+  _toPrimitive_null2.__initData = _worklet_12814759901173_init_data;
+  _toPrimitive_null2.__stackDetails = _e;
+  return _toPrimitive_null2;
+}();
+var _worklet_10645339112046_init_data = {
+  code: "function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPropertyKey = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _toPropertyKey_null3 = function _toPropertyKey_null3(t) {
+    var i = _toPrimitive(t, "string");
+    return "symbol" == typeof i ? i : i + "";
+  };
+  _toPropertyKey_null3.__closure = {
+    _toPrimitive: _toPrimitive
+  };
+  _toPropertyKey_null3.__workletHash = 10645339112046;
+  _toPropertyKey_null3.__initData = _worklet_10645339112046_init_data;
+  _toPropertyKey_null3.__stackDetails = _e;
+  return _toPropertyKey_null3;
+}();
+var _worklet_712232292287_init_data = {
+  code: "function _defineProperties_null4(target,props){const{_toPropertyKey}=this.__closure;for(var i=0;i<props.length;i++){var descriptor=props[i];descriptor.enumerable=descriptor.enumerable||false;descriptor.configurable=true;if(\\"value\\"in descriptor)descriptor.writable=true;Object.defineProperty(target,_toPropertyKey(descriptor.key),descriptor);}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _defineProperties = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _defineProperties_null4 = function _defineProperties_null4(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
+    }
+  };
+  _defineProperties_null4.__closure = {
+    _toPropertyKey: _toPropertyKey
+  };
+  _defineProperties_null4.__workletHash = 712232292287;
+  _defineProperties_null4.__initData = _worklet_712232292287_init_data;
+  _defineProperties_null4.__stackDetails = _e;
+  return _defineProperties_null4;
+}();
+var _worklet_6195256852552_init_data = {
+  code: "function _createClass_null5(Constructor,protoProps,staticProps){const{_defineProperties}=this.__closure;if(protoProps)_defineProperties(Constructor.prototype,protoProps);if(staticProps)_defineProperties(Constructor,staticProps);Object.defineProperty(Constructor,\\"prototype\\",{writable:false});return Constructor;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _createClass = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _createClass_null5 = function _createClass_null5(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    Object.defineProperty(Constructor, "prototype", {
+      writable: false
+    });
+    return Constructor;
+  };
+  _createClass_null5.__closure = {
+    _defineProperties: _defineProperties
+  };
+  _createClass_null5.__workletHash = 6195256852552;
+  _createClass_null5.__initData = _worklet_6195256852552_init_data;
+  _createClass_null5.__stackDetails = _e;
+  return _createClass_null5;
+}();
+var _worklet_13489230457045_init_data = {
+  code: "function Clazz_null6(){const Clazz_null6=this._recur;const{_classCallCheck}=this.__closure;_classCallCheck(this,Clazz_null6);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Clazz = exports.default = function () {
+  var Clazz = function () {
+    var _e = [new global.Error(), -2, -27];
+    var Clazz_null6 = function Clazz_null6() {
+      _classCallCheck(this, Clazz);
+    };
+    Clazz_null6.__closure = {
+      _classCallCheck: _classCallCheck
+    };
+    Clazz_null6.__workletHash = 13489230457045;
+    Clazz_null6.__initData = _worklet_13489230457045_init_data;
+    Clazz_null6.__stackDetails = _e;
+    return Clazz_null6;
+  }();
+  return _createClass(Clazz, [{
+    key: "foo",
+    value: function foo() {
+      return 'bar';
+    }
+  }]);
+}();
+var _worklet_11402422575750_init_data = {
+  code: "function ClazzClassFactory_null7(){const{_classCallCheck,_createClass}=this.__closure;function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function ClazzClassFactory_null7(){return'bar';}}]);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var ClazzClassFactory = function () {
+  var _e = [new global.Error(), -3, -27];
+  var ClazzClassFactory_null7 = function ClazzClassFactory_null7() {
+    function Clazz() {
+      _classCallCheck(this, Clazz);
+    }
+    return _createClass(Clazz, [{
+      key: "foo",
+      value: function foo() {
+        return 'bar';
+      }
+    }]);
+  };
+  ClazzClassFactory_null7.__closure = {
+    _classCallCheck: _classCallCheck,
+    _createClass: _createClass
+  };
+  ClazzClassFactory_null7.__workletHash = 11402422575750;
+  ClazzClassFactory_null7.__initData = _worklet_11402422575750_init_data;
+  ClazzClassFactory_null7.__stackDetails = _e;
+  return ClazzClassFactory_null7;
+}();
+Clazz.ClazzClassFactory = ClazzClassFactory;"
+`;
+
+exports[`babel plugin for file workletization workletizes ClassDeclaration in named export 1`] = `
+"var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Clazz = void 0;
+var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
+var _worklet_4985973100755_init_data = {
+  code: "function _classCallCheck_null1(instance,Constructor){if(!(instance instanceof Constructor)){throw new TypeError(\\"Cannot call a class as a function\\");}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _classCallCheck = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _classCallCheck_null1 = function _classCallCheck_null1(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  };
+  _classCallCheck_null1.__closure = {};
+  _classCallCheck_null1.__workletHash = 4985973100755;
+  _classCallCheck_null1.__initData = _worklet_4985973100755_init_data;
+  _classCallCheck_null1.__stackDetails = _e;
+  return _classCallCheck_null1;
+}();
+var _worklet_12814759901173_init_data = {
+  code: "function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPrimitive = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _toPrimitive_null2 = function _toPrimitive_null2(t, r) {
+    if ("object" != typeof t || !t) return t;
+    var e = t[Symbol.toPrimitive];
+    if (void 0 !== e) {
+      var i = e.call(t, r || "default");
+      if ("object" != typeof i) return i;
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === r ? String : Number)(t);
+  };
+  _toPrimitive_null2.__closure = {};
+  _toPrimitive_null2.__workletHash = 12814759901173;
+  _toPrimitive_null2.__initData = _worklet_12814759901173_init_data;
+  _toPrimitive_null2.__stackDetails = _e;
+  return _toPrimitive_null2;
+}();
+var _worklet_10645339112046_init_data = {
+  code: "function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPropertyKey = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _toPropertyKey_null3 = function _toPropertyKey_null3(t) {
+    var i = _toPrimitive(t, "string");
+    return "symbol" == typeof i ? i : i + "";
+  };
+  _toPropertyKey_null3.__closure = {
+    _toPrimitive: _toPrimitive
+  };
+  _toPropertyKey_null3.__workletHash = 10645339112046;
+  _toPropertyKey_null3.__initData = _worklet_10645339112046_init_data;
+  _toPropertyKey_null3.__stackDetails = _e;
+  return _toPropertyKey_null3;
+}();
+var _worklet_712232292287_init_data = {
+  code: "function _defineProperties_null4(target,props){const{_toPropertyKey}=this.__closure;for(var i=0;i<props.length;i++){var descriptor=props[i];descriptor.enumerable=descriptor.enumerable||false;descriptor.configurable=true;if(\\"value\\"in descriptor)descriptor.writable=true;Object.defineProperty(target,_toPropertyKey(descriptor.key),descriptor);}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _defineProperties = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _defineProperties_null4 = function _defineProperties_null4(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
+    }
+  };
+  _defineProperties_null4.__closure = {
+    _toPropertyKey: _toPropertyKey
+  };
+  _defineProperties_null4.__workletHash = 712232292287;
+  _defineProperties_null4.__initData = _worklet_712232292287_init_data;
+  _defineProperties_null4.__stackDetails = _e;
+  return _defineProperties_null4;
+}();
+var _worklet_6195256852552_init_data = {
+  code: "function _createClass_null5(Constructor,protoProps,staticProps){const{_defineProperties}=this.__closure;if(protoProps)_defineProperties(Constructor.prototype,protoProps);if(staticProps)_defineProperties(Constructor,staticProps);Object.defineProperty(Constructor,\\"prototype\\",{writable:false});return Constructor;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _createClass = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _createClass_null5 = function _createClass_null5(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    Object.defineProperty(Constructor, "prototype", {
+      writable: false
+    });
+    return Constructor;
+  };
+  _createClass_null5.__closure = {
+    _defineProperties: _defineProperties
+  };
+  _createClass_null5.__workletHash = 6195256852552;
+  _createClass_null5.__initData = _worklet_6195256852552_init_data;
+  _createClass_null5.__stackDetails = _e;
+  return _createClass_null5;
+}();
+var _worklet_13489230457045_init_data = {
+  code: "function Clazz_null6(){const Clazz_null6=this._recur;const{_classCallCheck}=this.__closure;_classCallCheck(this,Clazz_null6);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Clazz = exports.Clazz = function () {
+  var Clazz = function () {
+    var _e = [new global.Error(), -2, -27];
+    var Clazz_null6 = function Clazz_null6() {
+      (0, _classCallCheck2.default)(this, Clazz);
+    };
+    Clazz_null6.__closure = {
+      _classCallCheck: _classCallCheck2.default
+    };
+    Clazz_null6.__workletHash = 13489230457045;
+    Clazz_null6.__initData = _worklet_13489230457045_init_data;
+    Clazz_null6.__stackDetails = _e;
+    return Clazz_null6;
+  }();
+  return (0, _createClass2.default)(Clazz, [{
+    key: "foo",
+    value: function foo() {
+      return 'bar';
+    }
+  }]);
+}();
+var _worklet_11402422575750_init_data = {
+  code: "function ClazzClassFactory_null7(){const{_classCallCheck,_createClass}=this.__closure;function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function ClazzClassFactory_null7(){return'bar';}}]);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var ClazzClassFactory = function () {
+  var _e = [new global.Error(), -3, -27];
+  var ClazzClassFactory_null7 = function ClazzClassFactory_null7() {
+    function Clazz() {
+      (0, _classCallCheck2.default)(this, Clazz);
+    }
+    return (0, _createClass2.default)(Clazz, [{
+      key: "foo",
+      value: function foo() {
+        return 'bar';
+      }
+    }]);
+  };
+  ClazzClassFactory_null7.__closure = {
+    _classCallCheck: _classCallCheck2.default,
+    _createClass: _createClass2.default
+  };
+  ClazzClassFactory_null7.__workletHash = 11402422575750;
+  ClazzClassFactory_null7.__initData = _worklet_11402422575750_init_data;
+  ClazzClassFactory_null7.__stackDetails = _e;
+  return ClazzClassFactory_null7;
+}();
+Clazz.ClazzClassFactory = ClazzClassFactory;"
 `;
 
 exports[`babel plugin for file workletization workletizes FunctionDeclaration 1`] = `
@@ -2914,6 +3222,939 @@ exports[`babel plugin for web configuration skips initData when omitNativeOnlyDa
 exports[`babel plugin for web configuration substitutes isWeb and shouldBeUseWeb with true when substituteWebPlatformChecks option is set to true 1`] = `
 "var x = true;
 var y = true;"
+`;
+
+exports[`babel plugin for worklet classes appends necessary polyfills 1`] = `
+"var _worklet_4985973100755_init_data = {
+  code: "function _classCallCheck_null1(instance,Constructor){if(!(instance instanceof Constructor)){throw new TypeError(\\"Cannot call a class as a function\\");}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _classCallCheck = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _classCallCheck_null1 = function _classCallCheck_null1(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  };
+  _classCallCheck_null1.__closure = {};
+  _classCallCheck_null1.__workletHash = 4985973100755;
+  _classCallCheck_null1.__initData = _worklet_4985973100755_init_data;
+  _classCallCheck_null1.__stackDetails = _e;
+  return _classCallCheck_null1;
+}();
+var _worklet_12814759901173_init_data = {
+  code: "function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPrimitive = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _toPrimitive_null2 = function _toPrimitive_null2(t, r) {
+    if ("object" != typeof t || !t) return t;
+    var e = t[Symbol.toPrimitive];
+    if (void 0 !== e) {
+      var i = e.call(t, r || "default");
+      if ("object" != typeof i) return i;
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === r ? String : Number)(t);
+  };
+  _toPrimitive_null2.__closure = {};
+  _toPrimitive_null2.__workletHash = 12814759901173;
+  _toPrimitive_null2.__initData = _worklet_12814759901173_init_data;
+  _toPrimitive_null2.__stackDetails = _e;
+  return _toPrimitive_null2;
+}();
+var _worklet_10645339112046_init_data = {
+  code: "function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPropertyKey = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _toPropertyKey_null3 = function _toPropertyKey_null3(t) {
+    var i = _toPrimitive(t, "string");
+    return "symbol" == typeof i ? i : i + "";
+  };
+  _toPropertyKey_null3.__closure = {
+    _toPrimitive: _toPrimitive
+  };
+  _toPropertyKey_null3.__workletHash = 10645339112046;
+  _toPropertyKey_null3.__initData = _worklet_10645339112046_init_data;
+  _toPropertyKey_null3.__stackDetails = _e;
+  return _toPropertyKey_null3;
+}();
+var _worklet_712232292287_init_data = {
+  code: "function _defineProperties_null4(target,props){const{_toPropertyKey}=this.__closure;for(var i=0;i<props.length;i++){var descriptor=props[i];descriptor.enumerable=descriptor.enumerable||false;descriptor.configurable=true;if(\\"value\\"in descriptor)descriptor.writable=true;Object.defineProperty(target,_toPropertyKey(descriptor.key),descriptor);}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _defineProperties = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _defineProperties_null4 = function _defineProperties_null4(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
+    }
+  };
+  _defineProperties_null4.__closure = {
+    _toPropertyKey: _toPropertyKey
+  };
+  _defineProperties_null4.__workletHash = 712232292287;
+  _defineProperties_null4.__initData = _worklet_712232292287_init_data;
+  _defineProperties_null4.__stackDetails = _e;
+  return _defineProperties_null4;
+}();
+var _worklet_6195256852552_init_data = {
+  code: "function _createClass_null5(Constructor,protoProps,staticProps){const{_defineProperties}=this.__closure;if(protoProps)_defineProperties(Constructor.prototype,protoProps);if(staticProps)_defineProperties(Constructor,staticProps);Object.defineProperty(Constructor,\\"prototype\\",{writable:false});return Constructor;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _createClass = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _createClass_null5 = function _createClass_null5(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    Object.defineProperty(Constructor, "prototype", {
+      writable: false
+    });
+    return Constructor;
+  };
+  _createClass_null5.__closure = {
+    _defineProperties: _defineProperties
+  };
+  _createClass_null5.__workletHash = 6195256852552;
+  _createClass_null5.__initData = _worklet_6195256852552_init_data;
+  _createClass_null5.__stackDetails = _e;
+  return _createClass_null5;
+}();
+var _worklet_13489230457045_init_data = {
+  code: "function Clazz_null6(){const Clazz_null6=this._recur;const{_classCallCheck}=this.__closure;_classCallCheck(this,Clazz_null6);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Clazz = function () {
+  var Clazz = function () {
+    var _e = [new global.Error(), -2, -27];
+    var Clazz_null6 = function Clazz_null6() {
+      _classCallCheck(this, Clazz);
+    };
+    Clazz_null6.__closure = {
+      _classCallCheck: _classCallCheck
+    };
+    Clazz_null6.__workletHash = 13489230457045;
+    Clazz_null6.__initData = _worklet_13489230457045_init_data;
+    Clazz_null6.__stackDetails = _e;
+    return Clazz_null6;
+  }();
+  return _createClass(Clazz, [{
+    key: "foo",
+    value: function foo() {
+      return 'bar';
+    }
+  }]);
+}();
+var _worklet_11402422575750_init_data = {
+  code: "function ClazzClassFactory_null7(){const{_classCallCheck,_createClass}=this.__closure;function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function ClazzClassFactory_null7(){return'bar';}}]);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var ClazzClassFactory = function () {
+  var _e = [new global.Error(), -3, -27];
+  var ClazzClassFactory_null7 = function ClazzClassFactory_null7() {
+    function Clazz() {
+      _classCallCheck(this, Clazz);
+    }
+    return _createClass(Clazz, [{
+      key: "foo",
+      value: function foo() {
+        return 'bar';
+      }
+    }]);
+  };
+  ClazzClassFactory_null7.__closure = {
+    _classCallCheck: _classCallCheck,
+    _createClass: _createClass
+  };
+  ClazzClassFactory_null7.__workletHash = 11402422575750;
+  ClazzClassFactory_null7.__initData = _worklet_11402422575750_init_data;
+  ClazzClassFactory_null7.__stackDetails = _e;
+  return ClazzClassFactory_null7;
+}();
+Clazz.ClazzClassFactory = ClazzClassFactory;"
+`;
+
+exports[`babel plugin for worklet classes creates factories 1`] = `
+"var _worklet_4985973100755_init_data = {
+  code: "function _classCallCheck_null1(instance,Constructor){if(!(instance instanceof Constructor)){throw new TypeError(\\"Cannot call a class as a function\\");}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _classCallCheck = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _classCallCheck_null1 = function _classCallCheck_null1(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  };
+  _classCallCheck_null1.__closure = {};
+  _classCallCheck_null1.__workletHash = 4985973100755;
+  _classCallCheck_null1.__initData = _worklet_4985973100755_init_data;
+  _classCallCheck_null1.__stackDetails = _e;
+  return _classCallCheck_null1;
+}();
+var _worklet_12814759901173_init_data = {
+  code: "function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPrimitive = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _toPrimitive_null2 = function _toPrimitive_null2(t, r) {
+    if ("object" != typeof t || !t) return t;
+    var e = t[Symbol.toPrimitive];
+    if (void 0 !== e) {
+      var i = e.call(t, r || "default");
+      if ("object" != typeof i) return i;
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === r ? String : Number)(t);
+  };
+  _toPrimitive_null2.__closure = {};
+  _toPrimitive_null2.__workletHash = 12814759901173;
+  _toPrimitive_null2.__initData = _worklet_12814759901173_init_data;
+  _toPrimitive_null2.__stackDetails = _e;
+  return _toPrimitive_null2;
+}();
+var _worklet_10645339112046_init_data = {
+  code: "function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPropertyKey = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _toPropertyKey_null3 = function _toPropertyKey_null3(t) {
+    var i = _toPrimitive(t, "string");
+    return "symbol" == typeof i ? i : i + "";
+  };
+  _toPropertyKey_null3.__closure = {
+    _toPrimitive: _toPrimitive
+  };
+  _toPropertyKey_null3.__workletHash = 10645339112046;
+  _toPropertyKey_null3.__initData = _worklet_10645339112046_init_data;
+  _toPropertyKey_null3.__stackDetails = _e;
+  return _toPropertyKey_null3;
+}();
+var _worklet_712232292287_init_data = {
+  code: "function _defineProperties_null4(target,props){const{_toPropertyKey}=this.__closure;for(var i=0;i<props.length;i++){var descriptor=props[i];descriptor.enumerable=descriptor.enumerable||false;descriptor.configurable=true;if(\\"value\\"in descriptor)descriptor.writable=true;Object.defineProperty(target,_toPropertyKey(descriptor.key),descriptor);}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _defineProperties = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _defineProperties_null4 = function _defineProperties_null4(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
+    }
+  };
+  _defineProperties_null4.__closure = {
+    _toPropertyKey: _toPropertyKey
+  };
+  _defineProperties_null4.__workletHash = 712232292287;
+  _defineProperties_null4.__initData = _worklet_712232292287_init_data;
+  _defineProperties_null4.__stackDetails = _e;
+  return _defineProperties_null4;
+}();
+var _worklet_6195256852552_init_data = {
+  code: "function _createClass_null5(Constructor,protoProps,staticProps){const{_defineProperties}=this.__closure;if(protoProps)_defineProperties(Constructor.prototype,protoProps);if(staticProps)_defineProperties(Constructor,staticProps);Object.defineProperty(Constructor,\\"prototype\\",{writable:false});return Constructor;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _createClass = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _createClass_null5 = function _createClass_null5(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    Object.defineProperty(Constructor, "prototype", {
+      writable: false
+    });
+    return Constructor;
+  };
+  _createClass_null5.__closure = {
+    _defineProperties: _defineProperties
+  };
+  _createClass_null5.__workletHash = 6195256852552;
+  _createClass_null5.__initData = _worklet_6195256852552_init_data;
+  _createClass_null5.__stackDetails = _e;
+  return _createClass_null5;
+}();
+var _worklet_13489230457045_init_data = {
+  code: "function Clazz_null6(){const Clazz_null6=this._recur;const{_classCallCheck}=this.__closure;_classCallCheck(this,Clazz_null6);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Clazz = function () {
+  var Clazz = function () {
+    var _e = [new global.Error(), -2, -27];
+    var Clazz_null6 = function Clazz_null6() {
+      _classCallCheck(this, Clazz);
+    };
+    Clazz_null6.__closure = {
+      _classCallCheck: _classCallCheck
+    };
+    Clazz_null6.__workletHash = 13489230457045;
+    Clazz_null6.__initData = _worklet_13489230457045_init_data;
+    Clazz_null6.__stackDetails = _e;
+    return Clazz_null6;
+  }();
+  return _createClass(Clazz, [{
+    key: "foo",
+    value: function foo() {
+      return 'bar';
+    }
+  }]);
+}();
+var _worklet_11402422575750_init_data = {
+  code: "function ClazzClassFactory_null7(){const{_classCallCheck,_createClass}=this.__closure;function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function ClazzClassFactory_null7(){return'bar';}}]);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var ClazzClassFactory = function () {
+  var _e = [new global.Error(), -3, -27];
+  var ClazzClassFactory_null7 = function ClazzClassFactory_null7() {
+    function Clazz() {
+      _classCallCheck(this, Clazz);
+    }
+    return _createClass(Clazz, [{
+      key: "foo",
+      value: function foo() {
+        return 'bar';
+      }
+    }]);
+  };
+  ClazzClassFactory_null7.__closure = {
+    _classCallCheck: _classCallCheck,
+    _createClass: _createClass
+  };
+  ClazzClassFactory_null7.__workletHash = 11402422575750;
+  ClazzClassFactory_null7.__initData = _worklet_11402422575750_init_data;
+  ClazzClassFactory_null7.__stackDetails = _e;
+  return ClazzClassFactory_null7;
+}();
+Clazz.ClazzClassFactory = ClazzClassFactory;"
+`;
+
+exports[`babel plugin for worklet classes injects class factory into worklets 1`] = `
+"var _worklet_14190163115743_init_data = {
+  code: "function foo_null1(){const{ClazzClassFactory}=this.__closure;const Clazz=ClazzClassFactory();const clazz=new Clazz();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), -2, -27];
+  var foo_null1 = function foo_null1() {
+    var clazz = new Clazz();
+  };
+  foo_null1.__closure = {
+    ClazzClassFactory: Clazz.ClazzClassFactory
+  };
+  foo_null1.__workletHash = 14190163115743;
+  foo_null1.__initData = _worklet_14190163115743_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
+}();"
+`;
+
+exports[`babel plugin for worklet classes keeps this binding 1`] = `
+"var _worklet_4985973100755_init_data = {
+  code: "function _classCallCheck_null1(instance,Constructor){if(!(instance instanceof Constructor)){throw new TypeError(\\"Cannot call a class as a function\\");}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _classCallCheck = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _classCallCheck_null1 = function _classCallCheck_null1(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  };
+  _classCallCheck_null1.__closure = {};
+  _classCallCheck_null1.__workletHash = 4985973100755;
+  _classCallCheck_null1.__initData = _worklet_4985973100755_init_data;
+  _classCallCheck_null1.__stackDetails = _e;
+  return _classCallCheck_null1;
+}();
+var _worklet_12814759901173_init_data = {
+  code: "function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPrimitive = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _toPrimitive_null2 = function _toPrimitive_null2(t, r) {
+    if ("object" != typeof t || !t) return t;
+    var e = t[Symbol.toPrimitive];
+    if (void 0 !== e) {
+      var i = e.call(t, r || "default");
+      if ("object" != typeof i) return i;
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === r ? String : Number)(t);
+  };
+  _toPrimitive_null2.__closure = {};
+  _toPrimitive_null2.__workletHash = 12814759901173;
+  _toPrimitive_null2.__initData = _worklet_12814759901173_init_data;
+  _toPrimitive_null2.__stackDetails = _e;
+  return _toPrimitive_null2;
+}();
+var _worklet_10645339112046_init_data = {
+  code: "function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPropertyKey = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _toPropertyKey_null3 = function _toPropertyKey_null3(t) {
+    var i = _toPrimitive(t, "string");
+    return "symbol" == typeof i ? i : i + "";
+  };
+  _toPropertyKey_null3.__closure = {
+    _toPrimitive: _toPrimitive
+  };
+  _toPropertyKey_null3.__workletHash = 10645339112046;
+  _toPropertyKey_null3.__initData = _worklet_10645339112046_init_data;
+  _toPropertyKey_null3.__stackDetails = _e;
+  return _toPropertyKey_null3;
+}();
+var _worklet_712232292287_init_data = {
+  code: "function _defineProperties_null4(target,props){const{_toPropertyKey}=this.__closure;for(var i=0;i<props.length;i++){var descriptor=props[i];descriptor.enumerable=descriptor.enumerable||false;descriptor.configurable=true;if(\\"value\\"in descriptor)descriptor.writable=true;Object.defineProperty(target,_toPropertyKey(descriptor.key),descriptor);}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _defineProperties = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _defineProperties_null4 = function _defineProperties_null4(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
+    }
+  };
+  _defineProperties_null4.__closure = {
+    _toPropertyKey: _toPropertyKey
+  };
+  _defineProperties_null4.__workletHash = 712232292287;
+  _defineProperties_null4.__initData = _worklet_712232292287_init_data;
+  _defineProperties_null4.__stackDetails = _e;
+  return _defineProperties_null4;
+}();
+var _worklet_6195256852552_init_data = {
+  code: "function _createClass_null5(Constructor,protoProps,staticProps){const{_defineProperties}=this.__closure;if(protoProps)_defineProperties(Constructor.prototype,protoProps);if(staticProps)_defineProperties(Constructor,staticProps);Object.defineProperty(Constructor,\\"prototype\\",{writable:false});return Constructor;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _createClass = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _createClass_null5 = function _createClass_null5(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    Object.defineProperty(Constructor, "prototype", {
+      writable: false
+    });
+    return Constructor;
+  };
+  _createClass_null5.__closure = {
+    _defineProperties: _defineProperties
+  };
+  _createClass_null5.__workletHash = 6195256852552;
+  _createClass_null5.__initData = _worklet_6195256852552_init_data;
+  _createClass_null5.__stackDetails = _e;
+  return _createClass_null5;
+}();
+var _worklet_2101646101458_init_data = {
+  code: "function _defineProperty_null6(obj,key,value){const{_toPropertyKey}=this.__closure;key=_toPropertyKey(key);if(key in obj){Object.defineProperty(obj,key,{value:value,enumerable:true,configurable:true,writable:true});}else{obj[key]=value;}return obj;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _defineProperty = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _defineProperty_null6 = function _defineProperty_null6(obj, key, value) {
+    key = _toPropertyKey(key);
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+    return obj;
+  };
+  _defineProperty_null6.__closure = {
+    _toPropertyKey: _toPropertyKey
+  };
+  _defineProperty_null6.__workletHash = 2101646101458;
+  _defineProperty_null6.__initData = _worklet_2101646101458_init_data;
+  _defineProperty_null6.__stackDetails = _e;
+  return _defineProperty_null6;
+}();
+var _worklet_5897882335525_init_data = {
+  code: "function Clazz_null7(){const Clazz_null7=this._recur;const{_classCallCheck,_defineProperty}=this.__closure;_classCallCheck(this,Clazz_null7);_defineProperty(this,\\"member\\",1);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Clazz = function () {
+  var Clazz = function () {
+    var _e = [new global.Error(), -3, -27];
+    var Clazz_null7 = function Clazz_null7() {
+      _classCallCheck(this, Clazz);
+      _defineProperty(this, "member", 1);
+    };
+    Clazz_null7.__closure = {
+      _classCallCheck: _classCallCheck,
+      _defineProperty: _defineProperty
+    };
+    Clazz_null7.__workletHash = 5897882335525;
+    Clazz_null7.__initData = _worklet_5897882335525_init_data;
+    Clazz_null7.__stackDetails = _e;
+    return Clazz_null7;
+  }();
+  return _createClass(Clazz, [{
+    key: "foo",
+    value: function foo() {
+      return this.member;
+    }
+  }]);
+}();
+var _worklet_7864094172926_init_data = {
+  code: "function ClazzClassFactory_null8(){const{_classCallCheck,_defineProperty,_createClass}=this.__closure;function Clazz(){_classCallCheck(this,Clazz);_defineProperty(this,\\"member\\",1);}return _createClass(Clazz,[{key:\\"foo\\",value:function ClazzClassFactory_null8(){return this.member;}}]);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var ClazzClassFactory = function () {
+  var _e = [new global.Error(), -4, -27];
+  var ClazzClassFactory_null8 = function ClazzClassFactory_null8() {
+    function Clazz() {
+      _classCallCheck(this, Clazz);
+      _defineProperty(this, "member", 1);
+    }
+    return _createClass(Clazz, [{
+      key: "foo",
+      value: function foo() {
+        return this.member;
+      }
+    }]);
+  };
+  ClazzClassFactory_null8.__closure = {
+    _classCallCheck: _classCallCheck,
+    _defineProperty: _defineProperty,
+    _createClass: _createClass
+  };
+  ClazzClassFactory_null8.__workletHash = 7864094172926;
+  ClazzClassFactory_null8.__initData = _worklet_7864094172926_init_data;
+  ClazzClassFactory_null8.__stackDetails = _e;
+  return ClazzClassFactory_null8;
+}();
+Clazz.ClazzClassFactory = ClazzClassFactory;"
+`;
+
+exports[`babel plugin for worklet classes modifies closures 1`] = `
+"var _worklet_14190163115743_init_data = {
+  code: "function foo_null1(){const{ClazzClassFactory}=this.__closure;const Clazz=ClazzClassFactory();const clazz=new Clazz();}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), -2, -27];
+  var foo_null1 = function foo_null1() {
+    var clazz = new Clazz();
+  };
+  foo_null1.__closure = {
+    ClazzClassFactory: Clazz.ClazzClassFactory
+  };
+  foo_null1.__workletHash = 14190163115743;
+  foo_null1.__initData = _worklet_14190163115743_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
+}();"
+`;
+
+exports[`babel plugin for worklet classes removes marker 1`] = `
+"var _worklet_4985973100755_init_data = {
+  code: "function _classCallCheck_null1(instance,Constructor){if(!(instance instanceof Constructor)){throw new TypeError(\\"Cannot call a class as a function\\");}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _classCallCheck = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _classCallCheck_null1 = function _classCallCheck_null1(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  };
+  _classCallCheck_null1.__closure = {};
+  _classCallCheck_null1.__workletHash = 4985973100755;
+  _classCallCheck_null1.__initData = _worklet_4985973100755_init_data;
+  _classCallCheck_null1.__stackDetails = _e;
+  return _classCallCheck_null1;
+}();
+var _worklet_12814759901173_init_data = {
+  code: "function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPrimitive = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _toPrimitive_null2 = function _toPrimitive_null2(t, r) {
+    if ("object" != typeof t || !t) return t;
+    var e = t[Symbol.toPrimitive];
+    if (void 0 !== e) {
+      var i = e.call(t, r || "default");
+      if ("object" != typeof i) return i;
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === r ? String : Number)(t);
+  };
+  _toPrimitive_null2.__closure = {};
+  _toPrimitive_null2.__workletHash = 12814759901173;
+  _toPrimitive_null2.__initData = _worklet_12814759901173_init_data;
+  _toPrimitive_null2.__stackDetails = _e;
+  return _toPrimitive_null2;
+}();
+var _worklet_10645339112046_init_data = {
+  code: "function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPropertyKey = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _toPropertyKey_null3 = function _toPropertyKey_null3(t) {
+    var i = _toPrimitive(t, "string");
+    return "symbol" == typeof i ? i : i + "";
+  };
+  _toPropertyKey_null3.__closure = {
+    _toPrimitive: _toPrimitive
+  };
+  _toPropertyKey_null3.__workletHash = 10645339112046;
+  _toPropertyKey_null3.__initData = _worklet_10645339112046_init_data;
+  _toPropertyKey_null3.__stackDetails = _e;
+  return _toPropertyKey_null3;
+}();
+var _worklet_712232292287_init_data = {
+  code: "function _defineProperties_null4(target,props){const{_toPropertyKey}=this.__closure;for(var i=0;i<props.length;i++){var descriptor=props[i];descriptor.enumerable=descriptor.enumerable||false;descriptor.configurable=true;if(\\"value\\"in descriptor)descriptor.writable=true;Object.defineProperty(target,_toPropertyKey(descriptor.key),descriptor);}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _defineProperties = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _defineProperties_null4 = function _defineProperties_null4(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
+    }
+  };
+  _defineProperties_null4.__closure = {
+    _toPropertyKey: _toPropertyKey
+  };
+  _defineProperties_null4.__workletHash = 712232292287;
+  _defineProperties_null4.__initData = _worklet_712232292287_init_data;
+  _defineProperties_null4.__stackDetails = _e;
+  return _defineProperties_null4;
+}();
+var _worklet_6195256852552_init_data = {
+  code: "function _createClass_null5(Constructor,protoProps,staticProps){const{_defineProperties}=this.__closure;if(protoProps)_defineProperties(Constructor.prototype,protoProps);if(staticProps)_defineProperties(Constructor,staticProps);Object.defineProperty(Constructor,\\"prototype\\",{writable:false});return Constructor;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _createClass = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _createClass_null5 = function _createClass_null5(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    Object.defineProperty(Constructor, "prototype", {
+      writable: false
+    });
+    return Constructor;
+  };
+  _createClass_null5.__closure = {
+    _defineProperties: _defineProperties
+  };
+  _createClass_null5.__workletHash = 6195256852552;
+  _createClass_null5.__initData = _worklet_6195256852552_init_data;
+  _createClass_null5.__stackDetails = _e;
+  return _createClass_null5;
+}();
+var _worklet_13489230457045_init_data = {
+  code: "function Clazz_null6(){const Clazz_null6=this._recur;const{_classCallCheck}=this.__closure;_classCallCheck(this,Clazz_null6);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Clazz = function () {
+  var Clazz = function () {
+    var _e = [new global.Error(), -2, -27];
+    var Clazz_null6 = function Clazz_null6() {
+      _classCallCheck(this, Clazz);
+    };
+    Clazz_null6.__closure = {
+      _classCallCheck: _classCallCheck
+    };
+    Clazz_null6.__workletHash = 13489230457045;
+    Clazz_null6.__initData = _worklet_13489230457045_init_data;
+    Clazz_null6.__stackDetails = _e;
+    return Clazz_null6;
+  }();
+  return _createClass(Clazz, [{
+    key: "foo",
+    value: function foo() {
+      return 'bar';
+    }
+  }]);
+}();
+var _worklet_11402422575750_init_data = {
+  code: "function ClazzClassFactory_null7(){const{_classCallCheck,_createClass}=this.__closure;function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function ClazzClassFactory_null7(){return'bar';}}]);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var ClazzClassFactory = function () {
+  var _e = [new global.Error(), -3, -27];
+  var ClazzClassFactory_null7 = function ClazzClassFactory_null7() {
+    function Clazz() {
+      _classCallCheck(this, Clazz);
+    }
+    return _createClass(Clazz, [{
+      key: "foo",
+      value: function foo() {
+        return 'bar';
+      }
+    }]);
+  };
+  ClazzClassFactory_null7.__closure = {
+    _classCallCheck: _classCallCheck,
+    _createClass: _createClass
+  };
+  ClazzClassFactory_null7.__workletHash = 11402422575750;
+  ClazzClassFactory_null7.__initData = _worklet_11402422575750_init_data;
+  ClazzClassFactory_null7.__stackDetails = _e;
+  return ClazzClassFactory_null7;
+}();
+Clazz.ClazzClassFactory = ClazzClassFactory;"
+`;
+
+exports[`babel plugin for worklet classes workletizes regardless of marker value 1`] = `
+"var _worklet_4985973100755_init_data = {
+  code: "function _classCallCheck_null1(instance,Constructor){if(!(instance instanceof Constructor)){throw new TypeError(\\"Cannot call a class as a function\\");}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _classCallCheck = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _classCallCheck_null1 = function _classCallCheck_null1(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  };
+  _classCallCheck_null1.__closure = {};
+  _classCallCheck_null1.__workletHash = 4985973100755;
+  _classCallCheck_null1.__initData = _worklet_4985973100755_init_data;
+  _classCallCheck_null1.__stackDetails = _e;
+  return _classCallCheck_null1;
+}();
+var _worklet_12814759901173_init_data = {
+  code: "function _toPrimitive_null2(t,r){if(\\"object\\"!=typeof t||!t)return t;var e=t[Symbol.toPrimitive];if(void 0!==e){var i=e.call(t,r||\\"default\\");if(\\"object\\"!=typeof i)return i;throw new TypeError(\\"@@toPrimitive must return a primitive value.\\");}return(\\"string\\"===r?String:Number)(t);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPrimitive = function () {
+  var _e = [new global.Error(), 1, -27];
+  var _toPrimitive_null2 = function _toPrimitive_null2(t, r) {
+    if ("object" != typeof t || !t) return t;
+    var e = t[Symbol.toPrimitive];
+    if (void 0 !== e) {
+      var i = e.call(t, r || "default");
+      if ("object" != typeof i) return i;
+      throw new TypeError("@@toPrimitive must return a primitive value.");
+    }
+    return ("string" === r ? String : Number)(t);
+  };
+  _toPrimitive_null2.__closure = {};
+  _toPrimitive_null2.__workletHash = 12814759901173;
+  _toPrimitive_null2.__initData = _worklet_12814759901173_init_data;
+  _toPrimitive_null2.__stackDetails = _e;
+  return _toPrimitive_null2;
+}();
+var _worklet_10645339112046_init_data = {
+  code: "function _toPropertyKey_null3(t){const{_toPrimitive}=this.__closure;var i=_toPrimitive(t,\\"string\\");return\\"symbol\\"==typeof i?i:i+\\"\\";}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _toPropertyKey = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _toPropertyKey_null3 = function _toPropertyKey_null3(t) {
+    var i = _toPrimitive(t, "string");
+    return "symbol" == typeof i ? i : i + "";
+  };
+  _toPropertyKey_null3.__closure = {
+    _toPrimitive: _toPrimitive
+  };
+  _toPropertyKey_null3.__workletHash = 10645339112046;
+  _toPropertyKey_null3.__initData = _worklet_10645339112046_init_data;
+  _toPropertyKey_null3.__stackDetails = _e;
+  return _toPropertyKey_null3;
+}();
+var _worklet_712232292287_init_data = {
+  code: "function _defineProperties_null4(target,props){const{_toPropertyKey}=this.__closure;for(var i=0;i<props.length;i++){var descriptor=props[i];descriptor.enumerable=descriptor.enumerable||false;descriptor.configurable=true;if(\\"value\\"in descriptor)descriptor.writable=true;Object.defineProperty(target,_toPropertyKey(descriptor.key),descriptor);}}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _defineProperties = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _defineProperties_null4 = function _defineProperties_null4(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor);
+    }
+  };
+  _defineProperties_null4.__closure = {
+    _toPropertyKey: _toPropertyKey
+  };
+  _defineProperties_null4.__workletHash = 712232292287;
+  _defineProperties_null4.__initData = _worklet_712232292287_init_data;
+  _defineProperties_null4.__stackDetails = _e;
+  return _defineProperties_null4;
+}();
+var _worklet_6195256852552_init_data = {
+  code: "function _createClass_null5(Constructor,protoProps,staticProps){const{_defineProperties}=this.__closure;if(protoProps)_defineProperties(Constructor.prototype,protoProps);if(staticProps)_defineProperties(Constructor,staticProps);Object.defineProperty(Constructor,\\"prototype\\",{writable:false});return Constructor;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var _createClass = function () {
+  var _e = [new global.Error(), -2, -27];
+  var _createClass_null5 = function _createClass_null5(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    Object.defineProperty(Constructor, "prototype", {
+      writable: false
+    });
+    return Constructor;
+  };
+  _createClass_null5.__closure = {
+    _defineProperties: _defineProperties
+  };
+  _createClass_null5.__workletHash = 6195256852552;
+  _createClass_null5.__initData = _worklet_6195256852552_init_data;
+  _createClass_null5.__stackDetails = _e;
+  return _createClass_null5;
+}();
+var _worklet_13489230457045_init_data = {
+  code: "function Clazz_null6(){const Clazz_null6=this._recur;const{_classCallCheck}=this.__closure;_classCallCheck(this,Clazz_null6);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var Clazz = function () {
+  var Clazz = function () {
+    var _e = [new global.Error(), -2, -27];
+    var Clazz_null6 = function Clazz_null6() {
+      _classCallCheck(this, Clazz);
+    };
+    Clazz_null6.__closure = {
+      _classCallCheck: _classCallCheck
+    };
+    Clazz_null6.__workletHash = 13489230457045;
+    Clazz_null6.__initData = _worklet_13489230457045_init_data;
+    Clazz_null6.__stackDetails = _e;
+    return Clazz_null6;
+  }();
+  return _createClass(Clazz, [{
+    key: "foo",
+    value: function foo() {
+      return 'bar';
+    }
+  }]);
+}();
+var _worklet_11402422575750_init_data = {
+  code: "function ClazzClassFactory_null7(){const{_classCallCheck,_createClass}=this.__closure;function Clazz(){_classCallCheck(this,Clazz);}return _createClass(Clazz,[{key:\\"foo\\",value:function ClazzClassFactory_null7(){return'bar';}}]);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var ClazzClassFactory = function () {
+  var _e = [new global.Error(), -3, -27];
+  var ClazzClassFactory_null7 = function ClazzClassFactory_null7() {
+    function Clazz() {
+      _classCallCheck(this, Clazz);
+    }
+    return _createClass(Clazz, [{
+      key: "foo",
+      value: function foo() {
+        return 'bar';
+      }
+    }]);
+  };
+  ClazzClassFactory_null7.__closure = {
+    _classCallCheck: _classCallCheck,
+    _createClass: _createClass
+  };
+  ClazzClassFactory_null7.__workletHash = 11402422575750;
+  ClazzClassFactory_null7.__initData = _worklet_11402422575750_init_data;
+  ClazzClassFactory_null7.__stackDetails = _e;
+  return ClazzClassFactory_null7;
+}();
+Clazz.ClazzClassFactory = ClazzClassFactory;"
 `;
 
 exports[`babel plugin for worklet nesting doesn't process nested worklets when disabled 1`] = `

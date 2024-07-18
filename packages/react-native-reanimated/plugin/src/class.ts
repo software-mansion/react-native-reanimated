@@ -6,8 +6,13 @@ import {
   cloneNode,
   directive,
   directiveLiteral,
+  exportDefaultDeclaration,
+  exportNamedDeclaration,
+  exportSpecifier,
   expressionStatement,
   identifier,
+  isClassProperty,
+  isIdentifier,
   memberExpression,
   returnStatement,
   variableDeclaration,
@@ -22,6 +27,9 @@ import type {
   File as BabelFile,
   VariableDeclaration,
   Identifier,
+  ClassBody,
+  ExportDefaultDeclaration,
+  ExportNamedDeclaration,
 } from '@babel/types';
 import type { ReanimatedPluginPass } from './types';
 import generate from '@babel/generator';
@@ -29,15 +37,107 @@ import { WorkletizableFunction } from './types';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
 
-export function processClass(
-  path: NodePath<ClassDeclaration>,
+const classWorkletMarker = '__workletClass';
+
+export function processIfWorkletClass(
+  classPath: NodePath<ClassDeclaration>,
+  state: ReanimatedPluginPass
+): boolean {
+  if (!classPath.node.id) {
+    // We don't support unnamed classes yet.
+    return false;
+  }
+
+  if (!hasWorkletClassMarker(classPath.node.body)) {
+    return false;
+  }
+
+  const parentPath = classPath.parentPath;
+  const className = classPath.node.id.name;
+
+  classPath = splitClassExports(classPath, parentPath, className);
+
+  removeWorkletClassMarker(classPath.node.body);
+
+  processClass(classPath, state);
+
+  classPath.skip();
+
+  return true;
+}
+
+function splitClassExports(
+  classPath: NodePath<ClassDeclaration>,
+  parentPath: NodePath<unknown>,
+  className: string
+) {
+  if (parentPath.isExportDefaultDeclaration()) {
+    return splitDefaultExportClassDeclaration(parentPath, className);
+  } else if (parentPath.isExportNamedDeclaration()) {
+    return splitNamedExportClassDeclaration(parentPath, className);
+  } else {
+    return classPath;
+  }
+}
+
+function splitDefaultExportClassDeclaration(
+  exportPath: NodePath<ExportDefaultDeclaration>,
+  name: string
+): NodePath<ClassDeclaration> {
+  const identifierExport = exportDefaultDeclaration(identifier(name));
+
+  const newClassPath = exportPath.replaceWithMultiple([
+    exportPath.node.declaration,
+    identifierExport,
+  ])[0] as NodePath<ClassDeclaration>;
+
+  return newClassPath;
+}
+
+function splitNamedExportClassDeclaration(
+  exportPath: NodePath<ExportNamedDeclaration>,
+  name: string
+) {
+  const identifierExport = exportNamedDeclaration(null, [
+    exportSpecifier(identifier(name), identifier(name)),
+  ]);
+
+  const newClassPath = exportPath.replaceWithMultiple([
+    exportPath.node.declaration!,
+    identifierExport,
+  ])[0] as NodePath<ClassDeclaration>;
+
+  return newClassPath;
+}
+
+function hasWorkletClassMarker(classBody: ClassBody) {
+  return classBody.body.some(
+    (statement) =>
+      isClassProperty(statement) &&
+      isIdentifier(statement.key) &&
+      statement.key.name === classWorkletMarker
+  );
+}
+
+function removeWorkletClassMarker(classBody: ClassBody) {
+  classBody.body = classBody.body.filter(
+    (statement) =>
+      !isClassProperty(statement) ||
+      !isIdentifier(statement.key) ||
+      statement.key.name !== classWorkletMarker
+  );
+}
+
+function processClass(
+  classPath: NodePath<ClassDeclaration>,
   state: ReanimatedPluginPass
 ) {
-  if (!path.node.id) {
+  if (!classPath.node.id) {
+    // We don't support unnamed classes yet.
     return;
   }
-  const className = path.node.id.name;
-  const code = generate(path.node).code;
+  const className = classPath.node.id.name;
+  const code = generate(classPath.node).code;
 
   const transformedCode = transformSync(code, {
     plugins: [
@@ -128,9 +228,9 @@ export function processClass(
   assert(transformedNewCode);
   assert(transformedNewCode.ast);
 
-  const parent = path.parent as Program;
+  const parent = classPath.parent as Program;
 
-  const index = parent.body.findIndex((node) => node === path.node);
+  const index = parent.body.findIndex((node) => node === classPath.node);
 
   parent.body.splice(index, 1, ...transformedNewCode.ast.program.body);
 }
@@ -183,7 +283,6 @@ function getPolyfillsToSort(ast: BabelFile): SortElement[] {
                 return;
               }
               element.dependencies.add(path.node.name);
-              console.log(path.node.name);
             },
           });
         });

@@ -1,6 +1,7 @@
 import type { NodePath, PluginItem } from '@babel/core';
 import type {
   CallExpression,
+  ClassDeclaration,
   JSXAttribute,
   ObjectExpression,
   Program,
@@ -18,6 +19,7 @@ import { WorkletizableFunction } from './types';
 import { addCustomGlobals } from './utils';
 import { substituteWebCallExpression } from './webOptimization';
 import { processIfWithWorkletDirective } from './workletSubstitution';
+import { processIfWorkletClass } from './class';
 
 module.exports = function (): PluginItem {
   function runWithTaggedExceptions(fun: () => void) {
@@ -63,6 +65,13 @@ module.exports = function (): PluginItem {
         enter(path: NodePath<ObjectExpression>, state: ReanimatedPluginPass) {
           runWithTaggedExceptions(() => {
             processIfWorkletContextObject(path, state);
+          });
+        },
+      },
+      ClassDeclaration: {
+        enter(path: NodePath<ClassDeclaration>, state: ReanimatedPluginPass) {
+          runWithTaggedExceptions(() => {
+            processIfWorkletClass(path, state);
           });
         },
       },

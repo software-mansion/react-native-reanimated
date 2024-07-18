@@ -1,6 +1,7 @@
 import {
   blockStatement,
   booleanLiteral,
+  classProperty,
   directive,
   directiveLiteral,
   identifier,
@@ -18,9 +19,9 @@ import type {
   ArrowFunctionExpression,
   ObjectExpression,
   Statement,
-  Node as BabelNode,
   ThisExpression,
   ObjectMethod,
+  ClassBody,
 } from '@babel/types';
 import type { NodePath } from '@babel/core';
 import {
@@ -28,7 +29,6 @@ import {
   isWorkletizableObjectPath,
 } from './types';
 import type { ReanimatedPluginPass } from './types';
-import { processClass } from './class';
 import { contextObjectMarker } from './contextObject';
 
 export function processIfWorkletFile(
@@ -43,11 +43,12 @@ export function processIfWorkletFile(
     return false;
   }
 
-  processWorkletFile(path, state);
-  // Remove 'worklet' directive from the file afterwards.
+  // Remove 'worklet' directive from the file.
   path.node.directives = path.node.directives.filter(
     (functionDirective) => functionDirective.value.value !== 'worklet'
   );
+  processWorkletFile(path, state);
+
   return true;
 }
 
@@ -61,10 +62,7 @@ function processWorkletFile(
   const statements = programPath.get('body');
   statements.forEach((statement) => {
     const candidatePath = getCandidate(statement);
-    processWorkletizableEntity(
-      candidatePath as NodePath<NonNullable<typeof candidatePath.node>>,
-      state
-    );
+    processWorkletizableEntity(candidatePath, state);
   });
 }
 
@@ -73,9 +71,7 @@ function getCandidate(statementPath: NodePath<Statement>) {
     statementPath.isExportNamedDeclaration() ||
     statementPath.isExportDefaultDeclaration()
   ) {
-    return statementPath.get('declaration') as NodePath<
-      typeof statementPath.node.declaration
-    >;
+    return statementPath.get('declaration') as NodePath<unknown>;
   } else {
     return statementPath;
   }
@@ -99,7 +95,7 @@ function processWorkletizableEntity(
   } else if (nodePath.isVariableDeclaration()) {
     processVariableDeclaration(nodePath, state);
   } else if (nodePath.isClassDeclaration()) {
-    processClass(nodePath, state);
+    appendWorkletClassMarker(nodePath.node.body);
   }
 }
 
@@ -196,4 +192,10 @@ function hasThisExpression(path: NodePath<ObjectMethod>): boolean {
   });
 
   return result;
+}
+
+function appendWorkletClassMarker(classBody: ClassBody) {
+  classBody.body.push(
+    classProperty(identifier('__workletClass'), booleanLiteral(true))
+  );
 }

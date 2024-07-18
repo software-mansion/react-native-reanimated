@@ -22,3 +22,13 @@ export const implicitContextObject = {
     return this.getFour() + 1;
   },
 };
+
+export class ImplicitWorkletClass {
+  getSix() {
+    return 6;
+  }
+
+  getSeven() {
+    return this.getSix() + 1;
+  }
+}
