@@ -256,11 +256,6 @@ const styles = StyleSheet.create({
   checkedCheckbox: {
     backgroundColor: 'navy',
   },
-  reloadText: {
-    fontSize: 20,
-    color: 'navy',
-    alignSelf: 'center',
-  },
   pressedButton: {
     zIndex: 2,
     backgroundColor: '#FFFA',
