@@ -2,17 +2,9 @@ import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import type { AnimatableValueObject } from 'react-native-reanimated';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
-import type { ValidPropNames } from '../../../ReanimatedRuntimeTestsRunner/types';
-import {
-  describe,
-  test,
-  expect,
-  render,
-  useTestRef,
-  getTestComponent,
-  wait,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { getComparisonModeForProp } from '../../../ReanimatedRuntimeTestsRunner/matchers/Comparators';
+import type { ValidPropNames } from '../../../ReJest/types';
+import { describe, test, expect, render, useTestRef, getTestComponent, wait } from '../../../ReJest/RuntimeTestsApi';
+import { getComparisonModeForProp } from '../../../ReJest/matchers/Comparators';
 
 const COMPONENT_REF = 'AnimatedComponent';
 

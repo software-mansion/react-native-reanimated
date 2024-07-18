@@ -6,17 +6,9 @@ import Animated, {
   withSequence,
   withDelay,
 } from 'react-native-reanimated';
-import {
-  describe,
-  test,
-  render,
-  wait,
-  useTestRef,
-  getTestComponent,
-  expect,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { describe, test, render, wait, useTestRef, getTestComponent, expect } from '../../../ReJest/RuntimeTestsApi';
 import { View, StyleSheet } from 'react-native';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
+import { ComparisonMode } from '../../../ReJest/types';
 
 type TestCase = {
   startColor: string;
@@ -24,7 +16,7 @@ type TestCase = {
   finalColor: string;
 };
 
-describe('withSequence animation of number', () => {
+describe('withSequence animation of color', () => {
   enum Component {
     ACTIVE = 'ACTIVE',
     PASSIVE = 'PASSIVE',
