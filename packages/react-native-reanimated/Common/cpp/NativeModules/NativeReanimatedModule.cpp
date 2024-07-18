@@ -720,7 +720,7 @@ void NativeReanimatedModule::performOperations() {
     shadowTree.commit(
         [&](RootShadowNode const &oldRootShadowNode)
             -> RootShadowNode::Unshared {
-          PropsMap propsMap;
+          PropsMap<JsiValuePropsWrapper> propsMap;
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
           for (auto &[shadowNode, props] : copiedOperationsQueue) {

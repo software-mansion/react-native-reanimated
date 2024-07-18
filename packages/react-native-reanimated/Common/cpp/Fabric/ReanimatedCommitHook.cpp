@@ -40,7 +40,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   // ShadowTree not commited by Reanimated, apply updates from PropsRegistry
 
   auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
-  PropsMap propsMap;
+  PropsMap<FollyDynamicPropsWrapper> propsMap;
 
   {
     auto lock = propsRegistry_->createLock();

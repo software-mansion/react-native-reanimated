@@ -4,6 +4,7 @@
 #include <react/renderer/core/PropsParserContext.h>
 #include <react/renderer/uimanager/UIManager.h>
 
+#include <type_traits>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -15,12 +16,18 @@ using namespace react;
 
 namespace reanimated {
 
-using PropsMap = std::unordered_map<const ShadowNodeFamily *, std::vector<std::unique_ptr<PropsWrapper>>>;
+template<class T>
+concept Derived = std::is_base_of_v<PropsWrapper, T>;
+
+template<Derived T>
+using PropsMap = std::unordered_map<const ShadowNodeFamily *, std::vector<std::unique_ptr<T>>>;
+
 using ChildrenMap = std::unordered_map<const ShadowNodeFamily *, std::vector<int>>;
 
+template<Derived T>
 ShadowNode::Unshared cloneShadowTreeWithNewProps(
     const ShadowNode::Shared &oldRootNode,
-    const PropsMap &propsMap);
+    const PropsMap<T> &propsMap);
 
 } // namespace reanimated
 

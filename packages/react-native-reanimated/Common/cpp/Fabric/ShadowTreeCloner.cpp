@@ -6,10 +6,11 @@
 
 namespace reanimated {
 
+template<Derived T>
 ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
     const ChildrenMap &childrenMap,
     const ShadowNode::Shared &shadowNode,
-    const PropsMap &propsMap) {
+    const PropsMap<T> &propsMap) {
   const auto family = &shadowNode->getFamily();
   const auto affectedChildrenIt = childrenMap.find(family);
   const auto propsIt = propsMap.find(family);
@@ -42,9 +43,10 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
   return result;
 }
 
+template<Derived T>
 ShadowNode::Unshared cloneShadowTreeWithNewProps(
     const ShadowNode::Shared &oldRootNode,
-    const PropsMap &propsMap) {
+    const PropsMap<T> &propsMap) {
   ChildrenMap childrenMap;
 
   for (auto &[family, _] : propsMap) {
@@ -67,6 +69,14 @@ ShadowNode::Unshared cloneShadowTreeWithNewProps(
   return cloneShadowTreeWithNewPropsRecursive(
       childrenMap, oldRootNode, propsMap);
 }
+
+template ShadowNode::Unshared cloneShadowTreeWithNewProps(
+    const ShadowNode::Shared &oldRootNode,
+    const PropsMap<JsiValuePropsWrapper> &propsMap);
+
+template ShadowNode::Unshared cloneShadowTreeWithNewProps(
+    const ShadowNode::Shared &oldRootNode,
+    const PropsMap<FollyDynamicPropsWrapper> &propsMap);
 
 } // namespace reanimated
 
