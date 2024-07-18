@@ -1,4 +1,4 @@
-import { color } from '../stringFormatUtils';
+import { color } from '../utils/stringFormatUtils';
 import type { TestCase, TestValue, NullableTestValue } from '../types';
 import type { Matcher, MatcherArguments } from './rawMatchers';
 import {

@@ -1,4 +1,4 @@
-import { formatSnapshotMismatch, green, red, yellow } from '../stringFormatUtils';
+import { formatSnapshotMismatch, green, red, yellow } from '../utils/stringFormatUtils';
 import type { OperationUpdate, Mismatch } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
 import { getComparator, getComparisonModeForProp } from './Comparators';
