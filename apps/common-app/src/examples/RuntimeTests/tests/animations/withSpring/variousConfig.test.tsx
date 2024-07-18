@@ -10,7 +10,7 @@ import {
   recordAnimationUpdates,
   render,
   waitForAnimationUpdates,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 import { Snapshots } from './withSpring.snapshot';
 
 const AnimatedComponent = ({

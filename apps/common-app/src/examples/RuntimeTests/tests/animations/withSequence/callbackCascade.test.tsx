@@ -19,7 +19,7 @@ import {
   getRegisteredValue,
   registerValue,
   waitForAnimationUpdates,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 import { Snapshots } from './snapshots.snapshot';
 
 describe(`Cascade of callbacks`, () => {
