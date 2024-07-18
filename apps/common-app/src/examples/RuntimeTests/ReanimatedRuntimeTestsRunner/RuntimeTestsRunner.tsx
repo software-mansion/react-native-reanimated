@@ -42,6 +42,8 @@ interface RuntimeTestRunnerProps {
 export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
   const [component, setComponent] = useState<ReactNode | null>(null);
   const [started, setStarted] = useState<boolean>(false);
+  const [finished, setFinished] = useState<boolean>(false);
+
   const testSelectionCallbacks = useRef<Set<() => void>>(new Set());
   useEffect(() => {
     if (renderLock) {
@@ -52,6 +54,7 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
   async function run() {
     renderLock = configure({ render: setComponent });
     await runTests();
+    setFinished(true);
   }
 
   function handleStartClick() {
@@ -71,9 +74,9 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
           </Pressable>
         </>
       )}
-
       {/* Don't render anything if component is undefined to prevent blinking */}
       {component || null}
+      {finished ? <Text style={styles.reloadText}>Reload the app to run the tests again</Text> : null}
     </View>
   );
 }
@@ -255,6 +258,11 @@ const styles = StyleSheet.create({
   },
   checkedCheckbox: {
     backgroundColor: 'navy',
+  },
+  reloadText: {
+    fontSize: 20,
+    color: 'navy',
+    alignSelf: 'center',
   },
   pressedButton: {
     zIndex: 2,
