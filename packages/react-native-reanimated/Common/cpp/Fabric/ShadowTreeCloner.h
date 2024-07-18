@@ -16,18 +16,12 @@ using namespace react;
 
 namespace reanimated {
 
-template<class T>
-concept Derived = std::is_base_of_v<PropsWrapper, T>;
+using PropsMap = std::unordered_map<const ShadowNodeFamily *, std::vector<RawProps>>;
+using ChildrenMap = std::unordered_map<const ShadowNodeFamily *, std::unordered_set<int>>;
 
-template<Derived T>
-using PropsMap = std::unordered_map<const ShadowNodeFamily *, std::vector<std::unique_ptr<T>>>;
-
-using ChildrenMap = std::unordered_map<const ShadowNodeFamily *, std::vector<int>>;
-
-template<Derived T>
 ShadowNode::Unshared cloneShadowTreeWithNewProps(
     const ShadowNode::Shared &oldRootNode,
-    const PropsMap<T> &propsMap);
+    const PropsMap &propsMap);
 
 } // namespace reanimated
 

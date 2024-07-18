@@ -40,14 +40,14 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   // ShadowTree not commited by Reanimated, apply updates from PropsRegistry
 
   auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
-  PropsMap<FollyDynamicPropsWrapper> propsMap;
+  PropsMap propsMap;
 
   {
     auto lock = propsRegistry_->createLock();
 
     propsRegistry_->for_each(
         [&](const ShadowNodeFamily &family, const folly::dynamic &props) {
-          propsMap[&family].emplace_back(std::make_unique<FollyDynamicPropsWrapper>(props));
+          propsMap[&family].emplace_back(props);
         });
 
     rootNode = std::static_pointer_cast<RootShadowNode>(

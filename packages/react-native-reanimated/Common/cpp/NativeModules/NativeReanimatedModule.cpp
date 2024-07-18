@@ -720,12 +720,12 @@ void NativeReanimatedModule::performOperations() {
     shadowTree.commit(
         [&](RootShadowNode const &oldRootShadowNode)
             -> RootShadowNode::Unshared {
-          PropsMap<JsiValuePropsWrapper> propsMap;
+          PropsMap propsMap;
           auto rootNode =
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
           for (auto &[shadowNode, props] : copiedOperationsQueue) {
             auto family = &shadowNode->getFamily();
-            propsMap[family].emplace_back(std::make_unique<JsiValuePropsWrapper>(rt, std::move(props)));
+            propsMap[family].emplace_back(rt, std::move(*props));
 
 #if REACT_NATIVE_MINOR_VERSION >= 73
             // Fix for catching nullptr returned from commit hook was

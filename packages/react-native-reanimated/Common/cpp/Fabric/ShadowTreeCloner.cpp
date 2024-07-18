@@ -1,16 +1,16 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#include <ranges>
 #include <utility>
 
 #include "ShadowTreeCloner.h"
 
 namespace reanimated {
 
-template<Derived T>
 ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
     const ChildrenMap &childrenMap,
     const ShadowNode::Shared &shadowNode,
-    const PropsMap<T> &propsMap) {
+    const PropsMap &propsMap) {
   const auto family = &shadowNode->getFamily();
   const auto affectedChildrenIt = childrenMap.find(family);
   const auto propsIt = propsMap.find(family);
@@ -31,7 +31,7 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
     newProps = shadowNode->getProps();
     for (const auto &props : propsIt->second) {
       newProps = shadowNode->getComponentDescriptor().cloneProps(
-          propsParserContext, newProps, props->getRawProps());
+          propsParserContext, newProps, RawProps(props));
     }
   }
 
@@ -43,40 +43,29 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
   return result;
 }
 
-template<Derived T>
 ShadowNode::Unshared cloneShadowTreeWithNewProps(
     const ShadowNode::Shared &oldRootNode,
-    const PropsMap<T> &propsMap) {
+    const PropsMap &propsMap) {
   ChildrenMap childrenMap;
 
   for (auto &[family, _] : propsMap) {
     const auto ancestors = family->getAncestors(*oldRootNode);
 
-    for (auto it = ancestors.rbegin(); it != ancestors.rend(); ++it) {
-      const auto &parentNode = it->first.get();
-      const auto index = it->second;
-      const auto parentFamily = &parentNode.getFamily();
+    for (const auto & [parentNode, index] : std::ranges::reverse_view(ancestors)) {
+      const auto parentFamily = &parentNode.get().getFamily();
       auto &affectedChildren = childrenMap[parentFamily];
 
-      affectedChildren.push_back(index);
-
-      if (affectedChildren.size() > 1) {
-        break;
+      if (affectedChildren.contains(index)){
+        continue;
       }
+      
+      affectedChildren.insert(index);
     }
   }
 
   return cloneShadowTreeWithNewPropsRecursive(
       childrenMap, oldRootNode, propsMap);
 }
-
-template ShadowNode::Unshared cloneShadowTreeWithNewProps(
-    const ShadowNode::Shared &oldRootNode,
-    const PropsMap<JsiValuePropsWrapper> &propsMap);
-
-template ShadowNode::Unshared cloneShadowTreeWithNewProps(
-    const ShadowNode::Shared &oldRootNode,
-    const PropsMap<FollyDynamicPropsWrapper> &propsMap);
 
 } // namespace reanimated
 
