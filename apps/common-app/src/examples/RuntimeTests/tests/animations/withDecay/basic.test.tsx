@@ -6,11 +6,11 @@ import {
   describe,
   test,
   render,
-  wait,
   mockAnimationTimer,
   recordAnimationUpdates,
   unmockAnimationTimer,
   expect,
+  waitForAnimationUpdates,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './basic.snapshot';
 
@@ -29,12 +29,12 @@ describe('withDecay animation, test various config', () => {
     );
   };
 
-  async function getSnapshotUpdates(config: WithDecayConfig, duration: number) {
+  async function getSnapshotUpdates(snapshotName: keyof typeof Snapshots, config: WithDecayConfig, duration: number) {
     await mockAnimationTimer();
     const updatesContainer = await recordAnimationUpdates();
     await render(<DecayComponent config={config} />);
 
-    await wait(duration);
+    await waitForAnimationUpdates(Snapshots[snapshotName].length);
 
     const updates = updatesContainer.getUpdates();
     const nativeUpdates = await updatesContainer.getNativeSnapshots();
@@ -52,16 +52,15 @@ describe('withDecay animation, test various config', () => {
     [800, { velocity: 2000, clamp: [0, 150], rubberBandEffect: true }],
     [500, { velocity: 2000, clamp: [0, 150], rubberBandEffect: true, rubberBandFactor: 2 }],
   ] as Array<[number, WithDecayConfig]>)('Config ${1}', async ([duration, config]) => {
-    const snapshotName =
-      'decay_' +
+    const snapshotName = ('decay_' +
       Object.entries(config)
         .map(([key, val]) => {
           return `${key}_${val.toString().replace(/\./g, '_').replace(/,/g, '_')}`;
         })
-        .join('$');
+        .join('$')) as keyof typeof Snapshots;
 
-    const [updates, nativeUpdates] = await getSnapshotUpdates(config, duration);
-    expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
+    const [updates, nativeUpdates] = await getSnapshotUpdates(snapshotName, config, duration);
+    expect(updates).toMatchSnapshots(Snapshots[snapshotName]);
     expect(updates).toMatchNativeSnapshots(nativeUpdates);
   });
 });
