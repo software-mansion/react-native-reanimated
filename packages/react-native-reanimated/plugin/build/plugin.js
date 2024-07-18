@@ -1327,50 +1327,15 @@ var require_class = __commonJS({
       }
       const parentPath = classPath.parentPath;
       const className = classPath.node.id.name;
-      classPath = splitClassExports(classPath, parentPath, className);
+      classPath.skip();
+      classPath = makeStatement(classPath, parentPath, className);
       removeWorkletClassMarker(classPath.node.body);
       processClass(classPath, state);
-      classPath.skip();
       return true;
     }
     exports2.processIfWorkletClass = processIfWorkletClass;
-    function splitClassExports(classPath, parentPath, className) {
-      if (parentPath.isExportDefaultDeclaration()) {
-        return splitDefaultExportClassDeclaration(parentPath, className);
-      } else if (parentPath.isExportNamedDeclaration()) {
-        return splitNamedExportClassDeclaration(parentPath, className);
-      } else {
-        return classPath;
-      }
-    }
-    function splitDefaultExportClassDeclaration(exportPath, name) {
-      const identifierExport = (0, types_12.exportDefaultDeclaration)((0, types_12.identifier)(name));
-      const newClassPath = exportPath.replaceWithMultiple([
-        exportPath.node.declaration,
-        identifierExport
-      ])[0];
-      return newClassPath;
-    }
-    function splitNamedExportClassDeclaration(exportPath, name) {
-      const identifierExport = (0, types_12.exportNamedDeclaration)(null, [
-        (0, types_12.exportSpecifier)((0, types_12.identifier)(name), (0, types_12.identifier)(name))
-      ]);
-      const newClassPath = exportPath.replaceWithMultiple([
-        exportPath.node.declaration,
-        identifierExport
-      ])[0];
-      return newClassPath;
-    }
-    function hasWorkletClassMarker(classBody) {
-      return classBody.body.some((statement) => (0, types_12.isClassProperty)(statement) && (0, types_12.isIdentifier)(statement.key) && statement.key.name === classWorkletMarker);
-    }
-    function removeWorkletClassMarker(classBody) {
-      classBody.body = classBody.body.filter((statement) => !(0, types_12.isClassProperty)(statement) || !(0, types_12.isIdentifier)(statement.key) || statement.key.name !== classWorkletMarker);
-    }
     function processClass(classPath, state) {
-      if (!classPath.node.id) {
-        return;
-      }
+      (0, assert_1.strict)(classPath.node.id);
       const className = classPath.node.id.name;
       const code = (0, generator_1.default)(classPath.node).code;
       const transformedCode = (0, core_1.transformSync)(code, {
@@ -1427,6 +1392,39 @@ var require_class = __commonJS({
       const parent = classPath.parent;
       const index = parent.body.findIndex((node) => node === classPath.node);
       parent.body.splice(index, 1, ...transformedNewCode.ast.program.body);
+    }
+    function makeStatement(classPath, parentPath, className) {
+      if (parentPath.isExportDefaultDeclaration()) {
+        return splitDefaultExportClassDeclaration(parentPath, className);
+      } else if (parentPath.isExportNamedDeclaration()) {
+        return splitNamedExportClassDeclaration(parentPath, className);
+      } else {
+        return classPath;
+      }
+    }
+    function splitDefaultExportClassDeclaration(exportPath, name) {
+      const identifierExport = (0, types_12.exportDefaultDeclaration)((0, types_12.identifier)(name));
+      const newClassPath = exportPath.replaceWithMultiple([
+        exportPath.node.declaration,
+        identifierExport
+      ])[0];
+      return newClassPath;
+    }
+    function splitNamedExportClassDeclaration(exportPath, name) {
+      const identifierExport = (0, types_12.exportNamedDeclaration)(null, [
+        (0, types_12.exportSpecifier)((0, types_12.identifier)(name), (0, types_12.identifier)(name))
+      ]);
+      const newClassPath = exportPath.replaceWithMultiple([
+        exportPath.node.declaration,
+        identifierExport
+      ])[0];
+      return newClassPath;
+    }
+    function hasWorkletClassMarker(classBody) {
+      return classBody.body.some((statement) => (0, types_12.isClassProperty)(statement) && (0, types_12.isIdentifier)(statement.key) && statement.key.name === classWorkletMarker);
+    }
+    function removeWorkletClassMarker(classBody) {
+      classBody.body = classBody.body.filter((statement) => !(0, types_12.isClassProperty)(statement) || !(0, types_12.isIdentifier)(statement.key) || statement.key.name !== classWorkletMarker);
     }
     function sortPolyfills(ast) {
       const toSort = getPolyfillsToSort(ast);

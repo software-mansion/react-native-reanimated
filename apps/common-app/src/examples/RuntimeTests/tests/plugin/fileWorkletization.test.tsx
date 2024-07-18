@@ -53,7 +53,7 @@ describe('Test file workletization', () => {
     expect(sharedValue.onUI).toBe(5);
   });
 
-  test('WorkletClass are workletized', async () => {
+  test('WorkletClasses are workletized', async () => {
     const ExampleComponent = () => {
       const output = useSharedValue<number | null>(null);
       registerValue(SHARED_VALUE_REF, output);

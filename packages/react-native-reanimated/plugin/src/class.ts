@@ -55,87 +55,22 @@ export function processIfWorkletClass(
   const parentPath = classPath.parentPath;
   const className = classPath.node.id.name;
 
-  classPath = splitClassExports(classPath, parentPath, className);
+  classPath.skip();
+
+  classPath = makeStatement(classPath, parentPath, className);
 
   removeWorkletClassMarker(classPath.node.body);
 
   processClass(classPath, state);
 
-  classPath.skip();
-
   return true;
-}
-
-function splitClassExports(
-  classPath: NodePath<ClassDeclaration>,
-  parentPath: NodePath<unknown>,
-  className: string
-) {
-  if (parentPath.isExportDefaultDeclaration()) {
-    return splitDefaultExportClassDeclaration(parentPath, className);
-  } else if (parentPath.isExportNamedDeclaration()) {
-    return splitNamedExportClassDeclaration(parentPath, className);
-  } else {
-    return classPath;
-  }
-}
-
-function splitDefaultExportClassDeclaration(
-  exportPath: NodePath<ExportDefaultDeclaration>,
-  name: string
-): NodePath<ClassDeclaration> {
-  const identifierExport = exportDefaultDeclaration(identifier(name));
-
-  const newClassPath = exportPath.replaceWithMultiple([
-    exportPath.node.declaration,
-    identifierExport,
-  ])[0] as NodePath<ClassDeclaration>;
-
-  return newClassPath;
-}
-
-function splitNamedExportClassDeclaration(
-  exportPath: NodePath<ExportNamedDeclaration>,
-  name: string
-) {
-  const identifierExport = exportNamedDeclaration(null, [
-    exportSpecifier(identifier(name), identifier(name)),
-  ]);
-
-  const newClassPath = exportPath.replaceWithMultiple([
-    exportPath.node.declaration!,
-    identifierExport,
-  ])[0] as NodePath<ClassDeclaration>;
-
-  return newClassPath;
-}
-
-function hasWorkletClassMarker(classBody: ClassBody) {
-  return classBody.body.some(
-    (statement) =>
-      isClassProperty(statement) &&
-      isIdentifier(statement.key) &&
-      statement.key.name === classWorkletMarker
-  );
-}
-
-function removeWorkletClassMarker(classBody: ClassBody) {
-  classBody.body = classBody.body.filter(
-    (statement) =>
-      !isClassProperty(statement) ||
-      !isIdentifier(statement.key) ||
-      statement.key.name !== classWorkletMarker
-  );
 }
 
 function processClass(
   classPath: NodePath<ClassDeclaration>,
   state: ReanimatedPluginPass
 ) {
-  if (!classPath.node.id) {
-    // We don't support unnamed classes yet.
-    return;
-  }
+  assert(classPath.node.id);
   const className = classPath.node.id.name;
   const code = generate(classPath.node).code;
 
@@ -233,6 +168,68 @@ function processClass(
   const index = parent.body.findIndex((node) => node === classPath.node);
 
   parent.body.splice(index, 1, ...transformedNewCode.ast.program.body);
+}
+
+function makeStatement(
+  classPath: NodePath<ClassDeclaration>,
+  parentPath: NodePath<unknown>,
+  className: string
+) {
+  if (parentPath.isExportDefaultDeclaration()) {
+    return splitDefaultExportClassDeclaration(parentPath, className);
+  } else if (parentPath.isExportNamedDeclaration()) {
+    return splitNamedExportClassDeclaration(parentPath, className);
+  } else {
+    return classPath;
+  }
+}
+
+function splitDefaultExportClassDeclaration(
+  exportPath: NodePath<ExportDefaultDeclaration>,
+  name: string
+): NodePath<ClassDeclaration> {
+  const identifierExport = exportDefaultDeclaration(identifier(name));
+
+  const newClassPath = exportPath.replaceWithMultiple([
+    exportPath.node.declaration,
+    identifierExport,
+  ])[0] as NodePath<ClassDeclaration>;
+
+  return newClassPath;
+}
+
+function splitNamedExportClassDeclaration(
+  exportPath: NodePath<ExportNamedDeclaration>,
+  name: string
+) {
+  const identifierExport = exportNamedDeclaration(null, [
+    exportSpecifier(identifier(name), identifier(name)),
+  ]);
+
+  const newClassPath = exportPath.replaceWithMultiple([
+    exportPath.node.declaration!,
+    identifierExport,
+  ])[0] as NodePath<ClassDeclaration>;
+
+  return newClassPath;
+}
+
+function hasWorkletClassMarker(classBody: ClassBody) {
+  return classBody.body.some(
+    (statement) =>
+      isClassProperty(statement) &&
+      isIdentifier(statement.key) &&
+      statement.key.name === classWorkletMarker
+  );
+}
+
+function removeWorkletClassMarker(classBody: ClassBody) {
+  classBody.body = classBody.body.filter(
+    (statement) =>
+      !isClassProperty(statement) ||
+      !isIdentifier(statement.key) ||
+      statement.key.name !== classWorkletMarker
+  );
 }
 
 function sortPolyfills(ast: BabelFile) {

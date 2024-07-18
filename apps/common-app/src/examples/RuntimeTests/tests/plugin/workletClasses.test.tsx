@@ -13,7 +13,7 @@ import {
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
-class Clazz {
+class WorkletClass {
   __workletClass = true;
   value = 0;
   getOne() {
@@ -34,7 +34,7 @@ describe('Test worklet classes', () => {
     const ExampleComponent = () => {
       const output = useSharedValue<number | null>(null);
       registerValue(SHARED_VALUE_REF, output);
-      const clazz = new Clazz();
+      const clazz = new WorkletClass();
 
       output.value = clazz.getTwo() + clazz.getIncremented() + clazz.getIncremented();
 
@@ -50,7 +50,7 @@ describe('Test worklet classes', () => {
     const ExampleComponent = () => {
       useEffect(() => {
         runOnUI(() => {
-          const clazz = new Clazz();
+          const clazz = new WorkletClass();
           clazz.getOne();
         })();
       });
@@ -69,7 +69,7 @@ describe('Test worklet classes', () => {
 
       useEffect(() => {
         runOnUI(() => {
-          const clazz = new Clazz();
+          const clazz = new WorkletClass();
           output.value = clazz.getOne();
         })();
       });
@@ -89,7 +89,7 @@ describe('Test worklet classes', () => {
 
       useEffect(() => {
         runOnUI(() => {
-          const clazz = new Clazz();
+          const clazz = new WorkletClass();
           output.value = clazz.getTwo();
         })();
       });
@@ -109,7 +109,7 @@ describe('Test worklet classes', () => {
 
       useEffect(() => {
         runOnUI(() => {
-          const clazz = new Clazz();
+          const clazz = new WorkletClass();
           output.value = clazz.getIncremented() + clazz.getIncremented();
         })();
       });
@@ -120,6 +120,26 @@ describe('Test worklet classes', () => {
     await wait(100);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     expect(sharedValue.onUI).toBe(3);
+  });
+
+  test('instanceof operator works on Worklet runtime', async () => {
+    const ExampleComponent = () => {
+      const output = useSharedValue<boolean | null>(null);
+      registerValue(SHARED_VALUE_REF, output);
+
+      useEffect(() => {
+        runOnUI(() => {
+          const clazz = new WorkletClass();
+          output.value = clazz instanceof WorkletClass;
+        })();
+      });
+
+      return <View />;
+    };
+    await render(<ExampleComponent />);
+    await wait(100);
+    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe(true);
   });
 
   // TODO: Add a test that throws when class is sent from React to Worklet runtime.
