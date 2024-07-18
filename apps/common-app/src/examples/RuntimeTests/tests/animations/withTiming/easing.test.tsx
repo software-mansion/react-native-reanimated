@@ -11,9 +11,9 @@ import {
   render,
   wait,
   unmockAnimationTimer,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 import { EasingSnapshots } from './withTiming.snapshot';
-import { ErrorBoundary } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsRunner';
+import { ErrorBoundary } from '../../../ReJest/RuntimeTestsRunner';
 
 const ActiveAnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFunctionFactory | undefined }) => {
   const widthSV = useSharedValue(0);

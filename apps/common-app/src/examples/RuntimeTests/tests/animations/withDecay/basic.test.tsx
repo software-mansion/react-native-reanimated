@@ -11,7 +11,7 @@ import {
   recordAnimationUpdates,
   unmockAnimationTimer,
   expect,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 import { Snapshots } from './basic.snapshot';
 
 describe('withDecay animation, test various config', () => {

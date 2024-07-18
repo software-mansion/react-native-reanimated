@@ -9,7 +9,7 @@ import {
   recordAnimationUpdates,
   render,
   waitForAnimationUpdates,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 import { ColorSnapshots as Snapshots } from './entering.snapshot';
 
 const AnimatedComponent = ({ fromColor, toColor }: { fromColor: string; toColor: string }) => {

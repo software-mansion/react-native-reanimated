@@ -8,17 +8,9 @@ import Animated, {
   Easing,
   withDelay,
 } from 'react-native-reanimated';
-import {
-  describe,
-  test,
-  render,
-  wait,
-  useTestRef,
-  getTestComponent,
-  expect,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { describe, test, render, wait, useTestRef, getTestComponent, expect } from '../../../ReJest/RuntimeTestsApi';
 import { View, StyleSheet } from 'react-native';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
+import { ComparisonMode } from '../../../ReJest/types';
 
 type TestCase = {
   startValues: [number, number, number];
@@ -27,7 +19,7 @@ type TestCase = {
   animationNumber: number;
 };
 
-describe('withSequence animation of number', () => {
+describe('withSequence animation of array', () => {
   const COMPONENT_REF = {
     first: 'firstComponent',
     second: 'secondComponent',

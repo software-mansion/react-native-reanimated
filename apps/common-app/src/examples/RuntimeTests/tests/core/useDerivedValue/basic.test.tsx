@@ -7,7 +7,7 @@ import Animated, {
   useDerivedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
+import { ComparisonMode } from '../../../ReJest/types';
 import {
   describe,
   test,
@@ -19,7 +19,7 @@ import {
   recordAnimationUpdates,
   mockAnimationTimer,
   unmockAnimationTimer,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 import { BasicSnapshots } from './useDerivedValue.snapshot';
 
 const WIDTH_COMPONENT = 'WidthComponent';

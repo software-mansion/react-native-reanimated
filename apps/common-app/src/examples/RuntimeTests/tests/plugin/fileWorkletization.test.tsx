@@ -1,15 +1,7 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { useSharedValue, runOnUI } from 'react-native-reanimated';
-import {
-  render,
-  wait,
-  describe,
-  getRegisteredValue,
-  registerValue,
-  test,
-  expect,
-} from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { render, wait, describe, getRegisteredValue, registerValue, test, expect } from '../../ReJest/RuntimeTestsApi';
 import { getThree, implicitContextObject } from './fileWorkletization';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
