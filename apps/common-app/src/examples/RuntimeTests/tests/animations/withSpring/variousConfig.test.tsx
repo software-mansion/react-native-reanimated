@@ -9,7 +9,7 @@ import {
   mockAnimationTimer,
   recordAnimationUpdates,
   render,
-  wait,
+  waitForAnimationUpdates,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { Snapshots } from './withSpring.snapshot';
 
@@ -41,12 +41,11 @@ const AnimatedComponent = ({
   );
 };
 
-async function getSnapshotUpdates(animateFrom: number, animateTo: number, config: WithSpringConfig, waitTime = 2000) {
+async function getSnapshotUpdates(snapshotName: keyof typeof Snapshots, animateFrom: number, animateTo: number) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
-  await render(<AnimatedComponent animateFrom={animateFrom} animateTo={animateTo} config={config} />);
-  await wait(waitTime);
-
+  await render(<AnimatedComponent animateFrom={animateFrom} animateTo={animateTo} config={{}} />);
+  await waitForAnimationUpdates(Snapshots[snapshotName].length);
   const updates = updatesContainer.getUpdates();
   const nativeUpdates = await updatesContainer.getNativeSnapshots();
 
@@ -63,9 +62,9 @@ describe('WithSpring snapshots 📸, test various configs', () => {
     ] as Array<[number, number]>)(
       'Empty config, from ${0} to ${1}',
       async ([animateFrom, animateTo]: [number, number]) => {
-        const [updates, nativeUpdates] = await getSnapshotUpdates(animateFrom, animateTo, {});
-        const snapshotName = `empty_${animateFrom}_${animateTo}`;
-        expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
+        const snapshotName = `empty_${animateFrom}_${animateTo}` as keyof typeof Snapshots;
+        const [updates, nativeUpdates] = await getSnapshotUpdates(snapshotName, animateFrom, animateTo);
+        expect(updates).toMatchSnapshots(Snapshots[snapshotName]);
         expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
       },
     );
