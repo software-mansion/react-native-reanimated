@@ -1,5 +1,4 @@
 import { Bezier } from '../src/Bezier';
-import { getSeededRandom } from './utils/pseudoRandom';
 
 // spell-checker:disable
 /*
