@@ -9,6 +9,7 @@ import type {
   VariableDeclaration,
 } from '@babel/types';
 import {
+  assertBlockStatement,
   callExpression,
   functionExpression,
   identifier,
@@ -17,6 +18,7 @@ import {
   isExpression,
   isExpressionStatement,
   isFunctionDeclaration,
+  isIdentifier,
   isObjectMethod,
   isProgram,
   memberExpression,
@@ -68,7 +70,9 @@ export function buildWorkletString(
 
   traverse(fun, {
     NewExpression(path) {
-      // @ts-ignore fix me later
+      if (!isIdentifier(path.node.callee)) {
+        return;
+      }
       const constructorName = path.node.callee.name;
       if (
         !closureVariables.some(
@@ -83,7 +87,8 @@ export function buildWorkletString(
       );
       closureVariables.splice(index, 1);
       closureVariables.push(identifier(constructorName + 'ClassFactory'));
-      // @ts-ignore fix me later
+
+      assertBlockStatement(expression.body);
       expression.body.body.unshift(
         variableDeclaration('const', [
           variableDeclarator(

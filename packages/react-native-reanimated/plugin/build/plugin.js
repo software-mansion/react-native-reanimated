@@ -254,6 +254,9 @@ var require_workletStringCode = __commonJS({
       const parsedClasses = /* @__PURE__ */ new Set();
       (0, core_1.traverse)(fun, {
         NewExpression(path) {
+          if (!(0, types_12.isIdentifier)(path.node.callee)) {
+            return;
+          }
           const constructorName = path.node.callee.name;
           if (!closureVariables.some((variable) => variable.name === constructorName) || parsedClasses.has(constructorName)) {
             return;
@@ -261,6 +264,7 @@ var require_workletStringCode = __commonJS({
           const index = closureVariables.findIndex((variable) => variable.name === constructorName);
           closureVariables.splice(index, 1);
           closureVariables.push((0, types_12.identifier)(constructorName + "ClassFactory"));
+          (0, types_12.assertBlockStatement)(expression.body);
           expression.body.body.unshift((0, types_12.variableDeclaration)("const", [
             (0, types_12.variableDeclarator)((0, types_12.identifier)(constructorName), (0, types_12.callExpression)((0, types_12.identifier)(constructorName + "ClassFactory"), []))
           ]));
