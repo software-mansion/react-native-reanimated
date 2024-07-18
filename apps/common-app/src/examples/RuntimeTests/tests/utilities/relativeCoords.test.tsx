@@ -12,7 +12,7 @@ import {
   wait,
   registerValue,
   getRegisteredValue,
-} from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../ReJest/RuntimeTestsApi';
 
 const REGISTERED_VALUE_KEY = 'sv';
 

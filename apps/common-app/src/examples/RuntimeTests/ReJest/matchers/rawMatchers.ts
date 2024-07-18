@@ -1,4 +1,4 @@
-import { cyan, green, red, yellow } from '../stringFormatUtils';
+import { cyan, green, red, yellow } from '../utils/stringFormatUtils';
 import type { TestValue, TrackerCallCount } from '../types';
 import { ComparisonMode } from '../types';
 import { getComparator } from './Comparators';

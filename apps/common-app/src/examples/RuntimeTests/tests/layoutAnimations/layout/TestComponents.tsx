@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { useTestRef } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { useTestRef } from '../../../ReJest/RuntimeTestsApi';
 
 export const TRANSITION_REF = 'TRANSITION_REF';
 export enum Direction {

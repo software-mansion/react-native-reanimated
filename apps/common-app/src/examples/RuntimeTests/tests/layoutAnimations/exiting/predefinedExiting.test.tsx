@@ -53,7 +53,7 @@ import {
   clearRenderOutput,
   mockWindowDimensions,
   unmockWindowDimensions,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 import { DurationExitingSnapshots, NoModifierExitingSnapshots, SpringifyExitingSnapshots } from './exiting.snapshot';
 
 const FADE_EXITING = [FadeOut, FadeOutRight, FadeOutLeft, FadeOutUp, FadeOutDown];
