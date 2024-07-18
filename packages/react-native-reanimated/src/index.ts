@@ -123,6 +123,9 @@ export type {
   EntryExitAnimationFunction,
   LayoutAnimationsValues,
   LayoutAnimationFunction,
+  LayoutAnimationStartFunction,
+  LayoutAnimationType,
+  SharedTransitionAnimationsValues,
   ILayoutAnimationBuilder,
   IEntryExitAnimationBuilder,
 } from './layoutReanimation';

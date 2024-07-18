@@ -7,6 +7,7 @@ import { runOnUIImmediately } from '../threads';
 import type {
   SharedTransitionAnimationsValues,
   LayoutAnimation,
+  LayoutAnimationStartFunction,
 } from './animationBuilder/commonTypes';
 
 const TAG_OFFSET = 1e9;
@@ -34,7 +35,10 @@ function stopObservingProgress(
   global._notifyAboutEnd(tag, removeView);
 }
 
-function createLayoutAnimationManager() {
+function createLayoutAnimationManager(): {
+  start: LayoutAnimationStartFunction;
+  stop: (tag: number) => void;
+} {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();

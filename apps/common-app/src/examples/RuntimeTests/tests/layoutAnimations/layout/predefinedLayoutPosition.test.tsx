@@ -18,6 +18,8 @@ import {
   unmockAnimationTimer,
   clearRenderOutput,
   getTestComponent,
+  mockWindowDimensions,
+  unmockWindowDimensions,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import {
   CurvedSnapshot,
@@ -34,6 +36,7 @@ const TRANSITIONS = [LinearTransition, SequencedTransition, FadingTransition, Ju
 
 async function getSnapshotUpdates(layout: any, direction: Direction, snapshot: Array<any>) {
   await mockAnimationTimer();
+  await mockWindowDimensions();
 
   const updatesContainer = await recordAnimationUpdates();
   if (direction === Direction.UP || direction === Direction.DOWN) {
@@ -44,7 +47,9 @@ async function getSnapshotUpdates(layout: any, direction: Direction, snapshot: A
   await waitForAnimationUpdates(snapshot.length);
   const component = getTestComponent(TRANSITION_REF);
   const updates = updatesContainer.getUpdates(component);
+
   await unmockAnimationTimer();
+  await unmockWindowDimensions();
   await clearRenderOutput();
 
   return updates;
