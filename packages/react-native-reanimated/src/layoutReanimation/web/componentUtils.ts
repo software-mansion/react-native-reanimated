@@ -8,7 +8,7 @@ import type {
   CustomConfig,
   KeyframeDefinitions,
 } from './config';
-import { WebEasings } from './Easing.web';
+import { WebEasings, getEasingByName } from './Easing.web';
 import type { WebEasingsNames } from './Easing.web';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
@@ -21,10 +21,7 @@ import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Keyframe } from '../animationBuilder';
 import { ReducedMotionManager } from '../../ReducedMotion';
-
-function getEasingByName(easingName: WebEasingsNames) {
-  return `cubic-bezier(${WebEasings[easingName].toString()})`;
-}
+import { prepareCurvedTransition } from './transition/Curved.web';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName =
@@ -238,105 +235,19 @@ export function handleLayoutTransition(
   const { transitionKeyframeName, dummyTransitionKeyframeName } =
     TransitionGenerator(animationType, transitionData);
 
-  if (animationType !== TransitionType.CURVED) {
-    animationConfig.animationName = transitionKeyframeName;
-    setElementAnimation(element, animationConfig);
-  } else {
-    handleCurvedTransition(
+  animationConfig.animationName = transitionKeyframeName;
+
+  if (animationType === TransitionType.CURVED) {
+    const { dummy, dummyAnimationConfig } = prepareCurvedTransition(
       element,
       animationConfig,
       transitionData,
-      transitionKeyframeName,
       dummyTransitionKeyframeName! // In `CurvedTransition` it cannot be undefined
     );
+
+    setElementAnimation(dummy, dummyAnimationConfig);
   }
-}
-
-function handleCurvedTransition(
-  element: HTMLElement,
-  animationConfig: AnimationConfig,
-  transitionData: TransitionData,
-  transitionKeyframeName: string,
-  dummyTransitionKeyframeName: string
-) {
-  const resetStyle = (component: HTMLElement) => {
-    component.style.animationName = ''; // This line prevents unwanted entering animation
-    component.style.position = 'absolute';
-    component.style.top = '0px';
-    component.style.left = '0px';
-    component.style.margin = '0px';
-    component.style.width = '100%';
-    component.style.height = '100%';
-  };
-
-  const showChildren = (
-    parent: HTMLElement,
-    childrenDisplayProperty: Map<HTMLElement, string>,
-    shouldShow: boolean
-  ) => {
-    for (let i = 0; i < parent.children.length; ++i) {
-      const child = parent.children[i] as HTMLElement;
-
-      if (shouldShow) {
-        child.style.display = childrenDisplayProperty.get(child)!;
-      } else {
-        childrenDisplayProperty.set(child, child.style.display);
-        child.style.display = 'none';
-      }
-    }
-  };
-
-  // Adjust configs for `CurvedTransition` and create config object for dummy
-  animationConfig.animationName = transitionKeyframeName;
-  animationConfig.easing = getEasingByName(
-    transitionData.easingX as WebEasingsNames
-  );
-
-  const dummyAnimationConfig: AnimationConfig = {
-    animationName: dummyTransitionKeyframeName,
-    animationType: LayoutAnimationType.LAYOUT,
-    duration: animationConfig.duration,
-    delay: animationConfig.delay,
-    easing: getEasingByName(transitionData.easingY as WebEasingsNames),
-    callback: null,
-    reversed: false,
-  };
-
-  const dummy = element.cloneNode(true) as HTMLElement;
-  resetStyle(dummy);
-
-  const childrenDisplayProperty = new Map<HTMLElement, string>();
-  showChildren(element, childrenDisplayProperty, false);
-
-  const originalBackgroundColor = element.style.backgroundColor;
-  element.style.backgroundColor = 'transparent';
-  element.appendChild(dummy);
-
-  setElementAnimation(dummy, dummyAnimationConfig);
   setElementAnimation(element, animationConfig);
-
-  const onFinalize = () => {
-    if (element.contains(dummy)) {
-      element.removeChild(dummy);
-    }
-
-    showChildren(element, childrenDisplayProperty, true);
-
-    element.style.backgroundColor = originalBackgroundColor;
-  };
-
-  const animationCancelCallback = () => {
-    onFinalize();
-    element.removeEventListener('animationcancel', animationCancelCallback);
-  };
-
-  const animationEndCallback = () => {
-    onFinalize();
-    element.removeEventListener('animationend', animationEndCallback);
-  };
-
-  element.addEventListener('animationend', animationEndCallback);
-  element.addEventListener('animationcancel', animationCancelCallback);
 }
 
 function getElementScrollValue(element: HTMLElement): ScrollOffsets {
