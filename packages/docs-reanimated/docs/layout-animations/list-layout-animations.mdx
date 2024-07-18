@@ -1,12 +1,14 @@
 ---
 sidebar_position: 6
-title: ListLayoutAnimations
+title: List Layout Animations
 sidebar_label: List Layout Animations
 ---
 
-List items layout animations let you animate list items when they are inserted, removed, or re-ordered.
+`itemLayoutAnimation` lets you define the animation that will be used when list items layout changes. You can use one of the predefined [layout transitions](/docs/layout-animations/layout-transitions#predefined-transitions) like `LinearTransition` or create your own [custom layout transition](/docs/layout-animations/custom-animations#custom-layout-transition).
 
 ## Example
+
+<Row>
 
 <ThemedVideo
   sources={{
@@ -14,6 +16,33 @@ List items layout animations let you animate list items when they are inserted, 
     dark: '/recordings/layout-animations/listitem_dark.mov',
   }}
 />
+
+
+<div style={{flexGrow: 1}}>
+
+```jsx
+import Animated, { LinearTransition } from 'react-native-reanimated';
+
+function App() {
+  return (
+    <Animated.FlatList 
+      data={data}
+      renderItem={renderItem}
+      // highlight-next-line
+      itemLayoutAnimation={LinearTransition}
+    />
+  );
+}
+```
+
+</div>
+
+</Row>
+
+## Remarks
+
+- `itemLayoutAnimation` works only with a single-solumn `Animated.FlatList`,
+- it does not work when `numColumns` is greater than 1,
 
 ## Platform compatibility
 

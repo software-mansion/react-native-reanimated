@@ -85,7 +85,7 @@ export default function ListItemLayoutAnimation() {
           layout={transition}
         />
         <Animated.View style={styles.bottomMenu} layout={transition}>
-          <Text>Press an item to remove it</Text>
+          <Text style={styles.infoText}>Press an item to remove it</Text>
           <TouchableOpacity
             style={styles.button}
             onPress={() => setItems([...items, findItemName()])}>
@@ -108,6 +108,7 @@ export default function ListItemLayoutAnimation() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fcfcfe',
   },
   contentContainer: {
     padding: 16,
@@ -122,26 +123,31 @@ const styles = StyleSheet.create({
     maxHeight: Dimensions.get('window').height - 250,
   },
   listItem: {
-    padding: 16,
+    padding: 20,
     backgroundColor: '#ad8ee9',
     shadowColor: '#000',
     shadowOpacity: 0.05,
   },
   itemText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 22,
   },
   bottomMenu: {
     alignItems: 'center',
     flex: 1,
   },
   button: {
-    paddingTop: 16,
+    paddingTop: 20,
     width: 100,
     alignItems: 'center',
   },
-  buttonText: {
-    fontSize: 16,
+  infoText: {
     color: '#222534',
+    fontSize: 18,
+  },
+  buttonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#b59aeb',
   },
 });
