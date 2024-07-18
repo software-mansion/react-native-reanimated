@@ -29,7 +29,7 @@ describe('withDecay animation, test various config', () => {
     );
   };
 
-  async function getSnapshotUpdates(snapshotName: keyof typeof Snapshots, config: WithDecayConfig, duration: number) {
+  async function getSnapshotUpdates(snapshotName: keyof typeof Snapshots, config: WithDecayConfig) {
     await mockAnimationTimer();
     const updatesContainer = await recordAnimationUpdates();
     await render(<DecayComponent config={config} />);
@@ -44,14 +44,14 @@ describe('withDecay animation, test various config', () => {
   }
 
   test.each([
-    [1200, { velocity: 900 }],
-    [600, { velocity: 9, velocityFactor: 100 }],
-    [900, { velocity: 900, deceleration: 0.997 }],
-    [400, { velocity: 900, clamp: [0, 150] }],
-    [900, { velocity: 900, clamp: [0, 150], rubberBandEffect: true }],
-    [800, { velocity: 2000, clamp: [0, 150], rubberBandEffect: true }],
-    [500, { velocity: 2000, clamp: [0, 150], rubberBandEffect: true, rubberBandFactor: 2 }],
-  ] as Array<[number, WithDecayConfig]>)('Config ${1}', async ([duration, config]) => {
+    { velocity: 900 },
+    { velocity: 9, velocityFactor: 100 },
+    { velocity: 900, deceleration: 0.997 },
+    { velocity: 900, clamp: [0, 150] },
+    { velocity: 900, clamp: [0, 150], rubberBandEffect: true },
+    { velocity: 2000, clamp: [0, 150], rubberBandEffect: true },
+    { velocity: 2000, clamp: [0, 150], rubberBandEffect: true, rubberBandFactor: 2 },
+  ] as Array<WithDecayConfig>)('Config ${0}', async config => {
     const snapshotName = ('decay_' +
       Object.entries(config)
         .map(([key, val]) => {
@@ -59,7 +59,7 @@ describe('withDecay animation, test various config', () => {
         })
         .join('$')) as keyof typeof Snapshots;
 
-    const [updates, nativeUpdates] = await getSnapshotUpdates(snapshotName, config, duration);
+    const [updates, nativeUpdates] = await getSnapshotUpdates(snapshotName, config);
     expect(updates).toMatchSnapshots(Snapshots[snapshotName]);
     expect(updates).toMatchNativeSnapshots(nativeUpdates);
   });
