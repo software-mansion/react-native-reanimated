@@ -184,6 +184,14 @@ export async function unmockAnimationTimer() {
   await testRunner.unmockAnimationTimer();
 }
 
+export async function mockWindowDimensions() {
+  await testRunner.mockWindowDimensions();
+}
+
+export async function unmockWindowDimensions() {
+  await testRunner.unmockWindowDimensions();
+}
+
 export async function setAnimationTimestamp(timestamp: number) {
   await testRunner.setAnimationTimestamp(timestamp);
 }
