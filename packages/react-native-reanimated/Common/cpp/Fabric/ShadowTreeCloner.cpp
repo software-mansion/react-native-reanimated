@@ -51,14 +51,15 @@ ShadowNode::Unshared cloneShadowTreeWithNewProps(
   for (auto &[family, _] : propsMap) {
     const auto ancestors = family->getAncestors(*oldRootNode);
 
-    for (const auto & [parentNode, index] : std::ranges::reverse_view(ancestors)) {
+    for (const auto &[parentNode, index] :
+         std::ranges::reverse_view(ancestors)) {
       const auto parentFamily = &parentNode.get().getFamily();
       auto &affectedChildren = childrenMap[parentFamily];
 
-      if (affectedChildren.contains(index)){
+      if (affectedChildren.contains(index)) {
         continue;
       }
-      
+
       affectedChildren.insert(index);
     }
   }
