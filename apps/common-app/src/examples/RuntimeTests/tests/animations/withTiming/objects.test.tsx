@@ -41,7 +41,7 @@ const AnimatedComponent = ({
   );
 };
 
-describe.only('withTiming animation of WIDTH', () => {
+describe('withTiming animation of WIDTH', () => {
   test.each([
     {
       startStyle: { width: 10 },
