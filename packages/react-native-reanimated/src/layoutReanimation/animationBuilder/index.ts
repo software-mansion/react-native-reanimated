@@ -20,4 +20,5 @@ export type {
   BaseBuilderAnimationConfig,
   LayoutAnimationAndConfig,
   IEntryExitAnimationBuilder,
+  SharedTransitionAnimationsValues,
 } from './commonTypes';
