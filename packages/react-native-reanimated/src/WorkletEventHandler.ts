@@ -50,11 +50,13 @@ class WorkletEventHandlerNative<Event extends object>
 
   updateEventHandler(
     newWorklet: (event: ReanimatedEvent<Event>) => void,
-    newEvents: string[]
+    newEvents: string[],
+    newJSHandlers: Record<string, JSHandler<Event>>
   ): void {
     // Update worklet and event names
     this.worklet = newWorklet;
     this.eventNames = newEvents;
+    this.JSHandlers = newJSHandlers;
 
     // Detach all events
     this.#registrations.forEach((registrationIDs) => {
@@ -167,11 +169,13 @@ class WorkletEventHandlerWeb<Event extends object>
 
   updateEventHandler(
     newWorklet: (event: ReanimatedEvent<Event>) => void,
-    newEvents: string[]
+    newEvents: string[],
+    newJSHandlers: Record<string, JSHandler<Event>>
   ): void {
     // Update worklet and event names
     this.worklet = newWorklet;
     this.eventNames = newEvents;
+    this.JSHandlers = newJSHandlers;
     this.setupWebListeners();
   }
 

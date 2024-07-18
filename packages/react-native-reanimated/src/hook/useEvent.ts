@@ -63,7 +63,7 @@ export function useEvent<Event extends object, Context = never>(
     initRef.current = { workletEventHandler };
   } else if (rebuild) {
     const workletEventHandler = initRef.current.workletEventHandler;
-    workletEventHandler.updateEventHandler(handler, eventNames);
+    workletEventHandler.updateEventHandler(handler, eventNames, JSHandlers);
     initRef.current = { workletEventHandler };
   }
 

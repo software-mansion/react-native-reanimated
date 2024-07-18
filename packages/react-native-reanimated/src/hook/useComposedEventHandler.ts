@@ -159,7 +159,6 @@ export function useComposedEventHandler<
   });
 
   const { doDependenciesDiffer } = useHandler(workletsRecord);
-  // TODO: ADD DEPS BASED ON JS HANDLERS
 
   // @ts-expect-error We need the internal type
   return (useEvent as UseEventInternal<Event, Context>)(

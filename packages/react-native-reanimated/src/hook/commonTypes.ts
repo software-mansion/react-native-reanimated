@@ -89,7 +89,8 @@ export type JSHandler<Event extends object> = (event: JSEvent<Event>) => void;
 export interface IWorkletEventHandler<Event extends object> {
   updateEventHandler: (
     newWorklet: (event: ReanimatedEvent<Event>) => void,
-    newEvents: string[]
+    newEvents: string[],
+    newJSHandlers: Record<string, JSHandler<Event>>
   ) => void;
   registerForEvents: (viewTag: number, fallbackEventName?: string) => void;
   unregisterFromEvents: (viewTag: number) => void;
