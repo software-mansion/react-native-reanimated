@@ -31,10 +31,11 @@ const SIMPLE_EXAMPLES = [
     text: 'withDelay',
   },
   {
-    animation: () => withSequence(
-      withTiming((toValue + initialValue) / 2, { duration }),
-      withSpring(toValue, { duration })
-    ),
+    animation: () =>
+      withSequence(
+        withTiming((toValue + initialValue) / 2, { duration }),
+        withSpring(toValue, { duration })
+      ),
     text: 'withSequence',
   },
 ];
@@ -60,46 +61,51 @@ const REPEAT_EXAMPLES = [
 
 const CONFIG_EXAMPLES = [
   {
-    animation: () => withTiming(toValue, {
-      reduceMotion: ReduceMotion.Always,
-      duration,
-    }),
+    animation: () =>
+      withTiming(toValue, {
+        reduceMotion: ReduceMotion.Always,
+        duration,
+      }),
     text: 'always\nreduce',
   },
   {
-    animation: () => withTiming(toValue, {
-      reduceMotion: ReduceMotion.Never,
-      duration,
-    }),
+    animation: () =>
+      withTiming(toValue, {
+        reduceMotion: ReduceMotion.Never,
+        duration,
+      }),
     text: 'never\nreduce',
   },
   {
-    animation: () => withTiming(toValue, {
-      reduceMotion: ReduceMotion.System,
-      duration,
-    }),
-    text: 'system\nreduce',
-  },
-  {
-    animation: () => withSequence(
-      ReduceMotion.Always,
-      withTiming(initialValue + (toValue - initialValue) / 3, { duration }),
-      withTiming(initialValue + (2 * (toValue - initialValue)) / 3, {
+    animation: () =>
+      withTiming(toValue, {
         reduceMotion: ReduceMotion.System,
         duration,
       }),
-      withTiming(toValue, { reduceMotion: ReduceMotion.Never, duration })
-    ),
+    text: 'system\nreduce',
+  },
+  {
+    animation: () =>
+      withSequence(
+        ReduceMotion.Always,
+        withTiming(initialValue + (toValue - initialValue) / 3, { duration }),
+        withTiming(initialValue + (2 * (toValue - initialValue)) / 3, {
+          reduceMotion: ReduceMotion.System,
+          duration,
+        }),
+        withTiming(toValue, { reduceMotion: ReduceMotion.Never, duration })
+      ),
     text: 'nested sequence',
   },
   {
-    animation: () => withRepeat(
-      withTiming(toValue, { duration }),
-      3,
-      true,
-      undefined,
-      ReduceMotion.Always
-    ),
+    animation: () =>
+      withRepeat(
+        withTiming(toValue, { duration }),
+        3,
+        true,
+        undefined,
+        ReduceMotion.Always
+      ),
     text: 'nested repeat',
   },
 ];
