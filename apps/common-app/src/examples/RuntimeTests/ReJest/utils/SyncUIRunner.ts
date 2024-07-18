@@ -1,5 +1,5 @@
 import { runOnJS, runOnUI } from 'react-native-reanimated';
-import type { LockObject } from './types';
+import type { LockObject } from '../types';
 
 class WaitForUnlock {
   private _lock: LockObject = {

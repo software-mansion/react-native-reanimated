@@ -4,7 +4,7 @@ import { isValidPropName } from './types';
 import type { MultiViewSnapshot, SingleViewSnapshot } from './matchers/snapshotMatchers';
 import { convertDecimalColor } from './util';
 import type { TestComponent } from './TestComponent';
-import { SyncUIRunner } from './SyncUIRunner';
+import { SyncUIRunner } from './utils/SyncUIRunner';
 
 type JsUpdate = {
   tag: number;

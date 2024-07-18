@@ -1,5 +1,5 @@
 import type { Component, ReactElement } from 'react';
-import { TestRunner } from './TestRunner';
+import { TestRunner } from './TestRunner/TestRunner';
 import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
 import type { TestConfiguration, TestValue, NullableTestValue, BuildFunction } from './types';
