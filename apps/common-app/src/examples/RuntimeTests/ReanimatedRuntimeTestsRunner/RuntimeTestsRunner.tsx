@@ -63,9 +63,7 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
 
   return (
     <View style={styles.container}>
-      {started ? (
-        <Text style={styles.reloadText}>Reload the app to run the tests again</Text>
-      ) : (
+      {started ? null : (
         <>
           <TestSelector tests={tests} testSelectionCallbacks={testSelectionCallbacks} />
           <Pressable onPressOut={handleStartClick} style={styles.button}>
@@ -252,6 +250,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
     borderWidth: 2,
     backgroundColor: 'white',
+    borderColor: 'navy',
+    borderRadius: 5,
   },
   checkedCheckbox: {
     backgroundColor: 'navy',
