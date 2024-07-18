@@ -1,5 +1,5 @@
 import type { Component, Dispatch, MutableRefObject, ReactNode, SetStateAction } from 'react';
-import type { AnimatedStyle, StyleProps } from 'react-native-reanimated';
+import type { AnimatedStyle, StyleProps, LayoutAnimationStartFunction } from 'react-native-reanimated';
 
 export type CallTracker = {
   UICallsCount: number;
@@ -140,6 +140,14 @@ declare global {
   var _obtainPropPaper: (viewTag: number, propName: string) => string;
   var _obtainPropFabric: (shadowNodeWrapper: unknown, propName: string) => string;
   var __flushAnimationFrame: (frameTimestamp: number) => void;
+  var LayoutAnimationsManager: {
+    start: LayoutAnimationStartFunction;
+    stop: (tag: number) => void;
+  };
+  var originalLayoutAnimationsManager: {
+    start: LayoutAnimationStartFunction;
+    stop: (tag: number) => void;
+  };
 }
 /* eslint-enable no-var */
 

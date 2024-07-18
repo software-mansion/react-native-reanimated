@@ -51,6 +51,8 @@ import {
   waitForAnimationUpdates,
   unmockAnimationTimer,
   clearRenderOutput,
+  mockWindowDimensions,
+  unmockWindowDimensions,
 } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
 import { DurationExitingSnapshots, NoModifierExitingSnapshots, SpringifyExitingSnapshots } from './exiting.snapshot';
 
@@ -99,6 +101,7 @@ const ExitingComponent = ({ exiting }: { exiting: any }) => {
 
 async function getSnapshotUpdates(exiting: any, snapshot: Array<any>, duration: number | undefined, springify = false) {
   await mockAnimationTimer();
+  await mockWindowDimensions();
 
   const updatesContainer = await recordAnimationUpdates();
   const springExiting = springify ? exiting : exiting.springify();
@@ -108,7 +111,9 @@ async function getSnapshotUpdates(exiting: any, snapshot: Array<any>, duration: 
 
   await waitForAnimationUpdates(snapshot.length);
   const updates = updatesContainer.getUpdates();
+
   await unmockAnimationTimer();
+  await unmockWindowDimensions();
   await clearRenderOutput();
 
   return updates;

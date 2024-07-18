@@ -30,17 +30,26 @@ var require_types = __commonJS({
   "lib/types.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.isWorkletizableObjectType = exports2.isWorkletizableFunctionType = exports2.WorkletizableObject = exports2.WorkletizableFunction = void 0;
+    exports2.isWorkletizableObjectNode = exports2.isWorkletizableObjectPath = exports2.isWorkletizableFunctionNode = exports2.isWorkletizableFunctionPath = exports2.WorkletizableObject = exports2.WorkletizableFunction = void 0;
+    var types_12 = require("@babel/types");
     exports2.WorkletizableFunction = "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod";
     exports2.WorkletizableObject = "ObjectExpression";
-    function isWorkletizableFunctionType(path) {
+    function isWorkletizableFunctionPath(path) {
       return path.isFunctionDeclaration() || path.isFunctionExpression() || path.isArrowFunctionExpression() || path.isObjectMethod();
     }
-    exports2.isWorkletizableFunctionType = isWorkletizableFunctionType;
-    function isWorkletizableObjectType(path) {
+    exports2.isWorkletizableFunctionPath = isWorkletizableFunctionPath;
+    function isWorkletizableFunctionNode(node) {
+      return (0, types_12.isFunctionDeclaration)(node) || (0, types_12.isFunctionExpression)(node) || (0, types_12.isArrowFunctionExpression)(node) || (0, types_12.isObjectMethod)(node);
+    }
+    exports2.isWorkletizableFunctionNode = isWorkletizableFunctionNode;
+    function isWorkletizableObjectPath(path) {
       return path.isObjectExpression();
     }
-    exports2.isWorkletizableObjectType = isWorkletizableObjectType;
+    exports2.isWorkletizableObjectPath = isWorkletizableObjectPath;
+    function isWorkletizableObjectNode(node) {
+      return (0, types_12.isObjectExpression)(node);
+    }
+    exports2.isWorkletizableObjectNode = isWorkletizableObjectNode;
   }
 });
 
@@ -122,6 +131,8 @@ var require_globals = __commonJS({
       "null",
       "this",
       "global",
+      "window",
+      "globalThis",
       "console",
       "performance",
       "queueMicrotask",
@@ -878,24 +889,24 @@ var require_referencedWorklets = __commonJS({
         return void 0;
       }
       const worklet = workletDeclaration.get("init");
-      if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionType)(worklet)) {
+      if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionPath)(worklet)) {
         return worklet;
       }
-      if (acceptObject && (0, types_12.isWorkletizableObjectType)(worklet)) {
+      if (acceptObject && (0, types_12.isWorkletizableObjectPath)(worklet)) {
         return worklet;
       }
       return void 0;
     }
     function findReferencedWorkletFromAssignmentExpression(workletBinding, acceptWorkletizableFunction, acceptObject) {
-      const workletDeclaration = workletBinding.constantViolations.reverse().find((constantViolation) => constantViolation.isAssignmentExpression() && (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionType)(constantViolation.get("right")) || acceptObject && (0, types_12.isWorkletizableObjectType)(constantViolation.get("right"))));
+      const workletDeclaration = workletBinding.constantViolations.reverse().find((constantViolation) => constantViolation.isAssignmentExpression() && (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionPath)(constantViolation.get("right")) || acceptObject && (0, types_12.isWorkletizableObjectPath)(constantViolation.get("right"))));
       if (!workletDeclaration || !workletDeclaration.isAssignmentExpression()) {
         return void 0;
       }
       const workletDefinition = workletDeclaration.get("right");
-      if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionType)(workletDefinition)) {
+      if (acceptWorkletizableFunction && (0, types_12.isWorkletizableFunctionPath)(workletDefinition)) {
         return workletDefinition;
       }
-      if (acceptObject && (0, types_12.isWorkletizableObjectType)(workletDefinition)) {
+      if (acceptObject && (0, types_12.isWorkletizableObjectPath)(workletDefinition)) {
         return workletDefinition;
       }
       return void 0;
@@ -918,7 +929,7 @@ var require_objectWorklets = __commonJS({
           (0, workletSubstitution_12.processWorklet)(property, state);
         } else if (property.isObjectProperty()) {
           const value = property.get("value");
-          if ((0, types_12.isWorkletizableFunctionType)(value)) {
+          if ((0, types_12.isWorkletizableFunctionPath)(value)) {
             (0, workletSubstitution_12.processWorklet)(value, state);
           }
         } else {
@@ -1009,18 +1020,18 @@ var require_autoworkletization = __commonJS({
         if (!maybeWorklet) {
           return;
         }
-        if ((0, types_2.isWorkletizableFunctionType)(maybeWorklet)) {
+        if ((0, types_2.isWorkletizableFunctionPath)(maybeWorklet)) {
           (0, workletSubstitution_12.processWorklet)(maybeWorklet, state);
-        } else if ((0, types_2.isWorkletizableObjectType)(maybeWorklet)) {
+        } else if ((0, types_2.isWorkletizableObjectPath)(maybeWorklet)) {
           (0, objectWorklets_1.processWorkletizableObject)(maybeWorklet, state);
         }
       });
     }
     function findWorklet(arg, acceptWorkletizableFunction, acceptObject) {
-      if (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionType)(arg)) {
+      if (acceptWorkletizableFunction && (0, types_2.isWorkletizableFunctionPath)(arg)) {
         return arg;
       }
-      if (acceptObject && (0, types_2.isWorkletizableObjectType)(arg)) {
+      if (acceptObject && (0, types_2.isWorkletizableObjectPath)(arg)) {
         return arg;
       }
       if (arg.isReferencedIdentifier() && arg.isIdentifier()) {
@@ -1132,6 +1143,146 @@ var require_webOptimization = __commonJS({
   }
 });
 
+// lib/contextObject.js
+var require_contextObject = __commonJS({
+  "lib/contextObject.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.isContextObject = exports2.processIfWorkletContextObject = exports2.contextObjectMarker = void 0;
+    var types_12 = require("@babel/types");
+    exports2.contextObjectMarker = "__workletContextObject";
+    function processIfWorkletContextObject(path, _state) {
+      if (!isContextObject(path.node)) {
+        return false;
+      }
+      removeContextObjectMarker(path.node);
+      processWorkletContextObject(path.node);
+      return true;
+    }
+    exports2.processIfWorkletContextObject = processIfWorkletContextObject;
+    function isContextObject(objectExpression) {
+      return objectExpression.properties.some((property) => (0, types_12.isObjectProperty)(property) && (0, types_12.isIdentifier)(property.key) && property.key.name === exports2.contextObjectMarker);
+    }
+    exports2.isContextObject = isContextObject;
+    function processWorkletContextObject(objectExpression) {
+      const workletObjectFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([(0, types_12.returnStatement)((0, types_12.cloneNode)(objectExpression))], [(0, types_12.directive)((0, types_12.directiveLiteral)("worklet"))]));
+      objectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)(`${exports2.contextObjectMarker}Factory`), workletObjectFactory));
+    }
+    function removeContextObjectMarker(objectExpression) {
+      objectExpression.properties = objectExpression.properties.filter((property) => !((0, types_12.isObjectProperty)(property) && (0, types_12.isIdentifier)(property.key) && property.key.name === exports2.contextObjectMarker));
+    }
+  }
+});
+
+// lib/file.js
+var require_file = __commonJS({
+  "lib/file.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.isImplicitContextObject = exports2.processIfWorkletFile = void 0;
+    var types_12 = require("@babel/types");
+    var types_2 = require_types();
+    var contextObject_12 = require_contextObject();
+    function processIfWorkletFile(path, state) {
+      if (!path.node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
+        return false;
+      }
+      processWorkletFile(path, state);
+      path.node.directives = path.node.directives.filter((functionDirective) => functionDirective.value.value !== "worklet");
+      return true;
+    }
+    exports2.processIfWorkletFile = processIfWorkletFile;
+    function processWorkletFile(programPath, _state) {
+      const statements = programPath.get("body");
+      statements.forEach((statement) => {
+        const candidatePath = getCandidate(statement);
+        if (candidatePath.node) {
+          processWorkletizableEntity(candidatePath);
+        }
+      });
+    }
+    function getCandidate(statementPath) {
+      if (statementPath.isExportNamedDeclaration() || statementPath.isExportDefaultDeclaration()) {
+        return statementPath.get("declaration");
+      } else {
+        return statementPath;
+      }
+    }
+    function processWorkletizableEntity(nodePath) {
+      if ((0, types_2.isWorkletizableFunctionPath)(nodePath)) {
+        if (nodePath.isArrowFunctionExpression()) {
+          replaceImplicitReturnWithBlock(nodePath.node);
+        }
+        appendWorkletDirective(nodePath.node.body);
+      } else if ((0, types_2.isWorkletizableObjectPath)(nodePath)) {
+        if (isImplicitContextObject(nodePath)) {
+          appendWorkletContextObjectMarker(nodePath.node);
+        } else {
+          processWorkletAggregator(nodePath);
+        }
+      } else if (nodePath.isVariableDeclaration()) {
+        processVariableDeclaration(nodePath);
+      }
+    }
+    function processVariableDeclaration(variableDeclarationPath) {
+      const declarations = variableDeclarationPath.get("declarations");
+      declarations.forEach((declaration) => {
+        const initPath = declaration.get("init");
+        if (initPath.isExpression()) {
+          processWorkletizableEntity(initPath);
+        }
+      });
+    }
+    function processWorkletAggregator(objectPath) {
+      const properties = objectPath.get("properties");
+      properties.forEach((property) => {
+        if (property.isObjectMethod()) {
+          appendWorkletDirective(property.node.body);
+        } else if (property.isObjectProperty()) {
+          const valuePath = property.get("value");
+          processWorkletizableEntity(valuePath);
+        }
+      });
+    }
+    function replaceImplicitReturnWithBlock(path) {
+      if (!(0, types_12.isBlockStatement)(path.body)) {
+        path.body = (0, types_12.blockStatement)([(0, types_12.returnStatement)(path.body)]);
+      }
+    }
+    function appendWorkletDirective(node) {
+      if (!node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
+        node.directives.push((0, types_12.directive)((0, types_12.directiveLiteral)("worklet")));
+      }
+    }
+    function appendWorkletContextObjectMarker(objectExpression) {
+      if (objectExpression.properties.some((value) => (0, types_12.isObjectProperty)(value) && (0, types_12.isIdentifier)(value.key) && value.key.name === contextObject_12.contextObjectMarker)) {
+        return;
+      }
+      objectExpression.properties.push((0, types_12.objectProperty)((0, types_12.identifier)(`${contextObject_12.contextObjectMarker}`), (0, types_12.booleanLiteral)(true)));
+    }
+    function isImplicitContextObject(path) {
+      const propertyPaths = path.get("properties");
+      return propertyPaths.some((propertyPath) => {
+        if (!propertyPath.isObjectMethod()) {
+          return false;
+        }
+        return hasThisExpression(propertyPath);
+      });
+    }
+    exports2.isImplicitContextObject = isImplicitContextObject;
+    function hasThisExpression(path) {
+      let result = false;
+      path.traverse({
+        ThisExpression(thisPath) {
+          result = true;
+          thisPath.stop();
+        }
+      });
+      return result;
+    }
+  }
+});
+
 // lib/plugin.js
 Object.defineProperty(exports, "__esModule", { value: true });
 var autoworkletization_1 = require_autoworkletization();
@@ -1141,6 +1292,8 @@ var inlineStylesWarning_1 = require_inlineStylesWarning();
 var utils_1 = require_utils();
 var globals_1 = require_globals();
 var webOptimization_1 = require_webOptimization();
+var file_1 = require_file();
+var contextObject_1 = require_contextObject();
 module.exports = function() {
   function runWithTaggedExceptions(fun) {
     try {
@@ -1175,10 +1328,18 @@ module.exports = function() {
           });
         }
       },
+      ObjectExpression: {
+        enter(path, state) {
+          runWithTaggedExceptions(() => {
+            (0, contextObject_1.processIfWorkletContextObject)(path, state);
+          });
+        }
+      },
       Program: {
-        enter(_path, state) {
+        enter(path, state) {
           runWithTaggedExceptions(() => {
             state.workletNumber = 1;
+            (0, file_1.processIfWorkletFile)(path, state);
           });
         }
       },
