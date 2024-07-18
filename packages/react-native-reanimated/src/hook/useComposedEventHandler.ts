@@ -41,14 +41,51 @@ export function useComposedEventHandler<
     | null
   )[]
 ) {
-  // Record of handlers' worklets to calculate deps diffs. We use the record type to match the useHandler API requirements
-  const workletsRecord: Record<string, WorkletFunction> = {};
-  // Summed event names for registration
+  // Summed event names for worklet handlers registration
   const composedEventNames = new Set<string>();
   // Map that holds worklets for specific handled events
   const workletsMap: {
     [key: string]: ((event: ReanimatedEvent<Event>) => void)[];
   } = {};
+  // Record of handlers' worklets to calculate deps diffs
+  const workletsRecord: Record<string, WorkletFunction> = {};
+
+  function isWorkletEventHandler(
+    handler: unknown
+  ): handler is EventHandlerProcessed<Event, Context> {
+    return (
+      has('workletEventHandler', handler) &&
+      handler.workletEventHandler instanceof WorkletEventHandler
+    );
+  }
+
+  const workletHandlers = handlers
+    .filter((h) => h !== null)
+    .filter((h) => isWorkletEventHandler(h));
+
+  workletHandlers.forEach((handler) => {
+    // EventHandlerProcessed is the return type of useEvent and has to be force casted to EventHandlerInternal, because we need WorkletEventHandler object
+    const { workletEventHandler } =
+      handler as unknown as EventHandlerInternal<Context>;
+    if (workletEventHandler instanceof WorkletEventHandler) {
+      workletEventHandler.eventNames.forEach((eventName) => {
+        composedEventNames.add(eventName);
+
+        if (workletsMap[eventName]) {
+          workletsMap[eventName].push(workletEventHandler.worklet);
+        } else {
+          workletsMap[eventName] = [workletEventHandler.worklet];
+        }
+
+        const handlerName = eventName + `${workletsMap[eventName].length}`;
+        workletsRecord[handlerName] =
+          workletEventHandler.worklet as WorkletFunction;
+      });
+    }
+  });
+
+  const { doDependenciesDiffer } = useHandler(workletsRecord);
+
   // Record of provided JS handlers, used for passing it further down to WorkletEventHandler
   const JSHandlersRecord: Partial<
     Record<JSScrollEventsOutput, JSHandler<Event>>
@@ -123,42 +160,6 @@ export function useComposedEventHandler<
       };
     });
   }
-
-  function isWorkletEventHandler(
-    handler: unknown
-  ): handler is EventHandlerProcessed<Event, Context> {
-    return (
-      has('workletEventHandler', handler) &&
-      handler.workletEventHandler instanceof WorkletEventHandler
-    );
-  }
-
-  const workletHandlers = handlers
-    .filter((h) => h !== null)
-    .filter((h) => isWorkletEventHandler(h));
-
-  workletHandlers.forEach((handler) => {
-    // EventHandlerProcessed is the return type of useEvent and has to be force casted to EventHandlerInternal, because we need WorkletEventHandler object
-    const { workletEventHandler } =
-      handler as unknown as EventHandlerInternal<Context>;
-    if (workletEventHandler instanceof WorkletEventHandler) {
-      workletEventHandler.eventNames.forEach((eventName) => {
-        composedEventNames.add(eventName);
-
-        if (workletsMap[eventName]) {
-          workletsMap[eventName].push(workletEventHandler.worklet);
-        } else {
-          workletsMap[eventName] = [workletEventHandler.worklet];
-        }
-
-        const handlerName = eventName + `${workletsMap[eventName].length}`;
-        workletsRecord[handlerName] =
-          workletEventHandler.worklet as WorkletFunction;
-      });
-    }
-  });
-
-  const { doDependenciesDiffer } = useHandler(workletsRecord);
 
   // @ts-expect-error We need the internal type
   return (useEvent as UseEventInternal<Event, Context>)(
