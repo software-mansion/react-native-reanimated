@@ -4,7 +4,6 @@ import { ComparisonMode, isValidPropName } from '../types';
 import { getComparator, getComparisonModeForProp } from './Comparators';
 import type { SingleViewSnapshot } from '../TestRunner/UpdatesContainer';
 
-export type Snapshot = SingleViewSnapshot;
 function compareSnapshot(
   expectedSnapshot: OperationUpdate,
   capturedSnapshot: OperationUpdate,
