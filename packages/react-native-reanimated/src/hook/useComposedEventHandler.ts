@@ -11,6 +11,7 @@ import type {
 import type { WorkletFunction } from '../commonTypes';
 import type { EventHandlerProcessed, EventHandlerInternal } from './useEvent';
 import { has } from '../createAnimatedComponent/utils';
+import { useRef } from 'react';
 
 /**
  * Lets you compose multiple event handlers.
@@ -50,15 +51,6 @@ export function useComposedEventHandler<
   // Record of handlers' worklets to calculate deps diffs
   const workletsRecord: Record<string, WorkletFunction> = {};
 
-  function isWorkletEventHandler(
-    handler: unknown
-  ): handler is EventHandlerProcessed<Event, Context> {
-    return (
-      has('workletEventHandler', handler) &&
-      handler.workletEventHandler instanceof WorkletEventHandler
-    );
-  }
-
   const workletHandlers = handlers
     .filter((h) => h !== null)
     .filter((h) => isWorkletEventHandler(h));
@@ -94,19 +86,28 @@ export function useComposedEventHandler<
   const JSHandlersMap: Partial<
     Record<JSScrollEventsInput, JSHandler<Event>[]>
   > = {};
-
-  function isJSHandler(handler: unknown): handler is JSHandlersObject<Event> {
-    return Object.keys(JSScrollEventsPropMap).reduce((acc, val) => {
-      return acc || has(val, handler);
-    }, false);
-  }
+  // Ref to compare changes in JSHandlers
+  const JSHandlersRef = useRef<JSHandlersObject<Event>[] | null>(null);
+  // Flag that lets JS handlers get rebuilt too
+  let JSHandlersNeedRebuild = false;
 
   const JSHandlers: JSHandlersObject<Event>[] = handlers
     .filter((h) => h !== null)
     .filter((h) => isJSHandler(h)) as JSHandlersObject<Event>[];
 
+  // Update/initialize the ref and determine whether JS handlers need rebuild or not
+  if (JSHandlersRef.current === null) {
+    JSHandlersRef.current = JSHandlers;
+  } else {
+    JSHandlersNeedRebuild = !areJSHandlersEqual(
+      JSHandlersRef.current,
+      JSHandlers
+    );
+    JSHandlersRef.current = JSHandlers;
+  }
+
   // Setup the JSHandlersRecord object
-  if (JSHandlers) {
+  if (JSHandlers.length > 0) {
     // Store callbacks for each JS event in a record
     JSHandlers.forEach((handler) => {
       if (handler.onScroll) {
@@ -170,7 +171,7 @@ export function useComposedEventHandler<
       }
     },
     Array.from(composedEventNames),
-    doDependenciesDiffer,
+    doDependenciesDiffer || JSHandlersNeedRebuild,
     JSHandlersRecord
   ) as unknown as ComposedHandlerInternal<Event>;
 }
@@ -209,3 +210,54 @@ const JSScrollEventsPropMap: Record<JSScrollEventsInput, JSScrollEventsOutput> =
 type JSHandlersObject<Event extends object> = Partial<
   Record<JSScrollEventsInput, JSHandler<Event>>
 >;
+
+function isWorkletEventHandler(
+  handler: unknown
+): handler is EventHandlerProcessed<Event> {
+  return (
+    has('workletEventHandler', handler) &&
+    handler.workletEventHandler instanceof WorkletEventHandler
+  );
+}
+
+function isJSHandler(handler: unknown): handler is JSHandlersObject<Event> {
+  return Object.keys(JSScrollEventsPropMap).reduce((acc, val) => {
+    return acc || has(val, handler);
+  }, false);
+}
+
+function areJSHandlersEqual<Event extends object>(
+  oldHandlers: JSHandlersObject<Event>[],
+  newHandlers: JSHandlersObject<Event>[]
+) {
+  if (oldHandlers.length !== newHandlers.length) {
+    return false;
+  }
+  let handlersEqual = true;
+  for (let i = 0; i < oldHandlers.length; i++) {
+    const oldHandler = oldHandlers[i];
+    const newHandler = newHandlers[i];
+
+    const oldKeys = Object.keys(oldHandler).sort();
+    const newKeys = Object.keys(newHandler).sort();
+
+    if (oldKeys.toString() !== newKeys.toString()) {
+      handlersEqual = false;
+      break;
+    }
+
+    for (const key of oldKeys) {
+      const castedKey = key as unknown as JSScrollEventsInput;
+      if (oldHandlers[i][castedKey] !== newHandlers[i][castedKey]) {
+        handlersEqual = false;
+        break;
+      }
+    }
+
+    if (!handlersEqual) {
+      break;
+    }
+  }
+
+  return handlersEqual;
+}
