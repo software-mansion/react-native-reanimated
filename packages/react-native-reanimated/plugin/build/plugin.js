@@ -30,7 +30,7 @@ var require_types = __commonJS({
   "lib/types.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.isWorkletizableObjectNode = exports2.isWorkletizableObjectPath = exports2.isWorkletizableFunctionNode = exports2.isWorkletizableFunctionPath = exports2.WorkletizableObject = exports2.WorkletizableFunction = void 0;
+    exports2.workletClassFactorySuffix = exports2.isWorkletizableObjectNode = exports2.isWorkletizableObjectPath = exports2.isWorkletizableFunctionNode = exports2.isWorkletizableFunctionPath = exports2.WorkletizableObject = exports2.WorkletizableFunction = void 0;
     var types_12 = require("@babel/types");
     exports2.WorkletizableFunction = "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod";
     exports2.WorkletizableObject = "ObjectExpression";
@@ -50,6 +50,7 @@ var require_types = __commonJS({
       return (0, types_12.isObjectExpression)(node);
     }
     exports2.isWorkletizableObjectNode = isWorkletizableObjectNode;
+    exports2.workletClassFactorySuffix = "__classFactory";
   }
 });
 
@@ -176,7 +177,8 @@ var require_utils = __commonJS({
   "lib/utils.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.addCustomGlobals = exports2.isRelease = void 0;
+    exports2.replaceWithFactoryCall = exports2.addCustomGlobals = exports2.isRelease = void 0;
+    var types_12 = require("@babel/types");
     var globals_12 = require_globals();
     function isRelease() {
       var _a, _b;
@@ -192,6 +194,20 @@ var require_utils = __commonJS({
       }
     }
     exports2.addCustomGlobals = addCustomGlobals;
+    function replaceWithFactoryCall(toReplace, name, factoryCall) {
+      if (!name || !needsDeclaration(toReplace)) {
+        toReplace.replaceWith(factoryCall);
+      } else {
+        const replacement = (0, types_12.variableDeclaration)("const", [
+          (0, types_12.variableDeclarator)((0, types_12.identifier)(name), factoryCall)
+        ]);
+        toReplace.replaceWith(replacement);
+      }
+    }
+    exports2.replaceWithFactoryCall = replaceWithFactoryCall;
+    function needsDeclaration(nodePath) {
+      return (0, types_12.isScopable)(nodePath.parent) || (0, types_12.isExportNamedDeclaration)(nodePath.parent);
+    }
   }
 });
 
@@ -242,6 +258,7 @@ var require_workletStringCode = __commonJS({
     var assert_1 = require("assert");
     var convertSourceMap = __importStar(require("convert-source-map"));
     var fs = __importStar(require("fs"));
+    var types_2 = require_types();
     var utils_12 = require_utils();
     var MOCK_SOURCE_MAP = "mock source map";
     function buildWorkletString(fun, state, closureVariables, nameWithSource, inputMap) {
@@ -263,10 +280,11 @@ var require_workletStringCode = __commonJS({
           }
           const index = closureVariables.findIndex((variable) => variable.name === constructorName);
           closureVariables.splice(index, 1);
-          closureVariables.push((0, types_12.identifier)(constructorName + "ClassFactory"));
+          const workletClassFactoryName = constructorName + types_2.workletClassFactorySuffix;
+          closureVariables.push((0, types_12.identifier)(workletClassFactoryName));
           (0, types_12.assertBlockStatement)(expression.body);
           expression.body.body.unshift((0, types_12.variableDeclaration)("const", [
-            (0, types_12.variableDeclarator)((0, types_12.identifier)(constructorName), (0, types_12.callExpression)((0, types_12.identifier)(constructorName + "ClassFactory"), []))
+            (0, types_12.variableDeclarator)((0, types_12.identifier)(constructorName), (0, types_12.callExpression)((0, types_12.identifier)(workletClassFactoryName), []))
           ]));
           parsedClasses.add(constructorName);
         }
@@ -369,9 +387,10 @@ var require_workletFactory = __commonJS({
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
     var path_1 = require("path");
-    var workletStringCode_1 = require_workletStringCode();
     var globals_12 = require_globals();
+    var types_2 = require_types();
     var utils_12 = require_utils();
+    var workletStringCode_1 = require_workletStringCode();
     var REAL_VERSION = require("../../package.json").version;
     var MOCK_VERSION = "x.y.z";
     var workletStringTransformPresets = [
@@ -456,7 +475,7 @@ var require_workletFactory = __commonJS({
         (0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)(functionIdentifier, funExpression)
         ]),
-        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)(functionIdentifier, (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(variables.map((variable) => variable.name.endsWith("ClassFactory") ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - "ClassFactory".length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), variable, false, true))))),
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)(functionIdentifier, (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(variables.map((variable) => variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), variable, false, true))))),
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)(functionIdentifier, (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
       if (shouldIncludeInitData) {
@@ -610,10 +629,11 @@ var require_workletSubstitution = __commonJS({
   "lib/workletSubstitution.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.maybeSubstituteFunctionDeclarationWithVariableDeclaration = exports2.substituteObjectMethodWithObjectProperty = exports2.processWorklet = exports2.processIfWithWorkletDirective = void 0;
+    exports2.substituteObjectMethodWithObjectProperty = exports2.processWorklet = exports2.processIfWithWorkletDirective = void 0;
     var types_12 = require("@babel/types");
-    var workletFactoryCall_1 = require_workletFactoryCall();
     var types_2 = require_types();
+    var utils_12 = require_utils();
+    var workletFactoryCall_1 = require_workletFactoryCall();
     function processIfWithWorkletDirective(path, state) {
       if (!(0, types_12.isBlockStatement)(path.node.body)) {
         return false;
@@ -634,19 +654,19 @@ var require_workletSubstitution = __commonJS({
         }, state);
       }
       const workletFactoryCall = (0, workletFactoryCall_1.makeWorkletFactoryCall)(path, state);
-      substituteWithWorkletFactoryCall(path, workletFactoryCall);
+      substituteWorkletWithWorkletFactoryCall(path, workletFactoryCall);
     }
     exports2.processWorklet = processWorklet;
     function hasWorkletDirective(directives) {
       return directives.some((directive) => (0, types_12.isDirectiveLiteral)(directive.value) && directive.value.value === "worklet");
     }
-    function substituteWithWorkletFactoryCall(path, workletFactoryCall) {
+    function substituteWorkletWithWorkletFactoryCall(path, workletFactoryCall) {
+      var _a;
       if (path.isObjectMethod()) {
         substituteObjectMethodWithObjectProperty(path, workletFactoryCall);
-      } else if (path.isFunctionDeclaration()) {
-        maybeSubstituteFunctionDeclarationWithVariableDeclaration(path, workletFactoryCall);
       } else {
-        path.replaceWith(workletFactoryCall);
+        const name = "id" in path.node ? (_a = path.node.id) === null || _a === void 0 ? void 0 : _a.name : void 0;
+        (0, utils_12.replaceWithFactoryCall)(path, name, workletFactoryCall);
       }
     }
     function substituteObjectMethodWithObjectProperty(path, workletFactoryCall) {
@@ -654,14 +674,6 @@ var require_workletSubstitution = __commonJS({
       path.replaceWith(replacement);
     }
     exports2.substituteObjectMethodWithObjectProperty = substituteObjectMethodWithObjectProperty;
-    function maybeSubstituteFunctionDeclarationWithVariableDeclaration(path, workletFactoryCall) {
-      const needDeclaration = (0, types_12.isScopable)(path.parent) || (0, types_12.isExportNamedDeclaration)(path.parent);
-      const replacement = "id" in path.node && path.node.id && needDeclaration ? (0, types_12.variableDeclaration)("const", [
-        (0, types_12.variableDeclarator)(path.node.id, workletFactoryCall)
-      ]) : workletFactoryCall;
-      path.replaceWith(replacement);
-    }
-    exports2.maybeSubstituteFunctionDeclarationWithVariableDeclaration = maybeSubstituteFunctionDeclarationWithVariableDeclaration;
   }
 });
 
@@ -1316,11 +1328,12 @@ var require_class = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.processIfWorkletClass = void 0;
     var core_1 = require("@babel/core");
-    var types_12 = require("@babel/types");
     var generator_1 = __importDefault(require("@babel/generator"));
-    var types_2 = require_types();
     var traverse_1 = __importDefault(require("@babel/traverse"));
+    var types_12 = require("@babel/types");
     var assert_1 = require("assert");
+    var types_2 = require_types();
+    var utils_12 = require_utils();
     var classWorkletMarker = "__workletClass";
     function processIfWorkletClass(classPath, state) {
       if (!classPath.node.id) {
@@ -1329,10 +1342,6 @@ var require_class = __commonJS({
       if (!hasWorkletClassMarker(classPath.node.body)) {
         return false;
       }
-      const parentPath = classPath.parentPath;
-      const className = classPath.node.id.name;
-      classPath.skip();
-      classPath = makeStatement(classPath, parentPath, className);
       removeWorkletClassMarker(classPath.node.body);
       processClass(classPath, state);
       return true;
@@ -1341,8 +1350,18 @@ var require_class = __commonJS({
     function processClass(classPath, state) {
       (0, assert_1.strict)(classPath.node.id);
       const className = classPath.node.id.name;
-      const code = (0, generator_1.default)(classPath.node).code;
-      const transformedCode = (0, core_1.transformSync)(code, {
+      const polyfilledClassAst = getPolyfilledAst(classPath.node, state);
+      appendWorkletDirectiveToPolyfills(polyfilledClassAst.program.body);
+      replaceClassDeclarationWithFactoryAndCall(polyfilledClassAst.program.body, className);
+      sortPolyfills(polyfilledClassAst);
+      polyfilledClassAst.program.body.push((0, types_12.returnStatement)((0, types_12.identifier)(className)));
+      const factoryFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([...polyfilledClassAst.program.body]));
+      const factoryCall = (0, types_12.callExpression)(factoryFactory, []);
+      (0, utils_12.replaceWithFactoryCall)(classPath, className, factoryCall);
+    }
+    function getPolyfilledAst(classNode, state) {
+      const classCode = (0, generator_1.default)(classNode).code;
+      const classWithPolyfills = (0, core_1.transformSync)(classCode, {
         plugins: [
           "@babel/plugin-transform-class-properties",
           "@babel/plugin-transform-classes",
@@ -1353,76 +1372,38 @@ var require_class = __commonJS({
         babelrc: false,
         configFile: false
       });
-      (0, assert_1.strict)(transformedCode);
-      (0, assert_1.strict)(transformedCode.ast);
-      const ast = transformedCode.ast;
-      let factory;
-      let hasHandledClass = false;
-      (0, traverse_1.default)(ast, {
-        [types_2.WorkletizableFunction]: {
-          enter: (functionPath) => {
-            if (functionPath.parentPath.isObjectProperty()) {
-              return;
-            }
-            const workletDirective = (0, types_12.directive)((0, types_12.directiveLiteral)("worklet"));
-            if (functionPath.parentPath.isCallExpression() && !hasHandledClass) {
-              const factoryCopy = (0, types_12.cloneNode)(functionPath.node, true);
-              factoryCopy.id = (0, types_12.identifier)(className + "ClassFactory");
-              factoryCopy.body.directives.push(workletDirective);
-              factory = (0, types_12.variableDeclaration)("const", [
-                (0, types_12.variableDeclarator)((0, types_12.identifier)(className + "ClassFactory"), factoryCopy)
-              ]);
-              hasHandledClass = true;
-              return;
-            }
-            const bodyPath = functionPath.get("body");
-            if (!bodyPath.isBlockStatement()) {
-              bodyPath.replaceWith((0, types_12.blockStatement)([(0, types_12.returnStatement)(bodyPath.node)]));
-            }
-            functionPath.node.body.directives.push(workletDirective);
-          }
+      (0, assert_1.strict)(classWithPolyfills && classWithPolyfills.ast);
+      return classWithPolyfills.ast;
+    }
+    function appendWorkletDirectiveToPolyfills(statements) {
+      statements.forEach((statement) => {
+        if ((0, types_12.isFunctionDeclaration)(statement)) {
+          const workletDirective = (0, types_12.directive)((0, types_12.directiveLiteral)("worklet"));
+          statement.body.directives.push(workletDirective);
         }
       });
-      const body = ast.program.body;
-      body.push(factory);
-      body.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(className), (0, types_12.identifier)(className + "ClassFactory")), (0, types_12.identifier)(className + "ClassFactory"))));
-      sortPolyfills(ast);
-      const transformedNewCode = (0, core_1.transformSync)((0, generator_1.default)(ast).code, {
-        ast: true,
-        filename: state.file.opts.filename
-      });
-      (0, assert_1.strict)(transformedNewCode);
-      (0, assert_1.strict)(transformedNewCode.ast);
-      const parent = classPath.parent;
-      const index = parent.body.findIndex((node) => node === classPath.node);
-      parent.body.splice(index, 1, ...transformedNewCode.ast.program.body);
     }
-    function makeStatement(classPath, parentPath, className) {
-      if (parentPath.isExportDefaultDeclaration()) {
-        return splitDefaultExportClassDeclaration(parentPath, className);
-      } else if (parentPath.isExportNamedDeclaration()) {
-        return splitNamedExportClassDeclaration(parentPath, className);
-      } else {
-        return classPath;
-      }
-    }
-    function splitDefaultExportClassDeclaration(exportPath, name) {
-      const identifierExport = (0, types_12.exportDefaultDeclaration)((0, types_12.identifier)(name));
-      const newClassPath = exportPath.replaceWithMultiple([
-        exportPath.node.declaration,
-        identifierExport
-      ])[0];
-      return newClassPath;
-    }
-    function splitNamedExportClassDeclaration(exportPath, name) {
-      const identifierExport = (0, types_12.exportNamedDeclaration)(null, [
-        (0, types_12.exportSpecifier)((0, types_12.identifier)(name), (0, types_12.identifier)(name))
+    function replaceClassDeclarationWithFactoryAndCall(statements, className) {
+      const classFactoryName = className + types_2.workletClassFactorySuffix;
+      const classDeclarationIndex = getPolyfilledClassDeclarationIndex(statements, className);
+      const classDeclarationToReplace = statements[classDeclarationIndex];
+      const classDeclarationInit = classDeclarationToReplace.declarations[0].init;
+      const classFactoryDeclaration = (0, types_12.functionDeclaration)((0, types_12.identifier)(classFactoryName), [], (0, types_12.blockStatement)([
+        (0, types_12.variableDeclaration)("const", [
+          (0, types_12.variableDeclarator)((0, types_12.identifier)(className), classDeclarationInit)
+        ]),
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(className), (0, types_12.identifier)(classFactoryName)), (0, types_12.identifier)(classFactoryName))),
+        (0, types_12.returnStatement)((0, types_12.identifier)(className))
+      ], [(0, types_12.directive)((0, types_12.directiveLiteral)("worklet"))]));
+      const newClassDeclaration = (0, types_12.variableDeclaration)("const", [
+        (0, types_12.variableDeclarator)((0, types_12.identifier)(className), (0, types_12.callExpression)((0, types_12.identifier)(classFactoryName), []))
       ]);
-      const newClassPath = exportPath.replaceWithMultiple([
-        exportPath.node.declaration,
-        identifierExport
-      ])[0];
-      return newClassPath;
+      statements.splice(classDeclarationIndex, 1, classFactoryDeclaration, newClassDeclaration);
+    }
+    function getPolyfilledClassDeclarationIndex(statements, className) {
+      const index = statements.findIndex((statement) => (0, types_12.isVariableDeclaration)(statement) && statement.declarations.some((declaration) => (0, types_12.isIdentifier)(declaration.id) && declaration.id.name === className));
+      (0, assert_1.strict)(index >= 0);
+      return index;
     }
     function hasWorkletClassMarker(classBody) {
       return classBody.body.some((statement) => (0, types_12.isClassProperty)(statement) && (0, types_12.isIdentifier)(statement.key) && statement.key.name === classWorkletMarker);

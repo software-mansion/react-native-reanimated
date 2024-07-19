@@ -1,41 +1,40 @@
-import { transformSync } from '@babel/core';
 import type { NodePath } from '@babel/core';
+import { transformSync } from '@babel/core';
+import generate from '@babel/generator';
+import traverse from '@babel/traverse';
+import type {
+  File as BabelFile,
+  CallExpression,
+  ClassBody,
+  ClassDeclaration,
+  Identifier,
+  Program,
+  Statement,
+  VariableDeclaration,
+} from '@babel/types';
 import {
   assignmentExpression,
   blockStatement,
-  cloneNode,
+  callExpression,
   directive,
   directiveLiteral,
-  exportDefaultDeclaration,
-  exportNamedDeclaration,
-  exportSpecifier,
   expressionStatement,
+  functionDeclaration,
+  functionExpression,
   identifier,
   isClassProperty,
+  isFunctionDeclaration,
   isIdentifier,
+  isVariableDeclaration,
   memberExpression,
   returnStatement,
   variableDeclaration,
   variableDeclarator,
 } from '@babel/types';
-import type {
-  BlockStatement,
-  ClassDeclaration,
-  Expression,
-  FunctionExpression,
-  Program,
-  File as BabelFile,
-  VariableDeclaration,
-  Identifier,
-  ClassBody,
-  ExportDefaultDeclaration,
-  ExportNamedDeclaration,
-} from '@babel/types';
-import type { ReanimatedPluginPass } from './types';
-import generate from '@babel/generator';
-import { WorkletizableFunction } from './types';
-import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
+import type { ReanimatedPluginPass } from './types';
+import { workletClassFactorySuffix } from './types';
+import { replaceWithFactoryCall } from './utils';
 
 const classWorkletMarker = '__workletClass';
 
@@ -52,13 +51,6 @@ export function processIfWorkletClass(
     return false;
   }
 
-  const parentPath = classPath.parentPath;
-  const className = classPath.node.id.name;
-
-  classPath.skip();
-
-  classPath = makeStatement(classPath, parentPath, className);
-
   removeWorkletClassMarker(classPath.node.body);
 
   processClass(classPath, state);
@@ -72,9 +64,75 @@ function processClass(
 ) {
   assert(classPath.node.id);
   const className = classPath.node.id.name;
-  const code = generate(classPath.node).code;
 
-  const transformedCode = transformSync(code, {
+  const polyfilledClassAst = getPolyfilledAst(classPath.node, state);
+
+  appendWorkletDirectiveToPolyfills(polyfilledClassAst.program.body);
+
+  replaceClassDeclarationWithFactoryAndCall(
+    polyfilledClassAst.program.body,
+    className
+  );
+
+  sortPolyfills(polyfilledClassAst);
+
+  polyfilledClassAst.program.body.push(returnStatement(identifier(className)));
+
+  const factoryFactory = functionExpression(
+    null,
+    [],
+    blockStatement([...polyfilledClassAst.program.body])
+  );
+
+  const factoryCall = callExpression(factoryFactory, []);
+
+  replaceWithFactoryCall(classPath, className, factoryCall);
+  // const body = classWithPolyfills.ast.program.body;
+  // body.push(factory!);
+
+  // body.push(
+  //   expressionStatement(
+  //     assignmentExpression(
+  //       '=',
+  //       memberExpression(
+  //         identifier(className),
+  //         identifier(className + classFactorySuffix)
+  //       ),
+  //       identifier(className + classFactorySuffix)
+  //     )
+  //   )
+  // );
+
+  // sortPolyfills(classWithPolyfills.ast);
+
+  // const transformedNewCode = transformSync(
+  //   generate(classWithPolyfills.ast).code,
+  //   {
+  //     ast: true,
+  //     filename: state.file.opts.filename,
+  //   }
+  // );
+
+  // assert(transformedNewCode);
+  // assert(transformedNewCode.ast);
+
+  // // const needsDeclaration = needsDeclaration(classPath.parent);
+
+  // const parent = classPath.parent as Program;
+
+  // const index = parent.body.findIndex((node) => node === classPath.node);
+
+  // parent.body.splice(index, 1, ...transformedNewCode.ast.program.body);
+  // #endregion
+}
+
+function getPolyfilledAst(
+  classNode: ClassDeclaration,
+  state: ReanimatedPluginPass
+) {
+  const classCode = generate(classNode).code;
+
+  const classWithPolyfills = transformSync(classCode, {
     plugins: [
       '@babel/plugin-transform-class-properties',
       '@babel/plugin-transform-classes',
@@ -86,132 +144,102 @@ function processClass(
     configFile: false,
   });
 
-  assert(transformedCode);
-  assert(transformedCode.ast);
+  assert(classWithPolyfills && classWithPolyfills.ast);
 
-  const ast = transformedCode.ast;
+  return classWithPolyfills.ast;
+}
 
-  let factory: VariableDeclaration;
-
-  let hasHandledClass = false;
-
-  traverse(ast, {
-    [WorkletizableFunction]: {
-      // @ts-expect-error TS has some trouble inferring here.
-      enter: (functionPath: NodePath<WorkletizableFunction>) => {
-        if (functionPath.parentPath.isObjectProperty()) {
-          return;
-        }
-
-        const workletDirective = directive(directiveLiteral('worklet'));
-
-        if (functionPath.parentPath.isCallExpression() && !hasHandledClass) {
-          const factoryCopy = cloneNode(
-            functionPath.node,
-            true
-          ) as FunctionExpression;
-          factoryCopy.id = identifier(className + 'ClassFactory');
-          factoryCopy.body.directives.push(workletDirective);
-          factory = variableDeclaration('const', [
-            variableDeclarator(
-              identifier(className + 'ClassFactory'),
-              factoryCopy
-            ),
-          ]);
-          hasHandledClass = true;
-
-          return;
-        }
-
-        const bodyPath = functionPath.get('body');
-        if (!bodyPath.isBlockStatement()) {
-          bodyPath.replaceWith(
-            blockStatement([returnStatement(bodyPath.node as Expression)])
-          );
-        }
-
-        (functionPath.node.body as BlockStatement).directives.push(
-          workletDirective
-        );
-      },
-    },
+function appendWorkletDirectiveToPolyfills(statements: Statement[]) {
+  statements.forEach((statement) => {
+    if (isFunctionDeclaration(statement)) {
+      const workletDirective = directive(directiveLiteral('worklet'));
+      statement.body.directives.push(workletDirective);
+    }
   });
+}
 
-  const body = ast.program.body;
-  body.push(factory!);
+/**
+ * Replaces
+ * ```ts
+ * const Clazz = ...;
+ * ```
+ * with
+ * ```ts
+ * const Clazz__classFactory = ...;
+ * const Clazz = Clazz__classFactory();
+ * ```
+ */
+function replaceClassDeclarationWithFactoryAndCall(
+  statements: Statement[],
+  className: string
+) {
+  const classFactoryName = className + workletClassFactorySuffix;
 
-  body.push(
-    expressionStatement(
-      assignmentExpression(
-        '=',
-        memberExpression(
-          identifier(className),
-          identifier(className + 'ClassFactory')
+  const classDeclarationIndex = getPolyfilledClassDeclarationIndex(
+    statements,
+    className
+  );
+
+  const classDeclarationToReplace = statements[
+    classDeclarationIndex
+  ] as VariableDeclaration;
+
+  const classDeclarationInit = classDeclarationToReplace.declarations[0]
+    .init as CallExpression;
+
+  const classFactoryDeclaration = functionDeclaration(
+    identifier(classFactoryName),
+    [],
+    blockStatement(
+      [
+        variableDeclaration('const', [
+          variableDeclarator(identifier(className), classDeclarationInit),
+        ]),
+        expressionStatement(
+          assignmentExpression(
+            '=',
+            memberExpression(
+              identifier(className),
+              identifier(classFactoryName)
+            ),
+            identifier(classFactoryName)
+          )
         ),
-        identifier(className + 'ClassFactory')
-      )
+        returnStatement(identifier(className)),
+      ],
+      [directive(directiveLiteral('worklet'))]
     )
   );
 
-  sortPolyfills(ast);
-
-  const transformedNewCode = transformSync(generate(ast).code, {
-    ast: true,
-    filename: state.file.opts.filename,
-  });
-
-  assert(transformedNewCode);
-  assert(transformedNewCode.ast);
-
-  const parent = classPath.parent as Program;
-
-  const index = parent.body.findIndex((node) => node === classPath.node);
-
-  parent.body.splice(index, 1, ...transformedNewCode.ast.program.body);
-}
-
-function makeStatement(
-  classPath: NodePath<ClassDeclaration>,
-  parentPath: NodePath<unknown>,
-  className: string
-) {
-  if (parentPath.isExportDefaultDeclaration()) {
-    return splitDefaultExportClassDeclaration(parentPath, className);
-  } else if (parentPath.isExportNamedDeclaration()) {
-    return splitNamedExportClassDeclaration(parentPath, className);
-  } else {
-    return classPath;
-  }
-}
-
-function splitDefaultExportClassDeclaration(
-  exportPath: NodePath<ExportDefaultDeclaration>,
-  name: string
-): NodePath<ClassDeclaration> {
-  const identifierExport = exportDefaultDeclaration(identifier(name));
-
-  const newClassPath = exportPath.replaceWithMultiple([
-    exportPath.node.declaration,
-    identifierExport,
-  ])[0] as NodePath<ClassDeclaration>;
-
-  return newClassPath;
-}
-
-function splitNamedExportClassDeclaration(
-  exportPath: NodePath<ExportNamedDeclaration>,
-  name: string
-) {
-  const identifierExport = exportNamedDeclaration(null, [
-    exportSpecifier(identifier(name), identifier(name)),
+  const newClassDeclaration = variableDeclaration('const', [
+    variableDeclarator(
+      identifier(className),
+      callExpression(identifier(classFactoryName), [])
+    ),
   ]);
 
-  const newClassPath = exportPath.replaceWithMultiple([
-    exportPath.node.declaration!,
-    identifierExport,
-  ])[0] as NodePath<ClassDeclaration>;
+  statements.splice(
+    classDeclarationIndex,
+    1,
+    classFactoryDeclaration,
+    newClassDeclaration
+  );
+}
 
-  return newClassPath;
+function getPolyfilledClassDeclarationIndex(
+  statements: Statement[],
+  className: string
+) {
+  const index = statements.findIndex(
+    (statement) =>
+      isVariableDeclaration(statement) &&
+      statement.declarations.some(
+        (declaration) =>
+          isIdentifier(declaration.id) && declaration.id.name === className
+      )
+  );
+  assert(index >= 0);
+  return index;
 }
 
 function hasWorkletClassMarker(classBody: ClassBody) {
@@ -250,8 +278,8 @@ function sortPolyfills(ast: BabelFile) {
   }
 }
 
-function getPolyfillsToSort(ast: BabelFile): SortElement[] {
-  const polyfills: SortElement[] = [];
+function getPolyfillsToSort(ast: BabelFile): Polyfill[] {
+  const polyfills: Polyfill[] = [];
 
   traverse(ast, {
     Program: {
@@ -263,7 +291,7 @@ function getPolyfillsToSort(ast: BabelFile): SortElement[] {
             return;
           }
 
-          const element: SortElement = {
+          const element: Polyfill = {
             name: statement.node.id.name,
             index,
             dependencies: new Set(),
@@ -290,8 +318,8 @@ function getPolyfillsToSort(ast: BabelFile): SortElement[] {
   return polyfills;
 }
 
-function topoSort(toSort: SortElement[]): SortElement[] {
-  const sorted: SortElement[] = [];
+function topoSort(toSort: Polyfill[]): Polyfill[] {
+  const sorted: Polyfill[] = [];
   const stack: Set<string> = new Set();
   for (const element of toSort) {
     recursiveTopoSort(element, toSort, sorted, stack);
@@ -300,9 +328,9 @@ function topoSort(toSort: SortElement[]): SortElement[] {
 }
 
 function recursiveTopoSort(
-  current: SortElement,
-  toSort: SortElement[],
-  sorted: SortElement[],
+  current: Polyfill,
+  toSort: Polyfill[],
+  sorted: Polyfill[],
   stack: Set<string>
 ) {
   if (stack.has(current.name)) {
@@ -324,7 +352,7 @@ function recursiveTopoSort(
   stack.delete(current.name);
 }
 
-type SortElement = {
+type Polyfill = {
   name: string;
   index: number;
   dependencies: Set<string>;

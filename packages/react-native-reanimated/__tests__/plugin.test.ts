@@ -2319,9 +2319,9 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('var ClazzClassFactory = function ()');
-      expect(code).toIncludeInWorkletString('ClazzClassFactory');
-      expect(code).toContain('Clazz.ClazzClassFactory = ClazzClassFactory');
+      expect(code).toContain('var Clazz__classFactory = function ()');
+      expect(code).toIncludeInWorkletString('Clazz__classFactory');
+      expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
 
@@ -2337,9 +2337,9 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain('var Clazz = exports.Clazz = function ()');
-      expect(code).toContain('var ClazzClassFactory = function ()');
-      expect(code).toIncludeInWorkletString('ClazzClassFactory');
-      expect(code).toContain('Clazz.ClazzClassFactory = ClazzClassFactory');
+      expect(code).toContain('var Clazz__classFactory = function ()');
+      expect(code).toIncludeInWorkletString('Clazz__classFactory');
+      expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
 
@@ -2355,9 +2355,9 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain('var Clazz = exports.default = function ()');
-      expect(code).toContain('var ClazzClassFactory = function ()');
-      expect(code).toIncludeInWorkletString('ClazzClassFactory');
-      expect(code).toContain('Clazz.ClazzClassFactory = ClazzClassFactory');
+      expect(code).toContain('var Clazz__classFactory = function ()');
+      expect(code).toIncludeInWorkletString('Clazz__classFactory');
+      expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
 
@@ -2486,8 +2486,8 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('ClazzClassFactory');
-      expect(code).toHaveWorkletData(7);
+      expect(code).toContain('Clazz__classFactory');
+      expect(code).toIncludeInWorkletString('Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
 
@@ -2502,8 +2502,8 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('ClazzClassFactory');
-      expect(code).toHaveWorkletData(7);
+      expect(code).toContain('Clazz__classFactory');
+      expect(code).toIncludeInWorkletString('Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
 
@@ -2516,7 +2516,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('ClazzClassFactory');
+      expect(code).toContain('Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
 
@@ -2529,7 +2529,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain('ClazzClassFactory: Clazz.ClazzClassFactory');
+      expect(code).toContain('Clazz__classFactory: Clazz.Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
 
@@ -2546,11 +2546,10 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toIncludeInWorkletString('this.member');
-      expect(code).toHaveWorkletData(8);
       expect(code).toMatchSnapshot();
     });
 
-    it('appends necessary polyfills', () => {
+    it('appends polyfills', () => {
       const input = html`<script>
         class Clazz {
           __workletClass = true;
@@ -2563,6 +2562,22 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain('createClass');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes polyfills', () => {
+      const input = html`<script>
+        class Clazz {
+          __workletClass = true;
+
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(6);
       expect(code).toMatchSnapshot();
     });
   });

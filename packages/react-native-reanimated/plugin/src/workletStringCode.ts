@@ -31,8 +31,9 @@ import {
 import { strict as assert } from 'assert';
 import * as convertSourceMap from 'convert-source-map';
 import * as fs from 'fs';
-import { isRelease } from './utils';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import { workletClassFactorySuffix } from './types';
+import { isRelease } from './utils';
 
 const MOCK_SOURCE_MAP = 'mock source map';
 
@@ -86,14 +87,16 @@ export function buildWorkletString(
         (variable) => variable.name === constructorName
       );
       closureVariables.splice(index, 1);
-      closureVariables.push(identifier(constructorName + 'ClassFactory'));
+      const workletClassFactoryName =
+        constructorName + workletClassFactorySuffix;
+      closureVariables.push(identifier(workletClassFactoryName));
 
       assertBlockStatement(expression.body);
       expression.body.body.unshift(
         variableDeclaration('const', [
           variableDeclarator(
             identifier(constructorName),
-            callExpression(identifier(constructorName + 'ClassFactory'), [])
+            callExpression(identifier(workletClassFactoryName), [])
           ),
         ])
       );
