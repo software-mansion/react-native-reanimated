@@ -4,10 +4,9 @@ sidebar_position: 7
 
 # dispatchCommand
 
-import DispatchCommand from '@site/src/examples/DispatchCommand';
 import DispatchCommandSrc from '!!raw-loader!@site/src/examples/DispatchCommand';
 
-`dispatchCommand` allows you to dispatch command on a native component. It happens synchronously from the UI thread.
+`dispatchCommand` allows you to dispatch command on a native component. It happens on UI thread.
 
 ## Reference
 
@@ -33,6 +32,19 @@ function App() {
 }
 ```
 
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function dispatchCommand<T extends Component>(
+  animatedRef: AnimatedRef<T>,
+  commandName: string,
+  args?: unknown[]
+  ) => void;
+```
+
+</details>
+
 ### Arguments
 
 #### `animatedRef`
@@ -47,53 +59,23 @@ The name of the command to execute, e.g. `focus` or `scrollToEnd`.
 
 The array of command arguments. Defaults to an empty array.
 
-### Returns
+## Example
 
-`void`
+<ExampleVideo
+  sources={{
+    android: '/react-native-reanimated/recordings/dispatchCommand_android.mov',
+    ios: '/react-native-reanimated/recordings/dispatchCommand_ios.mov',
+  }}
+/>
 
-### Example
+<CollapsibleCode src={DispatchCommandSrc} showLines={[34, 40]} />
 
-<InteractiveExample src={DispatchCommandSrc} component={DispatchCommand} />
+## Platform compatibility
 
-```ts
-import Animated, {
-  dispatchCommand,
-  useAnimatedRef,
-} from 'react-native-reanimated';
-import { Button, StyleSheet, TextInput, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+<div className="platform-compatibility">
 
-import React from 'react';
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ❌  |
 
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
-
-export default function DispatchCommandExample() {
-  const aref = useAnimatedRef<TextInput>();
-
-  const gesture = Gesture.Tap().onStart(() => {
-    dispatchCommand(aref, 'focus');
-  });
-
-  return (
-    <View style={styles.container}>
-      <AnimatedTextInput ref={aref} style={styles.input} />
-      <GestureDetector gesture={gesture}>
-        <Button title="Focus" />
-      </GestureDetector>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  input: {
-    borderWidth: 1,
-    width: 200,
-    padding: 5,
-  },
-});
-```
+</div>
