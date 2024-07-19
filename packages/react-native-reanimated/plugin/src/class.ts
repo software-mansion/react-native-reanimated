@@ -87,43 +87,6 @@ function processClass(
   const factoryCall = callExpression(factoryFactory, []);
 
   replaceWithFactoryCall(classPath, className, factoryCall);
-  // const body = classWithPolyfills.ast.program.body;
-  // body.push(factory!);
-
-  // body.push(
-  //   expressionStatement(
-  //     assignmentExpression(
-  //       '=',
-  //       memberExpression(
-  //         identifier(className),
-  //         identifier(className + classFactorySuffix)
-  //       ),
-  //       identifier(className + classFactorySuffix)
-  //     )
-  //   )
-  // );
-
-  // sortPolyfills(classWithPolyfills.ast);
-
-  // const transformedNewCode = transformSync(
-  //   generate(classWithPolyfills.ast).code,
-  //   {
-  //     ast: true,
-  //     filename: state.file.opts.filename,
-  //   }
-  // );
-
-  // assert(transformedNewCode);
-  // assert(transformedNewCode.ast);
-
-  // // const needsDeclaration = needsDeclaration(classPath.parent);
-
-  // const parent = classPath.parent as Program;
-
-  // const index = parent.body.findIndex((node) => node === classPath.node);
-
-  // parent.body.splice(index, 1, ...transformedNewCode.ast.program.body);
-  // #endregion
 }
 
 function getPolyfilledAst(
