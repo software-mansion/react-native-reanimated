@@ -90,26 +90,3 @@ export function substituteObjectMethodWithObjectProperty(
   const replacement = objectProperty(path.node.key, workletFactoryCall);
   path.replaceWith(replacement);
 }
-
-// export function maybeSubstituteFunctionDeclarationWithVariableDeclaration(
-//   path: NodePath<FunctionDeclaration>,
-//   workletFactoryCall: CallExpression
-// ): void {
-//   // We check if function needs to be assigned to variable declaration.
-//   // This is needed if function definition directly in a scope. Some other ways
-//   // where function definition can be used is for example with variable declaration:
-//   //
-//   // const bar = function foo() {'worklet' ...};
-//   //
-//   // In such a case we don't need to define variable for the function.
-//   const needDeclaration = needsDeclaration(path.parent);
-
-//   const replacement =
-//     'id' in path.node && path.node.id && needDeclaration
-//       ? variableDeclaration('const', [
-//           variableDeclarator(path.node.id, workletFactoryCall),
-//         ])
-//       : workletFactoryCall;
-
-//   path.replaceWith(replacement);
-// }
