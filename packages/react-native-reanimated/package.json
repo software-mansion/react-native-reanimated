@@ -69,7 +69,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/software-mansion/react-native-reanimated.git"
+    "url": "git+https://github.com/software-mansion/react-native-reanimated.git",
     "directory": "packages/react-native-reanimated"
   },
   "author": {
