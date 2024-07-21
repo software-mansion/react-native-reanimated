@@ -47,7 +47,10 @@ export const prepareUIRegistry = runOnUIImmediately(() => {
         const delta = timestamp - this.previousFrameTimestamp;
 
         this.activeFrameCallbacks.forEach((callbackId: number) => {
-          const callbackDetails = this.frameCallbackRegistry.get(callbackId)!;
+          const callbackDetails = this.frameCallbackRegistry.get(callbackId);
+          if (!callbackDetails) {
+            return;
+          }
 
           const { startTime } = callbackDetails;
 
@@ -109,8 +112,10 @@ export const prepareUIRegistry = runOnUIImmediately(() => {
         this.activeFrameCallbacks.add(callbackId);
         this.runCallbacks(this.nextCallId);
       } else {
-        const callback = this.frameCallbackRegistry.get(callbackId)!;
-        callback.startTime = null;
+        const callback = this.frameCallbackRegistry.get(callbackId);
+        if (callback) {
+          callback.startTime = null;
+        }
 
         this.activeFrameCallbacks.delete(callbackId);
         if (this.activeFrameCallbacks.size === 0) {
