@@ -70,6 +70,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/software-mansion/react-native-reanimated.git"
+    "directory": "packages/react-native-reanimated"
   },
   "author": {
     "email": "krzys.magiera@gmail.com",
@@ -80,7 +81,7 @@
   "bugs": {
     "url": "https://github.com/software-mansion/react-native-reanimated/issues"
   },
-  "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
+  "homepage": "https://docs.swmansion.com/react-native-reanimated",
   "dependencies": {
     "@babel/plugin-transform-arrow-functions": "^7.0.0-0",
     "@babel/plugin-transform-nullish-coalescing-operator": "^7.0.0-0",
