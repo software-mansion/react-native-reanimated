@@ -70,7 +70,7 @@ import MakeMutableSrc from '!!raw-loader!@site/src/examples/MakeMutable';
 
 - All remarks from the [useSharedValue](/docs/core/useSharedValue) hook apply to `makeMutable` as well.
 
-- Don't use `makeMutable` directly in the component scope. When component re-renders, it will create the completely new object (with the new `initial` value if it was changed) and the state of the previous mutable value will be lost.
+- Don't call `makeMutable` directly in the component scope. When component re-renders, it will create the completely new object (with the new `initial` value if it was changed) and the state of the previous mutable value will be lost.
 
 <Indent>
 
