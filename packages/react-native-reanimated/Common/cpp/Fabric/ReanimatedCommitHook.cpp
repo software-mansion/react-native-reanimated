@@ -39,7 +39,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   // ShadowTree not commited by Reanimated, apply updates from PropsRegistry
 
-  auto rootNode = newRootShadowNode->ShadowNode::clone(ShadowNodeFragment{});
+  RootShadowNode::Unshared rootNode = newRootShadowNode;
   PropsMap propsMap;
 
   {
@@ -50,8 +50,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
           propsMap[&family].emplace_back(props);
         });
 
-    rootNode = std::static_pointer_cast<RootShadowNode>(
-        cloneShadowTreeWithNewProps(rootNode, propsMap));
+    rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
   }
 
   // If the commit comes from React Native then skip one commit from Reanimated
@@ -60,7 +59,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   // applied in ReanimatedCommitHook by iterating over PropsRegistry.
   propsRegistry_->pleaseSkipReanimatedCommit();
 
-  return std::static_pointer_cast<RootShadowNode>(rootNode);
+  return rootNode;
 }
 
 } // namespace reanimated

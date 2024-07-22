@@ -18,8 +18,8 @@ namespace reanimated {
 using PropsMap = std::unordered_map<const ShadowNodeFamily *, std::vector<RawProps>>;
 using ChildrenMap = std::unordered_map<const ShadowNodeFamily *, std::unordered_set<int>>;
 
-ShadowNode::Unshared cloneShadowTreeWithNewProps(
-    const ShadowNode::Shared &oldRootNode,
+RootShadowNode::Unshared cloneShadowTreeWithNewProps(
+    const RootShadowNode &oldRootNode,
     const PropsMap &propsMap);
 
 } // namespace reanimated

@@ -721,8 +721,6 @@ void NativeReanimatedModule::performOperations() {
         [&](RootShadowNode const &oldRootShadowNode)
             -> RootShadowNode::Unshared {
           PropsMap propsMap;
-          auto rootNode =
-              oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
           for (auto &[shadowNode, props] : copiedOperationsQueue) {
             auto family = &shadowNode->getFamily();
             react_native_assert(family->getSurfaceId() == surfaceId_);
@@ -738,8 +736,7 @@ void NativeReanimatedModule::performOperations() {
             }
 #endif
           }
-          return std::static_pointer_cast<RootShadowNode>(
-              cloneShadowTreeWithNewProps(rootNode, propsMap));
+          return cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
         },
         { /* .enableStateReconciliation = */
           false,

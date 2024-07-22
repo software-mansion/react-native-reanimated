@@ -8,18 +8,18 @@
 namespace reanimated {
 
 ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
+    const ShadowNode &shadowNode,
     const ChildrenMap &childrenMap,
-    const ShadowNode::Shared &shadowNode,
     const PropsMap &propsMap) {
-  const auto family = &shadowNode->getFamily();
+  const auto family = &shadowNode.getFamily();
   const auto affectedChildrenIt = childrenMap.find(family);
   const auto propsIt = propsMap.find(family);
-  auto children = shadowNode->getChildren();
+  auto children = shadowNode.getChildren();
 
   if (affectedChildrenIt != childrenMap.end()) {
     for (const auto index : affectedChildrenIt->second) {
       children[index] = cloneShadowTreeWithNewPropsRecursive(
-          childrenMap, children[index], propsMap);
+          *children[index], childrenMap, propsMap);
     }
   }
 
@@ -27,29 +27,29 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
 
   if (propsIt != propsMap.end()) {
     PropsParserContext propsParserContext{
-        shadowNode->getSurfaceId(), *shadowNode->getContextContainer()};
-    newProps = shadowNode->getProps();
+        shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
+    newProps = shadowNode.getProps();
     for (const auto &props : propsIt->second) {
-      newProps = shadowNode->getComponentDescriptor().cloneProps(
+      newProps = shadowNode.getComponentDescriptor().cloneProps(
           propsParserContext, newProps, RawProps(props));
     }
   }
 
-  const auto result = shadowNode->clone(
+  const auto result = shadowNode.clone(
       {newProps ? newProps : ShadowNodeFragment::propsPlaceholder(),
        std::make_shared<ShadowNode::ListOfShared>(children),
-       shadowNode->getState()});
+       shadowNode.getState()});
 
   return result;
 }
 
-ShadowNode::Unshared cloneShadowTreeWithNewProps(
-    const ShadowNode::Shared &oldRootNode,
+RootShadowNode::Unshared cloneShadowTreeWithNewProps(
+    const RootShadowNode &oldRootNode,
     const PropsMap &propsMap) {
   ChildrenMap childrenMap;
 
   for (auto &[family, _] : propsMap) {
-    const auto ancestors = family->getAncestors(*oldRootNode);
+    const auto ancestors = family->getAncestors(oldRootNode);
 
     for (const auto &[parentNode, index] :
          std::ranges::reverse_view(ancestors)) {
@@ -64,8 +64,10 @@ ShadowNode::Unshared cloneShadowTreeWithNewProps(
     }
   }
 
-  return cloneShadowTreeWithNewPropsRecursive(
-      childrenMap, oldRootNode, propsMap);
+  // This cast is safe, because this function returns a clone
+  // of the oldRootNode, which is an instance of RootShadowNode
+  return std::static_pointer_cast<RootShadowNode>(
+      cloneShadowTreeWithNewPropsRecursive(oldRootNode, childrenMap, propsMap));
 }
 
 } // namespace reanimated
