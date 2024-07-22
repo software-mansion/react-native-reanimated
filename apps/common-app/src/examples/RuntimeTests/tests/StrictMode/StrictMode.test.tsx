@@ -7,7 +7,6 @@ import {
   beforeEach,
   recordAnimationUpdates,
   waitForAnimationUpdates,
-  wait,
 } from '../../ReJest/RuntimeTestsApi';
 import {
   AssignAnimationExample,
@@ -18,7 +17,7 @@ import {
 } from './Components';
 import { Snapshot } from './StrictMode.snapshot';
 
-describe('StrictMode', async () => {
+describe('StrictMode', () => {
   beforeEach(async () => {
     await mockAnimationTimer();
   });

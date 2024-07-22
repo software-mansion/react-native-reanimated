@@ -2,6 +2,7 @@ import type { Component, MutableRefObject, ReactElement } from 'react';
 import { useRef } from 'react';
 import type {
   BuildFunction,
+  MaybeAsyncVoidFunction,
   NullableTestValue,
   Operation,
   SharedValueSnapshot,
@@ -370,22 +371,22 @@ export class TestRunner {
     nullableMatch(currentValue, this._currentTestCase, true);
   }
 
-  public beforeAll(job: () => void) {
+  public beforeAll(job: MaybeAsyncVoidFunction) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.beforeAll = job;
   }
 
-  public afterAll(job: () => void) {
+  public afterAll(job: MaybeAsyncVoidFunction) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterAll = job;
   }
 
-  public beforeEach(job: () => void) {
+  public beforeEach(job: MaybeAsyncVoidFunction) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.beforeEach = job;
   }
 
-  public afterEach(job: () => void) {
+  public afterEach(job: MaybeAsyncVoidFunction) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterEach = job;
   }

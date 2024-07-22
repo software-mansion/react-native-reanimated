@@ -53,15 +53,17 @@ export type TestCase = {
   | { decorator: Exclude<TestDecorator, TestDecorator.WARN | TestDecorator.FAILING> | null }
 );
 
+export type MaybeAsyncVoidFunction = () => void | Promise<void>;
+
 export type TestSuite = {
   name: string;
   buildSuite: BuildFunction;
   testCases: TestCase[];
   nestingLevel: number;
-  beforeAll?: () => void | Promise<void>;
-  afterAll?: () => void | Promise<void>;
-  beforeEach?: () => void | Promise<void>;
-  afterEach?: () => void | Promise<void>;
+  beforeAll?: MaybeAsyncVoidFunction;
+  afterAll?: MaybeAsyncVoidFunction;
+  beforeEach?: MaybeAsyncVoidFunction;
+  afterEach?: MaybeAsyncVoidFunction;
   skip?: boolean;
   decorator?: DescribeDecorator | null;
 };

@@ -2,7 +2,7 @@ import type { Component, ReactElement } from 'react';
 import { TestRunner } from './TestRunner/TestRunner';
 import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
-import type { TestConfiguration, TestValue, NullableTestValue, BuildFunction } from './types';
+import type { TestConfiguration, TestValue, NullableTestValue, BuildFunction, MaybeAsyncVoidFunction } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
@@ -78,19 +78,19 @@ test.only = testOnly;
 test.failing = testFailing;
 test.warn = testWarn;
 
-export function beforeAll(job: () => void) {
+export function beforeAll(job: MaybeAsyncVoidFunction) {
   testRunner.beforeAll(job);
 }
 
-export function beforeEach(job: () => void) {
+export function beforeEach(job: MaybeAsyncVoidFunction) {
   testRunner.beforeEach(job);
 }
 
-export function afterEach(job: () => void) {
+export function afterEach(job: MaybeAsyncVoidFunction) {
   testRunner.afterEach(job);
 }
 
-export function afterAll(job: () => void) {
+export function afterAll(job: MaybeAsyncVoidFunction) {
   testRunner.afterAll(job);
 }
 
