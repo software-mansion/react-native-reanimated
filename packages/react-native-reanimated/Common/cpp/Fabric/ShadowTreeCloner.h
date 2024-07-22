@@ -10,8 +10,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "PropsWrapper.h"
-
 using namespace facebook;
 using namespace react;
 
