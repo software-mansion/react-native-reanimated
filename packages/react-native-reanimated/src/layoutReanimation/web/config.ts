@@ -64,6 +64,8 @@ interface EasingType {
 
 export interface CustomConfig {
   easingV?: EasingType;
+  easingXV?: EasingType;
+  easingYV?: EasingType;
   durationV?: number;
   delayV?: number;
   randomizeDelay?: boolean;
@@ -81,6 +83,7 @@ export enum TransitionType {
   SEQUENCED,
   FADING,
   JUMPING,
+  CURVED,
   ENTRY_EXIT,
 }
 
