@@ -24,12 +24,23 @@ import { ReducedMotionManager } from '../../ReducedMotion';
 import { EasingNameSymbol } from '../../Easing';
 
 function getEasingFromConfig(config: CustomConfig): string {
-  const easingName =
-    config.easingV && config.easingV[EasingNameSymbol] in WebEasings
-      ? (config.easingV[EasingNameSymbol] as WebEasingsNames)
-      : 'linear';
+  if (!config.easingV) {
+    return `cubic-bezier(${WebEasings['linear'].toString()})`;
+  }
 
-  return `cubic-bezier(${WebEasings[easingName].toString()})`;
+  const easingName = config.easingV[EasingNameSymbol];
+
+  if (!(easingName in WebEasings)) {
+    console.warn(
+      `[Reanimated] Selected easing is not currently supported on web.`
+    );
+
+    return `cubic-bezier(${WebEasings['linear'].toString()})`;
+  }
+
+  return `cubic-bezier(${WebEasings[
+    easingName as WebEasingsNames
+  ].toString()})`;
 }
 
 function getRandomDelay(maxDelay = 1000) {
