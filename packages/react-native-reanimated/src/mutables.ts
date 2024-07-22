@@ -88,11 +88,9 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
 
     modify: (modifier, forceUpdate = true) => {
-      valueSetter(
-        mutable,
-        modifier !== undefined ? modifier(mutable.value) : mutable.value,
-        forceUpdate
-      );
+      runOnUI(() => {
+        mutable.modify(modifier, forceUpdate);
+      })();
     },
     addListener: () => {
       throw new Error(
