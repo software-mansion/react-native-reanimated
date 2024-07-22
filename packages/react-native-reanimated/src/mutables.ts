@@ -12,35 +12,36 @@ type Listener<Value> = (newValue: Value) => void;
 
 export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
   'worklet';
-
   const listeners = new Map<number, Listener<Value>>();
   let value = initial;
 
-  const self: Mutable<Value> = {
-    set value(newValue) {
-      valueSetter(self, newValue);
-    },
+  const mutable: Mutable<Value> = {
     get value() {
       return value;
     },
+    set value(newValue) {
+      valueSetter(mutable, newValue);
+    },
+
     /**
      * _value prop should only be accessed by the valueSetter implementation
      * which may make the decision about updating the mutable value depending
      * on the provided new value. All other places should only attempt to modify
      * the mutable by assigning to value prop directly.
      */
+    get _value(): Value {
+      return value;
+    },
     set _value(newValue: Value) {
       value = newValue;
       listeners.forEach((listener) => {
         listener(newValue);
       });
     },
-    get _value(): Value {
-      return value;
-    },
+
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
-        self,
+        mutable,
         modifier !== undefined ? modifier(value) : value,
         forceUpdate
       );
@@ -51,10 +52,11 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
     removeListener: (id: number) => {
       listeners.delete(id);
     },
+
     _animation: null,
     _isReanimatedSharedValue: true,
   };
-  return self;
+  return mutable;
 }
 
 function makeMutableNative<Value>(initial: Value): Mutable<Value> {
@@ -64,26 +66,28 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
       return makeMutableUI(initial);
     },
   });
+
   const mutable: Mutable<Value> = {
-    set value(newValue) {
-      runOnUI(() => {
-        mutable.value = newValue;
-      })();
-    },
     get value(): Value {
       const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
         return sv.value;
       });
       return uiValueGetter(mutable);
     },
-    set _value(_newValue: Value) {
-      throw new Error(
-        '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
-      );
+    set value(newValue) {
+      runOnUI(() => {
+        mutable.value = newValue;
+      })();
     },
+
     get _value(): Value {
       throw new Error(
         '[Reanimated] Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
+      );
+    },
+    set _value(_newValue: Value) {
+      throw new Error(
+        '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
       );
     },
 
@@ -102,21 +106,27 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
         '[Reanimated] Removing listeners is only possible on the UI runtime.'
       );
     },
+
     _isReanimatedSharedValue: true,
   };
+
   shareableMappingCache.set(mutable, handle);
   return mutable;
 }
 
 function makeMutableWeb<Value>(initial: Value): SharedValue<Value> {
   let value: Value = initial;
-  // Listeners are needed only in Web implementation.
   const listeners = new Map<number, Listener<Value>>();
+
   const mutable: Mutable<Value> = {
+    get value(): Value {
+      return value;
+    },
     set value(newValue) {
       valueSetter(mutable, newValue);
     },
-    get value(): Value {
+
+    get _value(): Value {
       return value;
     },
     set _value(newValue: Value) {
@@ -124,9 +134,6 @@ function makeMutableWeb<Value>(initial: Value): SharedValue<Value> {
       listeners.forEach((listener) => {
         listener(newValue);
       });
-    },
-    get _value(): Value {
-      return value;
     },
 
     modify: (modifier, forceUpdate = true) => {
@@ -142,6 +149,7 @@ function makeMutableWeb<Value>(initial: Value): SharedValue<Value> {
     removeListener: (id: number) => {
       listeners.delete(id);
     },
+
     _isReanimatedSharedValue: true,
   };
 
