@@ -21,11 +21,12 @@ import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Keyframe } from '../animationBuilder';
 import { ReducedMotionManager } from '../../ReducedMotion';
+import { EasingNameSymbol } from '../../Easing';
 
 function getEasingFromConfig(config: CustomConfig): string {
   const easingName =
-    config.easingV && config.easingV.name in WebEasings
-      ? (config.easingV.name as WebEasingsNames)
+    config.easingV && config.easingV[EasingNameSymbol] in WebEasings
+      ? (config.easingV[EasingNameSymbol] as WebEasingsNames)
       : 'linear';
 
   return `cubic-bezier(${WebEasings[easingName].toString()})`;
