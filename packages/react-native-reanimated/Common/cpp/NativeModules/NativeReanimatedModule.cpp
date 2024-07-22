@@ -725,6 +725,7 @@ void NativeReanimatedModule::performOperations() {
               oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
           for (auto &[shadowNode, props] : copiedOperationsQueue) {
             auto family = &shadowNode->getFamily();
+            react_native_assert(family->getSurfaceId() == surfaceId_);
             propsMap[family].emplace_back(rt, std::move(*props));
 
 #if REACT_NATIVE_MINOR_VERSION >= 73
