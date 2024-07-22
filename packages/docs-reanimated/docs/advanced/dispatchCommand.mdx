@@ -14,21 +14,21 @@ import DispatchCommandSrc from '!!raw-loader!@site/src/examples/DispatchCommand'
 import { dispatchCommand } from 'react-native-reanimated';
 
 function App() {
-  const animatedRef = useAnimatedRef()
+  const animatedRef = useAnimatedRef();
 
   const gesture = Gesture.Tap().onStart(() => {
-    dispatchCommand(animatedRef, 'focus)
-  })
+    // highlight-next-line
+    dispatchCommand(animatedRef, 'focus');
+  });
 
   return (
     <>
-      <AnimatedTextInput ref={aref} style={styles.input} />
+      <AnimatedTextInput ref={animatedRef} style={styles.input} />
       <GestureDetector gesture={gesture}>
         <Button title="Focus" />
       </GestureDetector>
     </>
-  )
-
+  );
 }
 ```
 
@@ -40,7 +40,7 @@ function dispatchCommand<T extends Component>(
   animatedRef: AnimatedRef<T>,
   commandName: string,
   args?: unknown[]
-  ) => void;
+) => void;
 ```
 
 </details>
@@ -49,11 +49,11 @@ function dispatchCommand<T extends Component>(
 
 #### `animatedRef`
 
-The product of [`useAnimatedRef`](/docs/core/useAnimatedRef) which is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread).
+The product of [`useAnimatedRef`](/docs/core/useAnimatedRef), which is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread).
 
 #### `commandName`
 
-The name of the command to execute, e.g. `focus` or `scrollToEnd`.
+The name of the command to execute, e.g. `'focus'` or `'scrollToEnd'`.
 
 #### `args` <Optional />
 
