@@ -10,7 +10,7 @@ import {
  * A component that lets you overwrite default reduce motion behavior globally in your application.
  *
  * @param mode - Determines default reduce motion behavior globally in your application. Configured with {@link ReduceMotion} enum.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/components/ReduceMotionConfig
+ * @see https://docs.swmansion.com/react-native-reanimated/docs/components/ReducedMotionConfig
  */
 export function ReducedMotionConfig({ mode }: { mode: ReduceMotion }) {
   useEffect(() => {
