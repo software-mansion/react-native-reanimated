@@ -1,4 +1,5 @@
 'use strict';
+import type { ReanimatedHTMLElement } from '../../../js-reanimated';
 import { LayoutAnimationType } from '../..';
 import type { WebEasingsNames } from '../Easing.web';
 import { getEasingByName } from '../Easing.web';
@@ -33,8 +34,8 @@ function showChildren(
 }
 
 function prepareParent(
-  element: HTMLElement,
-  dummy: HTMLElement,
+  element: ReanimatedHTMLElement,
+  dummy: ReanimatedHTMLElement,
   animationConfig: AnimationConfig,
   transitionData: TransitionData
 ) {
@@ -76,7 +77,7 @@ function prepareParent(
 }
 
 function prepareDummy(
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig,
   transitionData: TransitionData,
   dummyTransitionKeyframeName: string
@@ -91,14 +92,14 @@ function prepareDummy(
     reversed: false,
   };
 
-  const dummy = element.cloneNode(true) as HTMLElement;
+  const dummy = element.cloneNode(true) as ReanimatedHTMLElement;
   resetStyle(dummy);
 
   return { dummy, dummyAnimationConfig };
 }
 
 export function prepareCurvedTransition(
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig,
   transitionData: TransitionData,
   dummyTransitionKeyframeName: string
