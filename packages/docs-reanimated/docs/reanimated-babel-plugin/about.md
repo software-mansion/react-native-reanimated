@@ -10,7 +10,7 @@ sidebar_label: 'About'
 
 The Reanimated Babel Plugin transforms your code so that it can run on the [UI thread](/docs/fundamentals/glossary#ui-thread). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](/docs/fundamentals/glossary#to-workletize).
 
-A worklet is:
+In short, a worklet is:
 
 - A function that contains a `'worklet'` directive at its very top, i.e.:
 
@@ -36,9 +36,11 @@ useAnimatedStyle(() => {
 
 ## What can be a worklet?
 
-Currently, Reanimated Babel Plugin supports the following constructs as worklets:
+### JavaScript terms
 
-- Function Declarations
+Reanimated Babel Plugin supports the following terms as worklets:
+
+#### Function Declarations
 
 ```ts
 function foo() {
@@ -47,7 +49,7 @@ function foo() {
 }
 ```
 
-- Function Expressions
+#### Function Expressions
 
 ```ts
 const foo = function () {
@@ -56,7 +58,7 @@ const foo = function () {
 };
 ```
 
-- Arrow Function Expressions
+#### Arrow Function Expressions
 
 ```ts
 const foo = () => {
@@ -65,7 +67,7 @@ const foo = () => {
 };
 ```
 
-- Object Methods
+#### Object Methods
 
 ```ts
 const obj = {
@@ -75,6 +77,77 @@ const obj = {
   },
 };
 ```
+
+### Reanimated terms
+
+#### [Experimental] Worklet Context Objects
+
+_Object methods_ called on UI thread lose their `this` binding.
+
+```ts
+const obj = {
+  foo: 1,
+  bar() {
+    'worklet';
+    console.log(this.foo); // Error - the binding was lost.
+  },
+};
+```
+
+**Worklet Context Objects** are special terms that preserve that binding. Don't mistake them for objects created with `useSharedValue`. All changes to Worklet Context Objects on the UI thread are visible only on the UI thread and vice-versa with the JS thread.
+
+```ts
+const obj = {
+  foo: 1,
+  bar() {
+    console.log(this.foo);
+  },
+  __workletContextObject: true,
+};
+
+obj.foo = 2;
+obj.bar(); // Logs 2
+runOnUI(() => obj.bar)(); // Logs 1
+
+runOnUI(() => (obj.foo = 3))();
+obj.bar(); // Logs 2
+runOnUI(() => obj.bar)(); // Logs 3
+```
+
+`__workletContextObject` is a special property that marks an object as a Worklet Context Object. It's value doesn't matter, but it's a good practice to use `true` as a value. `worklet` directive in methods will be ignored if the object has this property.
+
+```ts
+const workletContextObject = {
+  message: 'Hello from WorkletContextObject',
+  foo() {
+    console.log(this.message);
+  },
+  __workletContextObject: true,
+};
+```
+
+#### [Experimental] Worklet Classes
+
+[Hermes](https://github.com/facebook/hermes), the JavaScript engine used by React Native, doesn't support classes. Class syntax requires [polyfilling](<https://en.wikipedia.org/wiki/Polyfill_(programming)>) before it can be used, which is problematic for the UI thread. To work around this, we coined the term of **Worklet Classes**. Worklet classes can be instantiated on the UI thread.
+
+`__workletClass` is a special property that marks a class as a Worklet Class. It's value doesn't matter, but it's a good practice to use `true` as a value. `worklet` directive in methods will be ignored if the class has this property.
+
+```ts
+class Clazz {
+  message = 'Hello from WorkletClass';
+  foo() {
+    console.log(this.message);
+  }
+  __workletClass = true;
+}
+
+runOnUI(() => new Clazz().foo)(); // Logs 'Hello from WorkletClass'
+```
+
+**Pitfalls:**
+
+- Worklet Classes don't support static methods and properties.
+- Class instances cannot be shared between JS and UI threads.
 
 ## Autoworkletization
 
@@ -132,12 +205,7 @@ const handler = useAnimatedScrollHandler(handlerObject);
 
 You can mark a file as a workletizable file by adding the `'worklet'` directive to the top of the file.
 
-This will make all _top-level_
-
-- Functions
-- Objects aggregating worklets
-
-workletized automatically. This can come in handy for files that contain multiple worklets.
+This will workletize all _top-level_ [JavaScript terms](#javascript-terms) and [Reanimated terms](#reanimated-terms) automatically. It can come in handy for files that contain multiple worklets.
 
 ```ts
 // file.ts
@@ -187,7 +255,7 @@ Currently Reanimated hasn't exposed APIs that would allow you to register your c
 
 ### Expressions
 
-A function won't get automatically workletized when it's a result of an expression. You have to add the `"worklet";` directive to make it work:
+A function won't get automatically workletized when it's a result of an expression. You have to add the `'worklet';` directive to make it work:
 
 ```ts
 const foo = someCondition
@@ -222,25 +290,6 @@ function foo() {
   'worklet';
   return { width: 100 };
 }
-```
-
-### Classes
-
-You can't use classes on the UI thread:
-
-```ts
-class Clazz {
-  foo() {
-    'worklet';
-    return { width: 100 };
-  }
-}
-
-const clazz = new Clazz();
-
-// The following line crashes,
-// even though 'foo' is marked as a worklet.
-const style = useAnimatedStyle(clazz.foo());
 ```
 
 ## Notes
