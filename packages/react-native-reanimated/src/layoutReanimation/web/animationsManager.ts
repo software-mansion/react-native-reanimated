@@ -28,6 +28,7 @@ import { areDOMRectsEqual } from './domUtils';
 import type { TransitionData } from './animationParser';
 import { Keyframe } from '../animationBuilder';
 import { makeElementVisible } from './componentStyle';
+import { EasingNameSymbol } from '../../Easing';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,
@@ -236,8 +237,10 @@ export function tryActivateLayoutTransition<
     scaleX: snapshot.width / rect.width,
     scaleY: snapshot.height / rect.height,
     reversed: false, // This field is used only in `SequencedTransition`, so by default it will be false
-    easingX: (props.layout as CustomConfig).easingXV?.name ?? 'ease',
-    easingY: (props.layout as CustomConfig).easingYV?.name ?? 'ease',
+    easingX:
+      (props.layout as CustomConfig).easingXV?.[EasingNameSymbol] ?? 'ease',
+    easingY:
+      (props.layout as CustomConfig).easingYV?.[EasingNameSymbol] ?? 'ease',
     entering: enteringAnimation,
     exiting: exitingAnimation,
   };
