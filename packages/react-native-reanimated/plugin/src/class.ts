@@ -7,6 +7,7 @@ import type {
   CallExpression,
   ClassBody,
   ClassDeclaration,
+  FunctionDeclaration,
   Identifier,
   Program,
   Statement,
@@ -262,15 +263,9 @@ function getPolyfillsToSort(ast: BabelFile): Polyfill[] {
           polyfills.push(element);
           statement.traverse({
             Identifier(path: NodePath<Identifier>) {
-              if (
-                !path.isReferencedIdentifier() ||
-                path.node.name in bindingIdentifiers ||
-                statement.scope.hasOwnBinding(path.node.name) ||
-                !statement.scope.hasReference(path.node.name)
-              ) {
-                return;
+              if (isOutsideDependency(path, bindingIdentifiers, statement)) {
+                element.dependencies.add(path.node.name);
               }
-              element.dependencies.add(path.node.name);
             },
           });
         });
@@ -313,6 +308,29 @@ function recursiveTopoSort(
   }
   sorted.push(current);
   stack.delete(current.name);
+}
+
+/**
+ * Checks if an identifier is a reference to an outside dependency.
+ * The condition was made by trial and error.
+ */
+function isOutsideDependency(
+  identifierPath: NodePath<Identifier>,
+  bindingIdentifiers: Record<string, Identifier>,
+  functionPath: NodePath<FunctionDeclaration>
+): boolean {
+  return (
+    // We don't care about identifiers that were just declared.
+    identifierPath.isReferencedIdentifier() &&
+    // We don't care about identifiers that are bound in the scope.
+    !(identifierPath.node.name in bindingIdentifiers) &&
+    // This I don't exactly understand, but the function identifier itself isn't in `bindingIdentifiers`,
+    // but it return true on `hasOwnBinding`.
+    !functionPath.scope.hasOwnBinding(identifierPath.node.name) &&
+    // `hasReference` returns true for global identifiers, like `Object`,
+    // we don't want to include those.
+    functionPath.scope.hasReference(identifierPath.node.name)
+  );
 }
 
 type Polyfill = {

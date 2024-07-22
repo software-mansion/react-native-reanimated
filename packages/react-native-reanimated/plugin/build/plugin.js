@@ -1114,20 +1114,20 @@ var require_file = __commonJS({
     var types_12 = require("@babel/types");
     var types_2 = require_types();
     var contextObject_12 = require_contextObject();
-    function processIfWorkletFile(path, state) {
+    function processIfWorkletFile(path, _state) {
       if (!path.node.directives.some((functionDirective) => functionDirective.value.value === "worklet")) {
         return false;
       }
       path.node.directives = path.node.directives.filter((functionDirective) => functionDirective.value.value !== "worklet");
-      processWorkletFile(path, state);
+      processWorkletFile(path);
       return true;
     }
     exports2.processIfWorkletFile = processIfWorkletFile;
-    function processWorkletFile(programPath, state) {
+    function processWorkletFile(programPath) {
       const statements = programPath.get("body");
       statements.forEach((statement) => {
         const candidatePath = getCandidate(statement);
-        processWorkletizableEntity(candidatePath, state);
+        processWorkletizableEntity(candidatePath);
       });
     }
     function getCandidate(statementPath) {
@@ -1137,7 +1137,7 @@ var require_file = __commonJS({
         return statementPath;
       }
     }
-    function processWorkletizableEntity(nodePath, state) {
+    function processWorkletizableEntity(nodePath) {
       if ((0, types_2.isWorkletizableFunctionPath)(nodePath)) {
         if (nodePath.isArrowFunctionExpression()) {
           replaceImplicitReturnWithBlock(nodePath.node);
@@ -1147,31 +1147,31 @@ var require_file = __commonJS({
         if (isImplicitContextObject(nodePath)) {
           appendWorkletContextObjectMarker(nodePath.node);
         } else {
-          processWorkletAggregator(nodePath, state);
+          processWorkletAggregator(nodePath);
         }
       } else if (nodePath.isVariableDeclaration()) {
-        processVariableDeclaration(nodePath, state);
+        processVariableDeclaration(nodePath);
       } else if (nodePath.isClassDeclaration()) {
         appendWorkletClassMarker(nodePath.node.body);
       }
     }
-    function processVariableDeclaration(variableDeclarationPath, state) {
+    function processVariableDeclaration(variableDeclarationPath) {
       const declarations = variableDeclarationPath.get("declarations");
       declarations.forEach((declaration) => {
         const initPath = declaration.get("init");
         if (initPath.isExpression()) {
-          processWorkletizableEntity(initPath, state);
+          processWorkletizableEntity(initPath);
         }
       });
     }
-    function processWorkletAggregator(objectPath, state) {
+    function processWorkletAggregator(objectPath) {
       const properties = objectPath.get("properties");
       properties.forEach((property) => {
         if (property.isObjectMethod()) {
           appendWorkletDirective(property.node.body);
         } else if (property.isObjectProperty()) {
           const valuePath = property.get("value");
-          processWorkletizableEntity(valuePath, state);
+          processWorkletizableEntity(valuePath);
         }
       });
     }
@@ -1445,10 +1445,9 @@ var require_class = __commonJS({
               polyfills.push(element);
               statement.traverse({
                 Identifier(path) {
-                  if (!path.isReferencedIdentifier() || path.node.name in bindingIdentifiers || statement.scope.hasOwnBinding(path.node.name) || !statement.scope.hasReference(path.node.name)) {
-                    return;
+                  if (isOutsideDependency(path, bindingIdentifiers, statement)) {
+                    element.dependencies.add(path.node.name);
                   }
-                  element.dependencies.add(path.node.name);
                 }
               });
             });
@@ -1482,6 +1481,9 @@ var require_class = __commonJS({
       }
       sorted.push(current);
       stack.delete(current.name);
+    }
+    function isOutsideDependency(identifierPath, bindingIdentifiers, functionPath) {
+      return identifierPath.isReferencedIdentifier() && !(identifierPath.node.name in bindingIdentifiers) && !functionPath.scope.hasOwnBinding(identifierPath.node.name) && functionPath.scope.hasReference(identifierPath.node.name);
     }
   }
 });

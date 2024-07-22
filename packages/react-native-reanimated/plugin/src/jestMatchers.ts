@@ -69,12 +69,12 @@ expect.extend({
   },
 
   toIncludeInWorkletString(received: string, expected: string) {
-    // Regular expression pattern to match the code field
+    // Regular expression pattern to find the `code` field in `initData`.
     // @ts-ignore This regex works well in Jest.
     const pattern = /code: "((?:[^"\\]|\\.)*)"/gs;
     const matches = received.match(pattern);
 
-    // If a match was found and the match group 1 (content within quotes) includes the expected string
+    // If a match was found and some of matches (`initData`'s `code`) include the expected string.
     if (matches && matches.some((match) => match.includes(expected))) {
       // return true;
       return {
@@ -83,7 +83,7 @@ expect.extend({
       };
     }
 
-    // If no match was found or the expected string is not a substring of the code field
+    // If no match was found or the expected string is not a substring of the code field.
     // return false;
     return {
       message: () =>
