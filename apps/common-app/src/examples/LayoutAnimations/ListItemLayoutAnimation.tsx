@@ -7,13 +7,29 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  View,
 } from 'react-native';
 import Animated, {
+  CurvedTransition,
+  EntryExitTransition,
+  FadeOut,
+  FadeIn,
+  FadingTransition,
+  JumpingTransition,
   LayoutAnimationConfig,
   LinearTransition,
+  SequencedTransition,
 } from 'react-native-reanimated';
 
 const ITEMS = ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5'];
+const LAYOUT_TRANSITIONS = [
+  LinearTransition,
+  FadingTransition,
+  SequencedTransition,
+  JumpingTransition,
+  CurvedTransition,
+  EntryExitTransition,
+] as const;
 
 type ListItemProps = {
   id: string;
@@ -30,18 +46,20 @@ const ListItem = memo(function ({ id, text, onPress }: ListItemProps) {
 });
 
 export default function ListItemLayoutAnimation() {
+  const [layoutAnimationEnabled, setLayoutAnimationEnabled] = useState(true);
+  const [currentTransitionIndex, setCurrentTransitionIndex] = useState(0);
   const [items, setItems] = useState(ITEMS);
 
-  const handlePress = useCallback((id: string) => {
+  const removeItem = useCallback((id: string) => {
     setItems((prevItems) => prevItems.filter((item) => item !== id));
   }, []);
 
   const renderItem = useCallback<ListRenderItem<string>>(
-    ({ item }) => <ListItem id={item} text={item} onPress={handlePress} />,
-    [handlePress]
+    ({ item }) => <ListItem id={item} text={item} onPress={removeItem} />,
+    [removeItem]
   );
 
-  const findItemName = useCallback(() => {
+  const getNewItemName = useCallback(() => {
     let i = 1;
     while (items.includes(`Item ${i}`)) {
       i++;
@@ -60,43 +78,76 @@ export default function ListItemLayoutAnimation() {
   const resetOrder = useCallback(() => {
     setItems((prevItems) => {
       const newItems = [...prevItems];
-      newItems.sort((a, b) => {
-        const aNum = parseInt(a.match(/\d+$/)![0], 10);
-        const bNum = parseInt(b.match(/\d+$/)![0], 10);
+      newItems.sort((left, right) => {
+        const aNum = parseInt(left.match(/\d+$/)![0], 10);
+        const bNum = parseInt(right.match(/\d+$/)![0], 10);
         return aNum - bNum;
       });
       return newItems;
     });
   }, []);
 
-  const transition = LinearTransition;
+  const transition = layoutAnimationEnabled
+    ? LAYOUT_TRANSITIONS[currentTransitionIndex]
+    : undefined;
 
   return (
-    // Skip initial entering animation
     <LayoutAnimationConfig skipEntering>
       <SafeAreaView style={styles.container}>
+        <View style={styles.menu}>
+          <View style={styles.row}>
+            <Text style={styles.infoText}>Layout animation: </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setLayoutAnimationEnabled((prev) => !prev);
+              }}>
+              <Text style={styles.buttonText}>
+                {layoutAnimationEnabled ? 'Enabled' : 'Disabled'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {transition && (
+            <Animated.View
+              style={styles.row}
+              entering={FadeIn}
+              exiting={FadeOut}>
+              <Text style={styles.infoText}>
+                Current: {transition?.presetName}
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setCurrentTransitionIndex(
+                    (prev) => (prev + 1) % LAYOUT_TRANSITIONS.length
+                  );
+                }}>
+                <Text style={styles.buttonText}>Change</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+        </View>
+
         <Animated.FlatList
           style={styles.list}
           data={items}
           renderItem={renderItem}
           keyExtractor={(item) => item}
           contentContainerStyle={styles.contentContainer}
-          itemLayoutAnimation={transition}
+          itemLayoutAnimation={layoutAnimationEnabled ? transition : undefined}
           layout={transition}
         />
-        <Animated.View style={styles.bottomMenu} layout={transition}>
+
+        <Animated.View style={styles.menu} layout={transition}>
           <Text style={styles.infoText}>Press an item to remove it</Text>
           <TouchableOpacity
-            style={styles.button}
-            onPress={() => setItems([...items, findItemName()])}>
+            onPress={() => setItems([...items, getNewItemName()])}>
             <Text style={styles.buttonText}>Add item</Text>
           </TouchableOpacity>
           <Animated.View style={styles.row} layout={transition}>
-            <TouchableOpacity style={styles.button} onPress={reorderItems}>
+            <TouchableOpacity onPress={reorderItems}>
               <Text style={styles.buttonText}>Reorder</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={resetOrder}>
-              <Text style={styles.buttonText}>Reset</Text>
+            <TouchableOpacity onPress={resetOrder}>
+              <Text style={styles.buttonText}>Reset order</Text>
             </TouchableOpacity>
           </Animated.View>
         </Animated.View>
@@ -115,11 +166,12 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 16,
+    alignItems: 'center',
   },
   list: {
     flexGrow: 0,
-    maxHeight: Dimensions.get('window').height - 250,
+    maxHeight: Dimensions.get('window').height - 300,
   },
   listItem: {
     padding: 20,
@@ -131,17 +183,14 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 22,
   },
-  bottomMenu: {
+  menu: {
+    padding: 16,
     alignItems: 'center',
-    flex: 1,
-  },
-  button: {
-    paddingTop: 20,
-    width: 100,
-    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 16,
+    gap: 8,
   },
   infoText: {
-    paddingTop: 16,
     color: '#222534',
     fontSize: 18,
   },
