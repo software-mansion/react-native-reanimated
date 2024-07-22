@@ -57,10 +57,15 @@ export interface AnimationConfig {
   reversed: boolean;
 }
 
+interface EasingType {
+  (): number;
+  [EasingNameSymbol: symbol]: string;
+}
+
 export interface CustomConfig {
-  easingV?: () => number;
-  easingXV?: () => number;
-  easingYV?: () => number;
+  easingV?: EasingType;
+  easingXV?: EasingType;
+  easingYV?: EasingType;
   durationV?: number;
   delayV?: number;
   randomizeDelay?: boolean;

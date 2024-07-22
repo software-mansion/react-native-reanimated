@@ -22,14 +22,24 @@ import { setElementPosition, snapshots } from './componentStyle';
 import { Keyframe } from '../animationBuilder';
 import { ReducedMotionManager } from '../../ReducedMotion';
 import { prepareCurvedTransition } from './transition/Curved.web';
+import { EasingNameSymbol } from '../../Easing';
 
 function getEasingFromConfig(config: CustomConfig): string {
-  const easingName =
-    config.easingV && config.easingV.name in WebEasings
-      ? (config.easingV.name as WebEasingsNames)
-      : 'linear';
+  if (!config.easingV) {
+    return getEasingByName('linear');
+  }
 
-  return getEasingByName(easingName);
+  const easingName = config.easingV[EasingNameSymbol];
+
+  if (!(easingName in WebEasings)) {
+    console.warn(
+      `[Reanimated] Selected easing is not currently supported on web.`
+    );
+
+    return getEasingByName('linear');
+  }
+
+  return getEasingByName(easingName as WebEasingsNames);
 }
 
 function getRandomDelay(maxDelay = 1000) {
