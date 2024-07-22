@@ -25,7 +25,7 @@ import { EasingNameSymbol } from '../../Easing';
 
 function getEasingFromConfig(config: CustomConfig): string {
   if (!config.easingV) {
-    return `cubic-bezier(${WebEasings['linear'].toString()})`;
+    return `cubic-bezier(${WebEasings.linear.toString()})`;
   }
 
   const easingName = config.easingV[EasingNameSymbol];
@@ -35,7 +35,7 @@ function getEasingFromConfig(config: CustomConfig): string {
       `[Reanimated] Selected easing is not currently supported on web.`
     );
 
-    return `cubic-bezier(${WebEasings['linear'].toString()})`;
+    return `cubic-bezier(${WebEasings.linear.toString()})`;
   }
 
   return `cubic-bezier(${WebEasings[
