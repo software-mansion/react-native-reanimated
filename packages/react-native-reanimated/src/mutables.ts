@@ -5,6 +5,7 @@ import { makeShareableCloneRecursive } from './shareables';
 import { shareableMappingCache } from './shareableMappingCache';
 import { executeOnUIRuntimeSync, runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
+import { isReactRendering } from './reactUtils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -71,6 +72,11 @@ export function makeMutable<Value>(initial: Value): Mutable<Value> {
     : undefined;
   const mutable: Mutable<Value> = {
     set value(newValue) {
+      if (isReactRendering()) {
+        console.warn(
+          '[Reanimated] Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.'
+        );
+      } 
       if (SHOULD_BE_USE_WEB) {
         valueSetter(mutable, newValue);
       } else {
@@ -80,6 +86,9 @@ export function makeMutable<Value>(initial: Value): Mutable<Value> {
       }
     },
     get value(): Value {
+      if (isReactRendering()) {
+        console.warn('[Reanimated] Reading from `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.')
+      } 
       if (SHOULD_BE_USE_WEB) {
         return value;
       }
