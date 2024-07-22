@@ -49,7 +49,7 @@ function dispatchCommand<T extends Component>(
 
 #### `animatedRef`
 
-The product of [`useAnimatedRef`](/docs/core/useAnimatedRef), which is Reanimated's extension of a standard React ref (delivers the view tag on the UI thread).
+An [animated ref](/docs/core/useAnimatedRef#returns) connected to the component you'd want to update. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
 
 #### `commandName`
 
@@ -68,11 +68,11 @@ The array of command arguments. Defaults to an empty array.
   }}
 />
 
-<CollapsibleCode src={DispatchCommandSrc} showLines={[34, 40]} />
+<CollapsibleCode src={DispatchCommandSrc} showLines={[30, 34]} />
 
 ## Remarks
 
-- The commands are automatically [workletized](/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+- Commands differ from component to component. Check relevant sources i.e. React Native documentation on [components](https://reactnative.dev/docs/components-and-apis), to see which commands are available.
 
 ## Platform compatibility
 
