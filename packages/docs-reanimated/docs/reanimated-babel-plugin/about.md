@@ -89,7 +89,7 @@ const obj = {
   foo: 1,
   bar() {
     'worklet';
-    console.log(this.foo); // Error - the binding was lost.
+    console.log(this.foo); // undefined - the binding was lost.
   },
 };
 ```
@@ -98,31 +98,31 @@ const obj = {
 
 ```ts
 const obj = {
+  __workletContextObject: true,
   foo: 1,
   bar() {
     console.log(this.foo);
   },
-  __workletContextObject: true,
 };
 
 obj.foo = 2;
 obj.bar(); // Logs 2
-runOnUI(() => obj.bar)(); // Logs 1
+runOnUI(() => obj.bar())(); // Logs 1
 
 runOnUI(() => (obj.foo = 3))();
 obj.bar(); // Logs 2
-runOnUI(() => obj.bar)(); // Logs 3
+runOnUI(() => obj.bar())(); // Logs 3
 ```
 
 `__workletContextObject` is a special property that marks an object as a Worklet Context Object. It's value doesn't matter, but it's a good practice to use `true` as a value. `worklet` directive in methods will be ignored if the object has this property.
 
 ```ts
 const workletContextObject = {
+  __workletContextObject: true,
   message: 'Hello from WorkletContextObject',
   foo() {
     console.log(this.message);
   },
-  __workletContextObject: true,
 };
 ```
 
@@ -134,14 +134,14 @@ const workletContextObject = {
 
 ```ts
 class Clazz {
+  __workletClass = true;
   message = 'Hello from WorkletClass';
   foo() {
     console.log(this.message);
   }
-  __workletClass = true;
 }
 
-runOnUI(() => new Clazz().foo)(); // Logs 'Hello from WorkletClass'
+runOnUI(() => new Clazz().foo())(); // Logs 'Hello from WorkletClass'
 ```
 
 **Pitfalls:**
