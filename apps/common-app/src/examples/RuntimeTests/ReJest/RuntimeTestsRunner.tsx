@@ -45,6 +45,13 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
   const [finished, setFinished] = useState<boolean>(false);
 
   const testSelectionCallbacks = useRef<Set<() => void>>(new Set());
+
+  useEffect(() => {
+    tests.forEach(testData => {
+      !testData.skipByDefault && testSelectionCallbacks.current.add(testData.importTest);
+    });
+  }, [tests]);
+
   useEffect(() => {
     if (renderLock) {
       renderLock.unlock();
