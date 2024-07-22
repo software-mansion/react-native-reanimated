@@ -20,7 +20,7 @@ import {
   getTestComponent,
   mockWindowDimensions,
   unmockWindowDimensions,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 import {
   CurvedSnapshot,
   FadingSnapshot,

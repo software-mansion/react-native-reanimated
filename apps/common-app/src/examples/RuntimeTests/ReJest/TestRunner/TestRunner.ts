@@ -11,10 +11,16 @@ import type {
   TestSummary,
   TestValue,
   TrackerCallCount,
-} from './types';
-import { DescribeDecorator, TestDecorator } from './types';
-import { TestComponent } from './TestComponent';
-import { EMPTY_LOG_PLACEHOLDER, applyMarkdown, color, formatString, indentNestingLevel } from './stringFormatUtils';
+} from '../types';
+import { DescribeDecorator, TestDecorator } from '../types';
+import { TestComponent } from '../TestComponent';
+import {
+  EMPTY_LOG_PLACEHOLDER,
+  applyMarkdown,
+  color,
+  formatString,
+  indentNestingLevel,
+} from '../utils/stringFormatUtils';
 import type {
   SharedValue,
   LayoutAnimationStartFunction,
@@ -22,12 +28,12 @@ import type {
   SharedTransitionAnimationsValues,
   LayoutAnimation,
 } from 'react-native-reanimated';
-import { Matchers, nullableMatch } from './matchers/Matchers';
+import { Matchers, nullableMatch } from '../matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
 import { makeMutable, runOnJS } from 'react-native-reanimated';
-import { RenderLock, SyncUIRunner } from './SyncUIRunner';
-export { Presets } from './Presets';
+import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
+export { Presets } from '../Presets';
 
 let callTrackerRegistryJS: Record<string, number> = {};
 const callTrackerRegistryUI = makeMutable<Record<string, number>>({});

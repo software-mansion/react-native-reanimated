@@ -2,7 +2,7 @@ import { View, StyleSheet, Text, Pressable } from 'react-native';
 import type { ReactNode } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
 import { runTests, configure } from './RuntimeTestsApi';
-import { RenderLock } from './SyncUIRunner';
+import { RenderLock } from './utils/SyncUIRunner';
 
 export class ErrorBoundary extends React.Component<
   { children: React.JSX.Element | Array<React.JSX.Element> },
