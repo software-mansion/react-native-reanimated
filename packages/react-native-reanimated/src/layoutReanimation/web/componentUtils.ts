@@ -8,7 +8,7 @@ import type {
   CustomConfig,
   KeyframeDefinitions,
 } from './config';
-import { WebEasings } from './Easing.web';
+import { WebEasings, getEasingByName } from './Easing.web';
 import type { WebEasingsNames } from './Easing.web';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
@@ -21,11 +21,12 @@ import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Keyframe } from '../animationBuilder';
 import { ReducedMotionManager } from '../../ReducedMotion';
+import { prepareCurvedTransition } from './transition/Curved.web';
 import { EasingNameSymbol } from '../../Easing';
 
 function getEasingFromConfig(config: CustomConfig): string {
   if (!config.easingV) {
-    return `cubic-bezier(${WebEasings.linear.toString()})`;
+    return getEasingByName('linear');
   }
 
   const easingName = config.easingV[EasingNameSymbol];
@@ -35,12 +36,10 @@ function getEasingFromConfig(config: CustomConfig): string {
       `[Reanimated] Selected easing is not currently supported on web.`
     );
 
-    return `cubic-bezier(${WebEasings.linear.toString()})`;
+    return getEasingByName('linear');
   }
 
-  return `cubic-bezier(${WebEasings[
-    easingName as WebEasingsNames
-  ].toString()})`;
+  return getEasingByName(easingName as WebEasingsNames);
 }
 
 function getRandomDelay(maxDelay = 1000) {
@@ -232,6 +231,9 @@ export function handleLayoutTransition(
     case 'JumpingTransition':
       animationType = TransitionType.JUMPING;
       break;
+    case 'CurvedTransition':
+      animationType = TransitionType.CURVED;
+      break;
     case 'EntryExitTransition':
       animationType = TransitionType.ENTRY_EXIT;
       break;
@@ -240,11 +242,21 @@ export function handleLayoutTransition(
       break;
   }
 
-  animationConfig.animationName = TransitionGenerator(
-    animationType,
-    transitionData
-  );
+  const { transitionKeyframeName, dummyTransitionKeyframeName } =
+    TransitionGenerator(animationType, transitionData);
 
+  animationConfig.animationName = transitionKeyframeName;
+
+  if (animationType === TransitionType.CURVED) {
+    const { dummy, dummyAnimationConfig } = prepareCurvedTransition(
+      element,
+      animationConfig,
+      transitionData,
+      dummyTransitionKeyframeName! // In `CurvedTransition` it cannot be undefined
+    );
+
+    setElementAnimation(dummy, dummyAnimationConfig);
+  }
   setElementAnimation(element, animationConfig);
 }
 
