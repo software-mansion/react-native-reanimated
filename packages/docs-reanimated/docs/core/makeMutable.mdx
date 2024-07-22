@@ -57,7 +57,7 @@ The value you want to be initially stored to a `.value` property. It can be any 
 
 `makeMutable` returns a mutable value with a single `value` property initially set to the `initial`.
 
-Values stored in mutable values can be accessed and modified by their `.value` property.
+Data stored in mutable values can be accessed and modified by their `.value` property.
 
 ## Example
 
@@ -109,10 +109,10 @@ function App() {
   const mv = useMemo(() => makeMutable(0), []);
 
   useEffect(() => {
-    mv.value = withRepeat(withSpring(100), -1, true); // this creates an infinite animation
+    mv.value = withRepeat(withSpring(100), -1, true); // creates an infinite animation
 
     return () => {
-      cancelAnimation(mv); // this will stop the infinite animation when the component is unmounted
+      cancelAnimation(mv); // will stop the infinite animation when the component is unmounted
     };
   }, []);
 }
@@ -133,6 +133,8 @@ function App() {
 ```
 
 </Indent>
+
+- When you decide to use `makeMutable`, ensure that you follow [Rules of React](https://react.dev/reference/rules) and avoid common `useRef` pitfalls, such as modifying the reference during rendering (see the **Pitfall** section in the [useRef](https://react.dev/reference/react/useRef) documentation for more details).
 
 ### Comparison with `useSharedValue`
 
