@@ -1,8 +1,8 @@
 'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
-import type { Mutable, SharedValue } from './commonTypes';
-import { makeShareableCloneRecursive } from './shareables';
+import type { Mutable } from './commonTypes';
 import { shareableMappingCache } from './shareableMappingCache';
+import { makeShareableCloneRecursive } from './shareables';
 import { executeOnUIRuntimeSync, runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 
@@ -114,7 +114,7 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
   return mutable;
 }
 
-function makeMutableWeb<Value>(initial: Value): SharedValue<Value> {
+function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
   let value: Value = initial;
   const listeners = new Map<number, Listener<Value>>();
 
