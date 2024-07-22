@@ -251,6 +251,7 @@ function getPolyfillsToSort(ast: BabelFile): Polyfill[] {
         const statements = functionPath.get('body');
         statements.forEach((statement, index) => {
           const bindingIdentifiers = statement.getBindingIdentifiers();
+          // Polyfills are prepended as FunctionDeclarations.
           if (!statement.isFunctionDeclaration() || !statement.node.id?.name) {
             return;
           }
