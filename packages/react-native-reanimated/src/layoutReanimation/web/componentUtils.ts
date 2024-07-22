@@ -153,9 +153,10 @@ export function saveSnapshot(element: HTMLElement) {
 }
 
 export function setElementAnimation(
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig,
-  shouldSavePosition = false
+  shouldSavePosition = false,
+  parent: Element | null = null
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
@@ -179,22 +180,30 @@ export function setElementAnimation(
       saveSnapshot(element);
     }
 
+    if (parent?.contains(element)) {
+      element.removedAfterAnimation = true;
+      parent.removeChild(element);
+    }
+
     animationConfig.callback?.(true);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
   const animationCancelHandler = () => {
     animationConfig.callback?.(false);
+
+    if (parent?.contains(element)) {
+      element.removedAfterAnimation = true;
+      parent.removeChild(element);
+    }
+
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
   // Here we have to use `addEventListener` since element.onanimationcancel doesn't work on chrome
   element.onanimationstart = () => {
     if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
-      _updatePropsJS(
-        { visibility: 'initial' },
-        element as ReanimatedHTMLElement
-      );
+      _updatePropsJS({ visibility: 'initial' }, element);
     }
 
     element.addEventListener('animationcancel', animationCancelHandler);
@@ -210,7 +219,7 @@ export function setElementAnimation(
 }
 
 export function handleLayoutTransition(
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig,
   transitionData: TransitionData
 ) {
@@ -292,6 +301,7 @@ export function handleExitingAnimation(
   dummy.reanimatedDummy = true;
 
   element.style.animationName = '';
+  dummy.style.animationName = '';
 
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
@@ -302,7 +312,6 @@ export function handleExitingAnimation(
     dummy.appendChild(element.firstChild);
   }
 
-  setElementAnimation(dummy, animationConfig);
   parent?.appendChild(dummy);
 
   const snapshot = snapshots.get(element)!;
@@ -332,22 +341,5 @@ export function handleExitingAnimation(
 
   setElementPosition(dummy, snapshot);
 
-  const originalOnAnimationEnd = dummy.onanimationend;
-
-  dummy.onanimationend = function (event: AnimationEvent) {
-    if (parent?.contains(dummy)) {
-      dummy.removedAfterAnimation = true;
-      parent.removeChild(dummy);
-    }
-
-    // Given that this function overrides onAnimationEnd, it won't be null
-    originalOnAnimationEnd?.call(this, event);
-  };
-
-  dummy.addEventListener('animationcancel', () => {
-    if (parent?.contains(dummy)) {
-      dummy.removedAfterAnimation = true;
-      parent.removeChild(dummy);
-    }
-  });
+  setElementAnimation(dummy, animationConfig, false, parent);
 }

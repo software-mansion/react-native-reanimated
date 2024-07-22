@@ -49,6 +49,7 @@ import type { FlatList, FlatListProps } from 'react-native';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
 import { getViewInfo } from './getViewInfo';
 import { NativeEventsManager } from './NativeEventsManager';
+import type { ReanimatedHTMLElement } from '../js-reanimated';
 
 const IS_WEB = isWeb();
 
@@ -178,7 +179,7 @@ export function createAnimatedComponent(
 
         startWebLayoutAnimation(
           this.props,
-          this._component as HTMLElement,
+          this._component as ReanimatedHTMLElement,
           LayoutAnimationType.ENTERING
         );
       }
@@ -211,7 +212,7 @@ export function createAnimatedComponent(
 
         startWebLayoutAnimation(
           this.props,
-          this._component as HTMLElement,
+          this._component as ReanimatedHTMLElement,
           LayoutAnimationType.EXITING
         );
       } else if (exiting && !IS_WEB && !isFabric()) {
@@ -418,7 +419,7 @@ export function createAnimatedComponent(
       ) {
         tryActivateLayoutTransition(
           this.props,
-          this._component as HTMLElement,
+          this._component as ReanimatedHTMLElement,
           snapshot
         );
       }
