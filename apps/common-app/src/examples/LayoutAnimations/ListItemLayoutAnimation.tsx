@@ -46,7 +46,7 @@ const ListItem = memo(function ({ id, text, onPress }: ListItemProps) {
 });
 
 export default function ListItemLayoutAnimation() {
-  const [layoutAnimationEnabled, setLayoutAnimationEnabled] = useState(true);
+  const [layoutTransitionEnabled, setLayoutTransitionEnabled] = useState(true);
   const [currentTransitionIndex, setCurrentTransitionIndex] = useState(0);
   const [items, setItems] = useState(ITEMS);
 
@@ -87,7 +87,7 @@ export default function ListItemLayoutAnimation() {
     });
   }, []);
 
-  const transition = layoutAnimationEnabled
+  const transition = layoutTransitionEnabled
     ? LAYOUT_TRANSITIONS[currentTransitionIndex]
     : undefined;
 
@@ -99,10 +99,10 @@ export default function ListItemLayoutAnimation() {
             <Text style={styles.infoText}>Layout animation: </Text>
             <TouchableOpacity
               onPress={() => {
-                setLayoutAnimationEnabled((prev) => !prev);
+                setLayoutTransitionEnabled((prev) => !prev);
               }}>
               <Text style={styles.buttonText}>
-                {layoutAnimationEnabled ? 'Enabled' : 'Disabled'}
+                {layoutTransitionEnabled ? 'Enabled' : 'Disabled'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -132,7 +132,7 @@ export default function ListItemLayoutAnimation() {
           renderItem={renderItem}
           keyExtractor={(item) => item}
           contentContainerStyle={styles.contentContainer}
-          itemLayoutAnimation={layoutAnimationEnabled ? transition : undefined}
+          itemLayoutAnimation={layoutTransitionEnabled ? transition : undefined}
           layout={transition}
         />
 
