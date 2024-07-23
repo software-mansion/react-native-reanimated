@@ -18145,6 +18145,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-worklets@workspace:packages/react-native-worklets":
+  version: 0.0.0-use.local
+  resolution: "react-native-worklets@workspace:packages/react-native-worklets"
+  dependencies:
+    eslint: "npm:^8.57.0"
+    prettier: "npm:2.8.8"
+    react: "npm:18.2.0"
+    react-native: "npm:0.74.0"
+    typescript: "npm:~5.3.0"
+  peerDependencies:
+    "@babel/core": ^7.0.0-0
+    react: "*"
+    react-native: "*"
+  languageName: unknown
+  linkType: soft
+
 "react-native@npm:0.73.4":
   version: 0.73.4
   resolution: "react-native@npm:0.73.4"

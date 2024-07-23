@@ -1,0 +1,27 @@
+{
+  "name": "react-native-worklets",
+  "version": "0.0.1",
+  "description": "Worklets for React Native",
+  "scripts": {
+    "build": "",
+    "lint": "yarn lint:js",
+    "lint:js": "eslint --ext '.js,.ts,.tsx' src && yarn prettier --check src ",
+    "format": "yarn format:js",
+    "format:js": "prettier --write --list-different src",
+    "type:check": "yarn type:check:src",
+    "type:check:src": "yarn tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@babel/core": "^7.0.0-0",
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "prettier": "2.8.8",
+    "react": "18.2.0",
+    "react-native": "0.74.0",
+    "typescript": "~5.3.0"
+  },
+  "packageManager": "yarn@4.1.1"
+}

@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "react-native-worklets": ["./src"]
+    }
+  },
+  "include": ["src"]
+}
