@@ -12,6 +12,7 @@ import type { WorkletFunction } from '../commonTypes';
 import type { EventHandlerProcessed, EventHandlerInternal } from './useEvent';
 import { has } from '../createAnimatedComponent/utils';
 import { useRef } from 'react';
+import { isWorkletEventHandler } from './commonTypes';
 
 /**
  * Lets you compose multiple event handlers.
@@ -210,15 +211,6 @@ const JSScrollEventsPropMap: Record<JSScrollEventsInput, JSScrollEventsOutput> =
 type JSHandlersObject<Event extends object> = Partial<
   Record<JSScrollEventsInput, JSHandler<Event>>
 >;
-
-function isWorkletEventHandler(
-  handler: unknown
-): handler is EventHandlerProcessed<Event> {
-  return (
-    has('workletEventHandler', handler) &&
-    handler.workletEventHandler instanceof WorkletEventHandler
-  );
-}
 
 function isJSHandler(handler: unknown): handler is JSHandlersObject<Event> {
   return Object.keys(JSScrollEventsPropMap).reduce((acc, val) => {

@@ -15,6 +15,7 @@ import type {
 } from './commonTypes';
 import { flattenArray, has } from './utils';
 import { StyleSheet } from 'react-native';
+import { isWorkletEventHandler } from '../hook/commonTypes';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -63,10 +64,7 @@ export class PropsFilter implements IPropsFilter {
               animatedProp.initial?.value[initialValueKey];
           });
         }
-      } else if (
-        has('workletEventHandler', value) &&
-        value.workletEventHandler instanceof WorkletEventHandler
-      ) {
+      } else if (isWorkletEventHandler(value)) {
         const handler = value.workletEventHandler;
         const isWebHandler = has('listeners', handler);
         const hasJSHandlers = Object.keys(handler.JSHandlers).length > 0;

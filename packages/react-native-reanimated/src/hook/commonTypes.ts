@@ -16,6 +16,8 @@ import type {
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type { AnimatedStyle } from '../helperTypes';
 import type { ReanimatedHTMLElement } from '../js-reanimated';
+import { has } from '../createAnimatedComponent/utils';
+import { WorkletEventHandler } from '../WorkletEventHandler';
 
 export type DependencyList = Array<unknown> | undefined;
 
@@ -85,6 +87,19 @@ export type JSEvent<Event extends object> = NativeSyntheticEvent<
 >;
 
 export type JSHandler<Event extends object> = (event: JSEvent<Event>) => void;
+
+type WorkletEventHandlerHolder = {
+  workletEventHandler: InstanceType<typeof WorkletEventHandler>;
+};
+
+export function isWorkletEventHandler(
+  prop: unknown
+): prop is WorkletEventHandlerHolder {
+  return (
+    has('workletEventHandler', prop) &&
+    prop.workletEventHandler instanceof WorkletEventHandler
+  );
+}
 
 export interface IWorkletEventHandler<Event extends object> {
   updateEventHandler: (
