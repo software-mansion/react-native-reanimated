@@ -196,16 +196,20 @@ function appendWorkletClassMarker(classBody: ClassBody) {
 
 function dehoistCommonJSExports(program: Program) {
   const statements = program.body;
-  let statementsLength = statements.length;
-  for (let i = 0; i < statementsLength; i++) {
-    const statement = statements[i];
+  let end = statements.length;
+  let current = 0;
+
+  while (current < end) {
+    const statement = statements[current];
     if (!isCommonJSExport(statement)) {
+      current++;
       continue;
     }
-    const exportStatement = statements.splice(i, 1);
+    const exportStatement = statements.splice(current, 1);
     statements.push(...exportStatement);
-    statementsLength--;
-    i--;
+    // We just removed one element from non-processed part,
+    // so we need to decrement the end index but not the current index.
+    end--;
   }
 }
 

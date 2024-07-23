@@ -990,7 +990,7 @@ exports[`babel plugin for file workletization doesn't workletize function outsid
 }"
 `;
 
-exports[`babel plugin for file workletization moves CommonJS exports to the bottom of the file 1`] = `
+exports[`babel plugin for file workletization moves CommonJS export to the bottom of the file 1`] = `
 "var _worklet_15780239751281_init_data = {
   code: "function foo_null1(){}",
   location: "/dev/null",
@@ -1008,6 +1008,73 @@ var foo = function () {
 }();
 var bar = 1;
 exports.foo = foo;"
+`;
+
+exports[`babel plugin for file workletization moves multiple CommonJS exports to the bottom of the file 1`] = `
+"var _worklet_15780239751281_init_data = {
+  code: "function foo_null1(){}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo_null1 = function foo_null1() {};
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 15780239751281;
+  foo_null1.__initData = _worklet_15780239751281_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
+}();
+var _worklet_552304524261_init_data = {
+  code: "function bar_null2(){}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var bar = function () {
+  var _e = [new global.Error(), 1, -27];
+  var bar_null2 = function bar_null2() {};
+  bar_null2.__closure = {};
+  bar_null2.__workletHash = 552304524261;
+  bar_null2.__initData = _worklet_552304524261_init_data;
+  bar_null2.__stackDetails = _e;
+  return bar_null2;
+}();
+var _worklet_9955902016844_init_data = {
+  code: "function baz_null3(){}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var baz = function () {
+  var _e = [new global.Error(), 1, -27];
+  var baz_null3 = function baz_null3() {};
+  baz_null3.__closure = {};
+  baz_null3.__workletHash = 9955902016844;
+  baz_null3.__initData = _worklet_9955902016844_init_data;
+  baz_null3.__stackDetails = _e;
+  return baz_null3;
+}();
+var _worklet_3271684035845_init_data = {
+  code: "function foobar_null4(){}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foobar = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foobar_null4 = function foobar_null4() {};
+  foobar_null4.__closure = {};
+  foobar_null4.__workletHash = 3271684035845;
+  foobar_null4.__initData = _worklet_3271684035845_init_data;
+  foobar_null4.__stackDetails = _e;
+  return foobar_null4;
+}();
+exports.foo = foo;
+exports.bar = bar;
+exports.baz = baz;
+exports.foobar = foobar;"
 `;
 
 exports[`babel plugin for file workletization workletizes ArrowFunctionExpression 1`] = `

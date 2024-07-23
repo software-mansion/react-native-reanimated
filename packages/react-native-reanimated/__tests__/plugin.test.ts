@@ -2392,7 +2392,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('moves CommonJS exports to the bottom of the file', () => {
+    it('moves CommonJS export to the bottom of the file', () => {
       const input = html`<script>
         'worklet';
         exports.foo = foo;
@@ -2402,6 +2402,23 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain('var bar = 1;\nexports.foo = foo;');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('moves multiple CommonJS exports to the bottom of the file', () => {
+      const input = html`<script>
+        'worklet';
+        exports.foo = foo;
+        exports.bar = bar;
+        function foo() {}
+        function bar() {}
+        function baz() {}
+        exports.baz = baz;
+        exports.foobar = foobar;
+        function foobar() {}
+      </script>`;
+
+      const { code } = runPlugin(input);
       expect(code).toMatchSnapshot();
     });
   });
