@@ -1351,9 +1351,9 @@ var require_class = __commonJS({
       (0, assert_1.strict)(classPath.node.id);
       const className = classPath.node.id.name;
       const polyfilledClassAst = getPolyfilledAst(classPath.node, state);
+      sortPolyfills(polyfilledClassAst);
       appendWorkletDirectiveToPolyfills(polyfilledClassAst.program.body);
       replaceClassDeclarationWithFactoryAndCall(polyfilledClassAst.program.body, className);
-      sortPolyfills(polyfilledClassAst);
       polyfilledClassAst.program.body.push((0, types_12.returnStatement)((0, types_12.identifier)(className)));
       const factoryFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([...polyfilledClassAst.program.body]));
       const factoryCall = (0, types_12.callExpression)(factoryFactory, []);
