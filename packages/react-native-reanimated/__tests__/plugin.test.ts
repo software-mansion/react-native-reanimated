@@ -2391,6 +2391,19 @@ describe('babel plugin', () => {
       expect(code).not.toHaveWorkletData();
       expect(code).toMatchSnapshot();
     });
+
+    it('moves CommonJS exports to the bottom of the file', () => {
+      const input = html`<script>
+        'worklet';
+        exports.foo = foo;
+        function foo() {}
+        const bar = 1;
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var bar = 1;\nexports.foo = foo;');
+      expect(code).toMatchSnapshot();
+    });
   });
 
   describe('for context objects', () => {

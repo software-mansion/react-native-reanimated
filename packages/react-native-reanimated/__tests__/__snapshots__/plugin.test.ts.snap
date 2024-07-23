@@ -990,6 +990,26 @@ exports[`babel plugin for file workletization doesn't workletize function outsid
 }"
 `;
 
+exports[`babel plugin for file workletization moves CommonJS exports to the bottom of the file 1`] = `
+"var _worklet_15780239751281_init_data = {
+  code: "function foo_null1(){}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo_null1 = function foo_null1() {};
+  foo_null1.__closure = {};
+  foo_null1.__workletHash = 15780239751281;
+  foo_null1.__initData = _worklet_15780239751281_init_data;
+  foo_null1.__stackDetails = _e;
+  return foo_null1;
+}();
+var bar = 1;
+exports.foo = foo;"
+`;
+
 exports[`babel plugin for file workletization workletizes ArrowFunctionExpression 1`] = `
 "var _worklet_2420910284744_init_data = {
   code: "function null1(){return'bar';}",
