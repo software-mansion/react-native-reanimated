@@ -94,10 +94,11 @@ export class TestRunner {
   }
 
   public async render(component: ReactElement<Component> | null) {
-    if (!component && this._wasRenderedNull) {
+    if (!component && this._renderLock.wasRenderedNull()) {
       return;
     }
-    this._wasRenderedNull = !component;
+
+    this._renderLock.setRenderedNull(!component);
     this._renderLock.lock();
 
     try {
