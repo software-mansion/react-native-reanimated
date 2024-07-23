@@ -15,6 +15,8 @@ export interface StyleProps extends ViewStyle, TextStyle {
  */
 export interface SharedValue<Value = unknown> {
   value: Value;
+  get(): Value;
+  set(value: Value): void;
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
   modify: (
@@ -22,7 +24,6 @@ export interface SharedValue<Value = unknown> {
     forceUpdate?: boolean
   ) => void;
 }
-
 export interface Mutable<Value = unknown> extends SharedValue<Value> {
   _isReanimatedSharedValue: true;
   _animation?: AnimationObject<Value> | null; // only in Native

@@ -10,6 +10,39 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 type Listener<Value> = (newValue: Value) => void;
 
+type PartialMutable<Value> = Omit<Mutable<Value>, '_value' | 'get' | 'set'>;
+
+/**
+ * Adds `get` and `set` methods to the mutable object to handle access to `value` property.
+ *
+ * React Compiler disallows modifying return values of hooks. Even though assignment to
+ * `value` is a setter invocation, Compiler's static analysis doesn't detect it.
+ * That's why we provide a second API for users using the Compiler.
+ */
+function addCompilerSafeGetAndSet<Value>(mutable: Mutable<Value>): void {
+  'worklet';
+  Object.defineProperties(mutable, {
+    get: {
+      value() {
+        return mutable.value;
+      },
+      configurable: false,
+      enumerable: false,
+    },
+    set: {
+      value(newValue: Value | ((value: Value) => Value)) {
+        if (typeof newValue === 'function') {
+          mutable.value = (newValue as (value: Value) => Value)(mutable.value);
+        } else {
+          mutable.value = newValue;
+        }
+      },
+      configurable: false,
+      enumerable: false,
+    },
+  });
+}
+
 export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
   'worklet';
   const listeners = new Map<number, Listener<Value>>();
@@ -39,7 +72,7 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
 
     _animation: null,
     _isReanimatedSharedValue: true,
-  } as Mutable<Value>;
+  } as PartialMutable<Value> as Mutable<Value>;
 
   /*
    * _value prop should only be accessed by the valueSetter implementation
@@ -60,6 +93,8 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
     configurable: false,
     enumerable: false,
   });
+
+  addCompilerSafeGetAndSet(mutable);
 
   return mutable;
 }
@@ -102,7 +137,7 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
 
     _isReanimatedSharedValue: true,
-  } as Omit<Mutable<Value>, '_value'> as Mutable<Value>;
+  } as PartialMutable<Value> as Mutable<Value>;
 
   Object.defineProperty(mutable, '_value', {
     // This way of defining the property makes it hidden for
@@ -121,6 +156,8 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     configurable: false,
     enumerable: false,
   });
+
+  addCompilerSafeGetAndSet(mutable);
 
   shareableMappingCache.set(mutable, handle);
   return mutable;
@@ -153,7 +190,7 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
     },
 
     _isReanimatedSharedValue: true,
-  } as Omit<Mutable<Value>, '_value'> as Mutable<Value>;
+  } as PartialMutable<Value> as Mutable<Value>;
 
   Object.defineProperty(mutable, '_value', {
     get(): Value {
@@ -168,6 +205,8 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
     configurable: false,
     enumerable: false,
   });
+
+  addCompilerSafeGetAndSet(mutable);
 
   return mutable;
 }
