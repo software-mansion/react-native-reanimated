@@ -4,7 +4,6 @@ import type {
   BuildFunction,
   NullableTestValue,
   Operation,
-  SharedValueSnapshot,
   TestCase,
   TestConfiguration,
   TestSuite,
@@ -22,7 +21,6 @@ import {
   indentNestingLevel,
 } from '../utils/stringFormatUtils';
 import type {
-  SharedValue,
   LayoutAnimationStartFunction,
   LayoutAnimationType,
   SharedTransitionAnimationsValues,
@@ -54,7 +52,6 @@ export class TestRunner {
   private _currentTestSuite: TestSuite | null = null;
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
-  private _valueRegistry: Record<string, SharedValue> = {};
   private _wasRenderedNull: boolean = false;
   private _includesOnly: boolean = false;
   private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
@@ -207,27 +204,6 @@ export class TestRunner {
     } else {
       callTrackerJS(name);
     }
-  }
-
-  public registerValue(name: string, value: SharedValue) {
-    'worklet';
-    this._valueRegistry[name] = value;
-  }
-
-  public async getRegisteredValue(name: string): Promise<SharedValueSnapshot> {
-    const jsValue = this._valueRegistry[name].value;
-    const sharedValue = this._valueRegistry[name];
-    const valueContainer = makeMutable<unknown>(null);
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      valueContainer.value = sharedValue.value;
-    }, 1000);
-    const uiValue = valueContainer.value;
-    return {
-      name,
-      onJS: jsValue as TestValue,
-      onUI: uiValue as TestValue,
-    };
   }
 
   public getTrackerCallCount(name: string): TrackerCallCount {

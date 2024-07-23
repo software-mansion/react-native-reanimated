@@ -4,10 +4,12 @@ import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
 import type { TestConfiguration, TestValue, NullableTestValue, BuildFunction } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
+import { ValueRegistry } from './TestRunner/ValueRegistry';
 
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
+const valueRegistry = new ValueRegistry();
 
 type DescribeFunction = (name: string, buildSuite: BuildFunction) => void;
 type TestFunction = (name: string, buildTest: BuildFunction) => void;
@@ -126,11 +128,11 @@ export function getTrackerCallCount(name: string) {
 }
 
 export function registerValue(name: string, value: SharedValue) {
-  return testRunner.registerValue(name, value);
+  return valueRegistry.registerValue(name, value);
 }
 
 export async function getRegisteredValue(name: string) {
-  return await testRunner.getRegisteredValue(name);
+  return await valueRegistry.getRegisteredValue(name);
 }
 
 export function getTestComponent(name: string): TestComponent {
