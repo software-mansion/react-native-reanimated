@@ -1125,6 +1125,7 @@ var require_file = __commonJS({
     exports2.processIfWorkletFile = processIfWorkletFile;
     function processWorkletFile(programPath) {
       const statements = programPath.get("body");
+      dehoistCommonJSExports(programPath.node);
       statements.forEach((statement) => {
         const candidatePath = getCandidate(statement);
         processWorkletizableEntity(candidatePath);
@@ -1213,6 +1214,24 @@ var require_file = __commonJS({
     }
     function appendWorkletClassMarker(classBody) {
       classBody.body.push((0, types_12.classProperty)((0, types_12.identifier)("__workletClass"), (0, types_12.booleanLiteral)(true)));
+    }
+    function dehoistCommonJSExports(program) {
+      const statements = program.body;
+      let end = statements.length;
+      let current = 0;
+      while (current < end) {
+        const statement = statements[current];
+        if (!isCommonJSExport(statement)) {
+          current++;
+          continue;
+        }
+        const exportStatement = statements.splice(current, 1);
+        statements.push(...exportStatement);
+        end--;
+      }
+    }
+    function isCommonJSExport(statement) {
+      return (0, types_12.isExpressionStatement)(statement) && (0, types_12.isAssignmentExpression)(statement.expression) && (0, types_12.isMemberExpression)(statement.expression.left) && (0, types_12.isIdentifier)(statement.expression.left.object) && statement.expression.left.object.name === "exports";
     }
   }
 });
