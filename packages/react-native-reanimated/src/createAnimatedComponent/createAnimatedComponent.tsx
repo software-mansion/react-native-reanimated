@@ -18,13 +18,13 @@ import {
   isWeb,
   RNRenderer,
   shouldBeUseWeb,
+  enableLayoutAnimations,
 } from 'react-native-worklets';
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
 import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import { adaptViewConfig } from '../ConfigHelper';
-import { enableLayoutAnimations } from '../core';
 import type { AnimateProps } from '../helperTypes';
 import { LayoutAnimationType, SharedTransition } from '../layoutReanimation';
 import '../layoutReanimation/animationsManager';

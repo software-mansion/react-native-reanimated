@@ -289,6 +289,24 @@ export { _updatePropsJS } from './js-reanimated';
 export type { ReanimatedHTMLElement } from './js-reanimated';
 export { RNRenderer } from './platform-specific/RNRenderer';
 export { shareableMappingCache } from './shareableMappingCache';
+export {
+  setShouldAnimateExitingForTag,
+  jsiConfigureProps,
+  enableLayoutAnimations,
+  subscribeForKeyboardEvents,
+  unsubscribeFromKeyboardEvents,
+  initializeSensor,
+  registerSensor,
+  unregisterSensor,
+  isReanimated3,
+  isConfigured,
+  getViewProp,
+  registerEventHandler,
+  unregisterEventHandler,
+  configureLayoutAnimationBatch,
+} from './core';
+export { startMapper, stopMapper } from './mappers';
+export { isSharedValue } from './isSharedValue';
 // export type { FrameInfo } from './frameCallback';
 // export { getUseOfValueInStyleWarning } from './pluginUtils';
 // export {

@@ -11,8 +11,7 @@ import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { adaptViewConfig } from '../ConfigHelper';
 import updateProps from '../UpdateProps';
-import { stopMapper, startMapper } from '../mappers';
-import { isSharedValue } from '../isSharedValue';
+import { startMapper, stopMapper, isSharedValue } from 'react-native-worklets';
 
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {

@@ -47,9 +47,9 @@ export type FlatShareableRef<T> = T extends ShareableRef<infer U>
   ? ShareableRef<U>
   : ShareableRef<T>;
 
-export type MapperRawInputs = unknown[];
+type MapperRawInputs = unknown[];
 
-export type MapperOutputs = SharedValue[];
+type MapperOutputs = SharedValue[];
 
 export type MapperRegistry = {
   start: (

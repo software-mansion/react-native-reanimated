@@ -4,7 +4,7 @@ import {
   makeMutable,
   subscribeForKeyboardEvents,
   unsubscribeFromKeyboardEvents,
-} from '../core';
+} from 'react-native-worklets';
 import type {
   AnimatedKeyboardInfo,
   AnimatedKeyboardOptions,

@@ -1,17 +1,29 @@
 'use strict';
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
-
-import { makeShareable, startMapper, stopMapper } from '../core';
-import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
-import { initialUpdaterRun } from '../animation';
-import { useSharedValue } from './useSharedValue';
 import {
-  buildWorkletsHash,
-  isAnimated,
-  shallowEqual,
-  validateAnimatedStyles,
-} from './utils';
+  isJest,
+  makeShareable,
+  shouldBeUseWeb,
+  startMapper,
+  stopMapper,
+} from 'react-native-worklets';
+import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
+import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
+import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
+import { initialUpdaterRun } from '../animation';
+import type {
+  AnimatedPropsAdapterFunction,
+  AnimatedPropsAdapterWorklet,
+  AnimatedStyle,
+  AnimationObject,
+  NestedObjectValues,
+  SharedValue,
+  StyleProps,
+  Timestamp,
+  WorkletFunction,
+} from '../commonTypes';
+import { isWorkletFunction } from '../commonTypes';
 import type {
   AnimatedStyleHandle,
   DefaultStyle,
@@ -19,21 +31,13 @@ import type {
   Descriptor,
   JestAnimatedStyleHandle,
 } from './commonTypes';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
-import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
-import { isJest, shouldBeUseWeb } from 'react-native-worklets';
-import type {
-  AnimationObject,
-  Timestamp,
-  NestedObjectValues,
-  SharedValue,
-  StyleProps,
-  WorkletFunction,
-  AnimatedPropsAdapterFunction,
-  AnimatedPropsAdapterWorklet,
-  AnimatedStyle,
-} from '../commonTypes';
-import { isWorkletFunction } from '../commonTypes';
+import { useSharedValue } from './useSharedValue';
+import {
+  buildWorkletsHash,
+  isAnimated,
+  shallowEqual,
+  validateAnimatedStyles,
+} from './utils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

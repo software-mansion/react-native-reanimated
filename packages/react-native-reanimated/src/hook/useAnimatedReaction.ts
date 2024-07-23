@@ -1,10 +1,9 @@
 'use strict';
 import { useEffect } from 'react';
 import type { WorkletFunction } from '../commonTypes';
-import { startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
-import { shouldBeUseWeb } from 'react-native-worklets';
+import { shouldBeUseWeb, startMapper, stopMapper } from 'react-native-worklets';
 
 /**
  * Lets you to respond to changes in a [shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value). It's especially useful when comparing values previously stored in the shared value with the current one.

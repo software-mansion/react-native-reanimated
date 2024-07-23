@@ -9,7 +9,7 @@ import {
   blue,
   opacity,
 } from './Colors';
-import { makeMutable } from './core';
+import { makeMutable } from 'react-native-worklets';
 import { Extrapolation, interpolate } from './interpolation';
 import type { SharedValue } from './commonTypes';
 import { useSharedValue } from './hook/useSharedValue';

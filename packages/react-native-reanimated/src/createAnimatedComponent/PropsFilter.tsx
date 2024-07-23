@@ -1,8 +1,7 @@
 'use strict';
 
 import type { StyleProps } from '../commonTypes';
-import { isSharedValue } from '../isSharedValue';
-import { isChromeDebugger } from 'react-native-worklets';
+import { isChromeDebugger, isSharedValue } from 'react-native-worklets';
 import { WorkletEventHandler } from '../WorkletEventHandler';
 import { initialUpdaterRun } from '../animation';
 import { hasInlineStyles, getInlineStyle } from './InlinePropManager';

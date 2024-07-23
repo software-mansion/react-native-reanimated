@@ -8,8 +8,7 @@
 
 /* eslint no-bitwise: 0 */
 import type { StyleProps } from './commonTypes';
-import { makeShareable } from './core';
-import { isAndroid } from 'react-native-worklets';
+import { makeShareable, isAndroid } from 'react-native-worklets';
 
 interface RGB {
   r: number;

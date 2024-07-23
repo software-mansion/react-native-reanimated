@@ -1,8 +1,8 @@
 'use strict';
 import { useEffect, useState } from 'react';
+import { makeMutable } from 'react-native-worklets';
 import { cancelAnimation } from '../animation';
 import type { SharedValue } from '../commonTypes';
-import { makeMutable } from '../core';
 
 /**
  * Lets you define [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) in your components.

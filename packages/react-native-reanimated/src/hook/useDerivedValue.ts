@@ -1,9 +1,13 @@
 'use strict';
 import { useEffect, useRef } from 'react';
+import {
+  makeMutable,
+  shouldBeUseWeb,
+  startMapper,
+  stopMapper,
+} from 'react-native-worklets';
 import { initialUpdaterRun } from '../animation';
 import type { SharedValue, WorkletFunction } from '../commonTypes';
-import { startMapper, stopMapper } from '../core';
-import { makeMutable, shouldBeUseWeb } from 'react-native-worklets';
 import type { DependencyList } from './commonTypes';
 
 export type DerivedValue<Value> = Readonly<SharedValue<Value>>;

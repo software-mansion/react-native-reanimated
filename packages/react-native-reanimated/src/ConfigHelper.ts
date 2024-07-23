@@ -1,6 +1,5 @@
 'use strict';
-import { PropsAllowlists } from 'react-native-worklets';
-import { jsiConfigureProps } from './core';
+import { PropsAllowlists, jsiConfigureProps } from 'react-native-worklets';
 function assertNoOverlapInLists() {
   for (const key in PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST) {
     if (key in PropsAllowlists.UI_THREAD_PROPS_WHITELIST) {

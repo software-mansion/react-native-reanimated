@@ -1,11 +1,11 @@
 'use strict';
 import type {
-  SensorType,
   SensorConfig,
-  Value3D,
-  ValueRotation,
+  SensorType,
   ShareableRef,
   SharedValue,
+  Value3D,
+  ValueRotation,
 } from './commonTypes';
 import Sensor from './Sensor';
 

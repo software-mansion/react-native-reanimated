@@ -1,12 +1,15 @@
 'use strict';
 import type { NativeSyntheticEvent } from 'react-native';
-import { registerEventHandler, unregisterEventHandler } from './core';
+import {
+  registerEventHandler,
+  shouldBeUseWeb,
+  unregisterEventHandler,
+} from 'react-native-worklets';
 import type {
   EventPayload,
-  ReanimatedEvent,
   IWorkletEventHandler,
+  ReanimatedEvent,
 } from './hook/commonTypes';
-import { shouldBeUseWeb } from 'react-native-worklets';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

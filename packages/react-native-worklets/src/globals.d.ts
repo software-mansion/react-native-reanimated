@@ -31,7 +31,7 @@ declare global {
     | ((js: string, sourceURL: string, sourceMap: string) => any)
     | undefined;
   var evalWithSourceUrl: ((js: string, sourceURL: string) => any) | undefined;
-  // var _log: (value: unknown) => void;
+  var _log: (value: unknown) => void;
   var _toString: (value: unknown) => string;
   // var _notifyAboutProgress: (
   //   tag: number,
@@ -99,8 +99,8 @@ declare global {
   var __workletsCache: Map<string, any>;
   var __handleCache: WeakMap<object, any>;
   var __callMicrotasks: () => void;
-  // var __mapperRegistry: MapperRegistry;
-  // var __sensorContainer: SensorContainer;
+  var __mapperRegistry: MapperRegistry;
+  var __sensorContainer: SensorContainer;
   var _maybeFlushUIUpdatesQueue: () => void;
   // var LayoutAnimationsManager: LayoutAnimationsManager;
   // var UpdatePropsManager: UpdatePropsManager;

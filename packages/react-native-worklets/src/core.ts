@@ -1,12 +1,9 @@
 'use strict';
-import {
-  initializeUIRuntime,
-  isFabric,
-  isWeb,
-  makeShareableCloneRecursive,
-  shouldBeUseWeb,
-  NativeReanimatedModule,
-} from 'react-native-worklets';
+import { initializeUIRuntime } from './initializers';
+import { NativeReanimatedModule } from './NativeReanimated';
+import { isFabric, isWeb, shouldBeUseWeb } from './PlatformChecker';
+import { makeShareableCloneRecursive } from './shareables';
+
 import type {
   AnimatedKeyboardOptions,
   SensorConfig,
@@ -15,20 +12,7 @@ import type {
   Value3D,
   ValueRotation,
 } from './commonTypes';
-import type { LayoutAnimationBatchItem } from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
-
-export {
-  createWorkletRuntime,
-  executeOnUIRuntimeSync,
-  makeMutable,
-  makeShareable,
-  makeShareableCloneRecursive,
-  runOnJS,
-  runOnRuntime,
-  runOnUI,
-} from 'react-native-worklets';
-export type { WorkletRuntime } from 'react-native-worklets';
 export { startMapper, stopMapper } from './mappers';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -201,7 +185,8 @@ export function enableLayoutAnimations(
 }
 
 export function configureLayoutAnimationBatch(
-  layoutAnimationsBatch: LayoutAnimationBatchItem[]
+  // layoutAnimationsBatch: LayoutAnimationBatchItem[]
+  layoutAnimationsBatch: any[]
 ): void {
   NativeReanimatedModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
 }

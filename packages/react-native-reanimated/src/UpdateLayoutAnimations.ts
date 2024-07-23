@@ -1,9 +1,10 @@
 'use strict';
-import { isFabric, shouldBeUseWeb } from 'react-native-worklets';
 import {
   configureLayoutAnimationBatch,
+  isFabric,
   makeShareableCloneRecursive,
-} from './core';
+  shouldBeUseWeb,
+} from 'react-native-worklets';
 import type {
   LayoutAnimationFunction,
   LayoutAnimationType,

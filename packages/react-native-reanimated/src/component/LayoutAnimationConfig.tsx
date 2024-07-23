@@ -7,7 +7,7 @@ import React, {
   useRef,
 } from 'react';
 import type { ReactNode } from 'react';
-import { setShouldAnimateExitingForTag } from '../core';
+import { setShouldAnimateExitingForTag } from 'react-native-worklets';
 import { findNodeHandle } from 'react-native';
 
 export const SkipEnteringContext =
