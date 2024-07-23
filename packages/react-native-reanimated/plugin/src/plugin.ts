@@ -1,23 +1,25 @@
-import type { PluginItem, NodePath } from '@babel/core';
+import type { NodePath, PluginItem } from '@babel/core';
 import type {
   CallExpression,
+  ClassDeclaration,
   JSXAttribute,
-  Program,
   ObjectExpression,
+  Program,
 } from '@babel/types';
 import {
-  processIfAutoworkletizableCallback,
   processCalleesAutoworkletizableCallbacks,
+  processIfAutoworkletizableCallback,
 } from './autoworkletization';
-import { WorkletizableFunction } from './types';
-import type { ReanimatedPluginPass } from './types';
-import { processIfWithWorkletDirective } from './workletSubstitution';
-import { processInlineStylesWarning } from './inlineStylesWarning';
-import { addCustomGlobals } from './utils';
-import { initializeGlobals } from './globals';
-import { substituteWebCallExpression } from './webOptimization';
-import { processIfWorkletFile } from './file';
 import { processIfWorkletContextObject } from './contextObject';
+import { processIfWorkletFile } from './file';
+import { initializeGlobals } from './globals';
+import { processInlineStylesWarning } from './inlineStylesWarning';
+import type { ReanimatedPluginPass } from './types';
+import { WorkletizableFunction } from './types';
+import { addCustomGlobals } from './utils';
+import { substituteWebCallExpression } from './webOptimization';
+import { processIfWithWorkletDirective } from './workletSubstitution';
+import { processIfWorkletClass } from './class';
 
 module.exports = function (): PluginItem {
   function runWithTaggedExceptions(fun: () => void) {
@@ -63,6 +65,13 @@ module.exports = function (): PluginItem {
         enter(path: NodePath<ObjectExpression>, state: ReanimatedPluginPass) {
           runWithTaggedExceptions(() => {
             processIfWorkletContextObject(path, state);
+          });
+        },
+      },
+      ClassDeclaration: {
+        enter(path: NodePath<ClassDeclaration>, state: ReanimatedPluginPass) {
+          runWithTaggedExceptions(() => {
+            processIfWorkletClass(path, state);
           });
         },
       },

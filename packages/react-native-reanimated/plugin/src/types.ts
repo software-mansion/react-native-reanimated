@@ -1,18 +1,18 @@
 import type { BabelFile, NodePath } from '@babel/core';
+import type {
+  ArrowFunctionExpression,
+  Node as BabelNode,
+  FunctionDeclaration,
+  FunctionExpression,
+  ObjectExpression,
+  ObjectMethod,
+} from '@babel/types';
 import {
   isArrowFunctionExpression,
   isFunctionDeclaration,
   isFunctionExpression,
-  isObjectMethod,
   isObjectExpression,
-} from '@babel/types';
-import type {
-  FunctionDeclaration,
-  FunctionExpression,
-  ObjectMethod,
-  ArrowFunctionExpression,
-  ObjectExpression,
-  Node as BabelNode,
+  isObjectMethod,
 } from '@babel/types';
 
 export interface ReanimatedPluginOptions {
@@ -83,3 +83,5 @@ export function isWorkletizableObjectNode(
 ): node is WorkletizableObject {
   return isObjectExpression(node);
 }
+
+export const workletClassFactorySuffix = '__classFactory';

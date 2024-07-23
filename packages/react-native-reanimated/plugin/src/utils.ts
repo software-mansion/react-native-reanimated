@@ -1,3 +1,12 @@
+import type { NodePath } from '@babel/traverse';
+import type { CallExpression } from '@babel/types';
+import {
+  identifier,
+  isExportNamedDeclaration,
+  isScopable,
+  variableDeclaration,
+  variableDeclarator,
+} from '@babel/types';
 import { globals } from './globals';
 import type { ReanimatedPluginPass } from './types';
 
@@ -21,4 +30,56 @@ export function addCustomGlobals(this: ReanimatedPluginPass) {
       globals.add(name);
     });
   }
+}
+
+/**
+ * This function replaces the node with a factory call while making
+ * sure that it's a legal operation.
+ * If the node cannot be simply replaced with a factory call, it will
+ * be replaced with a variable declaration.
+ *
+ * For example:
+ * ```ts
+ *  const foo = function() {
+ *    'worklet';
+ *    return 1;
+ *  };
+ * ```
+ * becomes
+ * ```ts
+ *  const foo = factoryCall();
+ * ```
+ * But:
+ * ```
+ *   export function foo() {
+ *     'worklet';
+ *     return 1;
+ *   };
+ * ```
+ *
+ * becomes
+ *
+ * ```ts
+ *   const foo = factoryCall();
+ * ```
+ */
+export function replaceWithFactoryCall(
+  toReplace: NodePath<unknown>,
+  name: string | undefined,
+  factoryCall: CallExpression
+) {
+  if (!name || !needsDeclaration(toReplace)) {
+    toReplace.replaceWith(factoryCall);
+  } else {
+    const replacement = variableDeclaration('const', [
+      variableDeclarator(identifier(name), factoryCall),
+    ]);
+    toReplace.replaceWith(replacement);
+  }
+}
+
+function needsDeclaration(nodePath: NodePath<unknown>): boolean {
+  return (
+    isScopable(nodePath.parent) || isExportNamedDeclaration(nodePath.parent)
+  );
 }

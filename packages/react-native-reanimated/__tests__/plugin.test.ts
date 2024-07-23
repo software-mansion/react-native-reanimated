@@ -2308,6 +2308,59 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
+    it('workletizes ClassDeclaration', () => {
+      const input = html`<script>
+        'worklet';
+        class Clazz {
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var Clazz__classFactory = function ()');
+      expect(code).toIncludeInWorkletString('Clazz__classFactory');
+      expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ClassDeclaration in named export', () => {
+      const input = html`<script>
+        'worklet';
+        export class Clazz {
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var Clazz = exports.Clazz = function ()');
+      expect(code).toContain('var Clazz__classFactory = function ()');
+      expect(code).toIncludeInWorkletString('Clazz__classFactory');
+      expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes ClassDeclaration in default export', () => {
+      const input = html`<script>
+        'worklet';
+        export default class Clazz {
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('var Clazz = exports.default = function ()');
+      expect(code).toContain('var Clazz__classFactory = function ()');
+      expect(code).toIncludeInWorkletString('Clazz__classFactory');
+      expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
+      expect(code).toMatchSnapshot();
+    });
+
     it('workletizes multiple functions', () => {
       const input = html`<script>
         'worklet';
@@ -2402,6 +2455,129 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toIncludeInWorkletString('this.bar()');
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for worklet classes', () => {
+    it('removes marker', () => {
+      const input = html`<script>
+        class Clazz {
+          __workletClass = true;
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).not.toMatch(/__workletClass:\s*/g);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('creates factories', () => {
+      const input = html`<script>
+        class Clazz {
+          __workletClass = true;
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('Clazz__classFactory');
+      expect(code).toIncludeInWorkletString('Clazz__classFactory');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes regardless of marker value', () => {
+      const input = html`<script>
+        class Clazz {
+          __workletClass = new RegExp('foo');
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('Clazz__classFactory');
+      expect(code).toIncludeInWorkletString('Clazz__classFactory');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('injects class factory into worklets', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          const clazz = new Clazz();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('Clazz__classFactory');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('modifies closures', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          const clazz = new Clazz();
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('Clazz__classFactory: Clazz.Clazz__classFactory');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('keeps this binding', () => {
+      const input = html`<script>
+        class Clazz {
+          __workletClass = true;
+          member = 1;
+          foo() {
+            return this.member;
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toIncludeInWorkletString('this.member');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('appends polyfills', () => {
+      const input = html`<script>
+        class Clazz {
+          __workletClass = true;
+
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('createClass');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes polyfills', () => {
+      const input = html`<script>
+        class Clazz {
+          __workletClass = true;
+
+          foo() {
+            return 'bar';
+          }
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(6);
       expect(code).toMatchSnapshot();
     });
   });

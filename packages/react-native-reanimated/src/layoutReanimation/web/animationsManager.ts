@@ -28,6 +28,8 @@ import { areDOMRectsEqual } from './domUtils';
 import type { TransitionData } from './animationParser';
 import { Keyframe } from '../animationBuilder';
 import { makeElementVisible } from './componentStyle';
+import { EasingNameSymbol } from '../../Easing';
+import type { ReanimatedHTMLElement } from '../../js-reanimated';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,
@@ -93,7 +95,7 @@ function maybeReportOverwrittenProperties(
 function chooseAction(
   animationType: LayoutAnimationType,
   animationConfig: AnimationConfig,
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   transitionData: TransitionData
 ) {
   switch (animationType) {
@@ -182,7 +184,7 @@ export function startWebLayoutAnimation<
   ComponentProps extends Record<string, unknown>
 >(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   animationType: LayoutAnimationType,
   transitionData?: TransitionData
 ) {
@@ -213,7 +215,7 @@ export function tryActivateLayoutTransition<
   ComponentProps extends Record<string, unknown>
 >(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   snapshot: DOMRect
 ) {
   if (!props.layout) {
@@ -236,6 +238,10 @@ export function tryActivateLayoutTransition<
     scaleX: snapshot.width / rect.width,
     scaleY: snapshot.height / rect.height,
     reversed: false, // This field is used only in `SequencedTransition`, so by default it will be false
+    easingX:
+      (props.layout as CustomConfig).easingXV?.[EasingNameSymbol] ?? 'ease',
+    easingY:
+      (props.layout as CustomConfig).easingYV?.[EasingNameSymbol] ?? 'ease',
     entering: enteringAnimation,
     exiting: exitingAnimation,
   };

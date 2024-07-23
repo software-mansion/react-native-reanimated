@@ -313,4 +313,15 @@ const EasingObject = {
   inOut,
 };
 
+export const EasingNameSymbol = Symbol('easingName');
+
+for (const [easingName, easing] of Object.entries(EasingObject)) {
+  Object.defineProperty(easing, EasingNameSymbol, {
+    value: easingName,
+    configurable: false,
+    enumerable: false,
+    writable: false,
+  });
+}
+
 export const Easing = EasingObject;
