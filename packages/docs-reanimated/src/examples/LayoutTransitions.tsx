@@ -12,6 +12,11 @@ import Animated, {
   FadingTransition,
   FadeOut,
   JumpingTransition,
+  CurvedTransition,
+  EntryExitTransition,
+  FlipOutYLeft,
+  FlipInEasyY,
+  Easing,
 } from 'react-native-reanimated';
 import { FormControl, MenuItem, Select } from '@mui/material';
 
@@ -37,12 +42,14 @@ const LAYOUT_TRANSITIONS = [
   { label: 'Sequenced Transition', value: SequencedTransition },
   { label: 'Fading Transition', value: FadingTransition },
   { label: 'Jumping Transition', value: JumpingTransition },
-  // { label: 'Curved Transition', value: CurvedTransition },
-  // {
-  //   label: 'Entry/Exit Transition',
-  //   value: EntryExitTransition.exiting(FlipOutYLeft),
-  // },
-  // TODO: in the future Curved and Entry/Exit will be available on web, now they don't so we don't use them.
+  {
+    label: 'Curved Transition',
+    value: CurvedTransition.easingX(Easing.sin).easingY(Easing.exp),
+  },
+  {
+    label: 'Entry/Exit Transition',
+    value: EntryExitTransition.entering(FlipInEasyY).exiting(FlipOutYLeft),
+  },
 ];
 
 interface SelectProps {
