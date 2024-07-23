@@ -52,8 +52,8 @@ export function useComposedEventHandler<
   const workletsRecord: Record<string, WorkletFunction> = {};
 
   const workletHandlers = handlers
-    .filter((h) => h !== null)
-    .filter((h) => isWorkletEventHandler(h));
+    .filter((handler) => handler !== null)
+    .filter((handler) => isWorkletEventHandler(handler));
 
   workletHandlers.forEach((handler) => {
     // EventHandlerProcessed is the return type of useEvent and has to be force casted to EventHandlerInternal, because we need WorkletEventHandler object
@@ -92,8 +92,8 @@ export function useComposedEventHandler<
   let JSHandlersNeedRebuild = false;
 
   const JSHandlers: JSHandlersObject<Event>[] = handlers
-    .filter((h) => h !== null)
-    .filter((h) => isJSHandler(h)) as JSHandlersObject<Event>[];
+    .filter((handler) => handler !== null)
+    .filter((handler) => isJSHandler(handler)) as JSHandlersObject<Event>[];
 
   // Update/initialize the ref and determine whether JS handlers need rebuild or not
   if (JSHandlersRef.current === null) {

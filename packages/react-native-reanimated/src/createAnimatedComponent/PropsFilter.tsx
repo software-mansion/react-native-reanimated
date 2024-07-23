@@ -71,18 +71,16 @@ export class PropsFilter implements IPropsFilter {
         const isWebHandler = has('listeners', handler);
         const hasJSHandlers = Object.keys(handler.JSHandlers).length > 0;
 
-        if (hasJSHandlers) {
-          if (isWebHandler) {
-            // on web, our and JS handlers are merged in listeners object
-            Object.keys(handler.listeners).forEach((eventName) => {
-              props[eventName] = handler.listeners[eventName];
-            });
-          } else {
-            // on mobile platforms, we just set the JS handlers to the props
-            Object.keys(handler.JSHandlers).forEach((eventName) => {
-              props[eventName] = handler.JSHandlers[eventName];
-            });
-          }
+        if (hasJSHandlers && isWebHandler) {
+          // on web, our and JS handlers are merged in listeners object
+          Object.keys(handler.listeners).forEach((eventName) => {
+            props[eventName] = handler.listeners[eventName];
+          });
+        } else if (hasJSHandlers && !isWebHandler) {
+          // on mobile platforms, we just set the JS handlers to the props
+          Object.keys(handler.JSHandlers).forEach((eventName) => {
+            props[eventName] = handler.JSHandlers[eventName];
+          });
         } else {
           if (handler.eventNames.length > 0) {
             handler.eventNames.forEach((eventName) => {

@@ -15,16 +15,27 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 // the event that came from React Native and convert it.
 function jsListener<Event extends object>(
   eventName: string,
+  handler: (event: ReanimatedEvent<Event>) => void,
+  handlerJS: JSHandler<Event>
+): (evt: JSEvent<Event>) => void;
+function jsListener<Event extends object>(
+  eventName: string,
+  handler: (event: ReanimatedEvent<Event>) => void
+): (evt: JSEvent<Event>) => void;
+function jsListener<Event extends object>(
+  eventName: string,
+  handlerJS: JSHandler<Event>
+): (evt: JSEvent<Event>) => void;
+
+function jsListener<Event extends object>(
+  eventName: string,
   handler?: (event: ReanimatedEvent<Event>) => void,
   handlerJS?: JSHandler<Event>
 ) {
   return (evt: JSEvent<Event>) => {
-    if (handler) {
+    handler &&
       handler({ ...evt.nativeEvent, eventName } as ReanimatedEvent<Event>);
-    }
-    if (handlerJS) {
-      handlerJS(evt);
-    }
+    handlerJS && handlerJS(evt);
   };
 }
 
@@ -161,7 +172,6 @@ class WorkletEventHandlerWeb<Event extends object>
     restJSEvents.forEach((eventName) => {
       this.listeners[eventName] = jsListener(
         eventName,
-        undefined,
         this.JSHandlers[eventName]
       );
     });
