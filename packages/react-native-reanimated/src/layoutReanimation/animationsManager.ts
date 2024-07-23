@@ -1,9 +1,8 @@
 'use strict';
 import { withStyleAnimation } from '../animation/styleAnimation';
 import type { SharedValue } from '../commonTypes';
-import { makeMutableUI } from '../mutables';
+import { makeMutableUI, runOnUIImmediately } from 'react-native-worklets';
 import { LayoutAnimationType } from './animationBuilder';
-import { runOnUIImmediately } from '../threads';
 import type {
   SharedTransitionAnimationsValues,
   LayoutAnimation,

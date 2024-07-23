@@ -5,7 +5,7 @@ import {
   isFabric,
   isJest,
   shouldBeUseWeb,
-} from '../PlatformChecker';
+} from 'react-native-worklets';
 import type {
   AnimatedRef,
   AnimatedRefOnJS,

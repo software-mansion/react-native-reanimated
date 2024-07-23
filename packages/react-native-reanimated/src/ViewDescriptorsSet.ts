@@ -1,5 +1,5 @@
 'use strict';
-import { makeMutable } from './core';
+import { makeMutable } from 'react-native-worklets';
 import type { SharedValue } from './commonTypes';
 import type { Descriptor } from './hook/commonTypes';
 

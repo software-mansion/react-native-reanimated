@@ -7,7 +7,7 @@ import type {
   Timestamp,
   RequiredKeys,
 } from '../../commonTypes';
-import { isWeb } from '../../PlatformChecker';
+import { isWeb } from 'react-native-worklets';
 
 const IS_WEB = isWeb();
 export const VELOCITY_EPS = IS_WEB ? 1 / 20 : 1;

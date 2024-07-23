@@ -1,5 +1,5 @@
 'use strict';
-import type { ReanimatedHTMLElement } from '../../../js-reanimated';
+import type { ReanimatedHTMLElement } from 'react-native-worklets';
 import { LayoutAnimationType } from '../..';
 import type { WebEasingsNames } from '../Easing.web';
 import { getEasingByName } from '../Easing.web';

@@ -1,10 +1,9 @@
 'use strict';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from '../commonTypes';
-import { isWeb, isJest } from '../PlatformChecker';
+import { isWeb, isJest, makeShareable } from 'react-native-worklets';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
 import { areDependenciesEqual, buildDependencies } from './utils';
-import { makeShareable } from '../shareables';
 
 interface GeneralHandler<
   Event extends object,

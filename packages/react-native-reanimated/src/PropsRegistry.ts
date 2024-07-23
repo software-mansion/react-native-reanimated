@@ -1,6 +1,5 @@
 'use strict';
-import { isFabric } from './PlatformChecker';
-import { runOnUI } from './threads';
+import { isFabric, runOnUI } from 'react-native-worklets';
 
 let VIEW_TAGS: number[] = [];
 

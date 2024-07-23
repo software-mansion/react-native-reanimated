@@ -7,7 +7,7 @@ import type {
   IAnimatedComponentInternal,
   InitialComponentProps,
 } from './createAnimatedComponent/commonTypes';
-import { isJest } from './PlatformChecker';
+import { isJest } from 'react-native-worklets';
 import type { DefaultStyle } from './hook/commonTypes';
 
 declare global {

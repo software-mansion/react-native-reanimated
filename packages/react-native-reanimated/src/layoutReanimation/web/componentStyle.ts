@@ -1,7 +1,7 @@
 'use strict';
 
-import { _updatePropsJS } from '../../js-reanimated';
-import type { ReanimatedHTMLElement } from '../../js-reanimated';
+import { _updatePropsJS } from 'react-native-worklets';
+import type { ReanimatedHTMLElement } from 'react-native-worklets';
 
 export interface ReanimatedSnapshot {
   top: number;

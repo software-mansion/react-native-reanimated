@@ -4,7 +4,7 @@ import {
   isFabric,
   isJest,
   shouldBeUseWeb,
-} from '../PlatformChecker';
+} from 'react-native-worklets';
 import { dispatchCommand } from './dispatchCommand';
 import type {
   AnimatedRef,

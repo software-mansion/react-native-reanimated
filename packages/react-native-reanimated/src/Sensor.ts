@@ -1,5 +1,5 @@
 'use strict';
-import NativeReanimatedModule from './NativeReanimated';
+import { NativeReanimatedModule } from 'react-native-worklets';
 import type {
   SensorConfig,
   SharedValue,
@@ -8,7 +8,7 @@ import type {
   ShareableRef,
 } from './commonTypes';
 import { SensorType } from './commonTypes';
-import { makeMutable } from './mutables';
+import { makeMutable } from 'react-native-worklets';
 
 function initSensorData(
   sensorType: SensorType

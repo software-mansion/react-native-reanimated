@@ -6,7 +6,7 @@ import type {
   ReanimatedEvent,
   IWorkletEventHandler,
 } from './hook/commonTypes';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { shouldBeUseWeb } from 'react-native-worklets';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

@@ -15,7 +15,7 @@ import type {
   NativeScrollEvent,
 } from 'react-native';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
-import type { ReanimatedHTMLElement } from '../js-reanimated';
+import type { ReanimatedHTMLElement } from 'react-native-worklets';
 
 export type DependencyList = Array<unknown> | undefined;
 

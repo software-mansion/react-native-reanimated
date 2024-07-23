@@ -2,7 +2,7 @@
 import { isWorkletFunction } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
 import { setupCallGuard, setupConsole } from './initializers';
-import NativeReanimatedModule from './NativeReanimated';
+import { NativeReanimatedModule } from './NativeReanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
 import {
   makeShareableCloneOnUIRecursive,

@@ -10,7 +10,7 @@ import type {
   RNNativeScrollEvent,
   ReanimatedScrollEvent,
 } from './commonTypes';
-import { isWeb } from '../PlatformChecker';
+import { isWeb } from 'react-native-worklets';
 
 const IS_WEB = isWeb();
 

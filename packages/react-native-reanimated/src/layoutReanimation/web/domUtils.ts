@@ -1,7 +1,7 @@
 'use strict';
 
-import type { ReanimatedHTMLElement } from '../../js-reanimated';
-import { isWindowAvailable } from '../../PlatformChecker';
+import type { ReanimatedHTMLElement } from 'react-native-worklets';
+import { isWindowAvailable } from 'react-native-worklets';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Animations } from './config';
 import type { AnimationNames } from './config';

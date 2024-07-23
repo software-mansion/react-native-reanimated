@@ -33,7 +33,7 @@ import {
   subtractMatrices,
   getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
-import { shouldBeUseWeb } from '../PlatformChecker';
+import { shouldBeUseWeb } from 'react-native-worklets';
 import type { EasingFunctionFactory } from '../Easing';
 import { ReducedMotionManager } from '../ReducedMotion';
 

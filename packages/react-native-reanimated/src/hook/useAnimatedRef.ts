@@ -4,12 +4,15 @@ import { useRef } from 'react';
 import { useSharedValue } from './useSharedValue';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import type { ShadowNodeWrapper } from '../commonTypes';
-import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { makeShareableCloneRecursive } from '../shareables';
-import { shareableMappingCache } from '../shareableMappingCache';
+import {
+  makeShareableCloneRecursive,
+  isFabric,
+  isWeb,
+  getShadowNodeWrapperFromRef,
+  shareableMappingCache,
+} from 'react-native-worklets';
 import { Platform, findNodeHandle } from 'react-native';
 import type { ScrollView, FlatList } from 'react-native';
-import { isFabric, isWeb } from '../PlatformChecker';
 
 const IS_WEB = isWeb();
 

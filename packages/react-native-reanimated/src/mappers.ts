@@ -4,8 +4,7 @@ import type {
   MapperOutputs,
   SharedValue,
 } from './commonTypes';
-import { isJest } from './PlatformChecker';
-import { runOnUI } from './threads';
+import { isJest, runOnUI } from 'react-native-worklets';
 import { isSharedValue } from './isSharedValue';
 
 const IS_JEST = isJest();

@@ -1,5 +1,5 @@
 'use strict';
-import { isFabric } from '../PlatformChecker';
+import { isFabric } from 'react-native-worklets';
 import updateProps from '../UpdateProps';
 import type { ShadowNodeWrapper, SharedValue } from '../commonTypes';
 import type { Descriptor } from '../hook/commonTypes';

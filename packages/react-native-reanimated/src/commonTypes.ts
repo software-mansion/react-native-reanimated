@@ -6,6 +6,8 @@ import type {
   ImageStyle,
 } from 'react-native';
 
+import type { WorkletStackDetails } from 'react-native-worklets';
+
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
@@ -26,12 +28,6 @@ export interface SharedValue<Value = unknown> {
     modifier?: <T extends Value>(value: T) => T,
     forceUpdate?: boolean
   ) => void;
-}
-
-export interface Mutable<Value = unknown> extends SharedValue<Value> {
-  _isReanimatedSharedValue: true;
-  _animation?: AnimationObject<Value> | null; // only in Native
-  _value: Value;
 }
 
 // The below type is used for HostObjects returned by the JSI API that don't have
@@ -64,12 +60,6 @@ export type MapperRegistry = {
   ) => void;
   stop: (mapperID: number) => void;
 };
-
-export type WorkletStackDetails = [
-  error: Error,
-  lineOffset: number,
-  columnOffset: number
-];
 
 type WorkletClosure = Record<string, unknown>;
 

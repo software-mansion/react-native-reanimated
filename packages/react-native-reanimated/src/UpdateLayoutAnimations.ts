@@ -1,5 +1,5 @@
 'use strict';
-import { isFabric, shouldBeUseWeb } from './PlatformChecker';
+import { isFabric, shouldBeUseWeb } from 'react-native-worklets';
 import {
   configureLayoutAnimationBatch,
   makeShareableCloneRecursive,

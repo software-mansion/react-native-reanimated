@@ -1,5 +1,5 @@
 'use strict';
-import NativeReanimatedModule from './NativeReanimated';
+import { NativeReanimatedModule } from './NativeReanimated';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { WorkletFunction } from './commonTypes';
 import {

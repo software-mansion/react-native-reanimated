@@ -2,9 +2,9 @@
 import { useEffect, useRef } from 'react';
 import { initialUpdaterRun } from '../animation';
 import type { SharedValue, WorkletFunction } from '../commonTypes';
-import { makeMutable, startMapper, stopMapper } from '../core';
+import { startMapper, stopMapper } from '../core';
+import { makeMutable, shouldBeUseWeb } from 'react-native-worklets';
 import type { DependencyList } from './commonTypes';
-import { shouldBeUseWeb } from '../PlatformChecker';
 
 export type DerivedValue<Value> = Readonly<SharedValue<Value>>;
 

@@ -1,6 +1,6 @@
 'use strict';
-import type { ReanimatedHTMLElement } from '../js-reanimated';
-import { _updatePropsJS } from '../js-reanimated';
+import type { ReanimatedHTMLElement } from 'react-native-worklets';
+import { _updatePropsJS } from 'react-native-worklets';
 import type { StyleProps } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';

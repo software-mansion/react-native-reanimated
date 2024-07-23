@@ -21,7 +21,7 @@ import type {
 } from './commonTypes';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
-import { isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { isJest, shouldBeUseWeb } from 'react-native-worklets';
 import type {
   AnimationObject,
   Timestamp,

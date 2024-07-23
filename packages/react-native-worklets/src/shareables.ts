@@ -1,5 +1,5 @@
 'use strict';
-import NativeReanimatedModule from './NativeReanimated';
+import { NativeReanimatedModule } from './NativeReanimated';
 import { isWorkletFunction } from './commonTypes';
 import type {
   ShareableRef,

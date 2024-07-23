@@ -1,6 +1,5 @@
 'use strict';
-import { isWeb, isWindowAvailable } from './PlatformChecker';
-import { makeMutable } from './mutables';
+import { isWeb, isWindowAvailable, makeMutable } from 'react-native-worklets';
 
 type localGlobal = typeof global & Record<string, unknown>;
 

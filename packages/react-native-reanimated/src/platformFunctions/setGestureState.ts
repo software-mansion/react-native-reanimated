@@ -1,5 +1,9 @@
 'use strict';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import {
+  isChromeDebugger,
+  isJest,
+  shouldBeUseWeb,
+} from 'react-native-worklets';
 
 type SetGestureState = (handlerTag: number, newState: number) => void;
 

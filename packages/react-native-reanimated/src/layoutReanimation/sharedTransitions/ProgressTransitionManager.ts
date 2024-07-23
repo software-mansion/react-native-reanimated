@@ -1,12 +1,15 @@
 'use strict';
-import { runOnUIImmediately } from '../../threads';
 import type {
   ProgressAnimation,
   SharedTransitionAnimationsValues,
 } from '../animationBuilder/commonTypes';
 import { registerEventHandler, unregisterEventHandler } from '../../core';
 import { Platform } from 'react-native';
-import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
+import {
+  isJest,
+  shouldBeUseWeb,
+  runOnUIImmediately,
+} from 'react-native-worklets';
 
 type TransitionProgressEvent = {
   closing: number;
