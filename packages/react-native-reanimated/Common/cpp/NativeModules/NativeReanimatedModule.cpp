@@ -647,6 +647,10 @@ void NativeReanimatedModule::performOperations() {
 
   {
     auto lock = propsRegistry_->createLock();
+    
+    if (copiedOperationsQueue.size() > 0){
+      propsRegistry_->resetReanimatedSkipCommitFlag();
+    }
 
     // remove recently unmounted ShadowNodes from PropsRegistry
     if (!tagsToRemove_.empty()) {
