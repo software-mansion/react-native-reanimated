@@ -11,7 +11,8 @@ import { AnimatedView } from './View';
 import { createAnimatedComponent } from '../createAnimatedComponent';
 import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
 import { LayoutAnimationConfig } from './LayoutAnimationConfig';
-import type { AnimatedProps, AnimatedStyle } from '../helperTypes';
+import type { AnimatedStyle } from '../commonTypes';
+import type { AnimatedProps } from '../helperTypes';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList);
 

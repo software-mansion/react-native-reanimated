@@ -1,5 +1,4 @@
 'use strict';
-import type { EasingFunction } from '../../Easing';
 import { Easing } from '../../Easing';
 import { withDelay, withSequence, withTiming } from '../../animation';
 import type {
@@ -9,8 +8,11 @@ import type {
   KeyframeProps,
   StylePropsWithArrayTransform,
 } from './commonTypes';
-import type { StyleProps } from '../../commonTypes';
-import type { TransformArrayItem } from '../../helperTypes';
+import type {
+  StyleProps,
+  EasingFunction,
+  TransformArrayItem,
+} from '../../commonTypes';
 import { ReduceMotion } from '../../commonTypes';
 import {
   assertEasingIsWorklet,
