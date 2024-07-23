@@ -55,7 +55,6 @@ export class TestRunner {
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
   private _valueRegistry: Record<string, SharedValue> = {};
-  private _wasRenderedNull: boolean = false;
   private _includesOnly: boolean = false;
   private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
