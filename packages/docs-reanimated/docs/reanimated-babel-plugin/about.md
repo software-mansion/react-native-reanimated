@@ -94,7 +94,7 @@ const obj = {
 };
 ```
 
-**Worklet Context Objects** are special terms that preserve that binding. Don't mistake them for objects created with `useSharedValue`. All changes to Worklet Context Objects on the UI thread are visible only on the UI thread and vice-versa with the JS thread.
+**Worklet Context Objects** are special terms that preserve that binding. Don't mistake them for objects created with `useSharedValue`. All changes to Worklet Context Objects on the UI thread are visible only on the UI thread. The same applies to the JS thread.
 
 ```ts
 const obj = {
@@ -114,7 +114,7 @@ obj.bar(); // Logs 2
 runOnUI(() => obj.bar())(); // Logs 3
 ```
 
-`__workletContextObject` is a special property that marks an object as a Worklet Context Object. It's value doesn't matter, but it's a good practice to use `true` as a value. `worklet` directive in methods will be ignored if the object has this property.
+`__workletContextObject` is a special property that marks an object as a Worklet Context Object. It's value doesn't matter, but it's a good practice to use `true` as a value. `'worklet'` directive in methods will be ignored if the object has this property.
 
 ```ts
 const workletContextObject = {
@@ -130,7 +130,7 @@ const workletContextObject = {
 
 [Hermes](https://github.com/facebook/hermes), the JavaScript engine used by React Native, doesn't support classes. Class syntax requires [polyfilling](<https://en.wikipedia.org/wiki/Polyfill_(programming)>) before it can be used, which is problematic for the UI thread. To work around this, we coined the term of **Worklet Classes**. Worklet classes can be instantiated on the UI thread.
 
-`__workletClass` is a special property that marks a class as a Worklet Class. It's value doesn't matter, but it's a good practice to use `true` as a value. `worklet` directive in methods will be ignored if the class has this property.
+`__workletClass` is a special property that marks a class as a Worklet Class. It's value doesn't matter, but it's a good practice to use `true` as a value. `'worklet'` directive in methods will be ignored if the class has this property.
 
 ```ts
 class Clazz {
@@ -201,7 +201,7 @@ const handlerObject = {
 const handler = useAnimatedScrollHandler(handlerObject);
 ```
 
-### Workletizing whole files (experimental)
+### [Experimental] Workletizing whole files
 
 You can mark a file as a workletizable file by adding the `'worklet'` directive to the top of the file.
 
