@@ -45,7 +45,7 @@ function App() {
 
 <Indent>
 
-```javascript
+```jsx
 function App() {
   const [transition, setTransition] = useState(LinearTransition);
 
@@ -68,6 +68,26 @@ function App() {
       renderItem={renderItem}
       // highlight-next-line
       itemLayoutAnimation={transition}
+    />
+  );
+}
+```
+
+</Indent>
+
+- If the list items contain neither a `key` nor `id` property (see [FlatList](https://reactnative.dev/docs/flatlist#keyextractor)), you must provide your own implementation of the `keyExtractor` function that returns a unique key for each element.
+
+<Indent>
+
+```jsx
+function App() {
+  return (
+    <Animated.FlatList
+      data={data}
+      renderItem={renderItem}
+      itemLayoutAnimation={LinearTransition}
+      // highlight-next-line
+      keyExtractor={customKeyExtractor}
     />
   );
 }
