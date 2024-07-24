@@ -21,7 +21,7 @@ fi
 if [ $? -eq 1 ]; then
   yarn build:plugin
   ! git status -u |
-    grep -E "plugin/build/plugin.js" >/dev/null
+    grep -E 'plugin/build/plugin.js' >/dev/null
   if [ $? -eq 1 ]; then
     git add plugin/build/plugin.js
     echo "[Reanimated] Plugin files were automatically built and changes were spotted.\
