@@ -86,7 +86,7 @@ export type JSEvent<Event extends object> = NativeSyntheticEvent<
   EventPayload<Event>
 >;
 
-export type JSHandler<Event extends object> = (event: JSEvent<Event>) => void;
+export type ReactEventHandler<Event extends object> = (event: JSEvent<Event>) => void;
 
 type WorkletEventHandlerHolder = {
   workletEventHandler: InstanceType<typeof WorkletEventHandler>;
@@ -105,7 +105,7 @@ export interface IWorkletEventHandler<Event extends object> {
   updateEventHandler: (
     newWorklet: (event: ReanimatedEvent<Event>) => void,
     newEvents: string[],
-    newJSHandlers: Record<string, JSHandler<Event>>
+    newJSHandlers: Record<string, ReactEventHandler<Event>>
   ) => void;
   registerForEvents: (viewTag: number, fallbackEventName?: string) => void;
   unregisterFromEvents: (viewTag: number) => void;
@@ -141,5 +141,5 @@ export type UseEventInternal<Event extends object, Context> = {
   handler: (event: ReanimatedEvent<Event>, context?: Context) => void;
   eventNames: string[];
   rebuild: boolean;
-  JSHandlers: Record<string, JSHandler<Event>>;
+  JSHandlers: Record<string, ReactEventHandler<Event>>;
 };

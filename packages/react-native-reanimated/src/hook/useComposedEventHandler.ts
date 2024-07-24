@@ -4,7 +4,7 @@ import { useHandler } from './useHandler';
 import { WorkletEventHandler } from '../WorkletEventHandler';
 import type {
   JSEvent,
-  JSHandler,
+  ReactEventHandler,
   ReanimatedEvent,
   UseEventInternal,
 } from './commonTypes';
@@ -28,7 +28,7 @@ export function useComposedEventHandler<
 >(
   handlers: (
     | EventHandlerProcessed<Event, Context>
-    | JSHandlersObject<Event>
+    | ReactHandlersObject<Event>
     | null
   )[]
 ): ComposedHandlerProcessed<Event, Context>;
@@ -39,7 +39,7 @@ export function useComposedEventHandler<
 >(
   handlers: (
     | EventHandlerProcessed<Event, Context>
-    | JSHandlersObject<Event>
+    | ReactHandlersObject<Event>
     | null
   )[]
 ) {
@@ -80,82 +80,86 @@ export function useComposedEventHandler<
   const { doDependenciesDiffer } = useHandler(workletsRecord);
 
   // Record of provided JS handlers, used for passing it further down to WorkletEventHandler
-  const JSHandlersRecord: Partial<
-    Record<JSScrollEventsOutput, JSHandler<Event>>
+  const ReactHandlersRecord: Partial<
+    Record<ReactScrollEventsOutput, ReactEventHandler<Event>>
   > = {};
   // Helper map used for merging same-event JS handlers into JSHandlersRecord object
-  const JSHandlersMap: Partial<
-    Record<JSScrollEventsInput, JSHandler<Event>[]>
+  const ReactHandlersMap: Partial<
+    Record<ReactScrollEventsInput, ReactEventHandler<Event>[]>
   > = {};
   // Ref to compare changes in JSHandlers
-  const JSHandlersRef = useRef<JSHandlersObject<Event>[] | null>(null);
+  const ReactHandlersRef = useRef<ReactHandlersObject<Event>[] | null>(null);
   // Flag that lets JS handlers get rebuilt too
   let JSHandlersNeedRebuild = false;
 
-  const JSHandlers: JSHandlersObject<Event>[] = handlers
+  const ReactHandlers: ReactHandlersObject<Event>[] = handlers
     .filter((handler) => handler !== null)
-    .filter((handler) => isJSHandler(handler)) as JSHandlersObject<Event>[];
+    .filter((handler) =>
+      isReactHandler(handler)
+    ) as ReactHandlersObject<Event>[];
 
   // Update/initialize the ref and determine whether JS handlers need rebuild or not
-  if (JSHandlersRef.current === null) {
-    JSHandlersRef.current = JSHandlers;
+  if (ReactHandlersRef.current === null) {
+    ReactHandlersRef.current = ReactHandlers;
   } else {
-    JSHandlersNeedRebuild = !areJSHandlersEqual(
-      JSHandlersRef.current,
-      JSHandlers
+    JSHandlersNeedRebuild = !areReactHandlersEqual(
+      ReactHandlersRef.current,
+      ReactHandlers
     );
-    JSHandlersRef.current = JSHandlers;
+    ReactHandlersRef.current = ReactHandlers;
   }
 
   // Setup the JSHandlersRecord object
-  if (JSHandlers.length > 0) {
+  if (ReactHandlers.length > 0) {
     // Store callbacks for each JS event in a record
-    JSHandlers.forEach((handler) => {
+    ReactHandlers.forEach((handler) => {
       if (handler.onScroll) {
-        if (JSHandlersMap.onScroll) {
-          JSHandlersMap.onScroll.push(handler.onScroll);
+        if (ReactHandlersMap.onScroll) {
+          ReactHandlersMap.onScroll.push(handler.onScroll);
         } else {
-          JSHandlersMap.onScroll = [handler.onScroll];
+          ReactHandlersMap.onScroll = [handler.onScroll];
         }
       }
       if (handler.onBeginDrag) {
-        if (JSHandlersMap.onBeginDrag) {
-          JSHandlersMap.onBeginDrag.push(handler.onBeginDrag);
+        if (ReactHandlersMap.onBeginDrag) {
+          ReactHandlersMap.onBeginDrag.push(handler.onBeginDrag);
         } else {
-          JSHandlersMap.onBeginDrag = [handler.onBeginDrag];
+          ReactHandlersMap.onBeginDrag = [handler.onBeginDrag];
         }
       }
       if (handler.onEndDrag) {
-        if (JSHandlersMap.onEndDrag) {
-          JSHandlersMap.onEndDrag.push(handler.onEndDrag);
+        if (ReactHandlersMap.onEndDrag) {
+          ReactHandlersMap.onEndDrag.push(handler.onEndDrag);
         } else {
-          JSHandlersMap.onEndDrag = [handler.onEndDrag];
+          ReactHandlersMap.onEndDrag = [handler.onEndDrag];
         }
       }
       if (handler.onMomentumBegin) {
-        if (JSHandlersMap.onMomentumBegin) {
-          JSHandlersMap.onMomentumBegin.push(handler.onMomentumBegin);
+        if (ReactHandlersMap.onMomentumBegin) {
+          ReactHandlersMap.onMomentumBegin.push(handler.onMomentumBegin);
         } else {
-          JSHandlersMap.onMomentumBegin = [handler.onMomentumBegin];
+          ReactHandlersMap.onMomentumBegin = [handler.onMomentumBegin];
         }
       }
       if (handler.onMomentumEnd) {
-        if (JSHandlersMap.onMomentumEnd) {
-          JSHandlersMap.onMomentumEnd.push(handler.onMomentumEnd);
+        if (ReactHandlersMap.onMomentumEnd) {
+          ReactHandlersMap.onMomentumEnd.push(handler.onMomentumEnd);
         } else {
-          JSHandlersMap.onMomentumEnd = [handler.onMomentumEnd];
+          ReactHandlersMap.onMomentumEnd = [handler.onMomentumEnd];
         }
       }
     });
 
     // Merge callbacks for given event and put them in the record object
-    Object.keys(JSHandlersMap).forEach((eventInput) => {
+    Object.keys(ReactHandlersMap).forEach((eventInput) => {
       const eventOutput =
-        JSScrollEventsPropMap[eventInput as unknown as JSScrollEventsInput];
+        ReactScrollEventsPropMap[
+          eventInput as unknown as ReactScrollEventsInput
+        ];
       const callbacks =
-        JSHandlersMap[eventInput as unknown as JSScrollEventsInput];
+        ReactHandlersMap[eventInput as unknown as ReactScrollEventsInput];
 
-      JSHandlersRecord[eventOutput] = (event: JSEvent<Event>) => {
+      ReactHandlersRecord[eventOutput] = (event: JSEvent<Event>) => {
         callbacks?.forEach((callback) => {
           callback(event);
         });
@@ -173,7 +177,7 @@ export function useComposedEventHandler<
     },
     Array.from(composedEventNames),
     doDependenciesDiffer || JSHandlersNeedRebuild,
-    JSHandlersRecord
+    ReactHandlersRecord
   ) as unknown as ComposedHandlerInternal<Event>;
 }
 
@@ -185,42 +189,46 @@ type ComposedHandlerProcessed<
 type ComposedHandlerInternal<Event extends object> =
   EventHandlerInternal<Event>;
 
-type JSScrollEventsInput =
+type ReactScrollEventsInput =
   | 'onScroll'
   | 'onBeginDrag'
   | 'onEndDrag'
   | 'onMomentumBegin'
   | 'onMomentumEnd';
 
-type JSScrollEventsOutput =
+type ReactScrollEventsOutput =
   | 'onScroll'
   | 'onScrollBeginDrag'
   | 'onScrollEndDrag'
   | 'onMomentumScrollBegin'
   | 'onMomentumScrollEnd';
 
-const JSScrollEventsPropMap: Record<JSScrollEventsInput, JSScrollEventsOutput> =
-  {
-    onScroll: 'onScroll',
-    onBeginDrag: 'onScrollBeginDrag',
-    onEndDrag: 'onScrollEndDrag',
-    onMomentumBegin: 'onMomentumScrollBegin',
-    onMomentumEnd: 'onMomentumScrollEnd',
-  };
+const ReactScrollEventsPropMap: Record<
+  ReactScrollEventsInput,
+  ReactScrollEventsOutput
+> = {
+  onScroll: 'onScroll',
+  onBeginDrag: 'onScrollBeginDrag',
+  onEndDrag: 'onScrollEndDrag',
+  onMomentumBegin: 'onMomentumScrollBegin',
+  onMomentumEnd: 'onMomentumScrollEnd',
+};
 
-type JSHandlersObject<Event extends object> = Partial<
-  Record<JSScrollEventsInput, JSHandler<Event>>
+type ReactHandlersObject<Event extends object> = Partial<
+  Record<ReactScrollEventsInput, ReactEventHandler<Event>>
 >;
 
-function isJSHandler(handler: unknown): handler is JSHandlersObject<Event> {
-  return Object.keys(JSScrollEventsPropMap).reduce((acc, val) => {
+function isReactHandler(
+  handler: unknown
+): handler is ReactHandlersObject<Event> {
+  return Object.keys(ReactScrollEventsPropMap).reduce((acc, val) => {
     return acc || has(val, handler);
   }, false);
 }
 
-function areJSHandlersEqual<Event extends object>(
-  oldHandlers: JSHandlersObject<Event>[],
-  newHandlers: JSHandlersObject<Event>[]
+function areReactHandlersEqual<Event extends object>(
+  oldHandlers: ReactHandlersObject<Event>[],
+  newHandlers: ReactHandlersObject<Event>[]
 ) {
   if (oldHandlers.length !== newHandlers.length) {
     return false;
@@ -239,7 +247,7 @@ function areJSHandlersEqual<Event extends object>(
     }
 
     for (const key of oldKeys) {
-      const castedKey = key as unknown as JSScrollEventsInput;
+      const castedKey = key as unknown as ReactScrollEventsInput;
       if (oldHandlers[i][castedKey] !== newHandlers[i][castedKey]) {
         handlersEqual = false;
         break;

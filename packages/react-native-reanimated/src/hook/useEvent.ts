@@ -3,7 +3,7 @@ import { useRef } from 'react';
 import { WorkletEventHandler } from '../WorkletEventHandler';
 import type {
   IWorkletEventHandler,
-  JSHandler,
+  ReactEventHandler,
   ReanimatedEvent,
 } from './commonTypes';
 
@@ -51,19 +51,19 @@ export function useEvent<Event extends object, Context = never>(
   handler: (event: ReanimatedEvent<Event>, context?: Context) => void,
   eventNames: string[] = [],
   rebuild = false,
-  JSHandlers: Record<string, JSHandler<Event>> = {}
+  reactHandlers: Record<string, ReactEventHandler<Event>> = {}
 ): EventHandlerInternal<Event> {
   const initRef = useRef<EventHandlerInternal<Event>>(null!);
   if (initRef.current === null) {
     const workletEventHandler = new WorkletEventHandler<Event>(
       handler,
       eventNames,
-      JSHandlers
+      reactHandlers
     );
     initRef.current = { workletEventHandler };
   } else if (rebuild) {
     const workletEventHandler = initRef.current.workletEventHandler;
-    workletEventHandler.updateEventHandler(handler, eventNames, JSHandlers);
+    workletEventHandler.updateEventHandler(handler, eventNames, reactHandlers);
     initRef.current = { workletEventHandler };
   }
 

@@ -3,7 +3,6 @@
 import type { StyleProps } from '../commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { isChromeDebugger } from '../PlatformChecker';
-import { WorkletEventHandler } from '../WorkletEventHandler';
 import { initialUpdaterRun } from '../animation';
 import { hasInlineStyles, getInlineStyle } from './InlinePropManager';
 import type {
@@ -67,17 +66,17 @@ export class PropsFilter implements IPropsFilter {
       } else if (isWorkletEventHandler(value)) {
         const handler = value.workletEventHandler;
         const isWebHandler = has('listeners', handler);
-        const hasJSHandlers = Object.keys(handler.JSHandlers).length > 0;
+        const hasReactHandlers = Object.keys(handler.reactHandlers).length > 0;
 
-        if (hasJSHandlers && isWebHandler) {
+        if (hasReactHandlers && isWebHandler) {
           // on web, our and JS handlers are merged in listeners object
           Object.keys(handler.listeners).forEach((eventName) => {
             props[eventName] = handler.listeners[eventName];
           });
-        } else if (hasJSHandlers && !isWebHandler) {
+        } else if (hasReactHandlers && !isWebHandler) {
           // on mobile platforms, we just set the JS handlers to the props
-          Object.keys(handler.JSHandlers).forEach((eventName) => {
-            props[eventName] = handler.JSHandlers[eventName];
+          Object.keys(handler.reactHandlers).forEach((eventName) => {
+            props[eventName] = handler.reactHandlers[eventName];
           });
         } else {
           if (handler.eventNames.length > 0) {
