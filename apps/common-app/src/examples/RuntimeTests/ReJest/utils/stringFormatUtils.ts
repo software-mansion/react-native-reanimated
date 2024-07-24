@@ -1,90 +1,53 @@
-import type { Mismatch, NullableTestValue } from '../types';
+import { isColor, processColor } from 'react-native-reanimated';
+import type { NullableTestValue } from '../types';
+
+const RESET_BACKGROUND = '\x1b[49m';
+const TEST_COLOR = '\x1b[38;5;242m';
+
+const COLOR_CODES = {
+  cyan: '\x1b[36m',
+  gray: TEST_COLOR,
+  lightGray: '\x1b[37m',
+  green: '\x1b[92m',
+  yellow: '\x1b[93m',
+  red: '\x1b[91m',
+  orange: '\x1b[38;5;208m',
+  reset: '\x1b[0m',
+};
+
+const ANSI_CODES = {
+  bold: '\x1b[1m',
+  resetBold: '\x1b[22m',
+  italic: '\x1b[3m',
+  resetItalic: '\x1b[23m',
+  reverse: '\x1b[7m',
+  resetReverse: '\x1b[27m',
+  underline: '\x1b[4m',
+  resetUnderline: '\x1b[24m',
+};
+
+type SupportedColors = keyof typeof COLOR_CODES;
 
 export function indentNestingLevel(nestingLevel: number) {
-  return `  ${'   '.repeat(nestingLevel)}`;
+  const HALF_INDENT = ' '.repeat(2);
+  const INDENT = ' '.repeat(4);
+  return `${HALF_INDENT}${INDENT.repeat(nestingLevel)}`;
 }
 
-function valueToPrettyString(message: NullableTestValue): string {
-  if (message === undefined) {
-    return 'undefined';
-  } else if (message === null) {
-    return 'null';
-  } else if (typeof message === 'object') {
-    return JSON.stringify(message);
-  } else if (typeof message === 'number') {
-    const digitsAfterDot = message.toString().split('.')?.[1]?.length || 0;
-
-    for (let i = 0; i < digitsAfterDot; i++) {
-      if (Math.abs(message - Number(message.toFixed(i))) < 0.00001) {
-        return '≈' + message.toFixed(i);
-      }
-    }
-    return String(message);
-  } else {
-    return message?.toString();
-  }
-}
-
-function adjustValueToLength(value: NullableTestValue, length: number) {
-  const valueStr = valueToPrettyString(value);
-
-  const messageLen = valueStr.length;
-  if (length > messageLen) {
-    const indentSize = length - messageLen;
-    return `${valueStr}${' '.repeat(indentSize)}`;
-  } else {
-    return valueStr.slice(0, length);
-  }
-}
-
-export function color(
-  value: NullableTestValue,
-  color: 'cyan' | 'gray' | 'green' | 'yellow' | 'red' | 'lightGray' | 'orange',
-) {
-  const COLOR_CODES = {
-    cyan: '\x1b[36m',
-    gray: '\x1b[38;5;242m',
-    lightGray: '\x1b[37m',
-    green: '\x1b[92m',
-    yellow: '\x1b[93m',
-    red: '\x1b[91m',
-    orange: '\x1b[38;5;208m',
-    reset: '\x1b[0m',
-  };
+export function color(value: NullableTestValue, color: SupportedColors) {
   const stringValue = typeof value === 'object' ? JSON.stringify(value) : value?.toString();
   return `${COLOR_CODES[color]}${stringValue}${COLOR_CODES.reset}`;
 }
+export const cyan = (x: NullableTestValue) => color(x, 'cyan');
+export const gray = (x: NullableTestValue) => color(x, 'gray');
+export const green = (x: NullableTestValue) => color(x, 'green');
+export const yellow = (x: NullableTestValue) => color(x, 'yellow');
+export const red = (x: NullableTestValue) => color(x, 'red');
+export const orange = (x: NullableTestValue) => color(x, 'orange');
 
-export function cyan(x: NullableTestValue) {
-  return color(x, 'cyan');
-}
-export function gray(x: NullableTestValue) {
-  return color(x, 'gray');
-}
-export function green(x: NullableTestValue) {
-  return color(x, 'green');
-}
-export function yellow(x: NullableTestValue) {
-  return color(x, 'yellow');
-}
-export function red(x: NullableTestValue) {
-  return color(x, 'red');
-}
-export function orange(x: NullableTestValue) {
-  return color(x, 'orange');
-}
+export const EMPTY_LOG_PLACEHOLDER = color(applyMarkdown('***   ***'), 'lightGray');
 
 export function applyMarkdown(template: string) {
-  const ANSI_CODES = {
-    bold: '\x1b[1m',
-    resetBold: '\x1b[22m',
-    italic: '\x1b[3m',
-    resetItalic: '\x1b[23m',
-    reverse: '\x1b[7m',
-    resetReverse: '\x1b[27m',
-    underline: '\x1b[4m',
-    resetUnderline: '\x1b[24m',
-  };
   template = template.replace(/\*{3}(.+?)\*{3}(?!\*)/g, `${ANSI_CODES.reverse} $1 ${ANSI_CODES.resetReverse}`);
   template = template.replace(/\*{2}(.+?)\*{2}(?!\*)/g, `${ANSI_CODES.bold}$1${ANSI_CODES.resetBold}`);
   template = template.replace(/\*{1}(.+?)\*{1}(?!\*)/g, `${ANSI_CODES.italic}$1${ANSI_CODES.resetItalic}`);
@@ -93,7 +56,36 @@ export function applyMarkdown(template: string) {
   return template;
 }
 
-export function formatString(template: string, variableObject: unknown, index: number) {
+function rgbToAnsi256(red: number, green: number, blue: number) {
+  if (red === green && green === blue) {
+    if (red < 8) {
+      return 16; // BLACK
+    }
+    if (red > 248) {
+      return 231; // WHITE
+    }
+    return Math.round(((red - 8) / 247) * 24) + 232;
+  }
+
+  const [scaledRed, scaledGreen, scaledBlue] = [red, green, blue].map(col => Math.round((col / 255) * 5));
+  return 16 + 36 * scaledRed + 6 * scaledGreen + scaledBlue;
+}
+
+export function getColorSquare(color: unknown) {
+  if (!isColor(color)) {
+    return '??';
+  }
+  const colorNumber = processColor(color) as number;
+  /* eslint-disable no-bitwise */
+  const red = (colorNumber >> 16) & 255;
+  const green = (colorNumber >> 8) & 255;
+  const blue = colorNumber & 255;
+  /* eslint-enable no-bitwise */
+  const colorAnsi = `\x1b[48;5;${rgbToAnsi256(red, green, blue)}m`;
+  return colorAnsi + '  ' + RESET_BACKGROUND;
+}
+
+export function formatTestName(template: string, variableObject: unknown, index: number) {
   const valueToString: (arg0: unknown) => string = (value: unknown) => {
     if (value instanceof Error) {
       return `**${value.name}** "${value.message}"`;
@@ -103,6 +95,10 @@ export function formatString(template: string, variableObject: unknown, index: n
     }
     if (typeof value === 'function') {
       return value.name;
+    }
+
+    if (isColor(value)) {
+      return value?.toString() + ' ' + getColorSquare(value);
     }
 
     return value?.toString() || '';
@@ -117,14 +113,14 @@ export function formatString(template: string, variableObject: unknown, index: n
   if (Array.isArray(variableObject)) {
     variableObject.forEach((value, index) => {
       // python-like syntax ${1} {2}
-      testName = testName.replace('${' + index + '}', valueToString(value));
+      testName = testName.replaceAll('${' + index + '}', valueToString(value));
     });
   }
   if (typeof variableObject === 'object') {
     const keys = Object.keys(variableObject);
     keys.forEach(k => {
       // Typical object literal syntax
-      testName = testName.replace('${' + k + '}', valueToString(variableObject[k as keyof typeof variableObject]));
+      testName = testName.replaceAll('${' + k + '}', valueToString(variableObject[k as keyof typeof variableObject]));
     });
   }
 
@@ -133,110 +129,3 @@ export function formatString(template: string, variableObject: unknown, index: n
 
   return testName;
 }
-
-const VALUE_COLUMN_WIDTH = 15;
-const INDEX_COLUMN_WIDTH = 7;
-
-const VERTICAL_LINE = '│';
-const VERTICAL_LINE_DOUBLE = '┃';
-const HORIZONTAL_LINE = '━';
-
-function getBorderLine(keys: Array<string>, type: 'top' | 'bottom' | 'mid') {
-  const leftEdge = { top: '╭', mid: '├', bottom: '╰' };
-  const rightEdge = { top: '╮', mid: '┤', bottom: '╯' };
-  const boldLineJoint = { top: '┳', mid: '╋', bottom: '┻' };
-  const singleLineJoint = { top: '┯', mid: '┷', bottom: HORIZONTAL_LINE };
-
-  return (
-    leftEdge[type] +
-    HORIZONTAL_LINE.repeat(INDEX_COLUMN_WIDTH) +
-    boldLineJoint[type] +
-    keys
-      .map(
-        _key =>
-          HORIZONTAL_LINE.repeat(VALUE_COLUMN_WIDTH) +
-          singleLineJoint[type] +
-          HORIZONTAL_LINE.repeat(VALUE_COLUMN_WIDTH),
-      )
-      .join(boldLineJoint[type]) +
-    rightEdge[type]
-  );
-}
-
-function getUpperTableHeader(keys: Array<string>) {
-  return (
-    ' '.repeat(INDEX_COLUMN_WIDTH) +
-    VERTICAL_LINE_DOUBLE +
-    keys
-      .map(
-        key =>
-          adjustValueToLength(key, VALUE_COLUMN_WIDTH) + VERTICAL_LINE + adjustValueToLength(key, VALUE_COLUMN_WIDTH),
-      )
-      .join(VERTICAL_LINE_DOUBLE)
-  );
-}
-
-function getLowerTableHeader(keys: Array<string>, native: boolean) {
-  const columnPair =
-    adjustValueToLength(native ? 'native' : 'expected', VALUE_COLUMN_WIDTH) +
-    VERTICAL_LINE +
-    adjustValueToLength(native ? 'js' : 'captured', VALUE_COLUMN_WIDTH);
-
-  return (
-    adjustValueToLength('index', INDEX_COLUMN_WIDTH) +
-    VERTICAL_LINE_DOUBLE +
-    keys.map(_ => columnPair).join(VERTICAL_LINE_DOUBLE)
-  );
-}
-
-function withSideBorders(line: string) {
-  return VERTICAL_LINE + line + VERTICAL_LINE;
-}
-
-function getComparisonRow(mismatch: Mismatch, keys: Array<string>) {
-  const { index, capturedSnapshot, expectedSnapshot } = mismatch;
-  const indexColumn = adjustValueToLength(index.toString(), INDEX_COLUMN_WIDTH);
-  const formattedCells = keys.map(key => {
-    const expectedValue = expectedSnapshot[key as keyof typeof expectedSnapshot];
-    const capturedValue = capturedSnapshot[key as keyof typeof capturedSnapshot];
-
-    const match = expectedValue === capturedValue;
-
-    const expectedAdjusted = adjustValueToLength(expectedValue, VALUE_COLUMN_WIDTH);
-    const capturedAdjusted = adjustValueToLength(capturedValue, VALUE_COLUMN_WIDTH);
-
-    const expectedColored = match ? expectedAdjusted : green(expectedAdjusted);
-    const capturedColored = match ? capturedAdjusted : red(capturedAdjusted);
-
-    return expectedColored + color(VERTICAL_LINE, 'gray') + capturedColored;
-  });
-
-  return indexColumn + VERTICAL_LINE_DOUBLE + formattedCells.join(VERTICAL_LINE_DOUBLE);
-}
-
-export function formatSnapshotMismatch(mismatches: Array<Mismatch>, native: boolean) {
-  const keysToPrint: Array<string> = [];
-  mismatches.forEach(({ expectedSnapshot, capturedSnapshot }) => {
-    Object.keys(expectedSnapshot).forEach(key => {
-      if (!keysToPrint.includes(key)) {
-        keysToPrint.push(key);
-      }
-    });
-    Object.keys(capturedSnapshot).forEach(key => {
-      if (!keysToPrint.includes(key)) {
-        keysToPrint.push(key);
-      }
-    });
-  });
-
-  const topLine = getBorderLine(keysToPrint, 'top');
-  const upperHeader = withSideBorders(getUpperTableHeader(keysToPrint));
-  const lowerHeader = withSideBorders(getLowerTableHeader(keysToPrint, native));
-  const separatorLine = getBorderLine(keysToPrint, 'mid');
-  const mismatchRows = mismatches.map(mismatch => withSideBorders(getComparisonRow(mismatch, keysToPrint)));
-  const bottomLine = getBorderLine(keysToPrint, 'bottom');
-
-  return [topLine, upperHeader, lowerHeader, separatorLine, ...mismatchRows, bottomLine].join('\n');
-}
-
-export const EMPTY_LOG_PLACEHOLDER = color(applyMarkdown('***   ***'), 'lightGray');

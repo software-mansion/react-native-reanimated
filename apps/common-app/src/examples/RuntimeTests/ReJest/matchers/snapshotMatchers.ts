@@ -1,7 +1,8 @@
-import { formatSnapshotMismatch, green, red, yellow } from '../utils/stringFormatUtils';
+import { green, red, yellow } from '../utils/stringFormatUtils';
 import type { OperationUpdate, Mismatch } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
 import { getComparator, getComparisonModeForProp } from './Comparators';
+import { formatSnapshotMismatch } from '../utils/drawSnapshotTable';
 
 export type SingleViewSnapshot = Array<OperationUpdate>;
 export type MultiViewSnapshot = Record<number, SingleViewSnapshot>;
