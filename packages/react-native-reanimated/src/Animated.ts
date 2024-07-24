@@ -1,17 +1,19 @@
 'use strict';
 import type { Extrapolate as _Extrapolate } from './interpolateColor';
-import type { SharedValue as _SharedValue } from './commonTypes';
+import type {
+  SharedValue as _SharedValue,
+  AnimatedTransform as _AnimatedTransform,
+  AnimateStyle as _AnimateStyle,
+  StylesOrDefault as _StylesOrDefault,
+  EasingFunction as _EasingFunction,
+} from './commonTypes';
 import type { DerivedValue as _DerivedValue } from './hook/useDerivedValue';
 import type {
   TransformStyleTypes as _TransformStyleTypes,
   Adaptable as _Adaptable,
   AdaptTransforms as _AdaptTransforms,
-  AnimatedTransform as _AnimatedTransform,
-  AnimateStyle as _AnimateStyle,
-  StylesOrDefault as _StylesOrDefault,
   AnimateProps as _AnimateProps,
 } from './helperTypes';
-import type { EasingFunction as _EasingFunction } from './Easing';
 
 import type { AnimatedScrollViewProps as _AnimatedScrollViewProps } from './component/ScrollView';
 import type { FlatListPropsWithLayout as _FlatListPropsWithLayout } from './component/FlatList';
