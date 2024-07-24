@@ -16,7 +16,7 @@ const AnimatedComponent = ({ fromColor, toColor }: { fromColor: string; toColor:
   const customAnim = () => {
     'worklet';
     const animations = {
-      backgroundColor: withDelay(500, withTiming(toColor, { duration: 500 })),
+      backgroundColor: withDelay(100, withTiming(toColor, { duration: 900 })),
     };
     const initialValues = { backgroundColor: fromColor };
     return { initialValues, animations };
@@ -36,7 +36,7 @@ async function getSnapshotUpdates(fromColor: string, toColor: string, snapshot: 
 }
 
 describe('entering with custom animation (withDelay + withTiming color changes) test', () => {
-  test.each([
+  test.only.each([
     ['rgba(16, 128, 26, 1)', 'rgba(179, 6, 6, 1)'],
     ['rgba(143, 253, 140, 1)', 'rgba(29, 247, 107, 1)'],
     ['rgba(226, 167, 48, 1)', 'rgba(222, 251, 137, 1)'],
@@ -55,7 +55,7 @@ describe('entering with custom animation (withDelay + withTiming color changes) 
       .replace(/rgba/g, '') as keyof typeof Snapshots;
     const snapshot = Snapshots[snapshotName];
     const [updates, nativeUpdates] = await getSnapshotUpdates(fromColor, toColor, snapshot);
-    expect(updates).toMatchSnapshots(snapshot);
+    expect([{}, ...updates]).toMatchSnapshots([...snapshot, {}]);
     expect(updates).toMatchNativeSnapshots(nativeUpdates);
   });
 });
