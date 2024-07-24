@@ -113,14 +113,14 @@ export function formatTestName(template: string, variableObject: unknown, index:
   if (Array.isArray(variableObject)) {
     variableObject.forEach((value, index) => {
       // python-like syntax ${1} {2}
-      testName = testName.replaceAll('${' + index + '}', valueToString(value));
+      testName = testName.replace('${' + index + '}', valueToString(value));
     });
   }
   if (typeof variableObject === 'object') {
     const keys = Object.keys(variableObject);
     keys.forEach(k => {
       // Typical object literal syntax
-      testName = testName.replaceAll('${' + k + '}', valueToString(variableObject[k as keyof typeof variableObject]));
+      testName = testName.replace('${' + k + '}', valueToString(variableObject[k as keyof typeof variableObject]));
     });
   }
 
