@@ -16,7 +16,7 @@ export interface StyleProps extends ViewStyle, TextStyle {
 export interface SharedValue<Value = unknown> {
   value: Value;
   get(): Value;
-  set(value: Value): void;
+  set(value: Value | ((value: Value) => Value)): void;
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
   modify: (

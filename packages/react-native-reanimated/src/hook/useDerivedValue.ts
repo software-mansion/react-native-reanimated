@@ -53,7 +53,9 @@ export function useDerivedValue<Value>(
       'worklet';
       sharedValue.value = updater();
     };
-    const mapperId = startMapper(fun, inputs, [sharedValue]);
+    const mapperId = startMapper(fun, inputs, [
+      sharedValue as SharedValue<unknown>,
+    ]);
     return () => {
       stopMapper(mapperId);
     };
