@@ -69,7 +69,8 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/software-mansion/react-native-reanimated.git"
+    "url": "git+https://github.com/software-mansion/react-native-reanimated.git",
+    "directory": "packages/react-native-reanimated"
   },
   "author": {
     "email": "krzys.magiera@gmail.com",
@@ -80,13 +81,16 @@
   "bugs": {
     "url": "https://github.com/software-mansion/react-native-reanimated/issues"
   },
-  "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
+  "homepage": "https://docs.swmansion.com/react-native-reanimated",
   "dependencies": {
     "@babel/plugin-transform-arrow-functions": "^7.0.0-0",
+    "@babel/plugin-transform-class-properties": "^7.0.0-0",
+    "@babel/plugin-transform-classes": "^7.0.0-0",
     "@babel/plugin-transform-nullish-coalescing-operator": "^7.0.0-0",
     "@babel/plugin-transform-optional-chaining": "^7.0.0-0",
     "@babel/plugin-transform-shorthand-properties": "^7.0.0-0",
     "@babel/plugin-transform-template-literals": "^7.0.0-0",
+    "@babel/plugin-transform-unicode-regex": "^7.0.0-0",
     "@babel/preset-typescript": "^7.16.7",
     "convert-source-map": "^2.0.0",
     "invariant": "^2.2.4"

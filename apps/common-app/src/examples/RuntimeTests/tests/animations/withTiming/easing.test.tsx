@@ -11,9 +11,9 @@ import {
   render,
   wait,
   unmockAnimationTimer,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 import { EasingSnapshots } from './withTiming.snapshot';
-import { ErrorBoundary } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsRunner';
+import { ErrorBoundary } from '../../../ReJest/RuntimeTestsRunner';
 
 const ActiveAnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFunctionFactory | undefined }) => {
   const widthSV = useSharedValue(0);
@@ -115,7 +115,6 @@ describe('withTiming snapshots 📸, test EASING', () => {
 
   test('No easing function', async () => {
     const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(undefined);
-
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots.noEasing);
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots.noEasing);
 
@@ -123,24 +122,21 @@ describe('withTiming snapshots 📸, test EASING', () => {
   });
 
   test.each([
-    [Easing.back, [0]],
-    [Easing.back, [4.75]],
-    [Easing.bezier, [0.25, 0.1, 0.25, 1]],
-    [Easing.bezier, [0.93, 2, 0.08, -0.96]],
-    [Easing.elastic, [0]],
-    [Easing.elastic, [10]],
-    [Easing.poly, [1.5]],
-    [Easing.poly, [10]],
-    [Easing.poly, [5.5]],
-    [Easing.poly, [4]],
-    [Easing.steps, [7, true]],
-    [Easing.steps, [1.5, true]],
-    [Easing.steps, [1.5, false]],
-  ])('Easing.${0}(${1})', async ([easing, argumentSet]) => {
-    const snapshotName = `${(easing as () => void).name}_${(argumentSet as Array<number | boolean>)
-      .join('_')
-      .replace(/\./g, '$')
-      .replace(/-/g, '$')}`;
+    ['back', Easing.back, [0]],
+    ['back', Easing.back, [4.75]],
+    ['bezier', Easing.bezier, [0.25, 0.1, 0.25, 1]],
+    ['bezier', Easing.bezier, [0.93, 2, 0.08, -0.96]],
+    ['elastic', Easing.elastic, [0]],
+    ['elastic', Easing.elastic, [10]],
+    ['poly', Easing.poly, [1.5]],
+    ['poly', Easing.poly, [10]],
+    ['poly', Easing.poly, [5.5]],
+    ['poly', Easing.poly, [4]],
+    ['steps', Easing.steps, [7, true]],
+    ['steps', Easing.steps, [1.5, true]],
+    ['steps', Easing.steps, [1.5, false]],
+  ] as const)('Easing.${0}(${2})', async ([easingName, easing, argumentSet]) => {
+    const snapshotName = `${easingName}_${argumentSet.join('_').replace(/\./g, '$').replace(/-/g, '$')}`;
 
     const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(
       // @ts-ignore This error is because various easing functions accept different number of arguments
@@ -155,15 +151,20 @@ describe('withTiming snapshots 📸, test EASING', () => {
     }
   });
 
-  test.each([Easing.bounce, Easing.circle, Easing.cubic, Easing.ease, Easing.linear, Easing.quad, Easing.sin])(
-    'Easing.%p',
-    async easing => {
-      const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing);
-      expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
-      expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
-      expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
-    },
-  );
+  test.each([
+    ['bounce', Easing.bounce],
+    ['circle', Easing.circle],
+    ['cubic', Easing.cubic],
+    ['ease', Easing.ease],
+    ['linear', Easing.linear],
+    ['quad', Easing.quad],
+    ['sin', Easing.sin],
+  ] as const)('Easing.%p', async ([easingName, easing]) => {
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing);
+    expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
+    expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
+    expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
+  });
   test('Easing.exp', async () => {
     const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(Easing.exp);
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots.exp);
@@ -172,10 +173,14 @@ describe('withTiming snapshots 📸, test EASING', () => {
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
   });
 
-  test.each([(Easing.in, Easing.out, Easing.inOut)])('Easing.%p(Easing.elastic(10))', async easing => {
+  test.each([
+    ['in', Easing.in],
+    ['out', Easing.out],
+    ['inOut', Easing.inOut],
+  ] as const)('Easing.${0}(Easing.elastic(10))', async ([easingName, easing]) => {
     const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing(Easing.elastic(10)));
-    expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
-    expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easing.name as keyof typeof EasingSnapshots]);
+    expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
+    expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
   });
 });

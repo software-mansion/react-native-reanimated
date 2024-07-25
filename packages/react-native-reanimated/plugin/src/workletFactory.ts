@@ -39,10 +39,11 @@ import {
 } from '@babel/types';
 import { strict as assert } from 'assert';
 import { basename, relative } from 'path';
-import { buildWorkletString } from './workletStringCode';
 import { globals } from './globals';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
+import { buildWorkletString } from './workletStringCode';
 
 const REAL_VERSION = require('../../package.json').version;
 const MOCK_VERSION = 'x.y.z';
@@ -226,7 +227,20 @@ export function makeWorkletFactory(
         memberExpression(functionIdentifier, identifier('__closure'), false),
         objectExpression(
           variables.map((variable) =>
-            objectProperty(identifier(variable.name), variable, false, true)
+            variable.name.endsWith(workletClassFactorySuffix)
+              ? objectProperty(
+                  identifier(variable.name),
+                  memberExpression(
+                    identifier(
+                      variable.name.slice(
+                        0,
+                        variable.name.length - workletClassFactorySuffix.length
+                      )
+                    ),
+                    identifier(variable.name)
+                  )
+                )
+              : objectProperty(identifier(variable.name), variable, false, true)
           )
         )
       )

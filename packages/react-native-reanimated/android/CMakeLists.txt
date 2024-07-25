@@ -66,10 +66,11 @@ target_include_directories(
         "${COMMON_SRC_DIR}/cpp/hidden_headers"
         "${COMMON_SRC_DIR}/cpp/LayoutAnimations"
         "${COMMON_SRC_DIR}/cpp/NativeModules"
-        "${COMMON_SRC_DIR}/cpp/ReanimatedRuntime"
-        "${COMMON_SRC_DIR}/cpp/Registries"
-        "${COMMON_SRC_DIR}/cpp/SharedItems"
         "${COMMON_SRC_DIR}/cpp/Tools"
+        "${COMMON_SRC_DIR}/cpp/Worklets/Registries"
+        "${COMMON_SRC_DIR}/cpp/Worklets/SharedItems"
+        "${COMMON_SRC_DIR}/cpp/Worklets/Tools"
+        "${COMMON_SRC_DIR}/cpp/Worklets/WorkletRuntime"
         "${SRC_DIR}/main/cpp"
 )
 

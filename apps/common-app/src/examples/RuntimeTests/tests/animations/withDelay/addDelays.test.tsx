@@ -13,7 +13,7 @@ import {
   unmockAnimationTimer,
   expect,
   clearRenderOutput,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 
 const WIDTH_COMPONENT_ACTIVE_REF = 'WidthComponentActive';
 const WIDTH_COMPONENT_PASSIVE_REF = 'WidthComponentPassive';

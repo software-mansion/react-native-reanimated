@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
+import { ComparisonMode } from '../../../ReJest/types';
 import {
   describe,
   test,
@@ -13,7 +13,7 @@ import {
   callTracker,
   callTrackerFn,
   getTrackerCallCount,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 
 enum Tracker {
   UseAnimatedStyle = 'useAnimatedStyleTracker',

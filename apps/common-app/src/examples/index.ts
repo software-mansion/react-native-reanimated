@@ -132,6 +132,7 @@ import FreezingShareablesExample from './ShareableFreezingExample';
 import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
 import StrictDOMExample from './StrictDOMExample';
 import BottomTabsExample from './LayoutAnimations/BottomTabs';
+import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation';
 
 interface Example {
   icon?: string;
@@ -669,6 +670,10 @@ export const EXAMPLES: Record<string, Example> = {
   ReactionsCounterExample: {
     title: '[LA] Reactions counter',
     screen: ReactionsCounterExample,
+  },
+  ListItemLayoutAnimation: {
+    title: '[LA] List item layout animation',
+    screen: ListItemLayoutAnimation,
   },
   SwipeableList: {
     title: '[LA] Swipeable list',

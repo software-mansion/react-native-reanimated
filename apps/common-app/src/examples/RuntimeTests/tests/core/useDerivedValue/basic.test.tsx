@@ -7,7 +7,7 @@ import Animated, {
   useDerivedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
+import { ComparisonMode } from '../../../ReJest/types';
 import {
   describe,
   test,
@@ -15,11 +15,11 @@ import {
   render,
   useTestRef,
   getTestComponent,
-  wait,
   recordAnimationUpdates,
   mockAnimationTimer,
   unmockAnimationTimer,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+  waitForAnimationUpdates,
+} from '../../../ReJest/RuntimeTestsApi';
 import { BasicSnapshots } from './useDerivedValue.snapshot';
 
 const WIDTH_COMPONENT = 'WidthComponent';
@@ -103,6 +103,7 @@ describe('Test useDerivedValue changing width', () => {
   ].forEach(({ derivedFun, msg, index }) => {
     describe(`Tests for derived function ${msg}`, () => {
       async function getSnapshotUpdatesAndCheckFinalValue(
+        snapshotLength: number,
         startWidth: number,
         finalWidth: number,
         animate: AnimationLocation,
@@ -120,9 +121,7 @@ describe('Test useDerivedValue changing width', () => {
           />,
         );
         const testComponent = getTestComponent(WIDTH_COMPONENT);
-        const waitTime =
-          animationType === AnimationType.NONE ? 50 : animationType === AnimationType.TIMING ? 350 : 1800;
-        await wait(waitTime);
+        await waitForAnimationUpdates(snapshotLength);
         expect(await testComponent.getAnimatedStyle('width')).toBe(derivedFun(finalWidth), ComparisonMode.PIXEL);
         const updates = updatesContainerActive.getUpdates();
         const naiveUpdates = await updatesContainerActive.getNativeSnapshots();
@@ -200,18 +199,22 @@ describe('Test useDerivedValue changing width', () => {
             [AnimationLocation.ANIMATED_STYLE]: 3,
           };
 
+          const snapshot = BasicSnapshots[`func_${index}` as keyof typeof BasicSnapshots];
           const snapshotName =
-            `width_${animationType}_${snapshotIdPerType[animate]}_${startWidth}_${finalWidth}`.replace(/\./g, '$');
+            `width_${animationType}_${snapshotIdPerType[animate]}_${startWidth}_${finalWidth}`.replace(
+              /\./g,
+              '$',
+            ) as keyof typeof snapshot;
 
           const [updates, nativeUpdates] = await getSnapshotUpdatesAndCheckFinalValue(
+            snapshot[snapshotName].length,
             startWidth,
             finalWidth,
             animate,
             animationType,
           );
 
-          const snapshot = BasicSnapshots[`func_${index}` as keyof typeof BasicSnapshots];
-          expect(updates).toMatchSnapshots(snapshot[snapshotName as keyof typeof snapshot]);
+          expect(updates).toMatchSnapshots(snapshot[snapshotName]);
           expect(updates).toMatchNativeSnapshots(nativeUpdates, true);
         },
       );
