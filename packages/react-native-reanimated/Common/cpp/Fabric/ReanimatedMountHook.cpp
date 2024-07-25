@@ -1,7 +1,6 @@
 #if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 73
 
 #include "ReanimatedMountHook.h"
-#include "ReanimatedCommitMarker.h"
 
 namespace reanimated {
 
@@ -18,13 +17,7 @@ ReanimatedMountHook::~ReanimatedMountHook() noexcept {
 
 void ReanimatedMountHook::shadowTreeDidMount(
     RootShadowNode::Shared const &,
-    double) noexcept {
-  // When commit from React Native has finished, we reset the skip commit flag
-  // in order to allow Reanimated to commit its tree
-  if (!ReanimatedCommitMarker::isReanimatedCommit()) {
-    propsRegistry_->resetReanimatedSkipCommitFlag();
-  }
-}
+    double) noexcept {}
 
 } // namespace reanimated
 
