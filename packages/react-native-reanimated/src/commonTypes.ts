@@ -1,5 +1,10 @@
 'use strict';
-import type { ViewStyle, TextStyle } from 'react-native';
+import type {
+  ViewStyle,
+  TextStyle,
+  TransformsStyle,
+  ImageStyle,
+} from 'react-native';
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface StyleProps extends ViewStyle, TextStyle {
@@ -306,3 +311,50 @@ export enum ReduceMotion {
   Always = 'always',
   Never = 'never',
 }
+
+export type EasingFunction = (t: number) => number;
+
+export type TransformArrayItem = Extract<
+  TransformsStyle['transform'],
+  Array<unknown>
+>[number];
+
+type MaybeSharedValue<Value> =
+  | Value
+  | (Value extends AnimatableValue ? SharedValue<Value> : never);
+
+type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
+  ? SharedValue<Item[]> | (MaybeSharedValueRecursive<Item> | Item)[]
+  : Value extends object
+  ?
+      | SharedValue<Value>
+      | {
+          [Key in keyof Value]:
+            | MaybeSharedValueRecursive<Value[Key]>
+            | Value[Key];
+        }
+  : MaybeSharedValue<Value>;
+
+type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
+
+// Ideally we want AnimatedStyle to not be generic, but there are
+// so many depenedencies on it being generic that it's not feasible at the moment.
+export type AnimatedStyle<Style = DefaultStyle> =
+  | Style
+  | MaybeSharedValueRecursive<Style>;
+
+export type AnimatedTransform = MaybeSharedValueRecursive<
+  TransformsStyle['transform']
+>;
+
+/**
+ * @deprecated Please use {@link AnimatedStyle} type instead.
+ */
+export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
+
+/**
+ * @deprecated This type is no longer relevant.
+ */
+export type StylesOrDefault<T> = 'style' extends keyof T
+  ? MaybeSharedValueRecursive<T['style']>
+  : Record<string, unknown>;

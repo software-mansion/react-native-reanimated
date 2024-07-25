@@ -14,6 +14,7 @@ import { SequencedTransition } from './transition/Sequenced.web';
 import { FadingTransition } from './transition/Fading.web';
 import { JumpingTransition } from './transition/Jumping.web';
 import { insertWebAnimation } from './domUtils';
+import { CurvedTransition } from './transition/Curved.web';
 import { EntryExitTransition } from './transition/EntryExit.web';
 
 type TransformType = NonNullable<TransformsStyle['transform']>;
@@ -156,6 +157,8 @@ export function TransitionGenerator(
   transitionData: TransitionData
 ) {
   const transitionKeyframeName = generateNextCustomKeyframeName();
+  let dummyTransitionKeyframeName;
+
   let transitionObject;
 
   switch (transitionType) {
@@ -183,6 +186,26 @@ export function TransitionGenerator(
         transitionData
       );
       break;
+
+    // Here code block with {} is necessary because of eslint
+    case TransitionType.CURVED: {
+      dummyTransitionKeyframeName = generateNextCustomKeyframeName();
+
+      const { firstKeyframeObj, secondKeyframeObj } = CurvedTransition(
+        transitionKeyframeName,
+        dummyTransitionKeyframeName,
+        transitionData
+      );
+
+      transitionObject = firstKeyframeObj;
+
+      const dummyKeyframe =
+        convertAnimationObjectToKeyframes(secondKeyframeObj);
+
+      insertWebAnimation(dummyTransitionKeyframeName, dummyKeyframe);
+
+      break;
+    }
     case TransitionType.ENTRY_EXIT:
       transitionObject = EntryExitTransition(
         transitionKeyframeName,
@@ -196,5 +219,5 @@ export function TransitionGenerator(
 
   insertWebAnimation(transitionKeyframeName, transitionKeyframe);
 
-  return transitionKeyframeName;
+  return { transitionKeyframeName, dummyTransitionKeyframeName };
 }

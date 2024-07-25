@@ -1,16 +1,8 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, withSequence, cancelAnimation, withTiming } from 'react-native-reanimated';
-import {
-  describe,
-  test,
-  expect,
-  render,
-  wait,
-  getTestComponent,
-  useTestRef,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
+import { describe, test, expect, render, wait, getTestComponent, useTestRef } from '../../../ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '../../../ReJest/types';
 
 describe(`Test cancelling animation `, () => {
   const COMPONENT_REF = 'COMPONENT_REF';

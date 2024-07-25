@@ -1,7 +1,7 @@
 'use strict';
 import { withStyleAnimation } from '../animation/styleAnimation';
 import type { SharedValue } from '../commonTypes';
-import { makeUIMutable } from '../mutables';
+import { makeMutableUI } from '../mutables';
 import { LayoutAnimationType } from './animationBuilder';
 import { runOnUIImmediately } from '../threads';
 import type {
@@ -73,7 +73,7 @@ function createLayoutAnimationManager(): {
 
       let value = mutableValuesForTag.get(tag);
       if (value === undefined) {
-        value = makeUIMutable(style.initialValues);
+        value = makeMutableUI(style.initialValues);
         mutableValuesForTag.set(tag, value);
       } else {
         stopObservingProgress(tag, value);

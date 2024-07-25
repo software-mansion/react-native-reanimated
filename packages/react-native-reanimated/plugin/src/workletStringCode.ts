@@ -9,6 +9,8 @@ import type {
   VariableDeclaration,
 } from '@babel/types';
 import {
+  assertBlockStatement,
+  callExpression,
   functionExpression,
   identifier,
   isArrowFunctionExpression,
@@ -16,6 +18,7 @@ import {
   isExpression,
   isExpressionStatement,
   isFunctionDeclaration,
+  isIdentifier,
   isObjectMethod,
   isProgram,
   memberExpression,
@@ -28,8 +31,9 @@ import {
 import { strict as assert } from 'assert';
 import * as convertSourceMap from 'convert-source-map';
 import * as fs from 'fs';
-import { isRelease } from './utils';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import { workletClassFactorySuffix } from './types';
+import { isRelease } from './utils';
 
 const MOCK_SOURCE_MAP = 'mock source map';
 
@@ -62,6 +66,43 @@ export function buildWorkletString(
     isBlockStatement(expression.body),
     '[Reanimated] `expression.body` is not a `BlockStatement`'
   );
+
+  const parsedClasses = new Set<string>();
+
+  traverse(fun, {
+    NewExpression(path) {
+      if (!isIdentifier(path.node.callee)) {
+        return;
+      }
+      const constructorName = path.node.callee.name;
+      if (
+        !closureVariables.some(
+          (variable) => variable.name === constructorName
+        ) ||
+        parsedClasses.has(constructorName)
+      ) {
+        return;
+      }
+      const index = closureVariables.findIndex(
+        (variable) => variable.name === constructorName
+      );
+      closureVariables.splice(index, 1);
+      const workletClassFactoryName =
+        constructorName + workletClassFactorySuffix;
+      closureVariables.push(identifier(workletClassFactoryName));
+
+      assertBlockStatement(expression.body);
+      expression.body.body.unshift(
+        variableDeclaration('const', [
+          variableDeclarator(
+            identifier(constructorName),
+            callExpression(identifier(workletClassFactoryName), [])
+          ),
+        ])
+      );
+      parsedClasses.add(constructorName);
+    },
+  });
 
   const workletFunction = functionExpression(
     identifier(nameWithSource),

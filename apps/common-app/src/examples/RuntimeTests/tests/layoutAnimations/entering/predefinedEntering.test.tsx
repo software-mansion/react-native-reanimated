@@ -53,7 +53,7 @@ import {
   mockWindowDimensions,
   unmockWindowDimensions,
   waitForAnimationUpdates,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 import {
   DurationEnteringSnapshots,
   NoModifierEnteringSnapshots,

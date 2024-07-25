@@ -1,6 +1,6 @@
 import React from 'react';
-import RuntimeTestsRunner from './ReanimatedRuntimeTestsRunner/RuntimeTestsRunner';
-import { describe } from './ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import RuntimeTestsRunner from './ReJest/RuntimeTestsRunner';
+import { describe } from './ReJest/RuntimeTestsApi';
 
 export default function RuntimeTestsExample() {
   return (
@@ -73,6 +73,7 @@ export default function RuntimeTestsExample() {
           importTest: () => {
             require('./tests/plugin/fileWorkletization.test');
             require('./tests/plugin/contextObjects.test');
+            require('./tests/plugin/workletClasses.test');
           },
         },
         {
