@@ -34,8 +34,8 @@ endif()
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(ANDROID_SRC_DIR "${CMAKE_SOURCE_DIR}/src")
-set(WORKLET_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/Worklets")
-set(REANIMATED_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/Reanimated")
+set(WORKLETS_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/worklets")
+set(REANIMATED_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/reanimated")
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/main/worklets)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/main/reanimated)

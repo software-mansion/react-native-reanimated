@@ -77,14 +77,14 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
-  s.subspec "RNReanimatedReanimated" do |ss|
+  s.subspec "reanimated" do |ss|
     ss.source_files = [
       "apple/**/*.{mm,h,m}",
       "Common/cpp/Reanimated/**/*.{cpp,h}",
     ]
   end
 
-  s.subspec "RNWorklets" do |ss|
+  s.subspec "worklets" do |ss|
     ss.source_files = [
       "Common/cpp/Worklets/**/*.{cpp,h}",
     ]

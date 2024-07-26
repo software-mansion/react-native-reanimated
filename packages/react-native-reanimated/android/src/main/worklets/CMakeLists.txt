@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-set(LOCAL_PACKAGE_NAME "worklets")
-
-file(GLOB_RECURSE WORKLET_COMMON_SOURCES CONFIGURE_DEPENDS "${WORKLET_COMMON_DIR}/*.cpp")
+file(GLOB_RECURSE WORKLETS_COMMON_SOURCES CONFIGURE_DEPENDS "${WORKLETS_COMMON_DIR}/*.cpp")
 
 # Consume shared libraries and headers from prefabs
 find_package(fbjni REQUIRED CONFIG)
@@ -13,9 +11,9 @@ if(${JS_RUNTIME} STREQUAL "hermes")
 endif()
 
 add_library(
-    ${LOCAL_PACKAGE_NAME}
+    "worklets"
     SHARED
-    ${WORKLET_COMMON_SOURCES}
+    ${WORKLETS_COMMON_SOURCES}
     ${INCLUDE_JSI_CPP}
     ${INCLUDE_JSIDYNAMIC_CPP}
     "${ANDROID_SRC_DIR}/main/cpp/AndroidLogger.cpp"
@@ -23,23 +21,23 @@ add_library(
 
 # includes
 target_include_directories(
-    ${LOCAL_PACKAGE_NAME}
+    "worklets"
     PUBLIC
-    "${WORKLET_COMMON_DIR}/hidden_headers"
-    "${WORKLET_COMMON_DIR}/Registries"
-    "${WORKLET_COMMON_DIR}/SharedItems"
-    "${WORKLET_COMMON_DIR}/Tools"
-    "${WORKLET_COMMON_DIR}/WorkletRuntime"
+    "${WORKLETS_COMMON_DIR}/hidden_headers"
+    "${WORKLETS_COMMON_DIR}/Registries"
+    "${WORKLETS_COMMON_DIR}/SharedItems"
+    "${WORKLETS_COMMON_DIR}/Tools"
+    "${WORKLETS_COMMON_DIR}/WorkletRuntime"
 )
 
 target_include_directories(
-    ${LOCAL_PACKAGE_NAME}
+    "worklets"
     PRIVATE
     "${ANDROID_SRC_DIR}/main/cpp"
 )
 
 target_include_directories(
-    ${LOCAL_PACKAGE_NAME}
+    "worklets"
     PRIVATE
     "${REANIMATED_COMMON_DIR}/NativeModules"
     "${REANIMATED_COMMON_DIR}/AnimatedSensor"
@@ -49,7 +47,7 @@ target_include_directories(
 )
 
 target_include_directories(
-    ${LOCAL_PACKAGE_NAME}
+    "worklets"
     PRIVATE
     "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
     "${REACT_NATIVE_DIR}/ReactCommon"
@@ -63,16 +61,16 @@ target_include_directories(
 )
 
 # build shared lib
-set_target_properties(${LOCAL_PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties("worklets" PROPERTIES LINKER_LANGUAGE CXX)
 
 target_link_libraries(
-    ${LOCAL_PACKAGE_NAME}
+    "worklets"
     log
     android
 )
 
 target_link_libraries(
-    ${LOCAL_PACKAGE_NAME}
+    "worklets"
     ReactAndroid::folly_runtime
     ReactAndroid::glog
     ReactAndroid::jsi
@@ -86,21 +84,21 @@ if(${JS_RUNTIME} STREQUAL "hermes")
     # From prefab from module `com.facebook.react:hermes-android`
     set(HERMES_LIB hermes-engine::libhermes)
     target_link_libraries(
-        ${LOCAL_PACKAGE_NAME}
+        "worklets"
         ${HERMES_LIB}
     )
 
     if(${HERMES_ENABLE_DEBUGGER})
         set(HERMES_EXECUTOR_LIB ReactAndroid::hermes_executor)
         target_link_libraries(
-            ${LOCAL_PACKAGE_NAME}
+            "worklets"
             ${HERMES_EXECUTOR_LIB}
         )
     endif()
 elseif(${JS_RUNTIME} STREQUAL "v8")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
     target_include_directories(
-        ${LOCAL_PACKAGE_NAME}
+        "worklets"
         PRIVATE
         "${JS_RUNTIME_DIR}/src"
     )
@@ -113,20 +111,20 @@ elseif(${JS_RUNTIME} STREQUAL "v8")
         NO_CMAKE_FIND_ROOT_PATH
     )
     target_link_libraries(
-        ${LOCAL_PACKAGE_NAME}
+        "worklets"
         ${V8EXECUTOR_LIB}
     )
 elseif(${JS_RUNTIME} STREQUAL "jsc")
     string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
     set(JSEXECUTOR_LIB ReactAndroid::jscexecutor)
-    target_link_libraries(${LOCAL_PACKAGE_NAME} ${JSEXECUTOR_LIB})
+    target_link_libraries("worklets" ${JSEXECUTOR_LIB})
 else()
     message(FATAL_ERROR "Unknown JS runtime ${JS_RUNTIME}.")
 endif()
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     target_link_libraries(
-        ${LOCAL_PACKAGE_NAME}
+        "worklets"
         ReactAndroid::fabricjni
         ReactAndroid::react_debug
         ReactAndroid::react_render_core
