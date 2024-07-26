@@ -11,7 +11,6 @@ file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS
 find_package(fbjni REQUIRED CONFIG)
 find_package(ReactAndroid REQUIRED CONFIG)
 
-# find_package(worklets REQUIRED)
 if(${JS_RUNTIME} STREQUAL "hermes")
     find_package(hermes-engine REQUIRED CONFIG)
 endif()
@@ -53,10 +52,6 @@ target_include_directories(
     "${REACT_NATIVE_DIR}/ReactCommon/yoga"
     "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/componentregistry"
     "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/core")
-
-# get_target_property(MY_INC_DIRS ${PACKAGE_NAME} INCLUDE_DIRECTORIES)
-# if(MY_INC_DIRS) message("Include directories of 'my_target': ${MY_INC_DIRS}")
-# else() message("There are no include directories for 'my_target'") endif()
 
 # build shared lib
 set_target_properties(${LOCAL_PACKAGE_NAME} PROPERTIES LINKER_LANGUAGE CXX)

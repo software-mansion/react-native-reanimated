@@ -62,7 +62,7 @@ void checkJSVersion(
     jsLogger->warnOnJS(
         std::string(
             "[Reanimated] C++ side failed to resolve JavaScript code version\n") +
-        "See `https://docs.swmansion.com/react-native-guides/troubleshooting#c-side-failed-to-resolve-javascript-code-version` for more details.");
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#c-side-failed-to-resolve-javascript-code-version` for more details.");
     return;
   }
 
@@ -73,7 +73,7 @@ void checkJSVersion(
         std::string(
             "[Reanimated] Mismatch between C++ code version and JavaScript code version (") +
         cppVersion + " vs. " + jsVersion + " respectively).\n" +
-        "See `https://docs.swmansion.com/react-native-guides/troubleshooting#mismatch-between-c-code-version-and-javascript-code-version` for more details.");
+        "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-c-code-version-and-javascript-code-version` for more details.");
     return;
   }
 }
