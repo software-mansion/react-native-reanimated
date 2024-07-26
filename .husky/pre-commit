@@ -11,6 +11,8 @@ cd $REANIMATED_PATH
 if [ $? -eq 1 ]; then
   yarn type:check:all
   yarn find-unused-code:js
+else
+  echo "[PRECOMMIT]: Reanimated TypeScript source files weren't changed. Skipping TypeScript checks." >&2
 fi
 
 # This automatically builds Reanimated Babel plugin JavaScript files if their
@@ -24,7 +26,11 @@ if [ $? -eq 1 ]; then
     grep -E 'plugin/build/plugin.js' >/dev/null
   if [ $? -eq 1 ]; then
     git add plugin/build/plugin.js
-    echo "[Reanimated] Plugin files were automatically built and changes were spotted.\
+    echo "[PRECOMMIT]: Babel plugin files were automatically built and changes were spotted.\
     \n             Those changes were added to the commit." >&2
+  else
+    echo "[PRECOMMIT]: All Babel plugin files were already commited." >&2
   fi
+else
+  echo "[PRECOMMIT]: Babel plugin files weren't changed. Skipping plugin checks." >&2
 fi
