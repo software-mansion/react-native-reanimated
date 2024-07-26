@@ -12,16 +12,8 @@ import Animated, {
   Easing,
   useFrameCallback,
 } from 'react-native-reanimated';
-import {
-  describe,
-  expect,
-  test,
-  render,
-  wait,
-  registerValue,
-  getRegisteredValue,
-} from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { ComparisonMode } from '../../ReanimatedRuntimeTestsRunner/types';
+import { describe, expect, test, render, wait, registerValue, getRegisteredValue } from '../../ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '../../ReJest/types';
 
 describe('Test measuring component before nad after animation', () => {
   const INITIAL_MEASURE = 'INITIAL_MEASURE';
@@ -169,7 +161,7 @@ describe('Test measuring component during the animation', () => {
     const observedWidths = (await getRegisteredValue(OBSERVED_WIDTHS_REF)).onJS as Array<[number, number]>;
     observedWidths.forEach(([width, timeSinceFirstFrame]) => {
       const expectedWidth = Math.min(FINAL_WIDTH, (timeSinceFirstFrame * FINAL_WIDTH) / DURATION);
-      expect(width).toBe(expectedWidth, ComparisonMode.DISTANCE);
+      expect(width).toBe(expectedWidth, ComparisonMode.PIXEL);
     });
   });
 });

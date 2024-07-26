@@ -1,4 +1,4 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Animated, { withDelay, withTiming } from 'react-native-reanimated';
 import React from 'react';
 import {
@@ -8,8 +8,8 @@ import {
   mockAnimationTimer,
   recordAnimationUpdates,
   render,
-  wait,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+  waitForAnimationUpdates,
+} from '../../../ReJest/RuntimeTestsApi';
 import { ColorSnapshots as Snapshots } from './entering.snapshot';
 
 const AnimatedComponent = ({ fromColor, toColor }: { fromColor: string; toColor: string }) => {
@@ -25,12 +25,11 @@ const AnimatedComponent = ({ fromColor, toColor }: { fromColor: string; toColor:
   return <Animated.View style={styles.colorBox} entering={customAnim} />;
 };
 
-async function getSnapshotUpdates(fromColor: string, toColor: string) {
+async function getSnapshotUpdates(fromColor: string, toColor: string, snapshot: Array<any>) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent fromColor={fromColor} toColor={toColor} />);
-  const waitTime = Platform.OS === 'ios' ? 1200 : 1400;
-  await wait(waitTime);
+  await waitForAnimationUpdates(snapshot.length);
   const updates = updatesContainer.getUpdates();
   const nativeUpdates = await updatesContainer.getNativeSnapshots();
   return [updates, nativeUpdates];
@@ -49,13 +48,14 @@ describe('entering with custom animation (withDelay + withTiming color changes) 
     ['rgba(116, 58, 155, 1)', 'rgba(161, 66, 77, 1)'],
     ['rgba(232, 113, 116, 1)', 'rgba(158, 201, 27, 1)'],
   ])('Entering color from ${0} to ${1}', async ([fromColor, toColor]) => {
-    const [updates, nativeUpdates] = await getSnapshotUpdates(fromColor, toColor);
     const snapshotName = (fromColor + toColor)
       .replace(/\s/g, '')
       .replace(/[()]/g, '_')
       .replace(/,/g, '_')
-      .replace(/rgba/g, '');
-    expect(updates).toMatchSnapshots(Snapshots[snapshotName as keyof typeof Snapshots]);
+      .replace(/rgba/g, '') as keyof typeof Snapshots;
+    const snapshot = Snapshots[snapshotName];
+    const [updates, nativeUpdates] = await getSnapshotUpdates(fromColor, toColor, snapshot);
+    expect(updates).toMatchSnapshots(snapshot);
     expect(updates).toMatchNativeSnapshots(nativeUpdates);
   });
 });

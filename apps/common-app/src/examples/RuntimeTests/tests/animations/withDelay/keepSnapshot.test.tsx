@@ -20,8 +20,8 @@ import {
   unmockAnimationTimer,
   mockAnimationTimer,
   clearRenderOutput,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import type { SingleViewSnapshot } from '../../../ReanimatedRuntimeTestsRunner/matchers/snapshotMatchers';
+} from '../../../ReJest/RuntimeTestsApi';
+import type { SingleViewSnapshot } from '../../../ReJest/matchers/snapshotMatchers';
 
 enum TestAnimation {
   TIMING = 'withTiming',

@@ -1,16 +1,8 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
-import {
-  describe,
-  test,
-  expect,
-  render,
-  useTestRef,
-  getTestComponent,
-  wait,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { ComparisonMode } from '../../../ReJest/types';
+import { describe, test, expect, render, useTestRef, getTestComponent, wait } from '../../../ReJest/RuntimeTestsApi';
 
 const COMPONENT_REF_ACTIVE = 'ColorComponentPassive';
 const COMPONENT_REF_PASSIVE = 'ColorComponentPassive';

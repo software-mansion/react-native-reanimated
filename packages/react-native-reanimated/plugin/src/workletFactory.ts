@@ -33,15 +33,17 @@ import {
   objectProperty,
   returnStatement,
   stringLiteral,
+  toIdentifier,
   variableDeclaration,
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { relative } from 'path';
-import { buildWorkletString } from './workletStringCode';
+import { basename, relative } from 'path';
 import { globals } from './globals';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
+import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
+import { buildWorkletString } from './workletStringCode';
 
 const REAL_VERSION = require('../../package.json').version;
 const MOCK_VERSION = 'x.y.z';
@@ -104,7 +106,7 @@ export function makeWorkletFactory(
 
   const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
-  const functionName = makeWorkletName(fun);
+  const functionName = makeWorkletName(fun, state);
   const functionIdentifier = identifier(functionName);
 
   const clone = cloneNode(fun.node);
@@ -120,6 +122,7 @@ export function makeWorkletFactory(
 
   let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
+    state,
     variables,
     functionName,
     transformed.map
@@ -224,7 +227,20 @@ export function makeWorkletFactory(
         memberExpression(functionIdentifier, identifier('__closure'), false),
         objectExpression(
           variables.map((variable) =>
-            objectProperty(identifier(variable.name), variable, false, true)
+            variable.name.endsWith(workletClassFactorySuffix)
+              ? objectProperty(
+                  identifier(variable.name),
+                  memberExpression(
+                    identifier(
+                      variable.name.slice(
+                        0,
+                        variable.name.length - workletClassFactorySuffix.length
+                      )
+                    ),
+                    identifier(variable.name)
+                  )
+                )
+              : objectProperty(identifier(variable.name), variable, false, true)
           )
         )
       )
@@ -325,17 +341,38 @@ function hash(str: string): number {
   return (hash1 >>> 0) * 4096 + (hash2 >>> 0);
 }
 
-function makeWorkletName(fun: NodePath<WorkletizableFunction>): string {
+function makeWorkletName(
+  fun: NodePath<WorkletizableFunction>,
+  state: ReanimatedPluginPass
+): string {
+  let source = 'unknownFile';
+
+  if (state.file.opts.filename) {
+    const filepath = state.file.opts.filename;
+    source = basename(filepath);
+
+    // Get the library name from the path.
+    const splitFilepath = filepath.split('/');
+    const nodeModulesIndex = splitFilepath.indexOf('node_modules');
+    if (nodeModulesIndex !== -1) {
+      const libraryName = splitFilepath[nodeModulesIndex + 1];
+      source = `${libraryName}_${source}`;
+    }
+  }
+
+  const suffix = `${source}${state.workletNumber++}`;
   if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
-    return fun.node.key.name;
+    return toIdentifier(`${fun.node.key.name}_${suffix}`);
   }
   if (isFunctionDeclaration(fun.node) && isIdentifier(fun.node.id)) {
-    return fun.node.id.name;
+    return toIdentifier(`${fun.node.id.name}_${suffix}`);
   }
   if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
-    return fun.node.id.name;
+    return toIdentifier(`${fun.node.id.name}_${suffix}`);
   }
-  return 'anonymous'; // fallback for ArrowFunctionExpression and unnamed FunctionExpression
+
+  // Fallback for ArrowFunctionExpression and unnamed FunctionExpression.
+  return toIdentifier(suffix);
 }
 
 function makeArrayFromCapturedBindings(

@@ -11,8 +11,8 @@ import {
   getRegisteredValue,
   Presets,
   clearRenderOutput,
-} from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { ComparisonMode } from '../../ReanimatedRuntimeTestsRunner/types';
+} from '../../ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '../../ReJest/types';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 const DOUBLED_SHARED_VALUE_REF = 'SHARED_VALUE_REF';

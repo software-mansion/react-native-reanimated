@@ -48,10 +48,12 @@ import {
   mockAnimationTimer,
   recordAnimationUpdates,
   render,
-  wait,
+  waitForAnimationUpdates,
   unmockAnimationTimer,
   clearRenderOutput,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+  mockWindowDimensions,
+  unmockWindowDimensions,
+} from '../../../ReJest/RuntimeTestsApi';
 import { DurationExitingSnapshots, NoModifierExitingSnapshots, SpringifyExitingSnapshots } from './exiting.snapshot';
 
 const FADE_EXITING = [FadeOut, FadeOutRight, FadeOutLeft, FadeOutUp, FadeOutDown];
@@ -74,17 +76,17 @@ const ZOOM_EXITING = [
   ZoomOutUp,
 ];
 
-const EXITING_SETS: Array<[string, unknown[], number]> = [
-  ['LightSpeed', LIGHTSPEED_EXITING, 1600],
-  ['Fade', FADE_EXITING, 1400],
-  ['Bounce', BOUNCE_EXITING, 650],
-  ['Flip', FLIP_EXITING, 1750],
-  ['Pinwheel', PINWHEEL_EXITING, 1000],
-  ['Roll', ROLL_EXITING, 1750],
-  ['Rotate', ROTATE_EXITING, 1600],
-  ['Slide', SLIDE_EXITING, 1800],
-  ['Stretch', STRETCH_EXITING, 1000],
-  ['Zoom', ZOOM_EXITING, 1800],
+const EXITING_SETS: Array<[string, unknown[]]> = [
+  ['LightSpeed', LIGHTSPEED_EXITING],
+  ['Fade', FADE_EXITING],
+  ['Bounce', BOUNCE_EXITING],
+  ['Flip', FLIP_EXITING],
+  ['Pinwheel', PINWHEEL_EXITING],
+  ['Roll', ROLL_EXITING],
+  ['Rotate', ROTATE_EXITING],
+  ['Slide', SLIDE_EXITING],
+  ['Stretch', STRETCH_EXITING],
+  ['Zoom', ZOOM_EXITING],
 ];
 
 const ExitingComponent = ({ exiting }: { exiting: any }) => {
@@ -97,8 +99,9 @@ const ExitingComponent = ({ exiting }: { exiting: any }) => {
   );
 };
 
-async function getSnapshotUpdates(exiting: any, waitTime: number, duration: number | undefined, springify = false) {
+async function getSnapshotUpdates(exiting: any, snapshot: Array<any>, duration: number | undefined, springify = false) {
   await mockAnimationTimer();
+  await mockWindowDimensions();
 
   const updatesContainer = await recordAnimationUpdates();
   const springExiting = springify ? exiting : exiting.springify();
@@ -106,9 +109,11 @@ async function getSnapshotUpdates(exiting: any, waitTime: number, duration: numb
 
   await render(<ExitingComponent exiting={componentExiting} />);
 
-  await wait(waitTime);
+  await waitForAnimationUpdates(snapshot.length);
   const updates = updatesContainer.getUpdates();
+
   await unmockAnimationTimer();
+  await unmockWindowDimensions();
   await clearRenderOutput();
 
   return updates;
@@ -116,41 +121,34 @@ async function getSnapshotUpdates(exiting: any, waitTime: number, duration: numb
 
 describe('Test predefined exiting', () => {
   describe('exiting on mount, no modifiers', () => {
-    test.each(EXITING_SETS)('Test suite of ${0}Out', async ([_setName, exitingSet, waitTime]) => {
+    test.each(EXITING_SETS)('Test suite of ${0}Out', async ([_setName, exitingSet]) => {
       for (const exiting of exitingSet) {
-        const snapshotName = (exiting as any).name;
-        const updates = await getSnapshotUpdates(exiting, waitTime, undefined);
-
-        expect(updates).toMatchSnapshots(
-          NoModifierExitingSnapshots[snapshotName as keyof typeof NoModifierExitingSnapshots],
-        );
+        const snapshotName = (exiting as any).name as keyof typeof NoModifierExitingSnapshots;
+        const snapshot = NoModifierExitingSnapshots[snapshotName];
+        const updates = await getSnapshotUpdates(exiting, snapshot, undefined);
+        expect(updates).toMatchSnapshots(snapshot);
       }
     });
   });
 
   describe('exiting on mount, duration 100', () => {
-    test.each(EXITING_SETS)('Test suite of ${0}Out', async ([_setName, exitingSet, _waitTime]) => {
+    test.each(EXITING_SETS)('Test suite of ${0}Out', async ([_setName, exitingSet]) => {
       for (const exiting of exitingSet) {
-        const snapshotName: string = (exiting as any).name;
-        const updates = await getSnapshotUpdates(exiting, 105, 100);
-
-        expect(updates).toMatchSnapshots(
-          DurationExitingSnapshots[snapshotName as keyof typeof DurationExitingSnapshots],
-        );
+        const snapshotName = (exiting as any).name as keyof typeof DurationExitingSnapshots;
+        const snapshot = DurationExitingSnapshots[snapshotName];
+        const updates = await getSnapshotUpdates(exiting, snapshot, 100);
+        expect(updates).toMatchSnapshots(snapshot);
       }
     });
   });
 
   describe('exiting on mount, springify', () => {
-    test.each(EXITING_SETS)('Test suite of ${0}Out', async ([_setName, exitingSet, waitTime]) => {
-      const timeToWait = _setName === 'Bounce' ? 650 : waitTime * 0.3;
+    test.each(EXITING_SETS)('Test suite of ${0}Out', async ([_setName, exitingSet]) => {
       for (const exiting of exitingSet) {
-        const snapshotName = (exiting as any).name;
-        const updates = await getSnapshotUpdates(exiting, timeToWait, undefined, true);
-
-        expect(updates).toMatchSnapshots(
-          SpringifyExitingSnapshots[snapshotName as keyof typeof SpringifyExitingSnapshots],
-        );
+        const snapshotName = (exiting as any).name as keyof typeof SpringifyExitingSnapshots;
+        const snapshot = SpringifyExitingSnapshots[snapshotName];
+        const updates = await getSnapshotUpdates(exiting, snapshot, undefined, true);
+        expect(updates).toMatchSnapshots(snapshot);
       }
     });
   });

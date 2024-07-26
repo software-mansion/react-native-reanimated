@@ -8,6 +8,23 @@ import { Bezier } from '../src/Bezier';
  */
 // spell-checker:enable
 
+function splitMix32(seed: number) {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x9e3779b9) | 0;
+    let t = seed ^ (seed >>> 16);
+    t = Math.imul(t, 0x21f0aaad);
+    t = t ^ (t >>> 15);
+    t = Math.imul(t, 0x735a2d97);
+    return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296;
+  };
+}
+
+function getSeededRandom(seed: number) {
+  return splitMix32(seed);
+}
+
+const seededRandom = getSeededRandom(2);
 function repeat(n: number) {
   return (f: () => void) => {
     for (let i = 0; i < n; ++i) {
@@ -89,8 +106,8 @@ describe('Test `Bezier` function', () => {
     const MONKEY_TRIES = 1000;
     let allTestPass = true;
     repeat(MONKEY_TRIES)(() => {
-      const a = Math.random();
-      const b = Math.random();
+      const a = seededRandom();
+      const b = seededRandom();
 
       const easing = Bezier(a, a, b, b);
 
@@ -123,10 +140,10 @@ describe('Test `Bezier` function', () => {
     const MONKEY_TRIES = 1000;
     let allTestPass = true;
     repeat(MONKEY_TRIES)(() => {
-      const a = Math.random();
-      const b = 3 * Math.random() - 1;
-      const c = Math.random();
-      const d = 3 * Math.random() - 1;
+      const a = seededRandom();
+      const b = 3 * seededRandom() - 1;
+      const c = seededRandom();
+      const d = 3 * seededRandom() - 1;
       const easing = Bezier(a, b, c, d);
 
       const satisfiesCondition = easing(0) === 0 && easing(1) === 1;
@@ -191,10 +208,10 @@ describe('Test `Bezier` function', () => {
     const PRECISION_0 = 0.02;
     let allTestPass0 = true;
     repeat(MONKEY_TRIES)(() => {
-      const a = Math.random();
-      const b = Math.random();
-      const c = Math.random();
-      const d = Math.random();
+      const a = seededRandom();
+      const b = seededRandom();
+      const c = seededRandom();
+      const d = seededRandom();
 
       const easing1 = Bezier(a, b, c, d);
       const easing2 = Bezier(b, a, d, c);
@@ -214,10 +231,10 @@ describe('Test `Bezier` function', () => {
     const PRECISION_1 = 1e-12;
     let allTestPass1 = true;
     repeat(MONKEY_TRIES)(() => {
-      const a = 0.9 * Math.random() + 0.05;
-      const b = 0.9 * Math.random() + 0.05;
-      const c = 0.9 * Math.random() + 0.05;
-      const d = 0.9 * Math.random() + 0.05;
+      const a = 0.9 * seededRandom() + 0.05;
+      const b = 0.9 * seededRandom() + 0.05;
+      const c = 0.9 * seededRandom() + 0.05;
+      const d = 0.9 * seededRandom() + 0.05;
 
       const easing1 = Bezier(a, b, c, d);
       const easing2 = Bezier(b, a, d, c);

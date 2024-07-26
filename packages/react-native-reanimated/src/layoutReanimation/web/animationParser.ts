@@ -34,6 +34,10 @@ export interface TransitionData {
   scaleX: number;
   scaleY: number;
   reversed?: boolean;
+  easingX?: string;
+  easingY?: string;
+  entering?: any;
+  exiting?: any;
 }
 
 export function convertAnimationObjectToKeyframes(
@@ -49,9 +53,13 @@ export function convertAnimationObjectToKeyframes(
 
     for (const [property, values] of Object.entries(style)) {
       if (property === 'easing') {
-        const easingName = (
-          values.name in WebEasings ? values.name : 'linear'
-        ) as WebEasingsNames;
+        let easingName: WebEasingsNames = 'linear';
+
+        if (values in WebEasings) {
+          easingName = values;
+        } else if (values.name in WebEasings) {
+          easingName = values.name;
+        }
 
         keyframe += `animation-timing-function: cubic-bezier(${WebEasings[
           easingName

@@ -8,8 +8,8 @@ import {
   mockAnimationTimer,
   recordAnimationUpdates,
   render,
-  wait,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+  waitForAnimationUpdates,
+} from '../../../ReJest/RuntimeTestsApi';
 import { MatrixSnapshots } from './withTiming.snapshot';
 
 const AnimatedComponent = ({
@@ -38,11 +38,16 @@ const AnimatedComponent = ({
   );
 };
 
-async function getSnapshotUpdates(initialTransform: Array<number>, finalTransform: Array<number>) {
+async function getSnapshotUpdates(
+  snapshotName: keyof typeof MatrixSnapshots,
+  initialTransform: Array<number>,
+  finalTransform: Array<number>,
+) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent initialTransform={initialTransform} finalTransform={finalTransform} />);
-  await wait(1200);
+
+  await waitForAnimationUpdates(MatrixSnapshots[snapshotName].length);
   const updates = updatesContainer.getUpdates();
   return updates;
 }
@@ -70,8 +75,9 @@ describe('withTiming snapshots 📸, test TRANSFORM MATRIX', () => {
       finalTransform: [1, 1, 100, 1, 0, 2, 0, 0.5, 30, 0, 10, 0, 30, 0, 0, 2],
     },
   ])('From ${initialTransform} to ${finalTransform}', async ({ initialTransform, finalTransform }, index) => {
-    const updates = await getSnapshotUpdates(initialTransform, finalTransform);
-    expect(updates).toMatchSnapshots(MatrixSnapshots[`matrix_${index}` as keyof typeof MatrixSnapshots]);
+    const snapshotName = `matrix_${index}` as keyof typeof MatrixSnapshots;
+    const updates = await getSnapshotUpdates(snapshotName, initialTransform, finalTransform);
+    expect(updates).toMatchSnapshots(MatrixSnapshots[snapshotName]);
   });
 });
 

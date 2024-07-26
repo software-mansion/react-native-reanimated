@@ -102,6 +102,8 @@ const notCapturedIdentifiers = [
   'null',
   'this',
   'global',
+  'window',
+  'globalThis',
   'console',
   'performance',
   'queueMicrotask',

@@ -20,9 +20,9 @@ import {
   notify,
   waitForNotify,
   clearRenderOutput,
-} from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../ReJest/RuntimeTestsApi';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
-import { ComparisonMode } from '../ReanimatedRuntimeTestsRunner/types';
+import { ComparisonMode } from '../ReJest/types';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);

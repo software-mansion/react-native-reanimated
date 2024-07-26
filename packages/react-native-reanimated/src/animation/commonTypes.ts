@@ -6,8 +6,8 @@ import type {
   Animation,
   Timestamp,
   AnimationCallback,
+  AnimatedStyle,
 } from '../commonTypes';
-import type { AnimatedStyle } from '../helperTypes';
 
 export interface HigherOrderAnimation {
   isHigherOrder?: boolean;
