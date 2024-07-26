@@ -8,19 +8,12 @@ import type {
   TestCase,
   TestConfiguration,
   TestSuite,
-  TestSummary,
   TestValue,
   TrackerCallCount,
 } from '../types';
 import { DescribeDecorator, TestDecorator } from '../types';
 import { TestComponent } from '../TestComponent';
-import {
-  EMPTY_LOG_PLACEHOLDER,
-  applyMarkdown,
-  color,
-  formatString,
-  indentNestingLevel,
-} from '../utils/stringFormatUtils';
+import { applyMarkdown, formatString } from '../utils/stringFormatUtils';
 import type {
   SharedValue,
   LayoutAnimationStartFunction,
@@ -33,6 +26,7 @@ import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from 
 import { createUpdatesContainer } from './UpdatesContainer';
 import { makeMutable, runOnJS } from 'react-native-reanimated';
 import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
+import { TestSummaryLogger } from './TestSummaryLogger';
 export { Presets } from '../Presets';
 
 let callTrackerRegistryJS: Record<string, number> = {};
@@ -59,14 +53,7 @@ export class TestRunner {
   private _includesOnly: boolean = false;
   private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
-  private _summary: TestSummary = {
-    passed: 0,
-    failed: 0,
-    skipped: 0,
-    failedTests: [] as Array<string>,
-    startTime: Date.now(),
-    endTime: 0,
-  };
+  private _testSummary: TestSummaryLogger = new TestSummaryLogger();
 
   public notify(name: string) {
     'worklet';
@@ -275,19 +262,18 @@ export class TestRunner {
     }
 
     this._testSuites = [];
-    console.log('End of tests run 🏁');
-    this._summary.endTime = Date.now();
-    this.printSummary();
+    this._testSummary.printSummary();
   }
 
   private async runTestSuite(testSuite: TestSuite) {
+    this._testSummary.countSkippedTestSuiteTests(testSuite);
+
     if (testSuite.skip) {
-      this._summary.skipped += testSuite.testCases.length;
       return;
     }
 
     this._currentTestSuite = testSuite;
-    console.log(`${indentNestingLevel(testSuite.nestingLevel)} ${testSuite.name}`);
+    this._testSummary.logRunningTestSuite(testSuite);
 
     if (testSuite.beforeAll) {
       await testSuite.beforeAll();
@@ -296,8 +282,6 @@ export class TestRunner {
     for (const testCase of testSuite.testCases) {
       if (!testCase.skip) {
         await this.runTestCase(testSuite, testCase);
-      } else {
-        this._summary.skipped++;
       }
     }
 
@@ -325,7 +309,7 @@ export class TestRunner {
       await testCase.run();
     }
 
-    this.showTestCaseSummary(testCase, testSuite.nestingLevel);
+    this._testSummary.showTestCaseSummary(testCase, testSuite.nestingLevel);
 
     if (testSuite.afterEach) {
       await testSuite.afterEach();
@@ -335,24 +319,6 @@ export class TestRunner {
     await this.render(null);
     await this.unmockAnimationTimer();
     await this.stopRecordingAnimationUpdates();
-  }
-
-  private showTestCaseSummary(testCase: TestCase, nestingLevel: number) {
-    let mark;
-    if (testCase.errors.length > 0) {
-      this._summary.failed++;
-      this._summary.failedTests.push(testCase.name);
-      mark = color('✖', 'red');
-    } else {
-      this._summary.passed++;
-      mark = color('✔', 'green');
-    }
-    console.log(`${indentNestingLevel(nestingLevel)} ${mark} ${color(testCase.name, 'gray')}`);
-
-    for (const error of testCase.errors) {
-      const indentedError = error.replace(/\n/g, '\n' + EMPTY_LOG_PLACEHOLDER + indentNestingLevel(nestingLevel + 2));
-      console.log(`${indentNestingLevel(nestingLevel)}\t${indentedError}`);
-    }
   }
 
   public expect(currentValue: TestValue): Matchers {
@@ -582,28 +548,6 @@ export class TestRunner {
         }
       }, CHECK_INTERVAL);
     });
-  }
-
-  private printSummary() {
-    const { passed, failed, failedTests, startTime, endTime, skipped } = this._summary;
-
-    console.log('\n');
-    console.log(
-      `🧮 Tests summary: ${color(passed, 'green')} passed, ${color(failed, 'red')} failed, ${color(
-        skipped,
-        'orange',
-      )} skipped`,
-    );
-    console.log(`⏱️  Total time: ${Math.round(((endTime - startTime) / 1000) * 100) / 100}s`);
-    if (failed > 0) {
-      console.log('❌ Failed tests:');
-      for (const failedTest of failedTests) {
-        console.log(`\t- ${failedTest}`);
-      }
-    } else {
-      console.log('✅ All tests passed!');
-    }
-    console.log('\n');
   }
 
   private async mockConsole(testCase: TestCase): Promise<[() => Promise<void>, () => void]> {
