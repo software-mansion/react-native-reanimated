@@ -80,16 +80,16 @@ Pod::Spec.new do |s|
   s.subspec "reanimated" do |ss|
     ss.source_files = [
       "apple/**/*.{mm,h,m}",
-      "Common/cpp/Reanimated/**/*.{cpp,h}",
+      "Common/cpp/reanimated/**/*.{cpp,h}",
     ]
   end
 
   s.subspec "worklets" do |ss|
     ss.source_files = [
-      "Common/cpp/Worklets/**/*.{cpp,h}",
+      "Common/cpp/worklets/**/*.{cpp,h}",
     ]
     ss.preserve_paths = [
-      "Common/cpp/Worklets/hidden_headers/**"
+      "Common/cpp/worklets/hidden_headers/**"
     ]
   end
 
