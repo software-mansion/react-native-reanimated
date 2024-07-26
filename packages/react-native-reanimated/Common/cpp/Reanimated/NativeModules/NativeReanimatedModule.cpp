@@ -10,9 +10,7 @@
 
 #include <functional>
 #include <iomanip>
-#include <memory>
 #include <sstream>
-#include <string>
 #include <thread>
 #include <unordered_map>
 
@@ -26,7 +24,6 @@
 #include "CollectionUtils.h"
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
-#include "JSScheduler.h"
 #include "ReanimatedHiddenHeaders.h"
 #include "Shareables.h"
 #include "UIRuntimeDecorator.h"

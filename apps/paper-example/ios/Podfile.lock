@@ -1275,6 +1275,50 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
+    - RNReanimated/RNReanimatedReanimated (= 3.14.0)
+    - RNReanimated/RNWorklets (= 3.14.0)
+    - Yoga
+  - RNReanimated/RNReanimatedReanimated (3.14.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Codegen
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
+  - RNReanimated/RNWorklets (3.14.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Codegen
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
     - Yoga
   - RNScreens (3.31.0-rc.1):
     - DoubleConversion
@@ -1570,7 +1614,7 @@ SPEC CHECKSUMS:
   RNCPicker: 3e2c37a8328f368ce14da050cdc8231deb5fc9f9
   RNFlashList: e9b57a5553639f9b528cc50ab53f25831722ed62
   RNGestureHandler: 2282cfbcf86c360d29f44ace393203afd5c6cff7
-  RNReanimated: 03a170d6b020e03de41bbc6817c665f8679248f8
+  RNReanimated: cc80474f6ce28ddaa4c2c0b0aab45ee5a07cedd9
   RNScreens: 52f2565581af64b1b410d49784cf8342ed94ca28
   RNSVG: 43b64ed39c14ce830d840903774154ca0c1f27ec
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
