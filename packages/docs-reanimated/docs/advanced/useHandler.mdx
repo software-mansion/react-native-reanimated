@@ -100,3 +100,25 @@ This array may contain:
 The hook returns a context that will be reused by event handlers and value that indicates whether worklets should be rebuilt. If different implementation is needed for web, `useWeb` boolean is returned to check for web environment
 
 ## Example
+
+```jsx
+function useAnimatedPagerScrollHandler(handlers, dependencies) {
+  const { context, doDependenciesDiffer, useWeb } = useHandler(
+    handlers,
+    dependencies
+  );
+
+  return useEvent(
+    (event) => {
+      'worklet';
+      const { onPageScroll } = handlers;
+
+      if (onPageScroll && event.eventName.endsWith('onPageScroll')) {
+        onPageScroll(event, context);
+      }
+    },
+    ['onPageScroll'],
+    doDependenciesDiffer
+  );
+}
+```
