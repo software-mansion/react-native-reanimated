@@ -20,9 +20,9 @@ import {
   notify,
   waitForNotify,
   clearRenderOutput,
-} from '../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../ReJest/RuntimeTestsApi';
 import { Snapshots } from './TestsOfTestingFramework.snapshot';
-import { ComparisonMode } from '../ReanimatedRuntimeTestsRunner/types';
+import { ComparisonMode } from '../ReJest/types';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);
@@ -146,7 +146,12 @@ const LayoutAnimation = () => {
   );
 };
 
-describe.skip('Tests of Test Framework', () => {
+function WarningComponent() {
+  console.warn('message');
+  return <View />;
+}
+
+describe('Tests of Test Framework', () => {
   test('withTiming - expect error', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('BrownComponent');
@@ -261,5 +266,9 @@ describe.skip('Tests of Test Framework', () => {
     await waitForNotify('notifyJS');
     await waitForNotify('notifyUI');
     expect(await component.getAnimatedStyle('width')).toBe('100');
+  });
+
+  test.warn('warning test', 'message', async () => {
+    await render(<WarningComponent />);
   });
 });

@@ -4,13 +4,10 @@
   "private": true,
   "scripts": {
     "build": "yarn patch-package",
-    "lint": "eslint --max-warnings=0 .",
+    "lint": "eslint .",
     "format": "prettier --write --list-different ."
   },
   "peerDependencies": {
-    "@fortawesome/fontawesome-svg-core": "*",
-    "@fortawesome/free-solid-svg-icons": "*",
-    "@fortawesome/react-native-fontawesome": "*",
     "@react-native-async-storage/async-storage": "*",
     "@react-native-community/slider": "*",
     "@react-native-masked-view/masked-view": "*",
@@ -19,6 +16,7 @@
     "@react-navigation/native": "*",
     "@react-navigation/native-stack": "*",
     "@react-navigation/stack": "*",
+    "@shopify/flash-list": "*",
     "@stylexjs/babel-plugin": "*",
     "d3-shape": "*",
     "react": "*",
@@ -34,9 +32,6 @@
     "react-strict-dom": "*"
   },
   "devDependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.4.0",
-    "@fortawesome/free-solid-svg-icons": "^6.4.0",
-    "@fortawesome/react-native-fontawesome": "^0.3.0",
     "@react-native-async-storage/async-storage": "^1.22.3",
     "@react-native-community/slider": "^4.5.0",
     "@react-native-masked-view/masked-view": "^0.3.1",
@@ -45,6 +40,7 @@
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "@react-navigation/stack": "^6.3.18",
+    "@shopify/flash-list": "^1.7.0",
     "@stylexjs/babel-plugin": "^0.7.0",
     "@tsconfig/react-native": "^3.0.0",
     "@types/d3-shape": "^3.1.1",

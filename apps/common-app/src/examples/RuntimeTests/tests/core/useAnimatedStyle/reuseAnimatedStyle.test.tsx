@@ -2,17 +2,9 @@ import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import type { AnimatableValueObject } from 'react-native-reanimated';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
-import {
-  describe,
-  test,
-  expect,
-  render,
-  useTestRef,
-  getTestComponent,
-  wait,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { getComparisonModeForProp } from '../../../ReanimatedRuntimeTestsRunner/matchers/Comparators';
+import { ComparisonMode } from '../../../ReJest/types';
+import { describe, test, expect, render, useTestRef, getTestComponent, wait } from '../../../ReJest/RuntimeTestsApi';
+import { getComparisonModeForProp } from '../../../ReJest/matchers/Comparators';
 
 describe('Test reusing animatedStyles', () => {
   const COMPONENT_REF = {
@@ -110,9 +102,9 @@ describe('Test reusing animatedStyles', () => {
       // Check the distance from the top
       const finalStyleFull = { height: 80, top: 0, margin: 0, ...finalStyle };
       const { height, margin, top } = finalStyleFull;
-      expect(await componentOne.getAnimatedStyle('top')).toBe(top + margin, ComparisonMode.DISTANCE);
-      expect(await componentTwo.getAnimatedStyle('top')).toBe(top + 3 * margin + height, ComparisonMode.DISTANCE);
-      expect(await componentThree.getAnimatedStyle('top')).toBe(top + 5 * margin + 2 * height, ComparisonMode.DISTANCE);
+      expect(await componentOne.getAnimatedStyle('top')).toBe(top + margin, ComparisonMode.PIXEL);
+      expect(await componentTwo.getAnimatedStyle('top')).toBe(top + 3 * margin + height, ComparisonMode.PIXEL);
+      expect(await componentThree.getAnimatedStyle('top')).toBe(top + 5 * margin + 2 * height, ComparisonMode.PIXEL);
 
       // Check the remaining props
       for (const key of ['width', 'height', 'left', 'opacity', 'backgroundColor'] as const) {

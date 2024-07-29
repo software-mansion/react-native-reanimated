@@ -1,7 +1,10 @@
 'use strict';
-import type { TransformArrayItem } from '../../helperTypes';
-import type { EasingFunction } from '../../Easing';
-import type { ShareableRef, StyleProps } from '../../commonTypes';
+import type {
+  ShareableRef,
+  StyleProps,
+  TransformArrayItem,
+  EasingFunction,
+} from '../../commonTypes';
 
 export type LayoutAnimationsOptions =
   | 'originX'
@@ -80,7 +83,7 @@ export type LayoutAnimationStartFunction = (
   tag: number,
   type: LayoutAnimationType,
   yogaValues: Partial<SharedTransitionAnimationsValues>,
-  config: LayoutAnimationFunction
+  config: (arg: Partial<SharedTransitionAnimationsValues>) => LayoutAnimation
 ) => void;
 
 export interface ILayoutAnimationBuilder {

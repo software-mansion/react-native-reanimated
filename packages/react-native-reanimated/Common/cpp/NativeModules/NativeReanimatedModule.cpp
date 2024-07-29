@@ -720,12 +720,11 @@ void NativeReanimatedModule::performOperations() {
     shadowTree.commit(
         [&](RootShadowNode const &oldRootShadowNode)
             -> RootShadowNode::Unshared {
-          auto rootNode =
-              oldRootShadowNode.ShadowNode::clone(ShadowNodeFragment{});
-
-          for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-            const ShadowNodeFamily &family = shadowNode->getFamily();
-            react_native_assert(family.getSurfaceId() == surfaceId_);
+          PropsMap propsMap;
+          for (auto &[shadowNode, props] : copiedOperationsQueue) {
+            auto family = &shadowNode->getFamily();
+            react_native_assert(family->getSurfaceId() == surfaceId_);
+            propsMap[family].emplace_back(rt, std::move(*props));
 
 #if REACT_NATIVE_MINOR_VERSION >= 73
             // Fix for catching nullptr returned from commit hook was
@@ -736,29 +735,19 @@ void NativeReanimatedModule::performOperations() {
               return nullptr;
             }
 #endif
-
-            auto newRootNode = cloneShadowTreeWithNewProps(
-                rootNode, family, RawProps(rt, *props));
-
-            if (newRootNode == nullptr) {
-              // this happens when React removed the component but Reanimated
-              // still tries to animate it, let's skip update for this
-              // specific component
-              continue;
-            }
-            rootNode = newRootNode;
           }
+
+          auto rootNode = cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
 
           // Mark the commit as Reanimated commit so that we can distinguish it
           // in ReanimatedCommitHook.
+              
           auto reaShadowNode =
               std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
                   rootNode);
           reaShadowNode->setReanimatedCommitTrait();
 
-          auto newRoot = std::static_pointer_cast<RootShadowNode>(rootNode);
-
-          return newRoot;
+          return rootNode;
         },
         { /* .enableStateReconciliation = */
           false,

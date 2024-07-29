@@ -8,7 +8,7 @@ import type {
   CustomConfig,
   KeyframeDefinitions,
 } from './config';
-import { WebEasings } from './Easing.web';
+import { WebEasings, getEasingByName } from './Easing.web';
 import type { WebEasingsNames } from './Easing.web';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
@@ -16,19 +16,30 @@ import { scheduleAnimationCleanup } from './domUtils';
 import { _updatePropsJS } from '../../js-reanimated';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { ReduceMotion } from '../../commonTypes';
-import { isReducedMotion } from '../../PlatformChecker';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Keyframe } from '../animationBuilder';
+import { ReducedMotionManager } from '../../ReducedMotion';
+import { prepareCurvedTransition } from './transition/Curved.web';
+import { EasingNameSymbol } from '../../Easing';
 
 function getEasingFromConfig(config: CustomConfig): string {
-  const easingName =
-    config.easingV && config.easingV.name in WebEasings
-      ? (config.easingV.name as WebEasingsNames)
-      : 'linear';
+  if (!config.easingV) {
+    return getEasingByName('linear');
+  }
 
-  return `cubic-bezier(${WebEasings[easingName].toString()})`;
+  const easingName = config.easingV[EasingNameSymbol];
+
+  if (!(easingName in WebEasings)) {
+    console.warn(
+      `[Reanimated] Selected easing is not currently supported on web.`
+    );
+
+    return getEasingByName('linear');
+  }
+
+  return getEasingByName(easingName as WebEasingsNames);
 }
 
 function getRandomDelay(maxDelay = 1000) {
@@ -51,7 +62,7 @@ function getDelayFromConfig(config: CustomConfig): number {
 
 export function getReducedMotionFromConfig(config: CustomConfig) {
   if (!config.reduceMotionV) {
-    return isReducedMotion();
+    return ReducedMotionManager.jsValue;
   }
 
   switch (config.reduceMotionV) {
@@ -60,7 +71,7 @@ export function getReducedMotionFromConfig(config: CustomConfig) {
     case ReduceMotion.Always:
       return true;
     default:
-      return isReducedMotion();
+      return ReducedMotionManager.jsValue;
   }
 }
 
@@ -142,20 +153,36 @@ export function saveSnapshot(element: HTMLElement) {
 }
 
 export function setElementAnimation(
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig,
-  shouldSavePosition = false
+  shouldSavePosition = false,
+  parent: Element | null = null
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
-  element.style.animationName = animationName;
-  element.style.animationDuration = `${duration}s`;
-  element.style.animationDelay = `${delay}s`;
-  element.style.animationTimingFunction = easing;
+  const configureAnimation = () => {
+    element.style.animationName = animationName;
+    element.style.animationDuration = `${duration}s`;
+    element.style.animationDelay = `${delay}s`;
+    element.style.animationTimingFunction = easing;
+  };
+
+  if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
+    // On chrome sometimes entering animations flicker. This is most likely caused by animation being interrupted
+    // by already started tasks. To avoid flickering, we use `requestAnimationFrame`, which will run callback right before repaint.
+    requestAnimationFrame(configureAnimation);
+  } else {
+    configureAnimation();
+  }
 
   element.onanimationend = () => {
     if (shouldSavePosition) {
       saveSnapshot(element);
+    }
+
+    if (parent?.contains(element)) {
+      element.removedAfterAnimation = true;
+      parent.removeChild(element);
     }
 
     animationConfig.callback?.(true);
@@ -164,16 +191,19 @@ export function setElementAnimation(
 
   const animationCancelHandler = () => {
     animationConfig.callback?.(false);
+
+    if (parent?.contains(element)) {
+      element.removedAfterAnimation = true;
+      parent.removeChild(element);
+    }
+
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
   // Here we have to use `addEventListener` since element.onanimationcancel doesn't work on chrome
   element.onanimationstart = () => {
     if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
-      _updatePropsJS(
-        { visibility: 'initial' },
-        { _component: element as ReanimatedHTMLElement }
-      );
+      _updatePropsJS({ visibility: 'initial' }, element);
     }
 
     element.addEventListener('animationcancel', animationCancelHandler);
@@ -189,7 +219,7 @@ export function setElementAnimation(
 }
 
 export function handleLayoutTransition(
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig,
   transitionData: TransitionData
 ) {
@@ -210,16 +240,32 @@ export function handleLayoutTransition(
     case 'JumpingTransition':
       animationType = TransitionType.JUMPING;
       break;
+    case 'CurvedTransition':
+      animationType = TransitionType.CURVED;
+      break;
+    case 'EntryExitTransition':
+      animationType = TransitionType.ENTRY_EXIT;
+      break;
     default:
       animationType = TransitionType.LINEAR;
       break;
   }
 
-  animationConfig.animationName = TransitionGenerator(
-    animationType,
-    transitionData
-  );
+  const { transitionKeyframeName, dummyTransitionKeyframeName } =
+    TransitionGenerator(animationType, transitionData);
 
+  animationConfig.animationName = transitionKeyframeName;
+
+  if (animationType === TransitionType.CURVED) {
+    const { dummy, dummyAnimationConfig } = prepareCurvedTransition(
+      element,
+      animationConfig,
+      transitionData,
+      dummyTransitionKeyframeName! // In `CurvedTransition` it cannot be undefined
+    );
+
+    setElementAnimation(dummy, dummyAnimationConfig);
+  }
   setElementAnimation(element, animationConfig);
 }
 
@@ -255,6 +301,7 @@ export function handleExitingAnimation(
   dummy.reanimatedDummy = true;
 
   element.style.animationName = '';
+  dummy.style.animationName = '';
 
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
@@ -265,7 +312,6 @@ export function handleExitingAnimation(
     dummy.appendChild(element.firstChild);
   }
 
-  setElementAnimation(dummy, animationConfig);
   parent?.appendChild(dummy);
 
   const snapshot = snapshots.get(element)!;
@@ -295,22 +341,5 @@ export function handleExitingAnimation(
 
   setElementPosition(dummy, snapshot);
 
-  const originalOnAnimationEnd = dummy.onanimationend;
-
-  dummy.onanimationend = function (event: AnimationEvent) {
-    if (parent?.contains(dummy)) {
-      dummy.removedAfterAnimation = true;
-      parent.removeChild(dummy);
-    }
-
-    // Given that this function overrides onAnimationEnd, it won't be null
-    originalOnAnimationEnd?.call(this, event);
-  };
-
-  dummy.addEventListener('animationcancel', () => {
-    if (parent?.contains(dummy)) {
-      dummy.removedAfterAnimation = true;
-      parent.removeChild(dummy);
-    }
-  });
+  setElementAnimation(dummy, animationConfig, false, parent);
 }

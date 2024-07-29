@@ -116,7 +116,6 @@ import WobbleExample from './WobbleExample';
 import WorkletExample from './WorkletExample';
 import WorkletRuntimeExample from './WorkletRuntimeExample';
 import NestedLayoutAnimationConfig from './LayoutAnimations/NestedLayoutAnimationConfig';
-import DynamicStylesExample from './DynamicStylesExample';
 import WithClampExample from './WithClampExample';
 import WorkletFactoryCrash from './WorkletFactoryCrashExample';
 import RuntimeTestsExample from './RuntimeTests/RuntimeTestsExample';
@@ -132,6 +131,8 @@ import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import FreezingShareablesExample from './ShareableFreezingExample';
 import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
 import StrictDOMExample from './StrictDOMExample';
+import BottomTabsExample from './LayoutAnimations/BottomTabs';
+import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation';
 
 interface Example {
   icon?: string;
@@ -491,11 +492,6 @@ export const EXAMPLES: Record<string, Example> = {
     title: 'Log test',
     screen: LogExample,
   },
-  DynamicStylesExample: {
-    icon: '🧨',
-    title: 'Dynamically appending/removing styles',
-    screen: DynamicStylesExample,
-  },
   WorkletFactoryCrash: {
     icon: '🏭',
     title: 'Worklet factory crash',
@@ -675,6 +671,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Reactions counter',
     screen: ReactionsCounterExample,
   },
+  ListItemLayoutAnimation: {
+    title: '[LA] List item layout animation',
+    screen: ListItemLayoutAnimation,
+  },
   SwipeableList: {
     title: '[LA] Swipeable list',
     screen: SwipeableList,
@@ -706,6 +706,10 @@ export const EXAMPLES: Record<string, Example> = {
   ChangeTheme: {
     title: '[LA] Change theme',
     screen: ChangeThemeExample,
+  },
+  BottomTabs: {
+    title: '[LA] Bottom Tabs',
+    screen: BottomTabsExample,
   },
 
   // Shared Element Transitions

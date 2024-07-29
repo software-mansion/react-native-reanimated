@@ -4,6 +4,7 @@ import type {
   AnimationConfig,
   AnimationNames,
   CustomConfig,
+  InitialValuesStyleProps,
   KeyframeDefinitions,
 } from './config';
 import { Animations } from './config';
@@ -12,7 +13,10 @@ import type {
   LayoutAnimationStaticContext,
 } from '../../createAnimatedComponent/commonTypes';
 import { LayoutAnimationType } from '../animationBuilder/commonTypes';
-import { createCustomKeyFrameAnimation } from './createAnimation';
+import {
+  createAnimationWithInitialValues,
+  createCustomKeyFrameAnimation,
+} from './createAnimation';
 import {
   getProcessedConfig,
   handleExitingAnimation,
@@ -24,6 +28,8 @@ import { areDOMRectsEqual } from './domUtils';
 import type { TransitionData } from './animationParser';
 import { Keyframe } from '../animationBuilder';
 import { makeElementVisible } from './componentStyle';
+import { EasingNameSymbol } from '../../Easing';
+import type { ReanimatedHTMLElement } from '../../js-reanimated';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,
@@ -89,7 +95,7 @@ function maybeReportOverwrittenProperties(
 function chooseAction(
   animationType: LayoutAnimationType,
   animationConfig: AnimationConfig,
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   transitionData: TransitionData
 ) {
   switch (animationType) {
@@ -120,6 +126,7 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
 
   const isLayoutTransition = animationType === LayoutAnimationType.LAYOUT;
   const isCustomKeyframe = config instanceof Keyframe;
+  const hasInitialValues = (config as CustomConfig).initialValues !== undefined;
 
   let animationName;
 
@@ -134,9 +141,16 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
       .presetName;
   }
 
+  if (hasInitialValues) {
+    animationName = createAnimationWithInitialValues(
+      animationName,
+      (config as CustomConfig).initialValues as InitialValuesStyleProps
+    );
+  }
+
   const shouldFail = checkUndefinedAnimationFail(
     animationName,
-    isLayoutTransition || isCustomKeyframe
+    isLayoutTransition || isCustomKeyframe || hasInitialValues
   );
 
   if (shouldFail) {
@@ -170,7 +184,7 @@ export function startWebLayoutAnimation<
   ComponentProps extends Record<string, unknown>
 >(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   animationType: LayoutAnimationType,
   transitionData?: TransitionData
 ) {
@@ -201,7 +215,7 @@ export function tryActivateLayoutTransition<
   ComponentProps extends Record<string, unknown>
 >(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   snapshot: DOMRect
 ) {
   if (!props.layout) {
@@ -214,12 +228,22 @@ export function tryActivateLayoutTransition<
     return;
   }
 
+  const enteringAnimation = (props.layout as CustomConfig).enteringV
+    ?.presetName;
+  const exitingAnimation = (props.layout as CustomConfig).exitingV?.presetName;
+
   const transitionData: TransitionData = {
     translateX: snapshot.x - rect.x,
     translateY: snapshot.y - rect.y,
     scaleX: snapshot.width / rect.width,
     scaleY: snapshot.height / rect.height,
     reversed: false, // This field is used only in `SequencedTransition`, so by default it will be false
+    easingX:
+      (props.layout as CustomConfig).easingXV?.[EasingNameSymbol] ?? 'ease',
+    easingY:
+      (props.layout as CustomConfig).easingYV?.[EasingNameSymbol] ?? 'ease',
+    entering: enteringAnimation,
+    exiting: exitingAnimation,
   };
 
   startWebLayoutAnimation(

@@ -17,6 +17,16 @@ export const RotateInData = {
         ],
         opacity: 0,
       },
+      100: {
+        transform: [
+          {
+            translateX: '0%',
+            translateY: '0%',
+            rotate: '0deg',
+          },
+        ],
+        opacity: 1,
+      },
     },
     duration: DEFAULT_ROTATE_TIME,
   },
@@ -33,6 +43,16 @@ export const RotateInData = {
           },
         ],
         opacity: 0,
+      },
+      100: {
+        transform: [
+          {
+            translateX: '0%',
+            translateY: '0%',
+            rotate: '0deg',
+          },
+        ],
+        opacity: 1,
       },
     },
     duration: DEFAULT_ROTATE_TIME,
@@ -51,6 +71,16 @@ export const RotateInData = {
         ],
         opacity: 0,
       },
+      100: {
+        transform: [
+          {
+            translateX: '0%',
+            translateY: '0%',
+            rotate: '0deg',
+          },
+        ],
+        opacity: 1,
+      },
     },
     duration: DEFAULT_ROTATE_TIME,
   },
@@ -68,6 +98,16 @@ export const RotateInData = {
         ],
         opacity: 0,
       },
+      100: {
+        transform: [
+          {
+            translateX: '0%',
+            translateY: '0%',
+            rotate: '0deg',
+          },
+        ],
+        opacity: 1,
+      },
     },
     duration: DEFAULT_ROTATE_TIME,
   },
@@ -77,6 +117,16 @@ export const RotateOutData = {
   RotateOutDownLeft: {
     name: 'RotateOutDownLeft',
     style: {
+      0: {
+        transform: [
+          {
+            translateX: '0%',
+            translateY: '0%',
+            rotate: '0deg',
+          },
+        ],
+        opacity: 1,
+      },
       100: {
         transform: [
           {
@@ -94,6 +144,16 @@ export const RotateOutData = {
   RotateOutDownRight: {
     name: 'RotateOutDownRight',
     style: {
+      0: {
+        transform: [
+          {
+            translateX: '0%',
+            translateY: '0%',
+            rotate: '0deg',
+          },
+        ],
+        opacity: 1,
+      },
       100: {
         transform: [
           {
@@ -111,6 +171,16 @@ export const RotateOutData = {
   RotateOutUpLeft: {
     name: 'RotateOutUpLeft',
     style: {
+      0: {
+        transform: [
+          {
+            translateX: '0%',
+            translateY: '0%',
+            rotate: '0deg',
+          },
+        ],
+        opacity: 1,
+      },
       100: {
         transform: [
           {
@@ -128,6 +198,16 @@ export const RotateOutData = {
   RotateOutUpRight: {
     name: 'RotateOutUpRight',
     style: {
+      0: {
+        transform: [
+          {
+            translateX: '0%',
+            translateY: '0%',
+            rotate: '0deg',
+          },
+        ],
+        opacity: 1,
+      },
       100: {
         transform: [
           {

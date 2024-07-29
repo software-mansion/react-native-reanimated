@@ -1,16 +1,8 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, withSequence, cancelAnimation, withTiming } from 'react-native-reanimated';
-import {
-  describe,
-  test,
-  expect,
-  render,
-  wait,
-  getTestComponent,
-  useTestRef,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
+import { describe, test, expect, render, wait, getTestComponent, useTestRef } from '../../../ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '../../../ReJest/types';
 
 describe(`Test cancelling animation `, () => {
   const COMPONENT_REF = 'COMPONENT_REF';
@@ -50,19 +42,19 @@ describe(`Test cancelling animation `, () => {
     await render(<CancelComponent />);
     await wait(500);
     const component = getTestComponent(COMPONENT_REF);
-    expect(await component.getAnimatedStyle('width')).toBe(50, ComparisonMode.DISTANCE);
+    expect(await component.getAnimatedStyle('width')).toBe(50, ComparisonMode.PIXEL);
   });
   test('Cancelling animation with *****cancelAnimation***** finishes the whole sequence', async () => {
     await render(<CancelComponent shouldCancelAnimation />);
     await wait(500);
     const component = getTestComponent(COMPONENT_REF);
-    expect(await component.getAnimatedStyle('width')).not.toBe(50, ComparisonMode.DISTANCE);
+    expect(await component.getAnimatedStyle('width')).not.toBe(50, ComparisonMode.PIXEL);
   });
   test('Cancelling animation by *****starting new animation***** finishes the whole sequence', async () => {
     await render(<CancelComponent shouldStartNewAnimation />);
     await wait(500);
     const component = getTestComponent(COMPONENT_REF);
-    expect(await component.getAnimatedStyle('width')).not.toBe(50, ComparisonMode.DISTANCE);
+    expect(await component.getAnimatedStyle('width')).not.toBe(50, ComparisonMode.PIXEL);
   });
 });
 

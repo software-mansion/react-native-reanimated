@@ -20,7 +20,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
-import { type StackScreenProps } from '@react-navigation/stack';
+import type { StackScreenProps } from '@react-navigation/stack';
 
 interface Item {
   id: number;
@@ -72,7 +72,7 @@ const TRANSITIONS = [
 function HomeScreen({ navigation }: HomeScreenProps) {
   return (
     <View style={styles.homeContainer}>
-      {TRANSITIONS.map(({ name, title, transition }) => (
+      {TRANSITIONS.map(({ name, title }) => (
         <Button
           key={name}
           title={title}
@@ -205,16 +205,6 @@ const styles = StyleSheet.create({
     color: '#001a72',
     textAlign: 'center',
     marginVertical: 16,
-  },
-  wrapper: {
-    width: '100%',
-    position: 'absolute',
-    display: 'flex',
-    alignItems: 'center',
-  },
-  animatedView: {
-    width: '100%',
-    overflow: 'hidden',
   },
   homeContainer: {
     flex: 1,

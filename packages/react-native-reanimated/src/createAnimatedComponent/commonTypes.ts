@@ -6,7 +6,7 @@ import type {
   StyleProps,
 } from '../commonTypes';
 import type { ViewConfig } from '../ConfigHelper';
-import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
+import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
@@ -17,7 +17,6 @@ import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;
-  viewsRef?: ViewRefSet<unknown>;
   initial?: SharedValue<StyleProps>;
 }
 

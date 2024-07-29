@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
+import { ComparisonMode } from '../../../ReJest/types';
 import {
   describe,
   test,
@@ -13,7 +13,7 @@ import {
   callTracker,
   callTrackerFn,
   getTrackerCallCount,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 
 enum Tracker {
   UseAnimatedStyle = 'useAnimatedStyleTracker',
@@ -97,8 +97,8 @@ describe('withTiming animation of WIDTH', () => {
       const componentActive = getTestComponent(WIDTH_COMPONENT_ACTIVE_REF);
       const WidthComponentPassive = getTestComponent(WIDTH_COMPONENT_PASSIVE_REF);
       await wait(1000);
-      expect(await componentActive.getAnimatedStyle('width')).toBe(finalWidthInPixels, ComparisonMode.DISTANCE);
-      expect(await WidthComponentPassive.getAnimatedStyle('width')).toBe(finalWidthInPixels, ComparisonMode.DISTANCE);
+      expect(await componentActive.getAnimatedStyle('width')).toBe(finalWidthInPixels, ComparisonMode.PIXEL);
+      expect(await WidthComponentPassive.getAnimatedStyle('width')).toBe(finalWidthInPixels, ComparisonMode.PIXEL);
     },
   );
 
@@ -107,8 +107,8 @@ describe('withTiming animation of WIDTH', () => {
     const componentActive = getTestComponent(WIDTH_COMPONENT_ACTIVE_REF);
     const WidthComponentPassive = getTestComponent(WIDTH_COMPONENT_PASSIVE_REF);
     await wait(1000);
-    expect(await componentActive.getAnimatedStyle('width')).not.toBe(100, ComparisonMode.DISTANCE);
-    expect(await WidthComponentPassive.getAnimatedStyle('width')).not.toBe(100, ComparisonMode.DISTANCE);
+    expect(await componentActive.getAnimatedStyle('width')).not.toBe(100, ComparisonMode.PIXEL);
+    expect(await WidthComponentPassive.getAnimatedStyle('width')).not.toBe(100, ComparisonMode.PIXEL);
   });
 });
 
