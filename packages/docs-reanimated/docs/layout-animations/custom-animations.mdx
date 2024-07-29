@@ -4,9 +4,7 @@ sidebar_position: 4
 
 # Custom animations
 
-import DocsCompatibilityInfo from '../_shared/_docs_compatibility_info.mdx';
-
-<DocsCompatibilityInfo />
+import EnteringExitingAnimationSrc from '!!raw-loader!@site/src/examples/CustomEnteringExiting';
 
 If our set of predefined animations is not enough for you then this tab is what you are looking for.
 
@@ -45,31 +43,15 @@ function CustomExitingAnimation(values) {
 
 ### Example
 
-```js
-function CardView() {
-  const exiting = (values) => {
-    'worklet';
-    const animations = {
-      originX: withTiming(width, { duration: 3000 }),
-      opacity: withTiming(0.5, { duration: 2000 }),
-    };
-    const initialValues = {
-      originX: values.currentOriginX,
-      opacity: 1,
-    };
-    return {
-      initialValues,
-      animations,
-    };
-  };
+<ExampleVideo
+  sources={{
+    android:
+      '/react-native-reanimated/recordings/custom_animations/android_custom_exiting.mov',
+    ios: '/react-native-reanimated/recordings/custom_animations/ios_custom_exiting.mov',
+  }}
+/>
 
-  return (
-    <Animated.View style={[styles.animatedView]} exiting={exiting}>
-      <Text> Card Example </Text>
-    </Animated.View>
-  );
-}
-```
+<CollapsibleCode src={EnteringExitingAnimationSrc} showLines={[32, 47]} />
 
 ## Custom Entering Animation
 
@@ -106,38 +88,15 @@ function CustomEnteringAnimation(values) {
 
 ### Example
 
-```js
-function CardView() {
-  const entering = (targetValues) => {
-    'worklet';
-    const animations = {
-      originX: withTiming(targetValues.targetOriginX, { duration: 3000 }),
-      opacity: withTiming(1, { duration: 2000 }),
-      borderRadius: withDelay(4000, withTiming(30, { duration: 3000 })),
-      transform: [
-        { rotate: withTiming('0deg', { duration: 4000 }) },
-        { scale: withTiming(1, { duration: 3500 }) },
-      ],
-    };
-    const initialValues = {
-      originX: -width,
-      opacity: 0,
-      borderRadius: 10,
-      transform: [{ rotate: '90deg' }, { scale: 0.5 }],
-    };
-    return {
-      initialValues,
-      animations,
-    };
-  };
+<ExampleVideo
+  sources={{
+    android:
+      '/react-native-reanimated/recordings/custom_animations/android_custom_entering.mov',
+    ios: '/react-native-reanimated/recordings/custom_animations/ios_custom_entering.mov',
+  }}
+/>
 
-  return (
-    <Animated.View style={[styles.animatedView]} entering={entering}>
-      <Text> Card Example </Text>
-    </Animated.View>
-  );
-}
-```
+<CollapsibleCode src={EnteringExitingAnimationSrc} showLines={[9, 30]} />
 
 ## Custom Layout Transition
 
@@ -253,3 +212,13 @@ export function CustomLayoutTransitionExample() {
 ## Other Facts
 
 Each Reanimated component has its shared value that keeps current animations assigned to that particular component. If you want to start a new animation for a specific prop and you don't provide an initial value for the prop then the initial value will be taken from the last animation that has been assigned to the component. The only exception is Entering animation because we have no way to get the previous animation values.
+
+## Platform compatibility
+
+<div className="platform-compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ❌  |
+
+</div>
