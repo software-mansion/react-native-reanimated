@@ -3,7 +3,6 @@ import { useRef } from 'react';
 import type {
   BuildFunction,
   NullableTestValue,
-  Operation,
   SharedValueSnapshot,
   TestCase,
   TestConfiguration,
@@ -23,10 +22,10 @@ import type {
 } from 'react-native-reanimated';
 import { Matchers, nullableMatch } from '../matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
-import { createUpdatesContainer } from './UpdatesContainer';
 import { makeMutable, runOnJS } from 'react-native-reanimated';
 import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
 import { TestSummaryLogger } from './TestSummaryLogger';
+import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
 export { Presets } from '../Presets';
 
 let callTrackerRegistryJS: Record<string, number> = {};
@@ -317,8 +316,9 @@ export class TestRunner {
 
     this._currentTestCase = null;
     await this.render(null);
-    await this.unmockAnimationTimer();
-    await this.stopRecordingAnimationUpdates();
+    const animationUpdatesRecorder = new AnimationUpdatesRecorder();
+    await animationUpdatesRecorder.unmockAnimationTimer();
+    await animationUpdatesRecorder.stopRecordingAnimationUpdates();
   }
 
   public expect(currentValue: TestValue): Matchers {
@@ -354,135 +354,6 @@ export class TestRunner {
   public afterEach(job: () => void) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterEach = job;
-  }
-
-  public async recordAnimationUpdates() {
-    const updatesContainer = createUpdatesContainer();
-    const recordAnimationUpdates = updatesContainer.pushAnimationUpdates;
-    const recordLayoutAnimationUpdates = updatesContainer.pushLayoutAnimationUpdates;
-
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      const originalUpdateProps = global._IS_FABRIC ? global._updatePropsFabric : global._updatePropsPaper;
-      global.originalUpdateProps = originalUpdateProps;
-
-      const mockedUpdateProps = (operations: Operation[]) => {
-        recordAnimationUpdates(operations);
-        originalUpdateProps(operations);
-      };
-
-      if (global._IS_FABRIC) {
-        global._updatePropsFabric = mockedUpdateProps;
-      } else {
-        global._updatePropsPaper = mockedUpdateProps;
-      }
-
-      const originalNotifyAboutProgress = global._notifyAboutProgress;
-      global.originalNotifyAboutProgress = originalNotifyAboutProgress;
-      global._notifyAboutProgress = (tag: number, value: Record<string, unknown>, isSharedTransition: boolean) => {
-        recordLayoutAnimationUpdates(tag, value);
-        originalNotifyAboutProgress(tag, value, isSharedTransition);
-      };
-    });
-    return updatesContainer;
-  }
-
-  public async stopRecordingAnimationUpdates() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      if (global.originalUpdateProps) {
-        if (global._IS_FABRIC) {
-          global._updatePropsFabric = global.originalUpdateProps;
-        } else {
-          global._updatePropsPaper = global.originalUpdateProps;
-        }
-        global.originalUpdateProps = undefined;
-      }
-      if (global.originalNotifyAboutProgress) {
-        global._notifyAboutProgress = global.originalNotifyAboutProgress;
-        global.originalNotifyAboutProgress = undefined;
-      }
-    });
-  }
-
-  public async mockAnimationTimer() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      global.mockedAnimationTimestamp = 0;
-      global.originalGetAnimationTimestamp = global._getAnimationTimestamp;
-      global._getAnimationTimestamp = () => {
-        if (global.mockedAnimationTimestamp === undefined) {
-          throw new Error("Animation timestamp wasn't initialized");
-        }
-        return global.mockedAnimationTimestamp;
-      };
-      global.framesCount = 0;
-
-      const originalRequestAnimationFrame = global.requestAnimationFrame;
-      global.originalRequestAnimationFrame = originalRequestAnimationFrame;
-      global.requestAnimationFrame = (callback: FrameRequestCallback) => {
-        originalRequestAnimationFrame(() => {
-          callback(global._getAnimationTimestamp());
-        });
-        return 0;
-      };
-
-      global.originalFlushAnimationFrame = global.__flushAnimationFrame;
-      global.__flushAnimationFrame = (_frameTimestamp: number) => {
-        global.mockedAnimationTimestamp! += 16;
-        global.__frameTimestamp = global.mockedAnimationTimestamp;
-        global.originalFlushAnimationFrame!(global.mockedAnimationTimestamp!);
-        global.framesCount!++;
-      };
-    });
-  }
-
-  public async setAnimationTimestamp(timestamp: number) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-      global.mockedAnimationTimestamp = timestamp;
-    });
-  }
-
-  public async advanceAnimationByTime(time: number) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-      global.mockedAnimationTimestamp += time;
-    });
-  }
-
-  public async advanceAnimationByFrames(frameCount: number) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-      global.mockedAnimationTimestamp += frameCount * 16;
-    });
-  }
-
-  public async unmockAnimationTimer() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      if (global.originalGetAnimationTimestamp) {
-        global._getAnimationTimestamp = global.originalGetAnimationTimestamp;
-        global.originalGetAnimationTimestamp = undefined;
-      }
-      if (global.originalRequestAnimationFrame) {
-        (global.requestAnimationFrame as any) = global.originalRequestAnimationFrame;
-        global.originalRequestAnimationFrame = undefined;
-      }
-      if (global.originalFlushAnimationFrame) {
-        global.__flushAnimationFrame = global.originalFlushAnimationFrame;
-        global.originalFlushAnimationFrame = undefined;
-      }
-      if (global.mockedAnimationTimestamp) {
-        global.mockedAnimationTimestamp = undefined;
-      }
-      if (global.framesCount) {
-        global.framesCount = undefined;
-      }
-    });
   }
 
   public async unmockWindowDimensions() {

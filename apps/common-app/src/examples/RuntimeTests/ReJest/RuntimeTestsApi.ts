@@ -4,10 +4,12 @@ import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
 import type { TestConfiguration, TestValue, NullableTestValue, BuildFunction } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
+import { AnimationUpdatesRecorder } from './TestRunner/AnimationUpdatesRecorder';
 
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
+const animationRecorder = new AnimationUpdatesRecorder();
 
 type DescribeFunction = (name: string, buildSuite: BuildFunction) => void;
 type TestFunction = (name: string, buildTest: BuildFunction) => void;
@@ -177,11 +179,11 @@ export function configure(config: TestConfiguration) {
 }
 
 export async function mockAnimationTimer() {
-  await testRunner.mockAnimationTimer();
+  await animationRecorder.mockAnimationTimer();
 }
 
 export async function unmockAnimationTimer() {
-  await testRunner.unmockAnimationTimer();
+  await animationRecorder.unmockAnimationTimer();
 }
 
 export async function mockWindowDimensions() {
@@ -193,21 +195,21 @@ export async function unmockWindowDimensions() {
 }
 
 export async function setAnimationTimestamp(timestamp: number) {
-  await testRunner.setAnimationTimestamp(timestamp);
+  await animationRecorder.setAnimationTimestamp(timestamp);
 }
 
 export async function advanceAnimationByTime(time: number) {
-  await testRunner.advanceAnimationByTime(time);
+  await animationRecorder.advanceAnimationByTime(time);
 }
 
 export async function advanceAnimationByFrames(frameCount: number) {
-  await testRunner.advanceAnimationByFrames(frameCount);
+  await animationRecorder.advanceAnimationByFrames(frameCount);
 }
 
 export async function recordAnimationUpdates() {
-  return testRunner.recordAnimationUpdates();
+  return animationRecorder.recordAnimationUpdates();
 }
 
 export async function stopRecordingAnimationUpdates() {
-  await testRunner.stopRecordingAnimationUpdates();
+  await animationRecorder.stopRecordingAnimationUpdates();
 }
