@@ -31,6 +31,7 @@ import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from 
 import { createUpdatesContainer } from './UpdatesContainer';
 import { makeMutable, runOnJS } from 'react-native-reanimated';
 import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
+import { ValueRegistry } from './ValueRegistry';
 export { Presets } from '../Presets';
 
 let callTrackerRegistryJS: Record<string, number> = {};
@@ -56,6 +57,8 @@ export class TestRunner {
   private _includesOnly: boolean = false;
   private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
+  private _valueRegistry = new ValueRegistry();
+
   private _summary: TestSummary = {
     passed: 0,
     failed: 0,
@@ -64,6 +67,10 @@ export class TestRunner {
     startTime: Date.now(),
     endTime: 0,
   };
+
+  public getValueRegistry() {
+    return this._valueRegistry;
+  }
 
   public notify(name: string) {
     'worklet';

@@ -4,12 +4,11 @@ import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
 import type { TestConfiguration, TestValue, NullableTestValue, BuildFunction } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
-import { ValueRegistry } from './TestRunner/ValueRegistry';
 
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
-const valueRegistry = new ValueRegistry();
+const valueRegistry = testRunner.getValueRegistry();
 
 type DescribeFunction = (name: string, buildSuite: BuildFunction) => void;
 type TestFunction = (name: string, buildTest: BuildFunction) => void;
