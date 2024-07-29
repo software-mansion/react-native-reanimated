@@ -150,12 +150,3 @@ declare global {
   };
 }
 /* eslint-enable no-var */
-
-export type TestSummary = {
-  passed: number;
-  failed: number;
-  skipped: number;
-  failedTests: Array<string>;
-  startTime: number;
-  endTime: number;
-};

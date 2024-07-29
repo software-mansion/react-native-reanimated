@@ -5,9 +5,8 @@ import type {
   BaseBuilderAnimationConfig,
   LayoutAnimationAndConfig,
 } from './commonTypes';
-import type { EasingFunction } from '../../Easing';
 import { BaseAnimationBuilder } from './BaseAnimationBuilder';
-import type { StyleProps } from '../../commonTypes';
+import type { StyleProps, EasingFunction } from '../../commonTypes';
 import { assertEasingIsWorklet } from '../../animation/util';
 
 export class ComplexAnimationBuilder extends BaseAnimationBuilder {

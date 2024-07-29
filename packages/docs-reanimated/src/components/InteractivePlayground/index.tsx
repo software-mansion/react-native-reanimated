@@ -146,7 +146,7 @@ const RangeStyling = {
   color: 'var(--swm-interactive-slider)', // color of the main path of slider
   '& .MuiSlider-thumb': {
     backgroundColor: 'var(--swm-interactive-slider)', //color of thumb
-    transform: 'translate(-50%, -40%)',
+    transform: 'translate(-50%, -50%)',
   },
   '& .MuiSlider-rail': {
     color: 'var(--swm-interactive-slider-rail)', //color of the rail (remaining area of slider)
@@ -158,7 +158,7 @@ const DisabledRangeStyling = {
   color: 'var(--swm-interactive-slider)', // color of the main path of slider
   '& .MuiSlider-thumb': {
     backgroundColor: '#ccc', //color of thumb
-    transform: 'translate(-50%, -40%)',
+    transform: 'translate(-50%, -50%)',
   },
   '& .MuiSlider-rail': {
     color: 'var(--swm-interactive-slider-rail)', //color of the rail (remaining area of slider)

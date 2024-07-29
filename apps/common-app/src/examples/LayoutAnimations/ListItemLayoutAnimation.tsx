@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   },
   listItem: {
     padding: 20,
-    backgroundColor: '#ad8ee9',
+    backgroundColor: '#b58df1',
     shadowColor: '#000',
     shadowOpacity: 0.05,
   },
@@ -197,6 +197,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#b59aeb',
+    color: '#b58df1',
   },
 });
