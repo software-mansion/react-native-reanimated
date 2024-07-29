@@ -2,14 +2,16 @@ package com.swmansion.reanimated;
 
 import android.graphics.drawable.Drawable;
 import android.view.View;
+
 import com.facebook.react.uimanager.drawable.CSSBackgroundDrawable;
 import com.facebook.react.uimanager.LengthPercentage;
 import com.facebook.react.uimanager.style.BorderRadiusProp;
 import com.facebook.react.uimanager.style.ComputedBorderRadius;
 import com.swmansion.reanimated.ReactNativeUtils;
+
 import java.util.Objects;
 
-public class DrawableBorderRadii {
+public class BorderRadiiDrawableUtils {
     public static ReactNativeUtils.BorderRadii getBorderRadii(View view) {
         Drawable background = view.getBackground();
         if (background instanceof CSSBackgroundDrawable drawable) {
