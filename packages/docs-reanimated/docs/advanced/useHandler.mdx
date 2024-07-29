@@ -4,8 +4,7 @@ sidebar_position: 5
 
 # useHandler
 
-Lets you find out whether the event handler dependencies have changed.
-This is low-level hook returning context object and value indicating whether worklet should be rebuilt, which should be used in order to create custom event handler hook like `useAnimatedGestureHandler` or `useAnimatedScrollHandler`.
+`useHandler` is a low-level hook. It returns a context object and a value that tells you if the worklet needs to be rebuilt. You can use it to create custom event handler hooks, like `useAnimatedGestureHandler` or `useAnimatedScrollHandler`.
 
 ## Reference
 
@@ -88,7 +87,7 @@ Each of the event worklets will receive the following parameters when called:
 
 #### `dependencies` <Optional />
 
-Optional array of values which changes cause this hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
+Changes in `dependencies` array cause `useHandler` hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
 
 This array may contain:
 
