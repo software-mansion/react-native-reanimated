@@ -18,7 +18,7 @@ import {
   unmockAnimationTimer,
   clearRenderOutput,
   getTestComponent,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../../ReJest/RuntimeTestsApi';
 import {
   CurvedSnapshot,
   FadingSnapshot,
