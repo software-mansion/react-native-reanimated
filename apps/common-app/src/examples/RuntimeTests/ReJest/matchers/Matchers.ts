@@ -1,5 +1,4 @@
-import { color } from '../utils/stringFormatUtils';
-import type { TestCase, TestValue, NullableTestValue } from '../types';
+import type { TestCase, TestValue } from '../types';
 import type { Matcher, MatcherArguments } from './rawMatchers';
 import {
   toBeMatcher,
@@ -7,6 +6,7 @@ import {
   toBeCalledMatcher,
   toBeCalledUIMatcher,
   toBeCalledJSMatcher,
+  toBeNullableMatcher,
 } from './rawMatchers';
 import { compareSnapshots } from './snapshotMatchers';
 import type { SingleViewSnapshot } from '../TestRunner/UpdatesContainer';
@@ -31,6 +31,7 @@ export class Matchers {
   }
 
   public toBe = this.decorateMatcher(toBeMatcher);
+  public toBeNullable = this.decorateMatcher(toBeNullableMatcher);
   public toBeWithinRange = this.decorateMatcher(toBeWithinRangeMatcher);
   public toBeCalled = this.decorateMatcher(toBeCalledMatcher);
   public toBeCalledUI = this.decorateMatcher(toBeCalledUIMatcher);
@@ -54,17 +55,5 @@ export class Matchers {
     if (mismatchError) {
       this._testCase.errors.push(mismatchError);
     }
-  }
-}
-
-export function nullableMatch(currentValue: NullableTestValue, testCase: TestCase, negation: boolean = false) {
-  const pass = currentValue === null || currentValue === undefined;
-
-  const coloredExpected = color('nullable', 'green');
-  const coloredReceived = color(currentValue, 'red');
-  const message = `Expected${negation ? ' NOT' : ''} ${coloredExpected} received ${coloredReceived}`;
-
-  if ((!pass && !negation) || (pass && negation)) {
-    testCase.errors.push(message);
   }
 }

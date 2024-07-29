@@ -152,6 +152,33 @@ function WarningComponent() {
 }
 
 describe('Tests of Test Framework', () => {
+  test('Test  comparators', () => {
+    expect(1).toBe(1.0);
+    expect(2).not.toBe(1.0);
+
+    expect(1).not.toBe('1');
+    expect('1').toBe(1);
+
+    expect('cornflowerblue').not.toBe('#6495edff');
+    expect('cornflowerblue').toBe('#6495edff', ComparisonMode.COLOR);
+
+    expect({ backgroundColor: 'cornflowerblue' }).toBe({ backgroundColor: '#6495edff' });
+    expect({ width: 'cornflowerblue' }).not.toBe({ width: '#6495edff' });
+
+    expect(2).toBeWithinRange(1, 3);
+    expect(2).toBeWithinRange(1.99999999, 2.0000001);
+    expect(2).toBeWithinRange(2, 2);
+
+    expect(null).toBeNullable();
+    expect(undefined).toBeNullable();
+    expect([]).not.toBeNullable();
+    expect(0).not.toBeNullable();
+  });
+  test('Test comparators - expect error', () => {
+    expect(0).toBeNullable();
+    expect(2).not.toBeWithinRange(1.99999999, 2.0000001);
+  });
+
   test('withTiming - expect error', async () => {
     await render(<AnimatedComponent />);
     const component = getTestComponent('BrownComponent');

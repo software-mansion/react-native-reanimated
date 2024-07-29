@@ -21,7 +21,7 @@ import type {
   SharedTransitionAnimationsValues,
   LayoutAnimation,
 } from 'react-native-reanimated';
-import { Matchers, nullableMatch } from '../matchers/Matchers';
+import { Matchers } from '../matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
 import { makeMutable, runOnJS } from 'react-native-reanimated';
@@ -324,16 +324,6 @@ export class TestRunner {
   public expect(currentValue: TestValue): Matchers {
     assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
-  }
-
-  public expectNullable(currentValue: NullableTestValue) {
-    assertTestCase(this._currentTestCase);
-    nullableMatch(currentValue, this._currentTestCase);
-  }
-
-  public expectNotNullable(currentValue: NullableTestValue) {
-    assertTestCase(this._currentTestCase);
-    nullableMatch(currentValue, this._currentTestCase, true);
   }
 
   public beforeAll(job: () => void) {
