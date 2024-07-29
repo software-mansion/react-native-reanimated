@@ -4,7 +4,10 @@ import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
 import type { TestConfiguration, TestValue, NullableTestValue, BuildFunction } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
-
+import {
+  mockWindowDimensions as _mockWindowDimensions,
+  unmockWindowDimensions as _unmockWindowDimensions,
+} from './TestRunner/mockWindowDimensions';
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
@@ -185,11 +188,11 @@ export async function unmockAnimationTimer() {
 }
 
 export async function mockWindowDimensions() {
-  await testRunner.mockWindowDimensions();
+  await _mockWindowDimensions();
 }
 
 export async function unmockWindowDimensions() {
-  await testRunner.unmockWindowDimensions();
+  await _unmockWindowDimensions();
 }
 
 export async function setAnimationTimestamp(timestamp: number) {

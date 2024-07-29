@@ -14,13 +14,7 @@ import type {
 import { DescribeDecorator, TestDecorator } from '../types';
 import { TestComponent } from '../TestComponent';
 import { applyMarkdown, formatString } from '../utils/stringFormatUtils';
-import type {
-  SharedValue,
-  LayoutAnimationStartFunction,
-  LayoutAnimationType,
-  SharedTransitionAnimationsValues,
-  LayoutAnimation,
-} from 'react-native-reanimated';
+import type { SharedValue } from 'react-native-reanimated';
 import { Matchers, nullableMatch } from '../matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
@@ -482,46 +476,6 @@ export class TestRunner {
       if (global.framesCount) {
         global.framesCount = undefined;
       }
-    });
-  }
-
-  public async unmockWindowDimensions() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      if (global.originalLayoutAnimationsManager) {
-        global.LayoutAnimationsManager = global.originalLayoutAnimationsManager;
-      }
-    });
-  }
-
-  public async mockWindowDimensions() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      const originalLayoutAnimationsManager = global.LayoutAnimationsManager;
-
-      const startLayoutAnimation: LayoutAnimationStartFunction = (
-        tag: number,
-        type: LayoutAnimationType,
-        _yogaValues: Partial<SharedTransitionAnimationsValues>,
-        config: (arg: Partial<SharedTransitionAnimationsValues>) => LayoutAnimation,
-      ) => {
-        originalLayoutAnimationsManager.start(
-          tag,
-          type,
-          {
-            ..._yogaValues,
-            windowHeight: 852,
-            windowWidth: 393,
-          },
-          config,
-        );
-      };
-
-      global.originalLayoutAnimationsManager = originalLayoutAnimationsManager;
-      global.LayoutAnimationsManager = {
-        start: startLayoutAnimation,
-        stop: originalLayoutAnimationsManager.stop,
-      };
     });
   }
 
