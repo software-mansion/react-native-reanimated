@@ -737,11 +737,12 @@ void NativeReanimatedModule::performOperations() {
 #endif
           }
 
-          auto rootNode = cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+          auto rootNode =
+              cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
 
           // Mark the commit as Reanimated commit so that we can distinguish it
           // in ReanimatedCommitHook.
-              
+
           auto reaShadowNode =
               std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
                   rootNode);
@@ -845,10 +846,6 @@ void NativeReanimatedModule::initializeFabric(
 
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
-  // #if REACT_NATIVE_MINOR_VERSION >= 73
-  //   mountHook_ =
-  //       std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
-  // #endif
 }
 
 void NativeReanimatedModule::initializeLayoutAnimations() {

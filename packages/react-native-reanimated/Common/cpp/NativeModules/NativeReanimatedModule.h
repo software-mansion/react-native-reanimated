@@ -218,9 +218,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
-#if REACT_NATIVE_MINOR_VERSION >= 73
-//  std::shared_ptr<ReanimatedMountHook> mountHook_;
-#endif
 
   std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #else
