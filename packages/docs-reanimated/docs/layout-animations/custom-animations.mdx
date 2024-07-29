@@ -5,16 +5,14 @@ sidebar_position: 4
 # Custom animations
 
 import EnteringExitingAnimationSrc from '!!raw-loader!@site/src/examples/CustomEnteringExiting';
+import LayoutAnimationSrc from '!!raw-loader!@site/src/examples/CustomLayoutAnimation';
 
-If our set of predefined animations is not enough for you then this tab is what you are looking for.
+If the predefined animations provided don't meet your needs, this guide will show you how to create custom animations. Under the hood, animation builders generate a worklet function that returns the essential data required to start a specific animation.
 
-## Custom Exiting Animation
-
-What our exiting animation builders do under the hood is generating a worklet function that returns essential data for starting particular animation.
-The high level template looks like this:
+## Reference
 
 ```js
-function CustomExitingAnimation(values) {
+function CustomAnimation(values) {
   'worklet';
   const animations = {
     // your animations
@@ -32,6 +30,10 @@ function CustomExitingAnimation(values) {
   };
 }
 ```
+
+## Custom Exiting Animation
+
+### Arguments
 
 - `values` - contains information about where view was displayed and what were its dimensions
   - `values.currentOriginX` - X coordinate of top left corner in parent's coordinate system
@@ -46,8 +48,8 @@ function CustomExitingAnimation(values) {
 <ExampleVideo
   sources={{
     android:
-      '/react-native-reanimated/recordings/custom_animations/android_custom_exiting.mov',
-    ios: '/react-native-reanimated/recordings/custom_animations/ios_custom_exiting.mov',
+      '/react-native-reanimated/recordings/custom_animations/android_exiting_custom.mov',
+    ios: '/react-native-reanimated/recordings/custom_animations/ios_exiting_custom.mov',
   }}
 />
 
@@ -55,28 +57,7 @@ function CustomExitingAnimation(values) {
 
 ## Custom Entering Animation
 
-What our entering animation builders do under the hood is generating a worklet function that returns essential data for starting particular animation.
-The high level template looks like this:
-
-```js
-function CustomEnteringAnimation(values) {
-  'worklet';
-  const animations = {
-    // your animations
-  };
-  const initialValues = {
-    // initial values for animations
-  };
-  const callback = (finished: boolean) => {
-    // optional callback that will fire when layout animation ends
-  };
-  return {
-    initialValues,
-    animations,
-    callback,
-  };
-}
-```
+### Arguments
 
 - `values` - contains information about where view wants to be displayed and what are its dimensions
   - `values.targetOriginX` - X coordinate of top left corner in parent's coordinate system
@@ -91,8 +72,8 @@ function CustomEnteringAnimation(values) {
 <ExampleVideo
   sources={{
     android:
-      '/react-native-reanimated/recordings/custom_animations/android_custom_entering.mov',
-    ios: '/react-native-reanimated/recordings/custom_animations/ios_custom_entering.mov',
+      '/react-native-reanimated/recordings/custom_animations/android_entering_custom.mov',
+    ios: '/react-native-reanimated/recordings/custom_animations/ios_entering_custom.mov',
   }}
 />
 
@@ -100,28 +81,7 @@ function CustomEnteringAnimation(values) {
 
 ## Custom Layout Transition
 
-What our layout transition builders do under the hood is generating a worklet function that returns essential data for starting particular transition.
-The high level template looks like this:
-
-```js
-function CustomLayoutTransition(values) {
-  'worklet';
-  const animations = {
-    // your animations
-  };
-  const initialValues = {
-    // initial values for animations
-  };
-  const callback = (finished: boolean) => {
-    // optional callback that will fire when layout animation ends
-  };
-  return {
-    initialValues,
-    animations,
-    callback,
-  };
-}
-```
+### Arguments
 
 - `values` - contains before and after information about the view's origin and dimensions
   - `values.targetOriginX` - X coordinate of top left corner in parent's coordinate system
@@ -139,79 +99,19 @@ function CustomLayoutTransition(values) {
 
 ### Example
 
-<video
-  src="https://user-images.githubusercontent.com/12784455/120450759-09fa3980-c391-11eb-9b64-65ec8e6c2509.mp4"
-  controls="controls"
-  muted="muted"
-  width="45%"></video>
+<ExampleVideo
+  sources={{
+    android:
+      '/react-native-reanimated/recordings/custom_animations/android_layout_custom.mov',
+    ios: '/react-native-reanimated/recordings/custom_animations/ios_layout_custom.mov',
+  }}
+/>
 
-```js
-function CustomLayoutTransition(values) {
-  'worklet';
-  return {
-    animations: {
-      originX: withTiming(values.targetOriginX, { duration: 1000 }),
-      originY: withDelay(
-        1000,
-        withTiming(values.targetOriginY, { duration: 1000 })
-      ),
-      width: withSpring(values.targetWidth),
-      height: withSpring(values.targetHeight),
-    },
-    initialValues: {
-      originX: values.currentOriginX,
-      originY: values.currentOriginY,
-      width: values.currentWidth,
-      height: values.currentHeight,
-    },
-  };
-}
+<CollapsibleCode src={LayoutAnimationSrc} showLines={[8, 28]} />
 
-function Box({ label, state }: { label: string, state: boolean }) {
-  const ind = label.charCodeAt(0) - 'A'.charCodeAt(0);
-  const delay = 300 * ind;
-  return (
-    <Animated.View
-      layout={CustomLayoutTransition}
-      style={[
-        styles.box,
-        {
-          flexDirection: state ? 'row' : 'row-reverse',
-          height: state ? 30 : 60,
-        },
-      ]}>
-      <Text> {label} </Text>
-    </Animated.View>
-  );
-}
+## Remarks
 
-export function CustomLayoutTransitionExample() {
-  const [state, setState] = useState(true);
-  return (
-    <View style={{ marginTop: 30 }}>
-      <View style={{ height: 300 }}>
-        <View style={{ flexDirection: state ? 'row' : 'column' }}>
-          {state && <Box key="a" label="A" state={state} />}
-          <Box key="b" label="B" state={state} />
-          {!state && <Box key="a" label="A" state={state} />}
-          <Box key="c" label="C" state={state} />
-        </View>
-      </View>
-
-      <Button
-        onPress={() => {
-          setState(!state);
-        }}
-        title="toggle"
-      />
-    </View>
-  );
-}
-```
-
-## Other Facts
-
-Each Reanimated component has its shared value that keeps current animations assigned to that particular component. If you want to start a new animation for a specific prop and you don't provide an initial value for the prop then the initial value will be taken from the last animation that has been assigned to the component. The only exception is Entering animation because we have no way to get the previous animation values.
+-Each Reanimated component has a shared value that keeps the current animations assigned to that particular component. If you start a new animation for a specific property without providing an initial value for that property, the initial value will be taken from the last animation assigned to the component. The only exception is the `Entering` animation, as we have no way to get the previous animation values.
 
 ## Platform compatibility
 
