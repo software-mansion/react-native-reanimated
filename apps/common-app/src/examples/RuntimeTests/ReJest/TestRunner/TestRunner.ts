@@ -52,6 +52,11 @@ export class TestRunner {
   private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
   private _testSummary: TestSummaryLogger = new TestSummaryLogger();
+  private _animationRecorder = new AnimationUpdatesRecorder();
+
+  public getAnimationUpdatesRecorder() {
+    return this._animationRecorder;
+  }
 
   public notify(name: string) {
     'worklet';
