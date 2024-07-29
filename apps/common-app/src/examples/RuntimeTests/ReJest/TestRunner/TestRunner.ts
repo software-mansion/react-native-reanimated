@@ -2,7 +2,6 @@ import type { Component, MutableRefObject, ReactElement } from 'react';
 import { useRef } from 'react';
 import type {
   BuildFunction,
-  NullableTestValue,
   Operation,
   SharedValueSnapshot,
   TestCase,

@@ -1,10 +1,10 @@
-import type { Mismatch, NullableTestValue } from '../types';
+import type { Mismatch, TestValue } from '../types';
 
 export function indentNestingLevel(nestingLevel: number) {
   return `  ${'   '.repeat(nestingLevel)}`;
 }
 
-function valueToPrettyString(message: NullableTestValue): string {
+function valueToPrettyString(message: TestValue): string {
   if (message === undefined) {
     return 'undefined';
   } else if (message === null) {
@@ -25,7 +25,7 @@ function valueToPrettyString(message: NullableTestValue): string {
   }
 }
 
-function adjustValueToLength(value: NullableTestValue, length: number) {
+function adjustValueToLength(value: TestValue, length: number) {
   const valueStr = valueToPrettyString(value);
 
   const messageLen = valueStr.length;
@@ -37,10 +37,7 @@ function adjustValueToLength(value: NullableTestValue, length: number) {
   }
 }
 
-export function color(
-  value: NullableTestValue,
-  color: 'cyan' | 'gray' | 'green' | 'yellow' | 'red' | 'lightGray' | 'orange',
-) {
+export function color(value: TestValue, color: 'cyan' | 'gray' | 'green' | 'yellow' | 'red' | 'lightGray' | 'orange') {
   const COLOR_CODES = {
     cyan: '\x1b[36m',
     gray: '\x1b[38;5;242m',
@@ -55,22 +52,22 @@ export function color(
   return `${COLOR_CODES[color]}${stringValue}${COLOR_CODES.reset}`;
 }
 
-export function cyan(x: NullableTestValue) {
+export function cyan(x: TestValue) {
   return color(x, 'cyan');
 }
-export function gray(x: NullableTestValue) {
+export function gray(x: TestValue) {
   return color(x, 'gray');
 }
-export function green(x: NullableTestValue) {
+export function green(x: TestValue) {
   return color(x, 'green');
 }
-export function yellow(x: NullableTestValue) {
+export function yellow(x: TestValue) {
   return color(x, 'yellow');
 }
-export function red(x: NullableTestValue) {
+export function red(x: TestValue) {
   return color(x, 'red');
 }
-export function orange(x: NullableTestValue) {
+export function orange(x: TestValue) {
   return color(x, 'orange');
 }
 
