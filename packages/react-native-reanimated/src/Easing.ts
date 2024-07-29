@@ -1,5 +1,6 @@
 'use strict';
 import { Bezier } from './Bezier';
+import type { EasingFunction } from './commonTypes';
 
 /**
  * The `Easing` module implements common easing functions. This module is used
@@ -46,8 +47,6 @@ import { Bezier } from './Bezier';
  * - [`inOut`](docs/easing.html#inout) makes any easing function symmetrical
  * - [`out`](docs/easing.html#out) runs an easing function backwards
  */
-
-export type EasingFunction = (t: number) => number;
 
 /**
  * @deprecated Please use {@link EasingFunction} type instead.

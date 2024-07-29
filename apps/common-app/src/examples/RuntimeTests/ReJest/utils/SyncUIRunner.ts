@@ -39,12 +39,22 @@ export class SyncUIRunner extends WaitForUnlock {
 }
 
 export class RenderLock extends WaitForUnlock {
+  private _wasRenderedNull: boolean = true;
+
   public lock() {
     this._setLock(true);
   }
 
   public unlock() {
     this._setLock(false);
+  }
+
+  public wasRenderedNull() {
+    return this._wasRenderedNull;
+  }
+
+  public setRenderedNull(wasRenderedNull: boolean) {
+    this._wasRenderedNull = wasRenderedNull;
   }
 
   public async waitForUnlock(maxWaitTime?: number) {
