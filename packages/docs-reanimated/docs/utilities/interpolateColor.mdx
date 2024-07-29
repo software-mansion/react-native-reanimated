@@ -9,7 +9,9 @@ sidebar_position: 3
 ## Reference
 
 ```jsx
-const Component = () => {
+import { interpolateColor } from 'react-native-reanimated';
+
+function App() {
   const progress = useSharedValue(0);
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -27,7 +29,7 @@ const Component = () => {
   // ...
 
   return <Animated.View style={[{ width: 100, height: 100 }, animatedStyle]} />;
-};
+}
 ```
 
 <details>
