@@ -2,17 +2,9 @@ import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import type { AnimatableValueObject } from 'react-native-reanimated';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
-import type { ValidPropNames } from '../../../ReanimatedRuntimeTestsRunner/types';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
-import {
-  describe,
-  test,
-  expect,
-  render,
-  useTestRef,
-  getTestComponent,
-  wait,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import type { ValidPropNames } from '../../../ReJest/types';
+import { describe, test, expect, render, useTestRef, getTestComponent, wait } from '../../../ReJest/RuntimeTestsApi';
+import { getComparisonModeForProp } from '../../../ReJest/matchers/Comparators';
 
 const COMPONENT_REF = 'AnimatedComponent';
 
@@ -42,16 +34,6 @@ const AnimatedComponent = ({
 };
 
 describe('withTiming animation of WIDTH', () => {
-  const comparisonModes = {
-    zIndex: ComparisonMode.NUMBER,
-    opacity: ComparisonMode.NUMBER,
-    width: ComparisonMode.DISTANCE,
-    height: ComparisonMode.DISTANCE,
-    top: ComparisonMode.DISTANCE,
-    left: ComparisonMode.DISTANCE,
-    backgroundColor: ComparisonMode.COLOR,
-  };
-
   test.each([
     {
       startStyle: { width: 10 },
@@ -74,7 +56,7 @@ describe('withTiming animation of WIDTH', () => {
       finalStyle: { opacity: 0.1, backgroundColor: '#AAAAFFFD' },
     },
   ])(
-    'Animate\tfrom \t${startStyle}\n\t\tto\t${finalStyle}',
+    'Animate from **${startStyle}** to **${finalStyle}**',
     async ({ startStyle, finalStyle }: { startStyle: any; finalStyle: any }) => {
       await render(<AnimatedComponent startStyle={startStyle} finalStyle={finalStyle} />);
       const component = getTestComponent(COMPONENT_REF);
@@ -82,7 +64,7 @@ describe('withTiming animation of WIDTH', () => {
       for (const key of Object.keys(finalStyle)) {
         expect(await component.getAnimatedStyle(key as ValidPropNames)).toBe(
           finalStyle[key],
-          comparisonModes[key as keyof typeof comparisonModes],
+          getComparisonModeForProp(key as ValidPropNames),
         );
       }
     },
@@ -97,6 +79,6 @@ const styles = StyleSheet.create({
   box: {
     height: 100,
     width: 100,
-    margin: 30,
+    margin: 0,
   },
 });

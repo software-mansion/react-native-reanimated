@@ -93,7 +93,6 @@ export {
   useInterpolateConfig,
 } from './interpolateColor';
 export type {
-  EasingFunction,
   EasingFn,
   EasingFunctionFactory,
   EasingFactoryFn,
@@ -118,6 +117,9 @@ export type {
   EntryExitAnimationFunction,
   LayoutAnimationsValues,
   LayoutAnimationFunction,
+  LayoutAnimationStartFunction,
+  LayoutAnimationType,
+  SharedTransitionAnimationsValues,
   ILayoutAnimationBuilder,
   IEntryExitAnimationBuilder,
 } from './layoutReanimation';
@@ -242,6 +244,12 @@ export type {
   AnimatedKeyboardInfo,
   AnimatedKeyboardOptions,
   MeasuredDimensions,
+  EasingFunction,
+  AnimatedTransform,
+  TransformArrayItem,
+  AnimateStyle,
+  AnimatedStyle,
+  StylesOrDefault,
 } from './commonTypes';
 export {
   SensorType,
@@ -262,18 +270,15 @@ export {
 } from './jestUtils';
 export { LayoutAnimationConfig } from './component/LayoutAnimationConfig';
 export { PerformanceMonitor } from './component/PerformanceMonitor';
+export type { PerformanceMonitorProps } from './component/PerformanceMonitor';
+export { ReducedMotionConfig } from './component/ReducedMotionConfig';
 export type {
   Adaptable,
   AdaptTransforms,
   AnimateProps,
   AnimatedProps,
-  AnimatedTransform,
   TransformStyleTypes,
-  TransformArrayItem,
-  AnimateStyle,
-  AnimatedStyle,
   AnimatedStyleProp,
-  StylesOrDefault,
 } from './helperTypes';
 export type { AnimatedScrollViewProps } from './component/ScrollView';
 export type { FlatListPropsWithLayout } from './component/FlatList';

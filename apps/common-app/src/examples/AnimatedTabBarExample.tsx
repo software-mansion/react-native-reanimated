@@ -9,45 +9,37 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import {
+  Text,
   View,
   Dimensions,
   StyleSheet,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import {
-  faCoffee,
-  faTrash,
-  faUser,
-  faList,
-  faReply,
-} from '@fortawesome/free-solid-svg-icons';
 import Svg, { Path } from 'react-native-svg';
 import * as shape from 'd3-shape';
-import { IconProp } from '@fortawesome/fontawesome-svg-core';
 
 const { width, height } = Dimensions.get('window');
 
 const tabs = [
   {
     name: 'coffee',
-    item: faCoffee,
+    item: '☕️',
   },
   {
     name: 'list',
-    item: faList,
+    item: '📝',
   },
   {
     name: 'reply',
-    item: faReply,
+    item: '🔁',
   },
   {
     name: 'trash',
-    item: faTrash,
+    item: '🗑',
   },
   {
     name: 'user',
-    item: faUser,
+    item: '👤',
   },
 ];
 
@@ -101,10 +93,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 5,
   },
+  emoji: {
+    fontSize: 25,
+  },
 });
 
 type ButtonProps = {
-  item: IconProp;
+  item: string;
   index: number;
   activeIndex: Animated.SharedValue<number>;
   width: number;
@@ -141,7 +136,7 @@ function Button({
     <TouchableWithoutFeedback onPress={() => (activeIndex.value = index)}>
       <View style={styles.tab}>
         <Animated.View style={staticIconStyle}>
-          <FontAwesomeIcon icon={item} color="black" size={25} />
+          <Text style={styles.emoji}>{item}</Text>
         </Animated.View>
       </View>
     </TouchableWithoutFeedback>
@@ -149,7 +144,7 @@ function Button({
 }
 
 type ActiveIconProps = {
-  item: IconProp;
+  item: string;
   index: number;
   activeIndex: Animated.SharedValue<number>;
   width: number;
@@ -170,7 +165,7 @@ function ActiveIcon({ item, index, activeIndex }: ActiveIconProps) {
   return (
     <Animated.View style={[styles.circleIcon, circleIconStyle]}>
       <View style={styles.activeIcon}>
-        <FontAwesomeIcon icon={item} color="black" size={25} />
+        <Text style={styles.emoji}>{item}</Text>
       </View>
     </Animated.View>
   );

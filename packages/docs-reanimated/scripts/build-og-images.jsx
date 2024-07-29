@@ -1,12 +1,12 @@
 import { createWriteStream } from 'fs';
 import { pipeline } from 'stream';
 import { promisify } from 'util';
-import React from 'react';
 import path from 'path';
 import fs from 'fs';
 import OGImageStream from './og-image-stream';
+const { globSync } = require('glob');
 
-const getMarkdownHeader = (path) => {
+const getDocsMarkdownHeader = (path) => {
   const content = fs.readFileSync(path, 'utf-8');
   const headers = content
     .split('\n')
@@ -22,26 +22,27 @@ const getMarkdownHeader = (path) => {
   return headers[0]?.title || 'React Native Reanimated';
 };
 
-async function saveStreamToFile(stream, path) {
-  const writeStream = createWriteStream(path);
+const getExampleMardownHeader = (path) => {
+  const content = fs.readFileSync(path, 'utf-8');
+  const headers = content
+    .split('\n')
+    .filter((line) => line.startsWith('title:'))
+    .map((line) => line.replace('title:', '').trim());
+
+  return headers[0] || 'React Native Reanimated';
+};
+
+async function saveStreamToFile(stream, filePath) {
+  const writeStream = createWriteStream(filePath);
   await promisify(pipeline)(stream, writeStream);
 }
 
 async function buildOGImages() {
-  const baseDirPath = path.resolve(__dirname, '../docs');
-  const dirs = await Promise.all(
-    (
-      await fs.promises.readdir(baseDirPath)
-    ).map(async (dir) => {
-      const files = await fs.promises.readdir(path.resolve(baseDirPath, dir));
-      return {
-        dir,
-        files: files.filter(
-          (file) => file.endsWith('.md') || file.endsWith('.mdx')
-        ),
-      };
-    })
-  );
+  const docsDirPath = path.resolve(__dirname, '../docs');
+  const blogDirPath = path.resolve(__dirname, '../blog');
+
+  const docsFiles = globSync(`${docsDirPath}/*/*.{md,mdx}`);
+  const blogFiles = globSync(`${blogDirPath}/*.{md,mdx}`);
 
   const ogImageTargets = path.resolve(__dirname, '../build/img/og');
 
@@ -57,21 +58,23 @@ async function buildOGImages() {
   const imageBuffer = fs.readFileSync(imagePath);
   const base64Image = `data:image/png;base64,${imageBuffer.toString('base64')}`;
 
-  dirs.map(async ({ dir, files }) => {
-    files.map(async (file) => {
-      const header = getMarkdownHeader(path.resolve(baseDirPath, dir, file));
+  const allFiles = [...docsFiles, ...blogFiles];
 
-      const ogImageStream = OGImageStream(header, base64Image);
+  for (const filePath of allFiles) {
+    const header = filePath.startsWith(docsDirPath)
+      ? getDocsMarkdownHeader(filePath)
+      : getExampleMardownHeader(filePath);
 
-      await saveStreamToFile(
-        await ogImageStream,
-        path.resolve(
-          ogImageTargets,
-          `${header.replace(/ /g, '-').replace('/', '-').toLowerCase()}.png`
-        )
-      );
-    });
-  });
+    const ogImageStream = OGImageStream(header, base64Image);
+
+    await saveStreamToFile(
+      await ogImageStream,
+      path.resolve(
+        ogImageTargets,
+        `${header.replace(/ /g, '-').replace('/', '-').toLowerCase()}.png`
+      )
+    );
+  }
 }
 
 buildOGImages();

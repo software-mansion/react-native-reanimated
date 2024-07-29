@@ -1,80 +1,97 @@
-import Animated, { Easing, Keyframe } from 'react-native-reanimated';
-import { Button, View, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
+import { View, Button, StyleSheet, Pressable } from 'react-native';
+import Animated, { Keyframe, Easing } from 'react-native-reanimated';
 
-export default function KeyframeAnimation() {
-  const [show, setShow] = useState(false);
+export default function KeyframeExample() {
+  const [visible, setVisible] = useState(true);
+
   const enteringAnimation = new Keyframe({
-    from: {
-      originX: 50,
-      transform: [{ rotate: '45deg' }, { scale: 0.5 }],
-    },
-    30: {
-      transform: [{ rotate: '-90deg' }, { scale: 2 }],
+    0: {
+      opacity: 0,
+      transform: [
+        { translateY: 50 },
+        { rotate: '820deg' },
+        { skewX: '0deg' },
+        { scale: 0 },
+      ],
     },
     50: {
-      originX: 70,
+      opacity: 0.5,
+      transform: [
+        { translateY: 25 },
+        { rotate: '-180deg' },
+        { skewX: '30deg' },
+        { scale: 0.5 },
+      ],
+      easing: Easing.out(Easing.quad),
     },
     100: {
-      originX: 0,
-      transform: [{ rotate: '0deg' }, { scale: 1 }],
-      easing: Easing.quad,
+      opacity: 1,
+      transform: [
+        { translateY: 0 },
+        { rotate: '0deg' },
+        { skewX: '0deg' },
+        { scale: 1 },
+      ],
     },
-  })
-    .duration(2000)
-    .withCallback((finished: boolean) => {
-      'worklet';
-      if (finished) {
-        console.log('callback');
-      }
-    });
+  }).duration(1000);
+
   const exitingAnimation = new Keyframe({
     0: {
       opacity: 1,
-      originX: 0,
+      transform: [{ translateY: 0 }, { rotateZ: '0deg' }],
     },
-    30: {
-      originX: -50,
+    10: {
+      opacity: 1,
+      transform: [{ translateY: 25 }, { rotateZ: '0deg' }],
       easing: Easing.exp,
     },
-    to: {
-      opacity: 0,
-      originX: 500,
+    50: {
+      opacity: 0.5,
+      transform: [{ translateY: -200 }, { rotateZ: '60deg' }],
     },
-  }).duration(2000);
+    100: {
+      opacity: 0,
+      transform: [{ translateY: -500 }, { rotateZ: '120deg' }],
+    },
+  }).duration(1000);
+
   return (
-    <View style={styles.columnReverse}>
-      <Button
-        title="animate"
-        onPress={() => {
-          setShow((last) => !last);
-        }}
-      />
-      <View style={styles.blueBoxContainer}>
-        {show && (
-          <Animated.View
-            entering={enteringAnimation}
-            exiting={exitingAnimation}
-            style={styles.blueBox}
+    <View style={styles.container}>
+      <Button title="Animate box" onPress={() => setVisible(!visible)} />
+      {visible && (
+        <Animated.View
+          entering={enteringAnimation}
+          exiting={exitingAnimation}
+          style={styles.box}>
+          <Pressable
+            onPress={() => setVisible(!visible)}
+            style={styles.button}
           />
-        )}
-      </View>
+        </Animated.View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  columnReverse: { flexDirection: 'column-reverse' },
-  blueBoxContainer: {
-    height: 400,
+  container: {
+    height: '50%',
+    flex: 1,
+    justifyContent: 'space-between',
+    marginVertical: 80,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  blueBox: {
+  button: {
+    height: '100%',
+    width: '100%',
+  },
+  box: {
+    width: 100,
     height: 100,
-    width: 200,
-    backgroundColor: 'blue',
-    alignItems: 'center',
+    backgroundColor: '#87cce8',
+    borderRadius: 24,
     justifyContent: 'center',
+    alignItems: 'center',
   },
 });

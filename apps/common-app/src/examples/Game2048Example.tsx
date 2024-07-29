@@ -1,4 +1,5 @@
-import { Text, StyleSheet, View, ColorValue, Alert } from 'react-native';
+import type { ColorValue } from 'react-native';
+import { Text, StyleSheet, View, Alert } from 'react-native';
 import Animated, { LinearTransition, ZoomIn } from 'react-native-reanimated';
 
 import React from 'react';
@@ -225,6 +226,11 @@ export default function Game2048Example() {
   const [tiles, setTiles] = React.useState(makeInitialBoard);
   const [gameOver, setGameOver] = React.useState(false);
 
+  const handleReset = React.useCallback(() => {
+    setTiles(makeInitialBoard());
+    setGameOver(false);
+  }, []);
+
   const fling = Gesture.Pan()
     .runOnJS(true)
     .onEnd((e) => {
@@ -243,11 +249,6 @@ export default function Game2048Example() {
         }, 500);
       }
     });
-
-  const handleReset = React.useCallback(() => {
-    setTiles(makeInitialBoard());
-    setGameOver(false);
-  }, []);
 
   return (
     <GestureHandlerRootView style={styles.container}>

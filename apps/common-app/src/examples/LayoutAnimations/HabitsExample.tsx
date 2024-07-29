@@ -1,16 +1,14 @@
 import React from 'react';
 import { Platform, Pressable, StyleSheet, View, Text } from 'react-native';
+import type { AnimatedProps } from 'react-native-reanimated';
 import Animated, {
   FadeInLeft,
   FadeInDown,
   ZoomIn,
   LightSpeedInLeft,
   BounceIn,
-  AnimatedProps,
   FadeOut,
 } from 'react-native-reanimated';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faCheck, faClose } from '@fortawesome/free-solid-svg-icons';
 
 const data = [
   { label: 'Water plants', icon: '🌿', isDone: true },
@@ -81,7 +79,7 @@ function Summary({ onPress }: SummaryProps) {
         Great job!
       </Animated.Text>
       <Animated.View entering={BounceIn} style={styles.checkmark}>
-        <FontAwesomeIcon icon={faCheck} size={64} color="white" />
+        <Text style={styles.summaryIcon}>{'✅'}</Text>
       </Animated.View>
       <Animated.Text style={styles.label}>
         {data.filter((item) => item.isDone).length} out of {data.length} habits
@@ -115,11 +113,7 @@ function ListItem({ label, icon, isDone, index }: ListItemProps) {
         {label}
       </Animated.Text>
       <Animated.View entering={FadeInLeft.delay(400 * index)}>
-        <FontAwesomeIcon
-          icon={isDone ? faCheck : faClose}
-          size={32}
-          color="white"
-        />
+        <Text>{isDone ? '✅' : '❌'}</Text>
       </Animated.View>
     </Animated.View>
   );
@@ -219,5 +213,8 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: 'white',
     fontWeight: 'bold',
+  },
+  summaryIcon: {
+    fontSize: 64,
   },
 });

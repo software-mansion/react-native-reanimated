@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import {
-  createNativeStackNavigator,
-  NativeStackNavigationProp,
-} from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated, {
   Easing,
   useAnimatedStyle,

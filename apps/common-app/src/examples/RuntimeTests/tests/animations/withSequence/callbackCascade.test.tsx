@@ -12,14 +12,14 @@ import {
   test,
   expect,
   render,
-  wait,
   callTracker,
   getTrackerCallCount,
   mockAnimationTimer,
   recordAnimationUpdates,
   getRegisteredValue,
   registerValue,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+  waitForAnimationUpdates,
+} from '../../../ReJest/RuntimeTestsApi';
 import { Snapshots } from './snapshots.snapshot';
 
 describe(`Cascade of callbacks`, () => {
@@ -97,7 +97,7 @@ describe(`Cascade of callbacks`, () => {
     const updatesContainerActive = await recordAnimationUpdates();
 
     await render(<CallbackComponent />);
-    await wait(1400);
+    await waitForAnimationUpdates(Snapshots.CallbackCascade.length);
     const updates = updatesContainerActive.getUpdates();
     const nativeUpdates = await updatesContainerActive.getNativeSnapshots();
 
@@ -202,7 +202,7 @@ describe(`Test all callbacks have been called in valid order`, () => {
     await mockAnimationTimer();
     const updatesContainerActive = await recordAnimationUpdates();
     await render(<CallbackComponent />);
-    await wait(1400);
+    await waitForAnimationUpdates(Snapshots.CallbackOrder.length);
     const updates = updatesContainerActive.getUpdates();
     const nativeUpdates = await updatesContainerActive.getNativeSnapshots();
     expect(updates).toMatchSnapshots(Snapshots.CallbackOrder);

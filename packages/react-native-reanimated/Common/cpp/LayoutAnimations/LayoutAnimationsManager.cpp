@@ -165,6 +165,12 @@ int LayoutAnimationsManager::findPrecedingViewTagForTransition(const int tag) {
   return -1;
 }
 
+const std::vector<int> &LayoutAnimationsManager::getSharedGroup(
+    const int viewTag) {
+  const auto &groupSharedTag = viewTagToSharedTag_[viewTag];
+  return sharedTransitionGroups_[groupSharedTag];
+}
+
 #ifdef RCT_NEW_ARCH_ENABLED
 void LayoutAnimationsManager::transferConfigFromNativeID(
     const int nativeId,

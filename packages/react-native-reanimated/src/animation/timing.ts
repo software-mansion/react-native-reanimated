@@ -1,5 +1,5 @@
 'use strict';
-import type { EasingFunction, EasingFunctionFactory } from '../Easing';
+import type { EasingFunctionFactory } from '../Easing';
 import { Easing } from '../Easing';
 import {
   assertEasingIsWorklet,
@@ -12,6 +12,7 @@ import type {
   Timestamp,
   AnimatableValue,
   ReduceMotion,
+  EasingFunction,
 } from '../commonTypes';
 
 /**

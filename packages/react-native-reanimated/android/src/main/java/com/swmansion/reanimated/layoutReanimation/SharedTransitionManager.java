@@ -193,6 +193,11 @@ public class SharedTransitionManager {
   }
 
   protected void onScreenWillDisappear() {
+    for (Integer tag : mTagsToCleanup) {
+      mNativeMethodsHolder.clearAnimationConfig(tag);
+    }
+    mTagsToCleanup.clear();
+
     if (!mIsTransitionPrepared) {
       return;
     }
@@ -205,11 +210,6 @@ public class SharedTransitionManager {
     }
 
     startPreparedTransitions();
-
-    for (Integer tag : mTagsToCleanup) {
-      mNativeMethodsHolder.clearAnimationConfig(tag);
-    }
-    mTagsToCleanup.clear();
   }
 
   private boolean tryStartSharedTransitionForViews(
@@ -265,17 +265,22 @@ public class SharedTransitionManager {
               mNativeMethodsHolder.findPrecedingViewTagForTransition(sharedView.getId());
         }
       }
+
       boolean bothAreRemoved = !addedNewScreen && viewTags.contains(targetViewTag);
       if (targetViewTag < 0) {
         continue;
       }
+
+      View siblingView = reanimatedNativeHierarchyManager.resolveView(targetViewTag);
+      siblingView = maybeOverrideSiblingForTabNavigator(sharedView, siblingView);
+
       View viewSource, viewTarget;
       if (addedNewScreen) {
-        viewSource = reanimatedNativeHierarchyManager.resolveView(targetViewTag);
+        viewSource = siblingView;
         viewTarget = sharedView;
       } else {
         viewSource = sharedView;
-        viewTarget = reanimatedNativeHierarchyManager.resolveView(targetViewTag);
+        viewTarget = siblingView;
       }
       if (bothAreRemoved) {
         // case for nested stack
@@ -293,33 +298,43 @@ public class SharedTransitionManager {
           continue;
         }
 
-        ViewGroup stack = (ViewGroup) findStack(viewSourceScreen);
-        if (stack == null) {
+        ViewGroup sourceStack = (ViewGroup) findStack(viewSourceScreen);
+        if (sourceStack == null) {
           continue;
         }
-
-        ViewGroupManager stackViewGroupManager =
-            (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(stack.getId());
-        int screensCount = stackViewGroupManager.getChildCount(stack);
-
-        if (screensCount < 2) {
-          continue;
+        int stackId = sourceStack.getId();
+        ViewGroupManager stackViewManager =
+            (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(stackId);
+        boolean isInSameStack = false;
+        for (int i = 0; i < stackViewManager.getChildCount(sourceStack); i++) {
+          if (stackViewManager.getChildAt(sourceStack, i) == viewTargetScreen) {
+            isInSameStack = true;
+          }
         }
+        if (isInSameStack) {
+          ViewGroupManager stackViewGroupManager =
+              (ViewGroupManager)
+                  reanimatedNativeHierarchyManager.resolveViewManager(sourceStack.getId());
+          int screensCount = stackViewGroupManager.getChildCount(sourceStack);
+          if (screensCount < 2) {
+            continue;
+          }
 
-        View topScreen = stackViewGroupManager.getChildAt(stack, screensCount - 1);
-        View secondScreen = stackViewGroupManager.getChildAt(stack, screensCount - 2);
-        boolean isValidConfiguration;
-        if (addedNewScreen) {
-          isValidConfiguration =
-              secondScreen.getId() == viewSourceScreen.getId()
-                  && topScreen.getId() == viewTargetScreen.getId();
-        } else {
-          isValidConfiguration =
-              topScreen.getId() == viewSourceScreen.getId()
-                  && secondScreen.getId() == viewTargetScreen.getId();
-        }
-        if (!isValidConfiguration) {
-          continue;
+          View topScreen = stackViewGroupManager.getChildAt(sourceStack, screensCount - 1);
+          View secondScreen = stackViewGroupManager.getChildAt(sourceStack, screensCount - 2);
+          boolean isValidConfiguration;
+          if (addedNewScreen) {
+            isValidConfiguration =
+                secondScreen.getId() == viewSourceScreen.getId()
+                    && topScreen.getId() == viewTargetScreen.getId();
+          } else {
+            isValidConfiguration =
+                topScreen.getId() == viewSourceScreen.getId()
+                    && secondScreen.getId() == viewTargetScreen.getId();
+          }
+          if (!isValidConfiguration) {
+            continue;
+          }
         }
       }
 
@@ -340,7 +355,7 @@ public class SharedTransitionManager {
       }
       Snapshot targetViewSnapshot = mSnapshotRegistry.get(viewTarget.getId());
       if (targetViewSnapshot == null) {
-        continue;
+        makeSnapshot(viewTarget);
       }
 
       newTransitionViews.add(viewSource);
@@ -377,6 +392,33 @@ public class SharedTransitionManager {
       mSharedElementsLookup.put(sharedElement.sourceView.getId(), sharedElement);
     }
     return sharedElements;
+  }
+
+  private View maybeOverrideSiblingForTabNavigator(View sharedView, View siblingView) {
+    View maybeTabNavigatorForSharedView = ScreensHelper.getTabNavigator(sharedView);
+
+    if (maybeTabNavigatorForSharedView == null) {
+      return siblingView;
+    }
+
+    int siblingTag = siblingView.getId();
+    int[] sharedGroup = mNativeMethodsHolder.getSharedGroup(sharedView.getId());
+    int siblingIndex = -1;
+    for (int i = 0; i < sharedGroup.length; i++) {
+      if (sharedGroup[i] == siblingTag) {
+        siblingIndex = i;
+      }
+    }
+
+    for (int i = siblingIndex; i >= 0; i--) {
+      int viewTag = sharedGroup[i];
+      View view = mAnimationsManager.resolveView(viewTag);
+      if (maybeTabNavigatorForSharedView == ScreensHelper.getTabNavigator(view)) {
+        return view;
+      }
+    }
+
+    return siblingView;
   }
 
   private void setupTransitionContainer() {
@@ -640,6 +682,7 @@ public class SharedTransitionManager {
   }
 
   void visitNativeTreeAndMakeSnapshot(View view) {
+    view = ScreensHelper.getTopScreenForStack(view);
     if (!(view instanceof ViewGroup)) {
       return;
     }
@@ -694,6 +737,62 @@ public class SharedTransitionManager {
       } else {
         mSharedElementsWithAnimation.add(sharedElement);
       }
+    }
+  }
+
+  public void navigationTabChanged(View previousTab, View newTab) {
+    mAddedSharedViews.clear();
+    List<SharedElement> sharedElements = new ArrayList<>();
+    List<View> sharedViews = new ArrayList<>();
+    findSharedViewsForScreen(previousTab, sharedViews);
+    sortViewsByTags(sharedViews);
+    for (View sharedView : sharedViews) {
+      int[] sharedGroup = mNativeMethodsHolder.getSharedGroup(sharedView.getId());
+      for (int i = sharedGroup.length - 1; i >= 0; i--) {
+        View targetView = mAnimationsManager.resolveView(sharedGroup[i]);
+        if (!ScreensHelper.isViewChildOfScreen(targetView, newTab)) {
+          continue;
+        }
+        Snapshot sourceViewSnapshot = mSnapshotRegistry.get(sharedView.getId());
+        if (sourceViewSnapshot == null) {
+          // This is just to ensure that we have a snapshot and to prevent
+          // a theoretically possible NullPointerException.
+          continue;
+        }
+        SharedElement sharedElement =
+            new SharedElement(sharedView, sourceViewSnapshot, targetView, new Snapshot(targetView));
+        sharedElements.add(sharedElement);
+        break;
+      }
+    }
+    if (sharedElements.isEmpty()) {
+      return;
+    }
+    mSharedElements = sharedElements;
+    mSharedElementsWithAnimation.clear();
+    for (SharedElement sharedElement : sharedElements) {
+      mSharedElementsLookup.put(sharedElement.sourceView.getId(), sharedElement);
+      mSharedElementsWithAnimation.add(sharedElement);
+    }
+    setupTransitionContainer();
+    reparentSharedViewsForCurrentTransition(sharedElements);
+    startSharedTransition(
+        mSharedElementsWithAnimation, LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION);
+  }
+
+  private void findSharedViewsForScreen(View view, List<View> sharedViews) {
+    view = ScreensHelper.getTopScreenForStack(view);
+    if (!(view instanceof ViewGroup)) {
+      return;
+    }
+    ViewGroup viewGroup = (ViewGroup) view;
+    if (mAnimationsManager.hasAnimationForTag(
+        view.getId(), LayoutAnimations.Types.SHARED_ELEMENT_TRANSITION)) {
+      sharedViews.add(view);
+    }
+    for (int i = 0; i < viewGroup.getChildCount(); i++) {
+      View child = viewGroup.getChildAt(i);
+      findSharedViewsForScreen(child, sharedViews);
     }
   }
 }

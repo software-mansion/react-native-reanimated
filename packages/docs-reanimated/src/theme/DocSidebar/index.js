@@ -12,7 +12,17 @@ export default function DocSidebarWrapper(props) {
     logo: useBaseUrl('/img/logo-hero.svg'),
     title: useBaseUrl('/img/title-hero.svg'),
   };
+
+  const newItems = ['animations/withClamp'];
+  const experimentalItems = ['shared-element-transitions/overview'];
+
   return (
-    <DocSidebar heroImages={heroImages} titleImages={titleImages} {...props} />
+    <DocSidebar
+      newItems={newItems}
+      experimentalItems={experimentalItems}
+      heroImages={heroImages}
+      titleImages={titleImages}
+      {...props}
+    />
   );
 }

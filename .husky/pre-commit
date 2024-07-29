@@ -4,19 +4,24 @@
 REANIMATED_PATH=packages/react-native-reanimated
 
 yarn lint-staged
+
 cd $REANIMATED_PATH
-yarn type:check:all
-yarn find-unused-code:js
+# This step can take several seconds, so we don't want to run it on irrelevant commits.
+! git diff-index --name-only HEAD -- | grep "$REANIMATED_PATH/src/.*\.\(ts\|tsx\)$" >/dev/null
+if [ $? -eq 1 ]; then
+  yarn type:check:all
+  yarn find-unused-code:js
+fi
 
 # This automatically builds Reanimated Babel plugin JavaScript files if their
 # TypeScript counterparts were changed. It also adds the output file to the commit
 # if the built file differs from currently committed one.
-! git diff-index HEAD --name-only |\
-grep -E '^plugin/' > /dev/null
+! git diff-index HEAD --name-only |
+  grep -E "$REANIMATED_PATH/plugin/" >/dev/null
 if [ $? -eq 1 ]; then
   yarn build:plugin
-  ! git status -u |\
-  grep -E 'plugin/build/plugin\.js' > /dev/null
+  ! git status -u |
+    grep -E 'plugin/build/plugin.js' >/dev/null
   if [ $? -eq 1 ]; then
     git add plugin/build/plugin.js
     echo "[Reanimated] Plugin files were automatically built and changes were spotted.\

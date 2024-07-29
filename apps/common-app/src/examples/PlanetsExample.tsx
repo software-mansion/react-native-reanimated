@@ -6,7 +6,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Circle, Ellipse, Path, Svg } from 'react-native-svg';
-import { ColorValue, StyleSheet, View } from 'react-native';
+import type { ColorValue } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);

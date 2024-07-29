@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated",
-  "version": "3.12.0",
+  "version": "3.14.0",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "test": "yarn format:js && yarn lint:js && yarn test:unit",
@@ -21,7 +21,7 @@
     "format:android": "find android/src/ -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:common": "find Common/ -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:docs": "cd docs && yarn format",
-    "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error  ",
+    "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error",
     "type:check:src": "yarn tsc --noEmit",
     "type:check:plugin": "cd plugin && yarn type:check:src && cd ..",
     "type:check:app": "./scripts/test-ts.sh ../../apps/common-app/src/App.tsx",
@@ -32,7 +32,9 @@
     "build": "yarn build:plugin && bob build",
     "build:plugin": "cd plugin && yarn install && yarn build",
     "circular-dependency-check": "yarn madge --extensions js,ts,tsx --circular src lib",
-    "use-strict-check": "node ./scripts/validate-use-strict.js"
+    "use-strict-check": "node ./scripts/validate-use-strict.js",
+    "prepack": "cp ../../README.md ./README.md",
+    "postpack": "rm ./README.md"
   },
   "main": "lib/module/index",
   "module": "lib/module/index",
@@ -67,7 +69,8 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/software-mansion/react-native-reanimated.git"
+    "url": "git+https://github.com/software-mansion/react-native-reanimated.git",
+    "directory": "packages/react-native-reanimated"
   },
   "author": {
     "email": "krzys.magiera@gmail.com",
@@ -78,13 +81,16 @@
   "bugs": {
     "url": "https://github.com/software-mansion/react-native-reanimated/issues"
   },
-  "homepage": "https://github.com/software-mansion/react-native-reanimated#readme",
+  "homepage": "https://docs.swmansion.com/react-native-reanimated",
   "dependencies": {
     "@babel/plugin-transform-arrow-functions": "^7.0.0-0",
+    "@babel/plugin-transform-class-properties": "^7.0.0-0",
+    "@babel/plugin-transform-classes": "^7.0.0-0",
     "@babel/plugin-transform-nullish-coalescing-operator": "^7.0.0-0",
     "@babel/plugin-transform-optional-chaining": "^7.0.0-0",
     "@babel/plugin-transform-shorthand-properties": "^7.0.0-0",
     "@babel/plugin-transform-template-literals": "^7.0.0-0",
+    "@babel/plugin-transform-unicode-regex": "^7.0.0-0",
     "@babel/preset-typescript": "^7.16.7",
     "convert-source-map": "^2.0.0",
     "invariant": "^2.2.4"
@@ -168,8 +174,9 @@
     }
   },
   "sideEffects": [
-    "./lib/reanimated2/core",
-    "./lib/index"
+    "./lib/module/reanimated2/layoutReanimation/animationsManager.js",
+    "./lib/module/reanimated2/core.js",
+    "./lib/module/index.js"
   ],
   "packageManager": "yarn@4.1.1"
 }

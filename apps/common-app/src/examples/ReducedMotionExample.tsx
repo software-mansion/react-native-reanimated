@@ -11,6 +11,7 @@ import Animated, {
   withSpring,
   withSequence,
   ReduceMotion,
+  ReducedMotionConfig,
 } from 'react-native-reanimated';
 import {
   Gesture,
@@ -23,82 +24,88 @@ const toValue = 100;
 const initialValue = -100;
 
 const SIMPLE_EXAMPLES = [
-  { animation: withTiming(toValue, { duration }), text: 'withTiming' },
-  { animation: withSpring(toValue, { duration }), text: 'withSpring' },
+  { animation: () => withTiming(toValue, { duration }), text: 'withTiming' },
+  { animation: () => withSpring(toValue, { duration }), text: 'withSpring' },
   {
-    animation: withDelay(1000, withTiming(toValue, { duration })),
+    animation: () => withDelay(1000, withTiming(toValue, { duration })),
     text: 'withDelay',
   },
   {
-    animation: withSequence(
-      withTiming((toValue + initialValue) / 2, { duration }),
-      withSpring(toValue, { duration })
-    ),
+    animation: () =>
+      withSequence(
+        withTiming((toValue + initialValue) / 2, { duration }),
+        withSpring(toValue, { duration })
+      ),
     text: 'withSequence',
   },
 ];
 
 const REPEAT_EXAMPLES = [
   {
-    animation: withRepeat(withTiming(toValue, { duration }), -1, true),
+    animation: () => withRepeat(withTiming(toValue, { duration }), -1, true),
     text: 'withRepeat (infinite)',
   },
   {
-    animation: withRepeat(withTiming(toValue, { duration }), 4, true),
+    animation: () => withRepeat(withTiming(toValue, { duration }), 4, true),
     text: 'withRepeat (even)',
   },
   {
-    animation: withRepeat(withTiming(toValue, { duration }), 3, true),
+    animation: () => withRepeat(withTiming(toValue, { duration }), 3, true),
     text: 'withRepeat (odd)',
   },
   {
-    animation: withRepeat(withTiming(toValue, { duration }), 4, false),
+    animation: () => withRepeat(withTiming(toValue, { duration }), 4, false),
     text: 'withRepeat\n(no reverse)',
   },
 ];
 
 const CONFIG_EXAMPLES = [
   {
-    animation: withTiming(toValue, {
-      reduceMotion: ReduceMotion.Always,
-      duration,
-    }),
+    animation: () =>
+      withTiming(toValue, {
+        reduceMotion: ReduceMotion.Always,
+        duration,
+      }),
     text: 'always\nreduce',
   },
   {
-    animation: withTiming(toValue, {
-      reduceMotion: ReduceMotion.Never,
-      duration,
-    }),
+    animation: () =>
+      withTiming(toValue, {
+        reduceMotion: ReduceMotion.Never,
+        duration,
+      }),
     text: 'never\nreduce',
   },
   {
-    animation: withTiming(toValue, {
-      reduceMotion: ReduceMotion.System,
-      duration,
-    }),
-    text: 'system\nreduce',
-  },
-  {
-    animation: withSequence(
-      ReduceMotion.Always,
-      withTiming(initialValue + (toValue - initialValue) / 3, { duration }),
-      withTiming(initialValue + (2 * (toValue - initialValue)) / 3, {
+    animation: () =>
+      withTiming(toValue, {
         reduceMotion: ReduceMotion.System,
         duration,
       }),
-      withTiming(toValue, { reduceMotion: ReduceMotion.Never, duration })
-    ),
+    text: 'system\nreduce',
+  },
+  {
+    animation: () =>
+      withSequence(
+        ReduceMotion.Always,
+        withTiming(initialValue + (toValue - initialValue) / 3, { duration }),
+        withTiming(initialValue + (2 * (toValue - initialValue)) / 3, {
+          reduceMotion: ReduceMotion.System,
+          duration,
+        }),
+        withTiming(toValue, { reduceMotion: ReduceMotion.Never, duration })
+      ),
     text: 'nested sequence',
   },
   {
-    animation: withRepeat(
-      withTiming(toValue, { duration }),
-      3,
-      true,
-      undefined,
-      ReduceMotion.Always
-    ),
+    animation: () =>
+      withRepeat(
+        withTiming(toValue, { duration }),
+        3,
+        true,
+        undefined,
+        ReduceMotion.Always
+      ),
     text: 'nested repeat',
   },
 ];
@@ -126,11 +133,23 @@ const EXAMPLES = [
 
 export default function ReducedMotionExample() {
   const [currentExample, setCurrentExample] = useState(0);
-
+  const [reduceMotion, setReduceMotion] = useState(ReduceMotion.Never);
   const { component, exampleList } = EXAMPLES[currentExample];
+
+  function handleReduceMotionModeChange() {
+    setReduceMotion(
+      reduceMotion === ReduceMotion.System
+        ? ReduceMotion.Never
+        : ReduceMotion.System
+    );
+  }
 
   return (
     <View style={styles.container}>
+      <Button
+        onPress={handleReduceMotionModeChange}
+        title={`Overwrite reduce motion: ${reduceMotion}`}
+      />
       {EXAMPLES.map((example, i) => (
         <Button
           key={i}
@@ -138,6 +157,7 @@ export default function ReducedMotionExample() {
           title={example.title}
         />
       ))}
+      <ReducedMotionConfig mode={reduceMotion} />
       {component}
       <View key={currentExample}>
         {exampleList.map((example, i) => {
@@ -173,7 +193,7 @@ function HookExample() {
   );
 }
 
-function Example(props: { animation: number; text: string }) {
+function Example(props: { animation: () => number; text: string }) {
   const sv = useSharedValue(initialValue);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -181,7 +201,7 @@ function Example(props: { animation: number; text: string }) {
   }));
 
   const handlePress = () => {
-    sv.value = props.animation;
+    sv.value = props.animation();
   };
 
   return (

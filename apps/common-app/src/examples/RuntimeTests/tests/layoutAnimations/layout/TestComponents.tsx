@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { useTestRef } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { useTestRef } from '../../../ReJest/RuntimeTestsApi';
 
 export const TRANSITION_REF = 'TRANSITION_REF';
 export enum Direction {
@@ -13,15 +13,7 @@ export enum Direction {
   LEFT_UP = 'LEFT_UP',
 }
 
-export const TransitionUpOrDown = ({
-  layout,
-  direction,
-  changeSize,
-}: {
-  layout: any;
-  direction: Direction;
-  changeSize?: boolean;
-}) => {
+export const TransitionUpOrDown = ({ layout, direction }: { layout: any; direction: Direction }) => {
   const [show, setShow] = useState(true);
   const ref = useTestRef(TRANSITION_REF);
 
@@ -35,37 +27,21 @@ export const TransitionUpOrDown = ({
         <>
           {show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View
-            ref={ref}
-            layout={layout}
-            style={[styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}]}
-          />
+          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
         </>
       )}
       {direction === Direction.DOWN && (
         <>
           {!show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View
-            ref={ref}
-            layout={layout}
-            style={[styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}]}
-          />
+          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
         </>
       )}
     </View>
   );
 };
 
-export const TransitionLeftOrRight = ({
-  layout,
-  direction,
-  changeSize,
-}: {
-  layout: any;
-  direction: Direction;
-  changeSize?: boolean;
-}) => {
+export const TransitionLeftOrRight = ({ layout, direction }: { layout: any; direction: Direction }) => {
   const [show, setShow] = useState(true);
   const ref = useTestRef(TRANSITION_REF);
 
@@ -79,22 +55,14 @@ export const TransitionLeftOrRight = ({
         <>
           {show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View
-            ref={ref}
-            layout={layout}
-            style={[styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}]}
-          />
+          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
         </>
       )}
       {direction === Direction.RIGHT && (
         <>
           {!show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View
-            ref={ref}
-            layout={layout}
-            style={[styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}]}
-          />
+          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
         </>
       )}
       {direction === Direction.RIGHT_UP && (
@@ -103,11 +71,7 @@ export const TransitionLeftOrRight = ({
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View
-            ref={ref}
-            layout={layout}
-            style={[styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}]}
-          />
+          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
         </>
       )}
       {direction === Direction.LEFT_UP && (
@@ -123,11 +87,7 @@ export const TransitionLeftOrRight = ({
           )}
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View
-            ref={ref}
-            layout={layout}
-            style={[styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}]}
-          />
+          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
         </>
       )}
     </View>
@@ -156,8 +116,4 @@ const styles = StyleSheet.create({
     margin: 5,
   },
   mainBox: { backgroundColor: 'darkorange' },
-  bigBox: {
-    width: 150,
-    height: 200,
-  },
 });

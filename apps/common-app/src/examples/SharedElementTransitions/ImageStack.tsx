@@ -1,16 +1,8 @@
 import React from 'react';
-import {
-  createNativeStackNavigator,
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
-import {
-  View,
-  ImageSourcePropType,
-  Pressable,
-  ScrollView,
-  Button,
-  StyleSheet,
-} from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import type { ImageSourcePropType } from 'react-native';
+import { View, Pressable, ScrollView, Button, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 const florence = require('./assets/florence.jpg');
@@ -52,9 +44,7 @@ export function ImageStack({
         }
         const marginTop = index === 0 || !collapsed ? 20 : -size + 20;
         return (
-          <View
-            style={[{ zIndex: -index }, styles.center]}
-            key={`${image}@${index}`}>
+          <View style={[{ zIndex: -index }, styles.center]} key={index}>
             <Animated.Image
               source={image}
               style={[
@@ -65,7 +55,7 @@ export function ImageStack({
                 },
                 styles.roundedBorder,
               ]}
-              sharedTransitionTag={`${image}@${index}`}
+              sharedTransitionTag={`SET${index}`}
             />
             <Animated.Text
               onPress={() => onDetails?.(image, index)}
@@ -74,7 +64,7 @@ export function ImageStack({
                   ? { marginTop: -20, zIndex: -index - 1 }
                   : { zIndex: -index - 1 }
               }
-              sharedTransitionTag={`${image}@${index}_text`}>
+              sharedTransitionTag={`SET${index}_text`}>
               Show details maybe
             </Animated.Text>
           </View>
@@ -134,7 +124,7 @@ export function ScreenThree({
       <Animated.Image
         source={image}
         style={styles.image}
-        sharedTransitionTag={`${image}@${index}`}
+        sharedTransitionTag={`SET${index}`}
       />
       <Button onPress={() => navigation.popToTop()} title="Go home" />
     </View>

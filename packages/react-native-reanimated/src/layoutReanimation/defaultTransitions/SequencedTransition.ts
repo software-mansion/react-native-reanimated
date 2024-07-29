@@ -41,8 +41,8 @@ export class SequencedTransition
     const delayFunction = this.getDelayFunction();
     const callback = this.callbackV;
     const delay = this.getDelay();
-    const sequenceDuration = (this.durationV ?? 500) / 2;
-    const config = { duration: sequenceDuration };
+    const halfDuration = (this.durationV ?? 500) / 2;
+    const config = { duration: halfDuration };
     const reverse = this.reversed;
 
     return (values) => {

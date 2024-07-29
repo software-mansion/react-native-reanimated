@@ -7,7 +7,6 @@ Flip card allows you to display different content depending on whether the card 
 
 import FlipCard from '@site/static/examples/FlipCard';
 import FlipCardSrc from '!!raw-loader!@site/static/examples/FlipCard';
-import ExampleVideo from '@site/src/components/ExampleVideo';
 
 <InteractiveExample src={FlipCardSrc} component={FlipCard} />
 

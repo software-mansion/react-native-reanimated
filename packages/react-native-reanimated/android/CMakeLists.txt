@@ -15,14 +15,14 @@ add_compile_options(${folly_FLAGS})
 
 string(APPEND CMAKE_CXX_FLAGS " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION} -DREANIMATED_VERSION=${REANIMATED_VERSION} -DHERMES_ENABLE_DEBUGGER=${HERMES_ENABLE_DEBUGGER}")
 
-string(APPEND CMAKE_CXX_FLAGS " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all -std=c++${CMAKE_CXX_STANDARD} -Wall -Wpedantic -Werror")
+string(APPEND CMAKE_CXX_FLAGS " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
     string(APPEND CMAKE_CXX_FLAGS " -DRCT_NEW_ARCH_ENABLED")
 endif()
 
 if(${IS_REANIMATED_EXAMPLE_APP})
-    string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP")
+    string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
 endif()
 
 if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
@@ -66,10 +66,11 @@ target_include_directories(
         "${COMMON_SRC_DIR}/cpp/hidden_headers"
         "${COMMON_SRC_DIR}/cpp/LayoutAnimations"
         "${COMMON_SRC_DIR}/cpp/NativeModules"
-        "${COMMON_SRC_DIR}/cpp/ReanimatedRuntime"
-        "${COMMON_SRC_DIR}/cpp/Registries"
-        "${COMMON_SRC_DIR}/cpp/SharedItems"
         "${COMMON_SRC_DIR}/cpp/Tools"
+        "${COMMON_SRC_DIR}/cpp/Worklets/Registries"
+        "${COMMON_SRC_DIR}/cpp/Worklets/SharedItems"
+        "${COMMON_SRC_DIR}/cpp/Worklets/Tools"
+        "${COMMON_SRC_DIR}/cpp/Worklets/WorkletRuntime"
         "${SRC_DIR}/main/cpp"
 )
 

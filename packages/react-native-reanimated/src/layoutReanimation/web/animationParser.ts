@@ -1,5 +1,8 @@
 'use strict';
 
+import { WebEasings } from './Easing.web';
+import type { WebEasingsNames } from './Easing.web';
+
 export interface ReanimatedWebTransformProperties {
   translateX?: string;
   translateY?: string;
@@ -14,7 +17,7 @@ export interface ReanimatedWebTransformProperties {
   skewX?: string;
 }
 
-interface AnimationStyle {
+export interface AnimationStyle {
   opacity?: number;
   transform?: ReanimatedWebTransformProperties[];
 }
@@ -31,6 +34,10 @@ export interface TransitionData {
   scaleX: number;
   scaleY: number;
   reversed?: boolean;
+  easingX?: string;
+  easingY?: string;
+  entering?: any;
+  exiting?: any;
 }
 
 export function convertAnimationObjectToKeyframes(
@@ -39,9 +46,38 @@ export function convertAnimationObjectToKeyframes(
   let keyframe = `@keyframes ${animationObject.name} { `;
 
   for (const [timestamp, style] of Object.entries(animationObject.style)) {
-    keyframe += `${timestamp}% { `;
+    const step =
+      timestamp === 'from' ? 0 : timestamp === 'to' ? 100 : timestamp;
+
+    keyframe += `${step}% { `;
 
     for (const [property, values] of Object.entries(style)) {
+      if (property === 'easing') {
+        let easingName: WebEasingsNames = 'linear';
+
+        if (values in WebEasings) {
+          easingName = values;
+        } else if (values.name in WebEasings) {
+          easingName = values.name;
+        }
+
+        keyframe += `animation-timing-function: cubic-bezier(${WebEasings[
+          easingName
+        ].toString()});`;
+
+        continue;
+      }
+
+      if (property === 'originX') {
+        keyframe += `left: ${values}px; `;
+        continue;
+      }
+
+      if (property === 'originY') {
+        keyframe += `top: ${values}px; `;
+        continue;
+      }
+
       if (property !== 'transform') {
         keyframe += `${property}: ${values}; `;
         continue;

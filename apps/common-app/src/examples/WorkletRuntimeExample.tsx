@@ -1,8 +1,8 @@
 import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
+import type { WorkletRuntime } from 'react-native-reanimated';
 import Animated, {
   Easing,
-  WorkletRuntime,
   createWorkletRuntime,
   runOnJS,
   runOnUI,
@@ -74,6 +74,7 @@ function CreateWorkletRuntimeDemo() {
     const runtime = createWorkletRuntime('foo');
     console.log(runtime);
     console.log(runtime.name);
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
     console.log(`${runtime}`);
     console.log(String(runtime));
   };
@@ -180,7 +181,9 @@ function RunOnRuntimeLongRunningTasksDemo() {
       runOnRuntime(runtime, () => {
         'worklet';
         const until = performance.now() + 500;
-        while (performance.now() < until) {}
+        while (performance.now() < until) {
+          // do nothing
+        }
         console.log('Hello from background!', performance.now());
       })();
     }

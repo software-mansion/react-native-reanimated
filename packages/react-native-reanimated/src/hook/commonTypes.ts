@@ -5,6 +5,7 @@ import type {
   ShadowNodeWrapper,
   SharedValue,
   WorkletFunction,
+  AnimatedStyle,
 } from '../commonTypes';
 import type {
   ImageStyle,
@@ -13,13 +14,13 @@ import type {
   ViewStyle,
   NativeScrollEvent,
 } from 'react-native';
-import type { ViewDescriptorsSet, ViewRefSet } from '../ViewDescriptorsSet';
-import type { AnimatedStyle } from '../helperTypes';
+import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
+import type { ReanimatedHTMLElement } from '../js-reanimated';
 
 export type DependencyList = Array<unknown> | undefined;
 
 export interface Descriptor {
-  tag: number;
+  tag: number | ReanimatedHTMLElement;
   name: string;
   shadowNodeWrapper: ShadowNodeWrapper;
 }
@@ -96,10 +97,6 @@ export interface AnimatedStyleHandle<
     value: AnimatedStyle<Style>;
     updater: () => AnimatedStyle<Style>;
   };
-  /**
-   * @remarks `viewsRef` is only defined in Web implementation.
-   */
-  viewsRef: ViewRefSet<unknown> | undefined;
 }
 
 export interface JestAnimatedStyleHandle<

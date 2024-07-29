@@ -18,7 +18,7 @@ import {
   useTestRef,
   registerValue,
   getRegisteredValue,
-} from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+} from '../../ReJest/RuntimeTestsApi';
 
 const ELAPSED_TIME_REF = 'ElapsedTime';
 
