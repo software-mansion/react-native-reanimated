@@ -4,15 +4,74 @@ sidebar_position: 5
 
 # useHandler
 
-import DocsCompatibilityInfo from '../_shared/_docs_compatibility_info.mdx';
-
-<DocsCompatibilityInfo />
-
+Lets you find out whether the event handler dependencies have changed.
 This is low-level hook returning context object and value indicating whether worklet should be rebuilt, which should be used in order to create custom event handler hook like `useAnimatedGestureHandler` or `useAnimatedScrollHandler`.
+
+## Reference
+
+```js
+function useHandlerExample() {
+  const dependencies = [{ isWeb: false }];
+  const handlers = {
+    onScroll: (event) => {
+      'worklet';
+      console.log(event);
+    },
+  };
+
+  const { context, doDependenciesDiffer, useWeb } = useHandler(
+    handlers,
+    dependencies
+  );
+
+  const customScrollHandler = useEvent(
+    (event) => {
+      'worklet';
+      const { onScroll } = handlers;
+      if (onScroll && event.eventName.endsWith('onScroll')) {
+        context.eventName = event.eventName + useWeb;
+        onScroll(event);
+      }
+    },
+    ['onScroll'],
+    doDependenciesDiffer
+  );
+
+  return <Animated.ScrollView onScroll={customScrollHandler} />;
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function useHandler<
+  Event extends object,
+  Context extends Record<string, unknown>
+>(
+  handlers: GeneralHandlers<Event, Context>,
+  dependencies?: DependencyList
+): UseHandlerContext<Context>;
+
+interface UseHandlerContext<Context extends Record<string, unknown>> {
+  context: Context;
+  doDependenciesDiffer: boolean;
+  useWeb: boolean;
+}
+
+interface GeneralHandler<
+  Event extends object,
+  Context extends Record<string, unknown>
+> {
+  (event: ReanimatedEvent<Event>, context: Context): void;
+}
+```
+
+</details>
 
 ### Arguments
 
-#### `handlerOrHandlersObject` [object with worklets]
+#### `handlers`
 
 Object containing custom keys matching native event names.
 The values in the object should be individual worklets.
@@ -20,43 +79,25 @@ Each of the worklet will be triggered when the corresponding event is dispatched
 
 Each of the event worklets will receive the following parameters when called:
 
-- `event` [object] - event object.
+- `event` - event object.
   The payload can differ depending on the type of the event.
 
-- `context` [object] - plain JS object that can be used to store some state.
+- `context` - plain JS object that can be used to store some state.
   This object will persist in between event occurrences and you can read and write any data to it.
   When there are several event handlers provided in a form of an object of worklets, the `context` object will be shared in between the worklets allowing them to communicate with each other.
 
-#### `dependencies` [Array]
+#### `dependencies` <Optional />
 
 Optional array of values which changes cause this hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
 
-`dependencies` here may be:
+This array may contain:
 
-- `undefined`(argument skipped) - worklet will be rebuilt if there is any change in any of the callbacks' bodies or any values from their closure(variables from outer scope used in worklet),
-- empty array(`[]`) - worklet will be rebuilt only if any of the callbacks' bodies changes,
-- array of values(`[val1, val2, ..., valN]`) - worklet will be rebuilt if there is any change in any of the callbacks bodies or in any values from the given array.
+- `undefined` (argument skipped) - worklet will be rebuilt if there is any change in any of the callbacks' bodies or any values from their closure (variables from outer scope used in worklet).
+- `[]` - worklet will be rebuilt only if any of the callbacks' bodies changes.
+- `[val1, val2, ..., valN]` - worklet will be rebuilt if there is any change in any of the callbacks bodies or in any values from the given array.
 
 ### Returns
 
 The hook returns a context that will be reused by event handlers and value that indicates whether worklets should be rebuilt. If different implementation is needed for web, `useWeb` boolean is returned to check for web environment
 
 ## Example
-
-```js
-function useAnimatedPagerScrollHandler(handlers, dependencies) {
-  const { context, doDependenciesDiffer, useWeb } = useHandler(handlers, dependencies);
-
-  return useEvent(
-    (event) => {
-      'worklet';
-      const { onPageScroll } = handlers;
-
-      if (onPageScroll && event.eventName.endsWith('onPageScroll')) {
-        onPageScroll(event, context);
-      }
-    },
-    ['onPageScroll'],
-    doDependenciesDiffer,
-  );
-```
