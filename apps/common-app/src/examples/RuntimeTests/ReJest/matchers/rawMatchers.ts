@@ -7,10 +7,11 @@ import { SyncUIRunner } from '../utils/SyncUIRunner';
 
 type ToBeArgs = [TestValue, ComparisonMode?];
 export type ToThrowArgs = [string?];
+type ToBeNullArgs = [];
 type ToBeWithinRangeArgs = [number, number];
 type ToBeCalledArgs = [number];
 
-export type SyncMatcherArguments = ToBeArgs | ToBeCalledArgs | ToBeWithinRangeArgs;
+export type SyncMatcherArguments = ToBeArgs | ToBeNullArgs | ToBeCalledArgs | ToBeWithinRangeArgs;
 export type AsyncMatcherArguments = ToThrowArgs;
 export type MatcherReturn = {
   pass: boolean;
@@ -52,6 +53,16 @@ export const toBeMatcher: Matcher<ToBeArgs> = (currentValue, negation, expectedV
   };
 };
 
+export const toBeNullableMatcher: Matcher<ToBeNullArgs> = (currentValue, negation) => {
+  const coloredExpected = green('nullable');
+  const coloredReceived = red(currentValue);
+
+  return {
+    pass: currentValue === null || currentValue === undefined,
+    message: `Expected${negation ? ' NOT' : ''} ${coloredExpected} received ${coloredReceived}`,
+  };
+};
+
 export const toBeWithinRangeMatcher: Matcher<ToBeWithinRangeArgs> = (
   currentValue,
   negation,
@@ -64,7 +75,7 @@ export const toBeWithinRangeMatcher: Matcher<ToBeWithinRangeArgs> = (
 
   return {
     pass: isWithinRange && validInputTypes,
-    message: `Expected the value ${negation ? ' NOT' : ''}to be in range ${green(
+    message: `Expected the value${negation ? ' NOT' : ''} to be in range ${green(
       `[${minimumValue}, ${maximumValue}]`,
     )} received ${red(currentValue)}`,
   };
