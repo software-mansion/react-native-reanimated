@@ -1,5 +1,5 @@
 import { isColor, processColor } from 'react-native-reanimated';
-import type { NullableTestValue } from '../types';
+import type { TestValue } from '../types';
 
 const RESET_BACKGROUND = '\x1b[49m';
 const TEST_COLOR = '\x1b[38;5;242m';
@@ -34,16 +34,16 @@ export function indentNestingLevel(nestingLevel: number) {
   return `${HALF_INDENT}${INDENT.repeat(nestingLevel)}`;
 }
 
-export function color(value: NullableTestValue, color: SupportedColors) {
+export function color(value: TestValue, color: SupportedColors) {
   const stringValue = typeof value === 'object' ? JSON.stringify(value) : value?.toString();
   return `${COLOR_CODES[color]}${stringValue}${COLOR_CODES.reset}`;
 }
-export const cyan = (x: NullableTestValue) => color(x, 'cyan');
-export const gray = (x: NullableTestValue) => color(x, 'gray');
-export const green = (x: NullableTestValue) => color(x, 'green');
-export const yellow = (x: NullableTestValue) => color(x, 'yellow');
-export const red = (x: NullableTestValue) => color(x, 'red');
-export const orange = (x: NullableTestValue) => color(x, 'orange');
+export const cyan = (x: TestValue) => color(x, 'cyan');
+export const gray = (x: TestValue) => color(x, 'gray');
+export const green = (x: TestValue) => color(x, 'green');
+export const yellow = (x: TestValue) => color(x, 'yellow');
+export const red = (x: TestValue) => color(x, 'red');
+export const orange = (x: TestValue) => color(x, 'orange');
 
 export const EMPTY_LOG_PLACEHOLDER = color(applyMarkdown('***   ***'), 'lightGray');
 

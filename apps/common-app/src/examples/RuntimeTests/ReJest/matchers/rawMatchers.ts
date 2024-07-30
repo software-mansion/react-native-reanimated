@@ -4,10 +4,11 @@ import { ComparisonMode } from '../types';
 import { getComparator } from './Comparators';
 
 type ToBeArgs = [TestValue, ComparisonMode?];
+type ToBeNullArgs = [];
 type ToBeWithinRangeArgs = [number, number];
 type ToBeCalledArgs = [number];
 
-export type MatcherArguments = ToBeArgs | ToBeCalledArgs | ToBeWithinRangeArgs;
+export type MatcherArguments = ToBeArgs | ToBeNullArgs | ToBeCalledArgs | ToBeWithinRangeArgs;
 
 export type Matcher<Args extends MatcherArguments> = (
   currentValue: TestValue,
@@ -39,6 +40,16 @@ export const toBeMatcher: Matcher<ToBeArgs> = (currentValue, negation, expectedV
   };
 };
 
+export const toBeNullableMatcher: Matcher<ToBeNullArgs> = (currentValue, negation) => {
+  const coloredExpected = green('nullable');
+  const coloredReceived = red(currentValue);
+
+  return {
+    pass: currentValue === null || currentValue === undefined,
+    message: `Expected${negation ? ' NOT' : ''} ${coloredExpected} received ${coloredReceived}`,
+  };
+};
+
 export const toBeWithinRangeMatcher: Matcher<ToBeWithinRangeArgs> = (
   currentValue,
   negation,
@@ -51,7 +62,7 @@ export const toBeWithinRangeMatcher: Matcher<ToBeWithinRangeArgs> = (
 
   return {
     pass: isWithinRange && validInputTypes,
-    message: `Expected the value ${negation ? ' NOT' : ''}to be in range ${green(
+    message: `Expected the value${negation ? ' NOT' : ''} to be in range ${green(
       `[${minimumValue}, ${maximumValue}]`,
     )} received ${red(currentValue)}`,
   };

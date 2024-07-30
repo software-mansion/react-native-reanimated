@@ -103,12 +103,10 @@ export type TestValue =
   | number
   | bigint
   | Record<string, unknown>
+  | boolean
   | null
   | undefined
-  | boolean
   | OperationUpdate;
-
-export type NullableTestValue = TestValue | null | undefined;
 
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
