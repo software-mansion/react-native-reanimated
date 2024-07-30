@@ -17,7 +17,7 @@
 
 namespace reanimated {
 
-class NativeReanimatedModule;
+class CommonReanimatedModule;
 
 using namespace facebook;
 

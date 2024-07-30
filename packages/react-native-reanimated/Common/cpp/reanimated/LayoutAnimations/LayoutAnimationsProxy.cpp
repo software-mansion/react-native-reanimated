@@ -5,7 +5,7 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <set>
 #include <utility>
-#include "NativeReanimatedModule.h"
+#include "CommonReanimatedModule.h"
 
 namespace reanimated {
 

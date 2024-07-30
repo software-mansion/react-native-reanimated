@@ -51,7 +51,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
-  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule_;
+  std::weak_ptr<CommonReanimatedModule> weakCommonReanimatedModule_;
 #else
   NSMutableArray<AnimatedOperation> *_operations;
 #endif // RCT_NEW_ARCH_ENABLED
@@ -105,8 +105,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   const auto &uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
-  if (auto nativeReanimatedModule = weakNativeReanimatedModule_.lock()) {
-    nativeReanimatedModule->initializeFabric(uiManager);
+  if (auto commonReanimatedModule = weakCommonReanimatedModule_.lock()) {
+    commonReanimatedModule->initializeFabric(uiManager);
   }
 }
 
@@ -143,16 +143,16 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     if (strongSelf == nil) {
       return;
     }
-    if (auto nativeReanimatedModule = strongSelf->weakNativeReanimatedModule_.lock()) {
+    if (auto commonReanimatedModule = strongSelf->weakCommonReanimatedModule_.lock()) {
       auto eventListener =
-          std::make_shared<facebook::react::EventListener>([nativeReanimatedModule](const RawEvent &rawEvent) {
+          std::make_shared<facebook::react::EventListener>([commonReanimatedModule](const RawEvent &rawEvent) {
             if (!RCTIsMainQueue()) {
               // event listener called on the JS thread, let's ignore this event
               // as we cannot safely access worklet runtime here
               // and also we don't care about topLayout events
               return false;
             }
-            return nativeReanimatedModule->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
+            return commonReanimatedModule->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
           });
       [scheduler addEventListener:eventListener];
     }
@@ -291,10 +291,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
         callbackBlock(runtime);
       }];
     });
-    auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
+    auto commonReanimatedModule = reanimated::createReanimatedModuleBridgeless(
         _moduleRegistry, rnRuntime, std::string([valueUnpackerCode UTF8String]), executorFunction);
     [self attachReactEventListener];
-    [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
+    [self commonInit:commonReanimatedModule withRnRuntime:rnRuntime];
 #else // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
     [NSException raise:@"Missing bridge" format:@"[Reanimated] Failed to obtain the bridge."];
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
@@ -304,11 +304,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
         : nullptr;
 
     if (jsiRuntime) {
-      auto nativeReanimatedModule = reanimated::createReanimatedModule(
+      auto commonReanimatedModule = reanimated::createReanimatedModule(
           self.bridge, self.bridge.jsCallInvoker, std::string([valueUnpackerCode UTF8String]));
       jsi::Runtime &rnRuntime = *jsiRuntime;
 
-      [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
+      [self commonInit:commonReanimatedModule withRnRuntime:rnRuntime];
     }
   }
   return @YES;
@@ -318,11 +318,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
-  return std::make_shared<facebook::react::NativeReanimatedModuleSpecJSI>(params);
+  return std::make_shared<facebook::react::CommonReanimatedModuleSpecJSI>(params);
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
-- (void)commonInit:(std::shared_ptr<NativeReanimatedModule>)nativeReanimatedModule
+- (void)commonInit:(std::shared_ptr<CommonReanimatedModule>)commonReanimatedModule
      withRnRuntime:(jsi::Runtime &)rnRuntime
 {
 #if __has_include(<UIKit/UIAccessibility.h>)
@@ -331,9 +331,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   auto isReducedMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
 #endif
   WorkletRuntimeCollector::install(rnRuntime);
-  RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule, isReducedMotion);
+  RNRuntimeDecorator::decorate(rnRuntime, commonReanimatedModule, isReducedMotion);
 #ifdef RCT_NEW_ARCH_ENABLED
-  weakNativeReanimatedModule_ = nativeReanimatedModule;
+  weakCommonReanimatedModule_ = commonReanimatedModule;
   if (self->_surfacePresenter != nil) {
     // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
     [self injectDependencies:rnRuntime];

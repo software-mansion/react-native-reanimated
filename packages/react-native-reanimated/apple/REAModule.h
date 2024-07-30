@@ -19,7 +19,7 @@
 
 @interface REAModule : RCTEventEmitter
 #ifdef RCT_NEW_ARCH_ENABLED
-                       <NativeReanimatedModuleSpec,
+                       <CommonReanimatedModuleSpec,
                         RCTInitializing,
 #if REACT_NATIVE_MINOR_VERSION >= 74
                         RCTRuntimeExecutorModule,

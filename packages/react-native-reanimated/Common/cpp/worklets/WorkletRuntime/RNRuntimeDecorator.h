@@ -4,7 +4,7 @@
 
 #include <memory>
 
-#include "NativeReanimatedModule.h"
+#include "CommonReanimatedModule.h"
 
 using namespace facebook;
 
@@ -14,7 +14,7 @@ class RNRuntimeDecorator {
  public:
   static void decorate(
       jsi::Runtime &rnRuntime,
-      const std::shared_ptr<NativeReanimatedModule> &nativeReanimatedModule,
+      const std::shared_ptr<CommonReanimatedModule> &commonReanimatedModule,
       const bool isReducedMotion);
 };
 

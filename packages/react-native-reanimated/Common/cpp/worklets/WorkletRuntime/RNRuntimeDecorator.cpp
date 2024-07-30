@@ -5,11 +5,11 @@ namespace reanimated {
 
 void RNRuntimeDecorator::decorate(
     jsi::Runtime &rnRuntime,
-    const std::shared_ptr<NativeReanimatedModule> &nativeReanimatedModule,
+    const std::shared_ptr<CommonReanimatedModule> &commonReanimatedModule,
     const bool isReducedMotion) {
   rnRuntime.global().setProperty(rnRuntime, "_WORKLET", false);
 
-  jsi::Runtime &uiRuntime = nativeReanimatedModule->getUIRuntime();
+  jsi::Runtime &uiRuntime = commonReanimatedModule->getUIRuntime();
   auto workletRuntimeValue =
       rnRuntime.global()
           .getPropertyAsObject(rnRuntime, "ArrayBuffer")
@@ -30,10 +30,10 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", isFabric);
 
   rnRuntime.global().setProperty(
-      rnRuntime, "_IS_BRIDGELESS", nativeReanimatedModule->isBridgeless());
+      rnRuntime, "_IS_BRIDGELESS", commonReanimatedModule->isBridgeless());
 
 #ifndef NDEBUG
-  checkJSVersion(rnRuntime, nativeReanimatedModule->getJSLogger());
+  checkJSVersion(rnRuntime, commonReanimatedModule->getJSLogger());
 #endif // NDEBUG
   injectReanimatedCppVersion(rnRuntime);
 
@@ -43,7 +43,7 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(
       rnRuntime,
       jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
-      jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
+      jsi::Object::createFromHostObject(rnRuntime, commonReanimatedModule));
 }
 
 } // namespace reanimated
