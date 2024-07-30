@@ -3,18 +3,17 @@
 
 namespace reanimated {
 
-const ShadowNodeTraits::Trait reanimatedCommitTrait{
-    ShadowNodeTraits::Trait(1 << 31)};
+constexpr ShadowNodeTraits::Trait reanimatedCommitTrait{1 << 31};
 
 class ReanimatedCommitShadowNode : public ShadowNode {
  public:
-  void setReanimatedCommitTrait() {
+  inline void setReanimatedCommitTrait() {
     traits_.set(reanimatedCommitTrait);
   }
-  void unsetReanimatedCommitTrait() {
+  inline void unsetReanimatedCommitTrait() {
     traits_.unset(reanimatedCommitTrait);
   }
-  bool hasReanimatedCommitTrait() {
+  inline bool hasReanimatedCommitTrait() {
     return traits_.check(reanimatedCommitTrait);
   }
 };
