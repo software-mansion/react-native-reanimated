@@ -16,8 +16,7 @@ import javax.annotation.Nullable;
 
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec
-    implements LifecycleEventListener, UIManagerModuleListener,
-               UIManagerListener {
+    implements LifecycleEventListener, UIManagerModuleListener, UIManagerListener {
   public static final String NAME = "ReanimatedModule";
 
   public void didDispatchMountItems(@NonNull UIManager uiManager) {
@@ -41,15 +40,16 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     final ArrayList<UIThreadOperation> operations = mOperations;
     mOperations = new ArrayList<>();
     if (uiManager instanceof FabricUIManager) {
-      ((FabricUIManager)uiManager).addUIBlock(uiBlockViewResolver -> {
-        NodesManager nodesManager = getNodesManager();
-        for (UIThreadOperation operation : operations) {
-          operation.execute(nodesManager);
-        }
-      });
+      ((FabricUIManager) uiManager)
+          .addUIBlock(
+              uiBlockViewResolver -> {
+                NodesManager nodesManager = getNodesManager();
+                for (UIThreadOperation operation : operations) {
+                  operation.execute(nodesManager);
+                }
+              });
     } else {
-      throw new RuntimeException(
-          "[Reanimated] Failed to obtain instance of FabricUIManager.");
+      throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
     }
   }
 
@@ -73,14 +73,12 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
       UIManager uiManager = reactCtx.getFabricUIManager();
       if (uiManager instanceof FabricUIManager) {
-        ((FabricUIManager)uiManager).addUIManagerEventListener(this);
+        ((FabricUIManager) uiManager).addUIManagerEventListener(this);
       } else {
-        throw new RuntimeException(
-            "[Reanimated] Failed to obtain instance of FabricUIManager.");
+        throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
       }
     } else {
-      UIManagerModule uiManager =
-          reactCtx.getNativeModule(UIManagerModule.class);
+      UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
       uiManager.addUIManagerListener(this);
     }
     reactCtx.addLifecycleEventListener(this);
@@ -114,12 +112,13 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     }
     final ArrayList<UIThreadOperation> operations = mOperations;
     mOperations = new ArrayList<>();
-    uiManager.addUIBlock(nativeViewHierarchyManager -> {
-      NodesManager nodesManager = getNodesManager();
-      for (UIThreadOperation operation : operations) {
-        operation.execute(nodesManager);
-      }
-    });
+    uiManager.addUIBlock(
+        nativeViewHierarchyManager -> {
+          NodesManager nodesManager = getNodesManager();
+          for (UIThreadOperation operation : operations) {
+            operation.execute(nodesManager);
+          }
+        });
   }
 
   @Override
@@ -140,12 +139,10 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   public boolean installTurboModule(String valueUnpackerCode) {
     // When debugging in chrome the JS context is not available.
     // https://github.com/facebook/react-native/blob/v0.67.0-rc.6/ReactAndroid/src/main/java/com/facebook/react/modules/blob/BlobCollector.java#L25
-    Utils.isChromeDebugger =
-        getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
+    Utils.isChromeDebugger = getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
 
     if (!Utils.isChromeDebugger) {
-      this.getNodesManager().initWithContext(
-          getReactApplicationContext(), valueUnpackerCode);
+      this.getNodesManager().initWithContext(getReactApplicationContext(), valueUnpackerCode);
       return true;
     } else {
       Log.w(

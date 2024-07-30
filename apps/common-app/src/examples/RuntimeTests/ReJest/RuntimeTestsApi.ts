@@ -2,13 +2,14 @@ import type { Component, ReactElement } from 'react';
 import { TestRunner } from './TestRunner/TestRunner';
 import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
-import type { TestConfiguration, TestValue, NullableTestValue, BuildFunction } from './types';
+import type { TestConfiguration, TestValue, BuildFunction } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
 const windowDimensionsMocker = testRunner.getWindowDimensionsMocker();
+const valueRegistry = testRunner.getValueRegistry();
 
 type DescribeFunction = (name: string, buildSuite: BuildFunction) => void;
 type TestFunction = (name: string, buildTest: BuildFunction) => void;
@@ -127,11 +128,11 @@ export function getTrackerCallCount(name: string) {
 }
 
 export function registerValue(name: string, value: SharedValue) {
-  return testRunner.registerValue(name, value);
+  return valueRegistry.registerValue(name, value);
 }
 
 export async function getRegisteredValue(name: string) {
-  return await testRunner.getRegisteredValue(name);
+  return await valueRegistry.getRegisteredValue(name);
 }
 
 export function getTestComponent(name: string): TestComponent {
@@ -163,14 +164,6 @@ export async function waitForNotify(name: string) {
 
 export function expect(value: TestValue) {
   return testRunner.expect(value);
-}
-
-export function expectNullable(currentValue: NullableTestValue) {
-  return testRunner.expectNullable(currentValue);
-}
-
-export function expectNotNullable(currentValue: NullableTestValue) {
-  return testRunner.expectNotNullable(currentValue);
 }
 
 export function configure(config: TestConfiguration) {
