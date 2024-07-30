@@ -45,7 +45,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
+std::shared_ptr<CommonReanimatedModule> createReanimatedModule(
     RCTBridge *bridge,
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::string &valueUnpackerCode)
@@ -66,24 +66,24 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   std::shared_ptr<JSScheduler> jsScheduler = std::make_shared<JSScheduler>(rnRuntime, jsInvoker);
   constexpr bool isBridgeless = false;
 
-  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+  auto commonReanimatedModule = std::make_shared<CommonReanimatedModule>(
       rnRuntime, jsScheduler, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode, isBridgeless);
 
-  commonInit(reaModule, nativeReanimatedModule);
+  commonInit(reaModule, commonReanimatedModule);
   // Layout Animation callbacks setup
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
   REAAnimationsManager *animationsManager = reaModule.animationsManager;
-  setupLayoutAnimationCallbacks(nativeReanimatedModule, animationsManager);
+  setupLayoutAnimationCallbacks(commonReanimatedModule, animationsManager);
 
 #endif // RCT_NEW_ARCH_ENABLED
 
-  return nativeReanimatedModule;
+  return commonReanimatedModule;
 }
 
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
+std::shared_ptr<CommonReanimatedModule> createReanimatedModuleBridgeless(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
     const std::string &valueUnpackerCode,
@@ -104,33 +104,33 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
   auto jsScheduler = std::make_shared<JSScheduler>(runtime, runtimeExecutor);
   constexpr bool isBridgeless = true;
 
-  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+  auto commonReanimatedModule = std::make_shared<CommonReanimatedModule>(
       runtime, jsScheduler, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode, isBridgeless);
 
-  commonInit(reaModule, nativeReanimatedModule);
+  commonInit(reaModule, commonReanimatedModule);
 
-  return nativeReanimatedModule;
+  return commonReanimatedModule;
 }
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 
-void commonInit(REAModule *reaModule, std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule)
+void commonInit(REAModule *reaModule, std::shared_ptr<CommonReanimatedModule> commonReanimatedModule)
 {
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
     std::string eventName = [event.eventName UTF8String];
     int emitterReactTag = [event.viewTag intValue];
     id eventData = [event arguments][2];
-    jsi::Runtime &uiRuntime = nativeReanimatedModule->getUIRuntime();
+    jsi::Runtime &uiRuntime = commonReanimatedModule->getUIRuntime();
     jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
     double currentTime = CACurrentMediaTime() * 1000;
-    nativeReanimatedModule->handleEvent(eventName, emitterReactTag, payload, currentTime);
+    commonReanimatedModule->handleEvent(eventName, emitterReactTag, payload, currentTime);
   }];
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule = nativeReanimatedModule; // to avoid retain cycle
+  std::weak_ptr<CommonReanimatedModule> weakCommonReanimatedModule = commonReanimatedModule; // to avoid retain cycle
   [reaModule.nodesManager registerPerformOperations:^() {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      nativeReanimatedModule->performOperations();
+    if (auto commonReanimatedModule = weakCommonReanimatedModule.lock()) {
+      commonReanimatedModule->performOperations();
     }
   }];
 #endif // RCT_NEW_ARCH_ENABLED
@@ -140,14 +140,14 @@ void commonInit(REAModule *reaModule, std::shared_ptr<NativeReanimatedModule> na
 // nothing
 #else // RCT_NEW_ARCH_ENABLED
 void setupLayoutAnimationCallbacks(
-    std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule,
+    std::shared_ptr<CommonReanimatedModule> commonReanimatedModule,
     REAAnimationsManager *animationsManager)
 {
-  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule = nativeReanimatedModule; // to avoid retain cycle
+  std::weak_ptr<CommonReanimatedModule> weakCommonReanimatedModule = commonReanimatedModule; // to avoid retain cycle
   [animationsManager
       setAnimationStartingBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values) {
-        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-          jsi::Runtime &rt = nativeReanimatedModule->getUIRuntime();
+        if (auto commonReanimatedModule = weakCommonReanimatedModule.lock()) {
+          jsi::Runtime &rt = commonReanimatedModule->getUIRuntime();
           jsi::Object yogaValues(rt);
           for (NSString *key in values.allKeys) {
             NSObject *value = values[key];
@@ -162,59 +162,59 @@ void setupLayoutAnimationCallbacks(
               yogaValues.setProperty(rt, [key UTF8String], [(NSNumber *)value doubleValue]);
             }
           }
-          nativeReanimatedModule->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
+          commonReanimatedModule->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
         }
       }];
 
   [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+    if (auto commonReanimatedModule = weakCommonReanimatedModule.lock()) {
       bool hasLayoutAnimation =
-          nativeReanimatedModule->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
+          commonReanimatedModule->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
       return hasLayoutAnimation ? YES : NO;
     }
     return NO;
   }];
 
   [animationsManager setShouldAnimateExitingBlock:^(NSNumber *_Nonnull tag, BOOL shouldAnimate) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+    if (auto commonReanimatedModule = weakCommonReanimatedModule.lock()) {
       bool shouldAnimateExiting =
-          nativeReanimatedModule->layoutAnimationsManager().shouldAnimateExiting([tag intValue], shouldAnimate);
+          commonReanimatedModule->layoutAnimationsManager().shouldAnimateExiting([tag intValue], shouldAnimate);
       return shouldAnimateExiting ? YES : NO;
     }
     return NO;
   }];
 
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      nativeReanimatedModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
+    if (auto commonReanimatedModule = weakCommonReanimatedModule.lock()) {
+      commonReanimatedModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
     }
   }];
 
   [animationsManager setSharedTransitionRemovingBlock:^(NSNumber *_Nonnull tag) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      nativeReanimatedModule->layoutAnimationsManager().clearSharedTransitionConfig([tag intValue]);
+    if (auto commonReanimatedModule = weakCommonReanimatedModule.lock()) {
+      commonReanimatedModule->layoutAnimationsManager().clearSharedTransitionConfig([tag intValue]);
     }
   }];
 
   [animationsManager setCancelAnimationBlock:^(NSNumber *_Nonnull tag) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      jsi::Runtime &rt = nativeReanimatedModule->getUIRuntime();
-      nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(rt, [tag intValue]);
+    if (auto commonReanimatedModule = weakCommonReanimatedModule.lock()) {
+      jsi::Runtime &rt = commonReanimatedModule->getUIRuntime();
+      commonReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(rt, [tag intValue]);
     }
   }];
 
   [animationsManager setFindPrecedingViewTagForTransitionBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+    if (auto commonReanimatedModule = weakCommonReanimatedModule.lock()) {
       int resultTag =
-          nativeReanimatedModule->layoutAnimationsManager().findPrecedingViewTagForTransition([tag intValue]);
+          commonReanimatedModule->layoutAnimationsManager().findPrecedingViewTagForTransition([tag intValue]);
       return resultTag == -1 ? nil : @(resultTag);
     }
     return nil;
   }];
 
   [animationsManager setGetSharedGroupBlock:^NSArray<NSNumber *> *_Nullable(NSNumber *_Nonnull tag) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      const auto &results = nativeReanimatedModule->layoutAnimationsManager().getSharedGroup([tag intValue]);
+    if (auto commonReanimatedModule = weakCommonReanimatedModule.lock()) {
+      const auto &results = commonReanimatedModule->layoutAnimationsManager().getSharedGroup([tag intValue]);
       NSMutableArray<NSNumber *> *convertedResult = [NSMutableArray new];
       for (const int tag : results) {
         [convertedResult addObject:@(tag)];
@@ -225,11 +225,11 @@ void setupLayoutAnimationCallbacks(
   }];
 #ifndef NDEBUG
   [animationsManager setCheckDuplicateSharedTagBlock:^(REAUIView *view, NSNumber *_Nonnull viewTag) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+    if (auto commonReanimatedModule = weakCommonReanimatedModule.lock()) {
       REAUIView *screen = [REAScreensHelper getScreenForView:(REAUIView *)view];
       auto screenTag = [screen.reactTag intValue];
       // Here we check if there are duplicate tags (we don't use return bool value currently)
-      nativeReanimatedModule->layoutAnimationsManager().checkDuplicateSharedTag([viewTag intValue], screenTag);
+      commonReanimatedModule->layoutAnimationsManager().checkDuplicateSharedTag([viewTag intValue], screenTag);
     }
   }];
 #endif // NDEBUG

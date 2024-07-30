@@ -4,7 +4,7 @@
 #import <REAKeyboardEventObserver.h>
 #import <REAModule.h>
 #import <REANodesManager.h>
-#import <RNReanimated/NativeReanimatedModule.h>
+#import <RNReanimated/CommonReanimatedModule.h>
 #import <React/RCTEventDispatcher.h>
 #import <ReanimatedSensorContainer.h>
 #include <memory>

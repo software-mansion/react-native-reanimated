@@ -14,7 +14,7 @@
 #include "EventHandlerRegistry.h"
 #include "JSScheduler.h"
 #include "LayoutAnimationsManager.h"
-#include "NativeReanimatedModuleSpec.h"
+#include "CommonReanimatedModuleSpec.h"
 #include "PlatformDepMethodsHolder.h"
 #include "SingleInstanceChecker.h"
 #include "UIScheduler.h"
@@ -25,14 +25,14 @@
 #include "ReanimatedCommitHook.h"
 #if REACT_NATIVE_MINOR_VERSION >= 73
 #include "ReanimatedMountHook.h"
-#endif
-#endif
+#endif // REACT_NATIVE_MINOR_VERSION >= 73
+#endif // RCT_NEW_ARCH_ENALBED
 
 namespace reanimated {
 
-class NativeReanimatedModule : public NativeReanimatedModuleSpec {
+class CommonReanimatedModule : public CommonReanimatedModuleSpec {
  public:
-  NativeReanimatedModule(
+  CommonReanimatedModule(
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
@@ -41,7 +41,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::string &valueUnpackerCode,
       const bool isBridgeless);
 
-  ~NativeReanimatedModule();
+  ~CommoReanimatedModule();
 
   jsi::Value makeShareableClone(
       jsi::Runtime &rt,
@@ -236,7 +236,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
 
 #ifndef NDEBUG
-  SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
+  SingleInstanceChecker<CommonReanimatedModule> singleInstanceChecker_;
 #endif
 };
 

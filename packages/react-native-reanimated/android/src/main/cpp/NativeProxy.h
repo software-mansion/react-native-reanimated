@@ -25,7 +25,7 @@
 #include "AndroidUIScheduler.h"
 #include "JNIHelper.h"
 #include "LayoutAnimations.h"
-#include "NativeReanimatedModule.h"
+#include "CommonReanimatedModule.h"
 #include "UIScheduler.h"
 
 namespace reanimated {
@@ -182,7 +182,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
-  std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
+  std::shared_ptr<CommonReanimatedModule> commonReanimatedModule_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
 #ifndef NDEBUG
   void checkJavaVersion(jsi::Runtime &);
