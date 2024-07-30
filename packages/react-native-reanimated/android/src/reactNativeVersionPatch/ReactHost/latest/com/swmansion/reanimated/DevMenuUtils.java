@@ -13,19 +13,19 @@ public class DevMenuUtils {
       DevSupportManager devSupportManager;
       if (context.isBridgeless()) {
         devSupportManager =
-                ((ReactApplication) context.getApplicationContext())
-                        .getReactHost().getDevSupportManager();
+            ((ReactApplication) context.getApplicationContext())
+                .getReactHost()
+                .getDevSupportManager();
       } else {
         devSupportManager =
-                ((ReactApplication) context.getApplicationContext())
-                        .getReactNativeHost()
-                        .getReactInstanceManager()
-                        .getDevSupportManager();
+            ((ReactApplication) context.getApplicationContext())
+                .getReactNativeHost()
+                .getReactInstanceManager()
+                .getDevSupportManager();
       }
 
       if (devSupportManager != null) {
-        devSupportManager.addCustomDevOption(
-                "Toggle slow animations (Reanimated)", handler);
+        devSupportManager.addCustomDevOption("Toggle slow animations (Reanimated)", handler);
       } else {
         throw new RuntimeException("[Reanimated] DevSupportManager is not available");
       }
