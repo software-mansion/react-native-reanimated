@@ -392,13 +392,12 @@ android {
                 }
             }
 
-            // DrawableBorderRadii
+            // BorderRadiiDrawableUtils
             if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                srcDirs += "src/reactNativeVersionPatch/DrawableBorderRadii/74"
+                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/74"
             } else {
-                srcDirs += "src/reactNativeVersionPatch/DrawableBorderRadii/latest"
+                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/latest"
             }
-            
         }
     }
 }
