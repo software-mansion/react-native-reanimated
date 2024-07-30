@@ -2,7 +2,7 @@ import type { Component, ReactElement } from 'react';
 import { TestRunner } from './TestRunner/TestRunner';
 import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
-import type { TestConfiguration, TestValue, NullableTestValue, BuildFunction } from './types';
+import type { TestConfiguration, TestValue, BuildFunction } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
@@ -163,14 +163,6 @@ export async function waitForNotify(name: string) {
 
 export function expect(value: TestValue) {
   return testRunner.expect(value);
-}
-
-export function expectNullable(currentValue: NullableTestValue) {
-  return testRunner.expectNullable(currentValue);
-}
-
-export function expectNotNullable(currentValue: NullableTestValue) {
-  return testRunner.expectNotNullable(currentValue);
 }
 
 export function configure(config: TestConfiguration) {
