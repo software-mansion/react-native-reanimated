@@ -36,7 +36,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
       std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
           newRootShadowNode);
 
-  if (reaShadowNode->isReanimatedCommit()) {
+  if (reaShadowNode->hasReanimatedCommitTrait()) {
     // ShadowTree commited by Reanimated, no need to apply updates from
     // PropsRegistry
     reaShadowNode->unsetReanimatedCommitTrait();

@@ -14,7 +14,7 @@ class ReanimatedCommitShadowNode : public ShadowNode {
   void unsetReanimatedCommitTrait() {
     traits_.unset(reanimatedCommitTrait);
   }
-  bool isReanimatedCommit() {
+  bool hasReanimatedCommitTrait() {
     return traits_.check(reanimatedCommitTrait);
   }
 };
