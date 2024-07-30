@@ -3,13 +3,13 @@
 
 namespace reanimated {
 
-// We use this trait to mark that a commit was created by reanimated.
+// We use this trait to mark that a commit was created by Reanimated.
 // Traits are copied when nodes are cloned, so this information
 // won't be lost unless someone explicitly overrides it.
 // We need this information to skip unnecessary updates in
 // the commit hook.
-// Currently RN traits go up to ten, so hopefully
-// the arbitarly chosen number 27 will be safe :)
+// Currently RN traits go up to 10, so hopefully
+// the arbitrarily chosen number 27 will be safe :)
 constexpr ShadowNodeTraits::Trait ReanimatedCommitTrait{1 << 27};
 
 class ReanimatedCommitShadowNode : public ShadowNode {
