@@ -32,10 +32,25 @@ if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
     string(APPEND CMAKE_CXX_FLAGS " -DNDEBUG")
 endif()
 
+if(${JS_RUNTIME} STREQUAL "hermes")
+    string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_HERMES=1")
+elseif(${JS_RUNTIME} STREQUAL "jsc")
+    string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_JSC=1")
+elseif(${JS_RUNTIME} STREQUAL "v8")
+    string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
+else()
+    message(FATAL_ERROR "Unknown JS runtime ${JS_RUNTIME}.")
+endif()
+
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(ANDROID_SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(WORKLETS_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/worklets")
 set(REANIMATED_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/reanimated")
+
+# Resolves "CMake Warning: Manually-specified variables were not used by the
+# project" when any of the following variables is not used in some build
+# configuration.
+set(ignoreMe "${JS_RUNTIME_DIR}")
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/main/worklets)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/main/reanimated)
