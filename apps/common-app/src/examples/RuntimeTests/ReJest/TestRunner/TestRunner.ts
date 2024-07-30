@@ -21,6 +21,7 @@ import { createUpdatesContainer } from './UpdatesContainer';
 import { makeMutable, runOnJS } from 'react-native-reanimated';
 import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
 import { TestSummaryLogger } from './TestSummaryLogger';
+import { WindowDimensionsMocker } from './WindowDimensionsMocker';
 export { Presets } from '../Presets';
 
 let callTrackerRegistryJS: Record<string, number> = {};
@@ -47,6 +48,11 @@ export class TestRunner {
   private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
   private _testSummary: TestSummaryLogger = new TestSummaryLogger();
+  private _windowDimensionsMocker: WindowDimensionsMocker = new WindowDimensionsMocker();
+
+  public getWindowDimensionsMocker() {
+    return this._windowDimensionsMocker;
+  }
 
   public notify(name: string) {
     'worklet';
