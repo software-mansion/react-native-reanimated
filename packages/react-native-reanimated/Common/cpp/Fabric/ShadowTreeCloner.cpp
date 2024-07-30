@@ -1,65 +1,73 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#include <ranges>
 #include <utility>
 
 #include "ShadowTreeCloner.h"
 
 namespace reanimated {
 
-ShadowNode::Unshared cloneShadowTreeWithNewProps(
-    const ShadowNode::Shared &oldRootNode,
-    const ShadowNodeFamily &family,
-    RawProps &&rawProps) {
-  // adapted from ShadowNode::cloneTree
+ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
+    const ShadowNode &shadowNode,
+    const ChildrenMap &childrenMap,
+    const PropsMap &propsMap) {
+  const auto family = &shadowNode.getFamily();
+  const auto affectedChildrenIt = childrenMap.find(family);
+  const auto propsIt = propsMap.find(family);
+  auto children = shadowNode.getChildren();
 
-  auto ancestors = family.getAncestors(*oldRootNode);
-
-  if (ancestors.empty()) {
-    return ShadowNode::Unshared{nullptr};
-  }
-
-  auto &parent = ancestors.back();
-  auto &source = parent.first.get().getChildren().at(parent.second);
-
-  PropsParserContext propsParserContext{
-      source->getSurfaceId(), *source->getContextContainer()};
-  const auto props = source->getComponentDescriptor().cloneProps(
-      propsParserContext, source->getProps(), std::move(rawProps));
-
-  auto newChildNode = source->clone(
-      {/* .props = */ props,
-       ShadowNodeFragment::childrenPlaceholder(),
-       source->getState()});
-
-  for (auto it = ancestors.rbegin(); it != ancestors.rend(); ++it) {
-    auto &parentNode = it->first.get();
-    auto childIndex = it->second;
-
-    auto children = parentNode.getChildren();
-    const auto &oldChildNode = *children.at(childIndex);
-    react_native_assert(ShadowNode::sameFamily(oldChildNode, *newChildNode));
-
-    if (!parentNode.getSealed()) {
-      // Optimization: if a ShadowNode is unsealed, we can directly update its
-      // children instead of cloning the whole path to the root node.
-      auto &parentNodeNonConst = const_cast<ShadowNode &>(parentNode);
-      parentNodeNonConst.replaceChild(oldChildNode, newChildNode, childIndex);
-      // Unfortunately, `replaceChild` does not update Yoga nodes, so we need to
-      // update them manually here.
-      static_cast<YogaLayoutableShadowNode *>(&parentNodeNonConst)
-          ->updateYogaChildren();
-      return std::const_pointer_cast<ShadowNode>(oldRootNode);
+  if (affectedChildrenIt != childrenMap.end()) {
+    for (const auto index : affectedChildrenIt->second) {
+      children[index] = cloneShadowTreeWithNewPropsRecursive(
+          *children[index], childrenMap, propsMap);
     }
-
-    children[childIndex] = newChildNode;
-
-    newChildNode = parentNode.clone(
-        {ShadowNodeFragment::propsPlaceholder(),
-         std::make_shared<ShadowNode::ListOfShared>(children),
-         parentNode.getState()});
   }
 
-  return std::const_pointer_cast<ShadowNode>(newChildNode);
+  Props::Shared newProps = nullptr;
+
+  if (propsIt != propsMap.end()) {
+    PropsParserContext propsParserContext{
+        shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
+    newProps = shadowNode.getProps();
+    for (const auto &props : propsIt->second) {
+      newProps = shadowNode.getComponentDescriptor().cloneProps(
+          propsParserContext, newProps, RawProps(props));
+    }
+  }
+
+  const auto result = shadowNode.clone(
+      {newProps ? newProps : ShadowNodeFragment::propsPlaceholder(),
+       std::make_shared<ShadowNode::ListOfShared>(children),
+       shadowNode.getState()});
+
+  return result;
+}
+
+RootShadowNode::Unshared cloneShadowTreeWithNewProps(
+    const RootShadowNode &oldRootNode,
+    const PropsMap &propsMap) {
+  ChildrenMap childrenMap;
+
+  for (auto &[family, _] : propsMap) {
+    const auto ancestors = family->getAncestors(oldRootNode);
+
+    for (const auto &[parentNode, index] :
+         std::ranges::reverse_view(ancestors)) {
+      const auto parentFamily = &parentNode.get().getFamily();
+      auto &affectedChildren = childrenMap[parentFamily];
+
+      if (affectedChildren.contains(index)) {
+        continue;
+      }
+
+      affectedChildren.insert(index);
+    }
+  }
+
+  // This cast is safe, because this function returns a clone
+  // of the oldRootNode, which is an instance of RootShadowNode
+  return std::static_pointer_cast<RootShadowNode>(
+      cloneShadowTreeWithNewPropsRecursive(oldRootNode, childrenMap, propsMap));
 }
 
 } // namespace reanimated
