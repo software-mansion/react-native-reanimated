@@ -13,7 +13,6 @@ const invalidReadWarning = '[Reanimated] Reading from `value` during component r
 const invalidWriteWarning = '[Reanimated] Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.';
 
 function shouldWarnInvalidAccess() {
-  console.log('warn?', isReactRendering() && !isFirstReactRender());
   return isReactRendering() && !isFirstReactRender();
 }
 
@@ -79,7 +78,6 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
   const mutable: Mutable<Value> = {
     get value(): Value {
       if (shouldWarnInvalidAccess()) {
-        console.log('warn 1')
         console.warn(invalidReadWarning);
       }
       const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
@@ -89,7 +87,6 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
     set value(newValue) {
       if (shouldWarnInvalidAccess()) {
-        console.log('warn 2')
         console.warn(invalidWriteWarning);
       }
       runOnUI(() => {
@@ -138,14 +135,12 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
   const mutable: Mutable<Value> = {
     get value(): Value {
       if (shouldWarnInvalidAccess()) {
-        console.log('warn 3')
         console.warn(invalidReadWarning);
       } 
       return value;
     },
     set value(newValue) {
       if (shouldWarnInvalidAccess()) {
-        console.log('warn 4')
         console.warn(invalidWriteWarning);
       }
       valueSetter(mutable, newValue);
