@@ -77,6 +77,12 @@ export default function RuntimeTestsExample() {
           },
         },
         {
+          testSuiteName: 'StrictMode',
+          importTest: () => {
+            require('./tests/StrictMode/StrictMode.test');
+          },
+        },
+        {
           skipByDefault: true,
           testSuiteName: 'self-tests',
           importTest: () => {
