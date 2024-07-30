@@ -9,13 +9,24 @@ import { valueSetter } from './valueSetter';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-const invalidReadWarning =
-  '[Reanimated] Reading from `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.';
-const invalidWriteWarning =
-  '[Reanimated] Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.';
-
-function shouldWarnInvalidAccess() {
+function shouldWarnAboutAccessDuringRender() {
   return isReactRendering() && !isFirstReactRender();
+}
+
+function checkInvalidReadDuringRender() {
+  if (shouldWarnAboutAccessDuringRender()) {
+    console.warn(
+      '[Reanimated] Reading from `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.'
+    );
+  }
+}
+
+function checkInvalidWriteDuringRender() {
+  if (shouldWarnAboutAccessDuringRender()) {
+    console.warn(
+      '[Reanimated] Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.'
+    );
+  }
 }
 
 type Listener<Value> = (newValue: Value) => void;
@@ -79,18 +90,14 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
 
   const mutable: Mutable<Value> = {
     get value(): Value {
-      if (shouldWarnInvalidAccess()) {
-        console.warn(invalidReadWarning);
-      }
+      checkInvalidReadDuringRender();
       const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
         return sv.value;
       });
       return uiValueGetter(mutable);
     },
     set value(newValue) {
-      if (shouldWarnInvalidAccess()) {
-        console.warn(invalidWriteWarning);
-      }
+      checkInvalidWriteDuringRender();
       runOnUI(() => {
         mutable.value = newValue;
       })();
@@ -136,15 +143,11 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
 
   const mutable: Mutable<Value> = {
     get value(): Value {
-      if (shouldWarnInvalidAccess()) {
-        console.warn(invalidReadWarning);
-      }
+      checkInvalidReadDuringRender();
       return value;
     },
     set value(newValue) {
-      if (shouldWarnInvalidAccess()) {
-        console.warn(invalidWriteWarning);
-      }
+      checkInvalidWriteDuringRender();
       valueSetter(mutable, newValue);
     },
 
