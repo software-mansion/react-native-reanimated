@@ -2,16 +2,11 @@ package com.swmansion.reanimated;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
-import com.swmansion.reanimated.NodesManager;
 
 class ReaCompatibility {
-    public ReaCompatibility(ReactApplicationContext reactApplicationContext) {
+  public ReaCompatibility(ReactApplicationContext reactApplicationContext) {}
 
-    }
-    public void registerFabricEventListener(NodesManager nodesManager) {
+  public void registerFabricEventListener(NodesManager nodesManager) {}
 
-    }
-    public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
-
-    }
+  public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {}
 }
