@@ -104,30 +104,40 @@ export const toBeCalledJSMatcher: Matcher<ToBeCalledArgs> = (currentValue, negat
   return toBeCalledOnThreadMatcher(currentValue, negation, times, 'JS');
 };
 
-export const toThrowMatcher: AsyncMatcher<ToThrowArgs> = async (currentValue, negation, errorMessage) => {
-  if (typeof currentValue !== 'function') {
-    return { pass: false, message: `${currentValue?.toString()} is not a function` };
+export const toThrowMatcher: AsyncMatcher<ToThrowArgs> = async (throwingFunction, negation, errorMessage) => {
+  if (typeof throwingFunction !== 'function') {
+    return { pass: false, message: `${throwingFunction?.toString()} is not a function` };
   }
-  const [restoreConsole, checkErrors] = await mockConsole();
+  const [restoreConsole, getCapturedConsoleErrors] = await mockConsole();
+  let thrownException = false;
+  let thrownExceptionMessage = null;
 
   try {
-    await currentValue();
+    await throwingFunction();
   } catch (e) {
-    const message = (e as Error)?.message || '';
-    const correctMessage = errorMessage ? errorMessage === message : true;
-
-    return {
-      pass: correctMessage,
-      message: `Function was expected${negation ? ' NOT' : ''} to throw the message "${green(errorMessage)}"${
-        negation ? '' : `, but received "${red(message)}`
-      }"`,
-    };
+    thrownException = true;
+    thrownExceptionMessage = (e as Error)?.message || '';
   }
   await restoreConsole();
-  return checkErrors(negation, errorMessage);
+
+  const { consoleErrorCount, consoleErrorMessage } = getCapturedConsoleErrors();
+  const errorWasThrown = thrownException || consoleErrorCount >= 1;
+  const capturedMessage = thrownExceptionMessage || consoleErrorMessage;
+  const messageIsCorrect = errorMessage ? errorMessage === capturedMessage : true;
+
+  return {
+    pass: errorWasThrown && messageIsCorrect,
+    message: messageIsCorrect
+      ? `Function was expected${negation ? ' NOT' : ''} to throw error or warning`
+      : `Function was expected${negation ? ' NOT' : ''} to throw the message "${green(errorMessage)}"${
+          negation ? '' : `, but received "${red(capturedMessage)}`
+        }"`,
+  };
 };
 
-async function mockConsole(): Promise<[() => Promise<void>, (negation: boolean, message?: string) => MatcherReturn]> {
+async function mockConsole(): Promise<
+  [() => Promise<void>, () => { consoleErrorCount: number; consoleErrorMessage: string }]
+> {
   const syncUIRunner = new SyncUIRunner();
   let counterJS = 0;
 
@@ -167,25 +177,10 @@ async function mockConsole(): Promise<[() => Promise<void>, (negation: boolean, 
     });
   };
 
-  const checkErrors = (negation: boolean, expectedMessage?: string) => {
+  const getCapturedConsoleErrors = () => {
     const count = counterUI.value + counterJS;
-    const correctMessage = expectedMessage ? expectedMessage === recordedMessage.value : true;
-    const correctCallNumber = count === 1;
-
-    let errorMessage = '';
-    if (!correctCallNumber) {
-      errorMessage = `Function was expected${negation ? ' NOT' : ''} to throw exactly one error or warning, got ${red(
-        count,
-      )}.`;
-    }
-    if (!correctMessage) {
-      errorMessage = `Function was expected${negation ? ' NOT' : ''} to throw the message "${green(expectedMessage)}"${
-        negation ? '' : `, but received "${red(recordedMessage.value)}`
-      }"`;
-    }
-
-    return { pass: correctCallNumber && correctMessage, message: errorMessage };
+    return { consoleErrorCount: count, consoleErrorMessage: recordedMessage.value };
   };
 
-  return [restoreConsole, checkErrors];
+  return [restoreConsole, getCapturedConsoleErrors];
 }
