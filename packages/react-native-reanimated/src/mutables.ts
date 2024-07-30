@@ -112,7 +112,6 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
     set value(newValue) {
       if (shouldWarnInvalidAccess()) {
-        console.log('warn 2');
         console.warn(invalidWriteWarning);
       }
       runOnUI(() => {

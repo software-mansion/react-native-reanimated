@@ -11,8 +11,7 @@ export function isReactRendering() {
 
 export function isFirstReactRender() {
   const currentOwner = getCurrentReactOwner()
-  // This is not null only after the first render and stores all the
-  // data from the previous render.
-  const alternate = currentOwner?.alternate;
-  return isReactRendering() && !alternate;
+  // alternate is not null only after the first render and stores all the
+  // data from the previous component render
+  return currentOwner && !currentOwner?.alternate;
 }
