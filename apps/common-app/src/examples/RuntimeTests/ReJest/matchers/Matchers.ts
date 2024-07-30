@@ -8,8 +8,8 @@ import {
   toBeCalledUIMatcher,
   toBeCalledJSMatcher,
 } from './rawMatchers';
-import type { SingleViewSnapshot } from './snapshotMatchers';
 import { compareSnapshots } from './snapshotMatchers';
+import type { SingleViewSnapshot } from '../TestRunner/UpdatesContainer';
 
 export class Matchers {
   private _negation = false;
@@ -36,8 +36,8 @@ export class Matchers {
   public toBeCalledUI = this.decorateMatcher(toBeCalledUIMatcher);
   public toBeCalledJS = this.decorateMatcher(toBeCalledJSMatcher);
 
-  public toMatchSnapshots(expectedSnapshots: SingleViewSnapshot | Record<number, SingleViewSnapshot>) {
-    const capturedSnapshots = this._currentValue as SingleViewSnapshot | Record<number, SingleViewSnapshot>;
+  public toMatchSnapshots(expectedSnapshots: SingleViewSnapshot) {
+    const capturedSnapshots = this._currentValue as SingleViewSnapshot;
     if (capturedSnapshots) {
       const mismatchError = compareSnapshots(expectedSnapshots, capturedSnapshots, false);
       if (mismatchError) {
@@ -48,11 +48,8 @@ export class Matchers {
     }
   }
 
-  public toMatchNativeSnapshots(
-    expectedSnapshots: SingleViewSnapshot | Record<number, SingleViewSnapshot>,
-    expectNegativeValueMismatch = false,
-  ) {
-    const capturedSnapshots = this._currentValue as SingleViewSnapshot | Record<number, SingleViewSnapshot>;
+  public toMatchNativeSnapshots(expectedSnapshots: SingleViewSnapshot, expectNegativeValueMismatch = false) {
+    const capturedSnapshots = this._currentValue as SingleViewSnapshot;
     const mismatchError = compareSnapshots(expectedSnapshots, capturedSnapshots, true, expectNegativeValueMismatch);
     if (mismatchError) {
       this._testCase.errors.push(mismatchError);

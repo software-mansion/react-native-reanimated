@@ -1,5 +1,6 @@
 'use strict';
 import type { AnimationObject, Mutable } from './commonTypes';
+import { isReactRendering } from './reactUtils';
 
 export function valueSetter<Value>(
   mutable: Mutable<Value>,
@@ -7,6 +8,11 @@ export function valueSetter<Value>(
   forceUpdate = false
 ): void {
   'worklet';
+  if (isReactRendering()) {
+    console.warn(
+      '[Reanimated] Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.'
+    );
+  } 
   const previousAnimation = mutable._animation;
   if (previousAnimation) {
     previousAnimation.cancelled = true;

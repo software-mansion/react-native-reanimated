@@ -4,7 +4,7 @@ import type {
   LayoutAnimationFunction,
 } from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder';
-import type { EasingFunction } from '../../Easing';
+import type { EasingFunction } from '../../commonTypes';
 import { Easing } from '../../Easing';
 import { withTiming } from '../../animation';
 import { assertEasingIsWorklet } from '../../animation/util';
