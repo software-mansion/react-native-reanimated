@@ -9,8 +9,10 @@ import { valueSetter } from './valueSetter';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-const invalidReadWarning = '[Reanimated] Reading from `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.';
-const invalidWriteWarning = '[Reanimated] Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.';
+const invalidReadWarning =
+  '[Reanimated] Reading from `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.';
+const invalidWriteWarning =
+  '[Reanimated] Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.';
 
 function shouldWarnInvalidAccess() {
   return isReactRendering() && !isFirstReactRender();
@@ -136,7 +138,7 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
     get value(): Value {
       if (shouldWarnInvalidAccess()) {
         console.warn(invalidReadWarning);
-      } 
+      }
       return value;
     },
     set value(newValue) {
