@@ -53,6 +53,21 @@ target_include_directories(
 )
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
+    target_include_directories(
+        worklets
+        PRIVATE
+        "${REACT_NATIVE_DIR}/ReactCommon/yoga"
+        "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+    )
+
+    target_link_libraries(
+        worklets
+        ReactAndroid::fabricjni
+        ReactAndroid::react_debug
+        ReactAndroid::react_render_core
+        ReactAndroid::react_render_componentregistry
+        ReactAndroid::rrc_view
+    )
 endif()
 
 # build shared lib
@@ -66,10 +81,6 @@ set_target_properties(
 target_link_libraries(
     worklets
     log
-)
-
-target_link_libraries(
-    worklets
     ReactAndroid::folly_runtime
     ReactAndroid::glog
     ReactAndroid::jsi
@@ -89,48 +100,28 @@ if(${JS_RUNTIME} STREQUAL "hermes")
             ReactAndroid::hermes_executor
         )
     endif()
-elseif(${JS_RUNTIME} STREQUAL "v8")
-# TODO: Address this when adding support for newest V8 for React Native
-#
-# string(APPEND CMAKE_CXX_FLAGS " -DJS_RUNTIME_V8=1")
-# target_include_directories(
-# worklets
-# PRIVATE
-# "${JS_RUNTIME_DIR}/src"
-# )
-# file(GLOB V8_SO_DIR "${JS_RUNTIME_DIR}/android/build/intermediates/library_jni/*/jni/${ANDROID_ABI}")
-# find_library(
-# V8EXECUTOR_LIB
-# v8executor
-# PATHS ${V8_SO_DIR}
-# NO_DEFAULT_PATH
-# NO_CMAKE_FIND_ROOT_PATH
-# )
-# target_link_libraries(
-# worklets
-# ${V8EXECUTOR_LIB}
-# )
 elseif(${JS_RUNTIME} STREQUAL "jsc")
     target_link_libraries(
         worklets
         ReactAndroid::jscexecutor
     )
-endif()
-
-if(${IS_NEW_ARCHITECTURE_ENABLED})
+elseif(${JS_RUNTIME} STREQUAL "v8")
+    # TODO: Refactor this when adding support for newest V8
     target_include_directories(
         worklets
         PRIVATE
-        "${REACT_NATIVE_DIR}/ReactCommon/yoga"
-        "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+        "${JS_RUNTIME_DIR}/src"
     )
-
+    file(GLOB V8_SO_DIR "${JS_RUNTIME_DIR}/android/build/intermediates/library_jni/*/jni/${ANDROID_ABI}")
+    find_library(
+        V8EXECUTOR_LIB
+        v8executor
+        PATHS ${V8_SO_DIR}
+        NO_DEFAULT_PATH
+        NO_CMAKE_FIND_ROOT_PATH
+    )
     target_link_libraries(
         worklets
-        ReactAndroid::fabricjni
-        ReactAndroid::react_debug
-        ReactAndroid::react_render_core
-        ReactAndroid::react_render_componentregistry
-        ReactAndroid::rrc_view
+        ${V8EXECUTOR_LIB}
     )
 endif()
