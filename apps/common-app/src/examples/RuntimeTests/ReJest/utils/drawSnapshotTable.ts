@@ -16,11 +16,12 @@ function prepareValueToTableCell(message: NullableTestValue): string {
     return 'null';
   } else if (typeof message === 'object') {
     return JSON.stringify(message);
-  } else if (typeof message === 'number') {
-    const digitsAfterDot = message.toString().split('.')?.[1]?.length || 0;
+  } else if (typeof message === 'number' || (typeof message === 'string' && Number(message) !== null)) {
+    const messageNum = Number(message);
+    const digitsAfterDot = messageNum.toString().split('.')?.[1]?.length || 0;
     for (let i = 0; i < digitsAfterDot; i++) {
-      if (Math.abs(message - Number(message.toFixed(i))) < 0.00001) {
-        return '≈' + message.toFixed(i);
+      if (Math.abs(messageNum - Number(messageNum.toFixed(i))) < 0.00001) {
+        return '≈' + messageNum.toFixed(i);
       }
     }
     return String(message);
