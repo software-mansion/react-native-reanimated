@@ -4,7 +4,6 @@ import type {
   BuildFunction,
   NullableTestValue,
   Operation,
-  SharedValueSnapshot,
   TestCase,
   TestConfiguration,
   TestSuite,
@@ -15,7 +14,6 @@ import { DescribeDecorator, TestDecorator } from '../types';
 import { TestComponent } from '../TestComponent';
 import { applyMarkdown, formatString } from '../utils/stringFormatUtils';
 import type {
-  SharedValue,
   LayoutAnimationStartFunction,
   LayoutAnimationType,
   SharedTransitionAnimationsValues,
@@ -26,6 +24,7 @@ import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from 
 import { createUpdatesContainer } from './UpdatesContainer';
 import { makeMutable, runOnJS } from 'react-native-reanimated';
 import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
+import { ValueRegistry } from './ValueRegistry';
 import { TestSummaryLogger } from './TestSummaryLogger';
 export { Presets } from '../Presets';
 
@@ -48,11 +47,15 @@ export class TestRunner {
   private _currentTestSuite: TestSuite | null = null;
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
-  private _valueRegistry: Record<string, SharedValue> = {};
   private _includesOnly: boolean = false;
   private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
-  private _testSummary: TestSummaryLogger = new TestSummaryLogger();
+  private _valueRegistry = new ValueRegistry();
+  private _testSummary = new TestSummaryLogger();
+
+  public getValueRegistry() {
+    return this._valueRegistry;
+  }
 
   public notify(name: string) {
     'worklet';
@@ -194,27 +197,6 @@ export class TestRunner {
     } else {
       callTrackerJS(name);
     }
-  }
-
-  public registerValue(name: string, value: SharedValue) {
-    'worklet';
-    this._valueRegistry[name] = value;
-  }
-
-  public async getRegisteredValue(name: string): Promise<SharedValueSnapshot> {
-    const jsValue = this._valueRegistry[name].value;
-    const sharedValue = this._valueRegistry[name];
-    const valueContainer = makeMutable<unknown>(null);
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      valueContainer.value = sharedValue.value;
-    }, 1000);
-    const uiValue = valueContainer.value;
-    return {
-      name,
-      onJS: jsValue as TestValue,
-      onUI: uiValue as TestValue,
-    };
   }
 
   public getTrackerCallCount(name: string): TrackerCallCount {

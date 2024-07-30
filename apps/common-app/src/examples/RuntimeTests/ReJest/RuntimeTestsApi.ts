@@ -8,6 +8,7 @@ import { DescribeDecorator, TestDecorator } from './types';
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
+const valueRegistry = testRunner.getValueRegistry();
 
 type DescribeFunction = (name: string, buildSuite: BuildFunction) => void;
 type TestFunction = (name: string, buildTest: BuildFunction) => void;
@@ -126,11 +127,11 @@ export function getTrackerCallCount(name: string) {
 }
 
 export function registerValue(name: string, value: SharedValue) {
-  return testRunner.registerValue(name, value);
+  return valueRegistry.registerValue(name, value);
 }
 
 export async function getRegisteredValue(name: string) {
-  return await testRunner.getRegisteredValue(name);
+  return await valueRegistry.getRegisteredValue(name);
 }
 
 export function getTestComponent(name: string): TestComponent {
