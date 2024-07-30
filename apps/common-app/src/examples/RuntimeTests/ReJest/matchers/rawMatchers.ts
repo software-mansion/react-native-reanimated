@@ -110,7 +110,19 @@ export const toThrowMatcher: AsyncMatcher<ToThrowArgs> = async (currentValue, ne
   }
   const [restoreConsole, checkErrors] = await mockConsole();
 
-  await currentValue();
+  try {
+    await currentValue();
+  } catch (e) {
+    const message = (e as Error)?.message || '';
+    const correctMessage = errorMessage ? errorMessage === message : true;
+
+    return {
+      pass: correctMessage,
+      message: `Function was expected${negation ? ' NOT' : ''} to throw the message "${green(errorMessage)}"${
+        negation ? '' : `, but received "${red(message)}`
+      }"`,
+    };
+  }
   await restoreConsole();
   return checkErrors(negation, errorMessage);
 };
@@ -162,7 +174,9 @@ async function mockConsole(): Promise<[() => Promise<void>, (negation: boolean, 
 
     let errorMessage = '';
     if (!correctCallNumber) {
-      errorMessage = `Function was expected${negation ? ' NOT' : ''} to throw exactly one error or warning.`;
+      errorMessage = `Function was expected${negation ? ' NOT' : ''} to throw exactly one error or warning, got ${red(
+        count,
+      )}.`;
     }
     if (!correctMessage) {
       errorMessage = `Function was expected${negation ? ' NOT' : ''} to throw the message "${green(expectedMessage)}"${
