@@ -321,9 +321,8 @@ export class TestRunner {
 
     this._currentTestCase = null;
     await this.render(null);
-    const animationUpdatesRecorder = new AnimationUpdatesRecorder();
-    await animationUpdatesRecorder.unmockAnimationTimer();
-    await animationUpdatesRecorder.stopRecordingAnimationUpdates();
+    await this._animationRecorder.unmockAnimationTimer();
+    await this._animationRecorder.stopRecordingAnimationUpdates();
   }
 
   public expect(currentValue: TestValue): Matchers {
