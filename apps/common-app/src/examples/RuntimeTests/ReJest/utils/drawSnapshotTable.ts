@@ -1,5 +1,5 @@
 import { isColor } from 'react-native-reanimated';
-import type { Mismatch, NullableTestValue } from '../types';
+import type { Mismatch, TestValue } from '../types';
 import { green, red, color, getColorSquare } from './stringFormatUtils';
 
 const VALUE_COLUMN_WIDTH = 15;
@@ -9,7 +9,7 @@ const VERTICAL_LINE = '│';
 const VERTICAL_LINE_DOUBLE = '┃';
 const HORIZONTAL_LINE = '━';
 
-function prepareValueToTableCell(message: NullableTestValue): string {
+function prepareValueToTableCell(message: TestValue): string {
   if (message === undefined) {
     return 'undefined';
   } else if (message === null) {
@@ -30,7 +30,7 @@ function prepareValueToTableCell(message: NullableTestValue): string {
   }
 }
 
-function adjustValueToLength(value: NullableTestValue, length: number, valueKey?: string) {
+function adjustValueToLength(value: TestValue, length: number, valueKey?: string) {
   let valueStr = prepareValueToTableCell(value);
   let messageLen = valueStr.length;
 
