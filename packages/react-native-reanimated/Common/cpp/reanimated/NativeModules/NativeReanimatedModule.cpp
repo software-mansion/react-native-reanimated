@@ -16,7 +16,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/scheduler/Scheduler.h>
-#include "ReanimatedCommitMarker.h"
+#include "ReanimatedCommitShadowNode.h"
 #include "ShadowTreeCloner.h"
 #endif
 
@@ -645,6 +645,10 @@ void NativeReanimatedModule::performOperations() {
   {
     auto lock = propsRegistry_->createLock();
 
+    if (copiedOperationsQueue.size() > 0) {
+      propsRegistry_->resetReanimatedSkipCommitFlag();
+    }
+
     // remove recently unmounted ShadowNodes from PropsRegistry
     if (!tagsToRemove_.empty()) {
       for (auto tag : tagsToRemove_) {
@@ -710,10 +714,6 @@ void NativeReanimatedModule::performOperations() {
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
   shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
-    // Mark the commit as Reanimated commit so that we can distinguish it
-    // in ReanimatedCommitHook.
-    ReanimatedCommitMarker commitMarker;
-
     shadowTree.commit(
         [&](RootShadowNode const &oldRootShadowNode)
             -> RootShadowNode::Unshared {
@@ -733,7 +733,19 @@ void NativeReanimatedModule::performOperations() {
             }
 #endif
           }
-          return cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+
+          auto rootNode =
+              cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+
+          // Mark the commit as Reanimated commit so that we can distinguish it
+          // in ReanimatedCommitHook.
+
+          auto reaShadowNode =
+              std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
+                  rootNode);
+          reaShadowNode->setReanimatedCommitTrait();
+
+          return rootNode;
         },
         { /* .enableStateReconciliation = */
           false,
@@ -831,10 +843,6 @@ void NativeReanimatedModule::initializeFabric(
 
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
-#if REACT_NATIVE_MINOR_VERSION >= 73
-  mountHook_ =
-      std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
-#endif
 }
 
 void NativeReanimatedModule::initializeLayoutAnimations() {

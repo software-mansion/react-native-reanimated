@@ -39,11 +39,9 @@ class PropsRegistry {
 #endif
   }
 
-#if REACT_NATIVE_MINOR_VERSION >= 73
   void resetReanimatedSkipCommitFlag() {
     shouldReanimatedSkipCommit_ = false;
   }
-#endif
 
  private:
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>> map_;

@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "ReanimatedCommitHook.h"
-#include "ReanimatedCommitMarker.h"
+#include "ReanimatedCommitShadowNode.h"
 #include "ShadowTreeCloner.h"
 
 using namespace facebook::react;
@@ -31,9 +31,15 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 #else
     RootShadowNode::Unshared const &newRootShadowNode) const noexcept {
 #endif
-  if (ReanimatedCommitMarker::isReanimatedCommit()) {
+
+  auto reaShadowNode =
+      std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
+          newRootShadowNode);
+
+  if (reaShadowNode->hasReanimatedCommitTrait()) {
     // ShadowTree commited by Reanimated, no need to apply updates from
     // PropsRegistry
+    reaShadowNode->unsetReanimatedCommitTrait();
     return newRootShadowNode;
   }
 
@@ -51,13 +57,14 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
         });
 
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
-  }
 
-  // If the commit comes from React Native then skip one commit from Reanimated
-  // since the ShadowTree to be committed by Reanimated may not include the new
-  // changes from React Native yet and all changes of animated props will be
-  // applied in ReanimatedCommitHook by iterating over PropsRegistry.
-  propsRegistry_->pleaseSkipReanimatedCommit();
+    // If the commit comes from React Native then skip one commit from
+    // Reanimated since the ShadowTree to be committed by Reanimated may not
+    // include the new changes from React Native yet and all changes of animated
+    // props will be applied in ReanimatedCommitHook by iterating over
+    // PropsRegistry.
+    propsRegistry_->pleaseSkipReanimatedCommit();
+  }
 
   return rootNode;
 }
