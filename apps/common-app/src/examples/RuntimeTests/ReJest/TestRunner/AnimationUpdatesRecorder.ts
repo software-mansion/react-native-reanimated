@@ -1,6 +1,5 @@
 import type { Operation } from '../types';
 import { SyncUIRunner } from '../utils/SyncUIRunner';
-import { assertMockedAnimationTimestamp } from './Asserts';
 import { createUpdatesContainer } from './UpdatesContainer';
 
 export class AnimationUpdatesRecorder {
@@ -108,30 +107,6 @@ export class AnimationUpdatesRecorder {
       if (global.framesCount) {
         global.framesCount = undefined;
       }
-    });
-  }
-
-  public async setAnimationTimestamp(timestamp: number) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-      global.mockedAnimationTimestamp = timestamp;
-    });
-  }
-
-  public async advanceAnimationByTime(time: number) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-      global.mockedAnimationTimestamp += time;
-    });
-  }
-
-  public async advanceAnimationByFrames(frameCount: number) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-      global.mockedAnimationTimestamp += frameCount * 16;
     });
   }
 }

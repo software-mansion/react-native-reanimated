@@ -186,18 +186,6 @@ export async function unmockWindowDimensions() {
   await testRunner.unmockWindowDimensions();
 }
 
-export async function setAnimationTimestamp(timestamp: number) {
-  await animationRecorder.setAnimationTimestamp(timestamp);
-}
-
-export async function advanceAnimationByTime(time: number) {
-  await animationRecorder.advanceAnimationByTime(time);
-}
-
-export async function advanceAnimationByFrames(frameCount: number) {
-  await animationRecorder.advanceAnimationByFrames(frameCount);
-}
-
 export async function recordAnimationUpdates() {
   return animationRecorder.recordAnimationUpdates();
 }
