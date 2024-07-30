@@ -7,5 +7,4 @@ public class ReactFeatureFlagsWrapper {
   public static void enableMountHooks() {
     ReactFeatureFlags.enableMountHooks = true;
   }
-
 }

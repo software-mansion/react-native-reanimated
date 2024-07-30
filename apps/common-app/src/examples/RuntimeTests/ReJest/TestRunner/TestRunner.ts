@@ -1,29 +1,20 @@
 import type { Component, MutableRefObject, ReactElement } from 'react';
 import { useRef } from 'react';
-import type {
-  BuildFunction,
-  NullableTestValue,
-  SharedValueSnapshot,
-  TestCase,
-  TestConfiguration,
-  TestSuite,
-  TestValue,
-  TrackerCallCount,
-} from '../types';
+import type { BuildFunction, TestCase, TestConfiguration, TestSuite, TestValue, TrackerCallCount } from '../types';
 import { DescribeDecorator, TestDecorator } from '../types';
 import { TestComponent } from '../TestComponent';
 import { applyMarkdown, formatString } from '../utils/stringFormatUtils';
 import type {
-  SharedValue,
   LayoutAnimationStartFunction,
   LayoutAnimationType,
   SharedTransitionAnimationsValues,
   LayoutAnimation,
 } from 'react-native-reanimated';
-import { Matchers, nullableMatch } from '../matchers/Matchers';
+import { Matchers } from '../matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
 import { makeMutable, runOnJS } from 'react-native-reanimated';
 import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
+import { ValueRegistry } from './ValueRegistry';
 import { TestSummaryLogger } from './TestSummaryLogger';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
 export { Presets } from '../Presets';
@@ -47,15 +38,19 @@ export class TestRunner {
   private _currentTestSuite: TestSuite | null = null;
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
-  private _valueRegistry: Record<string, SharedValue> = {};
   private _includesOnly: boolean = false;
   private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
   private _testSummary: TestSummaryLogger = new TestSummaryLogger();
   private _animationRecorder = new AnimationUpdatesRecorder();
+  private _valueRegistry = new ValueRegistry();
 
   public getAnimationUpdatesRecorder() {
     return this._animationRecorder;
+  }
+
+  public getValueRegistry() {
+    return this._valueRegistry;
   }
 
   public notify(name: string) {
@@ -200,27 +195,6 @@ export class TestRunner {
     }
   }
 
-  public registerValue(name: string, value: SharedValue) {
-    'worklet';
-    this._valueRegistry[name] = value;
-  }
-
-  public async getRegisteredValue(name: string): Promise<SharedValueSnapshot> {
-    const jsValue = this._valueRegistry[name].value;
-    const sharedValue = this._valueRegistry[name];
-    const valueContainer = makeMutable<unknown>(null);
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      valueContainer.value = sharedValue.value;
-    }, 1000);
-    const uiValue = valueContainer.value;
-    return {
-      name,
-      onJS: jsValue as TestValue,
-      onUI: uiValue as TestValue,
-    };
-  }
-
   public getTrackerCallCount(name: string): TrackerCallCount {
     return {
       name,
@@ -328,16 +302,6 @@ export class TestRunner {
   public expect(currentValue: TestValue): Matchers {
     assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
-  }
-
-  public expectNullable(currentValue: NullableTestValue) {
-    assertTestCase(this._currentTestCase);
-    nullableMatch(currentValue, this._currentTestCase);
-  }
-
-  public expectNotNullable(currentValue: NullableTestValue) {
-    assertTestCase(this._currentTestCase);
-    nullableMatch(currentValue, this._currentTestCase, true);
   }
 
   public beforeAll(job: () => void) {
