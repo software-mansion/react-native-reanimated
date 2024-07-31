@@ -11,7 +11,7 @@ import type {
 } from '../types';
 import { DescribeDecorator, TestDecorator } from '../types';
 import { TestComponent } from '../TestComponent';
-import { applyMarkdown, formatString } from '../utils/stringFormatUtils';
+import { applyMarkdown, formatTestName } from '../utils/stringFormatUtils';
 import type {
   LayoutAnimationStartFunction,
   LayoutAnimationType,
@@ -157,10 +157,10 @@ export class TestRunner {
           await testCase(example, index);
         };
         this.test(
-          formatString(name, example, index),
+          formatTestName(name, example, index),
           currentTestCase,
           decorator,
-          formatString(expectedWarning, example, index),
+          formatTestName(expectedWarning, example, index),
         );
       });
     };
@@ -172,7 +172,7 @@ export class TestRunner {
         const currentTestCase = async () => {
           await testCase(example, index);
         };
-        this.test(formatString(name, example, index), currentTestCase, decorator);
+        this.test(formatTestName(name, example, index), currentTestCase, decorator);
       });
     };
   }
