@@ -1,12 +1,13 @@
-import { color } from '../utils/stringFormatUtils';
-import type { TestCase, TestValue, NullableTestValue } from '../types';
-import type { Matcher, MatcherArguments } from './rawMatchers';
+import type { TestCase, TestValue } from '../types';
+import type { AsyncMatcher, AsyncMatcherArguments, Matcher, SyncMatcherArguments } from './rawMatchers';
 import {
   toBeMatcher,
   toBeWithinRangeMatcher,
   toBeCalledMatcher,
   toBeCalledUIMatcher,
   toBeCalledJSMatcher,
+  toThrowMatcher,
+  toBeNullableMatcher,
 } from './rawMatchers';
 import { compareSnapshots } from './snapshotMatchers';
 import type { SingleViewSnapshot } from '../TestRunner/UpdatesContainer';
@@ -21,7 +22,7 @@ export class Matchers {
     return this;
   }
 
-  private decorateMatcher<MatcherArgs extends MatcherArguments>(matcher: Matcher<MatcherArgs>) {
+  private decorateMatcher<MatcherArgs extends SyncMatcherArguments>(matcher: Matcher<MatcherArgs>) {
     return (...args: MatcherArgs) => {
       const { pass, message } = matcher(this._currentValue, this._negation, ...args);
       if ((!pass && !this._negation) || (pass && this._negation)) {
@@ -30,8 +31,19 @@ export class Matchers {
     };
   }
 
+  private decorateAsyncMatcher<MatcherArgs extends AsyncMatcherArguments>(matcher: AsyncMatcher<MatcherArgs>) {
+    return async (...args: MatcherArgs) => {
+      const { pass, message } = await matcher(this._currentValue, this._negation, ...args);
+      if ((!pass && !this._negation) || (pass && this._negation)) {
+        this._testCase.errors.push(message);
+      }
+    };
+  }
+
   public toBe = this.decorateMatcher(toBeMatcher);
+  public toBeNullable = this.decorateMatcher(toBeNullableMatcher);
   public toBeWithinRange = this.decorateMatcher(toBeWithinRangeMatcher);
+  public toThrow = this.decorateAsyncMatcher(toThrowMatcher);
   public toBeCalled = this.decorateMatcher(toBeCalledMatcher);
   public toBeCalledUI = this.decorateMatcher(toBeCalledUIMatcher);
   public toBeCalledJS = this.decorateMatcher(toBeCalledJSMatcher);
@@ -54,17 +66,5 @@ export class Matchers {
     if (mismatchError) {
       this._testCase.errors.push(mismatchError);
     }
-  }
-}
-
-export function nullableMatch(currentValue: NullableTestValue, testCase: TestCase, negation: boolean = false) {
-  const pass = currentValue === null || currentValue === undefined;
-
-  const coloredExpected = color('nullable', 'green');
-  const coloredReceived = color(currentValue, 'red');
-  const message = `Expected${negation ? ' NOT' : ''} ${coloredExpected} received ${coloredReceived}`;
-
-  if ((!pass && !negation) || (pass && negation)) {
-    testCase.errors.push(message);
   }
 }

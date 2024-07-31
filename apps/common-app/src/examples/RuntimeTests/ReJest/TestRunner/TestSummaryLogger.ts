@@ -7,7 +7,6 @@ export class TestSummaryLogger {
   private _skipped: number = 0;
   private _failedTests: Array<string> = [];
   private _startTime: number = Date.now();
-  private _endTime: number = 0;
 
   public logRunningTestSuite(testSuite: TestSuite) {
     console.log(`${indentNestingLevel(testSuite.nestingLevel)}${testSuite.name}`);
@@ -44,7 +43,8 @@ export class TestSummaryLogger {
   }
 
   public printSummary() {
-    this._endTime = Date.now();
+    const endTime = Date.now();
+    const timeInSeconds = Math.round((endTime - this._startTime) / 1000);
 
     console.log('End of tests run 🏁');
     console.log('\n');
@@ -54,7 +54,8 @@ export class TestSummaryLogger {
         'orange',
       )} skipped`,
     );
-    console.log(`⏱️  Total time: ${Math.round(((this._endTime - this._startTime) / 1000) * 100) / 100}s`);
+    console.log(`⏱️  Total time: ${Math.floor(timeInSeconds / 60)} minutes ${timeInSeconds % 60} s`);
+
     if (this._failed > 0) {
       console.log('❌ Failed tests:');
       for (const failedTest of this._failedTests) {

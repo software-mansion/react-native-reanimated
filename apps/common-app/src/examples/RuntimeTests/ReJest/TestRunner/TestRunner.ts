@@ -1,32 +1,22 @@
 import type { Component, MutableRefObject, ReactElement } from 'react';
 import { useRef } from 'react';
-import type {
-  BuildFunction,
-  NullableTestValue,
-  Operation,
-  SharedValueSnapshot,
-  TestCase,
-  TestConfiguration,
-  TestSuite,
-  TestValue,
-  TrackerCallCount,
-} from '../types';
+import type { BuildFunction, TestCase, TestConfiguration, TestSuite, TestValue, TrackerCallCount } from '../types';
 import { DescribeDecorator, TestDecorator } from '../types';
 import { TestComponent } from '../TestComponent';
-import { applyMarkdown, formatString } from '../utils/stringFormatUtils';
+import { applyMarkdown, formatTestName } from '../utils/stringFormatUtils';
 import type {
-  SharedValue,
   LayoutAnimationStartFunction,
   LayoutAnimationType,
   SharedTransitionAnimationsValues,
   LayoutAnimation,
 } from 'react-native-reanimated';
-import { Matchers, nullableMatch } from '../matchers/Matchers';
+import { Matchers } from '../matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
-import { createUpdatesContainer } from './UpdatesContainer';
 import { makeMutable, runOnJS } from 'react-native-reanimated';
 import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
+import { ValueRegistry } from './ValueRegistry';
 import { TestSummaryLogger } from './TestSummaryLogger';
+import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
 export { Presets } from '../Presets';
 
 let callTrackerRegistryJS: Record<string, number> = {};
@@ -48,11 +38,20 @@ export class TestRunner {
   private _currentTestSuite: TestSuite | null = null;
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
-  private _valueRegistry: Record<string, SharedValue> = {};
   private _includesOnly: boolean = false;
   private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
   private _testSummary: TestSummaryLogger = new TestSummaryLogger();
+  private _animationRecorder = new AnimationUpdatesRecorder();
+  private _valueRegistry = new ValueRegistry();
+
+  public getAnimationUpdatesRecorder() {
+    return this._animationRecorder;
+  }
+
+  public getValueRegistry() {
+    return this._valueRegistry;
+  }
 
   public notify(name: string) {
     'worklet';
@@ -155,10 +154,10 @@ export class TestRunner {
           await testCase(example, index);
         };
         this.test(
-          formatString(name, example, index),
+          formatTestName(name, example, index),
           currentTestCase,
           decorator,
-          formatString(expectedWarning, example, index),
+          formatTestName(expectedWarning, example, index),
         );
       });
     };
@@ -170,7 +169,7 @@ export class TestRunner {
         const currentTestCase = async () => {
           await testCase(example, index);
         };
-        this.test(formatString(name, example, index), currentTestCase, decorator);
+        this.test(formatTestName(name, example, index), currentTestCase, decorator);
       });
     };
   }
@@ -194,27 +193,6 @@ export class TestRunner {
     } else {
       callTrackerJS(name);
     }
-  }
-
-  public registerValue(name: string, value: SharedValue) {
-    'worklet';
-    this._valueRegistry[name] = value;
-  }
-
-  public async getRegisteredValue(name: string): Promise<SharedValueSnapshot> {
-    const jsValue = this._valueRegistry[name].value;
-    const sharedValue = this._valueRegistry[name];
-    const valueContainer = makeMutable<unknown>(null);
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      valueContainer.value = sharedValue.value;
-    }, 1000);
-    const uiValue = valueContainer.value;
-    return {
-      name,
-      onJS: jsValue as TestValue,
-      onUI: uiValue as TestValue,
-    };
   }
 
   public getTrackerCallCount(name: string): TrackerCallCount {
@@ -317,23 +295,13 @@ export class TestRunner {
 
     this._currentTestCase = null;
     await this.render(null);
-    await this.unmockAnimationTimer();
-    await this.stopRecordingAnimationUpdates();
+    await this._animationRecorder.unmockAnimationTimer();
+    await this._animationRecorder.stopRecordingAnimationUpdates();
   }
 
   public expect(currentValue: TestValue): Matchers {
     assertTestCase(this._currentTestCase);
     return new Matchers(currentValue, this._currentTestCase);
-  }
-
-  public expectNullable(currentValue: NullableTestValue) {
-    assertTestCase(this._currentTestCase);
-    nullableMatch(currentValue, this._currentTestCase);
-  }
-
-  public expectNotNullable(currentValue: NullableTestValue) {
-    assertTestCase(this._currentTestCase);
-    nullableMatch(currentValue, this._currentTestCase, true);
   }
 
   public beforeAll(job: () => void) {
@@ -354,135 +322,6 @@ export class TestRunner {
   public afterEach(job: () => void) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterEach = job;
-  }
-
-  public async recordAnimationUpdates() {
-    const updatesContainer = createUpdatesContainer();
-    const recordAnimationUpdates = updatesContainer.pushAnimationUpdates;
-    const recordLayoutAnimationUpdates = updatesContainer.pushLayoutAnimationUpdates;
-
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      const originalUpdateProps = global._IS_FABRIC ? global._updatePropsFabric : global._updatePropsPaper;
-      global.originalUpdateProps = originalUpdateProps;
-
-      const mockedUpdateProps = (operations: Operation[]) => {
-        recordAnimationUpdates(operations);
-        originalUpdateProps(operations);
-      };
-
-      if (global._IS_FABRIC) {
-        global._updatePropsFabric = mockedUpdateProps;
-      } else {
-        global._updatePropsPaper = mockedUpdateProps;
-      }
-
-      const originalNotifyAboutProgress = global._notifyAboutProgress;
-      global.originalNotifyAboutProgress = originalNotifyAboutProgress;
-      global._notifyAboutProgress = (tag: number, value: Record<string, unknown>, isSharedTransition: boolean) => {
-        recordLayoutAnimationUpdates(tag, value);
-        originalNotifyAboutProgress(tag, value, isSharedTransition);
-      };
-    });
-    return updatesContainer;
-  }
-
-  public async stopRecordingAnimationUpdates() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      if (global.originalUpdateProps) {
-        if (global._IS_FABRIC) {
-          global._updatePropsFabric = global.originalUpdateProps;
-        } else {
-          global._updatePropsPaper = global.originalUpdateProps;
-        }
-        global.originalUpdateProps = undefined;
-      }
-      if (global.originalNotifyAboutProgress) {
-        global._notifyAboutProgress = global.originalNotifyAboutProgress;
-        global.originalNotifyAboutProgress = undefined;
-      }
-    });
-  }
-
-  public async mockAnimationTimer() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      global.mockedAnimationTimestamp = 0;
-      global.originalGetAnimationTimestamp = global._getAnimationTimestamp;
-      global._getAnimationTimestamp = () => {
-        if (global.mockedAnimationTimestamp === undefined) {
-          throw new Error("Animation timestamp wasn't initialized");
-        }
-        return global.mockedAnimationTimestamp;
-      };
-      global.framesCount = 0;
-
-      const originalRequestAnimationFrame = global.requestAnimationFrame;
-      global.originalRequestAnimationFrame = originalRequestAnimationFrame;
-      global.requestAnimationFrame = (callback: FrameRequestCallback) => {
-        originalRequestAnimationFrame(() => {
-          callback(global._getAnimationTimestamp());
-        });
-        return 0;
-      };
-
-      global.originalFlushAnimationFrame = global.__flushAnimationFrame;
-      global.__flushAnimationFrame = (_frameTimestamp: number) => {
-        global.mockedAnimationTimestamp! += 16;
-        global.__frameTimestamp = global.mockedAnimationTimestamp;
-        global.originalFlushAnimationFrame!(global.mockedAnimationTimestamp!);
-        global.framesCount!++;
-      };
-    });
-  }
-
-  public async setAnimationTimestamp(timestamp: number) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-      global.mockedAnimationTimestamp = timestamp;
-    });
-  }
-
-  public async advanceAnimationByTime(time: number) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-      global.mockedAnimationTimestamp += time;
-    });
-  }
-
-  public async advanceAnimationByFrames(frameCount: number) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-      global.mockedAnimationTimestamp += frameCount * 16;
-    });
-  }
-
-  public async unmockAnimationTimer() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      if (global.originalGetAnimationTimestamp) {
-        global._getAnimationTimestamp = global.originalGetAnimationTimestamp;
-        global.originalGetAnimationTimestamp = undefined;
-      }
-      if (global.originalRequestAnimationFrame) {
-        (global.requestAnimationFrame as any) = global.originalRequestAnimationFrame;
-        global.originalRequestAnimationFrame = undefined;
-      }
-      if (global.originalFlushAnimationFrame) {
-        global.__flushAnimationFrame = global.originalFlushAnimationFrame;
-        global.originalFlushAnimationFrame = undefined;
-      }
-      if (global.mockedAnimationTimestamp) {
-        global.mockedAnimationTimestamp = undefined;
-      }
-      if (global.framesCount) {
-        global.framesCount = undefined;
-      }
-    });
   }
 
   public async unmockWindowDimensions() {
