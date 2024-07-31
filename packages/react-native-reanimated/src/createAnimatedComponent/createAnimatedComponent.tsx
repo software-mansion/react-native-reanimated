@@ -482,7 +482,9 @@ export function createAnimatedComponent(
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
 
-        this._componentViewTag = tag as number;
+        if (tag !== null) {
+          this._componentViewTag = tag as number;
+        }
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
