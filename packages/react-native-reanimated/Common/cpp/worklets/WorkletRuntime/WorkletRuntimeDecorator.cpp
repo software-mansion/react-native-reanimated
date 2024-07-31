@@ -9,7 +9,7 @@
 #ifdef ANDROID
 #include "Logger.h"
 #else
-#include "Common/cpp/hidden_headers/Logger.h"
+#include "Common/cpp/Worklets/hidden_headers/Logger.h"
 #endif
 
 namespace reanimated {
