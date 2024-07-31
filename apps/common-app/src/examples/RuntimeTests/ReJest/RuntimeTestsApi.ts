@@ -8,7 +8,7 @@ import { DescribeDecorator, TestDecorator } from './types';
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
-const windowDimensionsMocker = testRunner.getWindowDimensionsMocker();
+const animationRecorder = testRunner.getAnimationUpdatesRecorder();
 const valueRegistry = testRunner.getValueRegistry();
 
 type DescribeFunction = (name: string, buildSuite: BuildFunction) => void;
@@ -171,11 +171,11 @@ export function configure(config: TestConfiguration) {
 }
 
 export async function mockAnimationTimer() {
-  await testRunner.mockAnimationTimer();
+  await animationRecorder.mockAnimationTimer();
 }
 
 export async function unmockAnimationTimer() {
-  await testRunner.unmockAnimationTimer();
+  await animationRecorder.unmockAnimationTimer();
 }
 
 export async function mockWindowDimensions() {
@@ -186,22 +186,10 @@ export async function unmockWindowDimensions() {
   await windowDimensionsMocker.unmockWindowDimensions();
 }
 
-export async function setAnimationTimestamp(timestamp: number) {
-  await testRunner.setAnimationTimestamp(timestamp);
-}
-
-export async function advanceAnimationByTime(time: number) {
-  await testRunner.advanceAnimationByTime(time);
-}
-
-export async function advanceAnimationByFrames(frameCount: number) {
-  await testRunner.advanceAnimationByFrames(frameCount);
-}
-
 export async function recordAnimationUpdates() {
-  return testRunner.recordAnimationUpdates();
+  return animationRecorder.recordAnimationUpdates();
 }
 
 export async function stopRecordingAnimationUpdates() {
-  await testRunner.stopRecordingAnimationUpdates();
+  await animationRecorder.stopRecordingAnimationUpdates();
 }
