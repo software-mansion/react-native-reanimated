@@ -77,19 +77,17 @@ function useAnimatedGestureHandler<
 
 #### `gestureHandlers`
 
-The first argument to this hook is an object that can carry one or more worklet handlers.
-The handlers can be set under the following keys: `onStart`, `onActive`, `onEnd`, `onFail`, `onCancel`, `onFinish`.
+The first argument is an object that can carry one or more handlers.
+You can set the handlers under the following keys: `onStart`, `onActive`, `onEnd`, `onFail`, `onCancel`, `onFinish`.
 
-Read more about gesture handling states in the [Gesture Handler library documentation](https://docs.swmansion.com/react-native-gesture-handler/docs/under-the-hood/state).
-Each of the specified handlers will be triggered depending on the current state of the attached Gesture Handler.
-The handler worklet will receive the following arguments:
+Each of the specified handlers will be triggered depending on the current state of the attached gesture handler.
+Read more about gesture handling states in the [Gesture Handler documentation](https://docs.swmansion.com/react-native-gesture-handler/docs/under-the-hood/state).
+The handler receives the following arguments:
 
-- `event` [object] - event object carrying the event payload.
-  The payload will be different depending on the type of the Gesture Handler to which the worklet is attached (`PanGestureHandler`, `RotationGestureHandler`, etc.).
-  Please check the documentation section on the [selected handler type](https://docs.swmansion.com/react-native-gesture-handler/docs/) to learn about the event structure.
+- `event` [object] - an event object carrying the event payload.
+  The payload will be different depending on the type of the gesture handler to which the callback is attached to (`PanGestureHandler`, `RotationGestureHandler`, etc.).
 
-- `context` [object] - plain JS object that can be used to store some state.
-  This object will persist in between events and across worklet handlers for all the selected states and you can read and write any data to it.
+- `context` [object] - a JavaScript object that can be used to store some state. You can read and write any data to it. This object persists between events and across handlers for all the selected states.
 
 #### `dependencies` <Optional/>
 
@@ -100,7 +98,7 @@ Only relevant when using Reanimated [without the Babel plugin on the Web](https:
 ### Returns
 
 `useAnimatedGestureHandler` returns a handler object that can be attached to one of the gesture handler components provided by the `react-native-gesture-handler` library.
-The handler should be passed under `onGestureEvent` parameter regardless of what gesture states we are interested in processing.
+You need to pass this object to the `onGestureEvent` property of a gesture handler.
 
 ## Example
 
