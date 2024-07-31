@@ -2,12 +2,12 @@
 
 #include "PlatformLogger.h"
 
-#define TAG "Reanimated"
+constexpr const char *tag = "Reanimated";
 
 namespace reanimated {
 
 void PlatformLogger::log(const char *str) {
-  __android_log_print(ANDROID_LOG_VERBOSE, TAG, "%s", str);
+  __android_log_print(ANDROID_LOG_VERBOSE, tag, "%s", str);
 }
 
 void PlatformLogger::log(const std::string &str) {
@@ -15,11 +15,11 @@ void PlatformLogger::log(const std::string &str) {
 }
 
 void PlatformLogger::log(const double d) {
-  __android_log_print(ANDROID_LOG_VERBOSE, TAG, "%f", d);
+  __android_log_print(ANDROID_LOG_VERBOSE, tag, "%f", d);
 }
 
 void PlatformLogger::log(const int i) {
-  __android_log_print(ANDROID_LOG_VERBOSE, TAG, "%d", i);
+  __android_log_print(ANDROID_LOG_VERBOSE, tag, "%d", i);
 }
 
 void PlatformLogger::log(const bool b) {
