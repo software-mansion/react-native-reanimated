@@ -4,26 +4,84 @@ sidebar_position: 4
 
 # useEvent
 
-import DocsCompatibilityInfo from '../_shared/_docs_compatibility_info.mdx';
-
-<DocsCompatibilityInfo />
-
 This is low-level hook returning event handler that will be invoked with native events, which should be used in order to create custom event handler hook like `useAnimatedGestureHandler` or `useAnimatedScrollHandler`.
+
+## Reference
+
+```js
+function useEventExample() {
+  const dependencies = [{ isWeb: false }];
+  const handlers = {
+    onScroll: (event) => {
+      'worklet';
+      console.log(event);
+    },
+  };
+
+  const { context, doDependenciesDiffer, useWeb } = useHandler(
+    handlers,
+    dependencies
+  );
+
+  // highlight-start
+  const customScrollHandler = useEvent(
+    (event) => {
+      'worklet';
+      const { onScroll } = handlers;
+      if (onScroll && event.eventName.endsWith('onScroll')) {
+        context.eventName = event.eventName + useWeb;
+        onScroll(event);
+      }
+    },
+    ['onScroll'],
+    doDependenciesDiffer
+  );
+  // highlight-end
+
+  return <Animated.ScrollView onScroll={customScrollHandler} />;
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function useEvent<
+  Event extends object,
+  Context extends Record<string, unknown> = never
+>(
+  handler: EventHandler<Event, Context>,
+  eventNames?: string[],
+  rebuild?: boolean
+): EventHandlerProcessed<Event, Context>;
+
+type EventHandler<
+  Event extends object,
+  Context extends Record<string, unknown> = never
+> = (event: ReanimatedEvent<Event>, context?: Context) => void;
+
+type EventHandlerProcessed<
+  Event extends object,
+  Context extends Record<string, unknown> = never
+> = (event: Event, context?: Context) => void;
+```
+
+</details>
 
 ### Arguments
 
-#### `handler` [function]
+#### `handler`
 
 Handler will receive event object with native payload, that can be passed to custom handler hook's worklets.
 
-- `event` [object] - event object.
+- `event` - event object.
   The payload can differ depending on the type of the event.
 
-#### `eventNames` [Array]
+#### `eventNames` <Optional/>
 
 Array of event names that will be handled by handler.
 
-#### `rebuilt` [boolean]
+#### `rebuilt` <Optional/>
 
 Value indicating whether handler should be rebuilt.
 
@@ -47,6 +105,17 @@ function useAnimatedPagerScrollHandler(handlers, dependencies) {
       }
     },
     ['onPageScroll'],
-    doDependenciesDiffer,
+    doDependenciesDiffer
   );
+}
 ```
+
+## Platform compatibility
+
+<div className="platform-compatibility">
+
+| Android | iOS | Web |
+| ------- | --- | --- |
+| ✅      | ✅  | ✅  |
+
+</div>
