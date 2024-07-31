@@ -18,10 +18,12 @@ function useHandlerExample() {
     },
   };
 
+  // highlight-start
   const { context, doDependenciesDiffer, useWeb } = useHandler(
     handlers,
     dependencies
   );
+  // highlight-end
 
   const customScrollHandler = useEvent(
     (event) => {
