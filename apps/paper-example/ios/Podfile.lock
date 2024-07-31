@@ -1237,7 +1237,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-pager-view (6.3.0):
+  - react-native-pager-view (6.3.3):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1568,7 +1568,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNGestureHandler (2.16.2):
+  - RNGestureHandler (2.18.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1654,7 +1654,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNScreens (3.31.0-rc.1):
+  - RNScreens (3.33.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1669,13 +1669,14 @@ PODS:
     - React-ImageManager
     - React-NativeModulesApple
     - React-RCTFabric
+    - React-RCTImage
     - React-rendererdebug
     - React-utils
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNSVG (15.2.0):
+  - RNSVG (15.4.0):
     - React-Core
   - SocketRocket (0.7.0)
   - Yoga (0.0.0)
@@ -1946,9 +1947,9 @@ SPEC CHECKSUMS:
   React-logger: ea5ec74d80d24207594538033ff4cf7fdcdb6d23
   React-Mapbuffer: 147255f4cd32dc73987c067ed2e01024381d2835
   React-microtasksnativemodule: 0500f434ec7ec7fa84ca05f486e0e71226304a55
-  react-native-pager-view: 04f0d3af26fd33c722467ccfac64760f321bfb80
+  react-native-pager-view: ead608b90aad2c960a6730637b87b5e3739764b5
   react-native-safe-area-context: b7daa1a8df36095a032dff095a1ea8963cb48371
-  react-native-slider: 97ce0bd921f40de79cead9754546d5e4e7ba44f8
+  react-native-slider: 1a17fd1773291598f8f51b4894a4446f98cea298
   React-nativeconfig: 3459eaba25311b605e292915276865acff79edd7
   React-NativeModulesApple: 5b960996730025e53bb942f3cb935e35f4fe1200
   React-perflogger: a854dbc279c26468748a4bbd844949f961b398ee
@@ -1979,10 +1980,10 @@ SPEC CHECKSUMS:
   RNCMaskedView: 090213d32d8b3bb83a4dcb7d12c18f0152591906
   RNCPicker: 3e2c37a8328f368ce14da050cdc8231deb5fc9f9
   RNFlashList: 2a5ca82c4998952060b77fa9a1eb05f7ed8783b6
-  RNGestureHandler: 7a8279ab6061b64741aa72e52540bb516bea0f16
+  RNGestureHandler: 79789b93c9a67c553ecdfb4121e8c267cba12447
   RNReanimated: 1199b1abb084b76407a7acfdf215757d3c1a0d9e
-  RNScreens: 9e52e7ac57fef4008725149eb07b4b738b63c0c7
-  RNSVG: 43b64ed39c14ce830d840903774154ca0c1f27ec
+  RNScreens: 63500b789c1b5286972a55d4a7d73fc1123f51e4
+  RNSVG: cb24fb322de8c1ebf59904e7aca0447bb8dbed5a
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: 132f64c229103548a5c95fe12e2ab492fbd5c793
 
