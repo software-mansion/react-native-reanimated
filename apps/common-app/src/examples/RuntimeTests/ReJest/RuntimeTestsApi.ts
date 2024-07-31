@@ -8,6 +8,7 @@ import { DescribeDecorator, TestDecorator } from './types';
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
+const windowDimensionsMocker = testRunner.getWindowDimensionsMocker();
 const animationRecorder = testRunner.getAnimationUpdatesRecorder();
 const valueRegistry = testRunner.getValueRegistry();
 

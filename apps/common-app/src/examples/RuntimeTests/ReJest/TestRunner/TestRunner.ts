@@ -10,6 +10,7 @@ import { makeMutable, runOnJS } from 'react-native-reanimated';
 import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
 import { ValueRegistry } from './ValueRegistry';
 import { TestSummaryLogger } from './TestSummaryLogger';
+import { WindowDimensionsMocker } from './WindowDimensionsMocker';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
 export { Presets } from '../Presets';
 
@@ -36,8 +37,13 @@ export class TestRunner {
   private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
   private _testSummary: TestSummaryLogger = new TestSummaryLogger();
+  private _windowDimensionsMocker: WindowDimensionsMocker = new WindowDimensionsMocker();
   private _animationRecorder = new AnimationUpdatesRecorder();
   private _valueRegistry = new ValueRegistry();
+
+  public getWindowDimensionsMocker() {
+    return this._windowDimensionsMocker;
+  }
 
   public getAnimationUpdatesRecorder() {
     return this._animationRecorder;
@@ -316,46 +322,6 @@ export class TestRunner {
   public afterEach(job: () => void) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterEach = job;
-  }
-
-  public async unmockWindowDimensions() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      if (global.originalLayoutAnimationsManager) {
-        global.LayoutAnimationsManager = global.originalLayoutAnimationsManager;
-      }
-    });
-  }
-
-  public async mockWindowDimensions() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      const originalLayoutAnimationsManager = global.LayoutAnimationsManager;
-
-      const startLayoutAnimation: LayoutAnimationStartFunction = (
-        tag: number,
-        type: LayoutAnimationType,
-        _yogaValues: Partial<SharedTransitionAnimationsValues>,
-        config: (arg: Partial<SharedTransitionAnimationsValues>) => LayoutAnimation,
-      ) => {
-        originalLayoutAnimationsManager.start(
-          tag,
-          type,
-          {
-            ..._yogaValues,
-            windowHeight: 852,
-            windowWidth: 393,
-          },
-          config,
-        );
-      };
-
-      global.originalLayoutAnimationsManager = originalLayoutAnimationsManager;
-      global.LayoutAnimationsManager = {
-        start: startLayoutAnimation,
-        stop: originalLayoutAnimationsManager.stop,
-      };
-    });
   }
 
   public wait(delay: number) {
