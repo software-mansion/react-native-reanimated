@@ -65,7 +65,7 @@ describe('Tests of *****sharedValue*****', () => {
       },
     );
 
-    test.only.each([...Presets.stringObjects, ...Presets.dates, ...Presets.unserializableObjects])(
+    test.each([...Presets.stringObjects, ...Presets.dates, ...Presets.unserializableObjects])(
       'Test object %p causes an error',
       async testedValue => {
         await expect(async () => {

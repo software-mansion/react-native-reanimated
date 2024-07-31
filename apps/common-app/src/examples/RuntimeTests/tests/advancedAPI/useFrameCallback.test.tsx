@@ -56,7 +56,7 @@ describe('Test *****useFrameCallback*****', () => {
       return <View />;
     };
 
-    test.only('frameCallback should be workletized', async () => {
+    test('frameCallback should be workletized', async () => {
       await expect(async () => {
         await render(<InvalidFrameCallback />);
         await wait(200);

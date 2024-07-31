@@ -81,7 +81,7 @@ async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFacto
 }
 
 describe('withTiming snapshots 📸, test EASING', () => {
-  describe.only('Invalid easing', () => {
+  describe('Invalid easing', () => {
     test('Easing imported from react-native throws an error', async () => {
       await expect(async () => {
         await render(

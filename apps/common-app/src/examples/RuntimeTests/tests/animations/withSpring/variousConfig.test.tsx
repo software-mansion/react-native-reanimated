@@ -79,7 +79,7 @@ describe('WithSpring snapshots 📸, test various configs', () => {
       );
     });
 
-    test.only.each([
+    test.each([
       { mass: 0, stiffness: 5000 },
       { mass: 0 },
       { mass: -10 },
@@ -92,7 +92,7 @@ describe('WithSpring snapshots 📸, test various configs', () => {
       }).toThrow(`[Reanimated] Invalid spring config, mass must be grater than zero but got ${config.mass}`);
     });
 
-    test.only.each([
+    test.each([
       { stiffness: -20 },
       { stiffness: 0 },
       { damping: 20, stiffness: -20 },
@@ -104,13 +104,13 @@ describe('WithSpring snapshots 📸, test various configs', () => {
       }).toThrow(`[Reanimated] Invalid spring config, stiffness must be grater than zero but got ${config.stiffness}`);
     });
 
-    test.only.each([{ damping: -20 }, { damping: 0 }])('%# Invalid damping, config is %p', async config => {
+    test.each([{ damping: -20 }, { damping: 0 }])('%# Invalid damping, config is %p', async config => {
       await expect(async () => {
         await render(<AnimatedComponent animateFrom={30} animateTo={300} config={config} />);
       }).toThrow(`[Reanimated] Invalid spring config, damping must be grater than zero but got ${config.damping}`);
     });
 
-    test.only.each([{ duration: -20 }])('%# Invalid duration, config is %p', async config => {
+    test.each([{ duration: -20 }])('%# Invalid duration, config is %p', async config => {
       await expect(async () => {
         await render(<AnimatedComponent animateFrom={30} animateTo={300} config={config} />);
       }).toThrow(`[Reanimated] Invalid spring config, duration can't be negative, got ${config.duration}`);
