@@ -65,16 +65,17 @@ describe('Tests of *****sharedValue*****', () => {
       },
     );
 
-    test.failing.each([...Presets.stringObjects, ...Presets.dates, ...Presets.unserializableObjects])(
+    test.only.each([...Presets.stringObjects, ...Presets.dates, ...Presets.unserializableObjects])(
       'Test object %p causes an error',
-      'ReanimatedError: [Reanimated] Trying to access property `onFrame` of an object which cannot be sent to the UI runtime., js engine: reanimated',
       async testedValue => {
-        await render(<SharedValueComponent initialValue={testedValue} progress={0} />);
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const _sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
-
-        await render(<ProgressBar progress={0} />);
+        await expect(async () => {
+          await render(<SharedValueComponent initialValue={testedValue} progress={0} />);
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const _sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
+          await render(<ProgressBar progress={0} />);
+        }).toThrow(
+          'ReanimatedError: [Reanimated] Trying to access property `onFrame` of an object which cannot be sent to the UI runtime., js engine: reanimated',
+        );
       },
     );
 
