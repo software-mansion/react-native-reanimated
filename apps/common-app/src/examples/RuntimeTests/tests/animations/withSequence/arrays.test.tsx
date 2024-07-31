@@ -8,17 +8,9 @@ import Animated, {
   Easing,
   withDelay,
 } from 'react-native-reanimated';
-import {
-  describe,
-  test,
-  render,
-  wait,
-  useTestRef,
-  getTestComponent,
-  expect,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { describe, test, render, wait, useTestRef, getTestComponent, expect } from '../../../ReJest/RuntimeTestsApi';
 import { View, StyleSheet } from 'react-native';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
+import { ComparisonMode } from '../../../ReJest/types';
 
 type TestCase = {
   startValues: [number, number, number];
@@ -27,7 +19,7 @@ type TestCase = {
   animationNumber: number;
 };
 
-describe('withSequence animation of number', () => {
+describe('withSequence animation of array', () => {
   const COMPONENT_REF = {
     first: 'firstComponent',
     second: 'secondComponent',
@@ -113,17 +105,17 @@ describe('withSequence animation of number', () => {
       const margin = 30;
 
       await wait(200 + DELAY / 2);
-      expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + margin, ComparisonMode.DISTANCE);
-      expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + margin, ComparisonMode.DISTANCE);
-      expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + margin, ComparisonMode.DISTANCE);
+      expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + margin, ComparisonMode.PIXEL);
+      expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + margin, ComparisonMode.PIXEL);
+      expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + margin, ComparisonMode.PIXEL);
       await wait(300 + DELAY / 2);
-      expect(await componentOne.getAnimatedStyle('left')).toBe(middleValues[0] + margin, ComparisonMode.DISTANCE);
-      expect(await componentTwo.getAnimatedStyle('left')).toBe(middleValues[1] + margin, ComparisonMode.DISTANCE);
-      expect(await componentThree.getAnimatedStyle('left')).toBe(middleValues[2] + margin, ComparisonMode.DISTANCE);
+      expect(await componentOne.getAnimatedStyle('left')).toBe(middleValues[0] + margin, ComparisonMode.PIXEL);
+      expect(await componentTwo.getAnimatedStyle('left')).toBe(middleValues[1] + margin, ComparisonMode.PIXEL);
+      expect(await componentThree.getAnimatedStyle('left')).toBe(middleValues[2] + margin, ComparisonMode.PIXEL);
       await wait(200 + DELAY);
-      expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + 20 + margin, ComparisonMode.DISTANCE);
-      expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + 20 + margin, ComparisonMode.DISTANCE);
-      expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + 20 + margin, ComparisonMode.DISTANCE);
+      expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + 20 + margin, ComparisonMode.PIXEL);
+      expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + 20 + margin, ComparisonMode.PIXEL);
+      expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + 20 + margin, ComparisonMode.PIXEL);
     },
   );
 });

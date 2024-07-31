@@ -1,16 +1,8 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, useDerivedValue, withTiming } from 'react-native-reanimated';
-import {
-  describe,
-  render,
-  expect,
-  getTestComponent,
-  test,
-  wait,
-  useTestRef,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
+import { describe, render, expect, getTestComponent, test, wait, useTestRef } from '../../../ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '../../../ReJest/types';
 
 const COMPONENT_REF_ARRAY = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
 
@@ -148,7 +140,7 @@ describe('Test chained useDerivedValue', () => {
     });
 
     for (let i = 0; i < 10; i++) {
-      expect(await components[i].getAnimatedStyle('width')).toBe(expectedValues[i], ComparisonMode.DISTANCE);
+      expect(await components[i].getAnimatedStyle('width')).toBe(expectedValues[i], ComparisonMode.PIXEL);
     }
   });
 });

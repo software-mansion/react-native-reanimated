@@ -3,16 +3,7 @@ import type { FlexStyle, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { ComponentCoords } from 'react-native-reanimated';
 import Animated, { runOnUI, measure, getRelativeCoords, useAnimatedRef, useSharedValue } from 'react-native-reanimated';
-import {
-  describe,
-  test,
-  expect,
-  expectNotNullable,
-  render,
-  wait,
-  registerValue,
-  getRegisteredValue,
-} from '../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { describe, test, expect, render, wait, registerValue, getRegisteredValue } from '../../ReJest/RuntimeTestsApi';
 
 const REGISTERED_VALUE_KEY = 'sv';
 
@@ -68,7 +59,7 @@ describe('getRelativeCoords', () => {
       await render(<CoordsComponent justifyContent={justifyContent} alignItems={alignItems} />);
       await wait(300);
       const coords = (await getRegisteredValue(REGISTERED_VALUE_KEY)).onUI;
-      expectNotNullable(coords);
+      expect(coords).not.toBeNullable();
       if (coords) {
         expect(Math.floor((coords as unknown as ComponentCoords).x)).toBe(expectedValueX);
         expect(Math.floor((coords as unknown as ComponentCoords).y)).toBe(expectedValueY);

@@ -1,22 +1,14 @@
 import type { NodePath } from '@babel/core';
+import type { CallExpression, Directive, ObjectMethod } from '@babel/types';
 import {
   isBlockStatement,
   isDirectiveLiteral,
   objectProperty,
-  variableDeclaration,
-  variableDeclarator,
-  isScopable,
-  isExportNamedDeclaration,
 } from '@babel/types';
-import type {
-  Directive,
-  ObjectMethod,
-  CallExpression,
-  FunctionDeclaration,
-} from '@babel/types';
-import { makeWorkletFactoryCall } from './workletFactoryCall';
 import type { ReanimatedPluginPass } from './types';
 import { WorkletizableFunction } from './types';
+import { replaceWithFactoryCall } from './utils';
+import { makeWorkletFactoryCall } from './workletFactoryCall';
 
 /**
  *
@@ -69,7 +61,7 @@ export function processWorklet(
 
   const workletFactoryCall = makeWorkletFactoryCall(path, state);
 
-  substituteWithWorkletFactoryCall(path, workletFactoryCall);
+  substituteWorkletWithWorkletFactoryCall(path, workletFactoryCall);
 }
 
 function hasWorkletDirective(directives: Directive[]): boolean {
@@ -79,19 +71,15 @@ function hasWorkletDirective(directives: Directive[]): boolean {
   );
 }
 
-function substituteWithWorkletFactoryCall(
+function substituteWorkletWithWorkletFactoryCall(
   path: NodePath<WorkletizableFunction>,
   workletFactoryCall: CallExpression
 ): void {
   if (path.isObjectMethod()) {
     substituteObjectMethodWithObjectProperty(path, workletFactoryCall);
-  } else if (path.isFunctionDeclaration()) {
-    maybeSubstituteFunctionDeclarationWithVariableDeclaration(
-      path,
-      workletFactoryCall
-    );
   } else {
-    path.replaceWith(workletFactoryCall);
+    const name = 'id' in path.node ? path.node.id?.name : undefined;
+    replaceWithFactoryCall(path, name, workletFactoryCall);
   }
 }
 
@@ -100,29 +88,5 @@ export function substituteObjectMethodWithObjectProperty(
   workletFactoryCall: CallExpression
 ): void {
   const replacement = objectProperty(path.node.key, workletFactoryCall);
-  path.replaceWith(replacement);
-}
-
-export function maybeSubstituteFunctionDeclarationWithVariableDeclaration(
-  path: NodePath<FunctionDeclaration>,
-  workletFactoryCall: CallExpression
-): void {
-  // We check if function needs to be assigned to variable declaration.
-  // This is needed if function definition directly in a scope. Some other ways
-  // where function definition can be used is for example with variable declaration:
-  //
-  // const bar = function foo() {'worklet' ...};
-  //
-  // In such a case we don't need to define variable for the function.
-  const needDeclaration =
-    isScopable(path.parent) || isExportNamedDeclaration(path.parent);
-
-  const replacement =
-    'id' in path.node && path.node.id && needDeclaration
-      ? variableDeclaration('const', [
-          variableDeclarator(path.node.id, workletFactoryCall),
-        ])
-      : workletFactoryCall;
-
   path.replaceWith(replacement);
 }

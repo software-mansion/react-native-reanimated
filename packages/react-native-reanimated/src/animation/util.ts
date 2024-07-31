@@ -17,6 +17,7 @@ import type {
   AnimationObject,
   Timestamp,
   AnimatableValueObject,
+  EasingFunction,
 } from '../commonTypes';
 import type {
   AffineMatrixFlat,
@@ -33,7 +34,7 @@ import {
   getRotationMatrix,
 } from './transformationMatrix/matrixUtils';
 import { shouldBeUseWeb } from '../PlatformChecker';
-import type { EasingFunction, EasingFunctionFactory } from '../Easing';
+import type { EasingFunctionFactory } from '../Easing';
 import { ReducedMotionManager } from '../ReducedMotion';
 
 let IN_STYLE_UPDATER = false;

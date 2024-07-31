@@ -8,17 +8,9 @@ import Animated, {
   Easing,
   withDelay,
 } from 'react-native-reanimated';
-import {
-  describe,
-  test,
-  render,
-  wait,
-  useTestRef,
-  getTestComponent,
-  expect,
-} from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { describe, test, render, wait, useTestRef, getTestComponent, expect } from '../../../ReJest/RuntimeTestsApi';
 import { View, StyleSheet } from 'react-native';
-import { ComparisonMode } from '../../../ReanimatedRuntimeTestsRunner/types';
+import { ComparisonMode } from '../../../ReJest/types';
 
 type TestCase = {
   startValue: number;
@@ -131,16 +123,16 @@ describe('WithSequence animation of number', () => {
       await wait(DELAY / 2);
       // TODO The condition below is not fulfilled, decide whether its bug or expected behavior
       // expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[0], ComparisonMode.DISTANCE);
-      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[0], ComparisonMode.DISTANCE);
+      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[0], ComparisonMode.PIXEL);
       await wait(200 + DELAY);
-      expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[1], ComparisonMode.DISTANCE);
-      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[1], ComparisonMode.DISTANCE);
+      expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[1], ComparisonMode.PIXEL);
+      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[1], ComparisonMode.PIXEL);
       await wait(300 + DELAY);
-      expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[2], ComparisonMode.DISTANCE);
-      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[2], ComparisonMode.DISTANCE);
+      expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[2], ComparisonMode.PIXEL);
+      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[2], ComparisonMode.PIXEL);
       await wait(200 + DELAY);
-      expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[3], ComparisonMode.DISTANCE);
-      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[3], ComparisonMode.DISTANCE);
+      expect(await activeComponent.getAnimatedStyle('left')).toBe(stopValues[3], ComparisonMode.PIXEL);
+      expect(await passiveComponent.getAnimatedStyle('left')).toBe(stopValues[3], ComparisonMode.PIXEL);
     },
   );
 });

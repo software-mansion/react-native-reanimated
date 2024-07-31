@@ -57,8 +57,15 @@ export interface AnimationConfig {
   reversed: boolean;
 }
 
+interface EasingType {
+  (): number;
+  [EasingNameSymbol: symbol]: string;
+}
+
 export interface CustomConfig {
-  easingV?: () => number;
+  easingV?: EasingType;
+  easingXV?: EasingType;
+  easingYV?: EasingType;
   durationV?: number;
   delayV?: number;
   randomizeDelay?: boolean;
@@ -66,6 +73,8 @@ export interface CustomConfig {
   callbackV?: AnimationCallback;
   reversed?: boolean;
   definitions?: KeyframeDefinitions;
+  enteringV?: any;
+  exitingV?: any;
   initialValues?: StyleProps;
 }
 
@@ -74,6 +83,8 @@ export enum TransitionType {
   SEQUENCED,
   FADING,
   JUMPING,
+  CURVED,
+  ENTRY_EXIT,
 }
 
 export const AnimationsData: Record<string, AnimationData> = {

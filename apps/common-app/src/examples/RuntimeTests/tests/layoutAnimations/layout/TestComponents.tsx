@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { useTestRef } from '../../../ReanimatedRuntimeTestsRunner/RuntimeTestsApi';
+import { useTestRef } from '../../../ReJest/RuntimeTestsApi';
 
 export const TRANSITION_REF = 'TRANSITION_REF';
 export enum Direction {
@@ -13,13 +13,23 @@ export enum Direction {
   LEFT_UP = 'LEFT_UP',
 }
 
-export const TransitionUpOrDown = ({ layout, direction }: { layout: any; direction: Direction }) => {
+export const TransitionUpOrDown = ({
+  layout,
+  direction,
+  changeSize,
+}: {
+  layout: any;
+  direction: Direction;
+  changeSize?: boolean;
+}) => {
   const [show, setShow] = useState(true);
   const ref = useTestRef(TRANSITION_REF);
 
   useEffect(() => {
     setShow(false);
   }, [setShow]);
+
+  const mainBoxStyle = [styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}];
 
   return (
     <View style={styles.containerVertical}>
@@ -27,21 +37,29 @@ export const TransitionUpOrDown = ({ layout, direction }: { layout: any; directi
         <>
           {show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
+          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
         </>
       )}
       {direction === Direction.DOWN && (
         <>
           {!show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
+          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
         </>
       )}
     </View>
   );
 };
 
-export const TransitionLeftOrRight = ({ layout, direction }: { layout: any; direction: Direction }) => {
+export const TransitionLeftOrRight = ({
+  layout,
+  direction,
+  changeSize,
+}: {
+  layout: any;
+  direction: Direction;
+  changeSize?: boolean;
+}) => {
   const [show, setShow] = useState(true);
   const ref = useTestRef(TRANSITION_REF);
 
@@ -49,20 +67,22 @@ export const TransitionLeftOrRight = ({ layout, direction }: { layout: any; dire
     setShow(false);
   }, [setShow]);
 
+  const mainBoxStyle = [styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}];
+
   return (
     <View style={styles.containerHorizontal}>
       {direction === Direction.LEFT && (
         <>
           {show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
+          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
         </>
       )}
       {direction === Direction.RIGHT && (
         <>
           {!show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
+          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
         </>
       )}
       {direction === Direction.RIGHT_UP && (
@@ -71,7 +91,7 @@ export const TransitionLeftOrRight = ({ layout, direction }: { layout: any; dire
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
+          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
         </>
       )}
       {direction === Direction.LEFT_UP && (
@@ -116,4 +136,8 @@ const styles = StyleSheet.create({
     margin: 5,
   },
   mainBox: { backgroundColor: 'darkorange' },
+  bigBox: {
+    width: 150,
+    height: 200,
+  },
 });
