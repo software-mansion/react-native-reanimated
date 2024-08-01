@@ -1,16 +1,11 @@
 #include "WorkletRuntimeDecorator.h"
 #include "JSISerializer.h"
+#include "PlatformLogger.h"
 #include "ReanimatedJSIUtils.h"
 #include "Shareables.h"
 #include "WorkletRuntime.h"
 
 #include <vector>
-
-#ifdef ANDROID
-#include "Logger.h"
-#else
-#include "Common/cpp/Worklets/hidden_headers/Logger.h"
-#endif
 
 namespace reanimated {
 
@@ -73,7 +68,7 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) {
-        Logger::log(stringifyJSIValue(rt, value));
+        PlatformLogger::log(stringifyJSIValue(rt, value));
       });
 
   jsi_utils::installJsiFunction(

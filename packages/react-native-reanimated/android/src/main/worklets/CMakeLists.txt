@@ -14,14 +14,13 @@ add_library(
     worklets
     SHARED
     ${WORKLETS_COMMON_SOURCES}
-    "${ANDROID_SRC_DIR}/main/cpp/AndroidLogger.cpp"
+    "${ANDROID_SRC_DIR}/main/cpp/PlatformLogger.cpp"
 )
 
 # includes
 target_include_directories(
     worklets
     PUBLIC
-    "${WORKLETS_COMMON_DIR}/hidden_headers"
     "${WORKLETS_COMMON_DIR}/Registries"
     "${WORKLETS_COMMON_DIR}/SharedItems"
     "${WORKLETS_COMMON_DIR}/Tools"
