@@ -11,7 +11,10 @@
 
 namespace reanimated {
 
+static inline bool getIsReducedMotion();
+
 std::shared_ptr<reanimated::NativeReanimatedModule> createReanimatedModule(
+    REAModule *reaModule,
     RCTBridge *bridge,
     const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
     const std::string &valueUnpackerCode);

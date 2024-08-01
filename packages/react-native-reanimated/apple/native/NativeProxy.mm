@@ -45,13 +45,22 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
+static inline bool getIsReducedMotion()
+{
+#if __has_include(<UIKit/UIAccessibility.h>)
+  auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
+#else
+  auto isReducedMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
+#endif
+  return isReducedMotion;
+}
+
 std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
+    REAModule *reaModule,
     RCTBridge *bridge,
     const std::shared_ptr<CallInvoker> &jsInvoker,
     const std::string &valueUnpackerCode)
 {
-  REAModule *reaModule = [bridge moduleForClass:[REAModule class]];
-
   auto nodesManager = reaModule.nodesManager;
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
@@ -64,10 +73,18 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
   std::shared_ptr<JSScheduler> jsScheduler = std::make_shared<JSScheduler>(rnRuntime, jsInvoker);
-  constexpr bool isBridgeless = false;
+  constexpr auto isBridgeless = false;
+  const auto isReducedMotion = getIsReducedMotion();
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      rnRuntime, jsScheduler, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode, isBridgeless);
+      rnRuntime,
+      jsScheduler,
+      jsQueue,
+      uiScheduler,
+      platformDepMethodsHolder,
+      valueUnpackerCode,
+      isBridgeless,
+      isReducedMotion);
 
   commonInit(reaModule, nativeReanimatedModule);
   // Layout Animation callbacks setup
@@ -102,10 +119,18 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
 
   auto uiScheduler = std::make_shared<REAIOSUIScheduler>();
   auto jsScheduler = std::make_shared<JSScheduler>(runtime, runtimeExecutor);
-  constexpr bool isBridgeless = true;
+  constexpr auto isBridgeless = true;
+  const auto isReducedMotion = getIsReducedMotion();
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      runtime, jsScheduler, jsQueue, uiScheduler, platformDepMethodsHolder, valueUnpackerCode, isBridgeless);
+      runtime,
+      jsScheduler,
+      jsQueue,
+      uiScheduler,
+      platformDepMethodsHolder,
+      valueUnpackerCode,
+      isBridgeless,
+      isReducedMotion);
 
   commonInit(reaModule, nativeReanimatedModule);
 

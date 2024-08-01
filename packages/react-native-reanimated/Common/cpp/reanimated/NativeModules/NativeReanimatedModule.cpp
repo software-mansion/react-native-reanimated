@@ -24,6 +24,7 @@
 #include "CollectionUtils.h"
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
+#include "REAWorkletRuntimeDecorator.h"
 #include "Shareables.h"
 #include "UIRuntimeDecorator.h"
 #include "WorkletEventHandler.h"
@@ -48,10 +49,12 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
     const std::string &valueUnpackerCode,
-    const bool isBridgeless)
+    const bool isBridgeless,
+    const bool isReducedMotion)
     : NativeReanimatedModuleSpec(
           isBridgeless ? nullptr : jsScheduler->getJSCallInvoker()),
       isBridgeless_(isBridgeless),
+      isReducedMotion_(isReducedMotion),
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
@@ -228,6 +231,7 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Reanimated] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
+  REAWorkletRuntimeDecorator::decorate(workletRuntime->getJSIRuntime());
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 

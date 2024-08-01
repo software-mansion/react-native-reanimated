@@ -325,11 +325,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 - (void)commonInit:(std::shared_ptr<NativeReanimatedModule>)nativeReanimatedModule
      withRnRuntime:(jsi::Runtime &)rnRuntime
 {
-#if __has_include(<UIKit/UIAccessibility.h>)
-  auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
-#else
-  auto isReducedMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-#endif
+  const auto isReducedMotion = reanimated::NativeReanimatedModule.isReducedMotion();
   WorkletRuntimeCollector::install(rnRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule, isReducedMotion);
 #ifdef RCT_NEW_ARCH_ENABLED
