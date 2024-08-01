@@ -7,7 +7,7 @@ function getCurrentReactOwner() {
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED ||
     // @ts-expect-error React secret internals aren't typed
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-  return ReactSharedInternals.ReactCurrentOwner.current;
+  return ReactSharedInternals?.ReactCurrentOwner?.current;
 }
 
 export function isReactRendering() {
