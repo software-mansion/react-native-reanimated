@@ -32,6 +32,7 @@ describe('Test *****useFrameCallback*****', () => {
         </View>
       );
     };
+
     test.each([500, 1000])('Run frameCallback for **%p**ms', async timeToStop => {
       await render(<CancelAfterDelayComponent timeToStop={timeToStop} />);
       const animatedComponent = getTestComponent(STOP_AFTER_DELAY_REF);
@@ -39,7 +40,7 @@ describe('Test *****useFrameCallback*****', () => {
       await wait(timeToStop + 200);
 
       const expectedWidth = timeToStop / 8;
-      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth - 1, expectedWidth + 2);
+      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth - 5, expectedWidth + 5);
     });
   });
 

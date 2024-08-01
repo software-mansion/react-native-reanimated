@@ -19,6 +19,7 @@ import {
   getRegisteredValue,
   registerValue,
   waitForAnimationUpdates,
+  wait,
 } from '../../../ReJest/RuntimeTestsApi';
 import { Snapshots } from './snapshots.snapshot';
 
@@ -203,6 +204,7 @@ describe(`Test all callbacks have been called in valid order`, () => {
     const updatesContainerActive = await recordAnimationUpdates();
     await render(<CallbackComponent />);
     await waitForAnimationUpdates(Snapshots.CallbackOrder.length);
+    await wait(200); // Wait for the last callback
     const updates = updatesContainerActive.getUpdates();
     const nativeUpdates = await updatesContainerActive.getNativeSnapshots();
     expect(updates).toMatchSnapshots(Snapshots.CallbackOrder);
