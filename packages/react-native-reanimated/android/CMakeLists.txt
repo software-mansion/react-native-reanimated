@@ -48,9 +48,11 @@ endif()
 set(ignoreMe "${JS_RUNTIME_DIR}")
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
-set(ANDROID_SRC_DIR "${CMAKE_SOURCE_DIR}/src")
+set(REANIMATED_ANDROID_DIR "${CMAKE_SOURCE_DIR}/src/reanimated/cpp")
 set(WORKLETS_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/worklets")
 set(REANIMATED_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/reanimated")
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/src/main/worklets)
-add_subdirectory(${CMAKE_SOURCE_DIR}/src/main/reanimated)
+set(MAKE_EXPORT_COMMANDS ON)
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/worklets)
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/reanimated)

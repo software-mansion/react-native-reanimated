@@ -348,56 +348,52 @@ android {
     }
     sourceSets.main {
         java {
+            srcDirs += "src/reanimated/java"
+
             if (IS_NEW_ARCHITECTURE_ENABLED) {
-                srcDirs += "src/fabric/java"
+                srcDirs += "src/fabric/reanimated/java"
             } else {
-                srcDirs += "src/paper/java"
+                srcDirs += "src/paper/reanimated/java"
             }
 
             // messageQueueThread
             if (REANIMATED_MAJOR_VERSION > 2) {
                 if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/72"
+                    srcDirs += "src/reactNativeVersionPatch/reanimated/messageQueueThread/72"
                 } else {
-                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
+                    srcDirs += "src/reactNativeVersionPatch/reanimated/messageQueueThread/latest"
                 }
             }
 
             // ReanimatedUIManager & ReanimatedUIImplementation 
             if (REACT_NATIVE_MINOR_VERSION <= 73) {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
-            } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/74"
+                srcDirs += "src/reactNativeVersionPatch/reanimated/ReanimatedUIManager/73"
             } else {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
+                srcDirs += "src/reactNativeVersionPatch/reanimated/ReanimatedUIManager/latest"
             }
 
             // ReactHost
             if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                srcDirs += "src/reactNativeVersionPatch/ReactHost/72"
+                srcDirs += "src/reactNativeVersionPatch/reanimated/ReactHost/72"
             } else {
-                srcDirs += "src/reactNativeVersionPatch/ReactHost/latest"
+                srcDirs += "src/reactNativeVersionPatch/reanimated/ReactHost/latest"
             }
 
             // ReactFeatureFlags 
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/72"
-                } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/74"
+                    srcDirs += "src/reactNativeVersionPatch/reanimated/ReactFeatureFlagsWrapper/72"
                 } else {
-                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/latest"
+                    srcDirs += "src/reactNativeVersionPatch/reanimated/ReactFeatureFlagsWrapper/latest"
                 }
             }
 
             // RuntimeExecutor
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 if (REACT_NATIVE_MINOR_VERSION <= 73) {
-                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/73"
-                } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/74"
+                    srcDirs += "src/reactNativeVersionPatch/reanimated/RuntimeExecutor/73"
                 } else {
-                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/latest"
+                    srcDirs += "src/reactNativeVersionPatch/reanimated/RuntimeExecutor/latest"
                 }
             }
 
@@ -430,15 +426,16 @@ def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
 }
 
 task prepareHeadersForPrefab(type: Copy) {
-    from("$projectDir/src/main/cpp")
+    from("$projectDir/src/main/reanimated/cpp")
     from("$projectDir/../Common/cpp/reanimated/AnimatedSensor")
     from("$projectDir/../Common/cpp/reanimated/Fabric")
     from("$projectDir/../Common/cpp/reanimated/LayoutAnimations")
     from("$projectDir/../Common/cpp/reanimated/NativeModules")
+    from("$projectDir/../Common/cpp/reanimated/Tools")
+    from("$projectDir/../Common/cpp/worklets/ReanimatedRuntime")
     from("$projectDir/../Common/cpp/worklets/Registries")
     from("$projectDir/../Common/cpp/worklets/SharedItems")
     from("$projectDir/../Common/cpp/worklets/Tools")
-    from("$projectDir/../Common/cpp/worklets/WorkletRuntime")
     include("*.h")
     into(prefabHeadersDir)
 }
