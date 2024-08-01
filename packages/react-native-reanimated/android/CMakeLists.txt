@@ -50,7 +50,5 @@ set(REANIMATED_ANDROID_DIR "${CMAKE_SOURCE_DIR}/src/reanimated/cpp")
 set(WORKLETS_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/worklets")
 set(REANIMATED_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/reanimated")
 
-set(MAKE_EXPORT_COMMANDS ON)
-
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/worklets)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/reanimated)
