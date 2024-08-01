@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # useHandler
 
-`useHandler` is a low-level hook. It returns a context object and a value that tells you if the worklet needs to be rebuilt. You can use it to create custom event handler hooks, like `useAnimatedGestureHandler` or `useAnimatedScrollHandler`.
+`useHandler` is a low-level hook. It returns a context object and a value that tells you if the worklet needs to be rebuilt. You can use it to create custom event handler hooks, like [`useScrollViewOffset`](/docs/scroll/useScrollViewOffset/) or [`useAnimatedScrollHandler`](/docs/scroll/useAnimatedScrollHandler/).
 
 ## Reference
 
@@ -34,8 +34,10 @@ function useHandlerExample() {
         onScroll(event);
       }
     },
+    // highlight-start
     ['onScroll'],
     doDependenciesDiffer
+    // highlight-end
   );
 
   return <Animated.ScrollView onScroll={customScrollHandler} />;
@@ -76,7 +78,7 @@ interface GeneralHandler<
 
 Object containing custom keys matching native event names.
 The values in the object should be individual worklets.
-Each of the worklet will be triggered when the corresponding event is dispatched on the connected animated component.
+Each of the worklets will be triggered when the corresponding event is dispatched on the connected animated component.
 
 Each of the event worklets will receive the following parameters when called:
 
