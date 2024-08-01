@@ -2,9 +2,12 @@
 import React from 'react';
 
 function getCurrentReactOwner() {
-  // @ts-expect-error React secret internals aren't typed
-  return React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-    .ReactCurrentOwner.current;
+  const ReactSharedInternals =
+    // @ts-expect-error React secret internals aren't typed
+    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED ||
+    // @ts-expect-error React secret internals aren't typed
+    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+  return ReactSharedInternals.ReactCurrentOwner.current;
 }
 
 export function isReactRendering() {
