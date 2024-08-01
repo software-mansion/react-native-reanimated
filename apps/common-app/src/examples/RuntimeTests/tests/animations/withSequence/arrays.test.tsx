@@ -8,9 +8,19 @@ import Animated, {
   Easing,
   withDelay,
 } from 'react-native-reanimated';
-import { describe, test, render, wait, useTestRef, getTestComponent, expect } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  test,
+  render,
+  wait,
+  useTestRef,
+  getTestComponent,
+  expect,
+  recordAnimationUpdates,
+  mockAnimationTimer,
+} from '../../../ReJest/RuntimeTestsApi';
 import { View, StyleSheet } from 'react-native';
-import { ComparisonMode } from '../../../ReJest/types';
+import { ArraySnapshots } from './snapshots.snapshot';
 
 type TestCase = {
   startValues: [number, number, number];
@@ -91,6 +101,9 @@ describe('withSequence animation of array', () => {
   ] as Array<TestCase>)(
     'Animate ${startValues} → ${finalValues} → ${middleValues} → ${finalValues}, animation nr ${animationNumber}',
     async ({ startValues, middleValues, finalValues, animationNumber }) => {
+      await mockAnimationTimer();
+      const updatesContainer = await recordAnimationUpdates();
+
       await render(
         <WidthComponent
           startValues={startValues}
@@ -99,23 +112,20 @@ describe('withSequence animation of array', () => {
           animationNumber={animationNumber}
         />,
       );
-      const componentOne = getTestComponent(COMPONENT_REF.first);
-      const componentTwo = getTestComponent(COMPONENT_REF.second);
-      const componentThree = getTestComponent(COMPONENT_REF.third);
-      const margin = 30;
 
-      await wait(200 + DELAY / 2);
-      expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + margin, ComparisonMode.PIXEL);
-      expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + margin, ComparisonMode.PIXEL);
-      expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + margin, ComparisonMode.PIXEL);
-      await wait(300 + DELAY / 2);
-      expect(await componentOne.getAnimatedStyle('left')).toBe(middleValues[0] + margin, ComparisonMode.PIXEL);
-      expect(await componentTwo.getAnimatedStyle('left')).toBe(middleValues[1] + margin, ComparisonMode.PIXEL);
-      expect(await componentThree.getAnimatedStyle('left')).toBe(middleValues[2] + margin, ComparisonMode.PIXEL);
-      await wait(200 + DELAY);
-      expect(await componentOne.getAnimatedStyle('left')).toBe(finalValues[0] + 20 + margin, ComparisonMode.PIXEL);
-      expect(await componentTwo.getAnimatedStyle('left')).toBe(finalValues[1] + 20 + margin, ComparisonMode.PIXEL);
-      expect(await componentThree.getAnimatedStyle('left')).toBe(finalValues[2] + 20 + margin, ComparisonMode.PIXEL);
+      const snapshotNamePrefix = `from_${startValues.join('_')}_through_${middleValues.join('_')}_to_${finalValues.join(
+        '_',
+      )}_animation_${animationNumber}`.replace('-', 'min');
+
+      await wait(1000); // waitForAnimationUpdates doesn't work with multiple view recordings
+
+      for (const refName of ['first', 'second', 'third'] as const) {
+        const snapshotName = `${snapshotNamePrefix}_${refName}` as keyof typeof ArraySnapshots;
+
+        expect(updatesContainer.getUpdates(getTestComponent(COMPONENT_REF[refName]))).toMatchSnapshots(
+          ArraySnapshots[snapshotName],
+        );
+      }
     },
   );
 });
