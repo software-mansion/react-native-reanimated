@@ -305,7 +305,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 
     if (jsiRuntime) {
       auto nativeReanimatedModule = reanimated::createReanimatedModule(
-          self.bridge, self.bridge.jsCallInvoker, std::string([valueUnpackerCode UTF8String]));
+          self, self.bridge, self.bridge.jsCallInvoker, std::string([valueUnpackerCode UTF8String]));
       jsi::Runtime &rnRuntime = *jsiRuntime;
 
       [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
@@ -325,9 +325,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 - (void)commonInit:(std::shared_ptr<NativeReanimatedModule>)nativeReanimatedModule
      withRnRuntime:(jsi::Runtime &)rnRuntime
 {
-  const auto isReducedMotion = reanimated::NativeReanimatedModule.isReducedMotion();
   WorkletRuntimeCollector::install(rnRuntime);
-  RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule, isReducedMotion);
+  RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule);
 #ifdef RCT_NEW_ARCH_ENABLED
   weakNativeReanimatedModule_ = nativeReanimatedModule;
   if (self->_surfacePresenter != nil) {
