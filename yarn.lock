@@ -18481,11 +18481,11 @@ __metadata:
 
 "react-native-pager-view@patch:react-native-pager-view@npm%3A6.3.3#~/.yarn/patches/react-native-pager-view-npm-6.3.3-7b62f58674.patch":
   version: 6.3.3
-  resolution: "react-native-pager-view@patch:react-native-pager-view@npm%3A6.3.3#~/.yarn/patches/react-native-pager-view-npm-6.3.3-7b62f58674.patch::version=6.3.3&hash=414c26"
+  resolution: "react-native-pager-view@patch:react-native-pager-view@npm%3A6.3.3#~/.yarn/patches/react-native-pager-view-npm-6.3.3-7b62f58674.patch::version=6.3.3&hash=e38677"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/ac19874c2173d847883dff7f688df3d2014179b89a59852dfa38d8b48527e373ed9182e93b78ab54f089a34e7fa75c58916e62134930a29088c4dd08b4b4e7f1
+  checksum: 10/2f141dbc984a50fbfe818a90fe3094d0d0c898bb88f6be8dd580351b6ef152f958446b02abddecd7e3b621e205220ad30acd5922490cdfb60d336696cfd4e095
   languageName: node
   linkType: hard
 
