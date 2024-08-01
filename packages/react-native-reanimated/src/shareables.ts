@@ -13,6 +13,7 @@ import {
   shareableMappingCache,
   shareableMappingFlag,
 } from './shareableMappingCache';
+import { logger } from './logger';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -116,8 +117,8 @@ export function makeShareableCloneRecursive<T>(
     if (depth === DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
       processedObjectAtThresholdDepth = value;
     } else if (value === processedObjectAtThresholdDepth) {
-      throw new Error(
-        '[Reanimated] Trying to convert a cyclic object to a shareable. This is not supported.'
+      throw logger.createError(
+        'Trying to convert a cyclic object to a shareable. This is not supported.'
       );
     }
   } else {
@@ -340,10 +341,11 @@ function freezeObjectIfDev<T extends object>(value: T) {
         return element;
       },
       set() {
-        console.warn(
-          `[Reanimated] Tried to modify key \`${key}\` of an object which has been already passed to a worklet. See 
+        logger.warn(
+          `Tried to modify key \`${key}\` of an object which has been already passed to a worklet. See 
 https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-modify-key-of-an-object-which-has-been-converted-to-a-shareable 
-for more details.`
+for more details.`,
+          { trimStack: 'at set ' }
         );
       },
     });

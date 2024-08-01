@@ -9,6 +9,7 @@ import type {
 } from './createAnimatedComponent/commonTypes';
 import { isJest } from './PlatformChecker';
 import type { DefaultStyle } from './hook/commonTypes';
+import { logger } from './logger';
 
 declare global {
   namespace jest {
@@ -161,7 +162,7 @@ const afterTest = () => {
 };
 
 export const withReanimatedTimer = (animationTest: () => void) => {
-  console.warn(
+  logger.warn(
     'This method is deprecated, you should define your own before and after test hooks to enable jest.useFakeTimers(). Check out the documentation for details on testing'
   );
   beforeTest();
@@ -170,7 +171,7 @@ export const withReanimatedTimer = (animationTest: () => void) => {
 };
 
 export const advanceAnimationByTime = (time = frameTime) => {
-  console.warn(
+  logger.warn(
     'This method is deprecated, use jest.advanceTimersByTime directly'
   );
   jest.advanceTimersByTime(time);
@@ -178,7 +179,7 @@ export const advanceAnimationByTime = (time = frameTime) => {
 };
 
 export const advanceAnimationByFrame = (count: number) => {
-  console.warn(
+  logger.warn(
     'This method is deprecated, use jest.advanceTimersByTime directly'
   );
   jest.advanceTimersByTime(count * frameTime);
@@ -188,8 +189,8 @@ export const advanceAnimationByFrame = (count: number) => {
 const requireFunction = isJest()
   ? require
   : () => {
-      throw new Error(
-        '[Reanimated] `setUpTests` is available only in Jest environment.'
+      throw logger.createError(
+        '`setUpTests` is available only in Jest environment.'
       );
     };
 

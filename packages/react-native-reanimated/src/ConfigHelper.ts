@@ -1,11 +1,16 @@
 'use strict';
 import { PropsAllowlists } from './propsAllowlists';
 import { jsiConfigureProps } from './core';
+import { logger } from './logger';
+
 function assertNoOverlapInLists() {
   for (const key in PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST) {
     if (key in PropsAllowlists.UI_THREAD_PROPS_WHITELIST) {
-      throw new Error(
-        `[Reanimated] Property \`${key}\` was whitelisted both as UI and native prop. Please remove it from one of the lists.`
+      throw logger.createError(
+        `Property \`${key}\` was whitelisted both as UI and native prop. Please remove it from one of the lists.`,
+        {
+          trimStack: 'addWhitelistedUIProps|addWhitelistedNativeProps',
+        }
       );
     }
   }

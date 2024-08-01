@@ -5,6 +5,7 @@ import {
   ReducedMotionManager,
   isReducedMotionEnabledInSystem,
 } from '../ReducedMotion';
+import { logger } from '../logger';
 
 /**
  * A component that lets you overwrite default reduce motion behavior globally in your application.
@@ -17,10 +18,8 @@ export function ReducedMotionConfig({ mode }: { mode: ReduceMotion }) {
     if (!__DEV__) {
       return;
     }
-    console.warn(
-      `[Reanimated] Reduced motion setting is overwritten with mode '${mode}'.`
-    );
-  }, []);
+    logger.warn(`Reduced motion setting is overwritten with mode '${mode}'.`);
+  }, [mode]);
 
   useEffect(() => {
     const wasEnabled = ReducedMotionManager.jsValue;

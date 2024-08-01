@@ -18,6 +18,7 @@ import {
   assertEasingIsWorklet,
   getReduceMotionFromConfig,
 } from '../../animation/util';
+import { logger } from '../../logger';
 
 interface KeyframePoint {
   duration: number;
@@ -54,8 +55,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     */
     if (this.definitions.from) {
       if (this.definitions['0']) {
-        throw new Error(
-          "[Reanimated] You cannot provide both keyframe 0 and 'from' as they both specified initial values."
+        throw logger.createError(
+          "You cannot provide both keyframe 0 and 'from' as they both specified initial values."
         );
       }
       this.definitions['0'] = this.definitions.from;
@@ -63,8 +64,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     }
     if (this.definitions.to) {
       if (this.definitions['100']) {
-        throw new Error(
-          "[Reanimated] You cannot provide both keyframe 100 and 'to' as they both specified values at the end of the animation."
+        throw logger.createError(
+          "You cannot provide both keyframe 100 and 'to' as they both specified values at the end of the animation."
         );
       }
       this.definitions['100'] = this.definitions.to;
@@ -75,8 +76,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
        Every other keyframe should contain properties from the set provided as initial values.
     */
     if (!this.definitions['0']) {
-      throw new Error(
-        "[Reanimated] Please provide 0 or 'from' keyframe with initial state of your object."
+      throw logger.createError(
+        "Please provide 0 or 'from' keyframe with initial state of your object."
       );
     }
     const initialValues: StyleProps = this.definitions['0'] as StyleProps;
@@ -130,8 +131,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       easing?: EasingFunction;
     }): void => {
       if (!(key in parsedKeyframes)) {
-        throw new Error(
-          "[Reanimated] Keyframe can contain only that set of properties that were provide with initial values (keyframe 0 or 'from')"
+        throw logger.createError(
+          "Keyframe can contain only that set of properties that were provide with initial values (keyframe 0 or 'from')"
         );
       }
 
@@ -150,8 +151,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       .sort((a: string, b: string) => parseInt(a) - parseInt(b))
       .forEach((keyPoint: string) => {
         if (parseInt(keyPoint) < 0 || parseInt(keyPoint) > 100) {
-          throw new Error(
-            '[Reanimated] Keyframe should be in between range 0 - 100.'
+          throw logger.createError(
+            'Keyframe should be in between range 0 - 100.'
           );
         }
         const keyframe: KeyframeProps = this.definitions[keyPoint];

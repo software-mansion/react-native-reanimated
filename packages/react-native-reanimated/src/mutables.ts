@@ -18,7 +18,7 @@ function checkInvalidReadDuringRender() {
   if (shouldWarnAboutAccessDuringRender()) {
     logger.warn(
       'Reading from `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.',
-      { trim: 'get value' }
+      { trimStack: 'get value' }
     );
   }
 }
@@ -27,7 +27,7 @@ function checkInvalidWriteDuringRender() {
   if (shouldWarnAboutAccessDuringRender()) {
     logger.warn(
       'Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.',
-      { trim: 'set value' }
+      { trimStack: 'set value' }
     );
   }
 }
@@ -107,13 +107,13 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
 
     get _value(): Value {
-      throw new Error(
-        '[Reanimated] Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
+      throw logger.createError(
+        'Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
       );
     },
     set _value(_newValue: Value) {
-      throw new Error(
-        '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
+      throw logger.createError(
+        'Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
       );
     },
 
@@ -123,13 +123,13 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
       })();
     },
     addListener: () => {
-      throw new Error(
-        '[Reanimated] Adding listeners is only possible on the UI runtime.'
+      throw logger.createError(
+        'Adding listeners is only possible on the UI runtime.'
       );
     },
     removeListener: () => {
-      throw new Error(
-        '[Reanimated] Removing listeners is only possible on the UI runtime.'
+      throw logger.createError(
+        'Removing listeners is only possible on the UI runtime.'
       );
     },
 
