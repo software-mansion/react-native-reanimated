@@ -2,7 +2,7 @@
 
 #include "PlatformLogger.h"
 
-constexpr const char *tag = "Reanimated";
+constexpr const auto tag = "Reanimated";
 
 namespace reanimated {
 
