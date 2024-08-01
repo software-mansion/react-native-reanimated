@@ -8,6 +8,7 @@ import { DescribeDecorator, TestDecorator } from './types';
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
+const windowDimensionsMocker = testRunner.getWindowDimensionsMocker();
 const animationRecorder = testRunner.getAnimationUpdatesRecorder();
 const valueRegistry = testRunner.getValueRegistry();
 
@@ -179,11 +180,11 @@ export async function unmockAnimationTimer() {
 }
 
 export async function mockWindowDimensions() {
-  await testRunner.mockWindowDimensions();
+  await windowDimensionsMocker.mockWindowDimensions();
 }
 
 export async function unmockWindowDimensions() {
-  await testRunner.unmockWindowDimensions();
+  await windowDimensionsMocker.unmockWindowDimensions();
 }
 
 export async function recordAnimationUpdates() {
