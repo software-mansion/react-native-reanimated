@@ -27,6 +27,7 @@ on:
       - apps/macos-example/package.json
       - apps/macos-example/ios/**
       - apps/macos-example/macos/**
+  workflow_dispatch:
 
 jobs:
   build:
@@ -77,7 +78,7 @@ jobs:
 
       - name: Install Pods
         working-directory: ${{ env.WORKING_DIRECTORY }}/macos
-        run: pod install
+        run: bundle install && bundle exec pod install
 
       - name: Restore build artifacts from cache
         uses: actions/cache@v3
