@@ -4,49 +4,49 @@ import Animated, { withTiming, withDelay } from 'react-native-reanimated';
 
 const WIDTH = 200;
 
+const customEntering = (targetValues) => {
+  'worklet';
+  const animations = {
+    originX: withTiming(targetValues.targetOriginX, { duration: 3000 }),
+    opacity: withTiming(1, { duration: 2000 }),
+    borderRadius: withDelay(1500, withTiming(40, { duration: 3000 })),
+    transform: [
+      { rotate: withTiming('0deg', { duration: 4000 }) },
+      { scale: withTiming(1, { duration: 3500 }) },
+    ],
+  };
+  const initialValues = {
+    originX: -WIDTH,
+    opacity: 0,
+    borderRadius: 10,
+    transform: [{ rotate: '90deg' }, { scale: 0.2 }],
+  };
+  return {
+    initialValues,
+    animations,
+  };
+};
+
+const customExiting = (values) => {
+  'worklet';
+  const animations = {
+    originX: withTiming(2 * WIDTH, { duration: 3000 }),
+    opacity: withTiming(0, { duration: 2000 }),
+    transform: [{ scale: withTiming(0.2, { duration: 3500 }) }],
+  };
+  const initialValues = {
+    originX: values.currentOriginX,
+    opacity: 1,
+    transform: [{ scale: 1 }],
+  };
+  return {
+    initialValues,
+    animations,
+  };
+};
+
 export default function EnteringExample() {
   const [show, setShow] = useState(false);
-
-  const customEntering = (targetValues) => {
-    'worklet';
-    const animations = {
-      originX: withTiming(targetValues.targetOriginX, { duration: 3000 }),
-      opacity: withTiming(1, { duration: 2000 }),
-      borderRadius: withDelay(1500, withTiming(40, { duration: 3000 })),
-      transform: [
-        { rotate: withTiming('0deg', { duration: 4000 }) },
-        { scale: withTiming(1, { duration: 3500 }) },
-      ],
-    };
-    const initialValues = {
-      originX: -WIDTH,
-      opacity: 0,
-      borderRadius: 10,
-      transform: [{ rotate: '90deg' }, { scale: 0.2 }],
-    };
-    return {
-      initialValues,
-      animations,
-    };
-  };
-
-  const customExiting = (values) => {
-    'worklet';
-    const animations = {
-      originX: withTiming(2 * WIDTH, { duration: 3000 }),
-      opacity: withTiming(0, { duration: 2000 }),
-      transform: [{ scale: withTiming(0.2, { duration: 3500 }) }],
-    };
-    const initialValues = {
-      originX: values.currentOriginX,
-      opacity: 1,
-      transform: [{ scale: 1 }],
-    };
-    return {
-      initialValues,
-      animations,
-    };
-  };
 
   return (
     <SafeAreaView>
