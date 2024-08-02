@@ -1981,7 +1981,7 @@ SPEC CHECKSUMS:
   RNCPicker: 3e2c37a8328f368ce14da050cdc8231deb5fc9f9
   RNFlashList: 2a5ca82c4998952060b77fa9a1eb05f7ed8783b6
   RNGestureHandler: 79789b93c9a67c553ecdfb4121e8c267cba12447
-  RNReanimated: 1199b1abb084b76407a7acfdf215757d3c1a0d9e
+  RNReanimated: fa982264dd110a8852daf9fb0c3098ec0fe7eff3
   RNScreens: 63500b789c1b5286972a55d4a7d73fc1123f51e4
   RNSVG: cb24fb322de8c1ebf59904e7aca0447bb8dbed5a
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
