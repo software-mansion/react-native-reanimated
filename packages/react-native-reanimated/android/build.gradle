@@ -363,6 +363,8 @@ android {
             // ReanimatedUIManager & ReanimatedUIImplementation 
             if (REACT_NATIVE_MINOR_VERSION <= 73) {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
+            } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/74"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
             }
@@ -378,6 +380,8 @@ android {
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 if (REACT_NATIVE_MINOR_VERSION <= 72) {
                     srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/72"
+                } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/74"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/latest"
                 }
@@ -387,11 +391,19 @@ android {
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 if (REACT_NATIVE_MINOR_VERSION <= 73) {
                     srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/73"
+                } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/74"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/latest"
                 }
             }
 
+            // BorderRadiiDrawableUtils
+            if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/74"
+            } else {
+                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/latest"
+            }
         }
     }
 }
