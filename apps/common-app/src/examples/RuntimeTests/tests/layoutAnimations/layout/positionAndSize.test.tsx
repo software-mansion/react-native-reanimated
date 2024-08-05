@@ -143,7 +143,7 @@ describe('Test JUMPING transition modifiers', () => {
   });
 });
 
-describe.only('Test CURVED transition modifiers', () => {
+describe('Test CURVED transition modifiers', () => {
   test.each([
     [CurvedTransition, 'default'],
     [CurvedTransition.duration(300), 'default'], // the default duration is 300
