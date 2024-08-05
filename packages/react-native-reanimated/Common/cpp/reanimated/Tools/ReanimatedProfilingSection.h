@@ -59,4 +59,4 @@ std::free(pointer_##x);
 
 #endif
 
-} // namespace facebook::react
+} // namespace reanimated
