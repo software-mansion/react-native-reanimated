@@ -9977,7 +9977,7 @@ __metadata:
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.3.3#~/.yarn/patches/react-native-pager-view-npm-6.3.3-7b62f58674.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "patch:react-native-safe-area-context@npm%3A4.10.8#~/.yarn/patches/react-native-safe-area-context-npm-4.10.8-bcca33ef13.patch"
-    react-native-screens: "npm:3.33.0"
+    react-native-screens: "npm:3.34.0"
     react-native-svg: "npm:15.4.0"
     react-strict-dom: "npm:0.0.18"
     typescript: "npm:~5.3.0"
@@ -12583,7 +12583,7 @@ __metadata:
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.3.3#~/.yarn/patches/react-native-pager-view-npm-6.3.3-7b62f58674.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "patch:react-native-safe-area-context@npm%3A4.10.8#~/.yarn/patches/react-native-safe-area-context-npm-4.10.8-bcca33ef13.patch"
-    react-native-screens: "npm:3.33.0"
+    react-native-screens: "npm:3.34.0"
     react-native-svg: "npm:15.4.0"
     react-test-renderer: "npm:18.3.1"
     typescript: "npm:~5.3.0"
@@ -15983,7 +15983,7 @@ __metadata:
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.3.3#~/.yarn/patches/react-native-pager-view-npm-6.3.3-7b62f58674.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "patch:react-native-safe-area-context@npm%3A4.10.8#~/.yarn/patches/react-native-safe-area-context-npm-4.10.8-bcca33ef13.patch"
-    react-native-screens: "npm:3.33.0"
+    react-native-screens: "npm:3.34.0"
     react-native-svg: "npm:15.4.0"
     react-test-renderer: "npm:18.2.0"
     typescript: "npm:~5.3.0"
@@ -17510,7 +17510,7 @@ __metadata:
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.3.3#~/.yarn/patches/react-native-pager-view-npm-6.3.3-7b62f58674.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "patch:react-native-safe-area-context@npm%3A4.10.8#~/.yarn/patches/react-native-safe-area-context-npm-4.10.8-bcca33ef13.patch"
-    react-native-screens: "npm:3.33.0"
+    react-native-screens: "npm:3.34.0"
     react-native-svg: "npm:15.4.0"
     react-test-renderer: "npm:18.3.1"
     typescript: "npm:~5.3.0"
@@ -18598,16 +18598,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-screens@npm:3.33.0":
-  version: 3.33.0
-  resolution: "react-native-screens@npm:3.33.0"
+"react-native-screens@npm:3.34.0":
+  version: 3.34.0
+  resolution: "react-native-screens@npm:3.34.0"
   dependencies:
     react-freeze: "npm:^1.0.0"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/ad8f3534fae650b0d64ba3cc7e4f5cb3af81172a1064cacdd963ae9dd3628843ff4dda8e152dc7022fa3e9a04bff79e41ae3de351416a76f8d9fb5856079665b
+  checksum: 10/dfcbde7de4aae27980191bc64861190b2edece8f0e3988ef7e83ee6a7895df35fe006024d8fa0611cefc1e7dd6d574ce598f1dcb036750dc6b0a5fca073dd2b9
   languageName: node
   linkType: hard
 
