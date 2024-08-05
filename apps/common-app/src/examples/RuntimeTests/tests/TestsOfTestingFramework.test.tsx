@@ -298,4 +298,67 @@ describe('Tests of Test Framework', () => {
   test.warn('warning test', 'message', async () => {
     await render(<WarningComponent />);
   });
+
+  describe('Test .toThrow()', () => {
+    test('Warn with no error message - expect pass', async () => {
+      await expect(() => {
+        console.warn('OH, NO!');
+      }).toThrow();
+    });
+
+    test('Warn with no error message - expect error', async () => {
+      await expect(() => {}).toThrow();
+    });
+
+    test('Warn with no error message and negation - expect pass', async () => {
+      await expect(() => {}).not.toThrow();
+    });
+
+    test('Warn with with error message - expect pass', async () => {
+      await expect(() => {
+        console.warn('OH, NO!');
+      }).toThrow('OH, NO!');
+    });
+
+    test('Warn with with error message - expect error', async () => {
+      await expect(() => {
+        console.warn('OH, NO!');
+      }).toThrow('OH, YES!');
+    });
+
+    test('console.error with no error message - expect pass', async () => {
+      await expect(() => {
+        console.error('OH, NO!');
+      }).toThrow();
+    });
+
+    test('console.error  with with error message - expect pass', async () => {
+      await expect(() => {
+        console.error('OH, NO!');
+      }).toThrow('OH, NO!');
+    });
+    test('console.error  with with error message - expect error', async () => {
+      await expect(() => {
+        console.error('OH, NO!');
+      }).toThrow('OH, YES!');
+    });
+
+    test('Throw error with no error message - expect pass', async () => {
+      await expect(() => {
+        throw new Error('OH, NO!');
+      }).toThrow();
+    });
+
+    test('Throw error with with error message - expect pass', async () => {
+      await expect(() => {
+        throw new Error('OH, NO!');
+      }).toThrow('OH, NO!');
+    });
+
+    test('Throw error with with error message - expect error', async () => {
+      await expect(() => {
+        throw new Error('OH, NO!');
+      }).toThrow('OH, YES!');
+    });
+  });
 });

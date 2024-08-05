@@ -77,7 +77,7 @@ jobs:
 
       - name: Install Pods
         working-directory: ${{ env.WORKING_DIRECTORY }}/macos
-        run: pod install
+        run: bundle install && bundle exec pod install
 
       - name: Restore build artifacts from cache
         uses: actions/cache@v3

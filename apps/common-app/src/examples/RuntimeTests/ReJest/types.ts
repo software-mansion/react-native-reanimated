@@ -106,7 +106,8 @@ export type TestValue =
   | boolean
   | null
   | undefined
-  | OperationUpdate;
+  | OperationUpdate
+  | (() => unknown);
 
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;

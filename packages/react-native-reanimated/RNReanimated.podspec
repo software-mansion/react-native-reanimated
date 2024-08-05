@@ -77,14 +77,18 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
-  s.source_files = [
-    "apple/**/*.{mm,h,m}",
-    "Common/cpp/**/*.{cpp,h}"
-  ]
+  s.subspec "reanimated" do |ss|
+    ss.source_files = [
+      "apple/**/*.{mm,h,m}",
+      "Common/cpp/reanimated/**/*.{cpp,h}",
+    ]
+  end
 
-  s.preserve_paths = [
-    "Common/cpp/hidden_headers/**"
-  ]
+  s.subspec "worklets" do |ss|
+    ss.source_files = [
+      "Common/cpp/worklets/**/*.{cpp,h}",
+    ]
+  end
 
   gcc_debug_definitions = "$(inherited)"
   if $config[:react_native_minor_version] >= 73 || !is_release
