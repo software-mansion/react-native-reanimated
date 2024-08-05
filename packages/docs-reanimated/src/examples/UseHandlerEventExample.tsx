@@ -35,8 +35,8 @@ function UseHandlerExample() {
 
   const animatedProps = useAnimatedProps(() => {
     return {
-      text: `Offset: ${Math.round(offsetY.value)}`,
-      defaultValue: `Offset: ${offsetY.value}`,
+      text: `Scroll offset: ${Math.round(offsetY.value)}px`,
+      defaultValue: `Scroll offset: ${offsetY.value}px`,
     };
   });
 
