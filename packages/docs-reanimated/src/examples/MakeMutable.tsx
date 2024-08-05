@@ -147,15 +147,15 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 1,
     padding: 2,
-    borderColor: '#b58df1',
+    borderColor: 'var(--swm-purple-dark-100)',
   },
   checkBoxTick: {
     flex: 1,
     borderRadius: 2,
-    backgroundColor: '#b58df1',
+    backgroundColor: 'var(--swm-purple-dark-100)',
   },
   submitButton: {
-    backgroundColor: '#b58df1',
+    backgroundColor: 'var(--swm-purple-dark-100)',
     alignItems: 'center',
     borderRadius: 4,
     padding: 8,
