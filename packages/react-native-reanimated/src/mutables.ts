@@ -15,7 +15,7 @@ function shouldWarnAboutAccessDuringRender() {
 }
 
 function checkInvalidReadDuringRender() {
-  if (__DEV__ && shouldWarnAboutAccessDuringRender()) {
+  if (shouldWarnAboutAccessDuringRender()) {
     console.warn(
       '[Reanimated] Reading from `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.'
     );
@@ -23,7 +23,7 @@ function checkInvalidReadDuringRender() {
 }
 
 function checkInvalidWriteDuringRender() {
-  if (__DEV__ && shouldWarnAboutAccessDuringRender()) {
+  if (shouldWarnAboutAccessDuringRender()) {
     console.warn(
       '[Reanimated] Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.'
     );
