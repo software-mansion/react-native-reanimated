@@ -18,6 +18,8 @@ import {
   clearRenderOutput,
   getTestComponent,
   waitForAnimationUpdates,
+  mockWindowDimensions,
+  unmockWindowDimensions,
 } from '../../../ReJest/RuntimeTestsApi';
 import {
   CurvedSnapshot,
@@ -32,7 +34,7 @@ import { Direction, TransitionUpOrDown, TransitionLeftOrRight, TRANSITION_REF } 
 
 async function getSnapshotUpdates(layout: any, direction: Direction, snapshotSize: number) {
   await mockAnimationTimer();
-
+  await mockWindowDimensions();
   const updatesContainer = await recordAnimationUpdates();
   if (direction === Direction.UP || direction === Direction.DOWN) {
     await render(<TransitionUpOrDown layout={layout} direction={direction} changeSize />);
@@ -43,6 +45,7 @@ async function getSnapshotUpdates(layout: any, direction: Direction, snapshotSiz
   const component = getTestComponent(TRANSITION_REF);
   const updates = updatesContainer.getUpdates(component);
   await unmockAnimationTimer();
+  await unmockWindowDimensions();
   await clearRenderOutput();
 
   return updates;
@@ -50,7 +53,7 @@ async function getSnapshotUpdates(layout: any, direction: Direction, snapshotSiz
 
 describe('Test predefined layout transitions', () => {
   test.each([LinearTransition, SequencedTransition, FadingTransition, JumpingTransition, CurvedTransition])(
-    '${0}',
+    '%p',
     async transition => {
       for (const direction of Object.values(Direction)) {
         const snapshotName = `${transition.name}_${direction}` as keyof typeof TransitionSnapshotNoModifiers;
@@ -143,7 +146,7 @@ describe('Test JUMPING transition modifiers', () => {
   });
 });
 
-describe.only('Test CURVED transition modifiers', () => {
+describe('Test CURVED transition modifiers', () => {
   test.each([
     [CurvedTransition, 'default'],
     [CurvedTransition.duration(300), 'default'], // the default duration is 300
