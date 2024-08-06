@@ -33,6 +33,33 @@ function CustomAnimation(values) {
 
 ## Custom Exiting Animation
 
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function CustomExitTransition (values: ExitAnimationsValues) => LayoutAnimation
+
+type LayoutAnimation = {
+    initialValues: StyleProps;
+    animations: StyleProps;
+    callback?: (finished: boolean) => void;
+};
+
+type ExitAnimationsValues = CurrentLayoutAnimationsValues &
+  WindowDimensions;
+
+type CurrentLayoutAnimationsValues = {
+  ['currentOriginX', 'currentOriginY', 'currentWidth', 'currentHeight', 'currentBorderRadius', 'currentGlobalOriginX','currentGlobalOriginY']: number;
+};
+
+interface WindowDimensions {
+    windowWidth: number;
+    windowHeight: number;
+}
+```
+
+</details>
+
 ### Arguments
 
 - `values` - contains information about where view was displayed and what were its dimensions
@@ -40,6 +67,7 @@ function CustomAnimation(values) {
   - `values.currentOriginY` - Y coordinate of top left corner in parent's coordinate system
   - `values.currentWidth` - view's width
   - `values.currentHeight` - view's height
+  - `values.currentBorderRadius` - view's border radius
   - `values.currentGlobalOriginX` - X coordinate of top left corner in global coordinate system
   - `values.currentGlobalOriginY` - Y coordinate of top left corner in global coordinate system
 
@@ -53,9 +81,36 @@ function CustomAnimation(values) {
   }}
 />
 
-<CollapsibleCode src={EnteringExitingAnimationSrc} showLines={[32, 47]} />
+<CollapsibleCode src={EnteringExitingAnimationSrc} showLines={[29, 45]} />
 
 ## Custom Entering Animation
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function CustomEntryTransition (values: EntryAnimationsValues) => LayoutAnimation
+
+type LayoutAnimation = {
+    initialValues: StyleProps;
+    animations: StyleProps;
+    callback?: (finished: boolean) => void;
+};
+
+type EntryAnimationsValues = TargetLayoutAnimationsValues &
+  WindowDimensions;
+
+type TargetLayoutAnimationsValues = {
+  ['targetOriginX', 'targetOriginY', 'targetWidth', 'targetHeight', 'targetBorderRadius', 'targetGlobalOriginX','targetGlobalOriginY']: number;
+};
+
+interface WindowDimensions {
+    windowWidth: number;
+    windowHeight: number;
+}
+```
+
+</details>
 
 ### Arguments
 
@@ -64,6 +119,7 @@ function CustomAnimation(values) {
   - `values.targetOriginY` - Y coordinate of top left corner in parent's coordinate system
   - `values.targetWidth` - view's width
   - `values.targetHeight` - view's height
+  - `values.targetBorderRadius` - view's border radius
   - `values.targetGlobalOriginX` - X coordinate of top left corder in global coordinate system
   - `values.targetGlobalOriginY` - Y coordinate of top left corder in global coordinate system
 
@@ -77,9 +133,39 @@ function CustomAnimation(values) {
   }}
 />
 
-<CollapsibleCode src={EnteringExitingAnimationSrc} showLines={[9, 30]} />
+<CollapsibleCode src={EnteringExitingAnimationSrc} showLines={[6, 28]} />
 
 ## Custom Layout Transition
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function CustomLayoutTransition (values: LayoutAnimationValues) => LayoutAnimation
+
+type LayoutAnimation = {
+    initialValues: StyleProps;
+    animations: StyleProps;
+    callback?: (finished: boolean) => void;
+};
+
+type LayoutAnimationsValues = CurrentLayoutAnimationsValues & TargetLayoutAnimationsValues & WindowDimensions;
+
+type CurrentLayoutAnimationsValues = {
+    ['currentOriginX', 'currentOriginY', 'currentWidth', 'currentHeight', 'currentBorderRadius', 'currentGlobalOriginX','currentGlobalOriginY']: number;
+};
+
+type TargetLayoutAnimationsValues = {
+    ['targetOriginX', 'targetOriginY', 'targetWidth', 'targetHeight', 'targetBorderRadius', 'targetGlobalOriginX','targetGlobalOriginY']: number;
+};
+
+interface WindowDimensions {
+    windowWidth: number;
+    windowHeight: number;
+}
+```
+
+</details>
 
 ### Arguments
 
@@ -88,12 +174,14 @@ function CustomAnimation(values) {
   - `values.targetOriginY` - Y coordinate of top left corner in parent's coordinate system
   - `values.targetWidth` - view's width
   - `values.targetHeight` - view's height
+  - `values.targetBorderRadius` - view's border radius
   - `values.targetGlobalOriginX` - X coordinate of top left corder in global coordinate system
   - `values.targetGlobalOriginY` - Y coordinate of top left corder in global coordinate system
   - `values.currentOriginX` - X coordinate of top left corner in parent's coordinate system (before)
   - `values.currentOriginY` - Y coordinate of top left corner in parent's coordinate system (before)
   - `values.currentWidth` - view's width (before)
   - `values.currentHeight` - view's height (before)
+  - `values.currentBorderRadius` - view's border radius (before)
   - `values.currentGlobalOriginX` - X coordinate of top left corner in global coordinate system (before)
   - `values.currentGlobalOriginY` - Y coordinate of top left corner in global coordinate system (before)
 
