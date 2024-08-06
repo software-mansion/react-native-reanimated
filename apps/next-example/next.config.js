@@ -22,7 +22,8 @@ module.exports = withPlugins([withBundleAnalyzer, withExpo], {
     }
     config.resolve.alias.react = require('path').resolve(
       __dirname,
-      '.',
+      '..',
+      '..',
       'node_modules',
       'react'
     );
