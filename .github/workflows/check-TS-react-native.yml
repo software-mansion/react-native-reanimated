@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        react-native-version: ['0.71', '0.72', '0.73', '0.74', nightly]
+        react-native-version: ['0.72', '0.73', '0.74', '0.75.0-rc.6', nightly]
       fail-fast: false
     concurrency:
       group: TS-react-native-nightly-${{ matrix.react-native-version }}-${{ github.ref }}
@@ -55,5 +55,4 @@ jobs:
         run: yarn type:check:tests:common
       - name: Run 0.72+ type tests
         working-directory: packages/react-native-reanimated
-        if: matrix.react-native-version != '0.71'
         run: yarn type:check:tests:0.72+
