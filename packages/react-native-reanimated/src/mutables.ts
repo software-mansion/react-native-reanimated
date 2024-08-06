@@ -10,7 +10,7 @@ import { valueSetter } from './valueSetter';
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 function shouldWarnAboutAccessDuringRender() {
-  return isReactRendering() && !isFirstReactRender();
+  return __DEV__ && isReactRendering() && !isFirstReactRender();
 }
 
 function checkInvalidReadDuringRender() {
