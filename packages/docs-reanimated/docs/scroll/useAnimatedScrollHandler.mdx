@@ -16,7 +16,7 @@ function App() {
 
   // highlight-start
   const scrollHandler = useAnimatedScrollHandler((event) => {
-    translationY.value = event.contentOffset.y;
+    offsetY.value = event.contentOffset.y;
   });
   // highlight-end
 
@@ -30,6 +30,15 @@ function App() {
 <summary>Type definitions</summary>
 
 ```typescript
+function useAnimatedScrollHandler<Context extends Record<string, unknown>>(
+  handlers: ScrollHandler<Context> | ScrollHandlers<Context>,
+  dependencies?: DependencyList
+): ScrollHandlerProcessed<Context>;
+
+type ScrollHandler<
+  Context extends Record<string, unknown> = Record<string, unknown>
+> = (event: ReanimatedScrollEvent, context: Context) => void;
+
 interface ScrollHandlers<Context extends Record<string, unknown>> {
   onScroll?: ScrollHandler<Context>;
   onBeginDrag?: ScrollHandler<Context>;
@@ -37,24 +46,7 @@ interface ScrollHandlers<Context extends Record<string, unknown>> {
   onMomentumBegin?: ScrollHandler<Context>;
   onMomentumEnd?: ScrollHandler<Context>;
 }
-
-function useAnimatedScrollHandler<Context extends Record<string, unknown>>(
-  handlers: ScrollHandler<Context> | ScrollHandlers<Context>,
-  dependencies?: DependencyList
-): ScrollHandlerProcessed<Context>;
-
-type EventHandlerProcessed<
-  Event extends object,
-  Context extends Record<string, unknown> = never
-> = (event: Event, context?: Context) => void;
-
-type ScrollHandler<
-  Context extends Record<string, unknown> = Record<string, unknown>
-> = (event: ReanimatedScrollEvent, context: Context) => void;
-
-type ScrollHandlerProcessed<
-  Context extends Record<string, unknown> = Record<string, unknown>
-> = EventHandlerProcessed<RNNativeScrollEvent, Context>;
+type DependencyList = Array<unknown> | undefined;
 ```
 
 </details>
@@ -92,7 +84,7 @@ Only relevant when using Reanimated [without the Babel plugin on the Web.](/docs
 
 ### Returns
 
-The hook returns a handler object that can be hooked into a scrollable container.
+The hook returns a handler object that can be hooked into a scrollable container. The returned handler should be passed under `onScroll` parameter regardless of whether it is configured to receive only scroll or also momentum or drag events. In order for the returned handler to be properly triggered, you should use containers that are wrapped with `Animated` (e.g. `Animated.ScrollView` and not just `ScrollView`).
 
 ## Example
 
@@ -106,10 +98,9 @@ import AnimatedScrollHandlerSrc from '!!raw-loader!@site/src/examples/AnimatedSc
 
 ## Remarks
 
-- The returned handler should be passed under `onScroll` parameter regardless of whether it is configured to receive only scroll or also momentum or drag events.
 - The returned handler may be passed to multiple components. In such situation, the handler will invoke for the given events each time any of the components dispatches them.
+- If a single worklet function of type `(event) => void` is passed instead of a map of functions matched to event keys, it's treated as a handler for the 'onScroll' event.
 - Only `onScroll` event works on Web.
-- In order for the returned handler to be properly triggered, you should use containers that are wrapped with `Animated` (e.g. `Animated.ScrollView` and not just `ScrollView`).
 
 ## Platform compatibility
 
