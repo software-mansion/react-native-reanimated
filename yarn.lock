@@ -10201,6 +10201,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"create-react-class@npm:^15.7.0":
+  version: 15.7.0
+  resolution: "create-react-class@npm:15.7.0"
+  dependencies:
+    loose-envify: "npm:^1.3.1"
+    object-assign: "npm:^4.1.1"
+  checksum: 10/e845cb275c6b59c1fc4c4037e3d5caf4f42a258ef21f5cd9c86cd7ef476f933998f5c363a9e4b36970f682c30b122637d41474742abc85d8b931aef8041da8a3
+  languageName: node
+  linkType: hard
+
 "cross-fetch@npm:^3.1.5":
   version: 3.1.8
   resolution: "cross-fetch@npm:3.1.8"
@@ -15904,7 +15914,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"loose-envify@npm:^1.0.0, loose-envify@npm:^1.1.0, loose-envify@npm:^1.4.0":
+"loose-envify@npm:^1.0.0, loose-envify@npm:^1.1.0, loose-envify@npm:^1.3.1, loose-envify@npm:^1.4.0":
   version: 1.4.0
   resolution: "loose-envify@npm:1.4.0"
   dependencies:
@@ -16873,10 +16883,10 @@ __metadata:
     next: "npm:latest"
     next-compose-plugins: "npm:^2.2.1"
     prettier: "npm:2.8.8"
-    react: "npm:18.3.1"
-    react-dom: "npm:18.3.1"
+    react: "npm:^18.2.0"
+    react-dom: "npm:^18.2.0"
     react-native-reanimated: "workspace:*"
-    react-native-web: "npm:0.19.11"
+    react-native-web: "npm:^0.18.9"
     start-server-and-test: "npm:^2.0.1"
   languageName: unknown
   linkType: soft
@@ -17055,6 +17065,13 @@ __metadata:
   bin:
     nopt: bin/nopt.js
   checksum: 10/95a1f6dec8a81cd18cdc2fed93e6f0b4e02cf6bdb4501c848752c6e34f9883d9942f036a5e3b21a699047d8a448562d891e67492df68ec9c373e6198133337ae
+  languageName: node
+  linkType: hard
+
+"normalize-css-color@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "normalize-css-color@npm:1.0.2"
+  checksum: 10/7c1c435dbfda7abe3f306d5bb2dbf8b1bb7bbe4f6ec53cbc2b95f4514061d9441c082dd31abda7857d98956b40e24845284319b0c57c3883d245b71b70d3aeda
   languageName: node
   linkType: hard
 
@@ -18289,7 +18306,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:18.3.1":
+"react-dom@npm:18.3.1, react-dom@npm:^18.2.0":
   version: 18.3.1
   resolution: "react-dom@npm:18.3.1"
   dependencies:
@@ -18615,6 +18632,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-web@npm:^0.18.9":
+  version: 0.18.12
+  resolution: "react-native-web@npm:0.18.12"
+  dependencies:
+    "@babel/runtime": "npm:^7.18.6"
+    create-react-class: "npm:^15.7.0"
+    fbjs: "npm:^3.0.4"
+    inline-style-prefixer: "npm:^6.0.1"
+    normalize-css-color: "npm:^1.0.2"
+    postcss-value-parser: "npm:^4.2.0"
+    styleq: "npm:^0.1.2"
+  peerDependencies:
+    react: ^17.0.2 || ^18.0.0
+    react-dom: ^17.0.2 || ^18.0.0
+  checksum: 10/f3d36363026dd8e21cb4c794b2bffa92590c815a246c7f2682d4692c9e4a7e625effe04134d68b8ca202cc85a8c19444e1a17dcb53278ef73425e162fcd58eed
+  languageName: node
+  linkType: hard
+
 "react-native@npm:0.73.4":
   version: 0.73.4
   resolution: "react-native@npm:0.73.4"
@@ -18905,7 +18940,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:18.3.1":
+"react@npm:18.3.1, react@npm:^18.2.0":
   version: 18.3.1
   resolution: "react@npm:18.3.1"
   dependencies:
@@ -20428,7 +20463,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"styleq@npm:0.1.3, styleq@npm:^0.1.3":
+"styleq@npm:0.1.3, styleq@npm:^0.1.2, styleq@npm:^0.1.3":
   version: 0.1.3
   resolution: "styleq@npm:0.1.3"
   checksum: 10/9a75a1b635f8ebf5c0fdc3ffb56f466254f29aa1b2962ab2af776015d3b3bb1732a53edcda0c9ac9b97be96c22459db768feac0d61c1a319cc3954011ca9dcd8
