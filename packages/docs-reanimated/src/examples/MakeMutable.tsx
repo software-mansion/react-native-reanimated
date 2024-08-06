@@ -1,10 +1,5 @@
-import {
-  Text,
-  StyleSheet,
-  View,
-  TouchableOpacity,
-  useColorScheme,
-} from 'react-native';
+import { Text, StyleSheet, View, TouchableOpacity } from 'react-native';
+import { useColorScheme } from '@mui/material';
 
 import React, { useCallback, useMemo, useState } from 'react';
 import Animated, {
@@ -14,6 +9,12 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
+
+function useTextColorStyle() {
+  const { colorScheme } = useColorScheme();
+
+  return colorScheme === 'light' ? styles.darkText : styles.lightText;
+}
 
 type CheckListSelectorProps = {
   items: string[];
@@ -59,7 +60,8 @@ type CheckListItemProps = {
 };
 
 function CheckListItem({ item, selected }: CheckListItemProps) {
-  const scheme = useColorScheme();
+  const textColor = useTextColorStyle();
+
   const onPress = useCallback(() => {
     // highlight-start
     // No need to update the array of selected items, just toggle
@@ -76,13 +78,7 @@ function CheckListItem({ item, selected }: CheckListItemProps) {
       {/* No need to use `useDerivedValue` hook to get the `selected` value */}
       <CheckBox value={selected} />
       {/* highlight-end */}
-      <Text
-        style={[
-          styles.listItemText,
-          { color: scheme === 'dark' ? 'white' : 'black' },
-        ]}>
-        {item}
-      </Text>
+      <Text style={[styles.listItemText, textColor]}>{item}</Text>
     </TouchableOpacity>
   );
 }
@@ -113,13 +109,13 @@ const ITEMS = [
 ];
 
 export default function App() {
+  const textColor = useTextColorStyle();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const scheme = useColorScheme();
 
   return (
     <View style={styles.container}>
       <CheckListSelector items={ITEMS} onSubmit={setSelectedItems} />
-      <Text style={{ color: scheme === 'dark' ? 'white' : 'black' }}>
+      <Text style={textColor}>
         Selected items:{' '}
         {selectedItems.length ? selectedItems.join(', ') : 'None'}
       </Text>
@@ -151,24 +147,29 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 1,
     padding: 2,
-    borderColor: '#b58df1',
+    borderColor: 'var(--swm-purple-dark-100)',
   },
   checkBoxTick: {
     flex: 1,
     borderRadius: 2,
-    backgroundColor: '#b58df1',
+    backgroundColor: 'var(--swm-purple-dark-100)',
   },
   submitButton: {
-    backgroundColor: '#b58df1',
-    color: 'white',
+    backgroundColor: 'var(--swm-purple-dark-100)',
     alignItems: 'center',
     borderRadius: 4,
     padding: 8,
     marginTop: 16,
   },
   submitButtonText: {
-    color: 'white',
+    color: 'var(--swm-off-white)',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  lightText: {
+    color: 'var(--swm-off-white)',
+  },
+  darkText: {
+    color: 'var(--swm-navy-light-100)',
   },
 });
