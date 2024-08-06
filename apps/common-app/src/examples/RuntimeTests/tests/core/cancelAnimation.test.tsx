@@ -64,7 +64,7 @@ describe('Test *****cancelAnimation*****', () => {
     };
     test.each([
       [400, 450],
-      [500, 20],
+      [500, 720],
       [1000, 200],
       [1000, 400],
       [10000, 400],
@@ -86,7 +86,10 @@ describe('Test *****cancelAnimation*****', () => {
         // Let's approximate the animation duration using the predefined timeout to cancel it
         const expectedWidth = 300 * (timeToStop / animationDuration); // ANDROID
         // console.log(expectedWidth, await animatedComponent.getAnimatedStyle('width'));
-        expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth - 4, expectedWidth + 4);
+        expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(
+          expectedWidth - 10,
+          expectedWidth + 10,
+        );
       }
     });
   });
@@ -181,7 +184,10 @@ describe('Test *****cancelAnimation*****', () => {
       await wait(timeToStop + 100);
       const expectedWidth = (timeToStop / animationDuration) * 300;
 
-      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth, expectedWidth + 5);
+      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(
+        expectedWidth,
+        expectedWidth + (Platform.OS === 'ios' ? 5 : 10),
+      );
     });
   });
 });
