@@ -94,10 +94,10 @@ function InterpolationExtrapolateError1() {
  * Supported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND
  * Extrapolatation.IDENTITY]
  * Valid example:
- *    interpolate(value, [inputRange], [outputRange], {
+ *    interpolate(value, [inputRange], [outputRange], \{
  *      extrapolateLeft: Extrapolation.CLAMP,
  *      extrapolateRight: Extrapolation.IDENTITY
- *    }}
+ *    \}\}
  */
 function InterpolationExtrapolateError2() {
   interpolate(0, [0, 1], [0, 1], {
