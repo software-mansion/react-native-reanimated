@@ -13,6 +13,7 @@ import type { ReanimatedHTMLElement } from './js-reanimated';
 import { _updatePropsJS } from './js-reanimated';
 import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
 import { runOnUIImmediately } from './threads';
+import { logger } from './logger';
 
 let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
@@ -120,8 +121,8 @@ if (shouldBeUseWeb()) {
     // Jest attempts to access a property of this object to check if it is a Jest mock
     // so we can't throw an error in the getter.
     if (!isJest()) {
-      throw new Error(
-        '[Reanimated] `UpdatePropsManager` is not available on non-native platform.'
+      throw logger.newError(
+        '`UpdatePropsManager` is not available on non-native platform.'
       );
     }
   };
