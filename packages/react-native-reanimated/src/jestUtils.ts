@@ -27,9 +27,24 @@ const defaultFramerateConfig = {
   fps: 60,
 };
 
+const isEmpty = (obj: Object) => Object.keys(obj).length === 0;
+const getStylesFromObject = (obj: Object) =>
+  Object.fromEntries(
+    Object.entries(obj).map(([property, value]) => [property, value.value])
+  );
+
+type StyleValue = { value: unknown };
+type JestInlineStylesType =
+  | {
+      [s: string]: StyleValue;
+    }
+  | ArrayLike<StyleValue>;
+
 const getCurrentStyle = (component: TestComponent): DefaultStyle => {
   const styleObject = component.props.style;
+
   let currentStyle = {};
+
   if (Array.isArray(styleObject)) {
     styleObject.forEach((style) => {
       currentStyle = {
@@ -37,12 +52,53 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
         ...style,
       };
     });
-  } else {
+
+    return currentStyle;
+  }
+
+  const jestInlineStyles = component.props
+    .jestInlineStyle as JestInlineStylesType;
+
+  if (Array.isArray(jestInlineStyles)) {
+    let result = {};
+
+    for (const obj of jestInlineStyles) {
+      if ('jestAnimatedStyle' in obj) {
+        continue;
+      }
+
+      const inlineStyles = getStylesFromObject(obj);
+
+      result = {
+        ...result,
+        ...inlineStyles,
+      };
+    }
+
+    const jestAnimatedStyleValue = component.props.jestAnimatedStyle?.value;
+
     currentStyle = {
       ...styleObject,
-      ...component.props.jestAnimatedStyle?.value,
+      ...result,
     };
+
+    if (!isEmpty(jestAnimatedStyleValue as Object)) {
+      currentStyle = {
+        ...currentStyle,
+        ...component.props.jestAnimatedStyle?.value,
+      };
+    }
+
+    return currentStyle;
   }
+
+  const inlineStyles = getStylesFromObject(jestInlineStyles);
+  const jestAnimatedStyleValue = component.props.jestAnimatedStyle?.value;
+
+  currentStyle = isEmpty(jestAnimatedStyleValue as Object)
+    ? { ...styleObject, ...inlineStyles }
+    : { ...styleObject, ...component.props.jestAnimatedStyle?.value };
+
   return currentStyle;
 };
 
