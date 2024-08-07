@@ -41,9 +41,8 @@ function compareSingleViewSnapshots(
   }
 
   for (let i = 0; i < capturedSnapshots.length - 1; i++) {
-    if (native) {
-      const capturedSnapshot = capturedSnapshots[i];
-      /**
+    const capturedSnapshot = capturedSnapshots[i];
+    /**
       The TestRunner can collect two types of snapshots:
       - JS snapshots: animation updates sent via `_updateProps`
       - Native snapshots: snapshots obtained from the native side via `getViewProp`
@@ -54,16 +53,14 @@ function compareSingleViewSnapshots(
       we need to wait for the next frame before capturing the native snapshot.
       That's why native snapshots are one frame behind JS snapshots. To account for this delay,
       one additional native snapshot is taken during the execution of the `getNativeSnapshots` function. */
-      const expectedSnapshot = expectedSnapshots[i + Number(native)];
-      const snapshotMatching = compareSnapshot(expectedSnapshot, capturedSnapshot, expectNegativeValueMismatch);
-
-      if (!snapshotMatching) {
-        mismatchedSnapshots.push({
-          index: i,
-          expectedSnapshot: expectedSnapshots[i + Number(native)],
-          capturedSnapshot: capturedSnapshots[i],
-        });
-      }
+    const expectedSnapshot = expectedSnapshots[i + Number(native)];
+    const snapshotMatching = compareSnapshot(expectedSnapshot, capturedSnapshot, expectNegativeValueMismatch);
+    if (!snapshotMatching) {
+      mismatchedSnapshots.push({
+        index: i,
+        expectedSnapshot: expectedSnapshots[i + Number(native)],
+        capturedSnapshot: capturedSnapshots[i],
+      });
     }
   }
 
