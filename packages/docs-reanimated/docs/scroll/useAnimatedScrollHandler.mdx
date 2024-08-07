@@ -46,6 +46,7 @@ interface ScrollHandlers<Context extends Record<string, unknown>> {
   onMomentumBegin?: ScrollHandler<Context>;
   onMomentumEnd?: ScrollHandler<Context>;
 }
+
 type DependencyList = Array<unknown> | undefined;
 ```
 
@@ -99,7 +100,7 @@ import AnimatedScrollHandlerSrc from '!!raw-loader!@site/src/examples/AnimatedSc
 ## Remarks
 
 - The returned handler may be passed to multiple components. In such situation, the handler will invoke for the given events each time any of the components dispatches them.
-- If a single worklet function of type `(event) => void` is passed instead of a map of functions matched to event keys, it's treated as a handler for the 'onScroll' event.
+- If a single worklet function of type `(event) => void` is passed instead of a map of functions matched to event keys, it's treated as a handler for the `onScroll` event.
 - Only `onScroll` event works on Web.
 
 ## Platform compatibility
