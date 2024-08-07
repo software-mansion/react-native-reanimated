@@ -87,12 +87,6 @@ An optional array of dependencies.
 
 Only relevant when using Reanimated [without the Babel plugin on the Web.](/docs/guides/web-support/#web-without-the-babel-plugin)
 
-This array may contain:
-
-- `undefined` (argument skipped) - worklet will be rebuilt if there is any change in any of the callbacks' bodies or any values from their closure (variables from outer scope used in worklet).
-- `[]` - worklet will be rebuilt only if any of the callbacks' bodies changes.
-- `[val1, val2, ..., valN]` - worklet will be rebuilt if there is any change in any of the callbacks bodies or in any values from the given array.
-
 ### Returns
 
 The hook returns a context that will be reused by event handlers and value that indicates whether worklets should be rebuilt. If different implementation is needed for web, `useWeb` boolean is returned to check for web environment
@@ -103,6 +97,8 @@ import useHandler from '@site/src/examples/useHandlerEventExample';
 import useHandlerSrc from '!!raw-loader!@site/src/examples/useHandlerEventExample';
 
 <InteractiveExample src={useHandlerSrc} component={useHandler} />
+
+This example can be more easily implemented using [`useScrollViewOffset`](/docs/scroll/useScrollViewOffset/).
 
 ## Platform compatibility
 

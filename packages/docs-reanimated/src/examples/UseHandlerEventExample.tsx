@@ -13,7 +13,7 @@ function UseHandlerExample() {
   const offsetY = useSharedValue(0);
 
   const handlers = {
-    onScroll: (event: any) => {
+    onScroll: (event) => {
       'worklet';
       offsetY.value = event.contentOffset.y;
     },
