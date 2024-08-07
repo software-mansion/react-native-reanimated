@@ -12,6 +12,7 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 import type { Component } from 'react';
+import { logger } from '../logger';
 
 type ScrollTo = <T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -62,19 +63,15 @@ function scrollToPaper(
 }
 
 function scrollToJest() {
-  console.warn('[Reanimated] scrollTo() is not supported with Jest.');
+  logger.warn('scrollTo() is not supported with Jest.');
 }
 
 function scrollToChromeDebugger() {
-  console.warn(
-    '[Reanimated] scrollTo() is not supported with Chrome Debugger.'
-  );
+  logger.warn('scrollTo() is not supported with Chrome Debugger.');
 }
 
 function scrollToDefault() {
-  console.warn(
-    '[Reanimated] scrollTo() is not supported on this configuration.'
-  );
+  logger.warn('scrollTo() is not supported on this configuration.');
 }
 
 if (!shouldBeUseWeb()) {
