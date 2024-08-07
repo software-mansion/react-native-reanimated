@@ -12,7 +12,6 @@ import type {
   ReduceMotion,
 } from '../commonTypes';
 import type { ClampAnimation } from './commonTypes';
-import { logger } from '../logger';
 
 type withClampType = <T extends number | string>(
   config: {

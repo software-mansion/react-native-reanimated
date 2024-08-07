@@ -1,5 +1,5 @@
 'use strict';
-import { logger } from '../logger';
+
 import { jsVersion } from './jsVersion';
 
 export function checkCppVersion() {

@@ -1,5 +1,5 @@
 'use strict';
-import { logger } from '../logger';
+
 import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
 
 type SetGestureState = (handlerTag: number, newState: number) => void;

@@ -8,7 +8,6 @@ import type {
   ReduceMotion,
   Timestamp,
 } from '../commonTypes';
-import { logger } from '../logger';
 
 /**
  * Lets you run animations in a sequence.

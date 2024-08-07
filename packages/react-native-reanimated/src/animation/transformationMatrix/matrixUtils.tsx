@@ -1,7 +1,5 @@
 'use strict';
 
-import { logger } from '../../logger';
-
 type FixedLengthArray<
   T,
   L extends number,

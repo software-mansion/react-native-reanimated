@@ -12,7 +12,6 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 import type { Component } from 'react';
-import { logger } from '../logger';
 
 type Measure = <T extends Component>(
   animatedRef: AnimatedRef<T>

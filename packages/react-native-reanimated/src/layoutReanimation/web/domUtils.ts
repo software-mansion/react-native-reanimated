@@ -1,7 +1,7 @@
 'use strict';
 
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
-import { logger } from '../../logger';
+
 import { isWindowAvailable } from '../../PlatformChecker';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Animations } from './config';

@@ -70,8 +70,8 @@ const INACCESSIBLE_OBJECT = {
           );
         },
         set: () => {
-          throw new Error(
-            '[Reanimated] Trying to write to an object which cannot be sent to the UI runtime.'
+          throw logger.newError(
+            'Trying to write to an object which cannot be sent to the UI runtime.'
           );
         },
       }
@@ -116,8 +116,8 @@ export function makeShareableCloneRecursive<T>(
     if (depth === DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
       processedObjectAtThresholdDepth = value;
     } else if (value === processedObjectAtThresholdDepth) {
-      throw new Error(
-        '[Reanimated] Trying to convert a cyclic object to a shareable. This is not supported.'
+      throw logger.newError(
+        'Trying to convert a cyclic object to a shareable. This is not supported.'
       );
     }
   } else {

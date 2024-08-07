@@ -1,5 +1,5 @@
 'use strict';
-import { logger } from '../logger';
+
 import type { RNScreensTurboModuleType } from './commonTypes';
 
 function noopFactory<T>(defaultReturnValue?: T): () => T {
