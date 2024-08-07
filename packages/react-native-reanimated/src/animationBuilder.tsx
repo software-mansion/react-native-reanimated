@@ -6,6 +6,7 @@ import type {
 } from './layoutReanimation';
 import type { StyleProps } from './commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
+import { logger } from './logger';
 
 const mockTargetValues: LayoutAnimationsValues = {
   targetOriginX: 0,
@@ -61,8 +62,8 @@ function maybeReportOverwrittenProperties(
   const commonProperties = getCommonProperties(layoutAnimationStyle, style);
 
   if (commonProperties.length > 0) {
-    console.warn(
-      `[Reanimated] ${
+    logger.warn(
+      `${
         commonProperties.length === 1 ? 'Property' : 'Properties'
       } "${commonProperties.join(
         ', '
