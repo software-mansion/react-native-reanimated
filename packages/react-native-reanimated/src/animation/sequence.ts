@@ -8,6 +8,10 @@ import type {
   ReduceMotion,
   Timestamp,
 } from '../commonTypes';
+import { LogBox } from 'react-native';
+import { runOnJS } from '../threads';
+
+const addLog = LogBox.addLog.bind(LogBox);
 
 /**
  * Lets you run animations in a sequence.
@@ -44,7 +48,17 @@ export function withSequence(
   }
 
   if (_animations.length === 0) {
-    console.warn('[Reanimated] No animation was provided for the sequence');
+    runOnJS(addLog)({
+      level: 'warn',
+      message: {
+        content: '[Reanimated] No animation was provided for the sequence',
+        substitutions: [],
+      },
+      category: '[Reanimated] No animation was provided for the sequence',
+      componentStack: [],
+      componentStackType: null,
+      stack: new Error().stack,
+    });
 
     return defineAnimation<SequenceAnimation>(0, () => {
       'worklet';
