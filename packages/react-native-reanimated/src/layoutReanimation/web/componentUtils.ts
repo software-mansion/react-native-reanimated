@@ -23,7 +23,6 @@ import { Keyframe } from '../animationBuilder';
 import { ReducedMotionManager } from '../../ReducedMotion';
 import { prepareCurvedTransition } from './transition/Curved.web';
 import { EasingNameSymbol } from '../../Easing';
-import { logger } from '../../logger';
 
 function getEasingFromConfig(config: CustomConfig): string {
   if (!config.easingV) {

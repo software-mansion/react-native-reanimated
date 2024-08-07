@@ -1,6 +1,6 @@
 'use strict';
 import type { WorkletFunction } from '../commonTypes';
-import { logger } from '../logger';
+
 import type { DependencyList } from './commonTypes';
 
 // Builds one big hash from multiple worklets' hashes.

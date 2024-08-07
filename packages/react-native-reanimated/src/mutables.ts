@@ -1,7 +1,7 @@
 'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { Mutable } from './commonTypes';
-import { logger } from './logger';
+
 import { shareableMappingCache } from './shareableMappingCache';
 import { makeShareableCloneRecursive } from './shareables';
 import { executeOnUIRuntimeSync, runOnUI } from './threads';

@@ -5,7 +5,6 @@ import type {
   Timestamp,
   ReduceMotion,
 } from '../commonTypes';
-import { logger } from '../logger';
 
 /**
  * Spring animation configuration.

@@ -18,7 +18,6 @@ import {
   assertEasingIsWorklet,
   getReduceMotionFromConfig,
 } from '../../animation/util';
-import { logger } from '../../logger';
 
 interface KeyframePoint {
   duration: number;

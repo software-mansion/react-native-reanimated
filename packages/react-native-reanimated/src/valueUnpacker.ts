@@ -64,14 +64,14 @@ function valueUnpacker(
       const label = remoteFunctionName
         ? `function \`${remoteFunctionName}\``
         : 'anonymous function';
-      throw new Error(`[Reanimated] Tried to synchronously call a non-worklet ${label} on the UI thread.
+      throw logger.newError(`Tried to synchronously call a non-worklet ${label} on the UI thread.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
     };
     fun.__remoteFunction = objectToUnpack;
     return fun;
   } else {
-    throw new Error(
-      `[Reanimated] Data type in category "${category}" not recognized by value unpacker: "${_toString(
+    throw logger.newError(
+      `Data type in category "${category}" not recognized by value unpacker: "${_toString(
         objectToUnpack
       )}".`
     );
@@ -88,19 +88,19 @@ if (__DEV__ && !shouldBeUseWeb()) {
     'worklet';
   }) as WorkletFunction<[], void>;
   if (!isWorkletFunction(testWorklet)) {
-    throw new Error(
-      `[Reanimated] Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
+    throw logger.newError(
+      `Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
     );
   }
   if (!isWorkletFunction(valueUnpacker)) {
-    throw new Error('[Reanimated] `valueUnpacker` is not a worklet');
+    throw logger.newError('`valueUnpacker` is not a worklet');
   }
   const closure = (valueUnpacker as ValueUnpacker).__closure;
   if (closure === undefined) {
-    throw new Error('[Reanimated] `valueUnpacker` closure is undefined');
+    throw logger.newError('`valueUnpacker` closure is undefined');
   }
   if (Object.keys(closure).length !== 0) {
-    throw new Error('[Reanimated] `valueUnpacker` must have empty closure');
+    throw logger.newError('`valueUnpacker` must have empty closure');
   }
 }
 

@@ -7,7 +7,6 @@ import {
   createTextShadowValue,
 } from './webUtils';
 import { PropsAllowlists } from '../propsAllowlists';
-import { logger } from '../logger';
 
 const reanimatedJS = new JSReanimated();
 
