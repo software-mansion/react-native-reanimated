@@ -9,37 +9,28 @@ sidebar_position: 4
 ## Reference
 
 ```js
-function useEventExample() {
-  const dependencies = [{ isWeb: false }];
-  const handlers = {
-    onScroll: (event) => {
-      'worklet';
-      console.log(event);
-    },
-  };
+import { useEvent } from 'react-native-reanimated';
 
-  const { context, doDependenciesDiffer, useWeb } = useHandler(
-    handlers,
-    dependencies
-  );
+function useAnimatedPagerScrollHandler(handlers, dependencies) {
+  const { context, doDependenciesDiffer } = useHandler(handlers, dependencies);
 
   // highlight-start
-  const customScrollHandler = useEvent(
+  return useEvent(
     (event) => {
       'worklet';
-      const { onScroll } = handlers;
-      if (onScroll && event.eventName.endsWith('onScroll')) {
-        context.eventName = event.eventName + useWeb;
-        onScroll(event);
+      const { onPageScroll } = handlers;
+
+      if (onPageScroll && event.eventName.endsWith('onPageScroll')) {
+        onPageScroll(event, context);
       }
     },
-    ['onScroll'],
+    ['onPageScroll'],
     doDependenciesDiffer
   );
-  // highlight-end
-
-  return <Animated.ScrollView onScroll={customScrollHandler} />;
 }
+// highlight-end
+
+return <Animated.View onScroll={useAnimatedPagerScrollHandler} />;
 ```
 
 <details>
