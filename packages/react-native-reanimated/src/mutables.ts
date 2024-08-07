@@ -1,6 +1,7 @@
 'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { Mutable } from './commonTypes';
+import { logger } from './logger';
 import { shareableMappingCache } from './shareableMappingCache';
 import { makeShareableCloneRecursive } from './shareables';
 import { executeOnUIRuntimeSync, runOnUI } from './threads';
@@ -103,13 +104,13 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
 
     get _value(): Value {
-      throw new Error(
-        '[Reanimated] Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
+      throw logger.newError(
+        'Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
       );
     },
     set _value(_newValue: Value) {
-      throw new Error(
-        '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
+      throw logger.newError(
+        'Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
       );
     },
 
@@ -119,13 +120,13 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
       })();
     },
     addListener: () => {
-      throw new Error(
-        '[Reanimated] Adding listeners is only possible on the UI runtime.'
+      throw logger.newError(
+        'Adding listeners is only possible on the UI runtime.'
       );
     },
     removeListener: () => {
-      throw new Error(
-        '[Reanimated] Removing listeners is only possible on the UI runtime.'
+      throw logger.newError(
+        'Removing listeners is only possible on the UI runtime.'
       );
     },
 

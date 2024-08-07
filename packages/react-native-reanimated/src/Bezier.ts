@@ -1,4 +1,7 @@
 'use strict';
+
+import { logger } from './logger';
+
 /**
  * https://github.com/gre/bezier-easing
  * BezierEasing - use bezier curve for transition easing function
@@ -98,7 +101,7 @@ export function Bezier(
   }
 
   if (!(mX1 >= 0 && mX1 <= 1 && mX2 >= 0 && mX2 <= 1)) {
-    throw new Error('[Reanimated] Bezier x values must be in [0, 1] range.');
+    throw logger.newError('Bezier x values must be in [0, 1] range.');
   }
 
   if (mX1 === mY1 && mX2 === mY2) {

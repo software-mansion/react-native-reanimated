@@ -3,6 +3,7 @@ import { isWorkletFunction } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
 import { registerReanimatedError } from './errors';
 import { setupCallGuard, setupConsole } from './initializers';
+import { logger } from './logger';
 import NativeReanimatedModule from './NativeReanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
 import {
@@ -61,8 +62,8 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
-    throw new Error(
-      '[Reanimated] The function passed to `runOnRuntime` is not a worklet.' +
+    throw logger.newError(
+      'The function passed to `runOnRuntime` is not a worklet.' +
         (_WORKLET
           ? ' Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.'
           : '')
