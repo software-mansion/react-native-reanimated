@@ -1,9 +1,24 @@
 'use strict';
 import { runOnJS } from '../threads';
 import { LogBox } from './LogBox';
-import type { LogLevel } from './LogBox';
+import type { LogLevel, LogData } from './LogBox';
 
 const addLog = LogBox.addLog.bind(LogBox);
+
+function log(data: LogData) {
+  addLog(data);
+
+  switch (data.level) {
+    case 'warn':
+      console.warn(data.message.content);
+      break;
+    case 'error':
+    case 'fatal':
+    case 'syntax':
+      console.error(data.message.content);
+      break;
+  }
+}
 
 function createLogger(prefix: string) {
   function formatMessage(message: string) {
@@ -15,7 +30,7 @@ function createLogger(prefix: string) {
     'worklet';
     const formattedMessage = formatMessage(message);
 
-    runOnJS(addLog)({
+    runOnJS(log)({
       level,
       message: {
         content: formattedMessage,

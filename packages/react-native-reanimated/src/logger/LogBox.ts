@@ -27,7 +27,7 @@ type ComponentStack = CodeFrame[];
 
 type ComponentStackType = 'legacy' | 'stack';
 
-type LogData = {
+export type LogData = {
   level: LogLevel;
   message: Message;
   category: Category;
