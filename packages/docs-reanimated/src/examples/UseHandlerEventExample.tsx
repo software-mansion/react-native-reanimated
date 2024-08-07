@@ -4,6 +4,7 @@ import Animated, {
   useEvent,
   useSharedValue,
   useAnimatedProps,
+  type ScrollEvent,
 } from 'react-native-reanimated';
 import { TextInput, SafeAreaView, View, StyleSheet } from 'react-native';
 
@@ -13,7 +14,7 @@ function UseHandlerExample() {
   const offsetY = useSharedValue(0);
 
   const handlers = {
-    onScroll: (event) => {
+    onScroll: (event: ScrollEvent) => {
       'worklet';
       offsetY.value = event.contentOffset.y;
     },
@@ -22,7 +23,7 @@ function UseHandlerExample() {
   const { context, doDependenciesDiffer } = useHandler(handlers);
 
   const scrollHandler = useEvent(
-    (event) => {
+    (event: ScrollEvent) => {
       'worklet';
       const { onScroll } = handlers;
       if (onScroll) {
