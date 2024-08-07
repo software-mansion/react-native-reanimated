@@ -1,5 +1,7 @@
 'use strict';
 
+import { logger } from "./logger";
+
 /**
  * Extrapolation type.
  *
@@ -99,8 +101,8 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
 
   if (typeof type === 'string') {
     if (!isExtrapolate(type)) {
-      throw new Error(
-        `[Reanimated] Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
+      throw logger.newError(
+        `Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
         interpolate(value, [inputRange], [outputRange], "clamp")`
       );
     }

@@ -14,7 +14,7 @@ import Animated, {
   withSequence,
 } from 'react-native-reanimated';
 
-const EXAMPLE_NUMBER: number = 3;
+const EXAMPLE_NUMBER: number = 2;
 
 if (EXAMPLE_NUMBER === 4) {
   /*
@@ -49,7 +49,7 @@ export default function EmptyExample() {
 
     // runOnUI(() => {
     //   withSequence();
-    // });
+    // })();
 
     useAnimatedReaction(
       () => null,
@@ -71,9 +71,9 @@ export default function EmptyExample() {
     })();
   }
 
-  if (EXAMPLE_NUMBER === 5) {
+  if (EXAMPLE_NUMBER === 4) {
     /*
-    5.
+    4.
     ReanimatedError: [Reanimated] Unsupported value for "interpolate"
     Supported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]
     Valid example:
@@ -92,9 +92,9 @@ export default function EmptyExample() {
     );
   }
 
-  if (EXAMPLE_NUMBER === 6) {
+  if (EXAMPLE_NUMBER === 5) {
     /*
-    6.
+    5.
     ReanimatedError: [Reanimated] Interpolation input and output ranges should contain at least two values., js engine: reanimated
     */
     useAnimatedReaction(
@@ -105,9 +105,9 @@ export default function EmptyExample() {
     );
   }
 
-  if (EXAMPLE_NUMBER === 7) {
+  if (EXAMPLE_NUMBER === 6) {
     /*
-    7.
+    6.
     ReanimatedError: [Reanimated] Invalid color space provided: Invalid color space. Supported values are: ['RGB', 'HSV']., js engine: reanimated
     */
     useAnimatedReaction(
@@ -123,9 +123,9 @@ export default function EmptyExample() {
     );
   }
 
-  if (EXAMPLE_NUMBER === 8) {
+  if (EXAMPLE_NUMBER === 7) {
     /*
-    8.
+    7.
     ReanimatedError: 
     */
     getViewProp(0, 'opacity').catch(() => null);
