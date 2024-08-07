@@ -82,24 +82,12 @@ The hook returns event handler that will be invoked when native event is dispatc
 
 ## Example
 
-```js
-function useAnimatedPagerScrollHandler(handlers, dependencies) {
-  const { context, doDependenciesDiffer } = useHandler(handlers, dependencies);
+import useEvent from '@site/src/examples/useHandlerEventExample';
+import useEventSrc from '!!raw-loader!@site/src/examples/useHandlerEventExample';
 
-  return useEvent(
-    (event) => {
-      'worklet';
-      const { onPageScroll } = handlers;
+<InteractiveExample src={useEventSrc} component={useEvent} />
 
-      if (onPageScroll && event.eventName.endsWith('onPageScroll')) {
-        onPageScroll(event, context);
-      }
-    },
-    ['onPageScroll'],
-    doDependenciesDiffer
-  );
-}
-```
+This example can be more easily implemented using [`useScrollViewOffset`](/docs/scroll/useScrollViewOffset/).
 
 ## Remarks
 
