@@ -12,7 +12,6 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 import type { Component } from 'react';
-import { logger } from '../logger';
 
 type Measure = <T extends Component>(
   animatedRef: AnimatedRef<T>
@@ -35,26 +34,26 @@ function measureFabric(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
 
   const viewTag = animatedRef();
   if (viewTag === -1) {
-    logger.warn(
-      `The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
+    console.warn(
+      `[Reanimated] The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
     return null;
   }
 
   const measured = global._measureFabric!(viewTag as ShadowNodeWrapper);
   if (measured === null) {
-    logger.warn(
-      `The view has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
+    console.warn(
+      `[Reanimated] The view has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
     return null;
   } else if (measured.x === -1234567) {
-    logger.warn(
-      `The view returned an invalid measurement response. Please make sure the view is currently rendered.`
+    console.warn(
+      `[Reanimated] The view returned an invalid measurement response. Please make sure the view is currently rendered.`
     );
     return null;
   } else if (isNaN(measured.x)) {
-    logger.warn(
-      `The view gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
+    console.warn(
+      `[Reanimated] The view gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
     );
     return null;
   } else {

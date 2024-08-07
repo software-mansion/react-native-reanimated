@@ -8,7 +8,6 @@ import type {
   ReduceMotion,
   Timestamp,
 } from '../commonTypes';
-import { logger } from '../logger';
 
 /**
  * Lets you run animations in a sequence.
@@ -45,7 +44,7 @@ export function withSequence(
   }
 
   if (_animations.length === 0) {
-    logger.warn('No animation was provided for the sequence');
+    console.warn('[Reanimated] No animation was provided for the sequence');
 
     return defineAnimation<SequenceAnimation>(0, () => {
       'worklet';

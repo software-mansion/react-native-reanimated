@@ -1,2 +1,2 @@
-"use strict";
+'use strict';
 export { logger } from './logger';
