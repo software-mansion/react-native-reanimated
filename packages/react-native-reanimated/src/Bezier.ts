@@ -8,6 +8,8 @@
 
 // These values are established by empiricism with tests (tradeoff: performance VS precision)
 
+const logger = global.__reanimatedLogger;
+
 const NEWTON_ITERATIONS = 4;
 const NEWTON_MIN_SLOPE = 0.001;
 const SUBDIVISION_PRECISION = 0.0000001;

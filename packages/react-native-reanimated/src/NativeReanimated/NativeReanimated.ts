@@ -15,6 +15,8 @@ import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { LayoutAnimationBatchItem } from '../layoutReanimation/animationBuilder/commonTypes';
 import ReanimatedModule from '../specs/NativeReanimatedModule';
 
+const logger = global.__reanimatedLogger;
+
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
   makeShareableClone<T>(

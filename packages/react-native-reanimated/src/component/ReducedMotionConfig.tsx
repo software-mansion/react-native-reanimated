@@ -6,6 +6,8 @@ import {
   isReducedMotionEnabledInSystem,
 } from '../ReducedMotion';
 
+const logger = global.__reanimatedLogger;
+
 /**
  * A component that lets you overwrite default reduce motion behavior globally in your application.
  *

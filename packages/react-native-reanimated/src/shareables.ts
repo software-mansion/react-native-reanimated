@@ -14,6 +14,8 @@ import {
   shareableMappingFlag,
 } from './shareableMappingCache';
 
+const logger = global.__reanimatedLogger;
+
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
 // instead of shareable references, because of the fact that we don't have to deal with

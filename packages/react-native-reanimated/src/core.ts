@@ -21,6 +21,8 @@ export type { WorkletRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable } from './mutables';
 
+const logger = global.__reanimatedLogger;
+
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /**

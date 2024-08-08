@@ -51,6 +51,8 @@ import { getViewInfo } from './getViewInfo';
 import { NativeEventsManager } from './NativeEventsManager';
 import type { ReanimatedHTMLElement } from '../js-reanimated';
 
+const logger = global.__reanimatedLogger;
+
 const IS_WEB = isWeb();
 
 if (IS_WEB) {

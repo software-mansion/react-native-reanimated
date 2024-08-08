@@ -11,6 +11,8 @@ import type { WebSensor } from './WebSensor';
 import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
 import type { WorkletRuntime } from '../runtimes';
 
+const logger = global.__reanimatedLogger;
+
 // In Node.js environments (like when static rendering with Expo Router)
 // requestAnimationFrame is unavailable, so we use our mock.
 // It also has to be mocked for Jest purposes (see `initializeUIRuntime`).

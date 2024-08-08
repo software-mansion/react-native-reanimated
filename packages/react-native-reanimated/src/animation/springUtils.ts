@@ -6,6 +6,8 @@ import type {
   ReduceMotion,
 } from '../commonTypes';
 
+const logger = global.__reanimatedLogger;
+
 /**
  * Spring animation configuration.
  *

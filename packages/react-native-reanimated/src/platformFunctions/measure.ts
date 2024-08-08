@@ -13,6 +13,8 @@ import type {
 } from '../hook/commonTypes';
 import type { Component } from 'react';
 
+const logger = global.__reanimatedLogger;
+
 type Measure = <T extends Component>(
   animatedRef: AnimatedRef<T>
 ) => MeasuredDimensions | null;

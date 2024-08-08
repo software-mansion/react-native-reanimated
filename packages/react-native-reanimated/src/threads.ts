@@ -11,6 +11,8 @@ import type { LogData } from './logger';
 import { logger, loggerImpl, logToLogBoxAndConsole } from './logger';
 import { shareableMappingCache } from './shareableMappingCache';
 
+const logger = global.__reanimatedLogger;
+
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

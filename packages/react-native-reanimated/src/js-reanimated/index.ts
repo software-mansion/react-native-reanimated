@@ -8,6 +8,8 @@ import {
 } from './webUtils';
 import { PropsAllowlists } from '../propsAllowlists';
 
+const logger = global.__reanimatedLogger;
+
 const reanimatedJS = new JSReanimated();
 
 global._makeShareableClone = () => {

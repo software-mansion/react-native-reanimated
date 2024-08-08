@@ -14,6 +14,8 @@ import { _updatePropsJS } from './js-reanimated';
 import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
 import { runOnUIImmediately } from './threads';
 
+const logger = global.__reanimatedLogger;
+
 let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,
   updates: StyleProps | AnimatedStyle<any>,

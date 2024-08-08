@@ -7,6 +7,8 @@ import { makeShareableCloneRecursive } from './shareables';
 import { executeOnUIRuntimeSync, runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 
+const logger = global.__reanimatedLogger;
+
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 type Listener<Value> = (newValue: Value) => void;

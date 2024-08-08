@@ -17,6 +17,8 @@ import { ProgressTransitionManager } from './ProgressTransitionManager';
 import { updateLayoutAnimations } from '../../UpdateLayoutAnimations';
 import { getReduceMotionFromConfig } from '../../animation/util';
 
+const logger = global.__reanimatedLogger;
+
 const SUPPORTED_PROPS = [
   'width',
   'height',

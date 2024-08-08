@@ -3,6 +3,8 @@
 import { isFabric } from './PlatformChecker';
 import { runOnUI } from './threads';
 
+const logger = global.__reanimatedLogger;
+
 let VIEW_TAGS: number[] = [];
 
 export function removeFromPropsRegistry(viewTag: number) {

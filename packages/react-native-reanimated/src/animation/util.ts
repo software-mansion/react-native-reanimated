@@ -37,6 +37,8 @@ import { shouldBeUseWeb } from '../PlatformChecker';
 import type { EasingFunctionFactory } from '../Easing';
 import { ReducedMotionManager } from '../ReducedMotion';
 
+const logger = global.__reanimatedLogger;
+
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
