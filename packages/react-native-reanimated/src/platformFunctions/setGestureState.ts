@@ -2,6 +2,8 @@
 
 import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
 
+const logger = global.__reanimatedLogger;
+
 type SetGestureState = (handlerTag: number, newState: number) => void;
 
 export let setGestureState: SetGestureState;

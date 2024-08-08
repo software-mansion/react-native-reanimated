@@ -2,10 +2,12 @@
 
 import { jsVersion } from './jsVersion';
 
+const logger = global.__reanimatedLogger;
+
 export function checkCppVersion() {
   const cppVersion = global._REANIMATED_VERSION_CPP;
   if (cppVersion === undefined) {
-    throw logger.newError(
+    logger.warn(
       `Couldn't determine the version of the native part of Reanimated.
     See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#couldnt-determine-the-version-of-the-native-part-of-reanimated\` for more details.`
     );

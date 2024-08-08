@@ -9,6 +9,8 @@ import type {
 import { ReduceMotion } from '../../commonTypes';
 import { getReduceMotionFromConfig } from '../../animation/util';
 
+const logger = global.__reanimatedLogger;
+
 export class BaseAnimationBuilder {
   durationV?: number;
   delayV?: number;

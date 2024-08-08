@@ -31,6 +31,8 @@ import { makeElementVisible } from './componentStyle';
 import { EasingNameSymbol } from '../../Easing';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 
+const logger = global.__reanimatedLogger;
+
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,
   props: Readonly<AnimatedComponentProps<ComponentProps>>

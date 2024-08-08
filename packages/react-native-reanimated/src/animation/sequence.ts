@@ -9,6 +9,8 @@ import type {
   Timestamp,
 } from '../commonTypes';
 
+const logger = global.__reanimatedLogger;
+
 /**
  * Lets you run animations in a sequence.
  *

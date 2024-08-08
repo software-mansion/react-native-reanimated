@@ -3,6 +3,8 @@ import { shouldBeUseWeb } from './PlatformChecker';
 import { isWorkletFunction } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
 
+const logger = global.__reanimatedLogger;
+
 function valueUnpacker(
   objectToUnpack: any,
   category?: string,

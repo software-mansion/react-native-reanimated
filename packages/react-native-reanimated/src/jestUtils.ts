@@ -10,6 +10,8 @@ import type {
 import { isJest } from './PlatformChecker';
 import type { DefaultStyle } from './hook/commonTypes';
 
+const logger = global.__reanimatedLogger;
+
 declare global {
   namespace jest {
     interface Matchers<R> {

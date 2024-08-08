@@ -13,6 +13,8 @@ import type {
 } from '../commonTypes';
 import type { ClampAnimation } from './commonTypes';
 
+const logger = global.__reanimatedLogger;
+
 type withClampType = <T extends number | string>(
   config: {
     min?: T;

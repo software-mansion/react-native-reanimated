@@ -7,6 +7,8 @@ import { setElementPosition, snapshots } from './componentStyle';
 import { Animations } from './config';
 import type { AnimationNames } from './config';
 
+const logger = global.__reanimatedLogger;
+
 const PREDEFINED_WEB_ANIMATIONS_ID = 'ReanimatedPredefinedWebAnimationsStyle';
 const CUSTOM_WEB_ANIMATIONS_ID = 'ReanimatedCustomWebAnimationsStyle';
 

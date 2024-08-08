@@ -11,6 +11,8 @@ import {
   makeShareableCloneRecursive,
 } from './shareables';
 
+const logger = global.__reanimatedLogger;
+
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 export type WorkletRuntime = {

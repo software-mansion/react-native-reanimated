@@ -53,6 +53,8 @@ import { getViewInfo } from './getViewInfo';
 import { NativeEventsManager } from './NativeEventsManager';
 import type { ReanimatedHTMLElement } from '../js-reanimated';
 
+const logger = global.__reanimatedLogger;
+
 const IS_WEB = isWeb();
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();

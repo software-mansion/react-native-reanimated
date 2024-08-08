@@ -7,6 +7,8 @@ import type {
 import type { StyleProps } from './commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
 
+const logger = global.__reanimatedLogger;
+
 const mockTargetValues: LayoutAnimationsValues = {
   targetOriginX: 0,
   targetOriginY: 0,

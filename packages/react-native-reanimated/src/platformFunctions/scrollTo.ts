@@ -13,6 +13,8 @@ import type {
 } from '../hook/commonTypes';
 import type { Component } from 'react';
 
+const logger = global.__reanimatedLogger;
+
 type ScrollTo = <T extends Component>(
   animatedRef: AnimatedRef<T>,
   x: number,

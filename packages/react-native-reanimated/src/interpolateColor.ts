@@ -14,6 +14,8 @@ import { Extrapolation, interpolate } from './interpolation';
 import type { SharedValue } from './commonTypes';
 import { useSharedValue } from './hook/useSharedValue';
 
+const logger = global.__reanimatedLogger;
+
 /**
  * @deprecated Please use Extrapolation instead
  */

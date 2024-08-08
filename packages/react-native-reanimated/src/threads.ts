@@ -16,6 +16,8 @@ import {
 import { ReanimatedError, registerReanimatedError } from './errors';
 import { shareableMappingCache } from './shareableMappingCache';
 
+const logger = global.__reanimatedLogger;
+
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

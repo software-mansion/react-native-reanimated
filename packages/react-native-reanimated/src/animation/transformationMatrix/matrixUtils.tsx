@@ -1,5 +1,7 @@
 'use strict';
 
+const logger = global.__reanimatedLogger;
+
 type FixedLengthArray<
   T,
   L extends number,

@@ -24,6 +24,8 @@ import { ReducedMotionManager } from '../../ReducedMotion';
 import { prepareCurvedTransition } from './transition/Curved.web';
 import { EasingNameSymbol } from '../../Easing';
 
+const logger = global.__reanimatedLogger;
+
 function getEasingFromConfig(config: CustomConfig): string {
   if (!config.easingV) {
     return getEasingByName('linear');

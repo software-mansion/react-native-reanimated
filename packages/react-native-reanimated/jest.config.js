@@ -5,4 +5,7 @@ module.exports = {
   setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],
   testEnvironment: 'node',
   transformIgnorePatterns: [],
+  "globals": {
+    "__reanimatedLogger": true
+  },
 };

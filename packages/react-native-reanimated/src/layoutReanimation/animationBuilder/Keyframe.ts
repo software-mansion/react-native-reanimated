@@ -19,6 +19,8 @@ import {
   getReduceMotionFromConfig,
 } from '../../animation/util';
 
+const logger = global.__reanimatedLogger;
+
 interface KeyframePoint {
   duration: number;
   value: number | string;
@@ -28,6 +30,7 @@ interface ParsedKeyframesDefinition {
   initialValues: StyleProps;
   keyframes: Record<string, KeyframePoint[]>;
 }
+
 class InnerKeyframe implements IEntryExitAnimationBuilder {
   durationV?: number;
   delayV?: number;

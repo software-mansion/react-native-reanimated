@@ -15,6 +15,8 @@ import type {
 } from './utils';
 import { rigidDecay } from './rigidDecay';
 
+const logger = global.__reanimatedLogger;
+
 export type WithDecayConfig = DecayConfig;
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.

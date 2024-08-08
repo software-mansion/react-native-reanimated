@@ -14,6 +14,8 @@ import type {
 import type { Component } from 'react';
 import { processColorsInProps } from '../Colors';
 
+const logger = global.__reanimatedLogger;
+
 type SetNativeProps = <T extends Component>(
   animatedRef: AnimatedRef<T>,
   updates: StyleProps

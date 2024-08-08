@@ -35,6 +35,8 @@ import type {
 } from '../commonTypes';
 import { isWorkletFunction } from '../commonTypes';
 
+const logger = global.__reanimatedLogger;
+
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 interface AnimatedState {
