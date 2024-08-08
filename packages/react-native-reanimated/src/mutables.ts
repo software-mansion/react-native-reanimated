@@ -1,12 +1,33 @@
 'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { Mutable } from './commonTypes';
+import { isFirstReactRender, isReactRendering } from './reactUtils';
 import { shareableMappingCache } from './shareableMappingCache';
 import { makeShareableCloneRecursive } from './shareables';
 import { executeOnUIRuntimeSync, runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+
+function shouldWarnAboutAccessDuringRender() {
+  return __DEV__ && isReactRendering() && !isFirstReactRender();
+}
+
+function checkInvalidReadDuringRender() {
+  if (shouldWarnAboutAccessDuringRender()) {
+    console.warn(
+      '[Reanimated] Reading from `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.'
+    );
+  }
+}
+
+function checkInvalidWriteDuringRender() {
+  if (shouldWarnAboutAccessDuringRender()) {
+    console.warn(
+      '[Reanimated] Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.'
+    );
+  }
+}
 
 type Listener<Value> = (newValue: Value) => void;
 
@@ -69,12 +90,14 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
 
   const mutable: Mutable<Value> = {
     get value(): Value {
+      checkInvalidReadDuringRender();
       const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
         return sv.value;
       });
       return uiValueGetter(mutable);
     },
     set value(newValue) {
+      checkInvalidWriteDuringRender();
       runOnUI(() => {
         mutable.value = newValue;
       })();
@@ -120,9 +143,11 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
 
   const mutable: Mutable<Value> = {
     get value(): Value {
+      checkInvalidReadDuringRender();
       return value;
     },
     set value(newValue) {
+      checkInvalidWriteDuringRender();
       valueSetter(mutable, newValue);
     },
 
