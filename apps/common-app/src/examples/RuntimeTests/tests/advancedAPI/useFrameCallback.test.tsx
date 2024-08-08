@@ -4,7 +4,7 @@ import Animated, { useSharedValue, useAnimatedStyle, useFrameCallback } from 're
 import { describe, test, expect, render, getTestComponent, wait, useTestRef } from '../../ReJest/RuntimeTestsApi';
 
 describe('Test *****useFrameCallback*****', () => {
-  describe.only('Test _canceling frameCallback_ after predefined time', () => {
+  describe('Test _canceling frameCallback_ after predefined time', () => {
     const STOP_AFTER_DELAY_REF = 'CancelAfterDelayComponent';
     const CancelAfterDelayComponent = ({ timeToStop }: { timeToStop: number }) => {
       const width = useSharedValue(0);
