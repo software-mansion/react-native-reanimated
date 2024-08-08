@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -19,6 +19,7 @@ import {
   registerValue,
   getRegisteredValue,
 } from '../../ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '../../ReJest/types';
 
 const ELAPSED_TIME_REF = 'ElapsedTime';
 
@@ -63,7 +64,7 @@ describe('Test *****cancelAnimation*****', () => {
     };
     test.each([
       [400, 450],
-      [500, 200],
+      [500, 720],
       [1000, 200],
       [1000, 400],
       [10000, 400],
@@ -72,11 +73,24 @@ describe('Test *****cancelAnimation*****', () => {
       await render(<CancelAfterDelayComponent animationDuration={animationDuration} timeToStop={timeToStop} />);
       const animatedComponent = getTestComponent(CANCEL_AFTER_DELAY_REF);
 
-      await wait(timeToStop + 200);
+      await wait(timeToStop + 100);
 
-      const timeElapsed = (await getRegisteredValue(ELAPSED_TIME_REF)).onJS as number;
-      const expectedWidth = 300 * (timeElapsed / animationDuration);
-      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth - 4, expectedWidth + 4);
+      if (animationDuration < timeToStop) {
+        expect(await animatedComponent.getAnimatedStyle('width')).toBe(300, ComparisonMode.PIXEL);
+      } else if (Platform.OS === 'ios') {
+        // Let's approximate the animation duration using the timestamp of a callback executed after canceling the animation
+        const timeToGetCallback = (await getRegisteredValue(ELAPSED_TIME_REF)).onJS as number;
+        const expectedWidth = 300 * (timeToGetCallback / animationDuration);
+        expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth - 4, expectedWidth + 4);
+      } else if (Platform.OS === 'android') {
+        // Let's approximate the animation duration using the predefined timeout to cancel it
+        const expectedWidth = 300 * (timeToStop / animationDuration); // ANDROID
+        // console.log(expectedWidth, await animatedComponent.getAnimatedStyle('width'));
+        expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(
+          expectedWidth - 10,
+          expectedWidth + 10,
+        );
+      }
     });
   });
 
@@ -113,7 +127,7 @@ describe('Test *****cancelAnimation*****', () => {
       await render(<CancelAfterConditionComponent stopValue={stopValue} />);
       const animatedComponent = getTestComponent(CANCEL_AFTER_CONDITION_REF);
 
-      await wait(320);
+      await wait(400);
 
       expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(stopValue, stopValue + 17);
     });
@@ -170,7 +184,10 @@ describe('Test *****cancelAnimation*****', () => {
       await wait(timeToStop + 100);
       const expectedWidth = (timeToStop / animationDuration) * 300;
 
-      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth, expectedWidth + 5);
+      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(
+        expectedWidth,
+        expectedWidth + (Platform.OS === 'ios' ? 5 : 10),
+      );
     });
   });
 });

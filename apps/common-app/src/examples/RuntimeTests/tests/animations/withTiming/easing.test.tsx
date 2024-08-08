@@ -11,6 +11,7 @@ import {
   render,
   wait,
   unmockAnimationTimer,
+  waitForAnimationUpdates,
 } from '../../../ReJest/RuntimeTestsApi';
 import { EasingSnapshots } from './withTiming.snapshot';
 import { ErrorBoundary } from '../../../ReJest/RuntimeTestsRunner';
@@ -55,11 +56,14 @@ const PassiveAnimatedComponent = ({ easing }: { easing: EasingFunction | EasingF
   );
 };
 
-async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFactory | undefined) {
+async function getSnapshotUpdates(
+  easingFn: EasingFunction | EasingFunctionFactory | undefined,
+  snapshotName: keyof typeof EasingSnapshots,
+) {
   await mockAnimationTimer();
   const updatesContainerActive = await recordAnimationUpdates();
   await render(<ActiveAnimatedComponent easing={easingFn} />);
-  await wait(1200);
+  await waitForAnimationUpdates(EasingSnapshots[snapshotName].length);
   const activeUpdates = updatesContainerActive.getUpdates();
   const activeNaiveUpdates = await updatesContainerActive.getNativeSnapshots();
 
@@ -68,7 +72,7 @@ async function getSnapshotUpdates(easingFn: EasingFunction | EasingFunctionFacto
 
   const updatesContainerPassive = await recordAnimationUpdates();
   await render(<PassiveAnimatedComponent easing={easingFn} />);
-  await wait(1200);
+  await waitForAnimationUpdates(EasingSnapshots[snapshotName].length);
 
   // For passive updates we have the following order of operations:
   // 1. Slightly increase sharedValue
@@ -114,7 +118,7 @@ describe('withTiming snapshots 📸, test EASING', () => {
   });
 
   test('No easing function', async () => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(undefined);
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(undefined, 'noEasing');
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots.noEasing);
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots.noEasing);
 
@@ -136,18 +140,22 @@ describe('withTiming snapshots 📸, test EASING', () => {
     ['steps', Easing.steps, [1.5, true]],
     ['steps', Easing.steps, [1.5, false]],
   ] as const)('Easing.${0}(${2})', async ([easingName, easing, argumentSet]) => {
-    const snapshotName = `${easingName}_${argumentSet.join('_').replace(/\./g, '$').replace(/-/g, '$')}`;
+    const snapshotName = `${easingName}_${argumentSet
+      .join('_')
+      .replace(/\./g, '$')
+      .replace(/-/g, '$')}` as keyof typeof EasingSnapshots;
 
     const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(
       // @ts-ignore This error is because various easing functions accept different number of arguments
       easing(...argumentSet),
+      snapshotName,
     );
-    expect(activeUpdates).toMatchSnapshots(EasingSnapshots[snapshotName as keyof typeof EasingSnapshots]);
+    expect(activeUpdates).toMatchSnapshots(EasingSnapshots[snapshotName]);
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
 
     if (easing !== Easing.steps) {
       // passiveUpdates of steps don't record duplicated frames, so we execute this test only for constant motion, not for the quantified one
-      expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[snapshotName as keyof typeof EasingSnapshots]);
+      expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[snapshotName]);
     }
   });
 
@@ -159,14 +167,14 @@ describe('withTiming snapshots 📸, test EASING', () => {
     ['linear', Easing.linear],
     ['quad', Easing.quad],
     ['sin', Easing.sin],
-  ] as const)('Easing.%p', async ([easingName, easing]) => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing);
+  ] as const)('Easing.${0}', async ([easingName, easing]) => {
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing, easingName);
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);
   });
   test('Easing.exp', async () => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(Easing.exp);
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(Easing.exp, 'exp');
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots.exp);
     // TODO Investigate why easing.exp works different than other easings
     expect(passiveUpdates).toMatchSnapshots([{ width: 0 }, ...EasingSnapshots.exp]);
@@ -178,7 +186,10 @@ describe('withTiming snapshots 📸, test EASING', () => {
     ['out', Easing.out],
     ['inOut', Easing.inOut],
   ] as const)('Easing.${0}(Easing.elastic(10))', async ([easingName, easing]) => {
-    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(easing(Easing.elastic(10)));
+    const [activeUpdates, activeNativeUpdates, passiveUpdates] = await getSnapshotUpdates(
+      easing(Easing.elastic(10)),
+      easingName,
+    );
     expect(activeUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
     expect(passiveUpdates).toMatchSnapshots(EasingSnapshots[easingName]);
     expect(activeUpdates).toMatchNativeSnapshots(activeNativeUpdates, true);

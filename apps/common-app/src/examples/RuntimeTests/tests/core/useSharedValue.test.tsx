@@ -185,6 +185,10 @@ describe('Tests of *****sharedValue*****', () => {
           />,
         );
 
+        if (preset.length > 100) {
+          await wait(5000); // operations on big arrays are very slow
+        }
+
         const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
         expect(sharedValue.onJS).toBe(preset, ComparisonMode.ARRAY);
         expect(sharedValue.onUI).toBe(preset, ComparisonMode.ARRAY);

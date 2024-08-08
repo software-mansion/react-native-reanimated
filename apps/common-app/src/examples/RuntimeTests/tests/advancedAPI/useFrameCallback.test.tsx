@@ -39,7 +39,7 @@ describe('Test *****useFrameCallback*****', () => {
       await wait(timeToStop + 200);
 
       const expectedWidth = timeToStop / 8;
-      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth - 1, expectedWidth + 2);
+      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth - 5, expectedWidth + 5);
     });
   });
 

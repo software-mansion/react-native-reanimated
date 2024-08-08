@@ -21,7 +21,7 @@ import {
   mockAnimationTimer,
   clearRenderOutput,
 } from '../../../ReJest/RuntimeTestsApi';
-import type { SingleViewSnapshot } from '../../../ReJest/matchers/snapshotMatchers';
+import type { SingleViewSnapshot } from '../../../ReJest/TestRunner/UpdatesContainer';
 
 enum TestAnimation {
   TIMING = 'withTiming',
@@ -128,15 +128,12 @@ async function getSnapshotUpdates(testAnimation: TestAnimation, delay: number) {
   };
 }
 
-function compareActiveAndPassiveSnapshots(
-  msg: string,
-  {
-    active,
-    activeNative,
-    passive,
-    passiveNative,
-  }: Record<'active' | 'activeNative' | 'passive' | 'passiveNative', SingleViewSnapshot>,
-) {
+function compareActiveAndPassiveSnapshots({
+  active,
+  activeNative,
+  passive,
+  passiveNative,
+}: Record<'active' | 'activeNative' | 'passive' | 'passiveNative', SingleViewSnapshot>) {
   // animation from useAnimatedStyle does not record static frames in snapshot
   const fillerSize = active.length - passive.length;
   const filler = Array.from({ length: fillerSize }, () => {
@@ -162,14 +159,8 @@ for (const { testAnimation, delay } of testCases) {
     test('Components animated with `withDelay` of have same snapshot but moved in time', async () => {
       const { delaySnapshots, noDelaySnapshots } = await getSnapshotUpdates(testAnimation, delay);
 
-      compareActiveAndPassiveSnapshots(
-        'Components animated _without_ withDelay in two different ways have matching snapshots',
-        noDelaySnapshots,
-      );
-      compareActiveAndPassiveSnapshots(
-        'Components animated _with_ withDelay in two different ways have matching snapshots',
-        delaySnapshots,
-      );
+      compareActiveAndPassiveSnapshots(noDelaySnapshots);
+      compareActiveAndPassiveSnapshots(delaySnapshots);
       // Create snapshot of static animation consisting of frame {width: 100} repeated multiple times
       const fillerSize = delaySnapshots.active.length - noDelaySnapshots.active.length;
       const filler = Array.from({ length: fillerSize }, () => {
