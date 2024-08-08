@@ -2,7 +2,6 @@
 
 #include "AndroidUIScheduler.h"
 #include "LayoutAnimations.h"
-#include "Logger.h"
 #include "NativeProxy.h"
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {

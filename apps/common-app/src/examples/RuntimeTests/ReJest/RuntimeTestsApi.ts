@@ -14,15 +14,10 @@ const valueRegistry = testRunner.getValueRegistry();
 
 type DescribeFunction = (name: string, buildSuite: BuildFunction) => void;
 type TestFunction = (name: string, buildTest: BuildFunction) => void;
-type TestFunctionWithWarning = (name: string, warningMessage: string, buildTest: BuildFunction) => void;
 type TestEachFunction = <T>(
   examples: Array<T>,
 ) => (name: string, testCase: (example: T, index: number) => void | Promise<void>) => void;
-type TestEachFunctionWithWarning = <T>(
-  examples: Array<T>,
-) => (name: string, expectedWarning: string, testCase: (example: T, index: number) => void | Promise<void>) => void;
 type DecoratedTestFunction = TestFunction & { each: TestEachFunction };
-type DecoratedTestFunctionWithWarning = TestFunctionWithWarning & { each: TestEachFunctionWithWarning };
 
 const describeBasic = (name: string, buildSuite: BuildFunction) => {
   testRunner.describe(name, buildSuite, null);
@@ -54,32 +49,12 @@ const testOnly: DecoratedTestFunction = (name: string, testCase: BuildFunction) 
 testOnly.each = <T>(examples: Array<T>) => {
   return testRunner.testEach(examples, TestDecorator.ONLY);
 };
-const testFailing: DecoratedTestFunctionWithWarning = (
-  name: string,
-  expectedWarning: string,
-  testCase: BuildFunction,
-) => {
-  testRunner.test(name, testCase, TestDecorator.FAILING, expectedWarning);
-};
-testFailing.each = <T>(examples: Array<T>) => {
-  return testRunner.testEachErrorMsg(examples, TestDecorator.FAILING);
-};
-const testWarn: DecoratedTestFunctionWithWarning = (name: string, expectedWarning: string, testCase: BuildFunction) => {
-  testRunner.test(name, testCase, TestDecorator.WARN, expectedWarning);
-};
-testWarn.each = <T>(examples: Array<T>) => {
-  return testRunner.testEachErrorMsg(examples, TestDecorator.WARN);
-};
 
-type TestType = DecoratedTestFunction &
-  Record<TestDecorator.SKIP | TestDecorator.ONLY, DecoratedTestFunction> &
-  Record<TestDecorator.FAILING | TestDecorator.WARN, DecoratedTestFunctionWithWarning>;
+type TestType = DecoratedTestFunction & Record<TestDecorator.SKIP | TestDecorator.ONLY, DecoratedTestFunction>;
 
 export const test = <TestType>testBasic;
 test.skip = testSkip;
 test.only = testOnly;
-test.failing = testFailing;
-test.warn = testWarn;
 
 export function beforeAll(job: () => void) {
   testRunner.beforeAll(job);

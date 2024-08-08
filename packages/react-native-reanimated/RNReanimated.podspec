@@ -88,9 +88,6 @@ Pod::Spec.new do |s|
     ss.source_files = [
       "Common/cpp/worklets/**/*.{cpp,h}",
     ]
-    ss.preserve_paths = [
-      "Common/cpp/worklets/hidden_headers/**"
-    ]
   end
 
   gcc_debug_definitions = "$(inherited)"

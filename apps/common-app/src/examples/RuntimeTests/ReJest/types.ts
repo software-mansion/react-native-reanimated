@@ -32,8 +32,6 @@ export enum DescribeDecorator {
 export enum TestDecorator {
   ONLY = 'only',
   SKIP = 'skip',
-  FAILING = 'failing',
-  WARN = 'warn',
 }
 
 export type BuildFunction = () => void | Promise<void>;
@@ -45,13 +43,8 @@ export type TestCase = {
   callsRegistry: Record<string, CallTracker>;
   errors: string[];
   skip?: boolean;
-} & (
-  | {
-      decorator: TestDecorator.WARN | TestDecorator.FAILING;
-      warningMessage: string;
-    }
-  | { decorator: Exclude<TestDecorator, TestDecorator.WARN | TestDecorator.FAILING> | null }
-);
+  decorator?: TestDecorator | null;
+};
 
 export type TestSuite = {
   name: string;

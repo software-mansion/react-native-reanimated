@@ -311,7 +311,7 @@ enum Platform {
 
 declare global {
   interface Navigator {
-    userAgent?: string;
-    vendor?: string;
+    userAgent: string;
+    vendor: string;
   }
 }

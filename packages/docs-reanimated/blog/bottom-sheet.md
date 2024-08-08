@@ -5,6 +5,8 @@ title: Bottom Sheet
 
 Bottom sheets are surfaces containing supplementary content, anchored to the bottom of the screen. They can provide users with quick access to contextual information, actions, or settings without interrupting their current workflow.
 
+Looking for a ready-to-use solution? We recommend [@gorhom/bottom-sheet](https://www.npmjs.com/package/@gorhom/bottom-sheet).
+
 import BottomSheet from '@site/static/examples/BottomSheet';
 import BottomSheetSrc from '!!raw-loader!@site/static/examples/BottomSheet';
 import CollapsibleCode from '@site/src/components/CollapsibleCode';

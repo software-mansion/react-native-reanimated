@@ -24,7 +24,6 @@
 #include "CollectionUtils.h"
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
-#include "ReanimatedHiddenHeaders.h"
 #include "Shareables.h"
 #include "UIRuntimeDecorator.h"
 #include "WorkletEventHandler.h"

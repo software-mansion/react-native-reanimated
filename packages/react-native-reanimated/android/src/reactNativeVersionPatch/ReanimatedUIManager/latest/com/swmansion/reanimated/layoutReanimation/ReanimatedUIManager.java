@@ -126,22 +126,6 @@ public class ReanimatedUIManager extends UIManagerModule {
   }
 
   /**
-   * Like {@link #measure} and {@link #measureLayout} but measures relative to the immediate parent.
-   *
-   * <p>NB: Unlike {@link #measure}, this will measure relative to the view layout, not the visible
-   * window which can cause unexpected results when measuring relative to things like ScrollViews
-   * that can have offset content on the screen.
-   *
-   * @deprecated this method will not be available in FabricUIManager class.
-   */
-  @ReactMethod
-  @Deprecated
-  public void measureLayoutRelativeToParent(
-      int tag, Callback errorCallback, Callback successCallback) {
-    super.measureLayoutRelativeToParent(tag, errorCallback, successCallback);
-  }
-
-  /**
    * Find the touch target child native view in the supplied root view hierarchy, given a react
    * target location.
    *
@@ -184,26 +168,6 @@ public class ReanimatedUIManager extends UIManagerModule {
   public void dispatchViewManagerCommand(
       int reactTag, Dynamic commandId, @Nullable ReadableArray commandArgs) {
     super.dispatchViewManagerCommand(reactTag, commandId, commandArgs);
-  }
-
-  /**
-   * Show a PopupMenu.
-   *
-   * @param reactTag the tag of the anchor view (the PopupMenu is displayed next to this view); this
-   *     needs to be the tag of a native view (shadow views can not be anchors)
-   * @param items the menu items as an array of strings
-   * @param error will be called if there is an error displaying the menu
-   * @param success will be called with the position of the selected item as the first argument, or
-   *     no arguments if the menu is dismissed
-   */
-  @ReactMethod
-  public void showPopupMenu(int reactTag, ReadableArray items, Callback error, Callback success) {
-    super.showPopupMenu(reactTag, items, error, success);
-  }
-
-  @ReactMethod
-  public void dismissPopupMenu() {
-    super.dismissPopupMenu();
   }
 
   /**

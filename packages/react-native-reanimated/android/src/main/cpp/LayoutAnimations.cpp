@@ -1,7 +1,6 @@
 #include "LayoutAnimations.h"
 #include <vector>
 #include "FeaturesConfig.h"
-#include "Logger.h"
 
 namespace reanimated {
 
