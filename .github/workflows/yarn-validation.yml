@@ -1,12 +1,12 @@
-name: Validate yarn
+name: Yarn validation
 env:
   YARN_ENABLE_HARDENED_MODE: 1
 on:
   pull_request:
     paths:
-      - ".github/workflows/validate-yarn.yml"
-      - "**/package.json"
-      - "**/yarn.lock"
+      - '.github/workflows/validate-yarn.yml'
+      - '**/package.json'
+      - '**/yarn.lock'
   merge_group:
     branches:
       - main
@@ -14,9 +14,9 @@ on:
     branches:
       - main
     paths:
-      - ".github/workflows/validate-yarn.yml"
-      - "**/package.json"
-      - "**/yarn.lock"
+      - '.github/workflows/validate-yarn.yml'
+      - '**/package.json'
+      - '**/yarn.lock'
 
 jobs:
   check:

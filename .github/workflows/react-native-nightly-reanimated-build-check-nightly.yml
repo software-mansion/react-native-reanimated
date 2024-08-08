@@ -1,4 +1,4 @@
-name: Check React Native nightly build
+name: React Native nightly Reanimated build check [Nightly]
 on:
   pull_request:
     paths:
@@ -19,9 +19,9 @@ jobs:
       group: ios-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      # Sometimes `npx react-native init` fails due to dependency mismatches or other
-      # rather vague errors. This is a workaround for that.
       - name: Setup Yarn
+        # Sometimes `npx react-native init` fails due to dependency mismatches or other
+        # rather vague errors. This is a workaround for that.
         run: corepack enable && yarn init
       - name: Create app
         run: |
@@ -64,9 +64,9 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '18'
-      # Sometimes `npx react-native init` fails due to dependency mismatches or other
-      # rather vague errors. This is a workaround for that.
       - name: Setup Yarn
+        # Sometimes `npx react-native init` fails due to dependency mismatches or other
+        # rather vague errors. This is a workaround for that.
         run: corepack enable && yarn init
       - name: Create app
         run: |

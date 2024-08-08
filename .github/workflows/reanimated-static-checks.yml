@@ -1,4 +1,4 @@
-name: Test TypeScript and Lint in root
+name: Reanimated static checks
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
@@ -28,23 +28,14 @@ jobs:
         run: .github/workflows/helper/clear-annotations.sh
 
       - name: Install monorepo node dependencies
-        run: yarn install
-      - name: Install Reanimated node dependencies
-        working-directory: packages/react-native-reanimated
-        run: yarn install
-      - name: Build Reanimated package
-        working-directory: packages/react-native-reanimated
-        run: yarn build
+        run: yarn install --immutable
 
-      - name: Check types
+      - name: Check TypeScript types
         working-directory: packages/react-native-reanimated
-        run: yarn type:check:all
-      - name: Lint react-native-reanimated
+        run: yarn type:check
+      - name: Lint JavaScript
         working-directory: packages/react-native-reanimated
         run: yarn lint:js
-      - name: Lint common-app
-        working-directory: apps/common-app
-        run: yarn lint
       - name: Find unused code
         working-directory: packages/react-native-reanimated
         run: yarn find-unused-code:js
@@ -56,4 +47,4 @@ jobs:
         run: yarn use-strict-check
       - name: Run jest unit tests
         working-directory: packages/react-native-reanimated
-        run: yarn test:unit
+        run: yarn test

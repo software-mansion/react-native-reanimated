@@ -1,4 +1,4 @@
-name: Check Expo dev-client nightly build
+name: Expo DevClient build check [Nightly]
 env:
   YARN_ENABLE_HARDENED_MODE: 0
   SCRIPT_PATH: ${{github.workspace}}/reanimated_repo/.github/workflows/helper/configureDevClient.js

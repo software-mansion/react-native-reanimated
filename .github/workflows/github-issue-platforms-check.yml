@@ -1,4 +1,4 @@
-name: Check for platforms
+name: Github issue platforms check
 on:
   issues:
     types: [opened, edited]
@@ -14,12 +14,12 @@ jobs:
       - name: Checkout Actions
         uses: actions/checkout@v4
         with:
-          repository: "software-mansion-labs/swmansion-bot"
+          repository: 'software-mansion-labs/swmansion-bot'
           ref: stable
 
       - uses: actions/cache@v3
         with:
-          path: "**/node_modules"
+          path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install Actions
