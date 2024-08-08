@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Animated, {
   useHandler,
   useEvent,
@@ -6,11 +6,13 @@ import Animated, {
   useAnimatedProps,
   type ScrollEvent,
 } from 'react-native-reanimated';
+import { useColorScheme } from '@mui/material';
 import { TextInput, SafeAreaView, View, StyleSheet } from 'react-native';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 function UseHandlerExample() {
+  const { colorScheme } = useColorScheme();
   const offsetY = useSharedValue(0);
 
   const handlers = {
@@ -43,6 +45,9 @@ function UseHandlerExample() {
 
   const BRAND_COLORS = ['#fa7f7c', '#b58df1', '#ffe780', '#82cab2', '#87cce8'];
 
+  const textColor =
+    colorScheme === 'light' ? styles.darkText : styles.lightText;
+
   const content = BRAND_COLORS.map((color, index) => (
     <View
       key={index}
@@ -60,7 +65,7 @@ function UseHandlerExample() {
       <AnimatedTextInput
         animatedProps={animatedProps}
         editable={false}
-        style={styles.header}
+        style={[styles.header, textColor]}
       />
       <Animated.ScrollView onScroll={scrollHandler}>
         <View style={styles.container}>{content}</View>
@@ -77,12 +82,10 @@ const styles = StyleSheet.create({
     height: 350,
   },
   header: {
-    backgroundColor: '#f8f9ff',
     paddingVertical: 16,
     paddingHorizontal: 32,
     textAlign: 'center',
     fontFamily: 'Aeonik',
-    color: '#001a72',
     marginTop: '-1px',
   },
   section: {
@@ -90,5 +93,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginVertical: 10,
     marginHorizontal: 20,
+  },
+  lightText: {
+    color: 'var(--swm-off-white) !important',
+  },
+  darkText: {
+    color: 'var(--swm-navy-light-100)',
   },
 });
