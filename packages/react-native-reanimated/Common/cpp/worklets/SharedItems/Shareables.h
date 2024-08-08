@@ -116,6 +116,18 @@ class RetainingShareable : virtual public BaseClass {
   }
 };
 
+#if defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
+#define SUPPORTS_NATIVE_STATE 1
+#else
+#define SUPPORTS_NATIVE_STATE 0
+#endif
+
+#if SUPPORTS_NATIVE_STATE
+// nothing
+#else
+#error "[Reanimated] Native state is not supported in this version of React Native."
+#endif // SUPPORTS_NATIVE_STATE
+
 class ShareableNativeState : public jsi::NativeState {
  private:
   const std::shared_ptr<Shareable> shareable_;
@@ -178,12 +190,6 @@ class ShareableArray : public Shareable {
 class ShareableObject : public Shareable {
  public:
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
-
-#if defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
-#define SUPPORTS_NATIVE_STATE 1
-#else
-#define SUPPORTS_NATIVE_STATE 0
-#endif
 
 #if SUPPORTS_NATIVE_STATE
   ShareableObject(
