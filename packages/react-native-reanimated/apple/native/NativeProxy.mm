@@ -48,11 +48,10 @@ using namespace react;
 static inline bool getIsReducedMotion()
 {
 #if __has_include(<UIKit/UIAccessibility.h>)
-  auto isReducedMotion = UIAccessibilityIsReduceMotionEnabled();
+  return UIAccessibilityIsReduceMotionEnabled();
 #else
-  auto isReducedMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-#endif
-  return isReducedMotion;
+  return NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
+#endif // __has_include(<UIKit/UIAccessibility.h>)
 }
 
 std::shared_ptr<NativeReanimatedModule> createReanimatedModule(

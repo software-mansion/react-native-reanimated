@@ -6,7 +6,7 @@ using namespace facebook;
 
 namespace reanimated {
 
-class REAWorkletRuntimeDecorator {
+class ReanimatedWorkletRuntimeDecorator {
  public:
   static void decorate(jsi::Runtime &rt);
 };

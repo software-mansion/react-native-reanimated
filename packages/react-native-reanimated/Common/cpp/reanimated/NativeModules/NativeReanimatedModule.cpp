@@ -24,7 +24,7 @@
 #include "CollectionUtils.h"
 #include "EventHandlerRegistry.h"
 #include "FeaturesConfig.h"
-#include "REAWorkletRuntimeDecorator.h"
+#include "ReanimatedWorkletRuntimeDecorator.h"
 #include "Shareables.h"
 #include "UIRuntimeDecorator.h"
 #include "WorkletEventHandler.h"
@@ -231,7 +231,7 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Reanimated] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
-  REAWorkletRuntimeDecorator::decorate(workletRuntime->getJSIRuntime());
+  ReanimatedWorkletRuntimeDecorator::decorate(workletRuntime->getJSIRuntime());
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
