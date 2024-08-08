@@ -1,4 +1,4 @@
-package com.swmansion.reanimated;
+package com.swmansion.worklets;
 
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.queue.MessageQueueThread;
@@ -46,8 +46,9 @@ public abstract class ReanimatedMessageQueueThreadBase implements MessageQueueTh
     messageQueueThread.assertIsOnThread(s);
   }
 
-  // We don't want to quit the main looper (which is what MessageQueueThreadImpl would have done),
-  // but we still want to prevent anything else from executing.
+  // We don't want to quit the main looper (which is what MessageQueueThreadImpl
+  // would have done), but we still want to prevent anything else from
+  // executing.
   @Override
   public void quitSynchronous() {
     try {

@@ -11,13 +11,14 @@ import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
+import com.swmansion.worklets.WorkletsModule;
 import java.util.ArrayList;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec
     implements LifecycleEventListener, UIManagerModuleListener, UIManagerListener {
-  public static final String NAME = "ReanimatedModule";
 
   public void didDispatchMountItems(@NonNull UIManager uiManager) {
     // Keep: Required for UIManagerListener
@@ -60,10 +61,18 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   }
 
   private ArrayList<UIThreadOperation> mOperations = new ArrayList<>();
+
   private @Nullable NodesManager mNodesManager;
+
+  private final WorkletsModule mWorkletsModule;
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
+    mWorkletsModule = reactContext.getNativeModule(WorkletsModule.class);
+  }
+
+  public WorkletsModule getWorkletsModule() {
+    return mWorkletsModule;
   }
 
   @Override
@@ -79,6 +88,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
       }
     } else {
       UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
+      assert uiManager != null;
       uiManager.addUIManagerListener(this);
     }
     reactCtx.addLifecycleEventListener(this);
@@ -121,28 +131,25 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
         });
   }
 
-  @Override
-  public String getName() {
-    return NAME;
-  }
-
   /*package*/
   public NodesManager getNodesManager() {
     if (mNodesManager == null) {
-      mNodesManager = new NodesManager(getReactApplicationContext());
+      mNodesManager = new NodesManager(getReactApplicationContext(), mWorkletsModule);
     }
 
     return mNodesManager;
   }
 
   @ReactMethod(isBlockingSynchronousMethod = true)
-  public boolean installTurboModule(String valueUnpackerCode) {
+  public boolean installTurboModule() {
     // When debugging in chrome the JS context is not available.
     // https://github.com/facebook/react-native/blob/v0.67.0-rc.6/ReactAndroid/src/main/java/com/facebook/react/modules/blob/BlobCollector.java#L25
-    Utils.isChromeDebugger = getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
+    Utils.isChromeDebugger =
+        Objects.requireNonNull(getReactApplicationContext().getJavaScriptContextHolder()).get()
+            == 0;
 
     if (!Utils.isChromeDebugger) {
-      this.getNodesManager().initWithContext(getReactApplicationContext(), valueUnpackerCode);
+      this.getNodesManager().initWithContext(getReactApplicationContext());
       return true;
     } else {
       Log.w(
@@ -153,12 +160,12 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   }
 
   @ReactMethod
-  public void addListener(String eventName) {
+  public void addListener(String ignoredEventName) {
     // Keep: Required for RN built in Event Emitter Calls.
   }
 
   @ReactMethod
-  public void removeListeners(Integer count) {
+  public void removeListeners(Integer ignoredCount) {
     // Keep: Required for RN built in Event Emitter Calls.
   }
 

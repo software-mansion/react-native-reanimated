@@ -22,8 +22,8 @@ import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.ViewManager;
-import com.swmansion.reanimated.AndroidUIScheduler;
 import com.swmansion.reanimated.Utils;
+import com.swmansion.worklets.AndroidUIScheduler;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,15 +37,15 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private UIManager mUIManager;
   private NativeMethodsHolder mNativeMethodsHolder;
 
-  private HashSet<Integer> mEnteringViews = new HashSet<>();
-  private HashMap<Integer, Rect> mEnteringViewTargetValues = new HashMap<>();
+  private final HashSet<Integer> mEnteringViews = new HashSet<>();
+  private final HashMap<Integer, Rect> mEnteringViewTargetValues = new HashMap<>();
   private HashMap<Integer, View> mExitingViews = new HashMap<>();
   private HashMap<Integer, Integer> mExitingSubviewCountMap = new HashMap<>();
   private HashSet<Integer> mAncestorsToRemove = new HashSet<>();
   private HashMap<Integer, Runnable> mCallbacks = new HashMap<>();
   private ReanimatedNativeHierarchyManager mReanimatedNativeHierarchyManager;
   private boolean isInvalidated;
-  private SharedTransitionManager mSharedTransitionManager;
+  private final SharedTransitionManager mSharedTransitionManager;
 
   public void setReanimatedNativeHierarchyManager(
       ReanimatedNativeHierarchyManager reanimatedNativeHierarchyManager) {
@@ -147,8 +147,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
     HashMap<String, Object> startValues = before.toCurrentMap();
     HashMap<String, Object> targetValues = after.toTargetMap();
 
-    // If startValues are equal to targetValues it means that there was no UI Operation changing
-    // layout of the View. So dirtiness of that View is false positive
+    // If startValues are equal to targetValues it means that there was no UI
+    // Operation changing layout of the View. So dirtiness of that View is false
+    // positive
     boolean doNotStartLayout = true;
     for (int i = 0; i < Snapshot.targetKeysToTransform.size(); ++i) {
       double startV =
@@ -215,8 +216,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
 
-    ViewManager viewManager = resolveViewManager(tag);
-    ViewManager parentViewManager = resolveViewManager(parent.getId());
+    var viewManager = resolveViewManager(tag);
+    var parentViewManager = resolveViewManager(parent.getId());
 
     if (viewManager == null) {
       return;
@@ -253,6 +254,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mSharedTransitionManager.finishSharedAnimation(tag);
   }
 
+  /**
+   * @noinspection unused
+   */
   public void printSubTree(View view, int level) {
     if (level == 0) {
       Log.v("rea", "----------------------");
@@ -350,10 +354,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     if (props.containsKey(Snapshot.TRANSFORM_MATRIX)) {
       float[] matrixValues = new float[9];
-      if (props.get(Snapshot.TRANSFORM_MATRIX) instanceof ReadableNativeArray) {
+      if (props.get(Snapshot.TRANSFORM_MATRIX) instanceof ReadableNativeArray matrixArray) {
         // this array comes from JavaScript
-        ReadableNativeArray matrixArray =
-            (ReadableNativeArray) props.get(Snapshot.TRANSFORM_MATRIX);
         for (int i = 0; i < 9; i++) {
           matrixValues[i] = ((Double) matrixArray.getDouble(i)).floatValue();
         }
@@ -366,8 +368,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       }
       view.setScaleX(matrixValues[0]);
       view.setScaleY(matrixValues[4]);
-      // as far, let's support only scale and translation. Rotation maybe the future feature
-      // http://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
+      // as far, let's support only scale and translation. Rotation maybe the
+      // future feature http://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
 
       props.remove(Snapshot.TRANSFORM_MATRIX);
     }
@@ -424,46 +426,43 @@ public class AnimationsManager implements ViewHierarchyObserver {
       float widthf,
       float heightf,
       boolean isPositionAbsolute) {
-
     int x = Math.round(PixelUtil.toPixelFromDIP(xf));
     int y = Math.round(PixelUtil.toPixelFromDIP(yf));
     int width = Math.round(PixelUtil.toPixelFromDIP(widthf));
     int height = Math.round(PixelUtil.toPixelFromDIP(heightf));
-    // Even though we have exact dimensions, we still call measure because some platform views
-    // (e.g.
-    // Switch) assume that method will always be called before onLayout and onDraw. They use it to
-    // calculate and cache information used in the draw pass. For most views, onMeasure can be
-    // stubbed out to only call setMeasuredDimensions. For ViewGroups, onLayout should be stubbed
-    // out to not recursively call layout on its children: React Native already handles doing
-    // that.
+    // Even though we have exact dimensions, we still call measure because some
+    // platform views (e.g. Switch) assume that method will always be called
+    // before onLayout and onDraw. They use it to calculate and cache
+    // information used in the draw pass. For most views, onMeasure can be
+    // stubbed out to only call setMeasuredDimensions. For ViewGroups, onLayout
+    // should be stubbed out to not recursively call layout on its children:
+    // React Native already handles doing that.
     //
-    // Also, note measure and layout need to be called *after* all View properties have been
-    // updated
-    // because of caching and calculation that may occur in onMeasure and onLayout. Layout
-    // operations should also follow the native view hierarchy and go top to bottom for
-    // consistency
-    // with standard layout passes (some views may depend on this).
+    // Also, note measure and layout need to be called *after* all View
+    // properties have been updated because of caching and calculation that may
+    // occur in onMeasure and onLayout. Layout operations should also follow the
+    // native view hierarchy and go top to bottom for consistency with standard
+    // layout passes (some views may depend on this).
 
     viewToUpdate.measure(
         View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
         View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY));
 
-    // We update the layout of the ReactRootView when there is a change in the layout of its
-    // child.
-    // This is required to re-measure the size of the native View container (usually a
-    // FrameLayout) that is configured with layout_height = WRAP_CONTENT or layout_width =
-    // WRAP_CONTENT
+    // We update the layout of the ReactRootView when there is a change in the
+    // layout of its child. This is required to re-measure the size of the
+    // native View container (usually a FrameLayout) that is configured with
+    // layout_height = WRAP_CONTENT or layout_width = WRAP_CONTENT
     //
-    // This code is going to be executed ONLY when there is a change in the size of the Root
-    // View defined in the js side. Changes in the layout of inner views will not trigger an
-    // update
-    // on the layout of the Root View.
+    // This code is going to be executed ONLY when there is a change in the size
+    // of the Root View defined in the js side. Changes in the layout of inner
+    // views will not trigger an update on the layout of the Root View.
     ViewParent parent = viewToUpdate.getParent();
     if (parent instanceof RootView) {
       parent.requestLayout();
     }
 
-    // Check if the parent of the view has to layout the view, or the child has to lay itself out.
+    // Check if the parent of the view has to layout the view, or the child has
+    // to lay itself out.
     if (parentTag % 10 == 1 && parentViewManager != null) { // parentTag % 10 == 1 - ParentIsARoot
       IViewManagerWithChildren parentViewManagerWithChildren;
       if (parentViewManager instanceof IViewManagerWithChildren) {
@@ -504,14 +503,15 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private boolean removeOrAnimateExitRecursive(
       View view, boolean shouldRemove, boolean shouldAnimate) {
     int tag = view.getId();
-    ViewManager viewManager = resolveViewManager(tag);
+    var viewManager = resolveViewManager(tag);
 
     if (viewManager != null) {
       String viewManagerName = viewManager.getName();
       if (viewManagerName.equals("RCTModalHostView")
           || viewManagerName.equals("RNSScreen")
           || viewManagerName.equals("RNSScreenStack")) {
-        // don't run exiting animation when ScreenStack, Screen, or Modal are removing
+        // don't run exiting animation when ScreenStack, Screen, or Modal are
+        // removing
         cancelAnimationsRecursive(view);
         return false;
       }
@@ -536,8 +536,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     // we might want to keep this view around
     // because one of the (children's) children
     // has an exiting animation
-    if (view instanceof ViewGroup) {
-      ViewGroup viewGroup = (ViewGroup) view;
+    if (view instanceof ViewGroup viewGroup) {
       for (int i = viewGroup.getChildCount() - 1; i >= 0; i--) {
         View child = viewGroup.getChildAt(i);
         if (removeOrAnimateExitRecursive(child, shouldRemove, shouldAnimate)) {
@@ -569,9 +568,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
     if (hasAnimatedChildren) {
       if (tag == -1) {
-        // View tags are used to identify react views, therefore native-only views
-        // don't have any view tag and view.getId returns -1
-        // We shouldn't manage lifetime of non-react components.
+        // View tags are used to identify react views, therefore native-only
+        // views don't have any view tag and view.getId returns -1 We shouldn't
+        // manage lifetime of non-react components.
         cancelAnimationsRecursive(view);
         return false;
       }
@@ -587,8 +586,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   public void clearAnimationConfigRecursive(View view) {
     mNativeMethodsHolder.clearAnimationConfig(view.getId());
-    if (view instanceof ViewGroup) {
-      ViewGroup viewGroup = (ViewGroup) view;
+    if (view instanceof ViewGroup viewGroup) {
       for (int i = 0; i < viewGroup.getChildCount(); i++) {
         clearAnimationConfigRecursive(viewGroup.getChildAt(i));
       }
@@ -613,10 +611,9 @@ public class AnimationsManager implements ViewHierarchyObserver {
   }
 
   private void maybeDropAncestors(View exitingView) {
-    if (!(exitingView.getParent() instanceof View)) {
+    if (!(exitingView.getParent() instanceof View parent)) {
       return;
     }
-    View parent = (View) exitingView.getParent();
     while (parent != null && !(parent instanceof RootView)) {
       View view = parent;
       parent = (View) view.getParent();
@@ -649,8 +646,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       mReanimatedNativeHierarchyManager.publicDropView(view);
     }
 
-    // this removal might be redundant, however we decided to keep it for now to avoid introducing
-    // breaking changes
+    // this removal might be redundant, however we decided to keep it for now to
+    // avoid introducing breaking changes
     if (parent != null && parent.indexOfChild(view) != -1) {
       parent.removeView(view);
     }

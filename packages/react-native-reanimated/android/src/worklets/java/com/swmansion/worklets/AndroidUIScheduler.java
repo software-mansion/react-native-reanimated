@@ -1,28 +1,32 @@
-package com.swmansion.reanimated;
+package com.swmansion.worklets;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.GuardedRunnable;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
+import com.facebook.soloader.SoLoader;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * @noinspection JavaJniMissingFunction
+ */
 public class AndroidUIScheduler {
-
   @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
+
+  static {
+    SoLoader.loadLibrary("worklets");
+  }
 
   private final ReactApplicationContext mContext;
   private final AtomicBoolean mActive = new AtomicBoolean(true);
 
   private final Runnable mUIThreadRunnable =
-      new Runnable() {
-        @Override
-        public void run() {
-          if (mActive.get()) {
-            triggerUI();
-          }
+      () -> {
+        if (mActive.get()) {
+          triggerUI();
         }
       };
 

@@ -8,7 +8,6 @@ add_library(
     SHARED
     ${REANIMATED_COMMON_SOURCES}
     ${SOURCES_ANDROID}
-    "${ANDROID_SRC_DIR}/main/cpp/PlatformLogger.cpp"
 )
 
 target_include_directories(
@@ -31,8 +30,17 @@ target_include_directories(
 target_include_directories(
     reanimated
     PRIVATE
+    "${WORKLETS_COMMON_DIR}/CommonModules"
+
+    # "${WORKLETS_ANDROID_DIR}" # is it needed?
+)
+
+target_include_directories(
+    reanimated
+    PRIVATE
     "${REACT_NATIVE_DIR}/ReactCommon"
     "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
+    "${REACT_NATIVE_DIR}/ReactCommon/react/nativemodule/core/ReactCommon"
     "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
     "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
 )

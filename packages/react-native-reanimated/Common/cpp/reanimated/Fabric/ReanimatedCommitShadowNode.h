@@ -10,9 +10,10 @@ namespace reanimated {
 // the commit hook.
 // Currently RN traits go up to 10, so hopefully
 // the arbitrarily chosen number 27 will be safe :)
-constexpr ShadowNodeTraits::Trait ReanimatedCommitTrait{1 << 27};
+constexpr facebook::react::ShadowNodeTraits::Trait ReanimatedCommitTrait{
+    1 << 27};
 
-class ReanimatedCommitShadowNode : public ShadowNode {
+class ReanimatedCommitShadowNode : public facebook::react::ShadowNode {
  public:
   inline void setReanimatedCommitTrait() {
     traits_.set(ReanimatedCommitTrait);
