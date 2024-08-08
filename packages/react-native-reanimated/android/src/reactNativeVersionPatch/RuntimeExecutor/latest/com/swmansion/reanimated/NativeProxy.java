@@ -35,7 +35,7 @@ public class NativeProxy extends NativeProxyCommon {
     ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
 
     if (context.isBridgeless()) {
-      RuntimeExecutor runtimeExecutor = context.getRuntimeExecutor();
+      RuntimeExecutor runtimeExecutor = context.getCatalystInstance().getRuntimeExecutor();
       mHybridData =
           initHybridBridgeless(
               Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
