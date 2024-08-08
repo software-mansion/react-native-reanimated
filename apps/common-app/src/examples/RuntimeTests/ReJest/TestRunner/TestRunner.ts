@@ -6,12 +6,6 @@ import { TestComponent } from '../TestComponent';
 import { applyMarkdown, formatTestName } from '../utils/stringFormatUtils';
 import { Matchers } from '../matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
-import type {
-  LayoutAnimation,
-  LayoutAnimationStartFunction,
-  LayoutAnimationType,
-  SharedTransitionAnimationsValues,
-} from 'react-native-reanimated';
 import { makeMutable, runOnJS } from 'react-native-reanimated';
 import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
 import { ValueRegistry } from './ValueRegistry';
@@ -40,7 +34,6 @@ export class TestRunner {
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
   private _includesOnly: boolean = false;
-  private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
   private _testSummary: TestSummaryLogger = new TestSummaryLogger();
   private _windowDimensionsMocker: WindowDimensionsMocker = new WindowDimensionsMocker();
@@ -303,46 +296,6 @@ export class TestRunner {
   public afterEach(job: () => void) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterEach = job;
-  }
-
-  public async unmockWindowDimensions() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      if (global.originalLayoutAnimationsManager) {
-        global.LayoutAnimationsManager = global.originalLayoutAnimationsManager;
-      }
-    });
-  }
-
-  public async mockWindowDimensions() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      const originalLayoutAnimationsManager = global.LayoutAnimationsManager;
-
-      const startLayoutAnimation: LayoutAnimationStartFunction = (
-        tag: number,
-        type: LayoutAnimationType,
-        _yogaValues: Partial<SharedTransitionAnimationsValues>,
-        config: (arg: Partial<SharedTransitionAnimationsValues>) => LayoutAnimation,
-      ) => {
-        originalLayoutAnimationsManager.start(
-          tag,
-          type,
-          {
-            ..._yogaValues,
-            windowHeight: 852,
-            windowWidth: 393,
-          },
-          config,
-        );
-      };
-
-      global.originalLayoutAnimationsManager = originalLayoutAnimationsManager;
-      global.LayoutAnimationsManager = {
-        start: startLayoutAnimation,
-        stop: originalLayoutAnimationsManager.stop,
-      };
-    });
   }
 
   public wait(delay: number) {
