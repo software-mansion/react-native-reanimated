@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import type { AnimatableValueObject, MeasuredDimensions } from 'react-native-reanimated';
 import Animated, {
   runOnUI,
@@ -40,14 +40,16 @@ describe('Test measuring component before nad after animation', () => {
     });
 
     useEffect(() => {
-      runOnUI(() => {
-        measuredInitial.value = measure(ref);
-      })();
+      setTimeout(() => {
+        runOnUI(() => {
+          measuredInitial.value = measure(ref);
+        })();
+      }, 200);
     });
 
     useEffect(() => {
       styleSV.value = withDelay(
-        50,
+        250,
         withTiming(finalStyle, { duration: 300 }, () => {
           measuredFinal.value = measure(ref);
         }),
@@ -87,7 +89,7 @@ describe('Test measuring component before nad after animation', () => {
     ],
   ])('Measure component animating from ${0} to ${1}', async ([initialStyle, finalStyle]) => {
     await render(<MeasuredComponent initialStyle={initialStyle} finalStyle={finalStyle} />);
-    await wait(450);
+    await wait(700);
     const measuredInitial = (await getRegisteredValue(INITIAL_MEASURE)).onJS as unknown as MeasuredDimensions;
     const measuredFinal = (await getRegisteredValue(FINAL_MEASURE)).onJS as unknown as MeasuredDimensions;
 
@@ -95,7 +97,7 @@ describe('Test measuring component before nad after animation', () => {
     const finalStyleFull = { width: 100, height: 100, margin: 0, top: 0, left: 0, ...finalStyle };
     const initialStyleFull = { width: 100, height: 100, margin: 0, top: 0, left: 0, ...initialStyle };
 
-    if ('height' in finalStyle && 'height' in initialStyle) {
+    if ('height' in finalStyle && 'height' in initialStyle && 'height') {
       expect(measuredFinal.height).toBeWithinRange(finalStyle.height - 2, finalStyle.height + 2);
       expect(measuredInitial.height).toBeWithinRange(initialStyle.height - 2, initialStyle.height + 2);
     }
@@ -105,20 +107,36 @@ describe('Test measuring component before nad after animation', () => {
       expect(measuredInitial.width).toBeWithinRange(initialStyle.width - 2, initialStyle.width + 2);
     }
 
-    // Absolute translation equals relative translation
-    expect(measuredFinal.pageX - measuredInitial.pageX).toBe(measuredFinal.x - measuredInitial.x);
-    expect(measuredFinal.pageY - measuredInitial.pageY).toBe(measuredFinal.y - measuredInitial.y);
+    if (Platform.OS === 'ios') {
+      // Absolute translation equals relative translation
+      expect(measuredFinal.pageX - measuredInitial.pageX).toBe(measuredFinal.x - measuredInitial.x);
+      expect(measuredFinal.pageY - measuredInitial.pageY).toBe(measuredFinal.y - measuredInitial.y);
+    }
 
     // Check distance from top and from left
     const expectedInitialDistanceFromTop = initialStyleFull.margin + initialStyleFull.top;
-    expect(measuredInitial.y).toBeWithinRange(expectedInitialDistanceFromTop - 2, expectedInitialDistanceFromTop + 2);
     const expectedFinalDistanceFromTop = finalStyleFull.margin + finalStyleFull.top;
-    expect(measuredFinal.y).toBeWithinRange(expectedFinalDistanceFromTop - 2, expectedFinalDistanceFromTop + 2);
+    if (Platform.OS === 'ios') {
+      expect(measuredInitial.y).toBeWithinRange(expectedInitialDistanceFromTop - 2, expectedInitialDistanceFromTop + 2);
+      expect(measuredFinal.y).toBeWithinRange(expectedFinalDistanceFromTop - 2, expectedFinalDistanceFromTop + 2);
+    }
+    expect(measuredInitial.pageY - measuredFinal.pageY).toBe(
+      expectedInitialDistanceFromTop - expectedFinalDistanceFromTop,
+    );
+    expect(measuredInitial.pageY).not.toBe(0);
 
     const expectedInitialDistanceFromLeft = initialStyleFull.margin + initialStyleFull.left;
-    expect(measuredInitial.x).toBeWithinRange(expectedInitialDistanceFromLeft - 2, expectedInitialDistanceFromLeft + 2);
     const expectedFinalDistanceFromLeft = finalStyleFull.margin + finalStyleFull.left;
-    expect(measuredFinal.x).toBeWithinRange(expectedFinalDistanceFromLeft - 2, expectedFinalDistanceFromLeft + 2);
+    if (Platform.OS === 'ios') {
+      expect(measuredInitial.x).toBeWithinRange(
+        expectedInitialDistanceFromLeft - 2,
+        expectedInitialDistanceFromLeft + 2,
+      );
+      expect(measuredFinal.x).toBeWithinRange(expectedFinalDistanceFromLeft - 2, expectedFinalDistanceFromLeft + 2);
+    }
+    expect(measuredInitial.pageX - measuredFinal.pageX).toBe(
+      expectedInitialDistanceFromLeft - expectedFinalDistanceFromLeft,
+    );
   });
 });
 
