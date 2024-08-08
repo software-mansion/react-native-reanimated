@@ -95,9 +95,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
   lightText: {
-    color: 'var(--swm-off-white) !important',
+    color: '#001a72',
   },
   darkText: {
-    color: 'var(--swm-navy-light-100)',
+    color: '#f8f9ff',
   },
 });
