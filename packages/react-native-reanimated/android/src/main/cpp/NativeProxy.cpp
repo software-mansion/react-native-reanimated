@@ -49,7 +49,8 @@ NativeProxy::NativeProxy(
           uiScheduler,
           getPlatformDependentMethods(),
           valueUnpackerCode,
-          /* isBridgeless */ false)),
+          /* isBridgeless */ false,
+          getIsReducedMotion())),
       layoutAnimations_(std::move(layoutAnimations)) {
 #ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
@@ -76,7 +77,8 @@ NativeProxy::NativeProxy(
           uiScheduler,
           getPlatformDependentMethods(),
           valueUnpackerCode,
-          /* isBridgeless */ true)),
+          /* isBridgeless */ true,
+          getIsReducedMotion())),
       layoutAnimations_(std::move(layoutAnimations)) {
   commonInit(fabricUIManager);
 }
@@ -206,9 +208,7 @@ void NativeProxy::injectCppVersion() {
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
   WorkletRuntimeCollector::install(rnRuntime);
-  auto isReducedMotion = getIsReducedMotion();
-  RNRuntimeDecorator::decorate(
-      rnRuntime, nativeReanimatedModule_, isReducedMotion);
+  RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule_);
 #ifndef NDEBUG
   checkJavaVersion(rnRuntime);
   injectCppVersion();
