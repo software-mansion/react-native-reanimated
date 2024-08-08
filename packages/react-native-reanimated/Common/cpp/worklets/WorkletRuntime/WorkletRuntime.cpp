@@ -100,38 +100,20 @@ jsi::Value WorkletRuntime::executeSync(
   return shareableResult->toJSValue(rt);
 }
 
-jsi::Value WorkletRuntime::get(
-    jsi::Runtime &rt,
-    const jsi::PropNameID &propName) {
-  auto name = propName.utf8(rt);
-  if (name == "toString") {
-    return jsi::Function::createFromHostFunction(
-        rt,
-        propName,
-        0,
-        [this](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *, size_t)
-            -> jsi::Value {
-          return jsi::String::createFromUtf8(rt, toString());
-        });
-  }
-  if (name == "name") {
-    return jsi::String::createFromUtf8(rt, name_);
-  }
-  return jsi::Value::undefined();
-}
-
-std::vector<jsi::PropNameID> WorkletRuntime::getPropertyNames(
-    jsi::Runtime &rt) {
-  std::vector<jsi::PropNameID> result;
-  result.push_back(jsi::PropNameID::forUtf8(rt, "toString"));
-  result.push_back(jsi::PropNameID::forUtf8(rt, "name"));
-  return result;
+jsi::Value WorkletRuntime::createValue(jsi::Runtime &rt) {
+  const jsi::Object obj(rt);
+  obj.setProperty(rt, "name", name_);
+  obj.setProperty(rt, "toString", jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forUtf8(rt, "toString"), 0, [this](jsi::Runtime& rt, const jsi::Value& thisVal, const jsi::Value* args, size_t count) {
+    return jsi::String::createFromUtf8(rt, toString());
+  }));
+  obj.setNativeState(rt, shared_from_this());
+  return jsi::Value(rt, obj);
 }
 
 std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
     jsi::Runtime &rt,
     const jsi::Value &value) {
-  return value.getObject(rt).getHostObject<WorkletRuntime>(rt);
+  return value.getObject(rt).getNativeState<WorkletRuntime>(rt);
 }
 
 void scheduleOnRuntime(
