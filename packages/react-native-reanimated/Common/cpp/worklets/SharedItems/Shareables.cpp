@@ -131,7 +131,7 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
       return object.getNativeState<ShareableNativeState>(rt)->getShareable();
     }
     throw std::runtime_error(
-        "[Reanimated] Attempted to extract from a HostObject that wasn't converted to a Shareable.");
+        "[Reanimated] Attempted to extract from an object that wasn't converted to a Shareable.");
   } else if (maybeShareableValue.isUndefined()) {
     return Shareable::undefined();
   }
