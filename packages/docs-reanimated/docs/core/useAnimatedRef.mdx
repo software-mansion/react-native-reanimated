@@ -2,6 +2,8 @@
 sidebar_position: 4
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 # useAnimatedRef
 
 `useAnimatedRef` lets you get a reference of a view. Used alongside [`measure`](/docs/advanced/measure), [`scrollTo`](/docs/scroll/scrollTo), and [`useScrollViewOffset`](/docs/scroll/useScrollViewOffset) functions.
@@ -73,11 +75,4 @@ Alternatively, you can get the value stored in the `current` in [event handlers]
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
-```
+<PlatformCompatibility android ios web />

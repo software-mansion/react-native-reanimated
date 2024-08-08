@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 # measure
 
 `measure` lets you synchronously get the dimensions and position of a view on the screen, all on the [UI thread](/docs/fundamentals/glossary#ui-thread).
@@ -130,10 +132,4 @@ const handlePress = () => {
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />

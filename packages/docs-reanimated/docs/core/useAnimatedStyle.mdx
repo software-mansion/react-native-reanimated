@@ -2,6 +2,8 @@
 sidebar_position: 2
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 # useAnimatedStyle
 
 `useAnimatedStyle` lets you create a styles object, similar to `StyleSheet` styles, which can be animated using [shared values](/docs/fundamentals/glossary#shared-value).
@@ -144,10 +146,4 @@ function App() {
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />

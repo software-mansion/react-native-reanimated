@@ -2,6 +2,8 @@
 sidebar_position: 7
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 # withClamp
 
 `withClamp` is an [animation modifier](/docs/fundamentals/glossary#animation-modifier) that lets you limit the scope of movement of your animation to make it stay within some predefined range.
@@ -72,10 +74,4 @@ const clampedStyleWithDelay = useAnimatedStyle(() => {
 
 `withClamp` returns an [animation object](/docs/fundamentals/glossary#animation-object). It can be either assigned directly to a [shared value](/docs/fundamentals/glossary#shared-value) or can be used as a value for a style object returned from [useAnimatedStyle](docs/core/useAnimatedStyle).
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />

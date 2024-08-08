@@ -2,6 +2,8 @@
 sidebar_position: 2
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 `useAnimatedSensor` lets you create animations based on data from the device's sensors. You can access:
 
 - **Accelerometer** - the device acceleration (without gravity).
@@ -218,10 +220,4 @@ import AnimatedSensorSrc from '!!raw-loader!@site/src/examples/AnimatedSensor';
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />

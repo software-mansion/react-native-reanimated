@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 # useSharedValue
 
 `useSharedValue` lets you define [shared values](/docs/fundamentals/glossary#shared-value) in your components.
@@ -138,10 +140,4 @@ function App() {
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />

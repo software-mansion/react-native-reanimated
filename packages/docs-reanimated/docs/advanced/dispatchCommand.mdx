@@ -5,6 +5,7 @@ sidebar_position: 7
 # dispatchCommand
 
 import DispatchCommandSrc from '!!raw-loader!@site/src/examples/DispatchCommand';
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
 
 `dispatchCommand` allows you to run commands on a native component from the UI thread directly.
 
@@ -76,10 +77,4 @@ The array of command arguments. Defaults to an empty array.
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ❌  |
-
-</div>
+<PlatformCompatibility android ios />
