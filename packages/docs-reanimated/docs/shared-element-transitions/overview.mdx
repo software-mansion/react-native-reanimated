@@ -4,17 +4,19 @@ title: Shared Element Transitions
 sidebar_label: Overview
 ---
 
-import DocsCompatibilityInfo from '../_shared/_docs_compatibility_info.mdx';
-
-<DocsCompatibilityInfo />
-
 :::caution
 
 Shared Element Transitions is an experimental feature, not recommended for production use yet. We are waiting for your feedback to improve implementation.
 
 :::
 
-A Shared Element Transition allows you to smoothly transform a component from one screen into a component on another screen. When Reanimated detects that a component with a `sharedTransitionTag` is being mounted or unmounted, it tries to find the last registered view with the same `sharedTransitionTag`. If it finds two matching components, it takes a snapshot of the styles for both components, and both shared views are detached from their parent and attached to a temporary transition container for the duration of the animation. After the animation is complete, they are attached back to their original parent. If you do not create a custom animation, all snapshot properties, including `width`, `height`, `originX`, `originY`, and `transformMatrix`, are animated by default with a duration of 500ms using the `withTiming` animation.
+Shared Element Transition allows you to smoothly transform a component from one screen into a component on another screen.
+
+When Reanimated detects that a component with a `sharedTransitionTag` is being mounted or unmounted, it tries to find the last registered view with the same `sharedTransitionTag`.
+
+If it finds two matching components, it takes a snapshot of the styles for both components, and both shared views are detached from their parent and attached to a temporary transition container for the duration of the animation.
+
+After the animation is complete, they are attached back to their original parent. If you do not create a custom animation, all snapshot properties, including `width`, `height`, `originX`, `originY`, and `transformMatrix`, are animated by default with a duration of 500ms using the `withTiming` animation.
 
 ## How to use it?
 
