@@ -70,11 +70,10 @@ jsi::Value makeShareableClone(
       shareable =
           std::make_shared<ShareableArrayBuffer>(rt, object.getArrayBuffer(rt));
     } else if (object.isHostObject(rt)) {
-      if (object.isHostObject<ShareableJSRef>(rt)) {
-        return object;
-      }
       shareable =
           std::make_shared<ShareableHostObject>(rt, object.getHostObject(rt));
+    } else if (object.hasNativeState<ShareableNativeState>(rt)) {
+      return object;
     } else {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableObject>>(
@@ -119,7 +118,7 @@ jsi::Value makeShareableClone(
     throw std::runtime_error(
         "[Reanimated] Attempted to convert an unsupported value type.");
   }
-  return ShareableJSRef::newHostObject(rt, shareable);
+  return ShareableNativeState::createObjectWithShareableNativeState(rt, shareable);
 }
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
@@ -128,8 +127,8 @@ std::shared_ptr<Shareable> extractShareableOrThrow(
     const std::string &errorMessage) {
   if (maybeShareableValue.isObject()) {
     auto object = maybeShareableValue.asObject(rt);
-    if (object.isHostObject<ShareableJSRef>(rt)) {
-      return object.getHostObject<ShareableJSRef>(rt)->value();
+    if (object.hasNativeState<ShareableNativeState>(rt)) {
+      return object.getNativeState<ShareableNativeState>(rt)->getShareable();
     }
     throw std::runtime_error(
         "[Reanimated] Attempted to extract from a HostObject that wasn't converted to a Shareable.");
@@ -169,7 +168,7 @@ jsi::Value RetainingShareable<BaseClass>::toJSValue(jsi::Runtime &rt) {
   return BaseClass::toJSValue(rt);
 }
 
-ShareableJSRef::~ShareableJSRef() {}
+ShareableNativeState::~ShareableNativeState() {}
 
 ShareableArray::ShareableArray(jsi::Runtime &rt, const jsi::Array &array)
     : Shareable(ArrayType) {
@@ -271,11 +270,11 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
 #ifndef NDEBUG
     return getValueUnpacker(rt).call(
         rt,
-        ShareableJSRef::newHostObject(rt, shared_from_this()),
+        ShareableNativeState::createObjectWithShareableNativeState(rt, shared_from_this()),
         jsi::String::createFromAscii(rt, "RemoteFunction"),
         jsi::String::createFromUtf8(rt, name_));
 #else
-    return ShareableJSRef::newHostObject(rt, shared_from_this());
+    return ShareableNativeState::createObjectWithShareableNativeState(rt, shared_from_this());
 #endif
   }
 }

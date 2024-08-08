@@ -116,25 +116,26 @@ class RetainingShareable : virtual public BaseClass {
   }
 };
 
-class ShareableJSRef : public jsi::HostObject {
+class ShareableNativeState : public jsi::NativeState {
  private:
-  const std::shared_ptr<Shareable> value_;
+  const std::shared_ptr<Shareable> shareable_;
 
  public:
-  explicit ShareableJSRef(const std::shared_ptr<Shareable> &value)
-      : value_(value) {}
+  explicit ShareableNativeState(const std::shared_ptr<Shareable> &shareable)
+      : shareable_(shareable) {}
 
-  virtual ~ShareableJSRef();
+  virtual ~ShareableNativeState();
 
-  std::shared_ptr<Shareable> value() const {
-    return value_;
+  std::shared_ptr<Shareable> getShareable() const {
+    return shareable_;
   }
 
-  static jsi::Object newHostObject(
+  static jsi::Object createObjectWithShareableNativeState(
       jsi::Runtime &rt,
       const std::shared_ptr<Shareable> &value) {
-    return jsi::Object::createFromHostObject(
-        rt, std::make_shared<ShareableJSRef>(value));
+    jsi::Object obj(rt);
+    obj.setNativeState(rt, std::make_shared<ShareableNativeState>(value));
+    return obj;
   }
 };
 
