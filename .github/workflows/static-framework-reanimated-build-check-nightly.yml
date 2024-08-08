@@ -1,4 +1,4 @@
-name: Static framework with Reanimated build check [Nightly]
+name: Static framework Reanimated build check [Nightly]
 env:
   YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
