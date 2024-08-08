@@ -1,6 +1,8 @@
+import { makeMutable } from 'react-native-reanimated';
 import type { Operation } from '../types';
 import { SyncUIRunner } from '../utils/SyncUIRunner';
 import { createUpdatesContainer } from './UpdatesContainer';
+import { assertMockedAnimationTimestamp } from './Asserts';
 
 export class AnimationUpdatesRecorder {
   private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
@@ -107,6 +109,31 @@ export class AnimationUpdatesRecorder {
       if (global.framesCount) {
         global.framesCount = undefined;
       }
+    });
+  }
+
+  public wait(delay: number) {
+    return new Promise(resolve => {
+      setTimeout(resolve, delay);
+    });
+  }
+
+  public waitForAnimationUpdates(updatesCount: number): Promise<boolean> {
+    const CHECK_INTERVAL = 20;
+    const flag = makeMutable(false);
+    return new Promise<boolean>(resolve => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      const interval = setInterval(async () => {
+        await new SyncUIRunner().runOnUIBlocking(() => {
+          'worklet';
+          assertMockedAnimationTimestamp(global.framesCount);
+          flag.value = global.framesCount >= updatesCount - 1;
+        });
+        if (flag.value) {
+          clearInterval(interval);
+          resolve(true);
+        }
+      }, CHECK_INTERVAL);
     });
   }
 }

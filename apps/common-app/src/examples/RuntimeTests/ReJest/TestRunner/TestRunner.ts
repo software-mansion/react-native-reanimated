@@ -1,32 +1,18 @@
 import type { Component, MutableRefObject, ReactElement } from 'react';
 import { useRef } from 'react';
-import type { BuildFunction, TestCase, TestConfiguration, TestSuite, TestValue, TrackerCallCount } from '../types';
+import type { BuildFunction, TestCase, TestConfiguration, TestSuite, TestValue } from '../types';
 import { DescribeDecorator, TestDecorator } from '../types';
 import { TestComponent } from '../TestComponent';
 import { applyMarkdown, formatTestName } from '../utils/stringFormatUtils';
 import { Matchers } from '../matchers/Matchers';
-import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
-import { makeMutable, runOnJS } from 'react-native-reanimated';
-import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
+import { assertTestCase, assertTestSuite } from './Asserts';
+import { RenderLock } from '../utils/SyncUIRunner';
 import { ValueRegistry } from './ValueRegistry';
 import { TestSummaryLogger } from './TestSummaryLogger';
 import { WindowDimensionsMocker } from './WindowDimensionsMocker';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
+import { TrackerRegistry } from './TrackerRegistry';
 export { Presets } from '../Presets';
-
-let callTrackerRegistryJS: Record<string, number> = {};
-const callTrackerRegistryUI = makeMutable<Record<string, number>>({});
-function callTrackerJS(name: string) {
-  if (!callTrackerRegistryJS[name]) {
-    callTrackerRegistryJS[name] = 0;
-  }
-  callTrackerRegistryJS[name]++;
-}
-
-const notificationRegistry: Record<string, boolean> = {};
-function notifyJS(name: string) {
-  notificationRegistry[name] = true;
-}
 
 export class TestRunner {
   private _testSuites: TestSuite[] = [];
@@ -39,6 +25,7 @@ export class TestRunner {
   private _windowDimensionsMocker: WindowDimensionsMocker = new WindowDimensionsMocker();
   private _animationRecorder = new AnimationUpdatesRecorder();
   private _valueRegistry = new ValueRegistry();
+  private _trackerRegistry = new TrackerRegistry();
 
   public getWindowDimensionsMocker() {
     return this._windowDimensionsMocker;
@@ -52,24 +39,8 @@ export class TestRunner {
     return this._valueRegistry;
   }
 
-  public notify(name: string) {
-    'worklet';
-    if (_WORKLET) {
-      runOnJS(notifyJS)(name);
-    } else {
-      notifyJS(name);
-    }
-  }
-
-  public async waitForNotify(name: string) {
-    return new Promise(resolve => {
-      const interval = setInterval(() => {
-        if (notificationRegistry[name]) {
-          clearInterval(interval);
-          resolve(true);
-        }
-      }, 10);
-    });
+  public getTrackerRegistry() {
+    return this._trackerRegistry;
   }
 
   public configure(config: TestConfiguration) {
@@ -164,27 +135,6 @@ export class TestRunner {
     return ref;
   }
 
-  public callTracker(name: string) {
-    'worklet';
-    if (_WORKLET) {
-      if (!callTrackerRegistryUI.value[name]) {
-        callTrackerRegistryUI.value[name] = 0;
-      }
-      callTrackerRegistryUI.value[name]++;
-      callTrackerRegistryUI.value = { ...callTrackerRegistryUI.value };
-    } else {
-      callTrackerJS(name);
-    }
-  }
-
-  public getTrackerCallCount(name: string): TrackerCallCount {
-    return {
-      name,
-      onJS: callTrackerRegistryJS[name] ?? 0,
-      onUI: callTrackerRegistryUI.value[name] ?? 0,
-    };
-  }
-
   public getTestComponent(name: string): TestComponent {
     assertTestCase(this._currentTestCase);
     const componentRef = this._currentTestCase.componentsRefs[name];
@@ -252,8 +202,7 @@ export class TestRunner {
   }
 
   private async runTestCase(testSuite: TestSuite, testCase: TestCase) {
-    callTrackerRegistryUI.value = {};
-    callTrackerRegistryJS = {};
+    this._trackerRegistry.resetRegistry();
     this._currentTestCase = testCase;
 
     if (testSuite.beforeEach) {
@@ -296,30 +245,5 @@ export class TestRunner {
   public afterEach(job: () => void) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterEach = job;
-  }
-
-  public wait(delay: number) {
-    return new Promise(resolve => {
-      setTimeout(resolve, delay);
-    });
-  }
-
-  public waitForAnimationUpdates(updatesCount: number): Promise<boolean> {
-    const CHECK_INTERVAL = 20;
-    const flag = makeMutable(false);
-    return new Promise<boolean>(resolve => {
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      const interval = setInterval(async () => {
-        await new SyncUIRunner().runOnUIBlocking(() => {
-          'worklet';
-          assertMockedAnimationTimestamp(global.framesCount);
-          flag.value = global.framesCount >= updatesCount - 1;
-        });
-        if (flag.value) {
-          clearInterval(interval);
-          resolve(true);
-        }
-      }, CHECK_INTERVAL);
-    });
   }
 }
