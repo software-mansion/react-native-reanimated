@@ -21,7 +21,7 @@ import {
   mockAnimationTimer,
   clearRenderOutput,
 } from '../../../ReJest/RuntimeTestsApi';
-import type { SingleViewSnapshot } from '../../../ReJest/matchers/snapshotMatchers';
+import type { SingleViewSnapshot } from '../../../ReJest/TestRunner/UpdatesContainer';
 
 enum TestAnimation {
   TIMING = 'withTiming',

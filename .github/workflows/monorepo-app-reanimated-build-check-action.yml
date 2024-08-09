@@ -1,4 +1,4 @@
-name: Test build in monorepo
+name: Monorepo app Reanimated build check [Action]
 env:
   YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
@@ -32,6 +32,7 @@ jobs:
 
       - name: Setup monorepo
         working-directory: monorepo
+        # TODO: Put Monorepo template into a separate repo/package
         run: echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp", "AppA", "AppB"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
       - name: Install dependencies
         run: yarn install
@@ -64,11 +65,11 @@ jobs:
       - name: Install Pods for RootApp
         if: ${{ inputs.platform == 'iOS' }}
         working-directory: monorepo/RootApp/ios
-        run: pod install
+        run: bundle install && bundle exec pod install
       - name: Install Pods for PackageApp
         if: ${{ inputs.platform == 'iOS' }}
         working-directory: monorepo/packages/PackageApp/ios
-        run: pod install
+        run: bundle install && bundle exec pod install
       - name: Build iOS app RootApp
         if: ${{ inputs.platform == 'iOS' }}
         working-directory: monorepo/RootApp

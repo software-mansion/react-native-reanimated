@@ -1,4 +1,4 @@
-name: Check TypeScript with different React Native versions
+name: Reanimated TypeScript compatibility test [Nightly]
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
@@ -32,10 +32,7 @@ jobs:
 
       - name: Install monorepo node dependencies
         run: yarn install
-      - name: Install Reanimated node dependencies
-        working-directory: packages/react-native-reanimated
-        run: yarn install
-      - name: Build Reanimated node dependencies
+      - name: Build Reanimated
         working-directory: packages/react-native-reanimated
         run: yarn build
       - name: Install react-native ${{ matrix.react-native-version }}

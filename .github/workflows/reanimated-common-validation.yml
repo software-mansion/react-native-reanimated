@@ -1,21 +1,17 @@
-name: Validate C++
+name: Reanimated Common validation
 on:
   push:
     branches:
       - main
     paths:
-      - ".github/workflows/validate-cpp.yml"
-      - "packages/react-native-reanimated/scripts/cpplint.sh"
-      - "packages/react-native-reanimated/Common/cpp/**"
-      - "packages/react-native-reanimated/apple/native/**"
-      - "packages/react-native-reanimated/android/src/main/cpp/**"
+      - '.github/workflows/validate-cpp.yml'
+      - 'packages/react-native-reanimated/scripts/cpplint.sh'
+      - 'packages/react-native-reanimated/Common/cpp/**'
   pull_request:
     paths:
-      - ".github/workflows/validate-cpp.yml"
-      - "packages/react-native-reanimated/scripts/cpplint.sh"
-      - "packages/react-native-reanimated/Common/cpp/**"
-      - "packages/react-native-reanimated/apple/native/**"
-      - "packages/react-native-reanimated/android/src/main/cpp/**"
+      - '.github/workflows/validate-cpp.yml'
+      - 'packages/react-native-reanimated/scripts/cpplint.sh'
+      - 'packages/react-native-reanimated/Common/cpp/**'
   merge_group:
     branches:
       - main
@@ -40,11 +36,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install cpplint
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
 
-      - name: Run cpplint
+      - name: Lint Common
         working-directory: packages/react-native-reanimated
-        run: |
-          scripts/cpplint.sh
+        run: yarn lint:common
 
       - name: Disallow DEBUG macros
         run: |

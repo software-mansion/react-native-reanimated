@@ -1,4 +1,4 @@
-name: Test docs build
+name: Docs Reanimated build check
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:

@@ -1,4 +1,4 @@
-name: Check for reproduction
+name: GitHub issue repro check
 on:
   issues:
     types: [opened, edited]
@@ -16,12 +16,12 @@ jobs:
       - name: Checkout Actions
         uses: actions/checkout@v4
         with:
-          repository: "software-mansion-labs/swmansion-bot"
+          repository: 'software-mansion-labs/swmansion-bot'
           ref: stable
 
       - uses: actions/cache@v3
         with:
-          path: "**/node_modules"
+          path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install Actions
@@ -31,7 +31,7 @@ jobs:
         uses: ./needs-repro
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          needs-repro-label: "Missing repro"
+          needs-repro-label: 'Missing repro'
           needs-repro-response: "Hey! 👋 \n\nThe issue doesn't seem to contain a [minimal reproduction](https://stackoverflow.com/help/minimal-reproducible-example).\n\nCould you provide a [snack](https://snack.expo.dev/) or a link to a GitHub repository under your username that reproduces the problem?"
-          repro-provided-label: "Repro provided"
+          repro-provided-label: 'Repro provided'
           check-issues-only-created-after: 2022-01-01

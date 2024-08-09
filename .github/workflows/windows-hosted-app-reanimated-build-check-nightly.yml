@@ -1,4 +1,4 @@
-name: Test build on Windows nightly
+name: Windows hosted app Reanimated build check [Nightly]
 env:
   YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
