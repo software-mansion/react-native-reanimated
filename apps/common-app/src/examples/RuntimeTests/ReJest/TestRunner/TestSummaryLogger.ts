@@ -66,4 +66,8 @@ export class TestSummaryLogger {
     }
     console.log('\n');
   }
+
+  public allTestsPassed() {
+    return this._failed === 0;
+  }
 }

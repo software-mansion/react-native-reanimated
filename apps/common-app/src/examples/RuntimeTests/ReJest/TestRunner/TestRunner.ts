@@ -209,7 +209,7 @@ export class TestRunner {
     return new TestComponent(componentRef);
   }
 
-  public async runTests() {
+  public async runTests(): Promise<boolean> {
     console.log('\n');
 
     for (const testSuite of this._testSuites) {
@@ -241,6 +241,7 @@ export class TestRunner {
 
     this._testSuites = [];
     this._testSummary.printSummary();
+    return this._testSummary.allTestsPassed();
   }
 
   private async runTestSuite(testSuite: TestSuite) {
