@@ -60,8 +60,6 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
     .jestInlineStyle as JestInlineStylesType;
 
   if (Array.isArray(jestInlineStyles)) {
-    let result = {};
-
     for (const obj of jestInlineStyles) {
       if ('jestAnimatedStyle' in obj) {
         continue;
@@ -69,8 +67,8 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
 
       const inlineStyles = getStylesFromObject(obj);
 
-      result = {
-        ...result,
+      currentStyle = {
+        ...currentStyle,
         ...inlineStyles,
       };
     }
@@ -79,7 +77,7 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
 
     currentStyle = {
       ...styleObject,
-      ...result,
+      ...currentStyle,
     };
 
     if (!isEmpty(jestAnimatedStyleValue as Object)) {
