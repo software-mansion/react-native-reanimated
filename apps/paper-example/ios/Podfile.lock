@@ -1915,10 +1915,10 @@ SPEC CHECKSUMS:
   boost: 4cb898d0bf20404aab1850c656dcea009429d6c1
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
   FBLazyVector: d08b51db67e61e1adaed7aefdb43b43f247ee46a
-  fmt: 8083860262b879fc92bca720969c91bdb88ada93
-  glog: 79d13cd7c34b5d0cea5f4ca72c0e6b462ef8fb4d
+  fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120
+  glog: 69ef571f3de08433d766d614c73a9838a06bf7eb
   hermes-engine: b205fccb3c7b52031e5bdb458a40f85f806bb7e8
-  RCT-Folly: 62f9775ef5ef5819714c7923b4b3a3eb5bf32dab
+  RCT-Folly: 4464f4d875961fce86008d45f4ecf6cef6de0740
   RCTDeprecation: 8c3d64b4ab77cf28adefa261e04fd205c2715607
   RCTRequired: 70f9b55e176be07e234e2efe43b31de14d7cd5ba
   RCTTypeSafety: 570d25d58d8795b1a146f5dee4965a05b6fdf8ac
@@ -1981,7 +1981,7 @@ SPEC CHECKSUMS:
   RNCPicker: 3e2c37a8328f368ce14da050cdc8231deb5fc9f9
   RNFlashList: 2a5ca82c4998952060b77fa9a1eb05f7ed8783b6
   RNGestureHandler: 79789b93c9a67c553ecdfb4121e8c267cba12447
-  RNReanimated: 3daa2123ef575afadd66cd8a6b809129acbd4a47
+  RNReanimated: 2141ea09c132fb9d4b58f9dbab31f901119f0302
   RNScreens: 19719a9c326e925498ac3b2d35c4e50fe87afc06
   RNSVG: cb24fb322de8c1ebf59904e7aca0447bb8dbed5a
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
