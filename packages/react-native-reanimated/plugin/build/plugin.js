@@ -1485,7 +1485,7 @@ var require_class = __commonJS({
     }
     function recursiveTopoSort(current, toSort, sorted, stack) {
       if (stack.has(current.name)) {
-        throw new Error("Cycle detected. This should never happen.");
+        throw new Error("[Reanimated] Cycle detected. This should never happen.");
       }
       if (sorted.find((element) => element.name === current.name)) {
         return;

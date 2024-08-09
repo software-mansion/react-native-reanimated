@@ -13,7 +13,6 @@ import {
   shareableMappingCache,
   shareableMappingFlag,
 } from './shareableMappingCache';
-import { logger } from './logger';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used

@@ -2,7 +2,6 @@
 import { shouldBeUseWeb } from './PlatformChecker';
 import { isWorkletFunction } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
-import { logger } from './logger';
 
 function valueUnpacker(
   objectToUnpack: any,
@@ -65,14 +64,14 @@ function valueUnpacker(
       const label = remoteFunctionName
         ? `function \`${remoteFunctionName}\``
         : 'anonymous function';
-      throw new Error(`[Reanimated] Tried to synchronously call a non-worklet ${label} on the UI thread.
+      throw new ReanimatedError(`Tried to synchronously call a non-worklet ${label} on the UI thread.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
     };
     fun.__remoteFunction = objectToUnpack;
     return fun;
   } else {
-    throw new Error(
-      `[Reanimated] Data type in category "${category}" not recognized by value unpacker: "${_toString(
+    throw new ReanimatedError(
+      `Data type in category "${category}" not recognized by value unpacker: "${_toString(
         objectToUnpack
       )}".`
     );

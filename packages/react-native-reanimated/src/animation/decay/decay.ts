@@ -14,7 +14,6 @@ import type {
   InnerDecayAnimation,
 } from './utils';
 import { rigidDecay } from './rigidDecay';
-import { logger } from '../../logger';
 
 export type WithDecayConfig = DecayConfig;
 

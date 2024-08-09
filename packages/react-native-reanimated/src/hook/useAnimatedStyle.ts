@@ -34,7 +34,6 @@ import type {
   AnimatedStyle,
 } from '../commonTypes';
 import { isWorkletFunction } from '../commonTypes';
-import { logger } from '../logger';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

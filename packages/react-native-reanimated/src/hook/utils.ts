@@ -2,7 +2,6 @@
 import type { WorkletFunction } from '../commonTypes';
 
 import type { DependencyList } from './commonTypes';
-import { logger } from '../logger';
 
 // Builds one big hash from multiple worklets' hashes.
 export function buildWorkletsHash<Args extends unknown[], ReturnValue>(
