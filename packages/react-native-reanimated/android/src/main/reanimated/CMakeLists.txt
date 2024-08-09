@@ -8,6 +8,7 @@ add_library(
     SHARED
     ${REANIMATED_COMMON_SOURCES}
     ${SOURCES_ANDROID}
+    "${ANDROID_SRC_DIR}/main/cpp/PlatformLogger.cpp"
 )
 
 target_include_directories(
@@ -18,6 +19,7 @@ target_include_directories(
     "${REANIMATED_COMMON_DIR}/LayoutAnimations"
     "${REANIMATED_COMMON_DIR}/NativeModules"
     "${REANIMATED_COMMON_DIR}/Tools"
+    "${REANIMATED_COMMON_DIR}/RuntimeDecorators"
 )
 
 target_include_directories(
