@@ -1,4 +1,4 @@
-name: React Native compatibility check [Nightly]
+name: Reanimated compatibility check [Nightly]
 on:
   pull_request:
     paths:
