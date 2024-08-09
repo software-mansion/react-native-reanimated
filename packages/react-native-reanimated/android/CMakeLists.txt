@@ -46,7 +46,7 @@ endif()
 set(ignoreMe "${JS_RUNTIME_DIR}")
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
-set(REANIMATED_ANDROID_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp/reanimated")
+set(REANIMATED_ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp/reanimated")
 set(WORKLETS_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/worklets")
 set(REANIMATED_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/reanimated")
 

@@ -1,14 +1,13 @@
 cmake_minimum_required(VERSION 3.8)
 
 file(GLOB_RECURSE REANIMATED_COMMON_SOURCES CONFIGURE_DEPENDS "${REANIMATED_COMMON_DIR}/*.cpp")
-file(GLOB_RECURSE SOURCES_ANDROID CONFIGURE_DEPENDS "${REANIMATED_ANDROID_DIR}/*.cpp")
+file(GLOB_RECURSE REANIMATED_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS "${REANIMATED_ANDROID_CPP_DIR}/*.cpp")
 
 add_library(
     reanimated
     SHARED
     ${REANIMATED_COMMON_SOURCES}
-    ${SOURCES_ANDROID}
-    "${REANIMATED_ANDROID_DIR}/PlatformLogger.cpp"
+    ${REANIMATED_ANDROID_CPP_SOURCES}
 )
 
 target_include_directories(
@@ -25,7 +24,7 @@ target_include_directories(
 target_include_directories(
     reanimated
     PRIVATE
-    "${REANIMATED_ANDROID_DIR}"
+    "${REANIMATED_ANDROID_CPP_DIR}"
 )
 
 target_include_directories(

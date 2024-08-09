@@ -349,63 +349,63 @@ android {
     sourceSets.main {
         java {
             if (IS_NEW_ARCHITECTURE_ENABLED) {
-                srcDirs += "src/fabric/reanimated/java"
+                srcDirs += "src/fabric/java"
             } else {
-                srcDirs += "src/paper/reanimated/java"
+                srcDirs += "src/paper/java"
             }
 
             // messageQueueThread
             if (REANIMATED_MAJOR_VERSION > 2) {
                 if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                    srcDirs += "src/reactNativeVersionPatch/reanimated/messageQueueThread/72"
+                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/72"
                 } else {
-                    srcDirs += "src/reactNativeVersionPatch/reanimated/messageQueueThread/latest"
+                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
                 }
             }
 
             // ReanimatedUIManager & ReanimatedUIImplementation 
             if (REACT_NATIVE_MINOR_VERSION <= 73) {
-                srcDirs += "src/reactNativeVersionPatch/reanimated/ReanimatedUIManager/73"
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
             } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                srcDirs += "src/reactNativeVersionPatch/reanimated/ReanimatedUIManager/74"
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/74"
             } else {
-                srcDirs += "src/reactNativeVersionPatch/reanimated/ReanimatedUIManager/latest"
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
             }
 
             // ReactHost
             if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                srcDirs += "src/reactNativeVersionPatch/reanimated/ReactHost/72"
+                srcDirs += "src/reactNativeVersionPatch/ReactHost/72"
             } else {
-                srcDirs += "src/reactNativeVersionPatch/reanimated/ReactHost/latest"
+                srcDirs += "src/reactNativeVersionPatch/ReactHost/latest"
             }
 
             // ReactFeatureFlags 
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                    srcDirs += "src/reactNativeVersionPatch/reanimated/ReactFeatureFlagsWrapper/72"
+                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/72"
                 } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/reanimated/ReactFeatureFlagsWrapper/74"
+                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/74"
                 } else {
-                    srcDirs += "src/reactNativeVersionPatch/reanimated/ReactFeatureFlagsWrapper/latest"
+                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/latest"
                 }
             }
 
             // RuntimeExecutor
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 if (REACT_NATIVE_MINOR_VERSION <= 73) {
-                    srcDirs += "src/reactNativeVersionPatch/reanimated/RuntimeExecutor/73"
+                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/73"
                 } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/reanimated/RuntimeExecutor/74"
+                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/74"
                 } else {
-                    srcDirs += "src/reactNativeVersionPatch/reanimated/RuntimeExecutor/latest"
+                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/latest"
                 }
             }
 
             // BorderRadiiDrawableUtils
             if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                srcDirs += "src/reactNativeVersionPatch/reanimated/BorderRadiiDrawableUtils/74"
+                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/74"
             } else {
-                srcDirs += "src/reactNativeVersionPatch/reanimated/BorderRadiiDrawableUtils/latest"
+                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/latest"
             }
         }
     }
@@ -435,11 +435,14 @@ task prepareHeadersForPrefab(type: Copy) {
     from("$projectDir/../Common/cpp/reanimated/Fabric")
     from("$projectDir/../Common/cpp/reanimated/LayoutAnimations")
     from("$projectDir/../Common/cpp/reanimated/NativeModules")
+    from("$projectDir/../Common/cpp/reanimated/RuntimeDecorators")
     from("$projectDir/../Common/cpp/reanimated/Tools")
-    from("$projectDir/../Common/cpp/worklets/ReanimatedRuntime")
+
     from("$projectDir/../Common/cpp/worklets/Registries")
     from("$projectDir/../Common/cpp/worklets/SharedItems")
     from("$projectDir/../Common/cpp/worklets/Tools")
+    from("$projectDir/../Common/cpp/worklets/WorkletRuntime")
+    
     include("*.h")
     into(prefabHeadersDir)
 }
