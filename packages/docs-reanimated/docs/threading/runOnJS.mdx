@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 # runOnJS
 
 `runOnJS` lets you asynchronously run non-[workletized](/docs/fundamentals/glossary#to-workletize) functions that couldn't otherwise run on the [UI thread](/docs/fundamentals/glossary#ui-thread). This applies to most external libraries as they don't have their functions marked with `"worklet";` directive.
@@ -75,10 +77,4 @@ withTiming(0, {}, () => {
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />

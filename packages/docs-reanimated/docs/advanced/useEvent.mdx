@@ -2,6 +2,8 @@
 sidebar_position: 4
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 # useEvent
 
 `useEvent` is a low-level hook. It returns event handler that will be called when native event occurs. You can use it to create custom event handler hooks, like [`useScrollViewOffset`](/docs/scroll/useScrollViewOffset/) or [`useAnimatedScrollHandler`](/docs/scroll/useAnimatedScrollHandler/).
@@ -95,10 +97,4 @@ This example can be more easily implemented using [`useScrollViewOffset`](/docs/
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />

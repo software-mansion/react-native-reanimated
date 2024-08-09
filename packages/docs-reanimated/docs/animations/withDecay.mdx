@@ -2,6 +2,8 @@
 sidebar_position: 3
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 # withDecay
 
 `withDecay` lets you create animations that mimic objects in motion with friction. The animation will start with the provided velocity and slow down over time according to the given deceleration rate until it stops.
@@ -103,10 +105,4 @@ import DecayTrainSrc from '!!raw-loader!@site/src/examples/DecayTrain';
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />

@@ -2,6 +2,8 @@
 sidebar_position: 6
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 # useComposedEventHandler
 
 This is a hook that lets you compose [useEvent](/docs/advanced/useEvent)-based event handlers (such as [useAnimatedScrollHandler](/docs/scroll/useAnimatedScrollHandler) or your own custom ones) into a single, combined event handler.
@@ -74,10 +76,4 @@ The handler should be passed to a corresponding `onEvent` prop (e.g. `onScroll` 
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />

@@ -2,6 +2,8 @@
 sidebar_position: 5
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 # useDerivedValue
 
 `useDerivedValue` lets you create new [shared values](/docs/fundamentals/glossary#shared-value) based on existing ones while keeping them reactive.
@@ -64,10 +66,4 @@ import DerivedValueSrc from '!!raw-loader!@site/src/examples/DerivedValue';
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />
