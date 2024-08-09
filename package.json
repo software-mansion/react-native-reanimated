@@ -14,9 +14,11 @@
   "scripts": {
     "build": "husky && yarn workspaces foreach -A -p run build",
     "lint": "yarn workspaces foreach -A -p run lint",
-    "format": "yarn workspaces foreach -A -p run format"
+    "format": "yarn workspaces foreach -A -p run format",
+    "detox-paper-build": "detox build --configuration ios.sim.debug"
   },
   "devDependencies": {
+    "detox": "^20.25.2",
     "eslint": "^8.57.0",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
