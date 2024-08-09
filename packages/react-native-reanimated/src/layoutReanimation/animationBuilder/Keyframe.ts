@@ -18,8 +18,7 @@ import {
   assertEasingIsWorklet,
   getReduceMotionFromConfig,
 } from '../../animation/util';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../../logger';
 
 interface KeyframePoint {
   duration: number;
@@ -57,7 +56,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     */
     if (this.definitions.from) {
       if (this.definitions['0']) {
-        throw logger.newError(
+        throw new ReanimatedError(
           "You cannot provide both keyframe 0 and 'from' as they both specified initial values."
         );
       }
@@ -66,7 +65,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     }
     if (this.definitions.to) {
       if (this.definitions['100']) {
-        throw logger.newError(
+        throw new ReanimatedError(
           "You cannot provide both keyframe 100 and 'to' as they both specified values at the end of the animation."
         );
       }
@@ -78,7 +77,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
        Every other keyframe should contain properties from the set provided as initial values.
     */
     if (!this.definitions['0']) {
-      throw logger.newError(
+      throw new ReanimatedError(
         "Please provide 0 or 'from' keyframe with initial state of your object."
       );
     }
@@ -133,7 +132,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       easing?: EasingFunction;
     }): void => {
       if (!(key in parsedKeyframes)) {
-        throw logger.newError(
+        throw new ReanimatedError(
           "Keyframe can contain only that set of properties that were provide with initial values (keyframe 0 or 'from')"
         );
       }
@@ -153,7 +152,9 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       .sort((a: string, b: string) => parseInt(a) - parseInt(b))
       .forEach((keyPoint: string) => {
         if (parseInt(keyPoint) < 0 || parseInt(keyPoint) > 100) {
-          throw logger.newError('Keyframe should be in between range 0 - 100.');
+          throw new ReanimatedError(
+            'Keyframe should be in between range 0 - 100.'
+          );
         }
         const keyframe: KeyframeProps = this.definitions[keyPoint];
         const easing = keyframe.easing;

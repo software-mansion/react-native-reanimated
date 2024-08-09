@@ -5,8 +5,7 @@ import type {
   Timestamp,
   ReduceMotion,
 } from '../commonTypes';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 /**
  * Spring animation configuration.

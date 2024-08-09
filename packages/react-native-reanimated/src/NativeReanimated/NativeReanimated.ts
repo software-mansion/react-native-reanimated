@@ -14,8 +14,7 @@ import type React from 'react';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { LayoutAnimationBatchItem } from '../layoutReanimation/animationBuilder/commonTypes';
 import ReanimatedModule from '../specs/NativeReanimatedModule';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -70,7 +69,7 @@ function assertSingleReanimatedInstance() {
     global._REANIMATED_VERSION_JS !== undefined &&
     global._REANIMATED_VERSION_JS !== jsVersion
   ) {
-    throw logger.newError(
+    throw new ReanimatedError(
       `Another instance of Reanimated was detected.
 See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#another-instance-of-reanimated-was-detected\` for more details. Previous: ${global._REANIMATED_VERSION_JS}, current: ${jsVersion}.`
     );
@@ -91,7 +90,7 @@ export class NativeReanimated {
       ReanimatedModule?.installTurboModule(valueUnpackerCode);
     }
     if (global.__reanimatedModuleProxy === undefined) {
-      throw logger.newError(
+      throw new ReanimatedError(
         `Native part of Reanimated doesn't seem to be initialized.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );

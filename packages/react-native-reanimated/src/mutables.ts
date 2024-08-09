@@ -1,13 +1,12 @@
 'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { Mutable } from './commonTypes';
+import { logger } from './logger';
 
 import { shareableMappingCache } from './shareableMappingCache';
 import { makeShareableCloneRecursive } from './shareables';
 import { executeOnUIRuntimeSync, runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
-
-const logger = global.__reanimatedLogger;
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -106,12 +105,12 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
 
     get _value(): Value {
-      throw logger.newError(
+      throw new ReanimatedError(
         'Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
       );
     },
     set _value(_newValue: Value) {
-      throw logger.newError(
+      throw new ReanimatedError(
         'Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
       );
     },
@@ -122,12 +121,12 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
       })();
     },
     addListener: () => {
-      throw logger.newError(
+      throw new ReanimatedError(
         'Adding listeners is only possible on the UI runtime.'
       );
     },
     removeListener: () => {
-      throw logger.newError(
+      throw new ReanimatedError(
         'Removing listeners is only possible on the UI runtime.'
       );
     },

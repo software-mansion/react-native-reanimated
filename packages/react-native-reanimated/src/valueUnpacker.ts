@@ -2,8 +2,7 @@
 import { shouldBeUseWeb } from './PlatformChecker';
 import { isWorkletFunction } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
-
-const logger = global.__reanimatedLogger;
+import { logger } from './logger';
 
 function valueUnpacker(
   objectToUnpack: any,
@@ -66,14 +65,14 @@ function valueUnpacker(
       const label = remoteFunctionName
         ? `function \`${remoteFunctionName}\``
         : 'anonymous function';
-      throw logger.newError(`Tried to synchronously call a non-worklet ${label} on the UI thread.
+      throw new Error(`[Reanimated] Tried to synchronously call a non-worklet ${label} on the UI thread.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details.`);
     };
     fun.__remoteFunction = objectToUnpack;
     return fun;
   } else {
-    throw logger.newError(
-      `Data type in category "${category}" not recognized by value unpacker: "${_toString(
+    throw new Error(
+      `[Reanimated] Data type in category "${category}" not recognized by value unpacker: "${_toString(
         objectToUnpack
       )}".`
     );
@@ -90,19 +89,19 @@ if (__DEV__ && !shouldBeUseWeb()) {
     'worklet';
   }) as WorkletFunction<[], void>;
   if (!isWorkletFunction(testWorklet)) {
-    throw logger.newError(
+    throw new ReanimatedError(
       `Failed to create a worklet. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#failed-to-create-a-worklet for more details.`
     );
   }
   if (!isWorkletFunction(valueUnpacker)) {
-    throw logger.newError('`valueUnpacker` is not a worklet');
+    throw new ReanimatedError('`valueUnpacker` is not a worklet');
   }
   const closure = (valueUnpacker as ValueUnpacker).__closure;
   if (closure === undefined) {
-    throw logger.newError('`valueUnpacker` closure is undefined');
+    throw new ReanimatedError('`valueUnpacker` closure is undefined');
   }
   if (Object.keys(closure).length !== 0) {
-    throw logger.newError('`valueUnpacker` must have empty closure');
+    throw new ReanimatedError('`valueUnpacker` must have empty closure');
   }
 }
 

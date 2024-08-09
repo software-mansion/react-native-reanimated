@@ -36,8 +36,7 @@ import {
 import { shouldBeUseWeb } from '../PlatformChecker';
 import type { EasingFunctionFactory } from '../Easing';
 import { ReducedMotionManager } from '../ReducedMotion';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -67,7 +66,7 @@ export function assertEasingIsWorklet(
   }
 
   if (!isWorkletFunction(easing)) {
-    throw logger.newError(
+    throw new ReanimatedError(
       'The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
     );
   }
@@ -96,7 +95,7 @@ export function recognizePrefixSuffix(
       /([A-Za-z]*)(-?\d*\.?\d*)([eE][-+]?[0-9]+)?([A-Za-z%]*)/
     );
     if (!match) {
-      throw logger.newError("Couldn't parse animation value.");
+      throw new ReanimatedError("Couldn't parse animation value.");
     }
     const prefix = match[1];
     const suffix = match[4];

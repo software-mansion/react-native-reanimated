@@ -1,6 +1,6 @@
 'use strict';
 
-const logger = global.__reanimatedLogger;
+import { logger } from '../../logger';
 
 type FixedLengthArray<
   T,
@@ -258,7 +258,7 @@ function transposeMatrix(matrix: AffineMatrix): AffineMatrix {
 function assertVectorsHaveEqualLengths(a: number[], b: number[]) {
   'worklet';
   if (__DEV__ && a.length !== b.length) {
-    throw logger.newError(
+    throw new ReanimatedError(
       `Cannot calculate inner product of two vectors of different lengths. Length of ${a.toString()} is ${
         a.length
       } and length of ${b.toString()} is ${b.length}.`
@@ -351,7 +351,7 @@ export function decomposeMatrix(
 
   // normalize matrix
   if (matrix[15] === 0) {
-    throw logger.newError('Invalid transform matrix.');
+    throw new ReanimatedError('Invalid transform matrix.');
   }
   matrix.forEach((_, i) => (matrix[i] /= matrix[15]));
 

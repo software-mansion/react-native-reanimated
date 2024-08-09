@@ -13,6 +13,7 @@ import { makeShareableCloneRecursive } from './shareables';
 import { initializeUIRuntime } from './initializers';
 import type { LayoutAnimationBatchItem } from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
+import { logger } from './logger';
 
 export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';
@@ -20,8 +21,6 @@ export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export type { WorkletRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable } from './mutables';
-
-const logger = global.__reanimatedLogger;
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -54,7 +53,7 @@ export function getViewProp<T>(
   component?: React.Component // required on Fabric
 ): Promise<T> {
   if (isFabric() && !component) {
-    throw logger.newError(
+    throw new ReanimatedError(
       'Function `getViewProp` requires a component to be passed as an argument on Fabric.'
     );
   }

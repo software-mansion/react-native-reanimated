@@ -1,9 +1,8 @@
 'use strict';
 
+import { logger } from './logger';
 import { isFabric } from './PlatformChecker';
 import { runOnUI } from './threads';
-
-const logger = global.__reanimatedLogger;
 
 let VIEW_TAGS: number[] = [];
 
@@ -16,7 +15,7 @@ export function removeFromPropsRegistry(viewTag: number) {
 
 function flush() {
   if (__DEV__ && !isFabric()) {
-    throw logger.newError('PropsRegistry is only available on Fabric.');
+    throw new ReanimatedError('PropsRegistry is only available on Fabric.');
   }
   runOnUI(removeFromPropsRegistryOnUI)(VIEW_TAGS);
   VIEW_TAGS = [];

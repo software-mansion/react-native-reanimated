@@ -10,8 +10,7 @@ import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
-
-const logger = global.__reanimatedLogger;
+import { logger } from './logger';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -64,7 +63,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
-    throw logger.newError(
+    throw new ReanimatedError(
       'The function passed to `runOnRuntime` is not a worklet.' +
         (_WORKLET
           ? ' Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.'

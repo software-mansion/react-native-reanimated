@@ -2,8 +2,7 @@
 import type { WorkletFunction } from '../commonTypes';
 
 import type { DependencyList } from './commonTypes';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 // Builds one big hash from multiple worklets' hashes.
 export function buildWorkletsHash<Args extends unknown[], ReturnValue>(
@@ -111,11 +110,11 @@ export function shallowEqual<
 export function validateAnimatedStyles(styles: unknown[] | object) {
   'worklet';
   if (typeof styles !== 'object') {
-    throw logger.newError(
+    throw new ReanimatedError(
       `\`useAnimatedStyle\` has to return an object, found ${typeof styles} instead.`
     );
   } else if (Array.isArray(styles)) {
-    throw logger.newError(
+    throw new ReanimatedError(
       '`useAnimatedStyle` has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
     );
   }

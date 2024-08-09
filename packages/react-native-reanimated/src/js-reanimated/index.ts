@@ -7,25 +7,24 @@ import {
   createTextShadowValue,
 } from './webUtils';
 import { PropsAllowlists } from '../propsAllowlists';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 const reanimatedJS = new JSReanimated();
 
 global._makeShareableClone = () => {
-  throw logger.newError(
+  throw new ReanimatedError(
     '_makeShareableClone should never be called in JSReanimated.'
   );
 };
 
 global._scheduleOnJS = () => {
-  throw logger.newError(
+  throw new ReanimatedError(
     '_scheduleOnJS should never be called in JSReanimated.'
   );
 };
 
 global._scheduleOnRuntime = () => {
-  throw logger.newError(
+  throw new ReanimatedError(
     '_scheduleOnRuntime should never be called in JSReanimated.'
   );
 };

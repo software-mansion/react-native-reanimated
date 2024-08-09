@@ -14,8 +14,7 @@ import type {
   InnerDecayAnimation,
 } from './utils';
 import { rigidDecay } from './rigidDecay';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../../logger';
 
 export type WithDecayConfig = DecayConfig;
 
@@ -29,12 +28,12 @@ function validateConfig(config: DefaultDecayConfig): void {
   'worklet';
   if (config.clamp) {
     if (!Array.isArray(config.clamp)) {
-      throw logger.newError(
+      throw new ReanimatedError(
         `\`config.clamp\` must be an array but is ${typeof config.clamp}.`
       );
     }
     if (config.clamp.length !== 2) {
-      throw logger.newError(
+      throw new ReanimatedError(
         `\`clamp array\` must contain 2 items but is given ${
           config.clamp.length as number
         }.`
@@ -42,12 +41,12 @@ function validateConfig(config: DefaultDecayConfig): void {
     }
   }
   if (config.velocityFactor <= 0) {
-    throw logger.newError(
+    throw new ReanimatedError(
       `\`config.velocityFactor\` must be greater then 0 but is ${config.velocityFactor}.`
     );
   }
   if (config.rubberBandEffect && !config.clamp) {
-    throw logger.newError(
+    throw new ReanimatedError(
       'You need to set `clamp` property when using `rubberBandEffect`.'
     );
   }

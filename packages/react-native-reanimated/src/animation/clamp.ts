@@ -12,8 +12,7 @@ import type {
   ReduceMotion,
 } from '../commonTypes';
 import type { ClampAnimation } from './commonTypes';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 type withClampType = <T extends number | string>(
   config: {

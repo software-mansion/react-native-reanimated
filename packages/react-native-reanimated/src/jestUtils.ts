@@ -9,8 +9,7 @@ import type {
 } from './createAnimatedComponent/commonTypes';
 import { isJest } from './PlatformChecker';
 import type { DefaultStyle } from './hook/commonTypes';
-
-const logger = global.__reanimatedLogger;
+import { logger } from './logger';
 
 declare global {
   namespace jest {
@@ -243,7 +242,7 @@ export const advanceAnimationByFrame = (count: number) => {
 const requireFunction = isJest()
   ? require
   : () => {
-      throw logger.newError(
+      throw new ReanimatedError(
         '`setUpTests` is available only in Jest environment.'
       );
     };
