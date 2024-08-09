@@ -51,7 +51,7 @@ jobs:
         run: node ${{ env.SCRIPT_PATH }} setupFabricIOS
       - name: Install Pods
         working-directory: ExpoApp/ios
-        run: pod install
+        run: bundle install && bundle exec pod install
       - name: Build app
         working-directory: ExpoApp
         run: npx react-native run-ios --simulator='iPhone 14' --terminal='Terminal'
