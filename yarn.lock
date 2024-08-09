@@ -7174,16 +7174,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/react-native@npm:^7.1.0":
-  version: 7.2.0
-  resolution: "@testing-library/react-native@npm:7.2.0"
+"@testing-library/react-native@npm:^12.5.2":
+  version: 12.5.2
+  resolution: "@testing-library/react-native@npm:12.5.2"
   dependencies:
-    pretty-format: "npm:^26.0.1"
+    jest-matcher-utils: "npm:^29.7.0"
+    pretty-format: "npm:^29.7.0"
+    redent: "npm:^3.0.0"
   peerDependencies:
-    react: ">=16.0.0"
+    jest: ">=28.0.0"
+    react: ">=16.8.0"
     react-native: ">=0.59"
-    react-test-renderer: ">=16.0.0"
-  checksum: 10/477146d65bbf699ce389f42e1935b0c42e091504ad9041fd97f0183a1dafd2e6f71337e75ab0b2f929a530bc1841b5d42d9ed019d89a928b23103ad407fc1c1a
+    react-test-renderer: ">=16.8.0"
+  peerDependenciesMeta:
+    jest:
+      optional: true
+  checksum: 10/8d7f41db709b47085642ab10de039e3e6018e5cdefbed78da040879d52815125f21be7a8032422370fad36b649c6fc831b16e97d9c6bfa3f97e5d20944d01fe2
   languageName: node
   linkType: hard
 
@@ -17957,7 +17963,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pretty-format@npm:^26.0.1, pretty-format@npm:^26.5.2, pretty-format@npm:^26.6.2":
+"pretty-format@npm:^26.5.2, pretty-format@npm:^26.6.2":
   version: 26.6.2
   resolution: "pretty-format@npm:26.6.2"
   dependencies:
@@ -18495,7 +18501,7 @@ __metadata:
     "@react-native/typescript-config": "npm:0.74.81"
     "@testing-library/jest-native": "npm:^4.0.4"
     "@testing-library/react-hooks": "npm:^8.0.0"
-    "@testing-library/react-native": "npm:^7.1.0"
+    "@testing-library/react-native": "npm:^12.5.2"
     "@types/babel__core": "npm:^7.20.0"
     "@types/babel__generator": "npm:^7.6.4"
     "@types/babel__traverse": "npm:^7.14.2"
