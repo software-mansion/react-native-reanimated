@@ -1264,7 +1264,7 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: 826b603ae9c0f88b5ac4e956801f755109fa4d5c
   RNCPicker: 3e2c37a8328f368ce14da050cdc8231deb5fc9f9
   RNGestureHandler: f203fa4755a75b02d45a299b07d7ed878f636705
-  RNReanimated: b40f25f1e59b7071a7c699c99527137c2a0ddc09
+  RNReanimated: f27c64c70e04681e8c6e202442bce8db03fc27cd
   RNSVG: cb24fb322de8c1ebf59904e7aca0447bb8dbed5a
   SocketRocket: f6c6249082c011e6de2de60ed641ef8bbe0cfac9
   Yoga: dd0f2dde9c2bf2398b406740154bd99d5293aed8

@@ -79,7 +79,7 @@ Pod::Spec.new do |s|
 
   s.subspec "reanimated" do |ss|
     ss.source_files = [
-      "apple/**/*.{mm,h,m}",
+      "apple/reanimated/**/*.{mm,h,m}",
       "Common/cpp/reanimated/**/*.{cpp,h}",
     ]
   end

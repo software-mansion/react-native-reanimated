@@ -43,7 +43,7 @@ void RNRuntimeDecorator::decorate(
 
   rnRuntime.global().setProperty(
       rnRuntime,
-      jsi::PropNameID::forAscii(rnRuntime, "__reanimatedModuleProxy"),
+      "__reanimatedModuleProxy",
       jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
 }
 
