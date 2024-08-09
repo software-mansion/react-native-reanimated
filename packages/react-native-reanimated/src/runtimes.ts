@@ -12,7 +12,7 @@ import {
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 export type WorkletRuntime = {
-  __hostObjectWorkletRuntime: never;
+  __nativeStateWorkletRuntime: never;
   readonly name: string;
 };
 
@@ -21,7 +21,7 @@ export type WorkletRuntime = {
  *
  * @param name - A name used to identify the runtime which will appear in devices list in Chrome DevTools.
  * @param initializer - An optional worklet that will be run synchronously on the same thread immediately after the runtime is created.
- * @returns WorkletRuntime which is a jsi::HostObject\<reanimated::WorkletRuntime\> - {@link WorkletRuntime}
+ * @returns WorkletRuntime which is an object with jsi::NativeState\<reanimated::WorkletRuntime\> - {@link WorkletRuntime}
  * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
  */
 // @ts-expect-error Check `runOnUI` overload.

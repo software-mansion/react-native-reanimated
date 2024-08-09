@@ -232,7 +232,7 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
       rt, initializer, "[Reanimated] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
   ReanimatedWorkletRuntimeDecorator::decorate(workletRuntime->getJSIRuntime());
-  return jsi::Object::createFromHostObject(rt, workletRuntime);
+  return workletRuntime->createValue(rt);
 }
 
 jsi::Value NativeReanimatedModule::scheduleOnRuntime(

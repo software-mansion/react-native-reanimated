@@ -18,7 +18,7 @@ using namespace react;
 
 namespace reanimated {
 
-class WorkletRuntime : public jsi::HostObject,
+class WorkletRuntime : public jsi::NativeState,
                        public std::enable_shared_from_this<WorkletRuntime> {
  public:
   explicit WorkletRuntime(
@@ -57,9 +57,7 @@ class WorkletRuntime : public jsi::HostObject,
     return "[WorkletRuntime \"" + name_ + "\"]";
   }
 
-  jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
-
-  std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
+  jsi::Value createValue(jsi::Runtime &rt);
 
  private:
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
