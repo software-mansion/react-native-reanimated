@@ -28,10 +28,16 @@ const defaultFramerateConfig = {
 };
 
 const isEmpty = (obj: Object) => Object.keys(obj).length === 0;
-const getStylesFromObject = (obj: Object) =>
-  Object.fromEntries(
-    Object.entries(obj).map(([property, value]) => [property, value.value])
-  );
+const getStylesFromObject = (obj: Object) => {
+  return obj === undefined
+    ? {}
+    : Object.fromEntries(
+        Object.entries(obj).map(([property, value]) => [
+          property,
+          value.value ?? value,
+        ])
+      );
+};
 
 type StyleValue = { value: unknown };
 type JestInlineStylesType =
