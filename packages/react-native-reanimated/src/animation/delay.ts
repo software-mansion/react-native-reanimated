@@ -43,8 +43,7 @@ export const withDelay = function <T extends AnimationObject>(
       function delay(animation: DelayAnimation, now: Timestamp): boolean {
         const { startTime, started, previousAnimation } = animation;
         const current: AnimatableValue = animation.current;
-
-        if (now - startTime > delayMs || animation.reduceMotion) {
+        if (now - startTime >= delayMs || animation.reduceMotion) {
           if (!started) {
             nextAnimation.onStart(
               nextAnimation,
