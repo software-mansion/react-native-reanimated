@@ -50,6 +50,9 @@ jobs:
       - name: Create app
         run: |
           yarn react-native init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --skip-install --install-pods 0 --skip-git-init
+      - name: Create yarn.lock in app
+        working-directory: ${{ env.APP_NAME }}
+        run: touch yarn.lock
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
