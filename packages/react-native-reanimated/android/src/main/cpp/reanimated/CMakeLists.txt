@@ -8,7 +8,7 @@ add_library(
     SHARED
     ${REANIMATED_COMMON_SOURCES}
     ${SOURCES_ANDROID}
-    "${ANDROID_SRC_DIR}/main/cpp/PlatformLogger.cpp"
+    "${REANIMATED_ANDROID_DIR}/PlatformLogger.cpp"
 )
 
 target_include_directories(
