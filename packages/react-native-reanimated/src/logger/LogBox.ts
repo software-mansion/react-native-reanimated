@@ -42,4 +42,9 @@ interface LogBoxExtended extends LogBoxStatic {
 
 const LogBox = RNLogBox as LogBoxExtended;
 
-export const addLogBoxLog = LogBox.addLog.bind(LogBox);
+const noop = () => {
+  // do nothing
+};
+
+// Do nothing when addLogBoxLog is called if LogBox is not available
+export const addLogBoxLog = LogBox?.addLog?.bind(LogBox) ?? noop;
