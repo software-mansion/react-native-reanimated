@@ -13,7 +13,7 @@ on:
 jobs:
   build_ios:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-14
+    runs-on: ${{ matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest' }}
     strategy:
       matrix:
         react-native-architecture: ['Paper', 'Fabric']
@@ -58,6 +58,10 @@ jobs:
       - name: Expo prebuild
         working-directory: ${{ env.APP_NAME }}
         run: npx expo prebuild
+      - name: Install pods
+        if: ${{ matrix.platform == 'iOS' }}
+        working-directory: ${{ env.APP_NAME }}/ios
+        run: bundle install && bundle exec pod install
       - name: Build app (iOS)
         working-directory: ${{ env.APP_NAME }}
         if: ${{ matrix.platform == 'iOS' }}
