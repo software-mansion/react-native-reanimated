@@ -14,8 +14,7 @@ class RNRuntimeDecorator {
  public:
   static void decorate(
       jsi::Runtime &rnRuntime,
-      const std::shared_ptr<NativeReanimatedModule> &nativeReanimatedModule,
-      const bool isReducedMotion);
+      const std::shared_ptr<NativeReanimatedModule> &nativeReanimatedModule);
 };
 
 } // namespace reanimated
