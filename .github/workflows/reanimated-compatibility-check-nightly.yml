@@ -39,14 +39,17 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '18'
+      - name: Setup Yarn and React Native
+        # Sometimes `npx react-native init` fails due to dependency mismatches or other
+        # rather vague errors. This is a workaround for that.
+        run: |
+          corepack enable && yarn init
+          yarn add react-native@latest
+      - name: Install React Native
+        run: yarn add react-native@latest
       - name: Create app
         run: |
-          npx react-native init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --skip-install --install-pods=0 --skip-git-init
-      - name: Set Yarn version
-        # On 0.75 Yarn 1 is used by default ath the moment, most likely due to some bug.
-        if: ${{ matrix.react-native.version == '0.75' }}
-        working-directory: ${{ env.APP_NAME }}
-        run: corepack enable && yarn set version berry
+          yarn react-native init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --skip-install --install-pods 0 --skip-git-init
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
