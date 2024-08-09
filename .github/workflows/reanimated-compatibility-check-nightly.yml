@@ -2,7 +2,7 @@ name: React Native compatibility check [Nightly]
 on:
   pull_request:
     paths:
-      - .github/workflows/check-react-native-nightly.yml
+      - .github/workflows/reanimated-compatibility-check-nightly.yml
   schedule:
     - cron: '37 19 * * *'
   workflow_dispatch:
