@@ -14,6 +14,7 @@ jobs:
     strategy:
       matrix:
         platform: ['iOS', 'Android']
+        mode: ['Debug', 'Release']
         # TODO: Fetch compatibility in docs and here from common sources.
         # Update it when dropping support for RN versions.
         react-native:
@@ -29,7 +30,7 @@ jobs:
       APP_NAME: app
       RCT_NEW_ARCH_ENABLED: ${{ matrix.react-native.architecture == 'Fabric' && '1' || '0' }}
     concurrency:
-      group: react-native-nightly-reanimated-build-check-${{ matrix.react-native.version}}-${{matrix.platform}}-${{matrix.react-native.architecture}}-${{ github.ref }}
+      group: react-native-nightly-reanimated-build-check-${{ matrix.react-native.version}}-${{matrix.platform}}-${{matrix.react-native.architecture}}-${{ matrix.mode }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Set up JDK 18
@@ -60,8 +61,8 @@ jobs:
       - name: Build app (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}
-        run: yarn react-native run-ios --simulator='iPhone 14' --terminal='Terminal'
+        run: yarn react-native run-ios --simulator='iPhone 14' --terminal='Terminal'--mode=${{ matrix.mode }}
       - name: Build app (Android)
         if: ${{ matrix.platform == 'Android' }}
         working-directory: ${{ env.APP_NAME }}/android
-        run: ./gradlew assembleDebug --console=plain
+        run: ./gradlew assemble${{ matrix.mode }} --console=plain
