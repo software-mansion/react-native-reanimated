@@ -34,8 +34,12 @@ jobs:
           distribution: 'zulu'
           java-version: 17
 
-      - name: Create Expo app
+      - name: Create Expo app (Paper)
+        if: ${{ matrix.react-native-architecture == 'Paper' }}
         run: npx create-expo-app@latest ${{ env.APP_NAME }}
+      - name: Create Expo app (Fabric)
+        if: ${{ matrix.react-native-architecture == 'Fabric' }}
+        run: npx create-expo-app@latest ${{ env.APP_NAME }} -e with-new-arch
       - name: Install expo-dev-client
         working-directory: ${{ env.APP_NAME }}
         run: |
@@ -53,19 +57,11 @@ jobs:
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: npm install react-native-reanimated@nightly
-      - name: Set Fabric (iOS)
-        working-directory: ${{ env.APP_NAME }}
-        if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'iOS' }}
-        run: node ${{ env.SCRIPT_PATH }} setupFabricIOS
-      - name: Set Fabric (Android)
-        working-directory: ${{ env.APP_NAME }}
-        if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'Android' }}
-        run: node ${{ env.SCRIPT_PATH }} setupFabricAndroid
       - name: Build app (iOS)
         working-directory: ${{ env.APP_NAME }}
         if: ${{ matrix.platform == 'iOS' }}
         run: npx react-native run-ios --simulator='iPhone 14' --terminal='Terminal'
       - name: Build app (Android)
-        working-directory: ${{ env.APP_NAME }}
+        working-directory: ${{ env.APP_NAME }}/android
         if: ${{ matrix.platform == 'Android' }}
         run: ./gradlew assembleDebug --console=plain
