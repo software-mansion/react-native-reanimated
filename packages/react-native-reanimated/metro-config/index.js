@@ -1,29 +1,29 @@
 const COLLAPSED_STACK_REGEX = new RegExp(
   [
     // For internal usage in the example app
-    "/packages/react-native-reanimated/.+\\.(t|j)sx?$",
+    '/packages/react-native-reanimated/.+\\.(t|j)sx?$',
     // When reanimated is installed as a dependency (node_modules)
-    "/node_modules/react-native-reanimated/.+\\.(t|j)sx?$",
+    '/node_modules/react-native-reanimated/.+\\.(t|j)sx?$',
   ]
     // Make patterns work with both Windows and POSIX paths.
-    .map((pathPattern) => pathPattern.replaceAll("/", "[/\\\\]"))
-    .join("|")
+    .map((pathPattern) => pathPattern.replaceAll('/', '[/\\\\]'))
+    .join('|')
 );
 
-function withReanimated(config) {
+function wrapWithReanimatedMetroConfig(config) {
   return {
     ...config,
     symbolicator: {
-      customizeFrame: (frame) => {
+      async customizeFrame(frame) {
         const collapse = Boolean(
-          config?.symbolicator?.customizeFrame?.(frame).collapse || (frame.file !== null && COLLAPSED_STACK_REGEX.test(frame.file))
+          // Collapse the stack frame based on user's config symbolicator settings
+          (await config?.symbolicator?.customizeFrame?.(frame))?.collapse ||
+          // or, if not already collapsed, collapse the stack frame with path
+          // to react-native-reanimated source code
+          (frame.file && COLLAPSED_STACK_REGEX.test(frame.file))
         );
-        console.log(
-          frame.file, 
-          collapse
-        )
         return {
-          collapse
+          collapse,
         };
       },
     },
@@ -31,5 +31,5 @@ function withReanimated(config) {
 }
 
 module.exports = {
-  withReanimated
-}
+  wrapWithReanimatedMetroConfig,
+};

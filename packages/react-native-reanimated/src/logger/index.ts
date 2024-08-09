@@ -1,2 +1,3 @@
 'use strict';
-export { logger } from './logger';
+export * from './logger';
+export * from './LogBox';

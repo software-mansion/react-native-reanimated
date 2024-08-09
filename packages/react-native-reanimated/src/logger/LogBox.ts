@@ -40,4 +40,6 @@ interface LogBoxExtended extends LogBoxStatic {
   addLog(data: LogData): void;
 }
 
-export const LogBox = RNLogBox as LogBoxExtended;
+const LogBox = RNLogBox as LogBoxExtended;
+
+export const addLogBoxLog = LogBox.addLog.bind(LogBox);

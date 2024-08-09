@@ -1,6 +1,20 @@
 'use strict';
 import type { WorkletStackDetails } from './commonTypes';
 
+export class ReanimatedError extends Error {
+  constructor(message?: string) {
+    super(`[Reanimated] ${message}`);
+
+    // Set the name of the error to the class name
+    this.name = this.constructor.name;
+
+    if (Error.captureStackTrace) {
+      // Exclude constructor from stack trace
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+}
+
 const _workletStackDetails = new Map<number, WorkletStackDetails>();
 
 export function registerWorkletStackDetails(

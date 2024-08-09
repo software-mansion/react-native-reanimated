@@ -1,13 +1,9 @@
 'use strict';
-import { runOnJS } from '../threads';
-import { LogBox } from './LogBox';
+import { addLogBoxLog } from './LogBox';
 import type { LogLevel, LogData } from './LogBox';
 
-const addLog = LogBox.addLog.bind(LogBox);
-
-function log(data: LogData) {
-  addLog(data);
-
+function logToConsole(data: LogData) {
+  'worklet';
   switch (data.level) {
     case 'warn':
       console.warn(data.message.content);
@@ -20,56 +16,48 @@ function log(data: LogData) {
   }
 }
 
-function createLogger(prefix: string) {
-  function formatMessage(message: string) {
-    'worklet';
-    return `${prefix} ${message}`;
-  }
+export function logToLogBoxAndConsole(data: LogData) {
+  addLogBoxLog(data);
+  logToConsole(data);
+}
 
-  function output(level: LogLevel, message: string) {
-    'worklet';
-    const formattedMessage = formatMessage(message);
+function formatMessage(message: string) {
+  'worklet';
+  return `[Reanimated] ${message}`;
+}
 
-    runOnJS(log)({
-      level,
-      message: {
-        content: formattedMessage,
-        substitutions: [],
-      },
-      category: formattedMessage,
-      componentStack: [],
-      componentStackType: null,
-      stack: new Error().stack,
-    });
-  }
-
-  function warn(message: string) {
-    'worklet';
-    output('warn', message);
-  }
-
-  function error(message: string) {
-    'worklet';
-    output('error', message);
-  }
-
-  function fatal(message: string) {
-    'worklet';
-    output('fatal', message);
-  }
-
-  function newError(message: string): never {
-    'worklet';
-    const formattedMessage = formatMessage(message);
-    throw new Error(formattedMessage);
-  }
+function createLog(level: LogLevel, message: string): LogData {
+  'worklet';
+  const formattedMessage = formatMessage(message);
 
   return {
-    warn,
-    error,
-    fatal,
-    newError,
+    level,
+    message: {
+      content: formattedMessage,
+      substitutions: [],
+    },
+    category: formattedMessage,
+    componentStack: [],
+    componentStackType: null,
+    stack: new Error().stack,
   };
 }
 
-export const logger = createLogger('[Reanimated]');
+export const loggerImpl = {
+  logFunction: logToConsole,
+};
+
+export const logger = {
+  warn(message: string) {
+    'worklet';
+    loggerImpl.logFunction(createLog('warn', message));
+  },
+  error(message: string) {
+    'worklet';
+    loggerImpl.logFunction(createLog('error', message));
+  },
+  fatal(message: string) {
+    'worklet';
+    loggerImpl.logFunction(createLog('fatal', message));
+  },
+};

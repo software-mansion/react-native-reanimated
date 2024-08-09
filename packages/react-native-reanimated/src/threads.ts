@@ -7,6 +7,9 @@ import {
   makeShareableCloneRecursive,
 } from './shareables';
 import { isWorkletFunction } from './commonTypes';
+import type { LogData } from './logger';
+import { logger, loggerImpl, logToLogBoxAndConsole } from './logger';
+import { shareableMappingCache } from './shareableMappingCache';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -255,3 +258,11 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
     );
   };
 }
+
+// Override the logFunction implementation with the one that adds logs
+// with better stack traces to the LogBox
+loggerImpl.logFunction = (data: LogData) => {
+  'worklet';
+  runOnJS(logToLogBoxAndConsole)(data);
+};
+shareableMappingCache.set(logger, makeShareableCloneRecursive(logger));

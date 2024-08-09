@@ -1,7 +1,7 @@
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const {
-  withReanimated,
-} = require('../../packages/react-native-reanimated/metro-config');
+  wrapWithReanimatedMetroConfig,
+} = require('react-native-reanimated/metro-config');
 
 const path = require('path');
 
@@ -11,6 +11,6 @@ const config = {
   watchFolders: [root],
 };
 
-module.exports = withReanimated(
+module.exports = wrapWithReanimatedMetroConfig(
   mergeConfig(getDefaultConfig(__dirname), config)
 );
