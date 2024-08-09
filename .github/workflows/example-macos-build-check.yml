@@ -43,46 +43,46 @@ jobs:
 
       # Does this optimization even work with new yarn?
       # Perhaps we should cache `yarn's` cache instead?
-      - name: Restore node_modules from cache
-        id: monorepo-cache
-        uses: actions/cache@v3
-        with:
-          path: .
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('yarn.lock') }}
-          restore-keys: ${{ runner.os }}-node-modules-
-      - name: Restore app node_modules from cache
-        id: app-cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ ENV.WORKING_DIRECTORY }}/node_modules
-          key: ${{ runner.os }}-node-modules-${{ ENV.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/yarn.lock', ENV.WORKING_DIRECTORY)) }}
-          restore-keys: ${{ runner.os }}-node-modules-${{ ENV.WORKING_DIRECTORY }}-
+      # - name: Restore node_modules from cache
+      #   id: monorepo-cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: .
+      #     key: ${{ runner.os }}-node-modules-${{ hashFiles('yarn.lock') }}
+      #     restore-keys: ${{ runner.os }}-node-modules-
+      # - name: Restore app node_modules from cache
+      #   id: app-cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ${{ ENV.WORKING_DIRECTORY }}/node_modules
+      #     key: ${{ runner.os }}-node-modules-${{ ENV.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/yarn.lock', ENV.WORKING_DIRECTORY)) }}
+      #     restore-keys: ${{ runner.os }}-node-modules-${{ ENV.WORKING_DIRECTORY }}-
       - name: Install monorepo node dependencies
-        if: steps.monorepo-cache.outputs.cache-hit != 'true' || steps.app-cache.outputs.cache-hit != 'true'
+        # if: steps.monorepo-cache.outputs.cache-hit != 'true' || steps.app-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
 
-      - name: Restore Pods from cache
-        id: pods-cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ env.WORKING_DIRECTORY }}/macos/Pods
-            ~/Library/Caches/CocoaPods
-            ~/.cocoapods
-          key: ${{ runner.os }}-macos-pods-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/macos/Podfile.lock', env.WORKING_DIRECTORY)) }}
+      # - name: Restore Pods from cache
+      #   id: pods-cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       ${{ env.WORKING_DIRECTORY }}/macos/Pods
+      #       ~/Library/Caches/CocoaPods
+      #       ~/.cocoapods
+      #     key: ${{ runner.os }}-macos-pods-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/macos/Podfile.lock', env.WORKING_DIRECTORY)) }}
 
       - name: Install Pods
-        if: steps.pods-cache.outputs.cache-hit != 'true'
+        # if: steps.pods-cache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}/macos
         run: bundle install && bundle exec pod install
 
-      - name: Restore build artifacts from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ env.WORKING_DIRECTORY }}/macos/build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-macos-build-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/macos/Podfile.lock', env.WORKING_DIRECTORY)) }}
+      # - name: Restore build artifacts from cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       ${{ env.WORKING_DIRECTORY }}/macos/build
+      #       ~/Library/Developer/Xcode/DerivedData
+      #     key: ${{ runner.os }}-macos-build-${{ env.WORKING_DIRECTORY }}-${{ hashFiles(format('{0}/macos/Podfile.lock', env.WORKING_DIRECTORY)) }}
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}
