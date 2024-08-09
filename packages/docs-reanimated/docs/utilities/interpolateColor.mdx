@@ -2,6 +2,8 @@
 sidebar_position: 3
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 # interpolateColor
 
 `interpolateColor` maps input range to output colors using linear interpolation.
@@ -107,10 +109,4 @@ import { useInterpolateColorPlayground } from '@site/src/components/InteractiveP
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />

@@ -2,6 +2,8 @@
 sidebar_position: 4
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 # Custom animations
 
 import EnteringExitingAnimationSrc from '!!raw-loader!@site/src/examples/CustomEnteringExiting';
@@ -203,10 +205,4 @@ interface WindowDimensions {
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ❌  |
-
-</div>
+<PlatformCompatibility android ios />

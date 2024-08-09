@@ -2,6 +2,8 @@
 sidebar_position: 2
 ---
 
+import PlatformCompatibility from '@site/src/components/PlatformCompatibility';
+
 # runOnUI
 
 `runOnUI` lets you asynchronously run [workletized](/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](/docs/fundamentals/glossary#ui-thread).
@@ -73,10 +75,4 @@ import RunOnUISrc from '!!raw-loader!@site/src/examples/RunOnUI';
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />
