@@ -3,7 +3,6 @@
 import type { StyleProps } from '../commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { isChromeDebugger } from '../PlatformChecker';
-import { WorkletEventHandler } from '../WorkletEventHandler';
 import { initialUpdaterRun } from '../animation';
 import { hasInlineStyles, getInlineStyle } from './InlinePropManager';
 import type {
@@ -15,6 +14,7 @@ import type {
 } from './commonTypes';
 import { flattenArray, has } from './utils';
 import { StyleSheet } from 'react-native';
+import { isWorkletEventHandler } from '../hook/commonTypes';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -63,20 +63,31 @@ export class PropsFilter implements IPropsFilter {
               animatedProp.initial?.value[initialValueKey];
           });
         }
-      } else if (
-        has('workletEventHandler', value) &&
-        value.workletEventHandler instanceof WorkletEventHandler
-      ) {
-        if (value.workletEventHandler.eventNames.length > 0) {
-          value.workletEventHandler.eventNames.forEach((eventName) => {
-            props[eventName] = has('listeners', value.workletEventHandler)
-              ? (
-                  value.workletEventHandler.listeners as Record<string, unknown>
-                )[eventName]
-              : dummyListener;
+      } else if (isWorkletEventHandler(value)) {
+        const handler = value.workletEventHandler;
+        const isWebHandler = has('listeners', handler);
+        const hasReactHandlers = Object.keys(handler.reactHandlers).length > 0;
+
+        if (hasReactHandlers && isWebHandler) {
+          // on web, our and JS handlers are merged in listeners object
+          Object.keys(handler.listeners).forEach((eventName) => {
+            props[eventName] = handler.listeners[eventName];
+          });
+        } else if (hasReactHandlers && !isWebHandler) {
+          // on mobile platforms, we just set the JS handlers to the props
+          Object.keys(handler.reactHandlers).forEach((eventName) => {
+            props[eventName] = handler.reactHandlers[eventName];
           });
         } else {
-          props[key] = dummyListener;
+          if (handler.eventNames.length > 0) {
+            handler.eventNames.forEach((eventName) => {
+              props[eventName] = isWebHandler
+                ? (handler.listeners as Record<string, unknown>)[eventName]
+                : dummyListener;
+            });
+          } else {
+            props[key] = dummyListener;
+          }
         }
       } else if (isSharedValue(value)) {
         if (component._isFirstRender) {

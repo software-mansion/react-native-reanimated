@@ -16,6 +16,8 @@ import type {
 } from 'react-native';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type { ReanimatedHTMLElement } from '../js-reanimated';
+import { has } from '../createAnimatedComponent/utils';
+import { WorkletEventHandler } from '../WorkletEventHandler';
 
 export type DependencyList = Array<unknown> | undefined;
 
@@ -64,7 +66,7 @@ export type ReanimatedEvent<Event extends object> = ReanimatedPayload &
     ? NativeEvent
     : Event);
 
-export type EventPayload<Event extends object> = Event extends {
+type EventPayload<Event extends object> = Event extends {
   nativeEvent: infer NativeEvent extends object;
 }
   ? NativeEvent
@@ -80,10 +82,30 @@ export type RNNativeScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
 
 export type ReanimatedScrollEvent = ReanimatedEvent<RNNativeScrollEvent>;
 
+export type JSEvent<Event extends object> = NativeSyntheticEvent<
+  EventPayload<Event>
+>;
+
+export type ReactEventHandler<Event extends object> = (event: JSEvent<Event>) => void;
+
+type WorkletEventHandlerHolder = {
+  workletEventHandler: InstanceType<typeof WorkletEventHandler>;
+};
+
+export function isWorkletEventHandler(
+  prop: unknown
+): prop is WorkletEventHandlerHolder {
+  return (
+    has('workletEventHandler', prop) &&
+    prop.workletEventHandler instanceof WorkletEventHandler
+  );
+}
+
 export interface IWorkletEventHandler<Event extends object> {
   updateEventHandler: (
     newWorklet: (event: ReanimatedEvent<Event>) => void,
-    newEvents: string[]
+    newEvents: string[],
+    newJSHandlers: Record<string, ReactEventHandler<Event>>
   ) => void;
   registerForEvents: (viewTag: number, fallbackEventName?: string) => void;
   unregisterFromEvents: (viewTag: number) => void;
@@ -114,3 +136,10 @@ export type UseAnimatedStyleInternal<Style extends DefaultStyle> = (
     | null,
   isAnimatedProps?: boolean
 ) => AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style>;
+
+export type UseEventInternal<Event extends object, Context> = {
+  handler: (event: ReanimatedEvent<Event>, context?: Context) => void;
+  eventNames: string[];
+  rebuild: boolean;
+  JSHandlers: Record<string, ReactEventHandler<Event>>;
+};

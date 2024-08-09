@@ -1,26 +1,44 @@
 'use strict';
-import type { NativeSyntheticEvent } from 'react-native';
 import { registerEventHandler, unregisterEventHandler } from './core';
 import type {
-  EventPayload,
   ReanimatedEvent,
   IWorkletEventHandler,
+  JSEvent,
+  ReactEventHandler,
 } from './hook/commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-
-type JSEvent<Event extends object> = NativeSyntheticEvent<EventPayload<Event>>;
 
 // In JS implementation (e.g. for web) we don't use Reanimated's
 // event emitter, therefore we have to handle here
 // the event that came from React Native and convert it.
 function jsListener<Event extends object>(
   eventName: string,
-  handler: (event: ReanimatedEvent<Event>) => void
+  workletHandler: (event: ReanimatedEvent<Event>) => void,
+  reactHandler: ReactEventHandler<Event>
+): (evt: JSEvent<Event>) => void;
+function jsListener<Event extends object>(
+  eventName: string,
+  workletHandler: (event: ReanimatedEvent<Event>) => void
+): (evt: JSEvent<Event>) => void;
+function jsListener<Event extends object>(
+  eventName: string,
+  reactHandler: ReactEventHandler<Event>
+): (evt: JSEvent<Event>) => void;
+
+function jsListener<Event extends object>(
+  eventName: string,
+  workletHandler?: (event: ReanimatedEvent<Event>) => void,
+  reactHandler?: ReactEventHandler<Event>
 ) {
   return (evt: JSEvent<Event>) => {
-    handler({ ...evt.nativeEvent, eventName } as ReanimatedEvent<Event>);
+    workletHandler &&
+      workletHandler({
+        ...evt.nativeEvent,
+        eventName,
+      } as ReanimatedEvent<Event>);
+    reactHandler && reactHandler(evt);
   };
 }
 
@@ -29,25 +47,30 @@ class WorkletEventHandlerNative<Event extends object>
 {
   eventNames: string[];
   worklet: (event: ReanimatedEvent<Event>) => void;
+  reactHandlers: Record<string, ReactEventHandler<Event>>; // for native platforms we just need to keep them so PropFilter sets them to props
   #viewTags: Set<number>;
   #registrations: Map<number, number[]>; // keys are viewTags, values are arrays of registration ID's for each viewTag
   constructor(
     worklet: (event: ReanimatedEvent<Event>) => void,
-    eventNames: string[]
+    eventNames: string[],
+    reactHandlers: Record<string, ReactEventHandler<Event>>
   ) {
     this.worklet = worklet;
     this.eventNames = eventNames;
+    this.reactHandlers = reactHandlers;
     this.#viewTags = new Set<number>();
     this.#registrations = new Map<number, number[]>();
   }
 
   updateEventHandler(
     newWorklet: (event: ReanimatedEvent<Event>) => void,
-    newEvents: string[]
+    newEvents: string[],
+    newReactHandlers: Record<string, ReactEventHandler<Event>>
   ): void {
     // Update worklet and event names
     this.worklet = newWorklet;
     this.eventNames = newEvents;
+    this.reactHandlers = newReactHandlers;
 
     // Detach all events
     this.#registrations.forEach((registrationIDs) => {
@@ -99,32 +122,73 @@ class WorkletEventHandlerWeb<Event extends object>
     | Record<string, (event: ReanimatedEvent<ReanimatedEvent<Event>>) => void>
     | Record<string, (event: JSEvent<Event>) => void>;
 
+  reactHandlers: Record<string, ReactEventHandler<Event>>; // web react Handlers need to be merged with Worklet handlers
   worklet: (event: ReanimatedEvent<Event>) => void;
 
   constructor(
     worklet: (event: ReanimatedEvent<Event>) => void,
-    eventNames: string[] = []
+    eventNames: string[] = [],
+    reactHandlers: Record<string, ReactEventHandler<Event>>
   ) {
     this.worklet = worklet;
     this.eventNames = eventNames;
+    this.reactHandlers = reactHandlers;
     this.listeners = {};
     this.setupWebListeners();
   }
 
   setupWebListeners() {
     this.listeners = {};
-    this.eventNames.forEach((eventName) => {
+
+    const eventsFromReactHandlers = Object.keys(this.reactHandlers);
+
+    // events that are both from react and worklet handlers
+    const sharedEvents = eventsFromReactHandlers.filter((value) =>
+      this.eventNames.includes(value)
+    );
+
+    // events from only worklet handlers
+    const restWorkletEvents = this.eventNames.filter(
+      (value) => !eventsFromReactHandlers.includes(value)
+    );
+
+    // events from only react handlers
+    const restReactEvents = eventsFromReactHandlers.filter(
+      (value) => !this.eventNames.includes(value)
+    );
+
+    // shared events get react and worklet handlers merged into a listener to put into a prop
+    sharedEvents.forEach((eventName) => {
+      this.listeners[eventName] = jsListener(
+        eventName,
+        this.worklet,
+        this.reactHandlers[eventName]
+      );
+    });
+
+    // only worklet events get their own listeners
+    restWorkletEvents.forEach((eventName) => {
       this.listeners[eventName] = jsListener(eventName, this.worklet);
+    });
+
+    // only react events get their own listeners
+    restReactEvents.forEach((eventName) => {
+      this.listeners[eventName] = jsListener(
+        eventName,
+        this.reactHandlers[eventName]
+      );
     });
   }
 
   updateEventHandler(
     newWorklet: (event: ReanimatedEvent<Event>) => void,
-    newEvents: string[]
+    newEvents: string[],
+    newReactHandlers: Record<string, ReactEventHandler<Event>>
   ): void {
     // Update worklet and event names
     this.worklet = newWorklet;
     this.eventNames = newEvents;
+    this.reactHandlers = newReactHandlers;
     this.setupWebListeners();
   }
 

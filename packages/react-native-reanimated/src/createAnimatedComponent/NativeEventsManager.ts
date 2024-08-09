@@ -6,8 +6,8 @@ import type {
   InitialComponentProps,
   AnimatedComponentRef,
 } from './commonTypes';
-import { has } from './utils';
-import { WorkletEventHandler } from '../WorkletEventHandler';
+import { isWorkletEventHandler } from '../hook/commonTypes';
+import type { WorkletEventHandler } from '../WorkletEventHandler';
 import { findNodeHandle } from 'react-native';
 
 export class NativeEventsManager implements INativeEventsManager {
@@ -97,15 +97,6 @@ export class NativeEventsManager implements INativeEventsManager {
   }
 }
 
-function isWorkletEventHandler(
-  prop: unknown
-): prop is WorkletEventHandlerHolder {
-  return (
-    has('workletEventHandler', prop) &&
-    prop.workletEventHandler instanceof WorkletEventHandler
-  );
-}
-
 function executeForEachEventHandler(
   props: AnimatedComponentProps<InitialComponentProps>,
   callback: (
@@ -131,8 +122,4 @@ type ComponentOptions = {
     ref: AnimatedComponentRef,
     props: InitialComponentProps
   ) => void;
-};
-
-type WorkletEventHandlerHolder = {
-  workletEventHandler: InstanceType<typeof WorkletEventHandler>;
 };
