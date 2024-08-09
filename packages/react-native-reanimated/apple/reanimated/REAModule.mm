@@ -327,7 +327,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 {
   WorkletRuntimeCollector::install(rnRuntime);
 
-  RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule, nativeReanimatedModule->getDecoratorConfig());
+  RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule);
 #ifdef RCT_NEW_ARCH_ENABLED
   weakNativeReanimatedModule_ = nativeReanimatedModule;
   if (self->_surfacePresenter != nil) {
