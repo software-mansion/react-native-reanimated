@@ -111,7 +111,7 @@
     "@react-native/typescript-config": "0.74.81",
     "@testing-library/jest-native": "^4.0.4",
     "@testing-library/react-hooks": "^8.0.0",
-    "@testing-library/react-native": "^7.1.0",
+    "@testing-library/react-native": "^12.5.2",
     "@types/babel__core": "^7.20.0",
     "@types/babel__generator": "^7.6.4",
     "@types/babel__traverse": "^7.14.2",
