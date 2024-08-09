@@ -41,6 +41,11 @@ jobs:
       - name: Create app
         run: |
           npx react-native init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --skip-install --install-pods false --skip-git-init
+      - name: Set Yarn version
+        # On 0.75 Yarn 1 is used by default ath the moment, most likely due to some bug.
+        if: ${{ matrix.react-native.version == '0.75' }}
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn set version berry
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
@@ -55,7 +60,7 @@ jobs:
       - name: Build app (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}
-        run: yarn react-native run-ios --simulator='iPhone 14'
+        run: yarn react-native run-ios --simulator='iPhone 14' --terminal='Terminal'
       - name: Build app (Android)
         if: ${{ matrix.platform == 'Android' }}
         working-directory: ${{ env.APP_NAME }}/android
