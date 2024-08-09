@@ -2,8 +2,7 @@
 import type { MeasuredDimensions } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 export function measure<T extends Component>(
   animatedRef: AnimatedRef<T>

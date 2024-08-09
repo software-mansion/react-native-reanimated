@@ -1,5 +1,7 @@
 'use strict';
 
+import { logger } from './logger';
+
 /**
  * https://github.com/gre/bezier-easing
  * BezierEasing - use bezier curve for transition easing function
@@ -7,8 +9,6 @@
  */
 
 // These values are established by empiricism with tests (tradeoff: performance VS precision)
-
-const logger = global.__reanimatedLogger;
 
 const NEWTON_ITERATIONS = 4;
 const NEWTON_MIN_SLOPE = 0.001;
@@ -101,7 +101,7 @@ export function Bezier(
   }
 
   if (!(mX1 >= 0 && mX1 <= 1 && mX2 >= 0 && mX2 <= 1)) {
-    throw logger.newError('Bezier x values must be in [0, 1] range.');
+    throw new ReanimatedError('Bezier x values must be in [0, 1] range.');
   }
 
   if (mX1 === mY1 && mX2 === mY2) {

@@ -8,8 +8,7 @@ import type {
   ReduceMotion,
   Timestamp,
 } from '../commonTypes';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 /**
  * Lets you run animations in a sequence.

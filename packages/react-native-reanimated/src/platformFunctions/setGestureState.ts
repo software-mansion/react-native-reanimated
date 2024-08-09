@@ -1,8 +1,7 @@
 'use strict';
 
 import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 type SetGestureState = (handlerTag: number, newState: number) => void;
 

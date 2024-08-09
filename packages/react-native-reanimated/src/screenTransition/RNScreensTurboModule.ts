@@ -2,7 +2,7 @@
 
 import type { RNScreensTurboModuleType } from './commonTypes';
 
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 function noopFactory<T>(defaultReturnValue?: T): () => T {
   return () => {

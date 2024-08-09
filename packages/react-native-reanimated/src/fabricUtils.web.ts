@@ -1,7 +1,9 @@
 'use strict';
 
-const logger = global.__reanimatedLogger;
+import { logger } from './logger';
 
 export function getShadowNodeWrapperFromRef() {
-  throw logger.newError('Trying to call `getShadowNodeWrapperFromRef` on web.');
+  throw new ReanimatedError(
+    'Trying to call `getShadowNodeWrapperFromRef` on web.'
+  );
 }

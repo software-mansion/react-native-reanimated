@@ -1,6 +1,6 @@
 'use strict';
 
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 export function setGestureState() {
   logger.warn('setGestureState() is not available on web.');

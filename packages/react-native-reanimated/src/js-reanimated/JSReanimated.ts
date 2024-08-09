@@ -10,8 +10,7 @@ import { SensorType } from '../commonTypes';
 import type { WebSensor } from './WebSensor';
 import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
 import type { WorkletRuntime } from '../runtimes';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 // In Node.js environments (like when static rendering with Expo Router)
 // requestAnimationFrame is unavailable, so we use our mock.
@@ -27,7 +26,7 @@ export default class JSReanimated {
   platform?: Platform = undefined;
 
   makeShareableClone<T>(): ShareableRef<T> {
-    throw logger.newError(
+    throw new ReanimatedError(
       'makeShareableClone should never be called in JSReanimated.'
     );
   }
@@ -41,13 +40,13 @@ export default class JSReanimated {
     _name: string,
     _initializer: ShareableRef<() => void>
   ): WorkletRuntime {
-    throw logger.newError(
+    throw new ReanimatedError(
       'createWorkletRuntime is not available in JSReanimated.'
     );
   }
 
   scheduleOnRuntime() {
-    throw logger.newError(
+    throw new ReanimatedError(
       'scheduleOnRuntime is not available in JSReanimated.'
     );
   }
@@ -57,13 +56,13 @@ export default class JSReanimated {
     _eventName: string,
     _emitterReactTag: number
   ): number {
-    throw logger.newError(
+    throw new ReanimatedError(
       'registerEventHandler is not available in JSReanimated.'
     );
   }
 
   unregisterEventHandler(_: number): void {
-    throw logger.newError(
+    throw new ReanimatedError(
       'unregisterEventHandler is not available in JSReanimated.'
     );
   }
@@ -276,15 +275,17 @@ export default class JSReanimated {
     _component?: React.Component,
     _callback?: (result: T) => void
   ): Promise<T> {
-    throw logger.newError('getViewProp is not available in JSReanimated.');
+    throw new ReanimatedError('getViewProp is not available in JSReanimated.');
   }
 
   configureProps() {
-    throw logger.newError('configureProps is not available in JSReanimated.');
+    throw new ReanimatedError(
+      'configureProps is not available in JSReanimated.'
+    );
   }
 
   executeOnUIRuntimeSync<T, R>(_shareable: ShareableRef<T>): R {
-    throw logger.newError(
+    throw new ReanimatedError(
       '`executeOnUIRuntimeSync` is not available in JSReanimated.'
     );
   }

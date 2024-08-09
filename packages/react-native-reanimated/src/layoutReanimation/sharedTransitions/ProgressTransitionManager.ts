@@ -7,8 +7,7 @@ import type {
 import { registerEventHandler, unregisterEventHandler } from '../../core';
 import { Platform } from 'react-native';
 import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../../logger';
 
 type TransitionProgressEvent = {
   closing: number;
@@ -231,7 +230,7 @@ if (shouldBeUseWeb()) {
     // Jest attempts to access a property of this object to check if it is a Jest mock
     // so we can't throw an error in the getter.
     if (!isJest()) {
-      throw logger.newError(
+      throw new ReanimatedError(
         '`ProgressTransitionRegister` is not available on non-native platform.'
       );
     }

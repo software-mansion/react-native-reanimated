@@ -20,7 +20,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-const SHOW_EXAMPLE: number = 15;
+const SHOW_EXAMPLE: number = 14;
 
 /** [-1]
  * Error: [Reanimated] Property `text` was whitelisted both as UI and native prop. Please remove it from

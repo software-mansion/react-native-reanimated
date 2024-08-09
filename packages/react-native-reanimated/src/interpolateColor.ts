@@ -13,8 +13,7 @@ import { makeMutable } from './core';
 import { Extrapolation, interpolate } from './interpolation';
 import type { SharedValue } from './commonTypes';
 import { useSharedValue } from './hook/useSharedValue';
-
-const logger = global.__reanimatedLogger;
+import { logger } from './logger';
 
 /**
  * @deprecated Please use Extrapolation instead
@@ -238,7 +237,7 @@ export function interpolateColor(
       options
     );
   }
-  throw logger.newError(
+  throw new ReanimatedError(
     `Invalid color space provided: ${
       colorSpace as string
     }. Supported values are: ['RGB', 'HSV'].`

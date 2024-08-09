@@ -13,8 +13,7 @@ import type {
 } from '../hook/commonTypes';
 import type { Component } from 'react';
 import { processColorsInProps } from '../Colors';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 type SetNativeProps = <T extends Component>(
   animatedRef: AnimatedRef<T>,

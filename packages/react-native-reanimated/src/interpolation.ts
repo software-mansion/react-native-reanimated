@@ -1,6 +1,6 @@
 'use strict';
 
-const logger = global.__reanimatedLogger;
+import { logger } from './logger';
 
 /**
  * Extrapolation type.
@@ -101,7 +101,7 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
 
   if (typeof type === 'string') {
     if (!isExtrapolate(type)) {
-      throw logger.newError(
+      throw new ReanimatedError(
         `Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
         interpolate(value, [inputRange], [outputRange], "clamp")`
       );
@@ -116,7 +116,7 @@ function validateType(type: ExtrapolationType): RequiredExtrapolationConfig {
     (type.extrapolateLeft && !isExtrapolate(type.extrapolateLeft)) ||
     (type.extrapolateRight && !isExtrapolate(type.extrapolateRight))
   ) {
-    throw logger.newError(
+    throw new ReanimatedError(
       `Unsupported value for "interpolate" \nSupported values: ["extend", "clamp", "identity", Extrapolatation.CLAMP, Extrapolatation.EXTEND, Extrapolatation.IDENTITY]\n Valid example:
       interpolate(value, [inputRange], [outputRange], {
         extrapolateLeft: Extrapolation.CLAMP,
@@ -185,7 +185,7 @@ export function interpolate(
 ): number {
   'worklet';
   if (inputRange.length < 2 || outputRange.length < 2) {
-    throw logger.newError(
+    throw new ReanimatedError(
       'Interpolation input and output ranges should contain at least two values.'
     );
   }

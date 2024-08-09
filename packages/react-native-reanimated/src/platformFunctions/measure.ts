@@ -12,8 +12,7 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 import type { Component } from 'react';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 type Measure = <T extends Component>(
   animatedRef: AnimatedRef<T>

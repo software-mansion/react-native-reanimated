@@ -6,8 +6,7 @@ import { isWindowAvailable } from '../../PlatformChecker';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Animations } from './config';
 import type { AnimationNames } from './config';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../../logger';
 
 const PREDEFINED_WEB_ANIMATIONS_ID = 'ReanimatedPredefinedWebAnimationsStyle';
 const CUSTOM_WEB_ANIMATIONS_ID = 'ReanimatedCustomWebAnimationsStyle';
@@ -77,7 +76,7 @@ export function insertWebAnimation(animationName: string, keyframe: string) {
     const nextAnimationIndex = animationNameToIndex.get(nextAnimationName);
 
     if (nextAnimationIndex === undefined) {
-      throw logger.newError('Failed to obtain animation index.');
+      throw new ReanimatedError('Failed to obtain animation index.');
     }
 
     animationNameToIndex.set(animationNameList[i], nextAnimationIndex + 1);
@@ -100,7 +99,7 @@ function removeWebAnimation(
   const currentAnimationIndex = animationNameToIndex.get(animationName);
 
   if (currentAnimationIndex === undefined) {
-    throw logger.newError('Failed to obtain animation index.');
+    throw new ReanimatedError('Failed to obtain animation index.');
   }
 
   animationRemoveCallback();
@@ -115,7 +114,7 @@ function removeWebAnimation(
     const nextAnimationIndex = animationNameToIndex.get(nextAnimationName);
 
     if (nextAnimationIndex === undefined) {
-      throw logger.newError('Failed to obtain animation index.');
+      throw new ReanimatedError('Failed to obtain animation index.');
     }
 
     animationNameToIndex.set(animationNameList[i], nextAnimationIndex - 1);

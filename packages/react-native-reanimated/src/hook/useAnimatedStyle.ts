@@ -34,8 +34,7 @@ import type {
   AnimatedStyle,
 } from '../commonTypes';
 import { isWorkletFunction } from '../commonTypes';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../logger';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -382,7 +381,7 @@ function checkSharedValueUsage(
     prop.value !== undefined
   ) {
     // if shared value is passed instead of its value, throw an error
-    throw logger.newError(
+    throw new ReanimatedError(
       `Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
     );
   }
@@ -424,7 +423,7 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
       !dependencies &&
       !isWorkletFunction(updater)
     ) {
-      throw logger.newError(
+      throw new ReanimatedError(
         `\`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
 For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin\`.`
       );

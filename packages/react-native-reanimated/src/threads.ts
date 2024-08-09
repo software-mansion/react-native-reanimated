@@ -11,8 +11,6 @@ import type { LogData } from './logger';
 import { logger, loggerImpl, logToLogBoxAndConsole } from './logger';
 import { shareableMappingCache } from './shareableMappingCache';
 
-const logger = global.__reanimatedLogger;
-
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -81,12 +79,12 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
-    throw logger.newError(
+    throw new ReanimatedError(
       '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
-    throw logger.newError('`runOnUI` can only be used on worklets.');
+    throw new ReanimatedError('`runOnUI` can only be used on worklets.');
   }
   return (...args) => {
     if (IS_JEST) {
@@ -167,12 +165,14 @@ export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
-    throw logger.newError(
+    throw new ReanimatedError(
       '`runOnUIImmediately` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
-    throw logger.newError('`runOnUIImmediately` can only be used on worklets.');
+    throw new ReanimatedError(
+      '`runOnUIImmediately` can only be used on worklets.'
+    );
   }
   return (...args) => {
     NativeReanimatedModule.scheduleOnUI(

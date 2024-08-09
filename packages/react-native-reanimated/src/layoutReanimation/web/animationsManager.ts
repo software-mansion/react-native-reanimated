@@ -30,8 +30,7 @@ import { Keyframe } from '../animationBuilder';
 import { makeElementVisible } from './componentStyle';
 import { EasingNameSymbol } from '../../Easing';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
-
-const logger = global.__reanimatedLogger;
+import { logger } from '../../logger';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,
