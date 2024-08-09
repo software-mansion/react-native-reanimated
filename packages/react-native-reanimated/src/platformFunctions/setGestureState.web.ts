@@ -1,5 +1,7 @@
 'use strict';
 
+import { logger } from '../logger';
+
 export function setGestureState() {
-  console.warn('[Reanimated] setGestureState() is not available on web.');
+  logger.warn('setGestureState() is not available on web.');
 }

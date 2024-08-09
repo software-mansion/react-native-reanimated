@@ -188,8 +188,8 @@ export const advanceAnimationByFrame = (count: number) => {
 const requireFunction = isJest()
   ? require
   : () => {
-      throw new Error(
-        '[Reanimated] `setUpTests` is available only in Jest environment.'
+      throw new ReanimatedError(
+        '`setUpTests` is available only in Jest environment.'
       );
     };
 

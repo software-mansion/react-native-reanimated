@@ -171,8 +171,8 @@ export class SharedTransition {
         animations = animationFactory(values);
         for (const key in animations) {
           if (!(SUPPORTED_PROPS as readonly string[]).includes(key)) {
-            throw new Error(
-              `[Reanimated] The prop '${key}' is not supported yet.`
+            throw new ReanimatedError(
+              `The prop '${key}' is not supported yet.`
             );
           }
         }

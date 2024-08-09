@@ -236,8 +236,8 @@ export function interpolateColor(
       options
     );
   }
-  throw new Error(
-    `[Reanimated] Invalid color space provided: ${
+  throw new ReanimatedError(
+    `Invalid color space provided: ${
       colorSpace as string
     }. Supported values are: ['RGB', 'HSV'].`
   );

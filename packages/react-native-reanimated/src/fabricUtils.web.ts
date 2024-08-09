@@ -1,6 +1,7 @@
 'use strict';
+
 export function getShadowNodeWrapperFromRef() {
-  throw new Error(
-    '[Reanimated] Trying to call `getShadowNodeWrapperFromRef` on web.'
+  throw new ReanimatedError(
+    'Trying to call `getShadowNodeWrapperFromRef` on web.'
   );
 }

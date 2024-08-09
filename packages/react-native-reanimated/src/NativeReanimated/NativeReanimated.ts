@@ -68,8 +68,8 @@ function assertSingleReanimatedInstance() {
     global._REANIMATED_VERSION_JS !== undefined &&
     global._REANIMATED_VERSION_JS !== jsVersion
   ) {
-    throw new Error(
-      `[Reanimated] Another instance of Reanimated was detected.
+    throw new ReanimatedError(
+      `Another instance of Reanimated was detected.
 See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#another-instance-of-reanimated-was-detected\` for more details. Previous: ${global._REANIMATED_VERSION_JS}, current: ${jsVersion}.`
     );
   }
@@ -89,8 +89,8 @@ export class NativeReanimated {
       ReanimatedModule?.installTurboModule(valueUnpackerCode);
     }
     if (global.__reanimatedModuleProxy === undefined) {
-      throw new Error(
-        `[Reanimated] Native part of Reanimated doesn't seem to be initialized.
+      throw new ReanimatedError(
+        `Native part of Reanimated doesn't seem to be initialized.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }

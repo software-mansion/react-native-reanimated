@@ -52,8 +52,8 @@ export function getViewProp<T>(
   component?: React.Component // required on Fabric
 ): Promise<T> {
   if (isFabric() && !component) {
-    throw new Error(
-      '[Reanimated] Function `getViewProp` requires a component to be passed as an argument on Fabric.'
+    throw new ReanimatedError(
+      'Function `getViewProp` requires a component to be passed as an argument on Fabric.'
     );
   }
 

@@ -5,6 +5,7 @@ import type {
   Timestamp,
   ReduceMotion,
 } from '../commonTypes';
+import { logger } from '../logger';
 
 /**
  * Spring animation configuration.
@@ -108,7 +109,7 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   }
 
   if (errorMessage !== '') {
-    console.warn('[Reanimated] Invalid spring config' + errorMessage);
+    logger.warn('Invalid spring config' + errorMessage);
   }
 
   return errorMessage === '';

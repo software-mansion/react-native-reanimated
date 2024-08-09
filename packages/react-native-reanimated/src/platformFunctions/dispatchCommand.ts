@@ -12,6 +12,7 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 import type { Component } from 'react';
+import { logger } from '../logger';
 
 type DispatchCommand = <T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -58,19 +59,15 @@ function dispatchCommandPaper(
 }
 
 function dispatchCommandJest() {
-  console.warn('[Reanimated] dispatchCommand() is not supported with Jest.');
+  logger.warn('dispatchCommand() is not supported with Jest.');
 }
 
 function dispatchCommandChromeDebugger() {
-  console.warn(
-    '[Reanimated] dispatchCommand() is not supported with Chrome Debugger.'
-  );
+  logger.warn('dispatchCommand() is not supported with Chrome Debugger.');
 }
 
 function dispatchCommandDefault() {
-  console.warn(
-    '[Reanimated] dispatchCommand() is not supported on this configuration.'
-  );
+  logger.warn('dispatchCommand() is not supported on this configuration.');
 }
 
 if (!shouldBeUseWeb()) {
