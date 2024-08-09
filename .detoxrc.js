@@ -17,13 +17,14 @@ module.exports = {
       build:
         'xcodebuild -workspace apps/paper-example/ios/ReanimatedExample.xcworkspace  -scheme ReanimatedExample -configuration Debug -sdk iphonesimulator -derivedDataPath  apps/paper-example/ios/build',
     },
-    // 'ios.release': {
-    //   type: 'ios.app',
-    //   binaryPath:
-    //     'ios/build/Build/Products/Release-iphonesimulator/YOUR_APP.app',
-    //   build:
-    //     'xcodebuild -workspace ios/YOUR_APP.xcworkspace -scheme YOUR_APP -configuration Release -sdk iphonesimulator -derivedDataPath ios/build',
-    // },
+    'ios.release': {
+      type: 'ios.app',
+      binaryPath:
+        'apps/paper-example/ios/build/Build/Products/Release-iphonesimulator/ReanimatedExample.app',
+
+      build:
+        'xcodebuild -workspace apps/paper-example/ios/ReanimatedExample.xcworkspace -scheme ReanimatedExample -configuration Release -sdk iphonesimulator -derivedDataPath apps/paper-example/ios/build',
+    },
     // 'android.debug': {
     //   type: 'android.apk',
     //   binaryPath: 'android/app/build/outputs/apk/debug/app-debug.apk',

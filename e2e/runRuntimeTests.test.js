@@ -7,7 +7,7 @@ describe('Runtime tests', () => {
     await device.reloadReactNative();
   });
 
-  test.each(['utilities', 'babel plugin'])(
+  test.each(['utilities', 'babel plugin', 'advanced API', 'core'])(
     'Run tests of %p',
     async (sectionName) => {
       await element(by.id('RuntimeTestsExample')).tap();
