@@ -29,6 +29,9 @@ jobs:
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+      - name: Build Reanimated for TypeScript types
+        working-directory: packages/react-native-reanimated
+        run: yarn build
 
       - name: Check TypeScript types
         working-directory: packages/react-native-reanimated
