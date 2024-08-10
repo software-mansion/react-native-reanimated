@@ -114,61 +114,16 @@ const transition = SharedTransition.custom((values) => {
 />
 ```
 
-## Examples
+## Example
 
-More examples of usage you can find in **[Reanimated Example App](https://github.com/software-mansion/react-native-reanimated/tree/3.3.0/app/src/examples/SharedElementTransitions)**.
-
-```tsx {14,26}
-import * as React from 'react';
-import { View, Button } from 'react-native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NavigationContainer } from '@react-navigation/native';
-import Animated from 'react-native-reanimated';
-
-const Stack = createNativeStackNavigator();
-
-function Screen1({ navigation }) {
-  return (
-    <View style={{ flex: 1 }}>
-      <Animated.View
-        style={{ width: 150, height: 150, backgroundColor: 'green' }}
-        sharedTransitionTag="sharedTag"
-      />
-      <Button title="Screen2" onPress={() => navigation.navigate('Screen2')} />
-    </View>
-  );
-}
-
-function Screen2({ navigation }) {
-  return (
-    <View style={{ flex: 1, marginTop: 50 }}>
-      <Animated.View
-        style={{ width: 100, height: 100, backgroundColor: 'green' }}
-        sharedTransitionTag="sharedTag"
-      />
-      <Button title="Screen1" onPress={() => navigation.navigate('Screen1')} />
-    </View>
-  );
-}
-
-export default function SharedElementExample() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: true }}>
-        <Stack.Screen name="Screen1" component={Screen1} />
-        <Stack.Screen name="Screen2" component={Screen2} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
-```
-
-## Limitation and known issues
+## Remarks
 
 - Only the native stack is supported.
 - You can only animate `width`, `height`, `originX`, `originY`, and `transformMatrix` properties when using the shared transition.
 - The layout for shared view children is not computed during the transition.
 - The current implementation supports only the old React Native architecture (Paper)
+
+<PlatformCompatibility android ios />
 
 ## Plans for future
 
