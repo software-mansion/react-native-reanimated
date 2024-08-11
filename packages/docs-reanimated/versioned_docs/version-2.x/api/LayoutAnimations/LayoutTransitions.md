@@ -145,7 +145,7 @@ Entry/Exit transition, lets you specify different animations for exiting from th
 
 #### Combine Transition
 
-To make usage of that transition simplier we have prepared function `combineTransition` that will make your code look cleaner and shorter.
+To simplify the usage of this transition, we have prepared a function called `combineTransition`, which will make your code clean and concise.
 
 ##### Usage
 
