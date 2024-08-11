@@ -1,3 +1,4 @@
+'use strict';
 import type { Component, ComponentClass } from 'react';
 
 export function findNodeHandle(
