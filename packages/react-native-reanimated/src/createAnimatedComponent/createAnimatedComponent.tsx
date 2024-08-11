@@ -503,7 +503,7 @@ export function createAnimatedComponent(
                 : getReduceMotionFromConfig();
             if (!reduceMotionInExiting) {
               updateLayoutAnimations(
-                tag as number,
+                tag,
                 LayoutAnimationType.EXITING,
                 maybeBuild(
                   exiting,
@@ -517,7 +517,7 @@ export function createAnimatedComponent(
           const skipEntering = this.context?.current;
           if (entering && !skipEntering && !IS_WEB) {
             updateLayoutAnimations(
-              tag as number,
+              tag,
               LayoutAnimationType.ENTERING,
               maybeBuild(
                 entering,
