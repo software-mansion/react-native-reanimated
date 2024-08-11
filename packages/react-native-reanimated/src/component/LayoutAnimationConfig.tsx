@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import type { ReactNode } from 'react';
 import { setShouldAnimateExitingForTag } from '../core';
-import { findNodeHandle } from 'react-native';
+import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 
 export const SkipEnteringContext =
   createContext<React.MutableRefObject<boolean> | null>(null);
