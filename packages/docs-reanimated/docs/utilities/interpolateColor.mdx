@@ -4,44 +4,82 @@ sidebar_position: 3
 
 # interpolateColor
 
-import DocsCompatibilityInfo from '../_shared/_docs_compatibility_info.mdx';
+`interpolateColor` maps input range to output colors using linear interpolation.
 
-<DocsCompatibilityInfo />
+## Reference
 
-Maps input range to output colors using linear interpolation. It works just like `interpolate` function but the output is color string in `rgba(r, g, b, a)` notation.
+```jsx
+import { interpolateColor } from 'react-native-reanimated';
+
+function App() {
+  const progress = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      // highlight-start
+      backgroundColor: interpolateColor(
+        progress.value,
+        [0, 1],
+        ['red', 'green']
+      ),
+      // highlight-end
+    };
+  });
+
+  // ...
+
+  return <Animated.View style={[{ width: 100, height: 100 }, animatedStyle]} />;
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type InterpolationOptions = {
+  gamma?: number;
+  useCorrectedHSVInterpolation?: boolean;
+};
+
+function interpolateColor(
+  value: number,
+  input: number[],
+  output: string[],
+  colorSpace?: 'RGB' | 'HSV',
+  options?: InterpolationOptions
+): string;
+```
+
+</details>
 
 ### Arguments
 
-#### `value` [Float]
+#### `value`
 
-Value from within the input range that should be mapped to a value from the output range.
+A number from the input range that is going to be mapped to the output range.
 
-#### `input range` [Float[]]
+#### `input`
 
-An array of Floats that contains points that indicate the range of the input value. Values in the input range should be increasing.
+An array of numbers specifying the input range of the interpolation. Values in the input range should be increasing.
 
-#### `output range` [(string | number)[]]
+#### `output`
 
-An array of colors (strings like `'red'`, `'#ff0000'`, `'rgba(255, 0, 0, 0.5)'` etc.) that contains points that indicate the range of the output value. It should have at least the same number of points as the input range.
+An array of output colors values in form of strings (like `'red'`, `'#ff0000'`, `'rgba(255, 0, 0, 0.5)'` etc.). It should have at least the same number of points as the input range.
 
-#### `color space` [String]
+#### `colorSpace` <Optional />
 
-Can be either `'RGB'` or `'HSV'`.
+The color space to use for interpolation. Can be either `'HSV'` or `'RGB'`. Defaults to `'RGB'`.
 
-#### `options` [Object]
+#### `options` <Optional />
 
-Object containing color interpolation options. Allowed parameters are listed below:
+Color interpolation options. Allowed parameters:
 
-| Options                      | Default | Description                                             |
-| ---------------------------- | ------- | ------------------------------------------------------- |
-| gamma                        | 2.2     | Gamma parameter used in gamma correction.               |
-| useCorrectedHSVInterpolation | true    | See [Options explanation](#options-explanation) section |
+| Options                                   | Type      | Default | Description                                                                 |
+| ----------------------------------------- | --------- | ------- | --------------------------------------------------------------------------- |
+| gamma <Optional />                        | `number`  | 2.2     | Gamma parameter used in gamma correction.                                   |
+| useCorrectedHSVInterpolation <Optional /> | `boolean` | true    | Whether to reduce the number of colors the interpolation has to go through. |
 
-### Returns
-
-`interpolateColor` returns the color after interpolation from within the output range in `rgba(r, g, b, a)` format.
-
-### Options explanation
+#### Options explanation
 
 - _gamma_ - Colors on web / mobile are expressed in sRGB colorspace which is gamma-corrected, that is non-linear.
   Operations on colors in non-linear space like addition will give wrong results. For example the interpolated color
@@ -53,38 +91,20 @@ Object containing color interpolation options. Allowed parameters are listed bel
   through many other hues. This option allows to reduce the number of hues in such cases by treating HSV hues like a circular spectrum and choosing
   the shortest arc (so instead of going from yellow to purple through green and blue, it goes only through red).
 
+### Returns
+
+`interpolateColor` returns the color after interpolation from within the output range in `rgba(r, g, b, a)` format.
+
 ## Example
-
-```js
-const Component = () => {
-  const progress = useSharedValue(0);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      backgroundColor: interpolateColor(
-        progress.value,
-        [0, 1],
-        ['red', 'green']
-      ),
-    };
-  });
-
-  return (
-    <View>
-      <Animated.View style={[{ width: 100, height: 100 }, animatedStyle]} />
-      <Button
-        onPress={() => {
-          progress.value = withTiming(1 - progress.value, { duration: 1000 });
-        }}
-        title="run animation"
-      />
-    </View>
-  );
-};
-```
-
-## Playground
 
 import { useInterpolateColorPlayground } from '@site/src/components/InteractivePlayground';
 
 <InteractivePlayground usePlayground={useInterpolateColorPlayground} />
+
+## Remarks
+
+- It works just like `interpolate` function but the output is color string in `rgba(r, g, b, a)` notation.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />

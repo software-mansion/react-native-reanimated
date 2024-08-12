@@ -2,24 +2,22 @@ import type { Component, ReactElement } from 'react';
 import { TestRunner } from './TestRunner/TestRunner';
 import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
-import type { TestConfiguration, TestValue, NullableTestValue, MaybeAsync } from './types';
+import type { TestConfiguration, TestValue, MaybeAsync } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
+const windowDimensionsMocker = testRunner.getWindowDimensionsMocker();
+const animationRecorder = testRunner.getAnimationUpdatesRecorder();
+const valueRegistry = testRunner.getValueRegistry();
 
 type DescribeFunction = (name: string, buildSuite: MaybeAsync<void>) => void;
 type TestFunction = (name: string, buildTest: MaybeAsync<void>) => void;
-type TestFunctionWithWarning = (name: string, warningMessage: string, buildTest: MaybeAsync<void>) => void;
 type TestEachFunction = <T>(
   examples: Array<T>,
 ) => (name: string, testCase: (example: T, index: number) => void | Promise<void>) => void;
-type TestEachFunctionWithWarning = <T>(
-  examples: Array<T>,
-) => (name: string, expectedWarning: string, testCase: (example: T, index: number) => void | Promise<void>) => void;
 type DecoratedTestFunction = TestFunction & { each: TestEachFunction };
-type DecoratedTestFunctionWithWarning = TestFunctionWithWarning & { each: TestEachFunctionWithWarning };
 
 const describeBasic = (name: string, buildSuite: MaybeAsync<void>) => {
   testRunner.describe(name, buildSuite, null);
@@ -51,32 +49,12 @@ const testOnly: DecoratedTestFunction = (name: string, testCase: MaybeAsync<void
 testOnly.each = <T>(examples: Array<T>) => {
   return testRunner.testEach(examples, TestDecorator.ONLY);
 };
-const testFailing: DecoratedTestFunctionWithWarning = (
-  name: string,
-  expectedWarning: string,
-  testCase: MaybeAsync<void>,
-) => {
-  testRunner.test(name, testCase, TestDecorator.FAILING, expectedWarning);
-};
-testFailing.each = <T>(examples: Array<T>) => {
-  return testRunner.testEachErrorMsg(examples, TestDecorator.FAILING);
-};
-const testWarn: DecoratedTestFunctionWithWarning = (name: string, expectedWarning: string, testCase: MaybeAsync<void>) => {
-  testRunner.test(name, testCase, TestDecorator.WARN, expectedWarning);
-};
-testWarn.each = <T>(examples: Array<T>) => {
-  return testRunner.testEachErrorMsg(examples, TestDecorator.WARN);
-};
 
-type TestType = DecoratedTestFunction &
-  Record<TestDecorator.SKIP | TestDecorator.ONLY, DecoratedTestFunction> &
-  Record<TestDecorator.FAILING | TestDecorator.WARN, DecoratedTestFunctionWithWarning>;
+type TestType = DecoratedTestFunction & Record<TestDecorator.SKIP | TestDecorator.ONLY, DecoratedTestFunction>;
 
 export const test = <TestType>testBasic;
 test.skip = testSkip;
 test.only = testOnly;
-test.failing = testFailing;
-test.warn = testWarn;
 
 export function beforeAll(job: MaybeAsync<void>) {
   testRunner.beforeAll(job);
@@ -126,11 +104,11 @@ export function getTrackerCallCount(name: string) {
 }
 
 export function registerValue(name: string, value: SharedValue) {
-  return testRunner.registerValue(name, value);
+  return valueRegistry.registerValue(name, value);
 }
 
 export async function getRegisteredValue(name: string) {
-  return await testRunner.getRegisteredValue(name);
+  return await valueRegistry.getRegisteredValue(name);
 }
 
 export function getTestComponent(name: string): TestComponent {
@@ -164,50 +142,30 @@ export function expect(value: TestValue) {
   return testRunner.expect(value);
 }
 
-export function expectNullable(currentValue: NullableTestValue) {
-  return testRunner.expectNullable(currentValue);
-}
-
-export function expectNotNullable(currentValue: NullableTestValue) {
-  return testRunner.expectNotNullable(currentValue);
-}
-
 export function configure(config: TestConfiguration) {
   return testRunner.configure(config);
 }
 
 export async function mockAnimationTimer() {
-  await testRunner.mockAnimationTimer();
+  await animationRecorder.mockAnimationTimer();
 }
 
 export async function unmockAnimationTimer() {
-  await testRunner.unmockAnimationTimer();
+  await animationRecorder.unmockAnimationTimer();
 }
 
 export async function mockWindowDimensions() {
-  await testRunner.mockWindowDimensions();
+  await windowDimensionsMocker.mockWindowDimensions();
 }
 
 export async function unmockWindowDimensions() {
-  await testRunner.unmockWindowDimensions();
-}
-
-export async function setAnimationTimestamp(timestamp: number) {
-  await testRunner.setAnimationTimestamp(timestamp);
-}
-
-export async function advanceAnimationByTime(time: number) {
-  await testRunner.advanceAnimationByTime(time);
-}
-
-export async function advanceAnimationByFrames(frameCount: number) {
-  await testRunner.advanceAnimationByFrames(frameCount);
+  await windowDimensionsMocker.unmockWindowDimensions();
 }
 
 export async function recordAnimationUpdates() {
-  return testRunner.recordAnimationUpdates();
+  return animationRecorder.recordAnimationUpdates();
 }
 
 export async function stopRecordingAnimationUpdates() {
-  await testRunner.stopRecordingAnimationUpdates();
+  await animationRecorder.stopRecordingAnimationUpdates();
 }

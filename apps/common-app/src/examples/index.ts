@@ -131,6 +131,8 @@ import BorderRadiiExample from './SharedElementTransitions/BorderRadii';
 import FreezingShareablesExample from './ShareableFreezingExample';
 import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
 import StrictDOMExample from './StrictDOMExample';
+import BottomTabsExample from './LayoutAnimations/BottomTabs';
+import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation';
 
 interface Example {
   icon?: string;
@@ -669,6 +671,10 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Reactions counter',
     screen: ReactionsCounterExample,
   },
+  ListItemLayoutAnimation: {
+    title: '[LA] List item layout animation',
+    screen: ListItemLayoutAnimation,
+  },
   SwipeableList: {
     title: '[LA] Swipeable list',
     screen: SwipeableList,
@@ -700,6 +706,10 @@ export const EXAMPLES: Record<string, Example> = {
   ChangeTheme: {
     title: '[LA] Change theme',
     screen: ChangeThemeExample,
+  },
+  BottomTabs: {
+    title: '[LA] Bottom Tabs',
+    screen: BottomTabsExample,
   },
 
   // Shared Element Transitions

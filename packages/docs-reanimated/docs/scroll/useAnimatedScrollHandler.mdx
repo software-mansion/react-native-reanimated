@@ -4,126 +4,105 @@ sidebar_position: 3
 
 # useAnimatedScrollHandler
 
-import DocsCompatibilityInfo from '../_shared/_docs_compatibility_info.mdx';
+`useAnimatedScrollHandler` is a hook that returns an event handler reference. It can be used with React Native's scrollable components.
 
-<DocsCompatibilityInfo />
+## Reference
 
-This is a convenience hook that returns an event handler reference which can be used with React Native's scrollable components.
+```js
+import { useAnimatedScrollHandler } from 'react-native-reanimated';
+
+function App() {
+  const offsetY = useSharedValue(0);
+
+  // highlight-start
+  const scrollHandler = useAnimatedScrollHandler((event) => {
+    offsetY.value = event.contentOffset.y;
+  });
+  // highlight-end
+
+  // ...
+
+  return <Animated.ScrollView onScroll={scrollHandler} />;
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function useAnimatedScrollHandler<Context extends Record<string, unknown>>(
+  handlers: ScrollHandler<Context> | ScrollHandlers<Context>,
+  dependencies?: DependencyList
+): ScrollHandlerProcessed<Context>;
+
+type ScrollHandler<
+  Context extends Record<string, unknown> = Record<string, unknown>
+> = (event: ReanimatedScrollEvent, context: Context) => void;
+
+interface ScrollHandlers<Context extends Record<string, unknown>> {
+  onScroll?: ScrollHandler<Context>;
+  onBeginDrag?: ScrollHandler<Context>;
+  onEndDrag?: ScrollHandler<Context>;
+  onMomentumBegin?: ScrollHandler<Context>;
+  onMomentumEnd?: ScrollHandler<Context>;
+}
+
+type DependencyList = Array<unknown> | undefined;
+```
+
+</details>
 
 ### Arguments
 
-#### `scrollHandlerOrHandlersObject` [object with worklets]
+#### `handlers`
 
-Object containing any of the following keys: `onScroll`, `onBeginDrag`, `onEndDrag`, `onMomentumBegin`, `onMomentumEnd`.
+Object containing custom keys matching native event names. Following keys are available:
+
+- `onScroll`
+- `onBeginDrag`
+- `onEndDrag`
+- `onMomentumBegin`
+- `onMomentumEnd`
+
 The values in the object should be individual worklets.
 Each of the worklet will be triggered when the corresponding event is dispatched on the connected Scrollable component.
 
 Each of the event worklets will receive the following parameters when called:
 
-- `event` [object] - event object carrying the information about the scroll.
-  The payload can differ depending on the type of the event (`onScroll`, `onBeginDrag`, etc.).
+- `event` - event object carrying the information about the scroll.
+  The payload can differ depending on the type of the event.
   Please consult [React Native's ScrollView documentation](https://reactnative.dev/docs/scrollview) to learn about scroll event structure.
 
-- `context` [object] - plain JS object that can be used to store some state.
+- `context` - plain JS object that can be used to store some state.
   This object will persist in between scroll event occurrences and you can read and write any data to it.
   When there are several event handlers provided in a form of an object of worklets, the `context` object will be shared in between the worklets allowing them to communicate with each other.
 
-#### `dependencies` [Array]
+#### `dependencies` <Optional />
 
-Optional array of values which changes cause this hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
+An optional array of dependencies.
 
-Example:
-
-```js {11}
-const App = () => {
-  const [state, setState] = useState(0);
-  const sv = useSharedValue(0);
-
-  const handler = useAnimatedScrollHandler(
-    {
-      onEndDrag: (e) => {
-        sv.value = state;
-      },
-    },
-    dependencies
-  );
-  //...
-  return <></>;
-};
-```
-
-`dependencies` here may be:
-
-- `undefined`(argument skipped) - worklet will be rebuilt if there is any change in any of the callbacks' bodies or any values from their closure(variables from outer scope used in worklet),
-- empty array(`[]`) - worklet will be rebuilt only if any of the callbacks' bodies changes,
-- array of values(`[val1, val2, ..., valN]`) - worklet will be rebuilt if there is any change in any of the callbacks bodies or in any values from the given array.
+Only relevant when using Reanimated [without the Babel plugin on the Web.](/docs/guides/web-support/#web-without-the-babel-plugin)
 
 ### Returns
 
-The hook returns a handler object that can be hooked into a scrollable container.
-Note that in order for the handler to be properly triggered, you should use containers that are wrapped with `Animated` (e.g. `Animated.ScrollView` and not just `ScrollView`).
-The handler should be passed under `onScroll` parameter regardless of whether it is configured to receive only scroll or also momentum or drag events.
-
-### Remarks
-
-- The hook returns a handler that may be passed to multiple components. In such situation, the handler will invoke for the given events each time any of the components dispatches them.
+The hook returns a handler object that can be hooked into a scrollable container. The returned handler should be passed under `onScroll` parameter regardless of whether it is configured to receive only scroll or also momentum or drag events. In order for the returned handler to be properly triggered, you should use containers that are wrapped with `Animated` (e.g. `Animated.ScrollView` and not just `ScrollView`).
 
 ## Example
 
-In the below example we define a scroll handler by passing a single worklet handler.
-The worklet handler is triggered for each of the scroll events dispatched to the `Animated.ScrollView` component to which we attach the handler.
+import AnimatedScrollHandler from '@site/src/examples/AnimatedScrollHandler';
+import AnimatedScrollHandlerSrc from '!!raw-loader!@site/src/examples/AnimatedScrollHandler';
 
-```jsx {10-12,29}
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  useAnimatedScrollHandler,
-} from 'react-native-reanimated';
+<InteractiveExample
+  src={AnimatedScrollHandlerSrc}
+  component={AnimatedScrollHandler}
+/>
 
-function ScrollExample() {
-  const translationY = useSharedValue(0);
+## Remarks
 
-  const scrollHandler = useAnimatedScrollHandler((event) => {
-    translationY.value = event.contentOffset.y;
-  });
+- The returned handler may be passed to multiple components. In such situation, the handler will invoke for the given events each time any of the components dispatches them.
+- If a single worklet function of type `(event) => void` is passed instead of a map of functions matched to event keys, it's treated as a handler for the `onScroll` event.
+- Only `onScroll` event works on Web.
 
-  const stylez = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          translateY: translationY.value,
-        },
-      ],
-    };
-  });
+## Platform compatibility
 
-  return (
-    <View style={styles.container}>
-      <Animated.View style={[styles.box, stylez]} />
-      <Animated.ScrollView style={styles.scroll} onScroll={scrollHandler}>
-        <Content />
-      </Animated.ScrollView>
-    </View>
-  );
-}
-```
-
-If we are interested in receiving drag or momentum events instead of passing a single worklet object we can pass an object of worklets.
-Below for convenience, we only show how the `scrollHandler` should be defined in such a case.
-The place where we attach handler to a scrollable component remains unchanged regardless of the event types we want to receive:
-
-```jsx
-const isScrolling = useSharedValue(false);
-
-const scrollHandler = useAnimatedScrollHandler({
-  onScroll: (event) => {
-    translationY.value = event.contentOffset.y;
-  },
-  onBeginDrag: (e) => {
-    isScrolling.value = true;
-  },
-  onEndDrag: (e) => {
-    isScrolling.value = false;
-  },
-});
-```
+<PlatformCompatibility android ios web />

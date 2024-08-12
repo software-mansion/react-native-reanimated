@@ -8,7 +8,7 @@ import type {
   CustomConfig,
   KeyframeDefinitions,
 } from './config';
-import { WebEasings } from './Easing.web';
+import { WebEasings, getEasingByName } from './Easing.web';
 import type { WebEasingsNames } from './Easing.web';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
@@ -21,14 +21,25 @@ import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Keyframe } from '../animationBuilder';
 import { ReducedMotionManager } from '../../ReducedMotion';
+import { prepareCurvedTransition } from './transition/Curved.web';
+import { EasingNameSymbol } from '../../Easing';
 
 function getEasingFromConfig(config: CustomConfig): string {
-  const easingName =
-    config.easingV && config.easingV.name in WebEasings
-      ? (config.easingV.name as WebEasingsNames)
-      : 'linear';
+  if (!config.easingV) {
+    return getEasingByName('linear');
+  }
 
-  return `cubic-bezier(${WebEasings[easingName].toString()})`;
+  const easingName = config.easingV[EasingNameSymbol];
+
+  if (!(easingName in WebEasings)) {
+    console.warn(
+      `[Reanimated] Selected easing is not currently supported on web.`
+    );
+
+    return getEasingByName('linear');
+  }
+
+  return getEasingByName(easingName as WebEasingsNames);
 }
 
 function getRandomDelay(maxDelay = 1000) {
@@ -142,9 +153,10 @@ export function saveSnapshot(element: HTMLElement) {
 }
 
 export function setElementAnimation(
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig,
-  shouldSavePosition = false
+  shouldSavePosition = false,
+  parent: Element | null = null
 ) {
   const { animationName, duration, delay, easing } = animationConfig;
 
@@ -168,22 +180,30 @@ export function setElementAnimation(
       saveSnapshot(element);
     }
 
+    if (parent?.contains(element)) {
+      element.removedAfterAnimation = true;
+      parent.removeChild(element);
+    }
+
     animationConfig.callback?.(true);
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
   const animationCancelHandler = () => {
     animationConfig.callback?.(false);
+
+    if (parent?.contains(element)) {
+      element.removedAfterAnimation = true;
+      parent.removeChild(element);
+    }
+
     element.removeEventListener('animationcancel', animationCancelHandler);
   };
 
   // Here we have to use `addEventListener` since element.onanimationcancel doesn't work on chrome
   element.onanimationstart = () => {
     if (animationConfig.animationType === LayoutAnimationType.ENTERING) {
-      _updatePropsJS(
-        { visibility: 'initial' },
-        element as ReanimatedHTMLElement
-      );
+      _updatePropsJS({ visibility: 'initial' }, element);
     }
 
     element.addEventListener('animationcancel', animationCancelHandler);
@@ -199,7 +219,7 @@ export function setElementAnimation(
 }
 
 export function handleLayoutTransition(
-  element: HTMLElement,
+  element: ReanimatedHTMLElement,
   animationConfig: AnimationConfig,
   transitionData: TransitionData
 ) {
@@ -220,6 +240,9 @@ export function handleLayoutTransition(
     case 'JumpingTransition':
       animationType = TransitionType.JUMPING;
       break;
+    case 'CurvedTransition':
+      animationType = TransitionType.CURVED;
+      break;
     case 'EntryExitTransition':
       animationType = TransitionType.ENTRY_EXIT;
       break;
@@ -228,11 +251,21 @@ export function handleLayoutTransition(
       break;
   }
 
-  animationConfig.animationName = TransitionGenerator(
-    animationType,
-    transitionData
-  );
+  const { transitionKeyframeName, dummyTransitionKeyframeName } =
+    TransitionGenerator(animationType, transitionData);
 
+  animationConfig.animationName = transitionKeyframeName;
+
+  if (animationType === TransitionType.CURVED) {
+    const { dummy, dummyAnimationConfig } = prepareCurvedTransition(
+      element,
+      animationConfig,
+      transitionData,
+      dummyTransitionKeyframeName! // In `CurvedTransition` it cannot be undefined
+    );
+
+    setElementAnimation(dummy, dummyAnimationConfig);
+  }
   setElementAnimation(element, animationConfig);
 }
 
@@ -268,6 +301,7 @@ export function handleExitingAnimation(
   dummy.reanimatedDummy = true;
 
   element.style.animationName = '';
+  dummy.style.animationName = '';
 
   // After cloning the element, we want to move all children from original element to its clone. This is because original element
   // will be unmounted, therefore when this code executes in child component, parent will be either empty or removed soon.
@@ -278,7 +312,6 @@ export function handleExitingAnimation(
     dummy.appendChild(element.firstChild);
   }
 
-  setElementAnimation(dummy, animationConfig);
   parent?.appendChild(dummy);
 
   const snapshot = snapshots.get(element)!;
@@ -308,22 +341,5 @@ export function handleExitingAnimation(
 
   setElementPosition(dummy, snapshot);
 
-  const originalOnAnimationEnd = dummy.onanimationend;
-
-  dummy.onanimationend = function (event: AnimationEvent) {
-    if (parent?.contains(dummy)) {
-      dummy.removedAfterAnimation = true;
-      parent.removeChild(dummy);
-    }
-
-    // Given that this function overrides onAnimationEnd, it won't be null
-    originalOnAnimationEnd?.call(this, event);
-  };
-
-  dummy.addEventListener('animationcancel', () => {
-    if (parent?.contains(dummy)) {
-      dummy.removedAfterAnimation = true;
-      parent.removeChild(dummy);
-    }
-  });
+  setElementAnimation(dummy, animationConfig, false, parent);
 }

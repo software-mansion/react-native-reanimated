@@ -12,4 +12,8 @@ export const WebEasings = {
   exp: [0.7, 0, 0.84, 0],
 };
 
+export function getEasingByName(easingName: WebEasingsNames) {
+  return `cubic-bezier(${WebEasings[easingName].toString()})`;
+}
+
 export type WebEasingsNames = keyof typeof WebEasings;
