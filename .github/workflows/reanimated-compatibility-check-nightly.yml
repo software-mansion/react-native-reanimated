@@ -1,7 +1,4 @@
 name: Reanimated compatibility check [Nightly]
-# env:
-# YARN_ENABLE_HARDENED_MODE: 0
-# YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
   pull_request:
     paths:
@@ -20,14 +17,14 @@ jobs:
         mode: ['Debug', 'Release']
         # TODO: Fetch compatibility in docs and here from common sources.
         # Update it when dropping support for RN versions.
-        react-native:
-          [
+        react-native: [
             { version: '0.72', architecture: 'Paper' },
             { version: '0.73', architecture: 'Paper' },
             { version: '0.74', architecture: 'Paper' },
-            { version: '0.75', architecture: 'Paper' },
             { version: '0.74', architecture: 'Fabric' },
-            { version: '0.75', architecture: 'Fabric' },
+            # TODO: RN CLI currently struggles with setting 0.75 templates.
+            # { version: '0.75', architecture: 'Paper' },
+            # { version: '0.75', architecture: 'Fabric' },
           ]
       fail-fast: false
     env:
@@ -47,22 +44,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-
-      # - name: Setup Yarn and React Native
-      #   # Sometimes `npx react-native init` fails due to dependency mismatches or other
-      #   # rather vague errors. This is a workaround for that.
-      #   run: |
-      #     corepack enable && yarn init
-      #     yarn add react-native@latest
-      #     mkdir app && touch app/yarn.lock
-      #
       - name: Create app
         run: |
           npx react-native@latest init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --skip-install --install-pods 0 --skip-git-init
-      - name: Check app
-        working-directory: ${{ env.APP_NAME }}
-        run: ls -la
       - name: Setup Yarn Modern
+        # For convenience, sometimes there are vague issues with RN CLI and Yarn Legacy on the runner.
         working-directory: ${{ env.APP_NAME }}
         run: corepack enable && yarn set version berry
       - name: Install Reanimated
