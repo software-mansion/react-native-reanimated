@@ -59,19 +59,19 @@ test.skip = testSkip;
 test.only = testOnly;
 
 export function beforeAll(job: () => void) {
-  testRunner.beforeAll(job);
-}
-
-export function beforeEach(job: () => void) {
-  testRunner.beforeEach(job);
-}
-
-export function afterEach(job: () => void) {
-  testRunner.afterEach(job);
+  testSuiteManager.setJob('beforeAll', job);
 }
 
 export function afterAll(job: () => void) {
-  testRunner.afterAll(job);
+  testSuiteManager.setJob('afterAll', job);
+}
+
+export function beforeEach(job: () => void) {
+  testSuiteManager.setJob('beforeEach', job);
+}
+
+export function afterEach(job: () => void) {
+  testSuiteManager.setJob('afterEach', job);
 }
 
 export async function render(component: ReactElement<Component> | null) {
