@@ -36,11 +36,9 @@ export enum TestDecorator {
   WARN = 'warn',
 }
 
-export type BuildFunction = () => void | Promise<void>;
-
 export type TestCase = {
   name: string;
-  run: BuildFunction;
+  run: MaybePromise<void>;
   componentsRefs: Record<string, ComponentRef>;
   callsRegistry: Record<string, CallTracker>;
   errors: string[];
@@ -53,17 +51,17 @@ export type TestCase = {
   | { decorator: Exclude<TestDecorator, TestDecorator.WARN | TestDecorator.FAILING> | null }
 );
 
-export type MaybeAsyncVoidFunction = () => void | Promise<void>;
+export type MaybePromise<T> = () => T | Promise<T>;
 
 export type TestSuite = {
   name: string;
-  buildSuite: BuildFunction;
+  buildSuite: MaybePromise<void>;
   testCases: TestCase[];
   nestingLevel: number;
-  beforeAll?: MaybeAsyncVoidFunction;
-  afterAll?: MaybeAsyncVoidFunction;
-  beforeEach?: MaybeAsyncVoidFunction;
-  afterEach?: MaybeAsyncVoidFunction;
+  beforeAll?: MaybePromise<void>;
+  afterAll?: MaybePromise<void>;
+  beforeEach?: MaybePromise<void>;
+  afterEach?: MaybePromise<void>;
   skip?: boolean;
   decorator?: DescribeDecorator | null;
 };

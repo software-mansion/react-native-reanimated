@@ -1,8 +1,7 @@
 import type { Component, MutableRefObject, ReactElement } from 'react';
 import { useRef } from 'react';
 import type {
-  BuildFunction,
-  MaybeAsyncVoidFunction,
+  MaybePromise,
   NullableTestValue,
   Operation,
   SharedValueSnapshot,
@@ -113,7 +112,7 @@ export class TestRunner {
     return await this.render(null);
   }
 
-  public describe(name: string, buildSuite: BuildFunction, decorator: DescribeDecorator | null) {
+  public describe(name: string, buildSuite: MaybePromise<void>, decorator: DescribeDecorator | null) {
     if (decorator === DescribeDecorator.ONLY) {
       this._includesOnly = true;
     }
@@ -145,7 +144,7 @@ export class TestRunner {
     });
   }
 
-  public test(name: string, run: BuildFunction, decorator: TestDecorator | null, warningMessage = '') {
+  public test(name: string, run: MaybePromise<void>, decorator: TestDecorator | null, warningMessage = '') {
     assertTestSuite(this._currentTestSuite);
     if (decorator === TestDecorator.ONLY) {
       this._includesOnly = true;
@@ -371,22 +370,22 @@ export class TestRunner {
     nullableMatch(currentValue, this._currentTestCase, true);
   }
 
-  public beforeAll(job: MaybeAsyncVoidFunction) {
+  public beforeAll(job: MaybePromise<void>) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.beforeAll = job;
   }
 
-  public afterAll(job: MaybeAsyncVoidFunction) {
+  public afterAll(job: MaybePromise<void>) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterAll = job;
   }
 
-  public beforeEach(job: MaybeAsyncVoidFunction) {
+  public beforeEach(job: MaybePromise<void>) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.beforeEach = job;
   }
 
-  public afterEach(job: MaybeAsyncVoidFunction) {
+  public afterEach(job: MaybePromise<void>) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterEach = job;
   }
