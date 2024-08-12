@@ -1,5 +1,6 @@
 'use strict';
-import { NativeEventEmitter, Platform, findNodeHandle } from 'react-native';
+import { NativeEventEmitter, Platform } from 'react-native';
+import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import type { NativeModule } from 'react-native';
 import { shouldBeUseWeb } from '../PlatformChecker';
 import type { StyleProps } from '../commonTypes';
