@@ -3,7 +3,7 @@ import type { WorkletStackDetails } from './commonTypes';
 
 export interface ReanimatedError extends Error {
   // eslint-disable-next-line @typescript-eslint/no-misused-new
-  new (message?: string): ReanimatedError;
+  new (message: string): ReanimatedError;
 }
 
 export function ReanimatedError(message: string): ReanimatedError {
