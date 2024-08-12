@@ -60,7 +60,8 @@ jobs:
         run: |
           npx react-native@latest init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --skip-install --install-pods 0 --skip-git-init
       - name: Setup Yarn Modern
-        run: yarn set version berry
+        working-directory: ${{ env.APP_NAME }}
+        run: corepack enable && yarn set version berry
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
