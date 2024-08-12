@@ -1,4 +1,4 @@
-name: Build/test NextExample
+name: Example Next build check and tests
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
@@ -22,16 +22,9 @@ jobs:
         uses: actions/checkout@v4
       - name: Install monorepo node dependencies
         run: yarn install --immutable
-      - name: Install Reanimated node dependencies
-        working-directory: packages/react-native-reanimated
-        run: yarn install --immutable
       - name: Build Reanimated package
         working-directory: packages/react-native-reanimated
         run: yarn build
-
-      - name: Install NextExample node_modules
-        working-directory: apps/next-example
-        run: yarn install --immutable
 
       - name: Compile production build
         working-directory: apps/next-example

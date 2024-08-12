@@ -1,4 +1,4 @@
-name: Test V8 on Android nightly
+name: V8 Reanimated build check [Nightly]
 env:
   YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:

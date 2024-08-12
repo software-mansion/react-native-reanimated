@@ -1,4 +1,4 @@
-name: Test iOS build
+name: Example iOS build check
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
@@ -45,29 +45,21 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      - name: Install monorepo node dependencies
-        run: yarn install
-      - name: Restore Reanimated node_modules from cache
+      # TODO: Rework caching in this CI for monorepo setup.
+      - name: Restore node_modules from cache
         uses: actions/cache@v3
         with:
-          path: packages/react-native-reanimated/node_modules
-          key: ${{ runner.os }}-node-modules-reanimated-${{ hashFiles('packages/react-native-reanimated/yarn.lock') }}
-          restore-keys: ${{ runner.os }}-node-modules-reanimated-
-
-      - name: Install Reanimated node dependencies
-        working-directory: packages/react-native-reanimated
-        run: yarn install
-
+          path: .
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-node-modules-
       - name: Restore app node_modules from cache
         uses: actions/cache@v3
         with:
           path: ${{ matrix.working-directory }}/node_modules
           key: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/yarn.lock', matrix.working-directory)) }}
           restore-keys: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
-
-      - name: Install app node_modules
-        working-directory: ${{ matrix.working-directory }}
-        run: yarn install
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
 
       - name: Restore Pods from cache
         uses: actions/cache@v3
@@ -81,8 +73,8 @@ jobs:
       - name: Install Pods
         working-directory: ${{ matrix.working-directory }}/ios
         run: |
-          bundler install
-          bundler exec pod install
+          bundle install
+          bundle exec pod install
 
       - name: Restore build artifacts from cache
         uses: actions/cache@v3
