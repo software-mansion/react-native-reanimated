@@ -12,6 +12,7 @@ comes to gesture based interactions.
 ### Nightly CI state
 
 [![Build nightly npm package](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-nightly-npm-package.yml)
+[![Reanimated compatibility check [Nightly]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml)
 [![Run nightly monorepo test](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/build-monorepo-nightly.yml)
 [![Check static framework nightly build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-static-framework-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-static-framework-nightly.yml)
 [![Check React Native nightly build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-react-native-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/check-react-native-nightly.yml)
