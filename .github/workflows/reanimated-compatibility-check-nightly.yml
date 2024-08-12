@@ -47,7 +47,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: yarn
+
       - name: Setup Yarn and React Native
         # Sometimes `npx react-native init` fails due to dependency mismatches or other
         # rather vague errors. This is a workaround for that.
