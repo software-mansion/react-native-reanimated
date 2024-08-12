@@ -2,16 +2,16 @@ import type { Component, ReactElement } from 'react';
 import { TestRunner } from './TestRunner/TestRunner';
 import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
-import type { TestConfiguration, TestValue, NullableTestValue, MaybePromise } from './types';
+import type { TestConfiguration, TestValue, NullableTestValue, MaybeAsync } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
 
 const testRunner = new TestRunner();
 
-type DescribeFunction = (name: string, buildSuite: MaybePromise<void>) => void;
-type TestFunction = (name: string, buildTest: MaybePromise<void>) => void;
-type TestFunctionWithWarning = (name: string, warningMessage: string, buildTest: MaybePromise<void>) => void;
+type DescribeFunction = (name: string, buildSuite: MaybeAsync<void>) => void;
+type TestFunction = (name: string, buildTest: MaybeAsync<void>) => void;
+type TestFunctionWithWarning = (name: string, warningMessage: string, buildTest: MaybeAsync<void>) => void;
 type TestEachFunction = <T>(
   examples: Array<T>,
 ) => (name: string, testCase: (example: T, index: number) => void | Promise<void>) => void;
@@ -21,7 +21,7 @@ type TestEachFunctionWithWarning = <T>(
 type DecoratedTestFunction = TestFunction & { each: TestEachFunction };
 type DecoratedTestFunctionWithWarning = TestFunctionWithWarning & { each: TestEachFunctionWithWarning };
 
-const describeBasic = (name: string, buildSuite: MaybePromise<void>) => {
+const describeBasic = (name: string, buildSuite: MaybeAsync<void>) => {
   testRunner.describe(name, buildSuite, null);
 };
 
@@ -33,19 +33,19 @@ describe.only = (name, buildSuite) => {
   testRunner.describe(name, buildSuite, DescribeDecorator.ONLY);
 };
 
-const testBasic: DecoratedTestFunction = (name: string, testCase: MaybePromise<void>) => {
+const testBasic: DecoratedTestFunction = (name: string, testCase: MaybeAsync<void>) => {
   testRunner.test(name, testCase, null);
 };
 testBasic.each = <T>(examples: Array<T>) => {
   return testRunner.testEach(examples, null);
 };
-const testSkip: DecoratedTestFunction = (name: string, testCase: MaybePromise<void>) => {
+const testSkip: DecoratedTestFunction = (name: string, testCase: MaybeAsync<void>) => {
   testRunner.test(name, testCase, TestDecorator.SKIP);
 };
 testSkip.each = <T>(examples: Array<T>) => {
   return testRunner.testEach(examples, TestDecorator.SKIP);
 };
-const testOnly: DecoratedTestFunction = (name: string, testCase: MaybePromise<void>) => {
+const testOnly: DecoratedTestFunction = (name: string, testCase: MaybeAsync<void>) => {
   testRunner.test(name, testCase, TestDecorator.ONLY);
 };
 testOnly.each = <T>(examples: Array<T>) => {
@@ -54,14 +54,14 @@ testOnly.each = <T>(examples: Array<T>) => {
 const testFailing: DecoratedTestFunctionWithWarning = (
   name: string,
   expectedWarning: string,
-  testCase: MaybePromise<void>,
+  testCase: MaybeAsync<void>,
 ) => {
   testRunner.test(name, testCase, TestDecorator.FAILING, expectedWarning);
 };
 testFailing.each = <T>(examples: Array<T>) => {
   return testRunner.testEachErrorMsg(examples, TestDecorator.FAILING);
 };
-const testWarn: DecoratedTestFunctionWithWarning = (name: string, expectedWarning: string, testCase: MaybePromise<void>) => {
+const testWarn: DecoratedTestFunctionWithWarning = (name: string, expectedWarning: string, testCase: MaybeAsync<void>) => {
   testRunner.test(name, testCase, TestDecorator.WARN, expectedWarning);
 };
 testWarn.each = <T>(examples: Array<T>) => {
@@ -78,19 +78,19 @@ test.only = testOnly;
 test.failing = testFailing;
 test.warn = testWarn;
 
-export function beforeAll(job: MaybePromise<void>) {
+export function beforeAll(job: MaybeAsync<void>) {
   testRunner.beforeAll(job);
 }
 
-export function beforeEach(job: MaybePromise<void>) {
+export function beforeEach(job: MaybeAsync<void>) {
   testRunner.beforeEach(job);
 }
 
-export function afterEach(job: MaybePromise<void>) {
+export function afterEach(job: MaybeAsync<void>) {
   testRunner.afterEach(job);
 }
 
-export function afterAll(job: MaybePromise<void>) {
+export function afterAll(job: MaybeAsync<void>) {
   testRunner.afterAll(job);
 }
 

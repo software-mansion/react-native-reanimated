@@ -38,7 +38,7 @@ export enum TestDecorator {
 
 export type TestCase = {
   name: string;
-  run: MaybePromise<void>;
+  run: MaybeAsync<void>;
   componentsRefs: Record<string, ComponentRef>;
   callsRegistry: Record<string, CallTracker>;
   errors: string[];
@@ -51,17 +51,17 @@ export type TestCase = {
   | { decorator: Exclude<TestDecorator, TestDecorator.WARN | TestDecorator.FAILING> | null }
 );
 
-export type MaybePromise<T> = () => T | Promise<T>;
+export type MaybeAsync<T> = () => T | Promise<T>;
 
 export type TestSuite = {
   name: string;
-  buildSuite: MaybePromise<void>;
+  buildSuite: MaybeAsync<void>;
   testCases: TestCase[];
   nestingLevel: number;
-  beforeAll?: MaybePromise<void>;
-  afterAll?: MaybePromise<void>;
-  beforeEach?: MaybePromise<void>;
-  afterEach?: MaybePromise<void>;
+  beforeAll?: MaybeAsync<void>;
+  afterAll?: MaybeAsync<void>;
+  beforeEach?: MaybeAsync<void>;
+  afterEach?: MaybeAsync<void>;
   skip?: boolean;
   decorator?: DescribeDecorator | null;
 };
