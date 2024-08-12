@@ -1,19 +1,27 @@
 'use strict';
 import type { WorkletStackDetails } from './commonTypes';
 
-export class ReanimatedError extends Error {
-  constructor(message?: string) {
-    super(`[Reanimated] ${message}`);
-
-    // Set the name of the error to the class name
-    this.name = this.constructor.name;
-
-    if (Error.captureStackTrace) {
-      // Exclude constructor from stack trace
-      Error.captureStackTrace(this, this.constructor);
-    }
-  }
+export interface ReanimatedError extends Error {
+  // eslint-disable-next-line @typescript-eslint/no-misused-new
+  new (message?: string): ReanimatedError;
 }
+
+export function ReanimatedError(message: string): ReanimatedError {
+  const errorInstance = new Error(`[Reanimated] ${message}`);
+  Object.setPrototypeOf(errorInstance, ReanimatedError.prototype);
+  errorInstance.name = 'ReanimatedError';
+
+  // Exclude constructor from stack trace if captureStackTrace is available
+  if (Error.captureStackTrace) {
+    Error.captureStackTrace(errorInstance, ReanimatedError);
+  }
+
+  return errorInstance as ReanimatedError;
+}
+
+// Ensure the prototype chain is correct
+ReanimatedError.prototype = Object.create(Error.prototype);
+ReanimatedError.prototype.constructor = ReanimatedError;
 
 const _workletStackDetails = new Map<number, WorkletStackDetails>();
 

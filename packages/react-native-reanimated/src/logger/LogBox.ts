@@ -1,4 +1,10 @@
 'use strict';
+/**
+ * Copied from:
+ * react-native/Libraries/LogBox/Data/LogBoxData.js
+ * react-native/Libraries/LogBox/Data/parseLogBoxLog.js
+ */
+
 import type { LogBoxStatic } from 'react-native';
 import { LogBox as RNLogBox } from 'react-native';
 

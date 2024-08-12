@@ -1,5 +1,4 @@
 'use strict';
-import type { ReanimatedError as ReanimatedErrorClass } from './errors';
 
 /* eslint-disable no-var */
 export {};
@@ -23,9 +22,4 @@ declare global {
    * which is the Reanimated UI runtime.
    */
   var _WORKLET_RUNTIME: ArrayBuffer;
-
-  /**
-   * This is a custom error class that is thrown by Reanimated.
-   */
-  var ReanimatedError: typeof ReanimatedErrorClass;
 }

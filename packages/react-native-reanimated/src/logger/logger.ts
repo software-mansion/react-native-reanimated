@@ -1,4 +1,6 @@
 'use strict';
+import { shareableMappingCache } from '../shareableMappingCache';
+import { makeShareableCloneRecursive } from '../shareables';
 import { addLogBoxLog } from './LogBox';
 import type { LogLevel, LogData } from './LogBox';
 
@@ -14,11 +16,6 @@ function logToConsole(data: LogData) {
       console.error(data.message.content);
       break;
   }
-}
-
-export function logToLogBoxAndConsole(data: LogData) {
-  addLogBoxLog(data);
-  logToConsole(data);
 }
 
 function formatMessage(message: string) {
@@ -43,9 +40,21 @@ function createLog(level: LogLevel, message: string): LogData {
   };
 }
 
-export const loggerImpl = {
+const loggerImpl = {
   logFunction: logToConsole,
 };
+
+export function logToLogBoxAndConsole(data: LogData) {
+  addLogBoxLog(data);
+  logToConsole(data);
+}
+
+export function replaceLoggerImplementation(
+  logFunction: (data: LogData) => void
+) {
+  loggerImpl.logFunction = logFunction;
+  shareableMappingCache.set(logger, makeShareableCloneRecursive(logger));
+}
 
 export const logger = {
   warn(message: string) {

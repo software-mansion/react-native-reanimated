@@ -112,4 +112,5 @@ declare global {
     shadowNodeWrapper: ShadowNodeWrapper,
     propName: string
   ) => string;
+  var ReanimatedError: ReanimatedError;
 }
