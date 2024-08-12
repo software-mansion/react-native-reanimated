@@ -73,7 +73,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
   std::shared_ptr<JSScheduler> jsScheduler = std::make_shared<JSScheduler>(rnRuntime, jsInvoker);
   constexpr auto isBridgeless = false;
-  const auto isReducedMotion = getIsReducedMotion();
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       rnRuntime,
@@ -83,7 +82,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       platformDepMethodsHolder,
       valueUnpackerCode,
       isBridgeless,
-      isReducedMotion);
+      getIsReducedMotion());
 
   commonInit(reaModule, nativeReanimatedModule);
   // Layout Animation callbacks setup
@@ -119,7 +118,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
   auto uiScheduler = std::make_shared<REAIOSUIScheduler>();
   auto jsScheduler = std::make_shared<JSScheduler>(runtime, runtimeExecutor);
   constexpr auto isBridgeless = true;
-  const auto isReducedMotion = getIsReducedMotion();
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
       runtime,
@@ -129,7 +127,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
       platformDepMethodsHolder,
       valueUnpackerCode,
       isBridgeless,
-      isReducedMotion);
+      getIsReducedMotion());
 
   commonInit(reaModule, nativeReanimatedModule);
 
