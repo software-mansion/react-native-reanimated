@@ -267,4 +267,6 @@ replaceLoggerImplementation((data: LogData) => {
   runOnJS(logToLogBoxAndConsole)(data);
 });
 // Register ReanimatedError in the UI global scope
-executeOnUIRuntimeSync(registerReanimatedError)();
+if (!shouldBeUseWeb()) {
+  executeOnUIRuntimeSync(registerReanimatedError)();
+}
