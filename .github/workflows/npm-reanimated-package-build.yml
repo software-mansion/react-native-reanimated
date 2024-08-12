@@ -30,7 +30,7 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     env:
-      PACKAGE_NAME:
+      PACKAGE_NAME: PLACEHOLDER # Will be reassigned later on.
     steps:
       - name: Check out
         uses: actions/checkout@v4

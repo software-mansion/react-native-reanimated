@@ -45,8 +45,7 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      # Does this optimization even work with new yarn?
-      # Perhaps we should cache `yarn's` cache instead?
+      # TODO: Rework caching in this CI for monorepo setup.
       - name: Restore node_modules from cache
         uses: actions/cache@v3
         with:
