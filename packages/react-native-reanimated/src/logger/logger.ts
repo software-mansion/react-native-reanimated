@@ -1,6 +1,4 @@
 'use strict';
-import { shareableMappingCache } from '../shareableMappingCache';
-import { makeShareableCloneRecursive } from '../shareables';
 import { addLogBoxLog } from './LogBox';
 import type { LogLevel, LogData } from './LogBox';
 
@@ -53,7 +51,6 @@ export function replaceLoggerImplementation(
   logFunction: (data: LogData) => void
 ) {
   loggerImpl.logFunction = logFunction;
-  shareableMappingCache.set(logger, makeShareableCloneRecursive(logger));
 }
 
 export const logger = {

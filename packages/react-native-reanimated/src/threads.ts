@@ -8,8 +8,13 @@ import {
 } from './shareables';
 import { isWorkletFunction } from './commonTypes';
 import type { LogData } from './logger';
-import { logToLogBoxAndConsole, replaceLoggerImplementation } from './logger';
+import {
+  logger,
+  logToLogBoxAndConsole,
+  replaceLoggerImplementation,
+} from './logger';
 import { registerReanimatedError } from './errors';
+import { shareableMappingCache } from './shareableMappingCache';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -266,6 +271,8 @@ replaceLoggerImplementation((data: LogData) => {
   'worklet';
   runOnJS(logToLogBoxAndConsole)(data);
 });
+shareableMappingCache.set(logger, makeShareableCloneRecursive(logger));
+
 // Register ReanimatedError in the UI global scope
 if (!shouldBeUseWeb()) {
   executeOnUIRuntimeSync(registerReanimatedError)();
