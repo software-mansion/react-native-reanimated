@@ -458,12 +458,10 @@ public class NodesManager implements EventDispatcherListener {
         if (background instanceof ReactViewBackgroundDrawable) {
           actualColor = ((ReactViewBackgroundDrawable) background).getColor();
         }
-        ;
 
         if (background instanceof CSSBackgroundDrawable) {
           actualColor = ((CSSBackgroundDrawable) background).getColor();
         }
-        ;
 
         if (actualColor == -1) {
           return "Unable to resolve background color";
@@ -472,8 +470,6 @@ public class NodesManager implements EventDispatcherListener {
         String invertedColor = String.format("%08x", (0xFFFFFFFF & actualColor));
         // By default transparency is first, color second
         return "#" + invertedColor.substring(2, 8) + invertedColor.substring(0, 2);
-
-        ;
 
       default:
         throw new IllegalArgumentException(
