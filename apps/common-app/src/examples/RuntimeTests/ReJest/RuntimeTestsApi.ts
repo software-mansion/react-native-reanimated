@@ -11,6 +11,7 @@ const testRunner = new TestRunner();
 const windowDimensionsMocker = testRunner.getWindowDimensionsMocker();
 const animationRecorder = testRunner.getAnimationUpdatesRecorder();
 const valueRegistry = testRunner.getValueRegistry();
+const testSuiteManager = testRunner.getTestSuiteManager();
 
 type DescribeFunction = (name: string, buildSuite: BuildFunction) => void;
 type TestFunction = (name: string, buildTest: BuildFunction) => void;
@@ -25,50 +26,50 @@ type DecoratedTestFunction = TestFunction & { each: TestEachFunction };
 type DecoratedTestFunctionWithWarning = TestFunctionWithWarning & { each: TestEachFunctionWithWarning };
 
 const describeBasic = (name: string, buildSuite: BuildFunction) => {
-  testRunner.describe(name, buildSuite, null);
+  testSuiteManager.describe(name, buildSuite, null);
 };
 
 export const describe = <DescribeFunction & Record<DescribeDecorator, DescribeFunction>>describeBasic;
 describe.skip = (name, buildSuite) => {
-  testRunner.describe(name, buildSuite, DescribeDecorator.SKIP);
+  testSuiteManager.describe(name, buildSuite, DescribeDecorator.SKIP);
 };
 describe.only = (name, buildSuite) => {
-  testRunner.describe(name, buildSuite, DescribeDecorator.ONLY);
+  testSuiteManager.describe(name, buildSuite, DescribeDecorator.ONLY);
 };
 
 const testBasic: DecoratedTestFunction = (name: string, testCase: BuildFunction) => {
-  testRunner.test(name, testCase, null);
+  testSuiteManager.test(name, testCase, null);
 };
 testBasic.each = <T>(examples: Array<T>) => {
-  return testRunner.testEach(examples, null);
+  return testSuiteManager.testEach(examples, null);
 };
 const testSkip: DecoratedTestFunction = (name: string, testCase: BuildFunction) => {
-  testRunner.test(name, testCase, TestDecorator.SKIP);
+  testSuiteManager.test(name, testCase, TestDecorator.SKIP);
 };
 testSkip.each = <T>(examples: Array<T>) => {
-  return testRunner.testEach(examples, TestDecorator.SKIP);
+  return testSuiteManager.testEach(examples, TestDecorator.SKIP);
 };
 const testOnly: DecoratedTestFunction = (name: string, testCase: BuildFunction) => {
-  testRunner.test(name, testCase, TestDecorator.ONLY);
+  testSuiteManager.test(name, testCase, TestDecorator.ONLY);
 };
 testOnly.each = <T>(examples: Array<T>) => {
-  return testRunner.testEach(examples, TestDecorator.ONLY);
+  return testSuiteManager.testEach(examples, TestDecorator.ONLY);
 };
 const testFailing: DecoratedTestFunctionWithWarning = (
   name: string,
   expectedWarning: string,
   testCase: BuildFunction,
 ) => {
-  testRunner.test(name, testCase, TestDecorator.FAILING, expectedWarning);
+  testSuiteManager.test(name, testCase, TestDecorator.FAILING, expectedWarning);
 };
 testFailing.each = <T>(examples: Array<T>) => {
-  return testRunner.testEachErrorMsg(examples, TestDecorator.FAILING);
+  return testSuiteManager.testEachErrorMsg(examples, TestDecorator.FAILING);
 };
 const testWarn: DecoratedTestFunctionWithWarning = (name: string, expectedWarning: string, testCase: BuildFunction) => {
-  testRunner.test(name, testCase, TestDecorator.WARN, expectedWarning);
+  testSuiteManager.test(name, testCase, TestDecorator.WARN, expectedWarning);
 };
 testWarn.each = <T>(examples: Array<T>) => {
-  return testRunner.testEachErrorMsg(examples, TestDecorator.WARN);
+  return testSuiteManager.testEachErrorMsg(examples, TestDecorator.WARN);
 };
 
 type TestType = DecoratedTestFunction &
