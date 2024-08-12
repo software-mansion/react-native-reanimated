@@ -6,22 +6,17 @@ export interface ReanimatedError extends Error {
   new (message: string): ReanimatedError;
 }
 
-export function ReanimatedError(message: string): ReanimatedError {
+const ReanimatedErrorFactory: ReanimatedError = ((message: string) => {
+  'worklet';
   const errorInstance = new Error(`[Reanimated] ${message}`);
-  Object.setPrototypeOf(errorInstance, ReanimatedError.prototype);
   errorInstance.name = 'ReanimatedError';
+  return errorInstance;
+}) as unknown as ReanimatedError;
 
-  // Exclude constructor from stack trace if captureStackTrace is available
-  if (Error.captureStackTrace) {
-    Error.captureStackTrace(errorInstance, ReanimatedError);
-  }
-
-  return errorInstance as ReanimatedError;
+export function registerReanimatedError() {
+  'worklet';
+  global.ReanimatedError = ReanimatedErrorFactory;
 }
-
-// Ensure the prototype chain is correct
-ReanimatedError.prototype = Object.create(Error.prototype);
-ReanimatedError.prototype.constructor = ReanimatedError;
 
 const _workletStackDetails = new Map<number, WorkletStackDetails>();
 

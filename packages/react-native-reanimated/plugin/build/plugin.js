@@ -141,7 +141,8 @@ var require_globals = __commonJS({
       "setImmediate",
       "arguments",
       "HermesInternal",
-      "_WORKLET"
+      "_WORKLET",
+      "ReanimatedError"
     ];
     var notCapturedIdentifiers_DEPRECATED = [
       "_IS_FABRIC",
