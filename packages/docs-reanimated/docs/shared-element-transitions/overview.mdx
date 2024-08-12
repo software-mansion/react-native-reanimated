@@ -63,9 +63,11 @@ When Reanimated detects that a component with a `sharedTransitionTag` is being m
 
 If it finds two matching components, it takes a snapshot of the styles for both components, and both shared views are detached from their parent and attached to a temporary transition container for the duration of the animation.
 
-After the animation is complete, they are attached back to their original parent. If you do not create a custom animation, all snapshot properties, including `width`, `height`, `originX`, `originY`, and `transformMatrix`, are animated by default with a duration of 500ms using the `withTiming` animation.
+After the animation is complete, they are attached back to their original parent.
 
-## Using a shared element transitions
+If you don't create a custom animation, all snapshot properties, including `width`, `height`, `originX`, `originY`, and `transformMatrix`, are animated by default with a duration of 500ms using the `withTiming` animation.
+
+## Using a shared element transition
 
 To create a shared transition animation between two components on different screens, simply assign the same `sharedTransitionTag` to both components. When you navigate between screens, the shared transition animation will automatically play.
 
@@ -91,10 +93,11 @@ If you want to use more than one shared view on the same screen, be sure to assi
 
 ## Custom animation
 
-1. You need to create custom transition with Reanimated API, for example:
+You can create custom animation by using `SharedTransition.custom`.
 
 ```js
 import { SharedTransition } from 'react-native-reanimated';
+
 const transition = SharedTransition.custom((values) => {
   'worklet';
   return {
@@ -104,17 +107,22 @@ const transition = SharedTransition.custom((values) => {
 });
 ```
 
-2. You need to add custom transition as `sharedTransitionStyle` prop to your both components (on both screens):
+Then, to use it, simply pass your custom animation as `sharedTransitionStyle` prop to both your screen's components (just as with the `sharedTransitionTag`).
 
-```tsx {2,3}
+```tsx
 <View
   sharedTransitionTag="reanimatedTransition"
+  // highlight-next-line
   sharedTransitionStyle={transition}
   style={{ backgroundColor: 'blue', width: 200, height: 100 }}
 />
 ```
 
 ## Example
+
+import SharedElementSrc from '!!raw-loader!@site/src/examples/SharedElementSrc';
+
+<CollapsibleCode src={SharedElementSrc} showLines={[0, 50]} />
 
 ## Remarks
 
