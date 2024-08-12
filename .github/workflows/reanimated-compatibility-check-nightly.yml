@@ -55,6 +55,7 @@ jobs:
       #     corepack enable && yarn init
       #     yarn add react-native@latest
       #     mkdir app && touch app/yarn.lock
+      #
       - name: Create app
         run: |
           npx react-native@latest init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --skip-install --install-pods 0 --skip-git-init
