@@ -48,7 +48,7 @@ export class TestSuitePreExecutionManager extends TestSuiteManager {
     });
   }
 
-  public test(name: string, run: BuildFunction, decorator: TestDecorator | null, warningMessage = '') {
+  public test(name: string, run: BuildFunction, decorator: TestDecorator | null) {
     assertTestSuite(this._currentTestSuite);
     if (decorator === TestDecorator.ONLY) {
       this._includesOnly = true;
@@ -61,24 +61,7 @@ export class TestSuitePreExecutionManager extends TestSuiteManager {
       errors: [],
       skip: decorator === TestDecorator.SKIP || this._currentTestSuite.decorator === DescribeDecorator.SKIP,
       decorator,
-      warningMessage,
     });
-  }
-
-  public testEachErrorMsg<T>(examples: Array<T>, decorator: TestDecorator) {
-    return (name: string, expectedWarning: string, testCase: (example: T, index: number) => void | Promise<void>) => {
-      examples.forEach((example, index) => {
-        const currentTestCase = async () => {
-          await testCase(example, index);
-        };
-        this.test(
-          formatTestName(name, example, index),
-          currentTestCase,
-          decorator,
-          formatTestName(expectedWarning, example, index),
-        );
-      });
-    };
   }
 
   public testEach<T>(examples: Array<T>, decorator: TestDecorator | null) {
