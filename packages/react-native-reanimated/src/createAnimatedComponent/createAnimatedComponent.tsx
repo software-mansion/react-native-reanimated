@@ -53,6 +53,7 @@ import { getViewInfo } from './getViewInfo';
 import { NativeEventsManager } from './NativeEventsManager';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { ReanimatedError } from '../errors';
+import { registerCSSAnimation } from '../css';
 
 const IS_WEB = isWeb();
 const IS_JEST = isJest();
@@ -557,6 +558,22 @@ export function createAnimatedComponent(
               )
             );
           }
+        }
+
+        // @ts-expect-error TODO
+        if (isFabric() && this.props.style.animationName) {
+          const { shadowNodeWrapper } = this._getViewInfo();
+          const config = {
+            // @ts-expect-error TODO
+            animationName: this.props.style.animationName,
+            // @ts-expect-error TODO
+            animationDuration: this.props.style.animationDuration ?? '0s',
+            animationTimingFunction:
+              // @ts-expect-error TODO
+              this.props.style.animationTimingFunction ?? 'linear',
+            // TODO: support other attributes
+          };
+          registerCSSAnimation(shadowNodeWrapper as ShadowNodeWrapper, config);
         }
       },
     });
