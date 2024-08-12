@@ -27,8 +27,8 @@ const defaultFramerateConfig = {
   fps: 60,
 };
 
-const isEmpty = (obj: Object) => Object.keys(obj).length === 0;
-const getStylesFromObject = (obj: Object) => {
+const isEmpty = (obj: object) => Object.keys(obj).length === 0;
+const getStylesFromObject = (obj: object) => {
   return obj === undefined
     ? {}
     : Object.fromEntries(
@@ -86,7 +86,7 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
       ...currentStyle,
     };
 
-    if (!isEmpty(jestAnimatedStyleValue as Object)) {
+    if (!isEmpty(jestAnimatedStyleValue as object)) {
       currentStyle = {
         ...currentStyle,
         ...component.props.jestAnimatedStyle?.value,
@@ -99,7 +99,7 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
   const inlineStyles = getStylesFromObject(jestInlineStyles);
   const jestAnimatedStyleValue = component.props.jestAnimatedStyle?.value;
 
-  currentStyle = isEmpty(jestAnimatedStyleValue as Object)
+  currentStyle = isEmpty(jestAnimatedStyleValue as object)
     ? { ...styleObject, ...inlineStyles }
     : { ...styleObject, ...component.props.jestAnimatedStyle?.value };
 
