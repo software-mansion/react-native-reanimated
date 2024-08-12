@@ -105,7 +105,8 @@ void WorkletRuntimeDecorator::decorate(
             for (size_t i = 0; i < argsSize; i++) {
               args[i] = argsArray.getValueAtIndex(rt, i);
             }
-            remoteFun.asObject(rt).asFunction(rt).call(rt, const_cast<const jsi::Value *>(args.data()), args.size());
+            remoteFun.asObject(rt).asFunction(rt).call(
+                rt, const_cast<const jsi::Value *>(args.data()), args.size());
           }
         });
       });

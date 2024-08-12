@@ -89,7 +89,6 @@ export function recognizePrefixSuffix(
   value: string | number
 ): RecognizedPrefixSuffix {
   'worklet';
-  console.log('recognizePrefixSuffix');
   if (typeof value === 'string') {
     const match = value.match(
       /([A-Za-z]*)(-?\d*\.?\d*)([eE][-+]?[0-9]+)?([A-Za-z%]*)/

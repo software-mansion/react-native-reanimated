@@ -52,7 +52,6 @@ import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
 import { getViewInfo } from './getViewInfo';
 import { NativeEventsManager } from './NativeEventsManager';
 import type { ReanimatedHTMLElement } from '../js-reanimated';
-import { logger } from '../logger';
 
 const IS_WEB = isWeb();
 const IS_JEST = isJest();

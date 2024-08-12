@@ -19,6 +19,7 @@ export {
   getViewProp,
   executeOnUIRuntimeSync,
 } from './core';
+export { ReanimatedError } from './errors';
 export type {
   GestureHandlers,
   AnimatedRef,

@@ -1,6 +1,5 @@
 'use strict';
 
-import { logger } from './logger';
 import { isFabric } from './PlatformChecker';
 import { runOnUI } from './threads';
 

@@ -10,7 +10,6 @@ import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
-import { logger } from './logger';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

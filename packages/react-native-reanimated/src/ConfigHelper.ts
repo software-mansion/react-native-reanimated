@@ -1,7 +1,6 @@
 'use strict';
 import { PropsAllowlists } from './propsAllowlists';
 import { jsiConfigureProps } from './core';
-import { logger } from './logger';
 
 function assertNoOverlapInLists() {
   for (const key in PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST) {

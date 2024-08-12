@@ -1,7 +1,5 @@
 'use strict';
 
-import { logger } from './logger';
-
 /**
  * https://github.com/gre/bezier-easing
  * BezierEasing - use bezier curve for transition easing function
