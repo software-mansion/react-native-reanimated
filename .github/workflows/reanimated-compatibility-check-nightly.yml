@@ -48,16 +48,16 @@ jobs:
         with:
           node-version: 18
 
-      - name: Setup Yarn and React Native
-        # Sometimes `npx react-native init` fails due to dependency mismatches or other
-        # rather vague errors. This is a workaround for that.
-        run: |
-          corepack enable && yarn init
-          yarn add react-native@latest
-          mkdir app && touch app/yarn.lock
+      # - name: Setup Yarn and React Native
+      #   # Sometimes `npx react-native init` fails due to dependency mismatches or other
+      #   # rather vague errors. This is a workaround for that.
+      #   run: |
+      #     corepack enable && yarn init
+      #     yarn add react-native@latest
+      #     mkdir app && touch app/yarn.lock
       - name: Create app
         run: |
-          yarn react-native init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --skip-install --install-pods 0 --skip-git-init
+          npx react-native@latest init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --skip-install --install-pods 0 --skip-git-init
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
