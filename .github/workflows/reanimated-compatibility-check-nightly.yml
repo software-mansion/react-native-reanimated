@@ -29,7 +29,7 @@ jobs:
             { version: '0.74', architecture: 'Fabric' },
             { version: '0.75', architecture: 'Fabric' },
           ]
-      fail-fast: true
+      fail-fast: false
     env:
       APP_NAME: app
       RCT_NEW_ARCH_ENABLED: ${{ matrix.react-native.architecture == 'Fabric' && '1' || '0' }}
@@ -59,6 +59,9 @@ jobs:
       - name: Create app
         run: |
           npx react-native@latest init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --skip-install --install-pods 0 --skip-git-init
+      - name: Check app
+        working-directory: ${{ env.APP_NAME }}
+        run: ls -la
       - name: Setup Yarn Modern
         working-directory: ${{ env.APP_NAME }}
         run: corepack enable && yarn set version berry
