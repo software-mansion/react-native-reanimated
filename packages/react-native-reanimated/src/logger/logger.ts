@@ -38,8 +38,21 @@ function createLog(level: LogLevel, message: string): LogData {
   };
 }
 
-const loggerImpl = {
+export type LoggerConfig = {
+  level?: 'warn' | 'error';
+  strict?: boolean;
+};
+
+type LogFunction = (data: LogData) => void;
+
+const config: Required<LoggerConfig> & { logFunction: LogFunction } = {
   logFunction: logToConsole,
+  level: 'warn',
+  strict: false,
+};
+
+type LogOptions = {
+  strict?: boolean;
 };
 
 /**
@@ -59,23 +72,42 @@ export function logToLogBoxAndConsole(data: LogData) {
  *
  * @param logFunction - The custom log function.
  */
-export function replaceLoggerImplementation(
-  logFunction: (data: LogData) => void
+export function replaceLoggerImplementation(logFunction: LogFunction) {
+  config.logFunction = logFunction;
+}
+
+const logLevelImportance = {
+  warn: 1,
+  error: 2,
+  fatal: 3,
+} as const;
+
+function handleLog(
+  level: Exclude<LogLevel, 'syntax'>,
+  message: string,
+  options: LogOptions
 ) {
-  loggerImpl.logFunction = logFunction;
+  'worklet';
+  if (
+    (options.strict && !config.strict) ||
+    logLevelImportance[level] < logLevelImportance[config.level]
+  ) {
+    return;
+  }
+  config.logFunction(createLog(level, message));
 }
 
 export const logger = {
-  warn(message: string) {
+  warn(message: string, options: LogOptions = {}) {
     'worklet';
-    loggerImpl.logFunction(createLog('warn', message));
+    handleLog('warn', message, options);
   },
-  error(message: string) {
+  error(message: string, options: LogOptions = {}) {
     'worklet';
-    loggerImpl.logFunction(createLog('error', message));
+    handleLog('error', message, options);
   },
-  fatal(message: string) {
+  fatal(message: string, options: LogOptions = {}) {
     'worklet';
-    loggerImpl.logFunction(createLog('fatal', message));
+    handleLog('fatal', message, options);
   },
 };
