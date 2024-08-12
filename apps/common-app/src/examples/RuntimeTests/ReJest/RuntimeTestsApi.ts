@@ -121,11 +121,11 @@ export async function runTests() {
 }
 
 export async function wait(delay: number) {
-  return animationRecorder.wait(delay);
+  await animationRecorder.wait(delay);
 }
 
 export async function waitForAnimationUpdates(updatesCount: number) {
-  return animationRecorder.waitForAnimationUpdates(updatesCount);
+  await animationRecorder.waitForAnimationUpdates(updatesCount);
 }
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
