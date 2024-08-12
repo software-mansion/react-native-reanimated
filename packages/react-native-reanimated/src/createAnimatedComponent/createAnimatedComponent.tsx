@@ -584,7 +584,6 @@ export function createAnimatedComponent(
         <Component
           nativeID={nativeID}
           {...filteredProps}
-          jestAnimatedStyle={this.jestAnimatedStyle}
           jestInlineStyle={this.props.style}
           // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
           // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
