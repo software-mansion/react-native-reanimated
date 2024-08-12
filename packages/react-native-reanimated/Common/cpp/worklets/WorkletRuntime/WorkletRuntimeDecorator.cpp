@@ -1,6 +1,5 @@
 #include "WorkletRuntimeDecorator.h"
 #include "JSISerializer.h"
-#include "PlatformLogger.h"
 #include "ReanimatedJSIUtils.h"
 #include "Shareables.h"
 #include "WorkletRuntime.h"
@@ -67,11 +66,6 @@ void WorkletRuntimeDecorator::decorate(
       });
 
   jsi_utils::installJsiFunction(
-      rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) {
-        PlatformLogger::log(stringifyJSIValue(rt, value));
-      });
-
-  jsi_utils::installJsiFunction(
       rt,
       "_makeShareableClone",
       [](jsi::Runtime &rt,
@@ -111,7 +105,8 @@ void WorkletRuntimeDecorator::decorate(
             for (size_t i = 0; i < argsSize; i++) {
               args[i] = argsArray.getValueAtIndex(rt, i);
             }
-            remoteFun.asObject(rt).asFunction(rt).call(rt, const_cast<const jsi::Value *>(args.data()), args.size());
+            remoteFun.asObject(rt).asFunction(rt).call(
+                rt, const_cast<const jsi::Value *>(args.data()), args.size());
           }
         });
       });
