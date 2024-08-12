@@ -1,6 +1,5 @@
 #include "WorkletRuntimeDecorator.h"
 #include "JSISerializer.h"
-#include "PlatformLogger.h"
 #include "ReanimatedJSIUtils.h"
 #include "Shareables.h"
 #include "WorkletRuntime.h"
@@ -64,11 +63,6 @@ void WorkletRuntimeDecorator::decorate(
   jsi_utils::installJsiFunction(
       rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {
         return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
-      });
-
-  jsi_utils::installJsiFunction(
-      rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) {
-        PlatformLogger::log(stringifyJSIValue(rt, value));
       });
 
   jsi_utils::installJsiFunction(

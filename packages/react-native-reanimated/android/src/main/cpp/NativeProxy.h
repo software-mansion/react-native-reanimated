@@ -192,7 +192,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   // removed temporarily, event listener mechanism needs to be fixed on RN side
   // std::shared_ptr<facebook::react::Scheduler> reactScheduler_;
   // std::shared_ptr<EventListener> eventListener_;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
   void installJSIBindings();
 #ifdef RCT_NEW_ARCH_ENABLED
   void synchronouslyUpdateUIProps(

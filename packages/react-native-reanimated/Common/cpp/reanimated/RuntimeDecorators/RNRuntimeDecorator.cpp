@@ -5,8 +5,7 @@ namespace reanimated {
 
 void RNRuntimeDecorator::decorate(
     jsi::Runtime &rnRuntime,
-    const std::shared_ptr<NativeReanimatedModule> &nativeReanimatedModule,
-    const bool isReducedMotion) {
+    const std::shared_ptr<NativeReanimatedModule> &nativeReanimatedModule) {
   rnRuntime.global().setProperty(rnRuntime, "_WORKLET", false);
 
   jsi::Runtime &uiRuntime = nativeReanimatedModule->getUIRuntime();
@@ -38,7 +37,9 @@ void RNRuntimeDecorator::decorate(
   injectReanimatedCppVersion(rnRuntime);
 
   rnRuntime.global().setProperty(
-      rnRuntime, "_REANIMATED_IS_REDUCED_MOTION", isReducedMotion);
+      rnRuntime,
+      "_REANIMATED_IS_REDUCED_MOTION",
+      nativeReanimatedModule->isReducedMotion());
 
   rnRuntime.global().setProperty(
       rnRuntime,

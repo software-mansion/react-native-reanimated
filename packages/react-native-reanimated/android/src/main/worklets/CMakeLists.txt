@@ -14,7 +14,6 @@ add_library(
     worklets
     SHARED
     ${WORKLETS_COMMON_SOURCES}
-    "${ANDROID_SRC_DIR}/main/cpp/PlatformLogger.cpp"
 )
 
 # includes
@@ -25,22 +24,6 @@ target_include_directories(
     "${WORKLETS_COMMON_DIR}/SharedItems"
     "${WORKLETS_COMMON_DIR}/Tools"
     "${WORKLETS_COMMON_DIR}/WorkletRuntime"
-)
-
-target_include_directories(
-    worklets
-    PRIVATE
-    "${ANDROID_SRC_DIR}/main/cpp"
-)
-
-target_include_directories(
-    worklets
-    PRIVATE
-    "${REANIMATED_COMMON_DIR}/NativeModules"
-    "${REANIMATED_COMMON_DIR}/AnimatedSensor"
-    "${REANIMATED_COMMON_DIR}/Fabric"
-    "${REANIMATED_COMMON_DIR}/LayoutAnimations"
-    "${REANIMATED_COMMON_DIR}/Tools"
 )
 
 target_include_directories(
