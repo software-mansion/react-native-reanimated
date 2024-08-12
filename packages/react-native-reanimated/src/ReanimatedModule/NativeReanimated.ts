@@ -7,6 +7,7 @@ import type {
   IReanimatedModule,
   IWorkletsModule,
   WorkletFunction,
+  ShadowNodeWrapper,
 } from '../commonTypes';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
@@ -17,6 +18,7 @@ import { ReanimatedTurboModule } from '../specs';
 import { ReanimatedError } from '../errors';
 import { WorkletsModule } from '../worklets';
 import type { ReanimatedModuleProxy } from './reanimatedModuleProxy';
+import type { CSSAnimationConfig } from '../css';
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
@@ -156,5 +158,12 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   unsubscribeFromKeyboardEvents(listenerId: number) {
     this.#reanimatedModuleProxy.unsubscribeFromKeyboardEvents(listenerId);
+  }
+
+  registerCSSAnimation(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    config: CSSAnimationConfig
+  ) {
+    this.#reanimatedModuleProxy.registerCSSAnimation(shadowNodeWrapper, config);
   }
 }

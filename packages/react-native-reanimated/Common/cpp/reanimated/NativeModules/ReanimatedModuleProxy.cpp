@@ -73,6 +73,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
       layoutAnimationsManager_(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
+      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
+      getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
@@ -476,6 +478,16 @@ void ReanimatedModuleProxy::cleanupSensors() {
   animatedSensorModule_.unregisterAllSensors();
 }
 
+void ReanimatedModuleProxy::registerCSSAnimation(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &animationConfig) {
+  cssAnimationsRegistry_->registry_.push_back(std::make_tuple(
+      shadowNodeFromValue(rt, shadowNodeWrapper),
+      dynamicFromValue(rt, animationConfig),
+      CSSAnimationState::pending));
+}
+
 #ifdef RCT_NEW_ARCH_ENABLED
 bool ReanimatedModuleProxy::isThereAnyLayoutProp(
     jsi::Runtime &rt,
@@ -582,7 +594,69 @@ void ReanimatedModuleProxy::updateProps(
   }
 }
 
+float linear(float x) {
+  return x;
+}
+
+float easeInOutBack(float x) {
+  auto c1 = 1.70158;
+  auto c2 = c1 * 1.525;
+
+  return x < 0.5 ? (pow(2 * x, 2) * ((c2 + 1) * 2 * x - c2)) / 2
+                 : (pow(2 * x - 2, 2) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2;
+}
+
 void ReanimatedModuleProxy::performOperations() {
+  const auto now = getAnimationTimestamp_();
+  for (auto &[shadowNode, config, state] : cssAnimationsRegistry_->registry_) {
+    const auto tag = shadowNode->getTag();
+    switch (state) {
+      case CSSAnimationState::pending: {
+        state = CSSAnimationState::running;
+        cssAnimationsRegistry_->startTimes_[tag] = now;
+        // don't break;
+      }
+
+      case CSSAnimationState::running: {
+        const auto startTime = cssAnimationsRegistry_->startTimes_[tag];
+        auto duration = config["animationDuration"].asString();
+        assert(duration.back() == 's');
+        duration.pop_back();
+        auto durationMs = std::atof(duration.c_str()) * 1000.0;
+        auto progress = (now - startTime) / durationMs;
+        if (progress >= 1.0) {
+          state = CSSAnimationState::finished;
+          progress = 1;
+        }
+        jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+        jsi::Object updates(rt);
+        const auto easingFunction =
+            config["animationTimingFunction"].asString() == "ease-in-out"
+            ? easeInOutBack
+            : linear;
+        for (auto &pair : config["animationName"]["from"].items()) {
+          const auto &key = pair.first;
+          const auto &from = pair.second.asDouble();
+          const auto &to =
+              config["animationName"]["to"].find(pair.first)->second.asDouble();
+          float value =
+              static_cast<float>(from + easingFunction(progress) * (to - from));
+          updates.setProperty(rt, key.asString().c_str(), value);
+        }
+        operationsInBatch_.emplace_back(
+            shadowNode, std::make_unique<jsi::Value>(rt, updates));
+        break;
+      }
+
+      case CSSAnimationState::finished: {
+        cssAnimationsRegistry_->startTimes_.erase(tag);
+        // TODO: remove from cssAnimationsRegistry_->registry_
+        // TODO: restore original styles if animation-fill-mode is not set
+        break;
+      }
+    }
+  }
+
   if (operationsInBatch_.empty() && tagsToRemove_.empty()) {
     // nothing to do
     return;

@@ -9,6 +9,7 @@ import { SensorType } from '../../commonTypes';
 import type {
   IReanimatedModule,
   IWorkletsModule,
+  ShadowNodeWrapper,
   ShareableRef,
   Value3D,
   ValueRotation,
@@ -18,6 +19,7 @@ import type { WebSensor } from './WebSensor';
 import { logger } from '../../logger';
 import { ReanimatedError } from '../../errors';
 import { WorkletsModule } from '../../worklets';
+import type { CSSAnimationConfig } from '../../css';
 
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();
@@ -261,6 +263,15 @@ class JSReanimated implements IReanimatedModule {
   configureProps() {
     throw new ReanimatedError(
       'configureProps is not available in JSReanimated.'
+    );
+  }
+
+  registerCSSAnimation(
+    _shadowNodeWrapper: ShadowNodeWrapper,
+    _config: CSSAnimationConfig
+  ): void {
+    throw new ReanimatedError(
+      '[Reanimated] `registerCSSAnimation` is not available in JSReanimated.'
     );
   }
 }

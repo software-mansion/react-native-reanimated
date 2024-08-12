@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
+#include <reanimated/CSS/CSSAnimationsRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
@@ -76,6 +77,10 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
       const jsi::Value &shouldAnimate) override;
+  void registerCSSAnimation(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &animationConfig) override;
 
   void onRender(double timestampMs);
 
@@ -188,6 +193,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   AnimatedSensorModule animatedSensorModule_;
   const std::shared_ptr<JSLogger> jsLogger_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
+  const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
+  GetAnimationTimestampFunction getAnimationTimestamp_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
