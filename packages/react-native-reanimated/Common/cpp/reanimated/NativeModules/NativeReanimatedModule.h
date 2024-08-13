@@ -36,7 +36,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
       const std::string &valueUnpackerCode,
-      const bool isBridgeless);
+      const bool isBridgeless,
+      const bool isReducedMotion);
 
   ~NativeReanimatedModule();
 
@@ -164,12 +165,16 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     return *layoutAnimationsManager_;
   }
 
-  inline jsi::Runtime &getUIRuntime() {
+  inline jsi::Runtime &getUIRuntime() const {
     return uiWorkletRuntime_->getJSIRuntime();
   }
 
   inline bool isBridgeless() const {
     return isBridgeless_;
+  }
+
+  inline bool isReducedMotion() const {
+    return isReducedMotion_;
   }
 
  private:
@@ -185,6 +190,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 #endif // RCT_NEW_ARCH_ENABLED
 
   const bool isBridgeless_;
+  const bool isReducedMotion_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;

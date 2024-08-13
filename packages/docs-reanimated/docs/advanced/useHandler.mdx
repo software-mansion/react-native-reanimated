@@ -9,15 +9,9 @@ sidebar_position: 5
 ## Reference
 
 ```js
-function useHandlerExample() {
-  const dependencies = [{ isWeb: false }];
-  const handlers = {
-    onScroll: (event) => {
-      'worklet';
-      console.log(event);
-    },
-  };
+import { useEvent, useHandler } from 'react-native-reanimated';
 
+function useAnimatedPagerScrollHandler(handlers, dependencies) {
   // highlight-start
   const { context, doDependenciesDiffer, useWeb } = useHandler(
     handlers,
@@ -25,22 +19,20 @@ function useHandlerExample() {
   );
   // highlight-end
 
-  const customScrollHandler = useEvent(
+  return useEvent(
     (event) => {
       'worklet';
-      const { onScroll } = handlers;
-      if (onScroll && event.eventName.endsWith('onScroll')) {
-        context.eventName = event.eventName + useWeb;
-        onScroll(event);
+      const { onPageScroll } = handlers;
+
+      if (onPageScroll && event.eventName.endsWith('onPageScroll')) {
+        onPageScroll(event, context);
       }
     },
     // highlight-start
-    ['onScroll'],
+    ['onPageScroll'],
     doDependenciesDiffer
     // highlight-end
   );
-
-  return <Animated.ScrollView onScroll={customScrollHandler} />;
 }
 ```
 
@@ -91,13 +83,9 @@ Each of the event worklets will receive the following parameters when called:
 
 #### `dependencies` <Optional />
 
-Changes in `dependencies` array cause `useHandler` hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
+An optional array of dependencies.
 
-This array may contain:
-
-- `undefined` (argument skipped) - worklet will be rebuilt if there is any change in any of the callbacks' bodies or any values from their closure (variables from outer scope used in worklet).
-- `[]` - worklet will be rebuilt only if any of the callbacks' bodies changes.
-- `[val1, val2, ..., valN]` - worklet will be rebuilt if there is any change in any of the callbacks bodies or in any values from the given array.
+Only relevant when using Reanimated [without the Babel plugin on the Web.](/docs/guides/web-support/#web-without-the-babel-plugin)
 
 ### Returns
 
@@ -105,34 +93,13 @@ The hook returns a context that will be reused by event handlers and value that 
 
 ## Example
 
-```jsx
-function useAnimatedPagerScrollHandler(handlers, dependencies) {
-  const { context, doDependenciesDiffer, useWeb } = useHandler(
-    handlers,
-    dependencies
-  );
+import useHandler from '@site/src/examples/UseHandlerEventExample';
+import useHandlerSrc from '!!raw-loader!@site/src/examples/UseHandlerEventExample';
 
-  return useEvent(
-    (event) => {
-      'worklet';
-      const { onPageScroll } = handlers;
+<InteractiveExample src={useHandlerSrc} component={useHandler} />
 
-      if (onPageScroll && event.eventName.endsWith('onPageScroll')) {
-        onPageScroll(event, context);
-      }
-    },
-    ['onPageScroll'],
-    doDependenciesDiffer
-  );
-}
-```
+This example can be more easily implemented using [`useScrollViewOffset`](/docs/scroll/useScrollViewOffset/).
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />
