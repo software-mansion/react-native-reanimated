@@ -482,6 +482,8 @@ export function createAnimatedComponent(
           ? (ref as HTMLElement)
           : findNodeHandle(ref as Component);
 
+        // callback refs are executed twice - when the component mounts with ref,
+        // and with null when it unmounts
         if (tag !== null) {
           this._componentViewTag = tag as number;
         }
