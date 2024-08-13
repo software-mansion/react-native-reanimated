@@ -18,7 +18,7 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows//example-android-build-check.yml
+      - .github/workflows/example-android-build-check.yml
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
       - apps/paper-example/package.json
