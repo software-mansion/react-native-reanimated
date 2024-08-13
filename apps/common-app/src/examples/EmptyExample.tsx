@@ -22,10 +22,10 @@ import Animated, {
 } from 'react-native-reanimated';
 
 Animated.configureLogger({
-  level: 'error',
+  // level: 'error',
 });
 
-const SHOW_EXAMPLE: number = -2;
+const SHOW_EXAMPLE: number = 14;
 
 /** [-1]
  * Error: [Reanimated] Property `text` was whitelisted both as UI and native prop. Please remove it from

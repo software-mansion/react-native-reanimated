@@ -45,7 +45,7 @@ export type LoggerConfig = {
 
 type LogFunction = (data: LogData) => void;
 
-const config: Required<LoggerConfig> & { logFunction: LogFunction } = {
+export const config: Required<LoggerConfig> & { logFunction: LogFunction } = {
   logFunction: logToConsole,
   level: 'warn',
   strict: false,

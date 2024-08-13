@@ -1,10 +1,9 @@
 'use strict';
 import { PropsAllowlists } from './propsAllowlists';
-import { jsiConfigureProps, makeShareableCloneRecursive } from './core';
+import { jsiConfigureProps } from './core';
 import { ReanimatedError } from './errors';
-import { logger } from './logger';
+import { config as loggerConfig } from './logger';
 import type { LoggerConfig } from './logger';
-import { shareableMappingCache } from './shareableMappingCache';
 
 function assertNoOverlapInLists() {
   for (const key in PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST) {
@@ -56,9 +55,8 @@ export function addWhitelistedUIProps(props: Record<string, boolean>): void {
 }
 
 export function configureLogger(config: LoggerConfig) {
-  config.level = config.level ?? 'warn';
-  config.strict = config.strict ?? false;
-  shareableMappingCache.set(logger, makeShareableCloneRecursive(logger));
+  loggerConfig.level = config.level ?? 'warn';
+  loggerConfig.strict = config.strict ?? false;
 }
 
 const PROCESSED_VIEW_NAMES = new Set();
