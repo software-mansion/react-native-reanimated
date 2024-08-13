@@ -11,7 +11,8 @@ import { ValueRegistry } from './ValueRegistry';
 import { TestSummaryLogger } from './TestSummaryLogger';
 import { WindowDimensionsMocker } from './WindowDimensionsMocker';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
-import { TrackerRegistry } from './TrackerRegistry';
+import { CallTrackerRegistry } from './CallTrackerRegistry';
+import { NotificationRegistry } from './NotificationRegistry';
 export { Presets } from '../Presets';
 
 export class TestRunner {
@@ -25,7 +26,8 @@ export class TestRunner {
   private _windowDimensionsMocker: WindowDimensionsMocker = new WindowDimensionsMocker();
   private _animationRecorder = new AnimationUpdatesRecorder();
   private _valueRegistry = new ValueRegistry();
-  private _trackerRegistry = new TrackerRegistry();
+  private _callTrackerRegistry = new CallTrackerRegistry();
+  private _notificationRegistry = new NotificationRegistry();
 
   public getWindowDimensionsMocker() {
     return this._windowDimensionsMocker;
@@ -39,8 +41,12 @@ export class TestRunner {
     return this._valueRegistry;
   }
 
-  public getTrackerRegistry() {
-    return this._trackerRegistry;
+  public getCallTrackerRegistry() {
+    return this._callTrackerRegistry;
+  }
+
+  public getNotificationRegistry() {
+    return this._notificationRegistry;
   }
 
   public configure(config: TestConfiguration) {
@@ -202,7 +208,7 @@ export class TestRunner {
   }
 
   private async runTestCase(testSuite: TestSuite, testCase: TestCase) {
-    this._trackerRegistry.resetRegistry();
+    this._callTrackerRegistry.resetRegistry();
     this._currentTestCase = testCase;
 
     if (testSuite.beforeEach) {

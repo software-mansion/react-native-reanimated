@@ -11,7 +11,8 @@ const testRunner = new TestRunner();
 const windowDimensionsMocker = testRunner.getWindowDimensionsMocker();
 const animationRecorder = testRunner.getAnimationUpdatesRecorder();
 const valueRegistry = testRunner.getValueRegistry();
-const trackerRegistry = testRunner.getTrackerRegistry();
+const callTrackerRegistry = testRunner.getCallTrackerRegistry();
+const notificationRegistry = testRunner.getNotificationRegistry();
 
 type DescribeFunction = (name: string, buildSuite: BuildFunction) => void;
 type TestFunction = (name: string, buildTest: BuildFunction) => void;
@@ -86,7 +87,7 @@ export function useTestRef(name: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
-const testRunnerCallTrackerFn = trackerRegistry.callTracker;
+const testRunnerCallTrackerFn = callTrackerRegistry.callTracker;
 export function callTracker(name: string) {
   'worklet';
   return testRunnerCallTrackerFn(name);
@@ -101,7 +102,7 @@ export function callTrackerFn(name: string) {
 }
 
 export function getTrackerCallCount(name: string) {
-  return trackerRegistry.getTrackerCallCount(name);
+  return callTrackerRegistry.getTrackerCallCount(name);
 }
 
 export function registerValue(name: string, value: SharedValue) {
@@ -129,14 +130,14 @@ export async function waitForAnimationUpdates(updatesCount: number) {
 }
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
-const testRunnerNotifyFn = trackerRegistry.notify;
+const testRunnerNotifyFn = notificationRegistry.notify;
 export function notify(name: string) {
   'worklet';
   return testRunnerNotifyFn(name);
 }
 
 export async function waitForNotify(name: string) {
-  return trackerRegistry.waitForNotify(name);
+  return notificationRegistry.waitForNotify(name);
 }
 
 export function expect(value: TestValue) {
