@@ -34,7 +34,7 @@ const getStylesFromObject = (obj: object) => {
     : Object.fromEntries(
         Object.entries(obj).map(([property, value]) => [
           property,
-          value.value ?? value,
+          value._isReanimatedSharedValue ? value.value : value,
         ])
       );
 };
