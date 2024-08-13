@@ -484,7 +484,11 @@ export function createAnimatedComponent(
 
         const tag = findNodeHandle(ref as Component);
 
-        this._componentViewTag = tag as number;
+        // callback refs are executed twice - when the component mounts with ref,
+        // and with null when it unmounts
+        if (tag !== null) {
+          this._componentViewTag = tag;
+        }
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
