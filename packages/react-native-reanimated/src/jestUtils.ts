@@ -84,14 +84,8 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
     currentStyle = {
       ...styleObject,
       ...currentStyle,
+      ...jestAnimatedStyleValue,
     };
-
-    if (!isEmpty(jestAnimatedStyleValue as object)) {
-      currentStyle = {
-        ...currentStyle,
-        ...jestAnimatedStyleValue,
-      };
-    }
 
     return currentStyle;
   }
