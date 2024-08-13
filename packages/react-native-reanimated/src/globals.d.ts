@@ -19,7 +19,7 @@ import type { UpdatePropsManager } from './UpdateProps';
 import type { callGuardDEV } from './initializers';
 import type { WorkletRuntime } from './runtimes';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
-import type { ReanimatedError } from './errors';
+import type { ReanimatedErrorConstructor } from './errors';
 
 declare global {
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
@@ -113,5 +113,5 @@ declare global {
     shadowNodeWrapper: ShadowNodeWrapper,
     propName: string
   ) => string;
-  var ReanimatedError: ReanimatedError;
+  var ReanimatedError: ReanimatedErrorConstructor;
 }

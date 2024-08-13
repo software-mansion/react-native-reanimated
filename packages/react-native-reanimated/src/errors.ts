@@ -1,17 +1,22 @@
 'use strict';
 import type { WorkletStackDetails } from './commonTypes';
 
-export interface ReanimatedError extends Error {
-  // eslint-disable-next-line @typescript-eslint/no-misused-new
-  new (message: string): ReanimatedError;
+type ReanimatedError = Error & 'ReanimatedError'; // signed type
+
+export interface ReanimatedErrorConstructor extends Error {
+  new (message?: string): ReanimatedError;
+  (message?: string): ReanimatedError;
+  readonly prototype: ReanimatedError;
 }
 
-const ReanimatedErrorConstructor: ReanimatedError = ((message: string) => {
-  'worklet';
-  const errorInstance = new Error(`[Reanimated] ${message}`);
-  errorInstance.name = 'ReanimatedError';
-  return errorInstance;
-}) as unknown as ReanimatedError;
+const ReanimatedErrorConstructor: ReanimatedErrorConstructor =
+  function ReanimatedError(message?: string) {
+    'worklet';
+    const prefix = '[Reanimated]';
+    const errorInstance = new Error(message ? `${prefix} ${message}` : prefix);
+    errorInstance.name = 'ReanimatedError';
+    return errorInstance;
+  } as ReanimatedErrorConstructor;
 
 export function registerReanimatedError() {
   'worklet';
