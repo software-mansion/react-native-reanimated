@@ -22,7 +22,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 Animated.configureLogger({
-  // level: 'error',
+  level: 'error',
 });
 
 const SHOW_EXAMPLE: number = 14;

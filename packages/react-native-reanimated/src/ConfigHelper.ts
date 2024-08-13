@@ -1,8 +1,8 @@
 'use strict';
 import { PropsAllowlists } from './propsAllowlists';
-import { jsiConfigureProps } from './core';
+import { executeOnUIRuntimeSync, jsiConfigureProps } from './core';
 import { ReanimatedError } from './errors';
-import { config as loggerConfig } from './logger';
+import { updateLoggerConfig } from './logger';
 import type { LoggerConfig } from './logger';
 
 function assertNoOverlapInLists() {
@@ -55,8 +55,8 @@ export function addWhitelistedUIProps(props: Record<string, boolean>): void {
 }
 
 export function configureLogger(config: LoggerConfig) {
-  loggerConfig.level = config.level ?? 'warn';
-  loggerConfig.strict = config.strict ?? false;
+  updateLoggerConfig(config);
+  executeOnUIRuntimeSync(updateLoggerConfig)(config);
 }
 
 const PROCESSED_VIEW_NAMES = new Set();
