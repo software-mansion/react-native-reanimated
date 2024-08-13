@@ -79,7 +79,7 @@ export function updateLoggerConfig(config?: Partial<LoggerConfigInternal>) {
   global.__loggerConfig = {
     logFunction:
       // Re-use previously assigned log function if it exists
-      config?.logFunction ?? global.__loggerConfig.logFunction ?? logToConsole,
+      config?.logFunction ?? global.__loggerConfig?.logFunction ?? logToConsole,
     // Don't reuse previous level and strict values from the global config
     level: config?.level ?? 'warn',
     strict: config?.strict ?? false,
