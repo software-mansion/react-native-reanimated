@@ -6,7 +6,7 @@ export interface ReanimatedError extends Error {
   new (message: string): ReanimatedError;
 }
 
-const ReanimatedErrorFactory: ReanimatedError = ((message: string) => {
+const ReanimatedErrorConstructor: ReanimatedError = ((message: string) => {
   'worklet';
   const errorInstance = new Error(`[Reanimated] ${message}`);
   errorInstance.name = 'ReanimatedError';
@@ -15,7 +15,7 @@ const ReanimatedErrorFactory: ReanimatedError = ((message: string) => {
 
 export function registerReanimatedError() {
   'worklet';
-  global.ReanimatedError = ReanimatedErrorFactory;
+  global.ReanimatedError = ReanimatedErrorConstructor;
 }
 
 const _workletStackDetails = new Map<number, WorkletStackDetails>();
