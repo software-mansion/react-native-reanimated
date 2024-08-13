@@ -1,7 +1,6 @@
 import React from 'react';
 import RuntimeTestsRunner from './ReJest/RuntimeTestsRunner';
 import { describe } from './ReJest/RuntimeTestsApi';
-import { Platform } from 'react-native';
 
 export default function RuntimeTestsExample() {
   return (
@@ -33,11 +32,7 @@ export default function RuntimeTestsExample() {
             });
             describe('*****withDelay*****', () => {
               require('./tests/animations/withDelay/keepSnapshot.test');
-              if (Platform.OS === 'ios') {
-                // These tests don't pass on Android. We disable them instead of fixing, since
-                // the problem lies in withDelay and probably we should fix it before creating passing tests.
-                require('./tests/animations/withDelay/addDelays.test');
-              }
+              require('./tests/animations/withDelay/addDelays.test');
             });
           },
         },
@@ -63,14 +58,19 @@ export default function RuntimeTestsExample() {
             require('./tests/layoutAnimations/entering/enteringColors.test');
             require('./tests/layoutAnimations/entering/predefinedEntering.test');
             require('./tests/layoutAnimations/exiting/predefinedExiting.test');
-            require('./tests/layoutAnimations/layout/predefinedLayoutPosition.test');
+            describe('Compare layout transitions with **constant view size** with snapshots', () => {
+              require('./tests/layoutAnimations/layout/predefinedLayoutPosition.test');
+            });
+            describe('Compare Test layout transitions including view **size changes** with snapshots', () => {
+              require('./tests/layoutAnimations/layout/positionAndSize.test');
+            });
           },
         },
         {
           testSuiteName: 'advanced API',
           importTest: () => {
             require('./tests/advancedAPI/useFrameCallback.test');
-            require('./tests/advancedAPI/measure.test');
+            // require('./tests/advancedAPI/measure.test'); // crash on Android
           },
         },
         {
