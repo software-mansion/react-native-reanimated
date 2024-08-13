@@ -40,8 +40,7 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
-
-      # TODO: Rework caching in this CI for monorepo setup.
+      # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 

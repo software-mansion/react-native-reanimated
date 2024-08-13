@@ -1,4 +1,4 @@
-name: Example app, iOS build check (paper and fabric)
+name: Example iOS build check
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
@@ -47,7 +47,7 @@ jobs:
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
-
+      # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install Pods
         working-directory: ${{ matrix.working-directory }}/ios
         run: |
