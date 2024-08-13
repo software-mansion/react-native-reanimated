@@ -47,6 +47,7 @@ jobs:
           distribution: 'zulu'
           java-version: 17
 
+      # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 
