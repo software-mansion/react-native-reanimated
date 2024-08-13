@@ -34,7 +34,6 @@ export class TestRunner {
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
   private _includesOnly: boolean = false;
-  private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
   private _testSummary: TestSummaryLogger = new TestSummaryLogger();
   private _windowDimensionsMocker: WindowDimensionsMocker = new WindowDimensionsMocker();
@@ -130,7 +129,7 @@ export class TestRunner {
     });
   }
 
-  public test(name: string, run: BuildFunction, decorator: TestDecorator | null, warningMessage = '') {
+  public test(name: string, run: BuildFunction, decorator: TestDecorator | null) {
     assertTestSuite(this._currentTestSuite);
     if (decorator === TestDecorator.ONLY) {
       this._includesOnly = true;
@@ -143,24 +142,7 @@ export class TestRunner {
       errors: [],
       skip: decorator === TestDecorator.SKIP || this._currentTestSuite.decorator === DescribeDecorator.SKIP,
       decorator,
-      warningMessage,
     });
-  }
-
-  public testEachErrorMsg<T>(examples: Array<T>, decorator: TestDecorator) {
-    return (name: string, expectedWarning: string, testCase: (example: T, index: number) => void | Promise<void>) => {
-      examples.forEach((example, index) => {
-        const currentTestCase = async () => {
-          await testCase(example, index);
-        };
-        this.test(
-          formatTestName(name, example, index),
-          currentTestCase,
-          decorator,
-          formatTestName(expectedWarning, example, index),
-        );
-      });
-    };
   }
 
   public testEach<T>(examples: Array<T>, decorator: TestDecorator | null) {
@@ -277,15 +259,7 @@ export class TestRunner {
     if (testSuite.beforeEach) {
       await testSuite.beforeEach();
     }
-
-    if (testCase.decorator === TestDecorator.FAILING || testCase.decorator === TestDecorator.WARN) {
-      const [restoreConsole, checkErrors] = await this.mockConsole(testCase);
-      await testCase.run();
-      await restoreConsole();
-      checkErrors();
-    } else {
-      await testCase.run();
-    }
+    await testCase.run();
 
     this._testSummary.showTestCaseSummary(testCase, testSuite.nestingLevel);
 
@@ -347,55 +321,5 @@ export class TestRunner {
         }
       }, CHECK_INTERVAL);
     });
-  }
-
-  private async mockConsole(testCase: TestCase): Promise<[() => Promise<void>, () => void]> {
-    const counterUI = makeMutable(0);
-    let counterJS = 0;
-    const recordedMessage = makeMutable('');
-
-    const originalError = console.error;
-    const originalWarning = console.warn;
-
-    const incrementJS = () => {
-      counterJS++;
-    };
-    const mockedConsoleFunction = (message: string) => {
-      'worklet';
-      if (_WORKLET) {
-        counterUI.value++;
-      } else {
-        incrementJS();
-      }
-      recordedMessage.value = message.split('\n\nThis error is located at:')[0];
-    };
-    console.error = mockedConsoleFunction;
-    console.warn = mockedConsoleFunction;
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      console.error = mockedConsoleFunction;
-      console.warn = mockedConsoleFunction;
-    });
-
-    const restoreConsole = async () => {
-      console.error = originalError;
-      console.warn = originalWarning;
-      await this._syncUIRunner.runOnUIBlocking(() => {
-        'worklet';
-        console.error = originalError;
-        console.warn = originalWarning;
-      });
-    };
-
-    const checkErrors = () => {
-      if (testCase.decorator !== TestDecorator.WARN && testCase.decorator !== TestDecorator.FAILING) {
-        return;
-      }
-      const count = counterUI.value + counterJS;
-      this.expect(count).toBe(1);
-      this.expect(recordedMessage.value).toBe(testCase.warningMessage);
-    };
-
-    return [restoreConsole, checkErrors];
   }
 }

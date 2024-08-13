@@ -118,7 +118,6 @@ const styles = StyleSheet.create({
   containerVertical: {
     flex: 1,
     flexDirection: 'column',
-    margin: 5,
     width: 250,
   },
   containerHorizontal: {
@@ -126,16 +125,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    margin: 5,
     width: 250,
   },
   animatedBox: {
-    backgroundColor: 'royalblue',
+    backgroundColor: 'powderblue',
+    borderColor: 'steelblue',
+    borderWidth: 1,
     width: 100,
     height: 100,
     margin: 5,
   },
-  mainBox: { backgroundColor: 'darkorange' },
+  mainBox: { backgroundColor: 'orange', borderColor: 'darkorange' },
   bigBox: {
     width: 150,
     height: 200,

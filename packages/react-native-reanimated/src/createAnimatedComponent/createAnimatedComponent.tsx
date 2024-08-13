@@ -7,7 +7,8 @@ import type {
   MutableRefObject,
 } from 'react';
 import React from 'react';
-import { findNodeHandle, Platform } from 'react-native';
+import { Platform } from 'react-native';
+import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import '../layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from '../ConfigHelper';
@@ -478,11 +479,13 @@ export function createAnimatedComponent(
       setLocalRef: (ref) => {
         // TODO update config
 
-        const tag = IS_WEB
-          ? (ref as HTMLElement)
-          : findNodeHandle(ref as Component);
+        const tag = findNodeHandle(ref as Component);
 
-        this._componentViewTag = tag as number;
+        // callback refs are executed twice - when the component mounts with ref,
+        // and with null when it unmounts
+        if (tag !== null) {
+          this._componentViewTag = tag;
+        }
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
         if (
@@ -504,7 +507,7 @@ export function createAnimatedComponent(
                 : getReduceMotionFromConfig();
             if (!reduceMotionInExiting) {
               updateLayoutAnimations(
-                tag as number,
+                tag,
                 LayoutAnimationType.EXITING,
                 maybeBuild(
                   exiting,
@@ -518,7 +521,7 @@ export function createAnimatedComponent(
           const skipEntering = this.context?.current;
           if (entering && !skipEntering && !IS_WEB) {
             updateLayoutAnimations(
-              tag as number,
+              tag,
               LayoutAnimationType.ENTERING,
               maybeBuild(
                 entering,
