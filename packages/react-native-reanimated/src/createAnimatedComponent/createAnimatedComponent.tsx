@@ -31,6 +31,7 @@ import type {
   IAnimatedComponentInternal,
   ViewInfo,
   INativeEventsManager,
+  NestedArray,
 } from './commonTypes';
 import { flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
@@ -122,6 +123,7 @@ export function createAnimatedComponent(
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _componentViewTag = -1;
     _isFirstRender = true;
+    jestInlineStyle: NestedArray<StyleProps> | undefined;
     jestAnimatedStyle: { value: StyleProps } = { value: {} };
     _component: AnimatedComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
