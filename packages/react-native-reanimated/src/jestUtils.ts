@@ -63,7 +63,6 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
   }
 
   const jestInlineStyles = component.props.jestInlineStyle as JestInlineStyle;
-
   const jestAnimatedStyleValue = component.props.jestAnimatedStyle?.value;
 
   if (Array.isArray(jestInlineStyles)) {

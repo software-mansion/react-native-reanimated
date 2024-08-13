@@ -587,12 +587,18 @@ export function createAnimatedComponent(
       const nativeID =
         skipEntering || !isFabric() ? undefined : `${this.reanimatedID}`;
 
+      const jestProps = IS_JEST
+        ? {
+            jestInlineStyle: this.props.style,
+            jestAnimatedStyle: this.jestAnimatedStyle,
+          }
+        : {};
+
       return (
         <Component
           nativeID={nativeID}
           {...filteredProps}
-          jestAnimatedStyle={IS_JEST ? this.jestAnimatedStyle : {}}
-          jestInlineStyle={IS_JEST ? this.props.style : {}}
+          {...jestProps}
           // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
           // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
           ref={this._setComponentRef as (ref: Component) => void}
