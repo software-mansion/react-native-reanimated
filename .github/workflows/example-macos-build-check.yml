@@ -4,7 +4,7 @@ env:
 on:
   pull_request:
     paths:
-      - .github/workflows/macos-build.yml
+      - .github/workflows/example-macos-build-check.yml
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
@@ -19,7 +19,7 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/macos-build.yml
+      - .github/workflows/example-macos-build-check.yml
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**

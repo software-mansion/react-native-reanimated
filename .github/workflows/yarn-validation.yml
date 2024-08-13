@@ -4,7 +4,7 @@ env:
 on:
   pull_request:
     paths:
-      - '.github/workflows/validate-yarn.yml'
+      - '.github/workflows/yarn-validation.yml'
       - '**/package.json'
       - '**/yarn.lock'
   merge_group:
@@ -13,8 +13,8 @@ on:
   push:
     branches:
       - main
-    paths:
-      - '.github/workflows/validate-yarn.yml'
+    paths:     
+      - '.github/workflows/yarn-validation.yml'
       - '**/package.json'
       - '**/yarn.lock'
 
