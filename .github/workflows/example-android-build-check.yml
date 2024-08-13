@@ -47,6 +47,9 @@ jobs:
           distribution: 'zulu'
           java-version: 17
 
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android
         run: ./gradlew assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a

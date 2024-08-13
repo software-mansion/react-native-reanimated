@@ -7,7 +7,6 @@ on:
       - main
     paths:
       - packages/docs-reanimated/**
-      - '.github/workflows/docs-reanimated-publish.yml'
   workflow_dispatch:
 
 jobs:

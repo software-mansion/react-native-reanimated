@@ -45,6 +45,9 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+
       - name: Install Pods
         working-directory: ${{ matrix.working-directory }}/ios
         run: |
