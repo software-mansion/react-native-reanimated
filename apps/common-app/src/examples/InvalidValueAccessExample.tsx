@@ -7,6 +7,10 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+Animated.configureLogger({
+  strict: true,
+});
+
 export default function InvalidValueAccessExample() {
   const [counter, setCounter] = React.useState(0);
   const [updateFromUseEffect, setUpdateFromUseEffect] = React.useState(false);

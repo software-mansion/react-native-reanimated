@@ -2,6 +2,7 @@
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { Mutable } from './commonTypes';
 import { ReanimatedError } from './errors';
+import { logger } from './logger';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
 import { shareableMappingCache } from './shareableMappingCache';
 import { makeShareableCloneRecursive } from './shareables';
@@ -16,16 +17,18 @@ function shouldWarnAboutAccessDuringRender() {
 
 function checkInvalidReadDuringRender() {
   if (shouldWarnAboutAccessDuringRender()) {
-    console.warn(
-      '[Reanimated] Reading from `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.'
+    logger.warn(
+      'Reading from `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.',
+      { strict: true }
     );
   }
 }
 
 function checkInvalidWriteDuringRender() {
   if (shouldWarnAboutAccessDuringRender()) {
-    console.warn(
-      '[Reanimated] Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.'
+    logger.warn(
+      'Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.',
+      { strict: true }
     );
   }
 }
