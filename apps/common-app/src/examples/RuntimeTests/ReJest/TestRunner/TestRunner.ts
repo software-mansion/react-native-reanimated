@@ -1,30 +1,17 @@
 import type { Component, MutableRefObject, ReactElement } from 'react';
 import { useRef } from 'react';
-import type {
-  BuildFunction,
-  Operation,
-  TestCase,
-  TestConfiguration,
-  TestSuite,
-  TestValue,
-  TrackerCallCount,
-} from '../types';
+import type { BuildFunction, TestCase, TestConfiguration, TestSuite, TestValue, TrackerCallCount } from '../types';
 import { DescribeDecorator, TestDecorator } from '../types';
 import { TestComponent } from '../TestComponent';
-import { applyMarkdown, formatString } from '../utils/stringFormatUtils';
-import type {
-  LayoutAnimationStartFunction,
-  LayoutAnimationType,
-  SharedTransitionAnimationsValues,
-  LayoutAnimation,
-} from 'react-native-reanimated';
+import { applyMarkdown, formatTestName } from '../utils/stringFormatUtils';
 import { Matchers } from '../matchers/Matchers';
 import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
-import { createUpdatesContainer } from './UpdatesContainer';
 import { makeMutable, runOnJS } from 'react-native-reanimated';
 import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
 import { ValueRegistry } from './ValueRegistry';
 import { TestSummaryLogger } from './TestSummaryLogger';
+import { WindowDimensionsMocker } from './WindowDimensionsMocker';
+import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
 export { Presets } from '../Presets';
 
 let callTrackerRegistryJS: Record<string, number> = {};
@@ -47,10 +34,19 @@ export class TestRunner {
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
   private _includesOnly: boolean = false;
-  private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
+  private _testSummary: TestSummaryLogger = new TestSummaryLogger();
+  private _windowDimensionsMocker: WindowDimensionsMocker = new WindowDimensionsMocker();
+  private _animationRecorder = new AnimationUpdatesRecorder();
   private _valueRegistry = new ValueRegistry();
-  private _testSummary = new TestSummaryLogger();
+
+  public getWindowDimensionsMocker() {
+    return this._windowDimensionsMocker;
+  }
+
+  public getAnimationUpdatesRecorder() {
+    return this._animationRecorder;
+  }
 
   public getValueRegistry() {
     return this._valueRegistry;
@@ -133,7 +129,7 @@ export class TestRunner {
     });
   }
 
-  public test(name: string, run: BuildFunction, decorator: TestDecorator | null, warningMessage = '') {
+  public test(name: string, run: BuildFunction, decorator: TestDecorator | null) {
     assertTestSuite(this._currentTestSuite);
     if (decorator === TestDecorator.ONLY) {
       this._includesOnly = true;
@@ -146,24 +142,7 @@ export class TestRunner {
       errors: [],
       skip: decorator === TestDecorator.SKIP || this._currentTestSuite.decorator === DescribeDecorator.SKIP,
       decorator,
-      warningMessage,
     });
-  }
-
-  public testEachErrorMsg<T>(examples: Array<T>, decorator: TestDecorator) {
-    return (name: string, expectedWarning: string, testCase: (example: T, index: number) => void | Promise<void>) => {
-      examples.forEach((example, index) => {
-        const currentTestCase = async () => {
-          await testCase(example, index);
-        };
-        this.test(
-          formatString(name, example, index),
-          currentTestCase,
-          decorator,
-          formatString(expectedWarning, example, index),
-        );
-      });
-    };
   }
 
   public testEach<T>(examples: Array<T>, decorator: TestDecorator | null) {
@@ -172,7 +151,7 @@ export class TestRunner {
         const currentTestCase = async () => {
           await testCase(example, index);
         };
-        this.test(formatString(name, example, index), currentTestCase, decorator);
+        this.test(formatTestName(name, example, index), currentTestCase, decorator);
       });
     };
   }
@@ -280,15 +259,7 @@ export class TestRunner {
     if (testSuite.beforeEach) {
       await testSuite.beforeEach();
     }
-
-    if (testCase.decorator === TestDecorator.FAILING || testCase.decorator === TestDecorator.WARN) {
-      const [restoreConsole, checkErrors] = await this.mockConsole(testCase);
-      await testCase.run();
-      await restoreConsole();
-      checkErrors();
-    } else {
-      await testCase.run();
-    }
+    await testCase.run();
 
     this._testSummary.showTestCaseSummary(testCase, testSuite.nestingLevel);
 
@@ -298,8 +269,8 @@ export class TestRunner {
 
     this._currentTestCase = null;
     await this.render(null);
-    await this.unmockAnimationTimer();
-    await this.stopRecordingAnimationUpdates();
+    await this._animationRecorder.unmockAnimationTimer();
+    await this._animationRecorder.stopRecordingAnimationUpdates();
   }
 
   public expect(currentValue: TestValue): Matchers {
@@ -327,175 +298,6 @@ export class TestRunner {
     this._currentTestSuite.afterEach = job;
   }
 
-  public async recordAnimationUpdates() {
-    const updatesContainer = createUpdatesContainer();
-    const recordAnimationUpdates = updatesContainer.pushAnimationUpdates;
-    const recordLayoutAnimationUpdates = updatesContainer.pushLayoutAnimationUpdates;
-
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      const originalUpdateProps = global._IS_FABRIC ? global._updatePropsFabric : global._updatePropsPaper;
-      global.originalUpdateProps = originalUpdateProps;
-
-      const mockedUpdateProps = (operations: Operation[]) => {
-        recordAnimationUpdates(operations);
-        originalUpdateProps(operations);
-      };
-
-      if (global._IS_FABRIC) {
-        global._updatePropsFabric = mockedUpdateProps;
-      } else {
-        global._updatePropsPaper = mockedUpdateProps;
-      }
-
-      const originalNotifyAboutProgress = global._notifyAboutProgress;
-      global.originalNotifyAboutProgress = originalNotifyAboutProgress;
-      global._notifyAboutProgress = (tag: number, value: Record<string, unknown>, isSharedTransition: boolean) => {
-        recordLayoutAnimationUpdates(tag, value);
-        originalNotifyAboutProgress(tag, value, isSharedTransition);
-      };
-    });
-    return updatesContainer;
-  }
-
-  public async stopRecordingAnimationUpdates() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      if (global.originalUpdateProps) {
-        if (global._IS_FABRIC) {
-          global._updatePropsFabric = global.originalUpdateProps;
-        } else {
-          global._updatePropsPaper = global.originalUpdateProps;
-        }
-        global.originalUpdateProps = undefined;
-      }
-      if (global.originalNotifyAboutProgress) {
-        global._notifyAboutProgress = global.originalNotifyAboutProgress;
-        global.originalNotifyAboutProgress = undefined;
-      }
-    });
-  }
-
-  public async mockAnimationTimer() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      global.mockedAnimationTimestamp = 0;
-      global.originalGetAnimationTimestamp = global._getAnimationTimestamp;
-      global._getAnimationTimestamp = () => {
-        if (global.mockedAnimationTimestamp === undefined) {
-          throw new Error("Animation timestamp wasn't initialized");
-        }
-        return global.mockedAnimationTimestamp;
-      };
-      global.framesCount = 0;
-
-      const originalRequestAnimationFrame = global.requestAnimationFrame;
-      global.originalRequestAnimationFrame = originalRequestAnimationFrame;
-      global.requestAnimationFrame = (callback: FrameRequestCallback) => {
-        originalRequestAnimationFrame(() => {
-          callback(global._getAnimationTimestamp());
-        });
-        return 0;
-      };
-
-      global.originalFlushAnimationFrame = global.__flushAnimationFrame;
-      global.__flushAnimationFrame = (_frameTimestamp: number) => {
-        global.mockedAnimationTimestamp! += 16;
-        global.__frameTimestamp = global.mockedAnimationTimestamp;
-        global.originalFlushAnimationFrame!(global.mockedAnimationTimestamp!);
-        global.framesCount!++;
-      };
-    });
-  }
-
-  public async setAnimationTimestamp(timestamp: number) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-      global.mockedAnimationTimestamp = timestamp;
-    });
-  }
-
-  public async advanceAnimationByTime(time: number) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-      global.mockedAnimationTimestamp += time;
-    });
-  }
-
-  public async advanceAnimationByFrames(frameCount: number) {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      assertMockedAnimationTimestamp(global.mockedAnimationTimestamp);
-      global.mockedAnimationTimestamp += frameCount * 16;
-    });
-  }
-
-  public async unmockAnimationTimer() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      if (global.originalGetAnimationTimestamp) {
-        global._getAnimationTimestamp = global.originalGetAnimationTimestamp;
-        global.originalGetAnimationTimestamp = undefined;
-      }
-      if (global.originalRequestAnimationFrame) {
-        (global.requestAnimationFrame as any) = global.originalRequestAnimationFrame;
-        global.originalRequestAnimationFrame = undefined;
-      }
-      if (global.originalFlushAnimationFrame) {
-        global.__flushAnimationFrame = global.originalFlushAnimationFrame;
-        global.originalFlushAnimationFrame = undefined;
-      }
-      if (global.mockedAnimationTimestamp) {
-        global.mockedAnimationTimestamp = undefined;
-      }
-      if (global.framesCount) {
-        global.framesCount = undefined;
-      }
-    });
-  }
-
-  public async unmockWindowDimensions() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      if (global.originalLayoutAnimationsManager) {
-        global.LayoutAnimationsManager = global.originalLayoutAnimationsManager;
-      }
-    });
-  }
-
-  public async mockWindowDimensions() {
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      const originalLayoutAnimationsManager = global.LayoutAnimationsManager;
-
-      const startLayoutAnimation: LayoutAnimationStartFunction = (
-        tag: number,
-        type: LayoutAnimationType,
-        _yogaValues: Partial<SharedTransitionAnimationsValues>,
-        config: (arg: Partial<SharedTransitionAnimationsValues>) => LayoutAnimation,
-      ) => {
-        originalLayoutAnimationsManager.start(
-          tag,
-          type,
-          {
-            ..._yogaValues,
-            windowHeight: 852,
-            windowWidth: 393,
-          },
-          config,
-        );
-      };
-
-      global.originalLayoutAnimationsManager = originalLayoutAnimationsManager;
-      global.LayoutAnimationsManager = {
-        start: startLayoutAnimation,
-        stop: originalLayoutAnimationsManager.stop,
-      };
-    });
-  }
-
   public wait(delay: number) {
     return new Promise(resolve => {
       setTimeout(resolve, delay);
@@ -519,55 +321,5 @@ export class TestRunner {
         }
       }, CHECK_INTERVAL);
     });
-  }
-
-  private async mockConsole(testCase: TestCase): Promise<[() => Promise<void>, () => void]> {
-    const counterUI = makeMutable(0);
-    let counterJS = 0;
-    const recordedMessage = makeMutable('');
-
-    const originalError = console.error;
-    const originalWarning = console.warn;
-
-    const incrementJS = () => {
-      counterJS++;
-    };
-    const mockedConsoleFunction = (message: string) => {
-      'worklet';
-      if (_WORKLET) {
-        counterUI.value++;
-      } else {
-        incrementJS();
-      }
-      recordedMessage.value = message.split('\n\nThis error is located at:')[0];
-    };
-    console.error = mockedConsoleFunction;
-    console.warn = mockedConsoleFunction;
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      console.error = mockedConsoleFunction;
-      console.warn = mockedConsoleFunction;
-    });
-
-    const restoreConsole = async () => {
-      console.error = originalError;
-      console.warn = originalWarning;
-      await this._syncUIRunner.runOnUIBlocking(() => {
-        'worklet';
-        console.error = originalError;
-        console.warn = originalWarning;
-      });
-    };
-
-    const checkErrors = () => {
-      if (testCase.decorator !== TestDecorator.WARN && testCase.decorator !== TestDecorator.FAILING) {
-        return;
-      }
-      const count = counterUI.value + counterJS;
-      this.expect(count).toBe(1);
-      this.expect(recordedMessage.value).toBe(testCase.warningMessage);
-    };
-
-    return [restoreConsole, checkErrors];
   }
 }

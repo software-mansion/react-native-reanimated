@@ -9,7 +9,7 @@ cd $REANIMATED_PATH
 # This step can take several seconds, so we don't want to run it on irrelevant commits.
 ! git diff-index --name-only HEAD -- | grep "$REANIMATED_PATH/src/.*\.\(ts\|tsx\)$" >/dev/null
 if [ $? -eq 1 ]; then
-  yarn type:check:all
+  yarn type:check
   yarn find-unused-code:js
 else
   echo "[PRECOMMIT]: Reanimated TypeScript source files weren't changed. Skipping TypeScript checks." >&2

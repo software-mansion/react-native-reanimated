@@ -9,12 +9,6 @@ const root = path.resolve(__dirname, '../..');
 
 const modules = [...Object.keys(pack.peerDependencies), 'react-native-macos'];
 
-/**
- * Metro configuration
- * https://facebook.github.io/metro/docs/configuration
- *
- * @type {import('metro-config').MetroConfig}
- */
 const config = {
   projectRoot: __dirname,
   watchFolders: [root],
