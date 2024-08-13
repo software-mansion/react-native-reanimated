@@ -40,7 +40,7 @@ const getStylesFromObject = (obj: object) => {
 };
 
 type StyleValue = { value: unknown };
-type JestInlineStylesType =
+type JestInlineStyle =
   | {
       [s: string]: StyleValue;
     }
@@ -62,8 +62,7 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
     return currentStyle;
   }
 
-  const jestInlineStyles = component.props
-    .jestInlineStyle as JestInlineStylesType;
+  const jestInlineStyles = component.props.jestInlineStyle as JestInlineStyle;
 
   const jestAnimatedStyleValue = component.props.jestAnimatedStyle?.value;
 
