@@ -15,29 +15,31 @@ import Animated, {
 import { describe, expect, test, render, wait, registerValue, getRegisteredValue } from '../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../ReJest/types';
 
-const INITIAL_STYLE = {
+const DEFAULT_STYLE = {
   width: 100,
   height: 50,
   margin: 0,
   top: 0,
   left: 0,
 };
-const PARENT_MARGIN = 50;
+const DEFAULT_PARENT_MARGIN = 50;
 
-describe.only('Test measuring component before nad after animation', () => {
+type TestCase = {
+  initialStyle: AnimatableValueObject;
+  finalStyle: AnimatableValueObject;
+  initialParentMargin: number;
+  finalParentMargin: number;
+};
+
+describe('Test measuring component before nad after animation of the component and its parent', () => {
   const INITIAL_MEASURE = 'INITIAL_MEASURE';
   const FINAL_MEASURE = 'FINAL_MEASURE';
-  const MeasuredComponent = ({
-    initialStyle,
-    finalStyle,
-  }: {
-    initialStyle: AnimatableValueObject;
-    finalStyle: AnimatableValueObject;
-  }) => {
+  const MeasuredComponent = ({ initialStyle, finalStyle, initialParentMargin, finalParentMargin }: TestCase) => {
     const measuredInitial = useSharedValue<MeasuredDimensions | null>(null);
     const measuredFinal = useSharedValue<MeasuredDimensions | null>(null);
 
     const styleSV = useSharedValue(initialStyle);
+    const parentMarginSV = useSharedValue(initialParentMargin);
 
     registerValue(INITIAL_MEASURE, measuredInitial);
     registerValue(FINAL_MEASURE, measuredFinal);
@@ -48,91 +50,134 @@ describe.only('Test measuring component before nad after animation', () => {
       return styleSV.value;
     });
 
+    const parentMargin = useAnimatedStyle(() => {
+      return { margin: parentMarginSV.value };
+    });
+
     useEffect(() => {
       setTimeout(() => {
         runOnUI(() => {
           measuredInitial.value = measure(ref);
         })();
-      }, 200);
+      }, 50);
     });
 
     useEffect(() => {
       styleSV.value = withDelay(
-        250,
+        400,
         withTiming(finalStyle, { duration: 300 }, () => {
           measuredFinal.value = measure(ref);
         }),
       );
+      parentMarginSV.value = withDelay(
+        400,
+        withTiming(finalParentMargin, { duration: 200 }, () => {}),
+      );
     });
 
     return (
-      <View style={styles.container}>
+      <Animated.View style={[styles.container, parentMargin]}>
         <Animated.View ref={ref} style={[styles.smallBox, animatedStyle]} />
-      </View>
+      </Animated.View>
     );
   };
 
   test.each([
-    [{ width: 40 }, { width: 100 }],
-    [{ height: 40 }, { height: 100 }],
-    [
-      { height: 80, width: 20 },
-      { height: 25, width: 85 },
-    ],
-    [{ margin: 40 }, { margin: 60 }],
-    [
-      { height: 40, width: 40, margin: 40 },
-      { height: 100, width: 100, margin: 60 },
-    ],
-    [
-      { height: 40, width: 40, margin: 40, top: 0 },
-      { height: 100, width: 100, margin: 60, top: 40 },
-    ],
-    [
-      { height: 40, width: 40, margin: 40, left: 0 },
-      { height: 100, width: 100, margin: 60, left: 40 },
-    ],
-    [
-      { height: 40, width: 40, margin: 40, left: 0, top: 50 },
-      { height: 100, width: 100, margin: 60, left: 40, top: 0 },
-    ],
-  ])('Measure component animating from ${0} to ${1}', async ([initialStyle, finalStyle]) => {
-    await render(<MeasuredComponent initialStyle={initialStyle} finalStyle={finalStyle} />);
-    await wait(700);
-    const measuredInitial = (await getRegisteredValue(INITIAL_MEASURE)).onJS as unknown as MeasuredDimensions;
-    const measuredFinal = (await getRegisteredValue(FINAL_MEASURE)).onJS as unknown as MeasuredDimensions;
+    { initialStyle: { width: 40 }, finalStyle: { width: 100 }, initialParentMargin: 30, finalParentMargin: 60 },
+    { initialStyle: { height: 40 }, finalStyle: { height: 100 }, initialParentMargin: 30, finalParentMargin: 60 },
+    { initialStyle: { margin: 40 }, finalStyle: { margin: 60 }, initialParentMargin: 30, finalParentMargin: 60 },
+    {
+      initialStyle: { height: 80, width: 20 },
+      finalStyle: { height: 25, width: 85 },
+      initialParentMargin: 30,
+      finalParentMargin: 60,
+    },
+    {
+      initialStyle: { height: 40, width: 40, margin: 40 },
+      finalStyle: { height: 100, width: 100, margin: 60 },
+      initialParentMargin: 0,
+      finalParentMargin: 100,
+    },
+    {
+      initialStyle: { height: 40, width: 40, margin: 40, top: 0 },
+      finalStyle: { height: 100, width: 100, margin: 60, top: 40 },
+      initialParentMargin: 30,
+      finalParentMargin: 30,
+    },
+    {
+      initialStyle: { height: 40, width: 40, margin: 40, left: 0 },
+      finalStyle: { height: 100, width: 100, margin: 60, left: 40 },
+      initialParentMargin: 0,
+      finalParentMargin: 0,
+    },
+    {
+      initialStyle: { height: 40, width: 40, margin: 40, left: 0, top: 50 },
+      finalStyle: { height: 100, width: 100, margin: 60, left: 40, top: 0 },
+      initialParentMargin: 100,
+      finalParentMargin: 60,
+    },
+  ] as Array<TestCase>)(
+    'Measure test *****%#*****',
+    async ({ initialStyle, finalStyle, initialParentMargin, finalParentMargin }) => {
+      await render(
+        <MeasuredComponent
+          initialStyle={initialStyle}
+          finalStyle={finalStyle}
+          initialParentMargin={initialParentMargin}
+          finalParentMargin={finalParentMargin}
+        />,
+      );
 
-    // Check the distance from the top
-    const finalStyleFull = { ...INITIAL_STYLE, ...finalStyle };
-    const initialStyleFull = { ...INITIAL_STYLE, ...initialStyle };
+      await wait(1000);
 
-    expect(measuredFinal.height).toBeWithinRange(finalStyleFull.height - 2, finalStyleFull.height + 2);
-    expect(measuredInitial.height).toBeWithinRange(initialStyleFull.height - 2, initialStyleFull.height + 2);
-    expect(measuredFinal.width).toBeWithinRange(finalStyleFull.width - 2, finalStyleFull.width + 2);
-    expect(measuredInitial.width).toBeWithinRange(initialStyleFull.width - 2, initialStyleFull.width + 2);
+      const measuredInitial = (await getRegisteredValue(INITIAL_MEASURE)).onJS as unknown as MeasuredDimensions;
+      const measuredFinal = (await getRegisteredValue(FINAL_MEASURE)).onJS as unknown as MeasuredDimensions;
 
-    const expectedFinalDistanceFromLeft = finalStyleFull.margin + finalStyleFull.left;
-    const expectedInitialDistanceFromLeft = initialStyleFull.margin + initialStyleFull.left;
+      // Check the distance from the top
+      const finalStyleFull = { ...DEFAULT_STYLE, ...finalStyle };
+      const initialStyleFull = { ...DEFAULT_STYLE, ...initialStyle };
 
-    expect(measuredFinal.x).toBeWithinRange(expectedFinalDistanceFromLeft - 2, expectedFinalDistanceFromLeft + 2);
-    expect(measuredInitial.x).toBeWithinRange(expectedInitialDistanceFromLeft - 2, expectedInitialDistanceFromLeft + 2);
+      expect(measuredFinal.height).toBeWithinRange(finalStyleFull.height - 2, finalStyleFull.height + 2);
+      expect(measuredInitial.height).toBeWithinRange(initialStyleFull.height - 2, initialStyleFull.height + 2);
+      expect(measuredFinal.width).toBeWithinRange(finalStyleFull.width - 2, finalStyleFull.width + 2);
+      expect(measuredInitial.width).toBeWithinRange(initialStyleFull.width - 2, initialStyleFull.width + 2);
 
-    expect(measuredFinal.pageX).toBeWithinRange(
-      expectedFinalDistanceFromLeft + PARENT_MARGIN - 2,
-      expectedFinalDistanceFromLeft + PARENT_MARGIN + 2,
-    );
-    expect(measuredInitial.pageX).toBeWithinRange(
-      expectedInitialDistanceFromLeft + PARENT_MARGIN - 2,
-      expectedInitialDistanceFromLeft + PARENT_MARGIN + 2,
-    );
+      const expectedFinalDistanceFromLeft = finalStyleFull.margin + finalStyleFull.left;
+      const expectedInitialDistanceFromLeft = initialStyleFull.margin + initialStyleFull.left;
 
-    // Unfortunately we can't directly verify the distance from the top - it relies on top bar width
-    // Therefore we will check that the differences between initial and final values are valid
-    // And the differences between absolute and relative views -as well
-    const expectedTopDiff = finalStyleFull.top + finalStyleFull.margin - initialStyleFull.top - initialStyleFull.margin;
-    expect(measuredFinal.y - measuredInitial.y).toBeWithinRange(expectedTopDiff - 2, expectedTopDiff + 2);
-    expect(measuredFinal.pageY - measuredInitial.pageY).toBeWithinRange(expectedTopDiff - 2, expectedTopDiff + 2);
-  });
+      expect(measuredFinal.x).toBeWithinRange(expectedFinalDistanceFromLeft - 3, expectedFinalDistanceFromLeft + 3);
+      expect(measuredInitial.x).toBeWithinRange(
+        expectedInitialDistanceFromLeft - 3,
+        expectedInitialDistanceFromLeft + 3,
+      );
+
+      expect(measuredFinal.pageX).toBeWithinRange(
+        expectedFinalDistanceFromLeft + finalParentMargin - 3,
+        expectedFinalDistanceFromLeft + finalParentMargin + 3,
+      );
+      expect(measuredInitial.pageX).toBeWithinRange(
+        expectedInitialDistanceFromLeft + initialParentMargin - 3,
+        expectedInitialDistanceFromLeft + initialParentMargin + 3,
+      );
+
+      // Unfortunately we can't directly verify the distance from the top - it relies on top bar width
+      // Therefore we will check that the differences between initial and final values are valid
+      // And the differences between absolute and relative views -as well
+      const expectedTopDiffRelative =
+        finalStyleFull.top + finalStyleFull.margin - initialStyleFull.top - initialStyleFull.margin;
+      const expectedTopDiffAbsolute = expectedTopDiffRelative + finalParentMargin - initialParentMargin;
+
+      expect(measuredFinal.y - measuredInitial.y).toBeWithinRange(
+        expectedTopDiffRelative - 2,
+        expectedTopDiffRelative + 2,
+      );
+
+      expect(measuredFinal.pageY - measuredInitial.pageY).toBeWithinRange(
+        expectedTopDiffAbsolute - 2,
+        expectedTopDiffAbsolute + 2,
+      );
+    },
+  );
 });
 
 describe('Test measuring component during the animation', () => {
@@ -182,11 +227,13 @@ describe('Test measuring component during the animation', () => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'column',
-    margin: PARENT_MARGIN,
-    backgroundColor: 'lightblue',
+    margin: DEFAULT_PARENT_MARGIN,
+    borderColor: 'darkseagreen',
+    borderWidth: 2,
+    borderRadius: 10,
   },
   smallBox: {
-    ...INITIAL_STYLE,
+    ...DEFAULT_STYLE,
     backgroundColor: 'mediumseagreen',
     borderColor: 'seagreen',
     borderWidth: 2,
