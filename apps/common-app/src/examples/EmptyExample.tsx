@@ -251,17 +251,5 @@ const EXAMPLES = [
 ];
 
 export default function EmptyExample() {
-  return (
-    <View style={styles.container}>
-      <Text>Hello world!</Text>
-    </View>
-  );
+  return EXAMPLES[SHOW_EXAMPLE]?.();
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
