@@ -4,7 +4,7 @@ env:
 on:
   pull_request:
     paths:
-      - .github/workflows/check-react-native-nightly.yml
+      - .github/workflows/react-native-nightly-reanimated-build-check-nightly.yml
   schedule:
     - cron: '37 19 * * *'
   workflow_dispatch:
