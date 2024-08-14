@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/validate-ios.yml'
+      - '.github/workflows/reanimated-apple-validation.yml'
       - 'packages/react-native-reanimated/apple/**'
       - 'packages/react-native-reanimated/package.json'
       - 'packages/react-native-reanimated/scripts/validate-apple.sh'
@@ -14,7 +14,7 @@ on:
       - 'packages/react-native-reanimated/Common/cpp/**'
   pull_request:
     paths:
-      - '.github/workflows/validate-ios.yml'
+      - '.github/workflows/reanimated-apple-validation.yml'
       - 'packages/react-native-reanimated/apple/**'
       - 'packages/react-native-reanimated/package.json'
       - 'packages/react-native-reanimated/scripts/validate-apple.sh'
