@@ -9,7 +9,6 @@ import {
   mockAnimationTimer,
   recordAnimationUpdates,
   render,
-  wait,
   unmockAnimationTimer,
   waitForAnimationUpdates,
 } from '../../../ReJest/RuntimeTestsApi';
