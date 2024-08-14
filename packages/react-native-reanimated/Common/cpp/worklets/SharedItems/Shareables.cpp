@@ -233,7 +233,10 @@ ShareableObject::ShareableObject(
 jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
   auto obj = jsi::Object(rt);
   for (size_t i = 0, size = data_.size(); i < size; i++) {
-    obj.setProperty(rt, jsi::String::createFromUtf8(rt, data_[i].first), data_[i].second->toJSValue(rt));
+    obj.setProperty(
+        rt,
+        jsi::String::createFromUtf8(rt, data_[i].first),
+        data_[i].second->toJSValue(rt));
   }
 #if SUPPORTS_NATIVE_STATE
   if (nativeState_ != nullptr) {
