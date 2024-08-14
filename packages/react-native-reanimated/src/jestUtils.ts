@@ -52,6 +52,8 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
   let currentStyle = {};
 
   if (Array.isArray(styleObject)) {
+    // It is possible that style may contain nested arrays. Currently, neither `StyleSheet.flatten` nor `flattenArray` solve this issue.
+    // Hence, we're not handling nested arrays at the moment - this is a known limitation of the current implementation.
     styleObject.forEach((style) => {
       currentStyle = {
         ...currentStyle,
