@@ -5,7 +5,8 @@ on:
   push:
     branches:
       - main
-    paths: packages/docs-reanimated/**
+    paths:
+      - packages/docs-reanimated/**
   workflow_dispatch:
 
 jobs:
