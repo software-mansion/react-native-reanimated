@@ -23,7 +23,7 @@ def self.install_modules_dependencies_legacy(s)
   s.dependency "React-Core"
   if $new_arch_enabled
     s.dependency "React-RCTFabric"
-    s.dependency "React-Codegen"
+    s.dependency "ReactCodegen"
   end
   s.dependency "RCT-Folly"
   s.dependency "RCTRequired"

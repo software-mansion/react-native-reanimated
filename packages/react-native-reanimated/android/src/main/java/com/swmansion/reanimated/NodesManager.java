@@ -455,6 +455,7 @@ public class NodesManager implements EventDispatcherListener {
       case "backgroundColor":
         Drawable background = view.getBackground();
         int actualColor = -1;
+        // TODO: use CSSBackgroundDrawable instead
         if (background instanceof ReactViewBackgroundDrawable) {
           actualColor = ((ReactViewBackgroundDrawable) background).getColor();
         }
