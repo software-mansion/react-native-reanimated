@@ -29,6 +29,7 @@ import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
+import com.facebook.react.uimanager.drawable.CSSBackgroundDrawable;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
@@ -453,13 +454,23 @@ public class NodesManager implements EventDispatcherListener {
         return Float.toString(PixelUtil.toDIPFromPixel(view.getLeft()));
       case "backgroundColor":
         Drawable background = view.getBackground();
-        if (!(background instanceof ReactViewBackgroundDrawable)) {
-          return "unable to resolve background color";
+        int actualColor = -1;
+        if (background instanceof ReactViewBackgroundDrawable) {
+          actualColor = ((ReactViewBackgroundDrawable) background).getColor();
         }
-        int actualColor = ((ReactViewBackgroundDrawable) background).getColor();
+
+        if (background instanceof CSSBackgroundDrawable) {
+          actualColor = ((CSSBackgroundDrawable) background).getColor();
+        }
+
+        if (actualColor == -1) {
+          return "Unable to resolve background color";
+        }
+
         String invertedColor = String.format("%08x", (0xFFFFFFFF & actualColor));
         // By default transparency is first, color second
         return "#" + invertedColor.substring(2, 8) + invertedColor.substring(0, 2);
+
       default:
         throw new IllegalArgumentException(
             "[Reanimated] Attempted to get unsupported property "

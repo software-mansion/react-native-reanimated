@@ -2,8 +2,12 @@
 'use strict';
 import type { MutableRefObject } from 'react';
 import { processColorsInProps } from './Colors';
-import type { ShadowNodeWrapper, SharedValue, StyleProps } from './commonTypes';
-import type { AnimatedStyle } from './helperTypes';
+import type {
+  ShadowNodeWrapper,
+  SharedValue,
+  StyleProps,
+  AnimatedStyle,
+} from './commonTypes';
 import type { Descriptor } from './hook/commonTypes';
 import type { ReanimatedHTMLElement } from './js-reanimated';
 import { _updatePropsJS } from './js-reanimated';
