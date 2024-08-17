@@ -178,11 +178,17 @@ export function createAnimatedComponent(
           return;
         }
 
-        startWebLayoutAnimation(
-          this.props,
-          this._component as ReanimatedHTMLElement,
-          LayoutAnimationType.ENTERING
-        );
+        const skipEntering = this.context?.current;
+
+        if (!skipEntering) {
+          startWebLayoutAnimation(
+            this.props,
+            this._component as ReanimatedHTMLElement,
+            LayoutAnimationType.ENTERING
+          );
+        } else {
+          (this._component as HTMLElement).style.visibility = 'initial';
+        }
       }
 
       this._isFirstRender = false;
