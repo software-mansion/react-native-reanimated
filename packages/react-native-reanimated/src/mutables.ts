@@ -10,6 +10,25 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 type Listener<Value> = (newValue: Value) => void;
 
+/**
+ * Hides the internal `_value` property of a mutable. It won't be visible to:
+ * - `Object.keys`,
+ * - `const prop in obj`,
+ * - etc.
+ *
+ * This way when the user accidentally sends the SharedValue to React, he won't get an obscure
+ * error message.
+ *
+ * We hide for both _React runtime_ and _Worklet runtime_ mutables for uniformity of behavior.
+ */
+function hideInternalValueProp(mutable: Mutable) {
+  'worklet';
+  Object.defineProperty(mutable, '_value', {
+    configurable: false,
+    enumerable: false,
+  });
+}
+
 export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
   'worklet';
   const listeners = new Map<number, Listener<Value>>();
@@ -21,6 +40,22 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
     },
     set value(newValue) {
       valueSetter(mutable, newValue);
+    },
+
+    /**
+     * _value prop should only be accessed by the valueSetter implementation
+     * which may make the decision about updating the mutable value depending
+     * on the provided new value. All other places should only attempt to modify
+     * the mutable by assigning to value prop directly.
+     */
+    get _value(): Value {
+      return value;
+    },
+    set _value(newValue: Value) {
+      value = newValue;
+      listeners.forEach((listener) => {
+        listener(newValue);
+      });
     },
 
     modify: (modifier, forceUpdate = true) => {
@@ -39,27 +74,9 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
 
     _animation: null,
     _isReanimatedSharedValue: true,
-  } as Mutable<Value>;
+  };
 
-  /*
-   * _value prop should only be accessed by the valueSetter implementation
-   * which may make the decision about updating the mutable value depending
-   * on the provided new value. All other places should only attempt to modify
-   * the mutable by assigning to value prop directly.
-   */
-  Object.defineProperty(mutable, '_value', {
-    get(): Value {
-      return value;
-    },
-    set(newValue: Value) {
-      value = newValue;
-      listeners.forEach((listener) => {
-        listener(newValue);
-      });
-    },
-    configurable: false,
-    enumerable: false,
-  });
+  hideInternalValueProp(mutable);
 
   return mutable;
 }
@@ -85,6 +102,17 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
       })();
     },
 
+    get _value(): Value {
+      throw new Error(
+        '[Reanimated] Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
+      );
+    },
+    set _value(_newValue: Value) {
+      throw new Error(
+        '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
+      );
+    },
+
     modify: (modifier, forceUpdate = true) => {
       runOnUI(() => {
         mutable.modify(modifier, forceUpdate);
@@ -102,25 +130,9 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
 
     _isReanimatedSharedValue: true,
-  } as Omit<Mutable<Value>, '_value'> as Mutable<Value>;
+  };
 
-  Object.defineProperty(mutable, '_value', {
-    // This way of defining the property makes it hidden for
-    // `Object.keys` etc. so if the user accidentally passes it
-    // to React he won't get a critical error.
-    get() {
-      throw new Error(
-        '[Reanimated] Reading from `_value` directly is only possible on the UI runtime. Perhaps you wanted to read from `value` instead?'
-      );
-    },
-    set(_newValue: Value) {
-      throw new Error(
-        '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you wanted to assign to `value` instead?'
-      );
-    },
-    configurable: false,
-    enumerable: false,
-  });
+  hideInternalValueProp(mutable);
 
   shareableMappingCache.set(mutable, handle);
   return mutable;
@@ -138,6 +150,16 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
       valueSetter(mutable, newValue);
     },
 
+    get _value(): Value {
+      return value;
+    },
+    set _value(newValue: Value) {
+      value = newValue;
+      listeners.forEach((listener) => {
+        listener(newValue);
+      });
+    },
+
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
         mutable,
@@ -153,21 +175,9 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
     },
 
     _isReanimatedSharedValue: true,
-  } as Omit<Mutable<Value>, '_value'> as Mutable<Value>;
+  };
 
-  Object.defineProperty(mutable, '_value', {
-    get(): Value {
-      return value;
-    },
-    set(newValue: Value) {
-      value = newValue;
-      listeners.forEach((listener) => {
-        listener(newValue);
-      });
-    },
-    configurable: false,
-    enumerable: false,
-  });
+  hideInternalValueProp(mutable);
 
   return mutable;
 }
