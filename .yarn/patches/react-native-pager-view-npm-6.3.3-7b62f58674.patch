@@ -1,5 +1,5 @@
 diff --git a/android/src/fabric/java/com/reactnativepagerview/PagerViewViewManager.kt b/android/src/fabric/java/com/reactnativepagerview/PagerViewViewManager.kt
-index aa974a6bad63f5015a75834f9740abacd0771e0d..c8e2f8583a5fbd89216b982d6115c34375f009e5 100644
+index aa974a6bad63f5015a75834f9740abacd0771e0d..e9c4a52d4b98550b4c8f326ccf9b9bbf66cb615b 100644
 --- a/android/src/fabric/java/com/reactnativepagerview/PagerViewViewManager.kt
 +++ b/android/src/fabric/java/com/reactnativepagerview/PagerViewViewManager.kt
 @@ -88,7 +88,7 @@ class PagerViewViewManager : ViewGroupManager<NestedScrollableHost>(), RNCViewPa
@@ -7,12 +7,12 @@ index aa974a6bad63f5015a75834f9740abacd0771e0d..c8e2f8583a5fbd89216b982d6115c343
      }
  
 -    override fun addView(host: NestedScrollableHost, child: View?, index: Int) {
-+    fun addView(host: NestedScrollableHost, child: View?, index: Int) {
++    override fun addView(host: NestedScrollableHost, child: View, index: Int) {
          PagerViewViewManagerImpl.addView(host, child, index)
      }
  
 diff --git a/android/src/paper/java/com/reactnativepagerview/PagerViewViewManager.kt b/android/src/paper/java/com/reactnativepagerview/PagerViewViewManager.kt
-index 4d0adffe6a658de709319e0700b35f726783dca2..d3d99a2f2b8ce7f91e4056d07664d4fb6efc8115 100644
+index 4d0adffe6a658de709319e0700b35f726783dca2..959362c62af06f791088c416e2db8f1629ab63ce 100644
 --- a/android/src/paper/java/com/reactnativepagerview/PagerViewViewManager.kt
 +++ b/android/src/paper/java/com/reactnativepagerview/PagerViewViewManager.kt
 @@ -69,7 +69,7 @@ class PagerViewViewManager : ViewGroupManager<NestedScrollableHost>() {
@@ -20,7 +20,7 @@ index 4d0adffe6a658de709319e0700b35f726783dca2..d3d99a2f2b8ce7f91e4056d07664d4fb
      }
  
 -    override fun addView(host: NestedScrollableHost, child: View?, index: Int) {
-+    fun addView(host: NestedScrollableHost, child: View?, index: Int) {
++    override fun addView(host: NestedScrollableHost, child: View, index: Int) {
          PagerViewViewManagerImpl.addView(host, child, index)
      }
  
