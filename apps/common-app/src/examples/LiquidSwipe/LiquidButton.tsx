@@ -14,7 +14,7 @@ type ButtonProps = {
   y: Animated.SharedValue<number>;
 };
 
-export default function Button({ progress, y }: ButtonProps) {
+export default function LiquidButton({ progress, y }: ButtonProps) {
   const style = useAnimatedStyle(() => {
     return {
       opacity: interpolate(
