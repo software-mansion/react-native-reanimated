@@ -48,7 +48,7 @@ if echo "$STAGED_FILES" | grep -E "$PLUGIN_PATH" >/dev/null; then
 
   yarn workspace babel-plugin-reanimated build
 
-  PLUGIN_OUTPUT_PATH="$PLUGIN_PATH/build/plugin.js"
+  PLUGIN_OUTPUT_PATH="$PLUGIN_PATH/index.js"
   if git status -u | grep -E "$PLUGIN_OUTPUT_PATH" --silent; then
     git add "$PLUGIN_PATH"
     print "Non-commited changes were automatically added to the commit."

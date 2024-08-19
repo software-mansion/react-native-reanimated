@@ -57,10 +57,6 @@ react-native-reanimated-tests.js
 # Eclipse
 .settings/
 
-# plugin
-plugin/build/plugin.js.map
-plugin/types
-
 # yarn
 **/.yarn/*
 !.yarn/patches
