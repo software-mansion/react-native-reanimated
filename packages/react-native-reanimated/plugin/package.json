@@ -1,4 +1,7 @@
 {
+  "name": "babel-plugin-reanimated",
+  "version": "1.0.0",
+  "private": true,
   "devDependencies": {
     "@babel/cli": "^7.20.0",
     "@babel/core": "^7.20.0",
