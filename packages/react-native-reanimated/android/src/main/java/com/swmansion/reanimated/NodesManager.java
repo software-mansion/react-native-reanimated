@@ -455,7 +455,11 @@ public class NodesManager implements EventDispatcherListener {
       case "backgroundColor":
         Drawable background = view.getBackground();
         int actualColor = -1;
+
+        // ReactViewBackgroundDrawable got deprecated in react-native 0.75.
+        //noinspection deprecation
         if (background instanceof ReactViewBackgroundDrawable) {
+          //noinspection deprecation
           actualColor = ((ReactViewBackgroundDrawable) background).getColor();
         }
 
