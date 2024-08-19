@@ -1,5 +1,6 @@
 'use strict';
 
+import './errors';
 import './publicGlobals';
 import * as Animated from './Animated';
 

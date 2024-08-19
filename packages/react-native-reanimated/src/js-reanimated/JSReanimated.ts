@@ -10,6 +10,7 @@ import { SensorType } from '../commonTypes';
 import type { WebSensor } from './WebSensor';
 import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
 import type { WorkletRuntime } from '../runtimes';
+import { logger } from '../logger';
 
 // In Node.js environments (like when static rendering with Expo Router)
 // requestAnimationFrame is unavailable, so we use our mock.
@@ -68,15 +69,13 @@ export default class JSReanimated {
 
   enableLayoutAnimations() {
     if (isWeb()) {
-      console.warn('Layout Animations are not supported on web yet.');
+      logger.warn('Layout Animations are not supported on web yet.');
     } else if (isJest()) {
-      console.warn('Layout Animations are no-ops when using Jest.');
+      logger.warn('Layout Animations are no-ops when using Jest.');
     } else if (isChromeDebugger()) {
-      console.warn('Layout Animations are no-ops when using Chrome Debugger.');
+      logger.warn('Layout Animations are no-ops when using Chrome Debugger.');
     } else {
-      console.warn(
-        'Layout Animations are not supported on this configuration.'
-      );
+      logger.warn('Layout Animations are not supported on this configuration.');
     }
   }
 
@@ -106,7 +105,7 @@ export default class JSReanimated {
 
     if (!(this.getSensorName(sensorType) in window)) {
       // https://w3c.github.io/sensors/#secure-context
-      console.warn(
+      logger.warn(
         'Sensor is not available.' +
           (isWeb() && location.protocol !== 'https:'
             ? ' Make sure you use secure origin with `npx expo start --web --https`.'
@@ -202,15 +201,15 @@ export default class JSReanimated {
 
   subscribeForKeyboardEvents(_: ShareableRef<number>): number {
     if (isWeb()) {
-      console.warn('useAnimatedKeyboard is not available on web yet.');
+      logger.warn('useAnimatedKeyboard is not available on web yet.');
     } else if (isJest()) {
-      console.warn('useAnimatedKeyboard is not available when using Jest.');
+      logger.warn('useAnimatedKeyboard is not available when using Jest.');
     } else if (isChromeDebugger()) {
-      console.warn(
+      logger.warn(
         'useAnimatedKeyboard is not available when using Chrome Debugger.'
       );
     } else {
-      console.warn(
+      logger.warn(
         'useAnimatedKeyboard is not available on this configuration.'
       );
     }

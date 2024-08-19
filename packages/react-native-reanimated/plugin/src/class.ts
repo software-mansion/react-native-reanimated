@@ -293,7 +293,7 @@ function recursiveTopoSort(
   stack: Set<string>
 ) {
   if (stack.has(current.name)) {
-    throw new Error('[Reanimated] Cycle detected. This should never happen.');
+    throw new Error('Cycle detected. This should never happen.');
   }
   if (sorted.find((element) => element.name === current.name)) {
     return;

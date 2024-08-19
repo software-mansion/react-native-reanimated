@@ -13,6 +13,7 @@ import {
   shareableMappingCache,
   shareableMappingFlag,
 } from './shareableMappingCache';
+import { logger } from './logger';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -340,7 +341,7 @@ function freezeObjectIfDev<T extends object>(value: T) {
         return element;
       },
       set() {
-        console.warn(
+        logger.warn(
           `Tried to modify key \`${key}\` of an object which has been already passed to a worklet. See 
 https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-modify-key-of-an-object-which-has-been-converted-to-a-shareable 
 for more details.`
