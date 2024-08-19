@@ -1,5 +1,4 @@
 'use strict';
-
 import { isFabric } from './PlatformChecker';
 import { runOnUI } from './threads';
 
