@@ -1,4 +1,7 @@
 {
+  "name": "babel-plugin-reanimated",
+  "version": "1.0.0",
+  "private": true,
   "devDependencies": {
     "@babel/cli": "^7.20.0",
     "@babel/core": "^7.20.0",
@@ -21,12 +24,11 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {
-    "build": "yarn tsc && yarn bundle && yarn format && yarn clean",
-    "clean": "rm -f lib/* || true",
-    "bundle": "esbuild ./lib/plugin.js --bundle --external:@babel --external:convert-source-map --external:fs --external:'../../package.json' --log-level=warning --platform=node --sourcemap=linked --outfile=build/plugin.js",
+    "build": "yarn tsc && yarn bundle && yarn format",
+    "bundle": "node bundle.js",
     "format": "prettier --write --list-different src",
     "watch": "tsc-watch --onSuccess \"yarn bundle\"",
-    "lint": "eslint --max-warnings=0 --ext .ts .",
+    "lint": "eslint --max-warnings=0 --ext .",
     "type:check:src": "tsc --noEmit"
   },
   "types": "types/plugin.d.ts"
