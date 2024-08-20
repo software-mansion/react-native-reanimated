@@ -229,7 +229,7 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
-				826E27CF2C73DDD900991EFA /* Generate index for Clangd */,
+				19A0E79FAE0639D584D8ABD1 /* [CP-User] Generate metadata for clangd */,
 			);
 			buildRules = (
 			);
@@ -340,24 +340,16 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ReanimatedExample/Pods-ReanimatedExample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		826E27CF2C73DDD900991EFA /* Generate index for Clangd */ = {
+		19A0E79FAE0639D584D8ABD1 /* [CP-User] Generate metadata for clangd */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
+			alwaysOutOfDate = true;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Generate index for Clangd";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
+			name = "[CP-User] Generate metadata for clangd";
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "./generate-index.sh\n\n";
+			shellPath = /bin/bash;
+			shellScript = "../../../packages/react-native-reanimated/scripts/prepare-clangd-metadata.sh";
 		};
 		A55EABD7B0C7F3A422A6CC61 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;

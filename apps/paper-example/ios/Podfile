@@ -40,4 +40,8 @@ target 'ReanimatedExample' do
       # :ccache_enabled => true
     )
   end
+
+  generator_script_path = '../../../packages/react-native-reanimated/scripts/prepare-clangd-metadata.sh'
+
+  script_phase :name => 'Generate metadata for clangd', :script => generator_script_path, :shell_path => '/bin/bash', :always_out_of_date => 'true', :execution_position => :after_compile
 end

@@ -17,7 +17,9 @@ example_flag = $config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_AP
 version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
 debug_flag = is_release ? '-DNDEBUG' : ''
 ios_min_version = $config[:react_native_minor_version] >= 73 ? '13.4' : '9.0'
-gen_flag = '-gen-cdb-fragment-path $(PROJECT_DIR)/CompilationDatabase'
+
+compile_database_dir = "CompilationDatabase"
+compilation_metadata_generation_flag = $config[:is_reanimated_example_app] ? '-gen-cdb-fragment-path ' + compile_database_dir : ''
 
 def self.install_modules_dependencies_legacy(s)
   using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
@@ -108,7 +110,7 @@ Pod::Spec.new do |s|
   s.compiler_flags = folly_compiler_flags + ' ' + boost_compiler_flags
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/Headers/Public/React-hermes\" \"$(PODS_ROOT)/Headers/Public/hermes-engine\" \"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
-    "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags + " " + example_flag + " " + version_flag + " " + debug_flag + " " + gen_flag
+    "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags + " " + fabric_flags + " " + example_flag + " " + version_flag + " " + debug_flag + " " + compilation_metadata_generation_flag
   }
   s.requires_arc = true
   s.dependency "ReactCommon/turbomodule/core"
