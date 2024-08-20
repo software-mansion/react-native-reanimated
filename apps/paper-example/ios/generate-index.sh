@@ -1,7 +1,9 @@
 #!/bin/bash
 
-export PATH="$PATH:/opt/homebrew/bin/"
+HARD_LOCATION="../../../packages/react-native-reanimated/apple/.cache/compile_commands.json"
 
-for f in CompilationDatabase/*.json; do awk '{print substr($0, 0, length($0)-1)}' $f >$f.parsed; done
-for f in Pods/CompilationDatabase/*.json; do awk '{print substr($0, 0, length($0)-1)}' $f >$f.parsed; done
-jq -s '.' CompilationDatabase/*.parsed Pods/CompilationDatabase/*.parsed >../../../packages/react-native-reanimated/apple/compile_commands_hard.json
+echo "[" >$HARD_LOCATION
+
+for f in **/CompilationDatabase/*.json; do cat $f >>$HARD_LOCATION; done
+# for f in Pods/CompilationDatabase/*.json; do awk '{print substr($0, 0, length($0)-1)}' $f >$f.parsed; done
+echo "]" >>$HARD_LOCATION
