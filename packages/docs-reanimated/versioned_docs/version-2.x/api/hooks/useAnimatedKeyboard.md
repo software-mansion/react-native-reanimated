@@ -48,6 +48,8 @@ Properties:
 
 - `isStatusBarTranslucentAndroid`[bool] - if you want to use translucent status bar on Android, set this option to `true`. Defaults to `false`. Ignored on iOS.
 
+- `isNavigationBarTranslucentAndroid`[bool] - if you want to use translucent navigation bar on Android, set this option to `true`. Defaults to `false`. Ignored on iOS.
+
 ### Example
 
 ```js

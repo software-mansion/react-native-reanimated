@@ -82,7 +82,8 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   virtual jsi::Value subscribeForKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &keyboardEventContainer,
-      const jsi::Value &isStatusBarTranslucent) = 0;
+      const jsi::Value &isStatusBarTranslucent,
+      const jsi::Value &isNavigationBarTranslucent) = 0;
   virtual void unsubscribeFromKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &listenerId) = 0;

@@ -269,8 +269,8 @@ UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer 
 KeyboardEventSubscribeFunction makeSubscribeForKeyboardEventsFunction(REAKeyboardEventObserver *keyboardObserver)
 {
   auto subscribeForKeyboardEventsFunction =
-      [=](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater, bool isStatusBarTranslucent) {
-        // ignore isStatusBarTranslucent - it's Android only
+      [=](std::function<void(int keyboardState, int height)> keyboardEventDataUpdater, bool isStatusBarTranslucent, bool isNavigationBarTranslucent) {
+        // ignore isStatusBarTranslucent and isNavigationBarTranslucent - those are Android only
         return [keyboardObserver subscribeForKeyboardEvents:^(int keyboardState, int height) {
           keyboardEventDataUpdater(keyboardState, height);
         }];

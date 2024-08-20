@@ -876,7 +876,8 @@ void NativeReanimatedModule::initializeLayoutAnimations() {
 jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &handlerWorklet,
-    const jsi::Value &isStatusBarTranslucent) {
+    const jsi::Value &isStatusBarTranslucent,
+    const jsi::Value &isNavigationBarTranslucent) {
   auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
       rt,
       handlerWorklet,
@@ -886,7 +887,8 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
         uiWorkletRuntime_->runGuarded(
             shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
-      isStatusBarTranslucent.getBool());
+      isStatusBarTranslucent.getBool(),
+      isNavigationBarTranslucent.getBool());
 }
 
 void NativeReanimatedModule::unsubscribeFromKeyboardEvents(

@@ -19,7 +19,10 @@ import { KeyboardState } from '../commonTypes';
  * @see https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedKeyboard
  */
 export function useAnimatedKeyboard(
-  options: AnimatedKeyboardOptions = { isStatusBarTranslucentAndroid: false }
+  options: AnimatedKeyboardOptions = {
+    isStatusBarTranslucentAndroid: false,
+    isNavigationBarTranslucentAndroid: false,
+  }
 ): AnimatedKeyboardInfo {
   const ref = useRef<AnimatedKeyboardInfo | null>(null);
   const listenerId = useRef<number>(-1);
