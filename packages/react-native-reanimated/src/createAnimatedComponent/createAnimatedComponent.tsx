@@ -289,7 +289,7 @@ export function createAnimatedComponent(
         ? (this._component as AnimatedComponentRef).getAnimatableRef?.()
         : this;
 
-      if (IS_WEB) {
+      if (shouldBeUseWeb()) {
         // At this point I assume that `_setComponentRef` was already called and `_component` is set.
         // `this._component` on web represents HTMLElement of our component, that's why we use casting
         viewTag = this._component as HTMLElement;
