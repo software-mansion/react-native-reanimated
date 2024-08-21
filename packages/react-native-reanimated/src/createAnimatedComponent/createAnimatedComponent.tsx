@@ -55,6 +55,7 @@ import type { ReanimatedHTMLElement } from '../js-reanimated';
 
 const IS_WEB = isWeb();
 const IS_JEST = isJest();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 if (IS_WEB) {
   configureWebLayoutAnimations();
@@ -289,7 +290,7 @@ export function createAnimatedComponent(
         ? (this._component as AnimatedComponentRef).getAnimatableRef?.()
         : this;
 
-      if (IS_WEB) {
+      if (SHOULD_BE_USE_WEB) {
         // At this point I assume that `_setComponentRef` was already called and `_component` is set.
         // `this._component` on web represents HTMLElement of our component, that's why we use casting
         viewTag = this._component as HTMLElement;
@@ -501,7 +502,7 @@ export function createAnimatedComponent(
           (layout || entering || exiting || sharedTransitionTag) &&
           tag != null
         ) {
-          if (!shouldBeUseWeb()) {
+          if (!SHOULD_BE_USE_WEB) {
             enableLayoutAnimations(true, false);
           }
 
