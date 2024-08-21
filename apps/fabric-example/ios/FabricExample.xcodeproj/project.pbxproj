@@ -344,7 +344,7 @@
 			name = "[CP-User] Generate metadata for clangd";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "../../../packages/react-native-reanimated/scripts/prepare-clangd-metadata.sh";
+			shellScript = "../../../packages/react-native-reanimated/scripts/clangd-generate-xcode-metadata.sh";
 		};
 		A55EABD7B0C7F3A422A6CC61 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;

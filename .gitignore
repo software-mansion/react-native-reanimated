@@ -71,4 +71,4 @@ react-native-reanimated-tests.js
 # clangd
 .cache
 CompilationDatabase
-compile_commands_hard.json
+compile_commands.json

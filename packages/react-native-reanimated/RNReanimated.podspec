@@ -18,8 +18,10 @@ version_flag = '-DREANIMATED_VERSION=' + reanimated_package_json["version"]
 debug_flag = is_release ? '-DNDEBUG' : ''
 ios_min_version = $config[:react_native_minor_version] >= 73 ? '13.4' : '9.0'
 
-compile_database_dir = "CompilationDatabase"
-compilation_metadata_generation_flag = $config[:is_reanimated_example_app] ? '-gen-cdb-fragment-path ' + compile_database_dir : ''
+# Directory in which data for further processing for clangd will be stored.
+compilation_metadata_dir = "CompilationDatabase"
+# We want generate the metadata only within the monorepo of Reanimated.
+compilation_metadata_generation_flag = $config[:is_reanimated_example_app] ? '-gen-cdb-fragment-path ' + compilation_metadata_dir : ''
 
 def self.install_modules_dependencies_legacy(s)
   using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
