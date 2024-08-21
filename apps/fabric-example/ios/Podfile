@@ -5,6 +5,8 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
+require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-xcode-step.rb'
+
 ENV['RCT_NEW_ARCH_ENABLED'] = '1'
 ENV['REANIMATED_EXAMPLE_APP_NAME'] = 'FabricExample'
 min_ios_version_supported = '13.4'
@@ -42,7 +44,5 @@ target 'FabricExample' do
     )
   end
 
-  generator_script_path = '../../../packages/react-native-reanimated/scripts/clangd-generate-xcode-metadata.sh'
-
-  script_phase :name => 'Generate metadata for clangd', :script => generator_script_path, :shell_path => '/bin/bash', :always_out_of_date => 'true', :execution_position => :after_compile
+  add_clangd_generation_step()
 end

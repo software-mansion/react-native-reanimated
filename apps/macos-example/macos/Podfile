@@ -3,6 +3,8 @@ require_relative '../node_modules/@react-native-community/cli-platform-ios/nativ
 
 ENV['REANIMATED_EXAMPLE_APP_NAME'] = 'MacOSExample-macos'
 
+require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-xcode-step.rb'
+
 prepare_react_native_project!
 
 target 'MacOSExample-macOS' do
@@ -26,7 +28,5 @@ target 'MacOSExample-macOS' do
     react_native_post_install(installer)
   end
 
-  generator_script_path = '../../../packages/react-native-reanimated/scripts/clangd-generate-xcode-metadata.sh'
-
-  script_phase :name => 'Generate metadata for clangd', :script => generator_script_path, :shell_path => '/bin/bash', :always_out_of_date => 'true', :execution_position => :after_compile
+  add_clangd_generation_step()
 end
