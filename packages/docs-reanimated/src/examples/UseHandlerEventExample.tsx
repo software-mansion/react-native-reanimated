@@ -6,13 +6,13 @@ import Animated, {
   useAnimatedProps,
   type ScrollEvent,
 } from 'react-native-reanimated';
-import { useColorScheme } from '@mui/material';
 import { TextInput, SafeAreaView, View, StyleSheet } from 'react-native';
+import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 function UseHandlerExample() {
-  const { colorScheme } = useColorScheme();
+  const textColor = useThemedTextStyle();
   const offsetY = useSharedValue(0);
 
   const handlers = {
@@ -44,9 +44,6 @@ function UseHandlerExample() {
   });
 
   const BRAND_COLORS = ['#fa7f7c', '#b58df1', '#ffe780', '#82cab2', '#87cce8'];
-
-  const textColor =
-    colorScheme === 'light' ? styles.darkText : styles.lightText;
 
   const content = BRAND_COLORS.map((color, index) => (
     <View
@@ -93,11 +90,5 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginVertical: 10,
     marginHorizontal: 20,
-  },
-  lightText: {
-    color: '#001a72',
-  },
-  darkText: {
-    color: '#f8f9ff',
   },
 });
