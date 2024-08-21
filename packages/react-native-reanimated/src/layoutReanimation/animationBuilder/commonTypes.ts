@@ -32,6 +32,35 @@ export interface KeyframeProps extends StyleProps {
   easing?: EasingFunction;
 }
 
+type FirstFrame =
+  | {
+      0: KeyframeProps & { easing?: never };
+      from?: never;
+    }
+  | {
+      0?: never;
+      from: KeyframeProps & { easing?: never };
+    };
+
+type LastFrame =
+  | {
+      100: KeyframeProps;
+      to?: never;
+    }
+  | {
+      100?: never;
+      to: KeyframeProps;
+    };
+
+export type ValidKeyframeProps = FirstFrame &
+  LastFrame &
+  Record<number, KeyframeProps>;
+
+export type MaybeInvalidKeyframeProps = Record<number, KeyframeProps> & {
+  to?: KeyframeProps;
+  from?: KeyframeProps;
+};
+
 export type LayoutAnimation = {
   initialValues: StyleProps;
   animations: StyleProps;

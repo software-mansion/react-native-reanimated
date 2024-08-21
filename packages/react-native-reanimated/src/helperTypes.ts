@@ -18,14 +18,14 @@ import type {
   EntryExitAnimationFunction,
   LayoutAnimationFunction,
 } from './layoutReanimation/animationBuilder/commonTypes';
-import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
+import type { Keyframe as ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 
 type EntryOrExitLayoutType =
   | BaseAnimationBuilder
   | typeof BaseAnimationBuilder
   | EntryExitAnimationFunction
-  | ReanimatedKeyframe;
+  | typeof ReanimatedKeyframe;
 
 /*
   Style type properties (properties that extends StyleProp<ViewStyle>)

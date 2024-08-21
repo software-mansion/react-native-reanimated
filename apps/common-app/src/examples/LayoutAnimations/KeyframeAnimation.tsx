@@ -6,7 +6,7 @@ export default function KeyframeExample() {
   const [visible, setVisible] = useState(true);
 
   const enteringAnimation = new Keyframe({
-    0: {
+    from: {
       opacity: 0,
       transform: [
         { translateY: 50 },
@@ -25,7 +25,7 @@ export default function KeyframeExample() {
       ],
       easing: Easing.out(Easing.quad),
     },
-    100: {
+    to: {
       opacity: 1,
       transform: [
         { translateY: 0 },
