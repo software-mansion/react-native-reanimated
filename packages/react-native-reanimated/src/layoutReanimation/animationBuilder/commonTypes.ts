@@ -44,7 +44,7 @@ type FirstFrame =
 
 type LastFrame =
   | {
-      100: KeyframeProps;
+      100?: KeyframeProps;
       to?: never;
     }
   | {
