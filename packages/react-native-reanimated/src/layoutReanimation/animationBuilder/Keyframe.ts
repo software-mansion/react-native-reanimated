@@ -304,4 +304,12 @@ function makeKeyframeKey(index: number, transformProp: string) {
   return `${index}_transform:${transformProp}`;
 }
 
-export const Keyframe = InnerKeyframe;
+export declare class ReanimatedKeyframe {
+  constructor(definitions: ValidKeyframeProps);
+  duration(durationMs: number): ReanimatedKeyframe;
+  delay(delayMs: number): ReanimatedKeyframe;
+  reduceMotion(reduceMotionV: ReduceMotion): ReanimatedKeyframe;
+  withCallback(callback: (finished: boolean) => void): ReanimatedKeyframe;
+}
+
+export const Keyframe = InnerKeyframe as typeof ReanimatedKeyframe;
