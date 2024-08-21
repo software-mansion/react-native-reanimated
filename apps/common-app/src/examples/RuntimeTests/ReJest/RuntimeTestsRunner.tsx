@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
 import { runTests, configure } from './RuntimeTestsApi';
 import { RenderLock } from './utils/SyncUIRunner';
+import { FlatList } from 'react-native-gesture-handler';
 
 export class ErrorBoundary extends React.Component<
   { children: React.JSX.Element | Array<React.JSX.Element> },
@@ -126,18 +127,20 @@ function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
       <SelectAllButtonProps handleSelectAllClick={selectAllClick} select={true} />
       <SelectAllButtonProps handleSelectAllClick={selectAllClick} select={false} />
 
-      <View style={styles.selectButtonsFrame}>
-        {tests.map(testData => {
+      <FlatList
+        style={styles.selectButtonsFrame}
+        data={tests}
+        renderItem={({ item }) => {
           return (
             <SelectTest
-              key={testData.testSuiteName}
-              testSuiteName={testData.testSuiteName}
-              selectClick={() => selectClick(testData)}
+              key={item.testSuiteName}
+              testSuiteName={item.testSuiteName}
+              selectClick={() => selectClick(item)}
               selectedTests={selectedTests}
             />
           );
-        })}
-      </View>
+        }}
+      />
     </View>
   );
 }
