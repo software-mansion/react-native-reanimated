@@ -31,6 +31,7 @@ import type {
   IAnimatedComponentInternal,
   ViewInfo,
   INativeEventsManager,
+  NestedArray,
 } from './commonTypes';
 import { flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
@@ -53,6 +54,8 @@ import { NativeEventsManager } from './NativeEventsManager';
 import type { ReanimatedHTMLElement } from '../js-reanimated';
 
 const IS_WEB = isWeb();
+const IS_JEST = isJest();
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 if (IS_WEB) {
   configureWebLayoutAnimations();
@@ -121,6 +124,7 @@ export function createAnimatedComponent(
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _componentViewTag = -1;
     _isFirstRender = true;
+    jestInlineStyle: NestedArray<StyleProps> | undefined;
     jestAnimatedStyle: { value: StyleProps } = { value: {} };
     _component: AnimatedComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
@@ -136,7 +140,7 @@ export function createAnimatedComponent(
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
-      if (isJest()) {
+      if (IS_JEST) {
         this.jestAnimatedStyle = { value: {} };
       }
       const entering = this.props.entering;
@@ -178,11 +182,17 @@ export function createAnimatedComponent(
           return;
         }
 
-        startWebLayoutAnimation(
-          this.props,
-          this._component as ReanimatedHTMLElement,
-          LayoutAnimationType.ENTERING
-        );
+        const skipEntering = this.context?.current;
+
+        if (!skipEntering) {
+          startWebLayoutAnimation(
+            this.props,
+            this._component as ReanimatedHTMLElement,
+            LayoutAnimationType.ENTERING
+          );
+        } else {
+          (this._component as HTMLElement).style.visibility = 'initial';
+        }
       }
 
       this._isFirstRender = false;
@@ -280,7 +290,7 @@ export function createAnimatedComponent(
         ? (this._component as AnimatedComponentRef).getAnimatableRef?.()
         : this;
 
-      if (IS_WEB) {
+      if (SHOULD_BE_USE_WEB) {
         // At this point I assume that `_setComponentRef` was already called and `_component` is set.
         // `this._component` on web represents HTMLElement of our component, that's why we use casting
         viewTag = this._component as HTMLElement;
@@ -355,7 +365,7 @@ export function createAnimatedComponent(
           name: viewName,
           shadowNodeWrapper,
         });
-        if (isJest()) {
+        if (IS_JEST) {
           /**
            * We need to connect Jest's TestObject instance whose contains just props object
            * with the updateProps() function where we update the properties of the component.
@@ -492,7 +502,7 @@ export function createAnimatedComponent(
           (layout || entering || exiting || sharedTransitionTag) &&
           tag != null
         ) {
-          if (!shouldBeUseWeb()) {
+          if (!SHOULD_BE_USE_WEB) {
             enableLayoutAnimations(true, false);
           }
 
@@ -555,7 +565,7 @@ export function createAnimatedComponent(
     render() {
       const filteredProps = this._PropsFilter.filterNonAnimatedProps(this);
 
-      if (isJest()) {
+      if (IS_JEST) {
         filteredProps.jestAnimatedStyle = this.jestAnimatedStyle;
       }
 
@@ -584,10 +594,18 @@ export function createAnimatedComponent(
       const nativeID =
         skipEntering || !isFabric() ? undefined : `${this.reanimatedID}`;
 
+      const jestProps = IS_JEST
+        ? {
+            jestInlineStyle: this.props.style,
+            jestAnimatedStyle: this.jestAnimatedStyle,
+          }
+        : {};
+
       return (
         <Component
           nativeID={nativeID}
           {...filteredProps}
+          {...jestProps}
           // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
           // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
           ref={this._setComponentRef as (ref: Component) => void}
