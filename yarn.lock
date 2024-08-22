@@ -7086,16 +7086,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/react-native@npm:^7.1.0":
-  version: 7.2.0
-  resolution: "@testing-library/react-native@npm:7.2.0"
+"@testing-library/react-native@npm:^12.5.2":
+  version: 12.5.2
+  resolution: "@testing-library/react-native@npm:12.5.2"
   dependencies:
-    pretty-format: "npm:^26.0.1"
+    jest-matcher-utils: "npm:^29.7.0"
+    pretty-format: "npm:^29.7.0"
+    redent: "npm:^3.0.0"
   peerDependencies:
-    react: ">=16.0.0"
+    jest: ">=28.0.0"
+    react: ">=16.8.0"
     react-native: ">=0.59"
-    react-test-renderer: ">=16.0.0"
-  checksum: 10/477146d65bbf699ce389f42e1935b0c42e091504ad9041fd97f0183a1dafd2e6f71337e75ab0b2f929a530bc1841b5d42d9ed019d89a928b23103ad407fc1c1a
+    react-test-renderer: ">=16.8.0"
+  peerDependenciesMeta:
+    jest:
+      optional: true
+  checksum: 10/8d7f41db709b47085642ab10de039e3e6018e5cdefbed78da040879d52815125f21be7a8032422370fad36b649c6fc831b16e97d9c6bfa3f97e5d20944d01fe2
   languageName: node
   linkType: hard
 
@@ -8570,7 +8576,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.4.0, axios@npm:^1.6.1":
+"axios@npm:^1.6.1":
   version: 1.6.8
   resolution: "axios@npm:1.6.8"
   dependencies:
@@ -8578,6 +8584,17 @@ __metadata:
     form-data: "npm:^4.0.0"
     proxy-from-env: "npm:^1.1.0"
   checksum: 10/3f9a79eaf1d159544fca9576261ff867cbbff64ed30017848e4210e49f3b01e97cf416390150e6fdf6633f336cd43dc1151f890bbd09c3c01ad60bb0891eee63
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.7.4":
+  version: 1.7.4
+  resolution: "axios@npm:1.7.4"
+  dependencies:
+    follow-redirects: "npm:^1.15.6"
+    form-data: "npm:^4.0.0"
+    proxy-from-env: "npm:^1.1.0"
+  checksum: 10/7a1429be1e3d0c2e1b96d4bba4d113efbfabc7c724bed107beb535c782c7bea447ff634886b0c7c43395a264d085450d009eb1154b5f38a8bae49d469fdcbc61
   languageName: node
   linkType: hard
 
@@ -17869,7 +17886,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pretty-format@npm:^26.0.1, pretty-format@npm:^26.5.2, pretty-format@npm:^26.6.2":
+"pretty-format@npm:^26.5.2, pretty-format@npm:^26.6.2":
   version: 26.6.2
   resolution: "pretty-format@npm:26.6.2"
   dependencies:
@@ -18397,7 +18414,7 @@ __metadata:
     "@react-native/typescript-config": "npm:0.75.1"
     "@testing-library/jest-native": "npm:^4.0.4"
     "@testing-library/react-hooks": "npm:^8.0.0"
-    "@testing-library/react-native": "npm:^7.1.0"
+    "@testing-library/react-native": "npm:^12.5.2"
     "@types/babel__core": "npm:^7.20.0"
     "@types/babel__generator": "npm:^7.6.4"
     "@types/babel__traverse": "npm:^7.14.2"
@@ -18410,7 +18427,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^6.19.0"
     "@typescript-eslint/parser": "npm:^6.19.0"
     "@typescript-eslint/rule-tester": "npm:^6.21.0"
-    axios: "npm:^1.4.0"
+    axios: "npm:^1.7.4"
     babel-eslint: "npm:^10.1.0"
     babel-jest: "npm:^27.5.1"
     babel-plugin-module-resolver: "npm:^5.0.0"
