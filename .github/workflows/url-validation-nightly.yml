@@ -4,7 +4,7 @@ env:
 on:
   pull_request:
     paths:
-      - .github/workflows/detect-broken-urls-nightly.yml
+      - .github/workflows/url-validation-nightly.yml
       - packages/react-native-reanimated/scripts/validate-urls.js
   schedule:
     - cron: '37 19 * * *'

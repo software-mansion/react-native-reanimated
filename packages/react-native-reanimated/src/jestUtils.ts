@@ -27,22 +27,75 @@ const defaultFramerateConfig = {
   fps: 60,
 };
 
+const isEmpty = (obj: object) => Object.keys(obj).length === 0;
+const getStylesFromObject = (obj: object) => {
+  return obj === undefined
+    ? {}
+    : Object.fromEntries(
+        Object.entries(obj).map(([property, value]) => [
+          property,
+          value._isReanimatedSharedValue ? value.value : value,
+        ])
+      );
+};
+
+type StyleValue = { value: unknown };
+type JestInlineStyle =
+  | {
+      [s: string]: StyleValue;
+    }
+  | ArrayLike<StyleValue>;
+
 const getCurrentStyle = (component: TestComponent): DefaultStyle => {
   const styleObject = component.props.style;
+
   let currentStyle = {};
+
   if (Array.isArray(styleObject)) {
+    // It is possible that style may contain nested arrays. Currently, neither `StyleSheet.flatten` nor `flattenArray` solve this issue.
+    // Hence, we're not handling nested arrays at the moment - this is a known limitation of the current implementation.
     styleObject.forEach((style) => {
       currentStyle = {
         ...currentStyle,
         ...style,
       };
     });
-  } else {
+
+    return currentStyle;
+  }
+
+  const jestInlineStyles = component.props.jestInlineStyle as JestInlineStyle;
+  const jestAnimatedStyleValue = component.props.jestAnimatedStyle?.value;
+
+  if (Array.isArray(jestInlineStyles)) {
+    for (const obj of jestInlineStyles) {
+      if ('jestAnimatedStyle' in obj) {
+        continue;
+      }
+
+      const inlineStyles = getStylesFromObject(obj);
+
+      currentStyle = {
+        ...currentStyle,
+        ...inlineStyles,
+      };
+    }
+
     currentStyle = {
       ...styleObject,
-      ...component.props.jestAnimatedStyle?.value,
+      ...currentStyle,
+      ...jestAnimatedStyleValue,
     };
+
+    return currentStyle;
   }
+
+  const inlineStyles = getStylesFromObject(jestInlineStyles);
+
+  currentStyle = isEmpty(jestAnimatedStyleValue as object)
+    ? { ...styleObject, ...inlineStyles }
+    : { ...styleObject, ...jestAnimatedStyleValue };
+
   return currentStyle;
 };
 
