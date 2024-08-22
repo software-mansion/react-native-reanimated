@@ -36,8 +36,26 @@ function App() {
 <summary>Type definitions</summary>
 
 ```typescript
+type FirstFrame =
+  | {
+      0: KeyframeProps & { easing?: never };
+      from?: never;
+    }
+  | {
+      0?: never;
+      from: KeyframeProps & { easing?: never };
+    };
+
+type LastFrame =
+  | { 100?: KeyframeProps; to?: never }
+  | { 100?: never; to: KeyframeProps };
+
+export type ValidKeyframeProps = FirstFrame &
+  LastFrame &
+  Record<number, KeyframeProps>;
+
 class Keyframe {
-  constructor(definitions: Record<string, KeyframeProps>);
+  constructor(definitions: ValidKeyframeProps;
   duration(durationMs: number): Keyframe;
   delay(delayMs: number): Keyframe;
   reduceMotion(reduceMotionV: ReduceMotion): Keyframe;

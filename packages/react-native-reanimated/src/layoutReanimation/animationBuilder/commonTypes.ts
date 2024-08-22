@@ -43,14 +43,8 @@ type FirstFrame =
     };
 
 type LastFrame =
-  | {
-      100?: KeyframeProps;
-      to?: never;
-    }
-  | {
-      100?: never;
-      to: KeyframeProps;
-    };
+  | { 100?: KeyframeProps; to?: never }
+  | { 100?: never; to: KeyframeProps };
 
 export type ValidKeyframeProps = FirstFrame &
   LastFrame &
