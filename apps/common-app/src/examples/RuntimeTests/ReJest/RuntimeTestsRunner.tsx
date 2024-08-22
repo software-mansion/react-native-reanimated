@@ -73,18 +73,18 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.flexOne}>
       {started ? null : (
         <>
           <TestSelector tests={tests} testSelectionCallbacks={testSelectionCallbacks} />
           <Pressable onPressOut={handleStartClick} style={styles.button}>
-            <Text style={styles.buttonTextWhite}>Run tests</Text>
+            <Text style={styles.whiteText}>Run tests</Text>
           </Pressable>
         </>
       )}
       {/* Don't render anything if component is undefined to prevent blinking */}
       {component || null}
-      {finished ? <Text style={styles.reloadText}>Reload the app to run the tests again</Text> : null}
+      {finished ? <Text style={styles.navyText}>Reload the app to run the tests again</Text> : null}
     </View>
   );
 }
@@ -123,7 +123,7 @@ function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
   }
 
   return (
-    <View>
+    <View style={styles.flexOne}>
       <SelectAllButtonProps handleSelectAllClick={selectAllClick} select={true} />
       <SelectAllButtonProps handleSelectAllClick={selectAllClick} select={false} />
 
@@ -170,7 +170,7 @@ function SelectTest({ testSuiteName, selectClick, selectedTests }: SelectTestPro
       onPressOut={() => handleSelectClickOut()}>
       <View style={[styles.checkbox, selectedTests.get(testSuiteName) ? styles.checkedCheckbox : {}]} />
       <View style={styles.selectButton}>
-        <Text style={styles.buttonText}>{testSuiteName}</Text>
+        <Text style={styles.navyText}>{testSuiteName}</Text>
       </View>
     </Pressable>
   );
@@ -198,26 +198,43 @@ function SelectAllButtonProps({ handleSelectAllClick, select }: SelectAllButtonP
       onPressIn={handleSelectAllClickIn}
       onPressOut={() => handleSelectAllClickOut()}
       style={[styles.selectAllButton, isPressed ? styles.pressedButton : {}]}>
-      <Text style={styles.buttonText}>{select ? 'Select all' : 'Deselect all'}</Text>
+      <Text style={styles.navyText}>{select ? 'Select all' : 'Deselect all'}</Text>
     </Pressable>
   );
 }
 
+const TEXT = {
+  fontSize: 20,
+  alignSelf: 'center',
+} as const;
+
+const BUTTON = {
+  height: 40,
+  justifyContent: 'center',
+  alignItems: 'center',
+} as const;
+
+const WHITE_BUTTON = {
+  ...BUTTON,
+  borderWidth: 2,
+  backgroundColor: 'white',
+  borderColor: 'navy',
+  marginVertical: 5,
+  borderRadius: 10,
+} as const;
+
 const styles = StyleSheet.create({
-  container: {
+  flexOne: {
     flex: 1,
     flexDirection: 'column',
   },
   selectAllButton: {
-    marginVertical: 5,
+    ...WHITE_BUTTON,
     marginHorizontal: 20,
-    height: 40,
-    borderWidth: 2,
-    borderRadius: 10,
-    backgroundColor: 'white',
-    borderColor: 'navy',
-    justifyContent: 'center',
-    alignItems: 'center',
+  },
+  selectButton: {
+    ...WHITE_BUTTON,
+    flex: 1,
   },
   selectButtonsFrame: {
     borderRadius: 10,
@@ -226,30 +243,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 10,
   },
-  selectButton: {
-    height: 40,
-    borderWidth: 2,
-    marginVertical: 5,
-    borderRadius: 10,
-    backgroundColor: 'white',
-    borderColor: 'navy',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
-  },
   button: {
-    height: 40,
+    ...BUTTON,
     backgroundColor: 'navy',
-    justifyContent: 'center',
-    alignItems: 'center',
     zIndex: 1,
   },
-  buttonText: {
-    fontSize: 20,
+  navyText: {
+    ...TEXT,
     color: 'navy',
   },
-  buttonTextWhite: {
-    fontSize: 20,
+  whiteText: {
+    ...TEXT,
     color: 'white',
   },
   buttonWrapper: {
@@ -268,11 +272,6 @@ const styles = StyleSheet.create({
   },
   checkedCheckbox: {
     backgroundColor: 'navy',
-  },
-  reloadText: {
-    fontSize: 20,
-    color: 'navy',
-    alignSelf: 'center',
   },
   pressedButton: {
     zIndex: 2,
