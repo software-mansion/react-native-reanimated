@@ -32,7 +32,6 @@ import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
-import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import java.lang.reflect.Method;
@@ -456,7 +455,6 @@ public class NodesManager implements EventDispatcherListener {
         Drawable background = view.getBackground();
         int actualColor = -1;
 
-
         try {
           Method getColor = background.getClass().getMethod("getColor");
           actualColor = (int) getColor.invoke(background);
@@ -465,8 +463,8 @@ public class NodesManager implements EventDispatcherListener {
           // By default transparency is first, color second
           return "#" + invertedColor.substring(2, 8) + invertedColor.substring(0, 2);
 
-        }catch(Exception e){
-          return "Unable to get background color"
+        } catch (Exception e) {
+          return "Unable to get background color";
         }
       default:
         throw new IllegalArgumentException(
