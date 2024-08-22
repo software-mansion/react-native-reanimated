@@ -29,13 +29,13 @@ import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
-import com.facebook.react.uimanager.drawable.CSSBackgroundDrawable;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -456,25 +456,18 @@ public class NodesManager implements EventDispatcherListener {
         Drawable background = view.getBackground();
         int actualColor = -1;
 
-        // ReactViewBackgroundDrawable got deprecated in react-native 0.75.
-        //noinspection deprecation
-        if (background instanceof ReactViewBackgroundDrawable) {
-          //noinspection deprecation
-          actualColor = ((ReactViewBackgroundDrawable) background).getColor();
+
+        try {
+          Method getColor = background.getClass().getMethod("getColor");
+          actualColor = (int) getColor.invoke(background);
+
+          String invertedColor = String.format("%08x", (0xFFFFFFFF & actualColor));
+          // By default transparency is first, color second
+          return "#" + invertedColor.substring(2, 8) + invertedColor.substring(0, 2);
+
+        }catch(Exception e){
+          return "Unable to get background color"
         }
-
-        if (background instanceof CSSBackgroundDrawable) {
-          actualColor = ((CSSBackgroundDrawable) background).getColor();
-        }
-
-        if (actualColor == -1) {
-          return "Unable to resolve background color";
-        }
-
-        String invertedColor = String.format("%08x", (0xFFFFFFFF & actualColor));
-        // By default transparency is first, color second
-        return "#" + invertedColor.substring(2, 8) + invertedColor.substring(0, 2);
-
       default:
         throw new IllegalArgumentException(
             "[Reanimated] Attempted to get unsupported property "
