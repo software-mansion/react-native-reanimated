@@ -157,7 +157,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       jsi::Runtime &rt,
       const jsi::Value &keyboardEventContainer,
       const jsi::Value &isStatusBarTranslucent,
-      const jsi:Value &isNavigationBarTranslucent) override
+      const jsi::Value &isNavigationBarTranslucent) override;
   void unsubscribeFromKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &listenerId) override;

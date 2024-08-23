@@ -419,7 +419,7 @@ int NativeProxy::subscribeForKeyboardEvents(
     bool isStatusBarTranslucent,
     bool isNavigationBarTranslucent) {
   static const auto method =
-      getJniMethod<int(KeyboardWorkletWrapper::javaobject, bool)>(
+      getJniMethod<int(KeyboardWorkletWrapper::javaobject, bool, bool)>(
           "subscribeForKeyboardEvents");
   return method(
       javaPart_.get(),

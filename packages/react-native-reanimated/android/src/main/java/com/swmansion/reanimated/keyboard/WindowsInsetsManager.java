@@ -38,7 +38,7 @@ public class WindowsInsetsManager {
   public void startObservingChanges(
       KeyboardAnimationCallback keyboardAnimationCallback, boolean isStatusBarTranslucent, boolean isNavigationBarTranslucent) {
     mIsStatusBarTranslucent = isStatusBarTranslucent;
-    mIsNavigationBarTranslucent = isNavigationBarTranslucent
+    mIsNavigationBarTranslucent = isNavigationBarTranslucent;
     updateWindowDecor(false);
 
     Activity currentActivity = getCurrentActivity();
