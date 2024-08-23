@@ -50,6 +50,7 @@ module.exports = {
     'prettier',
     'plugin:import/typescript',
     'plugin:react-hooks/recommended',
+    'plugin:import/recommended',
   ],
   plugins: [
     'react',
@@ -88,5 +89,37 @@ module.exports = {
     'jest/prefer-to-have-length': 'warn',
     'jest/valid-expect': 'error',
     'react/react-in-jsx-scope': 'off',
+    'import/order': [
+      'error',
+      {
+        'newlines-between': 'always',
+        pathGroups: [
+          {
+            pattern: 'react-native',
+            group: 'external',
+            position: 'before',
+          },
+        ],
+        pathGroupsExcludedImportTypes: ['builtin'],
+        distinctGroup: false,
+        groups: [
+          'builtin',
+          'external',
+          'internal',
+          'parent',
+          'sibling',
+          'index',
+        ],
+        alphabetize: {
+          order: 'asc',
+          caseInsensitive: true,
+        },
+      },
+    ],
+    'import/no-self-import': 'error',
+    'import/no-cycle': 'error',
+    'import/no-useless-path-segments': 'error',
+    'import/newline-after-import': 'error',
+    'import/first': 'error',
   },
 };

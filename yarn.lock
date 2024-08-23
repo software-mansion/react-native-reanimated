@@ -11590,7 +11590,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-import@npm:^2.25.4":
+"eslint-plugin-import@npm:^2.25.4, eslint-plugin-import@npm:^2.29.1":
   version: 2.29.1
   resolution: "eslint-plugin-import@npm:2.29.1"
   dependencies:
@@ -11772,6 +11772,7 @@ __metadata:
     "@typescript-eslint/utils": "npm:^6.19.1"
     esbuild: "npm:^0.20.0"
     eslint: "npm:^8.57.0"
+    eslint-plugin-import: "npm:^2.29.1"
     jest: "npm:^29.7.0"
     prettier: "npm:2.8.8"
     ts-jest: "npm:^29.1.2"
