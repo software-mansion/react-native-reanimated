@@ -36,7 +36,9 @@ public class WindowsInsetsManager {
   }
 
   public void startObservingChanges(
-      KeyboardAnimationCallback keyboardAnimationCallback, boolean isStatusBarTranslucent, boolean isNavigationBarTranslucent) {
+      KeyboardAnimationCallback keyboardAnimationCallback,
+      boolean isStatusBarTranslucent,
+      boolean isNavigationBarTranslucent) {
     mIsStatusBarTranslucent = isStatusBarTranslucent;
     mIsNavigationBarTranslucent = isNavigationBarTranslucent;
     updateWindowDecor(false);
@@ -123,7 +125,11 @@ public class WindowsInsetsManager {
     FrameLayout.LayoutParams params =
         new FrameLayout.LayoutParams(matchParentFlag, matchParentFlag);
 
-    params.setMargins(0, mIsStatusBarTranslucent ? 0 : paddingTop, 0, mIsNavigationBarTranslucent ? 0 : paddingBottom);
+    params.setMargins(
+        0,
+        mIsStatusBarTranslucent ? 0 : paddingTop,
+        0,
+        mIsNavigationBarTranslucent ? 0 : paddingBottom);
     return params;
   }
 }

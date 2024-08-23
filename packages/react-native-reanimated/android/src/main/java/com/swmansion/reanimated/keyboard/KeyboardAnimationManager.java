@@ -22,7 +22,9 @@ public class KeyboardAnimationManager {
   }
 
   public int subscribeForKeyboardUpdates(
-      KeyboardWorkletWrapper callback, boolean isStatusBarTranslucent, boolean isNavigationBarTranslucent) {
+      KeyboardWorkletWrapper callback,
+      boolean isStatusBarTranslucent,
+      boolean isNavigationBarTranslucent) {
     int listenerId = mNextListenerId++;
     if (mListeners.isEmpty()) {
       KeyboardAnimationCallback keyboardAnimationCallback =
