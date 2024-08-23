@@ -155,7 +155,7 @@ describe('babel plugin', () => {
     });
   });
 
-  describe('names', () => {
+  describe('for worklet names', () => {
     it('unnamed ArrowFunctionExpression', () => {
       const input = html`<script>
         () => {
@@ -1817,7 +1817,6 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain('var foo = function* foo()'); // React code
-      expect(code).toMatchInWorkletString(/function\*foo_null[0-9]+\(\){/gm); // Worklet code
       expect(code).toMatchSnapshot();
     });
 

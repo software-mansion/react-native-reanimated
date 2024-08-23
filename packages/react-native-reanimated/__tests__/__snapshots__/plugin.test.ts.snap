@@ -4230,6 +4230,123 @@ var Clazz = function () {
 }();"
 `;
 
+exports[`babel plugin for worklet names appends file name to function name 1`] = `
+"var _worklet_3008648901742_init_data = {
+  code: "function foo_sourceJs1(){return 1;}",
+  location: "/source.js",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function foo() {
+    return 1;
+  };
+  foo.__closure = {};
+  foo.__workletHash = 3008648901742;
+  foo.__initData = _worklet_3008648901742_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for worklet names appends library name to function name 1`] = `
+"var _worklet_1237424241422_init_data = {
+  code: "function foo_library_sourceJs1(){return 1;}",
+  location: "/node_modules/library/source.js",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function foo() {
+    return 1;
+  };
+  foo.__closure = {};
+  foo.__workletHash = 1237424241422;
+  foo.__initData = _worklet_1237424241422_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for worklet names handles names with illegal characters 1`] = `
+"var _worklet_16115589986830_init_data = {
+  code: "function foo_SourceJs1(){return 1;}",
+  location: "/-source.js",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function foo() {
+    return 1;
+  };
+  foo.__closure = {};
+  foo.__workletHash = 16115589986830;
+  foo.__initData = _worklet_16115589986830_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for worklet names preserves recursion 1`] = `
+"var _worklet_13087563218653_init_data = {
+  code: "function foo_null1(){const foo_null1=this._recur;foo_null1(1);}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var foo = function () {
+  var _e = [new global.Error(), 1, -27];
+  var foo = function foo() {
+    foo(1);
+  };
+  foo.__closure = {};
+  foo.__workletHash = 13087563218653;
+  foo.__initData = _worklet_13087563218653_init_data;
+  foo.__stackDetails = _e;
+  return foo;
+}();"
+`;
+
+exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 1`] = `
+"var _worklet_1420107288296_init_data = {
+  code: "function null1(){return 1;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+(function () {
+  var _e = [new global.Error(), 1, -27];
+  var null1 = function null1() {
+    return 1;
+  };
+  null1.__closure = {};
+  null1.__workletHash = 1420107288296;
+  null1.__initData = _worklet_1420107288296_init_data;
+  null1.__stackDetails = _e;
+  return null1;
+})();"
+`;
+
+exports[`babel plugin for worklet names unnamed FunctionExpression 1`] = `
+"var _worklet_1420107288296_init_data = {
+  code: "function null1(){return 1;}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+[function () {
+  var _e = [new global.Error(), 1, -27];
+  var null1 = function null1() {
+    return 1;
+  };
+  null1.__closure = {};
+  null1.__workletHash = 1420107288296;
+  null1.__initData = _worklet_1420107288296_init_data;
+  null1.__stackDetails = _e;
+  return null1;
+}()]();"
+`;
+
 exports[`babel plugin for worklet nesting doesn't process nested worklets when disabled 1`] = `
 "var _worklet_16658893781105_init_data = {
   code: "function foo_null1(x){function bar(x){'worklet';return x+2;}return bar(x)+1;}",
@@ -4609,121 +4726,4 @@ function Box() {
     })]
   });
 }"
-`;
-
-exports[`babel plugin names appends file name to function name 1`] = `
-"var _worklet_3008648901742_init_data = {
-  code: "function foo_sourceJs1(){return 1;}",
-  location: "/source.js",
-  version: "x.y.z"
-};
-var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var foo = function foo() {
-    return 1;
-  };
-  foo.__closure = {};
-  foo.__workletHash = 3008648901742;
-  foo.__initData = _worklet_3008648901742_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}();"
-`;
-
-exports[`babel plugin names appends library name to function name 1`] = `
-"var _worklet_1237424241422_init_data = {
-  code: "function foo_library_sourceJs1(){return 1;}",
-  location: "/node_modules/library/source.js",
-  version: "x.y.z"
-};
-var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var foo = function foo() {
-    return 1;
-  };
-  foo.__closure = {};
-  foo.__workletHash = 1237424241422;
-  foo.__initData = _worklet_1237424241422_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}();"
-`;
-
-exports[`babel plugin names handles names with illegal characters 1`] = `
-"var _worklet_16115589986830_init_data = {
-  code: "function foo_SourceJs1(){return 1;}",
-  location: "/-source.js",
-  version: "x.y.z"
-};
-var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var foo = function foo() {
-    return 1;
-  };
-  foo.__closure = {};
-  foo.__workletHash = 16115589986830;
-  foo.__initData = _worklet_16115589986830_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}();"
-`;
-
-exports[`babel plugin names preserves recursion 1`] = `
-"var _worklet_13087563218653_init_data = {
-  code: "function foo_null1(){const foo_null1=this._recur;foo_null1(1);}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-var foo = function () {
-  var _e = [new global.Error(), 1, -27];
-  var foo = function foo() {
-    foo(1);
-  };
-  foo.__closure = {};
-  foo.__workletHash = 13087563218653;
-  foo.__initData = _worklet_13087563218653_init_data;
-  foo.__stackDetails = _e;
-  return foo;
-}();"
-`;
-
-exports[`babel plugin names unnamed ArrowFunctionExpression 1`] = `
-"var _worklet_1420107288296_init_data = {
-  code: "function null1(){return 1;}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-(function () {
-  var _e = [new global.Error(), 1, -27];
-  var null1 = function null1() {
-    return 1;
-  };
-  null1.__closure = {};
-  null1.__workletHash = 1420107288296;
-  null1.__initData = _worklet_1420107288296_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-})();"
-`;
-
-exports[`babel plugin names unnamed FunctionExpression 1`] = `
-"var _worklet_1420107288296_init_data = {
-  code: "function null1(){return 1;}",
-  location: "/dev/null",
-  sourceMap: "\\"mock source map\\"",
-  version: "x.y.z"
-};
-[function () {
-  var _e = [new global.Error(), 1, -27];
-  var null1 = function null1() {
-    return 1;
-  };
-  null1.__closure = {};
-  null1.__workletHash = 1420107288296;
-  null1.__initData = _worklet_1420107288296_init_data;
-  null1.__stackDetails = _e;
-  return null1;
-}()]();"
 `;
