@@ -186,7 +186,7 @@ JS THREAD
 
 This output occurs because the entire `global` object (!) would be copied to the UI thread for it to be assigned by `setOnUI`. Then, `readOnUI` would again copy the `global` object and read from this copy.
 
-There is a [huge list of identifiers whitelisted by default](https://github.com/software-mansion/react-native-reanimated/blob/main/plugin/src/globals.ts).
+There is a [huge list of identifiers whitelisted by default](https://github.com/software-mansion/react-native-reanimated/blob/3.14.0/packages/react-native-reanimated/plugin/src/globals.ts).
 
 ### substituteWebPlatformChecks
 

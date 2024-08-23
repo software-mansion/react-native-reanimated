@@ -5,8 +5,11 @@ import {
   directive,
   directiveLiteral,
   identifier,
+  isAssignmentExpression,
   isBlockStatement,
+  isExpressionStatement,
   isIdentifier,
+  isMemberExpression,
   isObjectProperty,
   objectProperty,
   returnStatement,
@@ -57,6 +60,7 @@ export function processIfWorkletFile(
  */
 function processWorkletFile(programPath: NodePath<Program>) {
   const statements = programPath.get('body');
+  dehoistCommonJSExports(programPath.node);
   statements.forEach((statement) => {
     const candidatePath = getCandidate(statement);
     processWorkletizableEntity(candidatePath);
@@ -187,5 +191,34 @@ function hasThisExpression(path: NodePath<ObjectMethod>): boolean {
 function appendWorkletClassMarker(classBody: ClassBody) {
   classBody.body.push(
     classProperty(identifier('__workletClass'), booleanLiteral(true))
+  );
+}
+
+function dehoistCommonJSExports(program: Program) {
+  const statements = program.body;
+  let end = statements.length;
+  let current = 0;
+
+  while (current < end) {
+    const statement = statements[current];
+    if (!isCommonJSExport(statement)) {
+      current++;
+      continue;
+    }
+    const exportStatement = statements.splice(current, 1);
+    statements.push(...exportStatement);
+    // We just removed one element from non-processed part,
+    // so we need to decrement the end index but not the current index.
+    end--;
+  }
+}
+
+function isCommonJSExport(statement: Statement) {
+  return (
+    isExpressionStatement(statement) &&
+    isAssignmentExpression(statement.expression) &&
+    isMemberExpression(statement.expression.left) &&
+    isIdentifier(statement.expression.left.object) &&
+    statement.expression.left.object.name === 'exports'
   );
 }

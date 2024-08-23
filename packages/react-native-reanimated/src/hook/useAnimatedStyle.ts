@@ -31,8 +31,8 @@ import type {
   WorkletFunction,
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
+  AnimatedStyle,
 } from '../commonTypes';
-import type { AnimatedStyle } from '../helperTypes';
 import { isWorkletFunction } from '../commonTypes';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();

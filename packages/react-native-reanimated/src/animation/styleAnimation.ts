@@ -7,8 +7,8 @@ import type {
   Animation,
   NestedObject,
   NestedObjectValues,
+  AnimatedStyle,
 } from '../commonTypes';
-import type { AnimatedStyle } from '../helperTypes';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
 import { ColorProperties, processColor } from '../Colors';

@@ -7,15 +7,12 @@ until time comes to refactor the code and get necessary types right.
 This will not be easy though! 
 */
 
+import type { RegisteredStyle, StyleProp } from 'react-native';
 import type {
-  ImageStyle,
-  RegisteredStyle,
-  StyleProp,
-  TextStyle,
-  TransformsStyle,
-  ViewStyle,
-} from 'react-native';
-import type { AnimatableValue, SharedValue } from './commonTypes';
+  AnimatedStyle,
+  SharedValue,
+  TransformArrayItem,
+} from './commonTypes';
 import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
 import type {
   EntryExitAnimationFunction,
@@ -23,39 +20,6 @@ import type {
 } from './layoutReanimation/animationBuilder/commonTypes';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
-
-export type TransformArrayItem = Extract<
-  TransformsStyle['transform'],
-  Array<unknown>
->[number];
-
-export type AnimatedTransform = MaybeSharedValueRecursive<
-  TransformsStyle['transform']
->;
-
-type MaybeSharedValue<Value> =
-  | Value
-  | (Value extends AnimatableValue ? SharedValue<Value> : never);
-
-type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
-  ? SharedValue<Item[]> | (MaybeSharedValueRecursive<Item> | Item)[]
-  : Value extends object
-  ?
-      | SharedValue<Value>
-      | {
-          [Key in keyof Value]:
-            | MaybeSharedValueRecursive<Value[Key]>
-            | Value[Key];
-        }
-  : MaybeSharedValue<Value>;
-
-type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
-
-// Ideally we want AnimatedStyle to not be generic, but there are
-// so many depenedencies on it being generic that it's not feasible at the moment.
-export type AnimatedStyle<Style = DefaultStyle> =
-  | Style
-  | MaybeSharedValueRecursive<Style>;
 
 type EntryOrExitLayoutType =
   | BaseAnimationBuilder
@@ -180,18 +144,6 @@ export type AdaptTransforms<T> = {
  * @deprecated Please use {@link TransformArrayItem} type instead.
  */
 export type TransformStyleTypes = TransformArrayItem;
-
-/**
- * @deprecated Please use {@link AnimatedStyle} type instead.
- */
-export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
-
-/**
- * @deprecated This type is no longer relevant.
- */
-export type StylesOrDefault<T> = 'style' extends keyof T
-  ? MaybeSharedValueRecursive<T['style']>
-  : Record<string, unknown>;
 
 /**
  * @deprecated This type is no longer relevant.

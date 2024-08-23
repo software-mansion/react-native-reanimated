@@ -68,14 +68,14 @@ function processClass(
 
   const polyfilledClassAst = getPolyfilledAst(classPath.node, state);
 
+  sortPolyfills(polyfilledClassAst);
+
   appendWorkletDirectiveToPolyfills(polyfilledClassAst.program.body);
 
   replaceClassDeclarationWithFactoryAndCall(
     polyfilledClassAst.program.body,
     className
   );
-
-  sortPolyfills(polyfilledClassAst);
 
   polyfilledClassAst.program.body.push(returnStatement(identifier(className)));
 

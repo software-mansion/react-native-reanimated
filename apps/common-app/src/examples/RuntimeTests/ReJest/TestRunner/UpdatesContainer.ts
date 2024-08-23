@@ -1,10 +1,12 @@
 import { makeMutable } from 'react-native-reanimated';
 import type { Operation, OperationUpdate } from '../types';
 import { isValidPropName } from '../types';
-import type { MultiViewSnapshot, SingleViewSnapshot } from '../matchers/snapshotMatchers';
 import type { TestComponent } from '../TestComponent';
 import { SyncUIRunner } from '../utils/SyncUIRunner';
 import { convertDecimalColor } from '../utils/util';
+
+export type SingleViewSnapshot = Array<OperationUpdate>;
+type MultiViewSnapshot = Record<number, SingleViewSnapshot>;
 
 type JsUpdate = {
   tag: number;

@@ -1,6 +1,7 @@
 {
   "name": "web-example",
   "main": "index.js",
+  "private": true,
   "version": "0.0.1",
   "scripts": {
     "start": "expo start --web",
@@ -16,8 +17,8 @@
     "@shopify/flash-list": "^1.7.0",
     "common-app": "workspace:*",
     "expo": "~51.0.2",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "react-native": "0.74.0",
     "react-native-reanimated": "workspace:*",
     "react-native-web": "0.19.11"
@@ -30,6 +31,5 @@
     "prettier": "2.8.8",
     "serve": "^14.2.3",
     "typescript": "~5.3.0"
-  },
-  "private": true
+  }
 }

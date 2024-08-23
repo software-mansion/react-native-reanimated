@@ -32,8 +32,6 @@ export enum DescribeDecorator {
 export enum TestDecorator {
   ONLY = 'only',
   SKIP = 'skip',
-  FAILING = 'failing',
-  WARN = 'warn',
 }
 
 export type BuildFunction = () => void | Promise<void>;
@@ -45,13 +43,8 @@ export type TestCase = {
   callsRegistry: Record<string, CallTracker>;
   errors: string[];
   skip?: boolean;
-} & (
-  | {
-      decorator: TestDecorator.WARN | TestDecorator.FAILING;
-      warningMessage: string;
-    }
-  | { decorator: Exclude<TestDecorator, TestDecorator.WARN | TestDecorator.FAILING> | null }
-);
+  decorator?: TestDecorator | null;
+};
 
 export type TestSuite = {
   name: string;
@@ -103,12 +96,11 @@ export type TestValue =
   | number
   | bigint
   | Record<string, unknown>
+  | boolean
   | null
   | undefined
-  | boolean
-  | OperationUpdate;
-
-export type NullableTestValue = TestValue | null | undefined;
+  | OperationUpdate
+  | (() => unknown);
 
 export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
@@ -150,12 +142,3 @@ declare global {
   };
 }
 /* eslint-enable no-var */
-
-export type TestSummary = {
-  passed: number;
-  failed: number;
-  skipped: number;
-  failedTests: Array<string>;
-  startTime: number;
-  endTime: number;
-};

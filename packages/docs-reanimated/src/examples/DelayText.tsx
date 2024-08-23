@@ -5,6 +5,7 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
+import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
 
 const DURATION = 1000;
 const DELAY = 500;
@@ -16,6 +17,7 @@ interface AppProps {
 }
 
 export default function App({ width }: AppProps) {
+  const textColor = useThemedTextStyle();
   const [isShown, setShown] = useState<boolean>(false);
 
   const opacity1 = useSharedValue<number>(0);
@@ -40,20 +42,21 @@ export default function App({ width }: AppProps) {
   return (
     <View style={styles.container}>
       <View style={styles.text}>
-        <Animated.Text style={{ ...styles.label, opacity: opacity1 }}>
+        <Animated.Text style={[styles.label, textColor, { opacity: opacity1 }]}>
           {text[0]}
         </Animated.Text>
-        <Animated.Text style={{ ...styles.label, opacity: opacity2 }}>
+        <Animated.Text style={[styles.label, textColor, { opacity: opacity2 }]}>
           {text[1]}
         </Animated.Text>
         {width > 450 && (
-          <Animated.Text style={{ ...styles.label, opacity: opacity3 }}>
+          <Animated.Text
+            style={[styles.label, textColor, { opacity: opacity3 }]}>
             {text[2]}
           </Animated.Text>
         )}
       </View>
       {width <= 450 && (
-        <Animated.Text style={{ ...styles.label, opacity: opacity3 }}>
+        <Animated.Text style={[styles.label, textColor, { opacity: opacity3 }]}>
           {text[2]}
         </Animated.Text>
       )}

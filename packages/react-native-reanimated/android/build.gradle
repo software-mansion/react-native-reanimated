@@ -2,6 +2,7 @@ import com.android.Version
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonSlurper
+import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 
 import javax.inject.Inject
 import java.nio.file.Files
@@ -244,6 +245,9 @@ android {
         reanimated {
             headers prefabHeadersDir.absolutePath
         }
+        worklets {
+            headers prefabHeadersDir.absolutePath
+        }
     }
 
     defaultConfig {
@@ -363,6 +367,8 @@ android {
             // ReanimatedUIManager & ReanimatedUIImplementation 
             if (REACT_NATIVE_MINOR_VERSION <= 73) {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
+            } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/74"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
             }
@@ -378,6 +384,8 @@ android {
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 if (REACT_NATIVE_MINOR_VERSION <= 72) {
                     srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/72"
+                } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/74"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/latest"
                 }
@@ -387,12 +395,36 @@ android {
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 if (REACT_NATIVE_MINOR_VERSION <= 73) {
                     srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/73"
+                } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/74"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/latest"
                 }
             }
 
+            // BorderRadiiDrawableUtils
+            if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/74"
+            } else {
+                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/latest"
+            }
         }
+    }
+    tasks.withType(ExternalNativeBuildJsonTask) {
+        compileTask ->
+            compileTask.doLast {
+                if (!isReanimatedExampleApp()) {
+                    return
+                }
+                def monorepoDir = new File("${project.projectDir}/../../..")
+
+                def generated = new File("${compileTask.abi.getCxxBuildFolder()}/compile_commands.json")
+                def output = new File("${monorepoDir}/compile_commands.json")
+
+                output.text = generated.text
+
+                println("Generated clangd metadata.")
+            }
     }
 }
 
@@ -415,15 +447,17 @@ def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
 }
 
 task prepareHeadersForPrefab(type: Copy) {
-    from("$projectDir/src/main/cpp")
-    from("$projectDir/../Common/cpp/AnimatedSensor")
-    from("$projectDir/../Common/cpp/Fabric")
-    from("$projectDir/../Common/cpp/LayoutAnimations")
-    from("$projectDir/../Common/cpp/NativeModules")
-    from("$projectDir/../Common/cpp/ReanimatedRuntime")
-    from("$projectDir/../Common/cpp/Registries")
-    from("$projectDir/../Common/cpp/SharedItems")
-    from("$projectDir/../Common/cpp/Tools")
+    from("$projectDir/src/main/cpp/reanimated")
+    from("$projectDir/../Common/cpp/reanimated/AnimatedSensor")
+    from("$projectDir/../Common/cpp/reanimated/Fabric")
+    from("$projectDir/../Common/cpp/reanimated/LayoutAnimations")
+    from("$projectDir/../Common/cpp/reanimated/NativeModules")
+    from("$projectDir/../Common/cpp/reanimated/RuntimeDecorators")
+    from("$projectDir/../Common/cpp/reanimated/Tools")
+    from("$projectDir/../Common/cpp/worklets/Registries")
+    from("$projectDir/../Common/cpp/worklets/SharedItems")
+    from("$projectDir/../Common/cpp/worklets/Tools")
+    from("$projectDir/../Common/cpp/worklets/WorkletRuntime")
     include("*.h")
     into(prefabHeadersDir)
 }
@@ -475,6 +509,7 @@ def resolveTaskFactory(String taskName, String artifactLocalName, File reactNati
 task packageNdkLibs(type: Copy) {
     from("$buildDir/reanimated-ndk/all")
     include("**/libreanimated.so")
+    include("**/libworklets.so")
     into("$projectDir/src/main/jniLibs")
 }
 
