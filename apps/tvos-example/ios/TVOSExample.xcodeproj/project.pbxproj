@@ -233,6 +233,7 @@
 				2D02E4CB1E0B4B27006451C7 /* Bundle React Native Code And Images */,
 				42686649B799B0EA1ADB4648 /* [CP] Copy Pods Resources */,
 				1D628A144AB903441126BE7D /* [CP] Embed Pods Frameworks */,
+				17098406ADB87B7DDD6A845F /* [CP-User] Generate metadata for clangd */,
 			);
 			buildRules = (
 			);
@@ -361,6 +362,17 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"../node_modules/react-native/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"../node_modules/react-native/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
+		};
+		17098406ADB87B7DDD6A845F /* [CP-User] Generate metadata for clangd */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = true;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "[CP-User] Generate metadata for clangd";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "../../../packages/react-native-reanimated/scripts/clangd-generate-xcode-metadata.sh";
 		};
 		1B09D78B63D400B062C57686 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
