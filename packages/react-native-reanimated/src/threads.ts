@@ -13,7 +13,7 @@ import {
   logToLogBoxAndConsole,
   replaceLoggerImplementation,
 } from './logger';
-import { registerReanimatedError } from './errors';
+import { ReanimatedError, registerReanimatedError } from './errors';
 import { shareableMappingCache } from './shareableMappingCache';
 
 const IS_JEST = isJest();

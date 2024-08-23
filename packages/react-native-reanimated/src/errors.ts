@@ -3,7 +3,7 @@ import type { WorkletStackDetails } from './commonTypes';
 
 type ReanimatedError = Error & 'ReanimatedError'; // signed type
 
-export interface ReanimatedErrorConstructor extends Error {
+interface ReanimatedErrorConstructor extends Error {
   new (message?: string): ReanimatedError;
   (message?: string): ReanimatedError;
   readonly prototype: ReanimatedError;
@@ -18,9 +18,16 @@ const ReanimatedErrorConstructor: ReanimatedErrorConstructor =
     return errorInstance;
   } as ReanimatedErrorConstructor;
 
+export { ReanimatedErrorConstructor as ReanimatedError };
+
+/**
+ * Registers ReanimatedError constructor in global scope.
+ * Used to add ReanimatedError in the worklet runtime.
+ */
 export function registerReanimatedError() {
   'worklet';
-  global.ReanimatedError = ReanimatedErrorConstructor;
+  (global as Record<string, unknown>).ReanimatedError =
+    ReanimatedErrorConstructor;
 }
 
 const _workletStackDetails = new Map<number, WorkletStackDetails>();
