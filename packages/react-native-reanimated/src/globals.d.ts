@@ -113,5 +113,8 @@ declare global {
     shadowNodeWrapper: ShadowNodeWrapper,
     propName: string
   ) => string;
+  /**
+  * `ReanimatedError` is present in the global scope only on Worklet runtimes. To use it on the React runtime you have to import it.
+  **/
   var ReanimatedError: ReanimatedErrorConstructor;
 }
