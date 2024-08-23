@@ -106,9 +106,6 @@ export function makeWorkletFactory(
 
   const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
 
-  const functionName = makeWorkletName(fun, state);
-  const functionIdentifier = identifier(functionName);
-
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
     ? functionExpression(
@@ -120,11 +117,13 @@ export function makeWorkletFactory(
       )
     : clone;
 
+  const { workletName, reactName } = makeWorkletName(fun, state);
+
   let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     state,
     variables,
-    functionName,
+    workletName,
     transformed.map
   );
   assert(funString, '[Reanimated] `funString` is undefined.');
@@ -219,12 +218,12 @@ export function makeWorkletFactory(
     VariableDeclaration | ExpressionStatement | ReturnStatement
   > = [
     variableDeclaration('const', [
-      variableDeclarator(functionIdentifier, funExpression),
+      variableDeclarator(identifier(reactName), funExpression),
     ]),
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(functionIdentifier, identifier('__closure'), false),
+        memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
           variables.map((variable) =>
             variable.name.endsWith(workletClassFactorySuffix)
@@ -249,7 +248,7 @@ export function makeWorkletFactory(
       assignmentExpression(
         '=',
         memberExpression(
-          functionIdentifier,
+          identifier(reactName),
           identifier('__workletHash'),
           false
         ),
@@ -263,7 +262,11 @@ export function makeWorkletFactory(
       expressionStatement(
         assignmentExpression(
           '=',
-          memberExpression(functionIdentifier, identifier('__initData'), false),
+          memberExpression(
+            identifier(reactName),
+            identifier('__initData'),
+            false
+          ),
           initDataId
         )
       )
@@ -291,7 +294,7 @@ export function makeWorkletFactory(
         assignmentExpression(
           '=',
           memberExpression(
-            functionIdentifier,
+            identifier(reactName),
             identifier('__stackDetails'),
             false
           ),
@@ -301,7 +304,7 @@ export function makeWorkletFactory(
     );
   }
 
-  statements.push(returnStatement(functionIdentifier));
+  statements.push(returnStatement(identifier(reactName)));
 
   const newFun = functionExpression(undefined, [], blockStatement(statements));
 
@@ -344,7 +347,7 @@ function hash(str: string): number {
 function makeWorkletName(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): string {
+): { workletName: string; reactName: string } {
   let source = 'unknownFile';
 
   if (state.file.opts.filename) {
@@ -361,18 +364,25 @@ function makeWorkletName(
   }
 
   const suffix = `${source}${state.workletNumber++}`;
+  let reactName = '';
+
   if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
-    return toIdentifier(`${fun.node.key.name}_${suffix}`);
-  }
-  if (isFunctionDeclaration(fun.node) && isIdentifier(fun.node.id)) {
-    return toIdentifier(`${fun.node.id.name}_${suffix}`);
-  }
-  if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
-    return toIdentifier(`${fun.node.id.name}_${suffix}`);
+    reactName = fun.node.key.name;
+  } else if (
+    (isFunctionDeclaration(fun.node) || isFunctionExpression(fun.node)) &&
+    isIdentifier(fun.node.id)
+  ) {
+    reactName = fun.node.id.name;
   }
 
+  const workletName = reactName
+    ? toIdentifier(`${reactName}_${suffix}`)
+    : toIdentifier(suffix);
+
   // Fallback for ArrowFunctionExpression and unnamed FunctionExpression.
-  return toIdentifier(suffix);
+  reactName = reactName || toIdentifier(suffix);
+
+  return { workletName, reactName };
 }
 
 function makeArrayFromCapturedBindings(
