@@ -1,5 +1,5 @@
 'use strict';
-import { reportFatalErrorOnJS, registerReanimatedError } from './errors';
+import { reportFatalErrorOnJS } from './errors';
 import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
 import {
   runOnJS,
@@ -8,8 +8,6 @@ import {
   runOnUIImmediately,
 } from './threads';
 import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
-
-registerReanimatedError();
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();

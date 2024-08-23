@@ -273,7 +273,9 @@ replaceLoggerImplementation((data: LogData) => {
 });
 shareableMappingCache.set(logger, makeShareableCloneRecursive(logger));
 
-// Register ReanimatedError in the UI global scope
+// Register ReanimatedError in the UI global scope.
+// (we are using `executeOnUIRuntimeSync` here to make sure that the error is
+// registered before any async operations are executed on the UI runtime)
 if (!shouldBeUseWeb()) {
   executeOnUIRuntimeSync(registerReanimatedError)();
 }

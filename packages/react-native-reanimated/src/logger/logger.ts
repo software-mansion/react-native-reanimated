@@ -42,11 +42,23 @@ const loggerImpl = {
   logFunction: logToConsole,
 };
 
+/**
+ * Function that logs to LogBox and console.
+ * Used to replace the default console logging with logging to LogBox
+ * on the UI thread when runOnJS is available.
+ *
+ * @param data - The details of the log.
+ */
 export function logToLogBoxAndConsole(data: LogData) {
   addLogBoxLog(data);
   logToConsole(data);
 }
 
+/**
+ * Replaces the default log function with a custom implementation.
+ *
+ * @param logFunction - The custom log function.
+ */
 export function replaceLoggerImplementation(
   logFunction: (data: LogData) => void
 ) {
