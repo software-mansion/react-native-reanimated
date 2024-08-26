@@ -26,8 +26,13 @@ export { ReanimatedErrorConstructor as ReanimatedError };
  */
 export function registerReanimatedError() {
   'worklet';
-  (global as Record<string, unknown>).ReanimatedError =
-    ReanimatedErrorConstructor;
+  const ReanimatedError = ReanimatedErrorConstructor;
+  if (!_WORKLET) {
+    throw new ReanimatedError(
+      'registerReanimatedError() must be called in a worklet runtime'
+    );
+  }
+  (global as Record<string, unknown>).ReanimatedError = ReanimatedError;
 }
 
 const _workletStackDetails = new Map<number, WorkletStackDetails>();
