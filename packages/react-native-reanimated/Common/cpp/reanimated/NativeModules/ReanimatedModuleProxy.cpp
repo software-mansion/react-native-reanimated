@@ -499,6 +499,8 @@ void ReanimatedModuleProxy::registerCSSAnimation(
 
   cssAnimationsRegistry_->addAnimation(
       shadowNodeFromValue(rt, shadowNodeWrapper), config);
+
+  maybeRunCssAnimationsLoop();
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -607,10 +609,38 @@ void ReanimatedModuleProxy::updateProps(
   }
 }
 
+void ReanimatedModuleProxy::maybeRunCssAnimationsLoop() {
+  if (cssAnimationsRegistry_->isCssLoopRunning()) {
+    return;
+  }
+
+  cssAnimationsRegistry_->setCssLoopRunning(true);
+
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI([this]() {
+    std::shared_ptr<std::function<void(const double)>> cssLoop =
+        std::make_shared<std::function<void(const double)>>();
+
+    *cssLoop = [this, cssLoop](const double timestampMs) {
+      performOperations();
+      if (cssAnimationsRegistry_->registry_.size() > 0) {
+        jsi::Runtime &rt =
+            workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+        requestRender_(*cssLoop, rt);
+      } else {
+        cssAnimationsRegistry_->setCssLoopRunning(false);
+      }
+    };
+
+    jsi::Runtime &rt =
+        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+    requestRender_(*cssLoop, rt);
+  });
+}
+
 void ReanimatedModuleProxy::performOperations() {
   const auto now = getAnimationTimestamp_();
 
-  for (auto &animation : cssAnimationsRegistry_->registry_) {
+  for (auto &[animationTag, animation] : cssAnimationsRegistry_->registry_) {
     switch (animation.getState()) {
       case CSSAnimationState::pending: {
         animation.start(now);
@@ -627,11 +657,16 @@ void ReanimatedModuleProxy::performOperations() {
         break;
       }
       case CSSAnimationState::finished: {
-        // TODO: remove from cssAnimationsRegistry_->registry_
+        // we remove css animations lazily
+        cssAnimationsRegistry_->markForRemoval(animationTag);
         break;
       }
     }
   }
+
+  // removing css animations after the loop because doing it during loop results
+  // in segfault
+  cssAnimationsRegistry_->runMarkedRemoval();
 
   if (operationsInBatch_.empty() && tagsToRemove_.empty()) {
     // nothing to do
