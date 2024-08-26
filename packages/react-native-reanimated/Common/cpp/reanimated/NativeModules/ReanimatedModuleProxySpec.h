@@ -78,7 +78,7 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
       const jsi::Value &shouldAnimate) = 0;
-      
+
   // CSS animations
   virtual void registerCSSAnimation(
       jsi::Runtime &rt,

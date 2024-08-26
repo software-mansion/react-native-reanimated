@@ -8,7 +8,7 @@ import type {
   LayoutAnimationBatchItem,
   WorkletFunction,
 } from '../commonTypes';
-import type { CSSAnimationConfig } from '../css';
+import type { NormalizedCSSAnimationConfig } from '../css';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
@@ -55,6 +55,6 @@ export interface ReanimatedModuleProxy {
 
   registerCSSAnimation(
     shadowNodeWrapper: ShadowNodeWrapper,
-    config: CSSAnimationConfig
+    config: NormalizedCSSAnimationConfig
   ): void;
 }

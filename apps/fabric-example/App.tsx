@@ -28,7 +28,7 @@ export default function EmptyExample() {
             },
           },
           animationDuration: '2s',
-          animationTimingFunction: 'ease-in-out',
+          animationTimingFunction: 'ease-in-out-back',
         }}
       />
     </View>

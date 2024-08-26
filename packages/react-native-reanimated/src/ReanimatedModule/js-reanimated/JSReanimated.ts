@@ -19,7 +19,7 @@ import type { WebSensor } from './WebSensor';
 import { logger } from '../../logger';
 import { ReanimatedError } from '../../errors';
 import { WorkletsModule } from '../../worklets';
-import type { CSSAnimationConfig } from '../../css';
+import type { NormalizedCSSAnimationConfig } from '../../css';
 
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();
@@ -268,10 +268,10 @@ class JSReanimated implements IReanimatedModule {
 
   registerCSSAnimation(
     _shadowNodeWrapper: ShadowNodeWrapper,
-    _config: CSSAnimationConfig
+    _config: NormalizedCSSAnimationConfig
   ): void {
     throw new ReanimatedError(
-      '[Reanimated] `registerCSSAnimation` is not available in JSReanimated.'
+      '`registerCSSAnimation` is not available in JSReanimated.'
     );
   }
 }
