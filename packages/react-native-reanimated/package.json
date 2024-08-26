@@ -50,6 +50,7 @@
     "scripts/reanimated_utils.rb",
     "mock.js",
     "plugin/index.js",
+    "metro-config",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",

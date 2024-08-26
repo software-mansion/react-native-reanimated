@@ -1,6 +1,7 @@
 'use strict';
 import { isWorkletFunction } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
+import { registerReanimatedError } from './errors';
 import { setupCallGuard, setupConsole } from './initializers';
 import NativeReanimatedModule from './NativeReanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
@@ -38,6 +39,7 @@ export function createWorkletRuntime(
     name,
     makeShareableCloneRecursive(() => {
       'worklet';
+      registerReanimatedError();
       setupCallGuard();
       setupConsole();
       initializer?.();
