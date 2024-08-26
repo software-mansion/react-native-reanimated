@@ -10,6 +10,25 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 type Listener<Value> = (newValue: Value) => void;
 
+/**
+ * Hides the internal `_value` property of a mutable. It won't be visible to:
+ * - `Object.keys`,
+ * - `const prop in obj`,
+ * - etc.
+ *
+ * This way when the user accidentally sends the SharedValue to React, he won't get an obscure
+ * error message.
+ *
+ * We hide for both _React runtime_ and _Worklet runtime_ mutables for uniformity of behavior.
+ */
+function hideInternalValueProp(mutable: Mutable) {
+  'worklet';
+  Object.defineProperty(mutable, '_value', {
+    configurable: false,
+    enumerable: false,
+  });
+}
+
 export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
   'worklet';
   const listeners = new Map<number, Listener<Value>>();
@@ -56,6 +75,9 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
     _animation: null,
     _isReanimatedSharedValue: true,
   };
+
+  hideInternalValueProp(mutable);
+
   return mutable;
 }
 
@@ -110,6 +132,8 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     _isReanimatedSharedValue: true,
   };
 
+  hideInternalValueProp(mutable);
+
   shareableMappingCache.set(mutable, handle);
   return mutable;
 }
@@ -152,6 +176,8 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
 
     _isReanimatedSharedValue: true,
   };
+
+  hideInternalValueProp(mutable);
 
   return mutable;
 }

@@ -10,8 +10,7 @@
     "esModuleInterop": true,
     "outDir": "lib",
     "rootDir": "src",
-    "declaration": true,
-    "declarationDir": "types"
+    "declaration": false,
   },
-  "include": ["src/**/*"]
+  "include": ["src"]
 }
