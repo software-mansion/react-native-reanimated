@@ -19,7 +19,8 @@ import {
   getRegisteredValue,
   registerValue,
   waitForAnimationUpdates,
-  wait,
+  waitForNotify,
+  notify,
 } from '../../../ReJest/RuntimeTestsApi';
 import { Snapshots } from './snapshots.snapshot';
 
@@ -184,6 +185,7 @@ describe(`Test all callbacks have been called in valid order`, () => {
         // finishes at 900
         withTiming(200, { duration: 400 }, () => {
           callbackArray.value = [...callbackArray.value, 'NINE'];
+          notify('lastCallback');
         }),
       );
     });
@@ -203,8 +205,7 @@ describe(`Test all callbacks have been called in valid order`, () => {
     await mockAnimationTimer();
     const updatesContainerActive = await recordAnimationUpdates();
     await render(<CallbackComponent />);
-    await waitForAnimationUpdates(Snapshots.CallbackOrder.length);
-    await wait(200); // Wait for the last callback
+    await waitForNotify('lastCallback');
     const updates = updatesContainerActive.getUpdates();
     const nativeUpdates = await updatesContainerActive.getNativeSnapshots();
     expect(updates).toMatchSnapshots(Snapshots.CallbackOrder);
