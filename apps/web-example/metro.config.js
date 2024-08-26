@@ -1,4 +1,7 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const {
+  wrapWithReanimatedMetroConfig,
+} = require('react-native-reanimated/metro-config');
 
 const path = require('path');
 const exclusionList = require('metro-config/src/defaults/exclusionList');
@@ -27,4 +30,4 @@ config.resolver.blacklistRE = exclusionList(
   )
 );
 
-module.exports = config;
+module.exports = wrapWithReanimatedMetroConfig(config);

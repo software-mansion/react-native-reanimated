@@ -17,14 +17,14 @@ jobs:
         mode: ['Debug', 'Release']
         # TODO: Fetch compatibility in docs and here from common sources.
         # Update it when dropping support for RN versions.
-        react-native: [
+        react-native:
+          [
             { version: '0.72', architecture: 'Paper' },
             { version: '0.73', architecture: 'Paper' },
             { version: '0.74', architecture: 'Paper' },
             { version: '0.74', architecture: 'Fabric' },
-            # TODO: RN CLI currently struggles with setting 0.75 templates.
-            # { version: '0.75', architecture: 'Paper' },
-            # { version: '0.75', architecture: 'Fabric' },
+            { version: '0.75', architecture: 'Paper' },
+            { version: '0.75', architecture: 'Fabric' },
           ]
       fail-fast: false
     env:
