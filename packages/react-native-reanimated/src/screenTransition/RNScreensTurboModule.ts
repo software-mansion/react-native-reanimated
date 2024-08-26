@@ -1,5 +1,4 @@
 'use strict';
-
 import type { RNScreensTurboModuleType } from './commonTypes';
 
 import { logger } from '../logger';
