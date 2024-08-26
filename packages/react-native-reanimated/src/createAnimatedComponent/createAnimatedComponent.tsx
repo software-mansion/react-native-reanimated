@@ -52,6 +52,7 @@ import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
 import { getViewInfo } from './getViewInfo';
 import { NativeEventsManager } from './NativeEventsManager';
 import type { ReanimatedHTMLElement } from '../js-reanimated';
+import { ReanimatedError } from '../errors';
 
 const IS_WEB = isWeb();
 const IS_JEST = isJest();
@@ -301,8 +302,8 @@ export function createAnimatedComponent(
         // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
         const hostInstance = RNRenderer.findHostInstance_DEPRECATED(component);
         if (!hostInstance) {
-          throw new Error(
-            '[Reanimated] Cannot find host instance for this component. Maybe it renders nothing?'
+          throw new ReanimatedError(
+            'Cannot find host instance for this component. Maybe it renders nothing?'
           );
         }
 

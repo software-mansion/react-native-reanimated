@@ -13,6 +13,7 @@ import { makeMutable } from './core';
 import { Extrapolation, interpolate } from './interpolation';
 import type { SharedValue } from './commonTypes';
 import { useSharedValue } from './hook/useSharedValue';
+import { ReanimatedError } from './errors';
 
 /**
  * @deprecated Please use Extrapolation instead
@@ -236,8 +237,8 @@ export function interpolateColor(
       options
     );
   }
-  throw new Error(
-    `[Reanimated] Invalid color space provided: ${
+  throw new ReanimatedError(
+    `Invalid color space provided: ${
       colorSpace as string
     }. Supported values are: ['RGB', 'HSV'].`
   );
