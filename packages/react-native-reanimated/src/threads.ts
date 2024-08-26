@@ -89,7 +89,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
     );
   }
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
-    throw new ReanimatedError('`runOnUI` can only be used on worklets.');
+    throw new ReanimatedError('`runOnUI` can only be used with worklets.');
   }
   return (...args) => {
     if (IS_JEST) {
