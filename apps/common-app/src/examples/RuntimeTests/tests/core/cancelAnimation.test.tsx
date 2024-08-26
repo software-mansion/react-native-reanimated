@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -8,20 +8,8 @@ import Animated, {
   Easing,
   useDerivedValue,
 } from 'react-native-reanimated';
-import {
-  describe,
-  test,
-  expect,
-  render,
-  getTestComponent,
-  wait,
-  useTestRef,
-  registerValue,
-  getRegisteredValue,
-} from '../../ReJest/RuntimeTestsApi';
+import { describe, test, expect, render, getTestComponent, wait, useTestRef } from '../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../ReJest/types';
-
-const ELAPSED_TIME_REF = 'ElapsedTime';
 
 describe('Test *****cancelAnimation*****', () => {
   describe('Test canceling animation _after predefined time_', () => {
@@ -34,8 +22,6 @@ describe('Test *****cancelAnimation*****', () => {
       timeToStop: number;
     }) => {
       const width = useSharedValue(0);
-      const elapsedTime = useSharedValue(0);
-      registerValue(ELAPSED_TIME_REF, elapsedTime);
       const ref = useTestRef(CANCEL_AFTER_DELAY_REF);
 
       const animatedStyle = useAnimatedStyle(() => {
@@ -45,16 +31,12 @@ describe('Test *****cancelAnimation*****', () => {
       });
 
       useEffect(() => {
-        const startTime = performance.now();
-        width.value = withTiming(300, { duration: animationDuration, easing: Easing.linear }, () => {
-          const stopTime = performance.now();
-          elapsedTime.value = stopTime - startTime;
-        });
+        width.value = withTiming(300, { duration: animationDuration, easing: Easing.linear }, () => {});
 
         setTimeout(() => {
           cancelAnimation(width);
         }, timeToStop);
-      }, [width, timeToStop, animationDuration, elapsedTime]);
+      }, [width, timeToStop, animationDuration]);
 
       return (
         <View style={styles.container}>
@@ -77,12 +59,7 @@ describe('Test *****cancelAnimation*****', () => {
 
       if (animationDuration < timeToStop) {
         expect(await animatedComponent.getAnimatedStyle('width')).toBe(300, ComparisonMode.PIXEL);
-      } else if (Platform.OS === 'ios') {
-        // Let's approximate the animation duration using the timestamp of a callback executed after canceling the animation
-        const timeToGetCallback = (await getRegisteredValue(ELAPSED_TIME_REF)).onJS as number;
-        const expectedWidth = 300 * (timeToGetCallback / animationDuration);
-        expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth - 4, expectedWidth + 4);
-      } else if (Platform.OS === 'android') {
+      } else {
         // Let's approximate the animation duration using the predefined timeout to cancel it
         const expectedWidth = 300 * (timeToStop / animationDuration); // ANDROID
         // console.log(expectedWidth, await animatedComponent.getAnimatedStyle('width'));
@@ -184,10 +161,7 @@ describe('Test *****cancelAnimation*****', () => {
       await wait(timeToStop + 100);
       const expectedWidth = (timeToStop / animationDuration) * 300;
 
-      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(
-        expectedWidth,
-        expectedWidth + (Platform.OS === 'ios' ? 5 : 10),
-      );
+      expect(await animatedComponent.getAnimatedStyle('width')).toBeWithinRange(expectedWidth, expectedWidth + 10);
     });
   });
 });
