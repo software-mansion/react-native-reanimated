@@ -176,7 +176,7 @@ export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
   }
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
     throw new ReanimatedError(
-      '`runOnUIImmediately` can only be used on worklets.'
+      '`runOnUIImmediately` can only be used with worklets.'
     );
   }
   return (...args) => {
