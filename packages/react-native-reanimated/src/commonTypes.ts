@@ -30,6 +30,16 @@ export interface SharedValue<Value = unknown> {
   ) => void;
 }
 
+/**
+ * Due to pattern of `MaybeSharedValue` type present in `AnimatedProps` (`AnimatedStyle`), contravariance breaks types
+ * for animated styles etc. Instead of refactoring the code with small chances of success,
+ * we just disable contravariance for `SharedValue` in this problematic case.
+ */
+type SharedValueDisableContravariance<Value = unknown> = Omit<
+  SharedValue<Value>,
+  'get' | 'set'
+>;
+
 export interface Mutable<Value = unknown> extends SharedValue<Value> {
   _isReanimatedSharedValue: true;
   _animation?: AnimationObject<Value> | null; // only in Native
@@ -329,13 +339,17 @@ export type TransformArrayItem = Extract<
 
 type MaybeSharedValue<Value> =
   | Value
-  | (Value extends AnimatableValue ? SharedValue<Value> : never);
+  | (Value extends AnimatableValue
+      ? SharedValueDisableContravariance<Value>
+      : never);
 
 type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
-  ? SharedValue<Item[]> | (MaybeSharedValueRecursive<Item> | Item)[]
+  ?
+      | SharedValueDisableContravariance<Item[]>
+      | (MaybeSharedValueRecursive<Item> | Item)[]
   : Value extends object
   ?
-      | SharedValue<Value>
+      | SharedValueDisableContravariance<Value>
       | {
           [Key in keyof Value]:
             | MaybeSharedValueRecursive<Value[Key]>
