@@ -21,8 +21,8 @@ const ReanimatedErrorConstructor: ReanimatedErrorConstructor =
 export { ReanimatedErrorConstructor as ReanimatedError };
 
 /**
- * Registers ReanimatedError constructor in global scope.
- * Used to add ReanimatedError in the worklet runtime.
+ * Registers `ReanimatedError` in global scope.
+ * Use it only for Worklet runtimes.
  */
 export function registerReanimatedError() {
   'worklet';
