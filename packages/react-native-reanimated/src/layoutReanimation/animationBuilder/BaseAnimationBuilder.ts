@@ -8,6 +8,7 @@ import type {
 
 import { ReduceMotion } from '../../commonTypes';
 import { getReduceMotionFromConfig } from '../../animation/util';
+import { ReanimatedError } from '../../errors';
 
 export class BaseAnimationBuilder {
   durationV?: number;

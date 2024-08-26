@@ -7,7 +7,7 @@ import type {
   WorkletFunction,
 } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
-import { registerWorkletStackDetails } from './errors';
+import { ReanimatedError, registerWorkletStackDetails } from './errors';
 import { jsVersion } from './platform-specific/jsVersion';
 import {
   shareableMappingCache,

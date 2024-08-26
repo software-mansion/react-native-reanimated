@@ -1,4 +1,5 @@
 'use strict';
+import { ReanimatedError } from './errors';
 import { isFabric } from './PlatformChecker';
 import { runOnUI } from './threads';
 

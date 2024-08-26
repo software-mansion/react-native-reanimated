@@ -11,6 +11,7 @@ import type { WebSensor } from './WebSensor';
 import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
 import type { WorkletRuntime } from '../runtimes';
 import { logger } from '../logger';
+import { ReanimatedError } from '../errors';
 
 // In Node.js environments (like when static rendering with Expo Router)
 // requestAnimationFrame is unavailable, so we use our mock.

@@ -1,5 +1,7 @@
 'use strict';
 
+import { ReanimatedError } from './errors';
+
 /**
  * Extrapolation type.
  *

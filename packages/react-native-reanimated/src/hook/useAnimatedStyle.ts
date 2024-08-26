@@ -34,6 +34,7 @@ import type {
   AnimatedStyle,
 } from '../commonTypes';
 import { isWorkletFunction } from '../commonTypes';
+import { ReanimatedError } from '../errors';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

@@ -14,6 +14,7 @@ import type React from 'react';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { LayoutAnimationBatchItem } from '../layoutReanimation/animationBuilder/commonTypes';
 import ReanimatedModule from '../specs/NativeReanimatedModule';
+import { ReanimatedError } from '../errors';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {

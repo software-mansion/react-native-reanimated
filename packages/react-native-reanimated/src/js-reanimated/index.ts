@@ -8,6 +8,7 @@ import {
 } from './webUtils';
 import { PropsAllowlists } from '../propsAllowlists';
 import { logger } from '../logger';
+import { ReanimatedError } from '../errors';
 
 const reanimatedJS = new JSReanimated();
 

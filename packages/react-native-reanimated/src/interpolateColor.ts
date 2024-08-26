@@ -13,6 +13,7 @@ import { makeMutable } from './core';
 import { Extrapolation, interpolate } from './interpolation';
 import type { SharedValue } from './commonTypes';
 import { useSharedValue } from './hook/useSharedValue';
+import { ReanimatedError } from './errors';
 
 /**
  * @deprecated Please use Extrapolation instead

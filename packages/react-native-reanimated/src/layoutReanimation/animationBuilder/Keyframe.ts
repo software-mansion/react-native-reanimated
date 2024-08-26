@@ -18,6 +18,7 @@ import {
   assertEasingIsWorklet,
   getReduceMotionFromConfig,
 } from '../../animation/util';
+import { ReanimatedError } from '../../errors';
 
 interface KeyframePoint {
   duration: number;

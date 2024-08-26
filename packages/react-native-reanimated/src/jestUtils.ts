@@ -9,6 +9,7 @@ import type {
 } from './createAnimatedComponent/commonTypes';
 import { isJest } from './PlatformChecker';
 import type { DefaultStyle } from './hook/commonTypes';
+import { ReanimatedError } from './errors';
 
 declare global {
   namespace jest {

@@ -14,6 +14,7 @@ import type {
   InnerDecayAnimation,
 } from './utils';
 import { rigidDecay } from './rigidDecay';
+import { ReanimatedError } from '../../errors';
 
 export type WithDecayConfig = DecayConfig;
 

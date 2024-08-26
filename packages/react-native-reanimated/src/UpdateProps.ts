@@ -13,6 +13,7 @@ import type { ReanimatedHTMLElement } from './js-reanimated';
 import { _updatePropsJS } from './js-reanimated';
 import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
 import { runOnUIImmediately } from './threads';
+import { ReanimatedError } from './errors';
 
 let updateProps: (
   viewDescriptor: SharedValue<Descriptor[]>,

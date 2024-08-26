@@ -13,6 +13,7 @@ import { makeShareableCloneRecursive } from './shareables';
 import { initializeUIRuntime } from './initializers';
 import type { LayoutAnimationBatchItem } from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
+import { ReanimatedError } from './errors';
 
 export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';

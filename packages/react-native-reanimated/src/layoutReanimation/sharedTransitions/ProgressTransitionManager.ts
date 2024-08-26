@@ -7,6 +7,7 @@ import type {
 import { registerEventHandler, unregisterEventHandler } from '../../core';
 import { Platform } from 'react-native';
 import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
+import { ReanimatedError } from '../../errors';
 
 type TransitionProgressEvent = {
   closing: number;

@@ -7,6 +7,7 @@ import { setElementPosition, snapshots } from './componentStyle';
 import { Animations } from './config';
 import type { AnimationNames } from './config';
 import { logger } from '../../logger';
+import { ReanimatedError } from '../../errors';
 
 const PREDEFINED_WEB_ANIMATIONS_ID = 'ReanimatedPredefinedWebAnimationsStyle';
 const CUSTOM_WEB_ANIMATIONS_ID = 'ReanimatedCustomWebAnimationsStyle';

@@ -16,6 +16,7 @@ import { ReduceMotion } from '../../commonTypes';
 import { ProgressTransitionManager } from './ProgressTransitionManager';
 import { updateLayoutAnimations } from '../../UpdateLayoutAnimations';
 import { getReduceMotionFromConfig } from '../../animation/util';
+import { ReanimatedError } from '../../errors';
 
 const SUPPORTED_PROPS = [
   'width',
