@@ -107,6 +107,7 @@ describe('Compare a sequence of three delays, with one delay of their sum', () =
     const updatesNative = await updatesContainer.getNativeSnapshots(getTestComponent(componentType));
     updatesNative.forEach(update => {
       if ('width' in update && update.width === '[Reanimated] Unable to resolve view') {
+        // We use this hack because component with inline props gets mounted a bit later
         update.width = 0;
       }
     });
