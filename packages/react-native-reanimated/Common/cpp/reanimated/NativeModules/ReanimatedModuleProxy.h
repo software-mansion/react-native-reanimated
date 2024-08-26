@@ -109,6 +109,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 
   void performOperations();
 
+  void maybeRunCssAnimationsLoop();
+
   void dispatchCommand(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeValue,
