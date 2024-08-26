@@ -628,10 +628,11 @@ void ReanimatedModuleProxy::performOperations() {
           state = CSSAnimationState::finished;
           progress = 1;
         }
-        jsi::Runtime &rt = workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+        jsi::Runtime &rt =
+            workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
         jsi::Object updates(rt);
         const auto easingFunction =
-            config["animationTimingFunction"].asString() == "ease-in-out"
+            config["animationTimingFunction"].asString() == "ease-in-out-back"
             ? easeInOutBack
             : linear;
         for (auto &pair : config["animationName"]["from"].items()) {
