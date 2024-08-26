@@ -29,7 +29,7 @@ export function registerReanimatedError() {
   const ReanimatedError = ReanimatedErrorConstructor;
   if (!_WORKLET) {
     throw new ReanimatedError(
-      'registerReanimatedError() must be called in a worklet runtime'
+      'registerReanimatedError() must be called on Worklet runtime'
     );
   }
   (global as Record<string, unknown>).ReanimatedError = ReanimatedError;
