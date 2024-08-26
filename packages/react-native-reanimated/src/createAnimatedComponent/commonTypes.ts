@@ -105,6 +105,7 @@ export interface IAnimatedComponentInternal {
    */
   _componentViewTag: number;
   _isFirstRender: boolean;
+  jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
   _component: AnimatedComponentRef | HTMLElement | null;
   _sharedElementTransition: SharedTransition | null;
