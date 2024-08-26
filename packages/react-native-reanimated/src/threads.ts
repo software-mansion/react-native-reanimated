@@ -265,7 +265,7 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
 }
 
 // Override the logFunction implementation with the one that adds logs
-// with better stack traces to the LogBox (need to override it after runOnJS
+// with better stack traces to the LogBox (need to override it after `runOnJS`
 // is defined).
 replaceLoggerImplementation((data: LogData) => {
   'worklet';
