@@ -13,6 +13,7 @@ import type {
 } from '../hook/commonTypes';
 import type { Component } from 'react';
 import { processColorsInProps } from '../Colors';
+import { logger } from '../logger';
 
 type SetNativeProps = <T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -33,9 +34,7 @@ function setNativePropsFabric(
 ) {
   'worklet';
   if (!_WORKLET) {
-    console.warn(
-      '[Reanimated] setNativeProps() can only be used on the UI runtime.'
-    );
+    logger.warn('setNativeProps() can only be used on the UI runtime.');
     return;
   }
   const shadowNodeWrapper = animatedRef() as ShadowNodeWrapper;
@@ -49,9 +48,7 @@ function setNativePropsPaper(
 ) {
   'worklet';
   if (!_WORKLET) {
-    console.warn(
-      '[Reanimated] setNativeProps() can only be used on the UI runtime.'
-    );
+    logger.warn('setNativeProps() can only be used on the UI runtime.');
     return;
   }
   const tag = animatedRef() as number;
@@ -61,19 +58,15 @@ function setNativePropsPaper(
 }
 
 function setNativePropsJest() {
-  console.warn('[Reanimated] setNativeProps() is not supported with Jest.');
+  logger.warn('setNativeProps() is not supported with Jest.');
 }
 
 function setNativePropsChromeDebugger() {
-  console.warn(
-    '[Reanimated] setNativeProps() is not supported with Chrome Debugger.'
-  );
+  logger.warn('setNativeProps() is not supported with Chrome Debugger.');
 }
 
 function setNativePropsDefault() {
-  console.warn(
-    '[Reanimated] setNativeProps() is not supported on this configuration.'
-  );
+  logger.warn('setNativeProps() is not supported on this configuration.');
 }
 
 if (!shouldBeUseWeb()) {

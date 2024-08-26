@@ -23,6 +23,7 @@ import { Keyframe } from '../animationBuilder';
 import { ReducedMotionManager } from '../../ReducedMotion';
 import { prepareCurvedTransition } from './transition/Curved.web';
 import { EasingNameSymbol } from '../../Easing';
+import { logger } from '../../logger';
 
 function getEasingFromConfig(config: CustomConfig): string {
   if (!config.easingV) {
@@ -32,9 +33,7 @@ function getEasingFromConfig(config: CustomConfig): string {
   const easingName = config.easingV[EasingNameSymbol];
 
   if (!(easingName in WebEasings)) {
-    console.warn(
-      `[Reanimated] Selected easing is not currently supported on web.`
-    );
+    logger.warn(`Selected easing is not currently supported on web.`);
 
     return getEasingByName('linear');
   }

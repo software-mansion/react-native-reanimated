@@ -7,7 +7,8 @@ import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { makeShareableCloneRecursive } from '../shareables';
 import { shareableMappingCache } from '../shareableMappingCache';
-import { Platform, findNodeHandle } from 'react-native';
+import { Platform } from 'react-native';
+import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import type { ScrollView, FlatList } from 'react-native';
 import { isFabric, isWeb } from '../PlatformChecker';
 

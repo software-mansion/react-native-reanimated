@@ -2,6 +2,7 @@ import com.android.Version
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonSlurper
+import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 
 import javax.inject.Inject
 import java.nio.file.Files
@@ -409,6 +410,22 @@ android {
             }
         }
     }
+    tasks.withType(ExternalNativeBuildJsonTask) {
+        compileTask ->
+            compileTask.doLast {
+                if (!isReanimatedExampleApp()) {
+                    return
+                }
+                def monorepoDir = new File("${project.projectDir}/../../..")
+
+                def generated = new File("${compileTask.abi.getCxxBuildFolder()}/compile_commands.json")
+                def output = new File("${monorepoDir}/compile_commands.json")
+
+                output.text = generated.text
+
+                println("Generated clangd metadata.")
+            }
+    }
 }
 
 def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWithNewArchitectureTask {
@@ -430,11 +447,13 @@ def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
 }
 
 task prepareHeadersForPrefab(type: Copy) {
-    from("$projectDir/src/main/cpp")
+    from("$projectDir/src/main/cpp/reanimated")
     from("$projectDir/../Common/cpp/reanimated/AnimatedSensor")
     from("$projectDir/../Common/cpp/reanimated/Fabric")
     from("$projectDir/../Common/cpp/reanimated/LayoutAnimations")
     from("$projectDir/../Common/cpp/reanimated/NativeModules")
+    from("$projectDir/../Common/cpp/reanimated/RuntimeDecorators")
+    from("$projectDir/../Common/cpp/reanimated/Tools")
     from("$projectDir/../Common/cpp/worklets/Registries")
     from("$projectDir/../Common/cpp/worklets/SharedItems")
     from("$projectDir/../Common/cpp/worklets/Tools")

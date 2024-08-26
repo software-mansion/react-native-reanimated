@@ -1,32 +1,19 @@
 import type { Component, MutableRefObject, ReactElement } from 'react';
 import { useRef } from 'react';
-import type { BuildFunction, TestCase, TestConfiguration, TestSuite, TestValue, TrackerCallCount } from '../types';
+import type { BuildFunction, TestCase, TestConfiguration, TestSuite, TestValue } from '../types';
 import { DescribeDecorator, TestDecorator } from '../types';
 import { TestComponent } from '../TestComponent';
 import { applyMarkdown, formatTestName } from '../utils/stringFormatUtils';
 import { Matchers } from '../matchers/Matchers';
-import { assertMockedAnimationTimestamp, assertTestCase, assertTestSuite } from './Asserts';
-import { makeMutable, runOnJS } from 'react-native-reanimated';
-import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
+import { assertTestCase, assertTestSuite } from './Asserts';
+import { RenderLock } from '../utils/SyncUIRunner';
 import { ValueRegistry } from './ValueRegistry';
 import { TestSummaryLogger } from './TestSummaryLogger';
 import { WindowDimensionsMocker } from './WindowDimensionsMocker';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
+import { CallTrackerRegistry } from './CallTrackerRegistry';
+import { NotificationRegistry } from './NotificationRegistry';
 export { Presets } from '../Presets';
-
-let callTrackerRegistryJS: Record<string, number> = {};
-const callTrackerRegistryUI = makeMutable<Record<string, number>>({});
-function callTrackerJS(name: string) {
-  if (!callTrackerRegistryJS[name]) {
-    callTrackerRegistryJS[name] = 0;
-  }
-  callTrackerRegistryJS[name]++;
-}
-
-const notificationRegistry: Record<string, boolean> = {};
-function notifyJS(name: string) {
-  notificationRegistry[name] = true;
-}
 
 export class TestRunner {
   private _testSuites: TestSuite[] = [];
@@ -34,12 +21,13 @@ export class TestRunner {
   private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
   private _includesOnly: boolean = false;
-  private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
   private _testSummary: TestSummaryLogger = new TestSummaryLogger();
   private _windowDimensionsMocker: WindowDimensionsMocker = new WindowDimensionsMocker();
   private _animationRecorder = new AnimationUpdatesRecorder();
   private _valueRegistry = new ValueRegistry();
+  private _callTrackerRegistry = new CallTrackerRegistry();
+  private _notificationRegistry = new NotificationRegistry();
 
   public getWindowDimensionsMocker() {
     return this._windowDimensionsMocker;
@@ -53,24 +41,12 @@ export class TestRunner {
     return this._valueRegistry;
   }
 
-  public notify(name: string) {
-    'worklet';
-    if (_WORKLET) {
-      runOnJS(notifyJS)(name);
-    } else {
-      notifyJS(name);
-    }
+  public getCallTrackerRegistry() {
+    return this._callTrackerRegistry;
   }
 
-  public async waitForNotify(name: string) {
-    return new Promise(resolve => {
-      const interval = setInterval(() => {
-        if (notificationRegistry[name]) {
-          clearInterval(interval);
-          resolve(true);
-        }
-      }, 10);
-    });
+  public getNotificationRegistry() {
+    return this._notificationRegistry;
   }
 
   public configure(config: TestConfiguration) {
@@ -130,7 +106,7 @@ export class TestRunner {
     });
   }
 
-  public test(name: string, run: BuildFunction, decorator: TestDecorator | null, warningMessage = '') {
+  public test(name: string, run: BuildFunction, decorator: TestDecorator | null) {
     assertTestSuite(this._currentTestSuite);
     if (decorator === TestDecorator.ONLY) {
       this._includesOnly = true;
@@ -143,24 +119,7 @@ export class TestRunner {
       errors: [],
       skip: decorator === TestDecorator.SKIP || this._currentTestSuite.decorator === DescribeDecorator.SKIP,
       decorator,
-      warningMessage,
     });
-  }
-
-  public testEachErrorMsg<T>(examples: Array<T>, decorator: TestDecorator) {
-    return (name: string, expectedWarning: string, testCase: (example: T, index: number) => void | Promise<void>) => {
-      examples.forEach((example, index) => {
-        const currentTestCase = async () => {
-          await testCase(example, index);
-        };
-        this.test(
-          formatTestName(name, example, index),
-          currentTestCase,
-          decorator,
-          formatTestName(expectedWarning, example, index),
-        );
-      });
-    };
   }
 
   public testEach<T>(examples: Array<T>, decorator: TestDecorator | null) {
@@ -180,27 +139,6 @@ export class TestRunner {
     assertTestCase(this._currentTestCase);
     this._currentTestCase.componentsRefs[name] = ref;
     return ref;
-  }
-
-  public callTracker(name: string) {
-    'worklet';
-    if (_WORKLET) {
-      if (!callTrackerRegistryUI.value[name]) {
-        callTrackerRegistryUI.value[name] = 0;
-      }
-      callTrackerRegistryUI.value[name]++;
-      callTrackerRegistryUI.value = { ...callTrackerRegistryUI.value };
-    } else {
-      callTrackerJS(name);
-    }
-  }
-
-  public getTrackerCallCount(name: string): TrackerCallCount {
-    return {
-      name,
-      onJS: callTrackerRegistryJS[name] ?? 0,
-      onUI: callTrackerRegistryUI.value[name] ?? 0,
-    };
   }
 
   public getTestComponent(name: string): TestComponent {
@@ -271,22 +209,13 @@ export class TestRunner {
   }
 
   private async runTestCase(testSuite: TestSuite, testCase: TestCase) {
-    callTrackerRegistryUI.value = {};
-    callTrackerRegistryJS = {};
+    this._callTrackerRegistry.resetRegistry();
     this._currentTestCase = testCase;
 
     if (testSuite.beforeEach) {
       await testSuite.beforeEach();
     }
-
-    if (testCase.decorator === TestDecorator.FAILING || testCase.decorator === TestDecorator.WARN) {
-      const [restoreConsole, checkErrors] = await this.mockConsole(testCase);
-      await testCase.run();
-      await restoreConsole();
-      checkErrors();
-    } else {
-      await testCase.run();
-    }
+    await testCase.run();
 
     this._testSummary.showTestCaseSummary(testCase, testSuite.nestingLevel);
 
@@ -323,80 +252,5 @@ export class TestRunner {
   public afterEach(job: () => void) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterEach = job;
-  }
-
-  public wait(delay: number) {
-    return new Promise(resolve => {
-      setTimeout(resolve, delay);
-    });
-  }
-
-  public waitForAnimationUpdates(updatesCount: number): Promise<boolean> {
-    const CHECK_INTERVAL = 20;
-    const flag = makeMutable(false);
-    return new Promise<boolean>(resolve => {
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      const interval = setInterval(async () => {
-        await new SyncUIRunner().runOnUIBlocking(() => {
-          'worklet';
-          assertMockedAnimationTimestamp(global.framesCount);
-          flag.value = global.framesCount >= updatesCount - 1;
-        });
-        if (flag.value) {
-          clearInterval(interval);
-          resolve(true);
-        }
-      }, CHECK_INTERVAL);
-    });
-  }
-
-  private async mockConsole(testCase: TestCase): Promise<[() => Promise<void>, () => void]> {
-    const counterUI = makeMutable(0);
-    let counterJS = 0;
-    const recordedMessage = makeMutable('');
-
-    const originalError = console.error;
-    const originalWarning = console.warn;
-
-    const incrementJS = () => {
-      counterJS++;
-    };
-    const mockedConsoleFunction = (message: string) => {
-      'worklet';
-      if (_WORKLET) {
-        counterUI.value++;
-      } else {
-        incrementJS();
-      }
-      recordedMessage.value = message.split('\n\nThis error is located at:')[0];
-    };
-    console.error = mockedConsoleFunction;
-    console.warn = mockedConsoleFunction;
-    await this._syncUIRunner.runOnUIBlocking(() => {
-      'worklet';
-      console.error = mockedConsoleFunction;
-      console.warn = mockedConsoleFunction;
-    });
-
-    const restoreConsole = async () => {
-      console.error = originalError;
-      console.warn = originalWarning;
-      await this._syncUIRunner.runOnUIBlocking(() => {
-        'worklet';
-        console.error = originalError;
-        console.warn = originalWarning;
-      });
-    };
-
-    const checkErrors = () => {
-      if (testCase.decorator !== TestDecorator.WARN && testCase.decorator !== TestDecorator.FAILING) {
-        return;
-      }
-      const count = counterUI.value + counterJS;
-      this.expect(count).toBe(1);
-      this.expect(recordedMessage.value).toBe(testCase.warningMessage);
-    };
-
-    return [restoreConsole, checkErrors];
   }
 }

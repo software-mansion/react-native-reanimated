@@ -10,6 +10,8 @@ import { SensorType } from '../commonTypes';
 import type { WebSensor } from './WebSensor';
 import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
 import type { WorkletRuntime } from '../runtimes';
+import { logger } from '../logger';
+import { ReanimatedError } from '../errors';
 
 // In Node.js environments (like when static rendering with Expo Router)
 // requestAnimationFrame is unavailable, so we use our mock.
@@ -25,8 +27,8 @@ export default class JSReanimated {
   platform?: Platform = undefined;
 
   makeShareableClone<T>(): ShareableRef<T> {
-    throw new Error(
-      '[Reanimated] makeShareableClone should never be called in JSReanimated.'
+    throw new ReanimatedError(
+      'makeShareableClone should never be called in JSReanimated.'
     );
   }
 
@@ -39,14 +41,14 @@ export default class JSReanimated {
     _name: string,
     _initializer: ShareableRef<() => void>
   ): WorkletRuntime {
-    throw new Error(
-      '[Reanimated] createWorkletRuntime is not available in JSReanimated.'
+    throw new ReanimatedError(
+      'createWorkletRuntime is not available in JSReanimated.'
     );
   }
 
   scheduleOnRuntime() {
-    throw new Error(
-      '[Reanimated] scheduleOnRuntime is not available in JSReanimated.'
+    throw new ReanimatedError(
+      'scheduleOnRuntime is not available in JSReanimated.'
     );
   }
 
@@ -55,34 +57,26 @@ export default class JSReanimated {
     _eventName: string,
     _emitterReactTag: number
   ): number {
-    throw new Error(
-      '[Reanimated] registerEventHandler is not available in JSReanimated.'
+    throw new ReanimatedError(
+      'registerEventHandler is not available in JSReanimated.'
     );
   }
 
   unregisterEventHandler(_: number): void {
-    throw new Error(
-      '[Reanimated] unregisterEventHandler is not available in JSReanimated.'
+    throw new ReanimatedError(
+      'unregisterEventHandler is not available in JSReanimated.'
     );
   }
 
   enableLayoutAnimations() {
     if (isWeb()) {
-      console.warn(
-        '[Reanimated] Layout Animations are not supported on web yet.'
-      );
+      logger.warn('Layout Animations are not supported on web yet.');
     } else if (isJest()) {
-      console.warn(
-        '[Reanimated] Layout Animations are no-ops when using Jest.'
-      );
+      logger.warn('Layout Animations are no-ops when using Jest.');
     } else if (isChromeDebugger()) {
-      console.warn(
-        '[Reanimated] Layout Animations are no-ops when using Chrome Debugger.'
-      );
+      logger.warn('Layout Animations are no-ops when using Chrome Debugger.');
     } else {
-      console.warn(
-        '[Reanimated] Layout Animations are not supported on this configuration.'
-      );
+      logger.warn('Layout Animations are not supported on this configuration.');
     }
   }
 
@@ -112,8 +106,8 @@ export default class JSReanimated {
 
     if (!(this.getSensorName(sensorType) in window)) {
       // https://w3c.github.io/sensors/#secure-context
-      console.warn(
-        '[Reanimated] Sensor is not available.' +
+      logger.warn(
+        'Sensor is not available.' +
           (isWeb() && location.protocol !== 'https:'
             ? ' Make sure you use secure origin with `npx expo start --web --https`.'
             : '') +
@@ -208,20 +202,16 @@ export default class JSReanimated {
 
   subscribeForKeyboardEvents(_: ShareableRef<number>): number {
     if (isWeb()) {
-      console.warn(
-        '[Reanimated] useAnimatedKeyboard is not available on web yet.'
-      );
+      logger.warn('useAnimatedKeyboard is not available on web yet.');
     } else if (isJest()) {
-      console.warn(
-        '[Reanimated] useAnimatedKeyboard is not available when using Jest.'
-      );
+      logger.warn('useAnimatedKeyboard is not available when using Jest.');
     } else if (isChromeDebugger()) {
-      console.warn(
-        '[Reanimated] useAnimatedKeyboard is not available when using Chrome Debugger.'
+      logger.warn(
+        'useAnimatedKeyboard is not available when using Chrome Debugger.'
       );
     } else {
-      console.warn(
-        '[Reanimated] useAnimatedKeyboard is not available on this configuration.'
+      logger.warn(
+        'useAnimatedKeyboard is not available on this configuration.'
       );
     }
     return -1;
@@ -284,20 +274,18 @@ export default class JSReanimated {
     _component?: React.Component,
     _callback?: (result: T) => void
   ): Promise<T> {
-    throw new Error(
-      '[Reanimated] getViewProp is not available in JSReanimated.'
-    );
+    throw new ReanimatedError('getViewProp is not available in JSReanimated.');
   }
 
   configureProps() {
-    throw new Error(
-      '[Reanimated] configureProps is not available in JSReanimated.'
+    throw new ReanimatedError(
+      'configureProps is not available in JSReanimated.'
     );
   }
 
   executeOnUIRuntimeSync<T, R>(_shareable: ShareableRef<T>): R {
-    throw new Error(
-      '[Reanimated] `executeOnUIRuntimeSync` is not available in JSReanimated.'
+    throw new ReanimatedError(
+      '`executeOnUIRuntimeSync` is not available in JSReanimated.'
     );
   }
 }

@@ -143,6 +143,7 @@
 				514201472437B4B30078DB4F /* Resources */,
 				381D8A6E24576A4E00465D17 /* Bundle React Native code and images */,
 				770DF54D9AC45C8966298BFA /* [CP] Copy Pods Resources */,
+				0C2EB78AE5F2832F6C1500D6 /* [CP-User] Generate metadata for clangd */,
 			);
 			buildRules = (
 			);
@@ -222,6 +223,17 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "export NODE_BINARY=node\n../node_modules/react-native-macos/scripts/react-native-xcode.sh\n";
+		};
+		0C2EB78AE5F2832F6C1500D6 /* [CP-User] Generate metadata for clangd */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = true;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "[CP-User] Generate metadata for clangd";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "../../../packages/react-native-reanimated/scripts/clangd-generate-xcode-metadata.sh";
 		};
 		1A938104A937498D81B3BD3B /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;

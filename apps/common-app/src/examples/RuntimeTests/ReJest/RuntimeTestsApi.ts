@@ -11,18 +11,15 @@ const testRunner = new TestRunner();
 const windowDimensionsMocker = testRunner.getWindowDimensionsMocker();
 const animationRecorder = testRunner.getAnimationUpdatesRecorder();
 const valueRegistry = testRunner.getValueRegistry();
+const callTrackerRegistry = testRunner.getCallTrackerRegistry();
+const notificationRegistry = testRunner.getNotificationRegistry();
 
 type DescribeFunction = (name: string, buildSuite: BuildFunction) => void;
 type TestFunction = (name: string, buildTest: BuildFunction) => void;
-type TestFunctionWithWarning = (name: string, warningMessage: string, buildTest: BuildFunction) => void;
 type TestEachFunction = <T>(
   examples: Array<T>,
 ) => (name: string, testCase: (example: T, index: number) => void | Promise<void>) => void;
-type TestEachFunctionWithWarning = <T>(
-  examples: Array<T>,
-) => (name: string, expectedWarning: string, testCase: (example: T, index: number) => void | Promise<void>) => void;
 type DecoratedTestFunction = TestFunction & { each: TestEachFunction };
-type DecoratedTestFunctionWithWarning = TestFunctionWithWarning & { each: TestEachFunctionWithWarning };
 
 const describeBasic = (name: string, buildSuite: BuildFunction) => {
   testRunner.describe(name, buildSuite, null);
@@ -54,32 +51,12 @@ const testOnly: DecoratedTestFunction = (name: string, testCase: BuildFunction) 
 testOnly.each = <T>(examples: Array<T>) => {
   return testRunner.testEach(examples, TestDecorator.ONLY);
 };
-const testFailing: DecoratedTestFunctionWithWarning = (
-  name: string,
-  expectedWarning: string,
-  testCase: BuildFunction,
-) => {
-  testRunner.test(name, testCase, TestDecorator.FAILING, expectedWarning);
-};
-testFailing.each = <T>(examples: Array<T>) => {
-  return testRunner.testEachErrorMsg(examples, TestDecorator.FAILING);
-};
-const testWarn: DecoratedTestFunctionWithWarning = (name: string, expectedWarning: string, testCase: BuildFunction) => {
-  testRunner.test(name, testCase, TestDecorator.WARN, expectedWarning);
-};
-testWarn.each = <T>(examples: Array<T>) => {
-  return testRunner.testEachErrorMsg(examples, TestDecorator.WARN);
-};
 
-type TestType = DecoratedTestFunction &
-  Record<TestDecorator.SKIP | TestDecorator.ONLY, DecoratedTestFunction> &
-  Record<TestDecorator.FAILING | TestDecorator.WARN, DecoratedTestFunctionWithWarning>;
+type TestType = DecoratedTestFunction & Record<TestDecorator.SKIP | TestDecorator.ONLY, DecoratedTestFunction>;
 
 export const test = <TestType>testBasic;
 test.skip = testSkip;
 test.only = testOnly;
-test.failing = testFailing;
-test.warn = testWarn;
 
 export function beforeAll(job: () => void) {
   testRunner.beforeAll(job);
@@ -110,7 +87,7 @@ export function useTestRef(name: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
-const testRunnerCallTrackerFn = testRunner.callTracker;
+const testRunnerCallTrackerFn = callTrackerRegistry.callTracker;
 export function callTracker(name: string) {
   'worklet';
   return testRunnerCallTrackerFn(name);
@@ -125,7 +102,7 @@ export function callTrackerFn(name: string) {
 }
 
 export function getTrackerCallCount(name: string) {
-  return testRunner.getTrackerCallCount(name);
+  return callTrackerRegistry.getTrackerCallCount(name);
 }
 
 export function registerValue(name: string, value: SharedValue) {
@@ -146,22 +123,22 @@ export async function runTests() {
 }
 
 export async function wait(delay: number) {
-  return testRunner.wait(delay);
+  await animationRecorder.wait(delay);
 }
 
 export async function waitForAnimationUpdates(updatesCount: number) {
-  return testRunner.waitForAnimationUpdates(updatesCount);
+  await animationRecorder.waitForAnimationUpdates(updatesCount);
 }
 
 // eslint-disable-next-line @typescript-eslint/unbound-method
-const testRunnerNotifyFn = testRunner.notify;
+const testRunnerNotifyFn = notificationRegistry.notify;
 export function notify(name: string) {
   'worklet';
   return testRunnerNotifyFn(name);
 }
 
 export async function waitForNotify(name: string) {
-  return testRunner.waitForNotify(name);
+  return notificationRegistry.waitForNotify(name);
 }
 
 export function expect(value: TestValue) {
