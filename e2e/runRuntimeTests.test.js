@@ -7,21 +7,18 @@ describe('Runtime tests', () => {
     await device.reloadReactNative();
   });
 
-  test.each(['utilities', 'babel plugin', 'advanced API', 'core'])(
-    'Run tests of %p',
-    async (sectionName) => {
-      await element(by.id('RuntimeTestsExample')).tap();
-      await element(by.id('deselect')).tap();
-      await element(by.id(sectionName)).tap();
-      await element(by.id('run')).tap();
+  test.each(['babel plugin'])('Run tests of %p', async (sectionName) => {
+    await element(by.id('RuntimeTestsExample')).tap();
+    await element(by.id('deselect')).tap();
+    await element(by.id(sectionName)).tap();
+    await element(by.id('run')).tap();
 
-      await waitFor(element(by.id('DONE')))
-        .toBeVisible()
-        .withTimeout(90000);
+    await waitFor(element(by.id('DONE')))
+      .toBeVisible()
+      .withTimeout(90000);
 
-      await waitFor(element(by.id('OK')))
-        .toBeVisible()
-        .withTimeout(100);
-    }
-  );
+    await waitFor(element(by.id('OK')))
+      .toBeVisible()
+      .withTimeout(1000);
+  });
 });

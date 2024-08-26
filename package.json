@@ -15,7 +15,8 @@
     "build": "husky && yarn workspaces foreach -A -p run build",
     "lint": "yarn workspaces foreach -A -p run lint",
     "format": "yarn workspaces foreach -A -p run format",
-    "detox-paper-build": "detox build --configuration ios.sim.debug"
+    "detox-debug-paper-build": "cd apps/paper-example/ios; pod install; cd ../../..; detox build --configuration ios.sim.debug",
+    "detox-debug-paper-test": "detox test --configuration ios.sim.debug"
   },
   "devDependencies": {
     "detox": "^20.25.2",
@@ -27,5 +28,8 @@
   },
   "resolutions": {
     "@react-native/codegen": "0.75.0-rc.6"
+  },
+  "dependencies": {
+    "jest": "^29.7.0"
   }
 }
