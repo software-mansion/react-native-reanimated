@@ -6,7 +6,7 @@ import React from 'react';
 import { Button } from 'react-native';
 import { useSharedValue, useDerivedValue } from '../..';
 
-function UseDerivedValueTest() {
+function UseDerivedValueTestOldAPI() {
   const progress = useSharedValue(0);
   const width = useDerivedValue(() => {
     return progress.value * 250;
@@ -16,4 +16,14 @@ function UseDerivedValueTest() {
   return (
     <Button title="Random" onPress={() => (progress.value = Math.random())} />
   );
+}
+
+function UseDerivedValueTestNewAPI() {
+  const progress = useSharedValue(0);
+  const width = useDerivedValue(() => {
+    return progress.value * 250;
+  });
+  // @ts-expect-error width is readonly
+  width.value = 100;
+  return <Button title="Random" onPress={() => progress.set(Math.random())} />;
 }

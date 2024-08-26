@@ -54,7 +54,7 @@ export type ShareableRef<T = unknown> = {
 };
 
 // In case of objects with depth or arrays of objects or arrays of arrays etc.
-// we add this utility type that makes it a SharaebleRef of the outermost type.
+// we add this utility type that makes it a `SharaebleRef` of the outermost type.
 export type FlatShareableRef<T> = T extends ShareableRef<infer U>
   ? ShareableRef<U>
   : ShareableRef<T>;
@@ -346,7 +346,7 @@ type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
 type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
 
 // Ideally we want AnimatedStyle to not be generic, but there are
-// so many depenedencies on it being generic that it's not feasible at the moment.
+// so many dependencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<Style = DefaultStyle> =
   | Style
   | MaybeSharedValueRecursive<Style>;
