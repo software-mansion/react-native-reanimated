@@ -72,7 +72,17 @@ export class TestSuiteBuilder {
     };
   }
 
-  public setSkipFlags() {
+  public async buildTests() {
+    for (const testSuite of this._testSuites) {
+      this._currentTestSuite = testSuite;
+      await testSuite.buildSuite();
+      this._currentTestSuite = null;
+    }
+
+    this._setSkipFlags();
+  }
+
+  private _setSkipFlags() {
     for (const testSuite of this._testSuites) {
       let skipTestSuite = testSuite.skip;
 

@@ -25,7 +25,7 @@ export class TestRunner {
   private _valueRegistry = new ValueRegistry();
   private _callTrackerRegistry = new CallTrackerRegistry();
   private _notificationRegistry = new NotificationRegistry();
-  private _testSuiteManager = new TestSuiteBuilder();
+  private _testSuiteBuilder = new TestSuiteBuilder();
 
   public getWindowDimensionsMocker() {
     return this._windowDimensionsMocker;
@@ -45,6 +45,10 @@ export class TestRunner {
 
   public getNotificationRegistry() {
     return this._notificationRegistry;
+  }
+
+  public getTestSuiteBuilder() {
+    return this._testSuiteBuilder;
   }
 
   public configure(config: TestConfiguration) {
@@ -88,18 +92,10 @@ export class TestRunner {
 
   public async runTests() {
     console.log('\n');
-
-    for (const testSuite of this._testSuiteManager.getTestSuites()) {
-      this._currentTestSuite = testSuite;
-      await testSuite.buildSuite();
-      this._currentTestSuite = null;
-    }
-    this._testSuiteManager.setSkipFlags();
-
-    for (const testSuite of this._testSuiteManager.getTestSuites()) {
+    await this._testSuiteBuilder.buildTests();
+    for (const testSuite of this._testSuiteBuilder.getTestSuites()) {
       await this.runTestSuite(testSuite);
     }
-
     this._testSummary.printSummary();
   }
 
