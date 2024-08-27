@@ -7,9 +7,7 @@ import {
   makeShareableCloneRecursive,
 } from './shareables';
 import { isWorkletFunction } from './commonTypes';
-import { logger, logToLogBoxAndConsole, updateLoggerConfig } from './logger';
-import { ReanimatedError, registerReanimatedError } from './errors';
-import { shareableMappingCache } from './shareableMappingCache';
+import { ReanimatedError } from './errors';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -257,25 +255,4 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
         : undefined
     );
   };
-}
-
-// Override the logFunction implementation with the one that adds logs
-// with better stack traces to the LogBox (need to override it after `runOnJS`
-// is defined).
-updateLoggerConfig({
-  logFunction(data) {
-    'worklet';
-    runOnJS(logToLogBoxAndConsole)(data);
-  },
-});
-shareableMappingCache.set(logger, makeShareableCloneRecursive(logger));
-
-// Register ReanimatedError and update logger config in the UI global scope.
-// (we are using `executeOnUIRuntimeSync` here to make sure that the changes
-// are applied before any async operations are executed on the UI runtime)
-if (!shouldBeUseWeb()) {
-  // Register ReanimatedError in the UI global scope
-  executeOnUIRuntimeSync(registerReanimatedError)();
-  // Register logger config in the UI global scope
-  executeOnUIRuntimeSync(updateLoggerConfig)();
 }

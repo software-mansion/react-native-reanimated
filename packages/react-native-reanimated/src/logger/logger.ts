@@ -1,6 +1,6 @@
 'use strict';
 import { addLogBoxLog } from './LogBox';
-import type { LogData, LogLevel as LogBoxLogLevel } from './LogBox';
+import type { LogData, LogBoxLogLevel } from './LogBox';
 
 type LogFunction = (data: LogData) => void;
 

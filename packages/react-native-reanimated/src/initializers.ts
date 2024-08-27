@@ -1,17 +1,42 @@
 'use strict';
-import { reportFatalErrorOnJS } from './errors';
+import { registerReanimatedError, reportFatalErrorOnJS } from './errors';
 import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
 import {
   runOnJS,
   setupMicrotasks,
   callMicrotasks,
   runOnUIImmediately,
+  executeOnUIRuntimeSync,
 } from './threads';
 import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
+import { logger, logToLogBoxAndConsole, updateLoggerConfig } from './logger';
+import { makeShareableCloneRecursive } from './shareables';
+import { shareableMappingCache } from './shareableMappingCache';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_CHROME_DEBUGGER = isChromeDebugger();
+
+// Register ReanimatedError and update logger config in the UI global scope.
+// (we are using `executeOnUIRuntimeSync` here to make sure that the changes
+// are applied before any async operations are executed on the UI runtime)
+if (!shouldBeUseWeb()) {
+  // Register ReanimatedError in the UI global scope
+  executeOnUIRuntimeSync(registerReanimatedError)();
+  // Register logger config in the UI global scope
+  executeOnUIRuntimeSync(updateLoggerConfig)();
+}
+
+// Override the logFunction implementation with the one that adds logs
+// with better stack traces to the LogBox (need to override it after `runOnJS`
+// is defined).
+updateLoggerConfig({
+  logFunction(data) {
+    'worklet';
+    runOnJS(logToLogBoxAndConsole)(data);
+  },
+});
+shareableMappingCache.set(logger, makeShareableCloneRecursive(logger));
 
 // callGuard is only used with debug builds
 export function callGuardDEV<Args extends unknown[], ReturnValue>(
