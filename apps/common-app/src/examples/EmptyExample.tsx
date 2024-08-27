@@ -1,4 +1,4 @@
-import { Text, StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import React from 'react';
 import Animated, {
@@ -15,17 +15,19 @@ import Animated, {
   useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
+  configureReanimatedLogger,
+  ReanimatedLogLevel,
   withClamp,
   withSequence,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
-Animated.configureLogger({
-  level: 'error',
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.error,
 });
 
-const SHOW_EXAMPLE: number = 14;
+const SHOW_EXAMPLE: number = 11;
 
 /** [-1]
  * Error: [Reanimated] Property `text` was whitelisted both as UI and native prop. Please remove it from
@@ -249,17 +251,5 @@ const EXAMPLES = [
 ];
 
 export default function EmptyExample() {
-  return (
-    <View style={styles.container}>
-      <Text>Hello world!</Text>
-    </View>
-  );
+  return EXAMPLES[SHOW_EXAMPLE]?.();
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

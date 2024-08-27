@@ -27,7 +27,6 @@ export { ReanimatedFlatList as FlatList } from './component/FlatList';
 export {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
-  configureLogger,
 } from './ConfigHelper';
 /**
  * @deprecated Please import `Extrapolate` directly from `react-native-reanimated` instead of `Animated` namespace.

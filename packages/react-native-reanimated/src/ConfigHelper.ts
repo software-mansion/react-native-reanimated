@@ -54,8 +54,10 @@ export function addWhitelistedUIProps(props: Record<string, boolean>): void {
   }
 }
 
-export function configureLogger(config: LoggerConfig) {
+export function configureReanimatedLogger(config: LoggerConfig) {
+  // Update the configuration object in the React runtime
   updateLoggerConfig(config);
+  // Register the updated configuration in the Worklet runtime
   executeOnUIRuntimeSync(updateLoggerConfig)(config);
 }
 
