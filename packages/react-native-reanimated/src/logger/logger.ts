@@ -133,8 +133,6 @@ function handleLog(
   'worklet';
   const config = __reanimatedLoggerConfig;
 
-  console.log('>>> handleLog', level, message, options, config);
-
   if (
     // Don't log if the log is marked as strict-only and the config doesn't
     // enable strict logging
