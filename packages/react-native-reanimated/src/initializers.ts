@@ -17,6 +17,13 @@ const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_CHROME_DEBUGGER = isChromeDebugger();
 
+// this is for web implementation
+if (SHOULD_BE_USE_WEB) {
+  global._WORKLET = false;
+  global._log = console.log;
+  global._getAnimationTimestamp = () => performance.now();
+}
+
 // Register ReanimatedError and update logger config in the UI global scope.
 // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
 // are applied before any async operations are executed on the UI runtime)
