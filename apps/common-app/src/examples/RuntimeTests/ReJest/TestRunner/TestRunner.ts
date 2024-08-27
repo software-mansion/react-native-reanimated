@@ -1,8 +1,9 @@
-import type { MutableRefObject, Component, ReactElement } from 'react';
+import type { Component, MutableRefObject, ReactElement } from 'react';
 import { useRef } from 'react';
 import type { TestCase, TestConfiguration, TestSuite, TestValue } from '../types';
 import { TestComponent } from '../TestComponent';
 import { Matchers } from '../matchers/Matchers';
+import { assertTestCase, assertTestSuite } from './Asserts';
 import { RenderLock } from '../utils/SyncUIRunner';
 import { ValueRegistry } from './ValueRegistry';
 import { TestSummaryLogger } from './TestSummaryLogger';
@@ -10,11 +11,12 @@ import { WindowDimensionsMocker } from './WindowDimensionsMocker';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
 import { CallTrackerRegistry } from './CallTrackerRegistry';
 import { NotificationRegistry } from './NotificationRegistry';
-import { assertExecutionManager } from './Asserts';
-import { TestSuiteExecutionManager, TestSuitePreExecutionManager } from './TestSuiteManager';
+import { TestSuiteBuilder } from './TestSuiteBuilder';
 export { Presets } from '../Presets';
 
 export class TestRunner {
+  private _currentTestSuite: TestSuite | null = null;
+  private _currentTestCase: TestCase | null = null;
   private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
   private _renderLock: RenderLock = new RenderLock();
   private _testSummary: TestSummaryLogger = new TestSummaryLogger();
@@ -23,8 +25,7 @@ export class TestRunner {
   private _valueRegistry = new ValueRegistry();
   private _callTrackerRegistry = new CallTrackerRegistry();
   private _notificationRegistry = new NotificationRegistry();
-  private _testSuiteInitialManager = new TestSuitePreExecutionManager();
-  private _testSuiteExecutionManager: TestSuiteExecutionManager | null = null;
+  private _testSuiteManager = new TestSuiteBuilder();
 
   public getWindowDimensionsMocker() {
     return this._windowDimensionsMocker;
@@ -71,29 +72,46 @@ export class TestRunner {
     return await this.render(null);
   }
 
+  public useTestRef(name: string): MutableRefObject<Component | null> {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const ref = useRef(null);
+    assertTestCase(this._currentTestCase);
+    this._currentTestCase.componentsRefs[name] = ref;
+    return ref;
+  }
+
+  public getTestComponent(name: string): TestComponent {
+    assertTestCase(this._currentTestCase);
+    const componentRef = this._currentTestCase.componentsRefs[name];
+    return new TestComponent(componentRef);
+  }
+
   public async runTests() {
     console.log('\n');
-    await this._testSuiteInitialManager.buildSuites();
-    this._testSuiteInitialManager.setSkipFlags();
 
-    const testSuiteExecutionManager = new TestSuiteExecutionManager(this._testSuiteInitialManager);
-    this._testSuiteExecutionManager = testSuiteExecutionManager;
+    for (const testSuite of this._testSuiteManager.getTestSuites()) {
+      this._currentTestSuite = testSuite;
+      await testSuite.buildSuite();
+      this._currentTestSuite = null;
+    }
+    this._testSuiteManager.setSkipFlags();
 
-    for (const testSuite of testSuiteExecutionManager.getTestSuites()) {
-      await this.runTestSuite(testSuite, testSuiteExecutionManager);
+    for (const testSuite of this._testSuiteManager.getTestSuites()) {
+      await this.runTestSuite(testSuite);
     }
 
     this._testSummary.printSummary();
   }
 
-  private async runTestSuite(testSuite: TestSuite, testSuiteExecutionManager: TestSuiteExecutionManager) {
+  private async runTestSuite(testSuite: TestSuite) {
     this._testSummary.countSkippedTestSuiteTests(testSuite);
+
     if (testSuite.skip) {
       return;
     }
 
+    this._currentTestSuite = testSuite;
     this._testSummary.logRunningTestSuite(testSuite);
-    testSuiteExecutionManager.setCurrentTestSuite(testSuite);
 
     if (testSuite.beforeAll) {
       await testSuite.beforeAll();
@@ -101,24 +119,19 @@ export class TestRunner {
 
     for (const testCase of testSuite.testCases) {
       if (!testCase.skip) {
-        await this.runTestCase(testSuite, testCase, testSuiteExecutionManager);
+        await this.runTestCase(testSuite, testCase);
       }
     }
 
     if (testSuite.afterAll) {
       await testSuite.afterAll();
     }
-
-    testSuiteExecutionManager.resetCurrentTestSuite();
+    this._currentTestSuite = null;
   }
 
-  private async runTestCase(
-    testSuite: TestSuite,
-    testCase: TestCase,
-    testSuiteExecutionManager: TestSuiteExecutionManager,
-  ) {
+  private async runTestCase(testSuite: TestSuite, testCase: TestCase) {
     this._callTrackerRegistry.resetRegistry();
-    testSuiteExecutionManager.setCurrentTestCase(testCase);
+    this._currentTestCase = testCase;
 
     if (testSuite.beforeEach) {
       await testSuite.beforeEach();
@@ -131,46 +144,34 @@ export class TestRunner {
       await testSuite.afterEach();
     }
 
-    testSuiteExecutionManager.resetCurrentTestCase();
+    this._currentTestCase = null;
     await this.render(null);
     await this._animationRecorder.unmockAnimationTimer();
     await this._animationRecorder.stopRecordingAnimationUpdates();
   }
 
   public expect(currentValue: TestValue): Matchers {
-    assertExecutionManager(this._testSuiteExecutionManager);
-    return new Matchers(currentValue, this._testSuiteExecutionManager.getCurrentTestCase());
-  }
-
-  public useTestRef(name: string): MutableRefObject<Component | null> {
-    assertExecutionManager(this._testSuiteExecutionManager);
-
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const ref = useRef(null);
-    this._testSuiteExecutionManager.getCurrentTestCase().componentsRefs[name] = ref;
-    return ref;
-  }
-
-  public getTestComponent(name: string): TestComponent {
-    assertExecutionManager(this._testSuiteExecutionManager);
-
-    const componentRef = this._testSuiteExecutionManager.getCurrentTestCase().componentsRefs[name];
-    return new TestComponent(componentRef);
+    assertTestCase(this._currentTestCase);
+    return new Matchers(currentValue, this._currentTestCase);
   }
 
   public beforeAll(job: () => void) {
-    this._testSuiteInitialManager.setJob('beforeAll', job);
+    assertTestSuite(this._currentTestSuite);
+    this._currentTestSuite.beforeAll = job;
   }
 
   public afterAll(job: () => void) {
-    this._testSuiteInitialManager.setJob('afterAll', job);
+    assertTestSuite(this._currentTestSuite);
+    this._currentTestSuite.afterAll = job;
   }
 
   public beforeEach(job: () => void) {
-    this._testSuiteInitialManager.setJob('beforeEach', job);
+    assertTestSuite(this._currentTestSuite);
+    this._currentTestSuite.beforeEach = job;
   }
 
   public afterEach(job: () => void) {
-    this._testSuiteInitialManager.setJob('afterEach', job);
+    assertTestSuite(this._currentTestSuite);
+    this._currentTestSuite.afterEach = job;
   }
 }
