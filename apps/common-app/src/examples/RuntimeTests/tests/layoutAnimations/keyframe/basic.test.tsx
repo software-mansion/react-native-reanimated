@@ -37,13 +37,13 @@ describe('entering with custom animation (withDelay + withTiming color changes) 
   }).duration(1000);
 
   const rainbowPulsarAnimation = new Keyframe({
-    0: { transform: [{ scale: 2 }], backgroundColor: 'rgba(255,0,0,1)' },
+    0: { transform: [{ scale: 2 }], backgroundColor: 'hsl(0, 100%, 50%)' },
     15: { transform: [{ scale: 1 }], easing: Easing.poly(1) },
     30: { transform: [{ scale: 2 }], easing: Easing.poly(2), backgroundColor: '#ffd700ff' },
     45: { transform: [{ scale: 1 }], easing: Easing.poly(3) },
     60: { transform: [{ scale: 2 }], backgroundColor: '#00F', easing: Easing.poly(10) },
     75: { transform: [{ scale: 1 }], easing: Easing.poly(4) },
-    85: { transform: [{ scale: 2 }], backgroundColor: 'hsl(310, 100%, 35%)', easing: Easing.poly(5) },
+    85: { transform: [{ scale: 2 }], backgroundColor: 'rgb(128, 0, 128)', easing: Easing.poly(5) },
     100: { transform: [{ scale: 1 }], backgroundColor: 'red', easing: Easing.poly(6) },
   }).duration(1000);
 

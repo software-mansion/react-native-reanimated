@@ -225,7 +225,7 @@ const commonStyles = StyleSheet.create({
 const basicStyles = StyleSheet.create({
   selectAllButton: { marginHorizontal: 20 },
   selectButton: { flex: 1 },
-  button: { backgroundColor: 'navy', zIndex: 1 },
+  button: { backgroundColor: 'navy', zIndex: 1, height: 60, marginBottom: 40 },
   navyText: { color: 'navy' },
   whiteText: { color: 'white' },
 });
