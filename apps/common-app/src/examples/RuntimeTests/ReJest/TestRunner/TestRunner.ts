@@ -1,29 +1,30 @@
 import type { MutableRefObject, Component, ReactElement } from 'react';
 import { useRef } from 'react';
-import { assertExecutionManager } from './Asserts';
-import { RenderLock, SyncUIRunner } from '../utils/SyncUIRunner';
 import type { TestCase, TestConfiguration, TestSuite, TestValue } from '../types';
 import { TestComponent } from '../TestComponent';
 import { Matchers } from '../matchers/Matchers';
+import { RenderLock } from '../utils/SyncUIRunner';
 import { ValueRegistry } from './ValueRegistry';
 import { TestSummaryLogger } from './TestSummaryLogger';
 import { WindowDimensionsMocker } from './WindowDimensionsMocker';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
+import { CallTrackerRegistry } from './CallTrackerRegistry';
+import { NotificationRegistry } from './NotificationRegistry';
+import { assertExecutionManager } from './Asserts';
 import { TestSuiteExecutionManager, TestSuitePreExecutionManager } from './TestSuiteManager';
-import { TrackerRegistry } from './TrackerRegistry';
 export { Presets } from '../Presets';
 
 export class TestRunner {
   private _renderHook: (component: ReactElement<Component> | null) => void = () => {};
-  private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
   private _renderLock: RenderLock = new RenderLock();
   private _testSummary: TestSummaryLogger = new TestSummaryLogger();
   private _windowDimensionsMocker: WindowDimensionsMocker = new WindowDimensionsMocker();
   private _animationRecorder = new AnimationUpdatesRecorder();
   private _valueRegistry = new ValueRegistry();
+  private _callTrackerRegistry = new CallTrackerRegistry();
+  private _notificationRegistry = new NotificationRegistry();
   private _testSuiteInitialManager = new TestSuitePreExecutionManager();
   private _testSuiteExecutionManager: TestSuiteExecutionManager | null = null;
-  private _trackerRegistry = new TrackerRegistry();
 
   public getWindowDimensionsMocker() {
     return this._windowDimensionsMocker;
@@ -37,12 +38,12 @@ export class TestRunner {
     return this._valueRegistry;
   }
 
-  public getTestSuiteManager() {
-    return this._testSuiteInitialManager;
+  public getCallTrackerRegistry() {
+    return this._callTrackerRegistry;
   }
 
-  public getTrackerRegistry() {
-    return this._trackerRegistry;
+  public getNotificationRegistry() {
+    return this._notificationRegistry;
   }
 
   public configure(config: TestConfiguration) {
@@ -116,7 +117,7 @@ export class TestRunner {
     testCase: TestCase,
     testSuiteExecutionManager: TestSuiteExecutionManager,
   ) {
-    this._trackerRegistry.resetRegistry();
+    this._callTrackerRegistry.resetRegistry();
     testSuiteExecutionManager.setCurrentTestCase(testCase);
 
     if (testSuite.beforeEach) {

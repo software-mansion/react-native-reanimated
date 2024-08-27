@@ -1,6 +1,8 @@
 'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { Mutable } from './commonTypes';
+import { ReanimatedError } from './errors';
+
 import { shareableMappingCache } from './shareableMappingCache';
 import { makeShareableCloneRecursive } from './shareables';
 import { executeOnUIRuntimeSync, runOnUI } from './threads';
@@ -9,6 +11,25 @@ import { valueSetter } from './valueSetter';
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 type Listener<Value> = (newValue: Value) => void;
+
+/**
+ * Hides the internal `_value` property of a mutable. It won't be visible to:
+ * - `Object.keys`,
+ * - `const prop in obj`,
+ * - etc.
+ *
+ * This way when the user accidentally sends the SharedValue to React, he won't get an obscure
+ * error message.
+ *
+ * We hide for both _React runtime_ and _Worklet runtime_ mutables for uniformity of behavior.
+ */
+function hideInternalValueProp(mutable: Mutable) {
+  'worklet';
+  Object.defineProperty(mutable, '_value', {
+    configurable: false,
+    enumerable: false,
+  });
+}
 
 export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
   'worklet';
@@ -56,6 +77,9 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
     _animation: null,
     _isReanimatedSharedValue: true,
   };
+
+  hideInternalValueProp(mutable);
+
   return mutable;
 }
 
@@ -81,13 +105,13 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
 
     get _value(): Value {
-      throw new Error(
-        '[Reanimated] Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
+      throw new ReanimatedError(
+        'Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
       );
     },
     set _value(_newValue: Value) {
-      throw new Error(
-        '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
+      throw new ReanimatedError(
+        'Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
       );
     },
 
@@ -97,18 +121,20 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
       })();
     },
     addListener: () => {
-      throw new Error(
-        '[Reanimated] Adding listeners is only possible on the UI runtime.'
+      throw new ReanimatedError(
+        'Adding listeners is only possible on the UI runtime.'
       );
     },
     removeListener: () => {
-      throw new Error(
-        '[Reanimated] Removing listeners is only possible on the UI runtime.'
+      throw new ReanimatedError(
+        'Removing listeners is only possible on the UI runtime.'
       );
     },
 
     _isReanimatedSharedValue: true,
   };
+
+  hideInternalValueProp(mutable);
 
   shareableMappingCache.set(mutable, handle);
   return mutable;
@@ -152,6 +178,8 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
 
     _isReanimatedSharedValue: true,
   };
+
+  hideInternalValueProp(mutable);
 
   return mutable;
 }

@@ -16,6 +16,7 @@ import { ReduceMotion } from '../../commonTypes';
 import { ProgressTransitionManager } from './ProgressTransitionManager';
 import { updateLayoutAnimations } from '../../UpdateLayoutAnimations';
 import { getReduceMotionFromConfig } from '../../animation/util';
+import { ReanimatedError } from '../../errors';
 
 const SUPPORTED_PROPS = [
   'width',
@@ -171,8 +172,8 @@ export class SharedTransition {
         animations = animationFactory(values);
         for (const key in animations) {
           if (!(SUPPORTED_PROPS as readonly string[]).includes(key)) {
-            throw new Error(
-              `[Reanimated] The prop '${key}' is not supported yet.`
+            throw new ReanimatedError(
+              `The prop '${key}' is not supported yet.`
             );
           }
         }
