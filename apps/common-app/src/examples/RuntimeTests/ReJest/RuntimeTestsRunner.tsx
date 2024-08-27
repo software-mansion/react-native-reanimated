@@ -77,14 +77,14 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
       {started ? null : (
         <>
           <TestSelector tests={tests} testSelectionCallbacks={testSelectionCallbacks} />
-          <Pressable onPressOut={handleStartClick} style={styles.button}>
-            <Text style={styles.whiteText}>Run tests</Text>
+          <Pressable onPressOut={handleStartClick} style={button}>
+            <Text style={whiteText}>Run tests</Text>
           </Pressable>
         </>
       )}
       {/* Don't render anything if component is undefined to prevent blinking */}
       {component || null}
-      {finished ? <Text style={styles.navyText}>Reload the app to run the tests again</Text> : null}
+      {finished ? <Text style={navyText}>Reload the app to run the tests again</Text> : null}
     </View>
   );
 }
@@ -169,8 +169,8 @@ function SelectTest({ testSuiteName, selectClick, selectedTests }: SelectTestPro
       onPressIn={() => handleSelectClickIn()}
       onPressOut={() => handleSelectClickOut()}>
       <View style={[styles.checkbox, selectedTests.get(testSuiteName) ? styles.checkedCheckbox : {}]} />
-      <View style={styles.selectButton}>
-        <Text style={styles.navyText}>{testSuiteName}</Text>
+      <View style={selectButton}>
+        <Text style={navyText}>{testSuiteName}</Text>
       </View>
     </Pressable>
   );
@@ -197,45 +197,52 @@ function SelectAllButtonProps({ handleSelectAllClick, select }: SelectAllButtonP
     <Pressable
       onPressIn={handleSelectAllClickIn}
       onPressOut={() => handleSelectAllClickOut()}
-      style={[styles.selectAllButton, isPressed ? styles.pressedButton : {}]}>
-      <Text style={styles.navyText}>{select ? 'Select all' : 'Deselect all'}</Text>
+      style={[selectAllButton, isPressed ? styles.pressedButton : {}]}>
+      <Text style={navyText}>{select ? 'Select all' : 'Deselect all'}</Text>
     </Pressable>
   );
 }
 
-const TEXT = {
-  fontSize: 20,
-  alignSelf: 'center',
-} as const;
+const commonStyles = StyleSheet.create({
+  textCommon: {
+    fontSize: 20,
+    alignSelf: 'center',
+  },
+  buttonCommon: {
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  whiteButtonCommon: {
+    borderWidth: 2,
+    backgroundColor: 'white',
+    borderColor: 'navy',
+    marginVertical: 5,
+    borderRadius: 10,
+  },
+});
 
-const BUTTON = {
-  height: 40,
-  justifyContent: 'center',
-  alignItems: 'center',
-} as const;
+const basicStyles = StyleSheet.create({
+  selectAllButton: { marginHorizontal: 20 },
+  selectButton: { flex: 1 },
+  button: { backgroundColor: 'navy', zIndex: 1 },
+  navyText: { color: 'navy' },
+  whiteText: { color: 'white' },
+});
 
-const WHITE_BUTTON = {
-  ...BUTTON,
-  borderWidth: 2,
-  backgroundColor: 'white',
-  borderColor: 'navy',
-  marginVertical: 5,
-  borderRadius: 10,
-} as const;
+const whiteButtonCommon = StyleSheet.flatten([commonStyles.buttonCommon, commonStyles.whiteButtonCommon]);
+const selectAllButton = StyleSheet.flatten([whiteButtonCommon, basicStyles.selectAllButton]);
+const selectButton = StyleSheet.flatten([whiteButtonCommon, basicStyles.selectButton]);
+const button = StyleSheet.flatten([commonStyles.buttonCommon, basicStyles.button]);
+const navyText = StyleSheet.flatten([commonStyles.textCommon, basicStyles.navyText]);
+const whiteText = StyleSheet.flatten([commonStyles.textCommon, basicStyles.whiteText]);
 
 const styles = StyleSheet.create({
   flexOne: {
     flex: 1,
     flexDirection: 'column',
   },
-  selectAllButton: {
-    ...WHITE_BUTTON,
-    marginHorizontal: 20,
-  },
-  selectButton: {
-    ...WHITE_BUTTON,
-    flex: 1,
-  },
+
   selectButtonsFrame: {
     borderRadius: 10,
     backgroundColor: 'lightblue',
@@ -243,19 +250,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 10,
   },
-  button: {
-    ...BUTTON,
-    backgroundColor: 'navy',
-    zIndex: 1,
-  },
-  navyText: {
-    ...TEXT,
-    color: 'navy',
-  },
-  whiteText: {
-    ...TEXT,
-    color: 'white',
-  },
+
   buttonWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
