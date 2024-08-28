@@ -120,16 +120,16 @@ Then, to use it, simply pass your custom animation as `sharedTransitionStyle` pr
 
 ## Example
 
-import SharedElementSrc from '!!raw-loader!@site/src/examples/SharedElementSrc';
+import SharedElementSrc from '!!raw-loader!@site/src/examples/SharedElementTransition';
 
-<CollapsibleCode src={SharedElementSrc} showLines={[0, 50]} />
+<CollapsibleCode src={SharedElementSrc} showLines={[48, 78]} />
 
 ## Remarks
 
 - Only the native stack is supported.
 - You can only animate `width`, `height`, `originX`, `originY`, and `transformMatrix` properties when using the shared transition.
 - The layout for shared view children is not computed during the transition.
-- The current implementation supports only the old React Native architecture (Paper)
+- The current implementation supports only the old React Native architecture - **Paper**.
 
 <PlatformCompatibility android ios />
 
