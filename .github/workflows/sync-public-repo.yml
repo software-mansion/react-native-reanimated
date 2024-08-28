@@ -5,6 +5,9 @@ on:
     - cron: '0 */6 * * *'  # Run every 6 hours
   workflow_dispatch:  # Allow manual triggering
 
+permissions:
+  contents: write
+
 jobs:
   sync-branches:
     runs-on: ubuntu-latest
