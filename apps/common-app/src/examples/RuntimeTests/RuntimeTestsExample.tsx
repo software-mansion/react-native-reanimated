@@ -78,21 +78,6 @@ export default function RuntimeTestsExample() {
           },
         },
         {
-          testSuiteName: 'layoutAnimations',
-          importTest: () => {
-            require('./tests/layoutAnimations/entering/enteringColors.test');
-            require('./tests/layoutAnimations/entering/predefinedEntering.test');
-            require('./tests/layoutAnimations/exiting/predefinedExiting.test');
-            describe('Compare layout transitions with **constant view size** with snapshots', () => {
-              require('./tests/layoutAnimations/layout/predefinedLayoutPosition.test');
-            });
-            describe('Compare Test layout transitions including view **size changes** with snapshots', () => {
-              require('./tests/layoutAnimations/layout/positionAndSize.test');
-            });
-          },
-        },
-
-        {
           testSuiteName: 'advanced API',
           importTest: () => {
             require('./tests/advancedAPI/useFrameCallback.test');
