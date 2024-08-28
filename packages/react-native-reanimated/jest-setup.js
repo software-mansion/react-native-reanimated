@@ -1,7 +1,7 @@
 delete global.MessageChannel;
 require('./src/jestUtils').setUpTests();
 
-global.__loggerConfig = {
+global.__reanimatedLoggerConfig = {
   logFunction: (data) => {
     switch (data.level) {
       case 'warn':
@@ -16,4 +16,4 @@ global.__loggerConfig = {
   },
   level: 'warn',
   strict: false,
-}
+};
