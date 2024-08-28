@@ -36,13 +36,15 @@ import {
 import { shouldBeUseWeb } from '../PlatformChecker';
 import type { EasingFunctionFactory } from '../Easing';
 import { ReducedMotionManager } from '../ReducedMotion';
+import { logger } from '../logger';
+import { ReanimatedError } from '../errors';
 
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 if (__DEV__ && ReducedMotionManager.jsValue) {
-  console.warn(
-    `[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
+  logger.warn(
+    `Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
   );
 }
 
@@ -65,8 +67,8 @@ export function assertEasingIsWorklet(
   }
 
   if (!isWorkletFunction(easing)) {
-    throw new Error(
-      '[Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
+    throw new ReanimatedError(
+      'The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
     );
   }
 }
@@ -93,7 +95,7 @@ export function recognizePrefixSuffix(
       /([A-Za-z]*)(-?\d*\.?\d*)([eE][-+]?[0-9]+)?([A-Za-z%]*)/
     );
     if (!match) {
-      throw new Error("[Reanimated] Couldn't parse animation value.");
+      throw new ReanimatedError("Couldn't parse animation value.");
     }
     const prefix = match[1];
     const suffix = match[4];
