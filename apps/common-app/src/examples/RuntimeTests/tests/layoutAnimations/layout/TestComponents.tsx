@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { useTestRef } from '../../../ReJest/RuntimeTestsApi';
+import {
+  clearRenderOutput,
+  getTestComponent,
+  mockAnimationTimer,
+  mockWindowDimensions,
+  recordAnimationUpdates,
+  render,
+  unmockAnimationTimer,
+  unmockWindowDimensions,
+  useTestRef,
+  waitForAnimationUpdates,
+} from '../../../ReJest/RuntimeTestsApi';
 
 export const TRANSITION_REF = 'TRANSITION_REF';
 export enum Direction {
@@ -13,30 +24,49 @@ export enum Direction {
   LEFT_UP = 'LEFT_UP',
 }
 
-interface TransitionComponentProps {
+export async function getSnapshotUpdates(
+  layout: any,
+  direction: Direction,
+  snapshotLength: number,
+  changeSize?: boolean,
+) {
+  await mockAnimationTimer();
+  await mockWindowDimensions();
+
+  const updatesContainer = await recordAnimationUpdates();
+  if (direction === Direction.UP || direction === Direction.DOWN) {
+    await render(<TransitionUpOrDown layout={layout} direction={direction} changeSize={!!changeSize} />);
+  } else {
+    await render(<TransitionLeftOrRight layout={layout} direction={direction} changeSize={!!changeSize} />);
+  }
+  await waitForAnimationUpdates(snapshotLength);
+  const component = getTestComponent(TRANSITION_REF);
+  const updates = updatesContainer.getUpdates(component);
+
+  await unmockAnimationTimer();
+  await unmockWindowDimensions();
+  await clearRenderOutput();
+
+  return updates;
+}
+
+export const TransitionUpOrDown = ({
+  layout,
+  direction,
+  changeSize,
+}: {
   layout: any;
   direction: Direction;
   changeSize?: boolean;
-}
-
-const MainBox = ({ layout, changeSize }: Omit<TransitionComponentProps, 'direction'> & { show: boolean }) => {
+}) => {
   const [show, setShow] = useState(true);
-  useEffect(() => {
-    setShow(false);
-  }, [setShow]);
-
   const ref = useTestRef(TRANSITION_REF);
-  const mainBoxStyle = [styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}];
-
-  return <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />;
-};
-
-export const TransitionUpOrDown = ({ layout, direction, changeSize }: TransitionComponentProps) => {
-  const [show, setShow] = useState(true);
 
   useEffect(() => {
     setShow(false);
   }, [setShow]);
+
+  const mainBoxStyle = [styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}];
 
   return (
     <View style={styles.containerVertical}>
@@ -44,26 +74,37 @@ export const TransitionUpOrDown = ({ layout, direction, changeSize }: Transition
         <>
           {show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <MainBox show={show} layout={layout} changeSize={changeSize} />
+          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
         </>
       )}
       {direction === Direction.DOWN && (
         <>
           {!show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <MainBox show={show} layout={layout} changeSize={changeSize} />
+          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
         </>
       )}
     </View>
   );
 };
 
-export const TransitionLeftOrRight = ({ layout, direction, changeSize }: TransitionComponentProps) => {
+export const TransitionLeftOrRight = ({
+  layout,
+  direction,
+  changeSize,
+}: {
+  layout: any;
+  direction: Direction;
+  changeSize?: boolean;
+}) => {
   const [show, setShow] = useState(true);
+  const ref = useTestRef(TRANSITION_REF);
 
   useEffect(() => {
     setShow(false);
   }, [setShow]);
+
+  const mainBoxStyle = [styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}];
 
   return (
     <View style={styles.containerHorizontal}>
@@ -71,14 +112,14 @@ export const TransitionLeftOrRight = ({ layout, direction, changeSize }: Transit
         <>
           {show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <MainBox show={show} layout={layout} changeSize={changeSize} />
+          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
         </>
       )}
       {direction === Direction.RIGHT && (
         <>
           {!show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <MainBox show={show} layout={layout} changeSize={changeSize} />
+          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
         </>
       )}
       {direction === Direction.RIGHT_UP && (
@@ -87,7 +128,7 @@ export const TransitionLeftOrRight = ({ layout, direction, changeSize }: Transit
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <MainBox show={show} layout={layout} changeSize={changeSize} />
+          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
         </>
       )}
       {direction === Direction.LEFT_UP && (
@@ -103,7 +144,7 @@ export const TransitionLeftOrRight = ({ layout, direction, changeSize }: Transit
           )}
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <MainBox show={show} layout={layout} changeSize={changeSize} />
+          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
         </>
       )}
     </View>
@@ -131,10 +172,7 @@ const styles = StyleSheet.create({
     height: 100,
     margin: 5,
   },
-  mainBox: {
-    backgroundColor: 'orange',
-    borderColor: 'darkorange',
-  },
+  mainBox: { backgroundColor: 'orange', borderColor: 'darkorange' },
   bigBox: {
     width: 150,
     height: 200,
