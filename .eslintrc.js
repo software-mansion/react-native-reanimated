@@ -10,7 +10,6 @@ module.exports = {
       },
       extends: ['plugin:@typescript-eslint/recommended-type-checked'],
       rules: {
-        'reanimated/use-reanimated-error': 'error',
         '@typescript-eslint/no-unsafe-call': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
         '@typescript-eslint/no-unsafe-return': 'off',
@@ -59,7 +58,6 @@ module.exports = {
     'jest',
     '@typescript-eslint',
     'eslint-plugin-tsdoc',
-    'eslint-plugin-reanimated',
   ],
   env: {
     'react-native/react-native': true,
