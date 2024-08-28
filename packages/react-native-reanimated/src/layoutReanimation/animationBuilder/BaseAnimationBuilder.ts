@@ -8,6 +8,7 @@ import type {
 
 import { ReduceMotion } from '../../commonTypes';
 import { getReduceMotionFromConfig } from '../../animation/util';
+import { ReanimatedError } from '../../errors';
 
 export class BaseAnimationBuilder {
   durationV?: number;
@@ -21,7 +22,7 @@ export class BaseAnimationBuilder {
   ) => InstanceType<T>;
 
   build = (): EntryExitAnimationFunction | LayoutAnimationFunction => {
-    throw new Error('[Reanimated] Unimplemented method in child class.');
+    throw new ReanimatedError('Unimplemented method in child class.');
   };
 
   /**
