@@ -34,6 +34,7 @@ function createLog(level: LogLevel, message: string): LogData {
     category: formattedMessage,
     componentStack: [],
     componentStackType: null,
+    // eslint-disable-next-line reanimated/use-reanimated-error
     stack: new Error().stack,
   };
 }
