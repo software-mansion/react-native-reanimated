@@ -41,7 +41,8 @@ if (SHOULD_BE_USE_WEB) {
   });
   shareableMappingCache.set(logger, makeShareableCloneRecursive(logger));
 
-  // Register ReanimatedError and update logger config in the UI global scope.
+  // Register ReanimatedError and update logger config in the UI runtime global
+  // scope.
   // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
   // are applied before any async operations are executed on the UI runtime)
   executeOnUIRuntimeSync(registerReanimatedError)();
