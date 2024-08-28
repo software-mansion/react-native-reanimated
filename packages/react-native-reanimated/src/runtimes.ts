@@ -3,6 +3,7 @@ import { isWorkletFunction } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
 import { ReanimatedError, registerReanimatedError } from './errors';
 import { setupCallGuard, setupConsole } from './initializers';
+import { registerLoggerConfig } from './logger';
 import NativeReanimatedModule from './NativeReanimated';
 import { shouldBeUseWeb } from './PlatformChecker';
 import {
@@ -35,11 +36,15 @@ export function createWorkletRuntime(
   name: string,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
+  // Assign to a different variable as __reanimatedLoggerConfig is not a captured
+  // identifier in the Worklet runtime.
+  const config = __reanimatedLoggerConfig;
   return NativeReanimatedModule.createWorkletRuntime(
     name,
     makeShareableCloneRecursive(() => {
       'worklet';
       registerReanimatedError();
+      registerLoggerConfig(config);
       setupCallGuard();
       setupConsole();
       initializer?.();
