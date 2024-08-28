@@ -1,7 +1,5 @@
 #include <reanimated/CSS/EasingFunctions.h>
 
-#include <glog/logging.h>
-
 namespace reanimated {
 
 double linear(double x) {
