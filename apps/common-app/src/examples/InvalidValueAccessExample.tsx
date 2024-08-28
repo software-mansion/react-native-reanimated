@@ -2,12 +2,15 @@ import { Text, StyleSheet, View, Button } from 'react-native';
 
 import React, { useEffect } from 'react';
 import Animated, {
+  configureReanimatedLogger,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 
-Animated.configureLogger({
+configureReanimatedLogger({
+  // change to `false` or remove the `configureReanimatedLogger` call to
+  // disable the warning
   strict: true,
 });
 
