@@ -1,4 +1,4 @@
-name: Check static framework nightly build
+name: Static framework Reanimated build check [Nightly]
 env:
   YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
@@ -29,11 +29,11 @@ jobs:
       - name: Install Paper Pods
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         working-directory: app/ios
-        run: export USE_FRAMEWORKS=static NO_FLIPPER=1 && pod install
+        run: export USE_FRAMEWORKS=static NO_FLIPPER=1 && bundle install && bundle exec pod install
       - name: Install Fabric Pods
         if: ${{ matrix.react-native-architecture == 'Fabric' }}
         working-directory: app/ios
-        run: export USE_FRAMEWORKS=static NO_FLIPPER=1 RCT_NEW_ARCH_ENABLED=1 && pod install
+        run: export USE_FRAMEWORKS=static NO_FLIPPER=1 RCT_NEW_ARCH_ENABLED=1 && bundle install && bundle exec pod install
       - name: Build app
         working-directory: app
         run: npx react-native run-ios --no-packager

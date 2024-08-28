@@ -1,4 +1,4 @@
-name: Test TypeScript and Lint in examples
+name: Example Typescript check and lint
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
@@ -16,12 +16,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory:
-          [
-            apps/paper-example,
+        working-directory: [
+            apps/common-app,
             apps/fabric-example,
-            apps/web-example,
+            apps/macos-example,
+            # apps/next-example, # next-example doesn't use TypeScript.
+            apps/paper-example,
             apps/tvos-example,
+            apps/web-example,
           ]
     concurrency:
       group: typescript-${{ matrix.working-directory }}-${{ github.ref }}
@@ -37,16 +39,10 @@ jobs:
         run: .github/workflows/helper/clear-annotations.sh
 
       - name: Install monorepo node dependencies
-        run: yarn install
-      - name: Install Reanimated node dependencies
-        working-directory: packages/react-native-reanimated
-        run: yarn install
+        run: yarn install --immutable
       - name: Build Reanimated package
         working-directory: packages/react-native-reanimated
         run: yarn build
-      - name: Install ${{ matrix.working-directory }} app node dependencies
-        working-directory: ${{ matrix.working-directory }}
-        run: yarn
 
       - name: Check types
         working-directory: ${{ matrix.working-directory }}
