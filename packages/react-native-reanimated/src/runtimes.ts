@@ -36,7 +36,7 @@ export function createWorkletRuntime(
   name: string,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
-  // Assign to a different variable as __reanimatedLoggerConfig is not captured
+  // Assign to a different variable as __reanimatedLoggerConfig is not a captured
   // identifier on the Worklet runtime.
   const config = __reanimatedLoggerConfig;
 
