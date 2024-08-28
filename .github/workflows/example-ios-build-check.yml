@@ -4,7 +4,7 @@ env:
 on:
   pull_request:
     paths:
-      - .github/workflows/ios-build.yml
+      - .github/workflows/example-ios-build-check.yml
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
@@ -20,7 +20,7 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/ios-build.yml
+      - .github/workflows/example-ios-build-check.yml
       - packages/react-native-reanimated/RNReanimated.podspec
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
@@ -45,42 +45,14 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      # TODO: Rework caching in this CI for monorepo setup.
-      - name: Restore node_modules from cache
-        uses: actions/cache@v3
-        with:
-          path: .
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('yarn.lock') }}
-          restore-keys: ${{ runner.os }}-node-modules-
-      - name: Restore app node_modules from cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ matrix.working-directory }}/node_modules
-          key: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/yarn.lock', matrix.working-directory)) }}
-          restore-keys: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
       - name: Install monorepo node dependencies
         run: yarn install --immutable
-
-      - name: Restore Pods from cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ matrix.working-directory }}/ios/Pods
-            ~/Library/Caches/CocoaPods
-            ~/.cocoapods
-          key: ${{ runner.os }}-pods-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
-
+      # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install Pods
         working-directory: ${{ matrix.working-directory }}/ios
         run: |
           bundle install
           bundle exec pod install
-
-      - name: Restore build artifacts from cache
-        uses: actions/cache@v3
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-ios-derived-data-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/ios/Podfile.lock', matrix.working-directory)) }}
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}

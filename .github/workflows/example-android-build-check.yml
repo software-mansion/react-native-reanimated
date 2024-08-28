@@ -4,7 +4,7 @@ env:
 on:
   pull_request:
     paths:
-      - .github/workflows/android-build.yml
+      - .github/workflows/example-android-build-check.yml
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
       - apps/paper-example/package.json
@@ -18,7 +18,7 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/android-build.yml
+      - .github/workflows/example-android-build-check.yml
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
       - apps/paper-example/package.json
@@ -47,19 +47,7 @@ jobs:
           distribution: 'zulu'
           java-version: 17
 
-      # TODO: Rework caching in this CI for monorepo setup.
-      - name: Restore node_modules from cache
-        uses: actions/cache@v3
-        with:
-          path: .
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('yarn.lock') }}
-          restore-keys: ${{ runner.os }}-node-modules-
-      - name: Restore app node_modules from cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ matrix.working-directory }}/node_modules
-          key: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-${{ hashFiles(format('{0}/yarn.lock', matrix.working-directory)) }}
-          restore-keys: ${{ runner.os }}-node-modules-${{ matrix.working-directory }}-
+      # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 
