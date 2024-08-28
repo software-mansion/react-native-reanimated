@@ -81,7 +81,7 @@ export default function RuntimeTestsExample() {
           testSuiteName: 'advanced API',
           importTest: () => {
             require('./tests/advancedAPI/useFrameCallback.test');
-            // require('./tests/advancedAPI/measure.test'); // crash on Android
+            require('./tests/advancedAPI/measure.test');
           },
         },
         {
