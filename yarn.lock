@@ -3622,17 +3622,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint-community/regexpp@npm:^4.10.0":
+"@eslint-community/regexpp@npm:^4.10.0, @eslint-community/regexpp@npm:^4.4.0":
   version: 4.11.0
   resolution: "@eslint-community/regexpp@npm:4.11.0"
   checksum: 10/f053f371c281ba173fe6ee16dbc4fe544c84870d58035ccca08dba7f6ce1830d895ce3237a0db89ba37616524775dca82f1c502066b58e2d5712d7f87f5ba17c
-  languageName: node
-  linkType: hard
-
-"@eslint-community/regexpp@npm:^4.4.0":
-  version: 4.10.1
-  resolution: "@eslint-community/regexpp@npm:4.10.1"
-  checksum: 10/54f13817caf90545502d7a19e1b61df79087aee9584342ffc558b6d067530764a47f1c484f493f43e2c70cfdff59ccfd5f26df2af298c4ad528469e599bd1d53
   languageName: node
   linkType: hard
 
@@ -18269,17 +18262,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-devtools-core@npm:^5.0.0":
-  version: 5.2.0
-  resolution: "react-devtools-core@npm:5.2.0"
-  dependencies:
-    shell-quote: "npm:^1.6.1"
-    ws: "npm:^7"
-  checksum: 10/90114565c9a55e3aa5af0f68895bec2cdefa3280e31ce6304c602c063db38ff7f597babf0ca89794b0fff153f6795e2f773c891405a7065cc8a1eec87ed3d4db
-  languageName: node
-  linkType: hard
-
-"react-devtools-core@npm:^5.3.1":
+"react-devtools-core@npm:^5.0.0, react-devtools-core@npm:^5.3.1":
   version: 5.3.1
   resolution: "react-devtools-core@npm:5.3.1"
   dependencies:
