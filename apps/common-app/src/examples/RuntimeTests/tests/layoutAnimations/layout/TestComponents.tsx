@@ -13,23 +13,30 @@ export enum Direction {
   LEFT_UP = 'LEFT_UP',
 }
 
-export const TransitionUpOrDown = ({
-  layout,
-  direction,
-  changeSize,
-}: {
+interface TransitionComponentProps {
   layout: any;
   direction: Direction;
   changeSize?: boolean;
-}) => {
-  const [show, setShow] = useState(true);
-  const ref = useTestRef(TRANSITION_REF);
+}
 
+const MainBox = ({ layout, changeSize }: Omit<TransitionComponentProps, 'direction'> & { show: boolean }) => {
+  const [show, setShow] = useState(true);
   useEffect(() => {
     setShow(false);
   }, [setShow]);
 
+  const ref = useTestRef(TRANSITION_REF);
   const mainBoxStyle = [styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}];
+
+  return <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />;
+};
+
+export const TransitionUpOrDown = ({ layout, direction, changeSize }: TransitionComponentProps) => {
+  const [show, setShow] = useState(true);
+
+  useEffect(() => {
+    setShow(false);
+  }, [setShow]);
 
   return (
     <View style={styles.containerVertical}>
@@ -37,37 +44,26 @@ export const TransitionUpOrDown = ({
         <>
           {show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
+          <MainBox show={show} layout={layout} changeSize={changeSize} />
         </>
       )}
       {direction === Direction.DOWN && (
         <>
           {!show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
+          <MainBox show={show} layout={layout} changeSize={changeSize} />
         </>
       )}
     </View>
   );
 };
 
-export const TransitionLeftOrRight = ({
-  layout,
-  direction,
-  changeSize,
-}: {
-  layout: any;
-  direction: Direction;
-  changeSize?: boolean;
-}) => {
+export const TransitionLeftOrRight = ({ layout, direction, changeSize }: TransitionComponentProps) => {
   const [show, setShow] = useState(true);
-  const ref = useTestRef(TRANSITION_REF);
 
   useEffect(() => {
     setShow(false);
   }, [setShow]);
-
-  const mainBoxStyle = [styles.animatedBox, styles.mainBox, changeSize && !show ? styles.bigBox : {}];
 
   return (
     <View style={styles.containerHorizontal}>
@@ -75,14 +71,14 @@ export const TransitionLeftOrRight = ({
         <>
           {show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
+          <MainBox show={show} layout={layout} changeSize={changeSize} />
         </>
       )}
       {direction === Direction.RIGHT && (
         <>
           {!show && <Animated.View layout={layout} style={styles.animatedBox} />}
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
+          <MainBox show={show} layout={layout} changeSize={changeSize} />
         </>
       )}
       {direction === Direction.RIGHT_UP && (
@@ -91,7 +87,7 @@ export const TransitionLeftOrRight = ({
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View ref={ref} layout={layout} style={mainBoxStyle} />
+          <MainBox show={show} layout={layout} changeSize={changeSize} />
         </>
       )}
       {direction === Direction.LEFT_UP && (
@@ -107,7 +103,7 @@ export const TransitionLeftOrRight = ({
           )}
           <Animated.View layout={layout} style={styles.animatedBox} />
           <Animated.View layout={layout} style={styles.animatedBox} />
-          <Animated.View ref={ref} layout={layout} style={[styles.animatedBox, styles.mainBox]} />
+          <MainBox show={show} layout={layout} changeSize={changeSize} />
         </>
       )}
     </View>
@@ -135,7 +131,10 @@ const styles = StyleSheet.create({
     height: 100,
     margin: 5,
   },
-  mainBox: { backgroundColor: 'orange', borderColor: 'darkorange' },
+  mainBox: {
+    backgroundColor: 'orange',
+    borderColor: 'darkorange',
+  },
   bigBox: {
     width: 150,
     height: 200,
