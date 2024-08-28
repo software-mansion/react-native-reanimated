@@ -8,7 +8,7 @@
 import type { LogBoxStatic } from 'react-native';
 import { LogBox as RNLogBox } from 'react-native';
 
-export type LogLevel = 'warn' | 'error' | 'fatal' | 'syntax';
+export type LogBoxLogLevel = 'warn' | 'error' | 'fatal' | 'syntax';
 
 type Message = {
   content: string;
@@ -34,7 +34,7 @@ type ComponentStack = CodeFrame[];
 type ComponentStackType = 'legacy' | 'stack';
 
 export type LogData = {
-  level: LogLevel;
+  level: LogBoxLogLevel;
   message: Message;
   category: Category;
   componentStack: ComponentStack;

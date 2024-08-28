@@ -1,7 +1,9 @@
 'use strict';
 import { PropsAllowlists } from './propsAllowlists';
-import { jsiConfigureProps } from './core';
+import { executeOnUIRuntimeSync, jsiConfigureProps } from './core';
 import { ReanimatedError } from './errors';
+import { updateLoggerConfig } from './logger';
+import type { LoggerConfig } from './logger';
 
 function assertNoOverlapInLists() {
   for (const key in PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST) {
@@ -50,6 +52,13 @@ export function addWhitelistedUIProps(props: Record<string, boolean>): void {
   ) {
     configureProps();
   }
+}
+
+export function configureReanimatedLogger(config: LoggerConfig) {
+  // Update the configuration object in the React runtime
+  updateLoggerConfig(config);
+  // Register the updated configuration in the UI runtime
+  executeOnUIRuntimeSync(updateLoggerConfig)(config);
 }
 
 const PROCESSED_VIEW_NAMES = new Set();
