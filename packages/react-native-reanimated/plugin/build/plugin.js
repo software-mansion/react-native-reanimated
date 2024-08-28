@@ -261,8 +261,8 @@ var require_workletStringCode = __commonJS({
     var types_2 = require_types();
     var utils_12 = require_utils();
     var MOCK_SOURCE_MAP = "mock source map";
-    function buildWorkletString(fun, state, closureVariables, nameWithSource, inputMap) {
-      restoreRecursiveCalls(fun, nameWithSource);
+    function buildWorkletString(fun, state, closureVariables, workletName, inputMap) {
+      restoreRecursiveCalls(fun, workletName);
       const draftExpression = fun.program.body.find((obj) => (0, types_12.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_12.isExpressionStatement)(obj)) || void 0;
       (0, assert_1.strict)(draftExpression, "[Reanimated] `draftExpression` is undefined.");
       const expression = (0, types_12.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
@@ -289,7 +289,7 @@ var require_workletStringCode = __commonJS({
           parsedClasses.add(constructorName);
         }
       });
-      const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(nameWithSource), expression.params, expression.body, expression.generator, expression.async);
+      const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(workletName), expression.params, expression.body, expression.generator, expression.async);
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "[Reanimated] `inputMap` is undefined.");
       const includeSourceMap = !((0, utils_12.isRelease)() || state.opts.disableSourceMaps);
@@ -426,11 +426,10 @@ var require_workletFactory = __commonJS({
       (0, assert_1.strict)(transformed, "[Reanimated] `transformed` is undefined.");
       (0, assert_1.strict)(transformed.ast, "[Reanimated] `transformed.ast` is undefined.");
       const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
-      const functionName = makeWorkletName(fun, state);
-      const functionIdentifier = (0, types_12.identifier)(functionName);
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
-      let [funString, sourceMapString] = (0, workletStringCode_1.buildWorkletString)(transformed.ast, state, variables, functionName, transformed.map);
+      const { workletName, reactName } = makeWorkletName(fun, state);
+      let [funString, sourceMapString] = (0, workletStringCode_1.buildWorkletString)(transformed.ast, state, variables, workletName, transformed.map);
       (0, assert_1.strict)(funString, "[Reanimated] `funString` is undefined.");
       const workletHash = hash(funString);
       let lineOffset = 1;
@@ -473,13 +472,13 @@ var require_workletFactory = __commonJS({
       (0, assert_1.strict)(!(0, types_12.isObjectMethod)(funExpression), "[Reanimated] `funExpression` is an `ObjectMethod`.");
       const statements = [
         (0, types_12.variableDeclaration)("const", [
-          (0, types_12.variableDeclarator)(functionIdentifier, funExpression)
+          (0, types_12.variableDeclarator)((0, types_12.identifier)(reactName), funExpression)
         ]),
-        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)(functionIdentifier, (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(variables.map((variable) => variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), variable, false, true))))),
-        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)(functionIdentifier, (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__closure"), false), (0, types_12.objectExpression)(variables.map((variable) => variable.name.endsWith(types_2.workletClassFactorySuffix) ? (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), (0, types_12.memberExpression)((0, types_12.identifier)(variable.name.slice(0, variable.name.length - types_2.workletClassFactorySuffix.length)), (0, types_12.identifier)(variable.name))) : (0, types_12.objectProperty)((0, types_12.identifier)(variable.name), variable, false, true))))),
+        (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
       if (shouldIncludeInitData) {
-        statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)(functionIdentifier, (0, types_12.identifier)("__initData"), false), initDataId)));
+        statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__initData"), false), initDataId)));
       }
       if (!(0, utils_12.isRelease)()) {
         statements.unshift((0, types_12.variableDeclaration)("const", [
@@ -489,9 +488,9 @@ var require_workletFactory = __commonJS({
             (0, types_12.numericLiteral)(-27)
           ]))
         ]));
-        statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)(functionIdentifier, (0, types_12.identifier)("__stackDetails"), false), (0, types_12.identifier)("_e"))));
+        statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__stackDetails"), false), (0, types_12.identifier)("_e"))));
       }
-      statements.push((0, types_12.returnStatement)(functionIdentifier));
+      statements.push((0, types_12.returnStatement)((0, types_12.identifier)(reactName)));
       const newFun = (0, types_12.functionExpression)(void 0, [], (0, types_12.blockStatement)(statements));
       return newFun;
     }
@@ -532,16 +531,15 @@ var require_workletFactory = __commonJS({
         }
       }
       const suffix = `${source}${state.workletNumber++}`;
+      let reactName = "";
       if ((0, types_12.isObjectMethod)(fun.node) && (0, types_12.isIdentifier)(fun.node.key)) {
-        return (0, types_12.toIdentifier)(`${fun.node.key.name}_${suffix}`);
+        reactName = fun.node.key.name;
+      } else if (((0, types_12.isFunctionDeclaration)(fun.node) || (0, types_12.isFunctionExpression)(fun.node)) && (0, types_12.isIdentifier)(fun.node.id)) {
+        reactName = fun.node.id.name;
       }
-      if ((0, types_12.isFunctionDeclaration)(fun.node) && (0, types_12.isIdentifier)(fun.node.id)) {
-        return (0, types_12.toIdentifier)(`${fun.node.id.name}_${suffix}`);
-      }
-      if ((0, types_12.isFunctionExpression)(fun.node) && (0, types_12.isIdentifier)(fun.node.id)) {
-        return (0, types_12.toIdentifier)(`${fun.node.id.name}_${suffix}`);
-      }
-      return (0, types_12.toIdentifier)(suffix);
+      const workletName = reactName ? (0, types_12.toIdentifier)(`${reactName}_${suffix}`) : (0, types_12.toIdentifier)(suffix);
+      reactName = reactName || (0, types_12.toIdentifier)(suffix);
+      return { workletName, reactName };
     }
     function makeArrayFromCapturedBindings(ast, fun) {
       const closure = /* @__PURE__ */ new Map();
