@@ -1,4 +1,5 @@
 import { html } from 'code-tag';
+// @ts-expect-error Plugin types aren't emitted.
 import plugin from '../plugin';
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
@@ -154,7 +155,7 @@ describe('babel plugin', () => {
     });
   });
 
-  describe('names', () => {
+  describe('for worklet names', () => {
     it('unnamed ArrowFunctionExpression', () => {
       const input = html`<script>
         () => {
@@ -252,6 +253,20 @@ describe('babel plugin', () => {
         '/-source.js'
       );
       expect(code).toMatch(/function foo_SourceJs[0-9]+\(\)/gm);
+      expect(code).toMatchSnapshot();
+    });
+
+    it('preserves recursion', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          foo(1);
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toMatch(/function foo_null[0-9]+\(\)/gm); // React code
+      expect(code).toMatchInWorkletString(/function foo_null[0-9]+\(\)/gm); // Worklet code
       expect(code).toMatchSnapshot();
     });
   });
@@ -380,7 +395,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input, undefined, { globals: ['foo'] });
-      expect(code).toMatch(/f_null[0-9]+\.__closure = \{\}/gm);
+      expect(code).toContain('f.__closure = {}');
       expect(code).toMatchSnapshot();
     });
 
@@ -393,7 +408,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toMatch(/f_null[0-9]+\.__closure = \{\}/gm);
+      expect(code).toContain('f.__closure = {}');
       expect(code).toMatchSnapshot();
     });
 
@@ -1801,10 +1816,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toMatch(
-        /var foo_null[0-9]+ = function\* foo_null[0-9]+\(\) {/gm
-      );
-
+      expect(code).toContain('var foo = function* foo()'); // React code
       expect(code).toMatchSnapshot();
     });
 
@@ -1889,7 +1901,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData(1);
-      expect(code).toIncludeInWorkletString('AssignmentExpression');
+      expect(code).toContainInWorkletString('AssignmentExpression');
       expect(code).toMatchSnapshot();
     });
 
@@ -1934,7 +1946,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData(1);
-      expect(code).toIncludeInWorkletString('AssignmentExpression');
+      expect(code).toContainInWorkletString('AssignmentExpression');
       expect(code).toMatchSnapshot();
     });
 
@@ -1992,7 +2004,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData(1);
-      expect(code).toIncludeInWorkletString('AssignmentExpression');
+      expect(code).toContainInWorkletString('AssignmentExpression');
       expect(code).toMatchSnapshot();
     });
 
@@ -2007,7 +2019,7 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
 
       expect(code).toHaveWorkletData(1);
-      expect(code).toIncludeInWorkletString('FunctionDeclaration');
+      expect(code).toContainInWorkletString('FunctionDeclaration');
       expect(code).toMatchSnapshot();
     });
 
@@ -2021,7 +2033,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData(1);
-      expect(code).toIncludeInWorkletString('AssignmentExpression');
+      expect(code).toContainInWorkletString('AssignmentExpression');
       expect(code).toMatchSnapshot();
     });
 
@@ -2062,7 +2074,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData(1);
-      expect(code).toIncludeInWorkletString('AssignmentAfterUse');
+      expect(code).toContainInWorkletString('AssignmentAfterUse');
       expect(code).toMatchSnapshot();
     });
   });
@@ -2320,7 +2332,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain('var Clazz__classFactory = function ()');
-      expect(code).toIncludeInWorkletString('Clazz__classFactory');
+      expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
@@ -2338,7 +2350,7 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       expect(code).toContain('var Clazz = exports.Clazz = function ()');
       expect(code).toContain('var Clazz__classFactory = function ()');
-      expect(code).toIncludeInWorkletString('Clazz__classFactory');
+      expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
@@ -2356,7 +2368,7 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       expect(code).toContain('var Clazz = exports.default = function ()');
       expect(code).toContain('var Clazz__classFactory = function ()');
-      expect(code).toIncludeInWorkletString('Clazz__classFactory');
+      expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
@@ -2484,7 +2496,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toIncludeInWorkletString('this.bar()');
+      expect(code).toContainInWorkletString('this.bar()');
       expect(code).toMatchSnapshot();
     });
   });
@@ -2517,7 +2529,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain('Clazz__classFactory');
-      expect(code).toIncludeInWorkletString('Clazz__classFactory');
+      expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
 
@@ -2533,7 +2545,7 @@ describe('babel plugin', () => {
 
       const { code } = runPlugin(input);
       expect(code).toContain('Clazz__classFactory');
-      expect(code).toIncludeInWorkletString('Clazz__classFactory');
+      expect(code).toContainInWorkletString('Clazz__classFactory');
       expect(code).toMatchSnapshot();
     });
 
@@ -2575,7 +2587,7 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toIncludeInWorkletString('this.member');
+      expect(code).toContainInWorkletString('this.member');
       expect(code).toMatchSnapshot();
     });
 

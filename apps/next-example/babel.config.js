@@ -8,7 +8,7 @@ module.exports = {
         alias: {
           'react-native': '../../node_modules/react-native-web',
           // Uncomment this if you want fast-refresh to work with reanimated:
-          // 'react-native-reanimated': '../src/index',
+          // 'react-native-reanimated': '../../packages/react-native-reanimated/src',
         },
       },
     ],

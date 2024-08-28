@@ -2,6 +2,7 @@ import com.android.Version
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonSlurper
+import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 
 import javax.inject.Inject
 import java.nio.file.Files
@@ -408,6 +409,22 @@ android {
                 srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/latest"
             }
         }
+    }
+    tasks.withType(ExternalNativeBuildJsonTask) {
+        compileTask ->
+            compileTask.doLast {
+                if (!isReanimatedExampleApp()) {
+                    return
+                }
+                def monorepoDir = new File("${project.projectDir}/../../..")
+
+                def generated = new File("${compileTask.abi.getCxxBuildFolder()}/compile_commands.json")
+                def output = new File("${monorepoDir}/compile_commands.json")
+
+                output.text = generated.text
+
+                println("Generated clangd metadata.")
+            }
     }
 }
 

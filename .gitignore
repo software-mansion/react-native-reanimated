@@ -67,3 +67,8 @@ react-native-reanimated-tests.js
 
 # pre-commit
 .husky/log.txt
+
+# clangd
+.cache
+CompilationDatabase
+compile_commands.json
