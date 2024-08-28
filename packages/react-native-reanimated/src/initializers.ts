@@ -9,41 +9,44 @@ import {
   executeOnUIRuntimeSync,
 } from './threads';
 import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
-import { logger, logToLogBoxAndConsole, updateLoggerConfig } from './logger';
-import { makeShareableCloneRecursive } from './shareables';
+import {
+  DEFAULT_LOGGER_CONFIG,
+  logger,
+  logToLogBoxAndConsole,
+  registerLoggerConfig,
+  replaceLoggerImplementation,
+} from './logger';
 import { shareableMappingCache } from './shareableMappingCache';
+import { makeShareableCloneRecursive } from './shareables';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_CHROME_DEBUGGER = isChromeDebugger();
+
+// Register logger config in the React runtime
+registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
 
 // this is for web implementation
 if (SHOULD_BE_USE_WEB) {
   global._WORKLET = false;
   global._log = console.log;
   global._getAnimationTimestamp = () => performance.now();
-}
-
-// Register ReanimatedError and update logger config in the UI global scope.
-// (we are using `executeOnUIRuntimeSync` here to make sure that the changes
-// are applied before any async operations are executed on the UI runtime)
-if (!shouldBeUseWeb()) {
-  // Register ReanimatedError in the UI global scope
-  executeOnUIRuntimeSync(registerReanimatedError)();
-  // Register logger config in the UI global scope
-  executeOnUIRuntimeSync(updateLoggerConfig)();
-}
-
-// Override the logFunction implementation with the one that adds logs
-// with better stack traces to the LogBox (need to override it after `runOnJS`
-// is defined).
-updateLoggerConfig({
-  logFunction(data) {
+} else {
+  // Override the logFunction implementation with the one that adds logs
+  // with better stack traces to the LogBox (need to override it after `runOnJS`
+  // is defined).
+  replaceLoggerImplementation((data) => {
     'worklet';
     runOnJS(logToLogBoxAndConsole)(data);
-  },
-});
-shareableMappingCache.set(logger, makeShareableCloneRecursive(logger));
+  });
+  shareableMappingCache.set(logger, makeShareableCloneRecursive(logger));
+
+  // Register ReanimatedError and update logger config in the UI global scope.
+  // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
+  // are applied before any async operations are executed on the UI runtime)
+  executeOnUIRuntimeSync(registerReanimatedError)();
+  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
+}
 
 // callGuard is only used with debug builds
 export function callGuardDEV<Args extends unknown[], ReturnValue>(

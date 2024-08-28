@@ -113,5 +113,5 @@ declare global {
     shadowNodeWrapper: ShadowNodeWrapper,
     propName: string
   ) => string;
-  var __loggerConfig: LoggerConfigInternal;
+  var __reanimatedLoggerConfig: LoggerConfigInternal;
 }

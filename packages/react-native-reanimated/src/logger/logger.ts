@@ -19,10 +19,6 @@ export type LoggerConfigInternal = {
   logFunction: LogFunction;
 } & Required<LoggerConfig>;
 
-type LogOptions = {
-  strict?: boolean;
-};
-
 function logToConsole(data: LogData) {
   'worklet';
   switch (data.level) {
@@ -37,7 +33,7 @@ function logToConsole(data: LogData) {
   }
 }
 
-export const __reanimatedLoggerConfig: LoggerConfigInternal = {
+export const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
   logFunction: logToConsole,
   level: LogLevel.warn,
   strict: false,
@@ -85,12 +81,17 @@ export function logToLogBoxAndConsole(data: LogData) {
  */
 export function registerLoggerConfig(config: LoggerConfigInternal) {
   'worklet';
-  if (!_WORKLET) {
-    throw new Error(
-      '[Reanimated] registerLoggerConfig() must be called on Worklet runtime'
-    );
-  }
-  (global as Record<string, unknown>).__reanimatedLoggerConfig = config;
+  global.__reanimatedLoggerConfig = config;
+}
+
+/**
+ * Replaces the default log function with a custom implementation.
+ *
+ * @param logFunction - The custom log function.
+ */
+export function replaceLoggerImplementation(logFunction: LogFunction) {
+  'worklet';
+  registerLoggerConfig({ ...__reanimatedLoggerConfig, logFunction });
 }
 
 /**
@@ -100,30 +101,20 @@ export function registerLoggerConfig(config: LoggerConfigInternal) {
  *   - level: The minimum log level to display.
  *   - strict: Whether to log warnings and errors that are not strict.
  *    Defaults to false.
- *   - logFunction: The function to use for logging.
  */
-export function updateLoggerConfig(options?: Partial<LoggerConfigInternal>) {
+export function updateLoggerConfig(options?: Partial<LoggerConfig>) {
   'worklet';
-  // Clone the config in the worklet runtime thus the object sent to
-  // the worklet runtime is immutable
-  const config = _WORKLET
-    ? {
-        ...(((global as Record<string, unknown>)
-          .__reanimatedLoggerConfig as LoggerConfigInternal) ?? {}),
-      }
-    : __reanimatedLoggerConfig;
-
-  // Re-use already set logFunction from the global config
-  config.logFunction =
-    config?.logFunction ?? options?.logFunction ?? logToConsole;
-  // Don't reuse previous level and strict values from the global config
-  config.level = options?.level ?? LogLevel.warn;
-  config.strict = options?.strict ?? false;
-
-  if (_WORKLET) {
-    registerLoggerConfig(config);
-  }
+  registerLoggerConfig({
+    ...__reanimatedLoggerConfig,
+    // Don't reuse previous level and strict values from the global config
+    level: options?.level ?? LogLevel.warn,
+    strict: options?.strict ?? false,
+  });
 }
+
+type LogOptions = {
+  strict?: boolean;
+};
 
 function handleLog(
   level: Exclude<LogBoxLogLevel, 'syntax'>,
@@ -132,7 +123,6 @@ function handleLog(
 ) {
   'worklet';
   const config = __reanimatedLoggerConfig;
-
   if (
     // Don't log if the log is marked as strict-only and the config doesn't
     // enable strict logging
