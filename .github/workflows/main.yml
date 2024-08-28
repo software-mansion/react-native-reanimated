@@ -1,0 +1,31 @@
+name: Sync public reanimated
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Run every 6 hours
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  sync-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout szeptem
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT }}  # Personal Access Token with repo scope
+
+      - name: Fetch all branches from reanimated repository
+        run: |
+          git remote add public https://github.com/software-mansion/react-native-reanimated.git
+          git fetch public
+
+      - name: Sync all branches
+        run: |
+          for branch in `git branch -r | grep public/ | grep -v HEAD`; do
+            git checkout -B ${branch#public/} $branch
+            git push origin ${branch#public/}
+          done
+
+      - name: Cleanup
+        run: git remote remove public
