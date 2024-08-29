@@ -28,7 +28,8 @@ public class KeyboardAnimationManager {
     int listenerId = mNextListenerId++;
     if (mListeners.isEmpty()) {
       KeyboardAnimationCallback keyboardAnimationCallback =
-          new KeyboardAnimationCallback(mKeyboard, this::notifyAboutKeyboardChange);
+          new KeyboardAnimationCallback(
+              mKeyboard, this::notifyAboutKeyboardChange, isNavigationBarTranslucent);
       mWindowsInsetsManager.startObservingChanges(
           keyboardAnimationCallback, isStatusBarTranslucent, isNavigationBarTranslucent);
     }

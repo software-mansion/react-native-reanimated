@@ -87,7 +87,7 @@ public class WindowsInsetsManager {
   private WindowInsetsCompat onApplyWindowInsetsListener(View view, WindowInsetsCompat insets) {
     WindowInsetsCompat defaultInsets = ViewCompat.onApplyWindowInsets(view, insets);
     if (mKeyboard.getState() == KeyboardState.OPEN) {
-      mKeyboard.updateHeight(insets);
+      mKeyboard.updateHeight(insets, mIsNavigationBarTranslucent);
       mNotifyAboutKeyboardChange.call();
     }
     setWindowInsets(defaultInsets);
