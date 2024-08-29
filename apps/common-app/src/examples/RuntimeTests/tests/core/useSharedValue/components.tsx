@@ -4,6 +4,7 @@ import { View } from 'react-native';
 export enum MutableAPI {
   ORIGINAL = 'ORIGINAL',
   REACT_COMPATIBLE = 'REACT_COMPATIBLE',
+  REACT_COMPATIBLE_WITH_FUNCTION = 'REACT_COMPATIBLE_WITH_FUNCTION',
 }
 
 export const ProgressBar = ({ progress }: { progress: number }) => {

@@ -6,7 +6,14 @@ import { makeMutable, startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
-export type DerivedValue<Value> = Readonly<SharedValue<Value>>;
+export interface DerivedValue<Value = unknown>
+  extends Readonly<Omit<SharedValue<Value>, 'set'>> {
+  /**
+   * @deprecated Derived values are readonly, don't use this method. It's here only to not induce breaking type changes.
+   * It will be removed in the future.
+   */
+  set: SharedValue<Value>['set'];
+}
 
 /**
  * Lets you create new shared values based on existing ones while keeping them reactive.

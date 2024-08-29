@@ -37,7 +37,7 @@ describe(`_Array operations_ on sharedValue`, () => {
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
 
     useEffect(() => {
-      sharedValue.set([...sharedValue.get(), ...appendedArray]);
+      sharedValue.set(value => [...value, ...appendedArray]);
     });
     return <ProgressBar progress={progress} />;
   };

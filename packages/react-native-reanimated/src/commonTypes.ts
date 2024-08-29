@@ -47,7 +47,7 @@ export interface Mutable<Value = unknown> extends SharedValue<Value> {
    * `_value` prop should only be accessed by the `valueSetter` implementation
    * which may make the decision about updating the mutable value depending
    * on the provided new value. All other places should only attempt to modify
-   * the mutable by assigning to value prop directly.
+   * the mutable by assigning to `value` prop directly or by calling the `set` method.
    */
   _value: Value;
 }

@@ -31,9 +31,10 @@ describe('Tests of objects as sharedValue', () => {
     const sharedValue = useSharedValue(initialValue);
     registerValue(SHARED_VALUE_REF, sharedValue as SharedValue<unknown>);
     useEffect(() => {
-      const currentValue = sharedValue.get();
-      currentValue[keyToUpdate as any] = newVal;
-      sharedValue.set(currentValue);
+      sharedValue.set(value => {
+        value[keyToUpdate as any] = newVal;
+        return value;
+      });
     });
     return <ProgressBar progress={progress} />;
   };
