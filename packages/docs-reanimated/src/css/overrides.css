@@ -8,7 +8,7 @@ table {
 }
 
 @media (max-width: 1280px) {
-  table {
+  table:not([class*='platform-compatibility']) {
     display: block;
     width: 100%;
   }

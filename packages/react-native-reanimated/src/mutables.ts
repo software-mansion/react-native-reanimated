@@ -1,12 +1,37 @@
 'use strict';
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { Mutable } from './commonTypes';
+import { ReanimatedError } from './errors';
+import { logger } from './logger';
+import { isFirstReactRender, isReactRendering } from './reactUtils';
 import { shareableMappingCache } from './shareableMappingCache';
 import { makeShareableCloneRecursive } from './shareables';
 import { executeOnUIRuntimeSync, runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+
+function shouldWarnAboutAccessDuringRender() {
+  return __DEV__ && isReactRendering() && !isFirstReactRender();
+}
+
+function checkInvalidReadDuringRender() {
+  if (shouldWarnAboutAccessDuringRender()) {
+    logger.warn(
+      'Reading from `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.',
+      { strict: true }
+    );
+  }
+}
+
+function checkInvalidWriteDuringRender() {
+  if (shouldWarnAboutAccessDuringRender()) {
+    logger.warn(
+      'Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.',
+      { strict: true }
+    );
+  }
+}
 
 type Listener<Value> = (newValue: Value) => void;
 
@@ -91,25 +116,27 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
 
   const mutable: Mutable<Value> = {
     get value(): Value {
+      checkInvalidReadDuringRender();
       const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
         return sv.value;
       });
       return uiValueGetter(mutable);
     },
     set value(newValue) {
+      checkInvalidWriteDuringRender();
       runOnUI(() => {
         mutable.value = newValue;
       })();
     },
 
     get _value(): Value {
-      throw new Error(
-        '[Reanimated] Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
+      throw new ReanimatedError(
+        'Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
       );
     },
     set _value(_newValue: Value) {
-      throw new Error(
-        '[Reanimated] Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
+      throw new ReanimatedError(
+        'Setting `_value` directly is only possible on the UI runtime. Perhaps you want to assign to `value` instead?'
       );
     },
 
@@ -119,13 +146,13 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
       })();
     },
     addListener: () => {
-      throw new Error(
-        '[Reanimated] Adding listeners is only possible on the UI runtime.'
+      throw new ReanimatedError(
+        'Adding listeners is only possible on the UI runtime.'
       );
     },
     removeListener: () => {
-      throw new Error(
-        '[Reanimated] Removing listeners is only possible on the UI runtime.'
+      throw new ReanimatedError(
+        'Removing listeners is only possible on the UI runtime.'
       );
     },
 
@@ -144,9 +171,11 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
 
   const mutable: Mutable<Value> = {
     get value(): Value {
+      checkInvalidReadDuringRender();
       return value;
     },
     set value(newValue) {
+      checkInvalidWriteDuringRender();
       valueSetter(mutable, newValue);
     },
 

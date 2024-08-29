@@ -7,12 +7,13 @@ import type {
   WorkletFunction,
 } from './commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
-import { registerWorkletStackDetails } from './errors';
+import { ReanimatedError, registerWorkletStackDetails } from './errors';
 import { jsVersion } from './platform-specific/jsVersion';
 import {
   shareableMappingCache,
   shareableMappingFlag,
 } from './shareableMappingCache';
+import { logger } from './logger';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -63,15 +64,15 @@ const INACCESSIBLE_OBJECT = {
             // need to allow for this key to be accessed here.
             return false;
           }
-          throw new Error(
-            `[Reanimated] Trying to access property \`${String(
+          throw new ReanimatedError(
+            `Trying to access property \`${String(
               prop
             )}\` of an object which cannot be sent to the UI runtime.`
           );
         },
         set: () => {
-          throw new Error(
-            '[Reanimated] Trying to write to an object which cannot be sent to the UI runtime.'
+          throw new ReanimatedError(
+            'Trying to write to an object which cannot be sent to the UI runtime.'
           );
         },
       }
@@ -116,8 +117,8 @@ export function makeShareableCloneRecursive<T>(
     if (depth === DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
       processedObjectAtThresholdDepth = value;
     } else if (value === processedObjectAtThresholdDepth) {
-      throw new Error(
-        '[Reanimated] Trying to convert a cyclic object to a shareable. This is not supported.'
+      throw new ReanimatedError(
+        'Trying to convert a cyclic object to a shareable. This is not supported.'
       );
     }
   } else {
@@ -168,7 +169,7 @@ export function makeShareableCloneRecursive<T>(
           if (__DEV__) {
             const babelVersion = value.__initData.version;
             if (babelVersion !== undefined && babelVersion !== jsVersion) {
-              throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).        
+              throw new ReanimatedError(`Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).        
 See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version\` for more details.
 Offending code was: \`${getWorkletCode(value)}\``);
             }
@@ -242,14 +243,14 @@ Offending code was: \`${getWorkletCode(value)}\``);
           __init: () => {
             'worklet';
             if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
-              throw new Error(
-                `[Reanimated] Invalid array view name \`${typeName}\`.`
+              throw new ReanimatedError(
+                `Invalid array view name \`${typeName}\`.`
               );
             }
             const constructor = global[typeName as keyof typeof global];
             if (constructor === undefined) {
-              throw new Error(
-                `[Reanimated] Constructor for \`${typeName}\` not found.`
+              throw new ReanimatedError(
+                `Constructor for \`${typeName}\` not found.`
               );
             }
             return new constructor(buffer);
@@ -340,8 +341,8 @@ function freezeObjectIfDev<T extends object>(value: T) {
         return element;
       },
       set() {
-        console.warn(
-          `[Reanimated] Tried to modify key \`${key}\` of an object which has been already passed to a worklet. See 
+        logger.warn(
+          `Tried to modify key \`${key}\` of an object which has been already passed to a worklet. See 
 https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-modify-key-of-an-object-which-has-been-converted-to-a-shareable 
 for more details.`
         );

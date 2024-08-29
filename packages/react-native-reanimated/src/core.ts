@@ -13,6 +13,7 @@ import { makeShareableCloneRecursive } from './shareables';
 import { initializeUIRuntime } from './initializers';
 import type { LayoutAnimationBatchItem } from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
+import { ReanimatedError } from './errors';
 
 export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';
@@ -39,21 +40,14 @@ export const isReanimated3 = () => true;
  */
 export const isConfigured = isReanimated3;
 
-// this is for web implementation
-if (SHOULD_BE_USE_WEB) {
-  global._WORKLET = false;
-  global._log = console.log;
-  global._getAnimationTimestamp = () => performance.now();
-}
-
 export function getViewProp<T>(
   viewTag: number,
   propName: string,
   component?: React.Component // required on Fabric
 ): Promise<T> {
   if (isFabric() && !component) {
-    throw new Error(
-      '[Reanimated] Function `getViewProp` requires a component to be passed as an argument on Fabric.'
+    throw new ReanimatedError(
+      'Function `getViewProp` requires a component to be passed as an argument on Fabric.'
     );
   }
 

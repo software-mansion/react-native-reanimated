@@ -7,6 +7,7 @@ import {
   makeShareableCloneRecursive,
 } from './shareables';
 import { isWorkletFunction } from './commonTypes';
+import { ReanimatedError } from './errors';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -76,12 +77,12 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
-    throw new Error(
-      '[Reanimated] `runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+    throw new ReanimatedError(
+      '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
-    throw new Error('[Reanimated] `runOnUI` can only be used on worklets.');
+    throw new ReanimatedError('`runOnUI` can only be used with worklets.');
   }
   return (...args) => {
     if (IS_JEST) {
@@ -162,13 +163,13 @@ export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
-    throw new Error(
-      '[Reanimated] `runOnUIImmediately` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
+    throw new ReanimatedError(
+      '`runOnUIImmediately` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
-    throw new Error(
-      '[Reanimated] `runOnUIImmediately` can only be used on worklets.'
+    throw new ReanimatedError(
+      '`runOnUIImmediately` can only be used with worklets.'
     );
   }
   return (...args) => {

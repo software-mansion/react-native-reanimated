@@ -30,6 +30,5 @@
     "watch": "tsc-watch --onSuccess \"yarn bundle\"",
     "lint": "eslint --max-warnings=0 --ext .",
     "type:check:src": "tsc --noEmit"
-  },
-  "types": "types/plugin.d.ts"
+  }
 }
