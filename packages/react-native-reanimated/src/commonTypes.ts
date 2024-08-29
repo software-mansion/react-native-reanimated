@@ -37,7 +37,7 @@ export interface SharedValue<Value = unknown> {
  */
 type SharedValueDisableContravariance<Value = unknown> = Omit<
   SharedValue<Value>,
-  'get' | 'set'
+  'set'
 >;
 
 export interface Mutable<Value = unknown> extends SharedValue<Value> {
