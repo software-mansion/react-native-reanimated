@@ -58,17 +58,28 @@ export default function RuntimeTestsExample() {
           },
         },
         {
-          testSuiteName: 'layoutAnimations',
+          testSuiteName: 'entering and exiting',
           importTest: () => {
             require('./tests/layoutAnimations/entering/enteringColors.test');
             require('./tests/layoutAnimations/entering/predefinedEntering.test');
             require('./tests/layoutAnimations/exiting/predefinedExiting.test');
+          },
+        },
+        {
+          testSuiteName: 'layout transitions',
+          importTest: () => {
             describe('Compare layout transitions with **constant view size** with snapshots', () => {
               require('./tests/layoutAnimations/layout/predefinedLayoutPosition.test');
             });
             describe('Compare Test layout transitions including view **size changes** with snapshots', () => {
               require('./tests/layoutAnimations/layout/positionAndSize.test');
             });
+          },
+        },
+        {
+          testSuiteName: 'keyframe animations',
+          importTest: () => {
+            require('./tests/layoutAnimations/keyframe/basic.test');
           },
         },
         {
@@ -84,6 +95,7 @@ export default function RuntimeTestsExample() {
             require('./tests/plugin/fileWorkletization.test');
             require('./tests/plugin/contextObjects.test');
             require('./tests/plugin/workletClasses.test');
+            require('./tests/plugin/recursion.test');
           },
         },
         {
