@@ -60,7 +60,7 @@ export function addCustomGlobals(this: ReanimatedPluginPass) {
  * becomes
  *
  * ```ts
- *   const foo = factoryCall();
+ *   export const foo = factoryCall();
  * ```
  */
 export function replaceWithFactoryCall(

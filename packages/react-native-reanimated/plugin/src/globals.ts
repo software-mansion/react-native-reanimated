@@ -117,6 +117,7 @@ const notCapturedIdentifiers = [
   // Reanimated
   '_WORKLET',
   'ReanimatedError',
+  '__reanimatedLoggerConfig',
 ];
 
 /**
