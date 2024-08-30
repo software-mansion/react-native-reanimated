@@ -4,7 +4,7 @@ import type { LogData, LogBoxLogLevel } from './LogBox';
 
 const DOCS_URL =
   'https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration';
-const DOCS_REFERENCE = `If you don't wand to see this message, refer to:\n${DOCS_URL}`;
+const DOCS_REFERENCE = `If you don't want to see this message, you can disable the \`strict\` mode. Refer to:\n${DOCS_URL} for more details.`;
 
 type LogFunction = (data: LogData) => void;
 

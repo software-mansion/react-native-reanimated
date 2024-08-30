@@ -18,10 +18,10 @@ import {
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
 
-// The following configuration is a default one
+// This is a default configuration
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
-  strict: true,
+  strict: true, // Reanimated runs in strict mode by default
 });
 ```
 
@@ -55,8 +55,6 @@ A value od the `ReanimatedLogLevel` enum that defines the minimum level of the l
 
 A boolean value that enables or disables strict mode. When strict mode is enabled, Reanimated will show more warnings that can help you to catch potential issues in your code.
 
-## Example
-
 ## Remarks
 
 - The logger configuration is global and affects all Reanimated animations in your app.
@@ -64,6 +62,8 @@ A boolean value that enables or disables strict mode. When strict mode is enable
 - The `configureReanimatedLogger` function should be called before any Reanimated animations are created, e.g. in the root file of your app.
 
 - Each call to `configureReanimatedLogger` overrides the previous configuration.
+
+- There are currently no `fatal` logs in Reanimated, but the `fatal` level is reserved for future use.
 
 ## Platform compatibility
 
