@@ -224,6 +224,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
         const handle = makeShareableCloneRecursive({
           __init: () => {
             'worklet';
+            // eslint-disable-next-line reanimated/use-reanimated-error
             const error = new Error();
             error.name = name;
             error.message = message;
