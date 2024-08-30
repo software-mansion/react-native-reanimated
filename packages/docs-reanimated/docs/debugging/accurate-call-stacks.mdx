@@ -1,0 +1,39 @@
+---
+id: debugging
+sidebar_label: Accurate Call Stacks
+sidebar_position: 1
+---
+
+# Accurate Call Stacks
+
+When debugging Reanimated code, you may encounter call stacks that don’t clearly indicate the root cause of an error or a warning. This occurs because, by default, React Native displays the entire call stack up to the point where the error was thrown or the warning was logged. This can be misleading, as it often highlights code from Reanimated’s internals instead of the specific problematic code within your own project.
+
+To address this, Metro provides a way to enhance stack traces through the Metro `symbolicator`. Reanimated leverages this feature by exporting a Metro config wrapper called `wrapWithReanimatedMetroConfig`. This wrapper configures the symbolicator to improve the accuracy of stack traces, making it easier to identify issues within your code.
+
+## Reference
+
+To enable more accurate call stacks, simply import `wrapWithReanimatedMetroConfig` from `react-native-reanimated/metro-config` and wrap your existing Metro configuration with it.
+
+```js
+const {
+  wrapWithReanimatedMetroConfig,
+} = require('react-native-reanimated/metro-config');
+
+const config = {
+  // Your existing Metro configuration options
+};
+
+module.exports = wrapWithReanimatedMetroConfig(config);
+```
+
+## Example
+
+The following example shows the difference in call stacks before and after applying the Reanimated Metro config wrapper. The **Before** image displays Reanimated source code as the error source, while the **After** image shows the actual incorrect code that caused the error.
+
+| Before                                                                                              | After                                                                                             |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| ![Call Stack before applying Reanimated Metro config wrapper](/img/debugging/MetroConfigBefore.png) | ![Call Stack after applying Reanimated Metro config wrapper](/img/debugging/MetroConfigAfter.png) |
+
+## Remarks
+
+- Some errors, especially those caused by asynchronous code, may still result in stack traces that point to internal Reanimated rather than the specific line in your code that triggered the error. This happens because the stack trace loses track of the component or function that initiated the asynchronous operation.
