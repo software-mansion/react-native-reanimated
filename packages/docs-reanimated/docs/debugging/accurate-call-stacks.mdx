@@ -1,14 +1,14 @@
 ---
-id: debugging
+id: accurate-call-stacks
 sidebar_label: Accurate Call Stacks
 sidebar_position: 1
 ---
 
 # Accurate Call Stacks
 
-When debugging Reanimated code, you may encounter call stacks that don’t clearly indicate the root cause of an error or a warning. This occurs because, by default, React Native displays the entire call stack up to the point where the error was thrown or the warning was logged. This can be misleading, as it often highlights code from Reanimated’s internals instead of the specific problematic code within your own project.
+When debugging Reanimated code, you may encounter error or warning call stacks that don’t clearly indicate the root cause of a problem. This occurs because, by default, React Native displays the entire call stack up to the point where the error was thrown or the warning was logged. This can be misleading, as it often highlights code from Reanimated internals instead of the specific problematic code within your project.
 
-To address this, Metro provides a way to enhance stack traces through the Metro `symbolicator`. Reanimated leverages this feature by exporting a Metro config wrapper called `wrapWithReanimatedMetroConfig`. This wrapper configures the symbolicator to improve the accuracy of stack traces, making it easier to identify issues within your code.
+To address this, Metro provides a way to enhance stack traces through the Metro `symbolicator`. Reanimated utilizes this feature by exporting a Metro config wrapper called `wrapWithReanimatedMetroConfig`. This wrapper configures the symbolicator to improve the accuracy of stack traces, making it easier to identify issues within your code.
 
 ## Reference
 

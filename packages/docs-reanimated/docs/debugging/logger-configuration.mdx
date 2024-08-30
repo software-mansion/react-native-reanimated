@@ -1,0 +1,70 @@
+---
+id: logger-configuration
+sidebar_label: Logger configuration
+sidebar_position: 2
+---
+
+# Logger configuration
+
+Reanimated shows warnings that indicate potential issues in the user code. These logs can be configured to be more or less verbose. The default configuration is to show all warnings. You can change this behavior by using the `configureReanimatedLogger` function.
+
+## Reference
+
+To configure the Reanimated logger, import `configureReanimatedLogger` from `react-native-reanimated` and call it with the desired configuration.
+
+```js
+import {
+  configureReanimatedLogger,
+  ReanimatedLogLevel,
+} from 'react-native-reanimated';
+
+// The following configuration is a default one
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.warn,
+  strict: true,
+});
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function configureReanimatedLogger(config: LoggerConfig): void;
+
+type LoggerConfig = {
+  level?: ReanimatedLogLevel;
+  strict?: boolean;
+};
+
+enum ReanimatedLogLevel {
+  warn = 1,
+  error = 2,
+  fatal = 3,
+}
+```
+
+</details>
+
+### Configuration options
+
+#### `level`
+
+A value od the `ReanimatedLogLevel` enum that defines the minimum level of the logs that will be shown.
+
+#### `strict`
+
+A boolean value that enables or disables strict mode. When strict mode is enabled, Reanimated will show more warnings that can help you to catch potential issues in your code.
+
+## Example
+
+## Remarks
+
+- The logger configuration is global and affects all Reanimated animations in your app.
+
+- The `configureReanimatedLogger` function should be called before any Reanimated animations are created, e.g. in the root file of your app.
+
+- Each call to `configureReanimatedLogger` overrides the previous configuration.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />
