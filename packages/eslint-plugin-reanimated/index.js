@@ -187,6 +187,9 @@ var require_useReanimatedError = __commonJS({
               context.report({
                 node,
                 messageId: 'useReanimatedError',
+                fix: function (fixer) {
+                  return fixer.replaceText(node.callee, 'ReanimatedError');
+                },
               });
             }
           },
@@ -204,6 +207,7 @@ var require_useReanimatedError = __commonJS({
         },
         type: 'suggestion',
         schema: [],
+        fixable: 'code',
       },
       defaultOptions: [],
     };

@@ -1,5 +1,4 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-// TODO: FIX ME
 // eslint-disable-next-line import/no-unresolved
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -15,6 +14,10 @@ const rule: TSESLint.RuleModule<'useReanimatedError', []> = {
           context.report({
             node,
             messageId: 'useReanimatedError',
+            fix: function (fixer) {
+              // Replace `Error` with `ReanimatedError`
+              return fixer.replaceText(node.callee, 'ReanimatedError');
+            },
           });
         }
       },
@@ -31,6 +34,7 @@ const rule: TSESLint.RuleModule<'useReanimatedError', []> = {
     },
     type: 'suggestion',
     schema: [],
+    fixable: 'code',
   },
   defaultOptions: [],
 };
