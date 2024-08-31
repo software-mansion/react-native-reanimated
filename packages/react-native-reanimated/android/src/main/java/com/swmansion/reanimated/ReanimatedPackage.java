@@ -3,6 +3,7 @@ package com.swmansion.reanimated;
 import static com.facebook.react.bridge.ReactMarkerConstants.CREATE_UI_MANAGER_MODULE_END;
 import static com.facebook.react.bridge.ReactMarkerConstants.CREATE_UI_MANAGER_MODULE_START;
 
+import androidx.annotation.NonNull;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactPackage;
@@ -28,9 +29,8 @@ import java.util.Map;
       ReanimatedUIManager.class,
     })
 public class ReanimatedPackage extends TurboReactPackage implements ReactPackage {
-
   @Override
-  public NativeModule getModule(String name, ReactApplicationContext reactContext) {
+  public NativeModule getModule(String name, @NonNull ReactApplicationContext reactContext) {
     if (name.equals(ReanimatedModule.NAME)) {
       return new ReanimatedModule(reactContext);
     }
@@ -51,6 +51,7 @@ public class ReanimatedPackage extends TurboReactPackage implements ReactPackage
     for (Class<? extends NativeModule> moduleClass : moduleList) {
       ReactModule reactModule = moduleClass.getAnnotation(ReactModule.class);
 
+      assert reactModule != null;
       reactModuleInfoMap.put(
           reactModule.name(),
           new ReactModuleInfo(
@@ -58,17 +59,11 @@ public class ReanimatedPackage extends TurboReactPackage implements ReactPackage
               moduleClass.getName(),
               true,
               reactModule.needsEagerInit(),
-              reactModule.hasConstants(),
               reactModule.isCxxModule(),
               BuildConfig.IS_NEW_ARCHITECTURE_ENABLED));
     }
 
-    return new ReactModuleInfoProvider() {
-      @Override
-      public Map<String, ReactModuleInfo> getReactModuleInfos() {
-        return reactModuleInfoMap;
-      }
-    };
+    return () -> reactModuleInfoMap;
   }
 
   private UIManagerModule createUIManager(final ReactApplicationContext reactContext) {
