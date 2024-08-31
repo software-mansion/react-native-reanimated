@@ -1,6 +1,7 @@
 package com.swmansion.reanimated;
 
 import static com.swmansion.reanimated.Utils.simplifyStringNumbersList;
+
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -21,7 +22,7 @@ public class NativeProxy extends NativeProxyCommon {
   private final HybridData mHybridData;
 
   @OptIn(markerClass = FrameworkAPI.class)
-  public  NativeProxy(ReactApplicationContext context, String valueUnpackerCode) {
+  public NativeProxy(ReactApplicationContext context, String valueUnpackerCode) {
     super(context);
     CallInvokerHolderImpl holder =
         (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
