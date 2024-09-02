@@ -1,66 +1,71 @@
 package com.swmansion.reanimated.keyboard;
 
-import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.FrameLayout;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
-import com.facebook.react.bridge.ReactApplicationContext;
-import java.lang.ref.WeakReference;
+import javax.annotation.Nullable;
 
-public class WindowsInsetsManager {
+abstract class InsetsManager {
 
   private boolean mIsStatusBarTranslucent = false;
-  private final WeakReference<ReactApplicationContext> mReactContext;
+
   private final Keyboard mKeyboard;
+
   private final NotifyAboutKeyboardChangeFunction mNotifyAboutKeyboardChange;
+
+  private boolean isObservingChanges = false;
 
   private final String MissingContextErrorMsg = "Unable to get reference to react activity";
 
-  public WindowsInsetsManager(
-      WeakReference<ReactApplicationContext> reactContext,
-      Keyboard keyboard,
-      NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange) {
-    mReactContext = reactContext;
+  public InsetsManager(
+      Keyboard keyboard, NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange) {
     mKeyboard = keyboard;
     mNotifyAboutKeyboardChange = notifyAboutKeyboardChange;
   }
 
-  private Activity getCurrentActivity() {
-    return mReactContext.get().getCurrentActivity();
-  }
+  abstract @Nullable Window getWindow();
 
   public void startObservingChanges(
-      KeyboardAnimationCallback keyboardAnimationCallback, boolean isStatusBarTranslucent) {
+      NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange, boolean isStatusBarTranslucent) {
+    if (isObservingChanges) {
+      return;
+    }
+
+    isObservingChanges = true;
     mIsStatusBarTranslucent = isStatusBarTranslucent;
     updateWindowDecor(false);
 
-    Activity currentActivity = getCurrentActivity();
-    if (currentActivity == null) {
+    Window window = getWindow();
+    if (window == null) {
       Log.e("Reanimated", MissingContextErrorMsg);
       return;
     }
 
-    View rootView = currentActivity.getWindow().getDecorView();
+    View rootView = window.getDecorView();
+    KeyboardAnimationCallback mKeyboardAnimationCallback =
+        new KeyboardAnimationCallback(mKeyboard, notifyAboutKeyboardChange);
     ViewCompat.setOnApplyWindowInsetsListener(rootView, this::onApplyWindowInsetsListener);
-    ViewCompat.setWindowInsetsAnimationCallback(rootView, keyboardAnimationCallback);
+    ViewCompat.setWindowInsetsAnimationCallback(rootView, mKeyboardAnimationCallback);
   }
 
   public void stopObservingChanges() {
+    isObservingChanges = false;
     updateWindowDecor(!mIsStatusBarTranslucent);
     updateInsets(0, 0);
 
-    Activity currentActivity = getCurrentActivity();
-    if (currentActivity == null) {
+    Window window = getWindow();
+    if (window == null) {
       Log.e("Reanimated", MissingContextErrorMsg);
       return;
     }
 
-    View rootView = currentActivity.getWindow().getDecorView();
+    View rootView = window.getDecorView();
     ViewCompat.setWindowInsetsAnimationCallback(rootView, null);
     ViewCompat.setOnApplyWindowInsetsListener(rootView, null);
   }
@@ -69,14 +74,13 @@ public class WindowsInsetsManager {
     new Handler(Looper.getMainLooper())
         .post(
             () -> {
-              Activity currentActivity = getCurrentActivity();
-              if (currentActivity == null) {
+              Window window = getWindow();
+              if (window == null) {
                 Log.e("Reanimated", MissingContextErrorMsg);
                 return;
               }
 
-              WindowCompat.setDecorFitsSystemWindows(
-                  currentActivity.getWindow(), decorFitsSystemWindow);
+              WindowCompat.setDecorFitsSystemWindows(window, decorFitsSystemWindow);
             });
   }
 
@@ -104,15 +108,16 @@ public class WindowsInsetsManager {
               FrameLayout.LayoutParams params = getLayoutParams(paddingTop, paddingBottom);
               int actionBarId = androidx.appcompat.R.id.action_bar_root;
 
-              Activity currentActivity = getCurrentActivity();
-              if (currentActivity == null) {
+              Window window = getWindow();
+              if (window == null) {
                 Log.e("Reanimated", MissingContextErrorMsg);
                 return;
               }
 
-              View actionBarRootView =
-                  currentActivity.getWindow().getDecorView().findViewById(actionBarId);
-              actionBarRootView.setLayoutParams(params);
+              View actionBarRootView = window.getDecorView().findViewById(actionBarId);
+              if (actionBarRootView != null) {
+                actionBarRootView.setLayoutParams(params);
+              }
             });
   }
 

@@ -2,6 +2,7 @@ package com.swmansion.reanimated;
 
 import static java.lang.Float.NaN;
 
+import android.app.Dialog;
 import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
 import android.view.View;
@@ -33,7 +34,9 @@ import com.facebook.react.uimanager.drawable.CSSBackgroundDrawable;
 import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.react.views.modal.ReactModalHostView;
 import com.facebook.react.views.view.ReactViewBackgroundDrawable;
+import com.swmansion.reanimated.keyboard.ModalManager;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import java.util.ArrayList;
@@ -104,6 +107,9 @@ public class NodesManager implements EventDispatcherListener {
   private final ReactContext mContext;
   private final UIManager mUIManager;
   private ReactApplicationContext mReactApplicationContext;
+
+  private ModalManager mModalManager;
+
   private RCTEventEmitter mCustomEventHandler = new NoopEventHandler();
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
@@ -350,6 +356,17 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void handleEvent(Event event) {
+    String eventName = event.getEventName();
+
+    if (eventName.equals(ModalManager.OPEN_MODAL_EVENT_NAME)) {
+      try {
+        View view = mUIManager.resolveView(event.getViewTag());
+        Dialog dialog = ((ReactModalHostView) view).getDialog();
+        mNativeProxy.registerNewDialog(dialog);
+      } catch (Error ignored) {
+      }
+    }
+
     event.dispatch(mCustomEventHandler);
   }
 

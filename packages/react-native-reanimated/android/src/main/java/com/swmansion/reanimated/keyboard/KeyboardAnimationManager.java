@@ -1,5 +1,6 @@
 package com.swmansion.reanimated.keyboard;
 
+import android.app.Dialog;
 import com.facebook.react.bridge.ReactApplicationContext;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,21 +15,23 @@ public class KeyboardAnimationManager {
   private final ConcurrentHashMap<Integer, KeyboardWorkletWrapper> mListeners =
       new ConcurrentHashMap<>();
   private final Keyboard mKeyboard = new Keyboard();
-  private final WindowsInsetsManager mWindowsInsetsManager;
+  private final ModalManager mModalManager;
+
+  private final WindowInsetsManager mWindowInsetsManager;
 
   public KeyboardAnimationManager(WeakReference<ReactApplicationContext> reactContext) {
-    mWindowsInsetsManager =
-        new WindowsInsetsManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
+    mWindowInsetsManager =
+        new WindowInsetsManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
+    mModalManager = new ModalManager(reactContext, mKeyboard, this::notifyAboutKeyboardChange);
   }
 
   public int subscribeForKeyboardUpdates(
       KeyboardWorkletWrapper callback, boolean isStatusBarTranslucent) {
     int listenerId = mNextListenerId++;
     if (mListeners.isEmpty()) {
-      KeyboardAnimationCallback keyboardAnimationCallback =
-          new KeyboardAnimationCallback(mKeyboard, this::notifyAboutKeyboardChange);
-      mWindowsInsetsManager.startObservingChanges(
-          keyboardAnimationCallback, isStatusBarTranslucent);
+      mWindowInsetsManager.startObservingChanges(
+          this::notifyAboutKeyboardChange, isStatusBarTranslucent);
+      mModalManager.startObservingChanges(isStatusBarTranslucent);
     }
     mListeners.put(listenerId, callback);
     return listenerId;
@@ -37,7 +40,8 @@ public class KeyboardAnimationManager {
   public void unsubscribeFromKeyboardUpdates(int listenerId) {
     mListeners.remove(listenerId);
     if (mListeners.isEmpty()) {
-      mWindowsInsetsManager.stopObservingChanges();
+      mWindowInsetsManager.stopObservingChanges();
+      mModalManager.stopObservingChanges();
     }
   }
 
@@ -45,5 +49,9 @@ public class KeyboardAnimationManager {
     for (KeyboardWorkletWrapper listener : mListeners.values()) {
       listener.invoke(mKeyboard.getState().asInt(), mKeyboard.getHeight());
     }
+  }
+
+  public void registerNewDialog(Dialog dialog) {
+    mModalManager.registerNewDialog(dialog, !mListeners.isEmpty());
   }
 }
