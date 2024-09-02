@@ -9,7 +9,7 @@ import { shouldBeUseWeb } from '../PlatformChecker';
 export interface DerivedValue<Value = unknown>
   extends Readonly<Omit<SharedValue<Value>, 'set'>> {
   /**
-   * @deprecated Derived values are readonly, don't use this method. It's here only to not induce breaking type changes.
+   * @deprecated Derived values are readonly, don't use this method. It's here only to prevent breaking changes in TypeScript types.
    * It will be removed in the future.
    */
   set: SharedValue<Value>['set'];
