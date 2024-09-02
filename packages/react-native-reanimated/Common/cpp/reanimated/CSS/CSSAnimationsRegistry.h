@@ -22,6 +22,7 @@ class CSSAnimationsRegistry {
   std::unordered_map<unsigned int, CSSAnimation> registry_;
 
   void addAnimation(
+      jsi::Runtime &rt,
       ShadowNode::Shared shadowNode,
       const CSSAnimationConfig &config);
   void markForRemoval(const unsigned int tag);

@@ -59,7 +59,7 @@ export default function EmptyExample() {
               // @ts-ignore TODO
               animationName: {
                 from: {
-                  width: 0,
+                  width: 100,
                 },
                 to: {
                   width: 300,
@@ -79,7 +79,7 @@ export default function EmptyExample() {
             // @ts-ignore TODO
             animationName: {
               from: {
-                width: 0,
+                width: 100,
               },
               to: {
                 width: 300,
