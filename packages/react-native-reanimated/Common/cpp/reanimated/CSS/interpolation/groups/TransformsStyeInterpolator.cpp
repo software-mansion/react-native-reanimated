@@ -45,8 +45,8 @@ TransformPropertyInterpolators TransformsStyleInterpolator::build(
 }
 
 jsi::Value TransformsStyleInterpolator::update(
-    jsi::Runtime &rt,
-    double progress) {
+    const InterpolationUpdateContext context) {
+  jsi::Runtime &rt = context.rt;
   jsi::Array updateResult(rt, interpolators_.size());
 
   for (size_t i = 0; i < interpolators_.size(); ++i) {
@@ -54,7 +54,7 @@ jsi::Value TransformsStyleInterpolator::update(
         interpolators_[i];
     auto propName = transformInterpolator.property;
     jsi::Value updatedValue =
-        transformInterpolator.interpolator->update(rt, progress);
+        transformInterpolator.interpolator->update(context);
 
     jsi::Object obj(rt);
     obj.setProperty(rt, jsi::PropNameID::forUtf8(rt, propName), updatedValue);

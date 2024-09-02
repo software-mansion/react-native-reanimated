@@ -18,8 +18,6 @@ class KeyframedStyleInterpolator : public ObjectPropertiesInterpolator {
       jsi::Runtime &rt,
       const jsi::Object &keyframedStyle);
 
-  jsi::Value update(jsi::Runtime &rt, double progress) override;
-
  private:
   static const ObjectPropertiesInterpolatorFactories &getFactories();
 };

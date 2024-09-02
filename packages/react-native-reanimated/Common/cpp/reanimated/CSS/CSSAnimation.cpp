@@ -26,7 +26,13 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
     finish();
   }
 
-  return styleInterpolator.update(rt, easingFunction(progress));
+  auto updatedStyle = styleInterpolator.update({
+      .rt = rt,
+      .progress = easingFunction(progress),
+      .node = shadowNode,
+  });
+
+  return updatedStyle;
 }
 
 void CSSAnimation::finish() {

@@ -31,7 +31,7 @@ class TransformsStyleInterpolator : public Interpolator {
       const jsi::Array &transformsArray,
       const TransformPropertyInterpolatorFactories &factories);
 
-  jsi::Value update(jsi::Runtime &rt, double progress) override;
+  jsi::Value update(const InterpolationUpdateContext context) override;
 
  private:
   const TransformPropertyInterpolators interpolators_;

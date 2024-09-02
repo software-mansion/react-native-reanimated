@@ -23,7 +23,7 @@ class ObjectPropertiesInterpolator : public Interpolator {
       const jsi::Object &object,
       const ObjectPropertiesInterpolatorFactories &factories);
 
-  jsi::Value update(jsi::Runtime &rt, double progress);
+  jsi::Value update(const InterpolationUpdateContext context);
 
  private:
   const ObjectPropertiesInterpolators interpolators_;

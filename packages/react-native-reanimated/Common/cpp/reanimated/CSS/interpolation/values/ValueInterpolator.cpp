@@ -72,13 +72,11 @@ std::pair<Keyframe<T>, Keyframe<T>> ValueInterpolator<T>::getKeyframePair(
   const auto &keyframes = *keyframes_;
 
   // Handle the case where there is no initial keyframe
-  // TODO: Read the initial keyframe from the view style
   if (fromKeyframeIndex_ == -1) {
     return {keyframes.front(), keyframes.front()};
   }
 
   // Handle the case where there is no final keyframe
-  // TODO: Read the final keyframe from the view style
   if (fromKeyframeIndex_ == static_cast<int>(keyframes.size()) - 1) {
     return {keyframes.back(), keyframes.back()};
   }
@@ -100,7 +98,9 @@ double ValueInterpolator<T>::calculateLocalProgress(double progress) const {
 }
 
 template <typename T>
-jsi::Value ValueInterpolator<T>::update(jsi::Runtime &rt, double progress) {
+jsi::Value ValueInterpolator<T>::update(
+    const InterpolationUpdateContext context) {
+  const auto progress = context.progress;
   updateFromKeyframeIndex(progress);
 
   auto [fromKeyframe, toKeyframe] = getKeyframePair(progress);
@@ -108,18 +108,14 @@ jsi::Value ValueInterpolator<T>::update(jsi::Runtime &rt, double progress) {
   T interpolatedValue =
       interpolate(localProgress, fromKeyframe.value, toKeyframe.value);
 
-  return convertToJSIValue(rt, interpolatedValue);
-}
-
-template <typename T>
-jsi::Value ValueInterpolator<T>::convertToJSIValue(
-    jsi::Runtime &rt,
-    const T &value) const {
-  return jsi::Value(value);
+  return convertToJSIValue(context.rt, interpolatedValue);
 }
 
 // Declare the types that will be used in the ValueInterpolator class
 // by different instantiations of the template.
+template class ValueInterpolator<int>;
 template class ValueInterpolator<double>;
+template class ValueInterpolator<std::string>;
+template class ValueInterpolator<std::vector<double>>;
 
 } // namespace reanimated

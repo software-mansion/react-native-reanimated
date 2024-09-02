@@ -19,6 +19,7 @@ export default function EmptyExample() {
             width: 100,
             height: 100,
             backgroundColor: 'blue',
+            shadowColor: 'black',
             // @ts-ignore TODO
             animationName: {
               from: {
@@ -56,13 +57,23 @@ export default function EmptyExample() {
             style={{
               height: 50,
               backgroundColor: 'cyan',
+              shadowColor: 'black',
+              shadowRadius: 10,
               // @ts-ignore TODO
               animationName: {
                 from: {
                   width: 100,
+                  shadowOffset: { width: 0, height: 10 },
+                  shadowOpacity: 0.25,
+                },
+                '50%': {
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 1,
                 },
                 to: {
                   width: 300,
+                  shadowOffset: { width: 0, height: -10 },
+                  shadowOpacity: 0.25,
                 },
               },
               animationDuration: '1000ms',
@@ -79,13 +90,21 @@ export default function EmptyExample() {
             // @ts-ignore TODO
             animationName: {
               from: {
-                width: 100,
+                width: 200,
+                transform: [{ rotate: '0deg' }],
+                zIndex: 0,
+              },
+              0.5: {
+                transform: [{ rotate: 2 * Math.PI + 'rad' }],
+                width: 500,
+                zIndex: -1,
               },
               to: {
                 width: 300,
+                transform: [{ rotate: '-360deg' }],
               },
             },
-            animationDuration: '3500ms',
+            animationDuration: '2000ms',
             animationTimingFunction: 'linear',
           }}
         />
