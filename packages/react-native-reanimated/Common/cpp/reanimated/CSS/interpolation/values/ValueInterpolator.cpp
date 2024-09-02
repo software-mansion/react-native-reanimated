@@ -38,6 +38,10 @@ ValueInterpolator<T>::createKeyframes(
 template <typename T>
 void ValueInterpolator<T>::updateCurrentKeyframes(
     const InterpolationUpdateContext context) {
+  if (!context.previousProgress.has_value()) {
+    keyframeAfterIndex_ = 0;
+  }
+
   const auto &keyframes = *keyframes_;
   const auto prevAfterIndex = keyframeAfterIndex_;
 

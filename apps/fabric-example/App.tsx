@@ -15,18 +15,18 @@ export default function EmptyExample() {
             width: 200,
             // @ts-ignore TODO
             animationName: {
-              0: {
+              from: {
                 width: 200,
               },
-              0.5: {
+              to: {
                 width: 350,
               },
-              1: {
-                width: 200,
-              },
             },
-            animationDuration: '10s',
+            animationDuration: '5s',
+            animationIterationCount: 'infinite',
             animationTimingFunction: 'linear',
+            animationDirection: 'alternate',
+            animationDelay: '-2.5s',
           }}>
           <View style={styles.row}>
             <View style={[styles.grow, { backgroundColor: 'blue' }]} />
@@ -44,7 +44,7 @@ export default function EmptyExample() {
               // @ts-ignore TODO
               animationName: {
                 from: {
-                  width: 20,
+                  width: '0%',
                 },
                 0.1: {
                   width: '75%',
@@ -77,8 +77,10 @@ export default function EmptyExample() {
                   width: '0%',
                 },
               },
-              animationDuration: '10s',
+              animationDuration: '5s',
+              animationIterationCount: 2,
               animationTimingFunction: 'linear',
+              animationDelay: '500ms',
             }}
           />
         </Animated.View>

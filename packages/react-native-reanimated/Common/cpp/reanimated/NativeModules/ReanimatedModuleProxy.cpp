@@ -484,17 +484,28 @@ void ReanimatedModuleProxy::registerCSSAnimation(
     const jsi::Value &animationConfig) {
   const auto &configObject = animationConfig.asObject(rt);
 
+  auto keyframedStyle =
+      configObject.getProperty(rt, "animationName").asObject(rt);
   auto animationDuration =
       configObject.getProperty(rt, "animationDuration").asNumber();
   auto animationTimingFunction =
       configObject.getProperty(rt, "animationTimingFunction")
           .asString(rt)
           .utf8(rt);
-  auto keyframedStyle =
-      configObject.getProperty(rt, "animationName").asObject(rt);
+  auto animationDelay =
+      configObject.getProperty(rt, "animationDelay").asNumber();
+  auto animationIterationCount =
+      (configObject.getProperty(rt, "animationIterationCount").asNumber());
+  auto animationDirection =
+      configObject.getProperty(rt, "animationDirection").asString(rt).utf8(rt);
 
   CSSAnimationConfig config{
-      animationDuration, animationTimingFunction, std::move(keyframedStyle)};
+      std::move(keyframedStyle),
+      animationDuration,
+      animationTimingFunction,
+      animationDelay,
+      animationIterationCount,
+      animationDirection};
 
   cssAnimationsRegistry_->addAnimation(
       rt, shadowNodeFromValue(rt, shadowNodeWrapper), config);
@@ -652,6 +663,10 @@ void ReanimatedModuleProxy::performOperations() {
 
         auto shadowNode = animation.getShadowNode();
         const jsi::Value &updates = animation.update(rt, now);
+
+        if (updates.isUndefined()) {
+          break;
+        }
 
         operationsInBatch_.emplace_back(
             shadowNode, std::make_unique<jsi::Value>(rt, updates));
