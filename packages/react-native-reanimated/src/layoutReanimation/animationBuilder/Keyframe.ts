@@ -154,7 +154,9 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       .sort((a: number, b: number) => a - b)
       .forEach((keyPoint: number) => {
         if (keyPoint < 0 || keyPoint > 100) {
-          throw new ReanimatedError('Keyframe should be in between range 0 - 100.');
+          throw new ReanimatedError(
+            'Keyframe should be in between range 0 - 100.'
+          );
         }
         const keyframe: KeyframeProps = this.definitions[keyPoint];
         const easing = keyframe.easing;
