@@ -18,7 +18,8 @@ class DiscreteStringInterpolator : public ValueInterpolator<std::string> {
   std::string interpolate(
       double localProgress,
       const std::string &fromValue,
-      const std::string &toValue) const override;
+      const std::string &toValue,
+      const InterpolationUpdateContext context) const override;
 };
 
 } // namespace reanimated

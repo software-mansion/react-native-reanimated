@@ -1,113 +1,87 @@
-import { Text, StyleSheet, View, Button, SafeAreaView } from 'react-native';
+import { Text, StyleSheet, View, SafeAreaView } from 'react-native';
 
 import React from 'react';
 import Animated from 'react-native-reanimated';
 
 export default function EmptyExample() {
-  const [someState, setSomeState] = React.useState(false);
-
   return (
     <SafeAreaView style={styles.container}>
-      <Button
-        title={`${someState ? 'Disable' : 'Enable'} additional animation`}
-        onPress={() => setSomeState(!someState)}
-      />
       <View style={styles.container}>
         <Text>Hello world!</Text>
         <Animated.View
           style={{
-            width: 100,
-            height: 100,
-            backgroundColor: 'blue',
-            shadowColor: 'black',
+            height: 65,
+            backgroundColor: 'gray',
+            width: 200,
             // @ts-ignore TODO
             animationName: {
-              from: {
-                width: 50,
-                height: 50,
-                transform: [{ scale: 0 }, { translateX: 0 }],
-              },
-              0.2: {
-                width: 300,
-                opacity: 1,
-              },
-              '50%': {
-                height: 600,
-                opacity: 0.25,
-                transform: [{ scale: 1 }, { translateX: 100 }],
-              },
-              0.75: {
-                width: 300,
-                opacity: 1,
-                transform: [{ translateX: -200 }],
-              },
-              to: {
+              0: {
                 width: 200,
-                height: 200,
-                transform: [{ translateX: 0 }],
+              },
+              0.5: {
+                width: 350,
+              },
+              1: {
+                width: 200,
               },
             },
-            animationDuration: '2s',
+            animationDuration: '10s',
             animationTimingFunction: 'linear',
-          }}
-        />
+          }}>
+          <View style={styles.row}>
+            <View style={[styles.grow, { backgroundColor: 'blue' }]} />
+            <View style={[styles.grow, { backgroundColor: 'lightblue' }]} />
+            <View style={[styles.grow, { backgroundColor: 'skyblue' }]} />
+            <View style={[styles.grow, { backgroundColor: 'powderblue' }]} />
+          </View>
 
-        {someState ? (
           <Animated.View
             style={{
-              height: 50,
-              backgroundColor: 'cyan',
+              height: '100%',
+              backgroundColor: 'gold',
               shadowColor: 'black',
-              shadowRadius: 10,
+              width: 20,
               // @ts-ignore TODO
               animationName: {
                 from: {
-                  width: 100,
-                  shadowOffset: { width: 0, height: 10 },
-                  shadowOpacity: 0.25,
+                  width: 20,
                 },
-                '50%': {
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 1,
+                0.1: {
+                  width: '75%',
+                },
+                0.2: {
+                  width: 20,
+                },
+                0.3: {
+                  width: '50%',
+                },
+                0.4: {
+                  width: 20,
+                },
+                0.5: {
+                  width: '75%',
+                },
+                0.6: {
+                  width: 0,
+                },
+                0.7: {
+                  width: '100%',
+                },
+                0.8: {
+                  width: '25%',
+                },
+                0.9: {
+                  width: '75%',
                 },
                 to: {
-                  width: 300,
-                  shadowOffset: { width: 0, height: -10 },
-                  shadowOpacity: 0.25,
+                  width: '0%',
                 },
               },
-              animationDuration: '1000ms',
-              animationTimingFunction: 'ease-in-out-back',
+              animationDuration: '10s',
+              animationTimingFunction: 'linear',
             }}
           />
-        ) : (
-          <></>
-        )}
-        <Animated.View
-          style={{
-            height: 50,
-            backgroundColor: 'magenta',
-            // @ts-ignore TODO
-            animationName: {
-              from: {
-                width: 200,
-                transform: [{ rotate: '0deg' }],
-                zIndex: 0,
-              },
-              0.5: {
-                transform: [{ rotate: 2 * Math.PI + 'rad' }],
-                width: 500,
-                zIndex: -1,
-              },
-              to: {
-                width: 300,
-                transform: [{ rotate: '-360deg' }],
-              },
-            },
-            animationDuration: '2000ms',
-            animationTimingFunction: 'linear',
-          }}
-        />
+        </Animated.View>
       </View>
     </SafeAreaView>
   );
@@ -118,5 +92,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    height: '50%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  grow: {
+    flexGrow: 1,
   },
 });

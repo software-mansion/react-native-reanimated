@@ -8,6 +8,7 @@
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <chrono>
+#include <optional>
 #include <utility>
 
 namespace reanimated {
@@ -50,6 +51,8 @@ class CSSAnimation {
 
   time_t startTime;
   CSSAnimationState state;
+  std::optional<double> previousProgress;
+  std::optional<double> previousToPreviousProgress;
 };
 
 } // namespace reanimated

@@ -637,6 +637,7 @@ void ReanimatedModuleProxy::maybeRunCssAnimationsLoop() {
 }
 
 void ReanimatedModuleProxy::performOperations() {
+  auto &viewPropsRepository = ViewPropsRepository::getInstance();
   const auto now = getAnimationTimestamp_();
 
   for (auto &[animationTag, animation] : cssAnimationsRegistry_->registry_) {
@@ -648,14 +649,12 @@ void ReanimatedModuleProxy::performOperations() {
       case CSSAnimationState::running: {
         jsi::Runtime &rt =
             workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+
+        auto shadowNode = animation.getShadowNode();
         const jsi::Value &updates = animation.update(rt, now);
 
-        LOG(INFO) << "CSS animation updates: "
-                  << stringifyJSIValue(rt, updates);
-
         operationsInBatch_.emplace_back(
-            animation.getShadowNode(),
-            std::make_unique<jsi::Value>(rt, updates));
+            shadowNode, std::make_unique<jsi::Value>(rt, updates));
         break;
       }
       case CSSAnimationState::finished: {
@@ -792,6 +791,11 @@ void ReanimatedModuleProxy::performOperations() {
            /* .mountSynchronously = */ true});
     });
   }
+
+  // Clear the entire cache after the commit
+  // (we don't know if the view is updated from outside of Reanimated
+  // so we have to clear the entire cache)
+  viewPropsRepository.clear();
 }
 
 void ReanimatedModuleProxy::removeFromPropsRegistry(
@@ -874,6 +878,7 @@ jsi::Value ReanimatedModuleProxy::measure(
 void ReanimatedModuleProxy::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
+  ViewPropsRepository::getInstance().setUIManager(uiManager);
 
   initializeLayoutAnimationsProxy();
 

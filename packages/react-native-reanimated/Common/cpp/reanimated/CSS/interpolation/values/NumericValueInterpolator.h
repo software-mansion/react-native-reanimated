@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/ViewPropsRepository.h>
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
 namespace reanimated {
@@ -16,7 +17,8 @@ class NumericValueInterpolator : public ValueInterpolator<double> {
   double interpolate(
       double localProgress,
       const double &fromValue,
-      const double &toValue) const override;
+      const double &toValue,
+      const InterpolationUpdateContext context) const override;
 };
 
 } // namespace reanimated

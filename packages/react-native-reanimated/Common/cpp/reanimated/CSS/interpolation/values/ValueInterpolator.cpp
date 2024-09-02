@@ -10,7 +10,6 @@ void ValueInterpolator<T>::initialize(
   if (keyframes_->empty()) {
     throw std::invalid_argument("[Reanimated] Keyframes cannot be empty.");
   }
-  fromKeyframeIndex_ = 0;
 }
 
 template <typename T>
@@ -21,7 +20,6 @@ ValueInterpolator<T>::createKeyframes(
   size_t keyframeCount = keyframeArray.size(rt);
   std::vector<Keyframe<T>> keyframes;
   keyframes.reserve(keyframeCount);
-
   for (size_t j = 0; j < keyframeCount; ++j) {
     jsi::Object keyframeObject =
         keyframeArray.getValueAtIndex(rt, j).asObject(rt);
@@ -38,77 +36,91 @@ ValueInterpolator<T>::createKeyframes(
 }
 
 template <typename T>
-void ValueInterpolator<T>::updateFromKeyframeIndex(double progress) {
+void ValueInterpolator<T>::updateCurrentKeyframes(
+    const InterpolationUpdateContext context) {
   const auto &keyframes = *keyframes_;
+  const auto prevAfterIndex = keyframeAfterIndex_;
 
-  // Handle the case where there is no initial keyframe
-  if (keyframes[0].offset > 0 && progress < keyframes[0].offset) {
-    fromKeyframeIndex_ = -1;
-    return;
+  while (context.progress < 1 && keyframeAfterIndex_ < keyframes.size() &&
+         keyframes[keyframeAfterIndex_].offset <= context.progress)
+    ++keyframeAfterIndex_;
+
+  while (context.progress > 0 && keyframeAfterIndex_ > 0 &&
+         keyframes[keyframeAfterIndex_ - 1].offset > context.progress)
+    --keyframeAfterIndex_;
+
+  if (context.previousProgress.has_value()) {
+    const auto previousProgress = context.previousProgress.value();
+    if (keyframeAfterIndex_ > prevAfterIndex) {
+      LOG(INFO) << "keyframeAfterIndex_ > prevAfterIndex: "
+                << keyframeAfterIndex_ << " > " << prevAfterIndex;
+      // Store the previous interpolation result instead of the keyframe
+      // from the keyframes array to ensure that value from which the
+      // interpolation starts doesn't change (e.g. if the keyframe value
+      // was relative to the parent view and the parent view changed).
+      keyframeBefore_ = {previousProgress, previousValue_};
+      keyframeAfter_ = keyframeAfterIndex_ < keyframes.size()
+          ? keyframes[keyframeAfterIndex_]
+          : keyframes
+                .back(); // TODO: Replace this with value read from the view
+    } else if (keyframeAfterIndex_ < prevAfterIndex) {
+      LOG(INFO) << "keyframeAfterIndex_ < prevAfterIndex: "
+                << keyframeAfterIndex_ << " < " << prevAfterIndex;
+      keyframeBefore_ = keyframeAfterIndex_ > 0
+          ? keyframes[keyframeAfterIndex_ - 1]
+          : keyframes
+                .front(); // TODO: Replace this with value read from the view
+      // Store previous value for the same reason as above.
+      keyframeAfter_ = {previousProgress, previousValue_};
+    }
+
+    if (context.directionChanged) {
+      LOG(INFO) << "Direction changed";
+      if (context.progress < previousProgress) {
+        LOG(INFO) << "Progress < previousProgress";
+        keyframeAfter_ = {previousProgress, previousValue_};
+      } else {
+        LOG(INFO) << "Progress >= previousProgress";
+        keyframeBefore_ = {previousProgress, previousValue_};
+      }
+    }
+  } else {
+    LOG(INFO) << "No previous progress, keyframeAfterIndex_: "
+              << keyframeAfterIndex_;
+    keyframeBefore_ = keyframeAfterIndex_ > 0
+        ? keyframes[keyframeAfterIndex_ - 1]
+        : keyframes.front(); // TODO: Replace this with value read from the view
+    keyframeAfter_ = keyframeAfterIndex_ < keyframes.size()
+        ? keyframes[keyframeAfterIndex_]
+        : keyframes.back(); // TODO: Replace this with value read from the view
+    LOG(INFO) << "keyframeBefore_: " << keyframeBefore_.offset
+              << ", keyframeAfter_: " << keyframeAfter_.offset;
   }
-
-  // Handle the case where there is no final keyframe
-  if (keyframes.back().offset < 1 && progress > keyframes.back().offset) {
-    fromKeyframeIndex_ = keyframes.size() - 1;
-    return;
-  }
-
-  // If the progress is decreasing, move the index backwards
-  while (fromKeyframeIndex_ > 0 &&
-         progress < keyframes[fromKeyframeIndex_].offset) {
-    --fromKeyframeIndex_;
-  }
-
-  // If the progress is increasing, move the index forwards
-  while (fromKeyframeIndex_ < static_cast<int>(keyframes.size()) - 2 &&
-         progress >= keyframes[fromKeyframeIndex_ + 1].offset) {
-    ++fromKeyframeIndex_;
-  }
-}
-
-template <typename T>
-std::pair<Keyframe<T>, Keyframe<T>> ValueInterpolator<T>::getKeyframePair(
-    double progress) const {
-  const auto &keyframes = *keyframes_;
-
-  // Handle the case where there is no initial keyframe
-  if (fromKeyframeIndex_ == -1) {
-    return {keyframes.front(), keyframes.front()};
-  }
-
-  // Handle the case where there is no final keyframe
-  if (fromKeyframeIndex_ == static_cast<int>(keyframes.size()) - 1) {
-    return {keyframes.back(), keyframes.back()};
-  }
-
-  // Return the current keyframe pair
-  return {keyframes[fromKeyframeIndex_], keyframes[fromKeyframeIndex_ + 1]};
-}
-
-template <typename T>
-double ValueInterpolator<T>::calculateLocalProgress(double progress) const {
-  auto [fromKeyframe, toKeyframe] = getKeyframePair(progress);
-
-  double fromOffset = fromKeyframe.offset;
-  double toOffset = toKeyframe.offset;
-
-  return toOffset != fromOffset
-      ? (progress - fromOffset) / (toOffset - fromOffset)
-      : 1.0;
 }
 
 template <typename T>
 jsi::Value ValueInterpolator<T>::update(
     const InterpolationUpdateContext context) {
-  const auto progress = context.progress;
-  updateFromKeyframeIndex(progress);
+  updateCurrentKeyframes(context);
 
-  auto [fromKeyframe, toKeyframe] = getKeyframePair(progress);
-  double localProgress = calculateLocalProgress(progress);
-  T interpolatedValue =
-      interpolate(localProgress, fromKeyframe.value, toKeyframe.value);
+  double beforeOffset = keyframeBefore_.offset;
+  double afterOffset = keyframeAfter_.offset;
 
-  return convertToJSIValue(context.rt, interpolatedValue);
+  double localProgress = afterOffset == beforeOffset
+      ? 1
+      : (context.progress - beforeOffset) / (afterOffset - beforeOffset);
+
+  T value = interpolate(
+      localProgress, keyframeBefore_.value, keyframeAfter_.value, context);
+  previousValue_ = value;
+
+  jsi::Runtime &rt = context.rt;
+  jsi::Value updates = convertToJSIValue(rt, value);
+
+  LOG(INFO) << " CSS animation updates: " << stringifyJSIValue(rt, updates)
+            << ", progress: " << context.progress;
+
+  return updates;
 }
 
 // Declare the types that will be used in the ValueInterpolator class
@@ -117,5 +129,6 @@ template class ValueInterpolator<int>;
 template class ValueInterpolator<double>;
 template class ValueInterpolator<std::string>;
 template class ValueInterpolator<std::vector<double>>;
+template class ValueInterpolator<RelativeInterpolatorValue>;
 
 } // namespace reanimated

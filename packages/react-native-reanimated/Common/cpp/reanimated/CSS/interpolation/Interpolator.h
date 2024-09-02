@@ -14,6 +14,13 @@ struct InterpolationUpdateContext {
   jsi::Runtime &rt;
   ShadowNode::Shared node;
   double progress;
+  std::optional<double> previousProgress;
+  bool directionChanged;
+};
+
+struct RelativeInterpolatorValue {
+  double value;
+  bool isRelative;
 };
 
 class Interpolator {

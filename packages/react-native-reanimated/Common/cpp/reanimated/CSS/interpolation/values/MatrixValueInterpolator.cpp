@@ -17,7 +17,8 @@ jsi::Value MatrixValueInterpolator::convertToJSIValue(
 std::vector<double> MatrixValueInterpolator::interpolate(
     double localProgress,
     const std::vector<double> &fromValue,
-    const std::vector<double> &toValue) const {
+    const std::vector<double> &toValue,
+    const InterpolationUpdateContext context) const {
   throw std::runtime_error("[Reanimated] Not implemented");
 }
 
