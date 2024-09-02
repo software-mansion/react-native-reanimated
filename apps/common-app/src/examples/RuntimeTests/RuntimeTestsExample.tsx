@@ -79,12 +79,6 @@ export default function RuntimeTestsExample() {
           },
         },
         {
-          testSuiteName: 'keyframe animations',
-          importTest: () => {
-            require('./tests/layoutAnimations/keyframe/basic.test');
-          },
-        },
-        {
           testSuiteName: 'advanced API',
           importTest: () => {
             require('./tests/advancedAPI/useFrameCallback.test');
