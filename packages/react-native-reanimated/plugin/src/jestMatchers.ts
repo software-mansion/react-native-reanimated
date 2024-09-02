@@ -7,7 +7,8 @@ declare global {
       toHaveWorkletData(times?: number): R;
       toHaveInlineStyleWarning(times?: number): R;
       toHaveLocation(location: string): R;
-      toIncludeInWorkletString(expected: string): R;
+      toContainInWorkletString(expected: string): R;
+      toMatchInWorkletString(regexp: RegExp): R;
     }
   }
 }
@@ -68,15 +69,11 @@ expect.extend({
     };
   },
 
-  toIncludeInWorkletString(received: string, expected: string) {
-    // Regular expression pattern to find the `code` field in `initData`.
-    // @ts-ignore This regex works well in Jest.
-    const pattern = /code: "((?:[^"\\]|\\.)*)"/gs;
-    const matches = received.match(pattern);
+  toContainInWorkletString(received: string, expected: string) {
+    const matches = getWorkletString(received);
 
     // If a match was found and some of matches (`initData`'s `code`) include the expected string.
     if (matches && matches.some((match) => match.includes(expected))) {
-      // return true;
       return {
         message: () => `Reanimated: found ${expected} in worklet string`,
         pass: true,
@@ -84,11 +81,37 @@ expect.extend({
     }
 
     // If no match was found or the expected string is not a substring of the code field.
-    // return false;
     return {
       message: () =>
-        `Reanimated: expected to find ${expected} in worklet string, but it's not present.`,
+        `Reanimated: expected to find\n${expected}\nin worklet string, but it's not present.\nReceived:\n${received}`,
+      pass: false,
+    };
+  },
+
+  toMatchInWorkletString(received: string, regexp: RegExp) {
+    const matches = getWorkletString(received);
+
+    // If a match was found and some of matches (`initData`'s `code`) match the provided regex.
+    if (matches && matches.some((match) => match.match(regexp))) {
+      return {
+        message: () => `Reanimated: found ${regexp} in worklet string`,
+        pass: true,
+      };
+    }
+
+    // If no match was found or the expected string is not a substring of the code field.
+    return {
+      message: () =>
+        `Reanimated: expected to match\n${regexp}\nin worklet string, but it's not present.\nReceived:\n${received}`,
       pass: false,
     };
   },
 });
+
+function getWorkletString(code: string) {
+  // Regular expression pattern to find the `code` field in `initData`.
+  // @ts-ignore This regex works well in Jest.
+  const pattern = /code: "((?:[^"\\]|\\.)*)"/gs;
+  // const matches = received.match(pattern);
+  return code.match(pattern);
+}
