@@ -6,7 +6,7 @@ sidebar_position: 2
 
 # Logger configuration
 
-Reanimated shows warnings that indicate potential issues in the user code. These logs can be configured to be more or less verbose. The default configuration is to show all warnings. You can change this behavior by using the `configureReanimatedLogger` function.
+Reanimated shows warnings that indicate misuses of the library API, such as modifying the [shared value](/docs/fundamentals/glossary#shared-value) during component re-render. These logs can be configured to be more or less verbose. The **default** configuration shows **all warnings and errors**. You can change this behavior by using the `configureReanimatedLogger` function.
 
 ## Reference
 
@@ -39,7 +39,6 @@ type LoggerConfig = {
 enum ReanimatedLogLevel {
   warn = 1,
   error = 2,
-  fatal = 3,
 }
 ```
 
@@ -60,10 +59,6 @@ A boolean value that enables or disables strict mode. When strict mode is enable
 - The logger configuration is global and affects all Reanimated animations in your app.
 
 - The `configureReanimatedLogger` function should be called before any Reanimated animations are created, e.g. in the root file of your app.
-
-- Each call to `configureReanimatedLogger` overrides the previous configuration.
-
-- There are currently no `fatal` logs in Reanimated, but the `fatal` level is reserved for future use.
 
 ## Platform compatibility
 
