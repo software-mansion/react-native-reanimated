@@ -9,6 +9,8 @@
 #include <jsi/jsi.h>
 #include <chrono>
 #include <optional>
+#include <stdexcept>
+#include <unordered_map>
 #include <utility>
 
 namespace reanimated {
@@ -17,11 +19,15 @@ using namespace facebook;
 using namespace react;
 
 enum CSSAnimationState { pending, running, finished };
+enum CSSAnimationDirection { normal, reverse, alternate, alternateReverse };
 
 struct CSSAnimationConfig {
+  jsi::Object keyframedStyle;
   double animationDuration;
   std::string animationTimingFunction;
-  jsi::Object keyframedStyle;
+  double animationDelay;
+  double animationIterationCount;
+  std::string animationDirection;
 };
 
 class CSSAnimation {
@@ -45,14 +51,26 @@ class CSSAnimation {
  private:
   const ShadowNode::Shared shadowNode;
 
-  const double duration;
-  const EasingFunction easingFunction;
   KeyframedStyleInterpolator styleInterpolator;
+  const double delay;
+  const CSSAnimationDirection direction;
+  const double duration;
+  const double iterationCount;
+  const EasingFunction easingFunction;
 
-  time_t startTime;
-  CSSAnimationState state;
+  CSSAnimationState state = CSSAnimationState::pending;
+  time_t startTime = 0;
+  unsigned currentIteration = 1;
+  double currentIterationElapsedTime = 0;
+  double previousIterationsDuration = 0;
   std::optional<double> previousProgress;
   std::optional<double> previousToPreviousProgress;
+
+  static CSSAnimationDirection getAnimationDirection(const std::string &str);
+
+  double getCurrentIterationProgress(time_t timestamp) const;
+
+  void maybeUpdateIterationNumber(time_t timestamp);
 };
 
 } // namespace reanimated

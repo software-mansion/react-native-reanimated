@@ -1,15 +1,21 @@
 import type { ViewStyle } from 'react-native';
 
-// TODO: support other keyframe types
 export type CSSKeyframeKey = `${number}%` | 'from' | 'to' | number;
 
-// TODO: support other units
-export type CSSAnimationDuration = `${number}s` | `${number}ms` | number;
+export type CSSAnimationKeyframes = Partial<Record<CSSKeyframeKey, ViewStyle>>;
+
+export type CSSAnimationTimeUnit = `${number}s` | `${number}ms` | number;
 
 // TODO: support other timing functions
 export type CSSAnimationTimingFunction = 'linear' | 'ease-in-out-back';
 
-export type CSSAnimationKeyframes = Partial<Record<CSSKeyframeKey, ViewStyle>>;
+export type CSSAnimationIterationCount = 'infinite' | number;
+
+export type CSSAnimationDirection =
+  | 'normal'
+  | 'reverse'
+  | 'alternate'
+  | 'alternate-reverse';
 
 export type NormalizedOffsetKeyframe = {
   offset: number;
@@ -18,14 +24,25 @@ export type NormalizedOffsetKeyframe = {
 
 export interface CSSAnimationConfig {
   animationName: CSSAnimationKeyframes;
-  animationDuration: CSSAnimationDuration;
+  animationDuration: CSSAnimationTimeUnit;
   animationTimingFunction: CSSAnimationTimingFunction;
+  animationDelay: CSSAnimationTimeUnit;
+  animationIterationCount: CSSAnimationIterationCount;
+  animationDirection: CSSAnimationDirection;
+  // animationFillMode: // TODO
+  // animationPlayState: // TODO
+  // This is still experimental in browsers and we might not want to support it
+  // when CSS animations in reanimated are released
+  // animationTimeline: // TODO
 }
 
 export type NormalizedCSSAnimationConfig = {
   animationName: KeyframedViewStyle;
   animationDuration: number;
   animationTimingFunction: CSSAnimationTimingFunction;
+  animationDelay: number;
+  animationIterationCount: number;
+  animationDirection: CSSAnimationDirection;
 };
 
 export type KeyframedValue<V> = {
@@ -33,7 +50,7 @@ export type KeyframedValue<V> = {
   value: V;
 }[];
 
-export type KeyframedStyle<S> = {
+type KeyframedStyle<S> = {
   [P in keyof S]: S[P] extends infer U | undefined
     ? U extends object
       ? U extends Array<infer T>

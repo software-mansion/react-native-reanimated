@@ -9,7 +9,7 @@ import {
   parseTransformString,
 } from './normalization';
 import type {
-  CSSAnimationDuration,
+  CSSAnimationTimeUnit,
   CSSKeyframeKey,
   KeyframedViewStyle,
 } from './types';
@@ -28,8 +28,8 @@ describe('normalizeDuration', () => {
   });
 
   test('throws an error for unsupported duration format', () => {
-    expect(() => normalizeDuration('invalid' as CSSAnimationDuration)).toThrow(
-      ERROR_MESSAGES.unsupportedDuration('invalid')
+    expect(() => normalizeDuration('invalid' as CSSAnimationTimeUnit)).toThrow(
+      ERROR_MESSAGES.invalidDuration('invalid')
     );
   });
 });

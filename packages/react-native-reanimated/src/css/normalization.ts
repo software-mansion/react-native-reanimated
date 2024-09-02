@@ -2,8 +2,11 @@
 import type { ViewStyle } from 'react-native';
 import type {
   CSSAnimationConfig,
-  CSSAnimationDuration,
+  CSSAnimationDirection,
+  CSSAnimationTimeUnit,
+  CSSAnimationIterationCount,
   CSSAnimationKeyframes,
+  CSSAnimationTimingFunction,
   CSSKeyframeKey,
   KeyframedValue,
   KeyframedViewStyle,
@@ -12,26 +15,65 @@ import type {
 } from './types';
 import { ReanimatedError } from '../errors';
 
+const VALID_ANIMATION_DIRECTIONS = [
+  'normal',
+  'reverse',
+  'alternate',
+  'alternate-reverse',
+] as const;
+
 export const ERROR_MESSAGES = {
-  unsupportedDuration: (duration: any) =>
-    `[Reanimated] Unsupported duration ${duration} in CSS animation`,
+  invalidDelay: (timeUnit: any) =>
+    `[Reanimated] Invalid delay "${timeUnit}". Expected a number, "ms", or "s".`,
+  invalidDuration: (duration: any) =>
+    `[Reanimated] Invalid duration "${duration}". Expected a number, "ms", or "s".`,
+  negativeDuration: (duration: any) =>
+    `[Reanimated] Duration cannot be negative, received "${duration}".`,
   unsupportedKeyframe: (key: any) =>
-    `[Reanimated] Unsupported keyframe ${key} in CSS animation`,
+    `[Reanimated] Unsupported keyframe "${key}". Expected a number or percentage.`,
   invalidOffsetRange: (key: any) =>
-    `[Reanimated] Keyframe offset should be in the range 0-100% (0-1), got ${key}`,
-  unsupportedKeyframeValue: (value: any, prop: string) =>
-    `[Reanimated] Unsupported keyframe value ${value.toString()} for ${prop} in CSS animation`,
+    `[Reanimated] Keyframe offset should be between 0 and 100% (0-1). Received "${key}".`,
+  unsupportedKeyframeValueType: (prop: string) =>
+    `[Reanimated] Unsupported keyframe value type for "${prop}". Expected an array only for "transform".`,
+  unsupportedAnimationDirection: (direction: any) =>
+    `[Reanimated] Unsupported animation direction "${direction}". Supported directions: ${VALID_ANIMATION_DIRECTIONS.join(
+      ', '
+    )}.`,
+  invalidIterationCount: `[Reanimated] Invalid iteration count. Expected a number or "infinite".`,
+  negativeIterationCount: `[Reanimated] Iteration count cannot be negative.`,
+  unsupportedTimingFunction: (timingFunction: any) =>
+    `[Reanimated] Unsupported timing function "${timingFunction}". Supported functions: linear, ease-in-out-back.`,
+  invalidAnimationName: (animationName: any) =>
+    `[Reanimated] Invalid animation "${animationName}". Expected an object containing keyframes.`,
 };
 
-export function normalizeDuration(duration: CSSAnimationDuration): number {
-  if (typeof duration === 'number') {
-    return duration;
-  } else if (duration.endsWith('ms')) {
-    return parseInt(duration, 10);
-  } else if (duration.endsWith('s')) {
-    return parseFloat(duration) * 1000;
+function normalizeTimeUnit(timeUnit: CSSAnimationTimeUnit): number | null {
+  if (typeof timeUnit === 'number') {
+    return timeUnit;
+  } else if (timeUnit?.endsWith('ms')) {
+    return parseInt(timeUnit, 10);
+  } else if (timeUnit?.endsWith('s')) {
+    return parseFloat(timeUnit) * 1000;
   }
-  throw new ReanimatedError(ERROR_MESSAGES.unsupportedDuration(duration));
+  return null;
+}
+
+function normalizeDelay(delay: CSSAnimationTimeUnit = 0): number {
+  const delayMs = normalizeTimeUnit(delay);
+  if (delayMs === null) {
+    throw new ReanimatedError(ERROR_MESSAGES.invalidDelay(delay));
+  }
+  return delayMs;
+}
+
+export function normalizeDuration(duration: CSSAnimationTimeUnit = 0): number {
+  const durationMs = normalizeTimeUnit(duration);
+  if (durationMs === null) {
+    throw new ReanimatedError(ERROR_MESSAGES.invalidDuration(duration));
+  } else if (durationMs < 0) {
+    throw new ReanimatedError(ERROR_MESSAGES.negativeDuration(durationMs));
+  }
+  return durationMs;
 }
 
 const OFFSET_REGEX = /^-?\d+(\.\d+)?%$/;
@@ -148,7 +190,7 @@ export function handleObjectValue(
   if (Array.isArray(value)) {
     if (prop !== 'transform') {
       throw new ReanimatedError(
-        ERROR_MESSAGES.unsupportedKeyframeValue(value, prop as string)
+        ERROR_MESSAGES.unsupportedKeyframeValueType(prop)
       );
     }
     addTransformValues(temporaryTransforms, value, offset);
@@ -238,20 +280,63 @@ export function parseTransformString(
     });
 }
 
+function normalizeDirection(
+  direction: CSSAnimationDirection = 'normal'
+): CSSAnimationDirection {
+  if (!VALID_ANIMATION_DIRECTIONS.includes(direction)) {
+    throw new ReanimatedError(
+      ERROR_MESSAGES.unsupportedAnimationDirection(direction)
+    );
+  }
+  return direction;
+}
+
+function normalizeIterationCount(
+  iterationCount: CSSAnimationIterationCount = 1
+): number {
+  if (iterationCount === 'infinite') {
+    return -1;
+  } else if (!isNumber(iterationCount)) {
+    throw new ReanimatedError(ERROR_MESSAGES.invalidIterationCount);
+  } else if (iterationCount < 0) {
+    throw new ReanimatedError(ERROR_MESSAGES.negativeIterationCount);
+  }
+  return iterationCount;
+}
+
 const VALID_TIMING_FUNCTIONS = ['linear', 'ease-in-out-back'] as const;
 
-export function normalizeConfig(
-  config: CSSAnimationConfig
-): NormalizedCSSAnimationConfig {
-  if (!VALID_TIMING_FUNCTIONS.includes(config.animationTimingFunction)) {
+function normalizeTimingFunction(
+  timingFunction: CSSAnimationTimingFunction = 'linear'
+): CSSAnimationTimingFunction {
+  if (!VALID_TIMING_FUNCTIONS.includes(timingFunction)) {
     throw new ReanimatedError(
-      `Unsupported timing function ${config.animationTimingFunction} in CSS animation`
+      ERROR_MESSAGES.unsupportedTimingFunction(timingFunction)
+    );
+  }
+  return timingFunction;
+}
+
+export function normalizeConfig({
+  animationName,
+  animationDuration,
+  animationDelay,
+  animationTimingFunction,
+  animationIterationCount,
+  animationDirection,
+}: CSSAnimationConfig): NormalizedCSSAnimationConfig {
+  if (!animationName || typeof animationName !== 'object') {
+    throw new ReanimatedError(
+      ERROR_MESSAGES.invalidAnimationName(animationName)
     );
   }
 
   return {
-    animationDuration: normalizeDuration(config.animationDuration),
-    animationTimingFunction: config.animationTimingFunction,
-    animationName: createKeyframedStyle(config.animationName),
+    animationName: createKeyframedStyle(animationName),
+    animationDuration: normalizeDuration(animationDuration),
+    animationTimingFunction: normalizeTimingFunction(animationTimingFunction),
+    animationDelay: normalizeDelay(animationDelay),
+    animationIterationCount: normalizeIterationCount(animationIterationCount),
+    animationDirection: normalizeDirection(animationDirection),
   };
 }

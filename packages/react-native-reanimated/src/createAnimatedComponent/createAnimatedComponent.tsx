@@ -561,16 +561,22 @@ export function createAnimatedComponent(
         }
 
         // @ts-expect-error TODO
-        if (isFabric() && this.props.style.animationName) {
+        if (isFabric() && this.props.style?.animationName) {
           const { shadowNodeWrapper } = this._getViewInfo();
           const config = {
             // @ts-expect-error TODO
             animationName: this.props.style.animationName,
             // @ts-expect-error TODO
-            animationDuration: this.props.style.animationDuration ?? '0s',
+            animationDelay: this.props.style.animationDelay,
+            // @ts-expect-error TODO
+            animationDuration: this.props.style.animationDuration,
+            // @ts-expect-error TODO
+            animationDirection: this.props.style.animationDirection,
+            // @ts-expect-error TODO
+            animationIterationCount: this.props.style.animationIterationCount,
             animationTimingFunction:
               // @ts-expect-error TODO
-              this.props.style.animationTimingFunction ?? 'linear',
+              this.props.style.animationTimingFunction,
             // TODO: support other attributes
           };
           registerCSSAnimation(shadowNodeWrapper as ShadowNodeWrapper, config);
