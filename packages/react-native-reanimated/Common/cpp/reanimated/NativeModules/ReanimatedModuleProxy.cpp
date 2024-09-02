@@ -484,21 +484,20 @@ void ReanimatedModuleProxy::registerCSSAnimation(
     const jsi::Value &animationConfig) {
   const auto &configObject = animationConfig.asObject(rt);
 
-  std::string animationTimingFunction =
+  auto animationDuration =
+      configObject.getProperty(rt, "animationDuration").asNumber();
+  auto animationTimingFunction =
       configObject.getProperty(rt, "animationTimingFunction")
           .asString(rt)
           .utf8(rt);
+  auto keyframedStyle =
+      configObject.getProperty(rt, "animationName").asObject(rt);
 
-  double animationDuration =
-      configObject.getProperty(rt, "animationDuration").asNumber();
-  EasingFunction easingFunction = getEasingFunction(animationTimingFunction);
-  folly::dynamic keyframedStyle =
-      dynamicFromValue(rt, configObject.getProperty(rt, "animationName"));
-
-  CSSAnimationConfig config{animationDuration, easingFunction, keyframedStyle};
+  CSSAnimationConfig config{
+      animationDuration, animationTimingFunction, std::move(keyframedStyle)};
 
   cssAnimationsRegistry_->addAnimation(
-      shadowNodeFromValue(rt, shadowNodeWrapper), config);
+      rt, shadowNodeFromValue(rt, shadowNodeWrapper), config);
 
   maybeRunCssAnimationsLoop();
 }
@@ -649,7 +648,10 @@ void ReanimatedModuleProxy::performOperations() {
       case CSSAnimationState::running: {
         jsi::Runtime &rt =
             workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-        jsi::Value updates = valueFromDynamic(rt, animation.update(now));
+        const jsi::Value &updates = animation.update(rt, now);
+
+        LOG(INFO) << "CSS animation updates: "
+                  << stringifyJSIValue(rt, updates);
 
         operationsInBatch_.emplace_back(
             animation.getShadowNode(),

@@ -3,9 +3,10 @@
 namespace reanimated {
 
 void CSSAnimationsRegistry::addAnimation(
+    jsi::Runtime &rt,
     ShadowNode::Shared node,
     const CSSAnimationConfig &config) {
-  registry_.insert({tagManager_.getTag(), CSSAnimation(node, config)});
+  registry_.insert({tagManager_.getTag(), CSSAnimation(rt, node, config)});
 }
 
 void CSSAnimationsRegistry::markForRemoval(const unsigned int tag) {
