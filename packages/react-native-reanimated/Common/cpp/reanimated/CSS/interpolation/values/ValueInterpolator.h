@@ -4,6 +4,7 @@
 
 #include <jsi/jsi.h>
 #include <memory>
+#include <string>
 #include <vector>
 
 using namespace facebook;
@@ -23,10 +24,13 @@ class ValueInterpolator : public Interpolator {
 
   void initialize(jsi::Runtime &rt, const jsi::Value &keyframeArray);
 
-  jsi::Value update(jsi::Runtime &rt, double progress) override;
+  jsi::Value update(const InterpolationUpdateContext context) override;
 
  protected:
   virtual T convertValue(jsi::Runtime &rt, const jsi::Value &value) const = 0;
+
+  virtual jsi::Value convertToJSIValue(jsi::Runtime &rt, const T &value)
+      const = 0;
 
   virtual T interpolate(
       double localProgress,
@@ -46,8 +50,6 @@ class ValueInterpolator : public Interpolator {
       const jsi::Array &keyframeArray) const;
 
   void updateFromKeyframeIndex(double progress);
-
-  jsi::Value convertToJSIValue(jsi::Runtime &rt, const T &value) const;
 };
 
 } // namespace reanimated

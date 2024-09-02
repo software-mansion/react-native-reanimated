@@ -37,16 +37,15 @@ ObjectPropertiesInterpolators ObjectPropertiesInterpolator::build(
 }
 
 jsi::Value ObjectPropertiesInterpolator::update(
-    jsi::Runtime &rt,
-    double progress) {
+    const InterpolationUpdateContext context) {
+  jsi::Runtime &rt = context.rt;
   jsi::Object result(rt);
 
   for (const auto &pair : interpolators_) {
     const std::string &propName = pair.first;
     const std::shared_ptr<Interpolator> &interpolator = pair.second;
 
-    result.setProperty(
-        rt, propName.c_str(), interpolator->update(rt, progress));
+    result.setProperty(rt, propName.c_str(), interpolator->update(context));
   }
 
   return result;

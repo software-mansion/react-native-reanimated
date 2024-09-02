@@ -48,8 +48,8 @@ class CSSAnimation {
   const EasingFunction easingFunction;
   KeyframedStyleInterpolator styleInterpolator;
 
-  CSSAnimationState state;
   time_t startTime;
+  CSSAnimationState state;
 };
 
 } // namespace reanimated

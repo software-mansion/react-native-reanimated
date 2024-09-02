@@ -1,17 +1,26 @@
 #pragma once
 
+#include <react/renderer/core/ShadowNode.h>
+
 #include <jsi/jsi.h>
 #include <memory>
 
-using namespace facebook;
-
 namespace reanimated {
+
+using namespace facebook;
+using namespace react;
+
+struct InterpolationUpdateContext {
+  jsi::Runtime &rt;
+  ShadowNode::Shared node;
+  double progress;
+};
 
 class Interpolator {
  public:
   virtual ~Interpolator() = default;
 
-  virtual jsi::Value update(jsi::Runtime &rt, double progress) = 0;
+  virtual jsi::Value update(const InterpolationUpdateContext context) = 0;
 };
 
 using InterpolatorFactoryFunction = std::function<
