@@ -17,7 +17,8 @@ jsi::Value DiscreteNumberInterpolator::convertToJSIValue(
 int DiscreteNumberInterpolator::interpolate(
     double localProgress,
     const int &fromValue,
-    const int &toValue) const {
+    const int &toValue,
+    const InterpolationUpdateContext context) const {
   // TODO: Make sure it should work in this way for DiscreteNumberInterpolator
   int diff = toValue - fromValue;
   return fromValue + static_cast<int>(diff * localProgress);

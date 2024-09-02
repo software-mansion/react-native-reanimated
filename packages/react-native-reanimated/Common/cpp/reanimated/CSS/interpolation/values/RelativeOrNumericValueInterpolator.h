@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/ViewPropsRepository.h>
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
 #include <jsi/jsi.h>
@@ -12,26 +13,33 @@ enum class TargetType {
   Self,
 };
 
-class RelativeOrNumericValueInterpolator : public ValueInterpolator<double> {
+class RelativeOrNumericValueInterpolator
+    : public ValueInterpolator<RelativeInterpolatorValue> {
  public:
   RelativeOrNumericValueInterpolator(
       TargetType relativeTo,
       const std::string &relativeProperty);
 
  protected:
-  double convertValue(jsi::Runtime &rt, const jsi::Value &value) const override;
+  RelativeInterpolatorValue convertValue(
+      jsi::Runtime &rt,
+      const jsi::Value &value) const override;
 
-  jsi::Value convertToJSIValue(jsi::Runtime &rt, const double &value)
-      const override;
+  jsi::Value convertToJSIValue(
+      jsi::Runtime &rt,
+      const RelativeInterpolatorValue &value) const override;
 
-  double interpolate(
+  RelativeInterpolatorValue interpolate(
       double localProgress,
-      const double &fromValue,
-      const double &toValue) const override;
+      const RelativeInterpolatorValue &fromValue,
+      const RelativeInterpolatorValue &toValue,
+      const InterpolationUpdateContext context) const override;
 
  private:
   TargetType relativeTo;
   std::string relativeProperty;
+
+  double getRelativeValue(const InterpolationUpdateContext context) const;
 };
 
 } // namespace reanimated

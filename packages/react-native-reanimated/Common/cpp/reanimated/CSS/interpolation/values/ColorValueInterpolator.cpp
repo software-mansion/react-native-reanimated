@@ -17,7 +17,8 @@ jsi::Value ColorValueInterpolator::convertToJSIValue(
 int ColorValueInterpolator::interpolate(
     double localProgress,
     const int &fromValue,
-    const int &toValue) const {
+    const int &toValue,
+    const InterpolationUpdateContext context) const {
   throw std::runtime_error("[Reanimated] Not implemented");
 }
 

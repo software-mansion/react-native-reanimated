@@ -16,7 +16,8 @@ class DiscreteNumberInterpolator : public ValueInterpolator<int> {
   int interpolate(
       double localProgress,
       const int &fromValue,
-      const int &toValue) const override;
+      const int &toValue,
+      const InterpolationUpdateContext context) const override;
 };
 
 } // namespace reanimated

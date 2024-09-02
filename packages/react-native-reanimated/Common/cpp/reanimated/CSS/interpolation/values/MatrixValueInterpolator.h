@@ -20,7 +20,8 @@ class MatrixValueInterpolator : public ValueInterpolator<std::vector<double>> {
   std::vector<double> interpolate(
       double localProgress,
       const std::vector<double> &fromValue,
-      const std::vector<double> &toValue) const override;
+      const std::vector<double> &toValue,
+      const InterpolationUpdateContext context) const override;
 };
 
 } // namespace reanimated
