@@ -9,34 +9,46 @@ import {
   executeOnUIRuntimeSync,
 } from './threads';
 import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
-import type { LogData } from './logger';
 import {
-  logger,
+  DEFAULT_LOGGER_CONFIG,
   logToLogBoxAndConsole,
+  registerLoggerConfig,
   replaceLoggerImplementation,
 } from './logger';
-import { makeShareableCloneRecursive } from './shareables';
-import { shareableMappingCache } from './shareableMappingCache';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_CHROME_DEBUGGER = isChromeDebugger();
 
-// Register ReanimatedError in the UI global scope.
-// (we are using `executeOnUIRuntimeSync` here to make sure that the error is
-// registered before any async operations are executed on the UI runtime)
-if (!shouldBeUseWeb()) {
-  executeOnUIRuntimeSync(registerReanimatedError)();
-}
-
 // Override the logFunction implementation with the one that adds logs
 // with better stack traces to the LogBox (need to override it after `runOnJS`
 // is defined).
-replaceLoggerImplementation((data: LogData) => {
+function overrideLogFunctionImplementation() {
   'worklet';
-  runOnJS(logToLogBoxAndConsole)(data);
-});
-shareableMappingCache.set(logger, makeShareableCloneRecursive(logger));
+  replaceLoggerImplementation((data) => {
+    'worklet';
+    runOnJS(logToLogBoxAndConsole)(data);
+  });
+}
+
+// Register logger config and replace the log function implementation in
+// the React runtime global scope
+registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
+overrideLogFunctionImplementation();
+
+// this is for web implementation
+if (SHOULD_BE_USE_WEB) {
+  global._WORKLET = false;
+  global._log = console.log;
+  global._getAnimationTimestamp = () => performance.now();
+} else {
+  // Register ReanimatedError and logger config in the UI runtime global scope.
+  // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
+  // are applied before any async operations are executed on the UI runtime)
+  executeOnUIRuntimeSync(registerReanimatedError)();
+  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
+  executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
+}
 
 // callGuard is only used with debug builds
 export function callGuardDEV<Args extends unknown[], ReturnValue>(
@@ -97,7 +109,7 @@ function setupRequestAnimationFrame() {
   const nativeRequestAnimationFrame = global.requestAnimationFrame;
 
   let animationFrameCallbacks: Array<(timestamp: number) => void> = [];
-  let lastNativeAnimationFrameTimestamp = -1;
+  let flushRequested = false;
 
   global.__flushAnimationFrame = (frameTimestamp: number) => {
     const currentCallbacks = animationFrameCallbacks;
@@ -110,16 +122,10 @@ function setupRequestAnimationFrame() {
     callback: (timestamp: number) => void
   ): number => {
     animationFrameCallbacks.push(callback);
-    if (animationFrameCallbacks.length === 1) {
-      // We schedule native requestAnimationFrame only when the first callback
-      // is added and then use it to execute all the enqueued callbacks. Once
-      // the callbacks are run, we clear the array.
+    if (!flushRequested) {
+      flushRequested = true;
       nativeRequestAnimationFrame((timestamp) => {
-        if (lastNativeAnimationFrameTimestamp >= timestamp) {
-          // Make sure we only execute the callbacks once for a given frame
-          return;
-        }
-        lastNativeAnimationFrameTimestamp = timestamp;
+        flushRequested = false;
         global.__frameTimestamp = timestamp;
         global.__flushAnimationFrame(timestamp);
         global.__frameTimestamp = undefined;

@@ -61,15 +61,21 @@ export default function RuntimeTestsExample() {
           },
         },
         {
-          testSuiteName: 'layout transition',
+          testSuiteName: 'layout transitions',
           importTest: () => {
-            describe('Compare predefined layout transitions with **constant view size** with snapshots', () => {
+            describe('Compare layout transitions with **constant view size** with snapshots', () => {
               require('./tests/layoutAnimations/layout/predefinedLayoutPosition.test');
             });
             describe('Compare predefined layout transitions including view **size changes** with snapshots', () => {
               require('./tests/layoutAnimations/layout/positionAndSize.test');
             });
             require('./tests/layoutAnimations/layout/custom.test');
+          },
+        },
+        {
+          testSuiteName: 'keyframe animations',
+          importTest: () => {
+            require('./tests/layoutAnimations/keyframe/basic.test');
           },
         },
         {

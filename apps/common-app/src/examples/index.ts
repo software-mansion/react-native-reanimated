@@ -133,6 +133,7 @@ import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample'
 import StrictDOMExample from './StrictDOMExample';
 import BottomTabsExample from './LayoutAnimations/BottomTabs';
 import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation';
+import InvalidValueAccessExample from './InvalidValueAccessExample';
 
 interface Example {
   icon?: string;
@@ -182,6 +183,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🥶',
     title: 'Freezing shareables',
     screen: FreezingShareablesExample,
+  },
+  InvalidReadWriteExample: {
+    icon: '🔒',
+    title: 'Invalid read/write during render',
+    screen: InvalidValueAccessExample,
   },
 
   // About
