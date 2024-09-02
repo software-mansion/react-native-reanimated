@@ -22,6 +22,7 @@ import com.facebook.react.modules.core.ReactChoreographer;
 import com.facebook.react.uimanager.GuardedFrameCallback;
 import com.facebook.react.uimanager.IllegalViewOperationException;
 import com.facebook.react.uimanager.PixelUtil;
+import com.facebook.react.uimanager.ReactShadowNode;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.UIImplementation;
 import com.facebook.react.uimanager.UIManagerHelper;
@@ -242,7 +243,7 @@ public class NodesManager implements EventDispatcherListener {
               }
               while (!copiedOperationsQueue.isEmpty()) {
                 NativeUpdateOperation op = copiedOperationsQueue.remove();
-                var shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
+                ReactShadowNode<?> shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
                 if (shadowNode != null) {
                   ((UIManagerModule) mUIManager)
                       .updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
@@ -258,7 +259,7 @@ public class NodesManager implements EventDispatcherListener {
           });
       if (trySynchronously) {
         try {
-          semaphore.tryAcquire(16, TimeUnit.MILLISECONDS);
+          boolean ignored = semaphore.tryAcquire(16, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
           // if the thread is interrupted we just continue and let the layout update happen
           // asynchronously
@@ -474,7 +475,7 @@ public class NodesManager implements EventDispatcherListener {
           return "Unable to resolve background color";
         }
 
-        String invertedColor = String.format("%08x", (actualColor));
+        String invertedColor = String.format("%08x", actualColor);
         // By default transparency is first, color second
         return "#" + invertedColor.substring(2, 8) + invertedColor.substring(0, 2);
       }

@@ -22,6 +22,7 @@ import com.facebook.systrace.Systrace;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @ReactModuleList(
     nativeModules = {
@@ -49,9 +50,9 @@ public class ReanimatedPackage extends TurboReactPackage implements ReactPackage
 
     final Map<String, ReactModuleInfo> reactModuleInfoMap = new HashMap<>();
     for (Class<? extends NativeModule> moduleClass : moduleList) {
-      ReactModule reactModule = moduleClass.getAnnotation(ReactModule.class);
+      ReactModule reactModule =
+          Objects.requireNonNull(moduleClass.getAnnotation(ReactModule.class));
 
-      assert reactModule != null;
       reactModuleInfoMap.put(
           reactModule.name(),
           new ReactModuleInfo(

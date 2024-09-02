@@ -215,8 +215,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
 
-    var viewManager = resolveViewManager(tag);
-    var parentViewManager = resolveViewManager(parent.getId());
+    ViewManager<?, ?> viewManager = resolveViewManager(tag);
+    ViewManager<?, ?> parentViewManager = resolveViewManager(parent.getId());
 
     if (viewManager == null) {
       return;
@@ -505,7 +505,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
   private boolean removeOrAnimateExitRecursive(
       View view, boolean shouldRemove, boolean shouldAnimate) {
     int tag = view.getId();
-    var viewManager = resolveViewManager(tag);
+    ViewManager<?, ?> viewManager = resolveViewManager(tag);
 
     if (viewManager != null) {
       String viewManagerName = viewManager.getName();
