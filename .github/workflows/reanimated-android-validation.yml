@@ -36,6 +36,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
       - name: Setup Java 17
+        # Using older versions of Java might cause the lint step to throw
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
