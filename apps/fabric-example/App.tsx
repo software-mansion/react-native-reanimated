@@ -1,109 +1,51 @@
-import { Text, StyleSheet, View, SafeAreaView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { NavigationState } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
+import { useCallback, useEffect, useState } from 'react';
+import { SafeAreaView } from 'react-native';
 
-import React from 'react';
-import Animated from 'react-native-reanimated';
+import { noop } from './src/utils';
+import { ExamplesStackNavigator } from './src/navigation';
+import { flex } from './src/theme';
 
-export default function EmptyExample() {
+const PERSISTENCE_KEY = 'NAVIGATION_STATE';
+
+export default function App() {
+  const [isReady, setIsReady] = useState(false);
+  const [navigationState, setNavigationState] = useState<NavigationState>();
+
+  useEffect(() => {
+    const restoreState = async () => {
+      try {
+        const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
+        const state = savedStateString
+          ? (JSON.parse(savedStateString) as NavigationState)
+          : undefined;
+
+        if (state !== undefined) {
+          setNavigationState(state);
+        }
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    if (!isReady) {
+      restoreState().catch(noop);
+    }
+  }, [isReady]);
+
+  const persistNavigationState = useCallback((state?: NavigationState) => {
+    AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state)).catch(noop);
+  }, []);
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.container}>
-        <Text>Hello world!</Text>
-        <Animated.View
-          style={{
-            height: 65,
-            backgroundColor: 'gray',
-            width: 200,
-            // @ts-ignore TODO
-            animationName: {
-              from: {
-                width: 200,
-              },
-              to: {
-                width: 350,
-              },
-            },
-            animationDuration: '5s',
-            animationIterationCount: 'infinite',
-            animationTimingFunction: 'linear',
-            animationDirection: 'alternate',
-            animationDelay: '-2.5s',
-          }}>
-          <View style={styles.row}>
-            <View style={[styles.grow, { backgroundColor: 'blue' }]} />
-            <View style={[styles.grow, { backgroundColor: 'lightblue' }]} />
-            <View style={[styles.grow, { backgroundColor: 'skyblue' }]} />
-            <View style={[styles.grow, { backgroundColor: 'powderblue' }]} />
-          </View>
-
-          <Animated.View
-            style={{
-              height: '100%',
-              backgroundColor: 'gold',
-              shadowColor: 'black',
-              width: 20,
-              // @ts-ignore TODO
-              animationName: {
-                from: {
-                  width: '0%',
-                },
-                0.1: {
-                  width: '75%',
-                },
-                0.2: {
-                  width: 20,
-                },
-                0.3: {
-                  width: '50%',
-                },
-                0.4: {
-                  width: 20,
-                },
-                0.5: {
-                  width: '75%',
-                },
-                0.6: {
-                  width: 0,
-                },
-                0.7: {
-                  width: '100%',
-                },
-                0.8: {
-                  width: '25%',
-                },
-                0.9: {
-                  width: '75%',
-                },
-                to: {
-                  width: '0%',
-                },
-              },
-              animationDuration: '5s',
-              animationIterationCount: 2,
-              animationTimingFunction: 'linear',
-              animationDelay: '500ms',
-            }}
-          />
-        </Animated.View>
-      </View>
-    </SafeAreaView>
+    <NavigationContainer
+      initialState={navigationState}
+      onStateChange={persistNavigationState}>
+      <SafeAreaView style={flex.fill}>
+        <ExamplesStackNavigator />
+      </SafeAreaView>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  row: {
-    flexDirection: 'row',
-    height: '50%',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-  },
-  grow: {
-    flexGrow: 1,
-  },
-});
