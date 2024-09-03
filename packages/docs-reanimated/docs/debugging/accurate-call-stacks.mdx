@@ -57,4 +57,4 @@ The following example shows the difference in call stacks before and after apply
 
 - Some errors, especially those caused by asynchronous code, may still result in stack traces that point to Reanimated internals rather than the specific line in your code that triggered the error. This happens because the stack trace loses track of the component or function that initiated the asynchronous operation.
 
-- Unfortunately, there's nothing you can do to prevent this behavior, as it's a limitation of how stack traces in asynchronous code are handled. You'll need to manually debug the issue based on the error message to identify the potential cause of the problem.
+- Unfortunately, there's nothing you can do to prevent this behavior, as it's a limitation of how React Native handles stack traces in asynchronous code. You'll need to manually debug the issue based on the error message to identify the potential cause of the problem.
