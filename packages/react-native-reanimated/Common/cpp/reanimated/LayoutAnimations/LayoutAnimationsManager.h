@@ -5,8 +5,6 @@
 #include "Shareables.h"
 
 #include <jsi/jsi.h>
-#include <stdio.h>
-#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>

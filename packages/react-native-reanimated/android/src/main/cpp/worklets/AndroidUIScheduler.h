@@ -17,12 +17,12 @@ using namespace facebook;
 class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/AndroidUIScheduler;";
+      "Lcom/swmansion/worklets/AndroidUIScheduler;";
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis);
   static void registerNatives();
 
-  std::shared_ptr<UIScheduler> getUIScheduler() {
+  std::shared_ptr<reanimated::UIScheduler> getUIScheduler() {
     return uiScheduler_;
   }
 
@@ -34,7 +34,7 @@ class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
   void triggerUI();
 
   jni::global_ref<AndroidUIScheduler::javaobject> javaPart_;
-  std::shared_ptr<UIScheduler> uiScheduler_;
+  std::shared_ptr<reanimated::UIScheduler> uiScheduler_;
 
   explicit AndroidUIScheduler(
       jni::alias_ref<AndroidUIScheduler::jhybridobject> jThis);

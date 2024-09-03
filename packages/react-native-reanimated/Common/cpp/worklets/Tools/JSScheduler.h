@@ -28,7 +28,7 @@ class JSScheduler {
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
 
   const std::function<void(Job)> scheduleOnJS = nullptr;
-  const std::shared_ptr<CallInvoker> getJSCallInvoker() const;
+  std::shared_ptr<CallInvoker> getJSCallInvoker() const;
 
  protected:
   jsi::Runtime &rnRuntime_;

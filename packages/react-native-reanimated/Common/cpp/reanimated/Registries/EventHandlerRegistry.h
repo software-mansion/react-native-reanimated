@@ -5,19 +5,16 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include <set>
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <vector>
 
+#include "WorkletEventHandler.h"
 #include "WorkletRuntime.h"
 
 using namespace facebook;
 
 namespace reanimated {
-
-class WorkletEventHandler;
 
 class EventHandlerRegistry {
   std::map<

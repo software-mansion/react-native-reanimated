@@ -36,6 +36,7 @@ import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.facebook.react.views.view.ReactViewBackgroundDrawable;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
+import com.swmansion.worklets.WorkletsModule;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -51,7 +52,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 public class NodesManager implements EventDispatcherListener {
-
   private Long mFirstUptime = SystemClock.uptimeMillis();
   private boolean mSlowAnimationsEnabled = false;
   private int mAnimationsDragFactor;
@@ -68,8 +68,8 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   public void dispatchCommand(int viewTag, String commandId, ReadableArray commandArgs) {
-    // mUIManager.dispatchCommand must be called from native modules queue thread
-    // because of an assert in ShadowNodeRegistry.getNode
+    // mUIManager.dispatchCommand must be called from native modules queue
+    // thread because of an assert in ShadowNodeRegistry.getNode
     mContext.runOnNativeModulesQueueThread(
         new GuardedRunnable(mContext.getExceptionHandler()) {
           @Override
@@ -94,6 +94,7 @@ public class NodesManager implements EventDispatcherListener {
     void onAnimationFrame(double timestampMs);
   }
 
+  private final WorkletsModule mWorkletsModule;
   private final AnimationsManager mAnimationManager;
   private final UIImplementation mUIImplementation;
   private final DeviceEventManagerModule.RCTDeviceEventEmitter mEventEmitter;
@@ -132,10 +133,9 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  public void initWithContext(
-      ReactApplicationContext reactApplicationContext, String valueUnpackerCode) {
-    mNativeProxy = new NativeProxy(reactApplicationContext, valueUnpackerCode);
-    mAnimationManager.setAndroidUIScheduler(getNativeProxy().getAndroidUIScheduler());
+  public void initWithContext(ReactApplicationContext reactApplicationContext) {
+    mNativeProxy = new NativeProxy(reactApplicationContext, mWorkletsModule);
+    mAnimationManager.setAndroidUIScheduler(mWorkletsModule.getAndroidUIScheduler());
     compatibility = new ReaCompatibility(reactApplicationContext);
     compatibility.registerFabricEventListener(this);
   }
@@ -153,8 +153,9 @@ public class NodesManager implements EventDispatcherListener {
   private Queue<NativeUpdateOperation> mOperationsInBatch = new LinkedList<>();
   private boolean mTryRunBatchUpdatesSynchronously = false;
 
-  public NodesManager(ReactContext context) {
+  public NodesManager(ReactContext context, WorkletsModule workletsModule) {
     mContext = context;
+    mWorkletsModule = workletsModule;
     int uiManagerType =
         BuildConfig.IS_NEW_ARCHITECTURE_ENABLED ? UIManagerType.FABRIC : UIManagerType.DEFAULT;
     mUIManager = UIManagerHelper.getUIManager(context, uiManagerType);
@@ -175,14 +176,15 @@ public class NodesManager implements EventDispatcherListener {
           }
         };
 
-    // We register as event listener at the end, because we pass `this` and we haven't finished
-    // constructing an object yet.
-    // This lead to a crash described in
-    // https://github.com/software-mansion/react-native-reanimated/issues/604 which was caused by
-    // Nodes Manager being constructed on UI thread and registering for events.
-    // Events are handled in the native modules thread in the `onEventDispatch()` method.
-    // This method indirectly uses `mChoreographerCallback` which was created after event
-    // registration, creating race condition
+    // We register as event listener at the end, because we pass `this` and we
+    // haven't finished constructing an object yet. This lead to a crash
+    // described in
+    // https://github.com/software-mansion/react-native-reanimated/issues/604
+    // which was caused by Nodes Manager being constructed on UI thread and
+    // registering for events. Events are handled in the native modules thread
+    // in the `onEventDispatch()` method. This method indirectly uses
+    // `mChoreographerCallback` which was created after event registration,
+    // creating race condition
     Objects.requireNonNull(UIManagerHelper.getEventDispatcher(context, uiManagerType))
         .addListener(this);
 
@@ -261,15 +263,16 @@ public class NodesManager implements EventDispatcherListener {
         try {
           boolean ignored = semaphore.tryAcquire(16, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
-          // if the thread is interrupted we just continue and let the layout update happen
-          // asynchronously
+          // if the thread is interrupted we just continue and let the layout
+          // update happen asynchronously
         }
       }
     }
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
-    // Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
+    // Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE,
+    // "onAnimationFrame");
 
     double currentFrameTimeMs = frameTimeNanos / 1000000.;
     if (mSlowAnimationsEnabled) {
@@ -278,8 +281,9 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (currentFrameTimeMs > lastFrameTimeMs) {
-      // It is possible for ChoreographerCallback to be executed twice within the same frame
-      // due to frame drops. If this occurs, the additional callback execution should be ignored.
+      // It is possible for ChoreographerCallback to be executed twice within
+      // the same frame due to frame drops. If this occurs, the additional
+      // callback execution should be ignored.
       lastFrameTimeMs = currentFrameTimeMs;
 
       while (!mEventQueue.isEmpty()) {
@@ -331,8 +335,8 @@ public class NodesManager implements EventDispatcherListener {
     if (mNativeProxy == null) {
       return;
     }
-    // Events can be dispatched from any thread so we have to make sure handleEvent is run from the
-    // UI thread.
+    // Events can be dispatched from any thread so we have to make sure
+    // handleEvent is run from the UI thread.
     if (UiThreadUtil.isOnUiThread()) {
       handleEvent(event);
       performOperations();
@@ -369,11 +373,12 @@ public class NodesManager implements EventDispatcherListener {
 
   public void updateProps(int viewTag, Map<String, Object> props) {
     /*
-     * This is a temporary fix intended to address an issue where updates to properties
-     * are attempted on views that may not exist or have been removed. This scenario can
-     * occur in fast-changing UI environments where components are frequently added or
-     * removed, leading to potential inconsistencies or errors when attempting to update
-     * views based on outdated references
+     * This is a temporary fix intended to address an issue where updates to
+     * properties are attempted on views that may not exist or have been
+     * removed. This scenario can occur in fast-changing UI environments where
+     * components are frequently added or removed, leading to potential
+     * inconsistencies or errors when attempting to update views based on
+     * outdated references
      */
     try {
       View view = mUIManager.resolveView(viewTag);
@@ -384,7 +389,8 @@ public class NodesManager implements EventDispatcherListener {
       return;
     }
 
-    // TODO: update PropsNode to use this method instead of its own way of updating props
+    // TODO: update PropsNode to use this method instead of its own way of
+    // updating props
     boolean hasUIProps = false;
     boolean hasNativeProps = false;
     boolean hasJSProps = false;

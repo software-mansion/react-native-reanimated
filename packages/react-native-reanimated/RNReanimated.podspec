@@ -91,6 +91,7 @@ Pod::Spec.new do |s|
 
   s.subspec "worklets" do |ss|
     ss.source_files = [
+      "apple/worklets/**/*.{mm,h,m}",
       "Common/cpp/worklets/**/*.{cpp,h}",
     ]
   end

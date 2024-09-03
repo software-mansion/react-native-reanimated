@@ -13,26 +13,12 @@ import { isFabric } from '../PlatformChecker';
 import type React from 'react';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { LayoutAnimationBatchItem } from '../layoutReanimation/animationBuilder/commonTypes';
+import WorkletsModule from '../specs/NativeWorkletsModule';
 import ReanimatedModule from '../specs/NativeReanimatedModule';
 import { ReanimatedError } from '../errors';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
-  makeShareableClone<T>(
-    value: T,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ): ShareableRef<T>;
-  scheduleOnUI<T>(shareable: ShareableRef<T>): void;
-  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R;
-  createWorkletRuntime(
-    name: string,
-    initializer: ShareableRef<() => void>
-  ): WorkletRuntime;
-  scheduleOnRuntime<T>(
-    workletRuntime: WorkletRuntime,
-    worklet: ShareableRef<T>
-  ): void;
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,
@@ -64,6 +50,24 @@ export interface NativeReanimatedModule {
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
 }
 
+export interface NativeWorkletsModule {
+  makeShareableClone<T>(
+    value: T,
+    shouldPersistRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<T>;
+  scheduleOnUI<T>(shareable: ShareableRef<T>): void;
+  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R;
+  createWorkletRuntime(
+    name: string,
+    initializer: ShareableRef<() => void>
+  ): WorkletRuntime;
+  scheduleOnRuntime<T>(
+    workletRuntime: WorkletRuntime,
+    worklet: ShareableRef<T>
+  ): void;
+}
+
 function assertSingleReanimatedInstance() {
   if (
     global._REANIMATED_VERSION_JS !== undefined &&
@@ -78,6 +82,7 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
 
 export class NativeReanimated {
   private InnerNativeModule: NativeReanimatedModule;
+  private CommonWorkletsModule: NativeWorkletsModule;
 
   constructor() {
     // These checks have to split since version checking depend on the execution order
@@ -87,9 +92,13 @@ export class NativeReanimated {
     global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined) {
       const valueUnpackerCode = getValueUnpackerCode();
-      ReanimatedModule?.installTurboModule(valueUnpackerCode);
+      WorkletsModule?.installTurboModule(valueUnpackerCode);
+      ReanimatedModule?.installTurboModule();
     }
-    if (global.__reanimatedModuleProxy === undefined) {
+    if (
+      global.__reanimatedModuleProxy === undefined ||
+      global.__workletsModuleProxy === undefined
+    ) {
       throw new ReanimatedError(
         `Native part of Reanimated doesn't seem to be initialized.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
@@ -98,6 +107,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     if (__DEV__) {
       checkCppVersion();
     }
+    this.CommonWorkletsModule = global.__workletsModuleProxy;
     this.InnerNativeModule = global.__reanimatedModuleProxy;
   }
 
@@ -106,7 +116,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     shouldPersistRemote: boolean,
     nativeStateSource?: object
   ) {
-    return this.InnerNativeModule.makeShareableClone(
+    return this.CommonWorkletsModule.makeShareableClone(
       value,
       shouldPersistRemote,
       nativeStateSource
@@ -114,22 +124,22 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   scheduleOnUI<T>(shareable: ShareableRef<T>) {
-    return this.InnerNativeModule.scheduleOnUI(shareable);
+    return this.CommonWorkletsModule.scheduleOnUI(shareable);
   }
 
   executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R {
-    return this.InnerNativeModule.executeOnUIRuntimeSync(shareable);
+    return this.CommonWorkletsModule.executeOnUIRuntimeSync(shareable);
   }
 
   createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
-    return this.InnerNativeModule.createWorkletRuntime(name, initializer);
+    return this.CommonWorkletsModule.createWorkletRuntime(name, initializer);
   }
 
   scheduleOnRuntime<T>(
     workletRuntime: WorkletRuntime,
     shareableWorklet: ShareableRef<T>
   ) {
-    return this.InnerNativeModule.scheduleOnRuntime(
+    return this.CommonWorkletsModule.scheduleOnRuntime(
       workletRuntime,
       shareableWorklet
     );

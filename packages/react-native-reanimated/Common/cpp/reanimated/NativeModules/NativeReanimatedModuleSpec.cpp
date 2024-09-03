@@ -6,57 +6,6 @@
 
 namespace reanimated {
 
-// SharedValue
-
-static jsi::Value SPEC_PREFIX(makeShareableClone)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->makeShareableClone(
-          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
-}
-
-// scheduler
-
-static jsi::Value SPEC_PREFIX(scheduleOnUI)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->scheduleOnUI(rt, std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value SPEC_PREFIX(executeOnUIRuntimeSync)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->executeOnUIRuntimeSync(rt, std::move(args[0]));
-}
-
-static jsi::Value SPEC_PREFIX(createWorkletRuntime)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->createWorkletRuntime(rt, std::move(args[0]), std::move(args[1]));
-}
-
-static jsi::Value SPEC_PREFIX(scheduleOnRuntime)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->scheduleOnRuntime(rt, std::move(args[0]), std::move(args[1]));
-}
-
 static jsi::Value SPEC_PREFIX(registerEventHandler)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -173,17 +122,6 @@ static jsi::Value SPEC_PREFIX(setShouldAnimateExiting)(
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     const std::shared_ptr<CallInvoker> &jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
-  methodMap_["makeShareableClone"] =
-      MethodMetadata{2, SPEC_PREFIX(makeShareableClone)};
-
-  methodMap_["scheduleOnUI"] = MethodMetadata{1, SPEC_PREFIX(scheduleOnUI)};
-  methodMap_["executeOnUIRuntimeSync"] =
-      MethodMetadata{1, SPEC_PREFIX(executeOnUIRuntimeSync)};
-  methodMap_["createWorkletRuntime"] =
-      MethodMetadata{2, SPEC_PREFIX(createWorkletRuntime)};
-  methodMap_["scheduleOnRuntime"] =
-      MethodMetadata{2, SPEC_PREFIX(scheduleOnRuntime)};
-
   methodMap_["registerEventHandler"] =
       MethodMetadata{3, SPEC_PREFIX(registerEventHandler)};
   methodMap_["unregisterEventHandler"] =

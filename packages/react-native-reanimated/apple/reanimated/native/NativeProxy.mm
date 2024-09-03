@@ -54,35 +54,17 @@ static inline bool getIsReducedMotion()
 #endif // __has_include(<UIKit/UIAccessibility.h>)
 }
 
-std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
-    REAModule *reaModule,
-    RCTBridge *bridge,
-    const std::shared_ptr<CallInvoker> &jsInvoker,
-    const std::string &valueUnpackerCode)
+std::shared_ptr<NativeReanimatedModule>
+createReanimatedModule(REAModule *reaModule, RCTBridge *bridge, WorkletsModule *workletsModule)
 {
   auto nodesManager = reaModule.nodesManager;
 
-  jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
-
-  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
-    throw error;
-  });
-
   PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(bridge, nodesManager, reaModule);
 
-  std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
-  std::shared_ptr<JSScheduler> jsScheduler = std::make_shared<JSScheduler>(rnRuntime, jsInvoker);
-  constexpr auto isBridgeless = false;
+  const std::shared_ptr<NativeWorkletsModule> NativeWorkletsModule = [workletsModule getNativeWorkletsModule];
 
-  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      rnRuntime,
-      jsScheduler,
-      jsQueue,
-      uiScheduler,
-      platformDepMethodsHolder,
-      valueUnpackerCode,
-      isBridgeless,
-      getIsReducedMotion());
+  auto nativeReanimatedModule =
+      std::make_shared<NativeReanimatedModule>(NativeWorkletsModule, platformDepMethodsHolder, getIsReducedMotion());
 
   commonInit(reaModule, nativeReanimatedModule);
   // Layout Animation callbacks setup
@@ -99,35 +81,19 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
+    REAModule *reaModule,
     RCTModuleRegistry *moduleRegistry,
-    jsi::Runtime &runtime,
-    const std::string &valueUnpackerCode,
-    RuntimeExecutor runtimeExecutor)
+    WorkletsModule *workletsModule)
 {
-  REAModule *reaModule = [moduleRegistry moduleForName:"ReanimatedModule"];
-
   auto nodesManager = reaModule.nodesManager;
-
-  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
-    throw error;
-  });
 
   PlatformDepMethodsHolder platformDepMethodsHolder =
       makePlatformDepMethodsHolderBridgeless(moduleRegistry, nodesManager, reaModule);
 
-  auto uiScheduler = std::make_shared<REAIOSUIScheduler>();
-  auto jsScheduler = std::make_shared<JSScheduler>(runtime, runtimeExecutor);
-  constexpr auto isBridgeless = true;
+  const auto NativeWorkletsModule = [workletsModule getNativeWorkletsModule];
 
-  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      runtime,
-      jsScheduler,
-      jsQueue,
-      uiScheduler,
-      platformDepMethodsHolder,
-      valueUnpackerCode,
-      isBridgeless,
-      getIsReducedMotion());
+  auto nativeReanimatedModule =
+      std::make_shared<NativeReanimatedModule>(NativeWorkletsModule, platformDepMethodsHolder, getIsReducedMotion());
 
   commonInit(reaModule, nativeReanimatedModule);
 

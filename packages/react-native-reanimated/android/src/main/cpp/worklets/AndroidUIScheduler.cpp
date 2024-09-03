@@ -5,7 +5,6 @@
 #include <jsi/jsi.h>
 
 #include <memory>
-#include <string>
 
 namespace reanimated {
 

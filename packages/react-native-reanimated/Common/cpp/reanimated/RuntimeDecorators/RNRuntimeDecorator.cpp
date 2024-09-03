@@ -29,7 +29,9 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", isFabric);
 
   rnRuntime.global().setProperty(
-      rnRuntime, "_IS_BRIDGELESS", nativeReanimatedModule->isBridgeless());
+      rnRuntime,
+      "_IS_BRIDGELESS",
+      nativeReanimatedModule->getNativeWorkletsModule()->isBridgeless());
 
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, nativeReanimatedModule->getJSLogger());

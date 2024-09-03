@@ -2,7 +2,7 @@
 
 #include "PlatformLogger.h"
 
-constexpr const auto tag = "Reanimated";
+constexpr const auto tag = "Worklets";
 
 namespace reanimated {
 

@@ -2,6 +2,7 @@
 #include "WorkletEventHandler.h"
 
 #include <utility>
+#include <vector>
 
 namespace reanimated {
 

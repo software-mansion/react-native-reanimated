@@ -19,8 +19,9 @@ target_include_directories(
     "${REANIMATED_COMMON_CPP_DIR}/Fabric"
     "${REANIMATED_COMMON_CPP_DIR}/LayoutAnimations"
     "${REANIMATED_COMMON_CPP_DIR}/NativeModules"
-    "${REANIMATED_COMMON_CPP_DIR}/Tools"
     "${REANIMATED_COMMON_CPP_DIR}/RuntimeDecorators"
+    "${REANIMATED_COMMON_CPP_DIR}/Registries"
+    "${REANIMATED_COMMON_CPP_DIR}/Tools"
 )
 
 target_include_directories(
@@ -34,6 +35,7 @@ target_include_directories(
     PRIVATE
     "${REACT_NATIVE_DIR}/ReactCommon"
     "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
+    "${REACT_NATIVE_DIR}/ReactCommon/react/nativemodule/core/ReactCommon"
     "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
     "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
 )

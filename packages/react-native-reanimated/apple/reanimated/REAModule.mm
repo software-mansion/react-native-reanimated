@@ -25,6 +25,7 @@
 #import <RNReanimated/SingleInstanceChecker.h>
 #import <RNReanimated/WorkletRuntime.h>
 #import <RNReanimated/WorkletRuntimeCollector.h>
+#import <RNReanimated/WorkletsModule.h>
 
 #if __has_include(<UIKit/UIAccessibility.h>)
 #import <UIKit/UIAccessibility.h>
@@ -59,7 +60,6 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   SingleInstanceChecker<REAModule> singleInstanceChecker_;
 #endif // NDEBUG
   bool hasListeners;
-  bool _isBridgeless;
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
@@ -168,7 +168,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
 {
   _surfacePresenter = surfacePresenter;
-  _isBridgeless = true;
 }
 
 - (void)setBridge:(RCTBridge *)bridge
@@ -277,22 +276,14 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   }
 }
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
-  if (_isBridgeless) {
+  WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
+  if ([workletsModule isBridgeless]) {
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
     RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
     auto &rnRuntime = *(jsi::Runtime *)cxxBridge.runtime;
-    auto executorFunction = ([executor = _runtimeExecutor](std::function<void(jsi::Runtime & runtime)> &&callback) {
-      // Convert to Objective-C block so it can be captured properly.
-      __block auto callbackBlock = callback;
-
-      [executor execute:^(jsi::Runtime &runtime) {
-        callbackBlock(runtime);
-      }];
-    });
-    auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
-        _moduleRegistry, rnRuntime, std::string([valueUnpackerCode UTF8String]), executorFunction);
+    auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(self, _moduleRegistry, workletsModule);
     [self attachReactEventListener];
     [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
 #else // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
@@ -304,8 +295,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
         : nullptr;
 
     if (jsiRuntime) {
-      auto nativeReanimatedModule = reanimated::createReanimatedModule(
-          self, self.bridge, self.bridge.jsCallInvoker, std::string([valueUnpackerCode UTF8String]));
+      auto nativeReanimatedModule = reanimated::createReanimatedModule(self, self.bridge, workletsModule);
       jsi::Runtime &rnRuntime = *jsiRuntime;
 
       [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
@@ -319,6 +309,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
   return std::make_shared<facebook::react::NativeReanimatedModuleSpecJSI>(params);
+}
+
+- (void)initialize
+{
+  // Do nothing.
+  // For `RCTInitializing` interface.
 }
 #endif // RCT_NEW_ARCH_ENABLED
 

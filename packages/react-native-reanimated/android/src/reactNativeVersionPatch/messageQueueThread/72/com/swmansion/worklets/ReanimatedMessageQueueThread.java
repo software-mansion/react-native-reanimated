@@ -1,4 +1,4 @@
-package com.swmansion.reanimated;
+package com.swmansion.worklets;
 
 import com.facebook.proguard.annotations.DoNotStrip;
 
@@ -7,10 +7,5 @@ public class ReanimatedMessageQueueThread extends ReanimatedMessageQueueThreadBa
   @Override
   public boolean runOnQueue(Runnable runnable) {
     return messageQueueThread.runOnQueue(runnable);
-  }
-
-  @Override
-  public boolean isIdle() {
-    return messageQueueThread.isIdle();
   }
 }

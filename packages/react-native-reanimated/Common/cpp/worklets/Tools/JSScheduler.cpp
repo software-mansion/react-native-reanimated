@@ -27,9 +27,12 @@ JSScheduler::JSScheduler(
       }),
       rnRuntime_(rnRuntime),
       runtimeExecutor_(runtimeExecutor) {}
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 
-const std::shared_ptr<CallInvoker> JSScheduler::getJSCallInvoker() const {
+std::shared_ptr<CallInvoker> JSScheduler::getJSCallInvoker() const {
+#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+  return nullptr;
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
   assert(
       jsCallInvoker_ != nullptr &&
       "[Reanimated] Expected jsCallInvoker, got nullptr instead.");

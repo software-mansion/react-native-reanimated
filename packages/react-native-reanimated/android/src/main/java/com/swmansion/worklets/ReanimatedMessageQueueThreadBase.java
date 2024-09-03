@@ -1,4 +1,4 @@
-package com.swmansion.reanimated;
+package com.swmansion.worklets;
 
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.queue.MessageQueueThread;
