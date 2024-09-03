@@ -9,6 +9,7 @@ import type { NestedArray } from './createAnimatedComponent/commonTypes';
 import { logger } from './logger';
 
 const mockTargetValues: LayoutAnimationsValues = {
+  targetOpacity: 0,
   targetOriginX: 0,
   targetOriginY: 0,
   targetWidth: 0,
@@ -18,6 +19,7 @@ const mockTargetValues: LayoutAnimationsValues = {
   targetBorderRadius: 0,
   windowWidth: 0,
   windowHeight: 0,
+  currentOpacity: 0,
   currentOriginX: 0,
   currentOriginY: 0,
   currentWidth: 0,

@@ -683,6 +683,8 @@ void LayoutAnimationsProxy::startLayoutAnimation(
         
     yogaValues.setProperty(uiRuntime_, "currentOpacity", currentValues.opacity);
     yogaValues.setProperty(uiRuntime_, "targetOpacity", targetValues.opacity);
+    yogaValues.setProperty(uiRuntime_, "currentBorderRadius", currentValues.borderRadius);
+    yogaValues.setProperty(uiRuntime_, "targetBorderRadius", targetValues.borderRadius);
 
     layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime_, tag, LayoutAnimationType::LAYOUT, yogaValues);

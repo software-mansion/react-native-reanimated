@@ -43,6 +43,7 @@ struct UpdateValues {
 struct Snapshot {
     double x, y, width, height, windowWidth, windowHeight;
     double opacity;
+    float borderRadius;
   Snapshot(const ShadowView &shadowView, Rect window) {
     const auto &frame = shadowView.layoutMetrics.frame;
     x = frame.origin.x;
@@ -56,7 +57,14 @@ struct Snapshot {
           static_cast<const ViewProps*>(shadowView.props.get());
 
     opacity = props->opacity;
+    const auto borderRadiiAll = props->borderRadii.all;
+    if (borderRadiiAll.has_value()){
+        borderRadius = props->borderRadii.all.value().value;
+    } else {
+        borderRadius = 0;
+    }
   }
+      
 };
 
 typedef enum ExitingState {

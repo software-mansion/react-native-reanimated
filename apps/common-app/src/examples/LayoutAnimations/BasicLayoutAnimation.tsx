@@ -20,6 +20,7 @@ export default function BasicLayoutAnimation() {
               marginLeft: state ? 200 : 0,
               backgroundColor: 'blue',
               opacity: state ? 1 : 0.1,
+              borderRadius: state ? 0 : 100,
             },
           ]}
         />

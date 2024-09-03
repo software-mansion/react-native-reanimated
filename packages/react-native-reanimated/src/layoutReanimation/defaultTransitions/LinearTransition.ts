@@ -40,6 +40,7 @@ export class LinearTransition
           width: values.currentWidth,
           height: values.currentHeight,
           opacity: values.currentOpacity,
+          borderRadius: values.currentBorderRadius,
         },
         animations: {
           originX: delayFunction(
@@ -55,6 +56,10 @@ export class LinearTransition
           opacity: delayFunction(
             delay,
             animation(values.targetOpacity, config)
+          ),
+          borderRadius: delayFunction(
+            delay,
+            animation(values.targetBorderRadius, config)
           ),
         },
         callback,
