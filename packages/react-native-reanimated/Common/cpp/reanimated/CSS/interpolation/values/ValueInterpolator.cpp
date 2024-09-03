@@ -56,8 +56,6 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
   if (context.previousProgress.has_value()) {
     const auto previousProgress = context.previousProgress.value();
     if (keyframeAfterIndex_ > prevAfterIndex) {
-      LOG(INFO) << "keyframeAfterIndex_ > prevAfterIndex: "
-                << keyframeAfterIndex_ << " > " << prevAfterIndex;
       // Store the previous interpolation result instead of the keyframe
       // from the keyframes array to ensure that value from which the
       // interpolation starts doesn't change (e.g. if the keyframe value
@@ -68,8 +66,6 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
           : keyframes
                 .back(); // TODO: Replace this with value read from the view
     } else if (keyframeAfterIndex_ < prevAfterIndex) {
-      LOG(INFO) << "keyframeAfterIndex_ < prevAfterIndex: "
-                << keyframeAfterIndex_ << " < " << prevAfterIndex;
       keyframeBefore_ = keyframeAfterIndex_ > 0
           ? keyframes[keyframeAfterIndex_ - 1]
           : keyframes
@@ -79,26 +75,19 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
     }
 
     if (context.directionChanged) {
-      LOG(INFO) << "Direction changed";
       if (context.progress < previousProgress) {
-        LOG(INFO) << "Progress < previousProgress";
         keyframeAfter_ = {previousProgress, previousValue_};
       } else {
-        LOG(INFO) << "Progress >= previousProgress";
         keyframeBefore_ = {previousProgress, previousValue_};
       }
     }
   } else {
-    LOG(INFO) << "No previous progress, keyframeAfterIndex_: "
-              << keyframeAfterIndex_;
     keyframeBefore_ = keyframeAfterIndex_ > 0
         ? keyframes[keyframeAfterIndex_ - 1]
         : keyframes.front(); // TODO: Replace this with value read from the view
     keyframeAfter_ = keyframeAfterIndex_ < keyframes.size()
         ? keyframes[keyframeAfterIndex_]
         : keyframes.back(); // TODO: Replace this with value read from the view
-    LOG(INFO) << "keyframeBefore_: " << keyframeBefore_.offset
-              << ", keyframeAfter_: " << keyframeAfter_.offset;
   }
 }
 
@@ -120,9 +109,6 @@ jsi::Value ValueInterpolator<T>::update(
 
   jsi::Runtime &rt = context.rt;
   jsi::Value updates = convertToJSIValue(rt, value);
-
-  LOG(INFO) << " CSS animation updates: " << stringifyJSIValue(rt, updates)
-            << ", progress: " << context.progress;
 
   return updates;
 }

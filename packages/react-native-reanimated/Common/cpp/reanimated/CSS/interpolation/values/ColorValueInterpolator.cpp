@@ -30,7 +30,8 @@ ColorArray ColorValueInterpolator::interpolate(
     const InterpolationUpdateContext context) const {
   ColorArray resultChannels;
 
-  // interpolate rgb cahnnels using gamma correction and alpha channel without it
+  // interpolate rgb cahnnels using gamma correction and alpha channel without
+  // it
   for (int i = 0; i < 4; i++) {
     double fromChannelValue =
         i == 3 ? fromValue[i] : toLinearSpace(fromValue[i]);

@@ -127,7 +127,18 @@ static jsi::Value REANIMATED_SPEC_PREFIX(registerCSSAnimation)(
     const jsi::Value *args,
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->registerCSSAnimation(rt, std::move(args[0]), std::move(args[1]));
+      ->registerCSSAnimation(
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSAnimation)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->unregisterCSSAnimation(std::move(args[0]));
   return jsi::Value::undefined();
 }
 
@@ -160,6 +171,8 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)};
 
   methodMap_["registerCSSAnimation"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSAnimation)};
+      MethodMetadata{3, REANIMATED_SPEC_PREFIX(registerCSSAnimation)};
+  methodMap_["unregisterCSSAnimation"] =
+      MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSAnimation)};
 }
 } // namespace reanimated

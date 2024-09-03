@@ -53,18 +53,40 @@ import { getViewInfo } from './getViewInfo';
 import { NativeEventsManager } from './NativeEventsManager';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { ReanimatedError } from '../errors';
-import { registerCSSAnimation } from '../css';
+import {
+  buildCSSAnimationConfigFromStyles,
+  registerCSSAnimation,
+  unregisterCSSAnimation,
+} from '../css';
 
 const IS_WEB = isWeb();
 const IS_JEST = isJest();
+const IS_FABRIC = isFabric();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 if (IS_WEB) {
   configureWebLayoutAnimations();
 }
 
-function onlyAnimatedStyles(styles: StyleProps[]): StyleProps[] {
-  return styles.filter((style) => style?.viewDescriptors);
+function splitStyles(styles: StyleProps[] | undefined): {
+  animatedStyles: StyleProps[];
+  plainStyles: StyleProps[];
+} {
+  if (!styles) {
+    return { animatedStyles: [], plainStyles: [] };
+  }
+
+  return styles.reduce(
+    ({ animatedStyles, plainStyles }, style) => {
+      if (style?.viewDescriptors) {
+        animatedStyles.push(style);
+      } else {
+        plainStyles.push(style);
+      }
+      return { animatedStyles, plainStyles };
+    },
+    { animatedStyles: [], plainStyles: [] }
+  ) as { animatedStyles: StyleProps[]; plainStyles: StyleProps[] };
 }
 
 type Options<P> = {
@@ -108,6 +130,7 @@ export function createAnimatedComponent(
 ): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
 
 let id = 0;
+let cssAnimationId = 0;
 
 export function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
@@ -123,7 +146,7 @@ export function createAnimatedComponent(
     extends React.Component<AnimatedComponentProps<InitialComponentProps>>
     implements IAnimatedComponentInternal
   {
-    _styles: StyleProps[] | null = null;
+    _animatedStyles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _isFirstRender = true;
     jestInlineStyle: NestedArray<StyleProps> | undefined;
@@ -139,6 +162,7 @@ export function createAnimatedComponent(
     static contextType = SkipEnteringContext;
     context!: React.ContextType<typeof SkipEnteringContext>;
     reanimatedID = id++;
+    _cssAnimationId?: number;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -152,7 +176,7 @@ export function createAnimatedComponent(
         !entering ||
         getReducedMotionFromConfig(entering as CustomConfig) ||
         skipEntering ||
-        !isFabric()
+        !IS_FABRIC
       ) {
         return;
       }
@@ -165,13 +189,18 @@ export function createAnimatedComponent(
     }
 
     componentDidMount() {
+      const { plainStyles, animatedStyles } = splitStyles(
+        flattenArray<StyleProps>(this.props.style ?? [])
+      );
+
       if (!IS_WEB) {
         // It exists only on native platforms. We initialize it here because the ref to the animated component is available only post-mount
         this._NativeEventsManager = new NativeEventsManager(this, options);
       }
       this._NativeEventsManager?.attachEvents();
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
-      this._attachAnimatedStyles();
+      this._attachAnimatedStyles(animatedStyles);
+      this._attachCSSAnimation(plainStyles);
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
       const layout = this.props.layout;
@@ -212,6 +241,7 @@ export function createAnimatedComponent(
       this._NativeEventsManager?.detachEvents();
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
+      this._detachCSSAnimation();
       this._InlinePropManager.detachInlineProps();
       if (this.props.sharedTransitionTag) {
         this._configureSharedTransition(true);
@@ -236,7 +266,7 @@ export function createAnimatedComponent(
           this._componentRef as ReanimatedHTMLElement,
           LayoutAnimationType.EXITING
         );
-      } else if (exiting && !IS_WEB && !isFabric()) {
+      } else if (exiting && !IS_WEB && !IS_FABRIC) {
         const reduceMotionInExiting =
           'getReduceMotion' in exiting &&
           typeof exiting.getReduceMotion === 'function'
@@ -262,14 +292,14 @@ export function createAnimatedComponent(
 
     _detachStyles() {
       const viewTag = this.getComponentViewTag();
-      if (viewTag !== -1 && this._styles !== null) {
-        for (const style of this._styles) {
+      if (viewTag !== -1 && this._animatedStyles !== null) {
+        for (const style of this._animatedStyles) {
           style.viewDescriptors.remove(viewTag);
         }
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(viewTag);
         }
-        if (isFabric()) {
+        if (IS_FABRIC) {
           removeFromPropsRegistry(viewTag);
         }
       }
@@ -320,7 +350,7 @@ export function createAnimatedComponent(
         viewTag = viewInfo.viewTag;
         viewName = viewInfo.viewName;
         viewConfig = viewInfo.viewConfig;
-        shadowNodeWrapper = isFabric()
+        shadowNodeWrapper = IS_FABRIC
           ? getShadowNodeWrapperFromRef(this, hostInstance)
           : null;
       }
@@ -328,12 +358,9 @@ export function createAnimatedComponent(
       return this._viewInfo;
     }
 
-    _attachAnimatedStyles() {
-      const styles = this.props.style
-        ? onlyAnimatedStyles(flattenArray<StyleProps>(this.props.style))
-        : [];
-      const prevStyles = this._styles;
-      this._styles = styles;
+    _attachAnimatedStyles(styles: StyleProps[]) {
+      const prevStyles = this._animatedStyles;
+      this._animatedStyles = styles;
 
       const prevAnimatedProps = this._animatedProps;
       this._animatedProps = this.props.animatedProps;
@@ -404,6 +431,35 @@ export function createAnimatedComponent(
       }
     }
 
+    _attachCSSAnimation(plainStyles: StyleProps[]) {
+      const config = buildCSSAnimationConfigFromStyles(plainStyles);
+      if (!config) {
+        return;
+      }
+
+      if (!IS_FABRIC) {
+        console.warn(
+          "[Reanimated] Tried to attach CSS animation in the environment that doesn't support it. CSS animations are supported only on Fabric."
+        );
+        return;
+      }
+
+      this._cssAnimationId = cssAnimationId++;
+      const { shadowNodeWrapper } = this._getViewInfo();
+
+      registerCSSAnimation(
+        shadowNodeWrapper as ShadowNodeWrapper,
+        this._cssAnimationId,
+        config
+      );
+    }
+
+    _detachCSSAnimation() {
+      if (this._cssAnimationId !== undefined) {
+        unregisterCSSAnimation(this._cssAnimationId);
+      }
+    }
+
     componentDidUpdate(
       prevProps: AnimatedComponentProps<InitialComponentProps>,
       _prevState: Readonly<unknown>,
@@ -423,7 +479,10 @@ export function createAnimatedComponent(
         this._configureSharedTransition();
       }
       this._NativeEventsManager?.updateEvents(prevProps);
-      this._attachAnimatedStyles();
+      const { animatedStyles } = splitStyles(
+        flattenArray<StyleProps>(this.props.style ?? [])
+      );
+      this._attachAnimatedStyles(animatedStyles);
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
       if (IS_WEB && this.props.exiting) {
@@ -527,7 +586,7 @@ export function createAnimatedComponent(
           if (sharedTransitionTag) {
             this._configureSharedTransition();
           }
-          if (exiting && isFabric()) {
+          if (exiting && IS_FABRIC) {
             const reduceMotionInExiting =
               'getReduceMotion' in exiting &&
               typeof exiting.getReduceMotion === 'function'
@@ -558,28 +617,6 @@ export function createAnimatedComponent(
               )
             );
           }
-        }
-
-        // @ts-expect-error TODO
-        if (isFabric() && this.props.style?.animationName) {
-          const { shadowNodeWrapper } = this._getViewInfo();
-          const config = {
-            // @ts-expect-error TODO
-            animationName: this.props.style.animationName,
-            // @ts-expect-error TODO
-            animationDelay: this.props.style.animationDelay,
-            // @ts-expect-error TODO
-            animationDuration: this.props.style.animationDuration,
-            // @ts-expect-error TODO
-            animationDirection: this.props.style.animationDirection,
-            // @ts-expect-error TODO
-            animationIterationCount: this.props.style.animationIterationCount,
-            animationTimingFunction:
-              // @ts-expect-error TODO
-              this.props.style.animationTimingFunction,
-            // TODO: support other attributes
-          };
-          registerCSSAnimation(shadowNodeWrapper as ShadowNodeWrapper, config);
         }
       },
     });

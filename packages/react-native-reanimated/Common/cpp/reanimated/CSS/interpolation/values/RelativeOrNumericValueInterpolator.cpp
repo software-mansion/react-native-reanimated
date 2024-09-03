@@ -41,9 +41,6 @@ RelativeInterpolatorValue RelativeOrNumericValueInterpolator::interpolate(
   double to =
       (toValue.isRelative ? getRelativeValue(context) : 1) * toValue.value;
 
-  LOG(INFO) << "Interpolating from " << from << " to " << to
-            << " with localProgress " << localProgress;
-
   return {from + (to - from) * localProgress, false};
 }
 
@@ -58,6 +55,16 @@ double RelativeOrNumericValueInterpolator::getRelativeValue(
   } else {
     relativeValue =
         viewPropsRepository.getProp(context.rt, context.node, relativeProperty);
+  }
+
+  // We can get undefined if the parent of the current shadow node does
+  // not exist. This usually happens when views are unmounted and parent
+  // becomes inaccessible before the child animation is stopped.
+  // (Finishing the animation when the componentWillUnmount is called
+  // doesn't guarantee that the animation will finish before the parent
+  // is unmounted).
+  if (relativeValue.isUndefined()) {
+    return 0;
   }
 
   return relativeValue.asNumber();

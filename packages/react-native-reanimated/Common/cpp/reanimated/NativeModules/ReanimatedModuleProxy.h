@@ -78,10 +78,13 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
       const jsi::Value &shouldAnimate) override;
+
   void registerCSSAnimation(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &animationId,
       const jsi::Value &animationConfig) override;
+  void unregisterCSSAnimation(const jsi::Value &animationId) override;
 
   void onRender(double timestampMs);
 

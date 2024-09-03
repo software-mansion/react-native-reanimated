@@ -24,16 +24,16 @@ export type NormalizedOffsetKeyframe = {
 
 export interface CSSAnimationConfig {
   animationName: CSSAnimationKeyframes;
-  animationDuration: CSSAnimationTimeUnit;
-  animationTimingFunction: CSSAnimationTimingFunction;
-  animationDelay: CSSAnimationTimeUnit;
-  animationIterationCount: CSSAnimationIterationCount;
-  animationDirection: CSSAnimationDirection;
-  // animationFillMode: // TODO
-  // animationPlayState: // TODO
+  animationDuration?: CSSAnimationTimeUnit;
+  animationTimingFunction?: CSSAnimationTimingFunction;
+  animationDelay?: CSSAnimationTimeUnit;
+  animationIterationCount?: CSSAnimationIterationCount;
+  animationDirection?: CSSAnimationDirection;
+  // animationFillMode?: // TODO
+  // animationPlayState?: // TODO
   // This is still experimental in browsers and we might not want to support it
   // when CSS animations in reanimated are released
-  // animationTimeline: // TODO
+  // animationTimeline?: // TODO
 }
 
 export type NormalizedCSSAnimationConfig = {

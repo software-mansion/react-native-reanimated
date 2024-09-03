@@ -83,7 +83,10 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
   virtual void registerCSSAnimation(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &animationId,
       const jsi::Value &animationConfig) = 0;
+
+  virtual void unregisterCSSAnimation(const jsi::Value &animationId) = 0;
 };
 
 } // namespace reanimated

@@ -481,6 +481,7 @@ void ReanimatedModuleProxy::cleanupSensors() {
 void ReanimatedModuleProxy::registerCSSAnimation(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &animationId,
     const jsi::Value &animationConfig) {
   const auto &configObject = animationConfig.asObject(rt);
 
@@ -508,9 +509,17 @@ void ReanimatedModuleProxy::registerCSSAnimation(
       animationDirection};
 
   cssAnimationsRegistry_->addAnimation(
-      rt, shadowNodeFromValue(rt, shadowNodeWrapper), config);
+      rt,
+      shadowNodeFromValue(rt, shadowNodeWrapper),
+      animationId.asNumber(),
+      config);
 
   maybeRunCssAnimationsLoop();
+}
+
+void ReanimatedModuleProxy::unregisterCSSAnimation(
+    const jsi::Value &animationId) {
+  cssAnimationsRegistry_->removeAnimation(animationId.asNumber());
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -632,7 +641,7 @@ void ReanimatedModuleProxy::maybeRunCssAnimationsLoop() {
 
     *cssLoop = [this, cssLoop](const double timestampMs) {
       performOperations();
-      if (cssAnimationsRegistry_->registry_.size() > 0) {
+      if (!cssAnimationsRegistry_->isEmpty()) {
         jsi::Runtime &rt =
             workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
         requestRender_(*cssLoop, rt);
@@ -649,40 +658,15 @@ void ReanimatedModuleProxy::maybeRunCssAnimationsLoop() {
 
 void ReanimatedModuleProxy::performOperations() {
   auto &viewPropsRepository = ViewPropsRepository::getInstance();
-  const auto now = getAnimationTimestamp_();
+  jsi::Runtime &rt =
+      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+  const auto timestamp = getAnimationTimestamp_();
 
-  for (auto &[animationTag, animation] : cssAnimationsRegistry_->registry_) {
-    switch (animation.getState()) {
-      case CSSAnimationState::pending: {
-        animation.start(now);
-        // don't break;
-      }
-      case CSSAnimationState::running: {
-        jsi::Runtime &rt =
-            workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-
-        auto shadowNode = animation.getShadowNode();
-        const jsi::Value &updates = animation.update(rt, now);
-
-        if (updates.isUndefined()) {
-          break;
-        }
-
-        operationsInBatch_.emplace_back(
-            shadowNode, std::make_unique<jsi::Value>(rt, updates));
-        break;
-      }
-      case CSSAnimationState::finished: {
-        // we remove css animations lazily
-        cssAnimationsRegistry_->markForRemoval(animationTag);
-        break;
-      }
-    }
+  auto updates = cssAnimationsRegistry_->updateAnimations(rt, timestamp);
+  for (const auto &[shadowNode, props] : updates) {
+    operationsInBatch_.emplace_back(
+        shadowNode, std::make_unique<jsi::Value>(rt, *props));
   }
-
-  // removing css animations after the loop because doing it during loop results
-  // in segfault
-  cssAnimationsRegistry_->runMarkedRemoval();
 
   if (operationsInBatch_.empty() && tagsToRemove_.empty()) {
     // nothing to do
@@ -693,9 +677,6 @@ void ReanimatedModuleProxy::performOperations() {
 
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_.clear();
-
-  jsi::Runtime &rt =
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
 
   {
     auto lock = propsRegistry_->createLock();

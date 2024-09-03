@@ -162,8 +162,17 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   registerCSSAnimation(
     shadowNodeWrapper: ShadowNodeWrapper,
+    animationId: number,
     config: NormalizedCSSAnimationConfig
   ) {
-    this.#reanimatedModuleProxy.registerCSSAnimation(shadowNodeWrapper, config);
+    this.#reanimatedModuleProxy.registerCSSAnimation(
+      shadowNodeWrapper,
+      animationId,
+      config
+    );
+  }
+
+  unregisterCSSAnimation(animationId: number) {
+    this.#reanimatedModuleProxy.unregisterCSSAnimation(animationId);
   }
 }

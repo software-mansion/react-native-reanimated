@@ -268,10 +268,17 @@ class JSReanimated implements IReanimatedModule {
 
   registerCSSAnimation(
     _shadowNodeWrapper: ShadowNodeWrapper,
+    _animationId: number,
     _config: NormalizedCSSAnimationConfig
   ): void {
     throw new ReanimatedError(
       '`registerCSSAnimation` is not available in JSReanimated.'
+    );
+  }
+
+  unregisterCSSAnimation(_animationId: number): void {
+    throw new ReanimatedError(
+      '[Reanimated] `unregisterCSSAnimation` is not available in JSReanimated.'
     );
   }
 }
