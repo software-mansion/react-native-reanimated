@@ -35,6 +35,34 @@ import Animated, {
   LightSpeedOutRight,
   LightSpeedOutLeft,
   PinwheelOut,
+  RollOutRight,
+  RollOutLeft,
+  RotateOutDownLeft,
+  RotateOutDownRight,
+  RotateOutUpLeft,
+  RotateOutUpRight,
+  SlideInRight,
+  SlideInLeft,
+  SlideInUp,
+  SlideInDown,
+  SlideOutLeft,
+  SlideOutRight,
+  SlideOutUp,
+  SlideOutDown,
+  StretchInX,
+  StretchInY,
+  StretchOutX,
+  StretchOutY,
+  BounceOut,
+  BounceOutRight,
+  BounceOutLeft,
+  BounceOutUp,
+  BounceOutDown,
+  BounceIn,
+  BounceInRight,
+  BounceInLeft,
+  BounceInUp,
+  BounceInDown,
 } from 'react-native-reanimated';
 import { EnteringExitingConfigProps } from '.';
 
@@ -50,6 +78,13 @@ export const ENTERING_ANIMATIONS = {
   FadeInRight: FadeInRight,
   FadeInUp: FadeInUp,
   FadeInDown: FadeInDown,
+
+  // Bounce
+  BounceIn: BounceIn,
+  BounceInRight: BounceInRight,
+  BounceInLeft: BounceInLeft,
+  BounceInUp: BounceInUp,
+  BounceInDown: BounceInDown,
 
   // Flip
   FlipInEasyX: FlipInEasyX,
@@ -75,6 +110,16 @@ export const ENTERING_ANIMATIONS = {
   RotateInDownRight: RotateInDownRight,
   RotateInUpLeft: RotateInUpLeft,
   RotateInUpRight: RotateInUpRight,
+
+  // Slide
+  SlideInRight: SlideInRight,
+  SlideInLeft: SlideInLeft,
+  SlideInUp: SlideInUp,
+  SlideInDown: SlideInDown,
+
+  // Stretch
+  StretchInX: StretchInX,
+  StretchInY: StretchInY,
 };
 
 export const EXITING_ANIMATIONS = {
@@ -84,6 +129,13 @@ export const EXITING_ANIMATIONS = {
   FadeOutRight: FadeOutRight,
   FadeOutUp: FadeOutUp,
   FadeOutDown: FadeOutDown,
+
+  // Bounce
+  BounceOut: BounceOut,
+  BounceOutRight: BounceOutRight,
+  BounceOutLeft: BounceOutLeft,
+  BounceOutUp: BounceOutUp,
+  BounceOutDown: BounceOutDown,
 
   // Flip
   FlipOutEasyX: FlipOutEasyX,
@@ -99,6 +151,26 @@ export const EXITING_ANIMATIONS = {
 
   // Pinwheel
   PinwheelOut: PinwheelOut,
+
+  // Roll
+  RollOutRight: RollOutRight,
+  RollOutLeft: RollOutLeft,
+
+  // Rotate
+  RotateOutDownLeft: RotateOutDownLeft,
+  RotateOutDownRight: RotateOutDownRight,
+  RotateOutUpLeft: RotateOutUpLeft,
+  RotateOutUpRight: RotateOutUpRight,
+
+  // Slide
+  SlideOutRight: SlideOutRight,
+  SlideOutLeft: SlideOutLeft,
+  SlideOutUp: SlideOutUp,
+  SlideOutDown: SlideOutDown,
+
+  // Stretch
+  StretchOutX: StretchOutX,
+  StretchOutY: StretchOutY,
 };
 
 export default function Example({ entering, exiting }: ExampleProps) {
@@ -109,6 +181,7 @@ export default function Example({ entering, exiting }: ExampleProps) {
       animation,
       easing,
       duration,
+      delay,
       isSpringBased,
       mass,
       stiffness,
@@ -118,9 +191,13 @@ export default function Example({ entering, exiting }: ExampleProps) {
       restDisplacementThreshold,
     } = entering;
 
-    return isSpringBased
-      ? ENTERING_ANIMATIONS[animation].duration(duration).easing(easing)
+    return !isSpringBased
+      ? ENTERING_ANIMATIONS[animation]
+          .duration(duration)
+          .delay(delay)
+          .easing(easing)
       : ENTERING_ANIMATIONS[animation]
+          .delay(delay)
           .springify()
           .damping(damping)
           .mass(mass)
@@ -134,6 +211,7 @@ export default function Example({ entering, exiting }: ExampleProps) {
     const {
       animation,
       easing,
+      delay,
       duration,
       isSpringBased,
       mass,
@@ -144,10 +222,14 @@ export default function Example({ entering, exiting }: ExampleProps) {
       restDisplacementThreshold,
     } = exiting;
 
-    return isSpringBased
-      ? EXITING_ANIMATIONS[animation].duration(duration).easing(easing)
+    return !isSpringBased
+      ? EXITING_ANIMATIONS[animation]
+          .duration(duration)
+          .delay(delay)
+          .easing(easing)
       : EXITING_ANIMATIONS[animation]
           .springify()
+          .delay(delay)
           .damping(damping)
           .mass(mass)
           .overshootClamping(overshootClamping)

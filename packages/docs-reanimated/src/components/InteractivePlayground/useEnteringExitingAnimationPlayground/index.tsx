@@ -12,6 +12,7 @@ import { ENTERING_ANIMATIONS, EXITING_ANIMATIONS } from './Example';
 export interface EnteringExitingConfigProps {
   animation: string;
   duration?: number;
+  delay?: number;
   easing?: string;
   nestedEasing?: string;
   x1?: number;
@@ -62,6 +63,7 @@ const defaultEasingConfig = {
 
 const baseConfig = {
   duration: 300,
+  delay: 0,
   ...defaultEasingConfig,
   ...defaultSpringConfig,
 };
@@ -87,6 +89,14 @@ const Controls = ({
   setType: React.Dispatch<React.SetStateAction<EnteringExitingConfigProps>>;
   isMobile: boolean;
 }) => {
+  const [isBounce, setIsBounce] = useState(
+    type.animation.toString().toLowerCase().includes('bounce')
+  );
+
+  useEffect(() => {
+    setIsBounce(type.animation.toString().toLowerCase().includes('bounce'));
+  }, [type.animation]);
+
   return (
     <>
       <SelectOption
@@ -119,18 +129,35 @@ const Controls = ({
           }}
         />
       )}
-      <CheckboxOption
-        label="Spring-based"
-        value={type.isSpringBased}
-        onChange={(value) =>
+      <Range
+        label="Delay (ms)"
+        min={0}
+        max={3000}
+        step={100}
+        value={type.delay}
+        onChange={(option) => {
           setType((prevState) => ({
             ...prevState,
-            easing: value ? null : prevState.easing,
-            isSpringBased: value,
-          }))
-        }
+            delay: option,
+          }));
+        }}
       />
-      {type.isSpringBased ? (
+      {!isBounce && (
+        <CheckboxOption
+          label="Spring-based"
+          value={type.isSpringBased}
+          onChange={(value) =>
+            setType((prevState) => ({
+              ...prevState,
+              easing: value ? null : prevState.easing,
+              isSpringBased: value,
+            }))
+          }
+        />
+      )}
+      {isBounce ? (
+        <></>
+      ) : type.isSpringBased ? (
         <>
           <Range
             label="Mass"
@@ -548,7 +575,12 @@ export default function useEnteringExitingPlayground() {
 
   const code = `
   Entering:
-    ${entering.animation}
+    ${entering.animation}${
+    entering.delay > 0
+      ? `
+    .delay(${entering.delay})`
+      : ''
+  }
     ${
       entering.isSpringBased
         ? `.springify()
@@ -563,7 +595,12 @@ export default function useEnteringExitingPlayground() {
     }
 
   Exiting:
-    ${exiting.animation}
+    ${exiting.animation}${
+    exiting.delay > 0
+      ? `
+    .delay(${exiting.delay})`
+      : ''
+  }
     ${
       exiting.isSpringBased
         ? `.springify()
