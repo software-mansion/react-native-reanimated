@@ -7,18 +7,23 @@
 
 namespace reanimated {
 
-class ColorValueInterpolator : public ValueInterpolator<int> {
+class ColorValueInterpolator : public ValueInterpolator<ColorArray> {
  protected:
-  int convertValue(jsi::Runtime &rt, const jsi::Value &value) const override;
-
-  jsi::Value convertToJSIValue(jsi::Runtime &rt, const int &value)
+  ColorArray convertValue(jsi::Runtime &rt, const jsi::Value &value)
       const override;
 
-  int interpolate(
+  jsi::Value convertToJSIValue(jsi::Runtime &rt, const ColorArray &value)
+      const override;
+
+  ColorArray interpolate(
       double localProgress,
-      const int &fromValue,
-      const int &toValue,
+      const ColorArray &fromValue,
+      const ColorArray &toValue,
       const InterpolationUpdateContext context) const override;
+
+ private:
+  double toLinearSpace(uint8_t value) const;
+  uint8_t toGammaCorrectedSpace(double value) const;
 };
 
 } // namespace reanimated

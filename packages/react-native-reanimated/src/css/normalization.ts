@@ -14,6 +14,7 @@ import type {
   NormalizedOffsetKeyframe,
 } from './types';
 import { ReanimatedError } from '../errors';
+import { processCSSAnimationColor } from '../Colors';
 
 const VALID_ANIMATION_DIRECTIONS = [
   'normal',
@@ -45,6 +46,8 @@ export const ERROR_MESSAGES = {
     `[Reanimated] Unsupported timing function "${timingFunction}". Supported functions: linear, ease-in-out-back.`,
   invalidAnimationName: (animationName: any) =>
     `[Reanimated] Invalid animation "${animationName}". Expected an object containing keyframes.`,
+  unsupportedColorFormat: (value: any, prop: string) =>
+    `[Reanimated] Unsupported color format ${value} for ${prop} in CSS animation`,
 };
 
 function normalizeTimeUnit(timeUnit: CSSAnimationTimeUnit): number | null {
@@ -241,7 +244,21 @@ export function handlePrimitiveValue(
   if (!keyframedStyle[prop]) {
     (keyframedStyle as any)[prop] = [];
   }
-  (keyframedStyle[prop] as any[]).push({ offset, value });
+
+  let processedValue = value;
+  if (
+    prop.toLowerCase().includes('color') &&
+    (typeof value === 'string' || typeof value === 'number')
+  ) {
+    processedValue = processCSSAnimationColor(value);
+    if (!processedValue) {
+      throw new ReanimatedError(
+        ERROR_MESSAGES.unsupportedColorFormat(value, prop)
+      );
+    }
+  }
+
+  (keyframedStyle[prop] as any[]).push({ offset, value: processedValue });
 }
 
 function addSubPropertyValue(

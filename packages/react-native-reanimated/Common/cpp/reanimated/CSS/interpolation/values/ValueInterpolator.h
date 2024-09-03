@@ -21,6 +21,8 @@ struct Keyframe {
   T value;
 };
 
+using ColorArray = std::array<uint8_t, 4>;
+
 template <typename T>
 class ValueInterpolator : public Interpolator {
  public:
