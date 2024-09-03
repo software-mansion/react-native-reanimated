@@ -28,6 +28,8 @@ function App() {
 ```typescript
 interface SharedValue<Value = unknown> {
   value: Value;
+  get(): Value;
+  set(value: Value | ((value: Value) => Value)): void;
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
   modify: (
@@ -45,13 +47,32 @@ function useSharedValue<Value>(initialValue: Value): SharedValue<Value>;
 
 #### `initialValue`
 
-The value you want to be initially stored to a `.value` property. It can be any JavaScript value like `number`, `string` or `boolean` but also data structures such as `array` and `object`.
+The value you want to store initially in the shared value. It can be any JavaScript value like `number`, `string` or `boolean` but also data structures such as `array` and `object`.
 
 ### Returns
 
-`useSharedValue` returns a shared value with a single `value` property initially set to the `initialValue`.
+`useSharedValue` returns a shared value initially set to the `initialValue`.
 
-Data stored in shared values can be accessed and modified by their `.value` property.
+You can access data stored in the shared value with either its `value` property or `get` and `set` methods.
+
+#### React Compiler support
+
+When working with the [React Compiler](https://react.dev/learn/react-compiler), you should refrain from accessing and modifying the `value` property directly. Instead, use the `get` and `set` methods. They're the alternative API for `useSharedValue`, compliant with the React Compiler standards.
+
+```javascript
+function App() {
+  const sv = useSharedValue(100);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    return { width: sv.get() * 100 };
+  });
+
+  const handlePress = () => {
+    sv.set((value) => value + 1);
+  };
+}
+```
 
 ## Example
 
@@ -61,6 +82,8 @@ import SharedValueSrc from '!!raw-loader!@site/src/examples/SharedValue';
 <InteractiveExample src={SharedValueSrc} component={SharedValue} showCode />
 
 ## Remarks
+
+- Don't read or modify the value of a shared value during a component's render. Access to `value` property or calling `get`/`set` methods is a side-effect. Triggering side-effects during render [violates the Rules of React](https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render). All reads from and writes to a shared value should happen in relevant callbacks which aren't executed during render, i.e. in `useAnimatedStyle` or `useEffect` hooks.
 
 - When you change the `sv.value` Reanimated will update the styles and keep the shared value in sync between the threads. However, this won't trigger a typical React re-render because a shared value is a plain JavaScript object.
 

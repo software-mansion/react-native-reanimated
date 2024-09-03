@@ -237,17 +237,17 @@ Curved transition enables animation of all parameters (`X`, `Y`, `width`, `heigh
 ### Reference
 
 ```js
-import { CurvedTransiton } from 'react-native-reanimated';
+import { CurvedTransition } from 'react-native-reanimated';
 
 function App() {
-  return <Animated.View layout={CurvedTransiton} />;
+  return <Animated.View layout={CurvedTransition} />;
 }
 ```
 
 ### Modifiers
 
 ```javascript
-CurvedTransiton.duration(1000)
+CurvedTransition.duration(1000)
   .delay(500)
   .easingX(Easing.in(Easing.exp))
   .easingY(Easing.out(Easing.quad))
