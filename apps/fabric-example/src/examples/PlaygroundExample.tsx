@@ -18,20 +18,18 @@ export default function PlaygroundExample() {
             height: 65,
             backgroundColor: 'gray',
             width: 200,
-            // @ts-ignore TODO
             animationName: {
-              0: {
+              from: {
                 width: 200,
               },
-              0.5: {
+              to: {
                 width: 350,
               },
-              1: {
-                width: 200,
-              },
             },
-            animationDuration: '10s',
+            animationDuration: '5s',
             animationTimingFunction: 'linear',
+            animationIterationCount: 'infinite',
+            animationDirection: 'alternate',
           }}>
           <View style={styles.row}>
             <View style={[styles.grow, { backgroundColor: 'blue' }]} />
@@ -46,7 +44,6 @@ export default function PlaygroundExample() {
               backgroundColor: 'gold',
               shadowColor: 'black',
               width: 20,
-              // @ts-ignore TODO
               animationName: {
                 from: {
                   width: 20,
@@ -84,6 +81,7 @@ export default function PlaygroundExample() {
               },
               animationDuration: '10s',
               animationTimingFunction: 'linear',
+              animationIterationCount: 'infinite',
             }}
           />
         </Animated.View>

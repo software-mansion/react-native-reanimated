@@ -55,6 +55,9 @@ export interface ReanimatedModuleProxy {
 
   registerCSSAnimation(
     shadowNodeWrapper: ShadowNodeWrapper,
+    animationId: number,
     config: NormalizedCSSAnimationConfig
   ): void;
+
+  unregisterCSSAnimation(animationId: number): void;
 }

@@ -30,8 +30,6 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
   currentIterationElapsedTime =
       timestamp - (startTime + delay + previousIterationsDuration);
 
-  LOG(INFO) << "currentIterationElapsedTime: " << currentIterationElapsedTime;
-
   // Check if the animation has not started yet because of the delay
   if (currentIterationElapsedTime < 0) {
     return jsi::Value::undefined();

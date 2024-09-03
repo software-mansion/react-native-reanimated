@@ -4,7 +4,6 @@
 
 #include <reanimated/CSS/CSSAnimation.h>
 #include <reanimated/CSS/CSSAnimationsRegistry.h>
-#include <reanimated/CSS/CSSAnimationsTagManager.h>
 
 #include <react/renderer/core/ShadowNode.h>
 
@@ -17,23 +16,35 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
+using UpdatesBatch =
+    std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>;
+
 class CSSAnimationsRegistry {
  public:
-  std::unordered_map<unsigned int, CSSAnimation> registry_;
-
   void addAnimation(
       jsi::Runtime &rt,
       ShadowNode::Shared shadowNode,
+      const unsigned id,
       const CSSAnimationConfig &config);
-  void markForRemoval(const unsigned int tag);
-  void runMarkedRemoval();
+
+  void removeAnimation(const unsigned id);
+
+  UpdatesBatch updateAnimations(jsi::Runtime &rt, const double timestamp);
+
+  bool isEmpty() const;
+
   bool isCssLoopRunning() const;
+
   void setCssLoopRunning(const bool running);
 
  private:
-  CSSAnimationsTagManager tagManager_;
-  std::vector<unsigned int> removalQueue_;
+  std::unordered_map<unsigned, CSSAnimation> registry_;
+  std::vector<unsigned> removalQueue_;
   bool cssLoopRunning_ = false;
+
+  void markForRemoval(const unsigned id);
+
+  void runMarkedRemoval();
 };
 
 } // namespace reanimated
