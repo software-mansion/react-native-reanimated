@@ -40,10 +40,22 @@ struct UpdateValues {
   Frame frame;
 };
 
+
+inline std::string colorToString(const SharedColor& value) {
+  ColorComponents components = colorComponentsFromColor(value);
+  auto ratio = 255.f;
+  return "rgba(" + folly::to<std::string>(round(components.red * ratio)) +
+      ", " + folly::to<std::string>(round(components.green * ratio)) + ", " +
+      folly::to<std::string>(round(components.blue * ratio)) + ", " +
+      folly::to<std::string>(round(components.alpha * ratio)) + ")";
+}
+
+
 struct Snapshot {
     double x, y, width, height, windowWidth, windowHeight;
     double opacity;
     float borderRadius;
+    std::string backgroundColor;
   Snapshot(const ShadowView &shadowView, Rect window) {
     const auto &frame = shadowView.layoutMetrics.frame;
     x = frame.origin.x;
@@ -55,8 +67,10 @@ struct Snapshot {
           
     const ViewProps* props =
           static_cast<const ViewProps*>(shadowView.props.get());
-
+    
     opacity = props->opacity;
+    backgroundColor= colorToString(props->backgroundColor);
+    
     const auto borderRadiiAll = props->borderRadii.all;
     if (borderRadiiAll.has_value()){
         borderRadius = props->borderRadii.all.value().value;

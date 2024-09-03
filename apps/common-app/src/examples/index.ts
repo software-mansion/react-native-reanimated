@@ -143,6 +143,11 @@ interface Example {
 }
 
 export const EXAMPLES: Record<string, Example> = {
+  BasicLayoutAnimation: {
+    title: '[LA] Basic layout animation',
+    screen: BasicLayoutAnimation,
+  },
+
   // Empty example for test purposes
   EmptyExample: {
     icon: '👻',
@@ -617,10 +622,7 @@ export const EXAMPLES: Record<string, Example> = {
     title: '[LA] Nested NativeStacks with layout',
     screen: NestedNativeStacksWithLayout,
   },
-  BasicLayoutAnimation: {
-    title: '[LA] Basic layout animation',
-    screen: BasicLayoutAnimation,
-  },
+
   BasicNestedAnimation: {
     title: '[LA] Basic nested animation',
     screen: BasicNestedAnimation,

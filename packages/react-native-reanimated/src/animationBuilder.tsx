@@ -17,6 +17,7 @@ const mockTargetValues: LayoutAnimationsValues = {
   targetGlobalOriginX: 0,
   targetGlobalOriginY: 0,
   targetBorderRadius: 0,
+  targetBackgroundColor: '#FFFFFF',
   windowWidth: 0,
   windowHeight: 0,
   currentOpacity: 0,
@@ -27,6 +28,7 @@ const mockTargetValues: LayoutAnimationsValues = {
   currentGlobalOriginX: 0,
   currentGlobalOriginY: 0,
   currentBorderRadius: 0,
+  currentBackgroundColor: '#FFFFFF',
 };
 
 function getCommonProperties(

@@ -18,11 +18,11 @@ export type LayoutAnimationsOptions =
 
 type CurrentLayoutAnimationsValues = {
   [K in LayoutAnimationsOptions as `current${Capitalize<string & K>}`]: number;
-};
+} & { currentBackgroundColor: string };
 
 type TargetLayoutAnimationsValues = {
   [K in LayoutAnimationsOptions as `target${Capitalize<string & K>}`]: number;
-};
+} & { targetBackgroundColor: string };
 
 interface WindowDimensions {
   windowWidth: number;

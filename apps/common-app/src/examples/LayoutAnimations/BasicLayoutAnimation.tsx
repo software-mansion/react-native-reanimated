@@ -18,9 +18,9 @@ export default function BasicLayoutAnimation() {
             styles.box,
             {
               marginLeft: state ? 200 : 0,
-              backgroundColor: 'blue',
+              backgroundColor: state ? 'blue' : 'red',
               opacity: state ? 1 : 0.1,
-              borderRadius: state ? 0 : 100,
+              borderRadius: state ? undefined : 100,
             },
           ]}
         />

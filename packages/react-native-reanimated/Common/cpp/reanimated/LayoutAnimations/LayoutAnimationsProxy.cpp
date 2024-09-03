@@ -686,6 +686,9 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     yogaValues.setProperty(uiRuntime_, "currentBorderRadius", currentValues.borderRadius);
     yogaValues.setProperty(uiRuntime_, "targetBorderRadius", targetValues.borderRadius);
 
+    yogaValues.setProperty(uiRuntime_, "currentBackgroundColor", currentValues.backgroundColor);
+    yogaValues.setProperty(uiRuntime_, "targetBackgroundColor", targetValues.backgroundColor);
+
     layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime_, tag, LayoutAnimationType::LAYOUT, yogaValues);
   });
