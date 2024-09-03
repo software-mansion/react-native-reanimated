@@ -41,7 +41,8 @@ struct UpdateValues {
 };
 
 struct Snapshot {
-  double x, y, width, height, windowWidth, windowHeight;
+    double x, y, width, height, windowWidth, windowHeight;
+    double opacity;
   Snapshot(const ShadowView &shadowView, Rect window) {
     const auto &frame = shadowView.layoutMetrics.frame;
     x = frame.origin.x;
@@ -50,6 +51,11 @@ struct Snapshot {
     height = frame.size.height;
     windowWidth = window.width;
     windowHeight = window.height;
+          
+    const ViewProps* props =
+          static_cast<const ViewProps*>(shadowView.props.get());
+
+    opacity = props->opacity;
   }
 };
 

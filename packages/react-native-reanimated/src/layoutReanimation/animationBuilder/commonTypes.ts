@@ -7,6 +7,7 @@ import type {
 } from '../../commonTypes';
 
 export type LayoutAnimationsOptions =
+  | 'opacity'
   | 'originX'
   | 'originY'
   | 'width'

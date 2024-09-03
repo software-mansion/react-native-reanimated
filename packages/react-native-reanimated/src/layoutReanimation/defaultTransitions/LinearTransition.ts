@@ -39,6 +39,7 @@ export class LinearTransition
           originY: values.currentOriginY,
           width: values.currentWidth,
           height: values.currentHeight,
+          opacity: values.currentOpacity,
         },
         animations: {
           originX: delayFunction(
@@ -51,6 +52,10 @@ export class LinearTransition
           ),
           width: delayFunction(delay, animation(values.targetWidth, config)),
           height: delayFunction(delay, animation(values.targetHeight, config)),
+          opacity: delayFunction(
+            delay,
+            animation(values.targetOpacity, config)
+          ),
         },
         callback,
       };

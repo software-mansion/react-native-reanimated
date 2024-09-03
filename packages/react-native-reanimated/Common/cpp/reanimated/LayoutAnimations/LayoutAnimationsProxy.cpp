@@ -670,6 +670,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     yogaValues.setProperty(uiRuntime_, "currentGlobalOriginY", currentValues.y);
     yogaValues.setProperty(uiRuntime_, "currentWidth", currentValues.width);
     yogaValues.setProperty(uiRuntime_, "currentHeight", currentValues.height);
+      
     yogaValues.setProperty(uiRuntime_, "targetOriginX", targetValues.x);
     yogaValues.setProperty(uiRuntime_, "targetGlobalOriginX", targetValues.x);
     yogaValues.setProperty(uiRuntime_, "targetOriginY", targetValues.y);
@@ -679,10 +680,15 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     yogaValues.setProperty(uiRuntime_, "windowWidth", targetValues.windowWidth);
     yogaValues.setProperty(
         uiRuntime_, "windowHeight", targetValues.windowHeight);
+        
+    yogaValues.setProperty(uiRuntime_, "currentOpacity", currentValues.opacity);
+    yogaValues.setProperty(uiRuntime_, "targetOpacity", targetValues.opacity);
+
     layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime_, tag, LayoutAnimationType::LAYOUT, yogaValues);
   });
 }
+
 
 void LayoutAnimationsProxy::updateOngoingAnimationTarget(
     const int tag,
