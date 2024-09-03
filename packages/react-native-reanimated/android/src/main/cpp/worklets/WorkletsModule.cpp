@@ -105,13 +105,14 @@ void WorkletsModule::installJSIBindings() {
 }
 
 void WorkletsModule::registerNatives() {
-  registerHybrid(
-      {makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
+  registerHybrid({
+    makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-       makeNativeMethod(
-           "initHybridBridgeless", WorkletsModule::initHybridBridgeless),
+        makeNativeMethod(
+            "initHybridBridgeless", WorkletsModule::initHybridBridgeless),
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-       makeNativeMethod(
-           "installJSIBindings", WorkletsModule::installJSIBindings)});
+        makeNativeMethod(
+            "installJSIBindings", WorkletsModule::installJSIBindings)
+  });
 }
 } // namespace reanimated

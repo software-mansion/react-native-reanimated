@@ -192,17 +192,18 @@ bool NativeProxy::getIsReducedMotion() {
 }
 
 void NativeProxy::registerNatives() {
-  registerHybrid(
-      {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
+  registerHybrid({
+    makeNativeMethod("initHybrid", NativeProxy::initHybrid),
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-       makeNativeMethod(
-           "initHybridBridgeless", NativeProxy::initHybridBridgeless),
+        makeNativeMethod(
+            "initHybridBridgeless", NativeProxy::initHybridBridgeless),
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-       makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
-       makeNativeMethod(
-           "isAnyHandlerWaitingForEvent",
-           NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations)});
+        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
+        makeNativeMethod(
+            "isAnyHandlerWaitingForEvent",
+            NativeProxy::isAnyHandlerWaitingForEvent),
+        makeNativeMethod("performOperations", NativeProxy::performOperations)
+  });
 }
 
 void NativeProxy::requestRender(
