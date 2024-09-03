@@ -56,11 +56,11 @@ A boolean value that enables or disables strict mode. When strict mode is enable
 
 ## Remarks
 
-- The logger configuration is global and affects all Reanimated animations in your app.
+- The logger configuration is global and affects all warnings and errors shown by Reanimated. There's no option to configure the logger per file/component.
 
 - The `configureReanimatedLogger` function should be called before any Reanimated animations are created, e.g. in the root file of your app.
 
-- The `configureReanimatedLogger` function is intended for application developers. If you are creating a library that relies on Reanimated, do not include this function call in your library source code.
+- The `configureReanimatedLogger` function is intended for application developers. If you are creating a library that relies on Reanimated, don't include this function call in your library source code - users will inherit the configuration which will override the default configuration in the Reanimated library.
 
 ## Platform compatibility
 

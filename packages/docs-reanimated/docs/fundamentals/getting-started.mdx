@@ -96,6 +96,7 @@ To learn more about the plugin head onto to [Reanimated babel plugin](/docs/fund
 Wrap your existing Metro configuration in the `metro.config.js` file with the `wrapWithReanimatedMetroConfig` function.
 
 ```js
+// metro.config.js
 const {
   wrapWithReanimatedMetroConfig,
 } = require('react-native-reanimated/metro-config');
@@ -110,7 +111,7 @@ module.exports = wrapWithReanimatedMetroConfig(config);
 <details>
 <summary>Why should I do this?</summary>
 
-By wrapping your Metro configuration with the Reanimated Metro config wrapper, you can improve reanimated errors and warnings with more accurate call stacks. This makes it easier to identify issues within your code.
+Wrapping your Metro configuration with the Reanimated Metro config wrapper will result in displaying improved reanimated errors and warnings with more accurate call stacks. Thanks to this, identifying misuses of the Reanimated API will be much easier than before.
 
 To learn more about this feature, head onto to [Accurate Call Stacks](/docs/debugging/accurate-call-stacks).
 
