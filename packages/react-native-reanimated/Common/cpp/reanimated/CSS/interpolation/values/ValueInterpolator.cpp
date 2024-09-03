@@ -133,6 +133,7 @@ template class ValueInterpolator<int>;
 template class ValueInterpolator<double>;
 template class ValueInterpolator<std::string>;
 template class ValueInterpolator<std::vector<double>>;
+template class ValueInterpolator<ColorArray>;
 template class ValueInterpolator<RelativeInterpolatorValue>;
 
 } // namespace reanimated

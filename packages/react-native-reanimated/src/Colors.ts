@@ -724,3 +724,12 @@ export function toGammaSpace(
   res.push(RGBA[3]);
   return res as ParsedColorArray;
 }
+
+export function processCSSAnimationColor(value: string | number) {
+  if (typeof value === 'string') {
+    return processColor(value);
+  } else {
+    // case of number format 0xRRGGBBAA format needs to be re-formatted
+    return processColor(`#${value.toString(16).padStart(8, '0')}`);
+  }
+}
