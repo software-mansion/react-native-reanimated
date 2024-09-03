@@ -7,7 +7,6 @@ type LogFunction = (data: LogData) => void;
 export enum LogLevel {
   warn = 1,
   error = 2,
-  fatal = 3,
 }
 
 export type LoggerConfig = {
