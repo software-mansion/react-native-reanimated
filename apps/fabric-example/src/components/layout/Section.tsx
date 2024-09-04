@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import Group from './Group';
 import { colors, flex, spacing, text } from '../../theme';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -17,15 +18,18 @@ export default function Section({
   title,
 }: SectionProps) {
   return (
-    <View style={[styles.container, fill && flex.fill]}>
+    <Animated.View
+      style={[styles.container, fill && flex.fill]}
+      layout={LinearTransition}>
       <View style={styles.textWrapper}>
         <Text style={styles.title}>{title}</Text>
         {description && <Text style={styles.description}>{description}</Text>}
       </View>
       <Group style={fill && flex.fill}>{children}</Group>
-    </View>
+    </Animated.View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     gap: spacing.xxs,
@@ -37,10 +41,10 @@ const styles = StyleSheet.create({
   },
   textWrapper: {
     gap: spacing.xs,
-    marginHorizontal: spacing.sm,
+    marginBottom: spacing.xs,
   },
   title: {
-    ...text.subHeading2,
+    ...text.heading3,
     color: colors.foreground1,
   },
 });

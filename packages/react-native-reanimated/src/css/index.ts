@@ -22,3 +22,11 @@ export function unregisterCSSAnimation(animationId: number) {
 
 export type { NormalizedCSSAnimationConfig, CSSAnimationConfig };
 export * from './utils';
+export type {
+  CSSAnimationKeyframes,
+  CSSAnimationTimeUnit as CSSAnimationDuration,
+  CSSAnimationTimeUnit as CSSAnimationDelay,
+  CSSAnimationIterationCount,
+  CSSAnimationDirection,
+  CSSAnimationTimingFunction,
+} from './types';

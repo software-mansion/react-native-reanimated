@@ -12,7 +12,7 @@ const accentColors = {
 };
 
 export const colors = {
-  background1: '#F8F6FF',
+  background1: '#fcfcff',
   background2: '#EEEAF5',
   background3: '#E1DEE8',
 
