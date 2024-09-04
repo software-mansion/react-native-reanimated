@@ -676,25 +676,45 @@ void LayoutAnimationsProxy::startLayoutAnimation(
                               tag]() {
     jsi::Object yogaValues(uiRuntime_);
     yogaValues.setProperty(uiRuntime_, "currentOriginX", currentValues.x);
-    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginX", currentValues.x);
-    yogaValues.setProperty(uiRuntime_, "currentOriginY", currentValues.y);
-    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginY", currentValues.y);
-
     yogaValues.setProperty(uiRuntime_, "targetOriginX", targetValues.x);
-    yogaValues.setProperty(uiRuntime_, "targetGlobalOriginX", targetValues.x);
+    yogaValues.setProperty(uiRuntime_, "currentOriginY", currentValues.y);
     yogaValues.setProperty(uiRuntime_, "targetOriginY", targetValues.y);
+    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginX", currentValues.x);
+    yogaValues.setProperty(uiRuntime_, "targetGlobalOriginX", targetValues.x);
+    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginY", currentValues.y);
     yogaValues.setProperty(uiRuntime_, "targetGlobalOriginY", targetValues.y);
-    yogaValues.setProperty(uiRuntime_, "targetWidth", targetValues.width);
-
     yogaValues.setProperty(uiRuntime_, "currentWidth", currentValues.width);
+    yogaValues.setProperty(uiRuntime_, "targetWidth", targetValues.width);
     yogaValues.setProperty(uiRuntime_, "currentHeight", currentValues.height);
     yogaValues.setProperty(uiRuntime_, "targetHeight", targetValues.height);
-    yogaValues.setProperty(uiRuntime_, "windowWidth", targetValues.windowWidth);
-    yogaValues.setProperty(
-        uiRuntime_, "windowHeight", targetValues.windowHeight);
+    yogaValues.setProperty(uiRuntime_, "currentWindowWidth", currentValues.windowWidth);
+    yogaValues.setProperty(uiRuntime_, "targetWindowWidth", targetValues.windowWidth);
+    yogaValues.setProperty(uiRuntime_, "currentWindowHeight", currentValues.windowHeight);
+    yogaValues.setProperty(uiRuntime_, "targetWindowHeight", targetValues.windowHeight);
+    yogaValues.setProperty(uiRuntime_, "currentOpacity", currentStyleValues.opacity);
+    yogaValues.setProperty(uiRuntime_, "targetOpacity", targetStyleValues.opacity);    
 
-    yogaValues.setProperty(
-        uiRuntime_,
+    yogaValues.setProperty(uiRuntime_, "currentShadowOffsetHeight", currentStyleValues.shadowOffsetHeight);
+    yogaValues.setProperty(uiRuntime_, "targetShadowOffsetHeight", targetStyleValues.shadowOffsetHeight);
+    yogaValues.setProperty(uiRuntime_, "currentShadowOffsetWidth", currentStyleValues.shadowOffsetWidth);
+    yogaValues.setProperty(uiRuntime_, "targetShadowOffsetWidth", targetStyleValues.shadowOffsetWidth);
+    yogaValues.setProperty(uiRuntime_, "currentShadowOpacity", currentStyleValues.shadowOpacity);
+    yogaValues.setProperty(uiRuntime_, "targetShadowOpacity", targetStyleValues.shadowOpacity);
+    yogaValues.setProperty(uiRuntime_, "currentShadowRadius", currentStyleValues.shadowRadius);
+    yogaValues.setProperty(uiRuntime_, "targetShadowRadius", targetStyleValues.shadowRadius);
+
+    yogaValues.setProperty(uiRuntime_, "currentBorderRadius", currentStyleValues.borderRadius);
+    yogaValues.setProperty(uiRuntime_, "targetBorderRadius", targetStyleValues.borderRadius);
+    yogaValues.setProperty(uiRuntime_, "currentBorderTopLeftRadius", currentStyleValues.borderTopLeftRadius);
+    yogaValues.setProperty(uiRuntime_, "targetBorderTopLeftRadius", targetStyleValues.borderTopLeftRadius);
+    yogaValues.setProperty(uiRuntime_, "currentBorderTopRightRadius", currentStyleValues.borderTopRightRadius);
+    yogaValues.setProperty(uiRuntime_, "targetBorderTopRightRadius", targetStyleValues.borderTopRightRadius);
+    yogaValues.setProperty(uiRuntime_, "currentBorderBottomLeftRadius", currentStyleValues.borderBottomLeftRadius);
+    yogaValues.setProperty(uiRuntime_, "targetBorderBottomLeftRadius", targetStyleValues.borderBottomLeftRadius);
+    yogaValues.setProperty(uiRuntime_, "currentBorderBottomRightRadius", currentStyleValues.borderBottomRightRadius);
+    yogaValues.setProperty(uiRuntime_, "targetBorderBottomRightRadius", targetStyleValues.borderBottomRightRadius);
+
+    yogaValues.setProperty(   uiRuntime_,
         "currentBackgroundColor",
         currentStyleValues.backgroundColor);
     yogaValues.setProperty(
@@ -704,26 +724,6 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     yogaValues.setProperty(
         uiRuntime_, "targetShadowColor", targetStyleValues.shadowColor);
 
-    for (int i = 0; i < 10; i++) {
-      char currentPropName
-          [7 + strlen(currentStyleValues.numericPropertiesNames[i])];
-      char targetPropName
-          [6 + strlen(targetStyleValues.numericPropertiesNames[i])];
-      strcpy(currentPropName, "current");
-      strcat(currentPropName, currentStyleValues.numericPropertiesNames[i]);
-
-      strcpy(targetPropName, "target");
-      strcat(targetPropName, targetStyleValues.numericPropertiesNames[i]);
-
-      yogaValues.setProperty(
-          uiRuntime_,
-          currentPropName,
-          currentStyleValues.numericPropertiesValues[i]);
-      yogaValues.setProperty(
-          uiRuntime_,
-          targetPropName,
-          targetStyleValues.numericPropertiesValues[i]);
-    }
 
     layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime_, tag, LayoutAnimationType::LAYOUT, yogaValues);

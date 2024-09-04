@@ -48,7 +48,7 @@ export class LinearTransition
           borderBottomLeftRadius: values.currentBorderBottomLeftRadius,
           borderBottomRightRadius: values.currentBorderBottomRightRadius,
 
-          shadowRadius: values.currentShadowRadius,
+          // shadowRadius: values.currentShadowRadius,
           shadowColor: values.currentShadowColor,
           shadowOpacity: values.currentShadowOpacity,
           shadowOffset: {
@@ -71,10 +71,10 @@ export class LinearTransition
             delay,
             animation(values.targetOpacity, config)
           ),
-          borderRadius: delayFunction(
-            delay,
-            animation(values.targetBorderRadius, config)
-          ),
+          // borderRadius: delayFunction(
+          //   delay,
+          //   animation(values.targetBorderRadius, config)
+          // ),
           borderTopLeftRadius: delayFunction(
             delay,
             animation(values.targetBorderTopLeftRadius, config)
@@ -103,16 +103,16 @@ export class LinearTransition
             delay,
             animation(values.targetShadowOpacity, config)
           ),
-          shadowOffset: delayFunction(
-            delay,
-            animation(
-              {
-                height: values.targetShadowOffsetHeight,
-                width: values.targetShadowOffsetWidth,
-              },
-              config
-            )
-          ),
+          shadowOffset: {
+            height: delayFunction(
+              delay,
+              animation(values.targetShadowOffsetHeight, config)
+            ),
+            width: delayFunction(
+              delay,
+              animation(values.targetShadowOffsetWidth, config)
+            ),
+          },
         },
         callback,
       };
