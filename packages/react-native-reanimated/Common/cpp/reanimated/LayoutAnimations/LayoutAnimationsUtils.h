@@ -6,11 +6,11 @@
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <string>
 
 namespace reanimated {
 
@@ -41,8 +41,7 @@ struct UpdateValues {
   Frame frame;
 };
 
-
-inline std::string colorToString(const SharedColor& value) {
+inline std::string colorToString(const SharedColor &value) {
   ColorComponents components = colorComponentsFromColor(value);
   auto ratio = 255.f;
   return "rgba(" + folly::to<std::string>(round(components.red * ratio)) +
@@ -51,12 +50,9 @@ inline std::string colorToString(const SharedColor& value) {
       folly::to<std::string>(round(components.alpha * ratio)) + ")";
 }
 
-
 struct Snapshot {
-    double x, y, width, height, windowWidth, windowHeight;
-    double opacity;
-    float borderRadius;
-    std::string backgroundColor;
+  double x, y, width, height, windowWidth, windowHeight;
+  double opacity;
   Snapshot(const ShadowView &shadowView, Rect window) {
     const auto &frame = shadowView.layoutMetrics.frame;
     x = frame.origin.x;
@@ -65,21 +61,72 @@ struct Snapshot {
     height = frame.size.height;
     windowWidth = window.width;
     windowHeight = window.height;
-          
-    const ViewProps* props =
-          static_cast<const ViewProps*>(shadowView.props.get());
-    
-    opacity = props->opacity;
-    backgroundColor= colorToString(props->backgroundColor);
-    
-    const auto borderRadiiAll = props->borderRadii.all;
-    if (borderRadiiAll.has_value()){
-        borderRadius = props->borderRadii.all.value().value;
-    } else {
-        borderRadius = 0;
-    }
   }
-      
+};
+
+struct StyleSnapshot {
+  int numOfProperties = 10;
+  std::string backgroundColor;
+  std::string shadowColor;
+  char *numericPropertiesNames[10] = {
+      "Opacity",
+      "BorderRadius",
+      "BorderTopLeftRadius",
+      "BorderTopRightRadius",
+      "BorderBottomLeftRadius",
+      "BorderBottomRightRadius",
+      "ShadowOffsetHeight",
+      "ShadowOffsetWidth",
+      "ShadowOpacity",
+      "ShadowRadius"};
+  std::array<double, 10> numericPropertiesValues;
+  StyleSnapshot(const ShadowView &shadowView, Rect window) {
+    const ViewProps *props =
+        static_cast<const ViewProps *>(shadowView.props.get());
+
+    backgroundColor = colorToString(props->backgroundColor);
+    shadowColor = colorToString(props->shadowColor);
+
+    auto opacity = props->opacity;
+    auto borderRadius = 0, borderTopLeftRadius = 0, borderTopRightRadius = 0,
+         borderBottomLeftRadius = 0, borderBottomRightRadius = 0;
+
+    auto borderRadii = props->borderRadii;
+    if (borderRadii.all.has_value()) {
+      borderTopLeftRadius = borderTopRightRadius = borderBottomLeftRadius =
+          borderBottomRightRadius = props->borderRadii.all.value().value;
+      borderRadius = props->borderRadii.all.value().value;
+    }
+    if (borderRadii.topLeft.has_value()) {
+      borderTopLeftRadius = props->borderRadii.topLeft.value().value;
+    }
+    if (borderRadii.topRight.has_value()) {
+      borderTopRightRadius = props->borderRadii.topRight.value().value;
+    }
+    if (borderRadii.bottomLeft.has_value()) {
+      borderBottomLeftRadius = props->borderRadii.bottomLeft.value().value;
+    }
+    if (borderRadii.bottomRight.has_value()) {
+      borderBottomRightRadius = props->borderRadii.bottomRight.value().value;
+    }
+
+    auto shadowOffsetHeight = props->shadowOffset.height;
+    auto shadowOffsetWidth = props->shadowOffset.width;
+    auto shadowOpacity = props->shadowOpacity;
+    auto shadowRadius = props->shadowRadius;
+
+    numericPropertiesValues = {
+        opacity,
+        double(borderRadius),
+        double(borderTopLeftRadius),
+        double(borderTopRightRadius),
+        double(borderBottomLeftRadius),
+        double(borderBottomRightRadius),
+        shadowOffsetHeight,
+        shadowOffsetWidth,
+        shadowOpacity,
+        shadowRadius};
+  }
 };
 
 typedef enum ExitingState {

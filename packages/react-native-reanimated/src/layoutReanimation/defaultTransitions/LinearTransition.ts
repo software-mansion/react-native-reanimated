@@ -40,8 +40,21 @@ export class LinearTransition
           width: values.currentWidth,
           height: values.currentHeight,
           opacity: values.currentOpacity,
-          borderRadius: values.currentBorderRadius,
           backgroundColor: values.currentBackgroundColor,
+
+          borderRadius: values.currentBorderRadius,
+          borderTopLeftRadius: values.currentBorderTopLeftRadius,
+          borderTopRightRadius: values.currentBorderTopRightRadius,
+          borderBottomLeftRadius: values.currentBorderBottomLeftRadius,
+          borderBottomRightRadius: values.currentBorderBottomRightRadius,
+
+          shadowRadius: values.currentShadowRadius,
+          shadowColor: values.currentShadowColor,
+          shadowOpacity: values.currentShadowOpacity,
+          shadowOffset: {
+            height: values.currentShadowOffsetHeight,
+            width: values.currentShadowOffsetWidth,
+          },
         },
         animations: {
           originX: delayFunction(
@@ -62,9 +75,43 @@ export class LinearTransition
             delay,
             animation(values.targetBorderRadius, config)
           ),
+          borderTopLeftRadius: delayFunction(
+            delay,
+            animation(values.targetBorderTopLeftRadius, config)
+          ),
+          borderTopRightRadius: delayFunction(
+            delay,
+            animation(values.targetBorderTopRightRadius, config)
+          ),
+          borderBottomLeftRadius: delayFunction(
+            delay,
+            animation(values.targetBorderBottomLeftRadius, config)
+          ),
+          borderBottomRightRadius: delayFunction(
+            delay,
+            animation(values.targetBorderBottomRightRadius, config)
+          ),
           backgroundColor: delayFunction(
             delay,
             animation(values.targetBackgroundColor, config)
+          ),
+          shadowColor: delayFunction(
+            delay,
+            animation(values.targetShadowColor, config)
+          ),
+          shadowOpacity: delayFunction(
+            delay,
+            animation(values.targetShadowOpacity, config)
+          ),
+          shadowOffset: delayFunction(
+            delay,
+            animation(
+              {
+                height: values.targetShadowOffsetHeight,
+                width: values.targetShadowOffsetWidth,
+              },
+              config
+            )
           ),
         },
         callback,

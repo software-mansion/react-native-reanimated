@@ -4,6 +4,7 @@
 #include <react/renderer/animations/utils.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <set>
+#include <string>
 #include <utility>
 #include "NativeReanimatedModule.h"
 
@@ -662,32 +663,67 @@ void LayoutAnimationsProxy::startLayoutAnimation(
   Snapshot targetValues(
       mutation.newChildShadowView, surfaceManager.getWindow(surfaceId));
 
-  uiScheduler_->scheduleOnUI([currentValues, targetValues, this, tag]() {
+  StyleSnapshot currentStyleValues(
+      oldView, surfaceManager.getWindow(surfaceId));
+  StyleSnapshot targetStyleValues(
+      mutation.newChildShadowView, surfaceManager.getWindow(surfaceId));
+
+  uiScheduler_->scheduleOnUI([currentValues,
+                              targetValues,
+                              currentStyleValues,
+                              targetStyleValues,
+                              this,
+                              tag]() {
     jsi::Object yogaValues(uiRuntime_);
     yogaValues.setProperty(uiRuntime_, "currentOriginX", currentValues.x);
     yogaValues.setProperty(uiRuntime_, "currentGlobalOriginX", currentValues.x);
     yogaValues.setProperty(uiRuntime_, "currentOriginY", currentValues.y);
     yogaValues.setProperty(uiRuntime_, "currentGlobalOriginY", currentValues.y);
-    yogaValues.setProperty(uiRuntime_, "currentWidth", currentValues.width);
-    yogaValues.setProperty(uiRuntime_, "currentHeight", currentValues.height);
-      
+
     yogaValues.setProperty(uiRuntime_, "targetOriginX", targetValues.x);
     yogaValues.setProperty(uiRuntime_, "targetGlobalOriginX", targetValues.x);
     yogaValues.setProperty(uiRuntime_, "targetOriginY", targetValues.y);
     yogaValues.setProperty(uiRuntime_, "targetGlobalOriginY", targetValues.y);
     yogaValues.setProperty(uiRuntime_, "targetWidth", targetValues.width);
+
+    yogaValues.setProperty(uiRuntime_, "currentWidth", currentValues.width);
+    yogaValues.setProperty(uiRuntime_, "currentHeight", currentValues.height);
     yogaValues.setProperty(uiRuntime_, "targetHeight", targetValues.height);
     yogaValues.setProperty(uiRuntime_, "windowWidth", targetValues.windowWidth);
     yogaValues.setProperty(
         uiRuntime_, "windowHeight", targetValues.windowHeight);
-        
-    yogaValues.setProperty(uiRuntime_, "currentOpacity", currentValues.opacity);
-    yogaValues.setProperty(uiRuntime_, "targetOpacity", targetValues.opacity);
-    yogaValues.setProperty(uiRuntime_, "currentBorderRadius", currentValues.borderRadius);
-    yogaValues.setProperty(uiRuntime_, "targetBorderRadius", targetValues.borderRadius);
 
-    yogaValues.setProperty(uiRuntime_, "currentBackgroundColor", currentValues.backgroundColor);
-    yogaValues.setProperty(uiRuntime_, "targetBackgroundColor", targetValues.backgroundColor);
+    yogaValues.setProperty(
+        uiRuntime_,
+        "currentBackgroundColor",
+        currentStyleValues.backgroundColor);
+    yogaValues.setProperty(
+        uiRuntime_, "targetBackgroundColor", targetStyleValues.backgroundColor);
+    yogaValues.setProperty(
+        uiRuntime_, "currentShadowColor", currentStyleValues.shadowColor);
+    yogaValues.setProperty(
+        uiRuntime_, "targetShadowColor", targetStyleValues.shadowColor);
+
+    for (int i = 0; i < 10; i++) {
+      char currentPropName
+          [7 + strlen(currentStyleValues.numericPropertiesNames[i])];
+      char targetPropName
+          [6 + strlen(targetStyleValues.numericPropertiesNames[i])];
+      strcpy(currentPropName, "current");
+      strcat(currentPropName, currentStyleValues.numericPropertiesNames[i]);
+
+      strcpy(targetPropName, "target");
+      strcat(targetPropName, targetStyleValues.numericPropertiesNames[i]);
+
+      yogaValues.setProperty(
+          uiRuntime_,
+          currentPropName,
+          currentStyleValues.numericPropertiesValues[i]);
+      yogaValues.setProperty(
+          uiRuntime_,
+          targetPropName,
+          targetStyleValues.numericPropertiesValues[i]);
+    }
 
     layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime_, tag, LayoutAnimationType::LAYOUT, yogaValues);

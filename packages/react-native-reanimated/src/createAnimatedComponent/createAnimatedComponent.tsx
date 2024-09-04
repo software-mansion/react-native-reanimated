@@ -149,7 +149,7 @@ export function createAnimatedComponent(
         updateLayoutAnimations(
           this.reanimatedID,
           LayoutAnimationType.ENTERING,
-          maybeBuild(entering, this.props?.style, AnimatedComponent.displayName)
+          maybeBuild(entering)
         );
       }
     }
@@ -237,11 +237,7 @@ export function createAnimatedComponent(
           updateLayoutAnimations(
             this._componentViewTag,
             LayoutAnimationType.EXITING,
-            maybeBuild(
-              exiting,
-              this.props?.style,
-              AnimatedComponent.displayName
-            )
+            maybeBuild(exiting)
           );
         }
       }
@@ -443,11 +439,7 @@ export function createAnimatedComponent(
       }
 
       const layout = this.props.layout
-        ? maybeBuild(
-            this.props.layout,
-            undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
-            AnimatedComponent.displayName
-          )
+        ? maybeBuild(this.props.layout)
         : undefined;
       updateLayoutAnimations(
         this._componentViewTag,
@@ -520,11 +512,7 @@ export function createAnimatedComponent(
               updateLayoutAnimations(
                 tag,
                 LayoutAnimationType.EXITING,
-                maybeBuild(
-                  exiting,
-                  this.props?.style,
-                  AnimatedComponent.displayName
-                )
+                maybeBuild(exiting)
               );
             }
           }
@@ -534,11 +522,7 @@ export function createAnimatedComponent(
             updateLayoutAnimations(
               tag,
               LayoutAnimationType.ENTERING,
-              maybeBuild(
-                entering,
-                this.props?.style,
-                AnimatedComponent.displayName
-              )
+              maybeBuild(entering)
             );
           }
         }

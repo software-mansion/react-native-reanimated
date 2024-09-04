@@ -20,7 +20,14 @@ export default function BasicLayoutAnimation() {
               marginLeft: state ? 200 : 0,
               backgroundColor: state ? 'blue' : 'red',
               opacity: state ? 1 : 0.1,
-              borderRadius: state ? undefined : 100,
+              borderTopLeftRadius: state ? undefined : 100,
+              borderBottomRightRadius: state ? undefined : 100,
+              shadowOffset: state
+                ? { width: 10, height: 50 }
+                : { width: -50, height: -50 },
+              shadowColor: state ? 'navy' : 'orange',
+              shadowOpacity: state ? 0.5 : 1,
+              shadowRadius: state ? 15 : 1,
             },
           ]}
         />
