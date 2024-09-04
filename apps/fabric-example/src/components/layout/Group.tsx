@@ -1,11 +1,11 @@
 import type { PropsWithChildren } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { colors, radius, spacing } from '../../theme';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 
 type GroupProps = PropsWithChildren<{
   bordered?: boolean;
-  withMargin?: boolean;
   center?: boolean;
   style?: StyleProp<ViewStyle>;
 }>;
@@ -15,19 +15,18 @@ export default function Group({
   center,
   children,
   style,
-  withMargin = true,
 }: GroupProps) {
   return (
-    <View
+    <Animated.View
+      layout={LinearTransition}
       style={[
         styles.group,
         bordered && styles.bordered,
         center && styles.center,
-        withMargin && styles.margin,
         style,
       ]}>
       {children}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -46,9 +45,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background1,
     borderRadius: radius.md,
     padding: spacing.sm,
-  },
-  margin: {
-    marginHorizontal: spacing.sm,
-    marginVertical: spacing.sm,
   },
 });

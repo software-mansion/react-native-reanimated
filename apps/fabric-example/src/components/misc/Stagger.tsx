@@ -1,7 +1,14 @@
 import type { PropsWithChildren, ReactNode } from 'react';
 import { Children } from 'react';
 import type { ViewStyle } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import type {
+  BaseAnimationBuilder,
+  LayoutAnimationFunction,
+} from 'react-native-reanimated';
+import Animated, {
+  FadeInDown,
+  LinearTransition,
+} from 'react-native-reanimated';
 
 type StaggerProps = PropsWithChildren<{
   interval?: number;
@@ -10,6 +17,10 @@ type StaggerProps = PropsWithChildren<{
     style?: ViewStyle;
   }>;
   wrapperStye?: ((index: number) => ViewStyle) | ViewStyle;
+  itemLayout?:
+    | BaseAnimationBuilder
+    | LayoutAnimationFunction
+    | typeof BaseAnimationBuilder;
 }>;
 
 export default function Stagger({
@@ -17,6 +28,7 @@ export default function Stagger({
   children,
   interval = 100,
   wrapperStye,
+  itemLayout = LinearTransition,
 }: StaggerProps) {
   const childrenArray = Children.toArray(children);
 
@@ -27,6 +39,7 @@ export default function Stagger({
     const wrappedChild = (
       <Animated.View
         entering={FadeInDown.delay(index * interval)}
+        layout={itemLayout}
         key={index}
         style={style}>
         {child}

@@ -14,7 +14,7 @@ export function buildCSSAnimationConfigFromStyles(
   styles: StyleProps[]
 ): CSSAnimationConfig | null {
   const animationName = styles.reduceRight((acc, style) => {
-    return acc || style.animationName;
+    return acc || style?.animationName;
   }, undefined);
 
   if (!animationName) {

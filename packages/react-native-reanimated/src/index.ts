@@ -292,3 +292,12 @@ export type {
   GoBackGesture,
   ScreenTransitionConfig,
 } from './screenTransition';
+export type {
+  CSSAnimationConfig,
+  CSSAnimationKeyframes,
+  CSSAnimationDuration,
+  CSSAnimationDelay,
+  CSSAnimationIterationCount,
+  CSSAnimationDirection,
+  CSSAnimationTimingFunction,
+} from './css';
