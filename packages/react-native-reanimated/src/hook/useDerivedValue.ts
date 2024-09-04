@@ -6,7 +6,14 @@ import { makeMutable, startMapper, stopMapper } from '../core';
 import type { DependencyList } from './commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
 
-export type DerivedValue<Value> = Readonly<SharedValue<Value>>;
+export interface DerivedValue<Value = unknown>
+  extends Readonly<Omit<SharedValue<Value>, 'set'>> {
+  /**
+   * @deprecated Derived values are readonly, don't use this method. It's here only to prevent breaking changes in TypeScript types.
+   * It will be removed in the future.
+   */
+  set: SharedValue<Value>['set'];
+}
 
 /**
  * Lets you create new shared values based on existing ones while keeping them reactive.
@@ -53,7 +60,9 @@ export function useDerivedValue<Value>(
       'worklet';
       sharedValue.value = updater();
     };
-    const mapperId = startMapper(fun, inputs, [sharedValue]);
+    const mapperId = startMapper(fun, inputs, [
+      sharedValue as SharedValue<unknown>,
+    ]);
     return () => {
       stopMapper(mapperId);
     };

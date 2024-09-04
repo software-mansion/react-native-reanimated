@@ -105,7 +105,7 @@ export function getTrackerCallCount(name: string) {
   return callTrackerRegistry.getTrackerCallCount(name);
 }
 
-export function registerValue(name: string, value: SharedValue) {
+export function registerValue<TValue = unknown>(name: string, value: SharedValue<TValue>) {
   return valueRegistry.registerValue(name, value);
 }
 

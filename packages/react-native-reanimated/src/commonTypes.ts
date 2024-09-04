@@ -20,6 +20,8 @@ export interface StyleProps extends ViewStyle, TextStyle {
  */
 export interface SharedValue<Value = unknown> {
   value: Value;
+  get(): Value;
+  set(value: Value | ((value: Value) => Value)): void;
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
   modify: (
@@ -28,9 +30,25 @@ export interface SharedValue<Value = unknown> {
   ) => void;
 }
 
+/**
+ * Due to pattern of `MaybeSharedValue` type present in `AnimatedProps` (`AnimatedStyle`), contravariance breaks types
+ * for animated styles etc. Instead of refactoring the code with small chances of success,
+ * we just disable contravariance for `SharedValue` in this problematic case.
+ */
+type SharedValueDisableContravariance<Value = unknown> = Omit<
+  SharedValue<Value>,
+  'set'
+>;
+
 export interface Mutable<Value = unknown> extends SharedValue<Value> {
   _isReanimatedSharedValue: true;
   _animation?: AnimationObject<Value> | null; // only in Native
+  /**
+   * `_value` prop should only be accessed by the `valueSetter` implementation
+   * which may make the decision about updating the mutable value depending
+   * on the provided new value. All other places should only attempt to modify
+   * the mutable by assigning to `value` prop directly or by calling the `set` method.
+   */
   _value: Value;
 }
 
@@ -46,7 +64,7 @@ export type ShareableRef<T = unknown> = {
 };
 
 // In case of objects with depth or arrays of objects or arrays of arrays etc.
-// we add this utility type that makes it a SharaebleRef of the outermost type.
+// we add this utility type that makes it a `SharaebleRef` of the outermost type.
 export type FlatShareableRef<T> = T extends ShareableRef<infer U>
   ? ShareableRef<U>
   : ShareableRef<T>;
@@ -321,13 +339,17 @@ export type TransformArrayItem = Extract<
 
 type MaybeSharedValue<Value> =
   | Value
-  | (Value extends AnimatableValue ? SharedValue<Value> : never);
+  | (Value extends AnimatableValue
+      ? SharedValueDisableContravariance<Value>
+      : never);
 
 type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
-  ? SharedValue<Item[]> | (MaybeSharedValueRecursive<Item> | Item)[]
+  ?
+      | SharedValueDisableContravariance<Item[]>
+      | (MaybeSharedValueRecursive<Item> | Item)[]
   : Value extends object
   ?
-      | SharedValue<Value>
+      | SharedValueDisableContravariance<Value>
       | {
           [Key in keyof Value]:
             | MaybeSharedValueRecursive<Value[Key]>
@@ -338,7 +360,7 @@ type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
 type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
 
 // Ideally we want AnimatedStyle to not be generic, but there are
-// so many depenedencies on it being generic that it's not feasible at the moment.
+// so many dependencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<Style = DefaultStyle> =
   | Style
   | MaybeSharedValueRecursive<Style>;
