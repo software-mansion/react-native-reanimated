@@ -36,7 +36,7 @@
   "module": "lib/module/index",
   "react-native": "src/index",
   "source": "src/index",
-  "types": "lib/typescript/index",
+  "types": "lib/typescript/index.d.ts",
   "files": [
     "Common/",
     "src/",
@@ -145,7 +145,7 @@
     "prettier": "2.8.8",
     "react": "18.3.1",
     "react-native": "0.75.2",
-    "react-native-builder-bob": "^0.18.3",
+    "react-native-builder-bob": "^0.30.0",
     "react-native-gesture-handler": "2.18.0",
     "react-native-web": "0.19.11",
     "react-test-renderer": "18.2.0",
