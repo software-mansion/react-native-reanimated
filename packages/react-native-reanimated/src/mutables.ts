@@ -38,11 +38,13 @@ type Listener<Value> = (newValue: Value) => void;
 type PartialMutable<Value> = Omit<Mutable<Value>, 'get' | 'set'>;
 
 /**
- * Adds `get` and `set` methods to the mutable object to handle access to `value` property.
+ * Adds `get` and `set` methods to the mutable object to handle access to
+ * `value` property.
  *
- * React Compiler disallows modifying return values of hooks. Even though assignment to
- * `value` is a setter invocation, Compiler's static analysis doesn't detect it.
- * That's why we provide a second API for users using the Compiler.
+ * React Compiler disallows modifying return values of hooks. Even though
+ * assignment to `value` is a setter invocation, Compiler's static analysis
+ * doesn't detect it. That's why we provide a second API for users using the
+ * Compiler.
  */
 function addCompilerSafeGetAndSet<Value>(mutable: PartialMutable<Value>): void {
   'worklet';
@@ -69,14 +71,16 @@ function addCompilerSafeGetAndSet<Value>(mutable: PartialMutable<Value>): void {
 }
 /**
  * Hides the internal `_value` property of a mutable. It won't be visible to:
+ *
  * - `Object.keys`,
  * - `const prop in obj`,
- * - etc.
+ * - Etc.
  *
- * This way when the user accidentally sends the SharedValue to React, he won't get an obscure
- * error message.
+ * This way when the user accidentally sends the SharedValue to React, he won't
+ * get an obscure error message.
  *
- * We hide for both _React runtime_ and _Worklet runtime_ mutables for uniformity of behavior.
+ * We hide for both _React runtime_ and _Worklet runtime_ mutables for
+ * uniformity of behavior.
  */
 function hideInternalValueProp<Value>(mutable: PartialMutable<Value>) {
   'worklet';

@@ -36,11 +36,12 @@ function getComponentOrScrollable(component: MaybeScrollableComponent) {
 /**
  * Lets you get a reference of a view that you can use inside a worklet.
  *
- * @returns An object with a `.current` property which contains an instance of a component.
+ * @returns An object with a `.current` property which contains an instance of a
+ *   component.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
  */
 export function useAnimatedRef<
-  TComponent extends Component
+  TComponent extends Component,
 >(): AnimatedRef<TComponent> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
   const viewName = useSharedValue<string | null>(null);

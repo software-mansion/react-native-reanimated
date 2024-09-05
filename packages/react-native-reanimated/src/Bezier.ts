@@ -3,9 +3,8 @@
 import { ReanimatedError } from './errors';
 
 /**
- * https://github.com/gre/bezier-easing
- * BezierEasing - use bezier curve for transition easing function
- * by Gaëtan Renaudeau 2014 - 2015 – MIT License
+ * https://github.com/gre/bezier-easing BezierEasing - use bezier curve for
+ * transition easing function by Gaëtan Renaudeau 2014 - 2015 – MIT License
  */
 
 // These values are established by empiricism with tests (tradeoff: performance VS precision)

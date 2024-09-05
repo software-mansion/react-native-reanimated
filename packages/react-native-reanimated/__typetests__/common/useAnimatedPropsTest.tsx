@@ -41,7 +41,7 @@ function UseAnimatedPropsTest() {
 
   function UseAnimatedPropsTestView1() {
     const animatedProps = useAnimatedProps(
-      () => ({ pointerEvents: 'none' } as const)
+      () => ({ pointerEvents: 'none' }) as const
     );
     return <Animated.View animatedProps={animatedProps} />;
   }
