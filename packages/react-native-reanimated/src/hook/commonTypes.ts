@@ -90,7 +90,7 @@ export interface IWorkletEventHandler<Event extends object> {
 }
 
 export interface AnimatedStyleHandle<
-  Style extends DefaultStyle = DefaultStyle
+  Style extends DefaultStyle = DefaultStyle,
 > {
   viewDescriptors: ViewDescriptorsSet;
   initial: {
@@ -100,7 +100,7 @@ export interface AnimatedStyleHandle<
 }
 
 export interface JestAnimatedStyleHandle<
-  Style extends DefaultStyle = DefaultStyle
+  Style extends DefaultStyle = DefaultStyle,
 > extends AnimatedStyleHandle<Style> {
   jestAnimatedStyle: MutableRefObject<AnimatedStyle<Style>>;
 }

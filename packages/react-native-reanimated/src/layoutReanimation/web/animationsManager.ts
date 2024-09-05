@@ -40,10 +40,10 @@ function chooseConfig<ComponentProps extends Record<string, unknown>>(
     animationType === LayoutAnimationType.ENTERING
       ? props.entering
       : animationType === LayoutAnimationType.EXITING
-      ? props.exiting
-      : animationType === LayoutAnimationType.LAYOUT
-      ? props.layout
-      : null;
+        ? props.exiting
+        : animationType === LayoutAnimationType.LAYOUT
+          ? props.layout
+          : null;
 
   return config;
 }
@@ -182,7 +182,7 @@ function tryGetAnimationConfig<ComponentProps extends Record<string, unknown>>(
 }
 
 export function startWebLayoutAnimation<
-  ComponentProps extends Record<string, unknown>
+  ComponentProps extends Record<string, unknown>,
 >(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
   element: ReanimatedHTMLElement,
@@ -213,7 +213,7 @@ export function startWebLayoutAnimation<
 }
 
 export function tryActivateLayoutTransition<
-  ComponentProps extends Record<string, unknown>
+  ComponentProps extends Record<string, unknown>,
 >(
   props: Readonly<AnimatedComponentProps<ComponentProps>>,
   element: ReanimatedHTMLElement,
