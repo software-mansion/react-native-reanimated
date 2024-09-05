@@ -48,7 +48,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-reanimated": "workspace:*",
     "patch-package": "^8.0.0",
-    "prettier": "2.8.8",
+    "prettier": "^3.3.3",
     "react": "18.3.1",
     "react-native": "0.75.2",
     "react-native-gesture-handler": "2.18.0",

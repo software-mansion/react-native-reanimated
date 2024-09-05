@@ -8789,7 +8789,7 @@ __metadata:
     esbuild: "npm:^0.17.11"
     eslint: "npm:^8.0.0-0"
     eslint-plugin-standard: "npm:^5.0.0"
-    prettier: "npm:^2.5.1"
+    prettier: "npm:^3.3.3"
     tsc-watch: "npm:^6.0.0"
     typescript: "npm:^4.1.3"
   languageName: unknown
@@ -9923,7 +9923,7 @@ __metadata:
     eslint: "npm:^8.57.0"
     eslint-plugin-reanimated: "workspace:*"
     patch-package: "npm:^8.0.0"
-    prettier: "npm:2.8.8"
+    prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.75.2"
     react-native-gesture-handler: "npm:2.18.0"
@@ -11773,7 +11773,7 @@ __metadata:
     esbuild: "npm:^0.20.0"
     eslint: "npm:^8.57.0"
     jest: "npm:^29.7.0"
-    prettier: "npm:2.8.8"
+    prettier: "npm:^3.3.3"
     ts-jest: "npm:^29.1.2"
     typescript: "npm:~5.3.0"
   languageName: unknown
@@ -12519,7 +12519,7 @@ __metadata:
     eslint: "npm:^8.57.0"
     jest: "npm:^29.6.3"
     patch-package: "npm:^8.0.0"
-    prettier: "npm:2.8.8"
+    prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.75.2"
     react-native-gesture-handler: "npm:2.18.0"
@@ -15918,7 +15918,7 @@ __metadata:
     common-app: "workspace:*"
     eslint: "npm:^8.57.0"
     jest: "npm:^29.6.3"
-    prettier: "npm:2.8.8"
+    prettier: "npm:^3.3.3"
     react: "npm:18.2.0"
     react-native: "npm:0.73.4"
     react-native-gesture-handler: "npm:2.18.0"
@@ -16825,7 +16825,7 @@ __metadata:
     expo: "npm:~48.0.10"
     next: "npm:latest"
     next-compose-plugins: "npm:^2.2.1"
-    prettier: "npm:2.8.8"
+    prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-dom: "npm:18.3.1"
     react-native-reanimated: "workspace:*"
@@ -17439,7 +17439,7 @@ __metadata:
     eslint: "npm:^8.57.0"
     jest: "npm:^29.6.3"
     patch-package: "npm:^8.0.0"
-    prettier: "npm:2.8.8"
+    prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.75.2"
     react-native-gesture-handler: "npm:2.18.0"
@@ -17870,12 +17870,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:2.8.8, prettier@npm:^2.5.1":
-  version: 2.8.8
-  resolution: "prettier@npm:2.8.8"
+"prettier@npm:^3.3.3":
+  version: 3.3.3
+  resolution: "prettier@npm:3.3.3"
   bin:
-    prettier: bin-prettier.js
-  checksum: 10/00cdb6ab0281f98306cd1847425c24cbaaa48a5ff03633945ab4c701901b8e96ad558eb0777364ffc312f437af9b5a07d0f45346266e8245beaf6247b9c62b24
+    prettier: bin/prettier.cjs
+  checksum: 10/5beac1f30b5b40162532b8e2f7c3a4eb650910a2695e9c8512a62ffdc09dae93190c29db9107fa7f26d1b6c71aad3628ecb9b5de1ecb0911191099be109434d7
   languageName: node
   linkType: hard
 
@@ -18386,7 +18386,7 @@ __metadata:
     eslint: "npm:^8.57.0"
     husky: "npm:^9.0.11"
     lint-staged: "npm:^15.2.2"
-    prettier: "npm:2.8.8"
+    prettier: "npm:^3.3.3"
     typescript: "npm:~5.3.0"
   languageName: unknown
   linkType: soft
@@ -18451,7 +18451,7 @@ __metadata:
     invariant: "npm:^2.2.4"
     jest: "npm:^29.0.0"
     madge: "npm:^5.0.1"
-    prettier: "npm:2.8.8"
+    prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.75.2"
     react-native-builder-bob: "npm:^0.18.3"
@@ -20891,7 +20891,7 @@ __metadata:
     eslint: "npm:^8.57.0"
     expo: "npm:^50.0.2"
     jest: "npm:^29.6.3"
-    prettier: "npm:2.8.8"
+    prettier: "npm:^3.3.3"
     react: "npm:18.2.0"
     react-native: "npm:react-native-tvos@0.73.4-0"
     react-native-reanimated: "workspace:*"
@@ -21540,7 +21540,7 @@ __metadata:
     common-app: "workspace:*"
     eslint: "npm:^8.57.0"
     expo: "npm:~51.0.2"
-    prettier: "npm:2.8.8"
+    prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-dom: "npm:18.3.1"
     react-native: "npm:0.74.0"
