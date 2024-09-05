@@ -1,10 +1,3 @@
 {
-  "extends": "../../../tsconfig.common.json",
-  "compilerOptions": {
-    "paths": {
-      "react-native-reanimated": ["./src"]
-    },
-    "noEmit": false,
-  },
-  "include": ["src", "metro-config"]
+  "extends": "../../tsconfig.json",
 }
