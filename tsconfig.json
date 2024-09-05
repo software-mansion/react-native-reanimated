@@ -16,5 +16,7 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": true,
+    // "outDir" is only necessary for VSCode type checkings
+    "outDir": "dist",
   },
 }
