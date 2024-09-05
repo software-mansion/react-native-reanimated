@@ -1,5 +1,6 @@
 const { withExpo } = require('@expo/next-adapter');
 
+// @ts-expect-error
 const withPlugins = require('next-compose-plugins');
 
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
@@ -16,6 +17,7 @@ module.exports = withPlugins([withBundleAnalyzer, withExpo], {
     ignoreDuringBuilds: true,
   },
   transpilePackages: ['react-native-reanimated', 'react-native', 'expo'],
+  // @ts-expect-error
   webpack(config, _options) {
     if (disableMinification) {
       config.optimization.minimizer = [];

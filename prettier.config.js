@@ -1,3 +1,4 @@
+/** @type {import('prettier').Config} */
 module.exports = {
   bracketSameLine: true,
   printWidth: 80,

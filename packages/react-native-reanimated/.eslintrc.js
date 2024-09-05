@@ -1,3 +1,4 @@
+/** @type {import('eslint').ESLint.ConfigData} */
 module.exports = {
   extends: ['../../.eslintrc.js'],
   plugins: ['eslint-plugin-reanimated'],
