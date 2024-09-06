@@ -87,8 +87,8 @@ export function processCalleesAutoworkletizableCallbacks(
     'name' in callee
       ? callee.name
       : 'property' in callee && 'name' in callee.property
-      ? callee.property.name
-      : undefined;
+        ? callee.property.name
+        : undefined;
   if (name === undefined) {
     return;
   }

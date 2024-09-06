@@ -9,7 +9,7 @@ import type { EventHandlerInternal, EventHandlerProcessed } from './useEvent';
 import { useEvent } from './useEvent';
 
 export type ScrollHandler<
-  Context extends Record<string, unknown> = Record<string, unknown>
+  Context extends Record<string, unknown> = Record<string, unknown>,
 > = (event: ReanimatedScrollEvent, context: Context) => void;
 export interface ScrollHandlers<Context extends Record<string, unknown>> {
   onScroll?: ScrollHandler<Context>;
@@ -20,7 +20,7 @@ export interface ScrollHandlers<Context extends Record<string, unknown>> {
 }
 
 export type ScrollHandlerProcessed<
-  Context extends Record<string, unknown> = Record<string, unknown>
+  Context extends Record<string, unknown> = Record<string, unknown>,
 > = EventHandlerProcessed<RNNativeScrollEvent, Context>;
 
 export type ScrollHandlerInternal = EventHandlerInternal<RNNativeScrollEvent>;
@@ -37,14 +37,14 @@ export type ScrollHandlerInternal = EventHandlerInternal<RNNativeScrollEvent>;
  */
 // @ts-expect-error This overload is required by our API.
 export function useAnimatedScrollHandler<
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 >(
   handlers: ScrollHandler<Context> | ScrollHandlers<Context>,
   dependencies?: DependencyList
 ): ScrollHandlerProcessed<Context>;
 
 export function useAnimatedScrollHandler<
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 >(
   handlers: ScrollHandlers<Context> | ScrollHandler<Context>,
   dependencies?: DependencyList

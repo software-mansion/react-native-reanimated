@@ -132,7 +132,7 @@ export interface BaseBuilderAnimationConfig extends BaseLayoutAnimationConfig {
 
 export type LayoutAnimationAndConfig = [
   AnimationFunction,
-  BaseBuilderAnimationConfig
+  BaseBuilderAnimationConfig,
 ];
 
 export interface IEntryExitAnimationBuilder {

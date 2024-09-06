@@ -8,24 +8,24 @@ import { makeShareable } from '../shareables';
 
 interface GeneralHandler<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 > {
   (event: ReanimatedEvent<Event>, context: Context): void;
 }
 
 type GeneralWorkletHandler<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 > = WorkletFunction<[event: ReanimatedEvent<Event>, context: Context]>;
 
 type GeneralHandlers<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 > = Record<string, GeneralHandler<Event, Context> | undefined>;
 
 type GeneralWorkletHandlers<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 > = Record<string, GeneralWorkletHandler<Event, Context> | undefined>;
 
 interface ContextWithDependencies<Context extends Record<string, unknown>> {
@@ -50,7 +50,7 @@ export interface UseHandlerContext<Context extends Record<string, unknown>> {
 // @ts-expect-error This overload is required by our API.
 export function useHandler<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 >(
   handlers: GeneralHandlers<Event, Context>,
   dependencies?: DependencyList
@@ -58,7 +58,7 @@ export function useHandler<
 
 export function useHandler<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 >(
   handlers: GeneralWorkletHandlers<Event, Context>,
   dependencies?: DependencyList

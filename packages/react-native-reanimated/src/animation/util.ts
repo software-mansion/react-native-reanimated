@@ -504,14 +504,14 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
 
 type AnimationToDecoration<
   T extends AnimationObject | StyleLayoutAnimation,
-  U extends AnimationObject | StyleLayoutAnimation
+  U extends AnimationObject | StyleLayoutAnimation,
 > = T extends StyleLayoutAnimation
   ? Record<string, unknown>
   : U | (() => U) | AnimatableValue;
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation, // type that's supposed to be returned
-  U extends AnimationObject | StyleLayoutAnimation = T // type that's received
+  U extends AnimationObject | StyleLayoutAnimation = T, // type that's received
 >(starting: AnimationToDecoration<T, U>, factory: () => T): T {
   'worklet';
   if (IN_STYLE_UPDATER) {

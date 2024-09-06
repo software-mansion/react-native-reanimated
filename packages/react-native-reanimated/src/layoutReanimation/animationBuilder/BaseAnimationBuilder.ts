@@ -125,7 +125,7 @@ export class BaseAnimationBuilder {
   getDelay(): number {
     return this.randomizeDelay
       ? Math.random() * (this.delayV ?? 1000)
-      : this.delayV ?? 0;
+      : (this.delayV ?? 0);
   }
 
   getReduceMotion(): ReduceMotion {

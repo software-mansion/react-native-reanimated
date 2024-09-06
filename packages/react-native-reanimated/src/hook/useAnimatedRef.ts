@@ -40,7 +40,7 @@ function getComponentOrScrollable(component: MaybeScrollableComponent) {
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef
  */
 export function useAnimatedRef<
-  TComponent extends Component
+  TComponent extends Component,
 >(): AnimatedRef<TComponent> {
   const tag = useSharedValue<number | ShadowNodeWrapper | null>(-1);
   const viewName = useSharedValue<string | null>(null);

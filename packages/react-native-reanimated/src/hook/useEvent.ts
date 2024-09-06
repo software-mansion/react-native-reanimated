@@ -8,12 +8,12 @@ import type { IWorkletEventHandler, ReanimatedEvent } from './commonTypes';
  */
 export type EventHandler<
   Event extends object,
-  Context extends Record<string, unknown> = never
+  Context extends Record<string, unknown> = never,
 > = (event: ReanimatedEvent<Event>, context?: Context) => void;
 
 export type EventHandlerProcessed<
   Event extends object,
-  Context extends Record<string, unknown> = never
+  Context extends Record<string, unknown> = never,
 > = (event: Event, context?: Context) => void;
 
 export type EventHandlerInternal<Event extends object> = {
@@ -36,7 +36,7 @@ export type EventHandlerInternal<Event extends object> = {
 // it being a React Ref in `createAnimatedComponent`.
 export function useEvent<
   Event extends object,
-  Context extends Record<string, unknown> = never
+  Context extends Record<string, unknown> = never,
 >(
   handler: EventHandler<Event, Context>,
   eventNames?: string[],
