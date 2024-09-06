@@ -8,7 +8,7 @@ import type { EventHandlerProcessed, EventHandlerInternal } from './useEvent';
 
 type ComposedHandlerProcessed<
   Event extends object,
-  Context extends Record<string, unknown> = Record<string, unknown>
+  Context extends Record<string, unknown> = Record<string, unknown>,
 > = EventHandlerProcessed<Event, Context>;
 
 type ComposedHandlerInternal<Event extends object> =
@@ -24,14 +24,14 @@ type ComposedHandlerInternal<Event extends object> =
 // @ts-expect-error This overload is required by our API.
 export function useComposedEventHandler<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 >(
   handlers: (EventHandlerProcessed<Event, Context> | null)[]
 ): ComposedHandlerProcessed<Event, Context>;
 
 export function useComposedEventHandler<
   Event extends object,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 >(handlers: (EventHandlerProcessed<Event, Context> | null)[]) {
   // Record of handlers' worklets to calculate deps diffs. We use the record type to match the useHandler API requirements
   const workletsRecord: Record<string, WorkletFunction> = {};

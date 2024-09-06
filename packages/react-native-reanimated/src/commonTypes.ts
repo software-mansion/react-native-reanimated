@@ -65,9 +65,8 @@ export type ShareableRef<T = unknown> = {
 
 // In case of objects with depth or arrays of objects or arrays of arrays etc.
 // we add this utility type that makes it a `SharaebleRef` of the outermost type.
-export type FlatShareableRef<T> = T extends ShareableRef<infer U>
-  ? ShareableRef<U>
-  : ShareableRef<T>;
+export type FlatShareableRef<T> =
+  T extends ShareableRef<infer U> ? ShareableRef<U> : ShareableRef<T>;
 
 export type MapperRawInputs = unknown[];
 
@@ -86,7 +85,7 @@ export type MapperRegistry = {
 export type WorkletStackDetails = [
   error: Error,
   lineOffset: number,
-  columnOffset: number
+  columnOffset: number,
 ];
 
 type WorkletClosure = Record<string, unknown>;
@@ -122,7 +121,7 @@ interface WorkletBaseDev extends WorkletBaseCommon {
 
 export type WorkletFunction<
   Args extends unknown[] = unknown[],
-  ReturnValue = unknown
+  ReturnValue = unknown,
 > = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
 
 /**
@@ -149,7 +148,7 @@ export type WorkletFunction<
 export function isWorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
-  BuildType extends WorkletBaseDev | WorkletBaseRelease = WorkletBaseDev
+  BuildType extends WorkletBaseDev | WorkletBaseRelease = WorkletBaseDev,
 >(value: unknown): value is WorkletFunction<Args, ReturnValue> & BuildType {
   'worklet';
   // Since host objects always return true for `in` operator, we have to use dot notation to check if the property exists.
@@ -348,14 +347,14 @@ type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
       | SharedValueDisableContravariance<Item[]>
       | (MaybeSharedValueRecursive<Item> | Item)[]
   : Value extends object
-  ?
-      | SharedValueDisableContravariance<Value>
-      | {
-          [Key in keyof Value]:
-            | MaybeSharedValueRecursive<Value[Key]>
-            | Value[Key];
-        }
-  : MaybeSharedValue<Value>;
+    ?
+        | SharedValueDisableContravariance<Value>
+        | {
+            [Key in keyof Value]:
+              | MaybeSharedValueRecursive<Value[Key]>
+              | Value[Key];
+          }
+    : MaybeSharedValue<Value>;
 
 type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
 

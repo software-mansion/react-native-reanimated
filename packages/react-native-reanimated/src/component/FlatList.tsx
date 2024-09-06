@@ -116,7 +116,7 @@ const FlatListForwardRefRender = function <Item = any>(
 export const ReanimatedFlatList = forwardRef(FlatListForwardRefRender) as <
   // We need explicit any here, because this is the exact same type that is used in React Native types.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ItemT = any
+  ItemT = any,
 >(
   props: ReanimatedFlatListPropsWithLayout<ItemT> & {
     ref?: React.ForwardedRef<FlatList>;
