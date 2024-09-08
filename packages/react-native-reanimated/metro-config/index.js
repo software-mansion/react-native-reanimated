@@ -10,6 +10,10 @@ const COLLAPSED_STACK_REGEX = new RegExp(
     .join('|')
 );
 
+/**
+ * @param {import('metro-config').MetroConfig} config
+ * @returns {import('metro-config').MetroConfig}
+ */
 function wrapWithReanimatedMetroConfig(config) {
   return {
     ...config,
