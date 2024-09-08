@@ -124,10 +124,13 @@ function appendWorkletDirectiveToPolyfills(statements: Statement[]) {
 
 /**
  * Replaces
+ *
  * ```ts
  * const Clazz = ...;
  * ```
- * with
+ *
+ * With
+ *
  * ```ts
  * const Clazz__classFactory = ...;
  * const Clazz = Clazz__classFactory();
@@ -312,8 +315,8 @@ function recursiveTopoSort(
 }
 
 /**
- * Checks if an identifier is a reference to an outside dependency.
- * The condition was made by trial and error.
+ * Checks if an identifier is a reference to an outside dependency. The
+ * condition was made by trial and error.
  */
 function isOutsideDependency(
   identifierPath: NodePath<Identifier>,

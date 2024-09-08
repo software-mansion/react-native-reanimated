@@ -165,6 +165,7 @@ export type CustomProgressAnimation = (
 
 /**
  * Used to configure the `.defaultTransitionType()` shared transition modifier.
+ *
  * @experimental
  */
 export enum SharedTransitionType {

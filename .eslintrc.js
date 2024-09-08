@@ -57,7 +57,7 @@ module.exports = {
     'import',
     'jest',
     '@typescript-eslint',
-    'eslint-plugin-tsdoc',
+    'tsdoc',
   ],
   env: {
     'react-native/react-native': true,

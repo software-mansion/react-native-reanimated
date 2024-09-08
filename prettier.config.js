@@ -1,4 +1,5 @@
 module.exports = {
+  plugins: ['prettier-plugin-jsdoc'],
   bracketSameLine: true,
   printWidth: 80,
   singleQuote: true,

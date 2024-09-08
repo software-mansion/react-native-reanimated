@@ -70,10 +70,12 @@ export interface GestureHandlers<
 }
 
 /**
- * @deprecated useAnimatedGestureHandler is an old API which is no longer supported.
+ * @deprecated UseAnimatedGestureHandler is an old API which is no longer
+ *   supported.
  *
- * Please check https://docs.swmansion.com/react-native-gesture-handler/docs/guides/upgrading-to-2/
- * for information about how to migrate to `react-native-gesture-handler` v2
+ *   Please check
+ *   https://docs.swmansion.com/react-native-gesture-handler/docs/guides/upgrading-to-2/
+ *   for information about how to migrate to `react-native-gesture-handler` v2
  */
 export function useAnimatedGestureHandler<
   Event extends

@@ -37,13 +37,13 @@ export interface AnimatedRef<T extends Component> {
 // Might make that type generic if it's ever needed.
 export type AnimatedRefOnJS = AnimatedRef<Component>;
 
-/**
- * `AnimatedRef` is mapped to this type on the UI thread via a shareable handle.
- */
+/** `AnimatedRef` is mapped to this type on the UI thread via a shareable handle. */
 export type AnimatedRefOnUI = {
   (): number | ShadowNodeWrapper | null;
   /**
-   * @remarks `viewName` is required only on iOS with Paper and it's value is null on other platforms.
+   * @remarks
+   *   `viewName` is required only on iOS with Paper and it's value is null on
+   *   other platforms.
    */
   viewName: SharedValue<string | null>;
 };
@@ -53,9 +53,9 @@ type ReanimatedPayload = {
 };
 
 /**
- * This utility type is to convert type of events that would normally be
- * sent by React Native (they have `nativeEvent` field) to the type
- * that is sent by Reanimated.
+ * This utility type is to convert type of events that would normally be sent by
+ * React Native (they have `nativeEvent` field) to the type that is sent by
+ * Reanimated.
  */
 export type ReanimatedEvent<Event extends object> = ReanimatedPayload &
   (Event extends {

@@ -63,9 +63,8 @@ function createLog(level: LogBoxLogLevel, message: string): LogData {
 }
 
 /**
- * Function that logs to LogBox and console.
- * Used to replace the default console logging with logging to LogBox
- * on the UI thread when runOnJS is available.
+ * Function that logs to LogBox and console. Used to replace the default console
+ * logging with logging to LogBox on the UI thread when runOnJS is available.
  *
  * @param data - The details of the log.
  */
@@ -75,8 +74,7 @@ export function logToLogBoxAndConsole(data: LogData) {
 }
 
 /**
- * Registers the logger configuration.
- * use it only for Worklet runtimes.
+ * Registers the logger configuration. use it only for Worklet runtimes.
  *
  * @param config - The config to register.
  */
@@ -99,9 +97,10 @@ export function replaceLoggerImplementation(logFunction: LogFunction) {
  * Updates logger configuration.
  *
  * @param options - The new logger configuration to apply.
- *   - level: The minimum log level to display.
- *   - strict: Whether to log warnings and errors that are not strict.
- *    Defaults to false.
+ *
+ *   - Level: The minimum log level to display.
+ *   - Strict: Whether to log warnings and errors that are not strict. Defaults to
+ *       false.
  */
 export function updateLoggerConfig(options?: Partial<LoggerConfig>) {
   'worklet';

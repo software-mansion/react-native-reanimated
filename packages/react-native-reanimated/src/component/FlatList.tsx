@@ -45,17 +45,17 @@ const createCellRendererComponent = (
 interface ReanimatedFlatListPropsWithLayout<T>
   extends AnimatedProps<FlatListProps<T>> {
   /**
-   * Lets you pass layout animation directly to the FlatList item.
-   * Works only with a single-column `Animated.FlatList`, `numColumns` property cannot be greater than 1.
+   * Lets you pass layout animation directly to the FlatList item. Works only
+   * with a single-column `Animated.FlatList`, `numColumns` property cannot be
+   * greater than 1.
    */
   itemLayoutAnimation?: ILayoutAnimationBuilder;
   /**
-   * Lets you skip entering and exiting animations of FlatList items when on FlatList mount or unmount.
+   * Lets you skip entering and exiting animations of FlatList items when on
+   * FlatList mount or unmount.
    */
   skipEnteringExitingAnimations?: boolean;
-  /**
-   * Property `CellRendererComponent` is not supported in `Animated.FlatList`.
-   */
+  /** Property `CellRendererComponent` is not supported in `Animated.FlatList`. */
   CellRendererComponent?: never;
 }
 
