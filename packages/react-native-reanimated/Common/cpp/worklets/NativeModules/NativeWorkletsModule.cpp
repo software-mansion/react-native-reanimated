@@ -1,10 +1,10 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
-#if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
+#if REACT_NATIVE_MINOR_VERSION >= 73
 #include <react/utils/CoreFeatures.h>
-#endif
-#endif
+#endif // REACT_NATIVE_MINOR_VERSION >= 73
+#endif // RCT_NEW_ARCH_ENABLED
 
 #include "NativeWorkletsModule.h"
 #include "RNRuntimeWorkletDecorator.h"

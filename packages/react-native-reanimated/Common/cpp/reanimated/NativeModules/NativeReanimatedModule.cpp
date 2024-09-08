@@ -5,18 +5,17 @@
 #include <react/renderer/uimanager/primitives.h>
 #if REACT_NATIVE_MINOR_VERSION >= 73
 #include <react/utils/CoreFeatures.h>
-#endif //REACT_NATIVE_MINOR_VERSION >= 73
+#endif // REACT_NATIVE_MINOR_VERSION >= 73
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <functional>
 
-
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <iomanip>
 #include <react/renderer/scheduler/Scheduler.h>
+#include <iomanip>
+#include "CollectionUtils.h"
 #include "ReanimatedCommitShadowNode.h"
 #include "ShadowTreeCloner.h"
-#include "CollectionUtils.h"
 #endif
 
 #include "FeaturesConfig.h"
@@ -38,12 +37,12 @@ bool CoreFeatures::useNativeState;
 namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(
-    const std::shared_ptr<NativeWorkletsModule> &NativeWorkletsModule,
+    const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
     const bool isReducedMotion)
-    : NativeReanimatedModuleSpec(NativeWorkletsModule->getJSCallInvoker()),
+    : NativeReanimatedModuleSpec(nativeWorkletsModule->getJSCallInvoker()),
       isReducedMotion_(isReducedMotion),
-      NativeWorkletsModule_(NativeWorkletsModule),
+      NativeWorkletsModule_(nativeWorkletsModule),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       onRenderCallback_([this](const double timestampMs) {
@@ -196,6 +195,8 @@ void NativeReanimatedModule::unregisterEventHandler(
     jsi::Runtime &,
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
+  // TODO: Expose `scheduleOnUI` and `scheduleOnJS` directly from
+  // `NativeWorkletsModule`.
   NativeWorkletsModule_->getUIScheduler()->scheduleOnUI(
       [=, this] { eventHandlerRegistry_->unregisterEventHandler(id); });
 }
@@ -673,15 +674,14 @@ void NativeReanimatedModule::performOperations() {
 
           return rootNode;
         },
-        { /* .enableStateReconciliation = */
-          false,
+        {/* .enableStateReconciliation = */
+         false,
 #if REACT_NATIVE_MINOR_VERSION >= 72
-              /* .mountSynchronously = */ true,
+         /* .mountSynchronously = */ true,
 #endif
-              /* .shouldYield = */ [this]() {
-                return propsRegistry_->shouldReanimatedSkipCommit();
-              }
-        });
+         /* .shouldYield = */ [this]() {
+           return propsRegistry_->shouldReanimatedSkipCommit();
+         }});
   });
 }
 

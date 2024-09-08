@@ -83,7 +83,7 @@ class NativeWorkletsModule : public NativeWorkletsModuleSpec {
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
-  std::string valueUnpackerCode_;
+  const std::string valueUnpackerCode_;
 
   const std::shared_ptr<JSLogger> jsLogger_;
 };

@@ -30,7 +30,7 @@ namespace reanimated {
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
-      const std::shared_ptr<NativeWorkletsModule> &NativeWorkletsModule,
+      const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
       const bool isReducedMotion);
 
