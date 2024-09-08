@@ -1,7 +1,6 @@
 'use strict';
 /**
- * Copied from:
- * react-native/Libraries/LogBox/Data/LogBoxData.js
+ * Copied from: react-native/Libraries/LogBox/Data/LogBoxData.js
  * react-native/Libraries/LogBox/Data/parseLogBoxLog.js
  */
 

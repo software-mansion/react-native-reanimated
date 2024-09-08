@@ -13,9 +13,11 @@ import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 
 /**
- * Scale from center animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Scale from center animation. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -55,9 +57,11 @@ export class ZoomIn
 }
 
 /**
- * Scale from center with rotation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Scale from center with rotation. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -101,9 +105,11 @@ export class ZoomInRotate
 }
 
 /**
- * Scale from left animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Scale from left animation. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -146,9 +152,11 @@ export class ZoomInLeft
 }
 
 /**
- * Scale from right animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Scale from right animation. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -191,9 +199,11 @@ export class ZoomInRight
 }
 
 /**
- * Scale from top animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Scale from top animation. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -236,9 +246,11 @@ export class ZoomInUp
 }
 
 /**
- * Scale from bottom animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Scale from bottom animation. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -281,9 +293,11 @@ export class ZoomInDown
 }
 
 /**
- * Eased scale from top animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Eased scale from top animation. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -326,9 +340,11 @@ export class ZoomInEasyUp
 }
 
 /**
- * Eased scale from bottom animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Eased scale from bottom animation. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -371,9 +387,11 @@ export class ZoomInEasyDown
 }
 
 /**
- * Scale to center animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Scale to center animation. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -413,9 +431,11 @@ export class ZoomOut
 }
 
 /**
- * Scale to center with rotation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Scale to center with rotation. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -459,9 +479,11 @@ export class ZoomOutRotate
 }
 
 /**
- * Scale to left animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Scale to left animation. You can modify the behavior by chaining methods like
+ * `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -509,9 +531,11 @@ export class ZoomOutLeft
 }
 
 /**
- * Scale to right animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Scale to right animation. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -559,9 +583,11 @@ export class ZoomOutRight
 }
 
 /**
- * Scale to top animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Scale to top animation. You can modify the behavior by chaining methods like
+ * `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -609,9 +635,11 @@ export class ZoomOutUp
 }
 
 /**
- * Scale to bottom animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Scale to bottom animation. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -659,9 +687,11 @@ export class ZoomOutDown
 }
 
 /**
- * Eased scale to top animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Eased scale to top animation. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */
@@ -709,9 +739,11 @@ export class ZoomOutEasyUp
 }
 
 /**
- * Eased scale to bottom animation. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Eased scale to bottom animation. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#zoom
  */

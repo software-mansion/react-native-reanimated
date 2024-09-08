@@ -14,9 +14,14 @@ export interface StyleProps extends ViewStyle, TextStyle {
 }
 
 /**
- * A value that can be used both on the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) and the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
+ * A value that can be used both on the [JavaScript
+ * thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread)
+ * and the [UI
+ * thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
  *
- * Shared values are defined using [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) hook. You access and modify shared values by their `.value` property.
+ * Shared values are defined using
+ * [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue)
+ * hook. You access and modify shared values by their `.value` property.
  */
 export interface SharedValue<Value = unknown> {
   value: Value;
@@ -31,9 +36,10 @@ export interface SharedValue<Value = unknown> {
 }
 
 /**
- * Due to pattern of `MaybeSharedValue` type present in `AnimatedProps` (`AnimatedStyle`), contravariance breaks types
- * for animated styles etc. Instead of refactoring the code with small chances of success,
- * we just disable contravariance for `SharedValue` in this problematic case.
+ * Due to pattern of `MaybeSharedValue` type present in `AnimatedProps`
+ * (`AnimatedStyle`), contravariance breaks types for animated styles etc.
+ * Instead of refactoring the code with small chances of success, we just
+ * disable contravariance for `SharedValue` in this problematic case.
  */
 type SharedValueDisableContravariance<Value = unknown> = Omit<
   SharedValue<Value>,
@@ -45,9 +51,10 @@ export interface Mutable<Value = unknown> extends SharedValue<Value> {
   _animation?: AnimationObject<Value> | null; // only in Native
   /**
    * `_value` prop should only be accessed by the `valueSetter` implementation
-   * which may make the decision about updating the mutable value depending
-   * on the provided new value. All other places should only attempt to modify
-   * the mutable by assigning to `value` prop directly or by calling the `set` method.
+   * which may make the decision about updating the mutable value depending on
+   * the provided new value. All other places should only attempt to modify the
+   * mutable by assigning to `value` prop directly or by calling the `set`
+   * method.
    */
   _value: Value;
 }
@@ -113,9 +120,7 @@ interface WorkletBaseRelease extends WorkletBaseCommon {
 
 interface WorkletBaseDev extends WorkletBaseCommon {
   __initData: WorkletInitDataDev;
-  /**
-   * `__stackDetails` is removed after parsing.
-   */
+  /** `__stackDetails` is removed after parsing. */
   __stackDetails?: WorkletStackDetails;
 }
 
@@ -125,25 +130,30 @@ export type WorkletFunction<
 > = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
 
 /**
- * This function allows you to determine if a given function is a worklet. It only works
- * with Reanimated Babel plugin enabled. Unless you are doing something with internals of
- * Reanimated you shouldn't need to use this function.
+ * This function allows you to determine if a given function is a worklet. It
+ * only works with Reanimated Babel plugin enabled. Unless you are doing
+ * something with internals of Reanimated you shouldn't need to use this
+ * function.
  *
  * ### Note
- * Do not call it before the worklet is declared, as it will always return false then. E.g.:
+ *
+ * Do not call it before the worklet is declared, as it will always return false
+ * then. E.g.:
  *
  * ```ts
  * isWorkletFunction(myWorklet); // Will always return false.
  *
  * function myWorklet() {
  *   'worklet';
- * };
+ * }
  * ```
  *
  * ### Maintainer note
- * This function works well on the JS thread performance-wise, since the JIT can inline it.
- * However, on other threads it will not get optimized and we will get a function call overhead.
- * We want to change it in the future, but it's not feasible at the moment.
+ *
+ * This function works well on the JS thread performance-wise, since the JIT can
+ * inline it. However, on other threads it will not get optimized and we will
+ * get a function call overhead. We want to change it in the future, but it's
+ * not feasible at the moment.
  */
 export function isWorkletFunction<
   Args extends unknown[] = unknown[],
@@ -244,7 +254,9 @@ export type AnimatedSensor<T extends Value3D | ValueRotation> = {
 };
 
 /**
- * A function called upon animation completion. If the animation is cancelled, the callback will receive `false` as the argument; otherwise, it will receive `true`.
+ * A function called upon animation completion. If the animation is cancelled,
+ * the callback will receive `false` as the argument; otherwise, it will receive
+ * `true`.
  */
 export type AnimationCallback = (
   finished?: boolean,
@@ -296,8 +308,10 @@ export type AnimatedKeyboardInfo = {
 };
 
 /**
- * @param x - A number representing X coordinate relative to the parent component.
- * @param y - A number representing Y coordinate relative to the parent component.
+ * @param x - A number representing X coordinate relative to the parent
+ *   component.
+ * @param y - A number representing Y coordinate relative to the parent
+ *   component.
  * @param width - A number representing the width of the component.
  * @param height - A number representing the height of the component.
  * @param pageX - A number representing X coordinate relative to the screen.
@@ -318,7 +332,8 @@ export interface AnimatedKeyboardOptions {
 }
 
 /**
- * @param System - If the `Reduce motion` accessibility setting is enabled on the device, disable the animation. Otherwise, enable the animation.
+ * @param System - If the `Reduce motion` accessibility setting is enabled on
+ *   the device, disable the animation. Otherwise, enable the animation.
  * @param Always - Disable the animation.
  * @param Never - Enable the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility
@@ -368,14 +383,10 @@ export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
 
-/**
- * @deprecated Please use {@link AnimatedStyle} type instead.
- */
+/** @deprecated Please use {@link AnimatedStyle} type instead. */
 export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
 
-/**
- * @deprecated This type is no longer relevant.
- */
+/** @deprecated This type is no longer relevant. */
 export type StylesOrDefault<T> = 'style' extends keyof T
   ? MaybeSharedValueRecursive<T['style']>
   : Record<string, unknown>;
