@@ -1,0 +1,19 @@
+diff --git a/lib/utils/compile.js b/lib/utils/compile.js
+index 2d555553203f582ca3c7cf06a6def3efdfc3354c..546a8bb9ecfb476b60b2f1ac5cc126acaa160e51 100644
+--- a/lib/utils/compile.js
++++ b/lib/utils/compile.js
+@@ -39,10 +39,10 @@ async function compile({
+       report.warn(`The ${_kleur.default.blue('copyFlow')} option was specified, but couldn't find ${_kleur.default.blue('flow-bin')} in ${_kleur.default.blue('package.json')}.\nIf the project is using ${_kleur.default.blue('flow')}, then make sure you have added ${_kleur.default.blue('flow-bin')} to your ${_kleur.default.blue('devDependencies')}, otherwise remove the ${_kleur.default.blue('copyFlow')} option.`);
+     }
+   }
+-  await _fsExtra.default.mkdirp(output);
+-  await _fsExtra.default.writeJSON(_path.default.join(output, 'package.json'), {
+-    type: modules === 'commonjs' ? 'commonjs' : 'module'
+-  });
++  // Addition of `package.json` into the build directory breaks our Next example.
++  // await _fsExtra.default.writeJSON(_path.default.join(output, 'package.json'), {
++  //   type: modules === 'commonjs' ? 'commonjs' : 'module'
++  // });
+   await Promise.all(files.map(async filepath => {
+     const outputFilename = _path.default.join(output, _path.default.relative(source, filepath)).replace(sourceExt, '.$1js');
+     await _fsExtra.default.mkdirp(_path.default.dirname(outputFilename));
