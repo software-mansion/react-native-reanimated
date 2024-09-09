@@ -193,10 +193,6 @@ export default function Example({ entering, exiting }: ExampleProps) {
 
     return !isSpringBased
       ? ENTERING_ANIMATIONS[animation]
-          .duration(duration)
-          .delay(delay)
-          .easing(easing)
-      : ENTERING_ANIMATIONS[animation]
           .delay(delay)
           .springify()
           .damping(damping)
@@ -204,7 +200,11 @@ export default function Example({ entering, exiting }: ExampleProps) {
           .overshootClamping(overshootClamping)
           .restSpeedThreshold(restSpeedThreshold)
           .restDisplacementThreshold(restDisplacementThreshold)
-          .stiffness(stiffness);
+          .stiffness(stiffness)
+      : ENTERING_ANIMATIONS[animation]
+          .duration(duration)
+          .delay(delay)
+          .easing(easing);
   };
 
   const getExitingAnimation = () => {
@@ -222,12 +222,8 @@ export default function Example({ entering, exiting }: ExampleProps) {
       restDisplacementThreshold,
     } = exiting;
 
-    return !isSpringBased
+    return isSpringBased
       ? EXITING_ANIMATIONS[animation]
-          .duration(duration)
-          .delay(delay)
-          .easing(easing)
-      : EXITING_ANIMATIONS[animation]
           .springify()
           .delay(delay)
           .damping(damping)
@@ -235,7 +231,11 @@ export default function Example({ entering, exiting }: ExampleProps) {
           .overshootClamping(overshootClamping)
           .restSpeedThreshold(restSpeedThreshold)
           .restDisplacementThreshold(restDisplacementThreshold)
-          .stiffness(stiffness);
+          .stiffness(stiffness)
+      : EXITING_ANIMATIONS[animation]
+          .duration(duration)
+          .delay(delay)
+          .easing(easing);
   };
 
   return (

@@ -155,9 +155,7 @@ const Controls = ({
           }
         />
       )}
-      {isBounce ? (
-        <></>
-      ) : type.isSpringBased ? (
+      {type.isSpringBased ? (
         <>
           <Range
             label="Mass"
