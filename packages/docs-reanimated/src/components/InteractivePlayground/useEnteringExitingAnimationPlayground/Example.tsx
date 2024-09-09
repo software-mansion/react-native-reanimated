@@ -191,7 +191,7 @@ export default function Example({ entering, exiting }: ExampleProps) {
       restDisplacementThreshold,
     } = entering;
 
-    return !isSpringBased
+    return isSpringBased
       ? ENTERING_ANIMATIONS[animation]
           .delay(delay)
           .springify()
