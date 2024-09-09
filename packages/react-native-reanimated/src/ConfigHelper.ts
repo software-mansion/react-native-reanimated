@@ -82,8 +82,8 @@ export interface ViewConfig {
   validAttributes: Record<string, unknown>;
 }
 /**
- * updates UI props whitelist for given view host instance
- * this will work just once for every view name
+ * Updates UI props whitelist for given view host instance this will work just
+ * once for every view name
  */
 
 export function adaptViewConfig(viewConfig: ViewConfig): void {

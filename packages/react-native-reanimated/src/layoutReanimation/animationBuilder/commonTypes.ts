@@ -132,7 +132,7 @@ export interface BaseBuilderAnimationConfig extends BaseLayoutAnimationConfig {
 
 export type LayoutAnimationAndConfig = [
   AnimationFunction,
-  BaseBuilderAnimationConfig
+  BaseBuilderAnimationConfig,
 ];
 
 export interface IEntryExitAnimationBuilder {
@@ -165,6 +165,7 @@ export type CustomProgressAnimation = (
 
 /**
  * Used to configure the `.defaultTransitionType()` shared transition modifier.
+ *
  * @experimental
  */
 export enum SharedTransitionType {
