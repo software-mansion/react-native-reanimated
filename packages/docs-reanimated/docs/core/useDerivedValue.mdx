@@ -37,8 +37,9 @@ interface SharedValue<Value = unknown> {
 interface DerivedValue<Value = unknown>
   extends Readonly<Omit<SharedValue<Value>, 'set'>> {
   /**
-   * @deprecated Derived values are readonly, don't use this method. It's here only to prevent breaking changes in TypeScript types.
-   * It will be removed in the future.
+   * @deprecated Derived values are readonly, don't use this method. It's here
+   *   only to prevent breaking changes in TypeScript types. It will be removed
+   *   in the future.
    */
   set: SharedValue<Value>['set'];
 }
