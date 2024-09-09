@@ -23,9 +23,14 @@
 #include "LayoutAnimationsProxy.h"
 #include "PropsRegistry.h"
 #include "ReanimatedCommitHook.h"
+#if REACT_NATIVE_MINOR_VERSION >= 73
+#include "ReanimatedMountHook.h"
+#endif
 #endif
 
 namespace reanimated {
+
+class ReanimatedMountHook;
 
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
@@ -224,6 +229,10 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  std::shared_ptr<ReanimatedMountHook> mountHook_;
+#endif
+
 
   std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #else

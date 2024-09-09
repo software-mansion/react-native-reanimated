@@ -11,6 +11,7 @@ namespace reanimated {
 // Currently RN traits go up to 10, so hopefully
 // the arbitrarily chosen number 27 will be safe :)
 constexpr ShadowNodeTraits::Trait ReanimatedCommitTrait{1 << 27};
+constexpr ShadowNodeTraits::Trait ReanimatedMountTrait{1 << 28};
 
 class ReanimatedCommitShadowNode : public ShadowNode {
  public:
@@ -22,6 +23,15 @@ class ReanimatedCommitShadowNode : public ShadowNode {
   }
   inline bool hasReanimatedCommitTrait() {
     return traits_.check(ReanimatedCommitTrait);
+  }
+  inline void setReanimatedMounTrait() {
+    traits_.set(ReanimatedMountTrait);
+  }
+  inline void unsetReanimatedMountTrait() {
+    traits_.unset(ReanimatedMountTrait);
+  }
+  inline bool hasReanimatedMountTrait() {
+    return traits_.check(ReanimatedMountTrait);
   }
 };
 

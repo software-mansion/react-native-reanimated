@@ -25,30 +25,40 @@ class PropsRegistry {
 
   void remove(const Tag tag);
 
-  void pleaseSkipReanimatedCommit() {
-    shouldReanimatedSkipCommit_ = true;
+  void pauseReanimatedCommits() {
+    isPaused_ = true;
   }
 
   bool shouldReanimatedSkipCommit() {
 #if REACT_NATIVE_MINOR_VERSION >= 73
     // In RN 0.73+ we have a mount hook that will properly unset this flag
     // after a non-Reanimated commit.
-    return shouldReanimatedSkipCommit_;
+    return isPaused_;
 #else
-    return shouldReanimatedSkipCommit_.exchange(false);
+    return isPaused_.exchange(false);
 #endif
   }
 
-  void resetReanimatedSkipCommitFlag() {
-    shouldReanimatedSkipCommit_ = false;
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  void unpauseReanimatedCommits() {
+    isPaused_ = false;
   }
-
+#endif
+  
+  void pleaseFlush() {
+    shouldFlush_ = true;
+  }
+  
+  bool shouldFlush() {
+    return shouldFlush_.exchange(false);
+  }
+  
  private:
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>> map_;
 
   mutable std::mutex mutex_; // Protects `map_`.
 
-  std::atomic<bool> shouldReanimatedSkipCommit_;
+  std::atomic<bool> isPaused_, shouldFlush_;
 };
 
 } // namespace reanimated

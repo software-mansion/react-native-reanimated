@@ -648,8 +648,8 @@ void NativeReanimatedModule::performOperations() {
   {
     auto lock = propsRegistry_->createLock();
 
-    if (copiedOperationsQueue.size() > 0) {
-      propsRegistry_->resetReanimatedSkipCommitFlag();
+    if (copiedOperationsQueue.size() > 0 && propsRegistry_->shouldReanimatedSkipCommit()) {
+      propsRegistry_->pleaseFlush();
     }
 
     // remove recently unmounted ShadowNodes from PropsRegistry
@@ -844,6 +844,8 @@ void NativeReanimatedModule::initializeFabric(
 
   initializeLayoutAnimations();
 
+  mountHook_ =
+      std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
 }

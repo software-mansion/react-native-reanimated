@@ -40,11 +40,12 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // ShadowTree commited by Reanimated, no need to apply updates from
     // PropsRegistry
     reaShadowNode->unsetReanimatedCommitTrait();
+    reaShadowNode->setReanimatedMounTrait();
     return newRootShadowNode;
   }
 
   // ShadowTree not commited by Reanimated, apply updates from PropsRegistry
-
+  reaShadowNode->unsetReanimatedMountTrait();
   RootShadowNode::Unshared rootNode = newRootShadowNode;
   PropsMap propsMap;
 
@@ -63,7 +64,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // include the new changes from React Native yet and all changes of animated
     // props will be applied in ReanimatedCommitHook by iterating over
     // PropsRegistry.
-    propsRegistry_->pleaseSkipReanimatedCommit();
+    propsRegistry_->pauseReanimatedCommits();
   }
 
   return rootNode;
