@@ -147,7 +147,10 @@ export interface UpdatePropsManager {
   flush(): void;
 }
 
-/** This used to be `SharedValue<Descriptors[]>` but objects holding just a single `value` prop are fine too. */
+/**
+ * This used to be `SharedValue<Descriptors[]>` but objects holding just a
+ * single `value` prop are fine too.
+ */
 interface ViewDescriptorsWrapper {
   value: Readonly<Descriptor[]>;
 }
