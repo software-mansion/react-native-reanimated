@@ -36,8 +36,26 @@ function App() {
 <summary>Type definitions</summary>
 
 ```typescript
+type FirstFrame =
+  | {
+      0: KeyframeProps & { easing?: never };
+      from?: never;
+    }
+  | {
+      0?: never;
+      from: KeyframeProps & { easing?: never };
+    };
+
+type LastFrame =
+  | { 100?: KeyframeProps; to?: never }
+  | { 100?: never; to: KeyframeProps };
+
+export type ValidKeyframeProps = FirstFrame &
+  LastFrame &
+  Record<number, KeyframeProps>;
+
 class Keyframe {
-  constructor(definitions: Record<string, KeyframeProps>);
+  constructor(definitions: ValidKeyframeProps;
   duration(durationMs: number): Keyframe;
   delay(delayMs: number): Keyframe;
   reduceMotion(reduceMotionV: ReduceMotion): Keyframe;
@@ -53,7 +71,7 @@ class Keyframe {
 
 An object, that contains definitions of your animation.
 The object keys should be within range `0-100` and correspond to animation progress.
-The object values should consist of style props and/or [easing function](/docs/animations/withTiming/#easing). If easing property is not provided, it defaults to `Easing.linear`.
+The object values should consist of style props and optionally of an [easing function](/docs/animations/withTiming/#easing). If easing property is not provided, it defaults to `Easing.linear`.
 
 The keys take the following values:
 
@@ -84,6 +102,7 @@ keyframe
 
 - Providing keyframe `0` or `from` is required as it contains the initial state of the object you want to animate.
 - Ensure you provide the initial value for all style properties you want to animate in other keyframes.
+- If you want to add easing to an animation between two keyframes you have to pass it to the second one. As a result you should never provide any easing to keyframe `0`.
 - Do not provide both `0` and `from`, or `100` and `to` keyframes, as it will result in a parsing conflict.
 - If you want to animate transform style, make sure that all properties in the transformation array are in the same order in all keyframes.
 

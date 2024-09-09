@@ -6,6 +6,7 @@ export default function App() {
       <Text accessibilityRole="header" style={styles.text}>
         Reanimated Page
       </Text>
+      {/* @ts-expect-error */}
       <Text style={styles.link} accessibilityRole="link" href="/">
         Go Back
       </Text>

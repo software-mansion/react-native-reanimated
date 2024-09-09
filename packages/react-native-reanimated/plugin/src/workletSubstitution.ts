@@ -10,10 +10,7 @@ import { WorkletizableFunction } from './types';
 import { replaceWithFactoryCall } from './utils';
 import { makeWorkletFactoryCall } from './workletFactoryCall';
 
-/**
- *
- * @returns `true` if the function was workletized, `false` otherwise.
- */
+/** @returns `true` if the function was workletized, `false` otherwise. */
 export function processIfWithWorkletDirective(
   path: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
@@ -33,12 +30,13 @@ export function processIfWithWorkletDirective(
 
 /**
  * Replaces
+ *
  * - `FunctionDeclaration`,
  * - `FunctionExpression`,
  * - `ArrowFunctionExpression`
  * - `ObjectMethod`
  *
- * with a workletized version of itself.
+ * With a workletized version of itself.
  */
 export function processWorklet(
   path: NodePath<WorkletizableFunction>,

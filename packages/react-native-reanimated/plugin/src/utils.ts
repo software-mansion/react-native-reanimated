@@ -19,10 +19,16 @@ export function isRelease() {
 }
 
 /**
- * This function allows to add custom globals such as host-functions.
- * Those globals have to be passed as an argument for the plugin in babel.config.js.
+ * This function allows to add custom globals such as host-functions. Those
+ * globals have to be passed as an argument for the plugin in babel.config.js.
  *
- * For example: `plugins: [['react-native-reanimated/plugin', { globals: ['myHostFunction'] }]]`
+ * For example:
+ *
+ * ```js
+ * plugins: [
+ *   ['react-native-reanimated/plugin', { globals: ['myHostFunction'] }],
+ * ];
+ * ```
  */
 export function addCustomGlobals(this: ReanimatedPluginPass) {
   if (this.opts && Array.isArray(this.opts.globals)) {
@@ -33,34 +39,38 @@ export function addCustomGlobals(this: ReanimatedPluginPass) {
 }
 
 /**
- * This function replaces the node with a factory call while making
- * sure that it's a legal operation.
- * If the node cannot be simply replaced with a factory call, it will
- * be replaced with a variable declaration.
+ * This function replaces the node with a factory call while making sure that
+ * it's a legal operation. If the node cannot be simply replaced with a factory
+ * call, it will be replaced with a variable declaration.
  *
  * For example:
+ *
  * ```ts
- *  const foo = function() {
- *    'worklet';
- *    return 1;
- *  };
+ * const foo = function () {
+ *   'worklet';
+ *   return 1;
+ * };
  * ```
- * becomes
+ *
+ * Becomes
+ *
  * ```ts
- *  const foo = factoryCall();
+ * const foo = factoryCall();
  * ```
+ *
  * But:
- * ```
- *   export function foo() {
- *     'worklet';
- *     return 1;
- *   };
- * ```
- *
- * becomes
  *
  * ```ts
- *   const foo = factoryCall();
+ * export function foo() {
+ *   'worklet';
+ *   return 1;
+ * }
+ * ```
+ *
+ * Becomes
+ *
+ * ```ts
+ * export const foo = factoryCall();
  * ```
  */
 export function replaceWithFactoryCall(

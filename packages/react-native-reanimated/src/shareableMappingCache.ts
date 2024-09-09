@@ -7,9 +7,9 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 /**
  * This symbol is used to represent a mapping from the value to itself.
  *
- * It's used to prevent converting a shareable that's already converted -
- * for example a Shared Value that's in worklet's closure.
- **/
+ * It's used to prevent converting a shareable that's already converted - for
+ * example a Shared Value that's in worklet's closure.
+ */
 export const shareableMappingFlag = Symbol('shareable flag');
 
 /*

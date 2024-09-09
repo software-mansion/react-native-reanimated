@@ -104,9 +104,10 @@ export const withClamp = function <T extends number | string>(
 
         animationToClamp.onStart(
           animationToClamp,
-          /** provide the current value of the previous animation of the clamped animation 
-          so we can animate from the original "un-truncated" value
-          */
+          /**
+           * Provide the current value of the previous animation of the clamped
+           * animation so we can animate from the original "un-truncated" value
+           */
           animationBeforeClamped?.current || value,
           now,
           animationBeforeClamped

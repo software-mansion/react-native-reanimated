@@ -41,10 +41,10 @@ export function buildWorkletString(
   fun: BabelFile,
   state: ReanimatedPluginPass,
   closureVariables: Array<Identifier>,
-  nameWithSource: string,
+  workletName: string,
   inputMap: BabelFileResult['map']
 ): Array<string | null | undefined> {
-  restoreRecursiveCalls(fun, nameWithSource);
+  restoreRecursiveCalls(fun, workletName);
 
   const draftExpression = (fun.program.body.find((obj) =>
     isFunctionDeclaration(obj)
@@ -105,7 +105,7 @@ export function buildWorkletString(
   });
 
   const workletFunction = functionExpression(
-    identifier(nameWithSource),
+    identifier(workletName),
     expression.params,
     expression.body,
     expression.generator,
@@ -161,7 +161,8 @@ export function buildWorkletString(
 }
 
 /**
- * Function that restores recursive calls after the name of the worklet has changed.
+ * Function that restores recursive calls after the name of the worklet has
+ * changed.
  */
 function restoreRecursiveCalls(file: BabelFile, newName: string): void {
   traverse(file, {
