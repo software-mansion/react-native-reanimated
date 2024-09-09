@@ -7,7 +7,6 @@ type LogFunction = (data: LogData) => void;
 export enum LogLevel {
   warn = 1,
   error = 2,
-  fatal = 3,
 }
 
 export type LoggerConfig = {
@@ -36,7 +35,7 @@ function logToConsole(data: LogData) {
 export const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
   logFunction: logToConsole,
   level: LogLevel.warn,
-  strict: false,
+  strict: true,
 };
 
 function formatMessage(message: string) {
@@ -57,14 +56,14 @@ function createLog(level: LogBoxLogLevel, message: string): LogData {
     category: formattedMessage,
     componentStack: [],
     componentStackType: null,
+    // eslint-disable-next-line reanimated/use-reanimated-error
     stack: new Error().stack,
   };
 }
 
 /**
- * Function that logs to LogBox and console.
- * Used to replace the default console logging with logging to LogBox
- * on the UI thread when runOnJS is available.
+ * Function that logs to LogBox and console. Used to replace the default console
+ * logging with logging to LogBox on the UI thread when runOnJS is available.
  *
  * @param data - The details of the log.
  */
@@ -74,8 +73,7 @@ export function logToLogBoxAndConsole(data: LogData) {
 }
 
 /**
- * Registers the logger configuration.
- * use it only for Worklet runtimes.
+ * Registers the logger configuration. use it only for Worklet runtimes.
  *
  * @param config - The config to register.
  */
@@ -98,9 +96,10 @@ export function replaceLoggerImplementation(logFunction: LogFunction) {
  * Updates logger configuration.
  *
  * @param options - The new logger configuration to apply.
- *   - level: The minimum log level to display.
- *   - strict: Whether to log warnings and errors that are not strict.
- *    Defaults to false.
+ *
+ *   - Level: The minimum log level to display.
+ *   - Strict: Whether to log warnings and errors that are not strict. Defaults to
+ *       false.
  */
 export function updateLoggerConfig(options?: Partial<LoggerConfig>) {
   'worklet';
@@ -117,7 +116,7 @@ type LogOptions = {
 };
 
 function handleLog(
-  level: Exclude<LogBoxLogLevel, 'syntax'>,
+  level: Exclude<LogBoxLogLevel, 'syntax' | 'fatal'>,
   message: string,
   options: LogOptions
 ) {
@@ -143,9 +142,5 @@ export const logger = {
   error(message: string, options: LogOptions = {}) {
     'worklet';
     handleLog('error', message, options);
-  },
-  fatal(message: string, options: LogOptions = {}) {
-    'worklet';
-    handleLog('fatal', message, options);
   },
 };

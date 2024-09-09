@@ -1,6 +1,7 @@
 const stylexPlugin = require('@stylexjs/babel-plugin');
 const rsdPlugin = require('react-strict-dom/babel');
 
+/** @type {import('@babel/core').ConfigFunction} */
 module.exports = function (api) {
   const plugins = [
     rsdPlugin,
@@ -22,6 +23,7 @@ module.exports = function (api) {
   if (disableBabelPlugin) {
     console.log('Starting Web example without Babel plugin.');
   } else {
+    // @ts-expect-error
     plugins.push('react-native-reanimated/plugin');
   }
 

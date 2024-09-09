@@ -1,3 +1,4 @@
+/* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 import type { WorkletStackDetails } from './commonTypes';
 
@@ -21,8 +22,8 @@ const ReanimatedErrorConstructor: ReanimatedErrorConstructor =
 export { ReanimatedErrorConstructor as ReanimatedError };
 
 /**
- * Registers `ReanimatedError` in global scope.
- * Use it only for Worklet runtimes.
+ * Registers `ReanimatedError` in global scope. Use it only for Worklet
+ * runtimes.
  */
 export function registerReanimatedError() {
   'worklet';

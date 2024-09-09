@@ -1,16 +1,11 @@
 #pragma once
 
+#include <ReactCommon/CallInvoker.h>
+#include <ReactCommon/TurboModule.h>
+
 #include <memory>
 #include <string>
 #include <vector>
-
-#ifdef ANDROID
-#include "TurboModule.h"
-#else
-#include <ReactCommon/TurboModule.h>
-#endif
-
-#include <ReactCommon/CallInvoker.h>
 
 using namespace facebook;
 using namespace react;

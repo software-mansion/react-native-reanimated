@@ -32,6 +32,29 @@ export interface KeyframeProps extends StyleProps {
   easing?: EasingFunction;
 }
 
+type FirstFrame =
+  | {
+      0: KeyframeProps & { easing?: never };
+      from?: never;
+    }
+  | {
+      0?: never;
+      from: KeyframeProps & { easing?: never };
+    };
+
+type LastFrame =
+  | { 100?: KeyframeProps; to?: never }
+  | { 100?: never; to: KeyframeProps };
+
+export type ValidKeyframeProps = FirstFrame &
+  LastFrame &
+  Record<number, KeyframeProps>;
+
+export type MaybeInvalidKeyframeProps = Record<number, KeyframeProps> & {
+  to?: KeyframeProps;
+  from?: KeyframeProps;
+};
+
 export type LayoutAnimation = {
   initialValues: StyleProps;
   animations: StyleProps;
@@ -109,7 +132,7 @@ export interface BaseBuilderAnimationConfig extends BaseLayoutAnimationConfig {
 
 export type LayoutAnimationAndConfig = [
   AnimationFunction,
-  BaseBuilderAnimationConfig
+  BaseBuilderAnimationConfig,
 ];
 
 export interface IEntryExitAnimationBuilder {
@@ -142,6 +165,7 @@ export type CustomProgressAnimation = (
 
 /**
  * Used to configure the `.defaultTransitionType()` shared transition modifier.
+ *
  * @experimental
  */
 export enum SharedTransitionType {
