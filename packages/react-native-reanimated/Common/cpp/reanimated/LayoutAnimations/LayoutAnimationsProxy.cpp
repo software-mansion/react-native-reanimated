@@ -664,9 +664,11 @@ void LayoutAnimationsProxy::startLayoutAnimation(
       mutation.newChildShadowView, surfaceManager.getWindow(surfaceId));
 
   StyleSnapshot currentStyleValues(
-      oldView, surfaceManager.getWindow(surfaceId));
+      uiRuntime_, oldView, surfaceManager.getWindow(surfaceId));
   StyleSnapshot targetStyleValues(
-      mutation.newChildShadowView, surfaceManager.getWindow(surfaceId));
+      uiRuntime_,
+      mutation.newChildShadowView,
+      surfaceManager.getWindow(surfaceId));
 
   uiScheduler_->scheduleOnUI([currentValues,
                               targetValues,
@@ -695,72 +697,25 @@ void LayoutAnimationsProxy::startLayoutAnimation(
         uiRuntime_, "currentWindowHeight", currentValues.windowHeight);
     yogaValues.setProperty(
         uiRuntime_, "targetWindowHeight", targetValues.windowHeight);
-    yogaValues.setProperty(
-        uiRuntime_, "currentOpacity", currentStyleValues.opacity);
-    yogaValues.setProperty(
-        uiRuntime_, "targetOpacity", targetStyleValues.opacity);
 
-    yogaValues.setProperty(
-        uiRuntime_,
-        "currentShadowOffsetHeight",
-        currentStyleValues.shadowOffsetHeight);
-    yogaValues.setProperty(
-        uiRuntime_,
-        "targetShadowOffsetHeight",
-        targetStyleValues.shadowOffsetHeight);
-    yogaValues.setProperty(
-        uiRuntime_,
-        "currentShadowOffsetWidth",
-        currentStyleValues.shadowOffsetWidth);
-    yogaValues.setProperty(
-        uiRuntime_,
-        "targetShadowOffsetWidth",
-        targetStyleValues.shadowOffsetWidth);
-    yogaValues.setProperty(
-        uiRuntime_, "currentShadowOpacity", currentStyleValues.shadowOpacity);
-    yogaValues.setProperty(
-        uiRuntime_, "targetShadowOpacity", targetStyleValues.shadowOpacity);
-    yogaValues.setProperty(
-        uiRuntime_, "currentShadowRadius", currentStyleValues.shadowRadius);
-    yogaValues.setProperty(
-        uiRuntime_, "targetShadowRadius", targetStyleValues.shadowRadius);
+    for (int i = 0; i < 9; i++) {
+      char currentPropName[7 + strlen(numericPropertiesNames[i])];
+      char targetPropName[6 + strlen(numericPropertiesNames[i])];
 
-    yogaValues.setProperty(
-        uiRuntime_, "currentBorderRadius", currentStyleValues.borderRadius);
-    yogaValues.setProperty(
-        uiRuntime_, "targetBorderRadius", targetStyleValues.borderRadius);
-    yogaValues.setProperty(
-        uiRuntime_,
-        "currentBorderTopLeftRadius",
-        currentStyleValues.borderTopLeftRadius);
-    yogaValues.setProperty(
-        uiRuntime_,
-        "targetBorderTopLeftRadius",
-        targetStyleValues.borderTopLeftRadius);
-    yogaValues.setProperty(
-        uiRuntime_,
-        "currentBorderTopRightRadius",
-        currentStyleValues.borderTopRightRadius);
-    yogaValues.setProperty(
-        uiRuntime_,
-        "targetBorderTopRightRadius",
-        targetStyleValues.borderTopRightRadius);
-    yogaValues.setProperty(
-        uiRuntime_,
-        "currentBorderBottomLeftRadius",
-        currentStyleValues.borderBottomLeftRadius);
-    yogaValues.setProperty(
-        uiRuntime_,
-        "targetBorderBottomLeftRadius",
-        targetStyleValues.borderBottomLeftRadius);
-    yogaValues.setProperty(
-        uiRuntime_,
-        "currentBorderBottomRightRadius",
-        currentStyleValues.borderBottomRightRadius);
-    yogaValues.setProperty(
-        uiRuntime_,
-        "targetBorderBottomRightRadius",
-        targetStyleValues.borderBottomRightRadius);
+      strcpy(currentPropName, "current");
+      strcat(currentPropName, numericPropertiesNames[i]);
+      strcpy(targetPropName, "target");
+      strcat(targetPropName, numericPropertiesNames[i]);
+
+      yogaValues.setProperty(
+          uiRuntime_,
+          currentPropName,
+          currentStyleValues.numericPropertiesValues[i]);
+      yogaValues.setProperty(
+          uiRuntime_,
+          targetPropName,
+          targetStyleValues.numericPropertiesValues[i]);
+    }
 
     yogaValues.setProperty(
         uiRuntime_,

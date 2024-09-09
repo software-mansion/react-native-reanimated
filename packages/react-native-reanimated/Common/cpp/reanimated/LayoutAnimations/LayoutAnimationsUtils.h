@@ -12,6 +12,11 @@
 #include <utility>
 #include <vector>
 
+#ifdef __ANDROID__ // parse color on android
+#include <iomanip>
+#include <sstream>
+#endif
+
 namespace reanimated {
 
 struct Rect {
@@ -41,6 +46,20 @@ struct UpdateValues {
   Frame frame;
 };
 
+#ifdef __ANDROID__
+static inline std::string colorToString(const int val) {
+  std::stringstream
+      invertedHexColorStream; // By default transparency is first, color second
+  invertedHexColorStream << std::setfill('0') << std::setw(8) << std::hex
+                         << val;
+
+  auto invertedHexColor = invertedHexColorStream.str();
+  auto hexColor =
+      "#" + invertedHexColor.substr(2, 6) + invertedHexColor.substr(0, 2);
+
+  return hexColor;
+}
+#else
 inline std::string colorToString(const SharedColor &value) {
   ColorComponents components = colorComponentsFromColor(value);
   auto ratio = 255.f;
@@ -49,6 +68,7 @@ inline std::string colorToString(const SharedColor &value) {
       folly::to<std::string>(round(components.blue * ratio)) + ", " +
       folly::to<std::string>(round(components.alpha * ratio)) + ")";
 }
+#endif
 
 struct Snapshot {
   double x, y, width, height, windowWidth, windowHeight;
@@ -63,28 +83,72 @@ struct Snapshot {
   }
 };
 
-struct StyleSnapshot {
-  std::string backgroundColor, shadowColor;
-  double opacity, shadowOffsetHeight, shadowOffsetWidth, shadowOpacity,
-      shadowRadius;
-  int borderRadius, borderTopLeftRadius, borderTopRightRadius,
-      borderBottomLeftRadius, borderBottomRightRadius;
+inline Float floatFromYogaFloat(float value) {
+  static_assert(
+      YGUndefined != YGUndefined,
+      "The code of this function assumes that YGUndefined is NaN.");
+  if (std::isnan(value) /* means: `value == YGUndefined` */) {
+    return std::numeric_limits<Float>::infinity();
+  }
 
-  StyleSnapshot(const ShadowView &shadowView, Rect window) {
+  return (Float)value;
+}
+
+inline Float floatFromYogaOptionalFloat(yoga::FloatOptional value) {
+  if (value.isUndefined()) {
+    return std::numeric_limits<Float>::quiet_NaN();
+  }
+
+  return floatFromYogaFloat(value.unwrap());
+}
+
+inline Float floatFromYogaBorderWidthValue(const yoga::Style::Length &length) {
+  if (length.unit() == yoga::Unit::Point) {
+    return floatFromYogaOptionalFloat(length.value());
+  }
+  // types percent, and auto are not allowed for border width
+  return 0;
+}
+
+const char *numericPropertiesNames[10] = {
+    "Opacity",
+    "BorderTopLeftRadius",
+    "BorderTopRightRadius",
+    "BorderBottomLeftRadius",
+    "BorderBottomRightRadius",
+
+    "BorderLeftWidth",
+    "BorderRightWidth",
+    "BorderTopWidth",
+    "BorderBottomWidth"};
+
+struct StyleSnapshot {
+  int numOfProperties = 10;
+  std::string backgroundColor;
+  std::string shadowColor;
+  std::array<double, 10> numericPropertiesValues;
+  StyleSnapshot(
+      jsi::Runtime &runtime,
+      const ShadowView &shadowView,
+      Rect window) {
     const ViewProps *props =
         static_cast<const ViewProps *>(shadowView.props.get());
 
+#ifdef __ANDROID__
+    backgroundColor = colorToString(props->backgroundColor.color_);
+    shadowColor = colorToString(props->shadowColor.color_);
+#else
     backgroundColor = colorToString(props->backgroundColor);
     shadowColor = colorToString(props->shadowColor);
+#endif
 
-    opacity = props->opacity;
-    borderRadius = borderTopLeftRadius = borderTopRightRadius =
-        borderBottomLeftRadius = borderBottomRightRadius = 0;
+    auto opacity = props->opacity;
+    auto borderTopLeftRadius = 0, borderTopRightRadius = 0,
+         borderBottomLeftRadius = 0, borderBottomRightRadius = 0;
     auto borderRadii = props->borderRadii;
     if (borderRadii.all.has_value()) {
-      // borderTopLeftRadius = borderTopRightRadius = borderBottomLeftRadius =
-      //     borderBottomRightRadius = props->borderRadii.all.value().value;
-      borderRadius = props->borderRadii.all.value().value;
+      borderTopLeftRadius = borderTopRightRadius = borderBottomLeftRadius =
+          borderBottomRightRadius = props->borderRadii.all.value().value;
     }
     if (borderRadii.topLeft.has_value()) {
       borderTopLeftRadius = props->borderRadii.topLeft.value().value;
@@ -99,10 +163,26 @@ struct StyleSnapshot {
       borderBottomRightRadius = props->borderRadii.bottomRight.value().value;
     }
 
-    shadowOffsetHeight = props->shadowOffset.height;
-    shadowOffsetWidth = props->shadowOffset.width;
-    shadowOpacity = props->shadowOpacity;
-    shadowRadius = props->shadowRadius;
+    auto left = floatFromYogaBorderWidthValue(
+        props->yogaStyle.border(yoga::Edge::Left));
+    auto right = floatFromYogaBorderWidthValue(
+        props->yogaStyle.border(yoga::Edge::Right));
+    auto top =
+        floatFromYogaBorderWidthValue(props->yogaStyle.border(yoga::Edge::Top));
+    auto bottom = floatFromYogaBorderWidthValue(
+        props->yogaStyle.border(yoga::Edge::Bottom));
+
+    numericPropertiesValues = {
+        opacity,
+        double(borderTopLeftRadius),
+        double(borderTopRightRadius),
+        double(borderBottomLeftRadius),
+        double(borderBottomRightRadius),
+
+        double(left),
+        double(right),
+        double(top),
+        double(bottom)};
   }
 };
 

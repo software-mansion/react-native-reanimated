@@ -13,16 +13,16 @@ import type {
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#linear-transition
  */
-export class LinearTransition
+export class LinearStyleTransition
   extends ComplexAnimationBuilder
   implements ILayoutAnimationBuilder
 {
-  static presetName = 'LinearTransition';
+  static presetName = 'LinearStyleTransition';
 
   static createInstance<T extends typeof BaseAnimationBuilder>(
     this: T
   ): InstanceType<T> {
-    return new LinearTransition() as InstanceType<T>;
+    return new LinearStyleTransition() as InstanceType<T>;
   }
 
   build = (): LayoutAnimationFunction => {
@@ -112,8 +112,3 @@ export class LinearTransition
     };
   };
 }
-
-/**
- * @deprecated Please use {@link LinearTransition} instead.
- */
-export const Layout = LinearTransition;

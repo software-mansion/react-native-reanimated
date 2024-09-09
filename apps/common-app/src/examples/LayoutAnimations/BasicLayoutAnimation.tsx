@@ -1,4 +1,4 @@
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import Animated, { LinearStyleTransition } from 'react-native-reanimated';
 import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
@@ -13,21 +13,23 @@ export default function BasicLayoutAnimation() {
       <Button onPress={() => setState(!state)} title="Update" />
       {visible && (
         <Animated.View
-          layout={LinearTransition.duration(1000)}
+          layout={LinearStyleTransition.duration(1000)}
           style={[
             styles.box,
             {
-              marginLeft: state ? 200 : 0,
+              marginLeft: state ? 100 : 0,
               backgroundColor: state ? 'blue' : 'red',
               opacity: state ? 1 : 0.1,
-              borderTopLeftRadius: state ? undefined : 100,
-              borderBottomRightRadius: state ? undefined : 100,
-              shadowOffset: state
-                ? { width: 10, height: 50 }
-                : { width: -50, height: -50 },
-              shadowColor: state ? 'navy' : 'orange',
-              shadowOpacity: state ? 0.5 : 1,
-              shadowRadius: state ? 15 : 1,
+
+              borderLeftWidth: state ? 1 : 5,
+              borderRightWidth: state ? 10 : 5,
+              borderTopWidth: state ? 1 : 5,
+              borderBottomWidth: state ? 15 : 5,
+
+              borderTopLeftRadius: state ? 20 : 100,
+              borderBottomRightRadius: state ? 50 : 100,
+              borderBottomLeftRadius: state ? 40 : 100,
+              borderTopRightRadius: state ? 10 : 10,
             },
           ]}
         />

@@ -1,5 +1,6 @@
 'use strict';
 export * from './LinearTransition';
+export * from './LinearStyleTransition';
 export * from './FadingTransition';
 export * from './SequencedTransition';
 export * from './JumpingTransition';
