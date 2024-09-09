@@ -7,7 +7,6 @@ type LogFunction = (data: LogData) => void;
 export enum LogLevel {
   warn = 1,
   error = 2,
-  fatal = 3,
 }
 
 export type LoggerConfig = {
@@ -36,7 +35,7 @@ function logToConsole(data: LogData) {
 export const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
   logFunction: logToConsole,
   level: LogLevel.warn,
-  strict: false,
+  strict: true,
 };
 
 function formatMessage(message: string) {
@@ -117,7 +116,7 @@ type LogOptions = {
 };
 
 function handleLog(
-  level: Exclude<LogBoxLogLevel, 'syntax'>,
+  level: Exclude<LogBoxLogLevel, 'syntax' | 'fatal'>,
   message: string,
   options: LogOptions
 ) {
@@ -143,9 +142,5 @@ export const logger = {
   error(message: string, options: LogOptions = {}) {
     'worklet';
     handleLog('error', message, options);
-  },
-  fatal(message: string, options: LogOptions = {}) {
-    'worklet';
-    handleLog('fatal', message, options);
   },
 };
