@@ -3,7 +3,7 @@ import Example from './Example';
 import useScreenSize from '@site/src/hooks/useScreenSize';
 import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
 import { Easing } from 'react-native-reanimated';
-import Controls from './Controls';
+import Controls from './Controls/Controls';
 import { ENTERING_ANIMATIONS, EXITING_ANIMATIONS } from './Example';
 
 export interface EnteringExitingConfigProps {
