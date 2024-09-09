@@ -145,7 +145,7 @@
     "prettier": "^3.3.3",
     "react": "18.3.1",
     "react-native": "0.75.2",
-    "react-native-builder-bob": "^0.30.0",
+    "react-native-builder-bob": "0.30.2",
     "react-native-gesture-handler": "2.18.0",
     "react-native-web": "0.19.11",
     "react-test-renderer": "18.2.0",
@@ -157,7 +157,12 @@
     "source": "src",
     "output": "lib",
     "targets": [
-      "module",
+      [
+        "module",
+        {
+          "esm": true
+        }
+      ],
       "typescript"
     ]
   },
