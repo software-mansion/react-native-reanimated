@@ -18,6 +18,7 @@ import com.facebook.react.uimanager.ViewManagerRegistry;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationController;
 import com.facebook.react.uimanager.layoutanimation.LayoutAnimationListener;
+import com.facebook.yoga.YogaDirection;
 import com.swmansion.reanimated.ReanimatedModule;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -281,8 +282,8 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
   }
 
   public synchronized void updateLayout(
-      int parentTag, int tag, int x, int y, int width, int height) {
-    super.updateLayout(parentTag, tag, x, y, width, height);
+      int parentTag, int tag, int x, int y, int width, int height, YogaDirection yogaDirection) {
+    super.updateLayout(parentTag, tag, x, y, width, height, yogaDirection);
     if (isLayoutAnimationDisabled()) {
       return;
     }

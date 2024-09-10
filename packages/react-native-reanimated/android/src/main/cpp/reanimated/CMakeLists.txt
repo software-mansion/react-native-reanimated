@@ -57,5 +57,5 @@ set_target_properties(
 target_link_libraries(
     reanimated
     worklets
-    ReactAndroid::react_nativemodule_core
+    ReactAndroid::reactnative
 )

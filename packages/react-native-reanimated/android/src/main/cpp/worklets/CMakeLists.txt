@@ -41,15 +41,6 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
         "${REACT_NATIVE_DIR}/ReactCommon/yoga"
         "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
     )
-
-    target_link_libraries(
-        worklets
-        ReactAndroid::fabricjni
-        ReactAndroid::react_debug
-        ReactAndroid::react_render_core
-        ReactAndroid::react_render_componentregistry
-        ReactAndroid::rrc_view
-    )
 endif()
 
 # build shared lib
@@ -63,10 +54,8 @@ set_target_properties(
 target_link_libraries(
     worklets
     log
-    ReactAndroid::folly_runtime
-    ReactAndroid::glog
+    ReactAndroid::reactnative
     ReactAndroid::jsi
-    ReactAndroid::reactnativejni
     fbjni::fbjni
 )
 
@@ -79,13 +68,13 @@ if(${JS_RUNTIME} STREQUAL "hermes")
     if(${HERMES_ENABLE_DEBUGGER})
         target_link_libraries(
             worklets
-            ReactAndroid::hermes_executor
+            "/Users/tomekzaw/Downloads/react-android-0.76.0-rc.0-debug/jni/${ANDROID_ABI}/libhermestooling.so"
         )
     endif()
 elseif(${JS_RUNTIME} STREQUAL "jsc")
     target_link_libraries(
         worklets
-        ReactAndroid::jscexecutor
+        "/Users/tomekzaw/Downloads/react-android-0.76.0-rc.0-debug/jni/${ANDROID_ABI}/libjsctooling.so"
     )
 elseif(${JS_RUNTIME} STREQUAL "v8")
     # TODO: Refactor this when adding support for newest V8
