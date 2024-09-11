@@ -615,15 +615,19 @@ template <typename T>
 void setYogaCurrentAndTargetValuePair(
     const jsi::Object *yogaValues,
     jsi::Runtime &runtime,
-    char *propName,
+    const char *propName,
     T &&currentValue,
     T &&targetValue) {
-  char currentPropName[7 + strlen(propName)];
-  char targetPropName[6 + strlen(propName)];
-  strcpy(currentPropName, "current");
-  strcat(currentPropName, propName);
-  strcpy(targetPropName, "target");
-  strcat(targetPropName, propName);
+  const auto current_word_len = 7;
+  const auto target_word_len = 6;
+
+  char currentPropName[50];
+  char targetPropName[50];
+
+  snprintf(currentPropName, current_word_len + 1, "current");
+  snprintf(currentPropName + current_word_len, strlen(propName) + 1, propName);
+  snprintf(targetPropName, target_word_len + 1, "target");
+  snprintf(targetPropName + target_word_len, strlen(propName) + 1, propName);
 
   yogaValues->setProperty(runtime, currentPropName, currentValue);
   yogaValues->setProperty(runtime, targetPropName, targetValue);
@@ -725,7 +729,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
       setYogaCurrentAndTargetValuePair(
           &yogaValues,
           uiRuntime_,
-          (char *)numericPropertiesNames[i],
+          numericPropertiesNames[i],
           currentStyleValues.numericPropertiesValues[i],
           targetStyleValues.numericPropertiesValues[i]);
     }
@@ -734,7 +738,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
       setYogaCurrentAndTargetValuePair(
           &yogaValues,
           uiRuntime_,
-          (char *)stringPropertiesNames[i],
+          stringPropertiesNames[i],
           currentStyleValues.stringPropertiesValues[i],
           targetStyleValues.stringPropertiesValues[i]);
     }

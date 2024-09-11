@@ -83,23 +83,15 @@ struct Snapshot {
   }
 };
 
-inline Float floatFromYogaFloat(float value) {
-  static_assert(
-      YGUndefined != YGUndefined,
-      "The code of this function assumes that YGUndefined is NaN.");
-  if (std::isnan(value) /* means: `value == YGUndefined` */) {
-    return std::numeric_limits<Float>::infinity();
-  }
-
-  return (Float)value;
-}
-
 inline Float floatFromYogaOptionalFloat(yoga::FloatOptional value) {
   if (value.isUndefined()) {
-    return std::numeric_limits<Float>::quiet_NaN();
+    return 0;
+  }
+  if (std::isnan(value.unwrap())) {
+    return 0;
   }
 
-  return floatFromYogaFloat(value.unwrap());
+  return (Float)value.unwrap();
 }
 
 inline Float floatFromYogaBorderWidthValue(const yoga::Style::Length &length) {
@@ -182,15 +174,15 @@ struct StyleSnapshot {
     numericPropertiesValues = {
         opacity,
 
-        double(borderTopLeftRadius),
-        double(borderTopRightRadius),
-        double(borderBottomLeftRadius),
-        double(borderBottomRightRadius),
+        static_cast<double>(borderTopLeftRadius), // int
+        static_cast<double>(borderTopRightRadius),
+        static_cast<double>(borderBottomLeftRadius),
+        static_cast<double>(borderBottomRightRadius),
 
-        double(leftBorderWidth),
-        double(rightBorderWidth),
-        double(topBorderWidth),
-        double(bottomBorderWidth)};
+        static_cast<double>(leftBorderWidth), // float
+        static_cast<double>(rightBorderWidth),
+        static_cast<double>(topBorderWidth),
+        static_cast<double>(bottomBorderWidth)};
 
     stringPropertiesValues = {backgroundColor, shadowColor};
   }
