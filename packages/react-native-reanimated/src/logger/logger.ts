@@ -2,6 +2,10 @@
 import { addLogBoxLog } from './LogBox';
 import type { LogData, LogBoxLogLevel } from './LogBox';
 
+const DOCS_URL =
+  'https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration';
+const DOCS_REFERENCE = `If you don't want to see this message, you can disable the \`strict\` mode. Refer to:\n${DOCS_URL} for more details.`;
+
 type LogFunction = (data: LogData) => void;
 
 export enum LogLevel {
@@ -131,6 +135,11 @@ function handleLog(
   ) {
     return;
   }
+
+  if (options.strict) {
+    message += `\n\n${DOCS_REFERENCE}`;
+  }
+
   config.logFunction(createLog(level, message));
 }
 
