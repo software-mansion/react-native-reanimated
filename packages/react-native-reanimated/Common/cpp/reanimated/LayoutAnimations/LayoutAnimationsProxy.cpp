@@ -588,6 +588,46 @@ void LayoutAnimationsProxy::createLayoutAnimation(
       tag, LayoutAnimation{finalView, currentView, parentView, {}, count});
 }
 
+void setYogaCurrentSnapshotValues(
+    const jsi::Object *yogaValues,
+    jsi::Runtime &runtime,
+    Snapshot currentValues) {
+  yogaValues->setProperty(runtime, "currentOriginX", currentValues.x);
+  yogaValues->setProperty(runtime, "currentGlobalOriginX", currentValues.x);
+  yogaValues->setProperty(runtime, "currentOriginY", currentValues.y);
+  yogaValues->setProperty(runtime, "currentGlobalOriginY", currentValues.y);
+  yogaValues->setProperty(runtime, "currentWidth", currentValues.width);
+  yogaValues->setProperty(runtime, "currentHeight", currentValues.height);
+}
+void setYogaTargetSnapshotValues(
+    const jsi::Object *yogaValues,
+    jsi::Runtime &runtime,
+    Snapshot targetValues) {
+  yogaValues->setProperty(runtime, "targetOriginX", targetValues.x);
+  yogaValues->setProperty(runtime, "targetGlobalOriginX", targetValues.x);
+  yogaValues->setProperty(runtime, "targetOriginY", targetValues.y);
+  yogaValues->setProperty(runtime, "targetGlobalOriginY", targetValues.y);
+  yogaValues->setProperty(runtime, "targetWidth", targetValues.width);
+  yogaValues->setProperty(runtime, "targetHeight", targetValues.height);
+}
+
+void setYogaCurrentandTargetValues(
+    const jsi::Object *yogaValues,
+    jsi::Runtime &runtime,
+    char *propName,
+    double currentValue,
+    double targetValue) {
+  char currentPropName[7 + strlen(propName)];
+  char targetPropName[6 + strlen(propName)];
+  strcpy(currentPropName, "current");
+  strcat(currentPropName, propName);
+  strcpy(targetPropName, "target");
+  strcat(targetPropName, propName);
+
+  yogaValues->setProperty(runtime, currentPropName, currentValue);
+  yogaValues->setProperty(runtime, targetPropName, targetValue);
+}
+
 void LayoutAnimationsProxy::startEnteringAnimation(
     const int tag,
     ShadowViewMutation &mutation) const {
@@ -608,12 +648,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
       surfaceManager.getWindow(mutation.newChildShadowView.surfaceId));
   uiScheduler_->scheduleOnUI([values, this, tag]() {
     jsi::Object yogaValues(uiRuntime_);
-    yogaValues.setProperty(uiRuntime_, "targetOriginX", values.x);
-    yogaValues.setProperty(uiRuntime_, "targetGlobalOriginX", values.x);
-    yogaValues.setProperty(uiRuntime_, "targetOriginY", values.y);
-    yogaValues.setProperty(uiRuntime_, "targetGlobalOriginY", values.y);
-    yogaValues.setProperty(uiRuntime_, "targetWidth", values.width);
-    yogaValues.setProperty(uiRuntime_, "targetHeight", values.height);
+    setYogaTargetSnapshotValues(&yogaValues, uiRuntime_, values);
     yogaValues.setProperty(uiRuntime_, "windowWidth", values.windowWidth);
     yogaValues.setProperty(uiRuntime_, "windowHeight", values.windowHeight);
     layoutAnimationsManager_->startLayoutAnimation(
@@ -635,12 +670,7 @@ void LayoutAnimationsProxy::startExitingAnimation(
 
   uiScheduler_->scheduleOnUI([values, this, tag]() {
     jsi::Object yogaValues(uiRuntime_);
-    yogaValues.setProperty(uiRuntime_, "currentOriginX", values.x);
-    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginX", values.x);
-    yogaValues.setProperty(uiRuntime_, "currentOriginY", values.y);
-    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginY", values.y);
-    yogaValues.setProperty(uiRuntime_, "currentWidth", values.width);
-    yogaValues.setProperty(uiRuntime_, "currentHeight", values.height);
+    setYogaCurrentSnapshotValues(&yogaValues, uiRuntime_, values);
     yogaValues.setProperty(uiRuntime_, "windowWidth", values.windowWidth);
     yogaValues.setProperty(uiRuntime_, "windowHeight", values.windowHeight);
     layoutAnimationsManager_->startLayoutAnimation(
@@ -677,18 +707,12 @@ void LayoutAnimationsProxy::startLayoutAnimation(
                               this,
                               tag]() {
     jsi::Object yogaValues(uiRuntime_);
-    yogaValues.setProperty(uiRuntime_, "currentOriginX", currentValues.x);
-    yogaValues.setProperty(uiRuntime_, "targetOriginX", targetValues.x);
-    yogaValues.setProperty(uiRuntime_, "currentOriginY", currentValues.y);
-    yogaValues.setProperty(uiRuntime_, "targetOriginY", targetValues.y);
-    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginX", currentValues.x);
-    yogaValues.setProperty(uiRuntime_, "targetGlobalOriginX", targetValues.x);
-    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginY", currentValues.y);
-    yogaValues.setProperty(uiRuntime_, "targetGlobalOriginY", targetValues.y);
-    yogaValues.setProperty(uiRuntime_, "currentWidth", currentValues.width);
-    yogaValues.setProperty(uiRuntime_, "targetWidth", targetValues.width);
-    yogaValues.setProperty(uiRuntime_, "currentHeight", currentValues.height);
-    yogaValues.setProperty(uiRuntime_, "targetHeight", targetValues.height);
+
+    setYogaCurrentSnapshotValues(&yogaValues, uiRuntime_, currentValues);
+    ;
+    setYogaTargetSnapshotValues(&yogaValues, uiRuntime_, targetValues);
+    ;
+
     yogaValues.setProperty(
         uiRuntime_, "currentWindowWidth", currentValues.windowWidth);
     yogaValues.setProperty(
@@ -698,22 +722,12 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     yogaValues.setProperty(
         uiRuntime_, "targetWindowHeight", targetValues.windowHeight);
 
-    for (int i = 0; i < 9; i++) {
-      char currentPropName[7 + strlen(numericPropertiesNames[i])];
-      char targetPropName[6 + strlen(numericPropertiesNames[i])];
-
-      strcpy(currentPropName, "current");
-      strcat(currentPropName, numericPropertiesNames[i]);
-      strcpy(targetPropName, "target");
-      strcat(targetPropName, numericPropertiesNames[i]);
-
-      yogaValues.setProperty(
+    for (int i = 0; i < numberOfNumericProperties; i++) {
+      setYogaCurrentandTargetValues(
+          &yogaValues,
           uiRuntime_,
-          currentPropName,
-          currentStyleValues.numericPropertiesValues[i]);
-      yogaValues.setProperty(
-          uiRuntime_,
-          targetPropName,
+          (char *)numericPropertiesNames[i],
+          currentStyleValues.numericPropertiesValues[i],
           targetStyleValues.numericPropertiesValues[i]);
     }
 

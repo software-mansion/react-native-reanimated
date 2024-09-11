@@ -110,22 +110,26 @@ inline Float floatFromYogaBorderWidthValue(const yoga::Style::Length &length) {
   return 0;
 }
 
-const char *numericPropertiesNames[10] = {
-    "Opacity",
-    "BorderTopLeftRadius",
+extern const int numberOfNumericProperties = 9;
+
+const char *numericPropertiesNames[numberOfNumericProperties] = {
+    "Opacity", // double
+
+    "BorderTopLeftRadius", // int
     "BorderTopRightRadius",
     "BorderBottomLeftRadius",
     "BorderBottomRightRadius",
 
-    "BorderLeftWidth",
+    "BorderLeftWidth", // float
     "BorderRightWidth",
     "BorderTopWidth",
     "BorderBottomWidth"};
 
 struct StyleSnapshot {
-  int numOfProperties = 10;
+  double opacity;
   std::string backgroundColor;
   std::string shadowColor;
+
   std::array<double, 10> numericPropertiesValues;
   StyleSnapshot(
       jsi::Runtime &runtime,
@@ -163,13 +167,13 @@ struct StyleSnapshot {
       borderBottomRightRadius = props->borderRadii.bottomRight.value().value;
     }
 
-    auto left = floatFromYogaBorderWidthValue(
+    auto leftBorderWidth = floatFromYogaBorderWidthValue(
         props->yogaStyle.border(yoga::Edge::Left));
-    auto right = floatFromYogaBorderWidthValue(
+    auto rightBorderWidth = floatFromYogaBorderWidthValue(
         props->yogaStyle.border(yoga::Edge::Right));
-    auto top =
+    auto topBorderWidth =
         floatFromYogaBorderWidthValue(props->yogaStyle.border(yoga::Edge::Top));
-    auto bottom = floatFromYogaBorderWidthValue(
+    auto bottomBorderWidth = floatFromYogaBorderWidthValue(
         props->yogaStyle.border(yoga::Edge::Bottom));
 
     numericPropertiesValues = {
@@ -179,10 +183,10 @@ struct StyleSnapshot {
         double(borderBottomLeftRadius),
         double(borderBottomRightRadius),
 
-        double(left),
-        double(right),
-        double(top),
-        double(bottom)};
+        double(leftBorderWidth),
+        double(rightBorderWidth),
+        double(topBorderWidth),
+        double(bottomBorderWidth)};
   }
 };
 
