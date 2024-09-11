@@ -16,6 +16,7 @@ const config = getDefaultConfig(projectRoot);
 // 1. Watch all files within the monorepo
 config.watchFolders = [monorepoRoot];
 // 2. Let Metro know where to resolve packages and in what order
+// @ts-expect-error
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(monorepoRoot, 'node_modules'),
@@ -23,6 +24,7 @@ config.resolver.nodeModulesPaths = [
 
 const modulesToBlock = ['@react-native'];
 
+// @ts-expect-error
 config.resolver.blacklistRE = exclusionList(
   modulesToBlock.map(
     (m) =>
@@ -30,4 +32,5 @@ config.resolver.blacklistRE = exclusionList(
   )
 );
 
+// @ts-expect-error
 module.exports = wrapWithReanimatedMetroConfig(config);

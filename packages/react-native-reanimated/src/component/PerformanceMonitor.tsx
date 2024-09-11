@@ -166,9 +166,11 @@ export type PerformanceMonitorProps = {
 };
 
 /**
- * A component that lets you measure fps values on JS and UI threads on both the Paper and Fabric architectures.
+ * A component that lets you measure fps values on JS and UI threads on both the
+ * Paper and Fabric architectures.
  *
- * @param smoothingFrames - Determines amount of saved frames which will be used for fps value smoothing.
+ * @param smoothingFrames - Determines amount of saved frames which will be used
+ *   for fps value smoothing.
  */
 export function PerformanceMonitor({
   smoothingFrames = DEFAULT_BUFFER_SIZE,

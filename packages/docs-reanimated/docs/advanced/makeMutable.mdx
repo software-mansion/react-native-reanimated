@@ -30,6 +30,8 @@ const mv = makeMutable(100);
 ```typescript
 interface SharedValue<Value = unknown> {
   value: Value;
+  get(): Value;
+  set(value: Value | ((value: Value) => Value)): void;
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
   modify: (
@@ -47,13 +49,13 @@ function makeMutable<Value>(initial: Value): SharedValue<Value>;
 
 #### `initial`
 
-The value you want to be initially stored to a `.value` property. It can be any JavaScript value like `number`, `string` or `boolean` but also data structures such as `array` and `object`.
+The value you want to be initially stored in the mutable. It can be any JavaScript value like `number`, `string` or `boolean` but also data structures such as `array` and `object`.
 
 ### Returns
 
-`makeMutable` returns a mutable value with a single `value` property initially set to the `initial`.
+`makeMutable` returns a mutable value initially set to the `initial`.
 
-Data stored in mutable values can be accessed and modified by their `.value` property.
+You can access data stored in the mutable with either its `value` property or `get` and `set` methods.
 
 ## Example
 

@@ -3,7 +3,6 @@
 #include <jsi/jsi.h>
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "Shareables.h"
 #include "WorkletRuntime.h"

@@ -12,12 +12,12 @@ import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
 import java.util.ArrayList;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec
     implements LifecycleEventListener, UIManagerModuleListener, UIManagerListener {
-  public static final String NAME = "ReanimatedModule";
 
   public void didDispatchMountItems(@NonNull UIManager uiManager) {
     // Keep: Required for UIManagerListener
@@ -78,7 +78,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
         throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
       }
     } else {
-      UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
+      UIManagerModule uiManager =
+          Objects.requireNonNull(reactCtx.getNativeModule(UIManagerModule.class));
       uiManager.addUIManagerListener(this);
     }
     reactCtx.addLifecycleEventListener(this);
@@ -121,11 +122,6 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
         });
   }
 
-  @Override
-  public String getName() {
-    return NAME;
-  }
-
   /*package*/
   public NodesManager getNodesManager() {
     if (mNodesManager == null) {
@@ -139,7 +135,9 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   public boolean installTurboModule(String valueUnpackerCode) {
     // When debugging in chrome the JS context is not available.
     // https://github.com/facebook/react-native/blob/v0.67.0-rc.6/ReactAndroid/src/main/java/com/facebook/react/modules/blob/BlobCollector.java#L25
-    Utils.isChromeDebugger = getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
+    Utils.isChromeDebugger =
+        Objects.requireNonNull(getReactApplicationContext().getJavaScriptContextHolder()).get()
+            == 0;
 
     if (!Utils.isChromeDebugger) {
       this.getNodesManager().initWithContext(getReactApplicationContext(), valueUnpackerCode);
@@ -153,12 +151,12 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   }
 
   @ReactMethod
-  public void addListener(String eventName) {
+  public void addListener(String ignoredEventName) {
     // Keep: Required for RN built in Event Emitter Calls.
   }
 
   @ReactMethod
-  public void removeListeners(Integer count) {
+  public void removeListeners(Integer ignoredCount) {
     // Keep: Required for RN built in Event Emitter Calls.
   }
 
