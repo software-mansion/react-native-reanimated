@@ -5,7 +5,7 @@ import type {
   SharedTransitionAnimationsValues,
   CustomProgressAnimation,
   ProgressAnimation,
-  LayoutAnimationsOptions,
+  NumericLayoutAnimationsOptions,
 } from '../animationBuilder/commonTypes';
 import {
   LayoutAnimationType,
@@ -190,7 +190,7 @@ export class SharedTransition {
               .charAt(0)
               .toUpperCase()}${propName.slice(
               1
-            )}` as Capitalize<LayoutAnimationsOptions>;
+            )}` as Capitalize<NumericLayoutAnimationsOptions>;
             const keyToTargetValue = `target${capitalizedPropName}` as const;
             animations[propName] = withTiming(values[keyToTargetValue], {
               reduceMotion,
@@ -205,7 +205,7 @@ export class SharedTransition {
           initialValues.transformMatrix = values.currentTransformMatrix;
         } else {
           const capitalizedPropName = (propName.charAt(0).toUpperCase() +
-            propName.slice(1)) as Capitalize<LayoutAnimationsOptions>;
+            propName.slice(1)) as Capitalize<NumericLayoutAnimationsOptions>;
           const keyToCurrentValue = `current${capitalizedPropName}` as const;
           initialValues[propName] = values[keyToCurrentValue];
         }
@@ -239,7 +239,9 @@ export class SharedTransition {
         } else {
           // PropertyName == propertyName with capitalized fist letter, (width -> Width)
           const PropertyName = (propertyName.charAt(0).toUpperCase() +
-            propertyName.slice(1)) as Capitalize<LayoutAnimationsOptions>;
+            propertyName.slice(
+              1
+            )) as Capitalize<NumericLayoutAnimationsOptions>;
           const currentPropertyName = `current${PropertyName}` as const;
           const targetPropertyName = `target${PropertyName}` as const;
 

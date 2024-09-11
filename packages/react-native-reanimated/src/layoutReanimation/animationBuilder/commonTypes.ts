@@ -6,7 +6,7 @@ import type {
   EasingFunction,
 } from '../../commonTypes';
 
-export type LayoutAnimationsOptions =
+export type NumericLayoutAnimationsOptions =
   | `origin${'X' | 'Y'}`
   | `globalOrigin${'X' | 'Y'}`
   | 'width'
@@ -16,13 +16,19 @@ export type LayoutAnimationsOptions =
   | `border${'Top' | 'Bottom'}${'Left' | 'Right'}Radius`
   | `border${'Top' | 'Bottom' | 'Left' | 'Right'}Width`;
 
-type CurrentLayoutAnimationsValues = {
-  [K in LayoutAnimationsOptions as `current${Capitalize<string & K>}`]: number;
-} & { currentBackgroundColor: string; currentShadowColor: string };
+type StringLayoutAnimationsOptions = 'backgroundColor';
 
-type TargetLayoutAnimationsValues = {
-  [K in LayoutAnimationsOptions as `target${Capitalize<string & K>}`]: number;
-} & { targetBackgroundColor: string; targetShadowColor: string };
+type CurrentLayoutAnimationsValues = Record<
+  `current${Capitalize<NumericLayoutAnimationsOptions>}`,
+  number
+> &
+  Record<`current${Capitalize<StringLayoutAnimationsOptions>}`, string>;
+
+type TargetLayoutAnimationsValues = Record<
+  `target${Capitalize<NumericLayoutAnimationsOptions>}`,
+  number
+> &
+  Record<`target${Capitalize<StringLayoutAnimationsOptions>}`, string>;
 
 interface WindowDimensions {
   windowWidth: number;

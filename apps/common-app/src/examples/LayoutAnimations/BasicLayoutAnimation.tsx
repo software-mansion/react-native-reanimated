@@ -22,9 +22,9 @@ export default function BasicLayoutAnimation() {
               opacity: state ? 1 : 0.1,
 
               borderLeftWidth: state ? 1 : 5,
-              borderRightWidth: state ? 10 : 5,
+              borderRightWidth: state ? 15 : 5,
               borderTopWidth: state ? 1 : 5,
-              borderBottomWidth: state ? 15 : 5,
+              borderBottomWidth: state ? 30 : 5,
 
               borderTopLeftRadius: state ? 20 : 100,
               borderBottomRightRadius: state ? 50 : 100,
