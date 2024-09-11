@@ -110,8 +110,12 @@ inline Float floatFromYogaBorderWidthValue(const yoga::Style::Length &length) {
   return 0;
 }
 
-extern const int numberOfNumericProperties = 9;
+extern const int numberOfStringProperties = 2;
+const char *stringPropertiesNames[numberOfStringProperties] = {
+    "BackgroundColor",
+    "ShadowColor"};
 
+extern const int numberOfNumericProperties = 9;
 const char *numericPropertiesNames[numberOfNumericProperties] = {
     "Opacity", // double
 
@@ -126,11 +130,9 @@ const char *numericPropertiesNames[numberOfNumericProperties] = {
     "BorderBottomWidth"};
 
 struct StyleSnapshot {
-  double opacity;
-  std::string backgroundColor;
-  std::string shadowColor;
+  std::array<double, numberOfNumericProperties> numericPropertiesValues;
+  std::array<std::string, numberOfStringProperties> stringPropertiesValues;
 
-  std::array<double, 10> numericPropertiesValues;
   StyleSnapshot(
       jsi::Runtime &runtime,
       const ShadowView &shadowView,
@@ -139,17 +141,18 @@ struct StyleSnapshot {
         static_cast<const ViewProps *>(shadowView.props.get());
 
 #ifdef __ANDROID__
-    backgroundColor = colorToString(props->backgroundColor.color_);
-    shadowColor = colorToString(props->shadowColor.color_);
+    auto backgroundColor = colorToString(props->backgroundColor.color_);
+    auto shadowColor = colorToString(props->shadowColor.color_);
 #else
-    backgroundColor = colorToString(props->backgroundColor);
-    shadowColor = colorToString(props->shadowColor);
+    auto backgroundColor = colorToString(props->backgroundColor);
+    auto shadowColor = colorToString(props->shadowColor);
 #endif
 
     auto opacity = props->opacity;
     auto borderTopLeftRadius = 0, borderTopRightRadius = 0,
          borderBottomLeftRadius = 0, borderBottomRightRadius = 0;
     auto borderRadii = props->borderRadii;
+
     if (borderRadii.all.has_value()) {
       borderTopLeftRadius = borderTopRightRadius = borderBottomLeftRadius =
           borderBottomRightRadius = props->borderRadii.all.value().value;
@@ -178,6 +181,7 @@ struct StyleSnapshot {
 
     numericPropertiesValues = {
         opacity,
+
         double(borderTopLeftRadius),
         double(borderTopRightRadius),
         double(borderBottomLeftRadius),
@@ -187,6 +191,8 @@ struct StyleSnapshot {
         double(rightBorderWidth),
         double(topBorderWidth),
         double(bottomBorderWidth)};
+
+    stringPropertiesValues = {backgroundColor, shadowColor};
   }
 };
 

@@ -611,12 +611,13 @@ void setYogaTargetSnapshotValues(
   yogaValues->setProperty(runtime, "targetHeight", targetValues.height);
 }
 
-void setYogaCurrentandTargetValues(
+template <typename T>
+void setYogaCurrentAndTargetValues(
     const jsi::Object *yogaValues,
     jsi::Runtime &runtime,
     char *propName,
-    double currentValue,
-    double targetValue) {
+    T &&currentValue,
+    T &&targetValue) {
   char currentPropName[7 + strlen(propName)];
   char targetPropName[6 + strlen(propName)];
   strcpy(currentPropName, "current");
@@ -709,9 +710,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     jsi::Object yogaValues(uiRuntime_);
 
     setYogaCurrentSnapshotValues(&yogaValues, uiRuntime_, currentValues);
-    ;
     setYogaTargetSnapshotValues(&yogaValues, uiRuntime_, targetValues);
-    ;
 
     yogaValues.setProperty(
         uiRuntime_, "currentWindowWidth", currentValues.windowWidth);
@@ -723,7 +722,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
         uiRuntime_, "targetWindowHeight", targetValues.windowHeight);
 
     for (int i = 0; i < numberOfNumericProperties; i++) {
-      setYogaCurrentandTargetValues(
+      setYogaCurrentAndTargetValues(
           &yogaValues,
           uiRuntime_,
           (char *)numericPropertiesNames[i],
@@ -731,16 +730,14 @@ void LayoutAnimationsProxy::startLayoutAnimation(
           targetStyleValues.numericPropertiesValues[i]);
     }
 
-    yogaValues.setProperty(
-        uiRuntime_,
-        "currentBackgroundColor",
-        currentStyleValues.backgroundColor);
-    yogaValues.setProperty(
-        uiRuntime_, "targetBackgroundColor", targetStyleValues.backgroundColor);
-    yogaValues.setProperty(
-        uiRuntime_, "currentShadowColor", currentStyleValues.shadowColor);
-    yogaValues.setProperty(
-        uiRuntime_, "targetShadowColor", targetStyleValues.shadowColor);
+    for (int i = 0; i < numberOfStringProperties; i++) {
+      setYogaCurrentAndTargetValues(
+          &yogaValues,
+          uiRuntime_,
+          (char *)stringPropertiesNames[i],
+          currentStyleValues.stringPropertiesValues[i],
+          targetStyleValues.stringPropertiesValues[i]);
+    }
 
     layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime_, tag, LayoutAnimationType::LAYOUT, yogaValues);
