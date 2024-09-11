@@ -7,22 +7,14 @@ import type {
 } from '../../commonTypes';
 
 export type LayoutAnimationsOptions =
-  | 'originX'
-  | 'originY'
-  | 'globalOriginX'
-  | 'globalOriginY'
+  | `origin${'X' | 'Y'}`
+  | `globalOrigin${'X' | 'Y'}`
   | 'width'
   | 'height'
   | 'opacity'
   | 'borderRadius'
-  | 'borderTopLeftRadius'
-  | 'borderTopRightRadius'
-  | 'borderBottomLeftRadius'
-  | 'borderBottomRightRadius'
-  | 'shadowOpacity'
-  | 'shadowRadius'
-  | 'shadowOffsetHeight'
-  | 'shadowOffsetWidth';
+  | `border${'Top' | 'Bottom'}${'Left' | 'Right'}Radius`
+  | `border${'Top' | 'Bottom' | 'Left' | 'Right'}Width`;
 
 type CurrentLayoutAnimationsValues = {
   [K in LayoutAnimationsOptions as `current${Capitalize<string & K>}`]: number;

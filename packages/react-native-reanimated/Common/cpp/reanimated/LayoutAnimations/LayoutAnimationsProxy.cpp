@@ -588,7 +588,7 @@ void LayoutAnimationsProxy::createLayoutAnimation(
       tag, LayoutAnimation{finalView, currentView, parentView, {}, count});
 }
 
-void setYogaCurrentSnapshotValues(
+void setYogaCurrentSnapshotProperties(
     const jsi::Object *yogaValues,
     jsi::Runtime &runtime,
     Snapshot currentValues) {
@@ -599,7 +599,7 @@ void setYogaCurrentSnapshotValues(
   yogaValues->setProperty(runtime, "currentWidth", currentValues.width);
   yogaValues->setProperty(runtime, "currentHeight", currentValues.height);
 }
-void setYogaTargetSnapshotValues(
+void setYogaTargetSnapshotProperties(
     const jsi::Object *yogaValues,
     jsi::Runtime &runtime,
     Snapshot targetValues) {
@@ -612,7 +612,7 @@ void setYogaTargetSnapshotValues(
 }
 
 template <typename T>
-void setYogaCurrentAndTargetValues(
+void setYogaCurrentAndTargetValuePair(
     const jsi::Object *yogaValues,
     jsi::Runtime &runtime,
     char *propName,
@@ -649,7 +649,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
       surfaceManager.getWindow(mutation.newChildShadowView.surfaceId));
   uiScheduler_->scheduleOnUI([values, this, tag]() {
     jsi::Object yogaValues(uiRuntime_);
-    setYogaTargetSnapshotValues(&yogaValues, uiRuntime_, values);
+    setYogaTargetSnapshotProperties(&yogaValues, uiRuntime_, values);
     yogaValues.setProperty(uiRuntime_, "windowWidth", values.windowWidth);
     yogaValues.setProperty(uiRuntime_, "windowHeight", values.windowHeight);
     layoutAnimationsManager_->startLayoutAnimation(
@@ -671,7 +671,7 @@ void LayoutAnimationsProxy::startExitingAnimation(
 
   uiScheduler_->scheduleOnUI([values, this, tag]() {
     jsi::Object yogaValues(uiRuntime_);
-    setYogaCurrentSnapshotValues(&yogaValues, uiRuntime_, values);
+    setYogaCurrentSnapshotProperties(&yogaValues, uiRuntime_, values);
     yogaValues.setProperty(uiRuntime_, "windowWidth", values.windowWidth);
     yogaValues.setProperty(uiRuntime_, "windowHeight", values.windowHeight);
     layoutAnimationsManager_->startLayoutAnimation(
@@ -709,8 +709,8 @@ void LayoutAnimationsProxy::startLayoutAnimation(
                               tag]() {
     jsi::Object yogaValues(uiRuntime_);
 
-    setYogaCurrentSnapshotValues(&yogaValues, uiRuntime_, currentValues);
-    setYogaTargetSnapshotValues(&yogaValues, uiRuntime_, targetValues);
+    setYogaCurrentSnapshotProperties(&yogaValues, uiRuntime_, currentValues);
+    setYogaTargetSnapshotProperties(&yogaValues, uiRuntime_, targetValues);
 
     yogaValues.setProperty(
         uiRuntime_, "currentWindowWidth", currentValues.windowWidth);
@@ -722,7 +722,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
         uiRuntime_, "targetWindowHeight", targetValues.windowHeight);
 
     for (int i = 0; i < numberOfNumericProperties; i++) {
-      setYogaCurrentAndTargetValues(
+      setYogaCurrentAndTargetValuePair(
           &yogaValues,
           uiRuntime_,
           (char *)numericPropertiesNames[i],
@@ -731,7 +731,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     }
 
     for (int i = 0; i < numberOfStringProperties; i++) {
-      setYogaCurrentAndTargetValues(
+      setYogaCurrentAndTargetValuePair(
           &yogaValues,
           uiRuntime_,
           (char *)stringPropertiesNames[i],
