@@ -68,13 +68,13 @@ if(${JS_RUNTIME} STREQUAL "hermes")
     if(${HERMES_ENABLE_DEBUGGER})
         target_link_libraries(
             worklets
-            "/Users/tomekzaw/Downloads/react-android-0.76.0-rc.0-debug/jni/${ANDROID_ABI}/libhermestooling.so"
+            ReactAndroid::hermestooling
         )
     endif()
 elseif(${JS_RUNTIME} STREQUAL "jsc")
     target_link_libraries(
         worklets
-        "/Users/tomekzaw/Downloads/react-android-0.76.0-rc.0-debug/jni/${ANDROID_ABI}/libjsctooling.so"
+        ReactAndroid::jsctooling
     )
 elseif(${JS_RUNTIME} STREQUAL "v8")
     # TODO: Refactor this when adding support for newest V8
