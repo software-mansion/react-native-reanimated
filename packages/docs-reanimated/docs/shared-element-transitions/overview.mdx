@@ -57,7 +57,7 @@ export default function SharedElementExample() {
 }
 ```
 
-## How it works
+## Overview
 
 When Reanimated detects that a component with a `sharedTransitionTag` is being mounted or unmounted, it tries to find the last registered view with the same `sharedTransitionTag`.
 
@@ -67,7 +67,7 @@ After the animation is complete, they are attached back to their original parent
 
 If you don't create a custom animation, all snapshot properties, including `width`, `height`, `originX`, `originY`, and `transformMatrix`, are animated by default with a duration of 500ms using the `withTiming` animation.
 
-## Using a shared element transition
+## Implementation
 
 To create a shared transition animation between two components on different screens, simply assign the same `sharedTransitionTag` to both components. When you navigate between screens, the shared transition animation will automatically play.
 
