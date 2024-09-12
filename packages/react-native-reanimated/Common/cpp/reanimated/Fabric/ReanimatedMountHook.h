@@ -5,7 +5,6 @@
 #include "PropsRegistry.h"
 
 #include <react/renderer/uimanager/UIManagerMountHook.h>
-#include "NativeReanimatedModule.h"
 #include "ShadowTreeCloner.h"
 
 #include <memory>
