@@ -60,7 +60,6 @@ function createLayoutAnimationManager(): {
         global.ProgressTransitionRegister.onTransitionStart(tag, yogaValues);
         return;
       }
-      console.log(yogaValues);
 
       const style = config(yogaValues);
       let currentAnimation = style.animations;
