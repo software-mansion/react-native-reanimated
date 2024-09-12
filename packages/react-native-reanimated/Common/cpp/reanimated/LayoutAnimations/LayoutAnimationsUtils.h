@@ -85,13 +85,9 @@ struct Snapshot {
 };
 
 inline Float floatFromYogaOptionalFloat(yoga::FloatOptional value) {
-  if (value.isUndefined()) {
+  if (value.isUndefined() || std::isnan(value.unwrap())) {
     return 0;
   }
-  if (std::isnan(value.unwrap())) {
-    return 0;
-  }
-
   return (Float)value.unwrap();
 }
 

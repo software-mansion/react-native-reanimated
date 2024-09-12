@@ -727,7 +727,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     yogaValues.setProperty(
         uiRuntime_, "targetWindowHeight", targetValues.windowHeight);
 
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < numberOfNumericProperties; i++) {
       setYogaCurrentAndTargetValuePair(
           &yogaValues,
           uiRuntime_,
@@ -736,7 +736,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
           targetStyleValues.numericPropertiesValues[i]);
     }
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < numberOfStringProperties; i++) {
       setYogaCurrentAndTargetValuePair(
           &yogaValues,
           uiRuntime_,
