@@ -138,14 +138,8 @@ import SharedElementSrc from '!!raw-loader!@site/src/examples/SharedElementTrans
 - You can only animate `width`, `height`, `originX`, `originY`, and `transformMatrix` properties when using the shared transition.
 - The layout for shared view children is not computed during the transition.
 - The current implementation supports only the old React Native architecture - **Paper**.
+- In the future we will introduce support for the new React Native architexture (Fabric).
+
+## Platform Compatibility
 
 <PlatformCompatibility android ios />
-
-## Plans for future
-
-- Enable the animation of all possible styles during a shared transition.
-- Calculate the layout for shared view children during the transition.
-- Add possibility to implement own screen transition with a customized animation for screen changes.
-- Allow shared transition to work for components located within the same screen.
-- Create a progress-based transition animation that can be controlled by swiping back (iOS only).
-- Support for the new React Native architecture (Fabric)
