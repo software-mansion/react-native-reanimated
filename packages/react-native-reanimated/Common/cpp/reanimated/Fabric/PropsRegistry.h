@@ -38,15 +38,15 @@ class PropsRegistry {
   void unpauseReanimatedCommits() {
     isPaused_ = false;
   }
-  
+
   void pleaseFlush() {
     shouldFlush_ = true;
   }
-  
+
   bool shouldFlush() {
     return shouldFlush_.exchange(false);
   }
-  
+
  private:
   std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>> map_;
 

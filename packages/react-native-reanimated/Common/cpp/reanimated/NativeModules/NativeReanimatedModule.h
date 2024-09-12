@@ -231,7 +231,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
 
-
   std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #else
   const ObtainPropFunction obtainPropFunction_;

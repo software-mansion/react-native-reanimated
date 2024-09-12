@@ -648,7 +648,8 @@ void NativeReanimatedModule::performOperations() {
   {
     auto lock = propsRegistry_->createLock();
 
-    if (copiedOperationsQueue.size() > 0 && propsRegistry_->shouldReanimatedSkipCommit()) {
+    if (copiedOperationsQueue.size() > 0 &&
+        propsRegistry_->shouldReanimatedSkipCommit()) {
       propsRegistry_->pleaseFlush();
     }
 
@@ -744,13 +745,12 @@ void NativeReanimatedModule::performOperations() {
 
           return rootNode;
         },
-        { /* .enableStateReconciliation = */
-          false,
-              /* .mountSynchronously = */ true,
-              /* .shouldYield = */ [this]() {
-                return propsRegistry_->shouldReanimatedSkipCommit();
-              }
-        });
+        {/* .enableStateReconciliation = */
+         false,
+         /* .mountSynchronously = */ true,
+         /* .shouldYield = */ [this]() {
+           return propsRegistry_->shouldReanimatedSkipCommit();
+         }});
   });
 }
 
