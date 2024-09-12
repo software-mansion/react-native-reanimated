@@ -60,7 +60,8 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // props will be applied in ReanimatedCommitHook by iterating over
     // PropsRegistry.
     // This is very important, since if we didn't pause Reanimated commits,
-    // it could lead to RN commits being delayed until the animation is finished (very bad).
+    // it could lead to RN commits being delayed until the animation is finished
+    // (very bad).
     propsRegistry_->pauseReanimatedCommits();
   }
 
