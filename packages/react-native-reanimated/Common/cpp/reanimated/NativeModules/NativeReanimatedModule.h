@@ -23,9 +23,7 @@
 #include "LayoutAnimationsProxy.h"
 #include "PropsRegistry.h"
 #include "ReanimatedCommitHook.h"
-#if REACT_NATIVE_MINOR_VERSION >= 73
 #include "ReanimatedMountHook.h"
-#endif
 #endif
 
 namespace reanimated {

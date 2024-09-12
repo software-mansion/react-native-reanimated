@@ -56,7 +56,6 @@ void ReanimatedMountHook::shadowTreeDidMount(
 
                   // Mark the commit as Reanimated commit so that we can
                   // distinguish it in ReanimatedCommitHook.
-
                   auto reaShadowNode =
                       std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
                           rootNode);

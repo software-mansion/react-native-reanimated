@@ -54,11 +54,13 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
 
-    // If the commit comes from React Native then skip one commit from
+    // If the commit comes from React Native then pause commits from
     // Reanimated since the ShadowTree to be committed by Reanimated may not
     // include the new changes from React Native yet and all changes of animated
     // props will be applied in ReanimatedCommitHook by iterating over
     // PropsRegistry.
+    // This is very important, since if we didn't pause Reanimated commits,
+    // it could lead to RN commits being delayed until the animation is finished (very bad).
     propsRegistry_->pauseReanimatedCommits();
   }
 
