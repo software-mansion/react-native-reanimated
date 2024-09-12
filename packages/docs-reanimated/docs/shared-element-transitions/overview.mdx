@@ -93,7 +93,7 @@ If you want to use more than one shared view on the same screen, be sure to assi
 
 ## Custom animation
 
-You can create custom animation by using `SharedTransition.custom`.
+You can create custom animation by using `SharedTransition.custom` for regular animations or `SharedTransition.progressAnimation` for progress-based animations.
 
 ```js
 import { SharedTransition } from 'react-native-reanimated';
@@ -104,8 +104,27 @@ const transition = SharedTransition.custom((values) => {
     height: withSpring(values.targetHeight),
     width: withSpring(values.targetWidth),
   };
-});
+})
+  .progressAnimation((values, progress) => {
+    'worklet';
+    const getValue = (
+      progress: number,
+      target: number,
+      current: number
+    ): number => {
+      return progress * (target - current) + current;
+    };
+    return {
+      width: getValue(progress, values.targetWidth, values.currentWidth),
+      height: getValue(progress, values.targetHeight, values.currentHeight),
+    };
+  })
+  .defaultTransitionType(SharedTransitionType.ANIMATION);
 ```
+
+By combining these methods and setting `defaultTransitionType(SharedTransitionType.ANIMATION)`, you specify that the custom animation will be used for screen transitions, while the progress-based animation will be applied during swipe back gesture (**iOS only**).
+
+Setting `defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION)` will apply progress-based animation in both scenarios.
 
 Then, to use it, simply pass your custom animation as `sharedTransitionStyle` prop to both your screen's components (just as with the `sharedTransitionTag`).
 
