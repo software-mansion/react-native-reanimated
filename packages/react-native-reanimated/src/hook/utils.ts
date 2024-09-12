@@ -1,5 +1,6 @@
 'use strict';
 import type { WorkletFunction } from '../commonTypes';
+import { ReanimatedError } from '../errors';
 import type { DependencyList } from './commonTypes';
 
 // Builds one big hash from multiple worklets' hashes.
@@ -89,7 +90,7 @@ export function isAnimated(prop: unknown) {
 // return empty array of primitives and on arrays
 // it returns array of its indices.
 export function shallowEqual<
-  T extends Record<string | number | symbol, unknown>
+  T extends Record<string | number | symbol, unknown>,
 >(a: T, b: T) {
   'worklet';
   const aKeys = Object.keys(a);
@@ -108,12 +109,12 @@ export function shallowEqual<
 export function validateAnimatedStyles(styles: unknown[] | object) {
   'worklet';
   if (typeof styles !== 'object') {
-    throw new Error(
-      `[Reanimated] \`useAnimatedStyle\` has to return an object, found ${typeof styles} instead.`
+    throw new ReanimatedError(
+      `\`useAnimatedStyle\` has to return an object, found ${typeof styles} instead.`
     );
   } else if (Array.isArray(styles)) {
-    throw new Error(
-      '[Reanimated] `useAnimatedStyle` has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
+    throw new ReanimatedError(
+      '`useAnimatedStyle` has to return an object and cannot return static styles combined with dynamic ones. Please do merging where a component receives props.'
     );
   }
 }

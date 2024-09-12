@@ -2,6 +2,7 @@ import com.android.Version
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonSlurper
+import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask
 
 import javax.inject.Inject
 import java.nio.file.Files
@@ -75,21 +76,10 @@ def resolveReactNativeDirectory() {
         return file(reactNativeLocation)
     }
 
-    // monorepo workaround
-    // react-native can be hoisted or in project's own node_modules
-    def reactNativeFromProjectNodeModules = file("${rootProject.projectDir}/../node_modules/react-native")
-    if (reactNativeFromProjectNodeModules.exists()) {
-        return reactNativeFromProjectNodeModules
-    }
-
-    def reactNativeFromReanimatedMonorepo = file("${projectDir}/../../../node_modules/react-native")
-    if (reactNativeFromReanimatedMonorepo.exists()) {
-        return reactNativeFromReanimatedMonorepo
-    }
-    
-    def reactNativeFromNodeModulesWithReanimated = file("${projectDir}/../../react-native")
-    if (reactNativeFromNodeModulesWithReanimated.exists()) {
-        return reactNativeFromNodeModulesWithReanimated
+    // Fallback to node resolver for custom directory structures like monorepos.
+    def reactNativePackage = file(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim())
+    if(reactNativePackage.exists()) {
+        return reactNativePackage.parentFile
     }
 
     throw new GradleException(
@@ -279,6 +269,7 @@ android {
     }
     externalNativeBuild {
         cmake {
+            version = System.getenv("CMAKE_VERSION") ?: "3.22.1"
             path "CMakeLists.txt"
         }
     }
@@ -408,6 +399,22 @@ android {
                 srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/latest"
             }
         }
+    }
+    tasks.withType(ExternalNativeBuildJsonTask) {
+        compileTask ->
+            compileTask.doLast {
+                if (!isReanimatedExampleApp()) {
+                    return
+                }
+                def monorepoDir = new File("${project.projectDir}/../../..")
+
+                def generated = new File("${compileTask.abi.getCxxBuildFolder()}/compile_commands.json")
+                def output = new File("${monorepoDir}/compile_commands.json")
+
+                output.text = generated.text
+
+                println("Generated clangd metadata.")
+            }
     }
 }
 

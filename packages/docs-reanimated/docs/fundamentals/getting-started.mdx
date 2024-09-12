@@ -91,7 +91,33 @@ To learn more about the plugin head onto to [Reanimated babel plugin](/docs/fund
 
 </details>
 
-### Step 3: Clear Metro bundler cache (recommended)
+### Step 3: Wrap metro config with reanimated wrapper (recommended)
+
+Wrap your existing Metro configuration in the `metro.config.js` file with the `wrapWithReanimatedMetroConfig` function.
+
+```js
+// metro.config.js
+const {
+  wrapWithReanimatedMetroConfig,
+} = require('react-native-reanimated/metro-config');
+
+const config = {
+  // Your existing Metro configuration options
+};
+
+module.exports = wrapWithReanimatedMetroConfig(config);
+```
+
+<details>
+<summary>Why should I do this?</summary>
+
+Wrapping your Metro configuration with the Reanimated Metro config wrapper will result in displaying improved reanimated errors and warnings with more accurate call stacks. Thanks to this, identifying misuses of the Reanimated API will be much easier than before.
+
+To learn more about this feature, head onto to [Accurate Call Stacks](/docs/debugging/accurate-call-stacks).
+
+</details>
+
+### Step 4: Clear Metro bundler cache (recommended)
 
 <Tabs groupId="package-managers">
   <TabItem value="expo" label="EXPO" default>

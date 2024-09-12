@@ -7,9 +7,9 @@ export class ValueRegistry {
   private _valueRegistry: Record<string, SharedValue> = {};
   private _syncUIRunner = new SyncUIRunner();
 
-  public registerValue(name: string, value: SharedValue) {
+  public registerValue<TValue = unknown>(name: string, value: SharedValue<TValue>) {
     'worklet';
-    this._valueRegistry[name] = value;
+    this._valueRegistry[name] = value as SharedValue;
   }
 
   public async getRegisteredValue(name: string): Promise<SharedValueSnapshot> {

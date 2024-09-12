@@ -7,9 +7,12 @@ import type {
 import { BaseAnimationBuilder } from '../animationBuilder';
 
 /**
- * Fades out components from one position and shows them in another. You can modify the behavior by chaining methods like `.duration(500)` or `.delay(500)`.
+ * Fades out components from one position and shows them in another. You can
+ * modify the behavior by chaining methods like `.duration(500)` or
+ * `.delay(500)`.
  *
- * You pass it to the `layout` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `layout` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions#fading-transition
  */

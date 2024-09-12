@@ -12,6 +12,7 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 import type { Component } from 'react';
+import { logger } from '../logger';
 
 type DispatchCommand = <T extends Component>(
   animatedRef: AnimatedRef<T>,
@@ -22,8 +23,11 @@ type DispatchCommand = <T extends Component>(
 /**
  * Lets you synchronously call a command of a native component.
  *
- * @param animatedRef - An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns) connected to the component you'd want to call the command on.
- * @param commandName - The name of the command to dispatch (e.g. `"focus"` or `"scrollToEnd"`).
+ * @param animatedRef - An [animated
+ *   ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns)
+ *   connected to the component you'd want to call the command on.
+ * @param commandName - The name of the command to dispatch (e.g. `"focus"` or
+ *   `"scrollToEnd"`).
  * @param args - An optional array of arguments for the command.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/dispatchCommand
  */
@@ -58,19 +62,15 @@ function dispatchCommandPaper(
 }
 
 function dispatchCommandJest() {
-  console.warn('[Reanimated] dispatchCommand() is not supported with Jest.');
+  logger.warn('dispatchCommand() is not supported with Jest.');
 }
 
 function dispatchCommandChromeDebugger() {
-  console.warn(
-    '[Reanimated] dispatchCommand() is not supported with Chrome Debugger.'
-  );
+  logger.warn('dispatchCommand() is not supported with Chrome Debugger.');
 }
 
 function dispatchCommandDefault() {
-  console.warn(
-    '[Reanimated] dispatchCommand() is not supported on this configuration.'
-  );
+  logger.warn('dispatchCommand() is not supported on this configuration.');
 }
 
 if (!shouldBeUseWeb()) {

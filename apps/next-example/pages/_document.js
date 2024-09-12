@@ -34,6 +34,7 @@ body {
 export default class MyDocument extends Document {
   static async getInitialProps({ renderPage }) {
     AppRegistry.registerComponent('main', () => Main);
+    // @ts-expect-error
     const { getStyleElement } = AppRegistry.getApplication('main');
     const page = await renderPage();
     const styles = [

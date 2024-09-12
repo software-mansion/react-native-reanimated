@@ -90,7 +90,7 @@ const NonActiveWidthComponents = ({ delays }: { delays: [number] | [number, numb
     withDelay( A, withDelay( B, withDelay( C, some_animation) and
     withDelay( A + B + C, some_animation) are equal.
  */
-describe('Add three delays', () => {
+describe('Compare a sequence of three delays, with one delay of their sum', () => {
   async function getSnapshotUpdates(delays: [number] | [number, number, number], componentType: ComponentType) {
     await mockAnimationTimer();
     const updatesContainer = await recordAnimationUpdates();
@@ -105,6 +105,13 @@ describe('Add three delays', () => {
 
     const updates = updatesContainer.getUpdates(getTestComponent(componentType));
     const updatesNative = await updatesContainer.getNativeSnapshots(getTestComponent(componentType));
+    updatesNative.forEach(update => {
+      if ('width' in update && update.width === '[Reanimated] Unable to resolve view') {
+        // We use this hack because component with inline props gets mounted a bit later
+        update.width = 0;
+      }
+    });
+
     await unmockAnimationTimer();
     await clearRenderOutput();
 
@@ -112,82 +119,42 @@ describe('Add three delays', () => {
   }
 
   test.each([
-    [[10, 20, 30], 'ACTIVE'],
-    [[10, 0, 30], 'ACTIVE'],
-    [[0, 30, 30], 'ACTIVE'],
-    [[40, 30, 0], 'ACTIVE'],
+    [10, 20, 30],
+    [16, 32, 64],
+    [10, 0, 30],
+    [0, 30, 30],
+    [40, 30, 0],
+    [0, 0, 30],
+    [40, 0, 0],
+    [0, 55, 0],
+    [0, 0, 0],
+  ] as Array<[number, number, number]>)('Sum of delays **%p** matches the delay of the sum', async delays => {
+    const delaySum = delays.reduce((current, sum) => sum + current, 0);
 
-    [[10, 20, 30], 'INLINE'],
-    [[10, 0, 30], 'INLINE'],
-    [[0, 30, 30], 'INLINE'],
-    [[40, 30, 0], 'INLINE'],
-  ] as Array<[[number, number, number], keyof typeof ComponentType]>)(
-    'Sum of delays ${0} is *****one frame longer***** than the delay of the sum, **${1}** component',
-    async ([delays, componentType]) => {
-      const [updates, nativeUpdates] = await getSnapshotUpdates(delays, ComponentType[componentType]);
-      const delaySum = delays.reduce((current, sum) => sum + current, 0);
+    for (const componentType of ['PASSIVE', 'ACTIVE', 'INLINE'] as const) {
+      const [updatesDelaySequence, nativeUpdatesDelaySequence] = await getSnapshotUpdates(
+        delays,
+        ComponentType[componentType],
+      );
       const [updatesOneDelay, nativeUpdatesOneDelay] = await getSnapshotUpdates(
         [delaySum],
         ComponentType[componentType],
       );
 
-      expect([{ width: 0 }, ...updatesOneDelay]).toMatchSnapshots(updates);
+      const fillerSize = updatesDelaySequence.length - updatesOneDelay.length;
+      const filler = Array.from({ length: fillerSize }, () => {
+        return {
+          width: 0,
+        };
+      });
+
+      expect([...filler, ...updatesOneDelay]).toMatchSnapshots(updatesDelaySequence);
+      expect(fillerSize <= 1).toBe(true); // The additional delay should be at most of one frame
+
       expect(updatesOneDelay).toMatchNativeSnapshots(nativeUpdatesOneDelay);
-      expect(updates).toMatchNativeSnapshots(nativeUpdates);
-    },
-  );
-
-  test.each([
-    [[0, 0, 30], 'ACTIVE'],
-    [[40, 0, 0], 'ACTIVE'],
-    [[0, 55, 0], 'ACTIVE'],
-    [[0, 0, 0], 'ACTIVE'],
-
-    [[0, 0, 30], 'INLINE'],
-    [[40, 0, 0], 'INLINE'],
-    [[0, 55, 0], 'INLINE'],
-    [[0, 0, 0], 'INLINE'],
-  ] as Array<[[number, number, number], keyof typeof ComponentType]>)(
-    'Sum of delays ${0} is *****two frames longer***** than the delay of the sum, **${1}** component',
-    async ([delays, componentType]) => {
-      const [updates, nativeUpdates] = await getSnapshotUpdates(delays, ComponentType[componentType]);
-      const delaySum = delays.reduce((current, sum) => sum + current, 0);
-      const [updatesOneDelay, nativeUpdatesOneDelay] = await getSnapshotUpdates(
-        [delaySum],
-        ComponentType[componentType],
-      );
-
-      expect([{ width: 0 }, { width: 0 }, ...updatesOneDelay]).toMatchSnapshots(updates);
-      expect(updatesOneDelay).toMatchNativeSnapshots(nativeUpdatesOneDelay);
-      expect(updates).toMatchNativeSnapshots(nativeUpdates);
-    },
-  );
-
-  test.each([
-    [[10, 20, 30], 'PASSIVE'],
-    [[10, 0, 30], 'PASSIVE'],
-    [[0, 30, 30], 'PASSIVE'],
-    [[40, 30, 0], 'PASSIVE'],
-
-    [[0, 0, 30], 'PASSIVE'],
-    [[40, 0, 0], 'PASSIVE'],
-    [[0, 55, 0], 'PASSIVE'],
-    [[0, 0, 0], 'PASSIVE'],
-  ] as Array<[[number, number, number], keyof typeof ComponentType]>)(
-    'Sum of delays ${0} is *****exactly matches***** than the delay of the sum, **${1}** component',
-    async ([delays, componentType]) => {
-      const [updates, nativeUpdates] = await getSnapshotUpdates(delays, ComponentType[componentType]);
-      const delaySum = delays.reduce((current, sum) => sum + current, 0);
-      const [updatesOneDelay, nativeUpdatesOneDelay] = await getSnapshotUpdates(
-        [delaySum],
-        ComponentType[componentType],
-      );
-
-      expect(updatesOneDelay).toMatchSnapshots(updates);
-      expect(updatesOneDelay).toMatchNativeSnapshots(nativeUpdatesOneDelay);
-      expect(updates).toMatchNativeSnapshots(nativeUpdates);
-    },
-  );
+      expect(updatesDelaySequence).toMatchNativeSnapshots(nativeUpdatesDelaySequence);
+    }
+  });
 });
 
 const styles = StyleSheet.create({

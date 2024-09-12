@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.8)
 file(GLOB_RECURSE REANIMATED_COMMON_CPP_SOURCES CONFIGURE_DEPENDS "${REANIMATED_COMMON_CPP_DIR}/*.cpp")
 file(GLOB_RECURSE REANIMATED_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS "${REANIMATED_ANDROID_CPP_DIR}/*.cpp")
 
+find_package(ReactAndroid REQUIRED CONFIG)
+
 add_library(
     reanimated
     SHARED
@@ -55,4 +57,5 @@ set_target_properties(
 target_link_libraries(
     reanimated
     worklets
+    ReactAndroid::react_nativemodule_core
 )

@@ -5,20 +5,32 @@ import type {
   Timestamp,
   ReduceMotion,
 } from '../commonTypes';
+import { logger } from '../logger';
 
 /**
  * Spring animation configuration.
  *
- * @param mass - The weight of the spring. Reducing this value makes the animation faster. Defaults to 1.
- * @param damping - How quickly a spring slows down. Higher damping means the spring will come to rest faster. Defaults to 10.
- * @param duration - Length of the animation (in milliseconds). Defaults to 2000.
- * @param dampingRatio - How damped the spring is. Value 1 means the spring is critically damped, and value \>1 means the spring is overdamped. Defaults to 0.5.
+ * @param mass - The weight of the spring. Reducing this value makes the
+ *   animation faster. Defaults to 1.
+ * @param damping - How quickly a spring slows down. Higher damping means the
+ *   spring will come to rest faster. Defaults to 10.
+ * @param duration - Length of the animation (in milliseconds). Defaults to
+ *   2000.
+ * @param dampingRatio - How damped the spring is. Value 1 means the spring is
+ *   critically damped, and value `>`1 means the spring is overdamped. Defaults
+ *   to 0.5.
  * @param stiffness - How bouncy the spring is. Defaults to 100.
- * @param velocity - Initial velocity applied to the spring equation. Defaults to 0.
- * @param overshootClamping - Whether a spring can bounce over the `toValue`. Defaults to false.
- * @param restDisplacementThreshold - The displacement below which the spring will snap to toValue without further oscillations. Defaults to 0.01.
- * @param restSpeedThreshold - The speed in pixels per second from which the spring will snap to toValue without further oscillations. Defaults to 2.
- * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System` - {@link ReduceMotion}.
+ * @param velocity - Initial velocity applied to the spring equation. Defaults
+ *   to 0.
+ * @param overshootClamping - Whether a spring can bounce over the `toValue`.
+ *   Defaults to false.
+ * @param restDisplacementThreshold - The displacement below which the spring
+ *   will snap to toValue without further oscillations. Defaults to 0.01.
+ * @param restSpeedThreshold - The speed in pixels per second from which the
+ *   spring will snap to toValue without further oscillations. Defaults to 2.
+ * @param reduceMotion - Determines how the animation responds to the device's
+ *   reduced motion accessibility setting. Default to `ReduceMotion.System` -
+ *   {@link ReduceMotion}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring/#config-
  */
 export type SpringConfig = {
@@ -108,7 +120,7 @@ export function checkIfConfigIsValid(config: DefaultSpringConfig): boolean {
   }
 
   if (errorMessage !== '') {
-    console.warn('[Reanimated] Invalid spring config' + errorMessage);
+    logger.warn('Invalid spring config' + errorMessage);
   }
 
   return errorMessage === '';
@@ -160,8 +172,10 @@ export function initialCalculations(
   if (config.useDuration) {
     const { stiffness: k, dampingRatio: zeta } = config;
 
-    /** omega0 and omega1 denote angular frequency and natural angular frequency, see this link for formulas:
-     *  https://courses.lumenlearning.com/suny-osuniversityphysics/chapter/15-5-damped-oscillations/
+    /**
+     * Omega0 and omega1 denote angular frequency and natural angular frequency,
+     * see this link for formulas:
+     * https://courses.lumenlearning.com/suny-osuniversityphysics/chapter/15-5-damped-oscillations/
      */
     const omega0 = Math.sqrt(k / mass);
     const omega1 = omega0 * Math.sqrt(1 - zeta ** 2);
@@ -178,8 +192,10 @@ export function initialCalculations(
   }
 }
 
-/** We make an assumption that we can manipulate zeta without changing duration of movement.
- *  According to theory this change is small and tests shows that we can indeed ignore it.
+/**
+ * We make an assumption that we can manipulate zeta without changing duration
+ * of movement. According to theory this change is small and tests shows that we
+ * can indeed ignore it.
  */
 export function scaleZetaToMatchClamps(
   animation: SpringAnimation,
@@ -198,13 +214,15 @@ export function scaleZetaToMatchClamps(
       ? [clamp.min, clamp.max]
       : [clamp.max, clamp.min];
 
-  /** The extrema we get from equation below are relative (we obtain a ratio),
-   *  To get absolute extrema we convert it as follows:
+  /**
+   * The extrema we get from equation below are relative (we obtain a ratio), To
+   * get absolute extrema we convert it as follows:
    *
-   *  AbsoluteExtremum = startValue ± RelativeExtremum * (toValue - startValue)
-   *  Where ± denotes:
-   *    + if extremum is over the target
-   *    - otherwise
+   * AbsoluteExtremum = startValue ± RelativeExtremum * (toValue - startValue)
+   * Where ± denotes:
+   *
+   * - If extremum is over the target
+   * - Otherwise
    */
 
   const relativeExtremum1 =
@@ -217,10 +235,11 @@ export function scaleZetaToMatchClamps(
       ? Math.abs((firstBound - toValueNum) / (toValueNum - startValue))
       : undefined;
 
-  /** Use this formula http://hyperphysics.phy-astr.gsu.edu/hbase/oscda.html to calculate
-   *  first two extrema. These extrema are located where cos = +- 1
+  /**
+   * Use this formula http://hyperphysics.phy-astr.gsu.edu/hbase/oscda.html to
+   * calculate first two extrema. These extrema are located where cos = +- 1
    *
-   *  Therefore the first two extrema are:
+   * Therefore the first two extrema are:
    *
    *     Math.exp(-zeta * Math.PI);      (over the target)
    *     Math.exp(-zeta * 2 * Math.PI);  (before the target)
@@ -255,24 +274,27 @@ export function calculateNewMassToMatchDuration(
     return 0;
   }
 
-  /** Use this formula: https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations
-       * to find the asymptote and estimate the damping that gives us the expected duration 
-
-            ⎛ ⎛ c⎞           ⎞           
-            ⎜-⎜──⎟ ⋅ duration⎟           
-            ⎝ ⎝2m⎠           ⎠           
-       A ⋅ e                   = threshold
-
- 
-      Amplitude calculated using "Conservation of energy"
-                       _________________
-                      ╱      2         2
-                     ╱ m ⋅ v0  + k ⋅ x0 
-      amplitude =   ╱  ─────────────────
-                  ╲╱           k        
-
-      And replace mass with damping ratio which is provided: m = (c^2)/(4 * k * zeta^2)   
-      */
+  /**
+   * Use this formula:
+   * https://phys.libretexts.org/Bookshelves/University_Physics/Book%3A_University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations
+   * to find the asymptote and estimate the damping that gives us the expected
+   * duration
+   *
+   *             ⎛ ⎛ c⎞           ⎞
+   *             ⎜-⎜──⎟ ⋅ duration⎟
+   *             ⎝ ⎝2m⎠           ⎠
+   *        A ⋅ e                   = threshold
+   *
+   *
+   *       Amplitude calculated using "Conservation of energy"
+   *                        _________________
+   *                       ╱      2         2
+   *                      ╱ m ⋅ v0  + k ⋅ x0
+   *       amplitude =   ╱  ─────────────────
+   *                   ╲╱           k
+   *
+   *       And replace mass with damping ratio which is provided: m = (c^2)/(4 * k * zeta^2)
+   */
   const {
     stiffness: k,
     dampingRatio: zeta,

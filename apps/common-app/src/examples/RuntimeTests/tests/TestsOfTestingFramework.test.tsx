@@ -146,6 +146,60 @@ const LayoutAnimation = () => {
   );
 };
 
+describe('Wardrobe with drawers', () => {
+  describe('Drawer *****1*****, with boxes', () => {
+    describe('Box *****1*****, with books', () => {
+      describe('Book *****1*****, with pages', () => {
+        describe('Page *****1*****', () => {
+          test('Test 1 of page 1 of book 1 of box 1 of drawer 1', async () => {
+            await render(<AnimatedComponent />);
+            await wait(10);
+            expect(1).toBe(1);
+          });
+          test('Test 2 of page 1 of book 1 of box 1 of drawer 1', async () => {
+            await render(<AnimatedComponent />);
+            await wait(10);
+            expect(1).toBe(1);
+          });
+        });
+
+        describe.skip('Page *****2*****', () => {
+          test('Test 1 of page 2 of book 1 of box 1 of drawer 1', async () => {
+            await render(<AnimatedComponent />);
+            await wait(10);
+            expect(1).toBe(1);
+          });
+          test('Test 2 of page 2 of book 1 of box 1 of drawer 1', async () => {
+            await render(<AnimatedComponent />);
+            await wait(10);
+            expect(1).toBe(1);
+          });
+        });
+      });
+    });
+  });
+  describe('Drawer *****2*****, with boxes', () => {
+    describe('Box *****1*****, with books', () => {
+      describe('Book *****1*****, with pages', () => {
+        describe('Page *****1*****', () => {});
+
+        describe('Page *****2*****', () => {
+          test('Test 1 of page 2 of book 1 of box 1 of drawer 2', async () => {
+            await render(<AnimatedComponent />);
+            await wait(10);
+            expect(1).toBe(1);
+          });
+          test('Test 2 of page 2 of book 1 of box 1 of drawer 2', async () => {
+            await render(<AnimatedComponent />);
+            await wait(10);
+            expect(1).toBe(1);
+          });
+        });
+      });
+    });
+  });
+});
+
 describe('Tests of Test Framework', () => {
   test('Test  comparators', () => {
     expect(1).toBe(1.0);

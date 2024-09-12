@@ -12,6 +12,7 @@ import type {
   ReduceMotion,
 } from '../commonTypes';
 import type { ClampAnimation } from './commonTypes';
+import { logger } from '../logger';
 
 type withClampType = <T extends number | string>(
   config: {
@@ -52,8 +53,8 @@ export const withClamp = function <T extends number | string>(
         const finished = animationToClamp.onFrame(animationToClamp, now);
 
         if (animationToClamp.current === undefined) {
-          console.warn(
-            "[Reanimated] Error inside 'withClamp' animation, the inner animation has invalid current value"
+          logger.warn(
+            "Error inside 'withClamp' animation, the inner animation has invalid current value"
           );
           return true;
         } else {
@@ -96,16 +97,17 @@ export const withClamp = function <T extends number | string>(
           config.min !== undefined &&
           config.max < config.min
         ) {
-          console.warn(
-            '[Reanimated] Wrong config was provided to withClamp. Min value is bigger than max'
+          logger.warn(
+            'Wrong config was provided to withClamp. Min value is bigger than max'
           );
         }
 
         animationToClamp.onStart(
           animationToClamp,
-          /** provide the current value of the previous animation of the clamped animation 
-          so we can animate from the original "un-truncated" value
-          */
+          /**
+           * Provide the current value of the previous animation of the clamped
+           * animation so we can animate from the original "un-truncated" value
+           */
           animationBeforeClamped?.current || value,
           now,
           animationBeforeClamped
