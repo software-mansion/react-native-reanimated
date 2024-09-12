@@ -59,6 +59,7 @@ static inline std::string colorToString(const int val) {
 
   return hexColor;
 }
+
 #else
 inline std::string colorToString(const SharedColor &value) {
   ColorComponents components = colorComponentsFromColor(value);
@@ -102,13 +103,13 @@ inline Float floatFromYogaBorderWidthValue(const yoga::Style::Length &length) {
   return 0;
 }
 
-extern const int numberOfStringProperties = 2;
-const char *stringPropertiesNames[numberOfStringProperties] = {
+static const int numberOfStringProperties = 2;
+static const char *stringPropertiesNames[2] = {
     "BackgroundColor",
     "ShadowColor"};
 
-extern const int numberOfNumericProperties = 9;
-const char *numericPropertiesNames[numberOfNumericProperties] = {
+static const int numberOfNumericProperties = 9;
+static const char *numericPropertiesNames[9] = {
     "Opacity", // double
 
     "BorderTopLeftRadius", // int
@@ -122,8 +123,8 @@ const char *numericPropertiesNames[numberOfNumericProperties] = {
     "BorderBottomWidth"};
 
 struct StyleSnapshot {
-  std::array<double, numberOfNumericProperties> numericPropertiesValues;
-  std::array<std::string, numberOfStringProperties> stringPropertiesValues;
+  std::array<double, 9> numericPropertiesValues;
+  std::array<std::string, 2> stringPropertiesValues;
 
   StyleSnapshot(
       jsi::Runtime &runtime,
@@ -133,8 +134,12 @@ struct StyleSnapshot {
         static_cast<const ViewProps *>(shadowView.props.get());
 
 #ifdef __ANDROID__
-    auto backgroundColor = colorToString(props->backgroundColor.color_);
-    auto shadowColor = colorToString(props->shadowColor.color_);
+    // Operator "*" of class SharedColor is overloaded and returns a private
+    // class member color_ of type Color
+    auto innerBackgroundColor = *props->backgroundColor;
+    auto backgroundColor = colorToString(innerBackgroundColor);
+    auto innerShadowColor = *props->backgroundColor;
+    auto shadowColor = colorToString(innerShadowColor);
 #else
     auto backgroundColor = colorToString(props->backgroundColor);
     auto shadowColor = colorToString(props->shadowColor);

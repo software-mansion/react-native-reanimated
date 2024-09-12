@@ -31,6 +31,10 @@ const SUPPORTED_PROPS = [
   'borderBottomRightRadius',
 ] as const;
 
+function capitalize<T extends string>(str: T): Capitalize<T> {
+  return `${str.charAt(0).toUpperCase()}${str.slice(1)}` as Capitalize<T>;
+}
+
 type AnimationFactory = (
   values: SharedTransitionAnimationsValues
 ) => StyleProps;
@@ -186,12 +190,7 @@ export class SharedTransition {
               duration: transitionDuration,
             });
           } else {
-            const capitalizedPropName = `${propName
-              .charAt(0)
-              .toUpperCase()}${propName.slice(
-              1
-            )}` as Capitalize<NumericLayoutAnimationsOptions>;
-            const keyToTargetValue = `target${capitalizedPropName}` as const;
+            const keyToTargetValue = `target${capitalize(propName)}` as const;
             animations[propName] = withTiming(values[keyToTargetValue], {
               reduceMotion,
               duration: transitionDuration,
@@ -237,13 +236,10 @@ export class SharedTransition {
           }
           newStyles.transformMatrix = newMatrix;
         } else {
-          // PropertyName == propertyName with capitalized fist letter, (width -> Width)
-          const PropertyName = (propertyName.charAt(0).toUpperCase() +
-            propertyName.slice(
-              1
-            )) as Capitalize<NumericLayoutAnimationsOptions>;
-          const currentPropertyName = `current${PropertyName}` as const;
-          const targetPropertyName = `target${PropertyName}` as const;
+          const currentPropertyName =
+            `current${capitalize(propertyName)}` as const;
+          const targetPropertyName =
+            `target${capitalize(propertyName)}` as const;
 
           const currentValue = values[currentPropertyName];
           const targetValue = values[targetPropertyName];
