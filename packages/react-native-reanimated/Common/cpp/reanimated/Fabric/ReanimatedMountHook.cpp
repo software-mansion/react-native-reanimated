@@ -63,9 +63,7 @@ void ReanimatedMountHook::shadowTreeDidMount(
             },
             { /* .enableStateReconciliation = */
               false,
-    #if REACT_NATIVE_MINOR_VERSION >= 72
                   /* .mountSynchronously = */ true
-    #endif
             });
       });
     }

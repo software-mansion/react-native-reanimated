@@ -726,15 +726,9 @@ void NativeReanimatedModule::performOperations() {
             react_native_assert(family->getSurfaceId() == surfaceId_);
             propsMap[family].emplace_back(rt, std::move(*props));
 
-#if REACT_NATIVE_MINOR_VERSION >= 73
-            // Fix for catching nullptr returned from commit hook was
-            // introduced in 0.72.4 but we have only check for minor version
-            // of React Native so enable that optimization in React Native >=
-            // 0.73
             if (propsRegistry_->shouldReanimatedSkipCommit()) {
               return nullptr;
             }
-#endif
           }
 
           auto rootNode =
@@ -752,9 +746,7 @@ void NativeReanimatedModule::performOperations() {
         },
         { /* .enableStateReconciliation = */
           false,
-#if REACT_NATIVE_MINOR_VERSION >= 72
               /* .mountSynchronously = */ true,
-#endif
               /* .shouldYield = */ [this]() {
                 return propsRegistry_->shouldReanimatedSkipCommit();
               }

@@ -30,20 +30,14 @@ class PropsRegistry {
   }
 
   bool shouldReanimatedSkipCommit() {
-#if REACT_NATIVE_MINOR_VERSION >= 73
     // In RN 0.73+ we have a mount hook that will properly unset this flag
     // after a non-Reanimated commit.
     return isPaused_;
-#else
-    return isPaused_.exchange(false);
-#endif
   }
 
-#if REACT_NATIVE_MINOR_VERSION >= 73
   void unpauseReanimatedCommits() {
     isPaused_ = false;
   }
-#endif
   
   void pleaseFlush() {
     shouldFlush_ = true;

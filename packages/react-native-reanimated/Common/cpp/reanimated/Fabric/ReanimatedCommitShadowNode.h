@@ -9,7 +9,12 @@ namespace reanimated {
 // We need this information to skip unnecessary updates in
 // the commit hook.
 // Currently RN traits go up to 10, so hopefully
-// the arbitrarily chosen number 27 will be safe :)
+// the arbitrarily chosen numbers 27 and 28 will be safe :)
+
+// We have to use 2 traits, because we want to distinguish reanimated
+// commits both in the commit hook and mount hook. If we only had one trait
+// and didn't remove it in the commit hook, then any node that would clone
+// this node would also have our commit trait, rendering this trait useless.
 constexpr ShadowNodeTraits::Trait ReanimatedCommitTrait{1 << 27};
 constexpr ShadowNodeTraits::Trait ReanimatedMountTrait{1 << 28};
 
@@ -24,7 +29,7 @@ class ReanimatedCommitShadowNode : public ShadowNode {
   inline bool hasReanimatedCommitTrait() {
     return traits_.check(ReanimatedCommitTrait);
   }
-  inline void setReanimatedMounTrait() {
+  inline void setReanimatedMountTrait() {
     traits_.set(ReanimatedMountTrait);
   }
   inline void unsetReanimatedMountTrait() {
