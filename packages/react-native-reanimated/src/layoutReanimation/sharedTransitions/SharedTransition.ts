@@ -5,7 +5,6 @@ import type {
   SharedTransitionAnimationsValues,
   CustomProgressAnimation,
   ProgressAnimation,
-  NumericLayoutAnimationsOptions,
 } from '../animationBuilder/commonTypes';
 import {
   LayoutAnimationType,
@@ -203,10 +202,9 @@ export class SharedTransition {
         if (propName === 'transform') {
           initialValues.transformMatrix = values.currentTransformMatrix;
         } else {
-          const capitalizedPropName = (propName.charAt(0).toUpperCase() +
-            propName.slice(1)) as Capitalize<NumericLayoutAnimationsOptions>;
-          const keyToCurrentValue = `current${capitalizedPropName}` as const;
-          initialValues[propName] = values[keyToCurrentValue];
+          const keyToCurrentValue = `current${capitalize(propName)}`;
+          initialValues[propName] =
+            values[keyToCurrentValue as keyof typeof values];
         }
       }
 
