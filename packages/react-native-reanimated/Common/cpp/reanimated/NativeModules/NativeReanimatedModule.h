@@ -28,8 +28,6 @@
 
 namespace reanimated {
 
-class ReanimatedMountHook;
-
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
