@@ -4,33 +4,56 @@ title: Web Support
 sidebar_label: Web Support
 ---
 
-import DocsCompatibilityInfo from '../_shared/_docs_compatibility_info.mdx';
-
-<DocsCompatibilityInfo />
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 It's possible to launch Reanimated in a web browser. For that case all of the functionalities are implemented purely in JavaScript, hence the efficiency of the animations might be lower.
 
-Reanimated for Web requires the following configuration steps. You need to add [`@babel/plugin-proposal-export-namespace-from`](https://babeljs.io/docs/en/babel-plugin-proposal-export-namespace-from) as well as Reanimated Babel plugin to your `babel.config.js`.
+### Step 1: Install the package
 
-```bash
-yarn add @babel/plugin-proposal-export-namespace-from
+Install `@babel/plugin-proposal-export-namespace-from` package from npm:
+
+<Tabs groupId="package-managers">
+  <TabItem value="expo" label="EXPO" default>
+
+    npx expo install @babel/plugin-proposal-export-namespace-from
+
+  </TabItem>
+  <TabItem value="npm" label="NPM">
+
+    npm install @babel/plugin-proposal-export-namespace-from
+
+  </TabItem>
+  <TabItem value="yarn" label="YARN">
+
+    yarn add @babel/plugin-proposal-export-namespace-from
+
+  </TabItem>
+</Tabs>
+
+### Step 2: Add Reanimated's babel plugin
+
+Add `@babel/plugin-proposal-export-namespace-from` plugin to your `babel.config.js`.
+
+```js {7}
+  module.exports = {
+      presets: [
+        ... // don't add it here :)
+      ],
+      plugins: [
+          ...
+          '@babel/plugin-proposal-export-namespace-from',
+          'react-native-reanimated/plugin',
+      ],
+  };
 ```
 
-```js {5,6}
-module.exports = {
-  presets: [
-      ...
-  ],
-  plugins: [
-    ...
-    '@babel/plugin-proposal-export-namespace-from',
-    'react-native-reanimated/plugin',
-  ],
-};
-```
+Make sure to list `react-native-reanimated/plugin` last.
+
+### Step 3: Launch your app
 
 If you use
-[playground](https://github.com/software-mansion-labs/reanimated-2-playground)
+[playground](https://github.com/software-mansion-labs/reanimated-3-playground)
 app and want to start it in the browser just type:
 
 ```shell
@@ -39,10 +62,10 @@ yarn web
 
 If you want to start the example applications from the
 [reanimated repository](https://github.com/software-mansion/react-native-reanimated)
-you need to run the following command inside the `Example` directory:
+you need to run the following command inside the `apps/web-example` directory:
 
 ```shell
-yarn start-web
+yarn start
 ```
 
 ## Webpack support
