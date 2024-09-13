@@ -2,8 +2,6 @@
 
 #include <reanimated/CSS/interpolation/Interpolator.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
 #include <jsi/jsi.h>
 #include <memory>
 #include <string>
@@ -11,8 +9,6 @@
 #include <vector>
 
 namespace reanimated {
-
-using namespace worklets;
 
 struct TransformPropertyInterpolator {
   std::string property;
@@ -30,6 +26,8 @@ class TransformsStyleInterpolator : public Interpolator {
       jsi::Runtime &rt,
       const jsi::Array &transformsArray,
       const TransformPropertyInterpolatorFactories &factories);
+
+  void setStyleValue(jsi::Runtime &rt, const jsi::Value &value) override;
 
   jsi::Value update(const InterpolationUpdateContext context) override;
 

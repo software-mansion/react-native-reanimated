@@ -5,53 +5,58 @@ namespace reanimated {
 const std::unordered_map<std::string, ConversionRate>
     WithUnitInterpolator::conversionRates = {
         {"rad", {"deg", 180.0 / M_PI}},
+        {"deg", {"rad", M_PI / 180.0}},
 };
+
+WithUnitInterpolator::WithUnitInterpolator(
+    std::string baseUnit,
+    const std::optional<double> &defaultStyleValue)
+    : NumericValueInterpolator(defaultStyleValue), baseUnit(baseUnit) {}
 
 double WithUnitInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
-  static const std::regex regexPattern("([-+]?[0-9]*\\.?[0-9]+)(.*)");
-  std::smatch match;
-
-  std::string valueStr = value.asString(rt).utf8(rt);
-
-  if (std::regex_match(valueStr, match, regexPattern)) {
-    double numericValue = std::stod(match[1].str());
-    std::string matchedUnit = match[2].str();
-
-    if (!unit.empty() && unit != matchedUnit) {
-      auto conversionRate = conversionRates.find(matchedUnit);
-      if (conversionRate == conversionRates.end() ||
-          conversionRate->second.targetUnit != unit) {
-        throw std::invalid_argument(
-            "[Reanimated] Conversion error: No valid conversion from '" +
-            matchedUnit + "' to '" + unit + "'. Check if you don't mix units.");
-      }
-      numericValue *= conversionRate->second.multiplier;
-    } else {
-      auto conversionRate = conversionRates.find(matchedUnit);
-      if (conversionRate != conversionRates.end()) {
-        numericValue *= conversionRate->second.multiplier;
-        unit = conversionRate->second.targetUnit;
-      } else {
-        unit = matchedUnit;
-      }
-    }
-
-    return numericValue;
-  } else {
-    throw std::invalid_argument(
-        "[Reanimated] Invalid value format: '" + valueStr +
-        "'. Expected format: '<number><unit>', e.g., '3.14rad'.");
-  }
+  return convertFromString(value.asString(rt).utf8(rt));
 }
 
 jsi::Value WithUnitInterpolator::convertResultToJSI(
     jsi::Runtime &rt,
     const double &value) const {
   std::ostringstream oss;
-  oss << value << unit;
+  oss << value << baseUnit;
   return jsi::String::createFromUtf8(rt, oss.str());
+}
+
+double WithUnitInterpolator::getConversionRate(const std::string &unit) const {
+  auto conversionRate = conversionRates.find(unit);
+  if (conversionRate == conversionRates.end()) {
+    throw std::invalid_argument(
+        "[Reanimated] Conversion error: No valid conversion for unit: " + unit);
+  }
+  return conversionRate->second.multiplier;
+}
+
+double WithUnitInterpolator::convertFromString(const std::string &value) const {
+  const std::regex regexPattern("([-+]?[0-9]*\\.?[0-9]+)(.*)");
+  std::smatch match;
+
+  if (std::regex_match(value, match, regexPattern)) {
+    double numericValue = std::stod(match[1].str());
+    std::string matchedUnit = match[2].str();
+
+    // If the unit is different than the base unit, convert it.
+    if (matchedUnit != baseUnit) {
+      double conversionRate = getConversionRate(matchedUnit);
+      return numericValue * conversionRate;
+    }
+
+    // Otherwise, just return the numeric value.
+    return numericValue;
+  } else {
+    throw std::invalid_argument(
+        "[Reanimated] Invalid value format: '" + value +
+        "'. Expected format: '<number><unit>', e.g., '3.14rad'.");
+  }
 }
 
 } // namespace reanimated

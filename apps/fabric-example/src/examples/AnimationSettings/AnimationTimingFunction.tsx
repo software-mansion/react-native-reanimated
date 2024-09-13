@@ -7,11 +7,6 @@ import { ExampleScreen } from './components';
 export default function AnimationTimingFunction() {
   const config: CSSAnimationConfig = {
     animationName: {
-      // TODO - remove from step once initial frame can be read in the CSS animation
-      from: {
-        left: 0,
-        transform: [{ translateX: 0 }],
-      },
       to: {
         left: '100%',
         transform: [{ translateX: '-100%' }],

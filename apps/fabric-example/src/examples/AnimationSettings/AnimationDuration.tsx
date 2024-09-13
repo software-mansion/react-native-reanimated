@@ -8,7 +8,6 @@ import { Text } from '../../components';
 export default function AnimationDuration() {
   const config: CSSAnimationConfig = {
     animationName: {
-      // TODO - remove from step once initial frame can be read in the CSS animation
       from: {
         width: 0,
       },

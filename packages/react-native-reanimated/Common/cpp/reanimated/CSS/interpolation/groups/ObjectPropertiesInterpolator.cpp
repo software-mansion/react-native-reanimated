@@ -36,6 +36,23 @@ ObjectPropertiesInterpolators ObjectPropertiesInterpolator::build(
   return interpolators;
 }
 
+void ObjectPropertiesInterpolator::setStyleValue(
+    jsi::Runtime &rt,
+    const jsi::Value &value) {
+  for (const auto &pair : interpolators_) {
+    const std::string &propName = pair.first;
+    const std::shared_ptr<Interpolator> &interpolator = pair.second;
+
+    jsi::Value propValue = jsi::Value::undefined();
+
+    if (value.isObject()) {
+      propValue = value.asObject(rt).getProperty(rt, propName.c_str());
+    }
+
+    interpolator->setStyleValue(rt, propValue);
+  }
+}
+
 jsi::Value ObjectPropertiesInterpolator::update(
     const InterpolationUpdateContext context) {
   jsi::Runtime &rt = context.rt;

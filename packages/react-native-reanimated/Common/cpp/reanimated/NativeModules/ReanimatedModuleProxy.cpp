@@ -482,7 +482,8 @@ void ReanimatedModuleProxy::registerCSSAnimation(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &animationId,
-    const jsi::Value &animationConfig) {
+    const jsi::Value &animationConfig,
+    const jsi::Value &viewStyle) {
   const auto &configObject = animationConfig.asObject(rt);
 
   auto keyframedStyle =
@@ -512,7 +513,8 @@ void ReanimatedModuleProxy::registerCSSAnimation(
       rt,
       shadowNodeFromValue(rt, shadowNodeWrapper),
       animationId.asNumber(),
-      config);
+      config,
+      viewStyle);
 
   maybeRunCssAnimationsLoop();
 }

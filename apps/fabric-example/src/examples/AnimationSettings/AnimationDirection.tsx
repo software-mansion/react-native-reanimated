@@ -7,7 +7,6 @@ import { ExampleScreen } from './components';
 export default function AnimationDirection() {
   const config: CSSAnimationConfig = {
     animationName: {
-      // TODO - remove from step once initial frame can be read in the CSS animation
       from: {
         width: 0,
       },

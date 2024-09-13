@@ -25,7 +25,8 @@ class CSSAnimationsRegistry {
       jsi::Runtime &rt,
       ShadowNode::Shared shadowNode,
       const unsigned id,
-      const CSSAnimationConfig &config);
+      const CSSAnimationConfig &config,
+      const jsi::Value &viewStyle);
 
   void removeAnimation(const unsigned id);
 

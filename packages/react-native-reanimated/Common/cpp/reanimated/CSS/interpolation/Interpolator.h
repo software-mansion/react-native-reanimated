@@ -18,7 +18,7 @@ struct InterpolationUpdateContext {
   bool directionChanged;
 };
 
-struct RelativeInterpolatorValue {
+struct RelativeOrNumericInterpolatorValue {
   double value;
   bool isRelative;
 };
@@ -28,6 +28,8 @@ using ColorArray = std::array<uint8_t, 4>;
 class Interpolator {
  public:
   virtual ~Interpolator() = default;
+
+  virtual void setStyleValue(jsi::Runtime &rt, const jsi::Value &value) = 0;
 
   virtual jsi::Value update(const InterpolationUpdateContext context) = 0;
 };

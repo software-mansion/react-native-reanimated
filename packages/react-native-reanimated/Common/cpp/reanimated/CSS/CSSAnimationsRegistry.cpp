@@ -6,8 +6,11 @@ void CSSAnimationsRegistry::addAnimation(
     jsi::Runtime &rt,
     ShadowNode::Shared node,
     const unsigned id,
-    const CSSAnimationConfig &config) {
-  registry_.insert({id, CSSAnimation(rt, node, config)});
+    const CSSAnimationConfig &config,
+    const jsi::Value &viewStyle) {
+  CSSAnimation animation(rt, node, config);
+  animation.setViewStyle(rt, viewStyle);
+  registry_.insert({id, animation});
 }
 
 void CSSAnimationsRegistry::removeAnimation(const unsigned id) {

@@ -8,7 +8,7 @@ double NumericValueInterpolator::prepareKeyframeValue(
   return value.asNumber();
 }
 
-double NumericValueInterpolator::interpolateBetweenKeyframes(
+double NumericValueInterpolator::interpolate(
     double localProgress,
     const double &fromValue,
     const double &toValue,

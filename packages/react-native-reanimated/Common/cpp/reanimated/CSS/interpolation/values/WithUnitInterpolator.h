@@ -17,6 +17,11 @@ struct ConversionRate {
 };
 
 class WithUnitInterpolator : public NumericValueInterpolator {
+ public:
+  WithUnitInterpolator(
+      std::string baseUnit,
+      const std::optional<double> &defaultStyleValue);
+
  protected:
   double prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const override;
@@ -25,8 +30,12 @@ class WithUnitInterpolator : public NumericValueInterpolator {
       const override;
 
  private:
-  mutable std::string unit;
+  const std::string baseUnit;
   static const std::unordered_map<std::string, ConversionRate> conversionRates;
+
+  double getConversionRate(const std::string &unit) const;
+
+  double convertFromString(const std::string &value) const;
 };
 
 } // namespace reanimated

@@ -4,10 +4,25 @@ namespace reanimated {
 
 RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
     TargetType relativeTo,
-    const std::string &relativeProperty)
-    : relativeTo(relativeTo), relativeProperty(relativeProperty) {}
+    const std::string &relativeProperty,
+    const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue)
+    : ValueInterpolator<RelativeOrNumericInterpolatorValue>(defaultValue),
+      relativeTo(relativeTo),
+      relativeProperty(relativeProperty) {}
 
-RelativeInterpolatorValue
+double RelativeOrNumericValueInterpolator::percentageToNumber(
+    const std::string &value) {
+  std::string str = value;
+  if (str.back() == '%') {
+    str.pop_back();
+    return std::stod(str) / 100;
+  }
+  throw std::runtime_error(
+      "[Reanimated] RelativeOrNumericValueInterpolator: unsupported value: " +
+      str);
+}
+
+RelativeOrNumericInterpolatorValue
 RelativeOrNumericValueInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
@@ -17,36 +32,31 @@ RelativeOrNumericValueInterpolator::prepareKeyframeValue(
   }
   // Relative value
   std::string str = value.asString(rt).utf8(rt);
-  if (str.back() == '%') {
-    str.pop_back();
-    return {std::stod(str) / 100, true};
-  }
-  throw std::runtime_error(
-      "[Reanimated] RelativeOrNumericValueInterpolator: unsupported value: " +
-      str);
+  return {percentageToNumber(str), true};
 }
 
 jsi::Value RelativeOrNumericValueInterpolator::convertResultToJSI(
     jsi::Runtime &rt,
-    const double &value) const {
-  return jsi::Value(value);
+    const RelativeOrNumericInterpolatorValue &value) const {
+  return jsi::Value(value.value);
 }
 
-double RelativeOrNumericValueInterpolator::interpolateBetweenKeyframes(
+RelativeOrNumericInterpolatorValue
+RelativeOrNumericValueInterpolator::interpolate(
     double localProgress,
-    const double &from,
-    const double &to,
+    const RelativeOrNumericInterpolatorValue &fromValue,
+    const RelativeOrNumericInterpolatorValue &toValue,
     const InterpolationUpdateContext context) const {
-  return from + (to - from) * localProgress;
+  double from =
+      (fromValue.isRelative ? getRelativeValue(context) : 1) * fromValue.value;
+  double to =
+      (toValue.isRelative ? getRelativeValue(context) : 1) * toValue.value;
+
+  return {from + (to - from) * localProgress, false};
 }
 
-double RelativeOrNumericValueInterpolator::resolveKeyframeValue(
-    const InterpolationUpdateContext context,
-    const RelativeInterpolatorValue &keyframeValue) const {
-  if (!keyframeValue.isRelative) {
-    return keyframeValue.value;
-  }
-
+double RelativeOrNumericValueInterpolator::getRelativeValue(
+    const InterpolationUpdateContext context) const {
   auto &viewPropsRepository = ViewPropsRepository::getInstance();
   jsi::Value relativeValue;
 
@@ -68,9 +78,7 @@ double RelativeOrNumericValueInterpolator::resolveKeyframeValue(
     return 0;
   }
 
-  const auto percentage = keyframeValue.value;
-
-  return percentage * relativeValue.asNumber();
+  return relativeValue.asNumber();
 }
 
 } // namespace reanimated

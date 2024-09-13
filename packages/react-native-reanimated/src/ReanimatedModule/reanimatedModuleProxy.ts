@@ -7,6 +7,7 @@ import type {
   ValueRotation,
   LayoutAnimationBatchItem,
   WorkletFunction,
+  StyleProps,
 } from '../commonTypes';
 import type { NormalizedCSSAnimationConfig } from '../css';
 
@@ -56,7 +57,8 @@ export interface ReanimatedModuleProxy {
   registerCSSAnimation(
     shadowNodeWrapper: ShadowNodeWrapper,
     animationId: number,
-    config: NormalizedCSSAnimationConfig
+    animationConfig: NormalizedCSSAnimationConfig,
+    viewStyle: StyleProps
   ): void;
 
   unregisterCSSAnimation(animationId: number): void;

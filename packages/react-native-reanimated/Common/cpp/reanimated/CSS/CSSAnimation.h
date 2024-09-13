@@ -41,8 +41,13 @@ class CSSAnimation {
   CSSAnimationState getState() const {
     return state;
   }
+
   ShadowNode::Shared getShadowNode() const {
     return shadowNode;
+  }
+
+  void setViewStyle(jsi::Runtime &rt, const jsi::Value &value) {
+    styleInterpolator.setStyleValue(rt, value);
   }
 
   void start(time_t timestamp);
