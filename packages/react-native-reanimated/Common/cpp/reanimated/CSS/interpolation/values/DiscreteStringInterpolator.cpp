@@ -14,7 +14,7 @@ jsi::Value DiscreteStringInterpolator::convertResultToJSI(
   return jsi::String::createFromUtf8(rt, value);
 }
 
-std::string DiscreteStringInterpolator::interpolateBetweenKeyframes(
+std::string DiscreteStringInterpolator::interpolate(
     double localProgress,
     const std::string &fromValue,
     const std::string &toValue,

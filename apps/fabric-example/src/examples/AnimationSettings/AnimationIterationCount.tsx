@@ -7,18 +7,9 @@ import { ExampleScreen } from './components';
 export default function AnimationIterationCount() {
   const config: CSSAnimationConfig = {
     animationName: {
-      // TODO - remove from/to steps after initial/last frame calculation is implemented
-      from: {
-        left: 0,
-        transform: [{ translateX: 0 }],
-      },
       '50%': {
         left: '100%',
         transform: [{ translateX: '-100%' }],
-      },
-      to: {
-        left: 0,
-        transform: [{ translateX: 0 }],
       },
     },
     animationDuration: '2s',

@@ -8,6 +8,7 @@ import type {
   IWorkletsModule,
   WorkletFunction,
   ShadowNodeWrapper,
+  StyleProps,
 } from '../commonTypes';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
@@ -163,12 +164,14 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   registerCSSAnimation(
     shadowNodeWrapper: ShadowNodeWrapper,
     animationId: number,
-    config: NormalizedCSSAnimationConfig
+    animationConfig: NormalizedCSSAnimationConfig,
+    viewStyle: StyleProps
   ) {
     this.#reanimatedModuleProxy.registerCSSAnimation(
       shadowNodeWrapper,
       animationId,
-      config
+      animationConfig,
+      viewStyle
     );
   }
 

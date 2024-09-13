@@ -14,33 +14,35 @@ enum class TargetType {
 };
 
 class RelativeOrNumericValueInterpolator
-    : public ValueInterpolator<RelativeInterpolatorValue, double> {
+    : public ValueInterpolator<RelativeOrNumericInterpolatorValue> {
  public:
   RelativeOrNumericValueInterpolator(
       TargetType relativeTo,
-      const std::string &relativeProperty);
+      const std::string &relativeProperty,
+      const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue);
+
+  static double percentageToNumber(const std::string &value);
 
  protected:
-  RelativeInterpolatorValue prepareKeyframeValue(
+  RelativeOrNumericInterpolatorValue prepareKeyframeValue(
       jsi::Runtime &rt,
       const jsi::Value &value) const override;
 
-  jsi::Value convertResultToJSI(jsi::Runtime &rt, const double &value)
-      const override;
+  jsi::Value convertResultToJSI(
+      jsi::Runtime &rt,
+      const RelativeOrNumericInterpolatorValue &value) const override;
 
-  double resolveKeyframeValue(
-      const InterpolationUpdateContext context,
-      const RelativeInterpolatorValue &value) const override;
-
-  double interpolateBetweenKeyframes(
+  RelativeOrNumericInterpolatorValue interpolate(
       double localProgress,
-      const double &fromValue,
-      const double &toValue,
+      const RelativeOrNumericInterpolatorValue &fromValue,
+      const RelativeOrNumericInterpolatorValue &toValue,
       const InterpolationUpdateContext context) const override;
 
  private:
   TargetType relativeTo;
   std::string relativeProperty;
+
+  double getRelativeValue(const InterpolationUpdateContext context) const;
 };
 
 } // namespace reanimated

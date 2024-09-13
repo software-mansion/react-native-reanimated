@@ -14,7 +14,7 @@ jsi::Value MatrixValueInterpolator::convertResultToJSI(
   throw std::runtime_error("[Reanimated] Not implemented");
 }
 
-std::vector<double> MatrixValueInterpolator::interpolateBetweenKeyframes(
+std::vector<double> MatrixValueInterpolator::interpolate(
     double localProgress,
     const std::vector<double> &fromValue,
     const std::vector<double> &toValue,

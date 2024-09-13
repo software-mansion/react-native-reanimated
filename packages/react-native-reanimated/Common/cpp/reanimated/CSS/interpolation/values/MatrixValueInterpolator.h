@@ -9,6 +9,9 @@
 namespace reanimated {
 
 class MatrixValueInterpolator : public ValueInterpolator<std::vector<double>> {
+ public:
+  using ValueInterpolator<std::vector<double>>::ValueInterpolator;
+
  protected:
   std::vector<double> prepareKeyframeValue(
       jsi::Runtime &rt,
@@ -18,7 +21,7 @@ class MatrixValueInterpolator : public ValueInterpolator<std::vector<double>> {
       jsi::Runtime &rt,
       const std::vector<double> &value) const override;
 
-  std::vector<double> interpolateBetweenKeyframes(
+  std::vector<double> interpolate(
       double localProgress,
       const std::vector<double> &fromValue,
       const std::vector<double> &toValue,

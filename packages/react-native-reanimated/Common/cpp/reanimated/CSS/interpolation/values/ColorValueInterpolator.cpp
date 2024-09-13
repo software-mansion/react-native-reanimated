@@ -2,17 +2,25 @@
 
 namespace reanimated {
 
-ColorArray ColorValueInterpolator::prepareKeyframeValue(
-    jsi::Runtime &rt,
-    const jsi::Value &value) const {
-  // We receive colors as decimals made from AARRGGBB format hexes
-  unsigned color = static_cast<unsigned>(value.asNumber());
+ColorValueInterpolator::ColorValueInterpolator(
+    const std::optional<ColorArray> &defaultValue)
+    : ValueInterpolator<ColorArray>(defaultValue) {}
+
+ColorArray ColorValueInterpolator::toColorArray(unsigned color) {
   ColorArray channels;
   channels[0] = (color << 8) >> 24; // Red
   channels[1] = (color << 16) >> 24; // Green
   channels[2] = (color << 24) >> 24; // Blue
   channels[3] = color >> 24; // Alpha
   return channels;
+}
+
+ColorArray ColorValueInterpolator::prepareKeyframeValue(
+    jsi::Runtime &rt,
+    const jsi::Value &value) const {
+  // We receive colors as decimals made from AARRGGBB format hexes
+  unsigned color = static_cast<unsigned>(value.asNumber());
+  return toColorArray(color);
 }
 
 jsi::Value ColorValueInterpolator::convertResultToJSI(
@@ -23,14 +31,14 @@ jsi::Value ColorValueInterpolator::convertResultToJSI(
   return jsi::Value(color);
 }
 
-ColorArray ColorValueInterpolator::interpolateBetweenKeyframes(
+ColorArray ColorValueInterpolator::interpolate(
     double localProgress,
     const ColorArray &fromValue,
     const ColorArray &toValue,
     const InterpolationUpdateContext context) const {
   ColorArray resultChannels;
 
-  // interpolate rgb cahnnels using gamma correction and alpha channel without
+  // interpolate rgb channels using gamma correction and alpha channel without
   // it
   for (int i = 0; i < 4; i++) {
     double fromChannelValue =

@@ -7,8 +7,6 @@
 #include <string>
 #include <unordered_map>
 
-using namespace facebook;
-
 namespace reanimated {
 
 using ObjectPropertiesInterpolatorFactories =
@@ -23,7 +21,9 @@ class ObjectPropertiesInterpolator : public Interpolator {
       const jsi::Object &object,
       const ObjectPropertiesInterpolatorFactories &factories);
 
-  jsi::Value update(const InterpolationUpdateContext context);
+  void setStyleValue(jsi::Runtime &rt, const jsi::Value &value) override;
+
+  jsi::Value update(const InterpolationUpdateContext context) override;
 
  private:
   const ObjectPropertiesInterpolators interpolators_;

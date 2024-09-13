@@ -8,6 +8,11 @@
 namespace reanimated {
 
 class ColorValueInterpolator : public ValueInterpolator<ColorArray> {
+ public:
+  ColorValueInterpolator(const std::optional<ColorArray> &defaultValue);
+
+  static ColorArray toColorArray(unsigned color);
+
  protected:
   ColorArray prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const override;
@@ -15,7 +20,7 @@ class ColorValueInterpolator : public ValueInterpolator<ColorArray> {
   jsi::Value convertResultToJSI(jsi::Runtime &rt, const ColorArray &value)
       const override;
 
-  ColorArray interpolateBetweenKeyframes(
+  ColorArray interpolate(
       double localProgress,
       const ColorArray &fromValue,
       const ColorArray &toValue,
@@ -23,6 +28,7 @@ class ColorValueInterpolator : public ValueInterpolator<ColorArray> {
 
  private:
   double toLinearSpace(uint8_t value) const;
+
   uint8_t toGammaCorrectedSpace(double value) const;
 };
 

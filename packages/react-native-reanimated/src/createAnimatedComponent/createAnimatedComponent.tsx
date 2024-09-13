@@ -54,7 +54,7 @@ import { NativeEventsManager } from './NativeEventsManager';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { ReanimatedError } from '../errors';
 import {
-  buildCSSAnimationConfigFromStyles,
+  extractAnimationConfigAndFlattenedStyles,
   registerCSSAnimation,
   unregisterCSSAnimation,
 } from '../css';
@@ -432,7 +432,8 @@ export function createAnimatedComponent(
     }
 
     _attachCSSAnimation(plainStyles: StyleProps[]) {
-      const config = buildCSSAnimationConfigFromStyles(plainStyles);
+      const [config, flattenedStyle] =
+        extractAnimationConfigAndFlattenedStyles(plainStyles);
       if (!config) {
         return;
       }
@@ -450,7 +451,8 @@ export function createAnimatedComponent(
       registerCSSAnimation(
         shadowNodeWrapper as ShadowNodeWrapper,
         this._cssAnimationId,
-        config
+        config,
+        flattenedStyle
       );
     }
 

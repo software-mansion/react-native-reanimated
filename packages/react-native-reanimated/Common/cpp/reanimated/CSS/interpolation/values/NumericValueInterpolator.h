@@ -6,6 +6,9 @@
 namespace reanimated {
 
 class NumericValueInterpolator : public ValueInterpolator<double> {
+ public:
+  using ValueInterpolator<double>::ValueInterpolator;
+
  protected:
   double prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const override;
@@ -15,7 +18,7 @@ class NumericValueInterpolator : public ValueInterpolator<double> {
     return jsi::Value(value);
   }
 
-  double interpolateBetweenKeyframes(
+  double interpolate(
       double localProgress,
       const double &fromValue,
       const double &toValue,

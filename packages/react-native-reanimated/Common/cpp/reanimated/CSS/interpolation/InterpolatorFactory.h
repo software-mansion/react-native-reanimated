@@ -4,60 +4,94 @@
 #include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
 #include <reanimated/CSS/interpolation/groups/TransformsStyleInterpolator.h>
 #include <reanimated/CSS/interpolation/values/ColorValueInterpolator.h>
-#include <reanimated/CSS/interpolation/values/DiscreteNumberInterpolator.h>
 #include <reanimated/CSS/interpolation/values/DiscreteStringInterpolator.h>
 #include <reanimated/CSS/interpolation/values/MatrixValueInterpolator.h>
+#include <reanimated/CSS/interpolation/values/NumberStepsInterpolator.h>
 #include <reanimated/CSS/interpolation/values/NumericValueInterpolator.h>
 #include <reanimated/CSS/interpolation/values/RelativeOrNumericValueInterpolator.h>
 #include <reanimated/CSS/interpolation/values/WithUnitInterpolator.h>
 
 #include <jsi/jsi.h>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace reanimated {
+namespace Interpolators {
 
-class InterpolatorFactory {
- public:
-  static InterpolatorFactoryFunction object(
-      const ObjectPropertiesInterpolatorFactories &factories);
+InterpolatorFactoryFunction object(
+    const ObjectPropertiesInterpolatorFactories &factories);
 
-  static InterpolatorFactoryFunction transforms(
-      const TransformPropertyInterpolatorFactories &factories);
+InterpolatorFactoryFunction transforms(
+    const TransformPropertyInterpolatorFactories &factories);
 
-  static std::shared_ptr<Interpolator> color(
-      jsi::Runtime &rt,
-      const jsi::Value &value);
+InterpolatorFactoryFunction color(
+    const std::optional<ColorArray> &defaultValue);
+InterpolatorFactoryFunction color(const unsigned &defaultValue) {
+  return color(ColorValueInterpolator::toColorArray(defaultValue));
+}
+InterpolatorFactoryFunction color() {
+  return color(std::nullopt);
+}
 
-  static std::shared_ptr<Interpolator> numeric(
-      jsi::Runtime &rt,
-      const jsi::Value &value);
+InterpolatorFactoryFunction numeric(const std::optional<double> &defaultValue);
+InterpolatorFactoryFunction numeric() {
+  return numeric(std::nullopt);
+}
 
-  static std::shared_ptr<Interpolator> withUnit(
-      jsi::Runtime &rt,
-      const jsi::Value &value);
+InterpolatorFactoryFunction withUnit(
+    std::string baseUnit,
+    const std::optional<double> &defaultValue);
+InterpolatorFactoryFunction withUnit(std::string baseUnit) {
+  return withUnit(baseUnit, std::nullopt);
+}
 
-  static std::shared_ptr<Interpolator> matrix(
-      jsi::Runtime &rt,
-      const jsi::Value &value);
+InterpolatorFactoryFunction matrix(
+    const std::optional<std::vector<double>> &defaultValue);
+InterpolatorFactoryFunction matrix() {
+  return matrix(std::nullopt);
+}
 
-  static std::shared_ptr<Interpolator> discreteNumber(
-      jsi::Runtime &rt,
-      const jsi::Value &value);
+InterpolatorFactoryFunction steps(const std::optional<int> &defaultValue);
+InterpolatorFactoryFunction steps() {
+  return steps(std::nullopt);
+}
 
-  static std::shared_ptr<Interpolator> discreteString(
-      jsi::Runtime &rt,
-      const jsi::Value &value);
+InterpolatorFactoryFunction discrete(
+    const std::optional<std::string> &defaultValue);
+InterpolatorFactoryFunction discrete() {
+  return discrete(std::nullopt);
+}
 
-  static InterpolatorFactoryFunction relativeOrNumeric(
-      TargetType relativeTo,
-      const std::string &relativeProperty);
+InterpolatorFactoryFunction relativeOrNumeric(
+    TargetType relativeTo,
+    const std::string &relativeProperty,
+    const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue);
+InterpolatorFactoryFunction relativeOrNumeric(
+    TargetType relativeTo,
+    const std::string &relativeProperty,
+    const double &defaultValue) {
+  return relativeOrNumeric(
+      relativeTo,
+      relativeProperty,
+      RelativeOrNumericInterpolatorValue{defaultValue, false});
+}
+InterpolatorFactoryFunction relativeOrNumeric(
+    TargetType relativeTo,
+    const std::string &relativeProperty,
+    const std::string &defaultValue) {
+  const auto convertedValue =
+      RelativeOrNumericValueInterpolator::percentageToNumber(defaultValue);
+  return relativeOrNumeric(
+      relativeTo,
+      relativeProperty,
+      RelativeOrNumericInterpolatorValue{convertedValue, true});
+}
+InterpolatorFactoryFunction relativeOrNumeric(
+    TargetType relativeTo,
+    const std::string &relativeProperty) {
+  return relativeOrNumeric(relativeTo, relativeProperty, std::nullopt);
+}
 
- private:
-  template <typename T>
-  static std::shared_ptr<Interpolator> createValueInterpolator(
-      jsi::Runtime &rt,
-      const jsi::Value &value);
-};
-
+} // namespace Interpolators
 } // namespace reanimated

@@ -43,10 +43,9 @@ export default function PlaygroundExample() {
               height: '100%',
               backgroundColor: 'gold',
               shadowColor: 'black',
-              width: 20,
               animationName: {
                 from: {
-                  width: 20,
+                  width: 0,
                 },
                 0.1: {
                   width: '75%',

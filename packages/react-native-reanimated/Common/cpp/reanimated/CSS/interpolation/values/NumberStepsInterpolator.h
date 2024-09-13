@@ -6,7 +6,10 @@
 
 namespace reanimated {
 
-class DiscreteNumberInterpolator : public ValueInterpolator<int> {
+class NumberStepsInterpolator : public ValueInterpolator<int> {
+ public:
+  using ValueInterpolator<int>::ValueInterpolator;
+
  protected:
   int prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const override;
@@ -14,7 +17,7 @@ class DiscreteNumberInterpolator : public ValueInterpolator<int> {
   jsi::Value convertResultToJSI(jsi::Runtime &rt, const int &value)
       const override;
 
-  int interpolateBetweenKeyframes(
+  int interpolate(
       double localProgress,
       const int &fromValue,
       const int &toValue,

@@ -1,8 +1,9 @@
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 
 namespace reanimated {
+namespace Interpolators {
 
-InterpolatorFactoryFunction InterpolatorFactory::object(
+InterpolatorFactoryFunction object(
     const ObjectPropertiesInterpolatorFactories &factories) {
   return [factories](jsi::Runtime &rt, const jsi::Value &value) {
     auto propertiesObject = value.asObject(rt);
@@ -11,7 +12,7 @@ InterpolatorFactoryFunction InterpolatorFactory::object(
   };
 }
 
-InterpolatorFactoryFunction InterpolatorFactory::transforms(
+InterpolatorFactoryFunction transforms(
     const TransformPropertyInterpolatorFactories &factories) {
   return [factories](
              jsi::Runtime &rt,
@@ -22,61 +23,74 @@ InterpolatorFactoryFunction InterpolatorFactory::transforms(
   };
 }
 
-std::shared_ptr<Interpolator> InterpolatorFactory::color(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return createValueInterpolator<ColorValueInterpolator>(rt, value);
-}
-
-std::shared_ptr<Interpolator> InterpolatorFactory::numeric(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return createValueInterpolator<NumericValueInterpolator>(rt, value);
-}
-
-std::shared_ptr<Interpolator> InterpolatorFactory::withUnit(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return createValueInterpolator<WithUnitInterpolator>(rt, value);
-}
-
-std::shared_ptr<Interpolator> InterpolatorFactory::matrix(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return createValueInterpolator<MatrixValueInterpolator>(rt, value);
-}
-
-std::shared_ptr<Interpolator> InterpolatorFactory::discreteNumber(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return createValueInterpolator<DiscreteNumberInterpolator>(rt, value);
-}
-
-std::shared_ptr<Interpolator> InterpolatorFactory::discreteString(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  return createValueInterpolator<DiscreteStringInterpolator>(rt, value);
-}
-
-InterpolatorFactoryFunction InterpolatorFactory::relativeOrNumeric(
-    TargetType relativeTo,
-    const std::string &relativeProperty) {
-  return [relativeTo, relativeProperty](
-             jsi::Runtime &rt, const jsi::Value &value) {
-    auto interpolator = std::make_shared<RelativeOrNumericValueInterpolator>(
-        relativeTo, relativeProperty);
+InterpolatorFactoryFunction color(
+    const std::optional<ColorArray> &defaultValue) {
+  return [defaultValue](jsi::Runtime &rt, const jsi::Value &value) {
+    auto interpolator = std::make_shared<ColorValueInterpolator>(defaultValue);
     interpolator->initialize(rt, value);
     return interpolator;
   };
 }
 
-template <typename T>
-std::shared_ptr<Interpolator> InterpolatorFactory::createValueInterpolator(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  auto interpolator = std::make_shared<T>();
-  interpolator->initialize(rt, value);
-  return interpolator;
+InterpolatorFactoryFunction numeric(const std::optional<double> &defaultValue) {
+  return [defaultValue](jsi::Runtime &rt, const jsi::Value &value) {
+    auto interpolator =
+        std::make_shared<NumericValueInterpolator>(defaultValue);
+    interpolator->initialize(rt, value);
+    return interpolator;
+  };
 }
 
+InterpolatorFactoryFunction withUnit(
+    std::string baseUnit,
+    const std::optional<double> &defaultValue) {
+  return [baseUnit, defaultValue](jsi::Runtime &rt, const jsi::Value &value) {
+    auto interpolator =
+        std::make_shared<WithUnitInterpolator>(baseUnit, defaultValue);
+    interpolator->initialize(rt, value);
+    return interpolator;
+  };
+}
+
+InterpolatorFactoryFunction matrix(
+    const std::optional<std::vector<double>> &defaultValue) {
+  return [defaultValue](jsi::Runtime &rt, const jsi::Value &value) {
+    auto interpolator = std::make_shared<MatrixValueInterpolator>(defaultValue);
+    interpolator->initialize(rt, value);
+    return interpolator;
+  };
+}
+
+InterpolatorFactoryFunction steps(const std::optional<int> &defaultValue) {
+  return [defaultValue](jsi::Runtime &rt, const jsi::Value &value) {
+    auto interpolator = std::make_shared<NumberStepsInterpolator>(defaultValue);
+    interpolator->initialize(rt, value);
+    return interpolator;
+  };
+}
+
+InterpolatorFactoryFunction discrete(
+    const std::optional<std::string> &defaultValue) {
+  return [defaultValue](jsi::Runtime &rt, const jsi::Value &value) {
+    auto interpolator =
+        std::make_shared<DiscreteStringInterpolator>(defaultValue);
+    interpolator->initialize(rt, value);
+    return interpolator;
+  };
+}
+
+InterpolatorFactoryFunction relativeOrNumeric(
+    TargetType relativeTo,
+    const std::string &relativeProperty,
+    const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue) {
+  return [relativeTo, relativeProperty, defaultValue](
+             jsi::Runtime &rt, const jsi::Value &value) {
+    auto interpolator = std::make_shared<RelativeOrNumericValueInterpolator>(
+        relativeTo, relativeProperty, defaultValue);
+    interpolator->initialize(rt, value);
+    return interpolator;
+  };
+}
+
+} // namespace Interpolators
 } // namespace reanimated

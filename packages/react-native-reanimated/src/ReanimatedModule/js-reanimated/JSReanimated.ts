@@ -11,6 +11,7 @@ import type {
   IWorkletsModule,
   ShadowNodeWrapper,
   ShareableRef,
+  StyleProps,
   Value3D,
   ValueRotation,
   WorkletFunction,
@@ -269,7 +270,8 @@ class JSReanimated implements IReanimatedModule {
   registerCSSAnimation(
     _shadowNodeWrapper: ShadowNodeWrapper,
     _animationId: number,
-    _config: NormalizedCSSAnimationConfig
+    _animationConfig: NormalizedCSSAnimationConfig,
+    _viewStyle: StyleProps
   ): void {
     throw new ReanimatedError(
       '`registerCSSAnimation` is not available in JSReanimated.'
