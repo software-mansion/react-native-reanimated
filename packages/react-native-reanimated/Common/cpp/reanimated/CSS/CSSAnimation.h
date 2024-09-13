@@ -3,10 +3,6 @@
 #include <reanimated/CSS/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/KeyframedStyleInterpolator.h>
 
-#include <react/renderer/core/ShadowNode.h>
-
-#include <folly/dynamic.h>
-#include <jsi/jsi.h>
 #include <chrono>
 #include <cmath>
 #include <optional>
@@ -16,11 +12,9 @@
 
 namespace reanimated {
 
-using namespace facebook;
-using namespace react;
-
-enum CSSAnimationState { pending, running, finished };
+enum CSSAnimationState { pending, running, finishing, finished };
 enum CSSAnimationDirection { normal, reverse, alternate, alternateReverse };
+enum CSSAnimationFillMode { none, forwards, backwards, both };
 
 struct CSSAnimationConfig {
   jsi::Object keyframedStyle;
@@ -29,6 +23,7 @@ struct CSSAnimationConfig {
   double animationDelay;
   double animationIterationCount;
   std::string animationDirection;
+  std::string animationFillMode;
 };
 
 class CSSAnimation {
@@ -47,14 +42,12 @@ class CSSAnimation {
   }
 
   void setViewStyle(jsi::Runtime &rt, const jsi::Value &value) {
-    styleInterpolator.setStyleValue(rt, value);
+    styleInterpolator.setFallbackValue(rt, value);
   }
 
   void start(time_t timestamp);
-
-  jsi::Value update(jsi::Runtime &rt, time_t timestamp);
-
   void finish();
+  jsi::Value update(jsi::Runtime &rt, time_t timestamp);
 
  private:
   const ShadowNode::Shared shadowNode;
@@ -65,6 +58,7 @@ class CSSAnimation {
   const double duration;
   const double iterationCount;
   const EasingFunction easingFunction;
+  const CSSAnimationFillMode fillMode;
 
   CSSAnimationState state = CSSAnimationState::pending;
   time_t startTime = 0;
@@ -76,9 +70,20 @@ class CSSAnimation {
 
   static CSSAnimationDirection getAnimationDirection(const std::string &str);
 
+  static CSSAnimationFillMode getAnimationFillMode(const std::string &str);
+
   double updateIterationProgress(time_t timestamp);
 
   double applyAnimationDirection(double progress) const;
+
+  InterpolationUpdateContext createUpdateContext(
+      jsi::Runtime &rt,
+      double progress,
+      bool directionChanged) const;
+
+  jsi::Value maybeApplyBackwardsFillMode(jsi::Runtime &rt);
+
+  jsi::Value maybeApplyForwardsFillMode(jsi::Runtime &rt);
 };
 
 } // namespace reanimated

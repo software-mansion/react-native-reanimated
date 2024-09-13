@@ -10,11 +10,9 @@ export default function AnimationDelay() {
       from: {
         width: 0,
       },
-      to: {
-        width: '100%',
-      },
     },
     animationDuration: '3s',
+    animationFillMode: 'backwards',
   };
 
   const renderExample = (exampleConfig: CSSAnimationConfig) => (

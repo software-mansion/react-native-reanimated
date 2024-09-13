@@ -27,9 +27,11 @@ class TransformsStyleInterpolator : public Interpolator {
       const jsi::Array &transformsArray,
       const TransformPropertyInterpolatorFactories &factories);
 
-  void setStyleValue(jsi::Runtime &rt, const jsi::Value &value) override;
+  void setFallbackValue(jsi::Runtime &rt, const jsi::Value &value) override;
 
   jsi::Value update(const InterpolationUpdateContext context) override;
+
+  jsi::Value reset(const InterpolationUpdateContext context) override;
 
  private:
   const TransformPropertyInterpolators interpolators_;

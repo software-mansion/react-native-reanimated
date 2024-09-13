@@ -36,7 +36,7 @@ ObjectPropertiesInterpolators ObjectPropertiesInterpolator::build(
   return interpolators;
 }
 
-void ObjectPropertiesInterpolator::setStyleValue(
+void ObjectPropertiesInterpolator::setFallbackValue(
     jsi::Runtime &rt,
     const jsi::Value &value) {
   for (const auto &pair : interpolators_) {
@@ -49,7 +49,7 @@ void ObjectPropertiesInterpolator::setStyleValue(
       propValue = value.asObject(rt).getProperty(rt, propName.c_str());
     }
 
-    interpolator->setStyleValue(rt, propValue);
+    interpolator->setFallbackValue(rt, propValue);
   }
 }
 
@@ -63,6 +63,21 @@ jsi::Value ObjectPropertiesInterpolator::update(
     const std::shared_ptr<Interpolator> &interpolator = pair.second;
 
     result.setProperty(rt, propName.c_str(), interpolator->update(context));
+  }
+
+  return result;
+}
+
+jsi::Value ObjectPropertiesInterpolator::reset(
+    const InterpolationUpdateContext context) {
+  jsi::Runtime &rt = context.rt;
+  jsi::Object result(rt);
+
+  for (const auto &pair : interpolators_) {
+    const std::string &propName = pair.first;
+    const std::shared_ptr<Interpolator> &interpolator = pair.second;
+
+    result.setProperty(rt, propName.c_str(), interpolator->reset(context));
   }
 
   return result;

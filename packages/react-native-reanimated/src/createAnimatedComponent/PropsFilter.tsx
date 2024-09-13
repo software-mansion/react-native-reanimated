@@ -48,8 +48,6 @@ export class PropsFilter implements IPropsFilter {
             return this._initialStyle;
           } else if (hasInlineStyles(style)) {
             return getInlineStyle(style, component._isFirstRender);
-          } else if (style?.animationName) {
-            return { ...style, ...style.animationName.from };
           } else {
             return style;
           }

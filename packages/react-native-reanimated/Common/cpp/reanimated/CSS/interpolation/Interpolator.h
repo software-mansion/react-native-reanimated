@@ -29,9 +29,11 @@ class Interpolator {
  public:
   virtual ~Interpolator() = default;
 
-  virtual void setStyleValue(jsi::Runtime &rt, const jsi::Value &value) = 0;
+  virtual void setFallbackValue(jsi::Runtime &rt, const jsi::Value &value) = 0;
 
   virtual jsi::Value update(const InterpolationUpdateContext context) = 0;
+
+  virtual jsi::Value reset(const InterpolationUpdateContext context) = 0;
 };
 
 using InterpolatorFactoryFunction = std::function<

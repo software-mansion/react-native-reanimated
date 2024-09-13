@@ -1,19 +1,25 @@
 import type { CSSAnimationConfig } from 'react-native-reanimated';
-import type { ExampleItemProps, ExampleListCardProps } from './ExampleListCard';
+import type { ExampleItemProps } from './ExampleListCard';
 import {
   Scroll,
   Stagger,
   Section,
   ExampleListCard,
-  ExpandableCodeBlock,
+  CodeBlock,
 } from '../../../components';
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
+import { colors, spacing, radius } from '../../../theme';
+import { StyleSheet, View } from 'react-native';
 
 type ExampleCardSection = {
   title: string;
   description?: ReactNode;
   items: ExampleItemProps[];
+};
+
+type OverriddenProperties = {
+  [key in keyof CSSAnimationConfig]: CSSAnimationConfig[key][];
 };
 
 type ExampleScreenProps = {
@@ -29,43 +35,10 @@ export default function ExampleScreen({
 }: ExampleScreenProps) {
   const allItems = useMemo(() => cards.flatMap((card) => card.items), [cards]);
 
-  return (
-    <Scroll>
-      <Stagger>
-        {cards.map((card) => (
-          <Section
-            key={card.title}
-            title={card.title}
-            description={card.description}>
-            <ExampleListCard
-              config={config}
-              items={card.items}
-              renderExample={renderExample}
-            />
-          </Section>
-        ))}
-
-        <Section
-          title="Animation configuration"
-          description="Animation configuration shared between examples.">
-          <CodeBlock config={config} items={allItems} />
-        </Section>
-      </Stagger>
-    </Scroll>
-  );
-}
-
-type OverriddenProperties = {
-  [key in keyof CSSAnimationConfig]: CSSAnimationConfig[key][];
-};
-
-type CodeBlockProps = Pick<ExampleListCardProps, 'config' | 'items'>;
-
-function CodeBlock({ config, items }: CodeBlockProps) {
   const overrides = useMemo<OverriddenProperties>(() => {
     const result = {} as OverriddenProperties;
 
-    for (const item of items) {
+    for (const item of allItems) {
       for (const key in item) {
         if (key !== 'label') {
           const k = key as keyof typeof result;
@@ -79,9 +52,9 @@ function CodeBlock({ config, items }: CodeBlockProps) {
     }
 
     return result;
-  }, [items]);
+  }, [allItems]);
 
-  const expandedCode = useMemo(() => {
+  const code = useMemo(() => {
     return (
       '{\n  ' +
       [...new Set([...Object.keys(config), ...Object.keys(overrides)])]
@@ -105,10 +78,37 @@ function CodeBlock({ config, items }: CodeBlockProps) {
   }, [config, overrides]);
 
   return (
-    <ExpandableCodeBlock
-      expandedCode={expandedCode}
-      collapsedCode={JSON.stringify(config.animationName, null, 2)}
-      showExpandOverlay
-    />
+    <Scroll>
+      <Stagger>
+        {cards.map((card) => (
+          <Section
+            key={card.title}
+            title={card.title}
+            description={card.description}>
+            <ExampleListCard
+              config={config}
+              items={card.items}
+              renderExample={renderExample}
+            />
+          </Section>
+        ))}
+
+        <Section
+          title="Animation configuration"
+          description="Animation configuration shared between examples.">
+          <View style={styles.codeBlock}>
+            <CodeBlock code={code} />
+          </View>
+        </Section>
+      </Stagger>
+    </Scroll>
   );
 }
+
+const styles = StyleSheet.create({
+  codeBlock: {
+    backgroundColor: colors.background2,
+    padding: spacing.xs,
+    borderRadius: radius.sm,
+  },
+});
