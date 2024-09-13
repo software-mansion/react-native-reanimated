@@ -4,7 +4,6 @@ import {
   render,
   expect,
   mockAnimationTimer,
-  beforeEach,
   recordAnimationUpdates,
   waitForAnimationUpdates,
 } from '../../ReJest/RuntimeTestsApi';
@@ -18,12 +17,9 @@ import {
 import { Snapshot } from './StrictMode.snapshot';
 
 describe('StrictMode', () => {
-  beforeEach(async () => {
-    await mockAnimationTimer();
-  });
-
   test('Run animation - assign value', async () => {
     const snapshot = Snapshot.assignValue;
+    await mockAnimationTimer();
     const updateContainer = await recordAnimationUpdates();
 
     await render(<AssignValueExample />);
@@ -37,6 +33,7 @@ describe('StrictMode', () => {
 
   test('Run animation - assign animation', async () => {
     const snapshot = Snapshot.assignAnimation;
+    await mockAnimationTimer();
     const updateContainer = await recordAnimationUpdates();
 
     await render(<AssignAnimationExample />);
@@ -50,6 +47,7 @@ describe('StrictMode', () => {
 
   test('Entering animation', async () => {
     const snapshot = Snapshot.entering;
+    await mockAnimationTimer();
     const updateContainer = await recordAnimationUpdates();
 
     await render(<EnteringExample />);
@@ -63,6 +61,7 @@ describe('StrictMode', () => {
 
   test('Layout animation', async () => {
     const snapshot = Snapshot.layout;
+    await mockAnimationTimer();
     const updateContainer = await recordAnimationUpdates();
 
     await render(<LayoutExample />);
@@ -74,6 +73,7 @@ describe('StrictMode', () => {
 
   test('Exiting animation', async () => {
     const snapshot = Snapshot.exiting;
+    await mockAnimationTimer();
     const updateContainer = await recordAnimationUpdates();
 
     await render(<ExitingExample />);
