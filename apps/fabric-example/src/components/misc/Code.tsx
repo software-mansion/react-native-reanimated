@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ExpandableCard } from '../cards';
 import Animated, {
   FadeInDown,
@@ -12,8 +12,9 @@ import Animated, {
   FadeOutUp,
   LayoutAnimationConfig,
 } from 'react-native-reanimated';
-import { colors, radius, spacing, text } from '../../theme';
+import { colors, radius, spacing } from '../../theme';
 import { Scroll } from '../layout';
+import { Text } from '../core';
 
 type CodeBlockProps = {
   code: string;
@@ -30,9 +31,9 @@ export function CodeBlock({ code }: CodeBlockProps) {
 
   return (
     <Scroll horizontal contentContainerStyle={styles.codeContainer}>
-      <Text style={text.body1}>
+      <Text>
         {formattedCode.split('\n').map((line, index) => (
-          <Text key={index}>
+          <Text key={index} variant="code">
             {index > 0 && '\n'}
             {line}
           </Text>

@@ -40,13 +40,13 @@ export default function AnimationDuration() {
               If duration is not specified or is set to 0 (0s, 0ms, 0), only one
               frame of the animation will be applied, calculated based on
               <Text
-                variant="code"
+                variant="inlineCode"
                 navLink="Examples/AnimationSettings/FillMode">
                 animationFillMode
               </Text>
               and
               <Text
-                variant="code"
+                variant="inlineCode"
                 navLink="Examples/AnimationSettings/Direction">
                 animationDirection
               </Text>

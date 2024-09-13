@@ -108,12 +108,20 @@ export const text: Record<FontVariant, FontStyle> = {
     lineHeight: 18,
     fontFamily: BASE_FONT,
   },
+  inlineCode: {
+    fontSize: 12,
+    fontStyle: 'normal',
+    fontWeight: '400',
+    letterSpacing: 0.4,
+    lineHeight: 12,
+    fontFamily: MONOSPACE_FONT,
+  },
   code: {
     fontSize: 12,
     fontStyle: 'normal',
     fontWeight: '400',
-    letterSpacing: 0.25,
-    lineHeight: 10,
+    letterSpacing: 0,
+    lineHeight: 16,
     fontFamily: MONOSPACE_FONT,
   },
 };

@@ -1,6 +1,7 @@
-export { colors } from './colors';
-export { flex } from './layout';
-export { radius } from './radius';
-export { sizes } from './sizes';
-export { spacing } from './spacing';
-export { text } from './text';
+export * from './colors';
+export * from './layout';
+export * from './radius';
+export * from './sizes';
+export * from './spacing';
+export * from './text';
+export * from './icons';
