@@ -6,15 +6,16 @@ import type {
   CSSAnimationTimeUnit,
   CSSAnimationIterationCount,
   CSSAnimationKeyframes,
-  CSSAnimationTimingFunction,
   CSSKeyframeKey,
   KeyframedValue,
   KeyframedViewStyle,
   NormalizedCSSAnimationConfig,
   NormalizedOffsetKeyframe,
+  CSSAnimationFillMode,
 } from './types';
 import { ReanimatedError } from '../errors';
 import { processCSSAnimationColor } from '../Colors';
+import { isColorProp } from './utils';
 
 const VALID_ANIMATION_DIRECTIONS = [
   'normal',
@@ -22,6 +23,8 @@ const VALID_ANIMATION_DIRECTIONS = [
   'alternate',
   'alternate-reverse',
 ] as const;
+
+const VALID_FILL_MODES = ['none', 'forwards', 'backwards', 'both'] as const;
 
 export const ERROR_MESSAGES = {
   invalidDelay: (timeUnit: any) =>
@@ -42,12 +45,14 @@ export const ERROR_MESSAGES = {
     )}.`,
   invalidIterationCount: `[Reanimated] Invalid iteration count. Expected a number or "infinite".`,
   negativeIterationCount: `[Reanimated] Iteration count cannot be negative.`,
-  unsupportedTimingFunction: (timingFunction: any) =>
-    `[Reanimated] Unsupported timing function "${timingFunction}". Supported functions: linear, ease-in-out-back.`,
   invalidAnimationName: (animationName: any) =>
     `[Reanimated] Invalid animation "${animationName}". Expected an object containing keyframes.`,
   unsupportedColorFormat: (value: any, prop: string) =>
     `[Reanimated] Unsupported color format ${value} for ${prop} in CSS animation`,
+  unsupportedFillMode: (fillMode: any) =>
+    `[Reanimated] Unsupported fill mode "${fillMode}". Supported modes: ${VALID_FILL_MODES.join(
+      ', '
+    )}.`,
 };
 
 function normalizeTimeUnit(timeUnit: CSSAnimationTimeUnit): number | null {
@@ -246,10 +251,7 @@ export function handlePrimitiveValue(
   }
 
   let processedValue = value;
-  if (
-    prop.toLowerCase().includes('color') &&
-    (typeof value === 'string' || typeof value === 'number')
-  ) {
+  if (isColorProp(prop, value)) {
     processedValue = processCSSAnimationColor(value);
     if (!processedValue) {
       throw new ReanimatedError(
@@ -321,17 +323,13 @@ function normalizeIterationCount(
   return iterationCount;
 }
 
-const VALID_TIMING_FUNCTIONS = ['linear', 'ease-in-out-back'] as const;
-
-function normalizeTimingFunction(
-  timingFunction: CSSAnimationTimingFunction = 'linear'
-): CSSAnimationTimingFunction {
-  if (!VALID_TIMING_FUNCTIONS.includes(timingFunction)) {
-    throw new ReanimatedError(
-      ERROR_MESSAGES.unsupportedTimingFunction(timingFunction)
-    );
+function normalizeFillMode(
+  fillMode: CSSAnimationFillMode = 'none'
+): CSSAnimationFillMode {
+  if (!VALID_FILL_MODES.includes(fillMode)) {
+    throw new ReanimatedError(ERROR_MESSAGES.unsupportedFillMode(fillMode));
   }
-  return timingFunction;
+  return fillMode;
 }
 
 export function normalizeConfig({
@@ -341,6 +339,7 @@ export function normalizeConfig({
   animationTimingFunction,
   animationIterationCount,
   animationDirection,
+  animationFillMode,
 }: CSSAnimationConfig): NormalizedCSSAnimationConfig {
   if (!animationName || typeof animationName !== 'object') {
     throw new ReanimatedError(
@@ -351,9 +350,10 @@ export function normalizeConfig({
   return {
     animationName: createKeyframedStyle(animationName),
     animationDuration: normalizeDuration(animationDuration),
-    animationTimingFunction: normalizeTimingFunction(animationTimingFunction),
+    animationTimingFunction: animationTimingFunction ?? 'linear',
     animationDelay: normalizeDelay(animationDelay),
     animationIterationCount: normalizeIterationCount(animationIterationCount),
     animationDirection: normalizeDirection(animationDirection),
+    animationFillMode: normalizeFillMode(animationFillMode),
   };
 }

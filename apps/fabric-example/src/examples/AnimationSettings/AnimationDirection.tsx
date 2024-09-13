@@ -34,7 +34,7 @@ export default function AnimationDirection() {
           description:
             'Alternate animations change direction on each iteration. Changes are visible only if the number of iterations is greater than one.',
           items: [
-            { animationDirection: 'normal', label: 'normal' },
+            { animationDirection: 'normal', label: 'normal (default)' },
             { animationDirection: 'reverse', label: 'reverse' },
             { animationDirection: 'alternate', label: 'alternate' },
             {

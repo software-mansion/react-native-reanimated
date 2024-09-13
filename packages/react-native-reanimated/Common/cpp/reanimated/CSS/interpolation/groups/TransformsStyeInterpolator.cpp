@@ -71,13 +71,13 @@ TransformPropertyInterpolators TransformsStyleInterpolator::build(
   return interpolators;
 }
 
-void TransformsStyleInterpolator::setStyleValue(
+void TransformsStyleInterpolator::setFallbackValue(
     jsi::Runtime &rt,
     const jsi::Value &value) {
   if (!value.isObject() || !value.asObject(rt).isArray(rt)) {
     jsi::Value undefinedValue = jsi::Value::undefined();
     for (const auto &transformInterpolator : interpolators_) {
-      transformInterpolator.interpolator->setStyleValue(rt, undefinedValue);
+      transformInterpolator.interpolator->setFallbackValue(rt, undefinedValue);
     }
     return;
   }
@@ -93,7 +93,7 @@ void TransformsStyleInterpolator::setStyleValue(
         ? std::move(transform->second)
         : jsi::Value::undefined();
 
-    transformInterpolator.interpolator->setStyleValue(rt, transformValue);
+    transformInterpolator.interpolator->setFallbackValue(rt, transformValue);
   }
 }
 
@@ -119,6 +119,27 @@ jsi::Value TransformsStyleInterpolator::update(
   }
 
   return updateResult;
+}
+
+jsi::Value TransformsStyleInterpolator::reset(
+    const InterpolationUpdateContext context) {
+  jsi::Runtime &rt = context.rt;
+  jsi::Array resetResult(rt, interpolators_.size());
+
+  for (size_t i = 0; i < interpolators_.size(); ++i) {
+    const TransformPropertyInterpolator &transformInterpolator =
+        interpolators_[i];
+    jsi::Value resetValue = transformInterpolator.interpolator->reset(context);
+
+    jsi::Object obj(rt);
+    obj.setProperty(
+        rt,
+        jsi::PropNameID::forUtf8(rt, transformInterpolator.property),
+        resetValue);
+    resetResult.setValueAtIndex(rt, i, obj);
+  }
+
+  return resetResult;
 }
 
 } // namespace reanimated

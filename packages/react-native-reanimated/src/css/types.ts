@@ -17,6 +17,8 @@ export type CSSAnimationDirection =
   | 'alternate'
   | 'alternate-reverse';
 
+export type CSSAnimationFillMode = 'none' | 'forwards' | 'backwards' | 'both';
+
 export type NormalizedOffsetKeyframe = {
   offset: number;
   style: ViewStyle;
@@ -29,7 +31,7 @@ export interface CSSAnimationConfig {
   animationDelay?: CSSAnimationTimeUnit;
   animationIterationCount?: CSSAnimationIterationCount;
   animationDirection?: CSSAnimationDirection;
-  // animationFillMode?: // TODO
+  animationFillMode?: CSSAnimationFillMode;
   // animationPlayState?: // TODO
   // This is still experimental in browsers and we might not want to support it
   // when CSS animations in reanimated are released
@@ -43,6 +45,7 @@ export type NormalizedCSSAnimationConfig = {
   animationDelay: number;
   animationIterationCount: number;
   animationDirection: CSSAnimationDirection;
+  animationFillMode: CSSAnimationFillMode;
 };
 
 export type KeyframedValue<V> = {

@@ -11,26 +11,28 @@ KeyframedStyleInterpolator::KeyframedStyleInterpolator(
 
 const ObjectPropertiesInterpolatorFactories &
 KeyframedStyleInterpolator::getFactories() {
+  const unsigned TRANSPARENT = 0x00000000;
+
   // TODO: Set proper default values for all the interpolators
   static const ObjectPropertiesInterpolatorFactories factories = {
       // Colors
-      {"backgroundColor", color()},
-      {"borderBlockColor", color()},
-      {"borderBlockEndColor", color()},
-      {"borderBlockStartColor", color()},
-      {"borderBottomColor", color()},
-      {"borderColor", color()},
-      {"borderEndColor", color()},
-      {"borderLeftColor", color()},
-      {"borderRightColor", color()},
-      {"borderStartColor", color()},
-      {"borderTopColor", color()},
-      {"color", color()},
-      {"overlayColor", color()},
-      {"shadowColor", color()},
-      {"textDecorationColor", color()},
-      {"textShadowColor", color()},
-      {"tintColor", color()},
+      {"backgroundColor", color(TRANSPARENT)},
+      {"borderBlockColor", color(TRANSPARENT)},
+      {"borderBlockEndColor", color(TRANSPARENT)},
+      {"borderBlockStartColor", color(TRANSPARENT)},
+      {"borderBottomColor", color(TRANSPARENT)},
+      {"borderColor", color(TRANSPARENT)},
+      {"borderEndColor", color(TRANSPARENT)},
+      {"borderLeftColor", color(TRANSPARENT)},
+      {"borderRightColor", color(TRANSPARENT)},
+      {"borderStartColor", color(TRANSPARENT)},
+      {"borderTopColor", color(TRANSPARENT)},
+      {"color", color(TRANSPARENT)},
+      {"overlayColor", color(TRANSPARENT)},
+      {"shadowColor", color(TRANSPARENT)},
+      {"textDecorationColor", color(TRANSPARENT)},
+      {"textShadowColor", color(TRANSPARENT)},
+      {"tintColor", color(TRANSPARENT)},
 
       // Discrete props
       {"alignContent", discrete()},
@@ -101,7 +103,7 @@ KeyframedStyleInterpolator::getFactories() {
 
       // Dimensions (relative to parent)
       // TODO: All of these also can have 'auto' value
-      {"height", relativeOrNumeric(TargetType::Parent, "height", 0)},
+      {"height", relativeOrNumeric(TargetType::Parent, "height")},
       {"width", relativeOrNumeric(TargetType::Parent, "width", "100%")},
       {"maxHeight", relativeOrNumeric(TargetType::Parent, "height")},
       {"maxWidth", relativeOrNumeric(TargetType::Parent, "width")},

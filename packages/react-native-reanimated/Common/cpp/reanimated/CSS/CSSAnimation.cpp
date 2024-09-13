@@ -12,6 +12,7 @@ CSSAnimation::CSSAnimation(
       iterationCount(config.animationIterationCount),
       easingFunction(getEasingFunction(config.animationTimingFunction)),
       direction(getAnimationDirection(config.animationDirection)),
+      fillMode(getAnimationFillMode(config.animationFillMode)),
       styleInterpolator(KeyframedStyleInterpolator(rt, config.keyframedStyle)) {
 }
 
@@ -26,13 +27,20 @@ void CSSAnimation::start(time_t timestamp) {
   previousToPreviousProgress.reset();
 }
 
+void CSSAnimation::finish() {
+  state = CSSAnimationState::finished;
+}
+
 jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
   currentIterationElapsedTime =
       timestamp - (startTime + delay + previousIterationsDuration);
 
   // Check if the animation has not started yet because of the delay
   if (currentIterationElapsedTime < 0) {
-    return jsi::Value::undefined();
+    // We have to return the style from the first animation keyframe (apply
+    // backwards fill mode) in every keyframe before the animation starts
+    // if the fill mode is backwards or both
+    return maybeApplyBackwardsFillMode(rt);
   }
 
   double progress = applyAnimationDirection(updateIterationProgress(timestamp));
@@ -59,27 +67,20 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
     directionChanged = prevDiff * currentDiff < 0;
   }
 
-  auto updatedStyle = styleInterpolator.update({
-      .rt = rt,
-      .progress = easingFunction(progress),
-      .previousProgress = previousProgress,
-      .directionChanged = directionChanged,
-      .node = shadowNode,
-  });
+  auto updatedStyle = styleInterpolator.update(
+      createUpdateContext(rt, easingFunction(progress), directionChanged));
 
   previousToPreviousProgress = previousProgress;
   previousProgress = progress;
 
-  if (shouldFinish) {
+  if (state == CSSAnimationState::finishing) {
     finish();
+    return maybeApplyForwardsFillMode(rt);
+  } else if (shouldFinish) {
+    state = CSSAnimationState::finishing;
   }
 
   return updatedStyle;
-}
-
-void CSSAnimation::finish() {
-  state = CSSAnimationState::finished;
-  // TODO: restore original styles if animation-fill-mode is not set
 }
 
 CSSAnimationDirection CSSAnimation::getAnimationDirection(
@@ -96,7 +97,25 @@ CSSAnimationDirection CSSAnimation::getAnimationDirection(
     return it->second;
   } else {
     throw std::invalid_argument(
-        "Invalid string for CSSAnimationDirection enum: " + str);
+        "[Reanimated] Invalid string for CSSAnimationDirection enum: " + str);
+  }
+}
+
+CSSAnimationFillMode CSSAnimation::getAnimationFillMode(
+    const std::string &str) {
+  static const std::unordered_map<std::string, CSSAnimationFillMode>
+      strToEnumMap = {
+          {"none", none},
+          {"forwards", forwards},
+          {"backwards", backwards},
+          {"both", both}};
+
+  auto it = strToEnumMap.find(str);
+  if (it != strToEnumMap.end()) {
+    return it->second;
+  } else {
+    throw std::invalid_argument(
+        "[Reanimated] Invalid string for CSSAnimationFillMode enum: " + str);
   }
 }
 
@@ -144,6 +163,34 @@ double CSSAnimation::updateIterationProgress(time_t timestamp) {
   // If the current iteration changes, the progress must be updated respectively
   // not to contain the progress of the previous iteration
   return progress - deltaIterations;
+}
+
+InterpolationUpdateContext CSSAnimation::createUpdateContext(
+    jsi::Runtime &rt,
+    double progress,
+    bool directionChanged) const {
+  return {rt, shadowNode, progress, previousProgress, directionChanged};
+}
+
+jsi::Value CSSAnimation::maybeApplyBackwardsFillMode(jsi::Runtime &rt) {
+  if (fillMode == backwards || fillMode == both) {
+    // Return the style from the first animation keyframe
+    return styleInterpolator.update(createUpdateContext(rt, 0, false));
+  }
+
+  return jsi::Value::undefined();
+}
+
+jsi::Value CSSAnimation::maybeApplyForwardsFillMode(jsi::Runtime &rt) {
+  if (fillMode == forwards || fillMode == both) {
+    // Don't restore the style from the view style if the forwards fill mode is
+    // applied
+    return jsi::Value::undefined();
+  }
+
+  // Reset all styles applied during the animation and restore the
+  // view style
+  return styleInterpolator.reset(createUpdateContext(rt, 0, false));
 }
 
 } // namespace reanimated

@@ -29,9 +29,11 @@ class ValueInterpolator : public Interpolator {
 
   void initialize(jsi::Runtime &rt, const jsi::Value &keyframeArray);
 
-  void setStyleValue(jsi::Runtime &rt, const jsi::Value &value) override;
+  void setFallbackValue(jsi::Runtime &rt, const jsi::Value &value) override;
 
   jsi::Value update(const InterpolationUpdateContext context) override;
+
+  jsi::Value reset(const InterpolationUpdateContext context) override;
 
  protected:
   virtual T prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)

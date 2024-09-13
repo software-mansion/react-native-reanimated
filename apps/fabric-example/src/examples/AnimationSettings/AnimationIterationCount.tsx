@@ -13,6 +13,7 @@ export default function AnimationIterationCount() {
       },
     },
     animationDuration: '2s',
+    animationFillMode: 'forwards',
   };
 
   const renderExample = (exampleConfig: CSSAnimationConfig) => (

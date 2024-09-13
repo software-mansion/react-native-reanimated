@@ -486,6 +486,10 @@ void ReanimatedModuleProxy::registerCSSAnimation(
     const jsi::Value &viewStyle) {
   const auto &configObject = animationConfig.asObject(rt);
 
+  LOG(INFO) << "Registering CSS animation with id: " << animationId.asNumber()
+            << " and config: " << stringifyJSIValue(rt, animationConfig)
+            << " and viewStyle: " << stringifyJSIValue(rt, viewStyle);
+
   auto keyframedStyle =
       configObject.getProperty(rt, "animationName").asObject(rt);
   auto animationDuration =
@@ -500,6 +504,8 @@ void ReanimatedModuleProxy::registerCSSAnimation(
       (configObject.getProperty(rt, "animationIterationCount").asNumber());
   auto animationDirection =
       configObject.getProperty(rt, "animationDirection").asString(rt).utf8(rt);
+  auto animationFillMode =
+      configObject.getProperty(rt, "animationFillMode").asString(rt).utf8(rt);
 
   CSSAnimationConfig config{
       std::move(keyframedStyle),
@@ -507,7 +513,8 @@ void ReanimatedModuleProxy::registerCSSAnimation(
       animationTimingFunction,
       animationDelay,
       animationIterationCount,
-      animationDirection};
+      animationDirection,
+      animationFillMode};
 
   cssAnimationsRegistry_->addAnimation(
       rt,

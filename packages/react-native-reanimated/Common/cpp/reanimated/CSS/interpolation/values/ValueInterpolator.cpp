@@ -13,7 +13,7 @@ void ValueInterpolator<T>::initialize(
 }
 
 template <typename T>
-void ValueInterpolator<T>::setStyleValue(
+void ValueInterpolator<T>::setFallbackValue(
     jsi::Runtime &rt,
     const jsi::Value &value) {
   if (value.isUndefined()) {
@@ -188,6 +188,23 @@ jsi::Value ValueInterpolator<T>::update(
   previousValue_ = value;
 
   return convertResultToJSI(context.rt, value);
+}
+
+template <typename T>
+jsi::Value ValueInterpolator<T>::reset(
+    const InterpolationUpdateContext context) {
+  keyframeAfterIndex_ = 0;
+  keyframeBefore_.reset();
+  keyframeAfter_.reset();
+  previousValue_.reset();
+
+  if (convertedStyleValue_.has_value()) {
+    return convertResultToJSI(
+        context.rt,
+        resolveKeyframeValue(convertedStyleValue_.value(), context));
+  }
+
+  return jsi::Value::undefined();
 }
 
 // Declare the types that will be used in the ValueInterpolator class

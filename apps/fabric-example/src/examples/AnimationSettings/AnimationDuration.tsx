@@ -11,9 +11,6 @@ export default function AnimationDuration() {
       from: {
         width: 0,
       },
-      to: {
-        width: '100%',
-      },
     },
   };
 

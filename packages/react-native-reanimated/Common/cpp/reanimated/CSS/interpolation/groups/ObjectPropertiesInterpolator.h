@@ -21,9 +21,11 @@ class ObjectPropertiesInterpolator : public Interpolator {
       const jsi::Object &object,
       const ObjectPropertiesInterpolatorFactories &factories);
 
-  void setStyleValue(jsi::Runtime &rt, const jsi::Value &value) override;
+  void setFallbackValue(jsi::Runtime &rt, const jsi::Value &value) override;
 
   jsi::Value update(const InterpolationUpdateContext context) override;
+
+  jsi::Value reset(const InterpolationUpdateContext context) override;
 
  private:
   const ObjectPropertiesInterpolators interpolators_;

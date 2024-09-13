@@ -33,7 +33,8 @@ UpdatesBatch CSSAnimationsRegistry::updateAnimations(
         animation.start(timestamp);
         // don't break;
       }
-      case CSSAnimationState::running: {
+      case CSSAnimationState::running:
+      case CSSAnimationState::finishing: {
         auto shadowNode = animation.getShadowNode();
 
         const jsi::Value &updates = animation.update(rt, timestamp);
