@@ -1,4 +1,4 @@
-import { AnimatedProperties, Playground } from '../examples';
+import { AnimatedProperties, Playground, AnimationSettings } from '../examples';
 import type { Routes } from './types';
 
 // TODO: Add more routes after implementing examples
@@ -12,45 +12,70 @@ const routes: Routes = {
     routes: {
       Dimensions: {
         name: 'Dimensions',
-        Component: AnimatedProperties.DimensionsExample,
+        Component: AnimatedProperties.Dimensions,
       },
       FlexStyles: {
         name: 'Flex Styles',
-        Component: AnimatedProperties.FlexStylesExample,
+        Component: AnimatedProperties.FlexStyles,
       },
       Insets: {
         name: 'Insets',
-        Component: AnimatedProperties.InsetsExample,
+        Component: AnimatedProperties.Insets,
       },
       Transforms: {
         name: 'Transforms',
-        Component: AnimatedProperties.TransformsExample,
+        Component: AnimatedProperties.Transforms,
       },
       Colors: {
         name: 'Colors',
-        Component: AnimatedProperties.ColorsExample,
+        Component: AnimatedProperties.Colors,
       },
       Borders: {
         name: 'Borders',
-        Component: AnimatedProperties.BordersExample,
+        Component: AnimatedProperties.Borders,
       },
       Margins: {
         name: 'Margins',
-        Component: AnimatedProperties.MarginsExample,
+        Component: AnimatedProperties.Margins,
       },
       Paddings: {
         name: 'Paddings',
-        Component: AnimatedProperties.PaddingsExample,
+        Component: AnimatedProperties.Paddings,
       },
     },
   },
-  Easings: {
-    name: 'Easings',
-    routes: {},
-  },
   AnimationSettings: {
     name: 'Animation Settings',
-    routes: {},
+    routes: {
+      Duration: {
+        name: 'Duration',
+        Component: AnimationSettings.AnimationDuration,
+      },
+      TimingFunction: {
+        name: 'Timing Function',
+        Component: AnimationSettings.AnimationTimingFunction,
+      },
+      Delay: {
+        name: 'Delay',
+        Component: AnimationSettings.AnimationDelay,
+      },
+      IterationCount: {
+        name: 'Iteration Count',
+        Component: AnimationSettings.AnimationIterationCount,
+      },
+      Direction: {
+        name: 'Direction',
+        Component: AnimationSettings.AnimationDirection,
+      },
+      FillMode: {
+        name: 'Fill Mode',
+        Component: AnimationSettings.AnimationFillMode,
+      },
+      PlayState: {
+        name: 'Play State',
+        Component: AnimationSettings.AnimationPlayState,
+      },
+    },
   },
   RealWorldExamples: {
     name: 'Real World Examples',

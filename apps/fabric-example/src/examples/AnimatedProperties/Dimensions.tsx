@@ -1,10 +1,11 @@
 import type { DimensionValue } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type { CSSAnimationConfig } from 'react-native-reanimated';
-import type { ExampleCardProps } from '../../components';
-import { ExampleCard, Section, TabView } from '../../components';
+import { Section, TabView } from '../../components';
 import { sizes, colors, radius } from '../../theme';
 import Animated from 'react-native-reanimated';
+import type { ExampleCardProps } from './components';
+import { ExampleCard } from './components';
 
 export default function DimensionsExample() {
   return (

@@ -78,6 +78,8 @@ void ViewPropsRepository::updateCacheIfNeeded(
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
+  // TODO - fix crash on unmount (this still sometimes crashes on the line
+  // below)
   cachedNode.layoutMetrics =
       dynamic_cast<const LayoutableShadowNode *>(newestCloneOfShadowNode.get())
           ->layoutMetrics_;

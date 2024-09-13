@@ -1,21 +1,21 @@
-import BordersExample from './BordersExample';
-import ColorsExample from './ColorsExample';
-import DimensionsExample from './DimensionsExample';
-import FlexStylesExample from './FlexStylesExample';
-import InsetsExample from './InsetsExample';
-import MarginsExample from './MarginsExample';
-import PaddingsExample from './PaddingsExample';
-import ShadowsExample from './ShadowsExample';
-import TransformsExample from './TransformsExample';
+import Borders from './Borders';
+import Colors from './Colors';
+import Dimensions from './Dimensions';
+import FlexStyles from './FlexStyles';
+import Insets from './Insets';
+import Margins from './Margins';
+import Paddings from './Paddings';
+import Shadows from './Shadows';
+import Transforms from './Transforms';
 
 export default {
-  DimensionsExample,
-  ColorsExample,
-  BordersExample,
-  FlexStylesExample,
-  InsetsExample,
-  MarginsExample,
-  PaddingsExample,
-  ShadowsExample,
-  TransformsExample,
+  Dimensions,
+  Colors,
+  Borders,
+  FlexStyles,
+  Insets,
+  Margins,
+  Paddings,
+  Shadows,
+  Transforms,
 };

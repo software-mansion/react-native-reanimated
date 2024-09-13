@@ -1,23 +1,17 @@
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { flex, colors, radius, spacing, text } from '../../theme';
+import { flex, colors, radius, spacing, text } from '../../../theme';
 import { useState } from 'react';
 import type { PropsWithChildren } from 'react';
 import Animated, {
-  interpolate,
   LinearTransition,
   useAnimatedStyle,
-  useDerivedValue,
   useSharedValue,
   withTiming,
   LayoutAnimationConfig,
-  FadeInDown,
   FadeOutDown,
+  FadeInDown,
 } from 'react-native-reanimated';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
-import { sizes } from '../../theme/sizes';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { CodeBlock } from '../misc';
+import { ExpandableCard, CodeBlock } from '../../../components';
 
 const AnimatedTouchableOpacity =
   Animated.createAnimatedComponent(TouchableOpacity);
@@ -38,18 +32,13 @@ export default function ExampleCard({
   collapsedCode,
   description,
   collapsedExampleHeight = 150,
-  minExampleHeight = 150,
+  minExampleHeight,
 }: ExampleCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const expandProgress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0));
   const exampleContainerDimensions = useSharedValue<{
     width: number;
     height: number;
   } | null>(null);
-
-  const animatedGradientStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(expandProgress.value, [0, 1], [1, 0]),
-  }));
 
   const animatedExampleStyle = useAnimatedStyle(() => {
     if (!exampleContainerDimensions.value) {
@@ -64,11 +53,12 @@ export default function ExampleCard({
     };
   });
 
-  const OVERLAY_HEIGHT = sizes.xl;
-
   return (
     <LayoutAnimationConfig skipEntering skipExiting>
-      <Animated.View layout={LinearTransition} style={styles.container}>
+      <ExpandableCard
+        expanded={isExpanded}
+        onChange={setIsExpanded}
+        showExpandOverlay>
         <Text style={styles.title}>{title}</Text>
         {description && <Text style={styles.description}>{description}</Text>}
         <View
@@ -93,7 +83,6 @@ export default function ExampleCard({
               </Animated.View>
             )}
           </Animated.View>
-
           {/* Example */}
           <AnimatedTouchableOpacity
             onPress={() => setIsExpanded(true)}
@@ -101,7 +90,11 @@ export default function ExampleCard({
             style={[
               styles.itemWrapper,
               flex.center,
-              { minHeight: minExampleHeight },
+              {
+                minHeight:
+                  minExampleHeight ||
+                  Math.min(minExampleHeight ?? 150, collapsedExampleHeight),
+              },
             ]}
             layout={LinearTransition}
             onLayout={({
@@ -127,60 +120,12 @@ export default function ExampleCard({
             </Animated.View>
           </AnimatedTouchableOpacity>
         </View>
-
-        {/* Overlay */}
-        <Animated.View
-          style={[styles.overlay, { height: OVERLAY_HEIGHT }]}
-          layout={LinearTransition}>
-          <Animated.View style={[styles.gradient, animatedGradientStyle]}>
-            <Svg height={OVERLAY_HEIGHT} width="100%">
-              <Defs>
-                <LinearGradient
-                  id="vertical-gradient"
-                  x1="0"
-                  x2="0"
-                  y1="0"
-                  y2="1">
-                  <Stop
-                    offset="0"
-                    stopColor={colors.background1}
-                    stopOpacity="0"
-                  />
-                  <Stop
-                    offset="0.8"
-                    stopColor={colors.background1}
-                    stopOpacity="1"
-                  />
-                </LinearGradient>
-              </Defs>
-
-              <Rect fill="url(#vertical-gradient)" height="100%" width="100%" />
-            </Svg>
-          </Animated.View>
-
-          <TouchableOpacity
-            onPress={() => setIsExpanded(!isExpanded)}
-            style={styles.expandButton}>
-            <FontAwesomeIcon
-              icon={isExpanded ? faChevronUp : faChevronDown}
-              size={sizes.xxxs}
-              color={colors.primary}
-            />
-            <Text style={styles.expandButtonText}>
-              {isExpanded ? 'Collapse' : 'Expand'}
-            </Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </Animated.View>
+      </ExpandableCard>
     </LayoutAnimationConfig>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    overflow: 'hidden',
-    paddingBottom: spacing.xl,
-  },
   title: {
     ...text.subHeading2,
     marginBottom: spacing.xs,
@@ -204,8 +149,8 @@ const styles = StyleSheet.create({
     flexBasis: '50%',
     backgroundColor: colors.background2,
     borderRadius: radius.sm,
-    padding: spacing.xs,
     overflow: 'hidden',
+    padding: spacing.xs,
   },
   exampleOuterContainer: {
     ...flex.center,
@@ -216,27 +161,5 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     padding: spacing.xs,
     backgroundColor: colors.background2,
-  },
-  overlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    pointerEvents: 'box-none',
-  },
-  gradient: {
-    ...StyleSheet.absoluteFillObject,
-    pointerEvents: 'none',
-  },
-  expandButton: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    alignItems: 'center',
-  },
-  expandButtonText: {
-    ...text.label2,
-    color: colors.primary,
   },
 });
