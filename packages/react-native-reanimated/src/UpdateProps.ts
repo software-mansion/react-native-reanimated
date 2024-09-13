@@ -4,7 +4,6 @@ import type { MutableRefObject } from 'react';
 import { processColorsInProps } from './Colors';
 import type {
   ShadowNodeWrapper,
-  SharedValue,
   StyleProps,
   AnimatedStyle,
 } from './commonTypes';
@@ -13,9 +12,10 @@ import type { ReanimatedHTMLElement } from './js-reanimated';
 import { _updatePropsJS } from './js-reanimated';
 import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
 import { runOnUIImmediately } from './threads';
+import { ReanimatedError } from './errors';
 
 let updateProps: (
-  viewDescriptor: SharedValue<Descriptor[]>,
+  viewDescriptors: ViewDescriptorsWrapper,
   updates: StyleProps | AnimatedStyle<any>,
   isAnimatedProps?: boolean
 ) => void;
@@ -37,7 +37,7 @@ if (shouldBeUseWeb()) {
 }
 
 export const updatePropsJestWrapper = (
-  viewDescriptors: SharedValue<Descriptor[]>,
+  viewDescriptors: ViewDescriptorsWrapper,
   updates: AnimatedStyle<any>,
   animatedStyle: MutableRefObject<AnimatedStyle<any>>,
   adapters: ((updates: AnimatedStyle<any>) => void)[]
@@ -65,7 +65,7 @@ const createUpdatePropsManager = isFabric()
       }[] = [];
       return {
         update(
-          viewDescriptors: SharedValue<Descriptor[]>,
+          viewDescriptors: ViewDescriptorsWrapper,
           updates: StyleProps | AnimatedStyle<any>
         ) {
           viewDescriptors.value.forEach((viewDescriptor) => {
@@ -94,7 +94,7 @@ const createUpdatePropsManager = isFabric()
       }[] = [];
       return {
         update(
-          viewDescriptors: SharedValue<Descriptor[]>,
+          viewDescriptors: ViewDescriptorsWrapper,
           updates: StyleProps | AnimatedStyle<any>
         ) {
           viewDescriptors.value.forEach((viewDescriptor) => {
@@ -120,8 +120,8 @@ if (shouldBeUseWeb()) {
     // Jest attempts to access a property of this object to check if it is a Jest mock
     // so we can't throw an error in the getter.
     if (!isJest()) {
-      throw new Error(
-        '[Reanimated] `UpdatePropsManager` is not available on non-native platform.'
+      throw new ReanimatedError(
+        '`UpdatePropsManager` is not available on non-native platform.'
       );
     }
   };
@@ -141,8 +141,16 @@ if (shouldBeUseWeb()) {
 
 export interface UpdatePropsManager {
   update(
-    viewDescriptors: SharedValue<Descriptor[]>,
+    viewDescriptors: ViewDescriptorsWrapper,
     updates: StyleProps | AnimatedStyle<any>
   ): void;
   flush(): void;
+}
+
+/**
+ * This used to be `SharedValue<Descriptors[]>` but objects holding just a
+ * single `value` prop are fine too.
+ */
+interface ViewDescriptorsWrapper {
+  value: Readonly<Descriptor[]>;
 }

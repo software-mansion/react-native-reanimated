@@ -5,11 +5,14 @@ import {
   ReducedMotionManager,
   isReducedMotionEnabledInSystem,
 } from '../ReducedMotion';
+import { logger } from '../logger';
 
 /**
- * A component that lets you overwrite default reduce motion behavior globally in your application.
+ * A component that lets you overwrite default reduce motion behavior globally
+ * in your application.
  *
- * @param mode - Determines default reduce motion behavior globally in your application. Configured with {@link ReduceMotion} enum.
+ * @param mode - Determines default reduce motion behavior globally in your
+ *   application. Configured with {@link ReduceMotion} enum.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/components/ReducedMotionConfig
  */
 export function ReducedMotionConfig({ mode }: { mode: ReduceMotion }) {
@@ -17,9 +20,7 @@ export function ReducedMotionConfig({ mode }: { mode: ReduceMotion }) {
     if (!__DEV__) {
       return;
     }
-    console.warn(
-      `[Reanimated] Reduced motion setting is overwritten with mode '${mode}'.`
-    );
+    logger.warn(`Reduced motion setting is overwritten with mode '${mode}'.`);
   }, []);
 
   useEffect(() => {

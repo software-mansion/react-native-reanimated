@@ -4,7 +4,7 @@ title: scrollTo
 sidebar_label: scrollTo
 ---
 
-Provides synchronous scroll on the UI thread to a given offset using an animated ref to a scroll view. This allows performing smooth scrolling without lags (which might have otherwise occured when it was asynchronous and based on lots of events).
+Provides synchronous scroll on the UI thread to a given offset using an animated ref to a scroll view. This allows performing smooth scrolling without lags (which might have otherwise occurred when it was asynchronous and based on lots of events).
 
 ### Arguments
 

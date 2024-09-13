@@ -1,6 +1,7 @@
 {
   "name": "eslint-plugin-reanimated",
   "version": "1.0.0",
+  "private": true,
   "license": "MIT",
   "types": "lib",
   "scripts": {
@@ -19,7 +20,7 @@
     "esbuild": "^0.20.0",
     "eslint": "^8.57.0",
     "jest": "^29.7.0",
-    "prettier": "2.8.8",
+    "prettier": "^3.3.3",
     "ts-jest": "^29.1.2",
     "typescript": "~5.3.0"
   }

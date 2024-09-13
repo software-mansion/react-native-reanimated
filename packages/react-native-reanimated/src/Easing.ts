@@ -15,8 +15,8 @@ import type { EasingFunction } from './commonTypes';
  * The `Easing` module provides several predefined animations through the
  * following methods:
  *
- * - [`back`](docs/easing.html#back) provides a simple animation where the
- *   object goes slightly back before moving forward
+ * - [`back`](docs/easing.html#back) provides a simple animation where the object
+ *   goes slightly back before moving forward
  * - [`bounce`](docs/easing.html#bounce) provides a bouncing animation
  * - [`ease`](docs/easing.html#ease) provides a simple inertial animation
  * - [`elastic`](docs/easing.html#elastic) provides a simple spring interaction
@@ -48,16 +48,12 @@ import type { EasingFunction } from './commonTypes';
  * - [`out`](docs/easing.html#out) runs an easing function backwards
  */
 
-/**
- * @deprecated Please use {@link EasingFunction} type instead.
- */
+/** @deprecated Please use {@link EasingFunction} type instead. */
 export type EasingFn = EasingFunction;
 
 export type EasingFunctionFactory = { factory: () => EasingFunction };
 
-/**
- * @deprecated Please use {@link EasingFunctionFactory} type instead.
- */
+/** @deprecated Please use {@link EasingFunctionFactory} type instead. */
 export type EasingFactoryFn = EasingFunctionFactory;
 /**
  * A linear function, `f(t) = t`. Position correlates to elapsed time one to
@@ -106,8 +102,7 @@ function cubic(t: number): number {
 /**
  * A power function. Position is equal to the Nth power of elapsed time.
  *
- * n = 4: http://easings.net/#easeInQuart
- * n = 5: http://easings.net/#easeInQuint
+ * N = 4: http://easings.net/#easeInQuart n = 5: http://easings.net/#easeInQuint
  */
 function poly(n: number): EasingFunction {
   'worklet';
@@ -148,11 +143,10 @@ function exp(t: number): number {
 }
 
 /**
- * A simple elastic interaction, similar to a spring oscillating back and
- * forth.
+ * A simple elastic interaction, similar to a spring oscillating back and forth.
  *
  * Default bounciness is 1, which overshoots a little bit once. 0 bounciness
- * doesn't overshoot at all, and bounciness of N \> 1 will overshoot about N
+ * doesn't overshoot at all, and bounciness of N `>` 1 will overshoot about N
  * times.
  *
  * http://easings.net/#easeInElastic
@@ -239,17 +233,13 @@ function bezierFn(
   return Bezier(x1, y1, x2, y2);
 }
 
-/**
- * Runs an easing function forwards.
- */
+/** Runs an easing function forwards. */
 function in_(easing: EasingFunction): EasingFunction {
   'worklet';
   return easing;
 }
 
-/**
- * Runs an easing function backwards.
- */
+/** Runs an easing function backwards. */
 function out(easing: EasingFunction): EasingFunction {
   'worklet';
   return (t) => {
@@ -259,9 +249,8 @@ function out(easing: EasingFunction): EasingFunction {
 }
 
 /**
- * Makes any easing function symmetrical. The easing function will run
- * forwards for half of the duration, then backwards for the rest of the
- * duration.
+ * Makes any easing function symmetrical. The easing function will run forwards
+ * for half of the duration, then backwards for the rest of the duration.
  */
 function inOut(easing: EasingFunction): EasingFunction {
   'worklet';
@@ -275,10 +264,11 @@ function inOut(easing: EasingFunction): EasingFunction {
 }
 
 /**
- * The `steps` easing function jumps between discrete values at regular intervals,
- * creating a stepped animation effect. The `n` parameter determines the number of
- * steps in the animation, and the `roundToNextStep` parameter determines whether the animation
- * should start at the beginning or end of each step.
+ * The `steps` easing function jumps between discrete values at regular
+ * intervals, creating a stepped animation effect. The `n` parameter determines
+ * the number of steps in the animation, and the `roundToNextStep` parameter
+ * determines whether the animation should start at the beginning or end of each
+ * step.
  */
 function steps(n = 10, roundToNextStep = true): EasingFunction {
   'worklet';
