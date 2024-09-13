@@ -8,12 +8,13 @@ namespace reanimated {
 
 class DiscreteNumberInterpolator : public ValueInterpolator<int> {
  protected:
-  int convertValue(jsi::Runtime &rt, const jsi::Value &value) const override;
-
-  jsi::Value convertToJSIValue(jsi::Runtime &rt, const int &value)
+  int prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const override;
 
-  int interpolate(
+  jsi::Value convertResultToJSI(jsi::Runtime &rt, const int &value)
+      const override;
+
+  int interpolateBetweenKeyframes(
       double localProgress,
       const int &fromValue,
       const int &toValue,

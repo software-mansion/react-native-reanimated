@@ -7,7 +7,7 @@ const std::unordered_map<std::string, ConversionRate>
         {"rad", {"deg", 180.0 / M_PI}},
 };
 
-double WithUnitInterpolator::convertValue(
+double WithUnitInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
   static const std::regex regexPattern("([-+]?[0-9]*\\.?[0-9]+)(.*)");
@@ -46,7 +46,7 @@ double WithUnitInterpolator::convertValue(
   }
 }
 
-jsi::Value WithUnitInterpolator::convertToJSIValue(
+jsi::Value WithUnitInterpolator::convertResultToJSI(
     jsi::Runtime &rt,
     const double &value) const {
   std::ostringstream oss;

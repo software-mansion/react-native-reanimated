@@ -7,7 +7,8 @@ RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
     const std::string &relativeProperty)
     : relativeTo(relativeTo), relativeProperty(relativeProperty) {}
 
-RelativeInterpolatorValue RelativeOrNumericValueInterpolator::convertValue(
+RelativeInterpolatorValue
+RelativeOrNumericValueInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
   // Numeric value
@@ -25,27 +26,27 @@ RelativeInterpolatorValue RelativeOrNumericValueInterpolator::convertValue(
       str);
 }
 
-jsi::Value RelativeOrNumericValueInterpolator::convertToJSIValue(
+jsi::Value RelativeOrNumericValueInterpolator::convertResultToJSI(
     jsi::Runtime &rt,
-    const RelativeInterpolatorValue &value) const {
-  return jsi::Value(value.value);
+    const double &value) const {
+  return jsi::Value(value);
 }
 
-RelativeInterpolatorValue RelativeOrNumericValueInterpolator::interpolate(
+double RelativeOrNumericValueInterpolator::interpolateBetweenKeyframes(
     double localProgress,
-    const RelativeInterpolatorValue &fromValue,
-    const RelativeInterpolatorValue &toValue,
+    const double &from,
+    const double &to,
     const InterpolationUpdateContext context) const {
-  double from =
-      (fromValue.isRelative ? getRelativeValue(context) : 1) * fromValue.value;
-  double to =
-      (toValue.isRelative ? getRelativeValue(context) : 1) * toValue.value;
-
-  return {from + (to - from) * localProgress, false};
+  return from + (to - from) * localProgress;
 }
 
-double RelativeOrNumericValueInterpolator::getRelativeValue(
-    const InterpolationUpdateContext context) const {
+double RelativeOrNumericValueInterpolator::resolveKeyframeValue(
+    const InterpolationUpdateContext context,
+    const RelativeInterpolatorValue &keyframeValue) const {
+  if (!keyframeValue.isRelative) {
+    return keyframeValue.value;
+  }
+
   auto &viewPropsRepository = ViewPropsRepository::getInstance();
   jsi::Value relativeValue;
 
@@ -67,7 +68,9 @@ double RelativeOrNumericValueInterpolator::getRelativeValue(
     return 0;
   }
 
-  return relativeValue.asNumber();
+  const auto percentage = keyframeValue.value;
+
+  return percentage * relativeValue.asNumber();
 }
 
 } // namespace reanimated

@@ -2,19 +2,19 @@
 
 namespace reanimated {
 
-std::string DiscreteStringInterpolator::convertValue(
+std::string DiscreteStringInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
   return value.asString(rt).utf8(rt);
 }
 
-jsi::Value DiscreteStringInterpolator::convertToJSIValue(
+jsi::Value DiscreteStringInterpolator::convertResultToJSI(
     jsi::Runtime &rt,
     const std::string &value) const {
   return jsi::String::createFromUtf8(rt, value);
 }
 
-std::string DiscreteStringInterpolator::interpolate(
+std::string DiscreteStringInterpolator::interpolateBetweenKeyframes(
     double localProgress,
     const std::string &fromValue,
     const std::string &toValue,

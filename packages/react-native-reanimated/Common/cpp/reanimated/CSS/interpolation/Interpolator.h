@@ -23,6 +23,8 @@ struct RelativeInterpolatorValue {
   bool isRelative;
 };
 
+using ColorArray = std::array<uint8_t, 4>;
+
 class Interpolator {
  public:
   virtual ~Interpolator() = default;

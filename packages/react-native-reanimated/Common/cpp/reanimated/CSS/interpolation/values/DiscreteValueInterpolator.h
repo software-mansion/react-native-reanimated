@@ -11,17 +11,17 @@ enum class DiscreteType { String, Number };
 // For Strings
 class DiscreteStringInterpolator : public ValueInterpolator<std::string> {
  protected:
-  std::string convertValue(jsi::Runtime &rt, const jsi::Value &value)
+  std::string prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const override {
     return value.asString(rt).utf8(rt);
   }
 
-  jsi::Value convertToJSIValue(jsi::Runtime &rt, const std::string &value)
+  jsi::Value convertResultToJSI(jsi::Runtime &rt, const std::string &value)
       const override {
     return jsi::String::createFromUtf8(rt, value);
   }
 
-  std::string interpolate(
+  std::string interpolateBetweenKeyframes(
       double localProgress,
       const std::string &fromValue,
       const std::string &toValue,
@@ -33,16 +33,17 @@ class DiscreteStringInterpolator : public ValueInterpolator<std::string> {
 // For Numbers
 class DiscreteNumberInterpolator : public ValueInterpolator<int> {
  protected:
-  int convertValue(jsi::Runtime &rt, const jsi::Value &value) const override {
+  int prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
+      const override {
     return static_cast<int>(value.asNumber());
   }
 
-  jsi::Value convertToJSIValue(jsi::Runtime &rt, const int &value)
+  jsi::Value convertResultToJSI(jsi::Runtime &rt, const int &value)
       const override {
     return jsi::Value(value);
   }
 
-  int interpolate(
+  int interpolateBetweenKeyframes(
       double localProgress,
       const int &fromValue,
       const int &toValue,

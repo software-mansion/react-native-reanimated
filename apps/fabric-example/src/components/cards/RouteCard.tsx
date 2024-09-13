@@ -3,9 +3,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useNavigation } from '@react-navigation/native';
 import { useState } from 'react';
 import type { PropsWithChildren } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
-import { colors, radius, spacing, text } from '../../theme';
+import { colors, radius, spacing } from '../../theme';
+import { Text } from '../core';
 
 type RouteCardProps = PropsWithChildren<{
   title: string;
@@ -70,7 +71,9 @@ export default function RouteCard({ children, route, title }: RouteCardProps) {
         </View>
       )}
       <View style={styles.footer}>
-        <Text style={[text.label1, styles.title]}>{title}</Text>
+        <Text variant="label1" style={styles.title}>
+          {title}
+        </Text>
         <FontAwesomeIcon color={colors.foreground3} icon={faChevronRight} />
       </View>
     </TouchableOpacity>

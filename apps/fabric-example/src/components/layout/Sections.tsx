@@ -1,14 +1,15 @@
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, ReactNode } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import Group from './Group';
-import { colors, flex, spacing, text } from '../../theme';
+import { colors, flex, spacing } from '../../theme';
 import Animated, { LinearTransition } from 'react-native-reanimated';
+import { Text } from '../core';
 
 type SectionProps = PropsWithChildren<{
   title: string;
-  description?: string;
+  description?: ReactNode;
   fill?: boolean;
   style?: StyleProp<ViewStyle>;
   groupStyle?: StyleProp<ViewStyle>;
@@ -26,8 +27,8 @@ export function Section({
       style={[styles.sectionContainer, style, fill && flex.fill]}
       layout={LinearTransition}>
       <View style={styles.textWrapper}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        {description && <Text style={styles.description}>{description}</Text>}
+        <Text variant="heading3">{title}</Text>
+        {description && <Text>{description}</Text>}
       </View>
       <Group style={[styles.sectionContent, fill && flex.fill]}>
         {children}
@@ -48,8 +49,8 @@ export function SubSection({
       style={[styles.subSectionContainer, style, fill && flex.fill]}
       layout={LinearTransition}>
       <View style={styles.textWrapper}>
-        <Text style={styles.subSectionTitle}>{title}</Text>
-        {description && <Text style={styles.description}>{description}</Text>}
+        <Text variant="subHeading2">{title}</Text>
+        {description && <Text>{description}</Text>}
       </View>
       <Group style={[styles.subSectionContent, fill && flex.fill]}>
         {children}
@@ -76,20 +77,8 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.sm,
     marginVertical: spacing.xxs,
   },
-  description: {
-    ...text.body1,
-    color: colors.foreground3,
-  },
   textWrapper: {
     gap: spacing.xs,
     marginHorizontal: spacing.sm,
-  },
-  sectionTitle: {
-    ...text.heading3,
-    color: colors.foreground1,
-  },
-  subSectionTitle: {
-    ...text.subHeading2,
-    color: colors.foreground1,
   },
 });

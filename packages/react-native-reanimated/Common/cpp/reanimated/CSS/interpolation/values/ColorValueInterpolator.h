@@ -9,13 +9,13 @@ namespace reanimated {
 
 class ColorValueInterpolator : public ValueInterpolator<ColorArray> {
  protected:
-  ColorArray convertValue(jsi::Runtime &rt, const jsi::Value &value)
+  ColorArray prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const override;
 
-  jsi::Value convertToJSIValue(jsi::Runtime &rt, const ColorArray &value)
+  jsi::Value convertResultToJSI(jsi::Runtime &rt, const ColorArray &value)
       const override;
 
-  ColorArray interpolate(
+  ColorArray interpolateBetweenKeyframes(
       double localProgress,
       const ColorArray &fromValue,
       const ColorArray &toValue,

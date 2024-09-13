@@ -7,14 +7,15 @@ namespace reanimated {
 
 class NumericValueInterpolator : public ValueInterpolator<double> {
  protected:
-  double convertValue(jsi::Runtime &rt, const jsi::Value &value) const override;
+  double prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
+      const override;
 
-  jsi::Value convertToJSIValue(jsi::Runtime &rt, const double &value)
+  jsi::Value convertResultToJSI(jsi::Runtime &rt, const double &value)
       const override {
     return jsi::Value(value);
   }
 
-  double interpolate(
+  double interpolateBetweenKeyframes(
       double localProgress,
       const double &fromValue,
       const double &toValue,

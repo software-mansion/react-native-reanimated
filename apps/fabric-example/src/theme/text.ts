@@ -1,5 +1,8 @@
 import type { FontStyle, FontVariant } from '../types';
 
+const BASE_FONT = 'System';
+const MONOSPACE_FONT = 'Menlo';
+
 export const text: Record<FontVariant, FontStyle> = {
   body1: {
     fontSize: 14,
@@ -7,6 +10,7 @@ export const text: Record<FontVariant, FontStyle> = {
     fontWeight: '400',
     letterSpacing: 0,
     lineHeight: 18,
+    fontFamily: BASE_FONT,
   },
   body2: {
     fontSize: 12,
@@ -14,6 +18,7 @@ export const text: Record<FontVariant, FontStyle> = {
     fontWeight: '400',
     letterSpacing: 0,
     lineHeight: 16,
+    fontFamily: BASE_FONT,
   },
   body3: {
     fontSize: 10,
@@ -21,6 +26,7 @@ export const text: Record<FontVariant, FontStyle> = {
     fontWeight: '400',
     letterSpacing: 0,
     lineHeight: 14,
+    fontFamily: BASE_FONT,
   },
   heading1: {
     fontSize: 28,
@@ -28,6 +34,7 @@ export const text: Record<FontVariant, FontStyle> = {
     fontWeight: '600',
     letterSpacing: 0,
     lineHeight: 40,
+    fontFamily: BASE_FONT,
   },
   heading2: {
     fontSize: 22,
@@ -35,6 +42,7 @@ export const text: Record<FontVariant, FontStyle> = {
     fontWeight: '600',
     letterSpacing: 0,
     lineHeight: 30,
+    fontFamily: BASE_FONT,
   },
   heading3: {
     fontSize: 18,
@@ -42,6 +50,7 @@ export const text: Record<FontVariant, FontStyle> = {
     fontWeight: '600',
     letterSpacing: 0,
     lineHeight: 26,
+    fontFamily: BASE_FONT,
   },
   heading4: {
     fontSize: 16,
@@ -49,6 +58,7 @@ export const text: Record<FontVariant, FontStyle> = {
     fontWeight: '600',
     letterSpacing: 0,
     lineHeight: 24,
+    fontFamily: BASE_FONT,
   },
   label1: {
     fontSize: 16,
@@ -56,6 +66,7 @@ export const text: Record<FontVariant, FontStyle> = {
     fontWeight: '600',
     letterSpacing: 0,
     lineHeight: 24,
+    fontFamily: BASE_FONT,
   },
   label2: {
     fontSize: 14,
@@ -63,6 +74,7 @@ export const text: Record<FontVariant, FontStyle> = {
     fontWeight: '600',
     letterSpacing: 0,
     lineHeight: 20,
+    fontFamily: BASE_FONT,
   },
   label3: {
     fontSize: 12,
@@ -70,6 +82,7 @@ export const text: Record<FontVariant, FontStyle> = {
     fontWeight: '600',
     letterSpacing: 0,
     lineHeight: 16,
+    fontFamily: BASE_FONT,
   },
   subHeading1: {
     fontSize: 18,
@@ -77,6 +90,7 @@ export const text: Record<FontVariant, FontStyle> = {
     fontWeight: '500',
     letterSpacing: 0,
     lineHeight: 24,
+    fontFamily: BASE_FONT,
   },
   subHeading2: {
     fontSize: 16,
@@ -84,6 +98,7 @@ export const text: Record<FontVariant, FontStyle> = {
     fontWeight: '500',
     letterSpacing: 0,
     lineHeight: 22,
+    fontFamily: BASE_FONT,
   },
   subHeading3: {
     fontSize: 14,
@@ -91,5 +106,14 @@ export const text: Record<FontVariant, FontStyle> = {
     fontWeight: '500',
     letterSpacing: 0,
     lineHeight: 18,
+    fontFamily: BASE_FONT,
+  },
+  code: {
+    fontSize: 12,
+    fontStyle: 'normal',
+    fontWeight: '400',
+    letterSpacing: 0.25,
+    lineHeight: 10,
+    fontFamily: MONOSPACE_FONT,
   },
 };

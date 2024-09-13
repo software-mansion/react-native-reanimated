@@ -18,6 +18,7 @@ export type FontStyle = {
   fontWeight: Weight;
   letterSpacing: number;
   lineHeight: number;
+  fontFamily: string;
 };
 
 export type FontVariant =
@@ -33,4 +34,5 @@ export type FontVariant =
   | 'label3'
   | 'subHeading1'
   | 'subHeading2'
-  | 'subHeading3';
+  | 'subHeading3'
+  | 'code';

@@ -2,19 +2,19 @@
 
 namespace reanimated {
 
-int DiscreteNumberInterpolator::convertValue(
+int DiscreteNumberInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
   return static_cast<int>(value.asNumber());
 }
 
-jsi::Value DiscreteNumberInterpolator::convertToJSIValue(
+jsi::Value DiscreteNumberInterpolator::convertResultToJSI(
     jsi::Runtime &rt,
     const int &value) const {
   return jsi::Value(value);
 }
 
-int DiscreteNumberInterpolator::interpolate(
+int DiscreteNumberInterpolator::interpolateBetweenKeyframes(
     double localProgress,
     const int &fromValue,
     const int &toValue,

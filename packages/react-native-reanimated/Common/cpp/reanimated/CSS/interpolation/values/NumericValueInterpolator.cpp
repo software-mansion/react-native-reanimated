@@ -2,13 +2,13 @@
 
 namespace reanimated {
 
-double NumericValueInterpolator::convertValue(
+double NumericValueInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
   return value.asNumber();
 }
 
-double NumericValueInterpolator::interpolate(
+double NumericValueInterpolator::interpolateBetweenKeyframes(
     double localProgress,
     const double &fromValue,
     const double &toValue,

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native';
 
 import { noop } from './src/utils';
-import { ExamplesStackNavigator } from './src/navigation';
+import { ExamplesStackNavigator, navigationRef } from './src/navigation';
 import { flex } from './src/theme';
 
 const PERSISTENCE_KEY = 'NAVIGATION_STATE';
@@ -42,6 +42,7 @@ export default function App() {
   return (
     <NavigationContainer
       initialState={navigationState}
+      ref={navigationRef}
       onStateChange={persistNavigationState}>
       <SafeAreaView style={flex.fill}>
         <ExamplesStackNavigator />

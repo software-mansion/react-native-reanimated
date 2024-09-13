@@ -58,5 +58,6 @@ const styles = StyleSheet.create({
   wrapper: {
     backgroundColor: colors.primaryLight,
     borderRadius: radius.sm,
+    overflow: 'hidden',
   },
 });
