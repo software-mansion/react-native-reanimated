@@ -35,4 +35,5 @@ export type FontVariant =
   | 'subHeading1'
   | 'subHeading2'
   | 'subHeading3'
+  | 'inlineCode'
   | 'code';

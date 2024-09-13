@@ -1,5 +1,8 @@
 import { Text as RNText, StyleSheet } from 'react-native';
-import type { TextProps as RNTextProps } from 'react-native';
+import type {
+  GestureResponderEvent,
+  TextProps as RNTextProps,
+} from 'react-native';
 import { colors, text } from '../../theme';
 import type { FontVariant } from '../../types';
 import { navigate } from '../../navigation';
@@ -7,7 +10,7 @@ import type { NavigationRouteName } from '../../navigation';
 
 const CODE_REGEX = /`([^`]+)`/g;
 
-const VARIANT_COLORS: Record<Exclude<FontVariant, 'code'>, string> = {
+const VARIANT_COLORS: Record<FontVariant, string> = {
   heading1: colors.foreground1,
   heading2: colors.foreground1,
   heading3: colors.foreground1,
@@ -21,6 +24,8 @@ const VARIANT_COLORS: Record<Exclude<FontVariant, 'code'>, string> = {
   label1: colors.foreground2,
   label2: colors.foreground2,
   label3: colors.foreground2,
+  inlineCode: colors.primaryDark,
+  code: colors.primaryDark,
 };
 
 type TextProps = RNTextProps & {
@@ -37,43 +42,46 @@ export default function Text({
   ...rest
 }: TextProps) {
   const variantStyle = text[variant];
+  const color = VARIANT_COLORS[variant];
 
-  const getVariantProps = (v: FontVariant): RNTextProps => ({
+  const variantProps = {
     ...rest,
     style: [
       variantStyle,
-      v === 'code' ? styles.code : { color: VARIANT_COLORS[v] },
+      {
+        color,
+        backgroundColor:
+          variant === 'inlineCode' ? colors.primaryLight : 'transparent',
+      },
       navLink && styles.link,
       style,
     ],
     onPress:
       navLink &&
-      ((args) => {
+      ((args: GestureResponderEvent) => {
         onPress?.(args);
         navigate(navLink);
       }),
-  });
+  };
 
-  if (variant === 'code') {
+  if (variant === 'inlineCode') {
     return (
       <Text>
         {' '}
-        <RNText {...getVariantProps('code')}>{children}</RNText>{' '}
+        <RNText {...variantProps}>{children}</RNText>{' '}
       </Text>
     );
   }
 
   const renderTextWithCode = (textToParse: string) =>
     textToParse.split(CODE_REGEX).map((part, index) => (
-      <RNText
-        key={index}
-        {...getVariantProps(index % 2 === 1 ? 'code' : variant)}>
+      <RNText key={index} {...variantProps}>
         {part}
       </RNText>
     ));
 
   return (
-    <RNText {...getVariantProps(variant)}>
+    <RNText {...variantProps}>
       {
         typeof children === 'string'
           ? renderTextWithCode(children)
@@ -84,10 +92,6 @@ export default function Text({
 }
 
 const styles = StyleSheet.create({
-  code: {
-    color: colors.primaryDark,
-    backgroundColor: colors.primaryLight,
-  },
   link: {
     textDecorationLine: 'underline',
   },

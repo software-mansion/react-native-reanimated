@@ -1,24 +1,22 @@
 const baseColors = {
   black: '#000000',
-  white: '#fcfcff',
+  white: '#FCFCFF',
 };
 
 const accentColors = {
-  primary: '#357ABD',
-  primaryDark: '#1A4E91',
-  primaryLight: '#A9D8FF',
-  secondary: '#0B1465',
-  secondaryLight: '#DFF0F9',
+  primary: '#5F9CC0',
+  primaryDark: '#113E60',
+  primaryLight: '#C1E0F1',
 };
 
 export const colors = {
-  background1: '#fcfcff',
-  background2: '#D8E6F5',
-  background3: '#C2D2E8',
+  background1: '#FEFEFE',
+  background2: '#F4F5F7',
+  background3: '#E3E6EA',
 
-  foreground1: '#0B1465',
-  foreground2: '#1E3A8A',
-  foreground3: '#4A6B9E',
+  foreground1: '#06196D',
+  foreground2: '#35427C',
+  foreground3: '#626D8A',
 
   ...baseColors,
   ...accentColors,

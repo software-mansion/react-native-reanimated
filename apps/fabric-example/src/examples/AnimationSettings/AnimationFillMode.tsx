@@ -8,12 +8,12 @@ export default function AnimationFillMode() {
   const config: CSSAnimationConfig = {
     animationName: {
       from: {
-        backgroundColor: colors.secondary,
+        backgroundColor: colors.primaryDark,
       },
       to: {
         left: '100%',
         transform: [{ translateX: '-100%' }],
-        backgroundColor: colors.secondary,
+        backgroundColor: colors.primaryDark,
       },
     },
     animationDuration: '2s',

@@ -9,8 +9,8 @@ import Animated, { FadeInLeft, FadeInRight } from 'react-native-reanimated';
 import exampleRoutes from './routes';
 import type { Routes } from './types';
 import { getScreenTitle, hasRoutes } from './utils';
-import { Stagger, RouteCard } from '../components';
-import { spacing, colors, flex } from '../theme';
+import { Stagger, RouteCard, Text } from '../components';
+import { spacing, colors, flex, iconSizes } from '../theme';
 
 const StackNavigator =
   createNativeStackNavigator<Record<string, React.ComponentType>>();
@@ -20,7 +20,6 @@ const BackButton = memo(function BackButton() {
 
   const state = navigation.getState();
   if (!state) {
-    console.log('here');
     return null;
   }
 
@@ -38,13 +37,16 @@ const BackButton = memo(function BackButton() {
       onPress={() => {
         navigation.goBack();
       }}>
-      <FontAwesomeIcon color={colors.primary} icon={faChevronLeft} />
-      <Animated.Text
-        entering={FadeInRight}
-        exiting={FadeInLeft}
-        style={styles.backButtonText}>
-        {getScreenTitle(prevRoute.name)}
-      </Animated.Text>
+      <FontAwesomeIcon
+        color={colors.primary}
+        icon={faChevronLeft}
+        size={iconSizes.xs}
+      />
+      <Animated.View entering={FadeInRight} exiting={FadeInLeft}>
+        <Text style={styles.backButtonText} variant="body1">
+          {getScreenTitle(prevRoute.name)}
+        </Text>
+      </Animated.View>
     </TouchableOpacity>
   );
 });
@@ -56,6 +58,7 @@ function createStackNavigator(routes: Routes): React.ComponentType {
         <StackNavigator.Navigator
           screenOptions={{
             headerLeft: () => <BackButton />,
+            headerTintColor: colors.foreground1,
           }}>
           {createNavigationScreens(routes, 'Examples')}
         </StackNavigator.Navigator>
@@ -128,7 +131,6 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     color: colors.primary,
-    fontSize: 16,
   },
   content: {
     backgroundColor: colors.background3,

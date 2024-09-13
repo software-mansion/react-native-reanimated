@@ -1,16 +1,11 @@
 import type { CSSAnimationConfig } from 'react-native-reanimated';
-import type { ExampleItemProps } from './ExampleListCard';
-import {
-  Scroll,
-  Stagger,
-  Section,
-  ExampleListCard,
-  CodeBlock,
-} from '../../../components';
+import type { ExampleItemProps } from './ExamplesListCard';
+import { Scroll, Stagger, Section, CodeBlock } from '../../../components';
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import { colors, spacing, radius } from '../../../theme';
 import { StyleSheet, View } from 'react-native';
+import ExamplesListCard from './ExamplesListCard';
 
 type ExampleCardSection = {
   title: string;
@@ -85,7 +80,7 @@ export default function ExampleScreen({
             key={card.title}
             title={card.title}
             description={card.description}>
-            <ExampleListCard
+            <ExamplesListCard
               config={config}
               items={card.items}
               renderExample={renderExample}

@@ -1,30 +1,31 @@
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationConfig } from 'react-native-reanimated';
 import { spacing, text } from '../../../theme';
+import { Text } from '../../../components';
 
 export type ExampleItemProps = Omit<CSSAnimationConfig, 'animationName'> & {
   label: string;
 };
 
-export type ExampleListCardProps = {
+export type ExamplesListCardProps = {
   config: CSSAnimationConfig;
   items: ExampleItemProps[];
   showCode?: boolean;
   renderExample: (config: CSSAnimationConfig) => JSX.Element;
 };
 
-export default function ExampleListCard({
+export default function ExamplesListCard({
   config,
   items,
   renderExample,
-}: ExampleListCardProps) {
+}: ExamplesListCardProps) {
   return (
     <View style={styles.container}>
       <View style={styles.examples}>
         {/* Labels column */}
         <View style={[styles.column, { flexShrink: 1 }]}>
           {items.map((item, index) => (
-            <Text style={styles.label} key={index}>
+            <Text variant="label2" style={styles.label} key={index}>
               {item.label}
             </Text>
           ))}
@@ -56,7 +57,6 @@ const styles = StyleSheet.create({
     maxWidth: '55%',
   },
   label: {
-    ...text.label2,
     flexShrink: 1,
   },
 });
