@@ -65,7 +65,7 @@ If it finds two matching components, it takes a snapshot of the styles for both 
 
 After the animation is complete, they are attached back to their original parent.
 
-If you don't create a custom animation, all snapshot properties, including `width`, `height`, `originX`, `originY`, and `transformMatrix`, are animated by default with a duration of 500ms using the `withTiming` animation.
+If you don't create a custom animation, all snapshot properties, including `width`, `height`, `originX`, `originY`, and `transformMatrix`, are animated by default with a duration of 500ms using the [`withTiming`](/docs/animations/withTiming/) animation.
 
 ## Implementation
 
@@ -93,7 +93,7 @@ If you want to use more than one shared view on the same screen, be sure to assi
 
 ## Custom animation
 
-You can create custom animation by using `SharedTransition.custom` for regular animations or `SharedTransition.progressAnimation` for progress-based animations.
+You can create a custom animation by using `SharedTransition.custom` for regular animations or `SharedTransition.progressAnimation` for progress-based animations.
 
 ```js
 import { SharedTransition } from 'react-native-reanimated';
@@ -126,7 +126,9 @@ By combining these methods and setting `defaultTransitionType(SharedTransitionTy
 
 Setting `defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION)` will apply progress-based animation in both scenarios.
 
-Then, to use it, simply pass your custom animation as `sharedTransitionStyle` prop to both your screen's components (just as with the `sharedTransitionTag`).
+Then, to use it, simply pass your custom animation as `sharedTransitionStyle` prop to both your screen's components.
+
+If you want even more customization, you can pass two different custom animations to two different component, as long as the components share the same `sharedTransitionTag`. In that case animation passed to component A will run when switching from A -> B, and animations passed to component B will run when switching from B -> A.
 
 ```tsx
 <View
@@ -157,7 +159,7 @@ import SharedElementSrc from '!!raw-loader!@site/src/examples/SharedElementTrans
 - You can only animate `width`, `height`, `originX`, `originY`, and `transformMatrix` properties when using the shared transition.
 - The layout for shared view children is not computed during the transition.
 - The current implementation supports **only** the old React Native architecture (**Paper**).
-- In the future we will introduce support for the new React Native architexture (Fabric).
+- In the future we will introduce support for the new React Native architecture (Fabric).
 
 ## Platform Compatibility
 
