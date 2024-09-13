@@ -2,7 +2,7 @@
 
 namespace reanimated {
 
-ColorArray ColorValueInterpolator::convertValue(
+ColorArray ColorValueInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
   // We receive colors as decimals made from AARRGGBB format hexes
@@ -15,7 +15,7 @@ ColorArray ColorValueInterpolator::convertValue(
   return channels;
 }
 
-jsi::Value ColorValueInterpolator::convertToJSIValue(
+jsi::Value ColorValueInterpolator::convertResultToJSI(
     jsi::Runtime &rt,
     const ColorArray &value) const {
   double color =
@@ -23,7 +23,7 @@ jsi::Value ColorValueInterpolator::convertToJSIValue(
   return jsi::Value(color);
 }
 
-ColorArray ColorValueInterpolator::interpolate(
+ColorArray ColorValueInterpolator::interpolateBetweenKeyframes(
     double localProgress,
     const ColorArray &fromValue,
     const ColorArray &toValue,

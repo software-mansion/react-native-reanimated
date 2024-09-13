@@ -7,11 +7,12 @@ import {
   ExampleListCard,
   ExpandableCodeBlock,
 } from '../../../components';
+import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 
 type ExampleCardSection = {
   title: string;
-  description?: string;
+  description?: ReactNode;
   items: ExampleItemProps[];
 };
 

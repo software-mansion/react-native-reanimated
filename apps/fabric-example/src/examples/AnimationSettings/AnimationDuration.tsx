@@ -3,6 +3,7 @@ import type { CSSAnimationConfig } from 'react-native-reanimated';
 import { sizes, colors, radius } from '../../theme';
 import Animated from 'react-native-reanimated';
 import { ExampleScreen } from './components';
+import { Text } from '../../components';
 
 export default function AnimationDuration() {
   const config: CSSAnimationConfig = {
@@ -15,7 +16,6 @@ export default function AnimationDuration() {
         width: '100%',
       },
     },
-    animationIterationCount: 'infinite',
   };
 
   const renderExample = (exampleConfig: CSSAnimationConfig) => (
@@ -39,8 +39,24 @@ export default function AnimationDuration() {
         },
         {
           title: 'Zero Duration',
-          description:
-            'If duration is not specified or is set to 0 (0s, 0ms, 0), the animation will not run.',
+          description: (
+            <>
+              If duration is not specified or is set to 0 (0s, 0ms, 0), only one
+              frame of the animation will be applied, calculated based on
+              <Text
+                variant="code"
+                navLink="Examples/AnimationSettings/FillMode">
+                animationFillMode
+              </Text>
+              and
+              <Text
+                variant="code"
+                navLink="Examples/AnimationSettings/Direction">
+                animationDirection
+              </Text>
+              properties.
+            </>
+          ),
           items: [{ animationDuration: '0s', label: '0s (default)' }],
         },
       ]}
@@ -57,5 +73,6 @@ const styles = StyleSheet.create({
   wrapper: {
     backgroundColor: colors.primaryLight,
     borderRadius: radius.sm,
+    overflow: 'hidden',
   },
 });

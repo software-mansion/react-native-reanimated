@@ -1,8 +1,7 @@
 import { AnimatedProperties, Playground, AnimationSettings } from '../examples';
-import type { Routes } from './types';
+import type { RouteNames, Routes } from './types';
 
-// TODO: Add more routes after implementing examples
-const routes: Routes = {
+const routes = {
   Playground: {
     name: 'Playground',
     Component: Playground,
@@ -81,6 +80,8 @@ const routes: Routes = {
     name: 'Real World Examples',
     routes: {},
   },
-};
+} satisfies Routes;
+
+export type NavigationRouteName = RouteNames<'Examples', typeof routes>;
 
 export default routes;

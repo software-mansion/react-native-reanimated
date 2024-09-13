@@ -2,19 +2,19 @@
 
 namespace reanimated {
 
-std::vector<double> MatrixValueInterpolator::convertValue(
+std::vector<double> MatrixValueInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
   throw std::runtime_error("[Reanimated] Not implemented");
 }
 
-jsi::Value MatrixValueInterpolator::convertToJSIValue(
+jsi::Value MatrixValueInterpolator::convertResultToJSI(
     jsi::Runtime &rt,
     const std::vector<double> &value) const {
   throw std::runtime_error("[Reanimated] Not implemented");
 }
 
-std::vector<double> MatrixValueInterpolator::interpolate(
+std::vector<double> MatrixValueInterpolator::interpolateBetweenKeyframes(
     double localProgress,
     const std::vector<double> &fromValue,
     const std::vector<double> &toValue,

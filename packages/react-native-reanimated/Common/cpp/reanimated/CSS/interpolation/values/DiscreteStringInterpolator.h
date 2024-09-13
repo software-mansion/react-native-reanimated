@@ -9,13 +9,13 @@ namespace reanimated {
 
 class DiscreteStringInterpolator : public ValueInterpolator<std::string> {
  protected:
-  std::string convertValue(jsi::Runtime &rt, const jsi::Value &value)
+  std::string prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const override;
 
-  jsi::Value convertToJSIValue(jsi::Runtime &rt, const std::string &value)
+  jsi::Value convertResultToJSI(jsi::Runtime &rt, const std::string &value)
       const override;
 
-  std::string interpolate(
+  std::string interpolateBetweenKeyframes(
       double localProgress,
       const std::string &fromValue,
       const std::string &toValue,

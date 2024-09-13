@@ -15,7 +15,6 @@ export default function AnimationDelay() {
         width: '100%',
       },
     },
-    animationIterationCount: 'infinite',
     animationDuration: '3s',
   };
 
@@ -64,5 +63,6 @@ const styles = StyleSheet.create({
   wrapper: {
     backgroundColor: colors.primaryLight,
     borderRadius: radius.sm,
+    overflow: 'hidden',
   },
 });

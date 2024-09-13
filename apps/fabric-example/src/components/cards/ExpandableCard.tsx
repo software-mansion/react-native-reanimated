@@ -4,12 +4,13 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
-import { colors, sizes, spacing, text } from '../../theme';
+import { colors, sizes, spacing } from '../../theme';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+import { Text } from '../core';
 
 export type ExpandableCardProps = PropsWithChildren<{
   expanded: boolean;
@@ -81,7 +82,7 @@ export default function ExpandableCard({
               size={sizes.xxxs}
               color={colors.primary}
             />
-            <Text style={styles.expandButtonText}>
+            <Text variant="label2" style={styles.expandButtonText}>
               {expanded ? 'Collapse' : 'Expand'}
             </Text>
           </TouchableOpacity>
@@ -114,7 +115,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   expandButtonText: {
-    ...text.label2,
     color: colors.primary,
   },
 });

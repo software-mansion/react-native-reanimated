@@ -8,6 +8,7 @@
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
 #include <chrono>
+#include <cmath>
 #include <optional>
 #include <stdexcept>
 #include <unordered_map>
@@ -45,7 +46,9 @@ class CSSAnimation {
   }
 
   void start(time_t timestamp);
+
   jsi::Value update(jsi::Runtime &rt, time_t timestamp);
+
   void finish();
 
  private:
@@ -68,9 +71,9 @@ class CSSAnimation {
 
   static CSSAnimationDirection getAnimationDirection(const std::string &str);
 
-  double getCurrentIterationProgress(time_t timestamp) const;
+  double updateIterationProgress(time_t timestamp);
 
-  void maybeUpdateIterationNumber(time_t timestamp);
+  double applyAnimationDirection(double progress) const;
 };
 
 } // namespace reanimated

@@ -2,8 +2,8 @@
 
 namespace reanimated {
 
-template <typename T>
-void ValueInterpolator<T>::initialize(
+template <typename T, typename U>
+void ValueInterpolator<T, U>::initialize(
     jsi::Runtime &rt,
     const jsi::Value &keyframeArray) {
   keyframes_ = createKeyframes(rt, keyframeArray.asObject(rt).asArray(rt));
@@ -12,9 +12,9 @@ void ValueInterpolator<T>::initialize(
   }
 }
 
-template <typename T>
+template <typename T, typename U>
 std::shared_ptr<const std::vector<Keyframe<T>>>
-ValueInterpolator<T>::createKeyframes(
+ValueInterpolator<T, U>::createKeyframes(
     jsi::Runtime &rt,
     const jsi::Array &keyframeArray) const {
   size_t keyframeCount = keyframeArray.size(rt);
@@ -27,7 +27,7 @@ ValueInterpolator<T>::createKeyframes(
     double offset = keyframeObject.getProperty(rt, "offset").asNumber();
     jsi::Value rawValue = keyframeObject.getProperty(rt, "value");
 
-    T value = convertValue(rt, rawValue);
+    T value = prepareKeyframeValue(rt, rawValue);
 
     keyframes.push_back({offset, value});
   }
@@ -35,11 +35,36 @@ ValueInterpolator<T>::createKeyframes(
   return std::make_shared<const std::vector<Keyframe<T>>>(std::move(keyframes));
 }
 
-template <typename T>
-void ValueInterpolator<T>::updateCurrentKeyframes(
+template <typename T, typename U>
+U ValueInterpolator<T, U>::resolveKeyframeValue(
+    const InterpolationUpdateContext context,
+    const T &value) const {
+  if constexpr (std::is_same<T, U>::value) {
+    return value;
+  } else {
+    throw std::logic_error(
+        "resolveKeyframeValue must be implemented in derived class");
+  }
+}
+
+template <typename T, typename U>
+Keyframe<T> ValueInterpolator<T, U>::getKeyframeAtIndex(size_t index) const {
+  if (index < 0) {
+    // TODO: Replace this with value read from the view
+    return keyframes_->front();
+  } else if (index >= keyframes_->size()) {
+    // TODO: Replace this with value read from the view
+    return keyframes_->back();
+  } else {
+    return keyframes_->at(index);
+  }
+}
+
+template <typename T, typename U>
+void ValueInterpolator<T, U>::updateCurrentKeyframes(
     const InterpolationUpdateContext context) {
   if (!context.previousProgress.has_value()) {
-    keyframeAfterIndex_ = 0;
+    keyframeAfterIndex_ = context.progress < 0.5 ? 0 : keyframes_->size();
   }
 
   const auto &keyframes = *keyframes_;
@@ -54,27 +79,13 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
     --keyframeAfterIndex_;
 
   if (context.previousProgress.has_value()) {
-    const auto previousProgress = context.previousProgress.value();
-    if (keyframeAfterIndex_ > prevAfterIndex) {
-      // Store the previous interpolation result instead of the keyframe
-      // from the keyframes array to ensure that value from which the
-      // interpolation starts doesn't change (e.g. if the keyframe value
-      // was relative to the parent view and the parent view changed).
-      keyframeBefore_ = {previousProgress, previousValue_};
-      keyframeAfter_ = keyframeAfterIndex_ < keyframes.size()
-          ? keyframes[keyframeAfterIndex_]
-          : keyframes
-                .back(); // TODO: Replace this with value read from the view
-    } else if (keyframeAfterIndex_ < prevAfterIndex) {
-      keyframeBefore_ = keyframeAfterIndex_ > 0
-          ? keyframes[keyframeAfterIndex_ - 1]
-          : keyframes
-                .front(); // TODO: Replace this with value read from the view
-      // Store previous value for the same reason as above.
-      keyframeAfter_ = {previousProgress, previousValue_};
+    if (keyframeAfterIndex_ != prevAfterIndex) {
+      keyframeBefore_ = getKeyframeAtIndex(keyframeAfterIndex_ - 1);
+      keyframeAfter_ = getKeyframeAtIndex(keyframeAfterIndex_);
     }
 
     if (context.directionChanged) {
+      const auto previousProgress = context.previousProgress.value();
       if (context.progress < previousProgress) {
         keyframeAfter_ = {previousProgress, previousValue_};
       } else {
@@ -82,17 +93,13 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
       }
     }
   } else {
-    keyframeBefore_ = keyframeAfterIndex_ > 0
-        ? keyframes[keyframeAfterIndex_ - 1]
-        : keyframes.front(); // TODO: Replace this with value read from the view
-    keyframeAfter_ = keyframeAfterIndex_ < keyframes.size()
-        ? keyframes[keyframeAfterIndex_]
-        : keyframes.back(); // TODO: Replace this with value read from the view
+    keyframeBefore_ = getKeyframeAtIndex(keyframeAfterIndex_ - 1);
+    keyframeAfter_ = getKeyframeAtIndex(keyframeAfterIndex_);
   }
 }
 
-template <typename T>
-jsi::Value ValueInterpolator<T>::update(
+template <typename T, typename U>
+jsi::Value ValueInterpolator<T, U>::update(
     const InterpolationUpdateContext context) {
   updateCurrentKeyframes(context);
 
@@ -103,12 +110,15 @@ jsi::Value ValueInterpolator<T>::update(
       ? 1
       : (context.progress - beforeOffset) / (afterOffset - beforeOffset);
 
-  T value = interpolate(
-      localProgress, keyframeBefore_.value, keyframeAfter_.value, context);
+  U value = interpolateBetweenKeyframes(
+      localProgress,
+      resolveKeyframeValue(context, keyframeBefore_.value),
+      resolveKeyframeValue(context, keyframeAfter_.value),
+      context);
   previousValue_ = value;
 
   jsi::Runtime &rt = context.rt;
-  jsi::Value updates = convertToJSIValue(rt, value);
+  jsi::Value updates = convertResultToJSI(rt, value);
 
   return updates;
 }
@@ -120,6 +130,6 @@ template class ValueInterpolator<double>;
 template class ValueInterpolator<std::string>;
 template class ValueInterpolator<std::vector<double>>;
 template class ValueInterpolator<ColorArray>;
-template class ValueInterpolator<RelativeInterpolatorValue>;
+template class ValueInterpolator<RelativeInterpolatorValue, double>;
 
 } // namespace reanimated

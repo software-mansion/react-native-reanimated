@@ -35,20 +35,24 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
     return jsi::Value::undefined();
   }
 
-  maybeUpdateIterationNumber(timestamp);
-  const double progress = getCurrentIterationProgress(timestamp);
+  double progress = applyAnimationDirection(updateIterationProgress(timestamp));
 
   // Check if the animation has finished (duration can be a floating point
   // number so we can't just check if the progress is 1.0)
-  if (iterationCount != -1 &&
-      (timestamp - (delay + startTime)) >= duration * iterationCount) {
-    finish();
-  }
-
-  // Determine if the progress update direction has changed (e.g. because of the
-  // easing used or the alternating animation direction)
+  bool shouldFinish = iterationCount != -1 &&
+      (timestamp - (delay + startTime)) >= duration * iterationCount;
   bool directionChanged = false;
-  if (previousProgress.has_value() && previousToPreviousProgress.has_value()) {
+
+  if (shouldFinish) {
+    // Override current progress for the last update in the last iteration
+    double intPart = std::floor(iterationCount);
+    progress = applyAnimationDirection(
+        intPart == iterationCount ? 1 : iterationCount - intPart);
+  }
+  // Determine if the progress update direction has changed (e.g. because of
+  // the easing used or the alternating animation direction)
+  else if (
+      previousProgress.has_value() && previousToPreviousProgress.has_value()) {
     auto prevDiff =
         previousProgress.value() - previousToPreviousProgress.value();
     auto currentDiff = progress - previousProgress.value();
@@ -65,6 +69,10 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
 
   previousToPreviousProgress = previousProgress;
   previousProgress = progress;
+
+  if (shouldFinish) {
+    finish();
+  }
 
   return updatedStyle;
 }
@@ -92,17 +100,7 @@ CSSAnimationDirection CSSAnimation::getAnimationDirection(
   }
 }
 
-double CSSAnimation::getCurrentIterationProgress(time_t timestamp) const {
-  if (duration == 0) {
-    return 1.0;
-  }
-
-  const double progress = currentIterationElapsedTime / duration;
-
-  if (progress > 1.0) {
-    return 1.0;
-  }
-
+double CSSAnimation::applyAnimationDirection(double progress) const {
   switch (direction) {
     case normal:
       return progress;
@@ -115,16 +113,25 @@ double CSSAnimation::getCurrentIterationProgress(time_t timestamp) const {
   }
 }
 
-void CSSAnimation::maybeUpdateIterationNumber(time_t timestamp) {
+double CSSAnimation::updateIterationProgress(time_t timestamp) {
+  if (duration == 0) {
+    return 1;
+  }
+
   // We can increase curentIteration by more than just one iteration if the
   // animation delay is negative, thus we are using this division to get the
   // number of iterations that have passed since the previous animation update
   // (deltaIterations can be greater than for the first update of the animation
   // with the negative delay)
-  const auto deltaIterations =
-      static_cast<size_t>(currentIterationElapsedTime / duration);
+  const double progress = currentIterationElapsedTime / duration;
+  const unsigned deltaIterations = static_cast<unsigned>(progress);
 
   if (deltaIterations > 0) {
+    // Return 1 if the current iteration is the last one
+    if (currentIteration == iterationCount) {
+      return 1;
+    }
+
     currentIteration += deltaIterations;
     previousIterationsDuration = (currentIteration - 1) * duration;
 
@@ -133,6 +140,10 @@ void CSSAnimation::maybeUpdateIterationNumber(time_t timestamp) {
       previousToPreviousProgress.reset();
     }
   }
+
+  // If the current iteration changes, the progress must be updated respectively
+  // not to contain the progress of the previous iteration
+  return progress - deltaIterations;
 }
 
 } // namespace reanimated
