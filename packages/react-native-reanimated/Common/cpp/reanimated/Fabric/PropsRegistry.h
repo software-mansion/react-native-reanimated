@@ -30,8 +30,6 @@ class PropsRegistry {
   }
 
   bool shouldReanimatedSkipCommit() {
-    // In RN 0.73+ we have a mount hook that will properly unset this flag
-    // after a non-Reanimated commit.
     return isPaused_;
   }
 
@@ -39,12 +37,12 @@ class PropsRegistry {
     isPaused_ = false;
   }
 
-  void pleaseFlush() {
-    shouldFlush_ = true;
+  void pleaseCommitAfterPause() {
+    shouldCommitAfterPause_ = true;
   }
 
-  bool shouldFlush() {
-    return shouldFlush_.exchange(false);
+  bool shouldCommitAfterPause() {
+    return shouldCommitAfterPause_.exchange(false);
   }
 
  private:
@@ -52,7 +50,8 @@ class PropsRegistry {
 
   mutable std::mutex mutex_; // Protects `map_`.
 
-  std::atomic<bool> isPaused_, shouldFlush_;
+  std::atomic<bool> isPaused_;
+  std::atomic<bool> shouldCommitAfterPause_;
 };
 
 } // namespace reanimated

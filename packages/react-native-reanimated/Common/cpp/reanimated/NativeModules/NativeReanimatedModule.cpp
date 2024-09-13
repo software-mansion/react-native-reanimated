@@ -650,7 +650,7 @@ void NativeReanimatedModule::performOperations() {
 
     if (copiedOperationsQueue.size() > 0 &&
         propsRegistry_->shouldReanimatedSkipCommit()) {
-      propsRegistry_->pleaseFlush();
+      propsRegistry_->pleaseCommitAfterPause();
     }
 
     // remove recently unmounted ShadowNodes from PropsRegistry

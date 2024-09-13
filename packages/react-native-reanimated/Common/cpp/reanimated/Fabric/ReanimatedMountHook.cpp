@@ -1,4 +1,4 @@
-#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 73
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include "ReanimatedMountHook.h"
 #include "ReanimatedCommitShadowNode.h"
@@ -24,12 +24,16 @@ void ReanimatedMountHook::shadowTreeDidMount(
           std::const_pointer_cast<RootShadowNode>(rootShadowNode));
 
   if (reaShadowNode->hasReanimatedMountTrait()) {
+    // We mark reanimated commits with ReanimatedMountTrait. We don't want other
+    // shadow nodes to use this trait, but since this rootShadowNode is Shared,
+    // we don't have that guarantee. That's why we also unset this trait in the
+    // commit hook. We remove it here mainly for the sake of cleanliness.
     reaShadowNode->unsetReanimatedMountTrait();
   } else {
     // When commit from React Native has finished, we reset the skip commit flag
     // in order to allow Reanimated to commit its tree
     propsRegistry_->unpauseReanimatedCommits();
-    if (propsRegistry_->shouldFlush()) {
+    if (propsRegistry_->shouldCommitAfterPause()) {
       const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
       shadowTreeRegistry.visit(
@@ -73,4 +77,4 @@ void ReanimatedMountHook::shadowTreeDidMount(
 
 } // namespace reanimated
 
-#endif // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 73
+#endif // RCT_NEW_ARCH_ENABLED
