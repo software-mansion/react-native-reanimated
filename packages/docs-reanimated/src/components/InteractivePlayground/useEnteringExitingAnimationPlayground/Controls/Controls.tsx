@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { Dispatch, SetStateAction, useState, useEffect } from 'react';
 import { Range, SelectOption, CheckboxOption } from '../..';
 import { EnteringExitingConfigProps } from '..';
 import SpringControls from './SpringControls';
@@ -11,9 +11,9 @@ const Controls = ({
   isMobile,
   canNestEasing,
 }: {
-  options: any;
+  options: string[];
   type: EnteringExitingConfigProps;
-  setType: React.Dispatch<React.SetStateAction<EnteringExitingConfigProps>>;
+  setType: Dispatch<SetStateAction<EnteringExitingConfigProps>>;
   isMobile: boolean;
   canNestEasing: (easing: string) => boolean;
 }) => {

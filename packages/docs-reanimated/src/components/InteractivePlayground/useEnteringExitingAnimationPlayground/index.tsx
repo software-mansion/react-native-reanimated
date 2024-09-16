@@ -6,6 +6,8 @@ import { Easing } from 'react-native-reanimated';
 import Controls from './Controls/Controls';
 import { ENTERING_ANIMATIONS, EXITING_ANIMATIONS } from './Example';
 
+const MOBILE_WIDTH = 768;
+
 export interface EnteringExitingConfigProps {
   animation: string;
   duration?: number;
@@ -82,7 +84,7 @@ const canNestEasing = (easing: string) => {
 export default function useEnteringExitingPlayground() {
   const { windowWidth } =
     ExecutionEnvironment.canUseViewport && useScreenSize();
-  const isMobile = windowWidth < 768;
+  const isMobile = windowWidth < MOBILE_WIDTH;
   const [tab, setTab] = useState<'entering' | 'exiting'>('entering');
 
   const [entering, setEntering] = useState(defaultEnteringConfig);

@@ -1,7 +1,14 @@
-import React from 'react';
-import { Range, SelectOption, CheckboxOption } from '../..';
+import React, { Dispatch, SetStateAction } from 'react';
+import { Range, CheckboxOption } from '../..';
+import { EnteringExitingConfigProps } from '..';
 
-const SpringControls = ({ type, setType }) => {
+const SpringControls = ({
+  type,
+  setType,
+}: {
+  type: EnteringExitingConfigProps;
+  setType: Dispatch<SetStateAction<EnteringExitingConfigProps>>;
+}) => {
   return (
     <>
       <Range

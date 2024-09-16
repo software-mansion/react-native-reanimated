@@ -1,9 +1,16 @@
-import React, { Dispatch } from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import { Range, SelectOption } from '../..';
 import { Collapsible } from '@docusaurus/theme-common';
 import CollapseButton from '@site/src/components/CollapseButton';
 import styles from '../styles.module.css';
 import { EnteringExitingConfigProps } from '..';
+
+export interface ControlProps {
+  type: EnteringExitingConfigProps;
+  setType: Dispatch<SetStateAction<EnteringExitingConfigProps>>;
+  canNestEasing: (easing: string) => boolean;
+  isMobile: boolean;
+}
 
 const EASING_OPTIONS = [
   'back',
@@ -47,7 +54,7 @@ const EasingControls = ({
   isMobile,
 }: {
   type: EnteringExitingConfigProps;
-  setType: any;
+  setType: Dispatch<SetStateAction<EnteringExitingConfigProps>>;
   canNestEasing: (easing: string) => boolean;
   isMobile: boolean;
 }) => {
