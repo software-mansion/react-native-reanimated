@@ -17,13 +17,7 @@ const Controls = ({
   isMobile: boolean;
   canNestEasing: (easing: string) => boolean;
 }) => {
-  const [isBounce, setIsBounce] = useState(
-    type.animation.toString().toLowerCase().includes('bounce')
-  );
-
-  useEffect(() => {
-    setIsBounce(type.animation.toString().toLowerCase().includes('bounce'));
-  }, [type.animation]);
+  const isBounce = type.animation.toString().toLowerCase().includes('bounce');
 
   return (
     <>
