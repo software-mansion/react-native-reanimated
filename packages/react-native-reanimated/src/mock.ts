@@ -7,6 +7,8 @@ import type {
   WithDecayConfig,
   AnimatableValue,
   AnimationCallback,
+  EventHandler,
+  EventHandlerProcessed,
 } from './index';
 import {
   IOSReferenceFrame,
@@ -38,7 +40,14 @@ const IMMEDIATE_CALLBACK_INVOCATION = <T>(callback: () => T) => callback();
 
 const hook = {
   useAnimatedProps: IMMEDIATE_CALLBACK_INVOCATION,
-  // useEvent: ADD ME IF NEEDED
+  useEvent: <
+    Event extends object,
+    Context extends Record<string, unknown> = never,
+  >(
+    _handler: EventHandler<Event, Context>,
+    _eventNames?: string[],
+    _rebuild?: boolean
+  ): EventHandlerProcessed<Event, Context> => NOOP,
   // useHandler: ADD ME IF NEEDED
   useWorkletCallback: ID,
   useSharedValue: <Value>(init: Value) => ({ value: init }),
