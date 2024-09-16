@@ -350,7 +350,7 @@ export function normalizeConfig({
   return {
     animationName: createKeyframedStyle(animationName),
     animationDuration: normalizeDuration(animationDuration),
-    animationTimingFunction: animationTimingFunction ?? 'linear',
+    animationTimingFunction: animationTimingFunction ?? 'ease',
     animationDelay: normalizeDelay(animationDelay),
     animationIterationCount: normalizeIterationCount(animationIterationCount),
     animationDirection: normalizeDirection(animationDirection),

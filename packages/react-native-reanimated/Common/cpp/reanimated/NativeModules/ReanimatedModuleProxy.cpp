@@ -495,9 +495,7 @@ void ReanimatedModuleProxy::registerCSSAnimation(
   auto animationDuration =
       configObject.getProperty(rt, "animationDuration").asNumber();
   auto animationTimingFunction =
-      configObject.getProperty(rt, "animationTimingFunction")
-          .asString(rt)
-          .utf8(rt);
+    configObject.getProperty(rt, "animationTimingFunction");
   auto animationDelay =
       configObject.getProperty(rt, "animationDelay").asNumber();
   auto animationIterationCount =

@@ -1,4 +1,9 @@
 import type { ViewStyle } from 'react-native';
+import type {
+  CubicBezierEasingConfig,
+  LinearEasingConfig,
+  StepsEasingConfig,
+} from './parametrizedEasings/types';
 
 export type CSSKeyframeKey = `${number}%` | 'from' | 'to' | number;
 
@@ -6,8 +11,17 @@ export type CSSAnimationKeyframes = Partial<Record<CSSKeyframeKey, ViewStyle>>;
 
 export type CSSAnimationTimeUnit = `${number}s` | `${number}ms` | number;
 
-// TODO: support other timing functions
-export type CSSAnimationTimingFunction = 'linear' | 'ease-in-out-back';
+export type CSSAnimationTimingFunction =
+  | 'linear'
+  | 'ease'
+  | 'easeIn'
+  | 'easeOut'
+  | 'easeInOut'
+  | 'stepStart'
+  | 'stepEnd'
+  | CubicBezierEasingConfig
+  | LinearEasingConfig
+  | StepsEasingConfig;
 
 export type CSSAnimationIterationCount = 'infinite' | number;
 

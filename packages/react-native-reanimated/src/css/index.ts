@@ -22,6 +22,7 @@ export function unregisterCSSAnimation(animationId: number) {
   ReanimatedModule.unregisterCSSAnimation(animationId);
 }
 
+export { cubicBezier, linear, steps } from './parametrizedEasings';
 export type { NormalizedCSSAnimationConfig, CSSAnimationConfig };
 export * from './utils';
 export type {

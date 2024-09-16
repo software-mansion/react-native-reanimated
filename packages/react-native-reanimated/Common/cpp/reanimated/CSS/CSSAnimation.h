@@ -19,7 +19,7 @@ enum CSSAnimationFillMode { none, forwards, backwards, both };
 struct CSSAnimationConfig {
   jsi::Object keyframedStyle;
   double animationDuration;
-  std::string animationTimingFunction;
+  jsi::Value &animationTimingFunction;
   double animationDelay;
   double animationIterationCount;
   std::string animationDirection;
