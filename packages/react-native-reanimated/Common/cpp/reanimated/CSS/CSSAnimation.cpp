@@ -10,7 +10,7 @@ CSSAnimation::CSSAnimation(
       delay(config.animationDelay),
       duration(config.animationDuration),
       iterationCount(config.animationIterationCount),
-      easingFunction(getEasingFunction(config.animationTimingFunction)),
+      easingFunction(getEasingFunction(config.animationTimingFunction, rt)),
       direction(getAnimationDirection(config.animationDirection)),
       fillMode(getAnimationFillMode(config.animationFillMode)),
       styleInterpolator(KeyframedStyleInterpolator(rt, config.keyframedStyle)) {

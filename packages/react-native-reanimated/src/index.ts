@@ -77,6 +77,7 @@ export {
   withSpring,
   withTiming,
 } from './animation';
+export { cubicBezier, linear, steps } from './css';
 export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
 export { Extrapolation, interpolate, clamp } from './interpolation';
 export type {
