@@ -133,6 +133,7 @@ import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample'
 import StrictDOMExample from './StrictDOMExample';
 import BottomTabsExample from './LayoutAnimations/BottomTabs';
 import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation';
+import ViewFlatteningExample from './LayoutAnimations/ViewFlattening';
 
 interface Example {
   icon?: string;
@@ -710,6 +711,10 @@ export const EXAMPLES: Record<string, Example> = {
   BottomTabs: {
     title: '[LA] Bottom Tabs',
     screen: BottomTabsExample,
+  },
+  ViewFlattening: {
+    title: '[LA] View Flattening',
+    screen: ViewFlatteningExample,
   },
 
   // Shared Element Transitions
