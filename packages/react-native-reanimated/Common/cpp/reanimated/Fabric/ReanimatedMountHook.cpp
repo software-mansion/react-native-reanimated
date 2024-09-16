@@ -31,7 +31,7 @@ void ReanimatedMountHook::shadowTreeDidMount(
     reaShadowNode->unsetReanimatedMountTrait();
     return;
   }
-      
+
   // When commit from React Native has finished, we reset the skip commit flag
   // in order to allow Reanimated to commit its tree
   propsRegistry_->unpauseReanimatedCommits();
