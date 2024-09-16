@@ -1,6 +1,6 @@
 import type { Component, MutableRefObject, ReactElement } from 'react';
 import { useRef } from 'react';
-import type { TestCase, TestConfiguration, TestSuite, TestValue } from '../types';
+import type { MaybeAsync, TestCase, TestConfiguration, TestSuite, TestValue } from '../types';
 import { TestComponent } from '../TestComponent';
 import { Matchers } from '../matchers/Matchers';
 import { assertTestCase, assertTestSuite } from './Asserts';
@@ -151,22 +151,22 @@ export class TestRunner {
     return new Matchers(currentValue, this._currentTestCase);
   }
 
-  public beforeAll(job: () => void) {
+  public beforeAll(job: MaybeAsync<void>) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.beforeAll = job;
   }
 
-  public afterAll(job: () => void) {
+  public afterAll(job: MaybeAsync<void>) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterAll = job;
   }
 
-  public beforeEach(job: () => void) {
+  public beforeEach(job: MaybeAsync<void>) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.beforeEach = job;
   }
 
-  public afterEach(job: () => void) {
+  public afterEach(job: MaybeAsync<void>) {
     assertTestSuite(this._currentTestSuite);
     this._currentTestSuite.afterEach = job;
   }

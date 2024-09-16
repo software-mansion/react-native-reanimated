@@ -1,4 +1,4 @@
-import type { BuildFunction, TestCase, TestSuite } from '../types';
+import type { MaybeAsync, TestCase, TestSuite } from '../types';
 import { DescribeDecorator, TestDecorator } from '../types';
 import { applyMarkdown, formatTestName } from '../utils/stringFormatUtils';
 import { assertTestSuite } from './Asserts';
@@ -13,7 +13,7 @@ export class TestSuiteBuilder {
     return this._testSuites;
   }
 
-  public describe(name: string, buildSuite: BuildFunction, decorator: DescribeDecorator | null) {
+  public describe(name: string, buildSuite: MaybeAsync<void>, decorator: DescribeDecorator | null) {
     if (decorator === DescribeDecorator.ONLY) {
       this._includesOnly = true;
     }
@@ -45,7 +45,7 @@ export class TestSuiteBuilder {
     });
   }
 
-  public test(name: string, run: BuildFunction, decorator: TestDecorator | null) {
+  public test(name: string, run: MaybeAsync<void>, decorator: TestDecorator | null) {
     assertTestSuite(this._currentTestSuite);
     if (decorator === TestDecorator.ONLY) {
       this._includesOnly = true;

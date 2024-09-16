@@ -23,7 +23,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     const TransactionTelemetry &telemetry,
     ShadowViewMutationList mutations) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
-  LOG(INFO) << "\npullTransaction " << std::this_thread::get_id() << " "
+  LOG(INFO) << std::endl;
+  LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " "
             << surfaceId << std::endl;
 #endif
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
@@ -241,15 +242,15 @@ void LayoutAnimationsProxy::handleRemovals(
     if (!startAnimationsRecursively(
             node, true, true, false, filteredMutations)) {
       filteredMutations.push_back(node->mutation);
-      nodeForTag_.erase(node->tag);
       node->unflattenedParent->removeChildFromUnflattenedTree(node); //???
-#ifdef LAYOUT_ANIMATIONS_LOGS
-      LOG(INFO) << "delete " << node->tag << std::endl;
-#endif
       if (node->state != MOVED) {
         maybeCancelAnimation(node->tag);
         filteredMutations.push_back(ShadowViewMutation::DeleteMutation(
             node->mutation.oldChildShadowView));
+        nodeForTag_.erase(node->tag);
+#ifdef LAYOUT_ANIMATIONS_LOGS
+        LOG(INFO) << "delete " << node->tag << std::endl;
+#endif
       }
     }
   }
@@ -487,7 +488,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
       hasAnimatedChildren = true;
     } else if (subNode->state == MOVED) {
       mutations.push_back(subNode->mutation);
-      nodeForTag_.erase(subNode->tag);
+      toBeRemoved.push_back(subNode);
     } else if (shouldRemoveSubviewsWithoutAnimations) {
       maybeCancelAnimation(subNode->tag);
       mutations.push_back(subNode->mutation);
@@ -509,6 +510,14 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
   }
 
   if (node->state == MOVED) {
+    auto replacement = std::make_shared<Node>(*node);
+    for (auto subNode : node->children) {
+      subNode->parent = replacement;
+    }
+    for (auto subNode : node->unflattenedChildren) {
+      subNode->unflattenedParent = replacement;
+    }
+    nodeForTag_[replacement->tag] = replacement;
     return false;
   }
 

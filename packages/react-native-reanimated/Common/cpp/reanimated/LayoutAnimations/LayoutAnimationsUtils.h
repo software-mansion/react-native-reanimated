@@ -219,6 +219,10 @@ struct Node {
       : children(std::move(node.children)),
         unflattenedChildren(std::move(node.unflattenedChildren)),
         tag(node.tag) {}
+  Node(Node &node)
+      : children(node.children),
+        unflattenedChildren(node.unflattenedChildren),
+        tag(node.tag) {}
   virtual ~Node() = default;
 };
 

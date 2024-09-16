@@ -2,7 +2,7 @@ import type { Component, ReactElement } from 'react';
 import { TestRunner } from './TestRunner/TestRunner';
 import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
-import type { TestConfiguration, TestValue, BuildFunction } from './types';
+import type { TestConfiguration, TestValue, MaybeAsync } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
@@ -15,14 +15,14 @@ const testSuiteBuilder = testRunner.getTestSuiteBuilder();
 const callTrackerRegistry = testRunner.getCallTrackerRegistry();
 const notificationRegistry = testRunner.getNotificationRegistry();
 
-type DescribeFunction = (name: string, buildSuite: BuildFunction) => void;
-type TestFunction = (name: string, buildTest: BuildFunction) => void;
+type DescribeFunction = (name: string, buildSuite: MaybeAsync<void>) => void;
+type TestFunction = (name: string, buildTest: MaybeAsync<void>) => void;
 type TestEachFunction = <T>(
   examples: Array<T>,
 ) => (name: string, testCase: (example: T, index: number) => void | Promise<void>) => void;
 type DecoratedTestFunction = TestFunction & { each: TestEachFunction };
 
-const describeBasic = (name: string, buildSuite: BuildFunction) => {
+const describeBasic = (name: string, buildSuite: MaybeAsync<void>) => {
   testSuiteBuilder.describe(name, buildSuite, null);
 };
 
@@ -34,19 +34,19 @@ describe.only = (name, buildSuite) => {
   testSuiteBuilder.describe(name, buildSuite, DescribeDecorator.ONLY);
 };
 
-const testBasic: DecoratedTestFunction = (name: string, testCase: BuildFunction) => {
+const testBasic: DecoratedTestFunction = (name: string, testCase: MaybeAsync<void>) => {
   testSuiteBuilder.test(name, testCase, null);
 };
 testBasic.each = <T>(examples: Array<T>) => {
   return testSuiteBuilder.testEach(examples, null);
 };
-const testSkip: DecoratedTestFunction = (name: string, testCase: BuildFunction) => {
+const testSkip: DecoratedTestFunction = (name: string, testCase: MaybeAsync<void>) => {
   testSuiteBuilder.test(name, testCase, TestDecorator.SKIP);
 };
 testSkip.each = <T>(examples: Array<T>) => {
   return testSuiteBuilder.testEach(examples, TestDecorator.SKIP);
 };
-const testOnly: DecoratedTestFunction = (name: string, testCase: BuildFunction) => {
+const testOnly: DecoratedTestFunction = (name: string, testCase: MaybeAsync<void>) => {
   testSuiteBuilder.test(name, testCase, TestDecorator.ONLY);
 };
 testOnly.each = <T>(examples: Array<T>) => {
@@ -59,19 +59,19 @@ export const test = <TestType>testBasic;
 test.skip = testSkip;
 test.only = testOnly;
 
-export function beforeAll(job: () => void) {
+export function beforeAll(job: MaybeAsync<void>) {
   testRunner.beforeAll(job);
 }
 
-export function afterAll(job: () => void) {
+export function afterAll(job: MaybeAsync<void>) {
   testRunner.afterAll(job);
 }
 
-export function beforeEach(job: () => void) {
+export function beforeEach(job: MaybeAsync<void>) {
   testRunner.beforeEach(job);
 }
 
-export function afterEach(job: () => void) {
+export function afterEach(job: MaybeAsync<void>) {
   testRunner.afterEach(job);
 }
 

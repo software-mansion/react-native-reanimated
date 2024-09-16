@@ -105,10 +105,10 @@ export default function useTimingPlayground() {
         code: `Easing.${easing}(${formatEasing(nestedEasing).code})`,
       };
     }
-    const nomalizedX1 = x1 || 0;
-    const nomalizedY1 = y1 || 0;
-    const nomalizedX2 = x2 || 0;
-    const nomalizedY2 = y2 || 0;
+    const normalizedX1 = x1 || 0;
+    const normalizedY1 = y1 || 0;
+    const normalizedX2 = x2 || 0;
+    const normalizedY2 = y2 || 0;
 
     switch (easing) {
       case 'back':
@@ -119,17 +119,22 @@ export default function useTimingPlayground() {
       case 'bezierFn':
         return {
           fn: Easing.bezierFn(
-            nomalizedX1,
-            nomalizedY1,
-            nomalizedX2,
-            nomalizedY2
+            normalizedX1,
+            normalizedY1,
+            normalizedX2,
+            normalizedY2
           ),
-          code: `Easing.bezierFn(${nomalizedX1}, ${nomalizedY1}, ${nomalizedX2}, ${nomalizedY2})`,
+          code: `Easing.bezierFn(${normalizedX1}, ${normalizedY1}, ${normalizedX2}, ${normalizedY2})`,
         };
       case 'bezier':
         return {
-          fn: Easing.bezier(nomalizedX1, nomalizedY1, nomalizedX2, nomalizedY2),
-          code: `Easing.bezier(${nomalizedX1}, ${nomalizedY1}, ${nomalizedX2}, ${nomalizedY2})`,
+          fn: Easing.bezier(
+            normalizedX1,
+            normalizedY1,
+            normalizedX2,
+            normalizedY2
+          ),
+          code: `Easing.bezier(${normalizedX1}, ${normalizedY1}, ${normalizedX2}, ${normalizedY2})`,
         };
       case 'poly':
         return {
