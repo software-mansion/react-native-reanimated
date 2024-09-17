@@ -43,32 +43,20 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
     return maybeApplyBackwardsFillMode(rt);
   }
 
-  double progress = applyAnimationDirection(updateIterationProgress(timestamp));
-
+  const double iterationProgress = updateIterationProgress(timestamp);
   // Check if the animation has finished (duration can be a floating point
   // number so we can't just check if the progress is 1.0)
-  bool shouldFinish = iterationCount != -1 &&
+  const bool shouldFinish = iterationCount != -1 &&
       (timestamp - (delay + startTime)) >= duration * iterationCount;
-  bool directionChanged = false;
 
-  if (shouldFinish) {
-    // Override current progress for the last update in the last iteration
-    double intPart = std::floor(iterationCount);
-    progress = applyAnimationDirection(
-        intPart == iterationCount ? 1 : iterationCount - intPart);
-  }
+  const double progress =
+      calculateResultingProgress(iterationProgress, shouldFinish);
   // Determine if the progress update direction has changed (e.g. because of
   // the easing used or the alternating animation direction)
-  else if (
-      previousProgress.has_value() && previousToPreviousProgress.has_value()) {
-    auto prevDiff =
-        previousProgress.value() - previousToPreviousProgress.value();
-    auto currentDiff = progress - previousProgress.value();
-    directionChanged = prevDiff * currentDiff < 0;
-  }
+  const bool directionChanged = !shouldFinish && checkDirectionChange(progress);
 
   auto updatedStyle = styleInterpolator.update(
-      createUpdateContext(rt, easingFunction(progress), directionChanged));
+      createUpdateContext(rt, progress, directionChanged));
 
   previousToPreviousProgress = previousProgress;
   previousProgress = progress;
@@ -119,19 +107,6 @@ CSSAnimationFillMode CSSAnimation::getAnimationFillMode(
   }
 }
 
-double CSSAnimation::applyAnimationDirection(double progress) const {
-  switch (direction) {
-    case normal:
-      return progress;
-    case reverse:
-      return 1.0 - progress;
-    case alternate:
-      return currentIteration % 2 == 0 ? 1.0 - progress : progress;
-    case alternateReverse:
-      return currentIteration % 2 == 0 ? progress : 1.0 - progress;
-  }
-}
-
 double CSSAnimation::updateIterationProgress(time_t timestamp) {
   if (duration == 0) {
     return 1;
@@ -163,6 +138,47 @@ double CSSAnimation::updateIterationProgress(time_t timestamp) {
   // If the current iteration changes, the progress must be updated respectively
   // not to contain the progress of the previous iteration
   return progress - deltaIterations;
+}
+
+double CSSAnimation::applyAnimationDirection(double progress) const {
+  switch (direction) {
+    case normal:
+      return progress;
+    case reverse:
+      return 1.0 - progress;
+    case alternate:
+      return currentIteration % 2 == 0 ? 1.0 - progress : progress;
+    case alternateReverse:
+      return currentIteration % 2 == 0 ? progress : 1.0 - progress;
+  }
+}
+
+double CSSAnimation::calculateResultingProgress(
+    double iterationProgress,
+    bool shouldFinish) const {
+  auto applyEasingWithDirection = [&](double progress) {
+    return easingFunction(applyAnimationDirection(progress));
+  };
+
+  if (shouldFinish) {
+    // Override current progress for the last update in the last iteration to
+    // ensure that animation finishes exactly at the specified iteration count
+    double intPart = std::floor(iterationCount);
+    return applyEasingWithDirection(
+        intPart == iterationCount ? 1 : iterationCount - intPart);
+  }
+
+  return applyEasingWithDirection(iterationProgress);
+}
+
+bool CSSAnimation::checkDirectionChange(double progress) const {
+  if (previousProgress.has_value() && previousToPreviousProgress.has_value()) {
+    const auto prevDiff =
+        previousProgress.value() - previousToPreviousProgress.value();
+    const auto currentDiff = progress - previousProgress.value();
+    return prevDiff * currentDiff < 0;
+  }
+  return false;
 }
 
 InterpolationUpdateContext CSSAnimation::createUpdateContext(
