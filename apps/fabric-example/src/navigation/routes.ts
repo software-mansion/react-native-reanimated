@@ -88,6 +88,10 @@ const routes = {
         name: 'Squishy Squashy',
         Component: RealWorldExamples.SquishySquashy,
       },
+      Emojis: {
+        name: 'Emojis',
+        Component: RealWorldExamples.Emojis,
+      },
     },
   },
 } satisfies Routes;
