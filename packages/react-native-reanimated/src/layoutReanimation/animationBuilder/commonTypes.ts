@@ -24,13 +24,17 @@ type CurrentLayoutAnimationsValues = Record<
   `current${Capitalize<NumericLayoutAnimationsOptions>}`,
   number
 > &
-  Record<`current${Capitalize<StringLayoutAnimationsOptions>}`, string>;
+  Record<`current${Capitalize<StringLayoutAnimationsOptions>}`, string> & {
+    currentTransformMatrix: Array<number>;
+  };
 
 type TargetLayoutAnimationsValues = Record<
   `target${Capitalize<NumericLayoutAnimationsOptions>}`,
   number
 > &
-  Record<`target${Capitalize<StringLayoutAnimationsOptions>}`, string>;
+  Record<`target${Capitalize<StringLayoutAnimationsOptions>}`, string> & {
+    targetTransformMatrix: Array<number>;
+  };
 
 interface WindowDimensions {
   windowWidth: number;

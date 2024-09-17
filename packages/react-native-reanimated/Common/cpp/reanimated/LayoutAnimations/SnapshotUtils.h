@@ -100,6 +100,7 @@ static const char *numericPropertiesNames[9] = {
 struct StyleSnapshot {
   std::array<double, 9> numericPropertiesValues;
   std::array<std::string, 6> stringPropertiesValues;
+  std::array<Float, 16> transformMatrix;
 
   StyleSnapshot(
       jsi::Runtime &runtime,
@@ -121,6 +122,9 @@ struct StyleSnapshot {
 #endif
 
     auto opacity = props->opacity;
+
+    Transform transform = props->resolveTransform(shadowView.layoutMetrics);
+    transformMatrix = transform.matrix;
 
     BorderMetrics cascadedBorderMetrics =
         props->resolveBorderMetrics(shadowView.layoutMetrics);

@@ -30,7 +30,10 @@ export class LinearStyleTransition
 
     return (values) => {
       'worklet';
-      const keys = Object.keys(values) as Array<keyof typeof values>;
+      const { currentTransformMatrix, targetTransformMatrix, ...restValues } =
+        values;
+
+      const keys = Object.keys(restValues) as Array<keyof typeof values>;
       const initialValuesArray = [];
       const animationsArray = [];
 
@@ -49,8 +52,21 @@ export class LinearStyleTransition
         }
       }
       return {
-        initialValues: Object.fromEntries(initialValuesArray),
-        animations: Object.fromEntries(animationsArray),
+        initialValues: {
+          ...Object.fromEntries(initialValuesArray),
+          transform: [{ matrix: currentTransformMatrix }],
+        },
+        animations: {
+          ...Object.fromEntries(animationsArray),
+          transform: [
+            {
+              matrix: delayFunction(
+                delay,
+                animation(targetTransformMatrix, config)
+              ),
+            },
+          ],
+        },
         callback,
       };
     };

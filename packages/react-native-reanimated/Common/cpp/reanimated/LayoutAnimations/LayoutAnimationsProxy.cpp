@@ -736,6 +736,19 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     yogaValues.setProperty(
         uiRuntime_, "targetWindowHeight", targetValues.windowHeight);
 
+    jsi::Array currentMatrix(uiRuntime_, 16);
+    jsi::Array targetMatrix(uiRuntime_, 16);
+
+    for (unsigned int i = 0; i < 16; i++) {
+      currentMatrix.setValueAtIndex(
+          uiRuntime_, i, currentStyleValues.transformMatrix[i]);
+      targetMatrix.setValueAtIndex(
+          uiRuntime_, i, targetStyleValues.transformMatrix[i]);
+    }
+
+    yogaValues.setProperty(uiRuntime_, "currentTransformMatrix", currentMatrix);
+    yogaValues.setProperty(uiRuntime_, "targetTransformMatrix", targetMatrix);
+
     for (int i = 0; i < numberOfNumericProperties; i++) {
       setYogaCurrentAndTargetValuePair(
           &yogaValues,

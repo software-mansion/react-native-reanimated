@@ -67,6 +67,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 0,
     borderColor: 'deepskyblue',
     backgroundColor: 'skyblue',
+    transform: [{ translateX: 40 }, { rotateZ: '30deg' }, { rotateX: '30deg' }],
   },
   leaf: {
     borderWidth: 60,
@@ -78,11 +79,13 @@ const styles = StyleSheet.create({
     borderBottomColor: 'green', // on Android this is overwritten with borderColor
     borderRightColor: 'green',
     backgroundColor: 'lime',
+    transform: [{ rotateZ: '30deg' }, { translateX: 40 }],
   },
   squareFrame: {
     borderWidth: 40,
     borderColor: 'goldenrod',
-    borderBlockColor: 'darkgoldenrod', // on Android this looks different than on IOS
+    borderBlockColor: 'darkgoldenrod', // on Android this looks different than on IOS, both the transform and borders
+    transform: [{ matrix: [1, 0.1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1] }],
   },
   arcFrame: {
     borderRadius: 20,
@@ -94,6 +97,9 @@ const styles = StyleSheet.create({
     borderColor: 'goldenrod',
     borderBlockEndColor: 'darkgoldenrod',
     borderBlockStartColor: 'darkgoldenrod',
+    transform: [
+      { matrix: [0.5, 5, 0, 0, -1, 0.5, 0, 0, 0, 0, 1, 0, 100, 100, 100, 4] },
+    ],
   },
 
   container: {
