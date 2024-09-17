@@ -49,11 +49,11 @@ const hyperspaceAnimation: CSSAnimationConfig = {
   animationName: {
     from: {
       opacity: 1,
-      transform: [{ scaleY: 0 }, { translateY: -100 }],
+      transform: [{ scaleY: 0 }, { translateY: -200 }],
     },
     to: {
       opacity: 0,
-      transform: [{ scaleY: 1 }, { translateY: 400 }],
+      transform: [{ scaleY: 1 }, { translateY: 600 }],
     },
   },
   animationDuration: '0.4s',
@@ -106,22 +106,22 @@ const propulsedSparkAnimation: CSSAnimationConfig = {
 };
 
 const STAR_POSITIONS = [
-  { x: 50, y: -85 },
-  { x: 120, y: -45 },
-  { x: 25, y: 5 },
-  { x: 105, y: -95 },
-  { x: 150, y: -135 },
-  { x: 20, y: -25 },
-  { x: 75, y: -55 },
-  { x: 85, y: -105 },
-  { x: 150, y: -135 },
-  { x: 20, y: -25 },
-  { x: 75, y: -55 },
-  { x: 85, y: -105 },
-  { x: -30, y: -135 },
-  { x: 200, y: -25 },
-  { x: -75, y: -55 },
-  { x: 275, y: -105 },
+  { x: 50, y: -235 },
+  { x: 120, y: -195 },
+  { x: 25, y: -145 },
+  { x: 105, y: -245 },
+  { x: 150, y: -285 },
+  { x: 20, y: -175 },
+  { x: 75, y: -205 },
+  { x: 85, y: -255 },
+  { x: 150, y: -285 },
+  { x: 20, y: -175 },
+  { x: 75, y: -205 },
+  { x: 85, y: -255 },
+  { x: -30, y: -285 },
+  { x: 200, y: -175 },
+  { x: -75, y: -205 },
+  { x: 275, y: -255 },
 ];
 
 const EXHAUST_FLAME_POSITIONS = [
