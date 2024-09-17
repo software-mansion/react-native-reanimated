@@ -457,7 +457,7 @@ public class NodesManager implements EventDispatcherListener {
 
         try {
           Method getColor = background.getClass().getMethod("getColor");
-          actualColor = (int) getColor.invoke(background);
+          int actualColor = (int) getColor.invoke(background);
 
           String invertedColor = String.format("%08x", (0xFFFFFFFF & actualColor));
           // By default transparency is first, color second
