@@ -484,6 +484,10 @@ void ReanimatedModuleProxy::registerCSSAnimation(
     const jsi::Value &animationId,
     const jsi::Value &animationConfig,
     const jsi::Value &viewStyle) {
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  // TODO: support multiple surfaces
+  surfaceId_ = shadowNode->getSurfaceId();
+
   const auto &configObject = animationConfig.asObject(rt);
 
   LOG(INFO) << "Registering CSS animation with id: " << animationId.asNumber()
@@ -495,7 +499,7 @@ void ReanimatedModuleProxy::registerCSSAnimation(
   auto animationDuration =
       configObject.getProperty(rt, "animationDuration").asNumber();
   auto animationTimingFunction =
-    configObject.getProperty(rt, "animationTimingFunction");
+      configObject.getProperty(rt, "animationTimingFunction");
   auto animationDelay =
       configObject.getProperty(rt, "animationDelay").asNumber();
   auto animationIterationCount =
