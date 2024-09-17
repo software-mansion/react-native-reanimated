@@ -86,9 +86,7 @@ export type {
   InterpolateHSV,
 } from './interpolateColor';
 export {
-  /**
-   * @deprecated Please use {@link Extrapolation} instead.
-   */
+  /** @deprecated Please use {@link Extrapolation} instead. */
   Extrapolate,
   ColorSpace,
   interpolateColor,

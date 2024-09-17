@@ -22,8 +22,27 @@ function App() {
 <summary>Type definitions</summary>
 
 ```typescript
-type SharedValue<T> = { value: T };
-type DerivedValue<T> = Readonly<SharedValue<T>>;
+interface SharedValue<Value = unknown> {
+  value: Value;
+  get(): Value;
+  set(value: Value | ((value: Value) => Value)): void;
+  addListener: (listenerID: number, listener: (value: Value) => void) => void;
+  removeListener: (listenerID: number) => void;
+  modify: (
+    modifier?: <T extends Value>(value: T) => T,
+    forceUpdate?: boolean
+  ) => void;
+}
+
+interface DerivedValue<Value = unknown>
+  extends Readonly<Omit<SharedValue<Value>, 'set'>> {
+  /**
+   * @deprecated Derived values are readonly, don't use this method. It's here
+   *   only to prevent breaking changes in TypeScript types. It will be removed
+   *   in the future.
+   */
+  set: SharedValue<Value>['set'];
+}
 
 function useDerivedValue<T>(
   updater: () => T,
