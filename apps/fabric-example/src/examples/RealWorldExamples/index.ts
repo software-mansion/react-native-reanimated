@@ -1,6 +1,7 @@
 import SpinnersAndLoaders from './SpinnersAndLoaders';
 import Emojis from './Emojis';
 import Campfire from './Campfire';
+import RocketInSpace from './RocketInSpace';
 import SquishySquashy from './SquishySquashy';
 
 export default {
@@ -8,4 +9,5 @@ export default {
   Emojis,
   Campfire,
   SquishySquashy,
+  RocketInSpace,
 };
