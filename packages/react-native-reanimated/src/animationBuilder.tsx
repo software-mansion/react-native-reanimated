@@ -30,7 +30,7 @@ const mockTargetValues = Object.fromEntries(
   propBaseList.map((propName) => [`target${propName}`, 0])
 );
 const mockCurrentValues = Object.fromEntries(
-  propBaseList.map((propName) => [`target${propName}`, 0])
+  propBaseList.map((propName) => [`current${propName}`, 0])
 );
 
 const mockValues = {

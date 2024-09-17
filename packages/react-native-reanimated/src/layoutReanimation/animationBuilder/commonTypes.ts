@@ -16,7 +16,9 @@ export type NumericLayoutAnimationsOptions =
   | `border${'Top' | 'Bottom'}${'Left' | 'Right'}Radius`
   | `border${'Top' | 'Bottom' | 'Left' | 'Right'}Width`;
 
-type StringLayoutAnimationsOptions = 'backgroundColor';
+type StringLayoutAnimationsOptions =
+  | 'backgroundColor'
+  | `border${'Top' | 'Bottom' | 'Left' | 'Right'}Color`;
 
 type CurrentLayoutAnimationsValues = Record<
   `current${Capitalize<NumericLayoutAnimationsOptions>}`,

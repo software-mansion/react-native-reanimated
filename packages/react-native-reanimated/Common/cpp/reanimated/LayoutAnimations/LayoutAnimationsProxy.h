@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <vector>
 #include "LayoutAnimationsUtils.h"
+#include "SnapshotUtils.h"
 #include "UIScheduler.h"
 
 namespace reanimated {

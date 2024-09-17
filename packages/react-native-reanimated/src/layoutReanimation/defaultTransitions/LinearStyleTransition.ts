@@ -30,80 +30,27 @@ export class LinearStyleTransition
 
     return (values) => {
       'worklet';
+      const keys = Object.keys(values) as Array<keyof typeof values>;
+      const initialValuesArray = [];
+      const animationsArray = [];
+
+      for (const key of keys) {
+        if (key.startsWith('current')) {
+          const propertyNameUpperCase = key.slice('current'.length);
+          const propertyName = `${propertyNameUpperCase.charAt(0).toLowerCase()}${propertyNameUpperCase.slice(1)}`;
+          initialValuesArray.push([propertyName, values[key]]);
+        } else if (key.startsWith('target')) {
+          const propertyNameUpperCase = key.slice('target'.length);
+          const propertyName = `${propertyNameUpperCase.charAt(0).toLowerCase()}${propertyNameUpperCase.slice(1)}`;
+          animationsArray.push([
+            propertyName,
+            delayFunction(delay, animation(values[key], config)),
+          ]);
+        }
+      }
       return {
-        initialValues: {
-          originX: values.currentOriginX,
-          originY: values.currentOriginY,
-          width: values.currentWidth,
-          height: values.currentHeight,
-          opacity: values.currentOpacity,
-          backgroundColor: values.currentBackgroundColor,
-
-          borderTopLeftRadius: values.currentBorderTopLeftRadius,
-          borderTopRightRadius: values.currentBorderTopRightRadius,
-          borderBottomLeftRadius: values.currentBorderBottomLeftRadius,
-          borderBottomRightRadius: values.currentBorderBottomRightRadius,
-
-          borderTopWidth: values.currentBorderTopWidth,
-          borderBottomWidth: values.currentBorderBottomWidth,
-          borderLeftWidth: values.currentBorderLeftWidth,
-          borderRightWidth: values.currentBorderRightWidth,
-        },
-        animations: {
-          originX: delayFunction(
-            delay,
-            animation(values.targetOriginX, config)
-          ),
-          originY: delayFunction(
-            delay,
-            animation(values.targetOriginY, config)
-          ),
-          width: delayFunction(delay, animation(values.targetWidth, config)),
-          height: delayFunction(delay, animation(values.targetHeight, config)),
-          opacity: delayFunction(
-            delay,
-            animation(values.targetOpacity, config)
-          ),
-
-          borderTopLeftRadius: delayFunction(
-            delay,
-            animation(values.targetBorderTopLeftRadius, config)
-          ),
-          borderTopRightRadius: delayFunction(
-            delay,
-            animation(values.targetBorderTopRightRadius, config)
-          ),
-          borderBottomLeftRadius: delayFunction(
-            delay,
-            animation(values.targetBorderBottomLeftRadius, config)
-          ),
-          borderBottomRightRadius: delayFunction(
-            delay,
-            animation(values.targetBorderBottomRightRadius, config)
-          ),
-
-          borderTopWidth: delayFunction(
-            delay,
-            animation(values.targetBorderTopWidth, config)
-          ),
-          borderBottomWidth: delayFunction(
-            delay,
-            animation(values.targetBorderBottomWidth, config)
-          ),
-          borderLeftWidth: delayFunction(
-            delay,
-            animation(values.targetBorderLeftWidth, config)
-          ),
-          borderRightWidth: delayFunction(
-            delay,
-            animation(values.targetBorderRightWidth, config)
-          ),
-
-          backgroundColor: delayFunction(
-            delay,
-            animation(values.targetBackgroundColor, config)
-          ),
-        },
+        initialValues: Object.fromEntries(initialValuesArray),
+        animations: Object.fromEntries(animationsArray),
         callback,
       };
     };

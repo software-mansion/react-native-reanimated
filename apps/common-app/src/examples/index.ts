@@ -14,6 +14,7 @@ import AnimatedTextWidthExample from './AnimatedTextWidthExample';
 import ArticleProgressExample from './ArticleProgressExample';
 import BabelVersionCheckExample from './BabelVersionCheckExample';
 import BasicLayoutAnimation from './LayoutAnimations/BasicLayoutAnimation';
+import BasicStyleTransition from './LayoutAnimations/BasicStyleTransition';
 import BasicNestedAnimation from './LayoutAnimations/BasicNestedAnimation';
 import BasicNestedLayoutAnimation from './LayoutAnimations/BasicNestedLayoutAnimation';
 import BokehExample from './BokehExample';
@@ -621,6 +622,10 @@ export const EXAMPLES: Record<string, Example> = {
   BasicLayoutAnimation: {
     title: '[LA] Basic layout animation',
     screen: BasicLayoutAnimation,
+  },
+  StyleTransition: {
+    title: '[LA] Basic style transition',
+    screen: BasicStyleTransition,
   },
   BasicNestedAnimation: {
     title: '[LA] Basic nested animation',

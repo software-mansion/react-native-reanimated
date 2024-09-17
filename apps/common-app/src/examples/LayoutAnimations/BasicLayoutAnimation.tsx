@@ -1,4 +1,8 @@
-import Animated, { LinearStyleTransition } from 'react-native-reanimated';
+import Animated, {
+  BounceInLeft,
+  FadeOutRight,
+  Layout,
+} from 'react-native-reanimated';
 import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
@@ -13,23 +17,14 @@ export default function BasicLayoutAnimation() {
       <Button onPress={() => setState(!state)} title="Update" />
       {visible && (
         <Animated.View
-          layout={LinearStyleTransition.duration(1000)}
+          entering={BounceInLeft}
+          layout={Layout.springify()}
+          exiting={FadeOutRight.duration(500)}
           style={[
             styles.box,
             {
-              marginLeft: state ? 100 : 0,
-              backgroundColor: state ? 'blue' : 'red',
-              opacity: state ? 1 : 0.1,
-
-              borderLeftWidth: state ? 1 : 5,
-              borderRightWidth: state ? 15 : 5,
-              borderTopWidth: state ? 1 : 5,
-              borderBottomWidth: state ? 30 : 5,
-
-              borderTopLeftRadius: state ? 20 : 100,
-              borderBottomRightRadius: state ? 50 : 100,
-              borderBottomLeftRadius: state ? 40 : 100,
-              borderTopRightRadius: state ? 10 : 10,
+              marginLeft: state ? 200 : 0,
+              backgroundColor: state ? 'red' : 'blue',
             },
           ]}
         />
@@ -45,8 +40,7 @@ const styles = StyleSheet.create({
     marginTop: 300,
   },
   box: {
-    width: 200,
-    height: 200,
-    opacity: 0.5,
+    width: 100,
+    height: 100,
   },
 });
