@@ -11,7 +11,7 @@ It's possible to launch Reanimated in a web browser. For that case all of the fu
 
 ### Step 1: Install the package
 
-Install `@babel/plugin-proposal-export-namespace-from` package from npm:
+Install [`@babel/plugin-proposal-export-namespace-from`](https://babeljs.io/docs/babel-plugin-transform-export-namespace-from):
 
 <Tabs groupId="package-managers">
   <TabItem value="expo" label="EXPO" default>
@@ -31,11 +31,11 @@ Install `@babel/plugin-proposal-export-namespace-from` package from npm:
   </TabItem>
 </Tabs>
 
-### Step 2: Add Reanimated's babel plugin
+### Step 2: Add plugins to config file
 
-Add `@babel/plugin-proposal-export-namespace-from` plugin to your `babel.config.js`.
+Add `@babel/plugin-proposal-export-namespace-from` and Reanimated Babel plugin to your `babel.config.js`.
 
-```js {7}
+```js {7,8}
   module.exports = {
       presets: [
         ... // don't add it here :)
@@ -74,7 +74,7 @@ If you want to use Reanimated in a `webpack` app you should adjust your `webpack
 
 Example webpack config file with Reanimated support:
 
-```js {6,14,15,34}
+```js
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 
@@ -113,7 +113,7 @@ module.exports = {
 
 ## Web without the Babel plugin
 
-It is possible to use Reanimated without the Babel plugin (`react-native-reanimated/plugin` on the Web, with some additional configuration.
+It is possible to use Reanimated on the Web without the `react-native-reanimated/plugin`, only with some additional configuration.
 
 Reanimated hooks all accept optional dependency arrays. Under the hood, the Reanimated Babel plugin inserts these for you.
 
@@ -140,7 +140,11 @@ const dv = useDerivedValue(
 
 Be sure to pass the dependency itself (`sv`) and not `sv.value` to the dependency array.
 
-> Babel users will still need to install the `@babel/plugin-proposal-class-properties` plugin.
+:::caution
+
+Babel users will still need to install the `@babel/plugin-proposal-class-properties` plugin.
+
+:::
 
 ### ESLint Support
 
@@ -159,7 +163,11 @@ When you use hooks from React, they give you nice suggestions from ESLint to inc
 }
 ```
 
+:::info
+
 This assumes you've already installed the `react-hooks` eslint [plugin](https://www.npmjs.com/package/eslint-plugin-react-hooks).
+
+:::
 
 If you're using ESLint autofix, the ESLint plugin may add `.value` to the dependency arrays, rather than the root dependency. In these cases, you should update the array yourself.
 
@@ -175,7 +183,7 @@ const dv = useDerivedValue(() => sv.value, [sv]);
 
 ## Solito / Next.js Compatibility
 
-There is an experimental SWC plugin in the works. However, given that this may not work properly, you can use the ["Web without a Babel plugin"](#web-without-a-babel-plugin) instructions above.
+There is an experimental SWC plugin in the works. However, given that this may not work properly, you can use the [Web without a Babel plugin](#web-without-a-babel-plugin) instructions above.
 
 ### Next.js Polyfill
 
