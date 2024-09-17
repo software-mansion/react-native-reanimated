@@ -4,6 +4,8 @@ import { EnteringExitingConfigProps } from '..';
 import SpringControls from './SpringControls';
 import EasingControls from './EasingControls';
 
+// TODO: Options related to spring will be uncommented after springify is introduced to web
+
 const Controls = ({
   options,
   type,
@@ -32,21 +34,21 @@ const Controls = ({
         }}
         options={options}
       />
-      {!type.isSpringBased && (
-        <Range
-          label="Duration (ms)"
-          min={100}
-          max={3000}
-          step={100}
-          value={type.duration}
-          onChange={(option) => {
-            setType((prevState) => ({
-              ...prevState,
-              duration: option,
-            }));
-          }}
-        />
-      )}
+      {/* {!type.isSpringBased && ( */}
+      <Range
+        label="Duration (ms)"
+        min={100}
+        max={3000}
+        step={100}
+        value={type.duration}
+        onChange={(option) => {
+          setType((prevState) => ({
+            ...prevState,
+            duration: option,
+          }));
+        }}
+      />
+      {/* )} */}
       <Range
         label="Delay (ms)"
         min={0}
@@ -60,7 +62,7 @@ const Controls = ({
           }));
         }}
       />
-      {!isBounce && (
+      {/* {!isBounce && (
         <CheckboxOption
           label="Spring-based"
           value={type.isSpringBased}
@@ -73,17 +75,17 @@ const Controls = ({
             }))
           }
         />
-      )}
-      {type.isSpringBased ? (
+      )} */}
+      {/* {type.isSpringBased ? (
         <SpringControls type={type} setType={setType} />
-      ) : (
-        <EasingControls
-          type={type}
-          setType={setType}
-          canNestEasing={canNestEasing}
-          isMobile={isMobile}
-        />
-      )}
+      ) : ( */}
+      <EasingControls
+        type={type}
+        setType={setType}
+        canNestEasing={canNestEasing}
+        isMobile={isMobile}
+      />
+      {/* )} */}
     </>
   );
 };

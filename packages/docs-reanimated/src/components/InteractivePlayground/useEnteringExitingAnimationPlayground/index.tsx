@@ -4,13 +4,16 @@ import useScreenSize from '@site/src/hooks/useScreenSize';
 import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
 import { Easing } from 'react-native-reanimated';
 import Controls from './Controls/Controls';
+import { type BaseLayoutAnimationConfig } from 'react-native-reanimated/lib/typescript/layoutReanimation';
 import { ENTERING_ANIMATIONS, EXITING_ANIMATIONS } from './Example';
+
+// TODO: Options related to spring will be uncommented after springify is introduced to web
 
 const MOBILE_WIDTH = 768;
 
-export interface EnteringExitingConfigProps {
+export interface EnteringExitingConfigProps
+  extends Omit<BaseLayoutAnimationConfig, 'easing'> {
   animation: string;
-  duration?: number;
   delay?: number;
   easing?: string;
   nestedEasing?: string;
@@ -25,23 +28,17 @@ export interface EnteringExitingConfigProps {
   steps?: number;
   roundToNextStep?: boolean;
   isSpringBased?: boolean;
-  damping?: number;
-  mass?: number;
-  stiffness?: number;
-  overshootClamping?: boolean;
-  restDisplacementThreshold?: number;
-  restSpeedThreshold?: number;
 }
 
-const defaultSpringConfig = {
-  isSpringBased: false,
-  damping: 10,
-  mass: 1,
-  stiffness: 100,
-  overshootClamping: false,
-  restDisplacementThreshold: 0.01,
-  restSpeedThreshold: 2,
-};
+// const defaultSpringConfig = {
+//   isSpringBased: false,
+//   damping: 10,
+//   mass: 1,
+//   stiffness: 100,
+//   overshootClamping: false,
+//   restDisplacementThreshold: 0.01,
+//   restSpeedThreshold: 2,
+// };
 
 const defaultEasingConfig = {
   easing: 'inOut',
@@ -64,7 +61,7 @@ const baseConfig = {
   duration: 300,
   delay: 0,
   ...defaultEasingConfig,
-  ...defaultSpringConfig,
+  // ...defaultSpringConfig,
 };
 
 const defaultEnteringConfig = {
@@ -203,18 +200,18 @@ export default function useEnteringExitingPlayground() {
     .delay(${entering.delay})`
       : ''
   }
-    ${
-      entering.isSpringBased
-        ? `.springify()
-    .mass(${entering.mass})
-    .damping(${entering.damping})
-    .stiffness(${entering.stiffness})
-    .overshootClamping(${entering.overshootClamping})
-    .restDisplacementThreshold(${entering.restDisplacementThreshold})
-    .restSpeedThreshold(${entering.restSpeedThreshold}`
-        : `.duration(${entering.duration})
-    .easing(${formatEasing(entering).code})`
-    }
+     ${
+       //   ${entering.isSpringBased
+       //     ? `.springify()
+       // .mass(${entering.mass})
+       // .damping(${entering.damping})
+       // .stiffness(${entering.stiffness})
+       // .overshootClamping(${entering.overshootClamping})
+       // .restDisplacementThreshold(${entering.restDisplacementThreshold})
+       // .restSpeedThreshold(${entering.restSpeedThreshold}`
+       `.duration(${entering.duration})
+     .easing(${formatEasing(entering).code})`
+     }
 
   Exiting:
     ${exiting.animation}${
@@ -223,18 +220,18 @@ export default function useEnteringExitingPlayground() {
     .delay(${exiting.delay})`
       : ''
   }
-    ${
-      exiting.isSpringBased
-        ? `.springify()
-    .mass(${exiting.mass})
-    .damping(${exiting.damping})
-    .stiffness(${exiting.stiffness})
-    .overshootClamping(${exiting.overshootClamping})
-    .restDisplacementThreshold(${exiting.restDisplacementThreshold})
-    .restSpeedThreshold(${exiting.restSpeedThreshold}`
-        : `.duration(${exiting.duration})
-    .easing(${formatEasing(exiting).code})`
-    }
+     ${
+       //   ${exiting.isSpringBased
+       //     ? `.springify()
+       // .mass(${exiting.mass})
+       // .damping(${exiting.damping})
+       // .stiffness(${exiting.stiffness})
+       // .overshootClamping(${exiting.overshootClamping})
+       // .restDisplacementThreshold(${exiting.restDisplacementThreshold})
+       // .restSpeedThreshold(${exiting.restSpeedThreshold}`
+       `.duration(${exiting.duration})
+     .easing(${formatEasing(exiting).code})`
+     }
   `;
 
   const controls = (

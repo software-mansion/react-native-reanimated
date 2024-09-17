@@ -66,6 +66,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { EnteringExitingConfigProps } from '.';
 
+// TODO: Options related to spring will be uncommented after springify is introduced to web
+
 interface ExampleProps {
   entering: EnteringExitingConfigProps;
   exiting: EnteringExitingConfigProps;
@@ -173,69 +175,28 @@ export const EXITING_ANIMATIONS = {
   StretchOutY: StretchOutY,
 };
 
+// when springify() on web is enabled, add following props:
+// isSpringBased, mass, damping, stiffness, overshootClamping, restDisplacementThreshold, restSpeedThreshold
+
 export default function Example({ entering, exiting }: ExampleProps) {
   const [visible, setVisible] = React.useState(true);
 
   const getEnteringAnimation = () => {
-    const {
-      animation,
-      easing,
-      duration,
-      delay,
-      isSpringBased,
-      mass,
-      stiffness,
-      damping,
-      overshootClamping,
-      restSpeedThreshold,
-      restDisplacementThreshold,
-    } = entering;
+    const { animation, easing, duration, delay } = entering;
 
-    return isSpringBased
-      ? ENTERING_ANIMATIONS[animation]
-          .delay(delay)
-          .springify()
-          .damping(damping)
-          .mass(mass)
-          .overshootClamping(overshootClamping)
-          .restSpeedThreshold(restSpeedThreshold)
-          .restDisplacementThreshold(restDisplacementThreshold)
-          .stiffness(stiffness)
-      : ENTERING_ANIMATIONS[animation]
-          .duration(duration)
-          .delay(delay)
-          .easing(easing);
+    return ENTERING_ANIMATIONS[animation]
+      .duration(duration)
+      .delay(delay)
+      .easing(easing);
   };
 
   const getExitingAnimation = () => {
-    const {
-      animation,
-      easing,
-      delay,
-      duration,
-      isSpringBased,
-      mass,
-      stiffness,
-      damping,
-      overshootClamping,
-      restSpeedThreshold,
-      restDisplacementThreshold,
-    } = exiting;
+    const { animation, easing, delay, duration } = exiting;
 
-    return isSpringBased
-      ? EXITING_ANIMATIONS[animation]
-          .springify()
-          .delay(delay)
-          .damping(damping)
-          .mass(mass)
-          .overshootClamping(overshootClamping)
-          .restSpeedThreshold(restSpeedThreshold)
-          .restDisplacementThreshold(restDisplacementThreshold)
-          .stiffness(stiffness)
-      : EXITING_ANIMATIONS[animation]
-          .duration(duration)
-          .delay(delay)
-          .easing(easing);
+    return EXITING_ANIMATIONS[animation]
+      .duration(duration)
+      .delay(delay)
+      .easing(easing);
   };
 
   return (
