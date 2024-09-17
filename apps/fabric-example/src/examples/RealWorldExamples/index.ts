@@ -1,9 +1,11 @@
+import SpinnersAndLoaders from './SpinnersAndLoaders';
+import Emojis from './Emojis';
 import Campfire from './Campfire';
 import SquishySquashy from './SquishySquashy';
-import Emojis from './Emojis';
 
 export default {
-  SquishySquashy,
+  SpinnersAndLoaders,
   Emojis,
   Campfire,
+  SquishySquashy,
 };

@@ -36,6 +36,7 @@ export default function Grid({
       aspectRatio: squareCells ? 1 : undefined,
       paddingHorizontal: cGap / 2,
       paddingVertical: rGap / 2,
+      alignItems: 'stretch',
     }),
     [columns, squareCells, cGap, rGap]
   );

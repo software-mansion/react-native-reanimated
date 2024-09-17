@@ -34,31 +34,30 @@ const COLORS = {
 
 export default function Emojis() {
   return (
-    <Scroll>
+    <Scroll contentContainerStyle={{ paddingVertical: spacing.lg }}>
       <Grid
         columns={3}
-        style={sharedStyles.container}
         staggerInterval={100}
         columnGap={spacing.sm}
         rowGap={spacing.md}>
-        <EmojiCell title="Like" Emoji={LikeEmoji} />
-        <EmojiCell title="Love" Emoji={HeartEmoji} />
-        <EmojiCell title="HaHa" Emoji={HaHaEmoji} />
-        <EmojiCell title="Yay" Emoji={YayEmoji} />
-        <EmojiCell title="Wow" Emoji={WowEmoji} />
-        <EmojiCell title="Sad" Emoji={SadEmoji} />
-        <EmojiCell title="Angry" Emoji={AngryEmoji} />
+        <Example title="Like" Emoji={LikeEmoji} />
+        <Example title="Heart" Emoji={HeartEmoji} />
+        <Example title="HaHa" Emoji={HaHaEmoji} />
+        <Example title="Yay" Emoji={YayEmoji} />
+        <Example title="Wow" Emoji={WowEmoji} />
+        <Example title="Sad" Emoji={SadEmoji} />
+        <Example title="Angry" Emoji={AngryEmoji} />
       </Grid>
     </Scroll>
   );
 }
 
-type EmojiCellProps = {
+type ExampleProps = {
   title: string;
   Emoji: ComponentType;
 };
 
-function EmojiCell({ title, Emoji }: EmojiCellProps) {
+function Example({ title, Emoji }: ExampleProps) {
   return (
     <View style={sharedStyles.cell}>
       <Stagger delay={50}>
@@ -70,9 +69,6 @@ function EmojiCell({ title, Emoji }: EmojiCellProps) {
 }
 
 const sharedStyles = StyleSheet.create({
-  container: {
-    paddingVertical: spacing.lg,
-  },
   cell: {
     backgroundColor: colors.background1,
     borderRadius: radius.md,
