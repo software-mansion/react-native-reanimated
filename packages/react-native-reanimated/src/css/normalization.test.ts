@@ -12,6 +12,7 @@ import type {
   CSSAnimationTimeUnit,
   CSSKeyframeKey,
   KeyframedViewStyle,
+  TemporaryTransforms,
 } from './types';
 
 describe('normalizeDuration', () => {
@@ -178,27 +179,9 @@ describe('handleObjectValue', () => {
   describe('when the value is an array and prop is "transform"', () => {
     test('adds transforms to the temporary transforms object ', () => {
       const keyframedStyle = {};
-      const temporaryTransforms = {};
-
-      handleObjectValue(
-        0.5,
-        'transform',
-        [{ translateX: 100 }, { translateY: 50 }],
-        keyframedStyle,
-        temporaryTransforms
-      );
-
-      expect(keyframedStyle).toEqual({});
-      expect(temporaryTransforms).toEqual({
-        translateX: [{ offset: 0.5, value: 100 }],
-        translateY: [{ offset: 0.5, value: 50 }],
-      });
-    });
-
-    test('properly handles multiple offset values for the same transform property', () => {
-      const keyframedStyle = {};
-      const temporaryTransforms = {
-        translateX: [{ offset: 0, value: 0 }],
+      const temporaryTransforms: TemporaryTransforms = {
+        transforms: {},
+        previousTransformOffset: -1,
       };
 
       handleObjectValue(
@@ -210,7 +193,29 @@ describe('handleObjectValue', () => {
       );
 
       expect(keyframedStyle).toEqual({});
-      expect(temporaryTransforms).toEqual({
+      expect(temporaryTransforms.transforms).toEqual({
+        translateX: [{ offset: 0.5, value: 100 }],
+        translateY: [{ offset: 0.5, value: 50 }],
+      });
+    });
+
+    test('properly handles multiple offset values for the same transform property', () => {
+      const keyframedStyle = {};
+      const temporaryTransforms: TemporaryTransforms = {
+        transforms: { translateX: [{ offset: 0, value: 0 }] },
+        previousTransformOffset: -1,
+      };
+
+      handleObjectValue(
+        0.5,
+        'transform',
+        [{ translateX: 100 }, { translateY: 50 }],
+        keyframedStyle,
+        temporaryTransforms
+      );
+
+      expect(keyframedStyle).toEqual({});
+      expect(temporaryTransforms.transforms).toEqual({
         translateX: [
           { offset: 0, value: 0 },
           { offset: 0.5, value: 100 },
@@ -223,7 +228,10 @@ describe('handleObjectValue', () => {
   describe('when the value is an object', () => {
     test('creates arrays with keyframed values for each prop', () => {
       const keyframedStyle = {};
-      const temporaryTransforms = {};
+      const temporaryTransforms: TemporaryTransforms = {
+        transforms: {},
+        previousTransformOffset: -1,
+      };
 
       handleObjectValue(
         0.5,
@@ -239,7 +247,7 @@ describe('handleObjectValue', () => {
           height: [{ offset: 0.5, value: 10 }],
         },
       });
-      expect(temporaryTransforms).toEqual({});
+      expect(temporaryTransforms.transforms).toEqual({});
     });
 
     test('properly handles multiple offset values for the same property', () => {
@@ -249,7 +257,10 @@ describe('handleObjectValue', () => {
           height: [{ offset: 0, value: 0 }],
         },
       };
-      const temporaryTransforms = {};
+      const temporaryTransforms: TemporaryTransforms = {
+        transforms: {},
+        previousTransformOffset: -1,
+      };
 
       handleObjectValue(
         0.5,
@@ -271,7 +282,7 @@ describe('handleObjectValue', () => {
           ],
         },
       });
-      expect(temporaryTransforms).toEqual({});
+      expect(temporaryTransforms.transforms).toEqual({});
     });
   });
 });

@@ -12,6 +12,7 @@ import type {
   NormalizedCSSAnimationConfig,
   NormalizedOffsetKeyframe,
   CSSAnimationFillMode,
+  TemporaryTransforms,
 } from './types';
 import { ReanimatedError } from '../errors';
 import { processCSSAnimationColor } from '../Colors';
@@ -140,7 +141,10 @@ export function createKeyframedStyle(
 ): KeyframedViewStyle {
   const normalizedKeyframes = normalizeKeyframesOffsets(keyframes);
 
-  const temporaryTransforms: Record<string, KeyframedValue<any>> = {};
+  const temporaryTransforms: TemporaryTransforms = {
+    transforms: {},
+    previousTransformOffset: -1,
+  };
   const keyframedStyle: KeyframedViewStyle = {};
 
   normalizedKeyframes.forEach(({ offset, style }) => {
@@ -154,7 +158,7 @@ export function createKeyframedStyle(
     }
   });
 
-  addFormattedTransforms(keyframedStyle, temporaryTransforms);
+  addFormattedTransforms(keyframedStyle, temporaryTransforms.transforms);
 
   return keyframedStyle;
 }
@@ -163,7 +167,7 @@ function processStyleProperties(
   offset: number,
   style: ViewStyle,
   keyframedStyle: KeyframedViewStyle,
-  temporaryTransforms: Record<string, KeyframedValue<any>>
+  temporaryTransforms: TemporaryTransforms
 ) {
   Object.entries(style).forEach(([property, value]) => {
     if (value === undefined) {
@@ -193,7 +197,7 @@ export function handleObjectValue(
   prop: keyof ViewStyle,
   value: any,
   keyframedStyle: KeyframedViewStyle,
-  temporaryTransforms: Record<string, KeyframedValue<any>>
+  temporaryTransforms: TemporaryTransforms
 ) {
   if (Array.isArray(value)) {
     if (prop !== 'transform') {
@@ -216,28 +220,57 @@ export function handleObjectValue(
 function handleTransformString(
   offset: number,
   value: string,
-  temporaryTransforms: Record<string, KeyframedValue<any>>
+  temporaryTransforms: TemporaryTransforms
 ) {
   const transformArray = parseTransformString(value);
   addTransformValues(temporaryTransforms, transformArray, offset);
 }
 
 function addTransformValues(
-  temporaryTransforms: Record<string, KeyframedValue<any>>,
+  temporaryTransforms: TemporaryTransforms,
   transforms: Array<Record<string, any>>,
   offset: number
 ) {
-  transforms.forEach((transform) => {
-    Object.entries(transform).forEach(([transformKey, transformValue]) => {
-      if (!temporaryTransforms[transformKey]) {
-        temporaryTransforms[transformKey] = [];
+  const currentTransformProperties = new Set(
+    transforms.flatMap((transform) => Object.keys(transform))
+  );
+
+  // Reset transforms of properties that were updated in previous keyframes
+  // but aren't present in the current keyframe
+  Object.entries(temporaryTransforms.transforms).forEach(
+    ([property, keyframes]) => {
+      if (
+        !currentTransformProperties.has(property) &&
+        keyframes[keyframes.length - 1]?.value !== undefined
+      ) {
+        keyframes.push({ offset, value: undefined });
       }
-      temporaryTransforms[transformKey].push({
-        offset,
-        value: transformValue,
-      });
+    }
+  );
+
+  transforms.forEach((transform) => {
+    Object.entries(transform).forEach(([property, value]) => {
+      if (!temporaryTransforms.transforms[property]) {
+        temporaryTransforms.transforms[property] = [];
+      }
+      const keyframes = temporaryTransforms.transforms[property];
+      const lastKeyframe = keyframes[keyframes.length - 1];
+
+      if (
+        temporaryTransforms.previousTransformOffset !== -1 &&
+        lastKeyframe?.offset !== temporaryTransforms.previousTransformOffset
+      ) {
+        keyframes.push({
+          offset: temporaryTransforms.previousTransformOffset,
+          value: undefined,
+        });
+      }
+
+      keyframes.push({ offset, value });
     });
   });
+
+  temporaryTransforms.previousTransformOffset = offset;
 }
 
 export function handlePrimitiveValue(
@@ -277,12 +310,26 @@ function addSubPropertyValue(
 
 function addFormattedTransforms(
   keyframedStyle: KeyframedViewStyle,
-  temporaryTransforms: Record<string, KeyframedValue<any>>
+  transforms: TemporaryTransforms['transforms']
 ) {
-  const transforms = Object.entries(temporaryTransforms);
-  if (transforms.length > 0) {
-    keyframedStyle.transform = transforms.map(([key, value]) => ({
-      [key]: value,
+  const entries = Object.entries(transforms);
+  if (entries.length > 0) {
+    keyframedStyle.transform = entries.map(([property, keyframedValue]) => ({
+      [property]: keyframedValue.reduce((acc, keyframe, idx) => {
+        if (
+          // Add keyframe only if the next and the previous keyframes have different values
+          (keyframedValue[idx - 1]?.value !== keyframe.value ||
+            keyframedValue[idx + 1]?.value !== keyframe.value) &&
+          // If the keyframe has no value, add it only if it is not the first or the last keyframe
+          // (these are added automatically in CPP)
+          (keyframe.value !== undefined ||
+            (keyframe.offset !== 0 && keyframe.offset !== 1))
+        ) {
+          acc.push(keyframe);
+        }
+
+        return acc;
+      }, [] as KeyframedValue<any>),
     })) as any;
   }
 }
@@ -294,8 +341,49 @@ export function parseTransformString(
     .split(/\)\s*/)
     .filter(Boolean)
     .map((transform) => {
-      const [key, value] = transform.split(/\(\s*/);
-      return { [key]: isNaN(+value) ? value : +value };
+      const [key, valueString] = transform.split(/\(\s*/);
+      const values = valueString
+        .replace(/\)$/g, '')
+        .split(',')
+        .map((value) => {
+          const trimmedValue = value.trim();
+          if (key.startsWith('translate')) {
+            return parseFloat(trimmedValue);
+          }
+          if (trimmedValue.endsWith('deg') || trimmedValue.endsWith('rad')) {
+            return trimmedValue;
+          }
+          return isNaN(+trimmedValue) ? trimmedValue : +trimmedValue;
+        });
+
+      const unwrappedValue = values.length === 1 ? values[0] : values;
+
+      switch (key) {
+        case 'translate':
+          return {
+            translateX: values[0] || 0,
+            translateY: values[1] || 0,
+          };
+        case 'translateX':
+        case 'translateY':
+          return { [key]: unwrappedValue };
+        case 'scale':
+          return values.length === 1
+            ? { scale: unwrappedValue }
+            : { scaleX: values[0] || 1, scaleY: values[1] || values[0] || 1 };
+        case 'rotate':
+        case 'rotateX':
+        case 'rotateY':
+        case 'rotateZ':
+          return { [key]: unwrappedValue };
+        case 'skew':
+          return {
+            skewX: values[0] || '0deg',
+            skewY: values[1] || '0deg',
+          };
+        default:
+          return { [key]: unwrappedValue };
+      }
     });
 }
 

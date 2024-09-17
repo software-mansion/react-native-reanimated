@@ -177,7 +177,6 @@ jsi::Value CSSAnimation::maybeApplyBackwardsFillMode(jsi::Runtime &rt) {
     // Return the style from the first animation keyframe
     return styleInterpolator.update(createUpdateContext(rt, 0, false));
   }
-
   return jsi::Value::undefined();
 }
 
@@ -187,7 +186,6 @@ jsi::Value CSSAnimation::maybeApplyForwardsFillMode(jsi::Runtime &rt) {
     // applied
     return jsi::Value::undefined();
   }
-
   // Reset all styles applied during the animation and restore the
   // view style
   return styleInterpolator.reset(createUpdateContext(rt, 0, false));

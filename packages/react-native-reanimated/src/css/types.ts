@@ -80,3 +80,9 @@ type KeyframedStyle<S> = {
 };
 
 export type KeyframedViewStyle = KeyframedStyle<ViewStyle>;
+
+export type TemporaryTransforms = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  transforms: Record<string, KeyframedValue<any>>;
+  previousTransformOffset: number;
+};
