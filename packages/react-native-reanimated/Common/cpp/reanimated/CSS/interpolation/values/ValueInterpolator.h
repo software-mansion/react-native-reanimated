@@ -15,7 +15,8 @@ using namespace facebook;
 template <typename T>
 struct Keyframe {
   double offset;
-  T value;
+  // If value is optional, the style value should be read from the view style
+  std::optional<T> value;
 };
 
 template <typename T>
@@ -51,9 +52,9 @@ class ValueInterpolator : public Interpolator {
  private:
   std::shared_ptr<const std::vector<Keyframe<T>>> keyframes_;
 
-  int keyframeAfterIndex_ = 0;
-  std::optional<Keyframe<T>> keyframeBefore_;
-  std::optional<Keyframe<T>> keyframeAfter_;
+  int keyframeAfterIndex_ = 1;
+  Keyframe<T> keyframeBefore_;
+  Keyframe<T> keyframeAfter_;
   std::optional<T> defaultStyleValue_; // Default style value
   std::optional<T> convertedStyleValue_; // Value that can be interpolated
   std::optional<T> previousValue_; // Previous interpolation result
@@ -62,26 +63,26 @@ class ValueInterpolator : public Interpolator {
       jsi::Runtime &rt,
       const jsi::Array &keyframeArray) const;
 
-  T resolveKeyframeValue(
-      const T unresolvedValue,
+  std::optional<T> resolveKeyframeValue(
+      const std::optional<T> unresolvedValue,
       const InterpolationUpdateContext context) const;
 
-  std::optional<Keyframe<T>> getKeyframeAtIndex(
+  Keyframe<T> getKeyframeAtIndex(
       int index,
       bool shouldResolve,
       const InterpolationUpdateContext context) const;
 
   void updateCurrentKeyframes(const InterpolationUpdateContext context);
 
-  jsi::Value interpolateMissingKeyframe(
-      double localProgress,
-      const std::optional<Keyframe<T>> &keyframeBefore,
-      const std::optional<Keyframe<T>> &keyframeAfter,
+  double calculateLocalProgress(
+      const Keyframe<T> &keyframeBefore,
+      const Keyframe<T> &keyframeAfter,
       const InterpolationUpdateContext context) const;
 
-  double calculateLocalProgress(
-      const std::optional<Keyframe<T>> &keyframeBefore,
-      const std::optional<Keyframe<T>> &keyframeAfter,
+  jsi::Value interpolateMissingValue(
+      double localProgress,
+      const std::optional<T> &fromValue,
+      const std::optional<T> &toValue,
       const InterpolationUpdateContext context) const;
 };
 

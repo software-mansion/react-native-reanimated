@@ -1,4 +1,9 @@
-import { AnimatedProperties, Playground, AnimationSettings } from '../examples';
+import {
+  AnimatedProperties,
+  Playground,
+  AnimationSettings,
+  RealWorldExamples,
+} from '../examples';
 import type { RouteNames, Routes } from './types';
 
 const routes = {
@@ -78,7 +83,12 @@ const routes = {
   },
   RealWorldExamples: {
     name: 'Real World Examples',
-    routes: {},
+    routes: {
+      SquishySquashy: {
+        name: 'Squishy Squashy',
+        Component: RealWorldExamples.SquishySquashy,
+      },
+    },
   },
 } satisfies Routes;
 

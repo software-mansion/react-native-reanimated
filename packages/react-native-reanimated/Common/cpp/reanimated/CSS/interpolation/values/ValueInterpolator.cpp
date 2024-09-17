@@ -33,59 +33,90 @@ std::shared_ptr<const std::vector<Keyframe<T>>>
 ValueInterpolator<T>::createKeyframes(
     jsi::Runtime &rt,
     const jsi::Array &keyframeArray) const {
-  size_t keyframeCount = keyframeArray.size(rt);
-  std::vector<Keyframe<T>> keyframes;
-  keyframes.reserve(keyframeCount);
-  for (size_t j = 0; j < keyframeCount; ++j) {
+  const size_t inputKeyframesCount = keyframeArray.size(rt);
+
+  auto getKeyframeAtIndexOffset = [&](size_t index) {
+    return keyframeArray.getValueAtIndex(rt, index)
+        .asObject(rt)
+        .getProperty(rt, "offset")
+        .asNumber();
+  };
+
+  bool hasOffset0 = getKeyframeAtIndexOffset(0) == 0;
+  bool hasOffset1 = getKeyframeAtIndexOffset(inputKeyframesCount - 1) == 1;
+
+  // Reserve space for the constant keyframes vector
+  std::vector<Keyframe<T>> keyframes_;
+  keyframes_.reserve(
+      inputKeyframesCount + (hasOffset0 ? 0 : 1) + (hasOffset1 ? 0 : 1));
+
+  // Insert the keyframe without value at offset 0 if it is not present
+  if (!hasOffset0) {
+    keyframes_.push_back({0, std::nullopt});
+  }
+
+  // Insert all provided keyframes
+  for (size_t j = 0; j < inputKeyframesCount; ++j) {
     jsi::Object keyframeObject =
         keyframeArray.getValueAtIndex(rt, j).asObject(rt);
-
     double offset = keyframeObject.getProperty(rt, "offset").asNumber();
-    jsi::Value rawValue = keyframeObject.getProperty(rt, "value");
+    jsi::Value value = keyframeObject.getProperty(rt, "value");
 
-    T value = prepareKeyframeValue(rt, rawValue);
-
-    keyframes.push_back({offset, value});
-  }
-
-  return std::make_shared<const std::vector<Keyframe<T>>>(std::move(keyframes));
-}
-
-template <typename T>
-T ValueInterpolator<T>::resolveKeyframeValue(
-    const T unresolvedValue,
-    const InterpolationUpdateContext context) const {
-  return interpolate(0, unresolvedValue, unresolvedValue, context);
-}
-
-template <typename T>
-std::optional<Keyframe<T>> ValueInterpolator<T>::getKeyframeAtIndex(
-    int index,
-    bool shouldResolve,
-    const InterpolationUpdateContext context) const {
-  double offset = 0;
-  std::optional<T> unresolvedValue;
-
-  if (index < 0 || index >= keyframes_->size()) {
-    offset = index < 0 ? 0 : 1;
-    if (convertedStyleValue_.has_value()) {
-      unresolvedValue = convertedStyleValue_.value();
+    // Add a keyframe with no value if there is not keyframe value specified
+    if (value.isUndefined()) {
+      keyframes_.push_back({offset, std::nullopt});
+    } else {
+      keyframes_.push_back({offset, prepareKeyframeValue(rt, value)});
     }
-  } else {
-    auto keyframe = keyframes_->at(index);
-    offset = keyframe.offset;
-    unresolvedValue = keyframe.value;
   }
 
+  // Insert the keyframe without value at offset 1 if it is not present
+  if (!hasOffset1) {
+    keyframes_.push_back({1, std::nullopt});
+  }
+
+  return std::make_shared<std::vector<Keyframe<T>>>(std::move(keyframes_));
+}
+
+template <typename T>
+std::optional<T> ValueInterpolator<T>::resolveKeyframeValue(
+    const std::optional<T> unresolvedValue,
+    const InterpolationUpdateContext context) const {
   if (!unresolvedValue.has_value()) {
     return std::nullopt;
   }
+  const auto value = unresolvedValue.value();
+  return interpolate(0, value, value, context);
+}
 
-  const T value = shouldResolve
-      ? resolveKeyframeValue(unresolvedValue.value(), context)
-      : unresolvedValue.value();
+template <typename T>
+Keyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
+    int index,
+    bool shouldResolve,
+    const InterpolationUpdateContext context) const {
+  // This should never happen
+  if (index < 0 || index >= keyframes_->size()) {
+    throw std::invalid_argument("[Reanimated] Keyframe index out of bounds.");
+  }
 
-  return Keyframe<T>{offset, value};
+  const auto keyframe = keyframes_->at(index);
+  const double offset = keyframe.offset;
+
+  if (shouldResolve) {
+    T unresolvedValue;
+
+    if (keyframe.value.has_value()) {
+      unresolvedValue = keyframe.value.value();
+    } else if (convertedStyleValue_.has_value()) {
+      unresolvedValue = convertedStyleValue_.value();
+    } else {
+      return Keyframe<T>{offset, std::nullopt};
+    }
+
+    return Keyframe<T>{offset, resolveKeyframeValue(unresolvedValue, context)};
+  }
+
+  return keyframe;
 }
 
 template <typename T>
@@ -94,17 +125,17 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
   const bool isProgressLessThanHalf = context.progress < 0.5;
 
   if (!context.previousProgress.has_value()) {
-    keyframeAfterIndex_ = isProgressLessThanHalf ? 0 : keyframes_->size();
+    keyframeAfterIndex_ = isProgressLessThanHalf ? 1 : keyframes_->size() - 1;
   }
 
   const auto &keyframes = *keyframes_;
   const auto prevAfterIndex = keyframeAfterIndex_;
 
-  while (context.progress < 1 && keyframeAfterIndex_ < keyframes.size() &&
+  while (context.progress < 1 && keyframeAfterIndex_ < keyframes.size() - 1 &&
          keyframes[keyframeAfterIndex_].offset <= context.progress)
     ++keyframeAfterIndex_;
 
-  while (context.progress > 0 && keyframeAfterIndex_ > 0 &&
+  while (context.progress > 0 && keyframeAfterIndex_ > 1 &&
          keyframes[keyframeAfterIndex_ - 1].offset >= context.progress)
     --keyframeAfterIndex_;
 
@@ -136,37 +167,31 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
 }
 
 template <typename T>
-jsi::Value ValueInterpolator<T>::interpolateMissingKeyframe(
-    double localProgress,
-    const std::optional<Keyframe<T>> &keyframeBefore,
-    const std::optional<Keyframe<T>> &keyframeAfter,
+double ValueInterpolator<T>::calculateLocalProgress(
+    const Keyframe<T> &keyframeBefore,
+    const Keyframe<T> &keyframeAfter,
     const InterpolationUpdateContext context) const {
-  if (localProgress < 0.5) {
-    return keyframeBefore.has_value()
-        ? convertResultToJSI(
-              context.rt, resolveKeyframeValue(keyframeBefore->value, context))
-        : jsi::Value::undefined();
-  } else {
-    return keyframeAfter.has_value()
-        ? convertResultToJSI(
-              context.rt, resolveKeyframeValue(keyframeAfter->value, context))
-        : jsi::Value::undefined();
+  const double beforeOffset = keyframeBefore.offset;
+  const double afterOffset = keyframeAfter.offset;
+
+  if (afterOffset == beforeOffset) {
+    return 1;
   }
+
+  return (context.progress - beforeOffset) / (afterOffset - beforeOffset);
 }
 
 template <typename T>
-double ValueInterpolator<T>::calculateLocalProgress(
-    const std::optional<Keyframe<T>> &keyframeBefore,
-    const std::optional<Keyframe<T>> &keyframeAfter,
+jsi::Value ValueInterpolator<T>::interpolateMissingValue(
+    double localProgress,
+    const std::optional<T> &fromValue,
+    const std::optional<T> &toValue,
     const InterpolationUpdateContext context) const {
-  const double beforeOffset =
-      keyframeBefore.has_value() ? keyframeBefore->offset : 0;
-  const double afterOffset =
-      keyframeAfter.has_value() ? keyframeAfter->offset : 1;
-
-  return afterOffset == beforeOffset
-      ? 1
-      : (context.progress - beforeOffset) / (afterOffset - beforeOffset);
+  return jsi::Value::undefined();
+  const auto selectedValue = localProgress < 0.5 ? fromValue : toValue;
+  return selectedValue.has_value()
+      ? convertResultToJSI(context.rt, selectedValue.value())
+      : jsi::Value::undefined();
 }
 
 template <typename T>
@@ -177,14 +202,21 @@ jsi::Value ValueInterpolator<T>::update(
   const auto localProgress =
       calculateLocalProgress(keyframeBefore_, keyframeAfter_, context);
 
-  if (!keyframeBefore_.has_value() || !keyframeAfter_.has_value()) {
-    previousValue_.reset();
-    return interpolateMissingKeyframe(
-        localProgress, keyframeBefore_, keyframeAfter_, context);
+  const std::optional<T> fromValue = keyframeBefore_.value;
+  const std::optional<T> toValue = keyframeAfter_.value;
+
+  // If at least one of keyframes has no value set and there is no fallback
+  // value, interpolate as if values were discrete
+  if ((!fromValue.has_value() || !toValue.has_value()) &&
+      !convertedStyleValue_.has_value()) {
+    return interpolateMissingValue(localProgress, fromValue, toValue, context);
   }
 
   T value = interpolate(
-      localProgress, keyframeBefore_->value, keyframeAfter_->value, context);
+      localProgress,
+      fromValue.has_value() ? fromValue.value() : convertedStyleValue_.value(),
+      toValue.has_value() ? toValue.value() : convertedStyleValue_.value(),
+      context);
   previousValue_ = value;
 
   return convertResultToJSI(context.rt, value);
@@ -194,17 +226,16 @@ template <typename T>
 jsi::Value ValueInterpolator<T>::reset(
     const InterpolationUpdateContext context) {
   keyframeAfterIndex_ = 0;
-  keyframeBefore_.reset();
-  keyframeAfter_.reset();
+  keyframeBefore_.value.reset();
+  keyframeAfter_.value.reset();
   previousValue_.reset();
 
-  if (convertedStyleValue_.has_value()) {
-    return convertResultToJSI(
-        context.rt,
-        resolveKeyframeValue(convertedStyleValue_.value(), context));
-  }
+  const auto resolvedValue =
+      resolveKeyframeValue(convertedStyleValue_, context);
 
-  return jsi::Value::undefined();
+  return resolvedValue.has_value()
+      ? convertResultToJSI(context.rt, resolvedValue.value())
+      : jsi::Value::undefined();
 }
 
 // Declare the types that will be used in the ValueInterpolator class

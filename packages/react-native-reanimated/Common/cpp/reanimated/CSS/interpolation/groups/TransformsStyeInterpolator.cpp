@@ -20,10 +20,12 @@ std::pair<std::string, jsi::Value> extractTransformPropertyAndValue(
   return std::make_pair(propName, std::move(propValue));
 }
 
-std::unordered_map<std::string, jsi::Value> extractTransformMap(
+std::pair<std::unordered_map<std::string, jsi::Value>, std::vector<std::string>>
+extractTransformMapAndOrderedProperties(
     jsi::Runtime &rt,
     const jsi::Array &transformArray) {
   std::unordered_map<std::string, jsi::Value> transformMap;
+  std::vector<std::string> orderedPropertyNames;
 
   for (size_t i = 0; i < transformArray.size(rt); i++) {
     jsi::Value arrayElement = transformArray.getValueAtIndex(rt, i);
@@ -33,10 +35,11 @@ std::unordered_map<std::string, jsi::Value> extractTransformMap(
       auto [propertyName, propertyValue] =
           extractTransformPropertyAndValue(rt, transformObject);
       transformMap[propertyName] = std::move(propertyValue);
+      orderedPropertyNames.push_back(propertyName);
     }
   }
 
-  return transformMap;
+  return {std::move(transformMap), std::move(orderedPropertyNames)};
 }
 
 TransformsStyleInterpolator::TransformsStyleInterpolator(
@@ -51,12 +54,11 @@ TransformPropertyInterpolators TransformsStyleInterpolator::build(
     const TransformPropertyInterpolatorFactories &factories) const {
   TransformPropertyInterpolators interpolators;
 
-  std::unordered_map<std::string, jsi::Value> transformMap =
-      extractTransformMap(rt, transformsArray);
+  auto [transformMap, orderedPropertyNames] =
+      extractTransformMapAndOrderedProperties(rt, transformsArray);
 
-  for (const auto &pair : transformMap) {
-    const std::string &propName = pair.first;
-    const jsi::Value &propValue = pair.second;
+  for (const auto &propName : orderedPropertyNames) {
+    const jsi::Value &propValue = transformMap[propName];
 
     auto factory = factories.find(propName);
     if (factory == factories.end()) {
@@ -84,8 +86,8 @@ void TransformsStyleInterpolator::setFallbackValue(
 
   jsi::Array transformArray = value.asObject(rt).asArray(rt);
 
-  std::unordered_map<std::string, jsi::Value> transformMap =
-      extractTransformMap(rt, transformArray);
+  auto [transformMap, orderedPropertyNames] =
+      extractTransformMapAndOrderedProperties(rt, transformArray);
 
   for (const auto &transformInterpolator : interpolators_) {
     auto transform = transformMap.find(transformInterpolator.property);
@@ -130,6 +132,10 @@ jsi::Value TransformsStyleInterpolator::reset(
     const TransformPropertyInterpolator &transformInterpolator =
         interpolators_[i];
     jsi::Value resetValue = transformInterpolator.interpolator->reset(context);
+
+    if (resetValue.isUndefined()) {
+      continue;
+    }
 
     jsi::Object obj(rt);
     obj.setProperty(
