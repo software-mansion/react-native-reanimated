@@ -183,6 +183,7 @@ KeyframedStyleInterpolator::getFactories() {
            {"skewX", withUnit("deg", 0)},
            {"skewY", withUnit("deg", 0)},
            {"matrix", matrix()},
+           {"perspective", numeric(0)},
        })},
   };
 

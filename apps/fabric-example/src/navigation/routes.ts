@@ -84,9 +84,9 @@ const routes = {
   RealWorldExamples: {
     name: 'Real World Examples',
     routes: {
-      SquishySquashy: {
-        name: 'Squishy Squashy',
-        Component: RealWorldExamples.SquishySquashy,
+      SpinnersAndLoaders: {
+        name: 'Spinners and Loaders',
+        Component: RealWorldExamples.SpinnersAndLoaders,
       },
       Emojis: {
         name: 'Emojis',
@@ -95,6 +95,10 @@ const routes = {
       Campfire: {
         name: 'Campfire',
         Component: RealWorldExamples.Campfire,
+      },
+      SquishySquashy: {
+        name: 'Squishy Squashy',
+        Component: RealWorldExamples.SquishySquashy,
       },
     },
   },

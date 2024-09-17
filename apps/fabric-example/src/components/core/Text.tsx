@@ -31,6 +31,7 @@ const VARIANT_COLORS: Record<FontVariant, string> = {
 type TextProps = RNTextProps & {
   variant?: FontVariant;
   navLink?: NavigationRouteName;
+  center?: boolean;
 };
 
 export default function Text({
@@ -39,6 +40,7 @@ export default function Text({
   children,
   navLink,
   onPress,
+  center,
   ...rest
 }: TextProps) {
   const variantStyle = text[variant];
@@ -52,6 +54,7 @@ export default function Text({
         color,
         backgroundColor:
           variant === 'inlineCode' ? colors.primaryLight : 'transparent',
+        textAlign: center ? 'center' : undefined,
       },
       navLink && styles.link,
       style,
