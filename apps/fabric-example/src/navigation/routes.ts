@@ -92,6 +92,10 @@ const routes = {
         name: 'Emojis',
         Component: RealWorldExamples.Emojis,
       },
+      Campfire: {
+        name: 'Campfire',
+        Component: RealWorldExamples.Campfire,
+      },
     },
   },
 } satisfies Routes;
