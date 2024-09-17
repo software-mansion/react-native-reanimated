@@ -74,7 +74,12 @@ class CSSAnimation {
 
   double updateIterationProgress(time_t timestamp);
 
-  double applyAnimationDirection(double progress) const;
+  double applyAnimationDirection(double iterationProgress) const;
+
+  double calculateResultingProgress(double iterationProgress, bool shouldFinish)
+      const;
+
+  bool checkDirectionChange(double progress) const;
 
   InterpolationUpdateContext createUpdateContext(
       jsi::Runtime &rt,
