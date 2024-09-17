@@ -293,7 +293,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         if (movedViews.contains(tag)) {
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
-            if (oldViews.contains(mutation.newChildShadowView.tag)) {
+            if (oldViews.contains(tag)) {
               filteredMutations.push_back(ShadowViewMutation::InsertMutation(
                   mutation.parentShadowView, oldViews[tag], mutation.index));
             } else {
