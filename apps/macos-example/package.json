@@ -27,7 +27,7 @@
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "patch:react-native-safe-area-context@npm%3A4.10.8#~/.yarn/patches/react-native-safe-area-context-npm-4.10.8-bcca33ef13.patch",
     "react-native-screens": "3.34.0",
-    "react-native-svg": "15.4.0"
+    "react-native-svg": "15.8.0-rc.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
