@@ -8,7 +8,7 @@ import type { FontVariant } from '../../types';
 import { navigate } from '../../navigation';
 import type { NavigationRouteName } from '../../navigation';
 
-const CODE_REGEX = /`([^`]+)`/g;
+const REGEX = /`([^`]+)`|\*\*([^*]+)\*\*/g; // Updated regex to capture both `code` and **bold** syntax
 
 const VARIANT_COLORS: Record<FontVariant, string> = {
   heading1: colors.foreground1,
@@ -43,21 +43,19 @@ export default function Text({
   center,
   ...rest
 }: TextProps) {
-  const variantStyle = text[variant];
-  const color = VARIANT_COLORS[variant];
-
-  const variantProps = {
+  const getVariantProps = (textVariant: FontVariant, extraStyle = {}) => ({
     ...rest,
     style: [
-      variantStyle,
+      text[textVariant],
       {
-        color,
+        color: VARIANT_COLORS[textVariant],
         backgroundColor:
-          variant === 'inlineCode' ? colors.primaryLight : 'transparent',
+          textVariant === 'inlineCode' ? colors.primaryLight : 'transparent',
         textAlign: center ? 'center' : undefined,
       },
       navLink && styles.link,
       style,
+      extraStyle, // Optional extra styles for things like bold
     ],
     onPress:
       navLink &&
@@ -65,26 +63,46 @@ export default function Text({
         onPress?.(args);
         navigate(navLink);
       }),
-  };
+  });
 
   if (variant === 'inlineCode') {
     return (
       <Text>
         {' '}
-        <RNText {...variantProps}>{children}</RNText>{' '}
+        <RNText {...getVariantProps(variant)}>{children}</RNText>{' '}
       </Text>
     );
   }
 
   const renderTextWithCode = (textToParse: string) =>
-    textToParse.split(CODE_REGEX).map((part, index) => (
-      <RNText key={index} {...variantProps}>
-        {part}
-      </RNText>
-    ));
+    textToParse.split(REGEX).map((part, index) => {
+      if (index % 3 === 1) {
+        // Apply inline code style
+        return (
+          <RNText key={index} {...getVariantProps('inlineCode')}>
+            {part}
+          </RNText>
+        );
+      } else if (index % 3 === 2) {
+        // Apply bold style
+        return (
+          <RNText
+            key={index}
+            {...getVariantProps(variant, { fontWeight: 'bold' })}>
+            {part}
+          </RNText>
+        );
+      }
+      // Default: regular text
+      return (
+        <RNText key={index} {...getVariantProps(variant)}>
+          {part}
+        </RNText>
+      );
+    });
 
   return (
-    <RNText {...variantProps}>
+    <RNText {...getVariantProps(variant)}>
       {
         typeof children === 'string'
           ? renderTextWithCode(children)

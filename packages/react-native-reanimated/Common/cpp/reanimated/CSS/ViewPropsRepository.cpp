@@ -14,7 +14,6 @@ jsi::Value ViewPropsRepository::getProp(
   int tag = shadowNode->getTag();
 
   auto &cachedNode = shadowNodeCache_[tag];
-
   updateCacheIfNeeded(cachedNode, shadowNode);
 
   if (propName == "width" || propName == "height" || propName == "top" ||
@@ -78,11 +77,19 @@ void ViewPropsRepository::updateCacheIfNeeded(
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
-  // TODO - fix crash on unmount (this still sometimes crashes on the line
-  // below)
-  cachedNode.layoutMetrics =
-      dynamic_cast<const LayoutableShadowNode *>(newestCloneOfShadowNode.get())
-          ->layoutMetrics_;
+  // Check if newestCloneOfShadowNode is valid (is already mounter / not
+  // yet unmounted)
+  if (!newestCloneOfShadowNode) {
+    return;
+  }
+
+  auto layoutableShadowNode =
+      dynamic_cast<const LayoutableShadowNode *>(newestCloneOfShadowNode.get());
+  if (!layoutableShadowNode) {
+    return;
+  }
+
+  cachedNode.layoutMetrics = layoutableShadowNode->layoutMetrics_;
   cachedNode.viewProps = std::static_pointer_cast<const ViewProps>(
       newestCloneOfShadowNode->getProps());
 }
