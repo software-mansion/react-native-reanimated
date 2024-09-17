@@ -446,7 +446,10 @@ export function createAnimatedComponent(
       }
 
       this._cssAnimationId = cssAnimationId++;
-      const { shadowNodeWrapper } = this._getViewInfo();
+      const { shadowNodeWrapper, viewConfig } = this._getViewInfo();
+      if (viewConfig) {
+        adaptViewConfig(viewConfig);
+      }
 
       registerCSSAnimation(
         shadowNodeWrapper as ShadowNodeWrapper,
