@@ -96,6 +96,10 @@ const routes = {
         name: 'Campfire',
         Component: RealWorldExamples.Campfire,
       },
+      RocketInSpace: {
+        name: 'Rocket In Space',
+        Component: RealWorldExamples.RocketInSpace,
+      },
       SquishySquashy: {
         name: 'Squishy Squashy',
         Component: RealWorldExamples.SquishySquashy,
