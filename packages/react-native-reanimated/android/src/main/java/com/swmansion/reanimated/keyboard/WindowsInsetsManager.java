@@ -15,6 +15,7 @@ import java.lang.ref.WeakReference;
 public class WindowsInsetsManager {
 
   private boolean mIsStatusBarTranslucent = false;
+  private boolean mIsNavigationBarTranslucent = false;
   private final WeakReference<ReactApplicationContext> mReactContext;
   private final Keyboard mKeyboard;
   private final NotifyAboutKeyboardChangeFunction mNotifyAboutKeyboardChange;
@@ -35,8 +36,11 @@ public class WindowsInsetsManager {
   }
 
   public void startObservingChanges(
-      KeyboardAnimationCallback keyboardAnimationCallback, boolean isStatusBarTranslucent) {
+      KeyboardAnimationCallback keyboardAnimationCallback,
+      boolean isStatusBarTranslucent,
+      boolean isNavigationBarTranslucent) {
     mIsStatusBarTranslucent = isStatusBarTranslucent;
+    mIsNavigationBarTranslucent = isNavigationBarTranslucent;
     updateWindowDecor(false);
 
     Activity currentActivity = getCurrentActivity();
@@ -51,7 +55,7 @@ public class WindowsInsetsManager {
   }
 
   public void stopObservingChanges() {
-    updateWindowDecor(!mIsStatusBarTranslucent);
+    updateWindowDecor(!mIsStatusBarTranslucent && !mIsNavigationBarTranslucent);
     updateInsets(0, 0);
 
     Activity currentActivity = getCurrentActivity();
@@ -83,7 +87,7 @@ public class WindowsInsetsManager {
   private WindowInsetsCompat onApplyWindowInsetsListener(View view, WindowInsetsCompat insets) {
     WindowInsetsCompat defaultInsets = ViewCompat.onApplyWindowInsets(view, insets);
     if (mKeyboard.getState() == KeyboardState.OPEN) {
-      mKeyboard.updateHeight(insets);
+      mKeyboard.updateHeight(insets, mIsNavigationBarTranslucent);
       mNotifyAboutKeyboardChange.call();
     }
     setWindowInsets(defaultInsets);
@@ -120,11 +124,12 @@ public class WindowsInsetsManager {
     int matchParentFlag = FrameLayout.LayoutParams.MATCH_PARENT;
     FrameLayout.LayoutParams params =
         new FrameLayout.LayoutParams(matchParentFlag, matchParentFlag);
-    if (mIsStatusBarTranslucent) {
-      params.setMargins(0, 0, 0, paddingBottom);
-    } else {
-      params.setMargins(0, paddingTop, 0, paddingBottom);
-    }
+
+    params.setMargins(
+        0,
+        mIsStatusBarTranslucent ? 0 : paddingTop,
+        0,
+        mIsNavigationBarTranslucent ? 0 : paddingBottom);
     return params;
   }
 }

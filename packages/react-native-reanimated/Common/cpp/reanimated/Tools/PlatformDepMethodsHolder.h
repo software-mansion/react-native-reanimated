@@ -72,7 +72,7 @@ using ConfigurePropsFunction = std::function<void(
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps)>;
 using KeyboardEventSubscribeFunction =
-    std::function<int(std::function<void(int, int)>, bool)>;
+    std::function<int(std::function<void(int, int)>, bool, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
