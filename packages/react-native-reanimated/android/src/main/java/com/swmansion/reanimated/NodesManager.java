@@ -463,7 +463,7 @@ public class NodesManager implements EventDispatcherListener {
 
         } catch (Exception e) {
           return "Unable to get background color";
-        };
+        }
       default:
         throw new IllegalArgumentException(
             "[Reanimated] Attempted to get unsupported property "
