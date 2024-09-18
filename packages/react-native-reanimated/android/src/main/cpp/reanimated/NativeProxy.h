@@ -221,7 +221,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void unregisterSensor(int sensorId);
   int subscribeForKeyboardEvents(
       std::function<void(int, int)> callback,
-      bool isStatusBarTranslucent);
+      bool isStatusBarTranslucent,
+      bool isNavigationBarTranslucent);
   void unsubscribeFromKeyboardEvents(int listenerId);
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing

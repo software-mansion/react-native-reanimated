@@ -329,6 +329,7 @@ export interface MeasuredDimensions {
 
 export interface AnimatedKeyboardOptions {
   isStatusBarTranslucentAndroid?: boolean;
+  isNavigationBarTranslucentAndroid?: boolean;
 }
 
 /**
