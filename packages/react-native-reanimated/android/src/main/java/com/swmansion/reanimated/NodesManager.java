@@ -453,8 +453,6 @@ public class NodesManager implements EventDispatcherListener {
         return Float.toString(PixelUtil.toDIPFromPixel(view.getLeft()));
       case "backgroundColor":
         Drawable background = view.getBackground();
-        int actualColor = -1;
-
         try {
           Method getColor = background.getClass().getMethod("getColor");
           int actualColor = (int) getColor.invoke(background);
@@ -465,7 +463,7 @@ public class NodesManager implements EventDispatcherListener {
 
         } catch (Exception e) {
           return "Unable to get background color";
-        }
+        };
       default:
         throw new IllegalArgumentException(
             "[Reanimated] Attempted to get unsupported property "
