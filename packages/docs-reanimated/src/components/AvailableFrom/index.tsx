@@ -23,15 +23,12 @@ export default function AvailableFrom({ version, isFull }: Props) {
           <div className={styles.infoIcon}>
             {isLightMode ? <Danger /> : <DangerDark />}
           </div>
-          <span>
-            Available from Reanimated{' '}
-            <span className={styles.version}>v{version}</span>
-          </span>
+          <span>Available from Reanimated {version}</span>
         </>
       );
     }
 
-    return <>Available from v{version}</>;
+    return <>Available from {version}</>;
   };
 
   return (
