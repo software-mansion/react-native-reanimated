@@ -1,7 +1,5 @@
 .badge {
   display: inline-block;
-  background-color: var(--swm-purple-light-40);
-  color: var(--swm-navy-light-100);
   border-radius: 8px;
   font-size: 12px;
   font-weight: 500;
@@ -10,19 +8,34 @@
   margin: 0 0.25rem;
 }
 
-.info {
-  margin-right: 1rem;
-}
-.version {
-  font-weight: 500;
-}
-
-.big {
+.fullBadge {
   padding: 1rem;
   width: '100%';
   border-radius: 8px;
-  background-color: var(--swm-purple-light-20);
   display: flex !important;
   flex-direction: row;
   margin-bottom: 1rem;
+}
+
+.light {
+  background-color: var(--swm-yellow-light-40);
+  color: var(--swm-navy-light-100);
+}
+
+.dark {
+  background-color: var(--swm-yellow-dark-120);
+  color: var(--swm-off-white);
+}
+
+.infoIcon {
+  margin-right: 1rem;
+}
+
+.infoIcon > svg {
+  width: 14px;
+  height: 14px;
+}
+
+.version {
+  font-weight: 500;
 }
