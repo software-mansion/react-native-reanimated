@@ -190,10 +190,13 @@ export class SharedTransition {
             });
           } else {
             const keyToTargetValue = `target${capitalize(propName)}` as const;
-            animations[propName] = withTiming(values[keyToTargetValue], {
-              reduceMotion,
-              duration: transitionDuration,
-            });
+            animations[propName] = withTiming(
+              values[keyToTargetValue] as number,
+              {
+                reduceMotion,
+                duration: transitionDuration,
+              }
+            );
           }
         }
       }
@@ -239,8 +242,8 @@ export class SharedTransition {
           const targetPropertyName =
             `target${capitalize(propertyName)}` as const;
 
-          const currentValue = values[currentPropertyName];
-          const targetValue = values[targetPropertyName];
+          const currentValue = values[currentPropertyName] as number;
+          const targetValue = values[targetPropertyName] as number;
 
           newStyles[propertyName] =
             progress * (targetValue - currentValue) + currentValue;

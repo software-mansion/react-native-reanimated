@@ -67,6 +67,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 0,
     borderColor: 'deepskyblue',
     backgroundColor: 'skyblue',
+    width: 100,
+    height: 300,
     transform: [{ translateX: 40 }, { rotateZ: '30deg' }, { rotateX: '30deg' }],
   },
   leaf: {

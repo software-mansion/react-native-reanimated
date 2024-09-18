@@ -56,8 +56,10 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
   void startEnteringAnimation(const int tag, ShadowViewMutation &mutation)
       const;
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation) const;
-  void startLayoutAnimation(const int tag, const ShadowViewMutation &mutation)
-      const;
+  void startLayoutAnimation(
+      const int tag,
+      const ShadowViewMutation &mutation,
+      bool makeFulSnapshot) const;
 
   void transferConfigFromNativeID(const std::string nativeId, const int tag)
       const;
@@ -99,7 +101,6 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
   void createLayoutAnimation(
       const ShadowViewMutation &mutation,
       ShadowView &oldView,
-      const SurfaceId &surfaceId,
       const int tag) const;
 
   void updateIndexForMutation(ShadowViewMutation &mutation) const;

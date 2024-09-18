@@ -30,10 +30,26 @@ export class LinearStyleTransition
 
     return (values) => {
       'worklet';
-      const { currentTransformMatrix, targetTransformMatrix, ...restValues } =
-        values;
 
-      const keys = Object.keys(restValues) as Array<keyof typeof values>;
+      let currentTransformMatrix, targetTransformMatrix;
+
+      if (
+        Object.keys(values).includes('currentTransformMatrix') &&
+        Object.keys(values).includes('targetTransformMatrix')
+      ) {
+        console.log('AAA');
+        const {
+          currentTransformMatrix: cTransformMatrix,
+          targetTransformMatrix: tTransformMatrix,
+          ...restValues
+        } = values;
+
+        currentTransformMatrix = cTransformMatrix;
+        targetTransformMatrix = tTransformMatrix;
+        values = restValues;
+      }
+
+      const keys = Object.keys(values) as Array<keyof typeof values>;
       const initialValuesArray = [];
       const animationsArray = [];
 
@@ -51,21 +67,32 @@ export class LinearStyleTransition
           ]);
         }
       }
+
+      const initialTransform = currentTransformMatrix
+        ? { transform: [{ matrix: currentTransformMatrix }] }
+        : {};
+
+      const transformAnimation = currentTransformMatrix
+        ? {
+            transform: [
+              {
+                matrix: delayFunction(
+                  delay,
+                  animation(targetTransformMatrix, config)
+                ),
+              },
+            ],
+          }
+        : {};
+
       return {
         initialValues: {
           ...Object.fromEntries(initialValuesArray),
-          transform: [{ matrix: currentTransformMatrix }],
+          ...initialTransform,
         },
         animations: {
           ...Object.fromEntries(animationsArray),
-          transform: [
-            {
-              matrix: delayFunction(
-                delay,
-                animation(targetTransformMatrix, config)
-              ),
-            },
-          ],
+          ...transformAnimation,
         },
         callback,
       };

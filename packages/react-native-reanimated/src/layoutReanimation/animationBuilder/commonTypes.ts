@@ -6,35 +6,36 @@ import type {
   EasingFunction,
 } from '../../commonTypes';
 
-export type NumericLayoutAnimationsOptions =
+type BaseSnapshotOptions =
   | `origin${'X' | 'Y'}`
   | `globalOrigin${'X' | 'Y'}`
   | 'width'
-  | 'height'
+  | 'height';
+
+type AdditionalSnapshotOptions =
   | 'opacity'
   | 'borderRadius'
   | `border${'Top' | 'Bottom'}${'Left' | 'Right'}Radius`
   | `border${'Top' | 'Bottom' | 'Left' | 'Right'}Width`;
 
+export type NumericLayoutAnimationsOptions =
+  | BaseSnapshotOptions
+  | AdditionalSnapshotOptions;
+
 type StringLayoutAnimationsOptions =
   | 'backgroundColor'
   | `border${'Top' | 'Bottom' | 'Left' | 'Right'}Color`;
 
-type CurrentLayoutAnimationsValues = Record<
-  `current${Capitalize<NumericLayoutAnimationsOptions>}`,
+type LayoutAnimationValues<prefix extends 'current' | 'target'> = Record<
+  `${prefix}${Capitalize<BaseSnapshotOptions>}`,
   number
 > &
-  Record<`current${Capitalize<StringLayoutAnimationsOptions>}`, string> & {
-    currentTransformMatrix: Array<number>;
-  };
+  Record<`${prefix}${Capitalize<StringLayoutAnimationsOptions>}`, string> &
+  Partial<Record<`${prefix}${Capitalize<AdditionalSnapshotOptions>}`, number>> &
+  Partial<Record<`${prefix}TransformMatrix`, Array<number>>>;
 
-type TargetLayoutAnimationsValues = Record<
-  `target${Capitalize<NumericLayoutAnimationsOptions>}`,
-  number
-> &
-  Record<`target${Capitalize<StringLayoutAnimationsOptions>}`, string> & {
-    targetTransformMatrix: Array<number>;
-  };
+type CurrentLayoutAnimationsValues = LayoutAnimationValues<'current'>;
+type TargetLayoutAnimationsValues = LayoutAnimationValues<'target'>;
 
 interface WindowDimensions {
   windowWidth: number;

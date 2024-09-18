@@ -340,7 +340,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           updateOngoingAnimationTarget(tag, mutation);
           continue;
         }
-        startLayoutAnimation(tag, mutation);
+        startLayoutAnimation(tag, mutation, true);
         break;
       }
 
@@ -576,11 +576,11 @@ bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
 void LayoutAnimationsProxy::createLayoutAnimation(
     const ShadowViewMutation &mutation,
     ShadowView &oldView,
-    const SurfaceId &surfaceId,
     const int tag) const {
   int count = 1;
   auto layoutAnimationIt = layoutAnimations_.find(tag);
 
+  const SurfaceId &surfaceId = mutation.oldChildShadowView.surfaceId;
   if (layoutAnimationIt != layoutAnimations_.end()) {
     auto &layoutAnimation = layoutAnimationIt->second;
     oldView = *layoutAnimation.currentView;
@@ -678,9 +678,11 @@ void LayoutAnimationsProxy::startExitingAnimation(
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start exiting animation for tag " << tag << std::endl;
 #endif
-  auto surfaceId = mutation.oldChildShadowView.surfaceId;
+
   auto oldView = mutation.oldChildShadowView;
-  createLayoutAnimation(mutation, oldView, surfaceId, tag);
+  auto surfaceId = oldView.surfaceId;
+
+  createLayoutAnimation(mutation, oldView, tag);
 
   Snapshot values(oldView, surfaceManager.getWindow(surfaceId));
 
@@ -697,79 +699,80 @@ void LayoutAnimationsProxy::startExitingAnimation(
 
 void LayoutAnimationsProxy::startLayoutAnimation(
     const int tag,
-    const ShadowViewMutation &mutation) const {
+    const ShadowViewMutation &mutation,
+    bool makeFullSnapshot) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start layout animation for tag " << tag << std::endl;
 #endif
-  auto surfaceId = mutation.oldChildShadowView.surfaceId;
+
   auto oldView = mutation.oldChildShadowView;
-  createLayoutAnimation(mutation, oldView, surfaceId, tag);
+  auto newView = mutation.newChildShadowView;
 
-  Snapshot currentValues(oldView, surfaceManager.getWindow(surfaceId));
-  Snapshot targetValues(
-      mutation.newChildShadowView, surfaceManager.getWindow(surfaceId));
+  createLayoutAnimation(mutation, oldView, tag);
 
-  StyleSnapshot currentStyleValues(
-      uiRuntime_, oldView, surfaceManager.getWindow(surfaceId));
-  StyleSnapshot targetStyleValues(
-      uiRuntime_,
-      mutation.newChildShadowView,
-      surfaceManager.getWindow(surfaceId));
+  auto window = surfaceManager.getWindow(oldView.surfaceId);
 
-  uiScheduler_->scheduleOnUI([currentValues,
-                              targetValues,
-                              currentStyleValues,
-                              targetStyleValues,
-                              this,
-                              tag]() {
-    jsi::Object yogaValues(uiRuntime_);
+  uiScheduler_->scheduleOnUI(
+      [oldView, newView, window, makeFullSnapshot, this, tag]() {
+        jsi::Object yogaValues(uiRuntime_);
 
-    setYogaCurrentSnapshotProperties(&yogaValues, uiRuntime_, currentValues);
-    setYogaTargetSnapshotProperties(&yogaValues, uiRuntime_, targetValues);
+        Snapshot currentValues(oldView, window);
+        Snapshot targetValues(newView, window);
 
-    yogaValues.setProperty(
-        uiRuntime_, "currentWindowWidth", currentValues.windowWidth);
-    yogaValues.setProperty(
-        uiRuntime_, "targetWindowWidth", targetValues.windowWidth);
-    yogaValues.setProperty(
-        uiRuntime_, "currentWindowHeight", currentValues.windowHeight);
-    yogaValues.setProperty(
-        uiRuntime_, "targetWindowHeight", targetValues.windowHeight);
+        setYogaCurrentSnapshotProperties(
+            &yogaValues, uiRuntime_, currentValues);
+        setYogaTargetSnapshotProperties(&yogaValues, uiRuntime_, targetValues);
 
-    jsi::Array currentMatrix(uiRuntime_, 16);
-    jsi::Array targetMatrix(uiRuntime_, 16);
+        yogaValues.setProperty(
+            uiRuntime_, "currentWindowWidth", currentValues.windowWidth);
+        yogaValues.setProperty(
+            uiRuntime_, "targetWindowWidth", targetValues.windowWidth);
+        yogaValues.setProperty(
+            uiRuntime_, "currentWindowHeight", currentValues.windowHeight);
+        yogaValues.setProperty(
+            uiRuntime_, "targetWindowHeight", targetValues.windowHeight);
 
-    for (unsigned int i = 0; i < 16; i++) {
-      currentMatrix.setValueAtIndex(
-          uiRuntime_, i, currentStyleValues.transformMatrix[i]);
-      targetMatrix.setValueAtIndex(
-          uiRuntime_, i, targetStyleValues.transformMatrix[i]);
-    }
+        if (makeFullSnapshot) {
+          StyleSnapshot currentStyleValues(uiRuntime_, oldView, window);
+          StyleSnapshot targetStyleValues(uiRuntime_, newView, window);
 
-    yogaValues.setProperty(uiRuntime_, "currentTransformMatrix", currentMatrix);
-    yogaValues.setProperty(uiRuntime_, "targetTransformMatrix", targetMatrix);
+          jsi::Array currentMatrix(uiRuntime_, 16);
+          jsi::Array targetMatrix(uiRuntime_, 16);
 
-    for (int i = 0; i < numberOfNumericProperties; i++) {
-      setYogaCurrentAndTargetValuePair(
-          &yogaValues,
-          uiRuntime_,
-          numericPropertiesNames[i],
-          currentStyleValues.numericPropertiesValues[i],
-          targetStyleValues.numericPropertiesValues[i]);
-    }
+          for (unsigned int i = 0; i < 16; i++) {
+            currentMatrix.setValueAtIndex(
+                uiRuntime_, i, currentStyleValues.transformMatrix[i]);
+            targetMatrix.setValueAtIndex(
+                uiRuntime_, i, targetStyleValues.transformMatrix[i]);
+          }
 
-    for (int i = 0; i < numberOfStringProperties; i++) {
-      setYogaCurrentAndTargetValuePair(
-          &yogaValues,
-          uiRuntime_,
-          stringPropertiesNames[i],
-          currentStyleValues.stringPropertiesValues[i],
-          targetStyleValues.stringPropertiesValues[i]);
-    }
+          yogaValues.setProperty(
+              uiRuntime_, "currentTransformMatrix", currentMatrix);
+          yogaValues.setProperty(
+              uiRuntime_, "targetTransformMatrix", targetMatrix);
 
-    layoutAnimationsManager_->startLayoutAnimation(
-        uiRuntime_, tag, LayoutAnimationType::LAYOUT, yogaValues);
-  });
+          for (int i = 0; i < numberOfNumericProperties; i++) {
+            setYogaCurrentAndTargetValuePair(
+                &yogaValues,
+                uiRuntime_,
+                numericPropertiesNames[i],
+                currentStyleValues.numericPropertiesValues[i],
+                targetStyleValues.numericPropertiesValues[i]);
+          }
+
+          for (int i = 0; i < numberOfStringProperties; i++) {
+            setYogaCurrentAndTargetValuePair(
+                &yogaValues,
+                uiRuntime_,
+                stringPropertiesNames[i],
+                currentStyleValues.stringPropertiesValues[i],
+                targetStyleValues.stringPropertiesValues[i]);
+          }
+        }
+
+        layoutAnimationsManager_->startLayoutAnimation(
+            uiRuntime_, tag, LayoutAnimationType::LAYOUT, yogaValues);
+      });
 }
 
 void LayoutAnimationsProxy::updateOngoingAnimationTarget(
