@@ -1,0 +1,28 @@
+.badge {
+  display: inline-block;
+  background-color: var(--swm-purple-light-40);
+  color: var(--swm-navy-light-100);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  white-space: nowrap;
+  margin: 0 0.25rem;
+}
+
+.info {
+  margin-right: 1rem;
+}
+.version {
+  font-weight: 500;
+}
+
+.big {
+  padding: 1rem;
+  width: '100%';
+  border-radius: 8px;
+  background-color: var(--swm-purple-light-20);
+  display: flex !important;
+  flex-direction: row;
+  margin-bottom: 1rem;
+}
