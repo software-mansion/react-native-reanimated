@@ -48,7 +48,11 @@ Add `@babel/plugin-proposal-export-namespace-from` and Reanimated Babel plugin t
   };
 ```
 
+:::caution
+
 Make sure to list `react-native-reanimated/plugin` last.
+
+:::
 
 ### Step 3: Launch your app
 
@@ -61,8 +65,13 @@ yarn web
 ```
 
 If you want to start the example applications from the
-[reanimated repository](https://github.com/software-mansion/react-native-reanimated)
-you need to run the following command inside the `apps/web-example` directory:
+[reanimated repository](https://github.com/software-mansion/react-native-reanimated) you need to run the following commands inside respository root:
+
+```shell
+yarn && yarn build
+```
+
+Then run inside the `apps/web-example` directory:
 
 ```shell
 yarn start
