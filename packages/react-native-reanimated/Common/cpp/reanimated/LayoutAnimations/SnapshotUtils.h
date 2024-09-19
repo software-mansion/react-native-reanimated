@@ -20,7 +20,12 @@
 namespace reanimated {
 
 #ifdef __ANDROID__
-static inline std::string colorToString(const int val) {
+static inline std::string colorToString(const SharedColor & color) {
+
+    // Operator "*" of class SharedColor is overloaded and returns a private
+    // class member color_ of type Color
+    int val = *color;
+
   std::stringstream
       invertedHexColorStream; // By default transparency is first, color second
   invertedHexColorStream << std::setfill('0') << std::setw(8) << std::hex
@@ -109,18 +114,8 @@ struct StyleSnapshot {
     const ViewProps *props =
         static_cast<const ViewProps *>(shadowView.props.get());
 
-#ifdef __ANDROID__
-    // Operator "*" of class SharedColor is overloaded and returns a private
-    // class member color_ of type Color
-    auto innerBackgroundColor = *props->backgroundColor;
-    auto backgroundColor = colorToString(innerBackgroundColor);
-    auto innerShadowColor = *props->backgroundColor;
-    auto shadowColor = colorToString(innerShadowColor);
-#else
     auto backgroundColor = colorToString(props->backgroundColor);
     auto shadowColor = colorToString(props->shadowColor);
-#endif
-
     auto opacity = props->opacity;
 
     Transform transform = props->resolveTransform(shadowView.layoutMetrics);
@@ -143,24 +138,15 @@ struct StyleSnapshot {
         static_cast<double>(cascadedBorderMetrics.borderWidths.bottom),
     };
 
-#ifdef __ANDROID__
     auto topBorderColor =
-        colorToString(*cascadedBorderMetrics.borderColors.top);
-    auto rightBorderColor =
-        colorToString(*cascadedBorderMetrics.borderColors.right);
-    auto bottomBorderColor =
-        colorToString(*cascadedBorderMetrics.borderColors.bottom);
-    auto leftBorderColor =
-        colorToString(*cascadedBorderMetrics.borderColors.left);
-#else
-    auto topBorderColor = colorToString(cascadedBorderMetrics.borderColors.top);
+        colorToString(cascadedBorderMetrics.borderColors.top);
     auto rightBorderColor =
         colorToString(cascadedBorderMetrics.borderColors.right);
     auto bottomBorderColor =
         colorToString(cascadedBorderMetrics.borderColors.bottom);
     auto leftBorderColor =
         colorToString(cascadedBorderMetrics.borderColors.left);
-#endif
+
     stringPropertiesValues = {
         backgroundColor,
         shadowColor,
