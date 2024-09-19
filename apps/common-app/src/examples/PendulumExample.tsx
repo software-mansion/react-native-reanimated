@@ -3,13 +3,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import {
-  StyleSheet,
-  TextInput,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { StyleSheet, TextInput, Text, View } from 'react-native';
 import type { Dispatch, SetStateAction } from 'react';
 import React, { useState } from 'react';
 import type {
@@ -21,6 +15,7 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
+import { SelectorRow } from './commonComponents/RowButtonSelector';
 
 const NAVY = '#001A72';
 const LIGHT_NAVY = '#C1C6E5';
@@ -118,40 +113,13 @@ export default function SpringExample() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={
-            useConfigWithDuration
-              ? styles.selectedButton
-              : styles.notSelectedButton
-          }
-          onPress={() => setUseConfigWithDuration(true)}>
-          <Text
-            style={
-              useConfigWithDuration
-                ? styles.selectedButtonText
-                : styles.notSelectedButtonText
-            }>
-            with duration
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={
-            !useConfigWithDuration
-              ? styles.selectedButton
-              : styles.notSelectedButton
-          }
-          onPress={() => setUseConfigWithDuration(false)}>
-          <Text
-            style={
-              !useConfigWithDuration
-                ? styles.selectedButtonText
-                : styles.notSelectedButtonText
-            }>
-            without duration
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <SelectorRow
+        firstButtonLabel="with duration"
+        secondButtonLabel="without duration"
+        selectedFirstButton={useConfigWithDuration}
+        setSelectedFirstButton={setUseConfigWithDuration}
+      />
+
       <GestureDetector gesture={gesture}>
         <View style={styles.pendulumContainer}>
           <Animated.View style={[styles.pendulum, style]}>
@@ -233,34 +201,5 @@ const styles = StyleSheet.create({
     width: 2,
     height: 160,
     marginBottom: -5,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    height: 40,
-    width: '80%',
-    margin: 20,
-    marginBottom: 0,
-    borderWidth: 2,
-    borderColor: NAVY,
-  },
-  selectedButton: {
-    backgroundColor: NAVY,
-    width: '50%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  notSelectedButton: {
-    backgroundColor: 'white',
-    width: '50%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  selectedButtonText: {
-    color: 'white',
-    fontSize: 20,
-  },
-  notSelectedButtonText: {
-    color: NAVY,
-    fontSize: 20,
   },
 });

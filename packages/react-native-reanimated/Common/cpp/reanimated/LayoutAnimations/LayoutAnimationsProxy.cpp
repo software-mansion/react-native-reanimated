@@ -324,9 +324,14 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
       }
 
       case ShadowViewMutation::Type::Update: {
-        auto shouldAnimate = hasLayoutChanged(mutation);
-        if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT) ||
-            (!shouldAnimate && !layoutAnimations_.contains(tag))) {
+        auto hasLayoutAnimation =
+            layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT);
+        auto hasLayoutAndStyleAnimation =
+            layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT_AND_STYLE);
+        auto layoutChanged = hasLayoutChanged(mutation);
+        if (!hasLayoutAnimation ||
+            (!hasLayoutAndStyleAnimation && !layoutChanged &&
+             !layoutAnimations_.contains(tag))) {
           // We should cancel any ongoing animation here to ensure that the
           // proper final state is reached for this view However, due to how
           // RNSScreens handle adding headers (a second commit is triggered to
@@ -336,11 +341,11 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           // TODO: find a better solution for this problem
           filteredMutations.push_back(mutation);
           continue;
-        } else if (!shouldAnimate) {
+        } else if (!layoutChanged && !hasLayoutAndStyleAnimation) {
           updateOngoingAnimationTarget(tag, mutation);
           continue;
         }
-        startLayoutAnimation(tag, mutation, true);
+        startLayoutAnimation(tag, mutation, hasLayoutAndStyleAnimation);
         break;
       }
 
@@ -580,7 +585,6 @@ void LayoutAnimationsProxy::createLayoutAnimation(
   int count = 1;
   auto layoutAnimationIt = layoutAnimations_.find(tag);
 
-  const SurfaceId &surfaceId = mutation.oldChildShadowView.surfaceId;
   if (layoutAnimationIt != layoutAnimations_.end()) {
     auto &layoutAnimation = layoutAnimationIt->second;
     oldView = *layoutAnimation.currentView;

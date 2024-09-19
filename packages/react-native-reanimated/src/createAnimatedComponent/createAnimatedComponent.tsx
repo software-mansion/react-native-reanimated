@@ -166,11 +166,13 @@ export function createAnimatedComponent(
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-      const layout = this.props.layout;
+      const { layout, styleTransition } = this.props;
       if (layout) {
-        this._configureLayoutTransition();
+        this._configureTransition('layoutTransition');
       }
-
+      if (styleTransition) {
+        this._configureTransition('styleTransition');
+      }
       if (IS_WEB) {
         if (this.props.exiting) {
           saveSnapshot(this._component as HTMLElement);
@@ -405,11 +407,17 @@ export function createAnimatedComponent(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       snapshot: DOMRect | null
     ) {
-      const layout = this.props.layout;
-      const oldLayout = prevProps.layout;
+      const { layout, styleTransition } = this.props;
+      const { layout: oldLayout, styleTransition: oldStyleTransition } =
+        prevProps;
+
       if (layout !== oldLayout) {
-        this._configureLayoutTransition();
+        this._configureTransition('layoutTransition');
       }
+      if (styleTransition !== oldStyleTransition) {
+        this._configureTransition('styleTransition');
+      }
+
       if (
         this.props.sharedTransitionTag !== undefined ||
         prevProps.sharedTransitionTag !== undefined
@@ -439,22 +447,38 @@ export function createAnimatedComponent(
       }
     }
 
-    _configureLayoutTransition() {
+    _configureTransition(
+      transitionType: 'layoutTransition' | 'styleTransition'
+    ) {
       if (IS_WEB) {
         return;
       }
 
-      const layout = this.props.layout
+      const TRANSITIONS = {
+        layoutTransition: {
+          propName: 'layout',
+          animationType: LayoutAnimationType.LAYOUT,
+        },
+        styleTransition: {
+          propName: 'styleTransition',
+          animationType: LayoutAnimationType.LAYOUT_AND_STYLE,
+        },
+      } as const;
+
+      const { propName, animationType } = TRANSITIONS[transitionType];
+      const configToBuild = this.props[propName];
+      const transitionConfig = configToBuild
         ? maybeBuild(
-            this.props.layout,
+            configToBuild,
             undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
             AnimatedComponent.displayName
           )
         : undefined;
+
       updateLayoutAnimations(
         this._componentViewTag,
-        LayoutAnimationType.LAYOUT,
-        layout
+        animationType,
+        transitionConfig
       );
     }
 

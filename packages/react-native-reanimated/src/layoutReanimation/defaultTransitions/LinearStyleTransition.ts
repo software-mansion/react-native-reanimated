@@ -37,7 +37,6 @@ export class LinearStyleTransition
         Object.keys(values).includes('currentTransformMatrix') &&
         Object.keys(values).includes('targetTransformMatrix')
       ) {
-        console.log('AAA');
         const {
           currentTransformMatrix: cTransformMatrix,
           targetTransformMatrix: tTransformMatrix,

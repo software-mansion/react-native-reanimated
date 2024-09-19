@@ -1,11 +1,11 @@
 import Animated, { LinearStyleTransition } from 'react-native-reanimated';
 import { Button, StyleSheet, View } from 'react-native';
-
 import React from 'react';
+import { SelectorRow } from '../commonComponents/RowButtonSelector';
 
 export default function BasicLayoutAnimation() {
   const [currentStyleIdx, setCurrentStyleIdx] = React.useState(0);
-  const [state, setState] = React.useState(false);
+  const [useLayout, setUseLayout] = React.useState(true);
 
   const viewStyles = [
     styles.googleColors,
@@ -21,31 +21,27 @@ export default function BasicLayoutAnimation() {
       newStyleIdx = 0;
     }
     setCurrentStyleIdx(newStyleIdx);
-    setState(!state);
   }
+
+  const transitionProp = useLayout
+    ? { layout: LinearStyleTransition.duration(1000) }
+    : { styleTransition: LinearStyleTransition.duration(1000) };
 
   return (
     <View style={styles.container}>
+      <SelectorRow
+        firstButtonLabel="Layout Transition"
+        secondButtonLabel=" Style Transition"
+        selectedFirstButton={useLayout}
+        setSelectedFirstButton={setUseLayout}
+      />
+
       <Button onPress={incrementStyle} title="Update" />
       <Animated.View
-        layout={LinearStyleTransition.duration(1000)}
-        style={[
-          styles.box,
-          viewStyles[currentStyleIdx],
-          {
-            marginLeft: state ? 100 : 0,
-          },
-        ]}
+        {...transitionProp}
+        style={[styles.box, viewStyles[currentStyleIdx]]}
       />
-      <View
-        style={[
-          styles.box,
-          viewStyles[currentStyleIdx],
-          {
-            marginLeft: state ? 100 : 0,
-          },
-        ]}
-      />
+      <View style={[styles.box, viewStyles[currentStyleIdx]]} />
     </View>
   );
 }
@@ -67,9 +63,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 0,
     borderColor: 'deepskyblue',
     backgroundColor: 'skyblue',
-    width: 100,
-    height: 300,
-    transform: [{ translateX: 40 }, { rotateZ: '30deg' }, { rotateX: '30deg' }],
+    width: 150,
+    height: 150,
+    transform: [{ translateX: 40 }, { rotateZ: '45deg' }],
   },
   leaf: {
     borderWidth: 60,
@@ -107,7 +103,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    paddingTop: 50,
   },
   box: {
     width: 200,

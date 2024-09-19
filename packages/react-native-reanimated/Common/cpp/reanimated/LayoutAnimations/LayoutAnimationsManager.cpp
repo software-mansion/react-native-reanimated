@@ -24,6 +24,11 @@ void LayoutAnimationsManager::configureAnimationBatch(
         enteringAnimationsForNativeID_[tag] = config;
         continue;
       }
+      if (type == LAYOUT_AND_STYLE) {
+        doLayoutAnimationContainStyle_[tag] = true;
+      } else {
+        doLayoutAnimationContainStyle_.erase(tag);
+      }
 #endif
       if (config == nullptr) {
         getConfigsForType(type).erase(tag);
@@ -69,6 +74,18 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
   if (type == SHARED_ELEMENT_TRANSITION_PROGRESS) {
     auto end = ignoreProgressAnimationForTag_.end();
     return ignoreProgressAnimationForTag_.find(tag) == end;
+  }
+
+  if (type == LAYOUT_AND_STYLE) {
+    // LAYOUT_AND_STYLE is a subset of LAYOUT animations, therefore
+    // hasLayoutAnimation(tag of view with LAYOUT_AND_STYLE animation, LAYOUT) =
+    // true hasLayoutAnimation(tag of view with LAYOUT animation,
+    // LAYOUT_AND_STYLE) = false
+
+    auto includesAnimation = collection::contains(layoutAnimations_, tag);
+    bool includesStyle =
+        collection::contains(doLayoutAnimationContainStyle_, tag);
+    return includesAnimation && includesStyle;
   }
   return collection::contains(getConfigsForType(type), tag);
 }
@@ -217,6 +234,7 @@ LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
     case EXITING:
       return exitingAnimations_;
     case LAYOUT:
+    case LAYOUT_AND_STYLE: // a subset of LAYOUT
       return layoutAnimations_;
     case SHARED_ELEMENT_TRANSITION:
     case SHARED_ELEMENT_TRANSITION_PROGRESS:
