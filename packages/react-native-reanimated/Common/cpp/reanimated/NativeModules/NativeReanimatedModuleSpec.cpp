@@ -87,7 +87,8 @@ static jsi::Value SPEC_PREFIX(subscribeForKeyboardEvents)(
     const jsi::Value *args,
     size_t) {
   return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->subscribeForKeyboardEvents(rt, std::move(args[0]), std::move(args[1]));
+      ->subscribeForKeyboardEvents(
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
 }
 
 static jsi::Value SPEC_PREFIX(unsubscribeFromKeyboardEvents)(

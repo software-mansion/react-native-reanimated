@@ -54,7 +54,8 @@ public abstract class NativeProxyCommon {
 
   protected NativeProxyCommon(ReactApplicationContext context) {
     mWorkletsModule =
-        Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class)).getWorkletsModule();
+        Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class))
+            .getWorkletsModule();
     mContext = new WeakReference<>(context);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
     keyboardAnimationManager = new KeyboardAnimationManager(mContext);
@@ -63,10 +64,11 @@ public abstract class NativeProxyCommon {
     GestureHandlerStateManager tempHandlerStateManager;
     try {
       Class<NativeModule> gestureHandlerModuleClass =
-          (Class<NativeModule>)
-              Class.forName("com.swmansion.gesturehandler.react.RNGestureHandlerModule");
+          (Class<NativeModule>)Class.forName(
+              "com.swmansion.gesturehandler.react.RNGestureHandlerModule");
       tempHandlerStateManager =
-          (GestureHandlerStateManager) context.getNativeModule(gestureHandlerModuleClass);
+          (GestureHandlerStateManager)context.getNativeModule(
+              gestureHandlerModuleClass);
     } catch (ClassCastException | ClassNotFoundException e) {
       tempHandlerStateManager = null;
     }
@@ -80,7 +82,8 @@ public abstract class NativeProxyCommon {
     if (slowAnimationsEnabled) {
       firstUptime = SystemClock.uptimeMillis();
     }
-    mNodesManager.enableSlowAnimations(slowAnimationsEnabled, ANIMATIONS_DRAG_FACTOR);
+    mNodesManager.enableSlowAnimations(
+        slowAnimationsEnabled, ANIMATIONS_DRAG_FACTOR);
   }
 
   private void addDevMenuOption() {
@@ -110,17 +113,16 @@ public abstract class NativeProxyCommon {
     if (cppVersion == null) {
       throw new RuntimeException(
           "[Reanimated] Java side failed to resolve C++ code version. "
-              + "See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#java-side-failed-to-resolve-c-code-version for more information.");
+          +
+          "See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#java-side-failed-to-resolve-c-code-version for more information.");
     }
     String javaVersion = getReanimatedJavaVersion();
     if (!cppVersion.equals(javaVersion)) {
       throw new RuntimeException(
-          "[Reanimated] Mismatch between Java code version and C++ code version ("
-              + javaVersion
-              + " vs. "
-              + cppVersion
-              + " respectively). See "
-              + "https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information.");
+          "[Reanimated] Mismatch between Java code version and C++ code version (" +
+          javaVersion + " vs. " + cppVersion + " respectively). See "
+          +
+          "https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-java-code-version-and-c-code-version for more information.");
     }
   }
 
@@ -145,7 +147,8 @@ public abstract class NativeProxyCommon {
   }
 
   @DoNotStrip
-  public void dispatchCommand(int viewTag, String commandId, ReadableArray commandArgs) {
+  public void
+  dispatchCommand(int viewTag, String commandId, ReadableArray commandArgs) {
     mNodesManager.dispatchCommand(viewTag, commandId, commandArgs);
   }
 
@@ -159,8 +162,9 @@ public abstract class NativeProxyCommon {
   @DoNotStrip
   public long getAnimationTimestamp() {
     if (slowAnimationsEnabled) {
-      return this.firstUptime
-          + (SystemClock.uptimeMillis() - this.firstUptime) / ANIMATIONS_DRAG_FACTOR;
+      return this.firstUptime +
+          (SystemClock.uptimeMillis() - this.firstUptime) /
+          ANIMATIONS_DRAG_FACTOR;
     } else {
       return SystemClock.uptimeMillis();
     }
@@ -172,7 +176,9 @@ public abstract class NativeProxyCommon {
   }
 
   @DoNotStrip
-  public void configureProps(ReadableNativeArray uiProps, ReadableNativeArray nativeProps) {
+  public void configureProps(
+      ReadableNativeArray uiProps,
+      ReadableNativeArray nativeProps) {
     Set<String> uiPropsSet = convertProps(uiProps);
     Set<String> nativePropsSet = convertProps(nativeProps);
     mNodesManager.configureProps(uiPropsSet, nativePropsSet);
@@ -182,7 +188,7 @@ public abstract class NativeProxyCommon {
     Set<String> propsSet = new HashSet<>();
     ArrayList<Object> propsList = props.toArrayList();
     for (int i = 0; i < propsList.size(); i++) {
-      propsSet.add((String) propsList.get(i));
+      propsSet.add((String)propsList.get(i));
     }
     return propsSet;
   }
@@ -206,9 +212,13 @@ public abstract class NativeProxyCommon {
 
   @DoNotStrip
   public int subscribeForKeyboardEvents(
-      KeyboardWorkletWrapper keyboardWorkletWrapper, boolean isStatusBarTranslucent) {
+      KeyboardWorkletWrapper keyboardWorkletWrapper,
+      boolean isStatusBarTranslucent,
+      boolean isNavigationBarTranslucent) {
     return keyboardAnimationManager.subscribeForKeyboardUpdates(
-        keyboardWorkletWrapper, isStatusBarTranslucent);
+        keyboardWorkletWrapper,
+        isStatusBarTranslucent,
+        isNavigationBarTranslucent);
   }
 
   @DoNotStrip
@@ -227,26 +237,32 @@ public abstract class NativeProxyCommon {
 
   public void prepareLayoutAnimations(LayoutAnimations layoutAnimations) {
     if (Utils.isChromeDebugger) {
-      Log.w("[REANIMATED]", "You can not use LayoutAnimation with enabled Chrome Debugger");
+      Log.w(
+          "[REANIMATED]",
+          "You can not use LayoutAnimation with enabled Chrome Debugger");
       return;
     }
-    mNodesManager =
-        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
-            .getNodesManager();
+    mNodesManager = Objects
+                        .requireNonNull(mContext.get().getNativeModule(
+                            ReanimatedModule.class))
+                        .getNodesManager();
 
     AnimationsManager animationsManager =
-        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
+        Objects
+            .requireNonNull(
+                mContext.get().getNativeModule(ReanimatedModule.class))
             .getNodesManager()
             .getAnimationsManager();
 
-    animationsManager.setNativeMethods(NativeProxy.createNativeMethodsHolder(layoutAnimations));
+    animationsManager.setNativeMethods(
+        NativeProxy.createNativeMethodsHolder(layoutAnimations));
   }
 
   @DoNotStrip
   public boolean getIsReducedMotion() {
     ContentResolver mContentResolver = mContext.get().getContentResolver();
-    String rawValue =
-        Settings.Global.getString(mContentResolver, Settings.Global.TRANSITION_ANIMATION_SCALE);
+    String rawValue = Settings.Global.getString(
+        mContentResolver, Settings.Global.TRANSITION_ANIMATION_SCALE);
     float parsedValue = rawValue != null ? Float.parseFloat(rawValue) : 1f;
     return parsedValue == 0f;
   }

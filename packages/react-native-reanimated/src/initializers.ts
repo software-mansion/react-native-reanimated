@@ -80,9 +80,48 @@ export function setupCallGuard() {
   };
 }
 
+/**
+ * Currently there seems to be a bug in the JSI layer which causes a crash when
+ * we try to copy some of the console methods, i.e. `clear` or `dirxml`.
+ *
+ * The crash happens only in React Native 0.75. It's not reproducible in neither
+ * 0.76 nor 0.74. It also happens only in the configuration of a debug app and
+ * production bundle.
+ *
+ * I haven't yet discovered what exactly causes the crash. It's tied to the
+ * console methods sometimes being `HostFunction`s. Therefore, as a workaround
+ * we don't copy the methods as they are in the original console object, we copy
+ * JavaScript wrappers instead.
+ */
+function createMemorySafeCapturableConsole(): typeof console {
+  const consoleCopy = Object.fromEntries(
+    Object.entries(console).map(([methodName, method]) => {
+      const methodWrapper = function methodWrapper(...args: unknown[]) {
+        return method(...args);
+      };
+      if (method.name) {
+        /**
+         * Set the original method name as the wrapper name if available.
+         *
+         * It might be unnecessary but if we want to fully mimic the console
+         * object we should take into the account the fact some code might rely
+         * on the method name.
+         */
+        Object.defineProperty(methodWrapper, 'name', {
+          value: method.name,
+          writable: false,
+        });
+      }
+      return [methodName, methodWrapper];
+    })
+  );
+
+  return consoleCopy as unknown as typeof console;
+}
+
 // We really have to create a copy of console here. Function runOnJS we use on elements inside
 // this object makes it not configurable
-const capturableConsole = { ...console };
+const capturableConsole = createMemorySafeCapturableConsole();
 
 export function setupConsole() {
   'worklet';

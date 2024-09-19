@@ -19,8 +19,8 @@ const animationNameList: string[] = [];
 let isObserverSet = false;
 
 /**
- *  Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules into the stylesheet.
- *  If style element already exists, nothing happens.
+ * Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules
+ * into the stylesheet. If style element already exists, nothing happens.
  */
 export function configureWebLayoutAnimations() {
   if (

@@ -90,7 +90,7 @@ export function isAnimated(prop: unknown) {
 // return empty array of primitives and on arrays
 // it returns array of its indices.
 export function shallowEqual<
-  T extends Record<string | number | symbol, unknown>
+  T extends Record<string | number | symbol, unknown>,
 >(a: T, b: T) {
   'worklet';
   const aKeys = Object.keys(a);

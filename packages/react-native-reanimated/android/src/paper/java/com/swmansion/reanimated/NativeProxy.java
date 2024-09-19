@@ -23,6 +23,7 @@ public class NativeProxy extends NativeProxyCommon {
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
 
+  @OptIn(markerClass = FrameworkAPI.class)
   public NativeProxy(ReactApplicationContext context, WorkletsModule workletsModule) {
     super(context);
     LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
