@@ -25,36 +25,37 @@ public class ReactNativeUtils {
   }
 
   public static BorderRadii getBorderRadii(View view) {
-//    if (view.getBackground() != null) {
-//      return BorderRadiiDrawableUtils.getBorderRadii(view);
-//    } else if (view instanceof ReactImageView) {
-//      try {
-//        if (mBorderRadiusField == null) {
-//          mBorderRadiusField = ReactImageView.class.getDeclaredField("mBorderRadius");
-//          mBorderRadiusField.setAccessible(true);
-//        }
-//        float fullBorderRadius = mBorderRadiusField.getFloat(view);
-//        if (getCornerRadiiMethod == null) {
-//          getCornerRadiiMethod =
-//              ReactImageView.class.getDeclaredMethod("getCornerRadii", float[].class);
-//          getCornerRadiiMethod.setAccessible(true);
-//        }
-//        if (Float.isNaN(fullBorderRadius)) {
-//          fullBorderRadius = 0;
-//        }
-//        float[] cornerRadii = new float[4];
-//        getCornerRadiiMethod.invoke(view, (Object) cornerRadii);
-//        return new BorderRadii(
-//            fullBorderRadius, cornerRadii[0], cornerRadii[1], cornerRadii[2], cornerRadii[3]);
-//      } catch (NullPointerException
-//          | NoSuchFieldException
-//          | NoSuchMethodException
-//          | IllegalAccessException
-//          | InvocationTargetException ignored) {
-//        // In case of non-standard view is better to not support the border animation
-//        // instead of throwing exception
-//      }
-//    }
+    if (view.getBackground() != null) {
+      return BorderRadiiDrawableUtils.getBorderRadii(view);
+      // The rest can be safely removed once support for version 0.75 is dropped.
+    } else if (view instanceof ReactImageView) {
+      try {
+        if (mBorderRadiusField == null) {
+          mBorderRadiusField = ReactImageView.class.getDeclaredField("mBorderRadius");
+          mBorderRadiusField.setAccessible(true);
+        }
+        float fullBorderRadius = mBorderRadiusField.getFloat(view);
+        if (getCornerRadiiMethod == null) {
+          getCornerRadiiMethod =
+              ReactImageView.class.getDeclaredMethod("getCornerRadii", float[].class);
+          getCornerRadiiMethod.setAccessible(true);
+        }
+        if (Float.isNaN(fullBorderRadius)) {
+          fullBorderRadius = 0;
+        }
+        float[] cornerRadii = new float[4];
+        getCornerRadiiMethod.invoke(view, (Object) cornerRadii);
+        return new BorderRadii(
+            fullBorderRadius, cornerRadii[0], cornerRadii[1], cornerRadii[2], cornerRadii[3]);
+      } catch (NullPointerException
+          | NoSuchFieldException
+          | NoSuchMethodException
+          | IllegalAccessException
+          | InvocationTargetException ignored) {
+        // In case of non-standard view is better to not support the border animation
+        // instead of throwing exception
+      }
+    }
     return new BorderRadii(0, 0, 0, 0, 0);
   }
 }
