@@ -20,11 +20,10 @@
 namespace reanimated {
 
 #ifdef __ANDROID__
-static inline std::string colorToString(const SharedColor & color) {
-
-    // Operator "*" of class SharedColor is overloaded and returns a private
-    // class member color_ of type Color
-    int val = *color;
+static inline std::string colorToString(const SharedColor &color) {
+  // Operator "*" of class SharedColor is overloaded and returns a private
+  // class member color_ of type Color
+  int val = *color;
 
   std::stringstream
       invertedHexColorStream; // By default transparency is first, color second
@@ -138,8 +137,7 @@ struct StyleSnapshot {
         static_cast<double>(cascadedBorderMetrics.borderWidths.bottom),
     };
 
-    auto topBorderColor =
-        colorToString(cascadedBorderMetrics.borderColors.top);
+    auto topBorderColor = colorToString(cascadedBorderMetrics.borderColors.top);
     auto rightBorderColor =
         colorToString(cascadedBorderMetrics.borderColors.right);
     auto bottomBorderColor =
