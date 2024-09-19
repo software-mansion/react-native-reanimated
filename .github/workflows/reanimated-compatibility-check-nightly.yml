@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_ios:
+  build:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
