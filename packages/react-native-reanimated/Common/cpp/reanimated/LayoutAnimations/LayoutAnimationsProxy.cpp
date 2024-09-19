@@ -345,7 +345,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           updateOngoingAnimationTarget(tag, mutation);
           continue;
         }
-        
+
         // store the oldChildShadowView, so that we can use this ShadowView when the view is inserted
         oldShadowViewsForReparentings[tag] = mutation.oldChildShadowView;
         startLayoutAnimation(tag, mutation);
