@@ -270,6 +270,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
     ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
+  std::unordered_map<Tag, ShadowView> oldShadowViewsForReparentings;
   for (auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation, surfaceId);
 
@@ -293,7 +294,14 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         if (movedViews.contains(tag)) {
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
-            filteredMutations.push_back(mutation);
+            if (oldShadowViewsForReparentings.contains(tag)) {
+              filteredMutations.push_back(ShadowViewMutation::InsertMutation(
+                  mutation.parentShadowView,
+                  oldShadowViewsForReparentings[tag],
+                  mutation.index));
+            } else {
+              filteredMutations.push_back(mutation);
+            }
             continue;
           }
 
@@ -345,6 +353,10 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           updateOngoingAnimationTarget(tag, mutation);
           continue;
         }
+
+        // store the oldChildShadowView, so that we can use this ShadowView when
+        // the view is inserted
+        oldShadowViewsForReparentings[tag] = mutation.oldChildShadowView;
         startLayoutAnimation(tag, mutation, hasLayoutAndStyleAnimation);
         break;
       }
@@ -655,13 +667,12 @@ void LayoutAnimationsProxy::startEnteringAnimation(
   LOG(INFO) << "start entering animation for tag " << tag << std::endl;
 #endif
   auto finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
-  auto current = std::make_shared<ShadowView>(mutation.oldChildShadowView);
+  auto current = std::make_shared<ShadowView>(mutation.newChildShadowView);
   auto parent = std::make_shared<ShadowView>(mutation.parentShadowView);
 
   auto &viewProps =
       static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
-  layoutAnimations_.insert_or_assign(
-      tag, LayoutAnimation{finalView, current, parent, viewProps.opacity});
+  auto opacity = viewProps.opacity;
 
   Snapshot values(
       mutation.newChildShadowView,
@@ -688,9 +699,17 @@ void LayoutAnimationsProxy::startExitingAnimation(
 
   createLayoutAnimation(mutation, oldView, tag);
 
-  Snapshot values(oldView, surfaceManager.getWindow(surfaceId));
+  uiScheduler_->scheduleOnUI([this, tag, mutation, surfaceId]() {
+    auto oldView = mutation.oldChildShadowView;
+    Rect window{};
+    {
+      auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+      createLayoutAnimation(mutation, oldView, surfaceId, tag);
+      window = surfaceManager.getWindow(surfaceId);
+    }
 
-  uiScheduler_->scheduleOnUI([values, this, tag]() {
+    Snapshot values(oldView, window);
+
     jsi::Object yogaValues(uiRuntime_);
     setYogaCurrentSnapshotProperties(&yogaValues, uiRuntime_, values);
     yogaValues.setProperty(uiRuntime_, "windowWidth", values.windowWidth);

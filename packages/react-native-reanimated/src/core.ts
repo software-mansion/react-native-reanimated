@@ -111,7 +111,8 @@ export function subscribeForKeyboardEvents(
   }
   return NativeReanimatedModule.subscribeForKeyboardEvents(
     makeShareableCloneRecursive(handleAndFlushAnimationFrame),
-    options.isStatusBarTranslucentAndroid ?? false
+    options.isStatusBarTranslucentAndroid ?? false,
+    options.isNavigationBarTranslucentAndroid ?? false
   );
 }
 
