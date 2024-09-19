@@ -295,7 +295,9 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           if (layoutAnimationIt == layoutAnimations_.end()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
               filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-                  mutation.parentShadowView, oldShadowViewsForReparentings[tag], mutation.index));
+                  mutation.parentShadowView,
+                  oldShadowViewsForReparentings[tag],
+                  mutation.index));
             } else {
               filteredMutations.push_back(mutation);
             }
@@ -346,7 +348,8 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           continue;
         }
 
-        // store the oldChildShadowView, so that we can use this ShadowView when the view is inserted
+        // store the oldChildShadowView, so that we can use this ShadowView when
+        // the view is inserted
         oldShadowViewsForReparentings[tag] = mutation.oldChildShadowView;
         startLayoutAnimation(tag, mutation);
         break;
