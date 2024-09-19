@@ -269,7 +269,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
     ShadowViewMutationList &mutations,
     const PropsParserContext &propsParserContext,
     SurfaceId surfaceId) const {
-  std::unordered_map<Tag, ShadowView> oldViews;
+  std::unordered_map<Tag, ShadowView> oldShadowViewsForReparentings;
   for (auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation, surfaceId);
 
@@ -293,9 +293,9 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         if (movedViews.contains(tag)) {
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
-            if (oldViews.contains(tag)) {
+            if (oldShadowViewsForReparentings.contains(tag)) {
               filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-                  mutation.parentShadowView, oldViews[tag], mutation.index));
+                  mutation.parentShadowView, oldShadowViewsForReparentings[tag], mutation.index));
             } else {
               filteredMutations.push_back(mutation);
             }
@@ -345,7 +345,9 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           updateOngoingAnimationTarget(tag, mutation);
           continue;
         }
-        oldViews[tag] = mutation.oldChildShadowView;
+        
+        // store the oldChildShadowView, so that we can use this ShadowView when the view is inserted
+        oldShadowViewsForReparentings[tag] = mutation.oldChildShadowView;
         startLayoutAnimation(tag, mutation);
         break;
       }
