@@ -262,6 +262,9 @@
   --swm-sidebar-label-text-experimental: var(--swm-navy-light-100);
   --swm-sidebar-label-background-experimental: var(--swm-yellow-light-40);
 
+  --swm-sidebar-label-text-unreleased: var(--swm-navy-light-100);
+  --swm-sidebar-label-background-unreleased: var(--swm-blue-light-40);
+
   /* Mobile sidebar versions */
   --swm-sidebar-elements-version-text: var(--swm-navy-light-100);
   --swm-sidebar-elements-version-inactive: var(--swm-navy-dark-40);
@@ -439,6 +442,9 @@
 
   --swm-sidebar-label-text-experimental: var(--swm-off-white);
   --swm-sidebar-label-background-experimental: var(--swm-yellow-dark-120);
+
+  --swm-sidebar-label-text-unreleased: var(--swm-off-white);
+  --swm-sidebar-label-background-unreleased: var(--swm-blue-dark-120);
 
   /* Mobile sidebar versions */
   --swm-sidebar-elements-version-text: var(--swm-navy-dark-20);
