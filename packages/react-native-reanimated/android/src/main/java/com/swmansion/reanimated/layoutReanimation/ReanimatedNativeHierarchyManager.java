@@ -281,6 +281,7 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     return !initOk || !mReaLayoutAnimator.isLayoutAnimationEnabled();
   }
 
+  @Override
   public synchronized void updateLayout(
       int parentTag, int tag, int x, int y, int width, int height, YogaDirection yogaDirection) {
     super.updateLayout(parentTag, tag, x, y, width, height, yogaDirection);
