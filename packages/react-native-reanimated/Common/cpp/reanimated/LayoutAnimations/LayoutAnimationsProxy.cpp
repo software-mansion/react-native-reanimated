@@ -484,6 +484,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
         hasAnimatedChildren = true;
       } else {
         endAnimationsRecursively(subNode, mutations);
+        toBeRemoved.push_back(subNode);
       }
     } else if (startAnimationsRecursively(
                    subNode,
