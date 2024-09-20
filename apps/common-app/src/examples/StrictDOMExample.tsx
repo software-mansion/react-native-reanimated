@@ -69,7 +69,7 @@ export default function StrictDOMExample() {
         {/* Our property types conversion for Animated Components is conflicting
         with Strict DOM's property type conversions in such a way they generate an endless loop. 
         Let's circle back on it in a few years.
-        @ts-expect-error TODO: */}
+        @ts-ignore TODO: */}
         <animated.html.div style={[styles.box, animatedStyle]} />
       </GestureDetector>
     </html.div>
