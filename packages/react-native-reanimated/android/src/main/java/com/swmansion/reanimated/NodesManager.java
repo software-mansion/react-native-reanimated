@@ -468,7 +468,8 @@ public class NodesManager implements EventDispatcherListener {
         } catch (Exception e) {
           return "Unable to resolve background color";
         }
-      default:
+      }
+      default -> {
         throw new IllegalArgumentException(
             "[Reanimated] Attempted to get unsupported property "
                 + propName
