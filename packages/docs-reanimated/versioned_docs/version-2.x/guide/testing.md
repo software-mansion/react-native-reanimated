@@ -105,8 +105,8 @@ test('stop in a middle of animation', () => {
 
 More example tests you can see in our repository
 
-- [SharedValue.test.js](https://github.com/software-mansion/react-native-reanimated/blob/main/__tests__/SharedValue.test.tsx)
-- [Animation.test.js](https://github.com/software-mansion/react-native-reanimated/blob/main/__tests__/Animation.test.tsx)
+- [SharedValue.test.js](https://github.com/software-mansion/react-native-reanimated/blob/Reanimated2/__tests__/SharedValue.test.js)
+- [Animation.test.js](https://github.com/software-mansion/react-native-reanimated/blob/Reanimated2/__tests__/Animation.test.js)
 
 ## Recommended testing library
 
