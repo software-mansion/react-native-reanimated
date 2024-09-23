@@ -16,17 +16,7 @@ target_include_directories(
     reanimated
     PRIVATE
     "${COMMON_CPP_DIR}"
-)
-
-target_include_directories(
-    reanimated
-    PRIVATE
     "${ANDROID_CPP_DIR}"
-)
-
-target_include_directories(
-    reanimated
-    PRIVATE
     "${REACT_NATIVE_DIR}/ReactCommon"
     "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
     "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
