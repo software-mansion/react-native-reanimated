@@ -138,6 +138,9 @@ export function createUpdatesContainer() {
     }
     const tag = component?.getTag();
     if (!tag || !(tag in sortedUpdates)) {
+      if (_IS_FABRIC && (-1) in sortedUpdates) {
+        return sortedUpdates[-1];
+      }
       throw new Error('Snapshot of given component not found');
     } else {
       return sortedUpdates[tag];
