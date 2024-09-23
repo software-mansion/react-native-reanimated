@@ -251,7 +251,6 @@ static BOOL _isConfigured = NO;
     REAUIView *sharedViewScreen = [REAScreensHelper getScreenForView:sharedView];
     REAUIView *stack = [REAScreensHelper getStackForView:sharedViewScreen];
 
-
     NSMutableSet<NSNumber *> *visitedTags = [NSMutableSet new];
     const int maxIterations = 100; // Safety limit to prevent infinite loops
     int iterationCount = 0;
@@ -261,22 +260,22 @@ static BOOL _isConfigured = NO;
     REAUIView *siblingView = nil;
 
     do {
-	  if (siblingViewTag == nil || [visitedTags containsObject:siblingViewTag]) {
-	    siblingViewTag = nil;
-		break;
-  	  }
-	  [visitedTags addObject:siblingViewTag];
+      if (siblingViewTag == nil || [visitedTags containsObject:siblingViewTag]) {
+        siblingViewTag = nil;
+        break;
+      }
+      [visitedTags addObject:siblingViewTag];
 
-	  siblingView = [_animationManager viewForTag:siblingViewTag];
-	  if (siblingView == nil) {
-	    [self clearAllSharedConfigsForViewTag:siblingViewTag];
-	    siblingViewTag = _findPrecedingViewTagForTransition(sharedView.reactTag);
-	  }
-	  iterationCount++;
+      siblingView = [_animationManager viewForTag:siblingViewTag];
+      if (siblingView == nil) {
+        [self clearAllSharedConfigsForViewTag:siblingViewTag];
+        siblingViewTag = _findPrecedingViewTagForTransition(sharedView.reactTag);
+      }
+      iterationCount++;
     } while (siblingView == nil && siblingViewTag != nil && iterationCount < maxIterations);
 
     if (iterationCount >= maxIterations) {
-	  NSLog(@"Warning: Exceeded maximum iterations in getSharedElementForCurrentTransition");
+      NSLog(@"Warning: Exceeded maximum iterations in getSharedElementForCurrentTransition");
     }
 
     siblingView = [self maybeOverrideSiblingForTabNavigator:sharedView siblingView:siblingView];
