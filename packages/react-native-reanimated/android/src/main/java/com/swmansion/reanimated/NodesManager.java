@@ -466,7 +466,7 @@ public class NodesManager implements EventDispatcherListener {
           return "#" + invertedColor.substring(2, 8) + invertedColor.substring(0, 2);
 
         } catch (Exception e) {
-          return "Unable to get background color";
+          return "Unable to resolve background color";
         }
       default:
         throw new IllegalArgumentException(
