@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include "WorkletRuntime.h"
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 using namespace facebook;
 

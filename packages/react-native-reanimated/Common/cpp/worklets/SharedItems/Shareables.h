@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "WorkletRuntimeRegistry.h"
+#include <worklets/Registries/WorkletRuntimeRegistry.h>
 
 using namespace facebook;
 

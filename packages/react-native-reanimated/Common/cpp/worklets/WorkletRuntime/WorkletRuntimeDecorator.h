@@ -1,6 +1,6 @@
 #pragma once
 
-#include "JSScheduler.h"
+#include <worklets/Tools/JSScheduler.h>
 
 #include <jsi/jsi.h>
 

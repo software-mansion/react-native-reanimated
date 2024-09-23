@@ -1,4 +1,4 @@
-#include "JSScheduler.h"
+#include <worklets/Tools/JSScheduler.h>
 
 #include <utility>
 

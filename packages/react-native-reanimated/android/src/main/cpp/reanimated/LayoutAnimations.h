@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "JNIHelper.h"
+#include <reanimated/JNIHelper.h>
 
 namespace reanimated {
 

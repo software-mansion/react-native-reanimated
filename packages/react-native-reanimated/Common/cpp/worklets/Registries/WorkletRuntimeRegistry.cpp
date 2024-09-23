@@ -1,4 +1,4 @@
-#include "WorkletRuntimeRegistry.h"
+#include <worklets/Registries/WorkletRuntimeRegistry.h>
 
 namespace reanimated {
 

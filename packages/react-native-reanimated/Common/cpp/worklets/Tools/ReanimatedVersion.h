@@ -3,7 +3,7 @@
 #include <jsi/jsi.h>
 #include <memory>
 #include <string>
-#include "JSLogger.h"
+#include <worklets/Tools/JSLogger.h>
 
 using namespace facebook;
 

@@ -4,9 +4,9 @@
 #include <memory>
 #include <unordered_set>
 
-#include "PlatformDepMethodsHolder.h"
-#include "Shareables.h"
-#include "WorkletRuntime.h"
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <worklets/SharedItems/Shareables.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 namespace reanimated {
 

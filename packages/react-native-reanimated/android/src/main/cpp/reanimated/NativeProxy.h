@@ -22,11 +22,11 @@
 #include <utility>
 #include <vector>
 
-#include "AndroidUIScheduler.h"
-#include "JNIHelper.h"
-#include "LayoutAnimations.h"
-#include "NativeReanimatedModule.h"
-#include "UIScheduler.h"
+#include <reanimated/AndroidUIScheduler.h>
+#include <reanimated/JNIHelper.h>
+#include <reanimated/LayoutAnimations.h>
+#include <reanimated/NativeModules/NativeReanimatedModule.h>
+#include <worklets/Tools/UIScheduler.h>
 
 namespace reanimated {
 

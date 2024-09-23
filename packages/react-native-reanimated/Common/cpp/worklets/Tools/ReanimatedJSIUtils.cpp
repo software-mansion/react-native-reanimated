@@ -1,4 +1,4 @@
-#include "ReanimatedJSIUtils.h"
+#include <worklets/Tools/ReanimatedJSIUtils.h>
 #include <vector>
 
 using namespace facebook;

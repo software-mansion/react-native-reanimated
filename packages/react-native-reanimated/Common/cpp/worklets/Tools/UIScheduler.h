@@ -5,7 +5,7 @@
 #include <atomic>
 #include <memory>
 
-#include "ThreadSafeQueue.h"
+#include <worklets/Tools/ThreadSafeQueue.h>
 
 namespace reanimated {
 

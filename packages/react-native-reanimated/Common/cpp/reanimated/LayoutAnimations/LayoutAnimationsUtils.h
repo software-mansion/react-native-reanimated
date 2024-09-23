@@ -1,7 +1,7 @@
 #pragma once
 
-#include "LayoutAnimationsManager.h"
-#include "PropsRegistry.h"
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/Fabric/PropsRegistry.h>
 
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>

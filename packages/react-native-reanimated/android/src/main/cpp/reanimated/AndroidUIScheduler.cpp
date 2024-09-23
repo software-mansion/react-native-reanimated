@@ -1,4 +1,4 @@
-#include "AndroidUIScheduler.h"
+#include <reanimated/AndroidUIScheduler.h>
 
 #include <android/log.h>
 #include <fbjni/fbjni.h>

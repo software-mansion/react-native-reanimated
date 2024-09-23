@@ -8,7 +8,7 @@
 
 #include <memory>
 
-#include "UIScheduler.h"
+#include <worklets/Tools/UIScheduler.h>
 
 namespace reanimated {
 

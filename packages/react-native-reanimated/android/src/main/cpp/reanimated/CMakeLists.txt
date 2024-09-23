@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 
-file(GLOB_RECURSE REANIMATED_COMMON_CPP_SOURCES CONFIGURE_DEPENDS "${REANIMATED_COMMON_CPP_DIR}/reanimated/*.cpp")
-file(GLOB_RECURSE REANIMATED_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS "${REANIMATED_ANDROID_CPP_DIR}/*.cpp")
+file(GLOB_RECURSE REANIMATED_COMMON_CPP_SOURCES CONFIGURE_DEPENDS "${COMMON_CPP_DIR}/reanimated/*.cpp")
+file(GLOB_RECURSE REANIMATED_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS "${ANDROID_CPP_DIR}/reanimated/*.cpp")
 
 find_package(ReactAndroid REQUIRED CONFIG)
 
@@ -15,19 +15,13 @@ add_library(
 target_include_directories(
     reanimated
     PRIVATE
-    "${REANIMATED_COMMON_CPP_DIR}/reanimated/AnimatedSensor"
-    "${REANIMATED_COMMON_CPP_DIR}"
-    "${REANIMATED_COMMON_CPP_DIR}/reanimated/Fabric"
-    "${REANIMATED_COMMON_CPP_DIR}/reanimated/LayoutAnimations"
-    "${REANIMATED_COMMON_CPP_DIR}/reanimated/NativeModules"
-    "${REANIMATED_COMMON_CPP_DIR}/reanimated/Tools"
-    "${REANIMATED_COMMON_CPP_DIR}/reanimated/RuntimeDecorators"
+    "${COMMON_CPP_DIR}"
 )
 
 target_include_directories(
     reanimated
     PRIVATE
-    "${REANIMATED_ANDROID_CPP_DIR}"
+    "${ANDROID_CPP_DIR}"
 )
 
 target_include_directories(

@@ -1,4 +1,4 @@
-#include "NativeReanimatedModule.h"
+#include <reanimated/NativeModules/NativeReanimatedModule.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManagerBinding.h>
@@ -16,18 +16,18 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/scheduler/Scheduler.h>
-#include "ReanimatedCommitShadowNode.h"
-#include "ShadowTreeCloner.h"
+#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
 #endif
 
-#include "AsyncQueue.h"
-#include "CollectionUtils.h"
-#include "EventHandlerRegistry.h"
-#include "FeaturesConfig.h"
-#include "ReanimatedWorkletRuntimeDecorator.h"
-#include "Shareables.h"
-#include "UIRuntimeDecorator.h"
-#include "WorkletEventHandler.h"
+#include <worklets/Tools/AsyncQueue.h>
+#include <reanimated/Tools/CollectionUtils.h>
+#include <worklets/Registries/EventHandlerRegistry.h>
+#include <reanimated/Tools/FeaturesConfig.h>
+#include <reanimated/RuntimeDecorators/ReanimatedWorkletRuntimeDecorator.h>
+#include <worklets/SharedItems/Shareables.h>
+#include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
+#include <worklets/Tools/WorkletEventHandler.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>

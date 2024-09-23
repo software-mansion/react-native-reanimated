@@ -1,8 +1,8 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include "LayoutAnimationsManager.h"
-#include "PropsRegistry.h"
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/Fabric/PropsRegistry.h>
 
 #include <react/renderer/componentregistry/ComponentDescriptorFactory.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
@@ -12,8 +12,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include "LayoutAnimationsUtils.h"
-#include "UIScheduler.h"
+#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <worklets/Tools/UIScheduler.h>
 
 namespace reanimated {
 

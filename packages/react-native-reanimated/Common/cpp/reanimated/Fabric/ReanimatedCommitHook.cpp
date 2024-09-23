@@ -4,9 +4,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ReanimatedCommitHook.h"
-#include "ReanimatedCommitShadowNode.h"
-#include "ShadowTreeCloner.h"
+#include <reanimated/Fabric/ReanimatedCommitHook.h>
+#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
 
 using namespace facebook::react;
 

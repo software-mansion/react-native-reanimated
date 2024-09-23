@@ -10,20 +10,20 @@
 #include <utility>
 #include <vector>
 
-#include "AnimatedSensorModule.h"
-#include "EventHandlerRegistry.h"
-#include "JSScheduler.h"
-#include "LayoutAnimationsManager.h"
-#include "NativeReanimatedModuleSpec.h"
-#include "PlatformDepMethodsHolder.h"
-#include "SingleInstanceChecker.h"
-#include "UIScheduler.h"
+#include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
+#include <worklets/Registries/EventHandlerRegistry.h>
+#include <worklets/Tools/JSScheduler.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/NativeModules/NativeReanimatedModuleSpec.h>
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <reanimated/Tools/SingleInstanceChecker.h>
+#include <worklets/Tools/UIScheduler.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include "LayoutAnimationsProxy.h"
-#include "PropsRegistry.h"
-#include "ReanimatedCommitHook.h"
-#include "ReanimatedMountHook.h"
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/Fabric/PropsRegistry.h>
+#include <reanimated/Fabric/ReanimatedCommitHook.h>
+#include <reanimated/Fabric/ReanimatedMountHook.h>
 #endif
 
 namespace reanimated {

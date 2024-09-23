@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include "PropsRegistry.h"
+#include <reanimated/Fabric/PropsRegistry.h>
 
 using namespace facebook::react;
 

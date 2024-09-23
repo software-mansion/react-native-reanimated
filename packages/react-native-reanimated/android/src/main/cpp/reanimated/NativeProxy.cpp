@@ -12,16 +12,16 @@
 #include <memory>
 #include <string>
 
-#include "AndroidUIScheduler.h"
-#include "LayoutAnimationsManager.h"
-#include "NativeProxy.h"
-#include "PlatformDepMethodsHolder.h"
-#include "RNRuntimeDecorator.h"
-#include "ReanimatedJSIUtils.h"
-#include "ReanimatedRuntime.h"
-#include "ReanimatedVersion.h"
-#include "WorkletRuntime.h"
-#include "WorkletRuntimeCollector.h"
+#include <reanimated/AndroidUIScheduler.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/NativeProxy.h>
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
+#include <worklets/Tools/ReanimatedJSIUtils.h>
+#include <worklets/WorkletRuntime/ReanimatedRuntime.h>
+#include <worklets/Tools/ReanimatedVersion.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
+#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 
 namespace reanimated {
 

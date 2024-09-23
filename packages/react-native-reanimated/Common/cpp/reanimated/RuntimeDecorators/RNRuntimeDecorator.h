@@ -4,7 +4,7 @@
 
 #include <memory>
 
-#include "NativeReanimatedModule.h"
+#include <reanimated/NativeModules/NativeReanimatedModule.h>
 
 using namespace facebook;
 

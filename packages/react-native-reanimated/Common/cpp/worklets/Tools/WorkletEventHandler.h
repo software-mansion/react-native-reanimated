@@ -4,8 +4,8 @@
 #include <memory>
 #include <string>
 
-#include "Shareables.h"
-#include "WorkletRuntime.h"
+#include <worklets/SharedItems/Shareables.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 using namespace facebook;
 

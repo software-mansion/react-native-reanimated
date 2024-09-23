@@ -1,5 +1,5 @@
-#include "EventHandlerRegistry.h"
-#include "WorkletEventHandler.h"
+#include <worklets/Registries/EventHandlerRegistry.h>
+#include <worklets/Tools/WorkletEventHandler.h>
 
 #include <utility>
 

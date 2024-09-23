@@ -3,7 +3,7 @@
 #include <ranges>
 #include <utility>
 
-#include "ShadowTreeCloner.h"
+#include <reanimated/Fabric/ShadowTreeCloner.h>
 
 namespace reanimated {
 

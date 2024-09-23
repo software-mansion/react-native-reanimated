@@ -1,8 +1,8 @@
-#include "WorkletRuntimeDecorator.h"
-#include "JSISerializer.h"
-#include "ReanimatedJSIUtils.h"
-#include "Shareables.h"
-#include "WorkletRuntime.h"
+#include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
+#include <worklets/Tools/JSISerializer.h>
+#include <worklets/Tools/ReanimatedJSIUtils.h>
+#include <worklets/SharedItems/Shareables.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <vector>
 
