@@ -402,6 +402,13 @@ android {
             } else {
                 srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/latest"
             }
+
+            // ReanimatedNativeHierarchyManager
+            if (REACT_NATIVE_MINOR_VERSION <= 75) {
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedNativeHierarchyManager/75"
+            } else {
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedNativeHierarchyManager/latest"
+            }
         }
     }
     tasks.withType(ExternalNativeBuildJsonTask) {
