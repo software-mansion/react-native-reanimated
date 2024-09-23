@@ -25,9 +25,9 @@ void LayoutAnimationsManager::configureAnimationBatch(
         continue;
       }
       if (type == STYLE_TRANSITION) {
-        doLayoutAnimationContainStyle_[tag] = true;
+        markLayoutAnimationAsStyleTransition_[tag] = true;
       } else {
-        doLayoutAnimationContainStyle_.erase(tag);
+        markLayoutAnimationAsStyleTransition_.erase(tag);
       }
 #endif
       if (config == nullptr) {
@@ -84,7 +84,7 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
 
     auto includesAnimation = collection::contains(layoutAnimations_, tag);
     bool includesStyle =
-        collection::contains(doLayoutAnimationContainStyle_, tag);
+        collection::contains(markLayoutAnimationAsStyleTransition_, tag);
     return includesAnimation && includesStyle;
   }
   return collection::contains(getConfigsForType(type), tag);

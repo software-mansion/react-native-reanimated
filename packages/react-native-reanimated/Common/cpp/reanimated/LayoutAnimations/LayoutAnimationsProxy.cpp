@@ -616,7 +616,7 @@ void LayoutAnimationsProxy::createLayoutAnimation(
 void setYogaCurrentSnapshotProperties(
     const jsi::Object *yogaValues,
     jsi::Runtime &runtime,
-    Snapshot currentValues) {
+    LayoutSnapshot currentValues) {
   yogaValues->setProperty(runtime, "currentOriginX", currentValues.x);
   yogaValues->setProperty(runtime, "currentGlobalOriginX", currentValues.x);
   yogaValues->setProperty(runtime, "currentOriginY", currentValues.y);
@@ -627,7 +627,7 @@ void setYogaCurrentSnapshotProperties(
 void setYogaTargetSnapshotProperties(
     const jsi::Object *yogaValues,
     jsi::Runtime &runtime,
-    Snapshot targetValues) {
+    LayoutSnapshot targetValues) {
   yogaValues->setProperty(runtime, "targetOriginX", targetValues.x);
   yogaValues->setProperty(runtime, "targetGlobalOriginX", targetValues.x);
   yogaValues->setProperty(runtime, "targetOriginY", targetValues.y);
@@ -702,7 +702,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
               surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
         }
 
-        Snapshot values(mutation.newChildShadowView, window);
+        LayoutSnapshot values(mutation.newChildShadowView, window);
         jsi::Object yogaValues(uiRuntime_);
         setYogaTargetSnapshotProperties(&yogaValues, uiRuntime_, values);
         yogaValues.setProperty(uiRuntime_, "windowWidth", values.windowWidth);
@@ -730,7 +730,7 @@ void LayoutAnimationsProxy::startExitingAnimation(
       window = surfaceManager.getWindow(surfaceId);
     }
 
-    Snapshot values(oldView, window);
+    LayoutSnapshot values(oldView, window);
 
     jsi::Object yogaValues(uiRuntime_);
     setYogaCurrentSnapshotProperties(&yogaValues, uiRuntime_, values);
@@ -761,8 +761,8 @@ void LayoutAnimationsProxy::startLayoutAnimation(
       window = surfaceManager.getWindow(oldView.surfaceId);
     }
 
-    Snapshot currentValues(oldView, window);
-    Snapshot targetValues(newView, window);
+    LayoutSnapshot currentValues(oldView, window);
+    LayoutSnapshot targetValues(newView, window);
 
     jsi::Object yogaValues(uiRuntime_);
 

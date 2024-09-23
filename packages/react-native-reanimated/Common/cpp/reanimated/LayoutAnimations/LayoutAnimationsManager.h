@@ -78,7 +78,7 @@ class LayoutAnimationsManager {
   // same array to store config
   // We use this additional array to figure out if given LAYOUT animation is
   // STYLE_TRANSITION too
-  std::unordered_map<int, bool> doLayoutAnimationContainStyle_;
+  std::unordered_map<int, bool> markLayoutAnimationAsStyleTransition_;
 
   std::unordered_map<int, std::shared_ptr<Shareable>>
       sharedTransitionAnimations_;

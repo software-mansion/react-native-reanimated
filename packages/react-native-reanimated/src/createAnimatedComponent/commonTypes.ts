@@ -62,20 +62,23 @@ export type LayoutAnimationStaticContext = {
   presetName: string;
 };
 
-type LayoutOrStyleTransition = (
-  | BaseAnimationBuilder
-  | ILayoutAnimationBuilder
-  | typeof BaseAnimationBuilder
-) &
-  LayoutAnimationStaticContext;
-
 export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
   forwardedRef?: Ref<Component>;
   style?: NestedArray<StyleProps>;
   animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   animatedStyle?: StyleProps;
-  layout?: LayoutOrStyleTransition;
-  styleTransition?: LayoutOrStyleTransition;
+  layout?: (
+    | BaseAnimationBuilder
+    | ILayoutAnimationBuilder
+    | typeof BaseAnimationBuilder
+  ) &
+    LayoutAnimationStaticContext;
+  styleTransition?: (
+    | BaseAnimationBuilder
+    | ILayoutAnimationBuilder
+    | typeof BaseAnimationBuilder
+  ) &
+    LayoutAnimationStaticContext;
   entering?: (
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder

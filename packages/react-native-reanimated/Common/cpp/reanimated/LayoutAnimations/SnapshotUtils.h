@@ -63,9 +63,9 @@ inline Float floatFromYogaBorderWidthValue(const yoga::Style::Length &length) {
   return 0;
 }
 
-struct Snapshot {
+struct LayoutSnapshot {
   double x, y, width, height, windowWidth, windowHeight;
-  Snapshot(const ShadowView &shadowView, Rect window) {
+  LayoutSnapshot(const ShadowView &shadowView, Rect window) {
     const auto &frame = shadowView.layoutMetrics.frame;
     x = frame.origin.x;
     y = frame.origin.y;
