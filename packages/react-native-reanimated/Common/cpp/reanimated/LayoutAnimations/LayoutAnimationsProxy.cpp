@@ -664,7 +664,7 @@ void setYogaTransformMatrix(
     const jsi::Object *yogaValues,
     jsi::Runtime &runtime,
     std::array<Float, 16> currentTransformMatrix,
-        std::array<Float, 16> targetTransformMatrix) {
+    std::array<Float, 16> targetTransformMatrix) {
   jsi::Array currentMatrix(runtime, 16);
   jsi::Array targetMatrix(runtime, 16);
 
