@@ -298,6 +298,10 @@ android {
     }
     packagingOptions {
         doNotStrip resolveBuildType() == 'debug' ? "**/**/*.so" : ''
+        // For some reason gradle only complains about the duplicated version of librrc_root and libreact_render libraries
+        // while there are more libraries copied in intermediates folder of the lib build directory, we exclude
+        // only the ones that make the build fail (ideally we should only include libreanimated but we
+        // are only allowed to specify exclude patterns)
         excludes = [
                 "META-INF",
                 "META-INF/**",
@@ -313,6 +317,8 @@ android {
                 "**/libreactnativejni.so",
                 "**/libturbomodulejsijni.so",
                 "**/libreact_nativemodule_core.so",
+                "**/libreact_render*.so"
+                "**/librrc_root.so",
                 "**/libjscexecutor.so",
                 "**/libv8executor.so",
         ]
@@ -328,14 +334,6 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-    }
-    packagingOptions {
-        // For some reason gradle only complains about the duplicated version of librrc_root and libreact_render libraries
-        // while there are more libraries copied in intermediates folder of the lib build directory, we exclude
-        // only the ones that make the build fail (ideally we should only include libreanimated but we
-        // are only allowed to specify exlude patterns)
-        exclude "**/libreact_render*.so"
-        exclude "**/librrc_root.so"
     }
     sourceSets.main {
         java {
