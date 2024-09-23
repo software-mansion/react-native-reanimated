@@ -48,19 +48,6 @@ inline std::string colorToString(const SharedColor &value) {
 }
 #endif
 
-struct Snapshot {
-  double x, y, width, height, windowWidth, windowHeight;
-  Snapshot(const ShadowView &shadowView, Rect window) {
-    const auto &frame = shadowView.layoutMetrics.frame;
-    x = frame.origin.x;
-    y = frame.origin.y;
-    width = frame.size.width;
-    height = frame.size.height;
-    windowWidth = window.width;
-    windowHeight = window.height;
-  }
-};
-
 inline Float floatFromYogaOptionalFloat(yoga::FloatOptional value) {
   if (value.isUndefined() || std::isnan(value.unwrap())) {
     return 0;
@@ -75,6 +62,19 @@ inline Float floatFromYogaBorderWidthValue(const yoga::Style::Length &length) {
   // types percent, and auto are not allowed for border width
   return 0;
 }
+
+struct Snapshot {
+  double x, y, width, height, windowWidth, windowHeight;
+  Snapshot(const ShadowView &shadowView, Rect window) {
+    const auto &frame = shadowView.layoutMetrics.frame;
+    x = frame.origin.x;
+    y = frame.origin.y;
+    width = frame.size.width;
+    height = frame.size.height;
+    windowWidth = window.width;
+    windowHeight = window.height;
+  }
+};
 
 static const int numberOfStringProperties = 6;
 static const char *stringPropertiesNames[6] = {

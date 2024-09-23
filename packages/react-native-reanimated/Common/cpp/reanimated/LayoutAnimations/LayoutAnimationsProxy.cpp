@@ -660,6 +660,23 @@ void setYogaCurrentAndTargetValuePair(
   yogaValues->setProperty(runtime, targetPropName, targetValue);
 }
 
+void setYogaTransformMatrix(
+    const jsi::Object *yogaValues,
+    jsi::Runtime &runtime,
+    std::array<Float, 16> currentTransformMatrix,
+        std::array<Float, 16> targetTransformMatrix) {
+  jsi::Array currentMatrix(runtime, 16);
+  jsi::Array targetMatrix(runtime, 16);
+
+  for (unsigned int i = 0; i < 16; i++) {
+    currentMatrix.setValueAtIndex(runtime, i, currentTransformMatrix[i]);
+    targetMatrix.setValueAtIndex(runtime, i, targetTransformMatrix[i]);
+  }
+
+  yogaValues->setProperty(runtime, "currentTransformMatrix", currentMatrix);
+  yogaValues->setProperty(runtime, "targetTransformMatrix", targetMatrix);
+}
+
 void LayoutAnimationsProxy::startEnteringAnimation(
     const int tag,
     ShadowViewMutation &mutation) const {
