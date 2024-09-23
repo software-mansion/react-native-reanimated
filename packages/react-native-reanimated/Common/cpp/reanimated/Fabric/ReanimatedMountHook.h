@@ -2,9 +2,9 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/Fabric/PropsRegistry.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
 
 #include <react/renderer/uimanager/UIManagerMountHook.h>
-#include <reanimated/Fabric/ShadowTreeCloner.h>
 
 #include <memory>
 
