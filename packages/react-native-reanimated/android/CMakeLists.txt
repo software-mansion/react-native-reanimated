@@ -49,7 +49,7 @@ set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(WORKLETS_ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp/worklets")
 set(WORKLETS_COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/worklets")
 set(REANIMATED_ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp/reanimated")
-set(REANIMATED_COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/reanimated")
+set(REANIMATED_COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")
 
 add_subdirectory(${WORKLETS_ANDROID_CPP_DIR})
 add_subdirectory(${REANIMATED_ANDROID_CPP_DIR})

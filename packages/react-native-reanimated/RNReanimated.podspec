@@ -87,6 +87,11 @@ Pod::Spec.new do |s|
       "apple/reanimated/**/*.{mm,h,m}",
       "Common/cpp/reanimated/**/*.{cpp,h}",
     ]
+    
+    ss.subspec "AnimatedSensor" do |sss|
+      sss.source_files         = "Common/cpp/reanimated/AnimatedSensor/*.{cpp,h}"
+      sss.header_dir           = "reanimated/AnimatedSensor"
+    end
   end
 
   s.subspec "worklets" do |ss|
