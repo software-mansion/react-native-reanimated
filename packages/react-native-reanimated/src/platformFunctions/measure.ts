@@ -12,16 +12,21 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 import type { Component } from 'react';
+import { logger } from '../logger';
 
 type Measure = <T extends Component>(
   animatedRef: AnimatedRef<T>
 ) => MeasuredDimensions | null;
 
 /**
- * Lets you synchronously get the dimensions and position of a view on the screen.
+ * Lets you synchronously get the dimensions and position of a view on the
+ * screen.
  *
- * @param animatedRef - An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns) connected to the component you'd want to get the measurements from.
- * @returns An object containing component measurements or null when the measurement couldn't be performed- {@link MeasuredDimensions}.
+ * @param animatedRef - An [animated
+ *   ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns)
+ *   connected to the component you'd want to get the measurements from.
+ * @returns An object containing component measurements or null when the
+ *   measurement couldn't be performed- {@link MeasuredDimensions}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/measure/
  */
 export let measure: Measure;
@@ -34,26 +39,26 @@ function measureFabric(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
 
   const viewTag = animatedRef();
   if (viewTag === -1) {
-    console.warn(
-      `[Reanimated] The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
+    logger.warn(
+      `The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
     return null;
   }
 
   const measured = global._measureFabric!(viewTag as ShadowNodeWrapper);
   if (measured === null) {
-    console.warn(
-      `[Reanimated] The view has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
+    logger.warn(
+      `The view has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
     return null;
   } else if (measured.x === -1234567) {
-    console.warn(
-      `[Reanimated] The view returned an invalid measurement response. Please make sure the view is currently rendered.`
+    logger.warn(
+      `The view returned an invalid measurement response. Please make sure the view is currently rendered.`
     );
     return null;
   } else if (isNaN(measured.x)) {
-    console.warn(
-      `[Reanimated] The view gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
+    logger.warn(
+      `The view gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
     );
     return null;
   } else {
@@ -69,30 +74,30 @@ function measurePaper(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
 
   const viewTag = animatedRef();
   if (viewTag === -1) {
-    console.warn(
-      `[Reanimated] The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
+    logger.warn(
+      `The view with tag ${viewTag} is not a valid argument for measure(). This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
     return null;
   }
 
   const measured = global._measurePaper!(viewTag as number);
   if (measured === null) {
-    console.warn(
-      `[Reanimated] The view with tag ${
+    logger.warn(
+      `The view with tag ${
         viewTag as number
       } has some undefined, not-yet-computed or meaningless value of \`LayoutMetrics\` type. This may be because the view is not currently rendered, which may not be a bug (e.g. an off-screen FlatList item).`
     );
     return null;
   } else if (measured.x === -1234567) {
-    console.warn(
-      `[Reanimated] The view with tag ${
+    logger.warn(
+      `The view with tag ${
         viewTag as number
       } returned an invalid measurement response. Please make sure the view is currently rendered.`
     );
     return null;
   } else if (isNaN(measured.x)) {
-    console.warn(
-      `[Reanimated] The view with tag ${
+    logger.warn(
+      `The view with tag ${
         viewTag as number
       } gets view-flattened on Android. To disable view-flattening, set \`collapsable={false}\` on this component.`
     );
@@ -103,19 +108,17 @@ function measurePaper(animatedRef: AnimatedRefOnJS | AnimatedRefOnUI) {
 }
 
 function measureJest() {
-  console.warn('[Reanimated] measure() cannot be used with Jest.');
+  logger.warn('measure() cannot be used with Jest.');
   return null;
 }
 
 function measureChromeDebugger() {
-  console.warn('[Reanimated] measure() cannot be used with Chrome Debugger.');
+  logger.warn('measure() cannot be used with Chrome Debugger.');
   return null;
 }
 
 function measureDefault() {
-  console.warn(
-    '[Reanimated] measure() is not supported on this configuration.'
-  );
+  logger.warn('measure() is not supported on this configuration.');
   return null;
 }
 

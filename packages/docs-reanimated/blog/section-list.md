@@ -54,6 +54,6 @@ To enable interaction with the FlashList component - such as scrolling to specif
 
 <CollapsibleCode src={SectionListSrc} showLines={[154,155]}/>
 
-Here, the `debounce` function throttles the invocations of `onScroll` event handler which improves the perfomrance.
+Here, the `debounce` function throttles the invocations of `onScroll` event handler which improves the performance.
 
 <CollapsibleCode src={SectionListSrc} showLines={[85,93]}/>

@@ -102,7 +102,6 @@ public class NodesManager implements EventDispatcherListener {
   private final AtomicBoolean mCallbackPosted = new AtomicBoolean();
   private final ReactContext mContext;
   private final UIManager mUIManager;
-  private ReactApplicationContext mReactApplicationContext;
   private RCTEventEmitter mCustomEventHandler = new NoopEventHandler();
   private List<OnAnimationFrame> mFrameCallbacks = new ArrayList<>();
   private ConcurrentLinkedQueue<CopiedEvent> mEventQueue = new ConcurrentLinkedQueue<>();
@@ -134,7 +133,6 @@ public class NodesManager implements EventDispatcherListener {
 
   public void initWithContext(
       ReactApplicationContext reactApplicationContext, String valueUnpackerCode) {
-    mReactApplicationContext = reactApplicationContext;
     mNativeProxy = new NativeProxy(reactApplicationContext, valueUnpackerCode);
     mAnimationManager.setAndroidUIScheduler(getNativeProxy().getAndroidUIScheduler());
     compatibility = new ReaCompatibility(reactApplicationContext);
@@ -244,7 +242,7 @@ public class NodesManager implements EventDispatcherListener {
               }
               while (!copiedOperationsQueue.isEmpty()) {
                 NativeUpdateOperation op = copiedOperationsQueue.remove();
-                ReactShadowNode shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
+                ReactShadowNode<?> shadowNode = mUIImplementation.resolveShadowNode(op.mViewTag);
                 if (shadowNode != null) {
                   ((UIManagerModule) mUIManager)
                       .updateView(op.mViewTag, shadowNode.getViewClass(), op.mNativeProps);
@@ -260,7 +258,7 @@ public class NodesManager implements EventDispatcherListener {
           });
       if (trySynchronously) {
         try {
-          semaphore.tryAcquire(16, TimeUnit.MILLISECONDS);
+          boolean ignored = semaphore.tryAcquire(16, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
           // if the thread is interrupted we just continue and let the layout update happen
           // asynchronously
@@ -439,19 +437,25 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     switch (propName) {
-      case "opacity":
+      case "opacity" -> {
         return Float.toString(view.getAlpha());
-      case "zIndex":
+      }
+      case "zIndex" -> {
         return Float.toString(view.getElevation());
-      case "width":
+      }
+      case "width" -> {
         return Float.toString(PixelUtil.toDIPFromPixel(view.getWidth()));
-      case "height":
+      }
+      case "height" -> {
         return Float.toString(PixelUtil.toDIPFromPixel(view.getHeight()));
-      case "top":
+      }
+      case "top" -> {
         return Float.toString(PixelUtil.toDIPFromPixel(view.getTop()));
-      case "left":
+      }
+      case "left" -> {
         return Float.toString(PixelUtil.toDIPFromPixel(view.getLeft()));
-      case "backgroundColor":
+      }
+      case "backgroundColor" -> {
         Drawable background = view.getBackground();
         try {
           Method getColor = background.getClass().getMethod("getColor");
@@ -469,6 +473,7 @@ public class NodesManager implements EventDispatcherListener {
             "[Reanimated] Attempted to get unsupported property "
                 + propName
                 + " with function `getViewProp`");
+      }
     }
   }
 
@@ -483,26 +488,13 @@ public class NodesManager implements EventDispatcherListener {
     for (int i = 0; i < array.size(); i++) {
       ReadableType type = array.getType(i);
       switch (type) {
-        case Boolean:
-          copy.pushBoolean(array.getBoolean(i));
-          break;
-        case String:
-          copy.pushString(array.getString(i));
-          break;
-        case Null:
-          copy.pushNull();
-          break;
-        case Number:
-          copy.pushDouble(array.getDouble(i));
-          break;
-        case Map:
-          copy.pushMap(copyReadableMap(array.getMap(i)));
-          break;
-        case Array:
-          copy.pushArray(copyReadableArray(array.getArray(i)));
-          break;
-        default:
-          throw new IllegalStateException("[Reanimated] Unknown type of ReadableArray.");
+        case Boolean -> copy.pushBoolean(array.getBoolean(i));
+        case String -> copy.pushString(array.getString(i));
+        case Null -> copy.pushNull();
+        case Number -> copy.pushDouble(array.getDouble(i));
+        case Map -> copy.pushMap(copyReadableMap(array.getMap(i)));
+        case Array -> copy.pushArray(copyReadableArray(array.getArray(i)));
+        default -> throw new IllegalStateException("[Reanimated] Unknown type of ReadableArray.");
       }
     }
     return copy;

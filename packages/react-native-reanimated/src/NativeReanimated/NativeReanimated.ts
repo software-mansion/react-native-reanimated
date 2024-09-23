@@ -14,6 +14,7 @@ import type React from 'react';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { LayoutAnimationBatchItem } from '../layoutReanimation/animationBuilder/commonTypes';
 import ReanimatedModule from '../specs/NativeReanimatedModule';
+import { ReanimatedError } from '../errors';
 
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
 export interface NativeReanimatedModule {
@@ -54,7 +55,8 @@ export interface NativeReanimatedModule {
   configureProps(uiProps: string[], nativeProps: string[]): void;
   subscribeForKeyboardEvents(
     handler: ShareableRef<number>,
-    isStatusBarTranslucent: boolean
+    isStatusBarTranslucent: boolean,
+    isNavigationBarTranslucent: boolean
   ): number;
   unsubscribeFromKeyboardEvents(listenerId: number): void;
   configureLayoutAnimationBatch(
@@ -68,8 +70,8 @@ function assertSingleReanimatedInstance() {
     global._REANIMATED_VERSION_JS !== undefined &&
     global._REANIMATED_VERSION_JS !== jsVersion
   ) {
-    throw new Error(
-      `[Reanimated] Another instance of Reanimated was detected.
+    throw new ReanimatedError(
+      `Another instance of Reanimated was detected.
 See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#another-instance-of-reanimated-was-detected\` for more details. Previous: ${global._REANIMATED_VERSION_JS}, current: ${jsVersion}.`
     );
   }
@@ -89,8 +91,8 @@ export class NativeReanimated {
       ReanimatedModule?.installTurboModule(valueUnpackerCode);
     }
     if (global.__reanimatedModuleProxy === undefined) {
-      throw new Error(
-        `[Reanimated] Native part of Reanimated doesn't seem to be initialized.
+      throw new ReanimatedError(
+        `Native part of Reanimated doesn't seem to be initialized.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
@@ -212,11 +214,13 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   subscribeForKeyboardEvents(
     handler: ShareableRef<number>,
-    isStatusBarTranslucent: boolean
+    isStatusBarTranslucent: boolean,
+    isNavigationBarTranslucent: boolean
   ) {
     return this.InnerNativeModule.subscribeForKeyboardEvents(
       handler,
-      isStatusBarTranslucent
+      isStatusBarTranslucent,
+      isNavigationBarTranslucent
     );
   }
 

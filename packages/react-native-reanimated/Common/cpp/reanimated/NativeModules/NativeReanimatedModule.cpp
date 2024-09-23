@@ -198,7 +198,7 @@ void NativeReanimatedModule::scheduleOnUI(
     const jsi::Value &worklet) {
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt, worklet, "[Reanimated] Only worklets can be scheduled to run on UI.");
-  uiScheduler_->scheduleOnUI([=] {
+  uiScheduler_->scheduleOnUI([=, this] {
 #if JS_RUNTIME_HERMES
     // JSI's scope defined here allows for JSI-objects to be cleared up after
     // each runtime loop. Within these loops we typically create some temporary
@@ -265,7 +265,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
       rt, worklet, "[Reanimated] Event handler must be a worklet.");
   int emitterReactTagInt = emitterReactTag.asNumber();
 
-  uiScheduler_->scheduleOnUI([=] {
+  uiScheduler_->scheduleOnUI([=, this] {
     auto handler = std::make_shared<WorkletEventHandler>(
         newRegistrationId, eventNameStr, emitterReactTagInt, handlerShareable);
     eventHandlerRegistry_->registerEventHandler(std::move(handler));
@@ -279,7 +279,7 @@ void NativeReanimatedModule::unregisterEventHandler(
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
   uiScheduler_->scheduleOnUI(
-      [=] { eventHandlerRegistry_->unregisterEventHandler(id); });
+      [=, this] { eventHandlerRegistry_->unregisterEventHandler(id); });
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -375,7 +375,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
 
   const int viewTagInt = viewTag.asNumber();
 
-  uiScheduler_->scheduleOnUI([=]() {
+  uiScheduler_->scheduleOnUI([=, this]() {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     const jsi::Value propNameValue =
         jsi::String::createFromUtf8(uiRuntime, propNameStr);
@@ -648,8 +648,9 @@ void NativeReanimatedModule::performOperations() {
   {
     auto lock = propsRegistry_->createLock();
 
-    if (copiedOperationsQueue.size() > 0) {
-      propsRegistry_->resetReanimatedSkipCommitFlag();
+    if (copiedOperationsQueue.size() > 0 &&
+        propsRegistry_->shouldReanimatedSkipCommit()) {
+      propsRegistry_->pleaseCommitAfterPause();
     }
 
     // remove recently unmounted ShadowNodes from PropsRegistry
@@ -726,15 +727,9 @@ void NativeReanimatedModule::performOperations() {
             react_native_assert(family->getSurfaceId() == surfaceId_);
             propsMap[family].emplace_back(rt, std::move(*props));
 
-#if REACT_NATIVE_MINOR_VERSION >= 73
-            // Fix for catching nullptr returned from commit hook was
-            // introduced in 0.72.4 but we have only check for minor version
-            // of React Native so enable that optimization in React Native >=
-            // 0.73
             if (propsRegistry_->shouldReanimatedSkipCommit()) {
               return nullptr;
             }
-#endif
           }
 
           auto rootNode =
@@ -750,15 +745,12 @@ void NativeReanimatedModule::performOperations() {
 
           return rootNode;
         },
-        { /* .enableStateReconciliation = */
-          false,
-#if REACT_NATIVE_MINOR_VERSION >= 72
-              /* .mountSynchronously = */ true,
-#endif
-              /* .shouldYield = */ [this]() {
-                return propsRegistry_->shouldReanimatedSkipCommit();
-              }
-        });
+        {/* .enableStateReconciliation = */
+         false,
+         /* .mountSynchronously = */ true,
+         /* .shouldYield = */ [this]() {
+           return propsRegistry_->shouldReanimatedSkipCommit();
+         }});
   });
 }
 
@@ -844,6 +836,8 @@ void NativeReanimatedModule::initializeFabric(
 
   initializeLayoutAnimations();
 
+  mountHook_ =
+      std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
   commitHook_ =
       std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
 }
@@ -876,17 +870,19 @@ void NativeReanimatedModule::initializeLayoutAnimations() {
 jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &handlerWorklet,
-    const jsi::Value &isStatusBarTranslucent) {
+    const jsi::Value &isStatusBarTranslucent,
+    const jsi::Value &isNavigationBarTranslucent) {
   auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
       rt,
       handlerWorklet,
       "[Reanimated] Keyboard event handler must be a worklet.");
   return subscribeForKeyboardEventsFunction_(
-      [=](int keyboardState, int height) {
+      [=, this](int keyboardState, int height) {
         uiWorkletRuntime_->runGuarded(
             shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
-      isStatusBarTranslucent.getBool());
+      isStatusBarTranslucent.getBool(),
+      isNavigationBarTranslucent.getBool());
 }
 
 void NativeReanimatedModule::unsubscribeFromKeyboardEvents(

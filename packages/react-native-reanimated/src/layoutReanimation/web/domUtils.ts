@@ -1,10 +1,13 @@
 'use strict';
 
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
+
 import { isWindowAvailable } from '../../PlatformChecker';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Animations } from './config';
 import type { AnimationNames } from './config';
+import { logger } from '../../logger';
+import { ReanimatedError } from '../../errors';
 
 const PREDEFINED_WEB_ANIMATIONS_ID = 'ReanimatedPredefinedWebAnimationsStyle';
 const CUSTOM_WEB_ANIMATIONS_ID = 'ReanimatedCustomWebAnimationsStyle';
@@ -16,8 +19,8 @@ const animationNameList: string[] = [];
 let isObserverSet = false;
 
 /**
- *  Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules into the stylesheet.
- *  If style element already exists, nothing happens.
+ * Creates `HTMLStyleElement`, inserts it into DOM and then inserts CSS rules
+ * into the stylesheet. If style element already exists, nothing happens.
  */
 export function configureWebLayoutAnimations() {
   if (
@@ -32,9 +35,7 @@ export function configureWebLayoutAnimations() {
 
   predefinedAnimationsStyleTag.onload = () => {
     if (!predefinedAnimationsStyleTag.sheet) {
-      console.error(
-        '[Reanimated] Failed to create layout animations stylesheet.'
-      );
+      logger.error('Failed to create layout animations stylesheet.');
       return;
     }
 
@@ -63,9 +64,7 @@ export function insertWebAnimation(animationName: string, keyframe: string) {
   ) as HTMLStyleElement;
 
   if (!styleTag.sheet) {
-    console.error(
-      '[Reanimated] Failed to create layout animations stylesheet.'
-    );
+    logger.error('Failed to create layout animations stylesheet.');
     return;
   }
 
@@ -78,7 +77,7 @@ export function insertWebAnimation(animationName: string, keyframe: string) {
     const nextAnimationIndex = animationNameToIndex.get(nextAnimationName);
 
     if (nextAnimationIndex === undefined) {
-      throw new Error('[Reanimated] Failed to obtain animation index.');
+      throw new ReanimatedError('Failed to obtain animation index.');
     }
 
     animationNameToIndex.set(animationNameList[i], nextAnimationIndex + 1);
@@ -101,7 +100,7 @@ function removeWebAnimation(
   const currentAnimationIndex = animationNameToIndex.get(animationName);
 
   if (currentAnimationIndex === undefined) {
-    throw new Error('[Reanimated] Failed to obtain animation index.');
+    throw new ReanimatedError('Failed to obtain animation index.');
   }
 
   animationRemoveCallback();
@@ -116,7 +115,7 @@ function removeWebAnimation(
     const nextAnimationIndex = animationNameToIndex.get(nextAnimationName);
 
     if (nextAnimationIndex === undefined) {
-      throw new Error('[Reanimated] Failed to obtain animation index.');
+      throw new ReanimatedError('Failed to obtain animation index.');
     }
 
     animationNameToIndex.set(animationNameList[i], nextAnimationIndex - 1);
@@ -149,7 +148,7 @@ function reattachElementToAncestor(child: ReanimatedHTMLElement, parent: Node) {
   const childSnapshot = snapshots.get(child);
 
   if (!childSnapshot) {
-    console.error('[Reanimated] Failed to obtain snapshot.');
+    logger.error('Failed to obtain snapshot.');
     return;
   }
 

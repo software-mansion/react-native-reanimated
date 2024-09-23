@@ -23,6 +23,7 @@
 #include "LayoutAnimationsProxy.h"
 #include "PropsRegistry.h"
 #include "ReanimatedCommitHook.h"
+#include "ReanimatedMountHook.h"
 #endif
 
 namespace reanimated {
@@ -156,7 +157,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   jsi::Value subscribeForKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &keyboardEventContainer,
-      const jsi::Value &isStatusBarTranslucent) override;
+      const jsi::Value &isStatusBarTranslucent,
+      const jsi::Value &isNavigationBarTranslucent) override;
   void unsubscribeFromKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &listenerId) override;
@@ -224,6 +226,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
+  std::shared_ptr<ReanimatedMountHook> mountHook_;
 
   std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #else

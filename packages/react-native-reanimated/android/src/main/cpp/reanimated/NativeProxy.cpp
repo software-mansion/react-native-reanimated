@@ -416,14 +416,16 @@ void NativeProxy::setGestureState(int handlerTag, int newState) {
 
 int NativeProxy::subscribeForKeyboardEvents(
     std::function<void(int, int)> callback,
-    bool isStatusBarTranslucent) {
+    bool isStatusBarTranslucent,
+    bool isNavigationBarTranslucent) {
   static const auto method =
-      getJniMethod<int(KeyboardWorkletWrapper::javaobject, bool)>(
+      getJniMethod<int(KeyboardWorkletWrapper::javaobject, bool, bool)>(
           "subscribeForKeyboardEvents");
   return method(
       javaPart_.get(),
       KeyboardWorkletWrapper::newObjectCxxArgs(std::move(callback)).get(),
-      isStatusBarTranslucent);
+      isStatusBarTranslucent,
+      isNavigationBarTranslucent);
 }
 
 void NativeProxy::unsubscribeFromKeyboardEvents(int listenerId) {
