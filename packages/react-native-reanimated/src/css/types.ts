@@ -86,3 +86,17 @@ export type TemporaryTransforms = {
   transforms: Record<string, KeyframedValue<any>>;
   previousTransformOffset: number;
 };
+
+export type CSSTransitionProperty =
+  | 'all'
+  | 'none'
+  | keyof ViewStyle
+  | (keyof ViewStyle)[];
+
+export interface CSSTransitionConfig {
+  transitionProperty?: CSSTransitionProperty;
+  transitionDuration?: CSSAnimationTimeUnit;
+  transitionTimingFunction?: CSSAnimationTimingFunction;
+  transitionDelay?: CSSAnimationTimeUnit;
+  // transitionBehavior?: TODO not sure if we want to include it as we can already work with discrete values
+}

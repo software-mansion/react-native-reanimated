@@ -6,9 +6,9 @@
 #include <string>
 #include <unordered_map>
 
-#include <reanimated/CSS/CubicBezierEasing.h>
-#include <reanimated/CSS/LinearParametrizedEasing.h>
-#include <reanimated/CSS/StepsEasing.h>
+#include <reanimated/CSS/easing/CubicBezierEasing.h>
+#include <reanimated/CSS/easing/LinearParametrizedEasing.h>
+#include <reanimated/CSS/easing/StepsEasing.h>
 
 using namespace facebook;
 

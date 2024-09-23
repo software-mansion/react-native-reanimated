@@ -1,4 +1,4 @@
-#include <reanimated/CSS/CubicBezierEasing.h>
+#include <reanimated/CSS/easing/CubicBezierEasing.h>
 
 namespace reanimated {
 

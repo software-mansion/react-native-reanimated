@@ -3,8 +3,8 @@
 #include <functional>
 #include <vector>
 
-#include <reanimated/CSS/Algorithms.h>
-#include <reanimated/CSS/EasingFunction.h>
+#include <reanimated/CSS/utility/Algorithms.h>
+#include <reanimated/CSS/utility/EasingFunction.h>
 
 namespace reanimated {
 EasingFunction createStepsEasingFunction(

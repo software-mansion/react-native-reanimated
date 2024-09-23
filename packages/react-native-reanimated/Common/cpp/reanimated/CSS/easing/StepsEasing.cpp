@@ -1,4 +1,4 @@
-#include <reanimated/CSS/StepsEasing.h>
+#include <reanimated/CSS/easing/StepsEasing.h>
 
 namespace reanimated {
 EasingFunction createStepsEasingFunction(

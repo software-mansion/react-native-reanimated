@@ -1,4 +1,4 @@
-#include <reanimated/CSS/EasingFunctions.h>
+#include <reanimated/CSS/easing/EasingFunctions.h>
 
 namespace reanimated {
 
