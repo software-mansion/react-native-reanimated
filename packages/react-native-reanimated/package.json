@@ -146,7 +146,7 @@
     "react": "18.3.1",
     "react-native": "0.76.0-rc.1",
     "react-native-builder-bob": "0.30.2",
-    "react-native-gesture-handler": "software-mansion/react-native-gesture-handler#a92c219ea73ac5959f0bffbfbae6da469b1326d5",
+    "react-native-gesture-handler": "https://github.com/software-mansion/react-native-gesture-handler.git#commit=a92c219ea73ac5959f0bffbfbae6da469b1326d5",
     "react-native-web": "0.19.11",
     "react-test-renderer": "18.2.0",
     "shelljs": "^0.8.5",

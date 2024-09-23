@@ -8867,7 +8867,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.76.0-rc.1"
-    react-native-gesture-handler: "software-mansion/react-native-gesture-handler#a92c219ea73ac5959f0bffbfbae6da469b1326d5"
+    react-native-gesture-handler: "https://github.com/software-mansion/react-native-gesture-handler.git#commit=a92c219ea73ac5959f0bffbfbae6da469b1326d5"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "patch:react-native-safe-area-context@npm%3A4.11.0#~/.yarn/patches/react-native-safe-area-context-npm-4.11.0-f8b3b898df.patch"
@@ -11538,7 +11538,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.76.0-rc.1"
-    react-native-gesture-handler: "software-mansion/react-native-gesture-handler#a92c219ea73ac5959f0bffbfbae6da469b1326d5"
+    react-native-gesture-handler: "https://github.com/software-mansion/react-native-gesture-handler.git#commit=a92c219ea73ac5959f0bffbfbae6da469b1326d5"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "patch:react-native-safe-area-context@npm%3A4.11.0#~/.yarn/patches/react-native-safe-area-context-npm-4.11.0-f8b3b898df.patch"
@@ -14929,7 +14929,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.2.0"
     react-native: "npm:0.73.4"
-    react-native-gesture-handler: "software-mansion/react-native-gesture-handler#a92c219ea73ac5959f0bffbfbae6da469b1326d5"
+    react-native-gesture-handler: "https://github.com/software-mansion/react-native-gesture-handler.git#commit=a92c219ea73ac5959f0bffbfbae6da469b1326d5"
     react-native-macos: "npm:^0.73.0-0"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch"
     react-native-reanimated: "workspace:*"
@@ -16979,7 +16979,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.76.0-rc.1"
-    react-native-gesture-handler: "software-mansion/react-native-gesture-handler#a92c219ea73ac5959f0bffbfbae6da469b1326d5"
+    react-native-gesture-handler: "https://github.com/software-mansion/react-native-gesture-handler.git#commit=a92c219ea73ac5959f0bffbfbae6da469b1326d5"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "patch:react-native-safe-area-context@npm%3A4.11.0#~/.yarn/patches/react-native-safe-area-context-npm-4.11.0-f8b3b898df.patch"
@@ -17830,7 +17830,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-gesture-handler@software-mansion/react-native-gesture-handler#a92c219ea73ac5959f0bffbfbae6da469b1326d5":
+"react-native-gesture-handler@https://github.com/software-mansion/react-native-gesture-handler.git#commit=a92c219ea73ac5959f0bffbfbae6da469b1326d5":
   version: 2.19.0
   resolution: "react-native-gesture-handler@https://github.com/software-mansion/react-native-gesture-handler.git#commit=a92c219ea73ac5959f0bffbfbae6da469b1326d5"
   dependencies:
@@ -17993,7 +17993,7 @@ __metadata:
     react: "npm:18.3.1"
     react-native: "npm:0.76.0-rc.1"
     react-native-builder-bob: "npm:0.30.2"
-    react-native-gesture-handler: "software-mansion/react-native-gesture-handler#a92c219ea73ac5959f0bffbfbae6da469b1326d5"
+    react-native-gesture-handler: "https://github.com/software-mansion/react-native-gesture-handler.git#commit=a92c219ea73ac5959f0bffbfbae6da469b1326d5"
     react-native-web: "npm:0.19.11"
     react-test-renderer: "npm:18.2.0"
     shelljs: "npm:^0.8.5"
