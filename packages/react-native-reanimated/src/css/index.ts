@@ -2,7 +2,11 @@
 import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
 import { ReanimatedModule } from '../ReanimatedModule';
 import { normalizeConfig } from './normalization';
-import type { CSSAnimationConfig, NormalizedCSSAnimationConfig } from './types';
+import type {
+  CSSAnimationConfig,
+  NormalizedCSSAnimationConfig,
+  CSSTransitionConfig,
+} from './types';
 
 export function registerCSSAnimation(
   shadowNodeWrapper: ShadowNodeWrapper,
@@ -23,7 +27,11 @@ export function unregisterCSSAnimation(animationId: number) {
 }
 
 export { cubicBezier, linear, steps } from './parametrizedEasings';
-export type { NormalizedCSSAnimationConfig, CSSAnimationConfig };
+export type {
+  NormalizedCSSAnimationConfig,
+  CSSAnimationConfig,
+  CSSTransitionConfig,
+};
 export * from './utils';
 export type {
   CSSAnimationKeyframes,
@@ -32,4 +40,6 @@ export type {
   CSSAnimationIterationCount,
   CSSAnimationDirection,
   CSSAnimationTimingFunction,
+  CSSAnimationFillMode,
+  CSSTransitionProperty,
 } from './types';

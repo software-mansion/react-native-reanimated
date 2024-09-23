@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/EasingFunctions.h>
+#include <reanimated/CSS/easing/EasingFunctions.h>
 
 #include <reanimated/CSS/CSSAnimation.h>
 #include <reanimated/CSS/CSSAnimationsRegistry.h>

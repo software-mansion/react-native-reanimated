@@ -3,7 +3,7 @@
 #include <cmath>
 #include <functional>
 
-#include <reanimated/CSS/EasingFunction.h>
+#include <reanimated/CSS/utility/EasingFunction.h>
 
 namespace reanimated {
 

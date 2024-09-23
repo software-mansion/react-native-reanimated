@@ -1,4 +1,4 @@
-#include <reanimated/CSS/LinearParametrizedEasing.h>
+#include <reanimated/CSS/easing/LinearParametrizedEasing.h>
 
 double interpolateValue(
     double x,

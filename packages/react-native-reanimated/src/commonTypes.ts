@@ -7,7 +7,7 @@ import type {
 } from 'react-native';
 import type { WorkletsModuleProxy } from './worklets';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
-import type { CSSAnimationConfig } from './css';
+import type { CSSAnimationConfig, CSSTransitionConfig } from './css';
 
 type DisallowKeysOf<TInterface> = {
   [TKey in keyof TInterface]?: never;
@@ -218,7 +218,6 @@ export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
   originY?: number;
-  animationName?: any;
   [key: string]: any;
 }
 
@@ -598,7 +597,7 @@ type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<Style = DefaultStyle> =
-  | (Style & Partial<CSSAnimationConfig>) // TODO - maybe add css animation config somewhere else
+  | (Style & Partial<CSSAnimationConfig> & Partial<CSSTransitionConfig>) // TODO - maybe add css animation config somewhere else
   | MaybeSharedValueRecursive<Style>;
 
 export type AnimatedTransform = MaybeSharedValueRecursive<

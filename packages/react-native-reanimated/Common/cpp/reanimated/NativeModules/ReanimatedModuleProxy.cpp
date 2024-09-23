@@ -485,14 +485,7 @@ void ReanimatedModuleProxy::registerCSSAnimation(
     const jsi::Value &animationConfig,
     const jsi::Value &viewStyle) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  // TODO: support multiple surfaces
-  surfaceId_ = shadowNode->getSurfaceId();
-
   const auto &configObject = animationConfig.asObject(rt);
-
-  LOG(INFO) << "Registering CSS animation with id: " << animationId.asNumber()
-            << " and config: " << stringifyJSIValue(rt, animationConfig)
-            << " and viewStyle: " << stringifyJSIValue(rt, viewStyle);
 
   auto keyframedStyle =
       configObject.getProperty(rt, "animationName").asObject(rt);
