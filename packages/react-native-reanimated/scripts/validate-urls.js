@@ -27,7 +27,7 @@ const extensions = [
 const ignoredDirectories = ['node_modules', 'Pods', 'lib', 'build', 'cypress'];
 
 const urlRegex =
-  /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)[\b,)]/g;
+  /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
 
 async function getFileAndUrls(dir) {
   const directories = await fsp.readdir(dir, { withFileTypes: true });
