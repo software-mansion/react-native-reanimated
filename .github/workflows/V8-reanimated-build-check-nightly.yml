@@ -3,11 +3,11 @@ env:
   YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
   pull_request:
-  paths:
-  - .github/workflows/build-v8-nightly.yml
-  - .github/workflows/helper/configureV8.js
+    paths:
+      - .github/workflows/build-v8-nightly.yml
+      - .github/workflows/helper/configureV8.js
   schedule:
-  - cron: '37 19 * * *'
+    - cron: '37 19 * * *'
   workflow_dispatch:
 
 jobs:
