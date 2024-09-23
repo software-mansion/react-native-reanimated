@@ -28,6 +28,7 @@
 #endif
 
 #include <functional>
+#include <iomanip>
 #include <utility>
 
 using namespace facebook;
