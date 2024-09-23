@@ -139,6 +139,9 @@ Pod::Spec.new do |s|
       sss.source_files = "Common/cpp/worklets/WorkletRuntime/*.{cpp,h}"
       sss.header_dir = "worklets/WorkletRuntime"
     end
+    ss.source_files = [
+      "apple/worklets/**/*.{mm,h,m}",
+    ]
   end
 
   gcc_debug_definitions = "$(inherited)"

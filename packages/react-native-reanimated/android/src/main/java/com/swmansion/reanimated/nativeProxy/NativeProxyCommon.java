@@ -26,6 +26,7 @@ import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 import com.swmansion.reanimated.sensor.ReanimatedSensorType;
+import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -33,11 +34,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * @noinspection JavaJniMissingFunction
+ */
 public abstract class NativeProxyCommon {
   static {
     SoLoader.loadLibrary("reanimated");
   }
 
+  protected final WorkletsModule mWorkletsModule;
   protected NodesManager mNodesManager;
   protected final WeakReference<ReactApplicationContext> mContext;
   protected final AndroidUIScheduler mAndroidUIScheduler;
@@ -50,6 +55,8 @@ public abstract class NativeProxyCommon {
   protected String cppVersion = null;
 
   protected NativeProxyCommon(ReactApplicationContext context) {
+    mWorkletsModule =
+        Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class)).getWorkletsModule();
     mAndroidUIScheduler = new AndroidUIScheduler(context);
     mContext = new WeakReference<>(context);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
@@ -218,6 +225,9 @@ public abstract class NativeProxyCommon {
     keyboardAnimationManager.unsubscribeFromKeyboardUpdates(listenerId);
   }
 
+  /**
+   * @noinspection unused
+   */
   protected abstract HybridData getHybridData();
 
   public void invalidate() {
@@ -226,7 +236,7 @@ public abstract class NativeProxyCommon {
 
   public void prepareLayoutAnimations(LayoutAnimations layoutAnimations) {
     if (Utils.isChromeDebugger) {
-      Log.w("[REANIMATED]", "You can not use LayoutAnimation with enabled Chrome Debugger");
+      Log.w("[REANIMATED]", "You can't use LayoutAnimation with Chrome Debugger enabled");
       return;
     }
     mNodesManager =

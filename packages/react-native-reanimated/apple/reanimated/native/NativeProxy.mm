@@ -58,7 +58,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     REAModule *reaModule,
     RCTBridge *bridge,
     const std::shared_ptr<CallInvoker> &jsInvoker,
-    const std::string &valueUnpackerCode)
+    WorkletsModule *workletsModule)
 {
   auto nodesManager = reaModule.nodesManager;
 
@@ -74,13 +74,15 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   std::shared_ptr<JSScheduler> jsScheduler = std::make_shared<JSScheduler>(rnRuntime, jsInvoker);
   constexpr auto isBridgeless = false;
 
+  const auto nativeWorkletsModule = [workletsModule getNativeWorkletsModule];
+
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+      nativeWorkletsModule,
       rnRuntime,
       jsScheduler,
       jsQueue,
       uiScheduler,
       platformDepMethodsHolder,
-      valueUnpackerCode,
       isBridgeless,
       getIsReducedMotion());
 
@@ -99,13 +101,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
+    REAModule *reaModule,
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
-    const std::string &valueUnpackerCode,
+    WorkletsModule *workletsModule,
     RuntimeExecutor runtimeExecutor)
 {
-  REAModule *reaModule = [moduleRegistry moduleForName:"ReanimatedModule"];
-
   auto nodesManager = reaModule.nodesManager;
 
   auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
@@ -115,17 +116,18 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
   PlatformDepMethodsHolder platformDepMethodsHolder =
       makePlatformDepMethodsHolderBridgeless(moduleRegistry, nodesManager, reaModule);
 
+  const auto NativeWorkletsModule = [workletsModule getNativeWorkletsModule];
   auto uiScheduler = std::make_shared<REAIOSUIScheduler>();
   auto jsScheduler = std::make_shared<JSScheduler>(runtime, runtimeExecutor);
   constexpr auto isBridgeless = true;
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+      NativeWorkletsModule,
       runtime,
       jsScheduler,
       jsQueue,
       uiScheduler,
       platformDepMethodsHolder,
-      valueUnpackerCode,
       isBridgeless,
       getIsReducedMotion());
 

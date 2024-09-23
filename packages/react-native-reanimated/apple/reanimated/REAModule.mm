@@ -25,6 +25,7 @@
 #import <RNReanimated/SingleInstanceChecker.h>
 #import <RNReanimated/WorkletRuntime.h>
 #import <RNReanimated/WorkletRuntimeCollector.h>
+#import <RNReanimated/WorkletsModule.h>
 
 #if __has_include(<UIKit/UIAccessibility.h>)
 #import <UIKit/UIAccessibility.h>
@@ -277,8 +278,9 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   }
 }
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
+  WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
   if (_isBridgeless) {
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
     RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
@@ -292,7 +294,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
       }];
     });
     auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
-        _moduleRegistry, rnRuntime, std::string([valueUnpackerCode UTF8String]), executorFunction);
+        self, _moduleRegistry, rnRuntime, workletsModule, executorFunction);
     [self attachReactEventListener];
     [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
 #else // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
@@ -304,8 +306,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
         : nullptr;
 
     if (jsiRuntime) {
-      auto nativeReanimatedModule = reanimated::createReanimatedModule(
-          self, self.bridge, self.bridge.jsCallInvoker, std::string([valueUnpackerCode UTF8String]));
+      auto nativeReanimatedModule =
+          reanimated::createReanimatedModule(self, self.bridge, self.bridge.jsCallInvoker, workletsModule);
       jsi::Runtime &rnRuntime = *jsiRuntime;
 
       [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
@@ -319,6 +321,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
   return std::make_shared<facebook::react::NativeReanimatedModuleSpecJSI>(params);
+}
+
+- (void)initialize
+{
+  // Do nothing.
+  // For `RCTInitializing` interface.
 }
 #endif // RCT_NEW_ARCH_ENABLED
 

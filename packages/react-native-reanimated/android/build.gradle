@@ -147,7 +147,8 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
 def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
 
-def prefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
+def workletsPrefabHeadersDir = project.file("$buildDir/prefab-headers/worklets")
+def reanimatedPrefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
 
 def JS_RUNTIME = {
     // Override JS runtime with environment variable
@@ -231,11 +232,11 @@ android {
     }
 
     prefab {
-        reanimated {
-            headers prefabHeadersDir.absolutePath
-        }
         worklets {
-            headers prefabHeadersDir.absolutePath
+            headers workletsPrefabHeadersDir.absolutePath
+        }
+        reanimated {
+            headers reanimatedPrefabHeadersDir.absolutePath
         }
     }
 
@@ -436,20 +437,31 @@ def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
     }
 }
 
-task prepareHeadersForPrefab(type: Copy) {
-    from("$projectDir/src/main/cpp/reanimated")
+task prepareWorkletsHeadersForPrefabs(type: Copy) {
+    from("$projectDir/src/worklets/cpp")
+    from("$projectDir/../Common/cpp/worklets/NativeModules")
+    from("$projectDir/../Common/cpp/worklets/Registries")
+    from("$projectDir/../Common/cpp/worklets/SharedItems")
+    from("$projectDir/../Common/cpp/worklets/Tools")
+    from("$projectDir/../Common/cpp/worklets/WorkletRuntime")
+    include("*.h")
+    into(workletsPrefabHeadersDir)
+}
+
+task prepareReanimatedHeadersForPrefabs(type: Copy) {
+    // Reanimated
     from("$projectDir/../Common/cpp/reanimated/AnimatedSensor")
     from("$projectDir/../Common/cpp/reanimated/Fabric")
     from("$projectDir/../Common/cpp/reanimated/LayoutAnimations")
     from("$projectDir/../Common/cpp/reanimated/NativeModules")
     from("$projectDir/../Common/cpp/reanimated/RuntimeDecorators")
     from("$projectDir/../Common/cpp/reanimated/Tools")
-    from("$projectDir/../Common/cpp/worklets/Registries")
+    // Worklets
     from("$projectDir/../Common/cpp/worklets/SharedItems")
-    from("$projectDir/../Common/cpp/worklets/Tools")
     from("$projectDir/../Common/cpp/worklets/WorkletRuntime")
+    from("$projectDir/../Common/cpp/worklets/Tools")
     include("*.h")
-    into(prefabHeadersDir)
+    into(reanimatedPrefabHeadersDir)
 }
 
 tasks.preBuild {
@@ -471,7 +483,8 @@ task printVersions {
 task createNativeDepsDirectories() {
     downloadsDir.mkdirs()
     thirdPartyNdkDir.mkdirs()
-    prefabHeadersDir.mkdirs()
+    workletsPrefabHeadersDir.mkdirs()
+    reanimatedPrefabHeadersDir.mkdirs()
 }
 
 def resolveTaskFactory(String taskName, String artifactLocalName, File reactNativeAndroidDownloadDir, File reanimatedDownloadDir) {
@@ -498,8 +511,8 @@ def resolveTaskFactory(String taskName, String artifactLocalName, File reactNati
 
 task packageNdkLibs(type: Copy) {
     from("$buildDir/reanimated-ndk/all")
-    include("**/libreanimated.so")
     include("**/libworklets.so")
+    include("**/libreanimated.so")
     into("$projectDir/src/main/jniLibs")
 }
 
@@ -540,7 +553,8 @@ def nativeBuildDependsOn(dependsOnTask) {
 }
 
 afterEvaluate {
-    preBuild.dependsOn(prepareHeadersForPrefab)
+    preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
+    preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
 
     tasks.forEach({ task ->
         if (task.name.contains("JniLibFolders")) {

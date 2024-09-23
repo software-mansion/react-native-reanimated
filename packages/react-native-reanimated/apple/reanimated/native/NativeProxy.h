@@ -7,6 +7,7 @@
 #import <RNReanimated/NativeReanimatedModule.h>
 #import <React/RCTEventDispatcher.h>
 #import <ReanimatedSensorContainer.h>
+#import <WorkletsModule.h>
 #include <memory>
 
 namespace reanimated {
@@ -17,14 +18,15 @@ std::shared_ptr<reanimated::NativeReanimatedModule> createReanimatedModule(
     REAModule *reaModule,
     RCTBridge *bridge,
     const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
-    const std::string &valueUnpackerCode);
+    WorkletsModule *workletsModule);
 
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 std::shared_ptr<reanimated::NativeReanimatedModule>
 createReanimatedModuleBridgeless(
+    REAModule *reaModule,
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
-    const std::string &valueUnpackerCode,
+    WorkletsModule *workletsModule,
     RuntimeExecutor runtimeExecutor);
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 
