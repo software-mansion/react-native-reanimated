@@ -1,8 +1,9 @@
 #pragma once
 
-#include <worklets/Tools/JSLogger.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
+
 #include <worklets/SharedItems/Shareables.h>
+#include <worklets/Tools/JSLogger.h>
 
 #include <jsi/jsi.h>
 #include <stdio.h>

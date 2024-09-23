@@ -1,11 +1,13 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/NativeModules/NativeReanimatedModule.h>
+
 #include <react/renderer/animations/utils.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
+
 #include <set>
 #include <utility>
-#include <reanimated/NativeModules/NativeReanimatedModule.h>
 
 namespace reanimated {
 

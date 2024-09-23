@@ -1,11 +1,11 @@
 #pragma once
 
+#include <reanimated/JNIHelper.h>
+
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
-#include <memory>
-#include <string>
+
 #include <vector>
-#include <reanimated/JNIHelper.h>
 
 namespace reanimated {
 

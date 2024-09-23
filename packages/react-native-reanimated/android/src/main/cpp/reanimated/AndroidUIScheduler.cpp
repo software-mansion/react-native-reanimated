@@ -4,9 +4,6 @@
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 
-#include <memory>
-#include <string>
-
 namespace reanimated {
 
 using namespace facebook;

@@ -1,6 +1,25 @@
 #include <reanimated/NativeModules/NativeReanimatedModule.h>
+#include <reanimated/RuntimeDecorators/ReanimatedWorkletRuntimeDecorator.h>
+#include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
+#include <reanimated/Tools/CollectionUtils.h>
+#include <reanimated/Tools/FeaturesConfig.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
+#endif
+
+#include <worklets/Registries/EventHandlerRegistry.h>
+#include <worklets/SharedItems/Shareables.h>
+#include <worklets/Tools/AsyncQueue.h>
+#include <worklets/Tools/WorkletEventHandler.h>
+
+#ifdef __ANDROID__
+#include <fbjni/fbjni.h>
+#endif
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
@@ -9,29 +28,7 @@
 #endif
 
 #include <functional>
-#include <iomanip>
-#include <sstream>
-#include <thread>
-#include <unordered_map>
-
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <react/renderer/scheduler/Scheduler.h>
-#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
-#include <reanimated/Fabric/ShadowTreeCloner.h>
-#endif
-
-#include <worklets/Tools/AsyncQueue.h>
-#include <reanimated/Tools/CollectionUtils.h>
-#include <worklets/Registries/EventHandlerRegistry.h>
-#include <reanimated/Tools/FeaturesConfig.h>
-#include <reanimated/RuntimeDecorators/ReanimatedWorkletRuntimeDecorator.h>
-#include <worklets/SharedItems/Shareables.h>
-#include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
-#include <worklets/Tools/WorkletEventHandler.h>
-
-#ifdef __ANDROID__
-#include <fbjni/fbjni.h>
-#endif
+#include <utility>
 
 using namespace facebook;
 

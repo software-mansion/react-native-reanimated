@@ -1,9 +1,11 @@
 #pragma once
 
+#include <worklets/Tools/JSLogger.h>
+
 #include <jsi/jsi.h>
+
 #include <memory>
 #include <string>
-#include <worklets/Tools/JSLogger.h>
 
 using namespace facebook;
 

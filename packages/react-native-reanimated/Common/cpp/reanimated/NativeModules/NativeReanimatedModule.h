@@ -1,5 +1,22 @@
 #pragma once
 
+#include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/NativeModules/NativeReanimatedModuleSpec.h>
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <reanimated/Tools/SingleInstanceChecker.h>
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <reanimated/Fabric/PropsRegistry.h>
+#include <reanimated/Fabric/ReanimatedCommitHook.h>
+#include <reanimated/Fabric/ReanimatedMountHook.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#endif
+
+#include <worklets/Registries/EventHandlerRegistry.h>
+#include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/UIScheduler.h>
+
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManager.h>
 #endif
@@ -9,22 +26,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-#include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
-#include <worklets/Registries/EventHandlerRegistry.h>
-#include <worklets/Tools/JSScheduler.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/NativeModules/NativeReanimatedModuleSpec.h>
-#include <reanimated/Tools/PlatformDepMethodsHolder.h>
-#include <reanimated/Tools/SingleInstanceChecker.h>
-#include <worklets/Tools/UIScheduler.h>
-
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
-#include <reanimated/Fabric/PropsRegistry.h>
-#include <reanimated/Fabric/ReanimatedCommitHook.h>
-#include <reanimated/Fabric/ReanimatedMountHook.h>
-#endif
 
 namespace reanimated {
 

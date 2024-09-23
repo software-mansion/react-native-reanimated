@@ -1,6 +1,7 @@
 #include <reanimated/RuntimeDecorators/ReanimatedWorkletRuntimeDecorator.h>
-#include <worklets/Tools/JSISerializer.h>
 #include <reanimated/Tools/PlatformLogger.h>
+
+#include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/ReanimatedJSIUtils.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 

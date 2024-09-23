@@ -1,8 +1,9 @@
+#include <worklets/Tools/JSLogger.h>
 #include <worklets/Tools/ReanimatedVersion.h>
+
 #include <memory>
 #include <regex>
 #include <string>
-#include <worklets/Tools/JSLogger.h>
 
 #ifdef REANIMATED_VERSION
 #define STRINGIZE(x) #x

@@ -1,5 +1,4 @@
 #include <reanimated/LayoutAnimations.h>
-#include <vector>
 #include <reanimated/Tools/FeaturesConfig.h>
 
 namespace reanimated {

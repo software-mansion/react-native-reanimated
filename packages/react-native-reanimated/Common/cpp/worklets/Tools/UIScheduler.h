@@ -1,11 +1,10 @@
 #pragma once
 
+#include <worklets/Tools/ThreadSafeQueue.h>
+
 #include <ReactCommon/CallInvoker.h>
 
 #include <atomic>
-#include <memory>
-
-#include <worklets/Tools/ThreadSafeQueue.h>
 
 namespace reanimated {
 

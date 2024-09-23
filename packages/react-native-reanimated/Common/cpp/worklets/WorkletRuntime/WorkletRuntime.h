@@ -3,13 +3,12 @@
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>
 
+#include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/AsyncQueue.h>
 #include <worklets/Tools/JSScheduler.h>
-#include <worklets/SharedItems/Shareables.h>
 
 #include <memory>
 #include <string>
-#include <thread>
 #include <utility>
 #include <vector>
 
