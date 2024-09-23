@@ -35,7 +35,9 @@ public class ReanimatedNativeHierarchyManager extends ReanimatedNativeHierarchyM
 
     Class<?> clazz = this.getClass().getSuperclass().getSuperclass();
     if (clazz == null) {
-      Log.e("reanimated", "unable to resolve NativeViewHierarchyManager class from ReanimatedNativeHierarchyManager");
+      Log.e(
+          "reanimated",
+          "unable to resolve NativeViewHierarchyManager class from ReanimatedNativeHierarchyManager");
       return;
     }
 
