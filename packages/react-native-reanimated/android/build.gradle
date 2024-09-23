@@ -317,7 +317,7 @@ android {
                 "**/libreactnativejni.so",
                 "**/libturbomodulejsijni.so",
                 "**/libreact_nativemodule_core.so",
-                "**/libreact_render*.so"
+                "**/libreact_render*.so",
                 "**/librrc_root.so",
                 "**/libjscexecutor.so",
                 "**/libv8executor.so",
