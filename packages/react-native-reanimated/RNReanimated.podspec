@@ -83,9 +83,10 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.subspec "reanimated" do |ss|
-    ss.source_files = [
-      "apple/reanimated/**/*.{mm,h,m}",
-    ]
+    ss.subspec "apple" do |sss|
+      sss.source_files         = "apple/reanimated/**/*.{mm,h,m}"
+      sss.header_dir           = "reanimated"
+    end
     
     ss.subspec "AnimatedSensor" do |sss|
       sss.source_files         = "Common/cpp/reanimated/AnimatedSensor/*.{cpp,h}"
@@ -119,10 +120,6 @@ Pod::Spec.new do |s|
   end
 
   s.subspec "worklets" do |ss|
-    ss.source_files = [
-      "Common/cpp/worklets/**/*.{cpp,h}",
-    ]
-
     ss.subspec "Registries" do |sss|
       sss.source_files         = "Common/cpp/worklets/Registries/*.{cpp,h}"
       sss.header_dir           = "worklets/Registries"
