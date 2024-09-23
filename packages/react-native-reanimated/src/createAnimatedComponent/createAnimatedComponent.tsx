@@ -58,6 +58,7 @@ import {
   registerCSSAnimation,
   unregisterCSSAnimation,
 } from '../css';
+import { logger } from '../logger';
 
 const IS_WEB = isWeb();
 const IS_JEST = isJest();
@@ -439,8 +440,8 @@ export function createAnimatedComponent(
       }
 
       if (!IS_FABRIC) {
-        console.warn(
-          "[Reanimated] Tried to attach CSS animation in the environment that doesn't support it. CSS animations are supported only on Fabric."
+        logger.warn(
+          "Tried to attach CSS animation in the environment that doesn't support it. CSS animations are supported only on Fabric."
         );
         return;
       }

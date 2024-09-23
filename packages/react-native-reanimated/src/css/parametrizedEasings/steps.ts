@@ -1,5 +1,6 @@
 import type { StepsEasingConfig, StepsModifier } from './types';
 import type { CSSAnimationTimingFunction } from '../types';
+import { ReanimatedError } from '../../errors';
 
 export function steps(
   stepsNumber: number,
@@ -7,8 +8,8 @@ export function steps(
 ): StepsEasingConfig | CSSAnimationTimingFunction {
   // We don't support
   if (stepsNumber <= 0 || stepsNumber % 1 !== 0) {
-    throw new Error(
-      `[Reanimated] Steps easing function accepts only positive integers as numbers of steps, ${stepsNumber} isn't a one`
+    throw new ReanimatedError(
+      `Steps easing function accepts only positive integers as numbers of steps, ${stepsNumber} isn't a one`
     );
   }
   const stepsX: number[] = [];

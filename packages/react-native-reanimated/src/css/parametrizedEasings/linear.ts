@@ -1,3 +1,4 @@
+import { ReanimatedError } from '../../errors';
 import type {
   LinearEasingInputPoint,
   LinearEasingNormalizedPoint,
@@ -7,8 +8,8 @@ import type {
 
 export function linear(points: LinearEasingInputPoint[]): LinearEasingConfig {
   if (points.length < 2) {
-    throw new Error(
-      `[Reanimated] Invalid linear easing points. There should be at least two points with 0% and 100% x percentages`
+    throw new ReanimatedError(
+      `Invalid linear easing points. There should be at least two points with 0% and 100% x percentages`
     );
   }
 
@@ -19,13 +20,13 @@ export function linear(points: LinearEasingInputPoint[]): LinearEasingConfig {
         // Parse percentage to float
         const newValue = parseFloat(point.x) / 100;
         if (Number.isNaN(newValue)) {
-          throw new Error(
-            `[Reanimated] Invalid linear easing point x value: ${point.x}, it should be a string between '0%' and '100%'`
+          throw new ReanimatedError(
+            `Invalid linear easing point x value: ${point.x}, it should be a string between '0%' and '100%'`
           );
         }
         if (newValue < 0 || newValue > 1) {
-          throw new Error(
-            `[Reanimated] Invalid linear easing point x percentage ${point.x}, it should be between 0% and 100%`
+          throw new ReanimatedError(
+            `Invalid linear easing point x percentage ${point.x}, it should be between 0% and 100%`
           );
         }
         return { y: point.y, x: newValue };
@@ -39,8 +40,8 @@ export function linear(points: LinearEasingInputPoint[]): LinearEasingConfig {
   const firstPoint = normalizedPoints[0];
   if (typeof firstPoint === 'object') {
     if (firstPoint.x > 0) {
-      throw new Error(
-        `[Reanimated] Linear easing starting point should have 0% percentage or no percentage.`
+      throw new ReanimatedError(
+        `Linear easing starting point should have 0% percentage or no percentage.`
       );
     }
   } else if (typeof firstPoint === 'number') {
@@ -51,8 +52,8 @@ export function linear(points: LinearEasingInputPoint[]): LinearEasingConfig {
   const lastPoint = normalizedPoints[normalizedPoints.length - 1];
   if (typeof lastPoint === 'object') {
     if (lastPoint.x < 1) {
-      throw new Error(
-        `[Reanimated] Linear easing ending point should have 100% percentage or no percentage.`
+      throw new ReanimatedError(
+        `Linear easing ending point should have 100% percentage or no percentage.`
       );
     }
   } else if (typeof lastPoint === 'number') {
@@ -65,8 +66,8 @@ export function linear(points: LinearEasingInputPoint[]): LinearEasingConfig {
     const point = normalizedPoints[i];
     if (typeof point === 'object') {
       if (point.x <= lastKnownX) {
-        throw new Error(
-          `[Reanimated] Linear easing points x percentages should be an increasing sequence`
+        throw new ReanimatedError(
+          `Linear easing points x percentages should be an increasing sequence`
         );
       }
       lastKnownX = point.x;

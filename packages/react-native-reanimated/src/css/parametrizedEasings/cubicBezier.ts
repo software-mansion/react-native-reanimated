@@ -1,3 +1,4 @@
+import { ReanimatedError } from '../../errors';
 import type { CubicBezierEasingConfig } from './types';
 
 export function cubicBezier(
@@ -7,8 +8,8 @@ export function cubicBezier(
   y2: number
 ): CubicBezierEasingConfig {
   if (x1 < 0 || x1 > 1 || x2 < 0 || x2 > 1) {
-    throw new Error(
-      `[Reanimated] Invalid x coordinates for cubic bezier easing points, they should be numbers between 0 and 1`
+    throw new ReanimatedError(
+      `Invalid x coordinates for cubic bezier easing points, they should be numbers between 0 and 1`
     );
   }
 
