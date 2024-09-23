@@ -12,11 +12,6 @@
 #include <utility>
 #include <vector>
 
-#ifdef __ANDROID__ // parse color on android
-#include <iomanip>
-#include <sstream>
-#endif
-
 namespace reanimated {
 
 struct Rect {

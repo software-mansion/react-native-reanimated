@@ -24,7 +24,7 @@ void LayoutAnimationsManager::configureAnimationBatch(
         enteringAnimationsForNativeID_[tag] = config;
         continue;
       }
-      if (type == LAYOUT_AND_STYLE) {
+      if (type == STYLE_TRANSITION) {
         doLayoutAnimationContainStyle_[tag] = true;
       } else {
         doLayoutAnimationContainStyle_.erase(tag);
@@ -76,11 +76,11 @@ bool LayoutAnimationsManager::hasLayoutAnimation(
     return ignoreProgressAnimationForTag_.find(tag) == end;
   }
 
-  if (type == LAYOUT_AND_STYLE) {
-    // LAYOUT_AND_STYLE is a subset of LAYOUT animations, therefore
-    // hasLayoutAnimation(tag of view with LAYOUT_AND_STYLE animation, LAYOUT) =
+  if (type == STYLE_TRANSITION) {
+    // STYLE_TRANSITION is a subset of LAYOUT animations, therefore
+    // hasLayoutAnimation(tag of view with STYLE_TRANSITION animation, LAYOUT) =
     // true hasLayoutAnimation(tag of view with LAYOUT animation,
-    // LAYOUT_AND_STYLE) = false
+    // STYLE_TRANSITION) = false
 
     auto includesAnimation = collection::contains(layoutAnimations_, tag);
     bool includesStyle =
@@ -234,7 +234,7 @@ LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
     case EXITING:
       return exitingAnimations_;
     case LAYOUT:
-    case LAYOUT_AND_STYLE: // a subset of LAYOUT
+    case STYLE_TRANSITION: // a subset of LAYOUT
       return layoutAnimations_;
     case SHARED_ELEMENT_TRANSITION:
     case SHARED_ELEMENT_TRANSITION_PROGRESS:

@@ -74,10 +74,10 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;
-  // LAYOUT_AND_STYLE animations are a subset of LAYOUT animations and use the
+  // STYLE_TRANSITION animations are a subset of LAYOUT animations and use the
   // same array to store config
   // We use this additional array to figure out if given LAYOUT animation is
-  // LAYOUT_AND_STYLE too
+  // STYLE_TRANSITION too
   std::unordered_map<int, bool> doLayoutAnimationContainStyle_;
 
   std::unordered_map<int, std::shared_ptr<Shareable>>

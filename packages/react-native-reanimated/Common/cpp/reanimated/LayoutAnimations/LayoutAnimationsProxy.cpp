@@ -335,7 +335,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         auto hasLayoutAnimation =
             layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT);
         auto hasLayoutAndStyleAnimation =
-            layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT_AND_STYLE);
+            layoutAnimationsManager_->hasLayoutAnimation(tag, STYLE_TRANSITION);
         auto layoutChanged = hasLayoutChanged(mutation);
         if (!hasLayoutAnimation ||
             (!hasLayoutAndStyleAnimation && !layoutChanged &&

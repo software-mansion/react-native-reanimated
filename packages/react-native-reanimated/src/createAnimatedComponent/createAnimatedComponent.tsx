@@ -168,10 +168,10 @@ export function createAnimatedComponent(
 
       const { layout, styleTransition } = this.props;
       if (layout) {
-        this._configureTransition('layoutTransition');
+        this._configureTransition(LayoutAnimationType.LAYOUT);
       }
       if (styleTransition) {
-        this._configureTransition('styleTransition');
+        this._configureTransition(LayoutAnimationType.STYLE_TRANSITION);
       }
       if (IS_WEB) {
         if (this.props.exiting) {
@@ -412,10 +412,10 @@ export function createAnimatedComponent(
         prevProps;
 
       if (layout !== oldLayout) {
-        this._configureTransition('layoutTransition');
+        this._configureTransition(LayoutAnimationType.LAYOUT);
       }
       if (styleTransition !== oldStyleTransition) {
-        this._configureTransition('styleTransition');
+        this._configureTransition(LayoutAnimationType.STYLE_TRANSITION);
       }
 
       if (
@@ -448,25 +448,26 @@ export function createAnimatedComponent(
     }
 
     _configureTransition(
-      transitionType: 'layoutTransition' | 'styleTransition'
+      transitionType:
+        | LayoutAnimationType.STYLE_TRANSITION
+        | LayoutAnimationType.LAYOUT
     ) {
       if (IS_WEB) {
         return;
       }
 
-      const TRANSITIONS = {
-        layoutTransition: {
-          propName: 'layout',
-          animationType: LayoutAnimationType.LAYOUT,
-        },
-        styleTransition: {
-          propName: 'styleTransition',
-          animationType: LayoutAnimationType.LAYOUT_AND_STYLE,
-        },
-      } as const;
+      const TRANSITIONS =
+        transitionType === LayoutAnimationType.LAYOUT
+          ? {
+              configToBuild: this.props?.layout,
+              animationType: LayoutAnimationType.LAYOUT,
+            }
+          : {
+              configToBuild: this.props?.styleTransition,
+              animationType: LayoutAnimationType.STYLE_TRANSITION,
+            };
 
-      const { propName, animationType } = TRANSITIONS[transitionType];
-      const configToBuild = this.props[propName];
+      const { configToBuild, animationType } = TRANSITIONS;
       const transitionConfig = configToBuild
         ? maybeBuild(
             configToBuild,

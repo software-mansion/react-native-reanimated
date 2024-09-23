@@ -6,5 +6,5 @@ typedef enum LayoutAnimationType {
   LAYOUT = 3,
   SHARED_ELEMENT_TRANSITION = 4,
   SHARED_ELEMENT_TRANSITION_PROGRESS = 5,
-  LAYOUT_AND_STYLE = 6
+  STYLE_TRANSITION = 6
 } LayoutAnimationType;
