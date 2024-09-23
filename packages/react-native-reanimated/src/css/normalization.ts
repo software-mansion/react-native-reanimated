@@ -29,29 +29,29 @@ const VALID_FILL_MODES = ['none', 'forwards', 'backwards', 'both'] as const;
 
 export const ERROR_MESSAGES = {
   invalidDelay: (timeUnit: any) =>
-    `[Reanimated] Invalid delay "${timeUnit}". Expected a number, "ms", or "s".`,
+    `Invalid delay "${timeUnit}". Expected a number, "ms", or "s".`,
   invalidDuration: (duration: any) =>
-    `[Reanimated] Invalid duration "${duration}". Expected a number, "ms", or "s".`,
+    `Invalid duration "${duration}". Expected a number, "ms", or "s".`,
   negativeDuration: (duration: any) =>
-    `[Reanimated] Duration cannot be negative, received "${duration}".`,
+    `Duration cannot be negative, received "${duration}".`,
   unsupportedKeyframe: (key: any) =>
-    `[Reanimated] Unsupported keyframe "${key}". Expected a number or percentage.`,
+    `Unsupported keyframe "${key}". Expected a number or percentage.`,
   invalidOffsetRange: (key: any) =>
-    `[Reanimated] Keyframe offset should be between 0 and 100% (0-1). Received "${key}".`,
+    `Keyframe offset should be between 0 and 100% (0-1). Received "${key}".`,
   unsupportedKeyframeValueType: (prop: string) =>
-    `[Reanimated] Unsupported keyframe value type for "${prop}". Expected an array only for "transform".`,
+    `Unsupported keyframe value type for "${prop}". Expected an array only for "transform".`,
   unsupportedAnimationDirection: (direction: any) =>
-    `[Reanimated] Unsupported animation direction "${direction}". Supported directions: ${VALID_ANIMATION_DIRECTIONS.join(
+    `Unsupported animation direction "${direction}". Supported directions: ${VALID_ANIMATION_DIRECTIONS.join(
       ', '
     )}.`,
-  invalidIterationCount: `[Reanimated] Invalid iteration count. Expected a number or "infinite".`,
-  negativeIterationCount: `[Reanimated] Iteration count cannot be negative.`,
+  invalidIterationCount: `Invalid iteration count. Expected a number or "infinite".`,
+  negativeIterationCount: `Iteration count cannot be negative.`,
   invalidAnimationName: (animationName: any) =>
-    `[Reanimated] Invalid animation "${animationName}". Expected an object containing keyframes.`,
+    `Invalid animation "${animationName}". Expected an object containing keyframes.`,
   unsupportedColorFormat: (value: any, prop: string) =>
-    `[Reanimated] Unsupported color format ${value} for ${prop} in CSS animation`,
+    `Unsupported color format ${value} for ${prop} in CSS animation`,
   unsupportedFillMode: (fillMode: any) =>
-    `[Reanimated] Unsupported fill mode "${fillMode}". Supported modes: ${VALID_FILL_MODES.join(
+    `Unsupported fill mode "${fillMode}". Supported modes: ${VALID_FILL_MODES.join(
       ', '
     )}.`,
 };
