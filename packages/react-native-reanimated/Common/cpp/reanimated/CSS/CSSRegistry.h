@@ -24,7 +24,7 @@ class CSSRegistry {
       const std::shared_ptr<CSSAnimation> &animation,
       const jsi::Value &viewStyle);
 
-  void remove(const unsigned id);
+  void finish(const unsigned id, const bool revertChanges);
 
   UpdatesBatch update(jsi::Runtime &rt, const double timestamp);
 

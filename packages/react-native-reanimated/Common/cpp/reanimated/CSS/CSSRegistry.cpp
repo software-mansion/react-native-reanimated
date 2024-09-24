@@ -11,10 +11,10 @@ void CSSRegistry::add(
   registry_.insert({id, animation});
 }
 
-void CSSRegistry::remove(const unsigned id) {
+void CSSRegistry::finish(const unsigned id, const bool revertChanges) {
   auto animation = registry_.find(id);
   if (animation != registry_.end()) {
-    animation->second->finish();
+    animation->second->finish(revertChanges);
   }
 }
 
@@ -28,10 +28,16 @@ UpdatesBatch CSSRegistry::update(jsi::Runtime &rt, const double timestamp) {
         // don't break;
       }
       case CSSAnimationState::running:
-      case CSSAnimationState::finishing: {
+      case CSSAnimationState::finishing:
+      case CSSAnimationState::reverting: {
         auto shadowNode = animation->getShadowNode();
 
         const jsi::Value &updates = animation->update(rt, timestamp);
+
+        // LOG(INFO) << "CSSAnimationsRegistry::updateAnimations: "
+        //           << "animationTag: " << animationTag << ", "
+        //           << "shadowNode: " << shadowNode->getTag() << ", "
+        //           << "updates: " << stringifyJSIValue(rt, updates);
 
         if (updates.isUndefined()) {
           break;

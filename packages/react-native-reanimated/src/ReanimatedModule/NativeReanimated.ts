@@ -188,8 +188,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
-  unregisterCSSAnimation(animationId: number) {
-    this.#reanimatedModuleProxy.unregisterCSSAnimation(animationId);
+  unregisterCSSAnimation(animationId: number, revertChanges: boolean) {
+    this.#reanimatedModuleProxy.unregisterCSSAnimation(
+      animationId,
+      revertChanges
+    );
   }
 
   updateCSSTransition(

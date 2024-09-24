@@ -3,17 +3,17 @@
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/Interpolator.h>
 
-#include <react/renderer/core/ShadowNode.h>
-
-#include <jsi/jsi.h>
 #include <chrono>
 
 namespace reanimated {
 
-using namespace react;
-using namespace facebook;
-
-enum CSSAnimationState { pending, running, finishing, finished };
+enum CSSAnimationState {
+  pending,
+  running,
+  finishing,
+  reverting,
+  finished,
+};
 
 class CSSAnimation {
  public:
@@ -31,9 +31,11 @@ class CSSAnimation {
 
   virtual void start(time_t timestamp) = 0;
 
-  virtual void finish() = 0;
+  virtual void finish(const bool revertChanges) = 0;
 
   virtual jsi::Value update(jsi::Runtime &rt, time_t timestamp) = 0;
+
+  virtual jsi::Value reset(jsi::Runtime &rt) = 0;
 
  protected:
   const ShadowNode::Shared shadowNode;

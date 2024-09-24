@@ -3,6 +3,7 @@ import {
   Playground,
   AnimationSettings,
   RealWorldExamples,
+  Miscellaneous,
 } from '../examples';
 import RouteCards from './cards';
 import type { RouteNames, Routes } from './types';
@@ -107,6 +108,15 @@ const routes = {
       SquishySquashy: {
         name: 'Squishy Squashy',
         Component: RealWorldExamples.SquishySquashy,
+      },
+    },
+  },
+  Miscellaneous: {
+    name: 'Miscellaneous',
+    routes: {
+      ChangingAnimation: {
+        name: 'Changing Animation',
+        Component: Miscellaneous.ChangingAnimation,
       },
     },
   },
