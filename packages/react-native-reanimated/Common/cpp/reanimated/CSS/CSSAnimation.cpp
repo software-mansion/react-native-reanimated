@@ -7,24 +7,25 @@ CSSAnimation::CSSAnimation(
     ShadowNode::Shared shadowNode,
     const CSSAnimationConfig &config)
     : shadowNode(shadowNode),
-      delay(config.animationDelay),
-      duration(config.animationDuration),
-      iterationCount(config.animationIterationCount),
-      easingFunction(getEasingFunction(config.animationTimingFunction, rt)),
-      direction(getAnimationDirection(config.animationDirection)),
       fillMode(getAnimationFillMode(config.animationFillMode)),
-      styleInterpolator(KeyframedStyleInterpolator(rt, config.keyframedStyle)) {
-}
+      styleInterpolator(KeyframedStyleInterpolator(rt, config.keyframedStyle)),
+      progressProvider(AnimationProgressProvider(
+          config.animationDuration,
+          config.animationDelay,
+          config.animationIterationCount,
+          getAnimationDirection(config.animationDirection),
+          getEasingFunction(rt, config.animationTimingFunction))) {}
 
 void CSSAnimation::start(time_t timestamp) {
-  if (iterationCount == 0) {
+  progressProvider.update(timestamp);
+
+  if (progressProvider.getState() == Finished) {
     state = CSSAnimationState::finished;
     return;
   }
+
   state = CSSAnimationState::running;
-  startTime = timestamp;
-  previousProgress.reset();
-  previousToPreviousProgress.reset();
+  progressProvider.reset(timestamp);
 }
 
 void CSSAnimation::finish() {
@@ -32,34 +33,24 @@ void CSSAnimation::finish() {
 }
 
 jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
-  currentIterationElapsedTime =
-      timestamp - (startTime + delay + previousIterationsDuration);
+  progressProvider.update(timestamp);
 
   // Check if the animation has not started yet because of the delay
-  if (currentIterationElapsedTime < 0) {
+  if (progressProvider.getState() == Pending) {
     // We have to return the style from the first animation keyframe (apply
     // backwards fill mode) in every keyframe before the animation starts
     // if the fill mode is backwards or both
     return maybeApplyBackwardsFillMode(rt);
   }
 
-  const double iterationProgress = updateIterationProgress(timestamp);
-  // Check if the animation has finished (duration can be a floating point
-  // number so we can't just check if the progress is 1.0)
-  const bool shouldFinish = iterationCount != -1 &&
-      (timestamp - (delay + startTime)) >= duration * iterationCount;
-
-  const double progress =
-      calculateResultingProgress(iterationProgress, shouldFinish);
+  const bool shouldFinish = progressProvider.getState() == Finished;
   // Determine if the progress update direction has changed (e.g. because of
   // the easing used or the alternating animation direction)
-  const bool directionChanged = !shouldFinish && checkDirectionChange(progress);
+  const bool directionChanged =
+      !shouldFinish && progressProvider.hasDirectionChanged();
 
   auto updatedStyle = styleInterpolator.update(
-      createUpdateContext(rt, progress, directionChanged));
-
-  previousToPreviousProgress = previousProgress;
-  previousProgress = progress;
+      createUpdateContext(rt, progressProvider.getCurrent(), directionChanged));
 
   if (state == CSSAnimationState::finishing) {
     finish();
@@ -107,85 +98,16 @@ CSSAnimationFillMode CSSAnimation::getAnimationFillMode(
   }
 }
 
-double CSSAnimation::updateIterationProgress(time_t timestamp) {
-  if (duration == 0) {
-    return 1;
-  }
-
-  // We can increase curentIteration by more than just one iteration if the
-  // animation delay is negative, thus we are using this division to get the
-  // number of iterations that have passed since the previous animation update
-  // (deltaIterations can be greater than for the first update of the animation
-  // with the negative delay)
-  const double progress = currentIterationElapsedTime / duration;
-  const unsigned deltaIterations = static_cast<unsigned>(progress);
-
-  if (deltaIterations > 0) {
-    // Return 1 if the current iteration is the last one
-    if (currentIteration == iterationCount) {
-      return 1;
-    }
-
-    currentIteration += deltaIterations;
-    previousIterationsDuration = (currentIteration - 1) * duration;
-
-    if (direction == normal || direction == reverse) {
-      previousProgress.reset();
-      previousToPreviousProgress.reset();
-    }
-  }
-
-  // If the current iteration changes, the progress must be updated respectively
-  // not to contain the progress of the previous iteration
-  return progress - deltaIterations;
-}
-
-double CSSAnimation::applyAnimationDirection(double progress) const {
-  switch (direction) {
-    case normal:
-      return progress;
-    case reverse:
-      return 1.0 - progress;
-    case alternate:
-      return currentIteration % 2 == 0 ? 1.0 - progress : progress;
-    case alternateReverse:
-      return currentIteration % 2 == 0 ? progress : 1.0 - progress;
-  }
-}
-
-double CSSAnimation::calculateResultingProgress(
-    double iterationProgress,
-    bool shouldFinish) const {
-  auto applyEasingWithDirection = [&](double progress) {
-    return easingFunction(applyAnimationDirection(progress));
-  };
-
-  if (shouldFinish) {
-    // Override current progress for the last update in the last iteration to
-    // ensure that animation finishes exactly at the specified iteration count
-    double intPart = std::floor(iterationCount);
-    return applyEasingWithDirection(
-        intPart == iterationCount ? 1 : iterationCount - intPart);
-  }
-
-  return applyEasingWithDirection(iterationProgress);
-}
-
-bool CSSAnimation::checkDirectionChange(double progress) const {
-  if (previousProgress.has_value() && previousToPreviousProgress.has_value()) {
-    const auto prevDiff =
-        previousProgress.value() - previousToPreviousProgress.value();
-    const auto currentDiff = progress - previousProgress.value();
-    return prevDiff * currentDiff < 0;
-  }
-  return false;
-}
-
 InterpolationUpdateContext CSSAnimation::createUpdateContext(
     jsi::Runtime &rt,
     double progress,
     bool directionChanged) const {
-  return {rt, shadowNode, progress, previousProgress, directionChanged};
+  return {
+      rt,
+      shadowNode,
+      progress,
+      progressProvider.getPrevious(),
+      progressProvider.hasDirectionChanged()};
 }
 
 jsi::Value CSSAnimation::maybeApplyBackwardsFillMode(jsi::Runtime &rt) {
@@ -203,7 +125,7 @@ jsi::Value CSSAnimation::maybeApplyForwardsFillMode(jsi::Runtime &rt) {
     return jsi::Value::undefined();
   }
   // Reset all styles applied during the animation and restore the
-  // view style
+  // view style (progress can be any value because it is not used by reset)
   return styleInterpolator.reset(createUpdateContext(rt, 0, false));
 }
 
