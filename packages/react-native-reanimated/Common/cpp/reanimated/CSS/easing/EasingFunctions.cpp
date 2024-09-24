@@ -19,12 +19,12 @@ inline const std::unordered_map<std::string, EasingFunction>
              std::vector<double>{0, 1})}};
 
 EasingFunction getEasingFunction(
-    const jsi::Value &easingConfig,
-    jsi::Runtime &rt) {
+    jsi::Runtime &rt,
+    const jsi::Value &easingConfig) {
   if (easingConfig.isString()) {
     return getPredefinedEasingFunction(easingConfig.asString(rt).utf8(rt));
   } else if (easingConfig.isObject()) {
-    return getParametrizedEasingFunction(easingConfig, rt);
+    return getParametrizedEasingFunction(rt, easingConfig);
   } else {
     throw std::runtime_error(
         std::string("[Reanimated] Invalid easing function"));
@@ -43,8 +43,8 @@ EasingFunction getPredefinedEasingFunction(const std::string &name) {
 }
 
 EasingFunction getParametrizedEasingFunction(
-    const jsi::Value &easingConfig,
-    jsi::Runtime &rt) {
+    jsi::Runtime &rt,
+    const jsi::Value &easingConfig) {
   jsi::Object obj = easingConfig.asObject(rt);
   std::string easingName = obj.getProperty(rt, "name").asString(rt).utf8(rt);
   if (easingName == "cubicBezier") {

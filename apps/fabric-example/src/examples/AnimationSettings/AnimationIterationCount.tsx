@@ -14,6 +14,7 @@ export default function AnimationIterationCount() {
     },
     animationDuration: '2s',
     animationFillMode: 'forwards',
+    animationTimingFunction: 'linear',
   };
 
   const renderExample = (exampleConfig: CSSAnimationConfig) => (
