@@ -1,4 +1,4 @@
-#import <RNReanimated/REAUtils.h>
+#import <reanimated/apple/REAUtils.h>
 
 @implementation REAUtils
 
