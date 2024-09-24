@@ -54,7 +54,7 @@ import { getViewInfo } from './getViewInfo';
 import { NativeEventsManager } from './NativeEventsManager';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { ReanimatedError } from '../errors';
-import { CSSManager } from './CSSManager';
+import { CSSManager } from '../css';
 
 const IS_WEB = isWeb();
 const IS_JEST = isJest();

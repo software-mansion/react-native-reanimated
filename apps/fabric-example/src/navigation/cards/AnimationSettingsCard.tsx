@@ -91,6 +91,7 @@ const styles = StyleSheet.create({
   },
   barTrackInner: {
     backgroundColor: colors.primary,
+    borderRadius: radius.full,
     width: '100%',
   },
   barThumb: {

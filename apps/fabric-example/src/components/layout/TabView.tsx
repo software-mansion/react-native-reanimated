@@ -64,7 +64,7 @@ const Tab = memo(function Tab({
 
   return (
     <Animated.View style={[styles.tab, animatedTabStyle]}>
-      {rendered ? <Scroll>{children}</Scroll> : null}
+      {rendered ? children : null}
     </Animated.View>
   );
 });
@@ -144,6 +144,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     zIndex: 1,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: spacing.xs },
+    shadowOpacity: 0.05,
   },
   fullWidth: {
     width: '100%',

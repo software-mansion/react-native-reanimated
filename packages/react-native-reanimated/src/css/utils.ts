@@ -1,3 +1,4 @@
+'use strict';
 import { processCSSAnimationColor } from '../Colors';
 import type { StyleProps } from '../commonTypes';
 import type {
@@ -6,6 +7,7 @@ import type {
   CSSAnimationSettings,
   CSSTransitionConfig,
   CSSTransitionProperty,
+  TransformsArray,
 } from './types';
 
 type AnimationSettingProp = keyof CSSAnimationSettings;
@@ -34,12 +36,65 @@ const isAnimationSetting = (key: string): key is AnimationSettingProp =>
   ANIMATION_SETTINGS_SET.has(key);
 const isTransitionSetting = (key: string): key is TransitionSettingProp =>
   TRANSITION_SETTINGS_SET.has(key);
+const isTransformString = (prop: string, value: unknown): value is string =>
+  prop === 'transform' && typeof value === 'string';
 
-export function isColorProp(prop: string, value: unknown): boolean {
-  return (
-    prop.toLowerCase().includes('color') &&
-    (typeof value === 'string' || typeof value === 'number')
-  );
+export const isColorProp = (prop: string, value: unknown): boolean =>
+  prop.toLowerCase().includes('color') &&
+  (typeof value === 'string' || typeof value === 'number');
+
+export const isNumber = (value: unknown): value is number =>
+  typeof value === 'number' && !isNaN(value);
+
+export function parseTransformString(transformString: string): TransformsArray {
+  return transformString
+    .split(/\)\s*/)
+    .filter(Boolean)
+    .map((transform) => {
+      const [key, valueString] = transform.split(/\(\s*/);
+      const values = valueString
+        .replace(/\)$/g, '')
+        .split(',')
+        .map((value) => {
+          const trimmedValue = value.trim();
+          if (key.startsWith('translate')) {
+            return parseFloat(trimmedValue);
+          }
+          if (trimmedValue.endsWith('deg') || trimmedValue.endsWith('rad')) {
+            return trimmedValue;
+          }
+          return isNaN(+trimmedValue) ? trimmedValue : +trimmedValue;
+        });
+
+      const unwrappedValue = values.length === 1 ? values[0] : values;
+
+      switch (key) {
+        case 'translate':
+          return {
+            translateX: values[0] || 0,
+            translateY: values[1] || 0,
+          };
+        case 'translateX':
+        case 'translateY':
+          return { [key]: unwrappedValue };
+        case 'scale':
+          return values.length === 1
+            ? { scale: unwrappedValue }
+            : { scaleX: values[0] || 1, scaleY: values[1] || values[0] || 1 };
+        case 'rotate':
+        case 'rotateX':
+        case 'rotateY':
+        case 'rotateZ':
+          return { [key]: unwrappedValue };
+        case 'skew':
+          return {
+            skewX: values[0] || '0deg',
+            skewY: values[1] || '0deg',
+          };
+        default:
+          return { [key]: unwrappedValue };
+      }
+    }) as TransformsArray;
 }
 
 export function extractCSSConfigsAndFlattenedStyles(
@@ -63,6 +118,8 @@ export function extractCSSConfigsAndFlattenedStyles(
         animationConfig[prop] = value;
       } else if (isTransitionSetting(prop)) {
         transitionConfig[prop] = value;
+      } else if (isTransformString(prop, value)) {
+        flattenedStyle[prop] = parseTransformString(value);
       } else if (isColorProp(prop, value)) {
         flattenedStyle[prop] = processCSSAnimationColor(value);
       } else {
