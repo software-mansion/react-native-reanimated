@@ -1,3 +1,5 @@
+#include <reanimated/CSS/CSSKeyframeAnimation.h>
+#include <reanimated/CSS/CSSTransition.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/CollectionUtils.h>
@@ -519,9 +521,67 @@ void ReanimatedModuleProxy::registerCSSAnimation(
   maybeRunCssAnimationsLoop();
 }
 
+void ReanimatedModuleProxy::updateCSSAnimation(
+    jsi::Runtime &rt,
+    const jsi::Value &animationId,
+    const jsi::Value &animationConfig,
+    const jsi::Value &viewStyle) {
+  // TODO
+}
+
 void ReanimatedModuleProxy::unregisterCSSAnimation(
     const jsi::Value &animationId) {
   cssRegistry_->remove(animationId.asNumber());
+}
+
+void ReanimatedModuleProxy::registerCSSTransition(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &transitionId,
+    const jsi::Value &transitionConfig,
+    const jsi::Value &viewStyle) {
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+
+  const auto &configObject = transitionConfig.asObject(rt);
+
+  LOG(INFO) << "Registering CSS transition with id: " << transitionId.asNumber()
+            << " and config: " << stringifyJSIValue(rt, transitionConfig)
+            << " and viewStyle: " << stringifyJSIValue(rt, viewStyle);
+
+  auto transitionProperties = configObject.getProperty(rt, "transitionProperty")
+                                  .asObject(rt)
+                                  .asArray(rt);
+  auto transitionDuration =
+      configObject.getProperty(rt, "transitionDuration").asNumber();
+  auto transitionTimingFunction =
+      configObject.getProperty(rt, "transitionTimingFunction");
+  auto transitionDelay =
+      configObject.getProperty(rt, "transitionDelay").asNumber();
+
+  CSSTransitionConfig config{
+      std::move(transitionProperties),
+      transitionDuration,
+      transitionTimingFunction,
+      transitionDelay};
+
+  std::shared_ptr<CSSTransition> transition =
+      std::make_shared<CSSTransition>(rt, shadowNode, config);
+
+  cssRegistry_->add(rt, transitionId.asNumber(), transition, viewStyle);
+  maybeRunCssAnimationsLoop();
+}
+
+void ReanimatedModuleProxy::updateCSSTransition(
+    jsi::Runtime &rt,
+    const jsi::Value &transitionId,
+    const jsi::Value &transitionConfig,
+    const jsi::Value &viewStyle) {
+  // TODO
+}
+
+void ReanimatedModuleProxy::unregisterCSSTransition(
+    const jsi::Value &transitionId) {
+  cssRegistry_->remove(transitionId.asNumber());
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED

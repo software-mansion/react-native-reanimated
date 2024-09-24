@@ -20,6 +20,7 @@ import { ReanimatedError } from '../errors';
 import { WorkletsModule } from '../worklets';
 import type { ReanimatedModuleProxy } from './reanimatedModuleProxy';
 import type { NormalizedCSSAnimationConfig } from '../css';
+import type { NormalizedCSSTransitionConfig } from '../css/types';
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
@@ -175,7 +176,49 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
+  updateCSSAnimation(
+    animationId: number,
+    animationConfig: NormalizedCSSAnimationConfig,
+    viewStyle: StyleProps
+  ) {
+    this.#reanimatedModuleProxy.updateCSSAnimation(
+      animationId,
+      animationConfig,
+      viewStyle
+    );
+  }
+
   unregisterCSSAnimation(animationId: number) {
     this.#reanimatedModuleProxy.unregisterCSSAnimation(animationId);
+  }
+
+  updateCSSTransition(
+    transitionId: number,
+    transitionConfig: NormalizedCSSTransitionConfig,
+    viewStyle: StyleProps
+  ) {
+    this.#reanimatedModuleProxy.updateCSSTransition(
+      transitionId,
+      transitionConfig,
+      viewStyle
+    );
+  }
+
+  registerCSSTransition(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    transitionId: number,
+    transitionConfig: NormalizedCSSTransitionConfig,
+    viewStyle: StyleProps
+  ) {
+    this.#reanimatedModuleProxy.registerCSSTransition(
+      shadowNodeWrapper,
+      transitionId,
+      transitionConfig,
+      viewStyle
+    );
+  }
+
+  unregisterCSSTransition(transitionId: number) {
+    this.#reanimatedModuleProxy.unregisterCSSTransition(transitionId);
   }
 }

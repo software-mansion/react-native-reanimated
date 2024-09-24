@@ -136,6 +136,17 @@ static jsi::Value REANIMATED_SPEC_PREFIX(registerCSSAnimation)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value REANIMATED_SPEC_PREFIX(updateCSSAnimation)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->updateCSSAnimation(
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+  return jsi::Value::undefined();
+}
+
 static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSAnimation)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -143,6 +154,42 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSAnimation)(
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->unregisterCSSAnimation(std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(registerCSSTransition)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->registerCSSTransition(
+          rt,
+          std::move(args[0]),
+          std::move(args[1]),
+          std::move(args[2]),
+          std::move(args[3]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(updateCSSTransition)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->updateCSSTransition(
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSTransition)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->unregisterCSSTransition(std::move(args[0]));
   return jsi::Value::undefined();
 }
 
@@ -176,7 +223,16 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
 
   methodMap_["registerCSSAnimation"] =
       MethodMetadata{4, REANIMATED_SPEC_PREFIX(registerCSSAnimation)};
+  methodMap_["updateCSSAnimation"] =
+      MethodMetadata{3, REANIMATED_SPEC_PREFIX(updateCSSAnimation)};
   methodMap_["unregisterCSSAnimation"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSAnimation)};
+
+  methodMap_["registerCSSTransition"] =
+      MethodMetadata{4, REANIMATED_SPEC_PREFIX(registerCSSTransition)};
+  methodMap_["updateCSSTransition"] =
+      MethodMetadata{3, REANIMATED_SPEC_PREFIX(updateCSSTransition)};
+  methodMap_["unregisterCSSTransition"] =
+      MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSTransition)};
 }
 } // namespace reanimated
