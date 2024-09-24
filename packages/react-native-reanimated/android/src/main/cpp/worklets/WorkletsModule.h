@@ -6,7 +6,7 @@
 #if REACT_NATIVE_MINOR_VERSION >= 74
 #include <react/jni/JRuntimeExecutor.h>
 #endif // REACT_NATIVE_MINOR_VERSION >= 74
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
@@ -35,15 +35,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<jhybridobject> jThis,
       jlong jsContext,
       const std::string &valueUnpackerCode);
-
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-
-  static jni::local_ref<jhybriddata> initHybridBridgeless(
-      jni::alias_ref<jhybridobject> jThis,
-      jlong jsContext,
-      const std::string &valueUnpackerCode);
-
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
 
   static void registerNatives();
 

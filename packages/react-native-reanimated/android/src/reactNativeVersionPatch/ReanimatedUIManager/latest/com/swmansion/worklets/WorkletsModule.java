@@ -8,6 +8,7 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.soloader.SoLoader;
+import com.swmansion.reanimated.NativeWorkletsModuleSpec;
 import java.util.Objects;
 
 @ReactModule(name = WorkletsModule.NAME)

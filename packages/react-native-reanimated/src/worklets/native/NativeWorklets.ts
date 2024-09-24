@@ -1,19 +1,19 @@
 'use strict';
 import { checkCppVersion } from '../../platform-specific/checkCppVersion';
 import { getValueUnpackerCode } from '../../valueUnpacker';
-import WorkletsModule from '../specs/NativeWorkletsModule';
+import { WorkletsTurboModule } from '../../specs';
 import { ReanimatedError } from '../../errors';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
-export interface NativeWorkletsModule {}
+export interface WorkletsModuleProxy {}
 
 export class NativeWorklets {
-  #nativeWorkletsModule: NativeWorkletsModule;
+  #workletsModuleProxy: WorkletsModuleProxy;
 
   constructor() {
     if (global.__workletsModuleProxy === undefined) {
       const valueUnpackerCode = getValueUnpackerCode();
-      WorkletsModule?.installTurboModule(valueUnpackerCode);
+      WorkletsTurboModule?.installTurboModule(valueUnpackerCode);
     }
     if (global.__workletsModuleProxy === undefined) {
       throw new ReanimatedError(
@@ -24,6 +24,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     if (__DEV__) {
       checkCppVersion();
     }
-    this.#nativeWorkletsModule = global.__workletsModuleProxy;
+    this.#workletsModuleProxy = global.__workletsModuleProxy;
   }
 }
