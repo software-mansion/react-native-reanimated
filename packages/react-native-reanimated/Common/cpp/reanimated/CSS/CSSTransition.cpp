@@ -18,11 +18,16 @@ void CSSTransition::start(time_t timestamp) {
   // TODO
 }
 
-void CSSTransition::finish() {
+void CSSTransition::finish(const bool revertChanges) {
   // TODO
 }
 
 jsi::Value CSSTransition::update(jsi::Runtime &rt, time_t timestamp) {
+  // TODO
+  return jsi::Value::undefined();
+}
+
+jsi::Value CSSTransition::reset(jsi::Runtime &rt) {
   // TODO
   return jsi::Value::undefined();
 }

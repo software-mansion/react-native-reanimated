@@ -63,6 +63,7 @@ const styles = StyleSheet.create({
   sectionContainer: {
     gap: spacing.xxs,
     marginTop: spacing.md,
+    overflow: 'hidden',
   },
   subSectionContainer: {
     gap: spacing.xxs,

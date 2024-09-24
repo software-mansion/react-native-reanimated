@@ -38,8 +38,11 @@ export function updateCSSAnimation(
   );
 }
 
-export function unregisterCSSAnimation(animationId: number) {
-  ReanimatedModule.unregisterCSSAnimation(animationId);
+export function unregisterCSSAnimation(
+  animationId: number,
+  revertChanges: boolean
+) {
+  ReanimatedModule.unregisterCSSAnimation(animationId, revertChanges);
 }
 
 export function registerCSSTransition(

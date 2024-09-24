@@ -153,7 +153,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSAnimation)(
     const jsi::Value *args,
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->unregisterCSSAnimation(std::move(args[0]));
+      ->unregisterCSSAnimation(std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
 
@@ -226,7 +226,7 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
   methodMap_["updateCSSAnimation"] =
       MethodMetadata{3, REANIMATED_SPEC_PREFIX(updateCSSAnimation)};
   methodMap_["unregisterCSSAnimation"] =
-      MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSAnimation)};
+      MethodMetadata{2, REANIMATED_SPEC_PREFIX(unregisterCSSAnimation)};
 
   methodMap_["registerCSSTransition"] =
       MethodMetadata{4, REANIMATED_SPEC_PREFIX(registerCSSTransition)};

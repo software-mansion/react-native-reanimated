@@ -289,7 +289,7 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  unregisterCSSAnimation(_animationId: number): void {
+  unregisterCSSAnimation(_animationId: number, _revertChanges: boolean): void {
     throw new ReanimatedError(
       '`unregisterCSSAnimation` is not available in JSReanimated.'
     );

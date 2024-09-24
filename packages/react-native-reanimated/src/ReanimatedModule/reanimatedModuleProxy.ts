@@ -68,7 +68,7 @@ export interface ReanimatedModuleProxy {
     viewStyle: StyleProps
   ): void;
 
-  unregisterCSSAnimation(animationId: number): void;
+  unregisterCSSAnimation(animationId: number, revertChanges: boolean): void;
 
   registerCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,

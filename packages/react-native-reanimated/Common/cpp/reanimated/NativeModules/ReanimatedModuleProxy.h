@@ -90,7 +90,9 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
       const jsi::Value &animationId,
       const jsi::Value &animationConfig,
       const jsi::Value &viewStyle) override;
-  void unregisterCSSAnimation(const jsi::Value &animationId) override;
+  void unregisterCSSAnimation(
+      const jsi::Value &animationId,
+      const jsi::Value &revertChanges) override;
 
   void registerCSSTransition(
       jsi::Runtime &rt,

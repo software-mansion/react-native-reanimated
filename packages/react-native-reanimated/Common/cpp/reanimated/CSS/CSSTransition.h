@@ -33,9 +33,11 @@ class CSSTransition : public CSSAnimation { // TODO - implement
 
   void start(time_t timestamp) override;
 
-  void finish() override;
+  void finish(const bool revertChanges) override;
 
   jsi::Value update(jsi::Runtime &rt, time_t timestamp) override;
+
+  jsi::Value reset(jsi::Runtime &rt) override;
 
  private:
   TransitionStyleInterpolator styleInterpolator;

@@ -487,6 +487,10 @@ void ReanimatedModuleProxy::registerCSSAnimation(
     const jsi::Value &animationId,
     const jsi::Value &animationConfig,
     const jsi::Value &viewStyle) {
+  LOG(INFO) << "Updating CSS animation with id: " << animationId.asNumber()
+            << " and config: " << stringifyJSIValue(rt, animationConfig)
+            << " and viewStyle: " << stringifyJSIValue(rt, viewStyle);
+
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto &configObject = animationConfig.asObject(rt);
 
@@ -530,8 +534,9 @@ void ReanimatedModuleProxy::updateCSSAnimation(
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimation(
-    const jsi::Value &animationId) {
-  cssRegistry_->remove(animationId.asNumber());
+    const jsi::Value &animationId,
+    const jsi::Value &revertChanges) {
+  cssRegistry_->finish(animationId.asNumber(), revertChanges.asBool());
 }
 
 void ReanimatedModuleProxy::registerCSSTransition(
@@ -581,7 +586,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
 
 void ReanimatedModuleProxy::unregisterCSSTransition(
     const jsi::Value &transitionId) {
-  cssRegistry_->remove(transitionId.asNumber());
+  cssRegistry_->finish(transitionId.asNumber(), false);
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED

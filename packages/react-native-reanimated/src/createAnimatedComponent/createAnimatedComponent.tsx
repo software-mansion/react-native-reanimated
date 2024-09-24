@@ -169,6 +169,8 @@ export function createAnimatedComponent(
     context!: React.ContextType<typeof SkipEnteringContext>;
     reanimatedID = id++;
     _cssAnimationId?: number;
+    _cssAnimationSerialized?: string;
+    _cssAnimationConfig?: CSSAnimationConfig;
     _cssTransitionId?: number;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
@@ -441,9 +443,12 @@ export function createAnimatedComponent(
     _attachCSSAnimation(
       animationConfig: CSSAnimationConfig,
       shadowNodeWrapper: ShadowNodeWrapper,
-      style: StyleProps
+      style: StyleProps,
+      serializedKeyframes?: string
     ) {
       this._cssAnimationId = cssId++;
+      this._cssAnimationSerialized =
+        serializedKeyframes ?? JSON.stringify(animationConfig.animationName);
       registerCSSAnimation(
         shadowNodeWrapper,
         this._cssAnimationId,
@@ -452,10 +457,11 @@ export function createAnimatedComponent(
       );
     }
 
-    _detachCSSAnimation() {
+    _detachCSSAnimation(revertChanges = false) {
       if (this._cssAnimationId !== undefined) {
-        unregisterCSSAnimation(this._cssAnimationId);
+        unregisterCSSAnimation(this._cssAnimationId, revertChanges);
         this._cssAnimationId = undefined;
+        this._cssAnimationSerialized = undefined;
       }
     }
 
@@ -480,6 +486,52 @@ export function createAnimatedComponent(
       }
     }
 
+    _updateCSSAnimation(
+      wrapper: ShadowNodeWrapper,
+      animationConfig: CSSAnimationConfig | null,
+      style: StyleProps
+    ) {
+      if (this._cssAnimationId !== undefined && animationConfig) {
+        const serializedKeyframes = JSON.stringify(
+          animationConfig.animationName
+        );
+        // Replace the animation by the new one if the keyframes have changed
+        if (this._cssAnimationSerialized !== serializedKeyframes) {
+          this._detachCSSAnimation(true);
+          this._attachCSSAnimation(
+            animationConfig,
+            wrapper,
+            style,
+            serializedKeyframes
+          );
+        }
+        // Otherwise, update the existing animation settings
+        else {
+          // TODO - maybe somehow check if the animation was affected by the component's
+          // props update and don't just blindly update it every time
+          updateCSSAnimation(this._cssAnimationId, animationConfig, style);
+        }
+      } else if (animationConfig) {
+        this._attachCSSAnimation(animationConfig, wrapper, style);
+      } else {
+        this._detachCSSAnimation(true);
+      }
+    }
+
+    _updateCSSTransition(
+      wrapper: ShadowNodeWrapper,
+      transitionConfig: CSSTransitionConfig | null,
+      style: StyleProps
+    ) {
+      if (this._cssTransitionId !== undefined && transitionConfig) {
+        updateCSSTransition(this._cssTransitionId, transitionConfig, style);
+      } else if (transitionConfig) {
+        this._attachCSSTransition(transitionConfig, wrapper, style);
+      } else {
+        this._detachCSSTransition();
+      }
+    }
+
     _updateCSS(plainStyles: StyleProps[]) {
       const [animationConfig, transitionConfig, style] =
         extractCSSConfigsAndFlattenedStyles(plainStyles);
@@ -498,21 +550,8 @@ export function createAnimatedComponent(
         adaptViewConfig(viewConfig);
       }
 
-      if (this._cssAnimationId !== undefined && animationConfig) {
-        updateCSSAnimation(this._cssAnimationId, animationConfig, style);
-      } else if (animationConfig) {
-        this._attachCSSAnimation(animationConfig, wrapper, style);
-      } else {
-        this._detachCSSAnimation();
-      }
-
-      if (this._cssTransitionId !== undefined && transitionConfig) {
-        updateCSSTransition(this._cssTransitionId, transitionConfig, style);
-      } else if (transitionConfig) {
-        this._attachCSSTransition(transitionConfig, wrapper, style);
-      } else {
-        this._detachCSSTransition();
-      }
+      this._updateCSSAnimation(wrapper, animationConfig, style);
+      this._updateCSSTransition(wrapper, transitionConfig, style);
     }
 
     _detachCSS() {

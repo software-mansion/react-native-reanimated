@@ -28,8 +28,14 @@ void CSSKeyframeAnimation::start(time_t timestamp) {
   progressProvider.reset(timestamp);
 }
 
-void CSSKeyframeAnimation::finish() {
-  state = CSSAnimationState::finished;
+void CSSKeyframeAnimation::finish(const bool revertChanges) {
+  // Set state to finishing to add one more frame in which we will revert
+  // changes applied during the animation
+  if (revertChanges) {
+    state = CSSAnimationState::reverting;
+  } else {
+    state = CSSAnimationState::finished;
+  }
 }
 
 jsi::Value CSSKeyframeAnimation::update(jsi::Runtime &rt, time_t timestamp) {
@@ -53,13 +59,22 @@ jsi::Value CSSKeyframeAnimation::update(jsi::Runtime &rt, time_t timestamp) {
       createUpdateContext(rt, progressProvider.getCurrent(), directionChanged));
 
   if (state == CSSAnimationState::finishing) {
-    finish();
+    state = CSSAnimationState::finished;
     return maybeApplyForwardsFillMode(rt);
+  } else if (state == CSSAnimationState::reverting) {
+    state = CSSAnimationState::finished;
+    return reset(rt);
   } else if (shouldFinish) {
     state = CSSAnimationState::finishing;
   }
 
   return updatedStyle;
+}
+
+jsi::Value CSSKeyframeAnimation::reset(jsi::Runtime &rt) {
+  // Reset all styles applied during the animation and restore the
+  // view style (progress can be any value because it is not used by reset)
+  return styleInterpolator.reset(createUpdateContext(rt, 0, false));
 }
 
 CSSAnimationDirection CSSKeyframeAnimation::getAnimationDirection(
@@ -124,9 +139,7 @@ jsi::Value CSSKeyframeAnimation::maybeApplyForwardsFillMode(jsi::Runtime &rt) {
     // applied
     return jsi::Value::undefined();
   }
-  // Reset all styles applied during the animation and restore the
-  // view style (progress can be any value because it is not used by reset)
-  return styleInterpolator.reset(createUpdateContext(rt, 0, false));
+  return reset(rt);
 }
 
 } // namespace reanimated
