@@ -11,7 +11,7 @@
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/Tools/JSScheduler.h>
@@ -19,7 +19,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManager.h>
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 #include <memory>
 #include <string>
