@@ -1,4 +1,4 @@
-#include "JSLogger.h"
+#include <worklets/Tools/JSLogger.h>
 #include <memory>
 
 namespace reanimated {

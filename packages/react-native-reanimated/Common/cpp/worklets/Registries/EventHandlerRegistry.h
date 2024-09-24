@@ -1,17 +1,15 @@
 #pragma once
 
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
+
 #include <jsi/jsi.h>
 
 #include <map>
 #include <memory>
 #include <mutex>
-#include <set>
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <vector>
-
-#include "WorkletRuntime.h"
 
 using namespace facebook;
 

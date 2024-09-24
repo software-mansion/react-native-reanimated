@@ -1,8 +1,8 @@
-#include "WorkletRuntime.h"
-#include "JSISerializer.h"
-#include "ReanimatedRuntime.h"
-#include "WorkletRuntimeCollector.h"
-#include "WorkletRuntimeDecorator.h"
+#include <worklets/Tools/JSISerializer.h>
+#include <worklets/WorkletRuntime/ReanimatedRuntime.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
+#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
+#include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
 
 #include <jsi/decorator.h>
 

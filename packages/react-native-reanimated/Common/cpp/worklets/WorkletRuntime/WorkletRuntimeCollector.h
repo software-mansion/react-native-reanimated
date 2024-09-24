@@ -1,6 +1,6 @@
 #pragma once
 
-#include "WorkletRuntimeRegistry.h"
+#include <worklets/Registries/WorkletRuntimeRegistry.h>
 
 #include <jsi/jsi.h>
 

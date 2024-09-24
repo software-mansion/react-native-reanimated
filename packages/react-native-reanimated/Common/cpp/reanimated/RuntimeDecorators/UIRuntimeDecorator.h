@@ -2,7 +2,7 @@
 
 #include <jsi/jsi.h>
 
-#include "PlatformDepMethodsHolder.h"
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 using namespace facebook;
 

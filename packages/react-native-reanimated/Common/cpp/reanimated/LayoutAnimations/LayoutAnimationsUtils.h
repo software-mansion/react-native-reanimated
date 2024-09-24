@@ -1,10 +1,11 @@
 #pragma once
 
-#include "LayoutAnimationsManager.h"
-#include "PropsRegistry.h"
+#include <reanimated/Fabric/PropsRegistry.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
+
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>

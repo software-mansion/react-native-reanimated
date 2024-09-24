@@ -6,11 +6,13 @@ on:
     paths:
       - '.github/workflows/reanimated-common-validation.yml'
       - 'packages/react-native-reanimated/scripts/cpplint.sh'
+      - 'packages/react-native-reanimated/scripts/validate-includes.sh'
       - 'packages/react-native-reanimated/Common/cpp/**'
   pull_request:
     paths:
       - '.github/workflows/reanimated-common-validation.yml'
       - 'packages/react-native-reanimated/scripts/cpplint.sh'
+      - 'packages/react-native-reanimated/scripts/validate-includes.sh'
       - 'packages/react-native-reanimated/Common/cpp/**'
   merge_group:
     branches:
