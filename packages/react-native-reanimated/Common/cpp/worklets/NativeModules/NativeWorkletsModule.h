@@ -8,7 +8,7 @@ namespace reanimated {
 
 class NativeWorkletsModule : public NativeWorkletsModuleSpec {
  public:
-  NativeWorkletsModule(const std::string &valueUnpackerCode);
+  explicit NativeWorkletsModule(const std::string &valueUnpackerCode);
 
   ~NativeWorkletsModule();
 

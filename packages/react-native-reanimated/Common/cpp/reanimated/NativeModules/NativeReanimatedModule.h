@@ -25,6 +25,10 @@
 #include <memory>
 #include <string>
 #include <vector>
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <unordered_set>
+#include <utility>
+#endif // RCT_NEW_ARCH_ENABLED
 
 namespace reanimated {
 

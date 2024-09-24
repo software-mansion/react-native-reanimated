@@ -27,6 +27,11 @@
 #include <memory>
 #include <string>
 #include <utility>
+#ifdef RCT_NEW_ARCH_ENABLED
+// Nothing.
+#else
+#include <vector>
+#endif // RCT_NEW_ARCH_ENABLED
 
 namespace reanimated {
 
