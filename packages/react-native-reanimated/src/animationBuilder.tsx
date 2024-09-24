@@ -2,14 +2,16 @@
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
-  LayoutAnimationsValues,
 } from './layoutReanimation';
 import type { StyleProps } from './commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
 import { logger } from './logger';
-import type { NumericLayoutAnimationsOptions } from './layoutReanimation/animationBuilder/commonTypes';
+import type {
+  StyleTransitionAnimationFunction,
+  StyleTransitionAnimationsValues,
+} from './layoutReanimation/animationBuilder/commonTypes';
 
-const propBaseList: Array<Capitalize<NumericLayoutAnimationsOptions>> = [
+const propBaseList = [
   `OriginX`,
   `OriginY`,
   `GlobalOriginX`,
@@ -24,7 +26,7 @@ const propBaseList: Array<Capitalize<NumericLayoutAnimationsOptions>> = [
   ...(['TopLeft', 'TopRight', 'BottomLeft', 'BottomRight'] as const).map(
     (direction) => `Border${direction}Radius` as const
   ),
-];
+] as const;
 
 const mockTargetValues = Object.fromEntries(
   propBaseList.map((propName) => [`target${propName}`, 0])
@@ -38,7 +40,7 @@ const mockValues = {
   ...mockCurrentValues,
   windowWidth: 0,
   windowHeight: 0,
-} as LayoutAnimationsValues & Record<'windowWidth' | 'windowHeight', number>;
+} as StyleTransitionAnimationsValues;
 
 function getCommonProperties(
   layoutStyle: StyleProps,
@@ -89,15 +91,19 @@ export function maybeBuild(
   layoutAnimationOrBuilder:
     | ILayoutAnimationBuilder
     | LayoutAnimationFunction
+    | StyleTransitionAnimationFunction
     | Keyframe,
   style: NestedArray<StyleProps> | undefined,
   displayName: string
-): LayoutAnimationFunction | Keyframe {
+): LayoutAnimationFunction | StyleTransitionAnimationFunction | Keyframe {
   const isAnimationBuilder = (
-    value: ILayoutAnimationBuilder | LayoutAnimationFunction | Keyframe
+    value:
+      | ILayoutAnimationBuilder
+      | LayoutAnimationFunction
+      | StyleTransitionAnimationFunction
+      | Keyframe
   ): value is ILayoutAnimationBuilder =>
-    'build' in layoutAnimationOrBuilder &&
-    typeof layoutAnimationOrBuilder.build === 'function';
+    'build' in value && typeof value.build === 'function';
 
   if (isAnimationBuilder(layoutAnimationOrBuilder)) {
     const animationFactory = layoutAnimationOrBuilder.build();

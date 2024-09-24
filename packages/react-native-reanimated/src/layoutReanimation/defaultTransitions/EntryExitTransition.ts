@@ -71,7 +71,9 @@ export class EntryExitTransition
 
     return (values) => {
       'worklet';
+      // @ts-ignore Make BaseAnimationBuilder a generic with build function depending on the animation type
       const enteringValues = enteringAnimation(values);
+      // @ts-ignore ...
       const exitingValues = exitingAnimation(values);
       const animations: StylePropsWithArrayTransform = {
         transform: [],

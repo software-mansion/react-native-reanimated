@@ -3,7 +3,8 @@ import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 import type {
   ILayoutAnimationBuilder,
-  LayoutAnimationFunction,
+  StyleTransitionAnimationFunction,
+  StyleTransitionAnimationsValues,
 } from '../animationBuilder/commonTypes';
 
 /**
@@ -22,13 +23,13 @@ export class LinearStyleTransition
     return new LinearStyleTransition() as InstanceType<T>;
   }
 
-  build = (): LayoutAnimationFunction => {
+  build = (): StyleTransitionAnimationFunction => {
     const delayFunction = this.getDelayFunction();
     const [animation, config] = this.getAnimationAndConfig();
     const callback = this.callbackV;
     const delay = this.getDelay();
 
-    return (values) => {
+    return (values: StyleTransitionAnimationsValues) => {
       'worklet';
 
       let currentTransformMatrix, targetTransformMatrix;
@@ -45,7 +46,7 @@ export class LinearStyleTransition
 
         currentTransformMatrix = cTransformMatrix;
         targetTransformMatrix = tTransformMatrix;
-        values = restValues;
+        values = restValues as unknown as StyleTransitionAnimationsValues;
       }
 
       const keys = Object.keys(values) as Array<keyof typeof values>;

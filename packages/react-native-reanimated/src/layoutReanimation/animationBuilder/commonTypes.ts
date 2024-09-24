@@ -6,68 +6,56 @@ import type {
   EasingFunction,
 } from '../../commonTypes';
 
-type BaseSnapshotOptions =
-  | `origin${'X' | 'Y'}`
-  | `globalOrigin${'X' | 'Y'}`
-  | 'width'
-  | 'height';
-
-type AdditionalSnapshotOptions =
-  | 'opacity'
-  | 'borderRadius'
-  | `border${'Top' | 'Bottom'}${'Left' | 'Right'}Radius`
-  | `border${'Top' | 'Bottom' | 'Left' | 'Right'}Width`;
-
-export type NumericLayoutAnimationsOptions =
-  | BaseSnapshotOptions
-  | AdditionalSnapshotOptions;
-
-type StringLayoutAnimationsOptions =
-  | 'backgroundColor'
-  | `border${'Top' | 'Bottom' | 'Left' | 'Right'}Color`;
-
-type LayoutAnimationValues<prefix extends 'current' | 'target'> = Record<
-  `${prefix}${Capitalize<BaseSnapshotOptions>}`,
-  number
-> &
-  Record<`${prefix}${Capitalize<StringLayoutAnimationsOptions>}`, string> &
-  Partial<Record<`${prefix}${Capitalize<AdditionalSnapshotOptions>}`, number>> &
-  Partial<Record<`${prefix}TransformMatrix`, Array<number>>>;
-
-type CurrentLayoutAnimationsValues = LayoutAnimationValues<'current'>;
-type TargetLayoutAnimationsValues = LayoutAnimationValues<'target'>;
-
 interface WindowDimensions {
   windowWidth: number;
   windowHeight: number;
 }
 
-export interface KeyframeProps extends StyleProps {
-  easing?: EasingFunction;
-}
+type PrefixedLayoutAnimationValues<prefix extends 'current' | 'target'> =
+  Record<
+    `${prefix}${
+      | `Origin${'X' | 'Y'}`
+      | `GlobalOrigin${'X' | 'Y'}`
+      | 'Width'
+      | 'Height'}`,
+    number
+  >;
 
-type FirstFrame =
-  | {
-      0: KeyframeProps & { easing?: never };
-      from?: never;
-    }
-  | {
-      0?: never;
-      from: KeyframeProps & { easing?: never };
-    };
+type PrefixedSharedTransitionCustomAnimationValues<
+  prefix extends 'current' | 'target',
+> = Record<
+  `${prefix}${
+    | 'BorderRadius'
+    | `Border${'Top' | 'Bottom'}${'Left' | 'Right'}Radius`}`,
+  number
+> &
+  Record<`${prefix}TransformMatrix`, number[]>;
 
-type LastFrame =
-  | { 100?: KeyframeProps; to?: never }
-  | { 100?: never; to: KeyframeProps };
+type PrefixedStyleTransitionCustomAnimationValues<
+  prefix extends 'current' | 'target',
+> = Record<
+  `${prefix}${'opacity' | `border${'Top' | 'Bottom' | 'Left' | 'Right'}Width`}`,
+  number
+> &
+  Record<
+    'backgroundColor' | `border${'Top' | 'Bottom' | 'Left' | 'Right'}Color`,
+    string
+  >;
 
-export type ValidKeyframeProps = FirstFrame &
-  LastFrame &
-  Record<number, KeyframeProps>;
+export type LayoutAnimationsValues = PrefixedLayoutAnimationValues<'current'> &
+  PrefixedLayoutAnimationValues<'target'> &
+  WindowDimensions;
 
-export type MaybeInvalidKeyframeProps = Record<number, KeyframeProps> & {
-  to?: KeyframeProps;
-  from?: KeyframeProps;
-};
+export interface SharedTransitionAnimationsValues
+  extends LayoutAnimationsValues,
+    PrefixedSharedTransitionCustomAnimationValues<'current'>,
+    PrefixedSharedTransitionCustomAnimationValues<'target'> {}
+
+export interface StyleTransitionAnimationsValues
+  extends LayoutAnimationsValues,
+    SharedTransitionAnimationsValues,
+    PrefixedStyleTransitionCustomAnimationValues<'current'>,
+    PrefixedStyleTransitionCustomAnimationValues<'target'> {}
 
 export type LayoutAnimation = {
   initialValues: StyleProps;
@@ -77,10 +65,10 @@ export type LayoutAnimation = {
 
 export type AnimationFunction = (a?: any, b?: any, c?: any) => any; // this is just a temporary mock
 
-export type EntryAnimationsValues = TargetLayoutAnimationsValues &
+export type EntryAnimationsValues = PrefixedLayoutAnimationValues<'target'> &
   WindowDimensions;
 
-export type ExitAnimationsValues = CurrentLayoutAnimationsValues &
+export type ExitAnimationsValues = PrefixedLayoutAnimationValues<'current'> &
   WindowDimensions;
 
 export type EntryExitAnimationFunction =
@@ -89,20 +77,6 @@ export type EntryExitAnimationFunction =
   | (() => LayoutAnimation);
 
 export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
-
-export type LayoutAnimationsValues = CurrentLayoutAnimationsValues &
-  TargetLayoutAnimationsValues &
-  WindowDimensions;
-
-export interface SharedTransitionAnimationsValues
-  extends LayoutAnimationsValues {
-  currentTransformMatrix: number[];
-  targetTransformMatrix: number[];
-}
-
-export type SharedTransitionAnimationsFunction = (
-  values: SharedTransitionAnimationsValues
-) => LayoutAnimation;
 
 export enum LayoutAnimationType {
   ENTERING = 1,
@@ -117,6 +91,14 @@ export type LayoutAnimationFunction = (
   targetValues: LayoutAnimationsValues
 ) => LayoutAnimation;
 
+export type StyleTransitionAnimationFunction = (
+  values: StyleTransitionAnimationsValues
+) => LayoutAnimation;
+
+export type SharedTransitionAnimationsFunction = (
+  values: SharedTransitionAnimationsValues
+) => LayoutAnimation;
+
 export type LayoutAnimationStartFunction = (
   tag: number,
   type: LayoutAnimationType,
@@ -125,7 +107,7 @@ export type LayoutAnimationStartFunction = (
 ) => void;
 
 export interface ILayoutAnimationBuilder {
-  build: () => LayoutAnimationFunction;
+  build: () => LayoutAnimationFunction | StyleTransitionAnimationFunction;
 }
 
 export interface BaseLayoutAnimationConfig {
@@ -209,3 +191,30 @@ export interface LayoutAnimationBatchItem {
     | undefined;
   sharedTransitionTag?: string;
 }
+
+export interface KeyframeProps extends StyleProps {
+  easing?: EasingFunction;
+}
+
+type FirstFrame =
+  | {
+      0: KeyframeProps & { easing?: never };
+      from?: never;
+    }
+  | {
+      0?: never;
+      from: KeyframeProps & { easing?: never };
+    };
+
+type LastFrame =
+  | { 100?: KeyframeProps; to?: never }
+  | { 100?: never; to: KeyframeProps };
+
+export type ValidKeyframeProps = FirstFrame &
+  LastFrame &
+  Record<number, KeyframeProps>;
+
+export type MaybeInvalidKeyframeProps = Record<number, KeyframeProps> & {
+  to?: KeyframeProps;
+  from?: KeyframeProps;
+};
