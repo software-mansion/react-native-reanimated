@@ -1,8 +1,8 @@
 #pragma once
 
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
-#include <reanimated/CSS/CSSAnimationsRegistry.h>
-#include <reanimated/CSS/ViewPropsRepository.h>
+#include <reanimated/CSS/CSSKeyframeAnimation.h>
+#include <reanimated/CSS/CSSRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
@@ -200,7 +200,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   AnimatedSensorModule animatedSensorModule_;
   const std::shared_ptr<JSLogger> jsLogger_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
-  const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
+  const std::shared_ptr<CSSRegistry> cssRegistry_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
 
 #ifdef RCT_NEW_ARCH_ENABLED

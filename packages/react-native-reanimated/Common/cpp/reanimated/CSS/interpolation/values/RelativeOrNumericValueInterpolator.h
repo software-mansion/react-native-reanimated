@@ -1,9 +1,8 @@
 #pragma once
 
-#include <reanimated/CSS/ViewPropsRepository.h>
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
+#include <reanimated/CSS/misc/ViewPropsRepository.h>
 
-#include <jsi/jsi.h>
 #include <string>
 
 namespace reanimated {

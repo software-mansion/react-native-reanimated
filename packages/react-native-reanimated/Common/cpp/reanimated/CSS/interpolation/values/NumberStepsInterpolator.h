@@ -2,8 +2,6 @@
 
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
-#include <jsi/jsi.h>
-
 namespace reanimated {
 
 class NumberStepsInterpolator : public ValueInterpolator<int> {

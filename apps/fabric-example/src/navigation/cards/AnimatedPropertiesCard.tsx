@@ -136,6 +136,7 @@ function InsetsExample() {
               left: 0,
             },
           },
+          animationTimingFunction: 'linear',
         },
       ]}
     />

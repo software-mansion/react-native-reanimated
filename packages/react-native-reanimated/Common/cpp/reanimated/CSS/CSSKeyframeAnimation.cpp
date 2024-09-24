@@ -1,22 +1,22 @@
-#include <reanimated/CSS/CSSAnimation.h>
+#include <reanimated/CSS/CSSKeyframeAnimation.h>
 
 namespace reanimated {
 
-CSSAnimation::CSSAnimation(
+CSSKeyframeAnimation::CSSKeyframeAnimation(
     jsi::Runtime &rt,
     ShadowNode::Shared shadowNode,
     const CSSAnimationConfig &config)
-    : shadowNode(shadowNode),
-      fillMode(getAnimationFillMode(config.animationFillMode)),
-      styleInterpolator(KeyframedStyleInterpolator(rt, config.keyframedStyle)),
+    : CSSAnimation(shadowNode),
+      styleInterpolator(AnimationStyleInterpolator(rt, config.keyframedStyle)),
       progressProvider(AnimationProgressProvider(
           config.animationDuration,
           config.animationDelay,
           config.animationIterationCount,
           getAnimationDirection(config.animationDirection),
-          getEasingFunction(rt, config.animationTimingFunction))) {}
+          getEasingFunction(rt, config.animationTimingFunction))),
+      fillMode(getAnimationFillMode(config.animationFillMode)) {}
 
-void CSSAnimation::start(time_t timestamp) {
+void CSSKeyframeAnimation::start(time_t timestamp) {
   progressProvider.update(timestamp);
 
   if (progressProvider.getState() == Finished) {
@@ -28,11 +28,11 @@ void CSSAnimation::start(time_t timestamp) {
   progressProvider.reset(timestamp);
 }
 
-void CSSAnimation::finish() {
+void CSSKeyframeAnimation::finish() {
   state = CSSAnimationState::finished;
 }
 
-jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
+jsi::Value CSSKeyframeAnimation::update(jsi::Runtime &rt, time_t timestamp) {
   progressProvider.update(timestamp);
 
   // Check if the animation has not started yet because of the delay
@@ -62,7 +62,7 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
   return updatedStyle;
 }
 
-CSSAnimationDirection CSSAnimation::getAnimationDirection(
+CSSAnimationDirection CSSKeyframeAnimation::getAnimationDirection(
     const std::string &str) {
   static const std::unordered_map<std::string, CSSAnimationDirection>
       strToEnumMap = {
@@ -80,7 +80,7 @@ CSSAnimationDirection CSSAnimation::getAnimationDirection(
   }
 }
 
-CSSAnimationFillMode CSSAnimation::getAnimationFillMode(
+CSSAnimationFillMode CSSKeyframeAnimation::getAnimationFillMode(
     const std::string &str) {
   static const std::unordered_map<std::string, CSSAnimationFillMode>
       strToEnumMap = {
@@ -98,7 +98,7 @@ CSSAnimationFillMode CSSAnimation::getAnimationFillMode(
   }
 }
 
-InterpolationUpdateContext CSSAnimation::createUpdateContext(
+InterpolationUpdateContext CSSKeyframeAnimation::createUpdateContext(
     jsi::Runtime &rt,
     double progress,
     bool directionChanged) const {
@@ -110,7 +110,7 @@ InterpolationUpdateContext CSSAnimation::createUpdateContext(
       progressProvider.hasDirectionChanged()};
 }
 
-jsi::Value CSSAnimation::maybeApplyBackwardsFillMode(jsi::Runtime &rt) {
+jsi::Value CSSKeyframeAnimation::maybeApplyBackwardsFillMode(jsi::Runtime &rt) {
   if (fillMode == backwards || fillMode == both) {
     // Return the style from the first animation keyframe
     return styleInterpolator.update(createUpdateContext(rt, 0, false));
@@ -118,7 +118,7 @@ jsi::Value CSSAnimation::maybeApplyBackwardsFillMode(jsi::Runtime &rt) {
   return jsi::Value::undefined();
 }
 
-jsi::Value CSSAnimation::maybeApplyForwardsFillMode(jsi::Runtime &rt) {
+jsi::Value CSSKeyframeAnimation::maybeApplyForwardsFillMode(jsi::Runtime &rt) {
   if (fillMode == forwards || fillMode == both) {
     // Don't restore the style from the view style if the forwards fill mode is
     // applied

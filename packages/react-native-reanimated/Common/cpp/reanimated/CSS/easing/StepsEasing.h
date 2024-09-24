@@ -1,10 +1,10 @@
 #pragma once
 
+#include <reanimated/CSS/utils/Algorithms.h>
+#include <reanimated/CSS/utils/EasingFunction.h>
+
 #include <functional>
 #include <vector>
-
-#include <reanimated/CSS/utility/Algorithms.h>
-#include <reanimated/CSS/utility/EasingFunction.h>
 
 namespace reanimated {
 EasingFunction createStepsEasingFunction(

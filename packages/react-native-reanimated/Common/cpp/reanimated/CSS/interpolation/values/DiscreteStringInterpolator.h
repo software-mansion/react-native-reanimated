@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
-#include <jsi/jsi.h>
 #include <string>
 
 namespace reanimated {

@@ -11,8 +11,6 @@
 #include <reanimated/CSS/interpolation/values/RelativeOrNumericValueInterpolator.h>
 #include <reanimated/CSS/interpolation/values/WithUnitInterpolator.h>
 
-#include <jsi/jsi.h>
-#include <memory>
 #include <optional>
 #include <string>
 
