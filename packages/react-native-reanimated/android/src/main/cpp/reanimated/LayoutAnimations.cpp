@@ -1,6 +1,5 @@
-#include "LayoutAnimations.h"
-#include <vector>
-#include "FeaturesConfig.h"
+#include <reanimated/LayoutAnimations.h>
+#include <reanimated/Tools/FeaturesConfig.h>
 
 namespace reanimated {
 

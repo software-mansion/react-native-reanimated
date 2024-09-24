@@ -1,12 +1,13 @@
 #pragma once
 
+#include <worklets/Registries/WorkletRuntimeRegistry.h>
+
 #include <jsi/jsi.h>
+
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "WorkletRuntimeRegistry.h"
 
 using namespace facebook;
 

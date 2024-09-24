@@ -44,7 +44,7 @@ const mockValues = {
 
 function getCommonProperties(
   layoutStyle: StyleProps,
-  componentStyle: StyleProps | Array<StyleProps>
+  componentStyle: NestedArray<StyleProps>
 ) {
   let componentStyleFlat = Array.isArray(componentStyle)
     ? componentStyle.flat()

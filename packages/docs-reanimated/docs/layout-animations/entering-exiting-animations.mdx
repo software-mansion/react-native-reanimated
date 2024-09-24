@@ -4,9 +4,17 @@ sidebar_position: 1
 
 # Entering/Exiting animations
 
+import { useEnteringExitingPlayground } from '@site/src/components/InteractivePlayground';
+
 Entering/Exiting animations let you animate elements when they are added to or removed from the view hierarchy.
 
 Reanimated comes with a bunch of predefined animations you can customize. For more advanced use-cases, you can use [Keyframes](/docs/layout-animations/keyframe-animations) or create your own [custom entering/exiting animations](/docs/layout-animations/custom-animations).
+
+<InteractivePlayground usePlayground={useEnteringExitingPlayground} />
+
+:::info
+Spring-based animations are yet to be introduced to the web. Due to that, playground doesn't cover `springify()` options but they can be applied to your animations on iOS and Android platforms.
+:::
 
 ## Remarks
 

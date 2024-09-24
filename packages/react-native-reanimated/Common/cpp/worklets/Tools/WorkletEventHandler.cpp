@@ -1,4 +1,4 @@
-#include "WorkletEventHandler.h"
+#include <worklets/Tools/WorkletEventHandler.h>
 
 namespace reanimated {
 

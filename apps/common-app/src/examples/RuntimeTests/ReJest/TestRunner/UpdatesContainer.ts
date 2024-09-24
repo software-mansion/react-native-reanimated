@@ -112,7 +112,7 @@ export function createUpdatesContainer() {
       if (!(tag in updatesForTag)) {
         updatesForTag[tag] = [];
       }
-      let update: OperationUpdate = [];
+      let update: OperationUpdate = {};
       if (propsNames.length === 0) {
         update = 'update' in updateRequest ? updateRequest.update : updateRequest.snapshot;
       } else {

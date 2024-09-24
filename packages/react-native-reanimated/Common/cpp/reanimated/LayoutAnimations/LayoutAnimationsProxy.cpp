@@ -1,12 +1,14 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include "LayoutAnimationsProxy.h"
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <reanimated/NativeModules/NativeReanimatedModule.h>
+
 #include <react/renderer/animations/utils.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
+
 #include <set>
 #include <string>
 #include <utility>
-#include "NativeReanimatedModule.h"
 
 namespace reanimated {
 
@@ -490,6 +492,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
         hasAnimatedChildren = true;
       } else {
         endAnimationsRecursively(subNode, mutations);
+        toBeRemoved.push_back(subNode);
       }
     } else if (startAnimationsRecursively(
                    subNode,
