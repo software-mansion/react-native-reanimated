@@ -7,7 +7,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/SharedItems/Shareables.h>
