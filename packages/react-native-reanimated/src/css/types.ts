@@ -62,6 +62,13 @@ export type NormalizedCSSAnimationConfig = {
   animationFillMode: CSSAnimationFillMode;
 };
 
+export type NormalizedCSSTransitionConfig = {
+  transitionProperty: string[];
+  transitionDuration: number;
+  transitionTimingFunction: CSSAnimationTimingFunction;
+  transitionDelay: number;
+};
+
 export type KeyframedValue<V> = {
   offset: number;
   value: V;
@@ -94,7 +101,7 @@ export type CSSTransitionProperty =
   | (keyof ViewStyle)[];
 
 export interface CSSTransitionConfig {
-  transitionProperty?: CSSTransitionProperty;
+  transitionProperty: CSSTransitionProperty;
   transitionDuration?: CSSAnimationTimeUnit;
   transitionTimingFunction?: CSSAnimationTimingFunction;
   transitionDelay?: CSSAnimationTimeUnit;

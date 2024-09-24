@@ -21,6 +21,7 @@ import { logger } from '../../logger';
 import { ReanimatedError } from '../../errors';
 import { WorkletsModule } from '../../worklets';
 import type { NormalizedCSSAnimationConfig } from '../../css';
+import { NormalizedCSSTransitionConfig } from '../../css/types';
 
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();
@@ -278,9 +279,46 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
+  updateCSSAnimation(
+    _animationId: number,
+    _animationConfig: NormalizedCSSAnimationConfig,
+    _viewStyle: StyleProps
+  ): void {
+    throw new ReanimatedError(
+      '`updateCSSAnimation` is not available in JSReanimated.'
+    );
+  }
+
   unregisterCSSAnimation(_animationId: number): void {
     throw new ReanimatedError(
       '`unregisterCSSAnimation` is not available in JSReanimated.'
+    );
+  }
+
+  registerCSSTransition(
+    _shadowNodeWrapper: ShadowNodeWrapper,
+    _transitionId: number,
+    _transitionConfig: NormalizedCSSTransitionConfig,
+    _viewStyle: StyleProps
+  ): void {
+    throw new ReanimatedError(
+      '`registerCSSTransition` is not available in JSReanimated.'
+    );
+  }
+
+  updateCSSTransition(
+    _transitionId: number,
+    _transitionConfig: NormalizedCSSTransitionConfig,
+    _viewStyle: StyleProps
+  ): void {
+    throw new ReanimatedError(
+      '`updateCSSTransition` is not available in JSReanimated.'
+    );
+  }
+
+  unregisterCSSTransition(_transitionId: number): void {
+    throw new ReanimatedError(
+      '`unregisterCSSTransition` is not available in JSReanimated.'
     );
   }
 }

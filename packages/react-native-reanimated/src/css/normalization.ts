@@ -13,6 +13,9 @@ import type {
   NormalizedOffsetKeyframe,
   CSSAnimationFillMode,
   TemporaryTransforms,
+  CSSTransitionConfig,
+  NormalizedCSSTransitionConfig,
+  CSSTransitionProperty,
 } from './types';
 import { ReanimatedError } from '../errors';
 import { processCSSAnimationColor } from '../Colors';
@@ -420,7 +423,7 @@ function normalizeFillMode(
   return fillMode;
 }
 
-export function normalizeConfig({
+export function normalizeAnimationConfig({
   animationName,
   animationDuration,
   animationDelay,
@@ -443,5 +446,41 @@ export function normalizeConfig({
     animationIterationCount: normalizeIterationCount(animationIterationCount),
     animationDirection: normalizeDirection(animationDirection),
     animationFillMode: normalizeFillMode(animationFillMode),
+  };
+}
+
+function normalizeTransitionProperty(
+  transitionProperty: CSSTransitionProperty,
+  viewStyle: ViewStyle
+): string[] {
+  if (Array.isArray(transitionProperty)) {
+    return transitionProperty;
+  }
+  if (transitionProperty === 'all') {
+    return Object.keys(viewStyle);
+  }
+  if (transitionProperty === 'none') {
+    return [];
+  }
+  return [transitionProperty];
+}
+
+export function normalizeTransitionConfig(
+  {
+    transitionProperty,
+    transitionDuration,
+    transitionTimingFunction,
+    transitionDelay,
+  }: CSSTransitionConfig,
+  viewStyle: ViewStyle
+): NormalizedCSSTransitionConfig {
+  return {
+    transitionProperty: normalizeTransitionProperty(
+      transitionProperty,
+      viewStyle
+    ),
+    transitionDuration: normalizeDuration(transitionDuration),
+    transitionTimingFunction: transitionTimingFunction ?? 'ease',
+    transitionDelay: normalizeDelay(transitionDelay),
   };
 }

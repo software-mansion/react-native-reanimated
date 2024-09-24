@@ -2,6 +2,7 @@ import { processCSSAnimationColor } from '../Colors';
 import type { StyleProps } from '../commonTypes';
 import type {
   CSSAnimationConfig,
+  CSSAnimationKeyframes,
   CSSTransitionConfig,
   CSSTransitionProperty,
 } from './types';
@@ -40,30 +41,27 @@ export function isColorProp(prop: string, value: unknown): boolean {
   );
 }
 
-export function extractAnimationConfigAndFlattenedStyles(
+export function extractCSSConfigsAndFlattenedStyles(
   styles: StyleProps[]
-): [CSSAnimationConfig | null, StyleProps] {
-  const animationName = styles.reduceRight((acc, style) => {
-    return acc || style?.animationName;
-  }, undefined);
-
-  if (!animationName) {
-    return [null, {}];
-  }
-
-  const config: CSSAnimationConfig = { animationName };
+): [CSSAnimationConfig | null, CSSTransitionConfig | null, StyleProps] {
+  let animationName: CSSAnimationKeyframes | null = null;
+  let transitionProperty: CSSTransitionProperty | null = null;
+  const animationConfig: Partial<CSSAnimationConfig> = {};
+  const transitionConfig: Partial<CSSTransitionConfig> = {};
   const flattenedStyle: StyleProps = {};
 
   for (const style of styles) {
     for (const prop in style) {
       const value = style[prop];
-      if (prop === 'animationName') {
-        continue;
-      } else if (isAnimationSetting(prop)) {
-        config[prop] = value;
 
-        // TODO: Maybe throw error or display a warning if the same property
-        // is defined in more than one style object
+      if (prop === 'animationName') {
+        animationName = value as CSSAnimationKeyframes;
+      } else if (prop === 'transitionProperty') {
+        transitionProperty = value as CSSTransitionProperty;
+      } else if (isAnimationSetting(prop)) {
+        animationConfig[prop] = value;
+      } else if (isTransitionSetting(prop)) {
+        transitionConfig[prop] = value;
       } else if (isColorProp(prop, value)) {
         flattenedStyle[prop] = processCSSAnimationColor(value);
       } else {
@@ -72,70 +70,18 @@ export function extractAnimationConfigAndFlattenedStyles(
     }
   }
 
-  return [config, flattenedStyle];
-}
+  // Return animationConfig only if the animationName is present
+  const finalAnimationConfig = animationName
+    ? ({ ...animationConfig, animationName } as CSSAnimationConfig)
+    : null;
 
-export function extractTransitionConfigAndFlattenedStyles(
-  styles: StyleProps[]
-): [CSSTransitionConfig | null, StyleProps] {
-  const config: CSSTransitionConfig = {};
-  const flattenedStyle: StyleProps = {};
-  let hasConfig = false;
+  // Return transitionConfig only if the transitionProperty is present
+  const hasTransitionConfig = Array.isArray(transitionProperty)
+    ? transitionProperty.length > 0
+    : !!transitionProperty;
+  const finalTransitionConfig = hasTransitionConfig
+    ? ({ ...transitionConfig, transitionProperty } as CSSTransitionConfig)
+    : null;
 
-  for (const style of styles) {
-    for (const prop in style) {
-      const value = style[prop];
-      if (isTransitionSetting(prop)) {
-        config[prop] = value;
-        hasConfig = true;
-      } else {
-        flattenedStyle[prop] = value;
-      }
-    }
-  }
-
-  if (!hasConfig) {
-    return [null, {}];
-  } else {
-    if (!config.transitionProperty) {
-      // we default to 'all' transitionProperty
-      config.transitionProperty = 'all';
-    }
-    if (
-      typeof config.transitionProperty === 'object' &&
-      config.transitionProperty.length === 0
-    ) {
-      // empty transitionProperty array is the same as 'none'
-      config.transitionProperty = 'none';
-    }
-    return [config, flattenedStyle];
-  }
-}
-
-export function getTransitionStyles(
-  prevStyles: StyleProps,
-  nextStyles: StyleProps,
-  transitionProperty: CSSTransitionProperty
-): [StyleProps | null, StyleProps | null] {
-  let prevTransitionStyles: StyleProps = {};
-  let nextTransitionStyles: StyleProps = {};
-
-  if (transitionProperty === 'all') {
-    prevTransitionStyles = prevStyles;
-    nextTransitionStyles = nextStyles;
-  } else if (typeof transitionProperty === 'object') {
-    for (const prop of transitionProperty) {
-      if (prevStyles[prop] && nextStyles[prop]) {
-        prevTransitionStyles[prop as string] = prevStyles[prop];
-        nextTransitionStyles[prop as string] = nextStyles[prop];
-      }
-    }
-  }
-
-  if (Object.keys(nextTransitionStyles).length === 0) {
-    // no styles to transition
-    return [null, null];
-  } else {
-    return [prevTransitionStyles, nextTransitionStyles];
-  }
+  return [finalAnimationConfig, finalTransitionConfig, flattenedStyle];
 }
