@@ -3,6 +3,7 @@ import type { NavigationState } from '@react-navigation/native';
 import { NavigationContainer } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native';
+import { PortalProvider } from '@gorhom/portal';
 
 import { noop } from './src/utils';
 import { ExamplesStackNavigator, navigationRef } from './src/navigation';
@@ -40,13 +41,15 @@ export default function App() {
   }, []);
 
   return (
-    <NavigationContainer
-      initialState={navigationState}
-      ref={navigationRef}
-      onStateChange={persistNavigationState}>
-      <SafeAreaView style={flex.fill}>
-        <ExamplesStackNavigator />
-      </SafeAreaView>
-    </NavigationContainer>
+    <PortalProvider>
+      <NavigationContainer
+        initialState={navigationState}
+        ref={navigationRef}
+        onStateChange={persistNavigationState}>
+        <SafeAreaView style={flex.fill}>
+          <ExamplesStackNavigator />
+        </SafeAreaView>
+      </NavigationContainer>
+    </PortalProvider>
   );
 }

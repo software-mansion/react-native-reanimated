@@ -528,15 +528,21 @@ void ReanimatedModuleProxy::registerCSSAnimation(
 void ReanimatedModuleProxy::updateCSSAnimation(
     jsi::Runtime &rt,
     const jsi::Value &animationId,
-    const jsi::Value &animationConfig,
+    const jsi::Value &updatedSettings,
     const jsi::Value &viewStyle) {
   // TODO
+  LOG(INFO) << "Updating CSS animation with id: " << animationId.asNumber()
+            << " and updated settings: "
+            << stringifyJSIValue(rt, updatedSettings)
+            << " and viewStyle: " << stringifyJSIValue(rt, viewStyle);
+  cssRegistry_->updateConfig(
+      rt, animationId.asNumber(), updatedSettings, viewStyle);
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimation(
     const jsi::Value &animationId,
     const jsi::Value &revertChanges) {
-  cssRegistry_->finish(animationId.asNumber(), revertChanges.asBool());
+  cssRegistry_->remove(animationId.asNumber(), revertChanges.asBool());
 }
 
 void ReanimatedModuleProxy::registerCSSTransition(
@@ -586,7 +592,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
 
 void ReanimatedModuleProxy::unregisterCSSTransition(
     const jsi::Value &transitionId) {
-  cssRegistry_->finish(transitionId.asNumber(), false);
+  cssRegistry_->remove(transitionId.asNumber(), false);
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -708,7 +714,7 @@ void ReanimatedModuleProxy::maybeRunCssAnimationsLoop() {
 
     *cssLoop = [this, cssLoop](const double timestampMs) {
       performOperations();
-      if (!cssRegistry_->isEmpty()) {
+      if (cssRegistry_->hasActiveAnimations()) {
         jsi::Runtime &rt =
             workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
         requestRender_(*cssLoop, rt);

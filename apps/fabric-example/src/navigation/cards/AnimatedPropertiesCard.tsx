@@ -1,7 +1,10 @@
 import { StyleSheet, View } from 'react-native';
 import type { RouteCardComponent } from '../../components';
 import { RouteCard } from '../../components';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type {
+  CSSAnimationConfig,
+  CSSAnimationSettings,
+} from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 import { colors, radius, sizes, spacing } from '../../theme';
 import { Children } from 'react';
@@ -17,7 +20,7 @@ const scrollAnimation: CSSAnimationConfig = {
   animationTimingFunction: 'linear',
 };
 
-const exampleAnimationSettings: Omit<CSSAnimationConfig, 'animationName'> = {
+const exampleAnimationSettings: CSSAnimationSettings = {
   animationDuration: '3s',
   animationIterationCount: 'infinite',
 };

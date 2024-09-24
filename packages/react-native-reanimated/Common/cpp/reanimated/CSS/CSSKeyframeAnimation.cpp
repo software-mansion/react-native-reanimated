@@ -16,6 +16,12 @@ CSSKeyframeAnimation::CSSKeyframeAnimation(
           getEasingFunction(rt, config.animationTimingFunction))),
       fillMode(getAnimationFillMode(config.animationFillMode)) {}
 
+void CSSKeyframeAnimation::updateSettings(
+    jsi::Runtime &rt,
+    const jsi::Value &settings) {
+  const auto settingsObject = settings.asObject(rt);
+}
+
 void CSSKeyframeAnimation::start(time_t timestamp) {
   progressProvider.update(timestamp);
 

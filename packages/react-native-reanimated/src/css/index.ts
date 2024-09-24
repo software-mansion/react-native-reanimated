@@ -1,41 +1,34 @@
 'use strict';
 import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
 import { ReanimatedModule } from '../ReanimatedModule';
-import {
-  normalizeAnimationConfig,
-  normalizeTransitionConfig,
-} from './normalization';
 import type {
   CSSAnimationConfig,
   NormalizedCSSAnimationConfig,
   CSSTransitionConfig,
+  NormalizedCSSAnimationSettings,
+  NormalizedCSSTransitionConfig,
 } from './types';
 
 export function registerCSSAnimation(
   shadowNodeWrapper: ShadowNodeWrapper,
   animationId: number,
-  animationConfig: CSSAnimationConfig,
+  animationConfig: NormalizedCSSAnimationConfig,
   viewStyle: StyleProps
 ) {
   ReanimatedModule.registerCSSAnimation(
     shadowNodeWrapper,
     animationId,
-    normalizeAnimationConfig(animationConfig),
+    animationConfig,
     viewStyle
   );
 }
 
 export function updateCSSAnimation(
   animationId: number,
-  animationConfig: CSSAnimationConfig,
+  updatedSettings: Partial<NormalizedCSSAnimationSettings>,
   viewStyle: StyleProps
 ) {
-  ReanimatedModule.updateCSSAnimation(
-    animationId,
-    // TODO - improve this not to normalize every time
-    normalizeAnimationConfig(animationConfig),
-    viewStyle
-  );
+  ReanimatedModule.updateCSSAnimation(animationId, updatedSettings, viewStyle);
 }
 
 export function unregisterCSSAnimation(
@@ -48,26 +41,25 @@ export function unregisterCSSAnimation(
 export function registerCSSTransition(
   shadowNodeWrapper: ShadowNodeWrapper,
   transitionId: number,
-  transitionConfig: CSSTransitionConfig,
+  transitionConfig: NormalizedCSSTransitionConfig,
   viewStyle: StyleProps
 ) {
   ReanimatedModule.registerCSSTransition(
     shadowNodeWrapper,
     transitionId,
-    normalizeTransitionConfig(transitionConfig, viewStyle),
+    transitionConfig,
     viewStyle
   );
 }
 
 export function updateCSSTransition(
   transitionId: number,
-  transitionConfig: CSSTransitionConfig,
+  transitionConfig: NormalizedCSSTransitionConfig,
   viewStyle: StyleProps
 ) {
   ReanimatedModule.updateCSSTransition(
     transitionId,
-    // TODO - improve this not to normalize every time
-    normalizeTransitionConfig(transitionConfig, viewStyle),
+    transitionConfig,
     viewStyle
   );
 }
@@ -76,13 +68,18 @@ export function unregisterCSSTransition(transitionId: number) {
   ReanimatedModule.unregisterCSSTransition(transitionId);
 }
 
-export { cubicBezier, linear, steps } from './parametrizedEasings';
+export { cubicBezier, linear, steps } from './easings';
 export type {
   NormalizedCSSAnimationConfig,
   CSSAnimationConfig,
   CSSTransitionConfig,
 };
 export * from './utils';
+export {
+  normalizeAnimationConfig,
+  normalizeAnimationSettings,
+  normalizeTransitionConfig,
+} from './normalization';
 export type {
   CSSAnimationKeyframes,
   CSSAnimationTimeUnit as CSSAnimationDuration,
@@ -91,5 +88,8 @@ export type {
   CSSAnimationDirection,
   CSSAnimationTimingFunction,
   CSSAnimationFillMode,
+  CSSAnimationSettings,
   CSSTransitionProperty,
+  NormalizedCSSAnimationSettings,
+  NormalizedCSSTransitionConfig,
 } from './types';

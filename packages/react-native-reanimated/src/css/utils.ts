@@ -3,11 +3,12 @@ import type { StyleProps } from '../commonTypes';
 import type {
   CSSAnimationConfig,
   CSSAnimationKeyframes,
+  CSSAnimationSettings,
   CSSTransitionConfig,
   CSSTransitionProperty,
 } from './types';
 
-type AnimationSettingProp = keyof Omit<CSSAnimationConfig, 'animationName'>;
+type AnimationSettingProp = keyof CSSAnimationSettings;
 type TransitionSettingProp = keyof CSSTransitionConfig;
 
 const ANIMATION_SETTINGS: AnimationSettingProp[] = [

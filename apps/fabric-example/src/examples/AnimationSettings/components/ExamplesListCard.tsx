@@ -1,9 +1,12 @@
 import { StyleSheet, View } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
-import { spacing, text } from '../../../theme';
+import type {
+  CSSAnimationConfig,
+  CSSAnimationSettings,
+} from 'react-native-reanimated';
+import { spacing } from '../../../theme';
 import { Text } from '../../../components';
 
-export type ExampleItemProps = Omit<CSSAnimationConfig, 'animationName'> & {
+export type ExampleItemProps = CSSAnimationSettings & {
   label: string;
 };
 

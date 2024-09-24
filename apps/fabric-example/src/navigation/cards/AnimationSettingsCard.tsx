@@ -5,10 +5,11 @@ import { colors, radius, sizes, spacing } from '../../theme';
 import type {
   CSSAnimationConfig,
   CSSAnimationDelay,
+  CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
-const animationSettings: Omit<CSSAnimationConfig, 'animationName'> = {
+const animationSettings: CSSAnimationSettings = {
   animationDuration: '2s',
   animationIterationCount: 'infinite',
   animationTimingFunction: 'easeInOut',

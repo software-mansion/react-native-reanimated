@@ -118,6 +118,10 @@ const routes = {
         name: 'Changing Animation',
         Component: Miscellaneous.ChangingAnimation,
       },
+      UpdatingAnimationConfig: {
+        name: 'Updating Animation Config',
+        Component: Miscellaneous.UpdatingAnimationConfig,
+      },
     },
   },
 } satisfies Routes;

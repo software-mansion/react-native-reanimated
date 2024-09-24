@@ -28,6 +28,8 @@ class CSSKeyframeAnimation : public CSSAnimation {
       ShadowNode::Shared shadowNode,
       const CSSAnimationConfig &config);
 
+  void updateSettings(jsi::Runtime &rt, const jsi::Value &settings) override;
+
   void updateViewStyle(jsi::Runtime &rt, const jsi::Value &value) override {
     styleInterpolator.setFallbackValue(rt, value);
   }
