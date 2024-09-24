@@ -16,7 +16,7 @@ import {
 import { colors, flex, radius, sizes, spacing } from '../../theme';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useCallback, useState } from 'react';
-import { typedMemo } from '../../utils';
+import { formatAnimationCode, typedMemo } from '../../utils';
 
 const keyframes: CSSAnimationKeyframes = {
   to: {
@@ -110,7 +110,7 @@ export default function UpdatingAnimationConfig() {
           title="Animation Configuration"
           description="Selected animation configuration">
           <Animated.View style={styles.codeWrapper} layout={LinearTransition}>
-            <CodeBlock code={JSON.stringify(animationConfig, null, 2)} />
+            <CodeBlock code={formatAnimationCode(animationConfig)} />
           </Animated.View>
         </Section>
       </Stagger>

@@ -40,11 +40,8 @@ export default function ExampleScreen({
           if (!result[k]) {
             result[k] = [];
           }
-          // @ts-expect-error this is fine
-          if (typeof item[k] !== 'object') {
-            // @ts-expect-error - this is fine too
-            result[k].push(item[k]);
-          }
+          // @ts-expect-error - this is fine
+          result[k].push(item[k].toString());
         }
       }
     }

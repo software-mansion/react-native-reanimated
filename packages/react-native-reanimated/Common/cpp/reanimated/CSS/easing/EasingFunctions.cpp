@@ -53,7 +53,7 @@ EasingFunction getParametrizedEasingFunction(
     double x2 = obj.getProperty(rt, "x2").asNumber();
     double y2 = obj.getProperty(rt, "y2").asNumber();
     return createBezierFunction(x1, y1, x2, y2);
-  } else if (easingName == "linearParametrized" || easingName == "steps") {
+  } else if (easingName == "linear" || easingName == "steps") {
     auto getPointsArray = [&](std::string easing, std::string coord) {
       std::string propName = (easing == "steps" ? "steps" : "points") + coord;
       return obj.getProperty(rt, propName.c_str()).asObject(rt).asArray(rt);

@@ -4,11 +4,12 @@ import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import { Section, TabView } from '../../components';
+import { Scroll, Section, TabView } from '../../components';
 import { sizes, colors, radius } from '../../theme';
 import Animated from 'react-native-reanimated';
 import type { ExampleCardProps } from './components';
 import { ExampleCard } from './components';
+import { formatAnimationCode } from '../../utils';
 
 export default function DimensionsExample() {
   return (
@@ -34,7 +35,7 @@ function AbsoluteDimensionsExample() {
   };
 
   return (
-    <>
+    <Scroll>
       <Section title="Width">
         <Example
           config={{
@@ -134,7 +135,7 @@ function AbsoluteDimensionsExample() {
           title="Max Height"
         />
       </Section>
-    </>
+    </Scroll>
   );
 }
 
@@ -146,7 +147,7 @@ function RelativeDimensionsExample() {
   };
 
   return (
-    <>
+    <Scroll>
       <Section title="Width">
         <Example
           config={{
@@ -248,7 +249,7 @@ function RelativeDimensionsExample() {
           title="Max Height"
         />
       </Section>
-    </>
+    </Scroll>
   );
 }
 
@@ -259,7 +260,7 @@ function MixedDimensionsExample() {
   };
 
   return (
-    <>
+    <Scroll>
       <Section title="Width">
         <Example
           config={{
@@ -313,7 +314,7 @@ function MixedDimensionsExample() {
           collapsedExampleHeight={300}
         />
       </Section>
-    </>
+    </Scroll>
   );
 }
 
@@ -331,7 +332,7 @@ export function Example({
 }: ExampleProps) {
   return (
     <ExampleCard
-      code={JSON.stringify(config, null, 2)}
+      code={formatAnimationCode(config)}
       collapsedCode={JSON.stringify(config.animationName, null, 2)}
       {...cardProps}>
       <Animated.View style={[styles.box, config, { width, height }]} />

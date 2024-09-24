@@ -17,6 +17,7 @@ import Animated, {
   LinearTransition,
 } from 'react-native-reanimated';
 import { useState } from 'react';
+import { formatAnimationCode } from '../../utils';
 
 const sharedConfig: CSSAnimationSettings = {
   animationDuration: '1s',
@@ -127,7 +128,7 @@ export default function ChangingAnimation() {
           description="Selected animation configuration">
           <Animated.View style={styles.codeWrapper} layout={LinearTransition}>
             {animation ? (
-              <CodeBlock code={JSON.stringify(animation, null, 2)} />
+              <CodeBlock code={formatAnimationCode(animation)} />
             ) : (
               <Text variant="subHeading2">No animation selected</Text>
             )}
