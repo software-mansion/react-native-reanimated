@@ -16,7 +16,7 @@
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
-#endif
+#endif // __ANDROID__
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/scheduler/Scheduler.h>
