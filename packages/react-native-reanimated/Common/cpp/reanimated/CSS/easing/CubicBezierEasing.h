@@ -1,9 +1,9 @@
 #pragma once
 
+#include <reanimated/CSS/utils/EasingFunction.h>
+
 #include <cmath>
 #include <functional>
-
-#include <reanimated/CSS/utility/EasingFunction.h>
 
 namespace reanimated {
 

@@ -3,34 +3,30 @@
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
 #include <reanimated/CSS/CSSAnimation.h>
-#include <reanimated/CSS/CSSAnimationsRegistry.h>
 
 #include <react/renderer/core/ShadowNode.h>
 
+#include <memory>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 namespace reanimated {
 
-using namespace facebook;
-using namespace react;
-
 using UpdatesBatch =
     std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>;
 
-class CSSAnimationsRegistry {
+class CSSRegistry {
  public:
-  void addAnimation(
+  void add(
       jsi::Runtime &rt,
-      ShadowNode::Shared shadowNode,
       const unsigned id,
-      const CSSAnimationConfig &config,
+      const std::shared_ptr<CSSAnimation> &animation,
       const jsi::Value &viewStyle);
 
-  void removeAnimation(const unsigned id);
+  void remove(const unsigned id);
 
-  UpdatesBatch updateAnimations(jsi::Runtime &rt, const double timestamp);
+  UpdatesBatch update(jsi::Runtime &rt, const double timestamp);
 
   bool isEmpty() const;
 
@@ -39,7 +35,7 @@ class CSSAnimationsRegistry {
   void setCssLoopRunning(const bool running);
 
  private:
-  std::unordered_map<unsigned, CSSAnimation> registry_;
+  std::unordered_map<unsigned, std::shared_ptr<CSSAnimation>> registry_;
   std::vector<unsigned> removalQueue_;
   bool cssLoopRunning_ = false;
 

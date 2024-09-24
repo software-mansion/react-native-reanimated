@@ -1,20 +1,19 @@
-#include <reanimated/CSS/interpolation/KeyframedStyleInterpolator.h>
+#pragma once
+
+#include <reanimated/CSS/interpolation/InterpolatorFactory.h>
+#include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
 
 namespace reanimated {
 
 using namespace Interpolators;
 
-KeyframedStyleInterpolator::KeyframedStyleInterpolator(
-    jsi::Runtime &rt,
-    const jsi::Object &keyframedStyle)
-    : ObjectPropertiesInterpolator(rt, keyframedStyle, getFactories()) {}
-
-const ObjectPropertiesInterpolatorFactories &
-KeyframedStyleInterpolator::getFactories() {
+const ObjectPropertiesInterpolatorFactories styleInterpolatorFactories = []() {
+  // Local constants
   const unsigned TRANSPARENT = 0x00000000;
 
+  // Initialize the factories
   // TODO: Set proper default values for all the interpolators
-  static const ObjectPropertiesInterpolatorFactories factories = {
+  return ObjectPropertiesInterpolatorFactories{
       // Colors
       {"backgroundColor", color(TRANSPARENT)},
       {"borderBlockColor", color(TRANSPARENT)},
@@ -92,10 +91,8 @@ KeyframedStyleInterpolator::getFactories() {
       // check if we should animate in such a case
       {"start", relativeOrNumeric(TargetType::Parent, "width")},
       {"end", relativeOrNumeric(TargetType::Parent, "width")},
-
       // TODO: This also can be auto or relative to width/height
       {"flexBasis", relativeOrNumeric(TargetType::Parent, "width")},
-
       // TODO: This is relative to width for columns and height for rows
       {"gap", relativeOrNumeric(TargetType::Parent, "width")},
       {"rowGap", relativeOrNumeric(TargetType::Parent, "height")},
@@ -157,16 +154,9 @@ KeyframedStyleInterpolator::getFactories() {
       {"aspectRatio", relativeOrNumeric(TargetType::Self, "width")},
 
       // Complex Props (Objects)
-      {"shadowOffset",
-       object({
-           {"width", numeric()},
-           {"height", numeric()},
-       })},
+      {"shadowOffset", object({{"width", numeric()}, {"height", numeric()}})},
       {"textShadowOffset",
-       object({
-           {"width", numeric()},
-           {"height", numeric()},
-       })},
+       object({{"width", numeric()}, {"height", numeric()}})},
 
       // Transforms
       {"transform",
@@ -184,10 +174,7 @@ KeyframedStyleInterpolator::getFactories() {
            {"skewY", withUnit("deg", 0)},
            {"matrix", matrix()},
            {"perspective", numeric(0)},
-       })},
-  };
-
-  return factories;
-}
+       })}};
+}();
 
 } // namespace reanimated

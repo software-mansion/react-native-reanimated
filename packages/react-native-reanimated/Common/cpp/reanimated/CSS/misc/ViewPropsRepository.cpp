@@ -1,4 +1,4 @@
-#include <reanimated/CSS/ViewPropsRepository.h>
+#include <reanimated/CSS/misc/ViewPropsRepository.h>
 
 namespace reanimated {
 

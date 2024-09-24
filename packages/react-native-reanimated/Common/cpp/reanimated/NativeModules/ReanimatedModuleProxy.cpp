@@ -13,6 +13,7 @@
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/AsyncQueue.h>
+#include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/WorkletEventHandler.h>
 
 #ifdef __ANDROID__
@@ -73,7 +74,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
       layoutAnimationsManager_(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
-      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
+      cssRegistry_(std::make_shared<CSSRegistry>()),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction_(
@@ -511,19 +512,16 @@ void ReanimatedModuleProxy::registerCSSAnimation(
       animationDirection,
       animationFillMode};
 
-  cssAnimationsRegistry_->addAnimation(
-      rt,
-      shadowNodeFromValue(rt, shadowNodeWrapper),
-      animationId.asNumber(),
-      config,
-      viewStyle);
+  std::shared_ptr<CSSKeyframeAnimation> animation =
+      std::make_shared<CSSKeyframeAnimation>(rt, shadowNode, config);
 
+  cssRegistry_->add(rt, animationId.asNumber(), animation, viewStyle);
   maybeRunCssAnimationsLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimation(
     const jsi::Value &animationId) {
-  cssAnimationsRegistry_->removeAnimation(animationId.asNumber());
+  cssRegistry_->remove(animationId.asNumber());
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -633,11 +631,11 @@ void ReanimatedModuleProxy::updateProps(
 }
 
 void ReanimatedModuleProxy::maybeRunCssAnimationsLoop() {
-  if (cssAnimationsRegistry_->isCssLoopRunning()) {
+  if (cssRegistry_->isCssLoopRunning()) {
     return;
   }
 
-  cssAnimationsRegistry_->setCssLoopRunning(true);
+  cssRegistry_->setCssLoopRunning(true);
 
   workletsModuleProxy_->getUIScheduler()->scheduleOnUI([this]() {
     std::shared_ptr<std::function<void(const double)>> cssLoop =
@@ -645,12 +643,12 @@ void ReanimatedModuleProxy::maybeRunCssAnimationsLoop() {
 
     *cssLoop = [this, cssLoop](const double timestampMs) {
       performOperations();
-      if (!cssAnimationsRegistry_->isEmpty()) {
+      if (!cssRegistry_->isEmpty()) {
         jsi::Runtime &rt =
             workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
         requestRender_(*cssLoop, rt);
       } else {
-        cssAnimationsRegistry_->setCssLoopRunning(false);
+        cssRegistry_->setCssLoopRunning(false);
       }
     };
 
@@ -666,7 +664,7 @@ void ReanimatedModuleProxy::performOperations() {
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   const auto timestamp = getAnimationTimestamp_();
 
-  auto updates = cssAnimationsRegistry_->updateAnimations(rt, timestamp);
+  auto updates = cssRegistry_->update(rt, timestamp);
   for (const auto &[shadowNode, props] : updates) {
     operationsInBatch_.emplace_back(
         shadowNode, std::make_unique<jsi::Value>(rt, *props));

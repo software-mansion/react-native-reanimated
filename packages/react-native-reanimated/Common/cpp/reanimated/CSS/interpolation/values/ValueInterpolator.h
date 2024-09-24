@@ -2,8 +2,6 @@
 
 #include <reanimated/CSS/interpolation/Interpolator.h>
 
-#include <jsi/jsi.h>
-#include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>

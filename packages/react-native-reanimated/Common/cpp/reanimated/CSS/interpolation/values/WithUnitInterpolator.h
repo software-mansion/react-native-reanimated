@@ -2,7 +2,6 @@
 
 #include <reanimated/CSS/interpolation/values/NumericValueInterpolator.h>
 
-#include <jsi/jsi.h>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
