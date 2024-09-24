@@ -41,9 +41,7 @@ function getTheme(theme: boolean, disabled: boolean) {
       height: withSpring(values.targetHeight, config),
       originX: withSpring(values.targetOriginX, config),
       originY: withSpring(values.targetOriginY, config),
-      borderRadius: values.targetBorderRadius
-        ? withSpring(values.targetBorderRadius, config)
-        : undefined,
+      borderRadius: withSpring(values.targetBorderRadius, config),
     };
   })
     .progressAnimation((values, progress) => {
@@ -70,14 +68,11 @@ function getTheme(theme: boolean, disabled: boolean) {
           values.targetOriginY,
           values.currentOriginY
         ),
-        borderRadius:
-          values.targetBorderRadius && values.currentBorderRadius
-            ? getValue(
-                progress,
-                values.targetBorderRadius,
-                values.currentBorderRadius
-              )
-            : undefined,
+        borderRadius: getValue(
+          progress,
+          values.targetBorderRadius,
+          values.currentBorderRadius
+        ),
       };
     })
     .defaultTransitionType(SharedTransitionType.ANIMATION);

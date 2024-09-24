@@ -1,6 +1,5 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/NativeModules/NativeReanimatedModule.h>
 
 #include <react/renderer/animations/utils.h>
@@ -9,6 +8,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include "YogaPropertySettingUtils.cpp"
 
 namespace reanimated {
 
@@ -616,70 +616,6 @@ void LayoutAnimationsProxy::createLayoutAnimation(
       tag, LayoutAnimation{finalView, currentView, parentView, {}, count});
 }
 
-void setYogaCurrentSnapshotProperties(
-    const jsi::Object *yogaValues,
-    jsi::Runtime &runtime,
-    LayoutSnapshot currentValues) {
-  yogaValues->setProperty(runtime, "currentOriginX", currentValues.x);
-  yogaValues->setProperty(runtime, "currentGlobalOriginX", currentValues.x);
-  yogaValues->setProperty(runtime, "currentOriginY", currentValues.y);
-  yogaValues->setProperty(runtime, "currentGlobalOriginY", currentValues.y);
-  yogaValues->setProperty(runtime, "currentWidth", currentValues.width);
-  yogaValues->setProperty(runtime, "currentHeight", currentValues.height);
-}
-void setYogaTargetSnapshotProperties(
-    const jsi::Object *yogaValues,
-    jsi::Runtime &runtime,
-    LayoutSnapshot targetValues) {
-  yogaValues->setProperty(runtime, "targetOriginX", targetValues.x);
-  yogaValues->setProperty(runtime, "targetGlobalOriginX", targetValues.x);
-  yogaValues->setProperty(runtime, "targetOriginY", targetValues.y);
-  yogaValues->setProperty(runtime, "targetGlobalOriginY", targetValues.y);
-  yogaValues->setProperty(runtime, "targetWidth", targetValues.width);
-  yogaValues->setProperty(runtime, "targetHeight", targetValues.height);
-}
-
-template <typename T>
-void setYogaCurrentAndTargetValuePair(
-    const jsi::Object *yogaValues,
-    jsi::Runtime &runtime,
-    const char *propName,
-    T &&currentValue,
-    T &&targetValue) {
-  const auto current_word_len = 7;
-  const auto target_word_len = 6;
-
-  char currentPropName[50];
-  char targetPropName[50];
-
-  snprintf(currentPropName, current_word_len + 1, "current");
-  snprintf(
-      currentPropName + current_word_len, strlen(propName) + 1, "%s", propName);
-  snprintf(targetPropName, target_word_len + 1, "target");
-  snprintf(
-      targetPropName + target_word_len, strlen(propName) + 1, "%s", propName);
-
-  yogaValues->setProperty(runtime, currentPropName, currentValue);
-  yogaValues->setProperty(runtime, targetPropName, targetValue);
-}
-
-void setYogaTransformMatrix(
-    const jsi::Object *yogaValues,
-    jsi::Runtime &runtime,
-    std::array<Float, 16> currentTransformMatrix,
-    std::array<Float, 16> targetTransformMatrix) {
-  jsi::Array currentMatrix(runtime, 16);
-  jsi::Array targetMatrix(runtime, 16);
-
-  for (unsigned int i = 0; i < 16; i++) {
-    currentMatrix.setValueAtIndex(runtime, i, currentTransformMatrix[i]);
-    targetMatrix.setValueAtIndex(runtime, i, targetTransformMatrix[i]);
-  }
-
-  yogaValues->setProperty(runtime, "currentTransformMatrix", currentMatrix);
-  yogaValues->setProperty(runtime, "targetTransformMatrix", targetMatrix);
-}
-
 void LayoutAnimationsProxy::startEnteringAnimation(
     const int tag,
     ShadowViewMutation &mutation) const {
@@ -707,9 +643,8 @@ void LayoutAnimationsProxy::startEnteringAnimation(
 
         LayoutSnapshot values(mutation.newChildShadowView, window);
         jsi::Object yogaValues(uiRuntime_);
-        setYogaTargetSnapshotProperties(&yogaValues, uiRuntime_, values);
-        yogaValues.setProperty(uiRuntime_, "windowWidth", values.windowWidth);
-        yogaValues.setProperty(uiRuntime_, "windowHeight", values.windowHeight);
+        setYogaPropertiesForEnteringAnimation(&yogaValues, uiRuntime_, values);
+
         layoutAnimationsManager_->startLayoutAnimation(
             uiRuntime_, tag, LayoutAnimationType::ENTERING, yogaValues);
       });
@@ -734,11 +669,8 @@ void LayoutAnimationsProxy::startExitingAnimation(
     }
 
     LayoutSnapshot values(oldView, window);
-
     jsi::Object yogaValues(uiRuntime_);
-    setYogaCurrentSnapshotProperties(&yogaValues, uiRuntime_, values);
-    yogaValues.setProperty(uiRuntime_, "windowWidth", values.windowWidth);
-    yogaValues.setProperty(uiRuntime_, "windowHeight", values.windowHeight);
+    setYogaPropertiesForExitingAnimation(&yogaValues, uiRuntime_, values);
     layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime_, tag, LayoutAnimationType::EXITING, yogaValues);
     layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
@@ -769,53 +701,15 @@ void LayoutAnimationsProxy::startLayoutAnimation(
 
     jsi::Object yogaValues(uiRuntime_);
 
-    setYogaCurrentSnapshotProperties(&yogaValues, uiRuntime_, currentValues);
-    setYogaTargetSnapshotProperties(&yogaValues, uiRuntime_, targetValues);
-
-    yogaValues.setProperty(
-        uiRuntime_, "currentWindowWidth", currentValues.windowWidth);
-    yogaValues.setProperty(
-        uiRuntime_, "targetWindowWidth", targetValues.windowWidth);
-    yogaValues.setProperty(
-        uiRuntime_, "currentWindowHeight", currentValues.windowHeight);
-    yogaValues.setProperty(
-        uiRuntime_, "targetWindowHeight", targetValues.windowHeight);
+    setYogaPropertiesForLayoutTransitionAnimation(
+        &yogaValues, uiRuntime_, currentValues, targetValues);
 
     if (makeFullSnapshot) {
       StyleSnapshot currentStyleValues(uiRuntime_, oldView, window);
       StyleSnapshot targetStyleValues(uiRuntime_, newView, window);
 
-      jsi::Array currentMatrix(uiRuntime_, 16);
-      jsi::Array targetMatrix(uiRuntime_, 16);
-
-      for (unsigned int i = 0; i < 16; i++) {
-        currentMatrix.setValueAtIndex(
-            uiRuntime_, i, currentStyleValues.transformMatrix[i]);
-        targetMatrix.setValueAtIndex(
-            uiRuntime_, i, targetStyleValues.transformMatrix[i]);
-      }
-
-      yogaValues.setProperty(
-          uiRuntime_, "currentTransformMatrix", currentMatrix);
-      yogaValues.setProperty(uiRuntime_, "targetTransformMatrix", targetMatrix);
-
-      for (int i = 0; i < numberOfNumericProperties; i++) {
-        setYogaCurrentAndTargetValuePair(
-            &yogaValues,
-            uiRuntime_,
-            numericPropertiesNames[i],
-            currentStyleValues.numericPropertiesValues[i],
-            targetStyleValues.numericPropertiesValues[i]);
-      }
-
-      for (int i = 0; i < numberOfStringProperties; i++) {
-        setYogaCurrentAndTargetValuePair(
-            &yogaValues,
-            uiRuntime_,
-            stringPropertiesNames[i],
-            currentStyleValues.stringPropertiesValues[i],
-            targetStyleValues.stringPropertiesValues[i]);
-      }
+      setYogaPropertiesForStyleTransitionAnimation(
+          &yogaValues, uiRuntime_, currentStyleValues, targetStyleValues);
     }
 
     layoutAnimationsManager_->startLayoutAnimation(
