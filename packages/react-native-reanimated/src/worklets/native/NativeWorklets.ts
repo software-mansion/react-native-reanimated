@@ -1,5 +1,4 @@
 'use strict';
-import { checkCppVersion } from '../../platform-specific/checkCppVersion';
 import { getValueUnpackerCode } from '../../valueUnpacker';
 import { WorkletsTurboModule } from '../../specs';
 import { ReanimatedError } from '../../errors';
@@ -20,9 +19,6 @@ export class NativeWorklets {
         `Native part of Reanimated doesn't seem to be initialized (Worklets).
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
-    }
-    if (__DEV__) {
-      checkCppVersion();
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
   }

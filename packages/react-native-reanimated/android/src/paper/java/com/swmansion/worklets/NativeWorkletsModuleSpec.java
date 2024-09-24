@@ -1,4 +1,6 @@
-package com.swmansion.worklets;
+// This file should be a part of `worklets` package but codegen
+// mangles namespaces for its Fabric counterpart.
+package com.swmansion.reanimated;
 
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;

@@ -1,5 +1,6 @@
 package com.swmansion.reanimated;
 
+import android.annotation.SuppressLint;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import com.facebook.react.bridge.LifecycleEventListener;
@@ -7,7 +8,6 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.UIManager;
 import com.facebook.react.bridge.UIManagerListener;
-import com.facebook.react.common.annotations.UnstableReactNativeAPI;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.UIManagerModule;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
-@UnstableReactNativeAPI
+@SuppressLint("UnsafeOptInUsageError") // TODO: Fix this
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec
     implements LifecycleEventListener, UIManagerModuleListener, UIManagerListener {

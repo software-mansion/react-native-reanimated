@@ -9,6 +9,7 @@
 #include <react/fabric/Binding.h>
 #endif
 
+#include "RNRuntimeWorkletDecorator.h"
 #include "WorkletRuntimeCollector.h"
 #include "WorkletsModule.h"
 
@@ -24,7 +25,9 @@ WorkletsModule::WorkletsModule(
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       nativeWorkletsModule_(std::make_shared<reanimated::NativeWorkletsModule>(
-          valueUnpackerCode)) {}
+          valueUnpackerCode)) {
+  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, nativeWorkletsModule_);
+}
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
