@@ -25,7 +25,7 @@ public class NativeProxy extends NativeProxyCommon {
   public NativeProxy(ReactApplicationContext context, String valueUnpackerCode) {
     super(context);
     CallInvokerHolderImpl holder =
-        (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
+        (CallInvokerHolderImpl) context.getJSCallInvokerHolder();
     LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
     ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
     mHybridData =

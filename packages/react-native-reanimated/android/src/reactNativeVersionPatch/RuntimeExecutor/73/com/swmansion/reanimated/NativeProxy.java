@@ -22,7 +22,7 @@ public class NativeProxy extends NativeProxyCommon {
     super(context);
     ReactFeatureFlagsWrapper.enableMountHooks();
     CallInvokerHolderImpl holder =
-        (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
+        (CallInvokerHolderImpl) context.getJSCallInvokerHolder();
 
     FabricUIManager fabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
