@@ -20,8 +20,8 @@
 #import <reanimated/Tools/SingleInstanceChecker.h>
 #import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
-#import <reanimated/apple/REAUIKit.h>
 #import <reanimated/apple/native/NativeProxy.h>
+#import <reanimated/apple/REAUIKit.h>
 
 #import <worklets/Tools/ReanimatedJSIUtils.h>
 #import <worklets/WorkletRuntime/WorkletRuntime.h>
