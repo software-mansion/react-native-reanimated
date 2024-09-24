@@ -7,13 +7,13 @@
 
 #include <worklets/Tools/UIScheduler.h>
 
-#include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <react/jni/CxxModuleWrapper.h>
-#include <react/jni/JMessageQueueThread.h>
 #include <react/jni/JavaScriptExecutorHolder.h>
+#include <react/jni/JMessageQueueThread.h>
 #include <react/jni/WritableNativeMap.h>
+#include <ReactCommon/CallInvokerHolder.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/fabric/JFabricUIManager.h>
@@ -21,7 +21,7 @@
 #if REACT_NATIVE_MINOR_VERSION >= 74
 #include <react/jni/JRuntimeExecutor.h>
 #endif // REACT_NATIVE_MINOR_VERSION >= 74
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 #include <memory>
 #include <string>
