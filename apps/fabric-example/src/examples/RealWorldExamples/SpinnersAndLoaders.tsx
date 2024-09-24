@@ -11,6 +11,7 @@ import { Grid as GridLayout, Scroll, Stagger, Text } from '../../components';
 import type {
   CSSAnimationConfig,
   CSSAnimationKeyframes,
+  CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 
@@ -308,7 +309,7 @@ function Ellipsis() {
     },
   };
 
-  const animationSettings: Omit<CSSAnimationConfig, 'animationName'> = {
+  const animationSettings: CSSAnimationSettings = {
     animationDuration: '0.6s',
     animationIterationCount: 'infinite',
     animationTimingFunction: cubicBezier(0.5, 0, 0.5, 1),
@@ -432,7 +433,7 @@ function Ripple() {
     },
   };
 
-  const animationSettings: Omit<CSSAnimationConfig, 'animationName'> = {
+  const animationSettings: CSSAnimationSettings = {
     animationDuration: '1s',
     animationTimingFunction: cubicBezier(0, 0.2, 0.8, 1),
     animationIterationCount: 'infinite',

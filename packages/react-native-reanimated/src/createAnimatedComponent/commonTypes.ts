@@ -58,6 +58,11 @@ export interface INativeEventsManager {
   updateEvents(prevProps: AnimatedComponentProps<InitialComponentProps>): void;
 }
 
+export interface ICSSManager {
+  update(styles: StyleProps[], viewInfo: ViewInfo): void;
+  detach(): void;
+}
+
 export type LayoutAnimationStaticContext = {
   presetName: string;
 };
@@ -110,6 +115,7 @@ export interface IAnimatedComponentInternal {
   _PropsFilter: IPropsFilter;
   /** Doesn't exist on web. */
   _NativeEventsManager?: INativeEventsManager;
+  _CSSManager?: ICSSManager;
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
   /**
@@ -125,3 +131,8 @@ export interface InitialComponentProps extends Record<string, unknown> {
   ref?: Ref<Component>;
   collapsable?: boolean;
 }
+
+export type ManagedAnimatedComponent = React.Component<
+  AnimatedComponentProps<InitialComponentProps>
+> &
+  IAnimatedComponentInternal;

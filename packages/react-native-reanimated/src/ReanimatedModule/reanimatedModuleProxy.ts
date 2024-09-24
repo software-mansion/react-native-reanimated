@@ -64,7 +64,7 @@ export interface ReanimatedModuleProxy {
 
   updateCSSAnimation(
     animationId: number,
-    animationConfig: NormalizedCSSAnimationConfig,
+    animationConfig: Partial<NormalizedCSSAnimationConfig>,
     viewStyle: StyleProps
   ): void;
 

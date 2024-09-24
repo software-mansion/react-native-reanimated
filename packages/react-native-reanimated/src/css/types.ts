@@ -3,7 +3,7 @@ import type {
   CubicBezierEasingConfig,
   LinearEasingConfig,
   StepsEasingConfig,
-} from './parametrizedEasings/types';
+} from './easings/types';
 
 export type CSSKeyframeKey = `${number}%` | 'from' | 'to' | number;
 
@@ -38,8 +38,7 @@ export type NormalizedOffsetKeyframe = {
   style: ViewStyle;
 };
 
-export interface CSSAnimationConfig {
-  animationName: CSSAnimationKeyframes;
+export type CSSAnimationSettings = {
   animationDuration?: CSSAnimationTimeUnit;
   animationTimingFunction?: CSSAnimationTimingFunction;
   animationDelay?: CSSAnimationTimeUnit;
@@ -50,16 +49,23 @@ export interface CSSAnimationConfig {
   // This is still experimental in browsers and we might not want to support it
   // when CSS animations in reanimated are released
   // animationTimeline?: // TODO
-}
+};
 
-export type NormalizedCSSAnimationConfig = {
-  animationName: KeyframedViewStyle;
+export type CSSAnimationConfig = CSSAnimationSettings & {
+  animationName: CSSAnimationKeyframes;
+};
+
+export type NormalizedCSSAnimationSettings = {
   animationDuration: number;
   animationTimingFunction: CSSAnimationTimingFunction;
   animationDelay: number;
   animationIterationCount: number;
   animationDirection: CSSAnimationDirection;
   animationFillMode: CSSAnimationFillMode;
+};
+
+export type NormalizedCSSAnimationConfig = NormalizedCSSAnimationSettings & {
+  animationName: KeyframedViewStyle;
 };
 
 export type NormalizedCSSTransitionConfig = {

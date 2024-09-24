@@ -88,7 +88,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   void updateCSSAnimation(
       jsi::Runtime &rt,
       const jsi::Value &animationId,
-      const jsi::Value &animationConfig,
+      const jsi::Value &updatedSettings,
       const jsi::Value &viewStyle) override;
   void unregisterCSSAnimation(
       const jsi::Value &animationId,

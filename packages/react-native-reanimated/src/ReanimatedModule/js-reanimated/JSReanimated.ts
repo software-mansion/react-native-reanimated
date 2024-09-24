@@ -20,8 +20,11 @@ import type { WebSensor } from './WebSensor';
 import { logger } from '../../logger';
 import { ReanimatedError } from '../../errors';
 import { WorkletsModule } from '../../worklets';
-import type { NormalizedCSSAnimationConfig } from '../../css';
-import { NormalizedCSSTransitionConfig } from '../../css/types';
+import type {
+  NormalizedCSSAnimationConfig,
+  NormalizedCSSAnimationSettings,
+} from '../../css';
+import type { NormalizedCSSTransitionConfig } from '../../css/types';
 
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();
@@ -281,7 +284,7 @@ class JSReanimated implements IReanimatedModule {
 
   updateCSSAnimation(
     _animationId: number,
-    _animationConfig: NormalizedCSSAnimationConfig,
+    _updatedSettings: Partial<NormalizedCSSAnimationSettings>,
     _viewStyle: StyleProps
   ): void {
     throw new ReanimatedError(

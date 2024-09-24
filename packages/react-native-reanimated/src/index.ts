@@ -299,6 +299,8 @@ export type {
   CSSAnimationDuration,
   CSSAnimationDelay,
   CSSAnimationIterationCount,
-  CSSAnimationDirection,
   CSSAnimationTimingFunction,
+  CSSAnimationDirection,
+  CSSAnimationFillMode,
+  CSSAnimationSettings,
 } from './css';

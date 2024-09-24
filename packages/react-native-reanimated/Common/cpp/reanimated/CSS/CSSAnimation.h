@@ -10,9 +10,14 @@ namespace reanimated {
 enum CSSAnimationState {
   pending,
   running,
+  paused,
+  // Animation is finishing if its progress reached the last frame
   finishing,
-  reverting,
   finished,
+  // Animation is in the reverting state if its removal was scheduled from JS
+  // and all changes applied during the animation will be reverted
+  reverting,
+  reverted
 };
 
 class CSSAnimation {
@@ -26,6 +31,8 @@ class CSSAnimation {
   ShadowNode::Shared getShadowNode() const {
     return shadowNode;
   }
+
+  virtual void updateSettings(jsi::Runtime &rt, const jsi::Value &settings) = 0;
 
   virtual void updateViewStyle(jsi::Runtime &rt, const jsi::Value &value) = 0;
 

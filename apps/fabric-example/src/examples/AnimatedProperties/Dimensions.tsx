@@ -1,6 +1,9 @@
 import type { DimensionValue } from 'react-native';
 import { StyleSheet } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type {
+  CSSAnimationConfig,
+  CSSAnimationSettings,
+} from 'react-native-reanimated';
 import { Section, TabView } from '../../components';
 import { sizes, colors, radius } from '../../theme';
 import Animated from 'react-native-reanimated';
@@ -24,7 +27,7 @@ export default function DimensionsExample() {
 }
 
 function AbsoluteDimensionsExample() {
-  const sharedConfig: Omit<CSSAnimationConfig, 'animationName'> = {
+  const sharedConfig: CSSAnimationSettings = {
     animationIterationCount: 'infinite',
     animationDirection: 'alternate',
     animationDuration: '1s',
@@ -136,7 +139,7 @@ function AbsoluteDimensionsExample() {
 }
 
 function RelativeDimensionsExample() {
-  const sharedConfig: Omit<CSSAnimationConfig, 'animationName'> = {
+  const sharedConfig: CSSAnimationSettings = {
     animationIterationCount: 'infinite',
     animationDirection: 'alternate',
     animationDuration: '1s',
@@ -250,7 +253,7 @@ function RelativeDimensionsExample() {
 }
 
 function MixedDimensionsExample() {
-  const sharedConfig: Omit<CSSAnimationConfig, 'animationName'> = {
+  const sharedConfig: CSSAnimationSettings = {
     animationIterationCount: 'infinite',
     animationDuration: '2.5s',
   };

@@ -27,6 +27,8 @@ class CSSTransition : public CSSAnimation { // TODO - implement
       ShadowNode::Shared shadowNode,
       const CSSTransitionConfig &config);
 
+  void updateSettings(jsi::Runtime &rt, const jsi::Value &settings) override;
+
   void updateViewStyle(jsi::Runtime &rt, const jsi::Value &value) override {
     styleInterpolator.updateViewStyle(rt, value);
   }

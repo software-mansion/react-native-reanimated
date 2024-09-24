@@ -32,8 +32,9 @@ import type {
   ViewInfo,
   INativeEventsManager,
   NestedArray,
+  ICSSManager,
 } from './commonTypes';
-import { flattenArray } from './utils';
+import { filterStyles, flattenArray } from './utils';
 import setAndForwardRef from './setAndForwardRef';
 import { isFabric, isJest, isWeb, shouldBeUseWeb } from '../PlatformChecker';
 import { InlinePropManager } from './InlinePropManager';
@@ -53,17 +54,7 @@ import { getViewInfo } from './getViewInfo';
 import { NativeEventsManager } from './NativeEventsManager';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { ReanimatedError } from '../errors';
-import type { CSSAnimationConfig, CSSTransitionConfig } from '../css';
-import {
-  extractCSSConfigsAndFlattenedStyles,
-  registerCSSAnimation,
-  registerCSSTransition,
-  unregisterCSSAnimation,
-  unregisterCSSTransition,
-  updateCSSAnimation,
-  updateCSSTransition,
-} from '../css';
-import { logger } from '../logger';
+import { CSSManager } from './CSSManager';
 
 const IS_WEB = isWeb();
 const IS_JEST = isJest();
@@ -72,27 +63,6 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 if (IS_WEB) {
   configureWebLayoutAnimations();
-}
-
-function splitStyles(styles: StyleProps[] | undefined): {
-  animatedStyles: StyleProps[];
-  plainStyles: StyleProps[];
-} {
-  if (!styles) {
-    return { animatedStyles: [], plainStyles: [] };
-  }
-
-  return styles.reduce(
-    ({ animatedStyles, plainStyles }, style) => {
-      if (style?.viewDescriptors) {
-        animatedStyles.push(style);
-      } else {
-        plainStyles.push(style);
-      }
-      return { animatedStyles, plainStyles };
-    },
-    { animatedStyles: [], plainStyles: [] }
-  ) as { animatedStyles: StyleProps[]; plainStyles: StyleProps[] };
 }
 
 type Options<P> = {
@@ -136,7 +106,6 @@ export function createAnimatedComponent(
 ): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
 
 let id = 0;
-let cssId = 0;
 
 export function createAnimatedComponent(
   Component: ComponentType<InitialComponentProps>,
@@ -163,15 +132,12 @@ export function createAnimatedComponent(
     _InlinePropManager = new InlinePropManager();
     _PropsFilter = new PropsFilter();
     _NativeEventsManager?: INativeEventsManager;
+    _CSSManager?: ICSSManager;
     _viewInfo?: ViewInfo;
     static displayName: string;
     static contextType = SkipEnteringContext;
     context!: React.ContextType<typeof SkipEnteringContext>;
     reanimatedID = id++;
-    _cssAnimationId?: number;
-    _cssAnimationSerialized?: string;
-    _cssAnimationConfig?: CSSAnimationConfig;
-    _cssTransitionId?: number;
 
     constructor(props: AnimatedComponentProps<InitialComponentProps>) {
       super(props);
@@ -198,7 +164,7 @@ export function createAnimatedComponent(
     }
 
     componentDidMount() {
-      const { plainStyles, animatedStyles } = splitStyles(
+      const { plainStyles, animatedStyles } = filterStyles(
         flattenArray<StyleProps>(this.props.style ?? [])
       );
 
@@ -206,11 +172,14 @@ export function createAnimatedComponent(
         // It exists only on native platforms. We initialize it here because the ref to the animated component is available only post-mount
         this._NativeEventsManager = new NativeEventsManager(this, options);
       }
+      if (IS_FABRIC) {
+        this._CSSManager = new CSSManager();
+      }
       this._NativeEventsManager?.attachEvents();
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles(animatedStyles);
-      this._updateCSS(plainStyles);
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+      this._CSSManager?.update(plainStyles, this._getViewInfo());
 
       const layout = this.props.layout;
       if (layout) {
@@ -250,7 +219,7 @@ export function createAnimatedComponent(
       this._NativeEventsManager?.detachEvents();
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
-      this._detachCSS();
+      this._CSSManager?.detach();
       this._InlinePropManager.detachInlineProps();
       if (this.props.sharedTransitionTag) {
         this._configureSharedTransition(true);
@@ -440,125 +409,6 @@ export function createAnimatedComponent(
       }
     }
 
-    _attachCSSAnimation(
-      animationConfig: CSSAnimationConfig,
-      shadowNodeWrapper: ShadowNodeWrapper,
-      style: StyleProps,
-      serializedKeyframes?: string
-    ) {
-      this._cssAnimationId = cssId++;
-      this._cssAnimationSerialized =
-        serializedKeyframes ?? JSON.stringify(animationConfig.animationName);
-      registerCSSAnimation(
-        shadowNodeWrapper,
-        this._cssAnimationId,
-        animationConfig,
-        style
-      );
-    }
-
-    _detachCSSAnimation(revertChanges = false) {
-      if (this._cssAnimationId !== undefined) {
-        unregisterCSSAnimation(this._cssAnimationId, revertChanges);
-        this._cssAnimationId = undefined;
-        this._cssAnimationSerialized = undefined;
-      }
-    }
-
-    _attachCSSTransition(
-      transitionConfig: CSSTransitionConfig,
-      shadowNodeWrapper: ShadowNodeWrapper,
-      style: StyleProps
-    ) {
-      this._cssTransitionId = cssId++;
-      registerCSSTransition(
-        shadowNodeWrapper,
-        this._cssTransitionId,
-        transitionConfig,
-        style
-      );
-    }
-
-    _detachCSSTransition() {
-      if (this._cssTransitionId !== undefined) {
-        unregisterCSSTransition(this._cssTransitionId);
-        this._cssTransitionId = undefined;
-      }
-    }
-
-    _updateCSSAnimation(
-      wrapper: ShadowNodeWrapper,
-      animationConfig: CSSAnimationConfig | null,
-      style: StyleProps
-    ) {
-      if (this._cssAnimationId !== undefined && animationConfig) {
-        const serializedKeyframes = JSON.stringify(
-          animationConfig.animationName
-        );
-        // Replace the animation by the new one if the keyframes have changed
-        if (this._cssAnimationSerialized !== serializedKeyframes) {
-          this._detachCSSAnimation(true);
-          this._attachCSSAnimation(
-            animationConfig,
-            wrapper,
-            style,
-            serializedKeyframes
-          );
-        }
-        // Otherwise, update the existing animation settings
-        else {
-          // TODO - maybe somehow check if the animation was affected by the component's
-          // props update and don't just blindly update it every time
-          updateCSSAnimation(this._cssAnimationId, animationConfig, style);
-        }
-      } else if (animationConfig) {
-        this._attachCSSAnimation(animationConfig, wrapper, style);
-      } else {
-        this._detachCSSAnimation(true);
-      }
-    }
-
-    _updateCSSTransition(
-      wrapper: ShadowNodeWrapper,
-      transitionConfig: CSSTransitionConfig | null,
-      style: StyleProps
-    ) {
-      if (this._cssTransitionId !== undefined && transitionConfig) {
-        updateCSSTransition(this._cssTransitionId, transitionConfig, style);
-      } else if (transitionConfig) {
-        this._attachCSSTransition(transitionConfig, wrapper, style);
-      } else {
-        this._detachCSSTransition();
-      }
-    }
-
-    _updateCSS(plainStyles: StyleProps[]) {
-      const [animationConfig, transitionConfig, style] =
-        extractCSSConfigsAndFlattenedStyles(plainStyles);
-
-      if ((animationConfig || transitionConfig) && !IS_FABRIC) {
-        const kind = animationConfig ? 'animation' : 'transition';
-        logger.warn(
-          `Tried to use CSS ${kind} in the environment that doesn't support it. CSS ${kind}s are supported only on Fabric.`
-        );
-        return;
-      }
-
-      const { shadowNodeWrapper, viewConfig } = this._getViewInfo();
-      const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
-      if (viewConfig) {
-        adaptViewConfig(viewConfig);
-      }
-
-      this._updateCSSAnimation(wrapper, animationConfig, style);
-      this._updateCSSTransition(wrapper, transitionConfig, style);
-    }
-
-    _detachCSS() {
-      this._detachCSSAnimation();
-      this._detachCSSTransition();
-    }
-
     componentDidUpdate(
       prevProps: AnimatedComponentProps<InitialComponentProps>,
       _prevState: Readonly<unknown>,
@@ -578,8 +428,9 @@ export function createAnimatedComponent(
         this._configureSharedTransition();
       }
       this._NativeEventsManager?.updateEvents(prevProps);
-      const { animatedStyles } = splitStyles(
-        flattenArray<StyleProps>(this.props.style ?? [])
+      const { animatedStyles } = filterStyles(
+        flattenArray<StyleProps>(this.props.style ?? []),
+        { animated: true }
       );
       this._attachAnimatedStyles(animatedStyles);
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
@@ -608,12 +459,14 @@ export function createAnimatedComponent(
       _nextState: Readonly<object>,
       _nextContext: unknown
     ): boolean {
-      const styleChanged = this.props.style !== nextProps.style;
-      if (styleChanged) {
-        const { plainStyles } = splitStyles(
-          flattenArray<StyleProps>(nextProps.style ?? [])
+      // TODO - maybe skip component re-render if the only update is
+      // related to CSS animations/transitions
+      if (this._CSSManager) {
+        const { plainStyles } = filterStyles(
+          flattenArray<StyleProps>(nextProps.style ?? []),
+          { plain: true }
         );
-        this._updateCSS(plainStyles);
+        this._CSSManager.update(plainStyles, this._getViewInfo());
       }
       return true;
     }

@@ -1,5 +1,8 @@
 import { View, StyleSheet } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type {
+  CSSAnimationConfig,
+  CSSAnimationSettings,
+} from 'react-native-reanimated';
 import {
   Button,
   CodeBlock,
@@ -15,7 +18,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useState } from 'react';
 
-const sharedConfig: Omit<CSSAnimationConfig, 'animationName'> = {
+const sharedConfig: CSSAnimationSettings = {
   animationDuration: '1s',
   animationTimingFunction: 'easeInOut',
   animationIterationCount: 'infinite',
@@ -93,7 +96,7 @@ export default function ChangingAnimation() {
           title="Changing Animation"
           description="Select one of the predefined animations and see that the box animation changes to the selected one.">
           <View style={styles.content}>
-            <View style={styles.removeRow}>
+            <View style={styles.buttonRow}>
               <Text variant="label1">Remove animation</Text>
               <Button
                 title="Remove"
@@ -139,7 +142,7 @@ const styles = StyleSheet.create({
   content: {
     gap: spacing.xs,
   },
-  removeRow: {
+  buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

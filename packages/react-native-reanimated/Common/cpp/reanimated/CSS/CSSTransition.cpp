@@ -14,6 +14,12 @@ CSSTransition::CSSTransition(
           getEasingFunction(rt, config.transitionTimingFunction),
           config.transitionDelay)) {}
 
+void CSSTransition::updateSettings(
+    jsi::Runtime &rt,
+    const jsi::Value &settings) {
+  // TODO
+}
+
 void CSSTransition::start(time_t timestamp) {
   // TODO
 }

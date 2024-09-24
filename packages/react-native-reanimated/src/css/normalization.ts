@@ -423,15 +423,30 @@ function normalizeFillMode(
   return fillMode;
 }
 
-export function normalizeAnimationConfig({
-  animationName,
+export function normalizeAnimationSettings<
+  C extends Partial<CSSAnimationConfig>,
+>({
   animationDuration,
   animationDelay,
   animationTimingFunction,
   animationIterationCount,
   animationDirection,
   animationFillMode,
-}: CSSAnimationConfig): NormalizedCSSAnimationConfig {
+}: C) {
+  return {
+    animationDuration: normalizeDuration(animationDuration),
+    animationTimingFunction: animationTimingFunction ?? 'ease',
+    animationDelay: normalizeDelay(animationDelay),
+    animationIterationCount: normalizeIterationCount(animationIterationCount),
+    animationDirection: normalizeDirection(animationDirection),
+    animationFillMode: normalizeFillMode(animationFillMode),
+  };
+}
+
+export function normalizeAnimationConfig(
+  config: CSSAnimationConfig
+): NormalizedCSSAnimationConfig {
+  const animationName = config.animationName;
   if (!animationName || typeof animationName !== 'object') {
     throw new ReanimatedError(
       ERROR_MESSAGES.invalidAnimationName(animationName)
@@ -440,12 +455,7 @@ export function normalizeAnimationConfig({
 
   return {
     animationName: createKeyframedStyle(animationName),
-    animationDuration: normalizeDuration(animationDuration),
-    animationTimingFunction: animationTimingFunction ?? 'ease',
-    animationDelay: normalizeDelay(animationDelay),
-    animationIterationCount: normalizeIterationCount(animationIterationCount),
-    animationDirection: normalizeDirection(animationDirection),
-    animationFillMode: normalizeFillMode(animationFillMode),
+    ...normalizeAnimationSettings(config),
   };
 }
 
