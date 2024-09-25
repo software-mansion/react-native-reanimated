@@ -5,7 +5,7 @@
 #include <queue>
 #include <utility>
 
-namespace reanimated {
+namespace worklets {
 
 //
 // Copyright (c) 2013 Juan Palacios juan.palacios.puyana@gmail.com
@@ -46,4 +46,4 @@ class ThreadSafeQueue {
   mutable std::condition_variable cond_;
 };
 
-} // namespace reanimated
+} // namespace worklets

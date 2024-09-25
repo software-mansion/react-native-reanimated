@@ -10,7 +10,7 @@
 
 using namespace facebook;
 
-namespace reanimated {
+namespace worklets {
 
 class WorkletEventHandler {
   const uint64_t handlerId_;
@@ -38,4 +38,4 @@ class WorkletEventHandler {
   bool shouldIgnoreEmitterReactTag() const;
 };
 
-} // namespace reanimated
+} // namespace worklets

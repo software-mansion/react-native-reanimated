@@ -6,7 +6,7 @@
 
 #include <memory>
 
-namespace reanimated {
+namespace worklets {
 
 class WorkletRuntimeCollector : public jsi::HostObject {
   // When worklet runtime is created, we inject an instance of this class as a
@@ -33,4 +33,4 @@ class WorkletRuntimeCollector : public jsi::HostObject {
   jsi::Runtime &runtime_;
 };
 
-} // namespace reanimated
+} // namespace worklets
