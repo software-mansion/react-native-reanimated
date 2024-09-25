@@ -1,7 +1,7 @@
 name: Reanimated compatibility check [Nightly]
 on:
   pull_request:
-    - .github/workflows/void.void.void
+    paths: .github/workflows/void.void.void
     types: [opened, synchronize, labeled, unlabeled]
   schedule:
     - cron: '37 19 * * *'
