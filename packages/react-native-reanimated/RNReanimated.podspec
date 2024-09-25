@@ -83,62 +83,21 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.subspec "reanimated" do |ss|
+    ss.source_files = "Common/cpp/reanimated/**/*.{cpp,h}"
+    ss.header_dir = "reanimated"
+    ss.header_mappings_dir = "Common/cpp/reanimated"
+
     ss.subspec "apple" do |sss|
       sss.source_files = "apple/reanimated/**/*.{mm,h,m}"
-      sss.header_dir = "reanimated"
-    end
-    
-    ss.subspec "AnimatedSensor" do |sss|
-      sss.source_files = "Common/cpp/reanimated/AnimatedSensor/*.{cpp,h}"
-      sss.header_dir = "reanimated/AnimatedSensor"
-    end
-
-    ss.subspec "Fabric" do |sss|
-      sss.source_files = "Common/cpp/reanimated/Fabric/*.{cpp,h}"
-      sss.header_dir = "reanimated/Fabric"
-    end
-
-    ss.subspec "LayoutAnimations" do |sss|
-      sss.source_files = "Common/cpp/reanimated/LayoutAnimations/*.{cpp,h}"
-      sss.header_dir = "reanimated/LayoutAnimations"
-    end
-
-    ss.subspec "NativeModules" do |sss|
-      sss.source_files = "Common/cpp/reanimated/NativeModules/*.{cpp,h}"
-      sss.header_dir = "reanimated/NativeModules"
-    end
-
-    ss.subspec "RuntimeDecorators" do |sss|
-      sss.source_files = "Common/cpp/reanimated/RuntimeDecorators/*.{cpp,h}"
-      sss.header_dir = "reanimated/RuntimeDecorators"
-    end
-
-    ss.subspec "Tools" do |sss|
-      sss.source_files = "Common/cpp/reanimated/Tools/*.{cpp,h}"
-      sss.header_dir = "reanimated/Tools"
+      sss.header_dir = "reanimated/apple"
+      sss.header_mappings_dir = "apple/reanimated"
     end
   end
 
   s.subspec "worklets" do |ss|
-    ss.subspec "Registries" do |sss|
-      sss.source_files = "Common/cpp/worklets/Registries/*.{cpp,h}"
-      sss.header_dir = "worklets/Registries"
-    end
-
-    ss.subspec "SharedItems" do |sss|
-      sss.source_files = "Common/cpp/worklets/SharedItems/*.{cpp,h}"
-      sss.header_dir = "worklets/SharedItems"
-    end
-
-    ss.subspec "Tools" do |sss|
-      sss.source_files = "Common/cpp/worklets/Tools/*.{cpp,h}"
-      sss.header_dir = "worklets/Tools"
-    end
-
-    ss.subspec "WorkletRuntime" do |sss|
-      sss.source_files = "Common/cpp/worklets/WorkletRuntime/*.{cpp,h}"
-      sss.header_dir = "worklets/WorkletRuntime"
-    end
+    ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
+    ss.header_dir = "worklets"
+    ss.header_mappings_dir = "Common/cpp/worklets"
   end
 
   gcc_debug_definitions = "$(inherited)"

@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
-#import <RNReanimated/ReanimatedSensor.h>
-#import <RNReanimated/ReanimatedSensorContainer.h>
+#import <reanimated/apple/sensor/ReanimatedSensor.h>
+#import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
 static NSNumber *_nextSensorId = nil;
 
