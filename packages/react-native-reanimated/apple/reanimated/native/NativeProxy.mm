@@ -1,24 +1,27 @@
-#import <RNReanimated/LayoutAnimationsManager.h>
-#import <RNReanimated/NativeMethods.h>
-#import <RNReanimated/NativeProxy.h>
-#import <RNReanimated/PlatformDepMethodsHolder.h>
-#import <RNReanimated/PlatformDepMethodsHolderImpl.h>
-#import <RNReanimated/REAAnimationsManager.h>
-#import <RNReanimated/REAIOSUIScheduler.h>
-#import <RNReanimated/REAJSIUtils.h>
-#import <RNReanimated/REAKeyboardEventObserver.h>
-#import <RNReanimated/REAMessageThread.h>
-#import <RNReanimated/REAModule.h>
-#import <RNReanimated/REANodesManager.h>
-#import <RNReanimated/REASlowAnimations.h>
-#import <RNReanimated/REASwizzledUIManager.h>
-#import <RNReanimated/RNGestureHandlerStateManager.h>
-#import <RNReanimated/ReanimatedRuntime.h>
-#import <RNReanimated/ReanimatedSensorContainer.h>
+#import <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#import <reanimated/NativeModules/NativeReanimatedModule.h>
+#import <reanimated/Tools/PlatformDepMethodsHolder.h>
+#import <reanimated/apple/LayoutReanimation/REAAnimationsManager.h>
+#import <reanimated/apple/LayoutReanimation/REASwizzledUIManager.h>
+#import <reanimated/apple/READisplayLink.h>
+#import <reanimated/apple/REAModule.h>
+#import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/REASlowAnimations.h>
+#import <reanimated/apple/RNGestureHandlerStateManager.h>
+#import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
+#import <reanimated/apple/native/NativeMethods.h>
+#import <reanimated/apple/native/NativeProxy.h>
+#import <reanimated/apple/native/PlatformDepMethodsHolderImpl.h>
+#import <reanimated/apple/native/REAIOSUIScheduler.h>
+#import <reanimated/apple/native/REAJSIUtils.h>
+#import <reanimated/apple/native/REAMessageThread.h>
+#import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
 #ifndef NDEBUG
-#import <RNReanimated/REAScreensHelper.h>
+#import <reanimated/apple/LayoutReanimation/REAScreensHelper.h>
 #endif
+
+#import <worklets/WorkletRuntime/ReanimatedRuntime.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTBridge+Private.h>
@@ -33,8 +36,6 @@
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>
 #endif
-
-#import <RNReanimated/READisplayLink.h>
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;

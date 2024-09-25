@@ -6,7 +6,7 @@ typedef UIView REAUIView;
 
 #else // TARGET_OS_OSX [
 
-#import <RNReanimated/RCTUIView+Reanimated.h>
+#import <reanimated/apple/RCTUIView+Reanimated.h>
 
 typedef RCTUIView REAUIView;
 

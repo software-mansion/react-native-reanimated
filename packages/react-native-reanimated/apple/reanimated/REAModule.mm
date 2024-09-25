@@ -13,19 +13,20 @@
 #endif // RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <RNReanimated/REAInitializerRCTFabricSurface.h>
+#import <reanimated/apple/Fabric/REAInitializerRCTFabricSurface.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
-#import <RNReanimated/NativeProxy.h>
-#import <RNReanimated/REAModule.h>
-#import <RNReanimated/REANodesManager.h>
-#import <RNReanimated/REAUIKit.h>
-#import <RNReanimated/RNRuntimeDecorator.h>
-#import <RNReanimated/ReanimatedJSIUtils.h>
-#import <RNReanimated/SingleInstanceChecker.h>
-#import <RNReanimated/WorkletRuntime.h>
-#import <RNReanimated/WorkletRuntimeCollector.h>
-#import <RNReanimated/WorkletsModule.h>
+#import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
+#import <reanimated/Tools/SingleInstanceChecker.h>
+#import <reanimated/apple/REAModule.h>
+#import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/REAUIKit.h>
+#import <reanimated/apple/native/NativeProxy.h>
+
+#import <worklets/Tools/ReanimatedJSIUtils.h>
+#import <worklets/WorkletRuntime/WorkletRuntime.h>
+#import <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
+#import <worklets/apple/WorkletsModule.h>
 
 #if __has_include(<UIKit/UIAccessibility.h>)
 #import <UIKit/UIAccessibility.h>

@@ -1,4 +1,4 @@
-#import <RNReanimated/REAScreensHelper.h>
+#import <reanimated/apple/LayoutReanimation/REAScreensHelper.h>
 
 @implementation REAScreensHelper
 

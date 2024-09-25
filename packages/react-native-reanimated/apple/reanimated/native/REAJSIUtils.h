@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jsi/jsi.h>
+#import <jsi/jsi.h>
 
 using namespace facebook;
 

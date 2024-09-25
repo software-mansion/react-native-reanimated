@@ -1,7 +1,7 @@
 #if TARGET_OS_OSX
 
-#import <RNReanimated/RCTUIView+Reanimated.h>
 #import <React/RCTUIKit.h>
+#import <reanimated/apple/RCTUIView+Reanimated.h>
 
 @implementation RCTUIView (Reanimated)
 

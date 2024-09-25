@@ -1,7 +1,7 @@
-#import <RNReanimated/REAMessageThread.h>
+#import <reanimated/apple/native/REAMessageThread.h>
 
-#include <condition_variable>
-#include <mutex>
+#import <condition_variable>
+#import <mutex>
 
 #import <React/RCTCxxUtils.h>
 #import <React/RCTMessageThread.h>

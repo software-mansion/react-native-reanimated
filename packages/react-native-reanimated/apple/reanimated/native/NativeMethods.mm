@@ -1,7 +1,7 @@
-#import <RNReanimated/NativeMethods.h>
-#import <RNReanimated/REAUIKit.h>
 #import <React/RCTEventDispatcher.h>
 #import <React/RCTScrollView.h>
+#import <reanimated/apple/REAUIKit.h>
+#import <reanimated/apple/native/NativeMethods.h>
 
 namespace reanimated {
 
