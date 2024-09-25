@@ -13,7 +13,6 @@
 
 @implementation WorkletsModule {
   std::shared_ptr<NativeWorkletsModule> nativeWorkletsModule_;
-  bool _isBridgeless;
 }
 
 - (std::shared_ptr<NativeWorkletsModule>)getNativeWorkletsModule
@@ -24,16 +23,6 @@
 @synthesize moduleRegistry = _moduleRegistry;
 
 RCT_EXPORT_MODULE(WorkletsModule);
-
-- (void)invalidate
-{
-  [super invalidate];
-}
-
-- (void)setBridge:(RCTBridge *)bridge
-{
-  [super setBridge:bridge];
-}
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
 {

@@ -171,7 +171,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     return *layoutAnimationsManager_;
   }
 
-  [[nodiscard]] jsi::Runtime &getUIRuntime() const {
+  [[nodiscard]] inline jsi::Runtime &getUIRuntime() const {
     return uiWorkletRuntime_->getJSIRuntime();
   }
 
