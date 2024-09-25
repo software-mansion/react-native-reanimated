@@ -15,13 +15,19 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
     steps:
-      - name: Print
-        run: echo ${{github}}
-          echo ${{github.event}}
-          echo ${{github.event.pull_request}}
-          echo ${{github.event.pull_request.labels}}
-          echo ${{github.event.pull_request.labels.*}}
-          echo ${{github.event.pull_request.labels.*.name}}
+      - name: Print github
+        run:
+      - name: Print github.event
+        run: echo ${{github.event}} 
+      - name: Print github.event.pull_request
+          run: echo ${{github.event.pull_request}}
+      - name: Print github.event.pull_request.labels
+        run: echo ${{github.event.pull_request.labels}}
+      - name: Print github.event.pull_request.labels.*
+        run: echo ${{github.event.pull_request.labels.*}}
+      - name: Print github.event.pull_request.labels.*.name
+        run: echo ${{github.event.pull_request.labels.*.name}}
+
   build:
     if: github.repository == 'software-mansion/react-native-reanimated' &&
       (github.event.pull_request.labels.*.name == 'Check compatibility')
