@@ -1,5 +1,5 @@
 'use strict';
-import { getValueUnpackerCode } from '../../valueUnpacker';
+import { getValueUnpackerCode } from '..';
 import { WorkletsTurboModule } from '../../specs';
 import { ReanimatedError } from '../../errors';
 
