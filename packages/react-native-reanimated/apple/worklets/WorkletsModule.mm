@@ -1,5 +1,4 @@
-#import <React/RCTBridge.h>
-#import <React/RCTCallInvoker.h>
+#import <React/RCTBridge+Private.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #import <worklets/apple/WorkletsModule.h>
 

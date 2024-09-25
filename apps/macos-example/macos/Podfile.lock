@@ -1035,44 +1035,8 @@ PODS:
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/AnimatedSensor (= 3.15.0)
     - RNReanimated/reanimated/apple (= 3.15.0)
-    - RNReanimated/reanimated/Fabric (= 3.15.0)
-    - RNReanimated/reanimated/LayoutAnimations (= 3.15.0)
-    - RNReanimated/reanimated/NativeModules (= 3.15.0)
-    - RNReanimated/reanimated/RuntimeDecorators (= 3.15.0)
-    - RNReanimated/reanimated/Tools (= 3.15.0)
-  - RNReanimated/reanimated/AnimatedSensor (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
   - RNReanimated/reanimated/apple (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/reanimated/Fabric (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/reanimated/LayoutAnimations (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/reanimated/NativeModules (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/reanimated/RuntimeDecorators (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/reanimated/Tools (3.15.0):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1082,26 +1046,8 @@ PODS:
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
     - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/Registries (= 3.15.0)
-    - RNReanimated/worklets/SharedItems (= 3.15.0)
-    - RNReanimated/worklets/Tools (= 3.15.0)
-    - RNReanimated/worklets/WorkletRuntime (= 3.15.0)
-  - RNReanimated/worklets/Registries (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/worklets/SharedItems (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/worklets/Tools (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/worklets/WorkletRuntime (3.15.0):
+    - RNReanimated/worklets/apple (= 3.15.0)
+  - RNReanimated/worklets/apple (3.15.0):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1330,7 +1276,7 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: 826b603ae9c0f88b5ac4e956801f755109fa4d5c
   RNCPicker: 3e2c37a8328f368ce14da050cdc8231deb5fc9f9
   RNGestureHandler: f203fa4755a75b02d45a299b07d7ed878f636705
-  RNReanimated: c411f901f15d21d1dc2af8c3a72375e789ba2120
+  RNReanimated: 0c326af309b41969460670137b537c49923c7ded
   RNSVG: cb24fb322de8c1ebf59904e7aca0447bb8dbed5a
   SocketRocket: f6c6249082c011e6de2de60ed641ef8bbe0cfac9
   Yoga: dd0f2dde9c2bf2398b406740154bd99d5293aed8
