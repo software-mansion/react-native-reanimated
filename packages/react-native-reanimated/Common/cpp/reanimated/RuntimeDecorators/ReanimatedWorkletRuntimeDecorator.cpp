@@ -7,6 +7,8 @@
 
 namespace reanimated {
 
+using namespace worklets;
+
 void ReanimatedWorkletRuntimeDecorator::decorate(jsi::Runtime &rt) {
   jsi_utils::installJsiFunction(
       rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) {

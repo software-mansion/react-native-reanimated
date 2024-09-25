@@ -13,6 +13,7 @@
 namespace reanimated {
 
 using namespace facebook;
+using namespace worklets;
 
 enum SensorType {
   ACCELEROMETER = 1,

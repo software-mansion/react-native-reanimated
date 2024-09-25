@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace reanimated {
+namespace worklets {
 
 static inline double performanceNow() {
   // copied from JSExecutor.cpp
@@ -72,7 +72,7 @@ void WorkletRuntimeDecorator::decorate(
          const jsi::Value &value,
          const jsi::Value &nativeStateSource) {
         auto shouldRetainRemote = jsi::Value::undefined();
-        return reanimated::makeShareableClone(
+        return makeShareableClone(
             rt, value, shouldRetainRemote, nativeStateSource);
       });
 
@@ -117,8 +117,7 @@ void WorkletRuntimeDecorator::decorate(
       [](jsi::Runtime &rt,
          const jsi::Value &workletRuntimeValue,
          const jsi::Value &shareableWorkletValue) {
-        reanimated::scheduleOnRuntime(
-            rt, workletRuntimeValue, shareableWorkletValue);
+        scheduleOnRuntime(rt, workletRuntimeValue, shareableWorkletValue);
       });
 
   jsi::Object performance(rt);
@@ -136,4 +135,4 @@ void WorkletRuntimeDecorator::decorate(
   rt.global().setProperty(rt, "performance", performance);
 }
 
-} // namespace reanimated
+} // namespace worklets
