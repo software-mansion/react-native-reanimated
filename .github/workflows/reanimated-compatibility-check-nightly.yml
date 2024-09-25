@@ -2,8 +2,6 @@ name: Reanimated compatibility check [Nightly]
 on:
   pull_request:
     types: [opened, synchronize, labeled, unlabeled]
-    paths:
-      - .github/workflows/reanimated-compatibility-check-nightly.yml
   schedule:
     - cron: '37 19 * * *'
   workflow_dispatch:
