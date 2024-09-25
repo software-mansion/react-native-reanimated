@@ -15,11 +15,11 @@
 #include <react/jni/JMessageQueueThread.h>
 #include <react/jni/WritableNativeMap.h>
 
+#include <worklets/NativeModules/NativeWorkletsModule.h>
+
 #include <memory>
 #include <string>
 #include <utility>
-
-#include "NativeWorkletsModule.h"
 
 namespace reanimated {
 

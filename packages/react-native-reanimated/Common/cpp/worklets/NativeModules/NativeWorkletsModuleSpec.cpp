@@ -1,4 +1,4 @@
-#include "NativeWorkletsModuleSpec.h"
+#include <worklets/NativeModules/NativeWorkletsModuleSpec.h>
 
 #define SPEC_PREFIX(FN_NAME) __hostFunction_NativeWorkletsModuleSpec_##FN_NAME
 

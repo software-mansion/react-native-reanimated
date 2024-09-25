@@ -1,26 +1,7 @@
-#import <React/RCTBridge+Private.h>
-
-#ifdef RCT_NEW_ARCH_ENABLED
-#if REACT_NATIVE_MINOR_VERSION < 73
-#import <React/RCTRuntimeExecutorFromBridge.h>
-#endif // REACT_NATIVE_MINOR_VERSION < 73
-#import <RNReanimated/REAInitializerRCTFabricSurface.h>
-#endif // RCT_NEW_ARCH_ENABLED
-
-#import <RNReanimated/REAIOSUIScheduler.h>
-#import <RNReanimated/REAMessageThread.h>
-#import <RNReanimated/REANodesManager.h>
-#import <RNReanimated/REAUIKit.h>
-#import <RNReanimated/RNRuntimeDecorator.h>
-#import <RNReanimated/RNRuntimeWorkletDecorator.h>
-#import <RNReanimated/ReanimatedJSIUtils.h>
-#import <RNReanimated/SingleInstanceChecker.h>
-#import <RNReanimated/WorkletRuntime.h>
-#import <RNReanimated/WorkletRuntimeCollector.h>
-#import <RNReanimated/WorkletsModule.h>
-
-using namespace facebook::react;
-using namespace reanimated;
+#import <React/RCTBridge.h>
+#import <React/RCTCallInvoker.h>
+#import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
+#import <worklets/apple/WorkletsModule.h>
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
@@ -32,9 +13,6 @@ using namespace reanimated;
 @end
 
 @implementation WorkletsModule {
-#ifndef NDEBUG
-  SingleInstanceChecker<REAModule> singleInstanceChecker_;
-#endif // NDEBUG
   std::shared_ptr<NativeWorkletsModule> nativeWorkletsModule_;
   bool _isBridgeless;
 }
@@ -60,8 +38,8 @@ RCT_EXPORT_MODULE(WorkletsModule);
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
 {
-  RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
-  auto &rnRuntime = *(jsi::Runtime *)cxxBridge.runtime;
+  auto *bridge = self.bridge;
+  auto &rnRuntime = *(jsi::Runtime *)bridge.runtime;
   nativeWorkletsModule_ = std::make_shared<NativeWorkletsModule>(std::string([valueUnpackerCode UTF8String]));
   RNRuntimeWorkletDecorator::decorate(rnRuntime, nativeWorkletsModule_);
 

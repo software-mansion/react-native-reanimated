@@ -7,7 +7,7 @@
 #include <react/utils/CoreFeatures.h>
 #endif // REACT_NATIVE_MINOR_VERSION >= 73
 #endif // RCT_NEW_ARCH_ENABLED
-#include "NativeWorkletsModule.h"
+#include <worklets/NativeModules/NativeWorkletsModule.h>
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
 #endif

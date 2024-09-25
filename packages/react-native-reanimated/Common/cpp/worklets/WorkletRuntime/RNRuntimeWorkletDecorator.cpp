@@ -1,4 +1,4 @@
-#include "RNRuntimeWorkletDecorator.h"
+#include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 
 namespace reanimated {
 

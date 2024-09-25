@@ -1,8 +1,8 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <memory>
 #include <worklets/NativeModules/NativeWorkletsModule.h>
+#include <memory>
 
 using namespace facebook;
 

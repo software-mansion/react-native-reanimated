@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cxxreact/MessageQueueThread.h>
+#include <worklets/NativeModules/NativeWorkletsModuleSpec.h>
 #include <string>
-#include "NativeWorkletsModuleSpec.h"
 
 namespace reanimated {
 
