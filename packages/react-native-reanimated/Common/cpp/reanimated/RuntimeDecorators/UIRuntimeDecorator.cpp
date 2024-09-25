@@ -3,6 +3,8 @@
 
 namespace reanimated {
 
+using namespace worklets;
+
 void UIRuntimeDecorator::decorate(
     jsi::Runtime &uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED

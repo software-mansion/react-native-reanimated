@@ -14,7 +14,7 @@
 #include <jsc/JSCRuntime.h>
 #endif // JS_RUNTIME
 
-namespace reanimated {
+namespace worklets {
 
 using namespace facebook;
 using namespace react;
@@ -49,4 +49,4 @@ std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
 #endif
 }
 
-} // namespace reanimated
+} // namespace worklets

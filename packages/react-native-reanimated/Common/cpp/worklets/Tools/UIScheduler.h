@@ -6,7 +6,7 @@
 
 #include <atomic>
 
-namespace reanimated {
+namespace worklets {
 
 class UIScheduler {
  public:
@@ -19,4 +19,4 @@ class UIScheduler {
   ThreadSafeQueue<std::function<void()>> uiJobs_;
 };
 
-} // namespace reanimated
+} // namespace worklets

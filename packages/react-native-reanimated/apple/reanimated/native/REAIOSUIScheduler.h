@@ -9,6 +9,7 @@ namespace reanimated {
 
 using namespace facebook;
 using namespace react;
+using namespace worklets;
 
 class REAIOSUIScheduler : public UIScheduler {
  public:

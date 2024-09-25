@@ -11,7 +11,7 @@
 
 using namespace facebook;
 
-namespace reanimated {
+namespace worklets {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt);
 
@@ -360,4 +360,4 @@ class ShareableScalar : public Shareable {
   Data data_;
 };
 
-} // namespace reanimated
+} // namespace worklets
