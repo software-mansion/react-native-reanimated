@@ -1,37 +1,35 @@
-#include "NativeReanimatedModule.h"
+#include <reanimated/NativeModules/NativeReanimatedModule.h>
+#include <reanimated/RuntimeDecorators/ReanimatedWorkletRuntimeDecorator.h>
+#include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
+#include <reanimated/Tools/CollectionUtils.h>
+#include <reanimated/Tools/FeaturesConfig.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <react/renderer/uimanager/UIManagerBinding.h>
-#include <react/renderer/uimanager/primitives.h>
-#if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
-#include <react/utils/CoreFeatures.h>
-#endif
-#endif
+#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
+#endif // RCT_NEW_ARCH_ENABLED
 
-#include <functional>
-#include <iomanip>
-#include <sstream>
-#include <thread>
-#include <unordered_map>
-
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <react/renderer/scheduler/Scheduler.h>
-#include "ReanimatedCommitShadowNode.h"
-#include "ShadowTreeCloner.h"
-#endif
-
-#include "AsyncQueue.h"
-#include "CollectionUtils.h"
-#include "EventHandlerRegistry.h"
-#include "FeaturesConfig.h"
-#include "ReanimatedWorkletRuntimeDecorator.h"
-#include "Shareables.h"
-#include "UIRuntimeDecorator.h"
-#include "WorkletEventHandler.h"
+#include <worklets/Registries/EventHandlerRegistry.h>
+#include <worklets/SharedItems/Shareables.h>
+#include <worklets/Tools/AsyncQueue.h>
+#include <worklets/Tools/WorkletEventHandler.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
-#endif
+#endif // __ANDROID__
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <react/renderer/scheduler/Scheduler.h>
+#include <react/renderer/uimanager/UIManagerBinding.h>
+#include <react/renderer/uimanager/primitives.h>
+#if REACT_NATIVE_MINOR_VERSION >= 73
+#include <react/utils/CoreFeatures.h>
+#endif // REACT_NATIVE_MINOR_VERSION
+#endif // RCT_NEW_ARCH_ENABLED
+
+#include <functional>
+#include <iomanip>
+#include <utility>
 
 using namespace facebook;
 

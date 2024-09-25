@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-file(GLOB_RECURSE WORKLETS_COMMON_CPP_SOURCES CONFIGURE_DEPENDS "${WORKLETS_COMMON_CPP_DIR}/*.cpp")
+file(GLOB_RECURSE WORKLETS_COMMON_CPP_SOURCES CONFIGURE_DEPENDS "${COMMON_CPP_DIR}/worklets/*.cpp")
 
 # Consume shared libraries and headers from prefabs
 find_package(fbjni REQUIRED CONFIG)
@@ -20,10 +20,7 @@ add_library(
 target_include_directories(
     worklets
     PUBLIC
-    "${WORKLETS_COMMON_CPP_DIR}/Registries"
-    "${WORKLETS_COMMON_CPP_DIR}/SharedItems"
-    "${WORKLETS_COMMON_CPP_DIR}/Tools"
-    "${WORKLETS_COMMON_CPP_DIR}/WorkletRuntime"
+    "${COMMON_CPP_DIR}"
 )
 
 target_include_directories(

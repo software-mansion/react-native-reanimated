@@ -1,4 +1,4 @@
-#include "JNIHelper.h"
+#include <reanimated/JNIHelper.h>
 
 namespace reanimated {
 

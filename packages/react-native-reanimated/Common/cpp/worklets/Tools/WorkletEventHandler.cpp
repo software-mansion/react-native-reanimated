@@ -1,6 +1,6 @@
-#include "WorkletEventHandler.h"
+#include <worklets/Tools/WorkletEventHandler.h>
 
-namespace reanimated {
+namespace worklets {
 
 void WorkletEventHandler::process(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
@@ -26,4 +26,4 @@ bool WorkletEventHandler::shouldIgnoreEmitterReactTag() const {
   return emitterReactTag_ == -1;
 }
 
-} // namespace reanimated
+} // namespace worklets

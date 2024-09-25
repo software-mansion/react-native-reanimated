@@ -1,5 +1,7 @@
 #pragma once
 
+#include <worklets/Tools/UIScheduler.h>
+
 #include <fbjni/fbjni.h>
 #include <jni.h>
 #include <jsi/jsi.h>
@@ -8,11 +10,10 @@
 
 #include <memory>
 
-#include "UIScheduler.h"
-
 namespace reanimated {
 
 using namespace facebook;
+using namespace worklets;
 
 class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
  public:

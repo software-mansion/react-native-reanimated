@@ -1,9 +1,9 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#include <reanimated/Fabric/ShadowTreeCloner.h>
+
 #include <ranges>
 #include <utility>
-
-#include "ShadowTreeCloner.h"
 
 namespace reanimated {
 

@@ -1,9 +1,9 @@
-#include "ReanimatedJSIUtils.h"
+#include <worklets/Tools/ReanimatedJSIUtils.h>
 #include <vector>
 
 using namespace facebook;
 
-namespace reanimated::jsi_utils {
+namespace worklets::jsi_utils {
 
 jsi::Array convertStringToArray(
     jsi::Runtime &rt,
@@ -23,4 +23,4 @@ jsi::Array convertStringToArray(
   return matrix;
 }
 
-} // namespace reanimated::jsi_utils
+} // namespace worklets::jsi_utils

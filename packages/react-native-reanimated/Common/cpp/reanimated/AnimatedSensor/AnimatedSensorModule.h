@@ -1,16 +1,19 @@
 #pragma once
 
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
+
+#include <worklets/SharedItems/Shareables.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
+
 #include <jsi/jsi.h>
+
 #include <memory>
 #include <unordered_set>
-
-#include "PlatformDepMethodsHolder.h"
-#include "Shareables.h"
-#include "WorkletRuntime.h"
 
 namespace reanimated {
 
 using namespace facebook;
+using namespace worklets;
 
 enum SensorType {
   ACCELEROMETER = 1,

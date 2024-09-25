@@ -1,7 +1,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include "ReanimatedMountHook.h"
-#include "ReanimatedCommitShadowNode.h"
+#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
+#include <reanimated/Fabric/ReanimatedMountHook.h>
 
 namespace reanimated {
 

@@ -1,4 +1,4 @@
-#include "ReanimatedHermesRuntime.h"
+#include <worklets/WorkletRuntime/ReanimatedHermesRuntime.h>
 
 // Only include this file in Hermes-enabled builds as some platforms (like tvOS)
 // don't support hermes and it causes the compilation to fail.
@@ -18,7 +18,7 @@
 #include <hermes/hermes.h>
 #endif
 
-namespace reanimated {
+namespace worklets {
 
 using namespace facebook;
 using namespace react;
@@ -117,6 +117,6 @@ ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
 #endif // HERMES_ENABLE_DEBUGGER
 }
 
-} // namespace reanimated
+} // namespace worklets
 
 #endif // JS_RUNTIME_HERMES

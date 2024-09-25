@@ -1,9 +1,10 @@
-#include "EventHandlerRegistry.h"
-#include "WorkletEventHandler.h"
+#include <worklets/Registries/EventHandlerRegistry.h>
+#include <worklets/Tools/WorkletEventHandler.h>
 
 #include <utility>
+#include <vector>
 
-namespace reanimated {
+namespace worklets {
 
 void EventHandlerRegistry::registerEventHandler(
     const std::shared_ptr<WorkletEventHandler> &eventHandler) {
@@ -90,4 +91,4 @@ bool EventHandlerRegistry::isAnyHandlerWaitingForEvent(
   return it != eventMappingsWithTag.end() && !it->second.empty();
 }
 
-} // namespace reanimated
+} // namespace worklets

@@ -1,4 +1,4 @@
-#import <RNReanimated/REAAnimationsManager.h>
+#import <reanimated/apple/LayoutReanimation/REAAnimationsManager.h>
 
 @interface REASwizzledUIManager : NSObject
 - (instancetype)initWithUIManager:(RCTUIManager *)uiManager

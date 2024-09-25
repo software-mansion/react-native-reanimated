@@ -1,12 +1,13 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#include <reanimated/Fabric/ReanimatedCommitHook.h>
+#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
+
 #include <react/renderer/core/ComponentDescriptor.h>
+
 #include <unordered_map>
 #include <vector>
-
-#include "ReanimatedCommitHook.h"
-#include "ReanimatedCommitShadowNode.h"
-#include "ShadowTreeCloner.h"
 
 using namespace facebook::react;
 
