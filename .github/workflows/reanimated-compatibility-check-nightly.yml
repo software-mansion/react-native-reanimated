@@ -18,9 +18,9 @@ jobs:
       - name: Print github
         run:
       - name: Print github.event
-        run: echo ${{github.event}} 
+        run: echo ${{github.event}}
       - name: Print github.event.pull_request
-          run: echo ${{github.event.pull_request}}
+        run: echo ${{github.event.pull_request}}
       - name: Print github.event.pull_request.labels
         run: echo ${{github.event.pull_request.labels}}
       - name: Print github.event.pull_request.labels.*
