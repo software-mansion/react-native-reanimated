@@ -9,9 +9,9 @@
 #include <react/fabric/Binding.h>
 #endif
 
-#include "RNRuntimeWorkletDecorator.h"
-#include "WorkletRuntimeCollector.h"
-#include "WorkletsModule.h"
+#include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
+#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
+#include <worklets/WorkletsModule.h>
 
 namespace reanimated {
 

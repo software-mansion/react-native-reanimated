@@ -2,7 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <memory>
-#include "NativeWorkletsModule.h"
+#include <worklets/NativeModules/NativeWorkletsModule.h>
 
 using namespace facebook;
 
