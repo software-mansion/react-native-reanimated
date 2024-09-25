@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Print github
-        run:
+        run: echo ${{github}}
       - name: Print github.event
         run: echo ${{github.event}}
       - name: Print github.event.pull_request
