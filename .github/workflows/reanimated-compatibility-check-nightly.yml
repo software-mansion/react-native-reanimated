@@ -7,23 +7,10 @@ on:
   schedule:
     - cron: '37 19 * * *'
   workflow_dispatch:
-  label:
-    types: [created, edited]
 
 jobs:
-  printJob:
-    name: Print event
-    runs-on: ubuntu-latest
-    steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: |
-          echo "$GITHUB_CONTEXT"
-
   build:
-    if: github.repository == 'software-mansion/react-native-reanimated' &&
-      (github.event.pull_request.labels.*.name == 'Check compatibility')
+    if: ${{ github.repository == 'software-mansion/react-native-reanimated' && github.event.pull_request.labels.*.name == 'Check compatibility' }}
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:
