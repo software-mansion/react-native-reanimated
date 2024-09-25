@@ -2,7 +2,6 @@
 
 #include <ReactCommon/CallInvoker.h>
 #include <ReactCommon/TurboModule.h>
-#include <jsi/jsi.h>
 #include <memory>
 
 using namespace facebook;

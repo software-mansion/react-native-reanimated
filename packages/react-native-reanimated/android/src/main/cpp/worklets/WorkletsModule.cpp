@@ -10,7 +10,6 @@
 #endif
 
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
-#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #include <worklets/WorkletsModule.h>
 
 namespace reanimated {
@@ -36,10 +35,7 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
   return makeCxxInstance(jThis, (jsi::Runtime *)jsContext, valueUnpackerCode);
 }
 
-void WorkletsModule::installJSIBindings() {
-  jsi::Runtime &rnRuntime = *rnRuntime_;
-  reanimated::WorkletRuntimeCollector::install(rnRuntime);
-}
+void WorkletsModule::installJSIBindings() {}
 
 void WorkletsModule::registerNatives() {
   registerHybrid(
