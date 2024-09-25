@@ -9,6 +9,7 @@ env:
   IS_REANIMATED: ${{ github.repository == 'software-mansion/react-native-reanimated' }}
   IS_PR: ${{github.event_name == 'pull_request'}}
   HAS_LABEL: ${{github.event_name == 'pull_request' && github.event.pull_request.labels.*.name == 'Check compatibility'}}
+  RIGHT_SIDE: (${{! github.event_name != 'pull_request'}} || contains(github.event.pull_request.labels.*.name, 'Check compatibility'))
 
 jobs:
   printJob:
@@ -20,6 +21,7 @@ jobs:
           echo "IS_REANIMATED: $IS_REANIMATED"
           echo "IS_PR: $IS_PR"
           echo "HAS_LABEL: $HAS_LABEL"
+          echo "RIGHT_SIDE: $RIGHT_SIDE"
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
