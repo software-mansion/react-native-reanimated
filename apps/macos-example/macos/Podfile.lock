@@ -1019,7 +1019,7 @@ PODS:
     - React-Core
   - RNCPicker (2.8.0):
     - React-Core
-  - RNGestureHandler (2.19.0):
+  - RNGestureHandler (2.20.0):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1035,44 +1035,8 @@ PODS:
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/AnimatedSensor (= 3.15.0)
     - RNReanimated/reanimated/apple (= 3.15.0)
-    - RNReanimated/reanimated/Fabric (= 3.15.0)
-    - RNReanimated/reanimated/LayoutAnimations (= 3.15.0)
-    - RNReanimated/reanimated/NativeModules (= 3.15.0)
-    - RNReanimated/reanimated/RuntimeDecorators (= 3.15.0)
-    - RNReanimated/reanimated/Tools (= 3.15.0)
-  - RNReanimated/reanimated/AnimatedSensor (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
   - RNReanimated/reanimated/apple (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/reanimated/Fabric (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/reanimated/LayoutAnimations (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/reanimated/NativeModules (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/reanimated/RuntimeDecorators (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/reanimated/Tools (3.15.0):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1082,35 +1046,7 @@ PODS:
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
     - ReactCommon/turbomodule/core
-<<<<<<< HEAD
   - RNSVG (15.8.0-rc.1):
-=======
-    - RNReanimated/worklets/Registries (= 3.15.0)
-    - RNReanimated/worklets/SharedItems (= 3.15.0)
-    - RNReanimated/worklets/Tools (= 3.15.0)
-    - RNReanimated/worklets/WorkletRuntime (= 3.15.0)
-  - RNReanimated/worklets/Registries (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/worklets/SharedItems (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/worklets/Tools (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNReanimated/worklets/WorkletRuntime (3.15.0):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
-    - ReactCommon/turbomodule/core
-  - RNSVG (15.4.0):
->>>>>>> main
     - React-Core
   - SocketRocket (0.7.0)
   - Yoga (1.14.0)
@@ -1291,7 +1227,6 @@ SPEC CHECKSUMS:
   fmt: 03574da4b7ba40de39da59677ca66610ce8c4a02
   glog: 3a72874c0322c7caf24931d3a2777cb7a3090529
   RCT-Folly: 68e9c0fd4c0f05964afd447041d3ac2d67298f27
-<<<<<<< HEAD
   RCTRequired: 8f165b521fb1031cdeae4e5cabaa116bbeef00a5
   RCTTypeSafety: 84dde8c83ecfb87e5b7a601191c0a606435aaa37
   React: c05c8ec2d476327c4c75dff743b030d0767ba21e
@@ -1334,56 +1269,9 @@ SPEC CHECKSUMS:
   ReactCommon: 0ccb181104be8de0f3d1afc56e362e1e103702b3
   RNCAsyncStorage: ec53e44dc3e75b44aa2a9f37618a49c3bc080a7a
   RNCPicker: 0173dedc74776227ec6dcc61bb85cd9f07bbb2ac
-  RNGestureHandler: 75e2ebf4e8ac521f2b3c9afdc048fcbc2e2c9ea4
-  RNReanimated: 6141521d9ae5dc9eee87f43e6127c9f563729d8e
+  RNGestureHandler: bb81850add626ddd265294323310fec6e861c96b
+  RNReanimated: 143bc4c36bc4a0491bcd1dacadb52d1f11ace9eb
   RNSVG: 01eb8d8a0e2289ec3ecc9626ce920e00d2174992
-=======
-  RCTRequired: 1b6c0e7675125f5e1ef771761dd74ed63f88f549
-  RCTTypeSafety: eebab76bd904f62b5101791a33e534d5183038db
-  React: c4ad79ac16d6ef8cf5604c9ea1e53907eb5531ab
-  React-callinvoker: 912c1a42cdca6d1615770ff0c0fabeccbc1d982f
-  React-Codegen: 2f93a9fc05b93ce177f06de6cd4cd267b5d31cab
-  React-Core: 23c625b4d468a73ab68c9ae135565e8c85334604
-  React-CoreModules: dfafc47e8efbca7f471f4c99b783ee3505021839
-  React-cxxreact: 7ff41d96439bdedfae5962f24e3fe3408fe4ca27
-  React-debug: 1f3b283cb7d8496e46382c14425801a385d7614a
-  React-Fabric: f7ba513e69531f6150f5c055bab0497c6c3b7639
-  React-FabricImage: feca0af14613b5b7a950a0c7c7c9517373860a9e
-  React-graphics: 98f58dd8d93eb3d4ef4723f81569cbaf1849be25
-  React-ImageManager: 1ea0399b5c153333c0aab5098b53cb0357ab2ceb
-  React-jsc: b26a317d649d632841c50dcbd7615119ce6abaaa
-  React-jserrorhandler: a6795fe0b5b53a456023593b58a8e471a9ecfb81
-  React-jsi: 1bf1381dcf21e2628d09466436d13a5fdc95f9db
-  React-jsiexecutor: 3269be12cbb44a4e3ffe415aa0a1a460a42d9f80
-  React-jsinspector: 65138cb9e3b9ea8bc46cb6a55e56cb7109b201de
-  React-logger: 77769db76b5437661dde25747d60677cef9d5c95
-  React-Mapbuffer: 62493907a7a7907d545a76864d8f57669cdee21b
-  React-nativeconfig: a4a2766d853a32c6bef2deabc430c440fa3b3ee4
-  React-NativeModulesApple: 65c4d27ddabf8ffc632ea7f7031dfb55188775ee
-  React-perflogger: c3a92408f3514a2232af76392d7a83f158e8b4c3
-  React-RCTActionSheet: af3b5c62e6250da74999405ea0607a5ec15a5153
-  React-RCTAnimation: 6699a4436e507a9e33e10e49e7ae6795b160be13
-  React-RCTAppDelegate: 769f7fc101cd970942bf3a499bfc3fa76a069eab
-  React-RCTBlob: 7f2d811b044cabde3cb06084aeb783e149ba2eaf
-  React-RCTFabric: ad4651a75969b16e36ba8dade9c31092b5b0f77c
-  React-RCTImage: 0fd2671924a6ba1667e204a02c33f976aa01c503
-  React-RCTLinking: 2bb5fb33068e89bb35846e890901387a2034e1ac
-  React-RCTNetwork: c2af23635445efe9bdb3a8eb2efe56f12f8765f3
-  React-RCTSettings: c1a3cff1a072ae97f87ccf1a3fb9659081d2e032
-  React-RCTText: 8d88de32b5552dd7ea5da16c334fc950759ea8f4
-  React-RCTVibration: 13531070a14a6051d64c8132c3b46fdc7a323abd
-  React-rendererdebug: 72fb11ebecda3b9b4be35df34de0009e3764568b
-  React-rncore: 9645e2fe9972f604afa470fb6d2a4b21da9acc08
-  React-runtimeexecutor: acfe59a8a332ca196579458b4c9de57fd36f8c99
-  React-runtimescheduler: 21b1b856b11cec12c3cafd06fe5216ce038ec002
-  React-utils: cad31b38051b5d68c71fbf8897741075fe6c7e66
-  ReactCommon: 391bb650df60503277a90cb69dd486802c030be1
-  RNCAsyncStorage: 826b603ae9c0f88b5ac4e956801f755109fa4d5c
-  RNCPicker: 3e2c37a8328f368ce14da050cdc8231deb5fc9f9
-  RNGestureHandler: f203fa4755a75b02d45a299b07d7ed878f636705
-  RNReanimated: ceedd7f2855ba7e75586cf20385e2b28ea4e012d
-  RNSVG: cb24fb322de8c1ebf59904e7aca0447bb8dbed5a
->>>>>>> main
   SocketRocket: f6c6249082c011e6de2de60ed641ef8bbe0cfac9
   Yoga: 329461de6a23b9e0c108d197fd0f6e87c8c8ecf2
 

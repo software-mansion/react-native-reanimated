@@ -42,7 +42,7 @@
     "react-dom": "^17.0.2",
     "react-draggable": "^4.4.5",
     "react-native": "^0.71.4",
-    "react-native-gesture-handler": "https://github.com/software-mansion/react-native-gesture-handler.git#commit=a92c219ea73ac5959f0bffbfbae6da469b1326d5",
+    "react-native-gesture-handler": "2.20.0",
     "react-native-reanimated": "^3.15.0-nightly-20240722-a15e0edec",
     "react-native-svg": "15.8.0-rc.1",
     "react-native-web": "^0.18.12",
