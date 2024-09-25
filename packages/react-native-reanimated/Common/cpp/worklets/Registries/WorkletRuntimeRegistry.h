@@ -7,7 +7,7 @@
 
 using namespace facebook;
 
-namespace reanimated {
+namespace worklets {
 
 class WorkletRuntimeRegistry {
  private:
@@ -36,4 +36,4 @@ class WorkletRuntimeRegistry {
   }
 };
 
-} // namespace reanimated
+} // namespace worklets

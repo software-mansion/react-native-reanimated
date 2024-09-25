@@ -15,7 +15,7 @@
 using namespace facebook;
 using namespace react;
 
-namespace reanimated {
+namespace worklets {
 
 class WorkletRuntime : public jsi::HostObject,
                        public std::enable_shared_from_this<WorkletRuntime> {
@@ -81,4 +81,4 @@ void scheduleOnRuntime(
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &shareableWorkletValue);
 
-} // namespace reanimated
+} // namespace worklets

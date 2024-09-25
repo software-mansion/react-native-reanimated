@@ -6,7 +6,7 @@
 
 #include <jsi/decorator.h>
 
-namespace reanimated {
+namespace worklets {
 
 class AroundLock {
   const std::shared_ptr<std::recursive_mutex> mutex_;
@@ -146,4 +146,4 @@ void scheduleOnRuntime(
   workletRuntime->runAsyncGuarded(shareableWorklet);
 }
 
-} // namespace reanimated
+} // namespace worklets

@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 
-namespace reanimated {
+namespace worklets {
 
 class JSLogger {
  public:
@@ -17,4 +17,4 @@ class JSLogger {
   const std::shared_ptr<JSScheduler> jsScheduler_;
 };
 
-} // namespace reanimated
+} // namespace worklets

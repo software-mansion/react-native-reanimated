@@ -2,7 +2,7 @@
 
 using namespace facebook;
 
-namespace reanimated {
+namespace worklets {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
@@ -331,4 +331,4 @@ jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
   }
 }
 
-} /* namespace reanimated */
+} // namespace worklets
