@@ -1,9 +1,9 @@
 #pragma once
 
-#include <reanimated/AndroidUIScheduler.h>
-#include <reanimated/JNIHelper.h>
-#include <reanimated/LayoutAnimations.h>
 #include <reanimated/NativeModules/NativeReanimatedModule.h>
+#include <reanimated/android/AndroidUIScheduler.h>
+#include <reanimated/android/JNIHelper.h>
+#include <reanimated/android/LayoutAnimations.h>
 
 #include <worklets/Tools/UIScheduler.h>
 
