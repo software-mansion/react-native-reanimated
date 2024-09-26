@@ -6,5 +6,5 @@ namespace reanimated {
 
 NativeWorkletsModuleSpec::NativeWorkletsModuleSpec(
     const std::shared_ptr<CallInvoker> jsInvoker)
-    : TurboModule("CommonWorklets", jsInvoker) {}
+    : TurboModule("NativeWorklets", jsInvoker) {}
 } // namespace reanimated
