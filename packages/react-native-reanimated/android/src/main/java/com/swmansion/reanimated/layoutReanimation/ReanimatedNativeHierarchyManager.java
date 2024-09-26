@@ -7,7 +7,6 @@ import android.view.ViewGroup;
 import androidx.annotation.Nullable;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.IllegalViewOperationException;
-import com.facebook.react.uimanager.NativeViewHierarchyManager;
 import com.facebook.react.uimanager.ViewAtIndex;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.ViewManager;
@@ -19,7 +18,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager {
+public class ReanimatedNativeHierarchyManager extends ReanimatedNativeHierarchyManagerBase {
   private final HashMap<Integer, ArrayList<View>> toBeRemoved = new HashMap<>();
   private final HashMap<Integer, Runnable> cleanerCallback = new HashMap<>();
   private final ReaLayoutAnimator mReaLayoutAnimator;
@@ -34,9 +33,11 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
     mReaLayoutAnimator = new ReaLayoutAnimator(reactContext, this);
     mTabNavigatorObserver = new TabNavigatorObserver(mReaLayoutAnimator);
 
-    Class<?> clazz = this.getClass().getSuperclass();
+    Class<?> clazz = this.getClass().getSuperclass().getSuperclass();
     if (clazz == null) {
-      Log.e("reanimated", "unable to resolve super class of ReanimatedNativeHierarchyManager");
+      Log.e(
+          "reanimated",
+          "unable to resolve NativeViewHierarchyManager class from ReanimatedNativeHierarchyManager");
       return;
     }
 
@@ -92,9 +93,8 @@ public class ReanimatedNativeHierarchyManager extends NativeViewHierarchyManager
   }
 
   @Override
-  public synchronized void updateLayout(
+  public synchronized void updateLayoutCommon(
       int parentTag, int tag, int x, int y, int width, int height) {
-    super.updateLayout(parentTag, tag, x, y, width, height);
     if (isLayoutAnimationDisabled()) {
       return;
     }

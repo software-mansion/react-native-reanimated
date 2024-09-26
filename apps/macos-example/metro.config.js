@@ -41,5 +41,6 @@ const config = {
 };
 
 module.exports = wrapWithReanimatedMetroConfig(
+  // @ts-expect-error Should be fixed with https://github.com/facebook/react-native/pull/46602
   mergeConfig(getDefaultConfig(__dirname), config)
 );
