@@ -28,8 +28,17 @@
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <functional>
-#include <iomanip>
 #include <utility>
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <iomanip>
+#endif // RCT_NEW_ARCH_ENABLED
+
+#if REACT_NATIVE_MINOR_VERSION >= 76
+// React Native 0.75 is the last one which allows NDK 23,
+// which uses C++17 and explicitly disallows C++20 features.
+#define CPP20_FEATURES_ALLOWED
+#endif // REACT_NATIVE_MINOR_VERSION >= 76
 
 using namespace facebook;
 
@@ -196,17 +205,23 @@ void NativeReanimatedModule::scheduleOnUI(
     const jsi::Value &worklet) {
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt, worklet, "[Reanimated] Only worklets can be scheduled to run on UI.");
-  uiScheduler_->scheduleOnUI([=, this] {
+  uiScheduler_->scheduleOnUI(
+#ifdef CPP20_FEATURES_ALLOWED
+      [=, this]
+#else
+      [=]
+#endif // CPP20_FEATURES_ALLOWED
+      {
 #if JS_RUNTIME_HERMES
-    // JSI's scope defined here allows for JSI-objects to be cleared up after
-    // each runtime loop. Within these loops we typically create some temporary
-    // JSI objects and hence it allows for such objects to be garbage collected
-    // much sooner.
-    // Apparently the scope API is only supported on Hermes at the moment.
-    const auto scope = jsi::Scope(uiWorkletRuntime_->getJSIRuntime());
+        // JSI's scope defined here allows for JSI-objects to be cleared up
+        // after each runtime loop. Within these loops we typically create some
+        // temporary JSI objects and hence it allows for such objects to be
+        // garbage collected much sooner. Apparently the scope API is only
+        // supported on Hermes at the moment.
+        const auto scope = jsi::Scope(uiWorkletRuntime_->getJSIRuntime());
 #endif
-    uiWorkletRuntime_->runGuarded(shareableWorklet);
-  });
+        uiWorkletRuntime_->runGuarded(shareableWorklet);
+      });
 }
 
 jsi::Value NativeReanimatedModule::executeOnUIRuntimeSync(
@@ -263,11 +278,20 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
       rt, worklet, "[Reanimated] Event handler must be a worklet.");
   int emitterReactTagInt = emitterReactTag.asNumber();
 
-  uiScheduler_->scheduleOnUI([=, this] {
-    auto handler = std::make_shared<WorkletEventHandler>(
-        newRegistrationId, eventNameStr, emitterReactTagInt, handlerShareable);
-    eventHandlerRegistry_->registerEventHandler(std::move(handler));
-  });
+  uiScheduler_->scheduleOnUI(
+#ifdef CPP20_FEATURES_ALLOWED
+      [=, this]
+#else
+      [=]
+#endif // CPP20_FEATURES_ALLOWED
+      {
+        auto handler = std::make_shared<WorkletEventHandler>(
+            newRegistrationId,
+            eventNameStr,
+            emitterReactTagInt,
+            handlerShareable);
+        eventHandlerRegistry_->registerEventHandler(std::move(handler));
+      });
 
   return jsi::Value(static_cast<double>(newRegistrationId));
 }
@@ -277,7 +301,12 @@ void NativeReanimatedModule::unregisterEventHandler(
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
   uiScheduler_->scheduleOnUI(
-      [=, this] { eventHandlerRegistry_->unregisterEventHandler(id); });
+#ifdef CPP20_FEATURES_ALLOWED
+      [=, this]
+#else
+      [=]
+#endif // CPP20_FEATURES_ALLOWED
+      { eventHandlerRegistry_->unregisterEventHandler(id); });
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -373,20 +402,26 @@ jsi::Value NativeReanimatedModule::getViewProp(
 
   const int viewTagInt = viewTag.asNumber();
 
-  uiScheduler_->scheduleOnUI([=, this]() {
-    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
-    const jsi::Value propNameValue =
-        jsi::String::createFromUtf8(uiRuntime, propNameStr);
-    const auto resultValue =
-        obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
-    const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
+  uiScheduler_->scheduleOnUI(
+#ifdef CPP20_FEATURES_ALLOWED
+      [=, this]
+#else
+      [=]
+#endif // CPP20_FEATURES_ALLOWED
+      () {
+        jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+        const jsi::Value propNameValue =
+            jsi::String::createFromUtf8(uiRuntime, propNameStr);
+        const auto resultValue =
+            obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
+        const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
 
-    jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
-      const auto resultValue =
-          jsi::String::createFromUtf8(rnRuntime, resultStr);
-      funPtr->call(rnRuntime, resultValue);
-    });
-  });
+        jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
+          const auto resultValue =
+              jsi::String::createFromUtf8(rnRuntime, resultStr);
+          funPtr->call(rnRuntime, resultValue);
+        });
+      });
   return jsi::Value::undefined();
 }
 
@@ -875,7 +910,12 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
       handlerWorklet,
       "[Reanimated] Keyboard event handler must be a worklet.");
   return subscribeForKeyboardEventsFunction_(
-      [=, this](int keyboardState, int height) {
+#ifdef CPP20_FEATURES_ALLOWED
+      [=, this]
+#else
+      [=]
+#endif // CPP20_FEATURES_ALLOWED
+      (int keyboardState, int height) {
         uiWorkletRuntime_->runGuarded(
             shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
