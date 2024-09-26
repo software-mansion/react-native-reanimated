@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
-    "@react-navigation/native": "^6.0.2",
-    "@shopify/flash-list": "^1.7.0",
+    "@react-navigation/native": "^6.1.18",
+    "@shopify/flash-list": "^1.7.1",
     "common-app": "workspace:*",
     "expo": "~51.0.2",
     "react": "18.3.1",

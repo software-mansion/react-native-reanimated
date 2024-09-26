@@ -1,8 +1,8 @@
-#include <reanimated/AndroidUIScheduler.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/NativeProxy.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <reanimated/android/AndroidUIScheduler.h>
+#include <reanimated/android/NativeProxy.h>
 
 #include <worklets/Tools/ReanimatedJSIUtils.h>
 #include <worklets/Tools/ReanimatedVersion.h>

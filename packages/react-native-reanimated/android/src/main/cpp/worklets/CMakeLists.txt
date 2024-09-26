@@ -44,14 +44,16 @@ if(${IS_NEW_ARCHITECTURE_ENABLED})
         "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
     )
 
-    target_link_libraries(
-        worklets
-        ReactAndroid::fabricjni
-        ReactAndroid::react_debug
-        ReactAndroid::react_render_core
-        ReactAndroid::react_render_componentregistry
-        ReactAndroid::rrc_view
-    )
+    if(ReactAndroid_VERSION_MINOR LESS 76)
+        target_link_libraries(
+            worklets
+            ReactAndroid::fabricjni
+            ReactAndroid::react_debug
+            ReactAndroid::react_render_core
+            ReactAndroid::react_render_componentregistry
+            ReactAndroid::rrc_view
+        )
+    endif()
 endif()
 
 # build shared lib
@@ -65,13 +67,24 @@ set_target_properties(
 target_link_libraries(
     worklets
     log
-    ReactAndroid::react_nativemodule_core
-    ReactAndroid::folly_runtime
-    ReactAndroid::glog
     ReactAndroid::jsi
-    ReactAndroid::reactnativejni
     fbjni::fbjni
 )
+
+if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
+    target_link_libraries(
+        worklets
+        ReactAndroid::reactnative
+    )
+else()
+    target_link_libraries(
+        worklets
+        ReactAndroid::react_nativemodule_core
+        ReactAndroid::folly_runtime
+        ReactAndroid::glog
+        ReactAndroid::reactnativejni
+    )
+endif()
 
 if(${JS_RUNTIME} STREQUAL "hermes")
     target_link_libraries(
@@ -80,16 +93,30 @@ if(${JS_RUNTIME} STREQUAL "hermes")
     )
 
     if(${HERMES_ENABLE_DEBUGGER})
-        target_link_libraries(
-            worklets
-            ReactAndroid::hermes_executor
-        )
+        if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
+            target_link_libraries(
+                worklets
+                ReactAndroid::hermestooling
+            )
+        else()
+            target_link_libraries(
+                worklets
+                ReactAndroid::hermes_executor
+            )
+        endif()
     endif()
 elseif(${JS_RUNTIME} STREQUAL "jsc")
-    target_link_libraries(
-        worklets
-        ReactAndroid::jscexecutor
-    )
+    if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
+        target_link_libraries(
+            worklets
+            ReactAndroid::jsctooling
+        )
+    else()
+        target_link_libraries(
+            worklets
+            ReactAndroid::jscexecutor
+        )
+    endif()
 elseif(${JS_RUNTIME} STREQUAL "v8")
     # TODO: Refactor this when adding support for newest V8
     target_include_directories(

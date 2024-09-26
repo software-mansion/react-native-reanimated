@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/JNIHelper.h>
+#include <reanimated/android/JNIHelper.h>
 
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
