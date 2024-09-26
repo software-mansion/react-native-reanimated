@@ -27,7 +27,7 @@ public class ReactNativeUtils {
   public static BorderRadii getBorderRadii(View view) {
     if (view.getBackground() != null) {
       return BorderRadiiDrawableUtils.getBorderRadii(view);
-      // The rest can be safely removed once support for version 0.75 is dropped.
+      // TODO: Remove the rest once support for RN 0.75 is dropped.
     } else if (view instanceof ReactImageView) {
       try {
         if (mBorderRadiusField == null) {
