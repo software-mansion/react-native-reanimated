@@ -3,6 +3,7 @@ import NativeReanimatedModule from './NativeReanimated';
 import { isWeb, shouldBeUseWeb, isFabric } from './PlatformChecker';
 import type {
   AnimatedKeyboardOptions,
+  LayoutAnimationBatchItem,
   SensorConfig,
   SensorType,
   SharedValue,
@@ -11,7 +12,6 @@ import type {
 } from './commonTypes';
 import { makeShareableCloneRecursive } from './shareables';
 import { initializeUIRuntime } from './initializers';
-import type { LayoutAnimationBatchItem } from './layoutReanimation/animationBuilder/commonTypes';
 import { SensorContainer } from './SensorContainer';
 import { ReanimatedError } from './errors';
 
