@@ -1,11 +1,11 @@
 'use strict';
 import type {
-  EntryAnimationsValues,
-  ExitAnimationsValues,
-  AnimationConfigFunction,
   IEntryAnimationBuilder,
+  AnimationConfigFunction,
+  EntryAnimationsValues,
   IExitAnimationBuilder,
-} from '../animationBuilder/commonTypes';
+  ExitAnimationsValues,
+} from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 

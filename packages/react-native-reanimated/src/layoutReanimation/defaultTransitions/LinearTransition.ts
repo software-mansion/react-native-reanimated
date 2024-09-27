@@ -1,10 +1,10 @@
 'use strict';
-import type { BaseAnimationBuilder } from '../animationBuilder';
-import { ComplexAnimationBuilder } from '../animationBuilder';
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
-} from '../animationBuilder/commonTypes';
+} from '../../commonTypes';
+import type { BaseAnimationBuilder } from '../animationBuilder';
+import { ComplexAnimationBuilder } from '../animationBuilder';
 
 /**
  * Linearly transforms the layout from one position to another. You can modify

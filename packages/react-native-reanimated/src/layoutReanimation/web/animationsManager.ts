@@ -12,7 +12,6 @@ import type {
   AnimatedComponentProps,
   LayoutAnimationStaticContext,
 } from '../../createAnimatedComponent/commonTypes';
-import { LayoutAnimationType } from '../animationBuilder/commonTypes';
 import {
   createAnimationWithInitialValues,
   createCustomKeyFrameAnimation,
@@ -31,6 +30,7 @@ import { makeElementVisible } from './componentStyle';
 import { EasingNameSymbol } from '../../Easing';
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { logger } from '../../logger';
+import { LayoutAnimationType } from '../../commonTypes';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,

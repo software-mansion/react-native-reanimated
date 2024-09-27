@@ -1,12 +1,13 @@
 'use strict';
 import { withTiming, withSpring } from '../../animation';
+import { BaseAnimationBuilder } from './BaseAnimationBuilder';
 import type {
+  StyleProps,
+  EasingFunction,
   AnimationFunction,
   BaseBuilderAnimationConfig,
   LayoutAnimationAndConfig,
-} from './commonTypes';
-import { BaseAnimationBuilder } from './BaseAnimationBuilder';
-import type { StyleProps, EasingFunction } from '../../commonTypes';
+} from '../../commonTypes';
 import { assertEasingIsWorklet } from '../../animation/util';
 
 export class ComplexAnimationBuilder extends BaseAnimationBuilder {

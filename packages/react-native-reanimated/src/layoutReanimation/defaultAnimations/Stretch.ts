@@ -2,7 +2,7 @@
 import type {
   IEntryExitAnimationBuilder,
   EntryExitAnimationFunction,
-} from '../animationBuilder/commonTypes';
+} from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 

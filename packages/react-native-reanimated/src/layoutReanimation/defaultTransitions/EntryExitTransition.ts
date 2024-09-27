@@ -1,16 +1,14 @@
 'use strict';
-import type {
-  ILayoutAnimationBuilder,
-  LayoutAnimationsValues,
-  LayoutAnimationFunction,
-  StylePropsWithArrayTransform,
-} from '../animationBuilder/commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder';
 import { withSequence, withTiming } from '../../animation';
 import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
 import type {
   AnimatableValue,
   AnimationObject,
+  ILayoutAnimationBuilder,
+  LayoutAnimationFunction,
+  LayoutAnimationsValues,
+  StylePropsWithArrayTransform,
   TransformArrayItem,
 } from '../../commonTypes';
 import { logger } from '../../logger';

@@ -1,13 +1,13 @@
 'use strict';
+import type {
+  IEntryAnimationBuilder,
+  AnimationConfigFunction,
+  EntryAnimationsValues,
+  IExitAnimationBuilder,
+  ExitAnimationsValues,
+} from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
-import type {
-  EntryAnimationsValues,
-  ExitAnimationsValues,
-  AnimationConfigFunction,
-  IEntryAnimationBuilder,
-  IExitAnimationBuilder,
-} from '../animationBuilder/commonTypes';
 
 /**
  * Rotate to bottom from left edge. You can modify the behavior by chaining
