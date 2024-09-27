@@ -34,11 +34,17 @@
 #include <iomanip>
 #endif // RCT_NEW_ARCH_ENABLED
 
-#if REACT_NATIVE_MINOR_VERSION >= 76
-// React Native 0.75 is the last one which allows NDK 23,
-// which uses C++17 and explicitly disallows C++20 features.
-#define CPP20_FEATURES_ALLOWED
-#endif // REACT_NATIVE_MINOR_VERSION >= 76
+// Standard `__cplusplus` macro reference:
+// https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros
+#if REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 20202L
+// Implicit copy capture of `this` is deprecated in NDK27, which uses C++20.
+#define COPY_CAPTURE_WITH_THIS [ =, this ]
+#else
+// React Native 0.75 is the last one which allows NDK23. NDK23 uses C++17 and
+// explicitly disallows C++20 features, including the syntax above. Therefore we
+// fallback to the deprecated syntax here.
+#define COPY_CAPTURE_WITH_THIS [=]
+#endif // REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 20202L
 
 using namespace facebook;
 
@@ -205,23 +211,17 @@ void NativeReanimatedModule::scheduleOnUI(
     const jsi::Value &worklet) {
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt, worklet, "[Reanimated] Only worklets can be scheduled to run on UI.");
-  uiScheduler_->scheduleOnUI(
-#ifdef CPP20_FEATURES_ALLOWED
-      [=, this]
-#else
-      [=]
-#endif // CPP20_FEATURES_ALLOWED
-      {
+  uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
 #if JS_RUNTIME_HERMES
-        // JSI's scope defined here allows for JSI-objects to be cleared up
-        // after each runtime loop. Within these loops we typically create some
-        // temporary JSI objects and hence it allows for such objects to be
-        // garbage collected much sooner. Apparently the scope API is only
-        // supported on Hermes at the moment.
-        const auto scope = jsi::Scope(uiWorkletRuntime_->getJSIRuntime());
+    // JSI's scope defined here allows for JSI-objects to be cleared up
+    // after each runtime loop. Within these loops we typically create some
+    // temporary JSI objects and hence it allows for such objects to be
+    // garbage collected much sooner. Apparently the scope API is only
+    // supported on Hermes at the moment.
+    const auto scope = jsi::Scope(uiWorkletRuntime_->getJSIRuntime());
 #endif
-        uiWorkletRuntime_->runGuarded(shareableWorklet);
-      });
+    uiWorkletRuntime_->runGuarded(shareableWorklet);
+  });
 }
 
 jsi::Value NativeReanimatedModule::executeOnUIRuntimeSync(
@@ -278,20 +278,11 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
       rt, worklet, "[Reanimated] Event handler must be a worklet.");
   int emitterReactTagInt = emitterReactTag.asNumber();
 
-  uiScheduler_->scheduleOnUI(
-#ifdef CPP20_FEATURES_ALLOWED
-      [=, this]
-#else
-      [=]
-#endif // CPP20_FEATURES_ALLOWED
-      {
-        auto handler = std::make_shared<WorkletEventHandler>(
-            newRegistrationId,
-            eventNameStr,
-            emitterReactTagInt,
-            handlerShareable);
-        eventHandlerRegistry_->registerEventHandler(std::move(handler));
-      });
+  uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
+    auto handler = std::make_shared<WorkletEventHandler>(
+        newRegistrationId, eventNameStr, emitterReactTagInt, handlerShareable);
+    eventHandlerRegistry_->registerEventHandler(std::move(handler));
+  });
 
   return jsi::Value(static_cast<double>(newRegistrationId));
 }
@@ -301,11 +292,8 @@ void NativeReanimatedModule::unregisterEventHandler(
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
   uiScheduler_->scheduleOnUI(
-#ifdef CPP20_FEATURES_ALLOWED
-      [=, this]
-#else
-      [=]
-#endif // CPP20_FEATURES_ALLOWED
+      COPY_CAPTURE_WITH_THIS
+
       { eventHandlerRegistry_->unregisterEventHandler(id); });
 }
 
@@ -403,11 +391,8 @@ jsi::Value NativeReanimatedModule::getViewProp(
   const int viewTagInt = viewTag.asNumber();
 
   uiScheduler_->scheduleOnUI(
-#ifdef CPP20_FEATURES_ALLOWED
-      [=, this]
-#else
-      [=]
-#endif // CPP20_FEATURES_ALLOWED
+      COPY_CAPTURE_WITH_THIS
+
       () {
         jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
         const jsi::Value propNameValue =
@@ -910,11 +895,8 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
       handlerWorklet,
       "[Reanimated] Keyboard event handler must be a worklet.");
   return subscribeForKeyboardEventsFunction_(
-#ifdef CPP20_FEATURES_ALLOWED
-      [=, this]
-#else
-      [=]
-#endif // CPP20_FEATURES_ALLOWED
+      COPY_CAPTURE_WITH_THIS
+
       (int keyboardState, int height) {
         uiWorkletRuntime_->runGuarded(
             shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
