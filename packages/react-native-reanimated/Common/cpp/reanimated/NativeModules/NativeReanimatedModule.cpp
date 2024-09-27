@@ -38,12 +38,12 @@
 // https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros
 #if REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 20202L
 // Implicit copy capture of `this` is deprecated in NDK27, which uses C++20.
-#define COPY_CAPTURE_WITH_THIS [ =, this ]
+#define COPY_CAPTURE_WITH_THIS [ =, this ] // NOLINT (whitespace/braces)
 #else
 // React Native 0.75 is the last one which allows NDK23. NDK23 uses C++17 and
 // explicitly disallows C++20 features, including the syntax above. Therefore we
 // fallback to the deprecated syntax here.
-#define COPY_CAPTURE_WITH_THIS [=]
+#define COPY_CAPTURE_WITH_THIS [=] // NOLINT (whitespace/braces)
 #endif // REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 20202L
 
 using namespace facebook;
