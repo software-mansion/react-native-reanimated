@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+
+print() {
+  echo "    [PRECOMMIT]: $1" >&2
+}
+
+BRANCH=$(git symbolic-ref HEAD)
+if [ "$BRANCH" = "refs/heads/main" ]; then
+  print "You tried to commit to main, which is probably a mistake. Aborting commit."
+  exit 1
+fi
