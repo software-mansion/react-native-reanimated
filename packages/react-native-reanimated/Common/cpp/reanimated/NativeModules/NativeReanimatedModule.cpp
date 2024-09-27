@@ -32,6 +32,18 @@
 #include <fbjni/fbjni.h>
 #endif
 
+// Standard `__cplusplus` macro reference:
+// https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros
+#if REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 20202L
+// Implicit copy capture of `this` is deprecated in NDK27, which uses C++20.
+#define COPY_CAPTURE_WITH_THIS [ =, this ] // NOLINT (whitespace/braces)
+#else
+// React Native 0.75 is the last one which allows NDK23. NDK23 uses C++17 and
+// explicitly disallows C++20 features, including the syntax above. Therefore we
+// fallback to the deprecated syntax here.
+#define COPY_CAPTURE_WITH_THIS [=] // NOLINT (whitespace/braces)
+#endif // REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 20202L
+
 using namespace facebook;
 
 #if REACT_NATIVE_MINOR_VERSION == 73 && defined(RCT_NEW_ARCH_ENABLED)
@@ -195,13 +207,13 @@ void NativeReanimatedModule::scheduleOnUI(
     const jsi::Value &worklet) {
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt, worklet, "[Reanimated] Only worklets can be scheduled to run on UI.");
-  uiScheduler_->scheduleOnUI([=, this] {
+  uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
 #if JS_RUNTIME_HERMES
-    // JSI's scope defined here allows for JSI-objects to be cleared up after
-    // each runtime loop. Within these loops we typically create some temporary
-    // JSI objects and hence it allows for such objects to be garbage collected
-    // much sooner.
-    // Apparently the scope API is only supported on Hermes at the moment.
+    // JSI's scope defined here allows for JSI-objects to be cleared up
+    // after each runtime loop. Within these loops we typically create some
+    // temporary JSI objects and hence it allows for such objects to be
+    // garbage collected much sooner. Apparently the scope API is only
+    // supported on Hermes at the moment.
     const auto scope = jsi::Scope(uiWorkletRuntime_->getJSIRuntime());
 #endif
     uiWorkletRuntime_->runGuarded(shareableWorklet);
@@ -261,7 +273,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
       rt, worklet, "[Reanimated] Event handler must be a worklet.");
   int emitterReactTagInt = emitterReactTag.asNumber();
 
-  uiScheduler_->scheduleOnUI([=, this] {
+  uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
     auto handler = std::make_shared<WorkletEventHandler>(
         newRegistrationId, eventNameStr, emitterReactTagInt, handlerShareable);
     eventHandlerRegistry_->registerEventHandler(std::move(handler));
@@ -275,7 +287,9 @@ void NativeReanimatedModule::unregisterEventHandler(
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
   uiScheduler_->scheduleOnUI(
-      [=, this] { eventHandlerRegistry_->unregisterEventHandler(id); });
+      COPY_CAPTURE_WITH_THIS
+
+      { eventHandlerRegistry_->unregisterEventHandler(id); });
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -371,20 +385,23 @@ jsi::Value NativeReanimatedModule::getViewProp(
 
   const int viewTagInt = viewTag.asNumber();
 
-  uiScheduler_->scheduleOnUI([=, this]() {
-    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
-    const jsi::Value propNameValue =
-        jsi::String::createFromUtf8(uiRuntime, propNameStr);
-    const auto resultValue =
-        obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
-    const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
+  uiScheduler_->scheduleOnUI(
+      COPY_CAPTURE_WITH_THIS
 
-    jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
-      const auto resultValue =
-          jsi::String::createFromUtf8(rnRuntime, resultStr);
-      funPtr->call(rnRuntime, resultValue);
-    });
-  });
+      () {
+        jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+        const jsi::Value propNameValue =
+            jsi::String::createFromUtf8(uiRuntime, propNameStr);
+        const auto resultValue =
+            obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
+        const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
+
+        jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
+          const auto resultValue =
+              jsi::String::createFromUtf8(rnRuntime, resultStr);
+          funPtr->call(rnRuntime, resultValue);
+        });
+      });
   return jsi::Value::undefined();
 }
 
@@ -872,7 +889,9 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
       handlerWorklet,
       "[Reanimated] Keyboard event handler must be a worklet.");
   return subscribeForKeyboardEventsFunction_(
-      [=, this](int keyboardState, int height) {
+      COPY_CAPTURE_WITH_THIS
+
+      (int keyboardState, int height) {
         uiWorkletRuntime_->runGuarded(
             shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
