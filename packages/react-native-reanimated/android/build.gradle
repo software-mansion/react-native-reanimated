@@ -455,8 +455,7 @@ task prepareWorkletsHeadersForPrefabs(type: Copy) {
 
 task prepareReanimatedHeadersForPrefabs(type: Copy) {
     // Reanimated
-    from("$projectDir/src/main/cpp")
-    from("$projectDir/../Common")
+    from("$projectDir/src/main/cpp/reanimated")
     from("$projectDir/../Common/cpp/reanimated/AnimatedSensor")
     from("$projectDir/../Common/cpp/reanimated/Fabric")
     from("$projectDir/../Common/cpp/reanimated/LayoutAnimations")
@@ -465,6 +464,7 @@ task prepareReanimatedHeadersForPrefabs(type: Copy) {
     from("$projectDir/../Common/cpp/reanimated/Tools")
     // Worklets
     from("$projectDir/../Common/cpp/worklets/SharedItems")
+    from("$projectDir/../Common/cpp/worklets/Registries")
     from("$projectDir/../Common/cpp/worklets/WorkletRuntime")
     from("$projectDir/../Common/cpp/worklets/Tools")
     include("*.h")
