@@ -4,6 +4,7 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #endif // RCT_NEW_ARCH_ENABLED
+
 #include <worklets/NativeModules/NativeWorkletsModule.h>
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -20,8 +21,4 @@ NativeWorkletsModule::NativeWorkletsModule(const std::string &valueUnpackerCode)
       valueUnpackerCode_(valueUnpackerCode) {}
 
 NativeWorkletsModule::~NativeWorkletsModule() {}
-
-std::string NativeWorkletsModule::getValueUnpackerCode() const {
-  return valueUnpackerCode_;
-}
 } // namespace reanimated

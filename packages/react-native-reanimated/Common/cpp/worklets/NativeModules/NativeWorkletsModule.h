@@ -12,7 +12,9 @@ class NativeWorkletsModule : public NativeWorkletsModuleSpec {
 
   ~NativeWorkletsModule();
 
-  [[nodiscard]] std::string getValueUnpackerCode() const;
+  [[nodiscard]] inline std::string getValueUnpackerCode() const {
+    return valueUnpackerCode_;
+  }
 
  private:
   const std::string valueUnpackerCode_;
