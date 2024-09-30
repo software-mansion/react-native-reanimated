@@ -1,5 +1,5 @@
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { flex, colors, radius, spacing, text } from '../../../theme';
+import { flex, colors, radius, spacing } from '../../../theme';
 import { useState } from 'react';
 import type { PropsWithChildren } from 'react';
 import Animated, {
@@ -17,7 +17,7 @@ const AnimatedTouchableOpacity =
   Animated.createAnimatedComponent(TouchableOpacity);
 
 export type ExampleCardProps = PropsWithChildren<{
-  title: string;
+  title?: string;
   code: string;
   collapsedCode?: string;
   description?: string;
@@ -59,9 +59,11 @@ export default function ExampleCard({
         expanded={isExpanded}
         onChange={setIsExpanded}
         showExpandOverlay>
-        <Text variant="subHeading2" style={styles.title}>
-          {title}
-        </Text>
+        {title && (
+          <Text variant="subHeading2" style={styles.title}>
+            {title}
+          </Text>
+        )}
         {description && <Text style={styles.description}>{description}</Text>}
         <View
           style={[
