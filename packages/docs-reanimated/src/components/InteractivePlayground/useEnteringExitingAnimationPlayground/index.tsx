@@ -2,7 +2,10 @@ import React, { useEffect, useState } from 'react';
 import Example from './Example';
 import useScreenSize from '@site/src/hooks/useScreenSize';
 import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
-import { Easing, type BaseLayoutAnimationConfig } from 'react-native-reanimated';
+import {
+  Easing,
+  type BaseLayoutAnimationConfig,
+} from 'react-native-reanimated';
 import Controls from './Controls/Controls';
 import { ENTERING_ANIMATIONS, EXITING_ANIMATIONS } from './Example';
 
