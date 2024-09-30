@@ -6,6 +6,7 @@
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <worklets/NativeModules/NativeWorkletsModule.h>
+
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
 #endif // __ANDROID__
