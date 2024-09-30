@@ -25,10 +25,10 @@ jobs:
       group: ${{ matrix.platform }}-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      # - name: Setup Yarn
+      - name: Setup Yarn
         # Sometimes `npx react-native init` fails due to dependency mismatches or other
         # rather vague errors. This is a workaround for that.
-        # run: corepack enable && yarn init
+        run: corepack enable && yarn init
       - name: Set up JDK 18
         if: ${{ matrix.platform == 'Android' }}
         uses: actions/setup-java@v3
@@ -44,10 +44,10 @@ jobs:
         run: yarn add react-native@${{ env.REACT_NATIVE_TAG }}
       - name: Create app
         run: |
-          npx @react-native-community/cli init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }} --pm yarn --skip-install --install-pods false --skip-git-init
-      - name: Add yarn.lock in app
-        working-directory: ${{ env.APP_NAME }}
-        run: touch yarn.lock
+          npx @react-native-community/cli init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }} --skip-install --install-pods false --skip-git-init
+      # - name: Add yarn.lock in app
+      #   working-directory: ${{ env.APP_NAME }}
+      #   run: touch yarn.lock
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
