@@ -483,28 +483,6 @@ task createNativeDepsDirectories() {
     prefabHeadersDir.mkdirs()
 }
 
-def resolveTaskFactory(String taskName, String artifactLocalName, File reactNativeAndroidDownloadDir, File reanimatedDownloadDir) {
-    return tasks.create(name: taskName, dependsOn: createNativeDepsDirectories, type: Copy) {
-        from reactNativeAndroidDownloadDir
-        include artifactLocalName
-        into reanimatedDownloadDir
-
-        onlyIf {
-            // First we check whether the file is already in our download directory
-            if (file("$reanimatedDownloadDir/$artifactLocalName").isFile()) {
-                return false
-            }
-
-            // If it is not the case we check whether it was downloaded by ReactAndroid project
-            if (file("$reactNativeAndroidDownloadDir/$artifactLocalName").isFile()) {
-                return true
-            }
-
-            return false
-        }
-    }
-}
-
 task packageNdkLibs(type: Copy) {
     from("$buildDir/reanimated-ndk/all")
     include("**/libreanimated.so")
