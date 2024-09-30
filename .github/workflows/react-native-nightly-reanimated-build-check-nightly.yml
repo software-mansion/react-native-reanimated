@@ -25,10 +25,10 @@ jobs:
       group: ${{ matrix.platform }}-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - name: Setup Yarn
+      # - name: Setup Yarn
         # Sometimes `npx react-native init` fails due to dependency mismatches or other
         # rather vague errors. This is a workaround for that.
-        run: corepack enable && yarn init
+        # run: corepack enable && yarn init
       - name: Set up JDK 18
         if: ${{ matrix.platform == 'Android' }}
         uses: actions/setup-java@v3
