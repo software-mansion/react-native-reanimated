@@ -247,6 +247,7 @@ export type {
   SharedTransitionAnimationsValues,
   ILayoutAnimationBuilder,
   IEntryExitAnimationBuilder,
+  BaseLayoutAnimationConfig,
 } from './commonTypes';
 export {
   SensorType,

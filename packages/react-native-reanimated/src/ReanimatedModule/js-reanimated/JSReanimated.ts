@@ -299,6 +299,9 @@ class JSReanimated implements IReanimatedModule {
   }
 }
 
+// Lack of this export breaks TypeScript generation since
+// an enum transpiles into JavaScript code.
+// ts-prune-ignore-next
 export enum Platform {
   WEB_IOS = 'web iOS',
   WEB_ANDROID = 'web Android',
