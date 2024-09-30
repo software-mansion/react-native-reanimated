@@ -122,6 +122,7 @@ export type {
   SharedTransitionAnimationsValues,
   ILayoutAnimationBuilder,
   IEntryExitAnimationBuilder,
+  BaseLayoutAnimationConfig,
 } from './layoutReanimation';
 export {
   BaseAnimationBuilder,

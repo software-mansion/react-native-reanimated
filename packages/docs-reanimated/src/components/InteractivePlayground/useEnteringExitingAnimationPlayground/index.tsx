@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import Example from './Example';
 import useScreenSize from '@site/src/hooks/useScreenSize';
 import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
-import { Easing } from 'react-native-reanimated';
+import {
+  Easing,
+  type BaseLayoutAnimationConfig,
+} from 'react-native-reanimated';
 import Controls from './Controls/Controls';
-import { type BaseLayoutAnimationConfig } from 'react-native-reanimated/lib/typescript/layoutReanimation';
 import { ENTERING_ANIMATIONS, EXITING_ANIMATIONS } from './Example';
 
 // TODO: Options related to spring will be uncommented after springify is introduced to web
