@@ -44,7 +44,7 @@ jobs:
         run: yarn add react-native@${{ env.REACT_NATIVE_TAG }}
       - name: Create app
         run: |
-          npx @react-native-community/cli init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }} --skip-install --install-pods false --skip-git-init
+          npx @react-native-community/cli init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }}
       # - name: Add yarn.lock in app
       #   working-directory: ${{ env.APP_NAME }}
       #   run: touch yarn.lock
