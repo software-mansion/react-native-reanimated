@@ -37,38 +37,12 @@ ColorArray ColorValueInterpolator::interpolate(
     const ColorArray &toValue,
     const InterpolationUpdateContext context) const {
   ColorArray resultChannels;
-
-  // interpolate rgb channels using gamma correction and alpha channel without
-  // it
+  // interpolate rgb channels linear to progress
   for (int i = 0; i < 4; i++) {
-    double fromChannelValue =
-        i == 3 ? fromValue[i] : toLinearSpace(fromValue[i]);
-    double toChannelValue = i == 3 ? toValue[i] : toLinearSpace(toValue[i]);
-    double interpolatedValue =
-        (toChannelValue - fromChannelValue) * localProgress + fromChannelValue;
     resultChannels[i] =
-        i == 3 ? interpolatedValue : toGammaCorrectedSpace(interpolatedValue);
+        (toValue[i] - fromValue[i]) * localProgress + fromValue[i];
   }
-
   return resultChannels;
-}
-
-double ColorValueInterpolator::toLinearSpace(uint8_t value) const {
-  double normalized = double(value) / 255.0;
-  if (normalized <= 0.04045) {
-    return normalized / 12.92;
-  } else {
-    return std::pow((normalized + 0.055) / 1.055, 2.4);
-  }
-}
-
-uint8_t ColorValueInterpolator::toGammaCorrectedSpace(double value) const {
-  if (value <= 0.0031308) {
-    value = 12.92 * value;
-  } else {
-    value = 1.055 * std::pow(value, 1.0 / 2.4) - 0.055;
-  }
-  return value * 255.0 + 0.5;
 }
 
 } // namespace reanimated

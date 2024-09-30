@@ -25,11 +25,6 @@ class ColorValueInterpolator : public ValueInterpolator<ColorArray> {
       const ColorArray &fromValue,
       const ColorArray &toValue,
       const InterpolationUpdateContext context) const override;
-
- private:
-  double toLinearSpace(uint8_t value) const;
-
-  uint8_t toGammaCorrectedSpace(double value) const;
 };
 
 } // namespace reanimated
