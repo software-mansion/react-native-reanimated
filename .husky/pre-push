@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+
+print() {
+  echo "    [PREPUSH]: $1" >&2
+}
+
+BRANCH=$(git symbolic-ref HEAD)
+if [ "$BRANCH" = "refs/heads/main" ]; then
+  print "You tried to push to main, which is probably a mistake. Aborting push."
+  exit 1
+fi

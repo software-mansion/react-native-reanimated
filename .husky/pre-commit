@@ -4,10 +4,16 @@ print() {
   echo "    [PRECOMMIT]: $1" >&2
 }
 
-# `lint-staged` is great, but its' parsing capabilites of more advanced CLIs is poor.
+BRANCH=$(git symbolic-ref HEAD)
+if [ "$BRANCH" = "refs/heads/main" ]; then
+  print "You tried to commit to main, which is probably a mistake. Aborting commit."
+  exit 1
+fi
+
+# `lint-staged` is great, but its' parsing capabilities of more advanced CLIs is poor.
 # We can use it reliably only with programs that expect the following syntax:
 #     command [options] [arg1] [arg2] [arg3] ...
-# more sophisiticated checks should be done in this script without `lint-staged`.
+# more sophisticated checks should be done in this script without `lint-staged`.
 print 'Running "lint-staged" ...'
 yarn lint-staged
 
@@ -51,9 +57,9 @@ if echo "$STAGED_FILES" | grep -E "$PLUGIN_PATH" >/dev/null; then
   PLUGIN_OUTPUT_PATH="$PLUGIN_PATH/index.js"
   if git status -u | grep -E "$PLUGIN_OUTPUT_PATH" --silent; then
     git add "$PLUGIN_PATH"
-    print "Non-commited changes were automatically added to the commit."
+    print "Non-committed changes were automatically added to the commit."
   else
-    print "All Babel plugin files were already commited."
+    print "All Babel plugin files were already committed."
   fi
 else
   print "No changes. Skipping plugin checks."
