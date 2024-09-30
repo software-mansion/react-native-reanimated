@@ -447,7 +447,7 @@ def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
 }
 
 task prepareWorkletsHeadersForPrefabs(type: Copy) {
-    from("$projectDir/src/main/cpp/worklets")
+    from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
     include("worklets/**/*.h")
     into(workletsPrefabHeadersDir)
@@ -455,7 +455,7 @@ task prepareWorkletsHeadersForPrefabs(type: Copy) {
 
 task prepareReanimatedHeadersForPrefabs(type: Copy) {
     // Reanimated
-    from("$projectDir/src/main/cpp/reanimated")
+    from("$projectDir/src/main/cpp")
     from("$projectDir/../Common")
     from("$projectDir/../Common/cpp/reanimated/AnimatedSensor")
     from("$projectDir/../Common/cpp/reanimated/Fabric")
@@ -464,7 +464,6 @@ task prepareReanimatedHeadersForPrefabs(type: Copy) {
     from("$projectDir/../Common/cpp/reanimated/RuntimeDecorators")
     from("$projectDir/../Common/cpp/reanimated/Tools")
     // Worklets
-    from("$projectDir/src/main/cpp/worklets")
     from("$projectDir/../Common/cpp/worklets/SharedItems")
     from("$projectDir/../Common/cpp/worklets/WorkletRuntime")
     from("$projectDir/../Common/cpp/worklets/Tools")
