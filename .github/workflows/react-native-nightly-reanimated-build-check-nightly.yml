@@ -40,8 +40,8 @@ jobs:
           if npm view react-native dist-tags | grep -q 'next:' ; then
             echo "REACT_NATIVE_TAG=next" >> $GITHUB_ENV
           fi
-      - name: Install React Native
-        run: yarn add react-native@${{ env.REACT_NATIVE_TAG }}
+      # - name: Install React Native
+      #   run: yarn add react-native@${{ env.REACT_NATIVE_TAG }}
       - name: Create app
         run: |
           npx @react-native-community/cli init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }}
