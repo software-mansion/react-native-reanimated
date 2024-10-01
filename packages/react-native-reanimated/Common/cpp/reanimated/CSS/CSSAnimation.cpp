@@ -1,13 +1,14 @@
-#include <reanimated/CSS/CSSKeyframeAnimation.h>
+#include "CSSAnimation.h"
+#include <reanimated/CSS/CSSAnimation.h>
 
 namespace reanimated {
 
-CSSKeyframeAnimation::CSSKeyframeAnimation(
+CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
     ShadowNode::Shared shadowNode,
     const CSSAnimationConfig &config)
-    : CSSAnimation(shadowNode),
-      styleInterpolator(AnimationStyleInterpolator(rt, config.keyframedStyle)),
+    : shadowNode(shadowNode),
+      styleInterpolator(AnimationStyleInterpolator(rt, config.keyframeStyle)),
       progressProvider(AnimationProgressProvider(
           config.animationDuration,
           config.animationDelay,
@@ -16,13 +17,13 @@ CSSKeyframeAnimation::CSSKeyframeAnimation(
           getEasingFunction(rt, config.animationTimingFunction))),
       fillMode(getAnimationFillMode(config.animationFillMode)) {}
 
-void CSSKeyframeAnimation::updateSettings(
+void CSSAnimation::updateSettings(
     jsi::Runtime &rt,
     const jsi::Value &settings) {
   const auto settingsObject = settings.asObject(rt);
 }
 
-void CSSKeyframeAnimation::start(time_t timestamp) {
+void CSSAnimation::start(time_t timestamp) {
   progressProvider.update(timestamp);
 
   if (progressProvider.getState() == Finished) {
@@ -34,7 +35,7 @@ void CSSKeyframeAnimation::start(time_t timestamp) {
   progressProvider.reset(timestamp);
 }
 
-void CSSKeyframeAnimation::finish(const bool revertChanges) {
+void CSSAnimation::finish(const bool revertChanges) {
   // Set state to finishing to add one more frame in which we will revert
   // changes applied during the animation
   if (revertChanges) {
@@ -44,7 +45,7 @@ void CSSKeyframeAnimation::finish(const bool revertChanges) {
   }
 }
 
-jsi::Value CSSKeyframeAnimation::update(jsi::Runtime &rt, time_t timestamp) {
+jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
   progressProvider.update(timestamp);
 
   // Check if the animation has not started yet because of the delay
@@ -77,13 +78,13 @@ jsi::Value CSSKeyframeAnimation::update(jsi::Runtime &rt, time_t timestamp) {
   return updatedStyle;
 }
 
-jsi::Value CSSKeyframeAnimation::reset(jsi::Runtime &rt) {
+jsi::Value CSSAnimation::reset(jsi::Runtime &rt) {
   // Reset all styles applied during the animation and restore the
   // view style (progress can be any value because it is not used by reset)
   return styleInterpolator.reset(createUpdateContext(rt, 0, false));
 }
 
-CSSAnimationDirection CSSKeyframeAnimation::getAnimationDirection(
+CSSAnimationDirection CSSAnimation::getAnimationDirection(
     const std::string &str) {
   static const std::unordered_map<std::string, CSSAnimationDirection>
       strToEnumMap = {
@@ -101,7 +102,7 @@ CSSAnimationDirection CSSKeyframeAnimation::getAnimationDirection(
   }
 }
 
-CSSAnimationFillMode CSSKeyframeAnimation::getAnimationFillMode(
+CSSAnimationFillMode CSSAnimation::getAnimationFillMode(
     const std::string &str) {
   static const std::unordered_map<std::string, CSSAnimationFillMode>
       strToEnumMap = {
@@ -119,7 +120,7 @@ CSSAnimationFillMode CSSKeyframeAnimation::getAnimationFillMode(
   }
 }
 
-InterpolationUpdateContext CSSKeyframeAnimation::createUpdateContext(
+InterpolationUpdateContext CSSAnimation::createUpdateContext(
     jsi::Runtime &rt,
     double progress,
     bool directionChanged) const {
@@ -131,7 +132,7 @@ InterpolationUpdateContext CSSKeyframeAnimation::createUpdateContext(
       progressProvider.hasDirectionChanged()};
 }
 
-jsi::Value CSSKeyframeAnimation::maybeApplyBackwardsFillMode(jsi::Runtime &rt) {
+jsi::Value CSSAnimation::maybeApplyBackwardsFillMode(jsi::Runtime &rt) {
   if (fillMode == backwards || fillMode == both) {
     // Return the style from the first animation keyframe
     return styleInterpolator.update(createUpdateContext(rt, 0, false));
@@ -139,7 +140,7 @@ jsi::Value CSSKeyframeAnimation::maybeApplyBackwardsFillMode(jsi::Runtime &rt) {
   return jsi::Value::undefined();
 }
 
-jsi::Value CSSKeyframeAnimation::maybeApplyForwardsFillMode(jsi::Runtime &rt) {
+jsi::Value CSSAnimation::maybeApplyForwardsFillMode(jsi::Runtime &rt) {
   if (fillMode == forwards || fillMode == both) {
     // Don't restore the style from the view style if the forwards fill mode is
     // applied

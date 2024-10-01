@@ -1,5 +1,3 @@
-#include <reanimated/CSS/CSSKeyframeAnimation.h>
-#include <reanimated/CSS/CSSTransition.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/CollectionUtils.h>
@@ -78,7 +76,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
-      cssRegistry_(std::make_shared<CSSRegistry>()),
+      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>()),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction_(
@@ -97,9 +96,16 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 
   {
     auto lock = updatesRegistryManager_->createLock();
+    // Add registries in order of their priority (from the lowest to the
+    // highest)
+    // CSS transitions should be overriden by animated style animations;
+    // animated style animations should be overriden by CSS animations
+#ifdef RCT_NEW_ARCH_ENABLED
+    updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
+#endif
     updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
 #ifdef RCT_NEW_ARCH_ENABLED
-    updatesRegistryManager_->addRegistry(cssRegistry_);
+    updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
 #endif
   }
 }
@@ -493,41 +499,13 @@ void ReanimatedModuleProxy::registerCSSAnimation(
     const jsi::Value &animationId,
     const jsi::Value &animationConfig,
     const jsi::Value &viewStyle) {
-  LOG(INFO) << "Updating CSS animation with id: " << animationId.asNumber()
-            << " and config: " << stringifyJSIValue(rt, animationConfig)
-            << " and viewStyle: " << stringifyJSIValue(rt, viewStyle);
-
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-  const auto &configObject = animationConfig.asObject(rt);
 
-  auto keyframedStyle =
-      configObject.getProperty(rt, "animationName").asObject(rt);
-  auto animationDuration =
-      configObject.getProperty(rt, "animationDuration").asNumber();
-  auto animationTimingFunction =
-      configObject.getProperty(rt, "animationTimingFunction");
-  auto animationDelay =
-      configObject.getProperty(rt, "animationDelay").asNumber();
-  auto animationIterationCount =
-      (configObject.getProperty(rt, "animationIterationCount").asNumber());
-  auto animationDirection =
-      configObject.getProperty(rt, "animationDirection").asString(rt).utf8(rt);
-  auto animationFillMode =
-      configObject.getProperty(rt, "animationFillMode").asString(rt).utf8(rt);
+  auto animation = std::make_shared<CSSAnimation>(
+      rt, shadowNode, parseCSSAnimationConfig(rt, animationConfig));
+  animation->updateViewStyle(rt, viewStyle);
 
-  CSSAnimationConfig config{
-      std::move(keyframedStyle),
-      animationDuration,
-      animationTimingFunction,
-      animationDelay,
-      animationIterationCount,
-      animationDirection,
-      animationFillMode};
-
-  std::shared_ptr<CSSKeyframeAnimation> animation =
-      std::make_shared<CSSKeyframeAnimation>(rt, shadowNode, config);
-
-  cssRegistry_->add(rt, animationId.asNumber(), animation, viewStyle);
+  cssAnimationsRegistry_->add(animationId.asNumber(), animation);
   maybeRunCssAnimationsLoop();
 }
 
@@ -536,19 +514,15 @@ void ReanimatedModuleProxy::updateCSSAnimation(
     const jsi::Value &animationId,
     const jsi::Value &updatedSettings,
     const jsi::Value &viewStyle) {
-  // TODO
-  LOG(INFO) << "Updating CSS animation with id: " << animationId.asNumber()
-            << " and updated settings: "
-            << stringifyJSIValue(rt, updatedSettings)
-            << " and viewStyle: " << stringifyJSIValue(rt, viewStyle);
-  cssRegistry_->updateConfig(
+  cssAnimationsRegistry_->updateConfig(
       rt, animationId.asNumber(), updatedSettings, viewStyle);
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimation(
     const jsi::Value &animationId,
     const jsi::Value &revertChanges) {
-  cssRegistry_->remove(animationId.asNumber(), revertChanges.asBool());
+  cssAnimationsRegistry_->remove(
+      animationId.asNumber(), revertChanges.asBool());
 }
 
 void ReanimatedModuleProxy::registerCSSTransition(
@@ -559,33 +533,10 @@ void ReanimatedModuleProxy::registerCSSTransition(
     const jsi::Value &viewStyle) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
-  const auto &configObject = transitionConfig.asObject(rt);
+  auto transition = CSSTransition{
+      rt, shadowNode, parseCSSTransitionConfig(rt, transitionConfig)};
 
-  LOG(INFO) << "Registering CSS transition with id: " << transitionId.asNumber()
-            << " and config: " << stringifyJSIValue(rt, transitionConfig)
-            << " and viewStyle: " << stringifyJSIValue(rt, viewStyle);
-
-  auto transitionProperties = configObject.getProperty(rt, "transitionProperty")
-                                  .asObject(rt)
-                                  .asArray(rt);
-  auto transitionDuration =
-      configObject.getProperty(rt, "transitionDuration").asNumber();
-  auto transitionTimingFunction =
-      configObject.getProperty(rt, "transitionTimingFunction");
-  auto transitionDelay =
-      configObject.getProperty(rt, "transitionDelay").asNumber();
-
-  CSSTransitionConfig config{
-      std::move(transitionProperties),
-      transitionDuration,
-      transitionTimingFunction,
-      transitionDelay};
-
-  std::shared_ptr<CSSTransition> transition =
-      std::make_shared<CSSTransition>(rt, shadowNode, config);
-
-  cssRegistry_->add(rt, transitionId.asNumber(), transition, viewStyle);
-  maybeRunCssAnimationsLoop();
+  // TODO
 }
 
 void ReanimatedModuleProxy::updateCSSTransition(
@@ -598,7 +549,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
 
 void ReanimatedModuleProxy::unregisterCSSTransition(
     const jsi::Value &transitionId) {
-  cssRegistry_->remove(transitionId.asNumber(), false);
+  // TODO
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -693,11 +644,11 @@ bool ReanimatedModuleProxy::handleRawEvent(
 }
 
 void ReanimatedModuleProxy::maybeRunCssAnimationsLoop() {
-  if (cssRegistry_->isCssLoopRunning()) {
+  if (cssLoopRunning_) {
     return;
   }
 
-  cssRegistry_->setCssLoopRunning(true);
+  cssLoopRunning_ = true;
 
   workletsModuleProxy_->getUIScheduler()->scheduleOnUI([this]() {
     std::shared_ptr<std::function<void(const double)>> cssLoop =
@@ -705,12 +656,13 @@ void ReanimatedModuleProxy::maybeRunCssAnimationsLoop() {
 
     *cssLoop = [this, cssLoop](const double timestampMs) {
       performOperations();
-      if (cssRegistry_->hasActiveAnimations()) {
+      if (cssAnimationsRegistry_->hasRunningAnimations() ||
+          cssTransitionsRegistry_->hasRunningTransitions()) {
         jsi::Runtime &rt =
             workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
         requestRender_(*cssLoop, rt);
       } else {
-        cssRegistry_->setCssLoopRunning(false);
+        cssLoopRunning_ = false;
       }
     };
 
@@ -725,7 +677,7 @@ void ReanimatedModuleProxy::performOperations() {
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   const auto timestamp = getAnimationTimestamp_();
-  cssRegistry_->update(rt, timestamp);
+  cssAnimationsRegistry_->update(rt, timestamp);
 
   // Flush all pending updates
   UpdatesBatch updatesBatch;

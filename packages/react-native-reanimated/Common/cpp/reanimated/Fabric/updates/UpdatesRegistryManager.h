@@ -18,6 +18,9 @@ class UpdatesRegistryManager {
   // TODO - ensure that other sublibraries can easily hook into this registry
   // manager (e.g. add priority to registries)
   void addRegistry(std::shared_ptr<UpdatesRegistry> registry) {
+    if (!registry) {
+      throw std::invalid_argument("[Reanimated] Registry cannot be null");
+    }
     registries_.push_back(std::move(registry));
   }
 

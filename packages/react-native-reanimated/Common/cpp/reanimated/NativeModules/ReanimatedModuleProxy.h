@@ -1,9 +1,11 @@
 #pragma once
 
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
-#include <reanimated/CSS/CSSKeyframeAnimation.h>
+#include <reanimated/CSS/CSSAnimation.h>
+#include <reanimated/CSS/CSSTransition.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
-#include <reanimated/Fabric/updates/CSSRegistry.h>
+#include <reanimated/Fabric/updates/CSSAnimationsRegistry.h>
+#include <reanimated/Fabric/updates/CSSTransitionsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
@@ -221,7 +223,9 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 
   std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
-  std::shared_ptr<CSSRegistry> cssRegistry_;
+  std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
+  std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
+  bool cssLoopRunning_{false};
 
 #ifdef RCT_NEW_ARCH_ENABLED
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
