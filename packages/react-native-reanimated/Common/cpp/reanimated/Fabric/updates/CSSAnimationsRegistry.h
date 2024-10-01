@@ -14,7 +14,7 @@
 
 namespace reanimated {
 
-enum AnimationOperation { add, remove, activate, deactivate };
+enum class AnimationOperation { ADD, REMOVE, ACTIVATE, DEACTIVATE };
 
 using AnimationsRegistry =
     std::unordered_map<unsigned, std::shared_ptr<CSSAnimation>>;
@@ -34,9 +34,15 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
 
   bool hasAnimationUpdates() const;
 
-  void add(const unsigned id, const std::shared_ptr<CSSAnimation> &animation);
+  void add(const std::shared_ptr<CSSAnimation> &animation);
   void remove(const unsigned id);
-  void update(jsi::Runtime &rt, const double timestamp);
+  void update(jsi::Runtime &rt, const time_t timestamp);
+
+  void updateSettings(
+      jsi::Runtime &rt,
+      const unsigned id,
+      const PartialCSSAnimationSettings &updatedSettings,
+      const time_t timestamp);
 
  private:
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
@@ -47,18 +53,24 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
   std::unordered_set<unsigned> runningAnimationIds_;
   DelayedAnimationsQueue delayedAnimationIds_;
 
-  void activateDelayedAnimations(const double timestamp);
-  void flushOperations(jsi::Runtime &rt, const double timestamp);
+  void activateDelayedAnimations(const time_t timestamp);
+  void flushOperations(jsi::Runtime &rt, const time_t timestamp);
 
   inline std::optional<std::shared_ptr<CSSAnimation>> getAnimation(
       const unsigned id);
 
-  void
-  addAnimation(jsi::Runtime &rt, const unsigned id, const double timestamp);
   void finishAnimation(jsi::Runtime &rt, const unsigned id);
+  void
+  addAnimation(jsi::Runtime &rt, const unsigned id, const time_t timestamp);
   void removeAnimation(jsi::Runtime &rt, const unsigned id);
   void activateAnimation(const unsigned id);
   void deactivateAnimation(const unsigned id);
+
+  void updatePlayState(
+      jsi::Runtime &rt,
+      const std::shared_ptr<CSSAnimation> &animation,
+      const AnimationPlayState playState,
+      const time_t timestamp);
 };
 
 } // namespace reanimated

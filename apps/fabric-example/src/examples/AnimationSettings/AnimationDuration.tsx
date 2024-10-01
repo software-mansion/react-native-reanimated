@@ -12,6 +12,7 @@ export default function AnimationDuration() {
         width: 0,
       },
     },
+    animationTimingFunction: 'linear',
   };
 
   const renderExample = (exampleConfig: CSSAnimationConfig) => (

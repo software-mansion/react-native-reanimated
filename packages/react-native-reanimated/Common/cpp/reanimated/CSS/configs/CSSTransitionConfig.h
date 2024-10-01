@@ -5,45 +5,28 @@
 namespace reanimated {
 
 struct CSSTransitionConfig {
-  jsi::Array transitionProperty;
-  double transitionDuration;
+  jsi::Array properties;
+  double duration;
   EasingFunction easingFunction;
-  double transitionDelay;
+  double delay;
 };
 
 inline jsi::Array getTransitionProperty(
     jsi::Runtime &rt,
-    const jsi::Object &config) {
-  return config.getProperty(rt, "transitionProperty").asObject(rt).asArray(rt);
-}
+    const jsi::Object &config);
 
 inline double getTransitionDuration(
     jsi::Runtime &rt,
-    const jsi::Object &config) {
-  return config.getProperty(rt, "transitionDuration").asNumber();
-}
+    const jsi::Object &config);
 
 inline EasingFunction getTransitionTimingFunction(
     jsi::Runtime &rt,
-    const jsi::Object &config) {
-  const auto str = config.getProperty(rt, "animationTimingFunction");
-  return getEasingFunction(rt, str);
-}
+    const jsi::Object &config);
 
-inline double getTransitionDelay(jsi::Runtime &rt, const jsi::Object &config) {
-  return config.getProperty(rt, "transitionDelay").asNumber();
-}
+inline double getTransitionDelay(jsi::Runtime &rt, const jsi::Object &config);
 
 CSSTransitionConfig parseCSSTransitionConfig(
     jsi::Runtime &rt,
-    const jsi::Value &config) {
-  const auto &configObj = config.asObject(rt);
-
-  return CSSTransitionConfig{
-      getTransitionProperty(rt, configObj),
-      getTransitionDuration(rt, configObj),
-      getTransitionTimingFunction(rt, configObj),
-      getTransitionDelay(rt, configObj)};
-}
+    const jsi::Value &config);
 
 } // namespace reanimated

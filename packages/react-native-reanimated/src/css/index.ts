@@ -13,6 +13,7 @@ export type {
   CSSAnimationIterationCount,
   CSSAnimationDirection,
   CSSAnimationFillMode,
+  CSSAnimationPlayState,
   CSSAnimationConfig,
   NormalizedCSSAnimationConfig,
   NormalizedCSSAnimationSettings,

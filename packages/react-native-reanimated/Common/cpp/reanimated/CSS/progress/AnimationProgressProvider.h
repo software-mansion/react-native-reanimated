@@ -15,6 +15,8 @@ class AnimationProgressProvider : public ProgressProvider {
       EasingFunction easingFunction);
 
   void reset(time_t startTime) override;
+  void pause(time_t timestamp);
+  void play(time_t timestamp);
 
  protected:
   std::optional<double> calculateRawProgress(time_t timestamp) override;
@@ -29,13 +31,12 @@ class AnimationProgressProvider : public ProgressProvider {
 
   unsigned currentIteration = 1;
   double previousIterationsDuration = 0;
+  time_t pauseTimestamp = 0;
+  time_t totalPausedTime = 0;
 
   bool shouldFinish() const;
 
-  double updateIterationProgress(
-      time_t timestamp,
-      double currentIterationElapsedTime);
-
+  double updateIterationProgress(double currentIterationElapsedTime);
   double applyAnimationDirection(double iterationProgress) const;
 };
 

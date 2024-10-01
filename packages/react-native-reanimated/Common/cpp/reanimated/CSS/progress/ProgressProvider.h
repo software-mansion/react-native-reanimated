@@ -7,10 +7,11 @@
 
 namespace reanimated {
 
-enum ProgressState {
-  Pending, // When the animation is waiting for the delay to pass
-  Running,
-  Finished
+enum class ProgressState {
+  PENDING, // When the animation is waiting for the delay to pass
+  RUNNING,
+  PAUSED, // For css animations only
+  FINISHED
 };
 
 class ProgressProvider {
@@ -48,6 +49,7 @@ class ProgressProvider {
   const double delay;
   const EasingFunction easingFunction;
 
+  ProgressState state = ProgressState::PENDING;
   time_t startTime = 0;
   time_t currentTimestamp = 0;
   // These progress values are resulting progress returned by the `get` method
@@ -71,8 +73,6 @@ class ProgressProvider {
   }
 
  private:
-  ProgressState state = Pending;
-
   std::optional<double> calculateProgress(time_t timestamp);
 };
 

@@ -15,6 +15,7 @@ import {
   normalizeIterationCount,
   normalizeDirection,
   normalizeFillMode,
+  normalizePlayState,
 } from './base';
 import { processKeyframes } from './keyframes';
 
@@ -31,6 +32,7 @@ export function normalizeCSSAnimationConfig({
   animationIterationCount,
   animationDirection,
   animationFillMode,
+  animationPlayState,
 }: CSSAnimationConfig): {
   normalizedConfig: NormalizedCSSAnimationConfig;
   animationProperties: CSSAnimationProperties;
@@ -50,6 +52,7 @@ export function normalizeCSSAnimationConfig({
     animationIterationCount: normalizeIterationCount(animationIterationCount),
     animationDirection: normalizeDirection(animationDirection),
     animationFillMode: normalizeFillMode(animationFillMode),
+    animationPlayState: normalizePlayState(animationPlayState),
   };
 
   return { normalizedConfig, animationProperties };
@@ -96,6 +99,11 @@ export function getNormalizedCSSAnimationSettingsUpdates(
   if (newSettings.animationFillMode !== oldSettings.animationFillMode) {
     updatedSettings.animationFillMode = normalizeFillMode(
       newSettings.animationFillMode
+    );
+  }
+  if (newSettings.animationPlayState !== oldSettings.animationPlayState) {
+    updatedSettings.animationPlayState = normalizePlayState(
+      newSettings.animationPlayState
     );
   }
 

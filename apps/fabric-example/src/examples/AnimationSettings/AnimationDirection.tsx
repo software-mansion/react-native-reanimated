@@ -38,8 +38,8 @@ export default function AnimationDirection() {
             { animationDirection: 'reverse', label: 'reverse' },
             { animationDirection: 'alternate', label: 'alternate' },
             {
-              animationDirection: 'alternate-reverse',
-              label: 'alternate-reverse',
+              animationDirection: 'alternateReverse',
+              label: 'alternateReverse',
             },
           ],
         },

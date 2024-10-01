@@ -20,6 +20,7 @@ const ANIMATION_SETTINGS: AnimationSettingProp[] = [
   'animationIterationCount',
   'animationDirection',
   'animationFillMode',
+  'animationPlayState',
 ];
 
 const TRANSITION_SETTINGS: TransitionSettingProp[] = [

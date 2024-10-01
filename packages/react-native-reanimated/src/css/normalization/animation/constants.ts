@@ -1,10 +1,14 @@
-import type { CSSAnimationDirection, CSSAnimationFillMode } from '../../types';
+import type {
+  CSSAnimationDirection,
+  CSSAnimationFillMode,
+  CSSAnimationPlayState,
+} from '../../types';
 
 export const VALID_ANIMATION_DIRECTIONS = new Set<CSSAnimationDirection>([
   'normal',
   'reverse',
   'alternate',
-  'alternate-reverse',
+  'alternateReverse',
 ]);
 
 export const VALID_FILL_MODES = new Set<CSSAnimationFillMode>([
@@ -12,6 +16,11 @@ export const VALID_FILL_MODES = new Set<CSSAnimationFillMode>([
   'forwards',
   'backwards',
   'both',
+]);
+
+export const VALID_PLAY_STATES = new Set<CSSAnimationPlayState>([
+  'running',
+  'paused',
 ]);
 
 export const OFFSET_REGEX = /^-?\d+(\.\d+)?%$/;

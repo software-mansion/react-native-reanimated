@@ -19,7 +19,7 @@ void ProgressProvider::reset(time_t timestamp) {
   currentProgress.reset();
   previousProgress.reset();
   previousToPreviousProgress.reset();
-  state = Pending;
+  state = ProgressState::PENDING;
 }
 
 void ProgressProvider::update(time_t timestamp) {
@@ -31,30 +31,30 @@ void ProgressProvider::update(time_t timestamp) {
 
 std::optional<double> ProgressProvider::calculateProgress(time_t timestamp) {
   if (duration == 0) {
-    state = Finished;
+    state = ProgressState::FINISHED;
     return 1;
   }
   if (timestamp - startTime < delay) {
-    state = Pending;
+    state = ProgressState::PENDING;
     return std::nullopt;
   }
 
   const auto rawProgress = calculateRawProgress(timestamp);
 
   if (!rawProgress.has_value()) {
-    state = Pending;
+    state = ProgressState::PENDING;
     return std::nullopt;
   }
   if (rawProgress.value() < 0) {
-    state = Pending;
+    state = ProgressState::PENDING;
     return std::nullopt;
   }
   if (rawProgress.value() >= 1) {
-    state = Finished;
+    state = ProgressState::FINISHED;
     return decorateProgress(1);
   }
 
-  state = Running;
+  state = ProgressState::RUNNING;
   return easingFunction(decorateProgress(rawProgress.value()));
 }
 
