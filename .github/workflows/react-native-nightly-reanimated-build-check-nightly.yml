@@ -1,4 +1,6 @@
 name: React Native nightly Reanimated build check [Nightly]
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
@@ -10,7 +12,7 @@ on:
 jobs:
   build_ios:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: ${{ matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
+    runs-on: 'ubuntu-latest'
     strategy:
       matrix:
         react-native-architecture: ['Paper', 'Fabric']
@@ -33,16 +35,16 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '18'
-      - name: Load "next" tag if available
-        run: |
-          if npm view react-native dist-tags | grep -q 'next:' ; then
-            echo "REACT_NATIVE_TAG=next" >> $GITHUB_ENV
-          fi
+      # - name: Load "next" tag if available
+      #   run: |
+      #     if npm view react-native dist-tags | grep -q 'next:' ; then
+      #       echo "REACT_NATIVE_TAG=next" >> $GITHUB_ENV
+      #     fi
       # - name: Install React Native
       #   run: yarn add react-native@${{ env.REACT_NATIVE_TAG }}
       - name: Create app
         run: |
-          npx @react-native-community/cli init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }}
+          npx react-native init app
       # - name: Add yarn.lock in app
       #   working-directory: ${{ env.APP_NAME }}
       #   run: touch yarn.lock
