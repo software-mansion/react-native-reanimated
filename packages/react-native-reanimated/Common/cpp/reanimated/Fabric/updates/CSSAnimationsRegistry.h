@@ -18,17 +18,11 @@ namespace reanimated {
 using AnimationsRegistry =
     std::unordered_map<unsigned, std::shared_ptr<CSSAnimation>>;
 
-class CSSRegistry : public UpdatesRegistry {
+class CSSAnimationsRegistry : public UpdatesRegistry {
  public:
-  bool hasActiveAnimations() const;
-  bool isCssLoopRunning() const;
-  void setCssLoopRunning(const bool running);
+  bool hasRunningAnimations() const;
 
-  void add(
-      jsi::Runtime &rt,
-      const unsigned id,
-      const std::shared_ptr<CSSAnimation> &animation,
-      const jsi::Value &viewStyle);
+  void add(const unsigned id, const std::shared_ptr<CSSAnimation> &animation);
 
   void remove(const unsigned id, const bool revertChanges);
 
@@ -41,7 +35,6 @@ class CSSRegistry : public UpdatesRegistry {
   void update(jsi::Runtime &rt, const double timestamp);
 
  private:
-  // Registry containing all animations (both active and inactive)
   AnimationsRegistry animationsRegistry_;
 
   // Set of active animation IDs. These are animations that are either pending,
@@ -52,8 +45,6 @@ class CSSRegistry : public UpdatesRegistry {
   // or finished (but not reverted). Inactive animations do not participate in
   // the update loop.
   std::unordered_set<unsigned> inactiveAnimationIds_;
-
-  bool cssLoopRunning_ = false;
 
   void activateAnimation(const unsigned id);
   void deactivateAnimation(const unsigned id);

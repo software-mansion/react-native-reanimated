@@ -6,7 +6,7 @@ CSSTransition::CSSTransition(
     jsi::Runtime &rt,
     ShadowNode::Shared shadowNode,
     const CSSTransitionConfig &config)
-    : CSSAnimation(shadowNode),
+    : shadowNode(shadowNode),
       styleInterpolator(TransitionStyleInterpolator(
           rt,
           config.transitionProperty,

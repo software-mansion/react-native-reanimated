@@ -1,11 +1,15 @@
 #pragma once
 
+#include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
-#include <reanimated/CSS/interpolation/Interpolator.h>
+#include <reanimated/CSS/interpolation/AnimationStyleInterpolator.h>
+#include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
 #include <chrono>
 
 namespace reanimated {
+
+enum CSSAnimationFillMode { none, forwards, backwards, both };
 
 enum CSSAnimationState {
   pending,
@@ -22,32 +26,46 @@ enum CSSAnimationState {
 
 class CSSAnimation {
  public:
-  CSSAnimation(ShadowNode::Shared shadowNode) : shadowNode(shadowNode) {}
+  CSSAnimation(
+      jsi::Runtime &rt,
+      ShadowNode::Shared shadowNode,
+      const CSSAnimationConfig &config);
 
   CSSAnimationState getState() const {
     return state;
   }
-
   ShadowNode::Shared getShadowNode() const {
     return shadowNode;
   }
 
-  virtual void updateSettings(jsi::Runtime &rt, const jsi::Value &settings) = 0;
+  void updateSettings(jsi::Runtime &rt, const jsi::Value &settings);
+  void updateViewStyle(jsi::Runtime &rt, const jsi::Value &value) {
+    styleInterpolator.setFallbackValue(rt, value);
+  }
 
-  virtual void updateViewStyle(jsi::Runtime &rt, const jsi::Value &value) = 0;
+  void start(time_t timestamp);
+  void finish(const bool revertChanges);
+  jsi::Value update(jsi::Runtime &rt, time_t timestamp);
+  jsi::Value reset(jsi::Runtime &rt);
 
-  virtual void start(time_t timestamp) = 0;
-
-  virtual void finish(const bool revertChanges) = 0;
-
-  virtual jsi::Value update(jsi::Runtime &rt, time_t timestamp) = 0;
-
-  virtual jsi::Value reset(jsi::Runtime &rt) = 0;
-
- protected:
+ private:
   const ShadowNode::Shared shadowNode;
+  const CSSAnimationFillMode fillMode;
 
   CSSAnimationState state = CSSAnimationState::pending;
+  AnimationStyleInterpolator styleInterpolator;
+  AnimationProgressProvider progressProvider;
+
+  static CSSAnimationDirection getAnimationDirection(const std::string &str);
+  static CSSAnimationFillMode getAnimationFillMode(const std::string &str);
+
+  InterpolationUpdateContext createUpdateContext(
+      jsi::Runtime &rt,
+      double progress,
+      bool directionChanged) const;
+
+  jsi::Value maybeApplyBackwardsFillMode(jsi::Runtime &rt);
+  jsi::Value maybeApplyForwardsFillMode(jsi::Runtime &rt);
 };
 
 } // namespace reanimated

@@ -1,30 +1,21 @@
-#include <reanimated/Fabric/updates/CSSRegistry.h>
+#include <reanimated/Fabric/updates/CSSAnimationsRegistry.h>
 
 namespace reanimated {
 
-bool CSSRegistry::hasActiveAnimations() const {
+bool CSSAnimationsRegistry::hasRunningAnimations() const {
   return !activeAnimationIds_.empty();
 }
 
-bool CSSRegistry::isCssLoopRunning() const {
-  return cssLoopRunning_;
-}
-
-void CSSRegistry::setCssLoopRunning(const bool running) {
-  cssLoopRunning_ = running;
-}
-
-void CSSRegistry::add(
-    jsi::Runtime &rt,
+void CSSAnimationsRegistry::add(
     const unsigned id,
-    const std::shared_ptr<CSSAnimation> &animation,
-    const jsi::Value &viewStyle) {
-  animation->updateViewStyle(rt, viewStyle);
+    const std::shared_ptr<CSSAnimation> &animation) {
   animationsRegistry_.insert({id, animation});
   activeAnimationIds_.insert(id);
 }
 
-void CSSRegistry::remove(const unsigned id, const bool revertChanges) {
+void CSSAnimationsRegistry::remove(
+    const unsigned id,
+    const bool revertChanges) {
   auto registryEntry = animationsRegistry_.find(id);
   if (registryEntry != animationsRegistry_.end()) {
     registryEntry->second->finish(revertChanges);
@@ -34,7 +25,7 @@ void CSSRegistry::remove(const unsigned id, const bool revertChanges) {
   }
 }
 
-void CSSRegistry::updateConfig(
+void CSSAnimationsRegistry::updateConfig(
     jsi::Runtime &rt,
     const unsigned id,
     const jsi::Value &settings,
@@ -48,7 +39,7 @@ void CSSRegistry::updateConfig(
   animation->updateViewStyle(rt, viewStyle);
 }
 
-void CSSRegistry::update(jsi::Runtime &rt, const double timestamp) {
+void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
   std::vector<unsigned> idsToDeactivate;
   std::vector<unsigned> idsToRemove;
 
@@ -96,14 +87,14 @@ void CSSRegistry::update(jsi::Runtime &rt, const double timestamp) {
   }
 }
 
-void CSSRegistry::activateAnimation(const unsigned id) {
+void CSSAnimationsRegistry::activateAnimation(const unsigned id) {
   if (inactiveAnimationIds_.find(id) != inactiveAnimationIds_.end()) {
     inactiveAnimationIds_.erase(id);
     activeAnimationIds_.insert(id);
   }
 }
 
-void CSSRegistry::deactivateAnimation(const unsigned id) {
+void CSSAnimationsRegistry::deactivateAnimation(const unsigned id) {
   auto registryEntry = animationsRegistry_.find(id);
   if (registryEntry != animationsRegistry_.end()) {
     activeAnimationIds_.erase(id);
@@ -111,7 +102,7 @@ void CSSRegistry::deactivateAnimation(const unsigned id) {
   }
 }
 
-void CSSRegistry::removeAnimation(const unsigned id) {
+void CSSAnimationsRegistry::removeAnimation(const unsigned id) {
   const auto it = animationsRegistry_.find(id);
   if (it != animationsRegistry_.end()) {
     const auto shadowNode = it->second->getShadowNode();

@@ -27,11 +27,9 @@ class ProgressProvider {
   std::optional<double> getPrevious() const {
     return previousProgress;
   }
-
   bool getStartTime() const {
     return startTime;
   }
-
   ProgressState getState() const {
     return state;
   }
