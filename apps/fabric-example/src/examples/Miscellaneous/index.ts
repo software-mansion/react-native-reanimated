@@ -1,7 +1,7 @@
 import ChangingAnimation from './ChangingAnimation';
-import UpdatingAnimationConfig from './UpdatingAnimationConfig';
+import UpdatingAnimationSettings from './UpdatingAnimationSettings';
 
 export default {
   ChangingAnimation,
-  UpdatingAnimationConfig,
+  UpdatingAnimationSettings,
 };

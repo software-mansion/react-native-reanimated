@@ -6,64 +6,62 @@ ProgressProvider::ProgressProvider(
     double duration,
     double delay,
     EasingFunction easingFunction)
-    : duration(duration), delay(delay), easingFunction(easingFunction) {}
+    : duration_(duration), delay_(delay), easingFunction_(easingFunction) {}
 
-void ProgressProvider::start(time_t timestamp) {
-  if (startTime == 0) {
-    startTime = timestamp;
+void ProgressProvider::start(const time_t timestamp) {
+  if (startTime_ == 0) {
+    startTime_ = timestamp;
   }
 }
 
-void ProgressProvider::reset(time_t timestamp) {
-  startTime = timestamp;
-  currentProgress.reset();
-  previousProgress.reset();
-  previousToPreviousProgress.reset();
-  state = ProgressState::PENDING;
+void ProgressProvider::resetProgress() {
+  rawProgress_.reset();
+  currentProgress_.reset();
+  previousProgress_.reset();
+  previousToPreviousProgress_.reset();
 }
 
-void ProgressProvider::update(time_t timestamp) {
-  currentTimestamp = timestamp;
-  previousToPreviousProgress = previousProgress;
-  previousProgress = currentProgress;
-  currentProgress = calculateProgress(timestamp);
+void ProgressProvider::update(const time_t timestamp) {
+  previousToPreviousProgress_ = previousProgress_;
+  previousProgress_ = currentProgress_;
+  currentProgress_ = calculateProgress(timestamp);
 }
 
-std::optional<double> ProgressProvider::calculateProgress(time_t timestamp) {
-  if (duration == 0) {
-    state = ProgressState::FINISHED;
+std::optional<double> ProgressProvider::calculateProgress(
+    const time_t timestamp) {
+  if (duration_ == 0) {
+    rawProgress_ = 1;
     return 1;
   }
-  if (timestamp - startTime < delay) {
-    state = ProgressState::PENDING;
+  if (timestamp - startTime_ < delay_) {
+    rawProgress_.reset();
     return std::nullopt;
   }
 
-  const auto rawProgress = calculateRawProgress(timestamp);
+  rawProgress_ = calculateRawProgress(timestamp);
 
-  if (!rawProgress.has_value()) {
-    state = ProgressState::PENDING;
+  if (!rawProgress_.has_value()) {
     return std::nullopt;
   }
-  if (rawProgress.value() < 0) {
-    state = ProgressState::PENDING;
+  if (rawProgress_.value() < 0) {
+    rawProgress_.reset();
     return std::nullopt;
   }
-  if (rawProgress.value() >= 1) {
-    state = ProgressState::FINISHED;
+  if (rawProgress_.value() >= 1) {
+    rawProgress_ = 1;
     return decorateProgress(1);
   }
 
-  state = ProgressState::RUNNING;
-  return easingFunction(decorateProgress(rawProgress.value()));
+  return easingFunction_(decorateProgress(rawProgress_.value()));
 }
 
 bool ProgressProvider::hasDirectionChanged() const {
-  if (currentProgress.has_value() && previousProgress.has_value() &&
-      previousToPreviousProgress.has_value()) {
+  if (currentProgress_.has_value() && previousProgress_.has_value() &&
+      previousToPreviousProgress_.has_value()) {
     const auto prevDiff =
-        previousProgress.value() - previousToPreviousProgress.value();
-    const auto currentDiff = currentProgress.value() - previousProgress.value();
+        previousProgress_.value() - previousToPreviousProgress_.value();
+    const auto currentDiff =
+        currentProgress_.value() - previousProgress_.value();
     return prevDiff * currentDiff < 0;
   }
   return false;

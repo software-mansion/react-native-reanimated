@@ -114,7 +114,7 @@ PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
   if (partialObj.hasProperty(rt, "animationDuration")) {
     result.duration = getAnimationDuration(rt, partialObj);
   }
-  if (partialObj.hasProperty(rt, "easingFunction")) {
+  if (partialObj.hasProperty(rt, "animationTimingFunction")) {
     result.easingFunction = getAnimationTimingFunction(rt, partialObj);
   }
   if (partialObj.hasProperty(rt, "animationDelay")) {

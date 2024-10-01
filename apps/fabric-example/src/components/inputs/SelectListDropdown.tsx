@@ -1,6 +1,6 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
-import { colors, iconSizes, radius, spacing } from '../../theme';
+import { colors, flex, iconSizes, radius, spacing } from '../../theme';
 import { Text } from '../core';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
@@ -66,7 +66,9 @@ export default function SelectListDropdown<T>({
       onOpen={() => (isExpanded.value = true)}
       onClose={() => (isExpanded.value = false)}>
       <View style={[styles.input, styleOptions?.inputStyle]}>
-        <Text variant="subHeading3">{selectedLabel}</Text>
+        <Text variant="subHeading3" style={flex.shrink} numberOfLines={1}>
+          {selectedLabel}
+        </Text>
         <Animated.View style={animatedArrowStyle}>
           <FontAwesomeIcon
             icon={faChevronDown}
