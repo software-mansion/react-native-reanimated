@@ -1,11 +1,10 @@
-name: V8 Reanimated build check [Nightly]
+name: React Native nightly Reanimated build check [Nightly]
 env:
-  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
+  YARN_ENABLE_HARDENED_MODE: 0
 on:
   pull_request:
     paths:
-      - .github/workflows/V8-reanimated-build-check-nightly.yml
-      - .github/workflows/helper/configureV8.js
+      - .github/workflows/react-native-nightly-reanimated-build-check-nightly.yml
   schedule:
     - cron: '37 19 * * *'
   workflow_dispatch:
