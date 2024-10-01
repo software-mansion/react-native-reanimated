@@ -1,9 +1,6 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
-#include <reanimated/CSS/misc/ViewPropsRepository.h>
-
-#include <string>
 
 namespace reanimated {
 
@@ -18,7 +15,9 @@ class RelativeOrNumericValueInterpolator
   RelativeOrNumericValueInterpolator(
       TargetType relativeTo,
       const std::string &relativeProperty,
-      const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue);
+      const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      const std::vector<std::string> &propertyPath);
 
   static double percentageToNumber(const std::string &value);
 
@@ -38,8 +37,9 @@ class RelativeOrNumericValueInterpolator
       const InterpolationUpdateContext context) const override;
 
  private:
-  TargetType relativeTo;
-  std::string relativeProperty;
+  const TargetType relativeTo_;
+  const std::string relativeProperty_;
+  const std::shared_ptr<ViewStylesRepository> viewPropsRepository_;
 
   double getRelativeValue(const InterpolationUpdateContext context) const;
 };

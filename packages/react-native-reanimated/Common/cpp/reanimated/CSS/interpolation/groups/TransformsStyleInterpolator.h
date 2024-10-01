@@ -13,6 +13,11 @@ namespace reanimated {
 struct TransformPropertyInterpolator {
   std::string property;
   std::shared_ptr<Interpolator> interpolator;
+
+  TransformPropertyInterpolator(
+      const std::string &prop,
+      std::shared_ptr<Interpolator> interp)
+      : property(prop), interpolator(interp) {}
 };
 
 using TransformPropertyInterpolators =
@@ -25,9 +30,9 @@ class TransformsStyleInterpolator : public Interpolator {
   TransformsStyleInterpolator(
       jsi::Runtime &rt,
       const jsi::Array &transformsArray,
-      const TransformPropertyInterpolatorFactories &factories);
-
-  void setFallbackValue(jsi::Runtime &rt, const jsi::Value &value) override;
+      const TransformPropertyInterpolatorFactories &factories,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      const std::vector<std::string> &propertyPath);
 
   jsi::Value update(const InterpolationUpdateContext context) override;
 
@@ -39,6 +44,7 @@ class TransformsStyleInterpolator : public Interpolator {
   TransformPropertyInterpolators build(
       jsi::Runtime &rt,
       const jsi::Array &transformsArray,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const TransformPropertyInterpolatorFactories &factories) const;
 };
 

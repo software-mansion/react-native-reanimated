@@ -10,8 +10,14 @@ const std::unordered_map<std::string, ConversionRate>
 
 WithUnitInterpolator::WithUnitInterpolator(
     std::string baseUnit,
-    const std::optional<double> &defaultStyleValue)
-    : NumericValueInterpolator(defaultStyleValue), baseUnit(baseUnit) {}
+    const std::optional<double> &defaultStyleValue,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    const std::vector<std::string> &propertyPath)
+    : NumericValueInterpolator(
+          defaultStyleValue,
+          viewStylesRepository,
+          propertyPath),
+      baseUnit(baseUnit) {}
 
 double WithUnitInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,

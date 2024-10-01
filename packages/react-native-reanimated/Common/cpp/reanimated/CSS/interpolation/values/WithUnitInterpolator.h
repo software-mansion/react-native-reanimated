@@ -4,9 +4,6 @@
 
 #include <regex>
 #include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
 
 namespace reanimated {
 
@@ -19,7 +16,9 @@ class WithUnitInterpolator : public NumericValueInterpolator {
  public:
   WithUnitInterpolator(
       std::string baseUnit,
-      const std::optional<double> &defaultStyleValue);
+      const std::optional<double> &defaultStyleValue,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      const std::vector<std::string> &propertyPath);
 
  protected:
   double prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)

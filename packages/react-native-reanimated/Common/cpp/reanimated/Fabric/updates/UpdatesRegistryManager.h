@@ -2,8 +2,6 @@
 
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
-#include <react/renderer/core/ShadowNode.h>
-
 #include <utility>
 
 namespace reanimated {
@@ -40,7 +38,6 @@ class UpdatesRegistryManager {
     return shouldCommitAfterPause_.exchange(false);
   }
 
-  UpdatesBatch flushUpdates(jsi::Runtime &rt);
   PropsMap collectProps();
 
  private:

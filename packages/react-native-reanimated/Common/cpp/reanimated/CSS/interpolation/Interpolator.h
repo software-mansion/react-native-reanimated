@@ -1,5 +1,7 @@
 #pragma once
 
+#include <reanimated/CSS/props/ViewStylesRepository.h>
+
 #include <react/renderer/core/ShadowNode.h>
 
 #include <jsi/jsi.h>
@@ -27,16 +29,20 @@ using ColorArray = std::array<uint8_t, 4>;
 
 class Interpolator {
  public:
-  virtual ~Interpolator() = default;
-
-  virtual void setFallbackValue(jsi::Runtime &rt, const jsi::Value &value) = 0;
+  Interpolator(const std::vector<std::string> &propertyPath)
+      : propertyPath_(propertyPath) {}
 
   virtual jsi::Value update(const InterpolationUpdateContext context) = 0;
-
   virtual jsi::Value reset(const InterpolationUpdateContext context) = 0;
+
+ protected:
+  std::vector<std::string> propertyPath_;
 };
 
-using InterpolatorFactoryFunction = std::function<
-    std::shared_ptr<Interpolator>(jsi::Runtime &rt, const jsi::Value &value)>;
+using InterpolatorFactoryFunction = std::function<std::shared_ptr<Interpolator>(
+    jsi::Runtime &rt,
+    const jsi::Value &value,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    const std::vector<std::string> &propertyPath)>;
 
 } // namespace reanimated

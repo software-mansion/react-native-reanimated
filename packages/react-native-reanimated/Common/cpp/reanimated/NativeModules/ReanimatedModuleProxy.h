@@ -3,6 +3,8 @@
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/CSSAnimation.h>
 #include <reanimated/CSS/CSSTransition.h>
+#include <reanimated/CSS/props/StaticPropsRegistry.h>
+#include <reanimated/CSS/props/ViewStylesRepository.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/CSSAnimationsRegistry.h>
 #include <reanimated/Fabric/updates/CSSTransitionsRegistry.h>
@@ -82,34 +84,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
       const jsi::Value &viewTag,
       const jsi::Value &shouldAnimate) override;
 
-  void registerCSSAnimation(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &animationId,
-      const jsi::Value &animationConfig,
-      const jsi::Value &viewStyle) override;
-  void updateCSSAnimation(
-      jsi::Runtime &rt,
-      const jsi::Value &animationId,
-      const jsi::Value &updatedSettings,
-      const jsi::Value &viewStyle) override;
-  void unregisterCSSAnimation(
-      const jsi::Value &animationId,
-      const jsi::Value &revertChanges) override;
-
-  void registerCSSTransition(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &transitionId,
-      const jsi::Value &transitionConfig,
-      const jsi::Value &viewStyle) override;
-  void updateCSSTransition(
-      jsi::Runtime &rt,
-      const jsi::Value &transitionId,
-      const jsi::Value &transitionConfig,
-      const jsi::Value &viewStyle) override;
-  void unregisterCSSTransition(const jsi::Value &transitionId) override;
-
   void onRender(double timestampMs);
 
   bool isAnyHandlerWaitingForEvent(
@@ -133,7 +107,35 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 
   void performOperations();
 
-  void maybeRunCssAnimationsLoop();
+  void maybeRunCSSLoop();
+
+  void setViewStyle(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &viewStyle) override;
+  void removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag) override;
+
+  void registerCSSAnimation(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &animationId,
+      const jsi::Value &animationConfig) override;
+  void updateCSSAnimation(
+      jsi::Runtime &rt,
+      const jsi::Value &animationId,
+      const jsi::Value &updatedSettings) override;
+  void unregisterCSSAnimation(const jsi::Value &animationId) override;
+
+  void registerCSSTransition(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &transitionId,
+      const jsi::Value &transitionConfig) override;
+  void updateCSSTransition(
+      jsi::Runtime &rt,
+      const jsi::Value &transitionId,
+      const jsi::Value &transitionConfig) override;
+  void unregisterCSSTransition(const jsi::Value &transitionId) override;
 
   void dispatchCommand(
       jsi::Runtime &rt,
@@ -221,13 +223,16 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
 
-  std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
-  std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
-  std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
-  std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
+  const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
+  const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   bool cssLoopRunning_{false};
 
 #ifdef RCT_NEW_ARCH_ENABLED
+  const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
+  const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
+  const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
+  const std::shared_ptr<ViewStylesRepository> viewPropsRepository_;
+
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps

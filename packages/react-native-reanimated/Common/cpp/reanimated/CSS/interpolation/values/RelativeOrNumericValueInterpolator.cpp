@@ -5,10 +5,16 @@ namespace reanimated {
 RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
     TargetType relativeTo,
     const std::string &relativeProperty,
-    const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue)
-    : ValueInterpolator<RelativeOrNumericInterpolatorValue>(defaultValue),
-      relativeTo(relativeTo),
-      relativeProperty(relativeProperty) {}
+    const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    const std::vector<std::string> &propertyPath)
+    : ValueInterpolator<RelativeOrNumericInterpolatorValue>(
+          defaultValue,
+          viewStylesRepository,
+          propertyPath),
+      relativeTo_(relativeTo),
+      relativeProperty_(relativeProperty),
+      viewPropsRepository_(viewStylesRepository) {};
 
 double RelativeOrNumericValueInterpolator::percentageToNumber(
     const std::string &value) {
@@ -57,23 +63,16 @@ RelativeOrNumericValueInterpolator::interpolate(
 
 double RelativeOrNumericValueInterpolator::getRelativeValue(
     const InterpolationUpdateContext context) const {
-  auto &viewPropsRepository = ViewPropsRepository::getInstance();
   jsi::Value relativeValue;
 
-  if (relativeTo == TargetType::Parent) {
-    relativeValue = viewPropsRepository.getParentProp(
-        context.rt, context.node, relativeProperty);
+  if (relativeTo_ == TargetType::Parent) {
+    relativeValue = viewPropsRepository_->getParentNodeProp(
+        context.node, relativeProperty_);
   } else {
     relativeValue =
-        viewPropsRepository.getProp(context.rt, context.node, relativeProperty);
+        viewPropsRepository_->getNodeProp(context.node, relativeProperty_);
   }
 
-  // We can get undefined if the parent of the current shadow node does
-  // not exist. This usually happens when views are unmounted and parent
-  // becomes inaccessible before the child animation is stopped.
-  // (Finishing the animation when the componentWillUnmount is called
-  // doesn't guarantee that the animation will finish before the parent
-  // is unmounted).
   if (relativeValue.isUndefined()) {
     return 0;
   }

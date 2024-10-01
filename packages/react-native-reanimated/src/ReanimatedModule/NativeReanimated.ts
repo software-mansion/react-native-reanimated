@@ -162,62 +162,59 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unsubscribeFromKeyboardEvents(listenerId);
   }
 
+  setViewStyle(viewTag: number, style: StyleProps) {
+    this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
+  }
+
+  removeViewStyle(viewTag: number) {
+    this.#reanimatedModuleProxy.removeViewStyle(viewTag);
+  }
+
   registerCSSAnimation(
     shadowNodeWrapper: ShadowNodeWrapper,
     animationId: number,
-    animationConfig: NormalizedCSSAnimationConfig,
-    viewStyle: StyleProps
+    animationConfig: NormalizedCSSAnimationConfig
   ) {
     this.#reanimatedModuleProxy.registerCSSAnimation(
       shadowNodeWrapper,
       animationId,
-      animationConfig,
-      viewStyle
+      animationConfig
     );
   }
 
   updateCSSAnimation(
     animationId: number,
-    animationConfig: NormalizedCSSAnimationConfig,
-    viewStyle: StyleProps
+    animationConfig: NormalizedCSSAnimationConfig
   ) {
     this.#reanimatedModuleProxy.updateCSSAnimation(
       animationId,
-      animationConfig,
-      viewStyle
+      animationConfig
     );
   }
 
-  unregisterCSSAnimation(animationId: number, revertChanges: boolean) {
-    this.#reanimatedModuleProxy.unregisterCSSAnimation(
-      animationId,
-      revertChanges
-    );
+  unregisterCSSAnimation(animationId: number) {
+    this.#reanimatedModuleProxy.unregisterCSSAnimation(animationId);
   }
 
   updateCSSTransition(
     transitionId: number,
-    transitionConfig: NormalizedCSSTransitionConfig,
-    viewStyle: StyleProps
+    transitionConfig: NormalizedCSSTransitionConfig
   ) {
     this.#reanimatedModuleProxy.updateCSSTransition(
       transitionId,
-      transitionConfig,
-      viewStyle
+      transitionConfig
     );
   }
 
   registerCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
     transitionId: number,
-    transitionConfig: NormalizedCSSTransitionConfig,
-    viewStyle: StyleProps
+    transitionConfig: NormalizedCSSTransitionConfig
   ) {
     this.#reanimatedModuleProxy.registerCSSTransition(
       shadowNodeWrapper,
       transitionId,
-      transitionConfig,
-      viewStyle
+      transitionConfig
     );
   }
 

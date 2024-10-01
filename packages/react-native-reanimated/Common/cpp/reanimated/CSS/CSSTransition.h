@@ -16,9 +16,6 @@ class CSSTransition { // TODO - implement
       const CSSTransitionConfig &config);
 
   void updateSettings(jsi::Runtime &rt, const jsi::Value &settings);
-  void updateViewStyle(jsi::Runtime &rt, const jsi::Value &value) {
-    styleInterpolator.updateViewStyle(rt, value);
-  }
 
   void start(time_t timestamp);
   void finish(const bool revertChanges);

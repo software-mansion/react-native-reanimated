@@ -27,8 +27,6 @@ class TransitionStyleInterpolator {
       const EasingFunction &easingFunction,
       double delay);
 
-  void updateViewStyle(jsi::Runtime &rt, const jsi::Value &value);
-
   jsi::Value update(time_t timestamp);
 
  private:

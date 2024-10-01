@@ -5,6 +5,8 @@
 #include <reanimated/CSS/interpolation/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
+#include <react/renderer/core/ShadowNode.h>
+
 #include <chrono>
 
 namespace reanimated {
@@ -29,7 +31,8 @@ class CSSAnimation {
   CSSAnimation(
       jsi::Runtime &rt,
       ShadowNode::Shared shadowNode,
-      const CSSAnimationConfig &config);
+      const CSSAnimationConfig &config,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   CSSAnimationState getState() const {
     return state;
@@ -39,9 +42,6 @@ class CSSAnimation {
   }
 
   void updateSettings(jsi::Runtime &rt, const jsi::Value &settings);
-  void updateViewStyle(jsi::Runtime &rt, const jsi::Value &value) {
-    styleInterpolator.setFallbackValue(rt, value);
-  }
 
   void start(time_t timestamp);
   void finish(const bool revertChanges);

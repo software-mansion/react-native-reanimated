@@ -60,7 +60,7 @@ export interface INativeEventsManager {
 
 export interface ICSSManager {
   update(styles: StyleProps[], viewInfo: ViewInfo): void;
-  detach(): void;
+  detach(viewTag: number): void;
 }
 
 export type LayoutAnimationStaticContext = {

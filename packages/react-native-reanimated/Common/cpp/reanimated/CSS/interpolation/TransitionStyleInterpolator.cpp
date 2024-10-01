@@ -16,12 +16,6 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
           delay,
           styleInterpolatorFactories)) {}
 
-void TransitionStyleInterpolator::updateViewStyle(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  // TODO
-}
-
 jsi::Value TransitionStyleInterpolator::update(time_t timestamp) {
   // TODO
   return jsi::Value::undefined();

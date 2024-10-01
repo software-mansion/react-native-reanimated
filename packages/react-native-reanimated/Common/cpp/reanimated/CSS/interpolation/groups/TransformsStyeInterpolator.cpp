@@ -45,12 +45,17 @@ extractTransformMapAndOrderedProperties(
 TransformsStyleInterpolator::TransformsStyleInterpolator(
     jsi::Runtime &rt,
     const jsi::Array &transformsArray,
-    const TransformPropertyInterpolatorFactories &factories)
-    : interpolators_(build(rt, transformsArray, factories)) {}
+    const TransformPropertyInterpolatorFactories &factories,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    const std::vector<std::string> &propertyPath)
+    : Interpolator(propertyPath),
+      interpolators_(
+          build(rt, transformsArray, viewStylesRepository, factories)) {}
 
 TransformPropertyInterpolators TransformsStyleInterpolator::build(
     jsi::Runtime &rt,
     const jsi::Array &transformsArray,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const TransformPropertyInterpolatorFactories &factories) const {
   TransformPropertyInterpolators interpolators;
 
@@ -67,36 +72,14 @@ TransformPropertyInterpolators TransformsStyleInterpolator::build(
           propName);
     }
 
-    interpolators.push_back({propName, factory->second(rt, propValue)});
+    std::vector<std::string> newPath = this->propertyPath_;
+    newPath.emplace_back(propName);
+    interpolators.emplace_back(
+        propName,
+        factory->second(rt, propValue, viewStylesRepository, newPath));
   }
 
   return interpolators;
-}
-
-void TransformsStyleInterpolator::setFallbackValue(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  if (!value.isObject() || !value.asObject(rt).isArray(rt)) {
-    jsi::Value undefinedValue = jsi::Value::undefined();
-    for (const auto &transformInterpolator : interpolators_) {
-      transformInterpolator.interpolator->setFallbackValue(rt, undefinedValue);
-    }
-    return;
-  }
-
-  jsi::Array transformArray = value.asObject(rt).asArray(rt);
-
-  auto [transformMap, orderedPropertyNames] =
-      extractTransformMapAndOrderedProperties(rt, transformArray);
-
-  for (const auto &transformInterpolator : interpolators_) {
-    auto transform = transformMap.find(transformInterpolator.property);
-    jsi::Value transformValue = (transform != transformMap.end())
-        ? std::move(transform->second)
-        : jsi::Value::undefined();
-
-    transformInterpolator.interpolator->setFallbackValue(rt, transformValue);
-  }
 }
 
 jsi::Value TransformsStyleInterpolator::update(

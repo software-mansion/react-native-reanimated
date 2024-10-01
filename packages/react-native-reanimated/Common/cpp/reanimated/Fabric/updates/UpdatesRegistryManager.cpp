@@ -2,16 +2,6 @@
 
 namespace reanimated {
 
-UpdatesBatch UpdatesRegistryManager::flushUpdates(jsi::Runtime &rt) {
-  UpdatesBatch updatesBatch;
-
-  for (auto &registry : registries_) {
-    registry->flushUpdates(rt, updatesBatch);
-  }
-
-  return updatesBatch;
-};
-
 PropsMap UpdatesRegistryManager::collectProps() {
   PropsMap propsMap;
 
