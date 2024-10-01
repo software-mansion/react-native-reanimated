@@ -520,12 +520,13 @@ void ReanimatedModuleProxy::registerCSSAnimation(
 
   auto animation = std::make_shared<CSSAnimation>(
       rt,
+      animationId.asNumber(),
       shadowNode,
       parseCSSAnimationConfig(rt, animationConfig),
       viewStylesRepository_,
       getAnimationTimestamp_());
 
-  cssAnimationsRegistry_->add(animationId.asNumber(), animation);
+  cssAnimationsRegistry_->add(animation);
   maybeRunCSSLoop();
 }
 
@@ -533,10 +534,12 @@ void ReanimatedModuleProxy::updateCSSAnimation(
     jsi::Runtime &rt,
     const jsi::Value &animationId,
     const jsi::Value &updatedSettings) {
-  // TODO - implement this
-  // cssAnimationsRegistry_->updateConfig(
-  //     rt, animationId.asNumber(), updatedSettings);
-  // maybeRunCSSLoop();
+  cssAnimationsRegistry_->updateSettings(
+      rt,
+      animationId.asNumber(),
+      parsePartialCSSAnimationSettings(rt, updatedSettings),
+      getAnimationTimestamp_());
+  maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimation(

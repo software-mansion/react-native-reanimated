@@ -29,7 +29,7 @@ const CONFIG_OPTIONS = {
   animationTimingFunction: ['ease', 'linear', 'easeIn', 'easeOut'],
   animationDelay: ['-5s', '0s', '1s', '2s', '5s'],
   animationIterationCount: [1, 2, 'infinite'],
-  animationDirection: ['normal', 'reverse', 'alternate', 'alternate-reverse'],
+  animationDirection: ['normal', 'reverse', 'alternate', 'alternateReverse'],
   animationFillMode: ['none', 'forwards', 'backwards', 'both'],
 } satisfies {
   [K in keyof CSSAnimationSettings]: CSSAnimationConfig[K][];
@@ -126,7 +126,7 @@ type ConfigOptionsRowProps<T extends keyof CSSAnimationSettings> = {
 };
 
 const ConfigOptionsRow = typedMemo(function ConfigOptionsRow<
-  T extends keyof typeof CONFIG_OPTIONS
+  T extends keyof typeof CONFIG_OPTIONS,
 >({ propertyName, options, onSelect, selected }: ConfigOptionsRowProps<T>) {
   return (
     <View style={styles.configRow}>

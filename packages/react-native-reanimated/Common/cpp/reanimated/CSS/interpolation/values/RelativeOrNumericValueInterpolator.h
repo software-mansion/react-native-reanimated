@@ -5,8 +5,8 @@
 namespace reanimated {
 
 enum class TargetType {
-  Parent,
-  Self,
+  PARENT,
+  SELF,
 };
 
 class RelativeOrNumericValueInterpolator

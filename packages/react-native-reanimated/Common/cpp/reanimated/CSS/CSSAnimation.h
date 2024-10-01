@@ -8,39 +8,37 @@
 #include <react/renderer/core/ShadowNode.h>
 
 #include <chrono>
-
 namespace reanimated {
-
-enum AnimationState {
-  pending,
-  running,
-  paused,
-  finished,
-};
 
 class CSSAnimation {
  public:
   CSSAnimation(
       jsi::Runtime &rt,
-      ShadowNode::Shared shadowNode,
+      const unsigned id,
+      const ShadowNode::Shared shadowNode,
       const CSSAnimationConfig &config,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const time_t startTime);
 
-  AnimationState getState() const {
-    return state;
+  unsigned getId() const {
+    return id_;
   }
   ShadowNode::Shared getShadowNode() const {
-    return shadowNode;
-  }
-  double getDelay() const {
-    return progressProvider.getDelay();
+    return shadowNode_;
   }
   bool hasForwardsFillMode() const {
-    return fillMode == forwards || fillMode == both;
+    return fillMode_ == AnimationFillMode::FORWARDS ||
+        fillMode_ == AnimationFillMode::BOTH;
   }
   bool hasBackwardsFillMode() const {
-    return fillMode == backwards || fillMode == both;
+    return fillMode_ == AnimationFillMode::BACKWARDS ||
+        fillMode_ == AnimationFillMode::BOTH;
+  }
+  ProgressState getState() const {
+    return progressProvider_.getState();
+  }
+  double getDelay() const {
+    return progressProvider_.getDelay();
   }
 
   jsi::Value getBackwardsFillStyle(jsi::Runtime &rt) const;
@@ -49,16 +47,17 @@ class CSSAnimation {
 
   void updateSettings(jsi::Runtime &rt, const jsi::Value &settings);
 
-  void run();
+  void run(time_t timestamp);
+  void pause(time_t timestamp);
   jsi::Value update(jsi::Runtime &rt, time_t timestamp);
 
  private:
-  const ShadowNode::Shared shadowNode;
-  const AnimationFillMode fillMode;
+  const unsigned id_;
+  const ShadowNode::Shared shadowNode_;
+  const AnimationFillMode fillMode_;
 
-  AnimationState state = AnimationState::pending;
-  AnimationStyleInterpolator styleInterpolator;
-  AnimationProgressProvider progressProvider;
+  AnimationStyleInterpolator styleInterpolator_;
+  AnimationProgressProvider progressProvider_;
 
   InterpolationUpdateContext createUpdateContext(
       jsi::Runtime &rt,

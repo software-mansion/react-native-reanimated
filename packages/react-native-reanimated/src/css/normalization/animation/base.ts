@@ -7,27 +7,31 @@ import type {
   CSSAnimationIterationCount,
   CSSAnimationKeyframes,
   NormalizedCSSAnimationKeyframe,
+  CSSAnimationPlayState,
 } from '../../types';
 import { isNumber } from '../../utils';
 import {
   OFFSET_REGEX,
   VALID_ANIMATION_DIRECTIONS,
   VALID_FILL_MODES,
+  VALID_PLAY_STATES,
 } from './constants';
 
 const ERROR_MESSAGES = {
   unsupportedKeyframe: (key: CSSAnimationKeyframeKey) =>
-    `[Reanimated] Unsupported keyframe "${key}". Only numbers, "from", and "to" are supported.`,
+    `Unsupported keyframe "${key}". Only numbers, "from", and "to" are supported.`,
   invalidOffsetRange: (key: CSSAnimationKeyframeKey) =>
-    `[Reanimated] Invalid keyframe offset "${key}". Expected a number between 0 and 1.`,
+    `Invalid keyframe offset "${key}". Expected a number between 0 and 1.`,
   unsupportedAnimationDirection: (direction: CSSAnimationDirection) =>
-    `[Reanimated] Unsupported animation direction "${direction}".`,
+    `Unsupported animation direction "${direction}".`,
   invalidIterationCount: (iterationCount: CSSAnimationIterationCount) =>
-    `[Reanimated] Invalid iteration count "${iterationCount}". Expected a number or "infinite".`,
+    `Invalid iteration count "${iterationCount}". Expected a number or "infinite".`,
   negativeIterationCount: (iterationCount: number) =>
-    `[Reanimated] Iteration count cannot be negative, received "${iterationCount}".`,
+    `Iteration count cannot be negative, received "${iterationCount}".`,
   unsupportedFillMode: (fillMode: CSSAnimationFillMode) =>
-    `[Reanimated] Unsupported fill mode "${fillMode}".`,
+    `Unsupported fill mode "${fillMode}".`,
+  unsupportedPlayState: (playState: CSSAnimationPlayState) =>
+    `Unsupported play state "${playState}".`,
 };
 
 function normalizeOffset(key: CSSAnimationKeyframeKey): number {
@@ -110,4 +114,13 @@ export function normalizeFillMode(
     throw new ReanimatedError(ERROR_MESSAGES.unsupportedFillMode(fillMode));
   }
   return fillMode;
+}
+
+export function normalizePlayState(
+  playState: CSSAnimationPlayState = 'running'
+): CSSAnimationPlayState {
+  if (!VALID_PLAY_STATES.has(playState)) {
+    throw new ReanimatedError(ERROR_MESSAGES.unsupportedPlayState(playState));
+  }
+  return playState;
 }

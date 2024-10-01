@@ -9,10 +9,10 @@ CSSTransition::CSSTransition(
     : shadowNode(shadowNode),
       styleInterpolator(TransitionStyleInterpolator(
           rt,
-          config.transitionProperty,
-          config.transitionDuration,
+          config.properties,
+          config.duration,
           config.easingFunction,
-          config.transitionDelay)) {}
+          config.delay)) {}
 
 void CSSTransition::updateSettings(
     jsi::Runtime &rt,

@@ -9,8 +9,10 @@ import ExamplesListCard from './ExamplesListCard';
 
 type ExampleCardSection = {
   title: string;
-  description?: ReactNode;
   items: ExampleItemProps[];
+  description?: ReactNode;
+  allowPause?: boolean;
+  onTogglePause?: (paused: boolean) => void;
 };
 
 type OverriddenProperties = {
@@ -84,6 +86,8 @@ export default function ExampleScreen({
               config={config}
               items={card.items}
               renderExample={renderExample}
+              allowPause={card.allowPause}
+              onTogglePause={card.onTogglePause}
             />
           </Section>
         ))}

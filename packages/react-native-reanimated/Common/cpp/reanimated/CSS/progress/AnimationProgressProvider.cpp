@@ -18,6 +18,19 @@ void AnimationProgressProvider::reset(time_t startTime) {
   previousIterationsDuration = 0;
 }
 
+void AnimationProgressProvider::pause(time_t timestamp) {
+  state = ProgressState::PAUSED;
+  pauseTimestamp = timestamp;
+}
+
+void AnimationProgressProvider::play(time_t timestamp) {
+  state = ProgressState::RUNNING;
+  if (pauseTimestamp > 0) {
+    totalPausedTime += timestamp - pauseTimestamp;
+  }
+  pauseTimestamp = 0;
+}
+
 bool AnimationProgressProvider::shouldFinish() const {
   if (iterationCount == 0) {
     return true;
@@ -30,15 +43,15 @@ bool AnimationProgressProvider::shouldFinish() const {
 
 std::optional<double> AnimationProgressProvider::calculateRawProgress(
     time_t timestamp) {
-  const double currentIterationElapsedTime =
-      timestamp - (startTime + delay + previousIterationsDuration);
+  const double currentIterationElapsedTime = timestamp -
+      (startTime + delay + previousIterationsDuration + totalPausedTime);
 
   if (currentIterationElapsedTime < 0) {
     return std::nullopt;
   }
 
   const double iterationProgress =
-      updateIterationProgress(timestamp, currentIterationElapsedTime);
+      updateIterationProgress(currentIterationElapsedTime);
 
   if (shouldFinish()) {
     // Override current progress for the last update in the last iteration to
@@ -51,7 +64,6 @@ std::optional<double> AnimationProgressProvider::calculateRawProgress(
 }
 
 double AnimationProgressProvider::updateIterationProgress(
-    time_t timestamp,
     double currentIterationElapsedTime) {
   if (duration == 0) {
     return 1;
@@ -74,7 +86,8 @@ double AnimationProgressProvider::updateIterationProgress(
     currentIteration += deltaIterations;
     previousIterationsDuration = (currentIteration - 1) * duration;
 
-    if (direction == normal || direction == reverse) {
+    if (direction == AnimationDirection::NORMAL ||
+        direction == AnimationDirection::REVERSE) {
       previousProgress.reset();
       previousToPreviousProgress.reset();
     }
@@ -88,13 +101,13 @@ double AnimationProgressProvider::updateIterationProgress(
 double AnimationProgressProvider::applyAnimationDirection(
     double progress) const {
   switch (direction) {
-    case normal:
+    case AnimationDirection::NORMAL:
       return progress;
-    case reverse:
+    case AnimationDirection::REVERSE:
       return 1.0 - progress;
-    case alternate:
+    case AnimationDirection::ALTERNATE:
       return currentIteration % 2 == 0 ? 1.0 - progress : progress;
-    case alternateReverse:
+    case AnimationDirection::ALTERNATE_REVERSE:
       return currentIteration % 2 == 0 ? progress : 1.0 - progress;
   }
 }

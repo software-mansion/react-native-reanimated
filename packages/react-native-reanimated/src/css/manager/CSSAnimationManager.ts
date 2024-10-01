@@ -2,11 +2,14 @@ import type { ShadowNodeWrapper } from '../../commonTypes';
 import {
   registerCSSAnimation,
   unregisterCSSAnimation,
+  updateCSSAnimation,
+} from '../native';
+import {
+  getNormalizedCSSAnimationSettingsUpdates,
   normalizeCSSAnimationConfig,
-} from '..';
-import type { CSSAnimationConfig } from '..';
+} from '../normalization';
+import type { CSSAnimationConfig, CSSAnimationProperties } from '../types';
 import type CSSIdManager from './CSSIdManager';
-import type { CSSAnimationProperties } from '../types';
 
 export default class CSSAnimationManager {
   private readonly cssIdManager: CSSIdManager;
@@ -66,7 +69,14 @@ export default class CSSAnimationManager {
       }
       // Otherwise, update the existing animation settings
       else {
-        // TODO
+        const settingsUpdates = getNormalizedCSSAnimationSettingsUpdates(
+          this.animationConfig,
+          animationConfig
+        );
+        this.animationConfig = animationConfig;
+        if (Object.keys(settingsUpdates).length > 0) {
+          updateCSSAnimation(this.animationId, settingsUpdates);
+        }
       }
     } else if (animationConfig) {
       this.attach(animationConfig, wrapper);

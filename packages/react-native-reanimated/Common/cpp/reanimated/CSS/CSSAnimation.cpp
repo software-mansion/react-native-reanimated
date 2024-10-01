@@ -4,37 +4,45 @@ namespace reanimated {
 
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
-    ShadowNode::Shared shadowNode,
+    const unsigned id,
+    const ShadowNode::Shared shadowNode,
     const CSSAnimationConfig &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const time_t timestamp)
-    : shadowNode(shadowNode),
-      styleInterpolator(AnimationStyleInterpolator(
+    const time_t startTime)
+    : id_(id),
+      shadowNode_(shadowNode),
+      styleInterpolator_(AnimationStyleInterpolator(
           rt,
           config.keyframeStyle,
           viewStylesRepository)),
-      progressProvider(AnimationProgressProvider(
-          config.animationDuration,
-          config.animationDelay,
-          config.animationIterationCount,
-          config.animationDirection,
+      progressProvider_(AnimationProgressProvider(
+          config.duration,
+          config.delay,
+          config.iterationCount,
+          config.direction,
           config.easingFunction)),
-      fillMode(config.animationFillMode) {
-  progressProvider.start(timestamp);
+      fillMode_(config.fillMode) {
+  // Register the current timestamp in the progress provider as the start
+  // timestamp
+  progressProvider_.start(startTime);
+  // If the animation is paused, pause it immediately
+  if (config.playState == AnimationPlayState::PAUSED) {
+    pause(startTime);
+  }
 }
 
 jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) const {
-  return hasBackwardsFillMode() ? styleInterpolator.getBackwardsFillValue(rt)
+  return hasBackwardsFillMode() ? styleInterpolator_.getBackwardsFillValue(rt)
                                 : jsi::Value::undefined();
 }
 
 jsi::Value CSSAnimation::getForwardsFillStyle(jsi::Runtime &rt) const {
-  return hasForwardsFillMode() ? styleInterpolator.getForwardsFillValue(rt)
+  return hasForwardsFillMode() ? styleInterpolator_.getForwardsFillValue(rt)
                                : jsi::Value::undefined();
 }
 
 jsi::Value CSSAnimation::getCurrentStyle(jsi::Runtime &rt) const {
-  return styleInterpolator.getStyleValue(rt, shadowNode);
+  return styleInterpolator_.getStyleValue(rt, shadowNode_);
 }
 
 void CSSAnimation::updateSettings(
@@ -43,37 +51,37 @@ void CSSAnimation::updateSettings(
   const auto settingsObject = settings.asObject(rt);
 }
 
-void CSSAnimation::run() {
-  if (progressProvider.getState() == Finished) {
-    state = AnimationState::finished;
+void CSSAnimation::run(time_t timestamp) {
+  if (progressProvider_.getState() == ProgressState::FINISHED) {
     return;
   }
-  state = AnimationState::running;
+  progressProvider_.play(timestamp);
+}
+
+void CSSAnimation::pause(time_t timestamp) {
+  progressProvider_.pause(timestamp);
 }
 
 jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
-  progressProvider.update(timestamp);
+  progressProvider_.update(timestamp);
 
   // Check if the animation has not started yet because of the delay
   // (In general, it shouldn't be activated until the delay has passed but we
   // add this check to make sure that animation doesn't start with the negative
   // progress)
-  if (progressProvider.getState() == Pending) {
+  if (progressProvider_.getState() == ProgressState::PENDING) {
     return jsi::Value::undefined();
   }
 
-  const bool shouldFinish = progressProvider.getState() == Finished;
+  const bool isFinished =
+      progressProvider_.getState() == ProgressState::FINISHED;
   // Determine if the progress update direction has changed (e.g. because of
   // the easing used or the alternating animation direction)
   const bool directionChanged =
-      !shouldFinish && progressProvider.hasDirectionChanged();
+      !isFinished && progressProvider_.hasDirectionChanged();
 
-  auto updatedStyle = styleInterpolator.update(
-      createUpdateContext(rt, progressProvider.getCurrent(), directionChanged));
-
-  if (shouldFinish) {
-    state = AnimationState::finished;
-  }
+  auto updatedStyle = styleInterpolator_.update(createUpdateContext(
+      rt, progressProvider_.getCurrent(), directionChanged));
 
   return updatedStyle;
 }
@@ -84,10 +92,10 @@ InterpolationUpdateContext CSSAnimation::createUpdateContext(
     bool directionChanged) const {
   return {
       rt,
-      shadowNode,
+      shadowNode_,
       progress,
-      progressProvider.getPrevious(),
-      progressProvider.hasDirectionChanged()};
+      progressProvider_.getPrevious(),
+      progressProvider_.hasDirectionChanged()};
 }
 
 } // namespace reanimated

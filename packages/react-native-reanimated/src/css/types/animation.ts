@@ -51,8 +51,9 @@ export type CSSAnimationDirection =
   | 'normal'
   | 'reverse'
   | 'alternate'
-  | 'alternate-reverse';
+  | 'alternateReverse';
 export type CSSAnimationFillMode = 'none' | 'forwards' | 'backwards' | 'both';
+export type CSSAnimationPlayState = 'running' | 'paused';
 
 export type CSSAnimationSettings = {
   animationDuration?: CSSAnimationDuration;
@@ -61,7 +62,7 @@ export type CSSAnimationSettings = {
   animationIterationCount?: CSSAnimationIterationCount;
   animationDirection?: CSSAnimationDirection;
   animationFillMode?: CSSAnimationFillMode;
-  // animationPlayState?: // TODO
+  animationPlayState?: CSSAnimationPlayState;
   // This is still experimental in browsers and we might not want to support it
   // when CSS animations in reanimated are released
   // animationTimeline?: // TODO
@@ -85,6 +86,7 @@ export type NormalizedCSSAnimationSettings = {
   animationIterationCount: number;
   animationDirection: CSSAnimationDirection;
   animationFillMode: CSSAnimationFillMode;
+  animationPlayState: CSSAnimationPlayState;
 };
 
 export type NormalizedCSSAnimationConfig = NormalizedCSSAnimationSettings & {

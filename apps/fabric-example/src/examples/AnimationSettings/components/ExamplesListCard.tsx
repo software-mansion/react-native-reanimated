@@ -4,7 +4,8 @@ import type {
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import { spacing } from '../../../theme';
-import { Text } from '../../../components';
+import { Button, Text } from '../../../components';
+import { useState } from 'react';
 
 export type ExampleItemProps = CSSAnimationSettings & {
   label: string;
@@ -13,17 +14,38 @@ export type ExampleItemProps = CSSAnimationSettings & {
 export type ExamplesListCardProps = {
   config: CSSAnimationConfig;
   items: ExampleItemProps[];
-  showCode?: boolean;
+  allowPause?: boolean;
   renderExample: (config: CSSAnimationConfig) => JSX.Element;
+  onTogglePause?: (paused: boolean) => void;
 };
 
 export default function ExamplesListCard({
   config,
   items,
   renderExample,
+  allowPause,
+  onTogglePause,
 }: ExamplesListCardProps) {
+  const [isPaused, setIsPaused] = useState(false);
+
+  const animationPlayState = isPaused ? 'paused' : 'running';
+
   return (
     <View style={styles.container}>
+      {allowPause && (
+        <View style={styles.buttonRow}>
+          <Button
+            style={styles.pauseButton}
+            title={isPaused ? 'Play' : 'Pause'}
+            onPress={() =>
+              setIsPaused((prev) => {
+                onTogglePause?.(!prev);
+                return !prev;
+              })
+            }
+          />
+        </View>
+      )}
       <View style={styles.examples}>
         {/* Labels column */}
         <View style={[styles.column, { flexShrink: 1 }]}>
@@ -37,7 +59,13 @@ export default function ExamplesListCard({
         {/* Examples column */}
         <View style={[styles.column, { flexGrow: 1 }]}>
           {items.map((item, index) => (
-            <View key={index}>{renderExample({ ...config, ...item })}</View>
+            <View key={index}>
+              {renderExample({
+                ...config,
+                ...item,
+                ...(allowPause ? { animationPlayState } : {}),
+              })}
+            </View>
           ))}
         </View>
       </View>
@@ -47,7 +75,7 @@ export default function ExamplesListCard({
 
 const styles = StyleSheet.create({
   container: {
-    gap: spacing.md,
+    gap: spacing.xs,
   },
   examples: {
     gap: spacing.xs,
@@ -61,5 +89,12 @@ const styles = StyleSheet.create({
   },
   label: {
     flexShrink: 1,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  pauseButton: {
+    width: 72,
   },
 });

@@ -13,6 +13,7 @@ export default function AnimationDelay() {
     },
     animationDuration: '3s',
     animationFillMode: 'backwards',
+    animationTimingFunction: 'linear',
   };
 
   const renderExample = (exampleConfig: CSSAnimationConfig) => (

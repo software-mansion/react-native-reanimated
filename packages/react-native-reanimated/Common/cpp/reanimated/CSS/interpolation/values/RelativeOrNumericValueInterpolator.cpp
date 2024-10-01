@@ -69,7 +69,7 @@ double RelativeOrNumericValueInterpolator::getRelativeValue(
     const InterpolationUpdateContext context) const {
   jsi::Value relativeValue;
 
-  if (relativeTo_ == TargetType::Parent) {
+  if (relativeTo_ == TargetType::PARENT) {
     relativeValue = viewStylesRepository_->getParentNodeProp(
         context.node, relativeProperty_);
   } else {
