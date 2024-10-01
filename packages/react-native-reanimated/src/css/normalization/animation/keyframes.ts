@@ -97,7 +97,7 @@ function processStyleProperties(
   });
 }
 
-export function handleObjectValue(
+function handleObjectValue(
   offset: number,
   prop: keyof ViewStyle,
   value: any,
@@ -194,7 +194,7 @@ function addTransformValues(
   temporaryTransforms.previousTransformOffset = offset;
 }
 
-export function handlePrimitiveValue(
+function handlePrimitiveValue(
   offset: number,
   prop: keyof ViewStyle,
   value: any,

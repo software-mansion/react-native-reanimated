@@ -2,13 +2,14 @@
 
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/CSSKeyframeAnimation.h>
-#include <reanimated/CSS/CSSRegistry.h>
+#include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
+#include <reanimated/Fabric/updates/CSSRegistry.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <reanimated/Fabric/PropsRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
@@ -128,10 +129,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 #ifdef RCT_NEW_ARCH_ENABLED
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
-  void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
-
-  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &viewTags);
-
   void performOperations();
 
   void maybeRunCssAnimationsLoop();
@@ -220,8 +217,11 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   AnimatedSensorModule animatedSensorModule_;
   const std::shared_ptr<JSLogger> jsLogger_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
-  const std::shared_ptr<CSSRegistry> cssRegistry_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
+
+  std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
+  std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
+  std::shared_ptr<CSSRegistry> cssRegistry_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
@@ -231,15 +231,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
       animatablePropNames_; // filled by configureProps
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
-
-  std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
-      operationsInBatch_; // TODO: refactor std::pair to custom struct
-
-  std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
-
-  std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #else
   const ObtainPropFunction obtainPropFunction_;
   const ConfigurePropsFunction configurePropsPlatformFunction_;
