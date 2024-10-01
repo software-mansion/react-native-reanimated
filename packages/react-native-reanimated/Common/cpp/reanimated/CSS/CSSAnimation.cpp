@@ -27,7 +27,7 @@ CSSAnimation::CSSAnimation(
   progressProvider_.start(startTime);
   // If the animation is paused, pause it immediately
   if (config.playState == AnimationPlayState::PAUSED) {
-    pause(startTime);
+    progressProvider_.pause(startTime);
   }
 }
 
@@ -41,40 +41,30 @@ jsi::Value CSSAnimation::getForwardsFillStyle(jsi::Runtime &rt) const {
                                : jsi::Value::undefined();
 }
 
-jsi::Value CSSAnimation::getCurrentStyle(jsi::Runtime &rt) const {
+jsi::Value CSSAnimation::getViewStyle(jsi::Runtime &rt) const {
   return styleInterpolator_.getStyleValue(rt, shadowNode_);
 }
 
-void CSSAnimation::updateSettings(
-    jsi::Runtime &rt,
-    const jsi::Value &settings) {
-  const auto settingsObject = settings.asObject(rt);
-}
-
-void CSSAnimation::run(time_t timestamp) {
-  if (progressProvider_.getState() == ProgressState::FINISHED) {
+void CSSAnimation::run(const time_t timestamp) {
+  if (progressProvider_.getState(timestamp) == ProgressState::FINISHED) {
     return;
   }
   progressProvider_.play(timestamp);
 }
 
-void CSSAnimation::pause(time_t timestamp) {
-  progressProvider_.pause(timestamp);
-}
-
-jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
+jsi::Value CSSAnimation::update(jsi::Runtime &rt, const time_t timestamp) {
   progressProvider_.update(timestamp);
 
   // Check if the animation has not started yet because of the delay
   // (In general, it shouldn't be activated until the delay has passed but we
   // add this check to make sure that animation doesn't start with the negative
   // progress)
-  if (progressProvider_.getState() == ProgressState::PENDING) {
-    return jsi::Value::undefined();
+  if (progressProvider_.getState(timestamp) == ProgressState::PENDING) {
+    return getBackwardsFillStyle(rt);
   }
 
   const bool isFinished =
-      progressProvider_.getState() == ProgressState::FINISHED;
+      progressProvider_.getState(timestamp) == ProgressState::FINISHED;
   // Determine if the progress update direction has changed (e.g. because of
   // the easing used or the alternating animation direction)
   const bool directionChanged =
@@ -86,10 +76,41 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
   return updatedStyle;
 }
 
+void CSSAnimation::updateSettings(
+    jsi::Runtime &rt,
+    const PartialCSSAnimationSettings &updatedSettings,
+    const time_t timestamp) {
+  if (updatedSettings.duration.has_value()) {
+    progressProvider_.setDuration(updatedSettings.duration.value());
+  }
+  if (updatedSettings.easingFunction.has_value()) {
+    progressProvider_.setEasingFunction(updatedSettings.easingFunction.value());
+  }
+  if (updatedSettings.delay.has_value()) {
+    progressProvider_.setDelay(updatedSettings.delay.value());
+  }
+  if (updatedSettings.iterationCount.has_value()) {
+    progressProvider_.setIterationCount(updatedSettings.iterationCount.value());
+  }
+  if (updatedSettings.direction.has_value()) {
+    progressProvider_.setDirection(updatedSettings.direction.value());
+  }
+  if (updatedSettings.fillMode.has_value()) {
+    fillMode_ = updatedSettings.fillMode.value();
+  }
+  if (updatedSettings.playState.has_value()) {
+    if (updatedSettings.playState.value() == AnimationPlayState::PAUSED) {
+      progressProvider_.pause(timestamp);
+    } else {
+      progressProvider_.play(timestamp);
+    }
+  }
+}
+
 InterpolationUpdateContext CSSAnimation::createUpdateContext(
     jsi::Runtime &rt,
-    double progress,
-    bool directionChanged) const {
+    const double progress,
+    const bool directionChanged) const {
   return {
       rt,
       shadowNode_,

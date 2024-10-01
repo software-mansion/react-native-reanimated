@@ -22,41 +22,51 @@ class ProgressProvider {
       EasingFunction easingFunction);
 
   double getCurrent() const {
-    return currentProgress.value_or(0);
+    return currentProgress_.value_or(0);
   }
-
   std::optional<double> getPrevious() const {
-    return previousProgress;
+    return previousProgress_;
   }
   bool getStartTime() const {
-    return startTime;
+    return startTime_;
   }
   double getDelay() const {
-    return delay;
+    return delay_;
   }
-  ProgressState getState() const {
-    return state;
+  virtual ProgressState getState(const time_t timestamp) const = 0;
+
+  void setDuration(const double duration) {
+    resetProgress();
+    duration_ = duration;
+  }
+  void setEasingFunction(const EasingFunction easingFunction) {
+    resetProgress();
+    easingFunction_ = easingFunction;
+  }
+  void setDelay(const double delay) {
+    resetProgress();
+    delay_ = delay;
   }
 
   bool hasDirectionChanged() const;
 
-  void start(time_t timestamp);
-  virtual void reset(time_t timestamp);
-  void update(time_t timestamp);
+  void start(const time_t timestamp);
+  virtual void resetProgress();
+  void update(const time_t timestamp);
 
  protected:
-  const double duration;
-  const double delay;
-  const EasingFunction easingFunction;
+  double duration_;
+  double delay_;
+  EasingFunction easingFunction_;
 
-  ProgressState state = ProgressState::PENDING;
-  time_t startTime = 0;
-  time_t currentTimestamp = 0;
+  time_t startTime_ = 0;
+
+  std::optional<double> rawProgress_;
   // These progress values are resulting progress returned by the `get` method
   // with all adjustments, such as easing, applied
-  std::optional<double> currentProgress;
-  std::optional<double> previousProgress;
-  std::optional<double> previousToPreviousProgress;
+  std::optional<double> currentProgress_;
+  std::optional<double> previousProgress_;
+  std::optional<double> previousToPreviousProgress_;
 
   /**
    * Calculates the progress of the animation at the given timestamp without

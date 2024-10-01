@@ -3,48 +3,72 @@
 namespace reanimated {
 
 AnimationProgressProvider::AnimationProgressProvider(
-    double duration,
-    double delay,
-    double iterationCount,
-    AnimationDirection direction,
-    EasingFunction easingFunction)
+    const double duration,
+    const double delay,
+    const double iterationCount,
+    const AnimationDirection direction,
+    const EasingFunction easingFunction)
     : ProgressProvider(duration, delay, easingFunction),
-      iterationCount(iterationCount),
-      direction(direction) {}
+      iterationCount_(iterationCount),
+      direction_(direction) {}
 
-void AnimationProgressProvider::reset(time_t startTime) {
-  ProgressProvider::reset(startTime);
-  currentIteration = 1;
-  previousIterationsDuration = 0;
-}
-
-void AnimationProgressProvider::pause(time_t timestamp) {
-  state = ProgressState::PAUSED;
-  pauseTimestamp = timestamp;
-}
-
-void AnimationProgressProvider::play(time_t timestamp) {
-  state = ProgressState::RUNNING;
-  if (pauseTimestamp > 0) {
-    totalPausedTime += timestamp - pauseTimestamp;
+ProgressState AnimationProgressProvider::getState(
+    const time_t timestamp) const {
+  if (shouldFinish(timestamp)) {
+    return ProgressState::FINISHED;
   }
-  pauseTimestamp = 0;
+  if (pauseTimestamp_ > 0) {
+    return ProgressState::PAUSED;
+  }
+  if (!rawProgress_.has_value()) {
+    return ProgressState::PENDING;
+  }
+  const auto rawProgress = rawProgress_.value();
+  if (rawProgress >= 1) {
+    return ProgressState::FINISHED;
+  }
+  return ProgressState::RUNNING;
 }
 
-bool AnimationProgressProvider::shouldFinish() const {
-  if (iterationCount == 0) {
+void AnimationProgressProvider::pause(const time_t timestamp) {
+  pauseTimestamp_ = timestamp;
+}
+
+void AnimationProgressProvider::play(const time_t timestamp) {
+  if (pauseTimestamp_ > 0) {
+    pausedTimeBefore_ += timestamp - pauseTimestamp_;
+  }
+  pauseTimestamp_ = 0;
+}
+
+void AnimationProgressProvider::resetProgress() {
+  ProgressProvider::resetProgress();
+  currentIteration_ = 1;
+  previousIterationsDuration_ = 0;
+}
+
+inline time_t AnimationProgressProvider::getTotalPausedTime(
+    const time_t timestamp) const {
+  return pauseTimestamp_ > 0 ? timestamp - pauseTimestamp_ + pausedTimeBefore_
+                             : pausedTimeBefore_;
+}
+
+bool AnimationProgressProvider::shouldFinish(const time_t timestamp) const {
+  if (iterationCount_ == 0) {
     return true;
   }
   // Check if the animation has finished (duration can be a floating point
   // number so we can't just check if the progress is 1.0)
-  return iterationCount != -1 &&
-      (currentTimestamp - (delay + startTime)) >= duration * iterationCount;
+  return iterationCount_ != -1 &&
+      (timestamp - (delay_ + startTime_ + getTotalPausedTime(timestamp))) >=
+      duration_ * iterationCount_;
 }
 
 std::optional<double> AnimationProgressProvider::calculateRawProgress(
-    time_t timestamp) {
+    const time_t timestamp) {
   const double currentIterationElapsedTime = timestamp -
-      (startTime + delay + previousIterationsDuration + totalPausedTime);
+      (startTime_ + delay_ + previousIterationsDuration_ +
+       getTotalPausedTime(timestamp));
 
   if (currentIterationElapsedTime < 0) {
     return std::nullopt;
@@ -53,43 +77,39 @@ std::optional<double> AnimationProgressProvider::calculateRawProgress(
   const double iterationProgress =
       updateIterationProgress(currentIterationElapsedTime);
 
-  if (shouldFinish()) {
+  if (shouldFinish(timestamp)) {
     // Override current progress for the last update in the last iteration to
     // ensure that animation finishes exactly at the specified iteration
-    const double intPart = std::floor(iterationCount);
-    return intPart == iterationCount ? 1 : iterationCount - intPart;
+    const double intPart = std::floor(iterationCount_);
+    return intPart == iterationCount_ ? 1 : iterationCount_ - intPart;
   }
 
   return iterationProgress;
 }
 
 double AnimationProgressProvider::updateIterationProgress(
-    double currentIterationElapsedTime) {
-  if (duration == 0) {
-    return 1;
-  }
-
+    const double currentIterationElapsedTime) {
   // We can increase curentIteration by more than just one iteration if the
   // animation delay is negative, thus we are using this division to get the
   // number of iterations that have passed since the previous animation update
   // (deltaIterations can be greater than for the first update of the
   // animation with the negative delay)
-  const double progress = currentIterationElapsedTime / duration;
+  const double progress = currentIterationElapsedTime / duration_;
   const unsigned deltaIterations = static_cast<unsigned>(progress);
 
   if (deltaIterations > 0) {
     // Return 1 if the current iteration is the last one
-    if (currentIteration == iterationCount) {
+    if (currentIteration_ == iterationCount_) {
       return 1;
     }
 
-    currentIteration += deltaIterations;
-    previousIterationsDuration = (currentIteration - 1) * duration;
+    currentIteration_ += deltaIterations;
+    previousIterationsDuration_ = (currentIteration_ - 1) * duration_;
 
-    if (direction == AnimationDirection::NORMAL ||
-        direction == AnimationDirection::REVERSE) {
-      previousProgress.reset();
-      previousToPreviousProgress.reset();
+    if (direction_ == AnimationDirection::NORMAL ||
+        direction_ == AnimationDirection::REVERSE) {
+      previousProgress_.reset();
+      previousToPreviousProgress_.reset();
     }
   }
 
@@ -99,16 +119,16 @@ double AnimationProgressProvider::updateIterationProgress(
 }
 
 double AnimationProgressProvider::applyAnimationDirection(
-    double progress) const {
-  switch (direction) {
+    const double progress) const {
+  switch (direction_) {
     case AnimationDirection::NORMAL:
       return progress;
     case AnimationDirection::REVERSE:
       return 1.0 - progress;
     case AnimationDirection::ALTERNATE:
-      return currentIteration % 2 == 0 ? 1.0 - progress : progress;
+      return currentIteration_ % 2 == 0 ? 1.0 - progress : progress;
     case AnimationDirection::ALTERNATE_REVERSE:
-      return currentIteration % 2 == 0 ? progress : 1.0 - progress;
+      return currentIteration_ % 2 == 0 ? progress : 1.0 - progress;
   }
 }
 

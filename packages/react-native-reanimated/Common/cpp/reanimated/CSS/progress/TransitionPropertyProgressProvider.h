@@ -6,10 +6,10 @@ namespace reanimated {
 
 class TransitionPropertyProgressProvider : public ProgressProvider {
  protected:
-  std::optional<double> calculateRawProgress(time_t timestamp) override;
+  std::optional<double> calculateRawProgress(const time_t timestamp) override;
 
  private:
-  double getElapsedTime(time_t timestamp) const;
+  double getElapsedTime(const time_t timestamp) const;
 };
 
 } // namespace reanimated

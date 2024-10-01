@@ -14,7 +14,7 @@
 
 namespace reanimated {
 
-enum class AnimationOperation { ADD, REMOVE, ACTIVATE, DEACTIVATE };
+enum class AnimationOperation { ADD, REMOVE, ACTIVATE, DEACTIVATE, FINISH };
 
 using AnimationsRegistry =
     std::unordered_map<unsigned, std::shared_ptr<CSSAnimation>>;
@@ -59,17 +59,20 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
   inline std::optional<std::shared_ptr<CSSAnimation>> getAnimation(
       const unsigned id);
 
-  void finishAnimation(jsi::Runtime &rt, const unsigned id);
-  void
-  addAnimation(jsi::Runtime &rt, const unsigned id, const time_t timestamp);
-  void removeAnimation(jsi::Runtime &rt, const unsigned id);
-  void activateAnimation(const unsigned id);
-  void deactivateAnimation(const unsigned id);
-
-  void updatePlayState(
+  void addAnimation(
       jsi::Runtime &rt,
       const std::shared_ptr<CSSAnimation> &animation,
-      const AnimationPlayState playState,
+      const time_t timestamp);
+  void removeAnimation(
+      jsi::Runtime &rt,
+      const std::shared_ptr<CSSAnimation> &animation);
+  void activateAnimation(const unsigned id);
+  void deactivateAnimation(
+      const std::shared_ptr<CSSAnimation> &animation,
+      const time_t timestamp);
+  void finishAnimation(
+      jsi::Runtime &rt,
+      const std::shared_ptr<CSSAnimation> &animation,
       const time_t timestamp);
 };
 

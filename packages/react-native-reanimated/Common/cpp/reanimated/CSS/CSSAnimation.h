@@ -34,35 +34,39 @@ class CSSAnimation {
     return fillMode_ == AnimationFillMode::BACKWARDS ||
         fillMode_ == AnimationFillMode::BOTH;
   }
-  ProgressState getState() const {
-    return progressProvider_.getState();
+  ProgressState getState(const time_t timestamp) const {
+    return progressProvider_.getState(timestamp);
   }
   double getDelay() const {
     return progressProvider_.getDelay();
   }
-
+  time_t getStartTime() const {
+    return progressProvider_.getStartTime();
+  }
   jsi::Value getBackwardsFillStyle(jsi::Runtime &rt) const;
   jsi::Value getForwardsFillStyle(jsi::Runtime &rt) const;
-  jsi::Value getCurrentStyle(jsi::Runtime &rt) const;
+  jsi::Value getViewStyle(jsi::Runtime &rt) const;
 
-  void updateSettings(jsi::Runtime &rt, const jsi::Value &settings);
-
-  void run(time_t timestamp);
-  void pause(time_t timestamp);
+  void run(const time_t timestamp);
   jsi::Value update(jsi::Runtime &rt, time_t timestamp);
+
+  void updateSettings(
+      jsi::Runtime &rt,
+      const PartialCSSAnimationSettings &updatedSettings,
+      const time_t timestamp);
 
  private:
   const unsigned id_;
   const ShadowNode::Shared shadowNode_;
-  const AnimationFillMode fillMode_;
+  AnimationFillMode fillMode_;
 
   AnimationStyleInterpolator styleInterpolator_;
   AnimationProgressProvider progressProvider_;
 
   InterpolationUpdateContext createUpdateContext(
       jsi::Runtime &rt,
-      double progress,
-      bool directionChanged) const;
+      const double progress,
+      const bool directionChanged) const;
 };
 
 } // namespace reanimated

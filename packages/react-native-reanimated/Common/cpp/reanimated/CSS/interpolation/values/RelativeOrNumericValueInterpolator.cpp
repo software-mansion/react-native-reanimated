@@ -14,7 +14,7 @@ RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
           propertyPath),
       relativeTo_(relativeTo),
       relativeProperty_(relativeProperty),
-      viewStylesRepository_(viewStylesRepository) {};
+      viewStylesRepository_(viewStylesRepository){};
 
 double RelativeOrNumericValueInterpolator::percentageToNumber(
     const std::string &value) {

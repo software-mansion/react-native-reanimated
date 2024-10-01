@@ -3,13 +3,13 @@
 namespace reanimated {
 
 std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(
-    time_t timestamp) {
-  return getElapsedTime(timestamp) / duration;
+    const time_t timestamp) {
+  return getElapsedTime(timestamp) / duration_;
 }
 
 double TransitionPropertyProgressProvider::getElapsedTime(
-    time_t timestamp) const {
-  return timestamp - (startTime + delay);
+    const time_t timestamp) const {
+  return timestamp - (startTime_ + delay_);
 }
 
 } // namespace reanimated

@@ -118,9 +118,9 @@ const routes = {
         name: 'Changing Animation',
         Component: Miscellaneous.ChangingAnimation,
       },
-      UpdatingAnimationConfig: {
-        name: 'Updating Animation Config',
-        Component: Miscellaneous.UpdatingAnimationConfig,
+      UpdatingAnimationSettings: {
+        name: 'Updating Animation Settings',
+        Component: Miscellaneous.UpdatingAnimationSettings,
       },
     },
   },

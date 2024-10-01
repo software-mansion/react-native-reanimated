@@ -8,36 +8,47 @@ namespace reanimated {
 class AnimationProgressProvider : public ProgressProvider {
  public:
   AnimationProgressProvider(
-      double duration,
-      double delay,
-      double iterationCount,
-      AnimationDirection direction,
-      EasingFunction easingFunction);
+      const double duration,
+      const double delay,
+      const double iterationCount,
+      const AnimationDirection direction,
+      const EasingFunction easingFunction);
 
-  void reset(time_t startTime) override;
-  void pause(time_t timestamp);
-  void play(time_t timestamp);
+  void setIterationCount(const double iterationCount) {
+    resetProgress();
+    iterationCount_ = iterationCount;
+  }
+  void setDirection(const AnimationDirection direction) {
+    resetProgress();
+    direction_ = direction;
+  }
+  ProgressState getState(const time_t timestamp) const override;
+
+  void pause(const time_t timestamp);
+  void play(const time_t timestamp);
+  void resetProgress() override;
 
  protected:
-  std::optional<double> calculateRawProgress(time_t timestamp) override;
+  std::optional<double> calculateRawProgress(const time_t timestamp) override;
 
-  double decorateProgress(double progress) const override {
+  double decorateProgress(const double progress) const override {
     return applyAnimationDirection(progress);
   }
 
  private:
-  const double iterationCount;
-  const AnimationDirection direction;
+  double iterationCount_;
+  AnimationDirection direction_;
 
-  unsigned currentIteration = 1;
-  double previousIterationsDuration = 0;
-  time_t pauseTimestamp = 0;
-  time_t totalPausedTime = 0;
+  unsigned currentIteration_ = 1;
+  double previousIterationsDuration_ = 0;
+  time_t pauseTimestamp_ = 0;
+  time_t pausedTimeBefore_ = 0;
 
-  bool shouldFinish() const;
+  inline time_t getTotalPausedTime(const time_t timestamp) const;
+  bool shouldFinish(const time_t timestamp) const;
 
-  double updateIterationProgress(double currentIterationElapsedTime);
-  double applyAnimationDirection(double iterationProgress) const;
+  double updateIterationProgress(const double currentIterationElapsedTime);
+  double applyAnimationDirection(const double iterationProgress) const;
 };
 
 } // namespace reanimated
