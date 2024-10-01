@@ -1,73 +1,45 @@
-name: React Native nightly Reanimated build check [Nightly]
+name: V8 Reanimated build check [Nightly]
 env:
-  YARN_ENABLE_HARDENED_MODE: 0
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
   pull_request:
     paths:
-      - .github/workflows/react-native-nightly-reanimated-build-check-nightly.yml
+      - .github/workflows/V8-reanimated-build-check-nightly.yml
+      - .github/workflows/helper/configureV8.js
   schedule:
     - cron: '37 19 * * *'
   workflow_dispatch:
 
 jobs:
-  build_ios:
+  build:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: 'ubuntu-latest'
-    strategy:
-      matrix:
-        react-native-architecture: ['Paper', 'Fabric']
-        platform: ['iOS', 'Android']
-      fail-fast: false
-    env:
-      REACT_NATIVE_TAG: nightly
-      APP_NAME: app
+    runs-on: ubuntu-latest
     concurrency:
-      group: ${{ matrix.platform }}-react-native-nightly-${{ matrix.react-native-architecture }}-${{ github.ref }}
+      group: build-v8-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      # - name: Setup Yarn
-        # Sometimes `npx react-native init` fails due to dependency mismatches or other
-        # rather vague errors. This is a workaround for that.
-        # run: corepack enable && yarn init
-      - name: Set up JDK 18
-        if: ${{ matrix.platform == 'Android' }}
-        uses: actions/setup-java@v3
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          path: 'reanimated_repo'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '18'
-      # - name: Load "next" tag if available
-      #   run: |
-      #     if npm view react-native dist-tags | grep -q 'next:' ; then
-      #       echo "REACT_NATIVE_TAG=next" >> $GITHUB_ENV
-      #     fi
-      # - name: Install React Native
-      #   run: yarn add react-native@${{ env.REACT_NATIVE_TAG }}
-      - name: Create app
-        run: |
-          npx react-native init app
-      # - name: Add yarn.lock in app
-      #   working-directory: ${{ env.APP_NAME }}
-      #   run: touch yarn.lock
+          java-version: '17'
+      - name: Create React Native app
+        run: npx react-native init app
+      - name: Install dependencies
+        working-directory: app
+        run: yarn install
       - name: Install Reanimated
-        working-directory: ${{ env.APP_NAME }}
+        working-directory: app
         run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
-      - name: Install Paper Pods (iOS)
-        if: ${{ matrix.react-native-architecture == 'Paper' && matrix.platform == 'iOS' }}
-        working-directory: app/ios
-        run: bundle install && bundle exec pod install
-      - name: Install Fabric Pods (iOS)
-        if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'iOS' }}
-        working-directory: app/ios
-        run: RCT_NEW_ARCH_ENABLED=1 bundle install && bundle exec pod install
-      - name: Setup Fabric (Android)
-        if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'Android' }}
-        working-directory: ${{ env.APP_NAME }}/android
-        run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
-      - name: Build app (iOS)
-        if: ${{ matrix.platform == 'iOS' }}
-        working-directory: ${{ env.APP_NAME }}
-        run: yarn react-native run-ios --simulator='iPhone 14'
-      - name: Build app (Android)
-        if: ${{ matrix.platform == 'Android' }}
-        working-directory: ${{ env.APP_NAME }}/android
+      - name: Install test dependencies
+        working-directory: app
+        run: yarn add react-native-v8 v8-android-jit
+      - name: Configure V8
+        run: node reanimated_repo/.github/workflows/helper/configureV8.js
+      - name: Build Android app
+        working-directory: app/android
         run: ./gradlew assembleDebug --console=plain
