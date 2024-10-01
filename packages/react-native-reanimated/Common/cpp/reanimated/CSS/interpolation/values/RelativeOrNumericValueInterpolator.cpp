@@ -14,7 +14,7 @@ RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
           propertyPath),
       relativeTo_(relativeTo),
       relativeProperty_(relativeProperty),
-      viewPropsRepository_(viewStylesRepository) {};
+      viewStylesRepository_(viewStylesRepository) {};
 
 double RelativeOrNumericValueInterpolator::percentageToNumber(
     const std::string &value) {
@@ -44,6 +44,10 @@ RelativeOrNumericValueInterpolator::prepareKeyframeValue(
 jsi::Value RelativeOrNumericValueInterpolator::convertResultToJSI(
     jsi::Runtime &rt,
     const RelativeOrNumericInterpolatorValue &value) const {
+  if (value.isRelative) {
+    return jsi::String::createFromUtf8(
+        rt, std::to_string(value.value * 100) + "%");
+  }
   return jsi::Value(value.value);
 }
 
@@ -66,11 +70,11 @@ double RelativeOrNumericValueInterpolator::getRelativeValue(
   jsi::Value relativeValue;
 
   if (relativeTo_ == TargetType::Parent) {
-    relativeValue = viewPropsRepository_->getParentNodeProp(
+    relativeValue = viewStylesRepository_->getParentNodeProp(
         context.node, relativeProperty_);
   } else {
     relativeValue =
-        viewPropsRepository_->getNodeProp(context.node, relativeProperty_);
+        viewStylesRepository_->getNodeProp(context.node, relativeProperty_);
   }
 
   if (relativeValue.isUndefined()) {

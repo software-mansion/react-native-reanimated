@@ -6,7 +6,8 @@ CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
     ShadowNode::Shared shadowNode,
     const CSSAnimationConfig &config,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    const time_t timestamp)
     : shadowNode(shadowNode),
       styleInterpolator(AnimationStyleInterpolator(
           rt,
@@ -16,9 +17,25 @@ CSSAnimation::CSSAnimation(
           config.animationDuration,
           config.animationDelay,
           config.animationIterationCount,
-          getAnimationDirection(config.animationDirection),
-          getEasingFunction(rt, config.animationTimingFunction))),
-      fillMode(getAnimationFillMode(config.animationFillMode)) {}
+          config.animationDirection,
+          config.easingFunction)),
+      fillMode(config.animationFillMode) {
+  progressProvider.start(timestamp);
+}
+
+jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) const {
+  return hasBackwardsFillMode() ? styleInterpolator.getBackwardsFillValue(rt)
+                                : jsi::Value::undefined();
+}
+
+jsi::Value CSSAnimation::getForwardsFillStyle(jsi::Runtime &rt) const {
+  return hasForwardsFillMode() ? styleInterpolator.getForwardsFillValue(rt)
+                               : jsi::Value::undefined();
+}
+
+jsi::Value CSSAnimation::getCurrentStyle(jsi::Runtime &rt) const {
+  return styleInterpolator.getStyleValue(rt, shadowNode);
+}
 
 void CSSAnimation::updateSettings(
     jsi::Runtime &rt,
@@ -26,37 +43,23 @@ void CSSAnimation::updateSettings(
   const auto settingsObject = settings.asObject(rt);
 }
 
-void CSSAnimation::start(time_t timestamp) {
-  progressProvider.update(timestamp);
-
+void CSSAnimation::run() {
   if (progressProvider.getState() == Finished) {
-    state = CSSAnimationState::finished;
+    state = AnimationState::finished;
     return;
   }
-
-  state = CSSAnimationState::running;
-  progressProvider.reset(timestamp);
-}
-
-void CSSAnimation::finish(const bool revertChanges) {
-  // Set state to finishing to add one more frame in which we will revert
-  // changes applied during the animation
-  if (revertChanges) {
-    state = CSSAnimationState::reverting;
-  } else {
-    state = CSSAnimationState::finished;
-  }
+  state = AnimationState::running;
 }
 
 jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
   progressProvider.update(timestamp);
 
   // Check if the animation has not started yet because of the delay
+  // (In general, it shouldn't be activated until the delay has passed but we
+  // add this check to make sure that animation doesn't start with the negative
+  // progress)
   if (progressProvider.getState() == Pending) {
-    // We have to return the style from the first animation keyframe (apply
-    // backwards fill mode) in every keyframe before the animation starts
-    // if the fill mode is backwards or both
-    return maybeApplyBackwardsFillMode(rt);
+    return jsi::Value::undefined();
   }
 
   const bool shouldFinish = progressProvider.getState() == Finished;
@@ -68,59 +71,11 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, time_t timestamp) {
   auto updatedStyle = styleInterpolator.update(
       createUpdateContext(rt, progressProvider.getCurrent(), directionChanged));
 
-  if (state == CSSAnimationState::finishing) {
-    state = CSSAnimationState::finished;
-    return maybeApplyForwardsFillMode(rt);
-  } else if (state == CSSAnimationState::reverting) {
-    state = CSSAnimationState::reverted;
-    return reset(rt);
-  } else if (shouldFinish) {
-    state = CSSAnimationState::finishing;
+  if (shouldFinish) {
+    state = AnimationState::finished;
   }
 
   return updatedStyle;
-}
-
-jsi::Value CSSAnimation::reset(jsi::Runtime &rt) {
-  // Reset all styles applied during the animation and restore the
-  // view style (progress can be any value because it is not used by reset)
-  return styleInterpolator.reset(createUpdateContext(rt, 0, false));
-}
-
-CSSAnimationDirection CSSAnimation::getAnimationDirection(
-    const std::string &str) {
-  static const std::unordered_map<std::string, CSSAnimationDirection>
-      strToEnumMap = {
-          {"normal", normal},
-          {"reverse", reverse},
-          {"alternate", alternate},
-          {"alternate-reverse", alternateReverse}};
-
-  auto it = strToEnumMap.find(str);
-  if (it != strToEnumMap.end()) {
-    return it->second;
-  } else {
-    throw std::invalid_argument(
-        "[Reanimated] Invalid string for CSSAnimationDirection enum: " + str);
-  }
-}
-
-CSSAnimationFillMode CSSAnimation::getAnimationFillMode(
-    const std::string &str) {
-  static const std::unordered_map<std::string, CSSAnimationFillMode>
-      strToEnumMap = {
-          {"none", none},
-          {"forwards", forwards},
-          {"backwards", backwards},
-          {"both", both}};
-
-  auto it = strToEnumMap.find(str);
-  if (it != strToEnumMap.end()) {
-    return it->second;
-  } else {
-    throw std::invalid_argument(
-        "[Reanimated] Invalid string for CSSAnimationFillMode enum: " + str);
-  }
 }
 
 InterpolationUpdateContext CSSAnimation::createUpdateContext(
@@ -133,23 +88,6 @@ InterpolationUpdateContext CSSAnimation::createUpdateContext(
       progress,
       progressProvider.getPrevious(),
       progressProvider.hasDirectionChanged()};
-}
-
-jsi::Value CSSAnimation::maybeApplyBackwardsFillMode(jsi::Runtime &rt) {
-  if (fillMode == backwards || fillMode == both) {
-    // Return the style from the first animation keyframe
-    return styleInterpolator.update(createUpdateContext(rt, 0, false));
-  }
-  return jsi::Value::undefined();
-}
-
-jsi::Value CSSAnimation::maybeApplyForwardsFillMode(jsi::Runtime &rt) {
-  if (fillMode == forwards || fillMode == both) {
-    // Don't restore the style from the view style if the forwards fill mode is
-    // applied
-    return jsi::Value::undefined();
-  }
-  return reset(rt);
 }
 
 } // namespace reanimated

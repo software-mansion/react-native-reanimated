@@ -81,11 +81,12 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
-      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>()),
-      viewPropsRepository_(std::make_shared<ViewStylesRepository>(
+      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
           staticPropsRegistry_,
           animatedPropsRegistry_)),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>()),
+      cssAnimationsRegistry_(
+          std::make_shared<CSSAnimationsRegistry>(viewStylesRepository_)),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(
@@ -521,7 +522,8 @@ void ReanimatedModuleProxy::registerCSSAnimation(
       rt,
       shadowNode,
       parseCSSAnimationConfig(rt, animationConfig),
-      viewPropsRepository_);
+      viewStylesRepository_,
+      getAnimationTimestamp_());
 
   cssAnimationsRegistry_->add(animationId.asNumber(), animation);
   maybeRunCSSLoop();
@@ -531,9 +533,10 @@ void ReanimatedModuleProxy::updateCSSAnimation(
     jsi::Runtime &rt,
     const jsi::Value &animationId,
     const jsi::Value &updatedSettings) {
-  cssAnimationsRegistry_->updateConfig(
-      rt, animationId.asNumber(), updatedSettings);
-  maybeRunCSSLoop();
+  // TODO - implement this
+  // cssAnimationsRegistry_->updateConfig(
+  //     rt, animationId.asNumber(), updatedSettings);
+  // maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimation(
@@ -673,7 +676,7 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
 
     *cssLoop = [this, cssLoop](const double timestampMs) {
       performOperations();
-      if (cssAnimationsRegistry_->hasRunningAnimations() ||
+      if (cssAnimationsRegistry_->hasAnimationUpdates() ||
           cssTransitionsRegistry_->hasRunningTransitions()) {
         jsi::Runtime &rt =
             workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
@@ -793,7 +796,7 @@ void ReanimatedModuleProxy::performOperations() {
     // Clear the entire cache after the commit
     // (we don't know if the view is updated from outside of Reanimated
     // so we have to clear the entire cache)
-    viewPropsRepository_->clearNodesCache();
+    viewStylesRepository_->clearNodesCache();
   }
 }
 
@@ -868,7 +871,7 @@ jsi::Value ReanimatedModuleProxy::measure(
 void ReanimatedModuleProxy::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
-  viewPropsRepository_->setUIManager(uiManager_);
+  viewStylesRepository_->setUIManager(uiManager_);
 
   initializeLayoutAnimationsProxy();
 

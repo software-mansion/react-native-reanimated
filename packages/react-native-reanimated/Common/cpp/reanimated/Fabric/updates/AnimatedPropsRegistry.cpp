@@ -28,7 +28,7 @@ void AnimatedPropsRegistry::remove(
   auto viewTagsArray = viewTags.asObject(rt).asArray(rt);
 
   for (size_t i = 0, length = viewTagsArray.size(rt); i < length; ++i) {
-    tagsToRemove_.emplace_back(viewTagsArray.getValueAtIndex(rt, i).asNumber());
+    tagsToRemove_.insert(viewTagsArray.getValueAtIndex(rt, i).asNumber());
   }
 };
 

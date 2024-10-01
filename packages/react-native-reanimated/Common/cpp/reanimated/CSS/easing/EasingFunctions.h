@@ -16,10 +16,13 @@ namespace reanimated {
 
 extern const std::unordered_map<std::string, EasingFunction>
     predefinedEasingMap;
+
 EasingFunction getEasingFunction(
     jsi::Runtime &rt,
     const jsi::Value &easingConfig);
+
 EasingFunction getPredefinedEasingFunction(const std::string &name);
+
 EasingFunction getParametrizedEasingFunction(
     jsi::Runtime &rt,
     const jsi::Value &easingConfig);

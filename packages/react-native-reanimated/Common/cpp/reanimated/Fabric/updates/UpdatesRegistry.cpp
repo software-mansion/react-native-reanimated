@@ -14,14 +14,15 @@ void UpdatesRegistry::flushUpdates(
   flushUpdatesToRegistry(rt, copiedUpdatesBatch);
 
   // Flush the updates to the updatesBatch used to apply current changes
-  updatesBatch.reserve(updatesBatch.size() + copiedUpdatesBatch.size());
-  updatesBatch.insert(
-      updatesBatch.end(),
-      std::make_move_iterator(copiedUpdatesBatch.begin()),
-      std::make_move_iterator(copiedUpdatesBatch.end()));
+  for (auto &[shadowNode, props] : copiedUpdatesBatch) {
+    // Add update only if the tag is not scheduled for removal
+    if (tagsToRemove_.count(shadowNode->getTag()) == 0) {
+      updatesBatch.emplace_back(shadowNode, std::move(props));
+    }
+  }
 
   // Remove all tags scheduled for removal
-  removeTags();
+  runMarkedRemovals();
 }
 
 void UpdatesRegistry::collectProps(PropsMap &propsMap) {
@@ -69,7 +70,7 @@ void UpdatesRegistry::flushUpdatesToRegistry(
   }
 }
 
-void UpdatesRegistry::removeTags() {
+void UpdatesRegistry::runMarkedRemovals() {
   auto copiedTagsToRemove = std::move(tagsToRemove_);
   for (const auto tag : copiedTagsToRemove) {
     updatesRegistry_.erase(tag);

@@ -6,7 +6,7 @@ AnimationProgressProvider::AnimationProgressProvider(
     double duration,
     double delay,
     double iterationCount,
-    CSSAnimationDirection direction,
+    AnimationDirection direction,
     EasingFunction easingFunction)
     : ProgressProvider(duration, delay, easingFunction),
       iterationCount(iterationCount),

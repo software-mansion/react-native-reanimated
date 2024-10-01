@@ -8,8 +8,14 @@ ProgressProvider::ProgressProvider(
     EasingFunction easingFunction)
     : duration(duration), delay(delay), easingFunction(easingFunction) {}
 
-void ProgressProvider::reset(time_t startTime) {
-  this->startTime = startTime;
+void ProgressProvider::start(time_t timestamp) {
+  if (startTime == 0) {
+    startTime = timestamp;
+  }
+}
+
+void ProgressProvider::reset(time_t timestamp) {
+  startTime = timestamp;
   currentProgress.reset();
   previousProgress.reset();
   previousToPreviousProgress.reset();
@@ -17,9 +23,6 @@ void ProgressProvider::reset(time_t startTime) {
 }
 
 void ProgressProvider::update(time_t timestamp) {
-  if (startTime == 0) {
-    startTime = timestamp;
-  }
   currentTimestamp = timestamp;
   previousToPreviousProgress = previousProgress;
   previousProgress = currentProgress;

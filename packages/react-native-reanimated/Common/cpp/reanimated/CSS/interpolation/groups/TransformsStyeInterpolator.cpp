@@ -48,7 +48,7 @@ TransformsStyleInterpolator::TransformsStyleInterpolator(
     const TransformPropertyInterpolatorFactories &factories,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const std::vector<std::string> &propertyPath)
-    : Interpolator(propertyPath),
+    : GroupInterpolator(propertyPath),
       interpolators_(
           build(rt, transformsArray, viewStylesRepository, factories)) {}
 
@@ -82,53 +82,29 @@ TransformPropertyInterpolators TransformsStyleInterpolator::build(
   return interpolators;
 }
 
-jsi::Value TransformsStyleInterpolator::update(
-    const InterpolationUpdateContext context) {
-  jsi::Runtime &rt = context.rt;
-  jsi::Array updateResult(rt, interpolators_.size());
+jsi::Value TransformsStyleInterpolator::mapInterpolators(
+    jsi::Runtime &rt,
+    std::function<jsi::Value(Interpolator &)> callback) const {
+  jsi::Array result(rt, interpolators_.size());
+  size_t index = 0;
 
-  for (size_t i = 0; i < interpolators_.size(); ++i) {
-    const TransformPropertyInterpolator &transformInterpolator =
-        interpolators_[i];
-    auto propName = transformInterpolator.property;
-    jsi::Value updatedValue =
-        transformInterpolator.interpolator->update(context);
+  for (const auto &interpolator : interpolators_) {
+    jsi::Value value = callback(*interpolator.interpolator);
 
-    if (updatedValue.isUndefined()) {
-      continue;
+    if (!value.isUndefined()) {
+      jsi::Object obj(rt);
+      obj.setProperty(
+          rt, jsi::PropNameID::forUtf8(rt, interpolator.property), value);
+      result.setValueAtIndex(rt, index++, obj);
     }
-
-    jsi::Object obj(rt);
-    obj.setProperty(rt, jsi::PropNameID::forUtf8(rt, propName), updatedValue);
-    updateResult.setValueAtIndex(rt, i, obj);
   }
 
-  return updateResult;
-}
-
-jsi::Value TransformsStyleInterpolator::reset(
-    const InterpolationUpdateContext context) {
-  jsi::Runtime &rt = context.rt;
-  jsi::Array resetResult(rt, interpolators_.size());
-
-  for (size_t i = 0; i < interpolators_.size(); ++i) {
-    const TransformPropertyInterpolator &transformInterpolator =
-        interpolators_[i];
-    jsi::Value resetValue = transformInterpolator.interpolator->reset(context);
-
-    if (resetValue.isUndefined()) {
-      continue;
-    }
-
-    jsi::Object obj(rt);
-    obj.setProperty(
-        rt,
-        jsi::PropNameID::forUtf8(rt, transformInterpolator.property),
-        resetValue);
-    resetResult.setValueAtIndex(rt, i, obj);
+  // If no results were added, return undefined
+  if (index == 0) {
+    return jsi::Value::undefined();
   }
 
-  return resetResult;
+  return result;
 }
 
 } // namespace reanimated

@@ -1,10 +1,7 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/Interpolator.h>
+#include <reanimated/CSS/interpolation/groups/GroupInterpolator.h>
 
-#include <jsi/jsi.h>
-#include <memory>
-#include <string>
 #include <unordered_map>
 
 namespace reanimated {
@@ -14,7 +11,7 @@ using ObjectPropertiesInterpolatorFactories =
 using ObjectPropertiesInterpolators =
     std::unordered_map<std::string, std::shared_ptr<Interpolator>>;
 
-class ObjectPropertiesInterpolator : public Interpolator {
+class ObjectPropertiesInterpolator : public GroupInterpolator {
  public:
   ObjectPropertiesInterpolator(
       jsi::Runtime &rt,
@@ -23,9 +20,10 @@ class ObjectPropertiesInterpolator : public Interpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const std::vector<std::string> &propertyPath);
 
-  jsi::Value update(const InterpolationUpdateContext context) override;
-
-  jsi::Value reset(const InterpolationUpdateContext context) override;
+ protected:
+  jsi::Value mapInterpolators(
+      jsi::Runtime &rt,
+      std::function<jsi::Value(Interpolator &)> callback) const override;
 
  private:
   const ObjectPropertiesInterpolators interpolators_;
