@@ -231,7 +231,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
-  const std::shared_ptr<ViewStylesRepository> viewPropsRepository_;
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
 

@@ -30,14 +30,17 @@ class ProgressProvider {
   bool getStartTime() const {
     return startTime;
   }
+  double getDelay() const {
+    return delay;
+  }
   ProgressState getState() const {
     return state;
   }
 
   bool hasDirectionChanged() const;
 
+  void start(time_t timestamp);
   virtual void reset(time_t timestamp);
-
   void update(time_t timestamp);
 
  protected:

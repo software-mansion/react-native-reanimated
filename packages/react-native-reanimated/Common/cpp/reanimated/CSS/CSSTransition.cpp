@@ -11,7 +11,7 @@ CSSTransition::CSSTransition(
           rt,
           config.transitionProperty,
           config.transitionDuration,
-          getEasingFunction(rt, config.transitionTimingFunction),
+          config.easingFunction,
           config.transitionDelay)) {}
 
 void CSSTransition::updateSettings(
@@ -29,11 +29,6 @@ void CSSTransition::finish(const bool revertChanges) {
 }
 
 jsi::Value CSSTransition::update(jsi::Runtime &rt, time_t timestamp) {
-  // TODO
-  return jsi::Value::undefined();
-}
-
-jsi::Value CSSTransition::reset(jsi::Runtime &rt) {
   // TODO
   return jsi::Value::undefined();
 }

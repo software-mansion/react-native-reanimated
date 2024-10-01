@@ -8,7 +8,7 @@ ValueInterpolator<T>::ValueInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const std::vector<std::string> &propertyPath)
     : Interpolator(propertyPath),
-      viewPropsRepository_(viewStylesRepository),
+      viewStylesRepository_(viewStylesRepository),
       defaultStyleValue_(defaultStyleValue) {}
 
 template <typename T>
@@ -74,14 +74,10 @@ ValueInterpolator<T>::createKeyframes(
 template <typename T>
 std::optional<T> ValueInterpolator<T>::getFallbackValue(
     const InterpolationUpdateContext context) const {
-  const jsi::Value fallbackValue = viewPropsRepository_->getStyleProp(
-      context.rt, context.node->getTag(), propertyPath_);
-
-  if (fallbackValue.isUndefined()) {
-    return defaultStyleValue_;
-  }
-
-  return prepareKeyframeValue(context.rt, fallbackValue);
+  const jsi::Value &styleValue = getStyleValue(context.rt, context.node);
+  return styleValue.isUndefined()
+      ? defaultStyleValue_
+      : prepareKeyframeValue(context.rt, styleValue);
 }
 
 template <typename T>
@@ -235,19 +231,25 @@ jsi::Value ValueInterpolator<T>::update(
 }
 
 template <typename T>
-jsi::Value ValueInterpolator<T>::reset(
-    const InterpolationUpdateContext context) {
-  keyframeAfterIndex_ = 0;
-  keyframeBefore_.value.reset();
-  keyframeAfter_.value.reset();
-  previousValue_.reset();
+jsi::Value ValueInterpolator<T>::getBackwardsFillValue(jsi::Runtime &rt) const {
+  const auto &value = keyframes_->front().value;
+  return value.has_value() ? convertResultToJSI(rt, value.value())
+                           : jsi::Value::undefined();
+}
 
-  const auto resolvedValue =
-      resolveKeyframeValue(getFallbackValue(context), context);
+template <typename T>
+jsi::Value ValueInterpolator<T>::getForwardsFillValue(jsi::Runtime &rt) const {
+  const auto &value = keyframes_->back().value;
+  return value.has_value() ? convertResultToJSI(rt, value.value())
+                           : jsi::Value::undefined();
+}
 
-  return resolvedValue.has_value()
-      ? convertResultToJSI(context.rt, resolvedValue.value())
-      : jsi::Value::undefined();
+template <typename T>
+jsi::Value ValueInterpolator<T>::getStyleValue(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) const {
+  return viewStylesRepository_->getStyleProp(
+      rt, shadowNode->getTag(), propertyPath_);
 }
 
 // Declare the types that will be used in the ValueInterpolator class

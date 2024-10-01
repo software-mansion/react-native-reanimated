@@ -8,7 +8,7 @@ ObjectPropertiesInterpolator::ObjectPropertiesInterpolator(
     const ObjectPropertiesInterpolatorFactories &factories,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const std::vector<std::string> &propertyPath)
-    : Interpolator(propertyPath),
+    : GroupInterpolator(propertyPath),
       interpolators_(build(rt, object, viewStylesRepository, factories)) {}
 
 ObjectPropertiesInterpolators ObjectPropertiesInterpolator::build(
@@ -43,31 +43,25 @@ ObjectPropertiesInterpolators ObjectPropertiesInterpolator::build(
   return interpolators;
 }
 
-jsi::Value ObjectPropertiesInterpolator::update(
-    const InterpolationUpdateContext context) {
-  jsi::Runtime &rt = context.rt;
+jsi::Value ObjectPropertiesInterpolator::mapInterpolators(
+    jsi::Runtime &rt,
+    std::function<jsi::Value(Interpolator &)> callback) const {
   jsi::Object result(rt);
+  bool allUndefined = true;
 
   for (const auto &pair : interpolators_) {
-    const std::string &propName = pair.first;
     const std::shared_ptr<Interpolator> &interpolator = pair.second;
+    jsi::Value value = callback(*interpolator);
 
-    result.setProperty(rt, propName.c_str(), interpolator->update(context));
+    if (!value.isUndefined()) {
+      allUndefined = false;
+    }
+
+    result.setProperty(rt, pair.first.c_str(), value);
   }
 
-  return result;
-}
-
-jsi::Value ObjectPropertiesInterpolator::reset(
-    const InterpolationUpdateContext context) {
-  jsi::Runtime &rt = context.rt;
-  jsi::Object result(rt);
-
-  for (const auto &pair : interpolators_) {
-    const std::string &propName = pair.first;
-    const std::shared_ptr<Interpolator> &interpolator = pair.second;
-
-    result.setProperty(rt, propName.c_str(), interpolator->reset(context));
+  if (allUndefined) {
+    return jsi::Value::undefined();
   }
 
   return result;

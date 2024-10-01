@@ -1,10 +1,9 @@
 #pragma once
 
+#include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/progress/ProgressProvider.h>
 
 namespace reanimated {
-
-enum CSSAnimationDirection { normal, reverse, alternate, alternateReverse };
 
 class AnimationProgressProvider : public ProgressProvider {
  public:
@@ -12,7 +11,7 @@ class AnimationProgressProvider : public ProgressProvider {
       double duration,
       double delay,
       double iterationCount,
-      CSSAnimationDirection direction,
+      AnimationDirection direction,
       EasingFunction easingFunction);
 
   void reset(time_t startTime) override;
@@ -26,7 +25,7 @@ class AnimationProgressProvider : public ProgressProvider {
 
  private:
   const double iterationCount;
-  const CSSAnimationDirection direction;
+  const AnimationDirection direction;
 
   unsigned currentIteration = 1;
   double previousIterationsDuration = 0;

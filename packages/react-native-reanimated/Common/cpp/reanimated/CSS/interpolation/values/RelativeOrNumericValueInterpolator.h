@@ -39,7 +39,7 @@ class RelativeOrNumericValueInterpolator
  private:
   const TargetType relativeTo_;
   const std::string relativeProperty_;
-  const std::shared_ptr<ViewStylesRepository> viewPropsRepository_;
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   double getRelativeValue(const InterpolationUpdateContext context) const;
 };

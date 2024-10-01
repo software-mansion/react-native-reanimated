@@ -6,6 +6,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <memory>
+#include <queue>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -13,34 +14,51 @@
 
 namespace reanimated {
 
+enum AnimationOperation { add, remove, activate, deactivate };
+
 using AnimationsRegistry =
     std::unordered_map<unsigned, std::shared_ptr<CSSAnimation>>;
 
+using AnimationOperationsBatch =
+    std::vector<std::pair<AnimationOperation, unsigned>>;
+
+using DelayedAnimationsQueue = std::priority_queue<
+    std::pair<time_t, unsigned>,
+    std::vector<std::pair<time_t, unsigned>>,
+    std::greater<std::pair<time_t, unsigned>>>;
+
 class CSSAnimationsRegistry : public UpdatesRegistry {
  public:
-  bool hasRunningAnimations() const;
+  CSSAnimationsRegistry(
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+
+  bool hasAnimationUpdates() const;
 
   void add(const unsigned id, const std::shared_ptr<CSSAnimation> &animation);
   void remove(const unsigned id);
-  void
-  updateConfig(jsi::Runtime &rt, const unsigned id, const jsi::Value &settings);
   void update(jsi::Runtime &rt, const double timestamp);
 
  private:
+  std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+
   AnimationsRegistry animationsRegistry_;
+  AnimationOperationsBatch operationsBatch_;
 
-  // Set of active animation IDs. These are animations that are either pending,
-  // running, or in intermediate states like finishing/reverting.
-  std::unordered_set<unsigned> activeAnimationIds_;
+  std::unordered_set<unsigned> runningAnimationIds_;
+  DelayedAnimationsQueue delayedAnimationIds_;
 
-  // Set of inactive animation IDs. These are animations that are either paused
-  // or finished (but not reverted). Inactive animations do not participate in
-  // the update loop.
-  std::unordered_set<unsigned> inactiveAnimationIds_;
+  void activateDelayedAnimations(const double timestamp);
+  void flushOperations(jsi::Runtime &rt, const double timestamp);
 
+  inline std::optional<std::shared_ptr<CSSAnimation>> getAnimation(
+      const unsigned id);
+
+  void
+  addAnimation(jsi::Runtime &rt, const unsigned id, const double timestamp);
+  void finishAnimation(jsi::Runtime &rt, const unsigned id);
+  void removeAnimation(jsi::Runtime &rt, const unsigned id);
   void activateAnimation(const unsigned id);
   void deactivateAnimation(const unsigned id);
-  void removeAnimation(const unsigned id);
 };
 
 } // namespace reanimated

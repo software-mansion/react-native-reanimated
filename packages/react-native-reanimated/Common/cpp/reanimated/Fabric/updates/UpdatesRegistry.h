@@ -6,6 +6,7 @@
 
 #include <jsi/jsi.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace reanimated {
@@ -27,7 +28,7 @@ class UpdatesRegistry {
 
  protected:
   UpdatesBatch updatesBatch_;
-  std::vector<Tag> tagsToRemove_;
+  std::unordered_set<Tag> tagsToRemove_;
   RegistryMap updatesRegistry_;
 
   void flushUpdatesToRegistry(jsi::Runtime &rt, UpdatesBatch &updatesBatch);
@@ -35,7 +36,7 @@ class UpdatesRegistry {
  private:
   mutable std::mutex mutex_;
 
-  void removeTags();
+  void runMarkedRemovals();
 };
 
 } // namespace reanimated

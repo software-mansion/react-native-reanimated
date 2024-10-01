@@ -20,7 +20,6 @@ class CSSTransition { // TODO - implement
   void start(time_t timestamp);
   void finish(const bool revertChanges);
   jsi::Value update(jsi::Runtime &rt, time_t timestamp);
-  jsi::Value reset(jsi::Runtime &rt);
 
  private:
   const ShadowNode::Shared shadowNode;

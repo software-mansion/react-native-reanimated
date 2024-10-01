@@ -1,10 +1,7 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/Interpolator.h>
+#include <reanimated/CSS/interpolation/groups/GroupInterpolator.h>
 
-#include <jsi/jsi.h>
-#include <memory>
-#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -25,7 +22,7 @@ using TransformPropertyInterpolators =
 using TransformPropertyInterpolatorFactories =
     std::unordered_map<std::string, InterpolatorFactoryFunction>;
 
-class TransformsStyleInterpolator : public Interpolator {
+class TransformsStyleInterpolator : public GroupInterpolator {
  public:
   TransformsStyleInterpolator(
       jsi::Runtime &rt,
@@ -34,9 +31,10 @@ class TransformsStyleInterpolator : public Interpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const std::vector<std::string> &propertyPath);
 
-  jsi::Value update(const InterpolationUpdateContext context) override;
-
-  jsi::Value reset(const InterpolationUpdateContext context) override;
+ protected:
+  jsi::Value mapInterpolators(
+      jsi::Runtime &rt,
+      std::function<jsi::Value(Interpolator &)> callback) const override;
 
  private:
   const TransformPropertyInterpolators interpolators_;

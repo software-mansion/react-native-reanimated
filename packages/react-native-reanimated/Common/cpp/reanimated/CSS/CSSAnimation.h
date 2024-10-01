@@ -11,19 +11,11 @@
 
 namespace reanimated {
 
-enum CSSAnimationFillMode { none, forwards, backwards, both };
-
-enum CSSAnimationState {
+enum AnimationState {
   pending,
   running,
   paused,
-  // Animation is finishing if its progress reached the last frame
-  finishing,
   finished,
-  // Animation is in the reverting state if its removal was scheduled from JS
-  // and all changes applied during the animation will be reverted
-  reverting,
-  reverted
 };
 
 class CSSAnimation {
@@ -32,40 +24,46 @@ class CSSAnimation {
       jsi::Runtime &rt,
       ShadowNode::Shared shadowNode,
       const CSSAnimationConfig &config,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      const time_t startTime);
 
-  CSSAnimationState getState() const {
+  AnimationState getState() const {
     return state;
   }
   ShadowNode::Shared getShadowNode() const {
     return shadowNode;
   }
+  double getDelay() const {
+    return progressProvider.getDelay();
+  }
+  bool hasForwardsFillMode() const {
+    return fillMode == forwards || fillMode == both;
+  }
+  bool hasBackwardsFillMode() const {
+    return fillMode == backwards || fillMode == both;
+  }
+
+  jsi::Value getBackwardsFillStyle(jsi::Runtime &rt) const;
+  jsi::Value getForwardsFillStyle(jsi::Runtime &rt) const;
+  jsi::Value getCurrentStyle(jsi::Runtime &rt) const;
 
   void updateSettings(jsi::Runtime &rt, const jsi::Value &settings);
 
-  void start(time_t timestamp);
-  void finish(const bool revertChanges);
+  void run();
   jsi::Value update(jsi::Runtime &rt, time_t timestamp);
-  jsi::Value reset(jsi::Runtime &rt);
 
  private:
   const ShadowNode::Shared shadowNode;
-  const CSSAnimationFillMode fillMode;
+  const AnimationFillMode fillMode;
 
-  CSSAnimationState state = CSSAnimationState::pending;
+  AnimationState state = AnimationState::pending;
   AnimationStyleInterpolator styleInterpolator;
   AnimationProgressProvider progressProvider;
-
-  static CSSAnimationDirection getAnimationDirection(const std::string &str);
-  static CSSAnimationFillMode getAnimationFillMode(const std::string &str);
 
   InterpolationUpdateContext createUpdateContext(
       jsi::Runtime &rt,
       double progress,
       bool directionChanged) const;
-
-  jsi::Value maybeApplyBackwardsFillMode(jsi::Runtime &rt);
-  jsi::Value maybeApplyForwardsFillMode(jsi::Runtime &rt);
 };
 
 } // namespace reanimated

@@ -1,20 +1,21 @@
 #pragma once
 
-#include <jsi/jsi.h>
-#include <string>
-
-using namespace facebook;
+#include <reanimated/CSS/easing/EasingFunctions.h>
 
 namespace reanimated {
+
+enum AnimationDirection { normal, reverse, alternate, alternateReverse };
+
+enum AnimationFillMode { none, forwards, backwards, both };
 
 struct CSSAnimationConfig {
   jsi::Object keyframeStyle;
   double animationDuration;
-  jsi::Value animationTimingFunction;
+  EasingFunction easingFunction;
   double animationDelay;
   double animationIterationCount;
-  std::string animationDirection;
-  std::string animationFillMode;
+  AnimationDirection animationDirection;
+  AnimationFillMode animationFillMode;
 };
 
 inline jsi::Object getAnimationKeyframeStyle(
@@ -29,10 +30,11 @@ inline double getAnimationDuration(
   return config.getProperty(rt, "animationDuration").asNumber();
 }
 
-inline jsi::Value getAnimationTimingFunction(
+inline EasingFunction getAnimationTimingFunction(
     jsi::Runtime &rt,
     const jsi::Object &config) {
-  return config.getProperty(rt, "animationTimingFunction");
+  const auto str = config.getProperty(rt, "animationTimingFunction");
+  return getEasingFunction(rt, str);
 }
 
 inline double getAnimationDelay(jsi::Runtime &rt, const jsi::Object &config) {
@@ -45,16 +47,46 @@ inline double getAnimationIterationCount(
   return config.getProperty(rt, "animationIterationCount").asNumber();
 }
 
-inline std::string getAnimationDirection(
+inline AnimationDirection getAnimationDirection(
     jsi::Runtime &rt,
     const jsi::Object &config) {
-  return config.getProperty(rt, "animationDirection").asString(rt).utf8(rt);
+  static const std::unordered_map<std::string, AnimationDirection>
+      strToEnumMap = {
+          {"normal", normal},
+          {"reverse", reverse},
+          {"alternate", alternate},
+          {"alternate-reverse", alternateReverse}};
+
+  const auto str =
+      config.getProperty(rt, "animationDirection").asString(rt).utf8(rt);
+
+  auto it = strToEnumMap.find(str);
+  if (it != strToEnumMap.end()) {
+    return it->second;
+  } else {
+    throw std::invalid_argument(
+        "[Reanimated] Invalid string for CSSAnimationDirection enum: " + str);
+  }
 }
 
-inline std::string getAnimationFillMode(
+inline AnimationFillMode getAnimationFillMode(
     jsi::Runtime &rt,
     const jsi::Object &config) {
-  return config.getProperty(rt, "animationFillMode").asString(rt).utf8(rt);
+  static const std::unordered_map<std::string, AnimationFillMode> strToEnumMap =
+      {{"none", none},
+       {"forwards", forwards},
+       {"backwards", backwards},
+       {"both", both}};
+
+  const auto str =
+      config.getProperty(rt, "animationFillMode").asString(rt).utf8(rt);
+
+  auto it = strToEnumMap.find(str);
+  if (it != strToEnumMap.end()) {
+    return it->second;
+  } else {
+    throw std::invalid_argument("[Reanimated] Invalid fill mode: " + str);
+  }
 }
 
 CSSAnimationConfig parseCSSAnimationConfig(
@@ -63,9 +95,9 @@ CSSAnimationConfig parseCSSAnimationConfig(
   const auto &configObj = config.asObject(rt);
 
   return {
-      std::move(getAnimationKeyframeStyle(rt, configObj)),
+      getAnimationKeyframeStyle(rt, configObj),
       getAnimationDuration(rt, configObj),
-      std::move(getAnimationTimingFunction(rt, configObj)),
+      getAnimationTimingFunction(rt, configObj),
       getAnimationDelay(rt, configObj),
       getAnimationIterationCount(rt, configObj),
       getAnimationDirection(rt, configObj),

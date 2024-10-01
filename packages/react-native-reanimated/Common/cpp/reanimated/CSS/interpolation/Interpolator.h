@@ -33,7 +33,11 @@ class Interpolator {
       : propertyPath_(propertyPath) {}
 
   virtual jsi::Value update(const InterpolationUpdateContext context) = 0;
-  virtual jsi::Value reset(const InterpolationUpdateContext context) = 0;
+  virtual jsi::Value getBackwardsFillValue(jsi::Runtime &rt) const = 0;
+  virtual jsi::Value getForwardsFillValue(jsi::Runtime &rt) const = 0;
+  virtual jsi::Value getStyleValue(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode) const = 0;
 
  protected:
   std::vector<std::string> propertyPath_;

@@ -1,15 +1,13 @@
 #pragma once
 
-#include <jsi/jsi.h>
-#include <string>
+#include <reanimated/CSS/easing/EasingFunctions.h>
 
-using namespace facebook;
 namespace reanimated {
 
 struct CSSTransitionConfig {
   jsi::Array transitionProperty;
   double transitionDuration;
-  jsi::Value transitionTimingFunction;
+  EasingFunction easingFunction;
   double transitionDelay;
 };
 
@@ -25,10 +23,11 @@ inline double getTransitionDuration(
   return config.getProperty(rt, "transitionDuration").asNumber();
 }
 
-inline jsi::Value getTransitionTimingFunction(
+inline EasingFunction getTransitionTimingFunction(
     jsi::Runtime &rt,
     const jsi::Object &config) {
-  return config.getProperty(rt, "transitionTimingFunction");
+  const auto str = config.getProperty(rt, "animationTimingFunction");
+  return getEasingFunction(rt, str);
 }
 
 inline double getTransitionDelay(jsi::Runtime &rt, const jsi::Object &config) {
