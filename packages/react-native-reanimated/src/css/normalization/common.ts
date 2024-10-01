@@ -17,7 +17,7 @@ const VALID_PREDEFINED_TIMING_FUNCTIONS = new Set<PredefinedTimingFunction>([
   'stepEnd',
 ]);
 
-export const ERROR_MESSAGES = {
+const ERROR_MESSAGES = {
   invalidDelay: (timeUnit: CSSTimeUnit) =>
     `[Reanimated] Invalid delay "${timeUnit}". Expected a number, "ms", or "s".`,
   invalidDuration: (duration: CSSTimeUnit) =>

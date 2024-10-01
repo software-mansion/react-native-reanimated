@@ -17,7 +17,7 @@ import { SharedTransition } from '../layoutReanimation';
 import { LayoutAnimationType } from '../commonTypes';
 import type { StyleProps, ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { removeFromPropsRegistry } from '../PropsRegistry';
+import { removeFromPropsRegistry } from '../AnimatedPropsRegistry';
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';

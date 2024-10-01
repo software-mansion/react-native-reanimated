@@ -1,8 +1,8 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/Fabric/PropsRegistry.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
 #include <react/renderer/uimanager/UIManagerMountHook.h>
 
@@ -15,8 +15,8 @@ using namespace facebook::react;
 class ReanimatedMountHook : public UIManagerMountHook {
  public:
   ReanimatedMountHook(
-      const std::shared_ptr<PropsRegistry> &propsRegistry,
-      const std::shared_ptr<UIManager> &uiManager);
+      const std::shared_ptr<UIManager> &uiManager,
+      const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager);
   ~ReanimatedMountHook() noexcept override;
 
   void shadowTreeDidMount(
@@ -24,8 +24,8 @@ class ReanimatedMountHook : public UIManagerMountHook {
       double mountTime) noexcept override;
 
  private:
-  const std::shared_ptr<PropsRegistry> propsRegistry_;
   const std::shared_ptr<UIManager> uiManager_;
+  const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
 };
 
 } // namespace reanimated

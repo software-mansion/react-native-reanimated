@@ -30,7 +30,7 @@ const ERROR_MESSAGES = {
     `[Reanimated] Unsupported fill mode "${fillMode}".`,
 };
 
-export function normalizeOffset(key: CSSAnimationKeyframeKey): number {
+function normalizeOffset(key: CSSAnimationKeyframeKey): number {
   if (key === 'from') {
     return 0;
   }

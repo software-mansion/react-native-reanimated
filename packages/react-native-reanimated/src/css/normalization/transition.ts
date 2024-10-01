@@ -10,7 +10,7 @@ import {
   normalizeTimingFunction,
 } from './common';
 
-export function normalizeTransitionProperty(
+function normalizeTransitionProperty(
   transitionProperty: CSSTransitionProperty,
   viewStyle: ViewStyle
 ): string[] {

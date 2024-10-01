@@ -14,7 +14,9 @@ export function removeFromPropsRegistry(viewTag: number) {
 
 function flush() {
   if (__DEV__ && !isFabric()) {
-    throw new ReanimatedError('PropsRegistry is only available on Fabric.');
+    throw new ReanimatedError(
+      'AnimatedPropsRegistry is only available on Fabric.'
+    );
   }
   runOnUI(removeFromPropsRegistryOnUI)(VIEW_TAGS);
   VIEW_TAGS = [];

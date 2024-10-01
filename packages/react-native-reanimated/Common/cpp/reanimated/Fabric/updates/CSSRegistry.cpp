@@ -1,4 +1,4 @@
-#include <reanimated/CSS/CSSRegistry.h>
+#include <reanimated/Fabric/updates/CSSRegistry.h>
 
 namespace reanimated {
 
@@ -20,13 +20,13 @@ void CSSRegistry::add(
     const std::shared_ptr<CSSAnimation> &animation,
     const jsi::Value &viewStyle) {
   animation->updateViewStyle(rt, viewStyle);
-  registry_.insert({id, animation});
+  animationsRegistry_.insert({id, animation});
   activeAnimationIds_.insert(id);
 }
 
 void CSSRegistry::remove(const unsigned id, const bool revertChanges) {
-  auto registryEntry = registry_.find(id);
-  if (registryEntry != registry_.end()) {
+  auto registryEntry = animationsRegistry_.find(id);
+  if (registryEntry != animationsRegistry_.end()) {
     registryEntry->second->finish(revertChanges);
     // We don't call removeAnimation here immediately,
     // to ensure reverting animations remain active until the final frame style
@@ -39,8 +39,8 @@ void CSSRegistry::updateConfig(
     const unsigned id,
     const jsi::Value &settings,
     const jsi::Value &viewStyle) {
-  auto registryEntry = registry_.find(id);
-  if (registryEntry == registry_.end()) {
+  auto registryEntry = animationsRegistry_.find(id);
+  if (registryEntry == animationsRegistry_.end()) {
     return;
   }
   auto animation = registryEntry->second;
@@ -48,14 +48,13 @@ void CSSRegistry::updateConfig(
   animation->updateViewStyle(rt, viewStyle);
 }
 
-UpdatesBatch CSSRegistry::update(jsi::Runtime &rt, const double timestamp) {
-  UpdatesBatch batch;
+void CSSRegistry::update(jsi::Runtime &rt, const double timestamp) {
   std::vector<unsigned> idsToDeactivate;
   std::vector<unsigned> idsToRemove;
 
   for (const auto &id : activeAnimationIds_) {
-    auto registryEntry = registry_.find(id);
-    if (registryEntry == registry_.end()) {
+    auto registryEntry = animationsRegistry_.find(id);
+    if (registryEntry == animationsRegistry_.end()) {
       continue;
     }
     auto animation = registryEntry->second;
@@ -72,7 +71,7 @@ UpdatesBatch CSSRegistry::update(jsi::Runtime &rt, const double timestamp) {
         const jsi::Value &updates = animation->update(rt, timestamp);
 
         if (!updates.isUndefined()) {
-          batch.emplace_back(
+          updatesBatch_.emplace_back(
               shadowNode, std::make_unique<jsi::Value>(rt, updates));
         }
         break;
@@ -95,8 +94,6 @@ UpdatesBatch CSSRegistry::update(jsi::Runtime &rt, const double timestamp) {
   for (const auto &id : idsToRemove) {
     removeAnimation(id);
   }
-
-  return batch;
 }
 
 void CSSRegistry::activateAnimation(const unsigned id) {
@@ -107,17 +104,22 @@ void CSSRegistry::activateAnimation(const unsigned id) {
 }
 
 void CSSRegistry::deactivateAnimation(const unsigned id) {
-  auto registryEntry = registry_.find(id);
-  if (registryEntry != registry_.end()) {
+  auto registryEntry = animationsRegistry_.find(id);
+  if (registryEntry != animationsRegistry_.end()) {
     activeAnimationIds_.erase(id);
     inactiveAnimationIds_.insert(id);
   }
 }
 
 void CSSRegistry::removeAnimation(const unsigned id) {
+  const auto it = animationsRegistry_.find(id);
+  if (it != animationsRegistry_.end()) {
+    const auto shadowNode = it->second->getShadowNode();
+    tagsToRemove_.emplace_back(shadowNode->getTag());
+  }
   activeAnimationIds_.erase(id);
   inactiveAnimationIds_.erase(id);
-  registry_.erase(id);
+  animationsRegistry_.erase(id);
 }
 
 } // namespace reanimated

@@ -3,6 +3,7 @@
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
 #include <reanimated/CSS/CSSAnimation.h>
+#include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <react/renderer/core/ShadowNode.h>
 
@@ -14,18 +15,13 @@
 
 namespace reanimated {
 
-using UpdatesBatch =
-    std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>;
-
 using AnimationsRegistry =
     std::unordered_map<unsigned, std::shared_ptr<CSSAnimation>>;
 
-class CSSRegistry {
+class CSSRegistry : public UpdatesRegistry {
  public:
   bool hasActiveAnimations() const;
-
   bool isCssLoopRunning() const;
-
   void setCssLoopRunning(const bool running);
 
   void add(
@@ -42,11 +38,11 @@ class CSSRegistry {
       const jsi::Value &settings,
       const jsi::Value &viewStyle);
 
-  UpdatesBatch update(jsi::Runtime &rt, const double timestamp);
+  void update(jsi::Runtime &rt, const double timestamp);
 
  private:
   // Registry containing all animations (both active and inactive)
-  AnimationsRegistry registry_;
+  AnimationsRegistry animationsRegistry_;
 
   // Set of active animation IDs. These are animations that are either pending,
   // running, or in intermediate states like finishing/reverting.

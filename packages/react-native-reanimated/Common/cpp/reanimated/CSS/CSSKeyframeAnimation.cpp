@@ -68,7 +68,7 @@ jsi::Value CSSKeyframeAnimation::update(jsi::Runtime &rt, time_t timestamp) {
     state = CSSAnimationState::finished;
     return maybeApplyForwardsFillMode(rt);
   } else if (state == CSSAnimationState::reverting) {
-    state = CSSAnimationState::finished;
+    state = CSSAnimationState::reverted;
     return reset(rt);
   } else if (shouldFinish) {
     state = CSSAnimationState::finishing;
