@@ -5,6 +5,8 @@ namespace reanimated {
 void UpdatesRegistry::flushUpdates(
     jsi::Runtime &rt,
     UpdatesBatch &updatesBatch) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   auto copiedUpdatesBatch = std::move(updatesBatch_);
   updatesBatch_.clear();
 
@@ -23,6 +25,8 @@ void UpdatesRegistry::flushUpdates(
 }
 
 void UpdatesRegistry::collectProps(PropsMap &propsMap) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   auto copiedRegistry = updatesRegistry_;
   for (const auto &[tag, pair] : copiedRegistry) {
     const auto &[shadowNode, props] = pair;
@@ -37,6 +41,16 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
       it->second.push_back(RawProps(props));
     }
   }
+}
+
+folly::dynamic UpdatesRegistry::get(Tag tag) const {
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  auto it = updatesRegistry_.find(tag);
+  if (it == updatesRegistry_.cend()) {
+    return nullptr;
+  }
+  return it->second.second;
 }
 
 void UpdatesRegistry::flushUpdatesToRegistry(

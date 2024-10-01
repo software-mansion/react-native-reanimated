@@ -23,6 +23,7 @@ class UpdatesRegistry {
  public:
   void flushUpdates(jsi::Runtime &rt, UpdatesBatch &updatesBatch);
   void collectProps(PropsMap &propsMap);
+  folly::dynamic get(Tag tag) const;
 
  protected:
   UpdatesBatch updatesBatch_;
@@ -32,6 +33,8 @@ class UpdatesRegistry {
   void flushUpdatesToRegistry(jsi::Runtime &rt, UpdatesBatch &updatesBatch);
 
  private:
+  mutable std::mutex mutex_;
+
   void removeTags();
 };
 

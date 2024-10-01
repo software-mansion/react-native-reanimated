@@ -79,35 +79,38 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
       const jsi::Value &viewTag,
       const jsi::Value &shouldAnimate) = 0;
 
+#ifdef RCT_NEW_ARCH_ENABLED
+  // JS View style
+  virtual void setViewStyle(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &viewStyle) = 0;
+  virtual void removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag) = 0;
+
   // CSS animations
   virtual void registerCSSAnimation(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
       const jsi::Value &animationId,
-      const jsi::Value &animationConfig,
-      const jsi::Value &viewStyle) = 0;
+      const jsi::Value &animationConfig) = 0;
   virtual void updateCSSAnimation(
       jsi::Runtime &rt,
       const jsi::Value &animationId,
-      const jsi::Value &updatedSettings,
-      const jsi::Value &viewStyle) = 0;
-  virtual void unregisterCSSAnimation(
-      const jsi::Value &animationId,
-      const jsi::Value &revertChanges) = 0;
+      const jsi::Value &updatedSettings) = 0;
+  virtual void unregisterCSSAnimation(const jsi::Value &animationId) = 0;
 
   // CSS transitions
   virtual void registerCSSTransition(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
       const jsi::Value &transitionId,
-      const jsi::Value &transitionConfig,
-      const jsi::Value &viewStyle) = 0;
+      const jsi::Value &transitionConfig) = 0;
   virtual void updateCSSTransition(
       jsi::Runtime &rt,
       const jsi::Value &transitionId,
-      const jsi::Value &transitionConfig,
-      const jsi::Value &viewStyle) = 0;
+      const jsi::Value &transitionConfig) = 0;
   virtual void unregisterCSSTransition(const jsi::Value &transitionId) = 0;
+#endif
 };
 
 } // namespace reanimated

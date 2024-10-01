@@ -1,6 +1,7 @@
 #include <reanimated/CSS/utils/Algorithms.h>
 
 namespace reanimated {
+
 size_t firstSmallerThanOrEqualBinsearch(double x, std::vector<double> arr) {
   size_t left = 0;
   size_t right = arr.size() - 1;

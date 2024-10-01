@@ -2,10 +2,6 @@
 
 namespace reanimated {
 
-ColorValueInterpolator::ColorValueInterpolator(
-    const std::optional<ColorArray> &defaultValue)
-    : ValueInterpolator<ColorArray>(defaultValue) {}
-
 ColorArray ColorValueInterpolator::toColorArray(unsigned color) {
   ColorArray channels;
   channels[0] = (color << 8) >> 24; // Red

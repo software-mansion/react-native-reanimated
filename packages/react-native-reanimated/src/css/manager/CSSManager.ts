@@ -1,7 +1,11 @@
 'use strict';
 import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
 import { adaptViewConfig } from '../../ConfigHelper';
-import { extractCSSConfigsAndFlattenedStyles } from '..';
+import {
+  extractCSSConfigsAndFlattenedStyles,
+  removeViewStyle,
+  setViewStyle,
+} from '..';
 import type {
   ICSSManager,
   ViewInfo,
@@ -22,7 +26,7 @@ export default class CSSManager implements ICSSManager {
 
   update(
     styles: StyleProps[],
-    { shadowNodeWrapper, viewConfig }: ViewInfo
+    { shadowNodeWrapper, viewConfig, viewTag }: ViewInfo
   ): void {
     const [animationConfig, transitionConfig, style] =
       extractCSSConfigsAndFlattenedStyles(styles);
@@ -32,11 +36,13 @@ export default class CSSManager implements ICSSManager {
       adaptViewConfig(viewConfig);
     }
 
-    this.cssAnimationManager.update(wrapper, animationConfig, style);
+    setViewStyle(viewTag as number, style);
+    this.cssAnimationManager.update(wrapper, animationConfig);
     this.cssTransitionManager.update(wrapper, transitionConfig, style);
   }
 
-  detach(): void {
+  detach(viewTag: number): void {
+    removeViewStyle(viewTag);
     this.cssAnimationManager.detach();
     this.cssTransitionManager.detach();
   }

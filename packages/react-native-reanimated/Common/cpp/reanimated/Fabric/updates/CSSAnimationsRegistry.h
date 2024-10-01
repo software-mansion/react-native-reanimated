@@ -5,8 +5,6 @@
 #include <reanimated/CSS/CSSAnimation.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
-#include <react/renderer/core/ShadowNode.h>
-
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -23,15 +21,9 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
   bool hasRunningAnimations() const;
 
   void add(const unsigned id, const std::shared_ptr<CSSAnimation> &animation);
-
-  void remove(const unsigned id, const bool revertChanges);
-
-  void updateConfig(
-      jsi::Runtime &rt,
-      const unsigned id,
-      const jsi::Value &settings,
-      const jsi::Value &viewStyle);
-
+  void remove(const unsigned id);
+  void
+  updateConfig(jsi::Runtime &rt, const unsigned id, const jsi::Value &settings);
   void update(jsi::Runtime &rt, const double timestamp);
 
  private:

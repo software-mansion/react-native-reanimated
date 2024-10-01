@@ -1,4 +1,3 @@
-#include "CSSAnimation.h"
 #include <reanimated/CSS/CSSAnimation.h>
 
 namespace reanimated {
@@ -6,9 +5,13 @@ namespace reanimated {
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
     ShadowNode::Shared shadowNode,
-    const CSSAnimationConfig &config)
+    const CSSAnimationConfig &config,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : shadowNode(shadowNode),
-      styleInterpolator(AnimationStyleInterpolator(rt, config.keyframeStyle)),
+      styleInterpolator(AnimationStyleInterpolator(
+          rt,
+          config.keyframeStyle,
+          viewStylesRepository)),
       progressProvider(AnimationProgressProvider(
           config.animationDuration,
           config.animationDelay,

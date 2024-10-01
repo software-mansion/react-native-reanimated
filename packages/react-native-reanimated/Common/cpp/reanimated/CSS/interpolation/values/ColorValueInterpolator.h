@@ -2,14 +2,11 @@
 
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
-#include <jsi/jsi.h>
-#include <stdexcept>
-
 namespace reanimated {
 
 class ColorValueInterpolator : public ValueInterpolator<ColorArray> {
  public:
-  ColorValueInterpolator(const std::optional<ColorArray> &defaultValue);
+  using ValueInterpolator<ColorArray>::ValueInterpolator;
 
   static ColorArray toColorArray(unsigned color);
 

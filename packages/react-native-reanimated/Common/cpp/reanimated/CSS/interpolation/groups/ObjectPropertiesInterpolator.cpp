@@ -5,12 +5,16 @@ namespace reanimated {
 ObjectPropertiesInterpolator::ObjectPropertiesInterpolator(
     jsi::Runtime &rt,
     const jsi::Object &object,
-    const ObjectPropertiesInterpolatorFactories &factories)
-    : interpolators_(build(rt, object, factories)) {}
+    const ObjectPropertiesInterpolatorFactories &factories,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    const std::vector<std::string> &propertyPath)
+    : Interpolator(propertyPath),
+      interpolators_(build(rt, object, viewStylesRepository, factories)) {}
 
 ObjectPropertiesInterpolators ObjectPropertiesInterpolator::build(
     jsi::Runtime &rt,
     const jsi::Object &object,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const ObjectPropertiesInterpolatorFactories &factories) {
   ObjectPropertiesInterpolators interpolators;
 
@@ -30,27 +34,13 @@ ObjectPropertiesInterpolators ObjectPropertiesInterpolator::build(
           propName);
     }
 
-    interpolators[propName] = factory->second(rt, propValue);
+    std::vector<std::string> newPath = this->propertyPath_;
+    newPath.emplace_back(propName);
+    interpolators[propName] =
+        factory->second(rt, propValue, viewStylesRepository, newPath);
   }
 
   return interpolators;
-}
-
-void ObjectPropertiesInterpolator::setFallbackValue(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  for (const auto &pair : interpolators_) {
-    const std::string &propName = pair.first;
-    const std::shared_ptr<Interpolator> &interpolator = pair.second;
-
-    jsi::Value propValue = jsi::Value::undefined();
-
-    if (value.isObject()) {
-      propValue = value.asObject(rt).getProperty(rt, propName.c_str());
-    }
-
-    interpolator->setFallbackValue(rt, propValue);
-  }
 }
 
 jsi::Value ObjectPropertiesInterpolator::update(

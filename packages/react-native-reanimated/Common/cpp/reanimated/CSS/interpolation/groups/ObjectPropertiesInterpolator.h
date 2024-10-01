@@ -19,9 +19,9 @@ class ObjectPropertiesInterpolator : public Interpolator {
   ObjectPropertiesInterpolator(
       jsi::Runtime &rt,
       const jsi::Object &object,
-      const ObjectPropertiesInterpolatorFactories &factories);
-
-  void setFallbackValue(jsi::Runtime &rt, const jsi::Value &value) override;
+      const ObjectPropertiesInterpolatorFactories &factories,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      const std::vector<std::string> &propertyPath);
 
   jsi::Value update(const InterpolationUpdateContext context) override;
 
@@ -33,6 +33,7 @@ class ObjectPropertiesInterpolator : public Interpolator {
   ObjectPropertiesInterpolators build(
       jsi::Runtime &rt,
       const jsi::Object &object,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const ObjectPropertiesInterpolatorFactories &factories);
 };
 

@@ -3,28 +3,21 @@
 namespace reanimated {
 
 template <typename T>
+ValueInterpolator<T>::ValueInterpolator(
+    const std::optional<T> &defaultStyleValue,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    const std::vector<std::string> &propertyPath)
+    : Interpolator(propertyPath),
+      viewPropsRepository_(viewStylesRepository),
+      defaultStyleValue_(defaultStyleValue) {}
+
+template <typename T>
 void ValueInterpolator<T>::initialize(
     jsi::Runtime &rt,
     const jsi::Value &keyframeArray) {
   keyframes_ = createKeyframes(rt, keyframeArray.asObject(rt).asArray(rt));
   if (keyframes_->empty()) {
     throw std::invalid_argument("[Reanimated] Keyframes cannot be empty.");
-  }
-}
-
-template <typename T>
-void ValueInterpolator<T>::setFallbackValue(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
-  if (value.isUndefined()) {
-    convertedStyleValue_ = defaultStyleValue_;
-    return;
-  }
-
-  try {
-    convertedStyleValue_ = prepareKeyframeValue(rt, value);
-  } catch (const std::exception &e) {
-    convertedStyleValue_.reset();
   }
 }
 
@@ -79,6 +72,19 @@ ValueInterpolator<T>::createKeyframes(
 }
 
 template <typename T>
+std::optional<T> ValueInterpolator<T>::getFallbackValue(
+    const InterpolationUpdateContext context) const {
+  const jsi::Value fallbackValue = viewPropsRepository_->getStyleProp(
+      context.rt, context.node->getTag(), propertyPath_);
+
+  if (fallbackValue.isUndefined()) {
+    return defaultStyleValue_;
+  }
+
+  return prepareKeyframeValue(context.rt, fallbackValue);
+}
+
+template <typename T>
 std::optional<T> ValueInterpolator<T>::resolveKeyframeValue(
     const std::optional<T> unresolvedValue,
     const InterpolationUpdateContext context) const {
@@ -107,10 +113,13 @@ Keyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
 
     if (keyframe.value.has_value()) {
       unresolvedValue = keyframe.value.value();
-    } else if (convertedStyleValue_.has_value()) {
-      unresolvedValue = convertedStyleValue_.value();
     } else {
-      return Keyframe<T>{offset, std::nullopt};
+      const auto fallbackValue = getFallbackValue(context);
+      if (fallbackValue.has_value()) {
+        unresolvedValue = fallbackValue.value();
+      } else {
+        return Keyframe<T>{offset, std::nullopt};
+      }
     }
 
     return Keyframe<T>{offset, resolveKeyframeValue(unresolvedValue, context)};
@@ -202,21 +211,24 @@ jsi::Value ValueInterpolator<T>::update(
   const auto localProgress =
       calculateLocalProgress(keyframeBefore_, keyframeAfter_, context);
 
-  const std::optional<T> fromValue = keyframeBefore_.value;
-  const std::optional<T> toValue = keyframeAfter_.value;
+  std::optional<T> fromValue = keyframeBefore_.value;
+  std::optional<T> toValue = keyframeAfter_.value;
+
+  if (!fromValue.has_value()) {
+    fromValue = getFallbackValue(context);
+  }
+  if (!toValue.has_value()) {
+    toValue = getFallbackValue(context);
+  }
 
   // If at least one of keyframes has no value set and there is no fallback
   // value, interpolate as if values were discrete
-  if ((!fromValue.has_value() || !toValue.has_value()) &&
-      !convertedStyleValue_.has_value()) {
+  if (!fromValue.has_value() || !toValue.has_value()) {
     return interpolateMissingValue(localProgress, fromValue, toValue, context);
   }
 
-  T value = interpolate(
-      localProgress,
-      fromValue.has_value() ? fromValue.value() : convertedStyleValue_.value(),
-      toValue.has_value() ? toValue.value() : convertedStyleValue_.value(),
-      context);
+  T value =
+      interpolate(localProgress, fromValue.value(), toValue.value(), context);
   previousValue_ = value;
 
   return convertResultToJSI(context.rt, value);
@@ -231,7 +243,7 @@ jsi::Value ValueInterpolator<T>::reset(
   previousValue_.reset();
 
   const auto resolvedValue =
-      resolveKeyframeValue(convertedStyleValue_, context);
+      resolveKeyframeValue(getFallbackValue(context), context);
 
   return resolvedValue.has_value()
       ? convertResultToJSI(context.rt, resolvedValue.value())

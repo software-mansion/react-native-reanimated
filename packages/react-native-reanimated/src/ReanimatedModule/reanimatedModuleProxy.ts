@@ -55,32 +55,32 @@ export interface ReanimatedModuleProxy {
 
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
 
+  setViewStyle(viewTag: number, style: StyleProps): void;
+
+  removeViewStyle(viewTag: number): void;
+
   registerCSSAnimation(
     shadowNodeWrapper: ShadowNodeWrapper,
     animationId: number,
-    animationConfig: NormalizedCSSAnimationConfig,
-    viewStyle: StyleProps
+    animationConfig: NormalizedCSSAnimationConfig
   ): void;
 
   updateCSSAnimation(
     animationId: number,
-    animationConfig: Partial<NormalizedCSSAnimationConfig>,
-    viewStyle: StyleProps
+    animationConfig: Partial<NormalizedCSSAnimationConfig>
   ): void;
 
-  unregisterCSSAnimation(animationId: number, revertChanges: boolean): void;
+  unregisterCSSAnimation(animationId: number): void;
 
   registerCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
     transitionId: number,
-    transitionConfig: NormalizedCSSTransitionConfig,
-    viewStyle: StyleProps
+    transitionConfig: NormalizedCSSTransitionConfig
   ): void;
 
   updateCSSTransition(
     transitionId: number,
-    transitionConfig: NormalizedCSSTransitionConfig,
-    viewStyle: StyleProps
+    transitionConfig: NormalizedCSSTransitionConfig
   ): void;
 
   unregisterCSSTransition(transitionId: number): void;

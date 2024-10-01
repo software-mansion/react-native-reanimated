@@ -13,12 +13,10 @@ void CSSAnimationsRegistry::add(
   activeAnimationIds_.insert(id);
 }
 
-void CSSAnimationsRegistry::remove(
-    const unsigned id,
-    const bool revertChanges) {
+void CSSAnimationsRegistry::remove(const unsigned id) {
   auto registryEntry = animationsRegistry_.find(id);
   if (registryEntry != animationsRegistry_.end()) {
-    registryEntry->second->finish(revertChanges);
+    registryEntry->second->finish(true);
     // We don't call removeAnimation here immediately,
     // to ensure reverting animations remain active until the final frame style
     // (reverted style) is applied.
@@ -28,15 +26,13 @@ void CSSAnimationsRegistry::remove(
 void CSSAnimationsRegistry::updateConfig(
     jsi::Runtime &rt,
     const unsigned id,
-    const jsi::Value &settings,
-    const jsi::Value &viewStyle) {
+    const jsi::Value &settings) {
   auto registryEntry = animationsRegistry_.find(id);
   if (registryEntry == animationsRegistry_.end()) {
     return;
   }
   auto animation = registryEntry->second;
   animation->updateSettings(rt, settings);
-  animation->updateViewStyle(rt, viewStyle);
 }
 
 void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {

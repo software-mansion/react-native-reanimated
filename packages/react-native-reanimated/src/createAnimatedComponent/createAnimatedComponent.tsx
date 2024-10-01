@@ -123,6 +123,7 @@ export function createAnimatedComponent(
   {
     _animatedStyles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
+    _componentViewTag = -1;
     _isFirstRender = true;
     jestInlineStyle: NestedArray<StyleProps> | undefined;
     jestAnimatedStyle: { value: StyleProps } = { value: {} };
@@ -219,7 +220,7 @@ export function createAnimatedComponent(
       this._NativeEventsManager?.detachEvents();
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
-      this._CSSManager?.detach();
+      this._CSSManager?.detach(this._componentViewTag);
       this._InlinePropManager.detachInlineProps();
       if (this.props.sharedTransitionTag) {
         this._configureSharedTransition(true);

@@ -271,11 +271,20 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
+  setViewStyle(_viewTag: number, _style: StyleProps): void {
+    throw new ReanimatedError('setViewStyle is not available in JSReanimated.');
+  }
+
+  removeViewStyle(_viewTag: number): void {
+    throw new ReanimatedError(
+      'removeViewStyle is not available in JSReanimated.'
+    );
+  }
+
   registerCSSAnimation(
     _shadowNodeWrapper: ShadowNodeWrapper,
     _animationId: number,
-    _animationConfig: NormalizedCSSAnimationConfig,
-    _viewStyle: StyleProps
+    _animationConfig: NormalizedCSSAnimationConfig
   ): void {
     throw new ReanimatedError(
       '`registerCSSAnimation` is not available in JSReanimated.'
@@ -284,15 +293,14 @@ class JSReanimated implements IReanimatedModule {
 
   updateCSSAnimation(
     _animationId: number,
-    _updatedSettings: Partial<NormalizedCSSAnimationSettings>,
-    _viewStyle: StyleProps
+    _updatedSettings: Partial<NormalizedCSSAnimationSettings>
   ): void {
     throw new ReanimatedError(
       '`updateCSSAnimation` is not available in JSReanimated.'
     );
   }
 
-  unregisterCSSAnimation(_animationId: number, _revertChanges: boolean): void {
+  unregisterCSSAnimation(_animationId: number): void {
     throw new ReanimatedError(
       '`unregisterCSSAnimation` is not available in JSReanimated.'
     );
@@ -301,8 +309,7 @@ class JSReanimated implements IReanimatedModule {
   registerCSSTransition(
     _shadowNodeWrapper: ShadowNodeWrapper,
     _transitionId: number,
-    _transitionConfig: NormalizedCSSTransitionConfig,
-    _viewStyle: StyleProps
+    _transitionConfig: NormalizedCSSTransitionConfig
   ): void {
     throw new ReanimatedError(
       '`registerCSSTransition` is not available in JSReanimated.'
@@ -311,8 +318,7 @@ class JSReanimated implements IReanimatedModule {
 
   updateCSSTransition(
     _transitionId: number,
-    _transitionConfig: NormalizedCSSTransitionConfig,
-    _viewStyle: StyleProps
+    _transitionConfig: NormalizedCSSTransitionConfig
   ): void {
     throw new ReanimatedError(
       '`updateCSSTransition` is not available in JSReanimated.'

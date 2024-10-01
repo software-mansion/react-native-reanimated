@@ -74,14 +74,18 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
       layoutAnimationsManager_(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
-      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
-      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>()),
+      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
+      staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
+      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>()),
+      viewPropsRepository_(std::make_shared<ViewStylesRepository>(
+          staticPropsRegistry_,
+          animatedPropsRegistry_)),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(
@@ -493,58 +497,71 @@ void ReanimatedModuleProxy::cleanupSensors() {
   animatedSensorModule_.unregisterAllSensors();
 }
 
+void ReanimatedModuleProxy::setViewStyle(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag,
+    const jsi::Value &viewStyle) {
+  staticPropsRegistry_->set(rt, viewTag.asNumber(), viewStyle);
+}
+
+void ReanimatedModuleProxy::removeViewStyle(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag) {
+  staticPropsRegistry_->remove(viewTag.asNumber());
+}
+
 void ReanimatedModuleProxy::registerCSSAnimation(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &animationId,
-    const jsi::Value &animationConfig,
-    const jsi::Value &viewStyle) {
+    const jsi::Value &animationConfig) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
   auto animation = std::make_shared<CSSAnimation>(
-      rt, shadowNode, parseCSSAnimationConfig(rt, animationConfig));
-  animation->updateViewStyle(rt, viewStyle);
+      rt,
+      shadowNode,
+      parseCSSAnimationConfig(rt, animationConfig),
+      viewPropsRepository_);
 
   cssAnimationsRegistry_->add(animationId.asNumber(), animation);
-  maybeRunCssAnimationsLoop();
+  maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::updateCSSAnimation(
     jsi::Runtime &rt,
     const jsi::Value &animationId,
-    const jsi::Value &updatedSettings,
-    const jsi::Value &viewStyle) {
+    const jsi::Value &updatedSettings) {
   cssAnimationsRegistry_->updateConfig(
-      rt, animationId.asNumber(), updatedSettings, viewStyle);
+      rt, animationId.asNumber(), updatedSettings);
+  maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimation(
-    const jsi::Value &animationId,
-    const jsi::Value &revertChanges) {
-  cssAnimationsRegistry_->remove(
-      animationId.asNumber(), revertChanges.asBool());
+    const jsi::Value &animationId) {
+  cssAnimationsRegistry_->remove(animationId.asNumber());
 }
 
 void ReanimatedModuleProxy::registerCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &transitionId,
-    const jsi::Value &transitionConfig,
-    const jsi::Value &viewStyle) {
+    const jsi::Value &transitionConfig) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
   auto transition = CSSTransition{
       rt, shadowNode, parseCSSTransitionConfig(rt, transitionConfig)};
 
   // TODO
+
+  maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::updateCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &transitionId,
-    const jsi::Value &transitionConfig,
-    const jsi::Value &viewStyle) {
+    const jsi::Value &transitionConfig) {
   // TODO
+  maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(
@@ -643,7 +660,7 @@ bool ReanimatedModuleProxy::handleRawEvent(
   return res;
 }
 
-void ReanimatedModuleProxy::maybeRunCssAnimationsLoop() {
+void ReanimatedModuleProxy::maybeRunCSSLoop() {
   if (cssLoopRunning_) {
     return;
   }
@@ -673,18 +690,20 @@ void ReanimatedModuleProxy::maybeRunCssAnimationsLoop() {
 }
 
 void ReanimatedModuleProxy::performOperations() {
-  // Update CSS animations
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-  const auto timestamp = getAnimationTimestamp_();
-  cssAnimationsRegistry_->update(rt, timestamp);
 
-  // Flush all pending updates
   UpdatesBatch updatesBatch;
 
   {
     auto lock = updatesRegistryManager_->createLock();
-    updatesBatch = updatesRegistryManager_->flushUpdates(rt);
+
+    // Flush all animated props updates
+    animatedPropsRegistry_->flushUpdates(rt, updatesBatch);
+
+    // Update CSS animations and flush updates
+    cssAnimationsRegistry_->update(rt, getAnimationTimestamp_());
+    cssAnimationsRegistry_->flushUpdates(rt, updatesBatch);
   }
 
   ReanimatedSystraceSection s("performOperations");
@@ -774,8 +793,7 @@ void ReanimatedModuleProxy::performOperations() {
     // Clear the entire cache after the commit
     // (we don't know if the view is updated from outside of Reanimated
     // so we have to clear the entire cache)
-    auto &viewPropsRepository = ViewPropsRepository::getInstance();
-    viewPropsRepository.clear();
+    viewPropsRepository_->clearNodesCache();
   }
 }
 
@@ -850,7 +868,7 @@ jsi::Value ReanimatedModuleProxy::measure(
 void ReanimatedModuleProxy::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
-  ViewPropsRepository::getInstance().setUIManager(uiManager);
+  viewPropsRepository_->setUIManager(uiManager_);
 
   initializeLayoutAnimationsProxy();
 

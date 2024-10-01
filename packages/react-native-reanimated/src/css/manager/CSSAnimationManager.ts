@@ -1,4 +1,4 @@
-import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
+import type { ShadowNodeWrapper } from '../../commonTypes';
 import {
   registerCSSAnimation,
   unregisterCSSAnimation,
@@ -15,7 +15,6 @@ export default class CSSAnimationManager {
   private serializedAnimationKeyframes?: string;
   private animationConfig?: CSSAnimationConfig;
   private animationProperties?: CSSAnimationProperties;
-  private oldStyle?: StyleProps;
 
   constructor(cssIdManager: CSSIdManager) {
     this.cssIdManager = cssIdManager;
@@ -24,7 +23,6 @@ export default class CSSAnimationManager {
   attach(
     animationConfig: CSSAnimationConfig,
     shadowNodeWrapper: ShadowNodeWrapper,
-    style: StyleProps,
     serializedKeyframes?: string
   ) {
     this.animationId = this.cssIdManager.getId();
@@ -37,17 +35,12 @@ export default class CSSAnimationManager {
 
     this.animationProperties = animationProperties;
 
-    registerCSSAnimation(
-      shadowNodeWrapper,
-      this.animationId,
-      normalizedConfig,
-      style
-    );
+    registerCSSAnimation(shadowNodeWrapper, this.animationId, normalizedConfig);
   }
 
-  detach(revertChanges = false) {
+  detach() {
     if (this.animationId !== undefined) {
-      unregisterCSSAnimation(this.animationId, revertChanges);
+      unregisterCSSAnimation(this.animationId);
       this.animationId = undefined;
       this.serializedAnimationKeyframes = undefined;
       this.animationConfig = undefined;
@@ -57,8 +50,7 @@ export default class CSSAnimationManager {
 
   update(
     wrapper: ShadowNodeWrapper,
-    animationConfig: CSSAnimationConfig | null,
-    newStyle: StyleProps
+    animationConfig: CSSAnimationConfig | null
   ): void {
     if (
       this.animationId !== undefined &&
@@ -69,17 +61,17 @@ export default class CSSAnimationManager {
       const serializedKeyframes = JSON.stringify(animationConfig.animationName);
       // Replace the animation by the new one if the keyframes have changed
       if (this.serializedAnimationKeyframes !== serializedKeyframes) {
-        this.detach(true);
-        this.attach(animationConfig, wrapper, newStyle, serializedKeyframes);
+        this.detach();
+        this.attach(animationConfig, wrapper, serializedKeyframes);
       }
       // Otherwise, update the existing animation settings
       else {
         // TODO
       }
     } else if (animationConfig) {
-      this.attach(animationConfig, wrapper, newStyle);
+      this.attach(animationConfig, wrapper);
     } else {
-      this.detach(true);
+      this.detach();
     }
   }
 }

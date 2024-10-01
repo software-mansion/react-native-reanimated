@@ -2,8 +2,6 @@
 
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
-#include <vector>
-
 namespace reanimated {
 
 class MatrixValueInterpolator : public ValueInterpolator<std::vector<double>> {

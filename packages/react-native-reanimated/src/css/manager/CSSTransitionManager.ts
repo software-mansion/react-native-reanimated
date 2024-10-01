@@ -24,8 +24,7 @@ export default class CSSTransitionManager {
     registerCSSTransition(
       shadowNodeWrapper,
       this.transitionId,
-      normalizeCSSTransitionConfig(transitionConfig, style),
-      style
+      normalizeCSSTransitionConfig(transitionConfig, style)
     );
   }
 
@@ -41,10 +40,12 @@ export default class CSSTransitionManager {
     transitionConfig: CSSTransitionConfig | null,
     newStyle: StyleProps
   ): void {
-    if (transitionConfig) {
-      this.attach(transitionConfig, wrapper, newStyle);
-    } else {
-      this.detach();
-    }
+    // TODO - implement
+    console.log(
+      'CSSTransitionManager.update',
+      wrapper,
+      transitionConfig,
+      newStyle
+    );
   }
 }
