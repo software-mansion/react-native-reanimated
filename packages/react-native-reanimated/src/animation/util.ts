@@ -541,8 +541,8 @@ export function defineAnimation<
 export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
-  if (sharedValue._value != null) {
-    sharedValue.value = sharedValue._value;
+  if (sharedValue._initial != null) {
+    sharedValue.value = sharedValue._initial;
     return;
   }
   sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
