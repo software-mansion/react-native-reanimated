@@ -54,12 +54,7 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: Monorepo app Reanimated build check [Nightly]
     uses: ./.github/workflows/monorepo-app-reanimated-build-check-nightly.yml
-
-  react_native_nightly_reanimated_build_check_nightly:
-    if: github.repository == 'software-mansion/react-native-reanimated'
-    name: React Native nightly Reanimated build check
-    uses: ./.github/workflows/react-native-nightly-reanimated-build-check-nightly.yml
-
+    
   reanimated_android_validation:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: Reanimated Android validation
