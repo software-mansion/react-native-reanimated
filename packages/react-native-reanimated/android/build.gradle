@@ -265,7 +265,7 @@ android {
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
-        
+
         consumerProguardFiles 'proguard-rules.pro'
     }
     externalNativeBuild {
@@ -355,7 +355,7 @@ android {
                 }
             }
 
-            // ReanimatedUIManager & ReanimatedUIImplementation 
+            // ReanimatedUIManager & ReanimatedUIImplementation
             if (REACT_NATIVE_MINOR_VERSION <= 73) {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
             } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
@@ -371,7 +371,7 @@ android {
                 srcDirs += "src/reactNativeVersionPatch/ReactHost/latest"
             }
 
-            // ReactFeatureFlags 
+            // ReactFeatureFlags
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 if (REACT_NATIVE_MINOR_VERSION <= 72) {
                     srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/72"
@@ -454,20 +454,23 @@ task prepareWorkletsHeadersForPrefabs(type: Copy) {
 }
 
 task prepareReanimatedHeadersForPrefabs(type: Copy) {
-    // Reanimated
-    from("$projectDir/src/main/cpp/reanimated")
-    from("$projectDir/../Common/cpp/reanimated/AnimatedSensor")
-    from("$projectDir/../Common/cpp/reanimated/Fabric")
-    from("$projectDir/../Common/cpp/reanimated/LayoutAnimations")
-    from("$projectDir/../Common/cpp/reanimated/NativeModules")
-    from("$projectDir/../Common/cpp/reanimated/RuntimeDecorators")
-    from("$projectDir/../Common/cpp/reanimated/Tools")
-    // Worklets
-    from("$projectDir/../Common/cpp/worklets/SharedItems")
-    from("$projectDir/../Common/cpp/worklets/Registries")
-    from("$projectDir/../Common/cpp/worklets/WorkletRuntime")
-    from("$projectDir/../Common/cpp/worklets/Tools")
-    include("*.h")
+    // // Reanimated
+    // from("$projectDir/src/main/cpp/reanimated")
+    // from("$projectDir/../Common/cpp/reanimated/AnimatedSensor")
+    // from("$projectDir/../Common/cpp/reanimated/Fabric")
+    // from("$projectDir/../Common/cpp/reanimated/LayoutAnimations")
+    // from("$projectDir/../Common/cpp/reanimated/NativeModules")
+    // from("$projectDir/../Common/cpp/reanimated/RuntimeDecorators")
+    // from("$projectDir/../Common/cpp/reanimated/Tools")
+    // // Worklets
+    // from("$projectDir/../Common/cpp/worklets/SharedItems")
+    // from("$projectDir/../Common/cpp/worklets/Registries")
+    // from("$projectDir/../Common/cpp/worklets/WorkletRuntime")
+    // from("$projectDir/../Common/cpp/worklets/Tools")
+    // include("*.h")
+    from("$projectDir/src/main/cpp")
+    from("$projectDir/../Common/cpp")
+    include("reanimated/**/*.h")
     into(reanimatedPrefabHeadersDir)
 }
 
@@ -492,28 +495,6 @@ task createNativeDepsDirectories() {
     thirdPartyNdkDir.mkdirs()
     workletsPrefabHeadersDir.mkdirs()
     reanimatedPrefabHeadersDir.mkdirs()
-}
-
-def resolveTaskFactory(String taskName, String artifactLocalName, File reactNativeAndroidDownloadDir, File reanimatedDownloadDir) {
-    return tasks.create(name: taskName, dependsOn: createNativeDepsDirectories, type: Copy) {
-        from reactNativeAndroidDownloadDir
-        include artifactLocalName
-        into reanimatedDownloadDir
-
-        onlyIf {
-            // First we check whether the file is already in our download directory
-            if (file("$reanimatedDownloadDir/$artifactLocalName").isFile()) {
-                return false
-            }
-
-            // If it is not the case we check whether it was downloaded by ReactAndroid project
-            if (file("$reactNativeAndroidDownloadDir/$artifactLocalName").isFile()) {
-                return true
-            }
-
-            return false
-        }
-    }
 }
 
 task packageNdkLibs(type: Copy) {

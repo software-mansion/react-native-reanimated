@@ -43,6 +43,7 @@ class NativeReanimatedModule implements IReanimatedModule {
   #reanimatedModuleProxy: ReanimatedModuleProxy;
 
   constructor() {
+    this.#workletsModule = WorkletsModule;
     // These checks have to split since version checking depend on the execution order
     if (__DEV__) {
       assertSingleReanimatedInstance();
@@ -60,7 +61,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     if (__DEV__) {
       checkCppVersion();
     }
-    this.#workletsModule = WorkletsModule;
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
   }
 
