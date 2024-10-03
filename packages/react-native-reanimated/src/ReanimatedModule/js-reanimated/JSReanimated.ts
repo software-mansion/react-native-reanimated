@@ -4,14 +4,25 @@ import {
   isJest,
   isWeb,
   isWindowAvailable,
-} from '../PlatformChecker';
-import type { ShareableRef, Value3D, ValueRotation } from '../commonTypes';
-import { SensorType } from '../commonTypes';
+} from '../../PlatformChecker';
+import { SensorType } from '../../commonTypes';
+import type {
+  IReanimatedModule,
+  IWorkletsModule,
+  ShareableRef,
+  Value3D,
+  ValueRotation,
+} from '../../commonTypes';
 import type { WebSensor } from './WebSensor';
-import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
-import type { WorkletRuntime } from '../runtimes';
-import { logger } from '../logger';
-import { ReanimatedError } from '../errors';
+import { mockedRequestAnimationFrame } from '../../mockedRequestAnimationFrame';
+import type { WorkletRuntime } from '../../runtimes';
+import { logger } from '../../logger';
+import { ReanimatedError } from '../../errors';
+import { WorkletsModule } from '../../worklets';
+
+export function createJSReanimatedModule(): IReanimatedModule {
+  return new JSReanimated();
+}
 
 // In Node.js environments (like when static rendering with Expo Router)
 // requestAnimationFrame is unavailable, so we use our mock.
@@ -21,7 +32,12 @@ const requestAnimationFrameImpl =
     ? mockedRequestAnimationFrame
     : globalThis.requestAnimationFrame;
 
-export default class JSReanimated {
+class JSReanimated implements IReanimatedModule {
+  /**
+   * We keep the instance of `WorkletsModule` here to keep correct coupling of
+   * the modules and initialization order.
+   */
+  #workletsModule: IWorkletsModule = WorkletsModule;
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
@@ -290,7 +306,10 @@ export default class JSReanimated {
   }
 }
 
-enum Platform {
+// Lack of this export breaks TypeScript generation since
+// an enum transpiles into JavaScript code.
+// ts-prune-ignore-next
+export enum Platform {
   WEB_IOS = 'web iOS',
   WEB_ANDROID = 'web Android',
   WEB = 'web',

@@ -14,7 +14,8 @@ import invariant from 'invariant';
 import { adaptViewConfig } from '../ConfigHelper';
 import { RNRenderer } from '../platform-specific/RNRenderer';
 import { enableLayoutAnimations } from '../core';
-import { SharedTransition, LayoutAnimationType } from '../layoutReanimation';
+import { SharedTransition } from '../layoutReanimation';
+import { LayoutAnimationType } from '../commonTypes';
 import type { StyleProps, ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { removeFromPropsRegistry } from '../PropsRegistry';
@@ -51,7 +52,7 @@ import type { FlatList, FlatListProps } from 'react-native';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
 import { getViewInfo } from './getViewInfo';
 import { NativeEventsManager } from './NativeEventsManager';
-import type { ReanimatedHTMLElement } from '../js-reanimated';
+import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import { ReanimatedError } from '../errors';
 
 const IS_WEB = isWeb();

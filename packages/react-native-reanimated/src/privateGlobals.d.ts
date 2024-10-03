@@ -15,8 +15,8 @@ import type {
 } from './commonTypes';
 import type { AnimatedStyle } from './helperTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
-import type { ReanimatedModuleProxy } from './NativeReanimated/NativeReanimated';
-import type { NativeWorklets } from './worklets';
+import type { ReanimatedModuleProxy } from './ReanimatedModule';
+import type { WorkletsModuleProxy } from './worklets';
 import type { SensorContainer } from './SensorContainer';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
@@ -31,7 +31,7 @@ declare global {
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_JS: string | undefined;
-  var __workletsModuleProxy: NativeWorklets | undefined;
+  var __workletsModuleProxy: WorkletsModuleProxy | undefined;
   var __reanimatedModuleProxy: ReanimatedModuleProxy | undefined;
   var __callGuardDEV: typeof callGuardDEV | undefined;
   var evalWithSourceMap:

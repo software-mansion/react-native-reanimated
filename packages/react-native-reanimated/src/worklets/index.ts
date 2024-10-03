@@ -1,4 +1,5 @@
 'use strict';
-export { NativeWorklets } from './native';
-export type { WorkletsModuleProxy } from './native';
+
+export { WorkletsModule } from './WorkletsModule';
+export type { WorkletsModuleProxy } from './WorkletsModule';
 export { getValueUnpackerCode } from './valueUnpacker';

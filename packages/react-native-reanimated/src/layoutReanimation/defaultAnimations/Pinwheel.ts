@@ -1,10 +1,10 @@
 'use strict';
+import type {
+  IEntryExitAnimationBuilder,
+  EntryExitAnimationFunction,
+} from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
-import type {
-  EntryExitAnimationFunction,
-  IEntryExitAnimationBuilder,
-} from '../animationBuilder/commonTypes';
 
 /**
  * Entry with change in rotation, scale, and opacity. You can modify the

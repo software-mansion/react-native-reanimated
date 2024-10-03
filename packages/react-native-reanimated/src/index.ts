@@ -110,19 +110,6 @@ export {
 export type { ParsedColorArray } from './Colors';
 export { isColor, processColor, convertToRGBA } from './Colors';
 export { createAnimatedPropAdapter } from './PropAdapters';
-export type {
-  LayoutAnimation,
-  EntryAnimationsValues,
-  ExitAnimationsValues,
-  EntryExitAnimationFunction,
-  LayoutAnimationsValues,
-  LayoutAnimationFunction,
-  LayoutAnimationStartFunction,
-  LayoutAnimationType,
-  SharedTransitionAnimationsValues,
-  ILayoutAnimationBuilder,
-  IEntryExitAnimationBuilder,
-} from './layoutReanimation';
 export {
   BaseAnimationBuilder,
   ComplexAnimationBuilder,
@@ -226,7 +213,6 @@ export {
   combineTransition,
   // SET
   SharedTransition,
-  SharedTransitionType,
 } from './layoutReanimation';
 export { isSharedValue } from './isSharedValue';
 export type {
@@ -250,6 +236,18 @@ export type {
   AnimateStyle,
   AnimatedStyle,
   StylesOrDefault,
+  LayoutAnimation,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
+  EntryExitAnimationFunction,
+  LayoutAnimationsValues,
+  LayoutAnimationFunction,
+  LayoutAnimationStartFunction,
+  LayoutAnimationType,
+  SharedTransitionAnimationsValues,
+  ILayoutAnimationBuilder,
+  IEntryExitAnimationBuilder,
+  BaseLayoutAnimationConfig,
 } from './commonTypes';
 export {
   SensorType,
@@ -258,6 +256,7 @@ export {
   KeyboardState,
   ReduceMotion,
   isWorkletFunction,
+  SharedTransitionType,
 } from './commonTypes';
 export type { FrameInfo } from './frameCallback';
 export { getUseOfValueInStyleWarning } from './pluginUtils';

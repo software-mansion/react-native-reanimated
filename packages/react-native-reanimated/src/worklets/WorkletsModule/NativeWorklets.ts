@@ -2,11 +2,14 @@
 import { getValueUnpackerCode } from '../valueUnpacker';
 import { WorkletsTurboModule } from '../../specs';
 import { ReanimatedError } from '../../errors';
+import type { IWorkletsModule } from '../../commonTypes';
+import type { WorkletsModuleProxy } from './workletsModuleProxy';
 
-/** Type of `__workletsModuleProxy` injected with JSI. */
-export interface WorkletsModuleProxy {}
+export function createNativeWorkletsModule(): IWorkletsModule {
+  return new NativeWorklets();
+}
 
-export class NativeWorklets {
+class NativeWorklets {
   #workletsModuleProxy: WorkletsModuleProxy;
 
   constructor() {
