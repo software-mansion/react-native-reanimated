@@ -12,6 +12,7 @@ on:
       - main
   workflow_call:
   workflow_dispatch:
+    
 jobs:
   check:
     runs-on: ubuntu-latest
