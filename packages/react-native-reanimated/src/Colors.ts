@@ -335,6 +335,7 @@ export const ColorProperties = makeShareable([
   'borderBlockEndColor',
   'borderBlockStartColor',
   'color',
+  'outlineColor',
   'shadowColor',
   'textDecorationColor',
   'tintColor',
