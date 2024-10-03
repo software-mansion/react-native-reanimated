@@ -4,6 +4,7 @@ on:
     types: [opened, synchronize, labeled, unlabeled]
   schedule:
     - cron: '37 19 * * *'
+  workflow_call:
   workflow_dispatch:
 
 jobs:
