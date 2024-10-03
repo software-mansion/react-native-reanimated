@@ -449,14 +449,14 @@ def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
 task prepareWorkletsHeadersForPrefabs(type: Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
-    include("**/*.h")
+    include("worklets/**/*.h")
     into(workletsPrefabHeadersDir)
 }
 
 task prepareReanimatedHeadersForPrefabs(type: Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
-    include("**/*.h")
+    include("reanimated/**/*.h")
     into(reanimatedPrefabHeadersDir)
 }
 
