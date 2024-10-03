@@ -5,6 +5,70 @@ import type {
   TransformsStyle,
   ImageStyle,
 } from 'react-native';
+import type { WorkletRuntime } from './runtimes';
+
+export interface IReanimatedModule {
+  registerSensor(
+    sensorType: number,
+    interval: number,
+    iosReferenceFrame: number,
+    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
+  ): number;
+  unregisterSensor(sensorId: number): void;
+  registerEventHandler<TValue>(
+    eventHandler: ShareableRef<TValue>,
+    eventName: string,
+    emitterReactTag: number
+  ): number;
+  unregisterEventHandler(id: number): void;
+
+  getViewProp<TValue>(
+    viewTag: number,
+    propName: string,
+    component: React.Component | undefined,
+    callback?: (result: TValue) => void
+  ): Promise<TValue>;
+
+  configureLayoutAnimationBatch(
+    layoutAnimationsBatch: LayoutAnimationBatchItem[]
+  ): void;
+
+  setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
+
+  enableLayoutAnimations(flag: boolean): void;
+
+  configureProps(uiProps: string[], nativeProps: string[]): void;
+
+  subscribeForKeyboardEvents(
+    handler: ShareableRef<number>,
+    isStatusBarTranslucent: boolean,
+    isNavigationBarTranslucent: boolean
+  ): number;
+
+  unsubscribeFromKeyboardEvents(listenerId: number): void;
+
+  makeShareableClone<TValue>(
+    value: TValue,
+    shouldPersistRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<TValue>;
+
+  scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
+
+  executeOnUIRuntimeSync<TValue, TResult>(
+    shareable: ShareableRef<TValue>
+  ): TResult;
+
+  createWorkletRuntime(
+    name: string,
+    initializer: ShareableRef<() => void>
+  ): WorkletRuntime;
+
+  scheduleOnRuntime<TValue>(
+    workletRuntime: WorkletRuntime,
+    shareableWorklet: ShareableRef<TValue>
+  ): void;
+}
 
 export type LayoutAnimationsOptions =
   | 'originX'
