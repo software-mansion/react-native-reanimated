@@ -10,7 +10,12 @@ if grep -Rn Common/cpp/worklets -e '^#include .*reanimated\/'; then
     exit 1
 fi
 
-if grep -Rn android/src/main/cpp/worklets -e 'reanimated::'; then
+if grep -Rn Common/cpp/worklets -e 'namespace reanimated'; then
+    echo 'Found `namespace reanimated` usage in Worklets which is not allowed.'
+    exit 1
+fi
+
+if grep -Rn Common/cpp/worklets -e 'reanimated::'; then
     echo 'Found `reanimated::` usage in Worklets which is not allowed.'
     exit 1
 fi
