@@ -28,7 +28,7 @@ static inline std::vector<jsi::Value> parseArgs(
 
   auto argsArray = shareableArgs->toJSValue(rt).asObject(rt).asArray(rt);
   auto argsSize = argsArray.size(rt);
-  std::vector<jsi::Value>result(argsSize);
+  std::vector<jsi::Value> result(argsSize);
   for (size_t i = 0; i < argsSize; i++) {
     result[i] = argsArray.getValueAtIndex(rt, i);
   }
@@ -94,38 +94,21 @@ void WorkletRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(
       rt,
-      "_scheduleOnJS",
+      "_scheduleRemoteFunctionOnJS",
       [jsScheduler](
           jsi::Runtime &rt,
           const jsi::Value &fun,
           const jsi::Value &argsValue) {
-        bool isHostFun = fun.isObject() && fun.asObject(rt).isFunction(rt) &&
-            fun.asObject(rt).asFunction(rt).isHostFunction(rt);
-
-        auto shareableArgs = argsValue.isUndefined()
-            ? nullptr
-            : extractShareableOrThrow<ShareableArray>(
-                  rt, argsValue, "[Reanimated] Args must be an array.");
-
-        if (isHostFun) {
-          auto hostFun = fun.asObject(rt).asFunction(rt).getHostFunction(rt);
-
-          jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
-            std::vector<jsi::Value> args = parseArgs(rt, shareableArgs);
-            hostFun(
-                rt,
-                jsi::Value::undefined(),
-                const_cast<const jsi::Value *>(args.data()),
-                args.size());
-          });
-          return;
-        }
-
         std::shared_ptr<Shareable> remoteFun = extractShareableOrThrow<
             ShareableRemoteFunction>(
             rt,
             fun,
             "[Reanimated] Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
+
+        auto shareableArgs = argsValue.isUndefined()
+            ? nullptr
+            : extractShareableOrThrow<ShareableArray>(
+                  rt, argsValue, "[Reanimated] Args must be an array.");
 
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
           auto fun = remoteFun->toJSValue(rt).asObject(rt).asFunction(rt);
@@ -134,8 +117,33 @@ void WorkletRuntimeDecorator::decorate(
             fun.call(rt);
           } else {
             std::vector<jsi::Value> args = parseArgs(rt, shareableArgs);
-            fun.call(rt, const_cast<const jsi::Value *>(args.data()), args.size());
+            fun.call(
+                rt, const_cast<const jsi::Value *>(args.data()), args.size());
           }
+        });
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_scheduleHostFunctionOnJS",
+      [jsScheduler](
+          jsi::Runtime &rt,
+          const jsi::Value &fun,
+          const jsi::Value &argsValue) {
+        auto hostFun = fun.asObject(rt).asFunction(rt).getHostFunction(rt);
+
+        auto shareableArgs = argsValue.isUndefined()
+            ? nullptr
+            : extractShareableOrThrow<ShareableArray>(
+                  rt, argsValue, "[Reanimated] Args must be an array.");
+
+        jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
+          std::vector<jsi::Value> args = parseArgs(rt, shareableArgs);
+          hostFun(
+              rt,
+              jsi::Value::undefined(),
+              const_cast<const jsi::Value *>(args.data()),
+              args.size());
         });
       });
 
