@@ -1,6 +1,6 @@
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 
-namespace reanimated {
+namespace worklets {
 
 void RNRuntimeWorkletDecorator::decorate(
     jsi::Runtime &rnRuntime,
@@ -11,4 +11,4 @@ void RNRuntimeWorkletDecorator::decorate(
       jsi::Object::createFromHostObject(rnRuntime, nativeWorkletsModule));
 }
 
-} // namespace reanimated
+} // namespace worklets

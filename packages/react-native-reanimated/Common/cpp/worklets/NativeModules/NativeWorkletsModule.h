@@ -4,7 +4,7 @@
 #include <worklets/NativeModules/NativeWorkletsModuleSpec.h>
 #include <string>
 
-namespace reanimated {
+namespace worklets {
 
 class NativeWorkletsModule : public NativeWorkletsModuleSpec {
  public:
@@ -20,4 +20,4 @@ class NativeWorkletsModule : public NativeWorkletsModuleSpec {
   const std::string valueUnpackerCode_;
 };
 
-} // namespace reanimated
+} // namespace worklets

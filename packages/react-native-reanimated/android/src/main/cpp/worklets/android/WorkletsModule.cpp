@@ -10,9 +10,9 @@
 #endif
 
 #include <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
-#include <worklets/WorkletsModule.h>
+#include <worklets/android/WorkletsModule.h>
 
-namespace reanimated {
+namespace worklets {
 
 using namespace facebook;
 using namespace react;
@@ -23,8 +23,8 @@ WorkletsModule::WorkletsModule(
     const std::string &valueUnpackerCode)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
-      nativeWorkletsModule_(std::make_shared<reanimated::NativeWorkletsModule>(
-          valueUnpackerCode)) {
+      nativeWorkletsModule_(
+          std::make_shared<NativeWorkletsModule>(valueUnpackerCode)) {
   RNRuntimeWorkletDecorator::decorate(*rnRuntime_, nativeWorkletsModule_);
 }
 
@@ -43,4 +43,4 @@ void WorkletsModule::registerNatives() {
        makeNativeMethod(
            "installJSIBindings", WorkletsModule::installJSIBindings)});
 }
-} // namespace reanimated
+} // namespace worklets

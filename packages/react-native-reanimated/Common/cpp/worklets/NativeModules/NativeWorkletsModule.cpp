@@ -15,11 +15,11 @@
 
 using namespace facebook;
 
-namespace reanimated {
+namespace worklets {
 
 NativeWorkletsModule::NativeWorkletsModule(const std::string &valueUnpackerCode)
     : NativeWorkletsModuleSpec(nullptr),
       valueUnpackerCode_(valueUnpackerCode) {}
 
 NativeWorkletsModule::~NativeWorkletsModule() {}
-} // namespace reanimated
+} // namespace worklets

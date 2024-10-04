@@ -6,7 +6,7 @@
 
 using namespace facebook;
 
-namespace reanimated {
+namespace worklets {
 
 class RNRuntimeWorkletDecorator {
  public:
@@ -15,4 +15,4 @@ class RNRuntimeWorkletDecorator {
       const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule);
 };
 
-} // namespace reanimated
+} // namespace worklets

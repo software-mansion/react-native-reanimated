@@ -24,6 +24,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   /**
    * @noinspection unused
    */
+  // TODO: Do I need this?
   protected HybridData getHybridData() {
     return mHybridData;
   }
@@ -34,6 +35,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(long jsContext, String valueUnpackerCode);
 
+  // TODO: Remove this
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
   }
@@ -41,8 +43,10 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   /**
    * @noinspection JavaJniMissingFunction
    */
+  // TODO: Remove this
   protected native void installJSIBindings();
 
+  // TODO: Remove this
   @Override
   public void initialize() {
     // Do nothing.
@@ -60,6 +64,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
     return true;
   }
 
+  // TODO: Remove this
   @Override
   public void invalidate() {
     super.invalidate();

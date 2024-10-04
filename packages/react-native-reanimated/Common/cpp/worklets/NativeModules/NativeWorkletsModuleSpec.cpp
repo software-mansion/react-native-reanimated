@@ -2,9 +2,9 @@
 
 #define SPEC_PREFIX(FN_NAME) __hostFunction_NativeWorkletsModuleSpec_##FN_NAME
 
-namespace reanimated {
+namespace worklets {
 
 NativeWorkletsModuleSpec::NativeWorkletsModuleSpec(
     const std::shared_ptr<CallInvoker> jsInvoker)
     : TurboModule("NativeWorklets", jsInvoker) {}
-} // namespace reanimated
+} // namespace worklets

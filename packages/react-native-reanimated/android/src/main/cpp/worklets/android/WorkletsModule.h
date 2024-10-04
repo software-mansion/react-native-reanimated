@@ -21,7 +21,7 @@
 #include <string>
 #include <utility>
 
-namespace reanimated {
+namespace worklets {
 
 using namespace facebook;
 using namespace facebook::jni;
@@ -38,8 +38,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
   static void registerNatives();
 
-  inline std::shared_ptr<reanimated::NativeWorkletsModule>
-  getNativeWorkletsModule() {
+  inline std::shared_ptr<NativeWorkletsModule> getNativeWorkletsModule() {
     return nativeWorkletsModule_;
   }
 
@@ -47,7 +46,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   friend HybridBase;
   jni::global_ref<WorkletsModule::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
-  std::shared_ptr<reanimated::NativeWorkletsModule> nativeWorkletsModule_;
+  std::shared_ptr<NativeWorkletsModule> nativeWorkletsModule_;
 
   void installJSIBindings();
 
@@ -79,4 +78,4 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       const std::string &valueUnpackerCode);
 };
 
-} // namespace reanimated
+} // namespace worklets

@@ -7,7 +7,7 @@
 using namespace facebook;
 using namespace react;
 
-namespace reanimated {
+namespace worklets {
 
 class JSI_EXPORT NativeWorkletsModuleSpec : public TurboModule {
  protected:
@@ -15,4 +15,4 @@ class JSI_EXPORT NativeWorkletsModuleSpec : public TurboModule {
       const std::shared_ptr<CallInvoker> jsInvoker);
 };
 
-} // namespace reanimated
+} // namespace worklets

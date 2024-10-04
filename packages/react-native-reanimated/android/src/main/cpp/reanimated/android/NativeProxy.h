@@ -6,7 +6,7 @@
 #include <reanimated/android/LayoutAnimations.h>
 
 #include <worklets/Tools/UIScheduler.h>
-#include <worklets/WorkletsModule.h>
+#include <worklets/android/WorkletsModule.h>
 
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
