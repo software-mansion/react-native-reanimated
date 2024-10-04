@@ -97,12 +97,12 @@ void WorkletRuntimeDecorator::decorate(
       "_scheduleRemoteFunctionOnJS",
       [jsScheduler](
           jsi::Runtime &rt,
-          const jsi::Value &fun,
+          const jsi::Value &funValue,
           const jsi::Value &argsValue) {
-        std::shared_ptr<Shareable> remoteFun = extractShareableOrThrow<
+        std::shared_ptr<Shareable> shareableRemoteFun = extractShareableOrThrow<
             ShareableRemoteFunction>(
             rt,
-            fun,
+            funValue,
             "[Reanimated] Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
 
         auto shareableArgs = argsValue.isUndefined()
@@ -111,7 +111,7 @@ void WorkletRuntimeDecorator::decorate(
                   rt, argsValue, "[Reanimated] Args must be an array.");
 
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
-          auto fun = remoteFun->toJSValue(rt).asObject(rt).asFunction(rt);
+          auto fun = shareableRemoteFun->toJSValue(rt).asObject(rt).asFunction(rt);
           if (shareableArgs == nullptr) {
             // fast path for remote function w/o arguments
             fun.call(rt);
@@ -128,9 +128,9 @@ void WorkletRuntimeDecorator::decorate(
       "_scheduleHostFunctionOnJS",
       [jsScheduler](
           jsi::Runtime &rt,
-          const jsi::Value &fun,
+          const jsi::Value &hostFunValue,
           const jsi::Value &argsValue) {
-        auto hostFun = fun.asObject(rt).asFunction(rt).getHostFunction(rt);
+        auto hostFun = hostFunValue.asObject(rt).asFunction(rt).getHostFunction(rt);
 
         auto shareableArgs = argsValue.isUndefined()
             ? nullptr
