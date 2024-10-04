@@ -254,8 +254,14 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
     // reference to the original remote function in the `__remoteFunction` property.
     fun = (fun as FunDevRemote).__remoteFunction;
   }
+
+  const scheduleOnJS =
+    typeof fun === 'function'
+      ? global._scheduleHostFunctionOnJS
+      : global._scheduleRemoteFunctionOnJS;
+
   return (...args) => {
-    global._scheduleOnJS(
+    scheduleOnJS(
       fun as
         | ((...args: Args) => ReturnValue)
         | WorkletFunction<Args, ReturnValue>,
