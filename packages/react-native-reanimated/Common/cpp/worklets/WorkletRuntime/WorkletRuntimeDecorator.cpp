@@ -128,13 +128,13 @@ void WorkletRuntimeDecorator::decorate(
             "[Reanimated] Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
 
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
+          auto fun = remoteFun->toJSValue(rt).asObject(rt).asFunction(rt);
           if (shareableArgs == nullptr) {
             // fast path for remote function w/o arguments
-            remoteFun->toJSValue(rt).asObject(rt).asFunction(rt).call(rt);
+            fun.call(rt);
           } else {
             std::vector<jsi::Value> args = parseArgs(rt, shareableArgs);
-            remoteFun->toJSValue(rt).asObject(rt).asFunction(rt).call(
-                rt, const_cast<const jsi::Value *>(args.data()), args.size());
+            fun.call(rt, const_cast<const jsi::Value *>(args.data()), args.size());
           }
         });
       });
