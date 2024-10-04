@@ -192,7 +192,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       if (parent.getClass().getSimpleName().equals("Screen")) {
         break;
       }
-      parent = (ViewParent) parent.getParent();
+      parent = parent.getParent();
     }
 
     if (parent != null) {
