@@ -19,20 +19,20 @@ static inline double performanceNow() {
   return duration / NANOSECONDS_IN_MILLISECOND;
 }
 
-static inline void parseArgs(
+static inline std::vector<jsi::Value> parseArgs(
     jsi::Runtime &rt,
-    std::shared_ptr<ShareableArray> shareableArgs,
-    std::vector<jsi::Value> &result) {
+    std::shared_ptr<ShareableArray> shareableArgs) {
   if (shareableArgs == nullptr) {
-    return;
+    return {};
   }
 
   auto argsArray = shareableArgs->toJSValue(rt).asObject(rt).asArray(rt);
   auto argsSize = argsArray.size(rt);
-  result.resize(argsSize);
+  std::vector<jsi::Value>result(argsSize);
   for (size_t i = 0; i < argsSize; i++) {
     result[i] = argsArray.getValueAtIndex(rt, i);
   }
+  return result;
 }
 
 void WorkletRuntimeDecorator::decorate(
@@ -111,8 +111,7 @@ void WorkletRuntimeDecorator::decorate(
           auto hostFun = fun.asObject(rt).asFunction(rt).getHostFunction(rt);
 
           jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
-            std::vector<jsi::Value> args;
-            parseArgs(rt, shareableArgs, args);
+            std::vector<jsi::Value> args = parseArgs(rt, shareableArgs);
             hostFun(
                 rt,
                 jsi::Value::undefined(),
@@ -133,8 +132,7 @@ void WorkletRuntimeDecorator::decorate(
             // fast path for remote function w/o arguments
             remoteFun->toJSValue(rt).asObject(rt).asFunction(rt).call(rt);
           } else {
-            std::vector<jsi::Value> args;
-            parseArgs(rt, shareableArgs, args);
+            std::vector<jsi::Value> args = parseArgs(rt, shareableArgs);
             remoteFun->toJSValue(rt).asObject(rt).asFunction(rt).call(
                 rt, const_cast<const jsi::Value *>(args.data()), args.size());
           }
