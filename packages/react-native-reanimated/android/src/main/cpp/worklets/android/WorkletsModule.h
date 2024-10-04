@@ -19,7 +19,6 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 
 namespace worklets {
 
@@ -47,30 +46,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   jni::global_ref<WorkletsModule::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<NativeWorkletsModule> nativeWorkletsModule_;
-
-  void installJSIBindings();
-
-  /***
-   * Wraps a method of `WorkletsModule` in a function object capturing
-   * `this`
-   * @tparam TReturn return type of passed method
-   * @tparam TParams parameter types of passed method
-   * @param methodPtr pointer to method to be wrapped
-   * @return a function object with the same signature as the method, calling
-   * that method on `this`
-   */
-  template <class TReturn, class... TParams>
-  std::function<TReturn(TParams...)> bindThis(
-      TReturn (WorkletsModule::*methodPtr)(TParams...)) {
-    return [this, methodPtr](TParams &&...args) {
-      return (this->*methodPtr)(std::forward<TParams>(args)...);
-    };
-  }
-
-  template <class Signature>
-  JMethod<Signature> getJniMethod(std::string const &methodName) {
-    return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
-  }
 
   explicit WorkletsModule(
       jni::alias_ref<WorkletsModule::jhybridobject> jThis,

@@ -35,12 +35,7 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
   return makeCxxInstance(jThis, (jsi::Runtime *)jsContext, valueUnpackerCode);
 }
 
-void WorkletsModule::installJSIBindings() {}
-
 void WorkletsModule::registerNatives() {
-  registerHybrid(
-      {makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
-       makeNativeMethod(
-           "installJSIBindings", WorkletsModule::installJSIBindings)});
+  registerHybrid({makeNativeMethod("initHybrid", WorkletsModule::initHybrid)});
 }
 } // namespace worklets
