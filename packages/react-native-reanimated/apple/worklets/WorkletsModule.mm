@@ -2,11 +2,14 @@
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #import <worklets/apple/WorkletsModule.h>
 
+using worklets::NativeWorkletsModule;
+using worklets::RNRuntimeWorkletDecorator;
+
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
 @end
 
-@interface RCTBridge (RCTTurboModule)
+@interface RCTBridge (RCTTurboModule) 
 - (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
 - (void)_tryAndHandleError:(dispatch_block_t)block;
 @end
