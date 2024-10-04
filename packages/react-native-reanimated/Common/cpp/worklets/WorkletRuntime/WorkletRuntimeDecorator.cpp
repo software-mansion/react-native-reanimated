@@ -111,7 +111,8 @@ void WorkletRuntimeDecorator::decorate(
                   rt, argsValue, "[Reanimated] Args must be an array.");
 
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
-          auto fun = shareableRemoteFun->toJSValue(rt).asObject(rt).asFunction(rt);
+          auto fun =
+              shareableRemoteFun->toJSValue(rt).asObject(rt).asFunction(rt);
           if (shareableArgs == nullptr) {
             // fast path for remote function w/o arguments
             fun.call(rt);
@@ -130,7 +131,8 @@ void WorkletRuntimeDecorator::decorate(
           jsi::Runtime &rt,
           const jsi::Value &hostFunValue,
           const jsi::Value &argsValue) {
-        auto hostFun = hostFunValue.asObject(rt).asFunction(rt).getHostFunction(rt);
+        auto hostFun =
+            hostFunValue.asObject(rt).asFunction(rt).getHostFunction(rt);
 
         auto shareableArgs = argsValue.isUndefined()
             ? nullptr
