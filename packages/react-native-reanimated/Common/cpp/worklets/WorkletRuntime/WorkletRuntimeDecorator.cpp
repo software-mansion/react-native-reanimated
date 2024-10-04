@@ -99,7 +99,7 @@ void WorkletRuntimeDecorator::decorate(
           jsi::Runtime &rt,
           const jsi::Value &funValue,
           const jsi::Value &argsValue) {
-        std::shared_ptr<Shareable> shareableRemoteFun = extractShareableOrThrow<
+        auto shareableRemoteFun = extractShareableOrThrow<
             ShareableRemoteFunction>(
             rt,
             funValue,
@@ -117,7 +117,7 @@ void WorkletRuntimeDecorator::decorate(
             // fast path for remote function w/o arguments
             fun.call(rt);
           } else {
-            std::vector<jsi::Value> args = parseArgs(rt, shareableArgs);
+            auto args = parseArgs(rt, shareableArgs);
             fun.call(
                 rt, const_cast<const jsi::Value *>(args.data()), args.size());
           }
@@ -140,7 +140,7 @@ void WorkletRuntimeDecorator::decorate(
                   rt, argsValue, "[Reanimated] Args must be an array.");
 
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
-          std::vector<jsi::Value> args = parseArgs(rt, shareableArgs);
+          auto args = parseArgs(rt, shareableArgs);
           hostFun(
               rt,
               jsi::Value::undefined(),
