@@ -19,6 +19,22 @@ static inline double performanceNow() {
   return duration / NANOSECONDS_IN_MILLISECOND;
 }
 
+static inline void parseArgs(
+    jsi::Runtime &rt,
+    std::shared_ptr<ShareableArray> shareableArgs,
+    std::vector<jsi::Value> &result) {
+  if (shareableArgs == nullptr) {
+    return;
+  }
+
+  auto argsArray = shareableArgs->toJSValue(rt).asObject(rt).asArray(rt);
+  auto argsSize = argsArray.size(rt);
+  result.resize(argsSize);
+  for (size_t i = 0; i < argsSize; i++) {
+    result[i] = argsArray.getValueAtIndex(rt, i);
+  }
+}
+
 void WorkletRuntimeDecorator::decorate(
     jsi::Runtime &rt,
     const std::string &name,
@@ -81,31 +97,45 @@ void WorkletRuntimeDecorator::decorate(
       "_scheduleOnJS",
       [jsScheduler](
           jsi::Runtime &rt,
-          const jsi::Value &remoteFun,
+          const jsi::Value &fun,
           const jsi::Value &argsValue) {
-        auto shareableRemoteFun = extractShareableOrThrow<
-            ShareableRemoteFunction>(
-            rt,
-            remoteFun,
-            "[Reanimated] Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
+        bool isHostFun = fun.isObject() && fun.asObject(rt).isFunction(rt) &&
+            fun.asObject(rt).asFunction(rt).isHostFunction(rt);
+
         auto shareableArgs = argsValue.isUndefined()
             ? nullptr
             : extractShareableOrThrow<ShareableArray>(
                   rt, argsValue, "[Reanimated] Args must be an array.");
+
+        if (isHostFun) {
+          auto hostFun = fun.asObject(rt).asFunction(rt).getHostFunction(rt);
+
+          jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
+            std::vector<jsi::Value> args;
+            parseArgs(rt, shareableArgs, args);
+            hostFun(
+                rt,
+                jsi::Value::undefined(),
+                const_cast<const jsi::Value *>(args.data()),
+                args.size());
+          });
+          return;
+        }
+
+        std::shared_ptr<Shareable> remoteFun = extractShareableOrThrow<
+            ShareableRemoteFunction>(
+            rt,
+            fun,
+            "[Reanimated] Incompatible object passed to scheduleOnJS. It is only allowed to schedule worklets or functions defined on the React Native JS runtime this way.");
+
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
-          auto remoteFun = shareableRemoteFun->toJSValue(rt);
           if (shareableArgs == nullptr) {
             // fast path for remote function w/o arguments
-            remoteFun.asObject(rt).asFunction(rt).call(rt);
+            remoteFun->toJSValue(rt).asObject(rt).asFunction(rt).call(rt);
           } else {
-            auto argsArray =
-                shareableArgs->toJSValue(rt).asObject(rt).asArray(rt);
-            auto argsSize = argsArray.size(rt);
-            std::vector<jsi::Value> args(argsSize);
-            for (size_t i = 0; i < argsSize; i++) {
-              args[i] = argsArray.getValueAtIndex(rt, i);
-            }
-            remoteFun.asObject(rt).asFunction(rt).call(
+            std::vector<jsi::Value> args;
+            parseArgs(rt, shareableArgs, args);
+            remoteFun->toJSValue(rt).asObject(rt).asFunction(rt).call(
                 rt, const_cast<const jsi::Value *>(args.data()), args.size());
           }
         });
