@@ -28,7 +28,7 @@ public class ReanimatedSensor {
     Display display = wm.getDefaultDisplay();
     listener = new ReanimatedSensorListener(setter, interval, display);
     sensorManager =
-        (SensorManager) reactContext.get().getSystemService(reactContext.get().SENSOR_SERVICE);
+        (SensorManager) reactContext.get().getSystemService(ReactApplicationContext.SENSOR_SERVICE);
     this.sensorType = sensorType;
     if (interval == -1) {
       this.interval = DEFAULT_INTERVAL;
