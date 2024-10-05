@@ -9,7 +9,7 @@ using worklets::RNRuntimeWorkletDecorator;
 - (void *)runtime;
 @end
 
-@interface RCTBridge (RCTTurboModule) 
+@interface RCTBridge (RCTTurboModule)
 - (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
 - (void)_tryAndHandleError:(dispatch_block_t)block;
 @end

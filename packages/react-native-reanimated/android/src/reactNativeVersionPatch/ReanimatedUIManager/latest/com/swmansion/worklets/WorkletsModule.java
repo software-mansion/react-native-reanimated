@@ -38,7 +38,6 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
     super(reactContext);
   }
 
-
   @OptIn(markerClass = FrameworkAPI.class)
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule(String valueUnpackerCode) {
@@ -50,5 +49,4 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
 
     return true;
   }
-
 }
