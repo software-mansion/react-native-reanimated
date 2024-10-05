@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "",
+    "build": "cd ios && bundle install && bundle exec pod update",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint --max-warnings=0 .",

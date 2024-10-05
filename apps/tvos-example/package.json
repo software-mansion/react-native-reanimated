@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "build": "cd ios && bundle install && bundle exec pod update",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "tvos": "expo run:ios --scheme TVOSExample-tvOS --device \"Apple TV\"",
