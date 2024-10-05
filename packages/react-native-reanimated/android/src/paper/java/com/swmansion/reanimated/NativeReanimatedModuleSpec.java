@@ -34,5 +34,5 @@ public abstract class NativeReanimatedModuleSpec extends ReactContextBaseJavaMod
 
   @ReactMethod(isBlockingSynchronousMethod = true)
   @DoNotStrip
-  public abstract boolean installTurboModule(String valueUnpackerCode);
+  public abstract boolean installTurboModule();
 }

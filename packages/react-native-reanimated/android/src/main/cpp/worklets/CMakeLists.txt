@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 
 file(GLOB_RECURSE WORKLETS_COMMON_CPP_SOURCES CONFIGURE_DEPENDS "${COMMON_CPP_DIR}/worklets/*.cpp")
+file(GLOB_RECURSE WORKLETS_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS "${ANDROID_CPP_DIR}/worklets/*.cpp")
 
 # Consume shared libraries and headers from prefabs
 find_package(fbjni REQUIRED CONFIG)
@@ -14,6 +15,7 @@ add_library(
     worklets
     SHARED
     ${WORKLETS_COMMON_CPP_SOURCES}
+    ${WORKLETS_ANDROID_CPP_SOURCES}
 )
 
 # includes
@@ -21,12 +23,15 @@ target_include_directories(
     worklets
     PUBLIC
     "${COMMON_CPP_DIR}"
+    "${ANDROID_CPP_DIR}"
 )
 
 target_include_directories(
     worklets
     PRIVATE
     "${REACT_NATIVE_DIR}/ReactCommon"
+    "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
+    "${REACT_NATIVE_DIR}/ReactCommon/react/nativemodule/core/ReactCommon"
     "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
     "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
 )
@@ -74,6 +79,7 @@ if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
 else()
     target_link_libraries(
         worklets
+        ReactAndroid::react_nativemodule_core
         ReactAndroid::folly_runtime
         ReactAndroid::glog
         ReactAndroid::reactnativejni

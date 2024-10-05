@@ -98,6 +98,15 @@ Pod::Spec.new do |s|
     ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
     ss.header_dir = "worklets"
     ss.header_mappings_dir = "Common/cpp/worklets"
+
+    ss.subspec "apple" do |sss|
+      # Please be careful with the snakes.
+      # 🐍🐍🐍
+      # Thank you for your understanding.
+      sss.source_files = "apple/worklets/**/*.{mm,h,m}"
+      sss.header_dir = "worklets/apple"
+      sss.header_mappings_dir = "apple/worklets"
+    end
   end
 
   gcc_debug_definitions = "$(inherited)"

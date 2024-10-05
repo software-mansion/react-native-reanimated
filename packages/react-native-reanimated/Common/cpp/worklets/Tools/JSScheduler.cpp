@@ -28,7 +28,7 @@ JSScheduler::JSScheduler(
       }),
       rnRuntime_(rnRuntime),
       runtimeExecutor_(runtimeExecutor) {}
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
+#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 
 const std::shared_ptr<CallInvoker> JSScheduler::getJSCallInvoker() const {
   assert(

@@ -19,33 +19,40 @@ import com.facebook.react.uimanager.ReanimatedUIManager;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.systrace.Systrace;
+import com.swmansion.worklets.WorkletsModule;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+// `WorkletsModule` should be included from a separate Java package, called `WorkletsPackage`.
+// However, it's not possible with the current state of the Gradle Tools provided by
+// RNC CLI - all packages besides the first found are ignored.
+// Therefore, until we extract `react-native-worklets` to a separate package,
+// we will host this module in Reanimated's package.
 @ReactModuleList(
     nativeModules = {
+      WorkletsModule.class,
       ReanimatedModule.class,
       ReanimatedUIManager.class,
     })
 public class ReanimatedPackage extends TurboReactPackage implements ReactPackage {
   @Override
-  public NativeModule getModule(String name, @NonNull ReactApplicationContext reactContext) {
-    if (name.equals(ReanimatedModule.NAME)) {
-      return new ReanimatedModule(reactContext);
-    }
-    if (name.equals(ReanimatedUIManager.NAME)) {
-      return createUIManager(reactContext);
-    }
-    return null;
+  public NativeModule getModule(
+      @NonNull String name, @NonNull ReactApplicationContext reactContext) {
+    return switch (name) {
+      case WorkletsModule.NAME -> new WorkletsModule(reactContext);
+      case ReanimatedModule.NAME -> new ReanimatedModule(reactContext);
+      case ReanimatedUIManager.NAME -> createUIManager(reactContext);
+      default -> null;
+    };
   }
 
   @Override
   public ReactModuleInfoProvider getReactModuleInfoProvider() {
     Class<? extends NativeModule>[] moduleList =
         new Class[] {
-          ReanimatedModule.class, ReanimatedUIManager.class,
+          WorkletsModule.class, ReanimatedModule.class, ReanimatedUIManager.class,
         };
 
     final Map<String, ReactModuleInfo> reactModuleInfoMap = new HashMap<>();
