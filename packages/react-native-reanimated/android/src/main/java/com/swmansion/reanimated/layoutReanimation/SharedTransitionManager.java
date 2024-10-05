@@ -56,6 +56,7 @@ public class SharedTransitionManager {
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public void onEventDispatch(Event event) {
       if (event.getEventName().equals("topWillAppear")) {
         tryStartSharedTransitionForViews(mAddedSharedViews, true);
@@ -303,8 +304,8 @@ public class SharedTransitionManager {
           continue;
         }
         int stackId = sourceStack.getId();
-        ViewGroupManager stackViewManager =
-            (ViewGroupManager) reanimatedNativeHierarchyManager.resolveViewManager(stackId);
+        ViewGroupManager<ViewGroup> stackViewManager =
+            (ViewGroupManager<ViewGroup>) reanimatedNativeHierarchyManager.resolveViewManager(stackId);
         boolean isInSameStack = false;
         for (int i = 0; i < stackViewManager.getChildCount(sourceStack); i++) {
           if (stackViewManager.getChildAt(sourceStack, i) == viewTargetScreen) {
