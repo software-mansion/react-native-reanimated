@@ -6,6 +6,7 @@
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <worklets/NativeModules/NativeWorkletsModule.h>
+#include <worklets/SharedItems/Shareables.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -22,4 +23,14 @@ NativeWorkletsModule::NativeWorkletsModule(const std::string &valueUnpackerCode)
       valueUnpackerCode_(valueUnpackerCode) {}
 
 NativeWorkletsModule::~NativeWorkletsModule() {}
+
+jsi::Value NativeWorkletsModule::makeShareableClone(
+    jsi::Runtime &rt,
+    const jsi::Value &value,
+    const jsi::Value &shouldRetainRemote,
+    const jsi::Value &nativeStateSource) {
+  return worklets::makeShareableClone(
+      rt, value, shouldRetainRemote, nativeStateSource);
+}
+
 } // namespace worklets

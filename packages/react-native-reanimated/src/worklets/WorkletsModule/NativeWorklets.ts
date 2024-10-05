@@ -25,4 +25,16 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     }
     this.#workletsModuleProxy = global.__workletsModuleProxy;
   }
+
+  makeShareableClone<T>(
+    value: T,
+    shouldPersistRemote: boolean,
+    nativeStateSource?: object
+  ) {
+    return this.#workletsModuleProxy.makeShareableClone(
+      value,
+      shouldPersistRemote,
+      nativeStateSource
+    );
+  }
 }

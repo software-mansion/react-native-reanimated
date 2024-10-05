@@ -6,18 +6,6 @@
 
 namespace reanimated {
 
-// SharedValue
-
-static jsi::Value SPEC_PREFIX(makeShareableClone)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
-      ->makeShareableClone(
-          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
-}
-
 // scheduler
 
 static jsi::Value SPEC_PREFIX(scheduleOnUI)(
@@ -174,9 +162,6 @@ static jsi::Value SPEC_PREFIX(setShouldAnimateExiting)(
 NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
     const std::shared_ptr<CallInvoker> &jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
-  methodMap_["makeShareableClone"] =
-      MethodMetadata{2, SPEC_PREFIX(makeShareableClone)};
-
   methodMap_["scheduleOnUI"] = MethodMetadata{1, SPEC_PREFIX(scheduleOnUI)};
   methodMap_["executeOnUIRuntimeSync"] =
       MethodMetadata{1, SPEC_PREFIX(executeOnUIRuntimeSync)};

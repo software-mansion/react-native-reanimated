@@ -13,6 +13,13 @@ class JSI_EXPORT NativeWorkletsModuleSpec : public TurboModule {
  protected:
   explicit NativeWorkletsModuleSpec(
       const std::shared_ptr<CallInvoker> jsInvoker);
+
+ public:
+  virtual jsi::Value makeShareableClone(
+      jsi::Runtime &rt,
+      const jsi::Value &value,
+      const jsi::Value &shouldRetainRemote,
+      const jsi::Value &nativeStateSource) = 0;
 };
 
 } // namespace worklets

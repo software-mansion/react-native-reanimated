@@ -45,6 +45,7 @@ class NativeReanimatedModule implements IReanimatedModule {
   constructor() {
     this.#workletsModule = WorkletsModule;
     // These checks have to split since version checking depend on the execution order
+    this.#workletsModule = WorkletsModule;
     if (__DEV__) {
       assertSingleReanimatedInstance();
     }
@@ -62,18 +63,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
-  }
-
-  makeShareableClone<T>(
-    value: T,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ) {
-    return this.#reanimatedModuleProxy.makeShareableClone(
-      value,
-      shouldPersistRemote,
-      nativeStateSource
-    );
   }
 
   scheduleOnUI<T>(shareable: ShareableRef<T>) {

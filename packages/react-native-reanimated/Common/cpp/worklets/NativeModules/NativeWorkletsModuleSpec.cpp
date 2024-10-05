@@ -4,7 +4,21 @@
 
 namespace worklets {
 
+static jsi::Value SPEC_PREFIX(makeShareableClone)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<NativeWorkletsModuleSpec *>(&turboModule)
+      ->makeShareableClone(
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
+}
+
 NativeWorkletsModuleSpec::NativeWorkletsModuleSpec(
     const std::shared_ptr<CallInvoker> jsInvoker)
-    : TurboModule("NativeWorklets", jsInvoker) {}
+    : TurboModule("NativeWorklets", jsInvoker) {
+  methodMap_["makeShareableClone"] =
+      MethodMetadata{2, SPEC_PREFIX(makeShareableClone)};
+}
+
 } // namespace worklets
