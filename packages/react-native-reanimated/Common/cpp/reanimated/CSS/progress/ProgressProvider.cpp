@@ -3,15 +3,13 @@
 namespace reanimated {
 
 ProgressProvider::ProgressProvider(
-    double duration,
-    double delay,
-    EasingFunction easingFunction)
+    const double duration,
+    const double delay,
+    const EasingFunction easingFunction)
     : duration_(duration), delay_(delay), easingFunction_(easingFunction) {}
 
 void ProgressProvider::start(const time_t timestamp) {
-  if (startTime_ == 0) {
-    startTime_ = timestamp;
-  }
+  startTime_ = timestamp;
 }
 
 void ProgressProvider::resetProgress() {

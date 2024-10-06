@@ -23,7 +23,10 @@ class ValueInterpolator : public Interpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const std::vector<std::string> &propertyPath);
 
-  void setKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
+  void updateKeyframes(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const jsi::Value &keyframes) override;
 
   jsi::Value getBackwardsFillValue(jsi::Runtime &rt) const override;
   jsi::Value getForwardsFillValue(jsi::Runtime &rt) const override;
@@ -47,7 +50,7 @@ class ValueInterpolator : public Interpolator {
       const InterpolationUpdateContext context) const = 0;
 
  private:
-  std::shared_ptr<const std::vector<Keyframe<T>>> keyframes_;
+  std::vector<Keyframe<T>> keyframes_;
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   int keyframeAfterIndex_ = 1;
@@ -56,7 +59,7 @@ class ValueInterpolator : public Interpolator {
   std::optional<T> defaultStyleValue_; // Default style value
   std::optional<T> previousValue_; // Previous interpolation result
 
-  std::shared_ptr<const std::vector<Keyframe<T>>> createKeyframes(
+  std::vector<Keyframe<T>> createKeyframes(
       jsi::Runtime &rt,
       const jsi::Array &keyframeArray) const;
 

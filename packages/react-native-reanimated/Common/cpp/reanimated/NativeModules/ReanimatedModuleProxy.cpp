@@ -84,10 +84,10 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(
           staticPropsRegistry_,
           animatedPropsRegistry_)),
-      cssTransitionsRegistry_(
-          std::make_shared<CSSTransitionsRegistry>(staticPropsRegistry_)),
-      cssAnimationsRegistry_(
-          std::make_shared<CSSAnimationsRegistry>(viewStylesRepository_)),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
+          staticPropsRegistry_,
+          getAnimationTimestamp_)),
+      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(
@@ -503,7 +503,11 @@ void ReanimatedModuleProxy::setViewStyle(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &viewStyle) {
-  staticPropsRegistry_->set(rt, viewTag.asNumber(), viewStyle);
+  const auto tag = viewTag.asNumber();
+  staticPropsRegistry_->set(rt, tag, viewStyle);
+  if (staticPropsRegistry_->hasObservers(tag)) {
+    maybeRunCSSLoop();
+  }
 }
 
 void ReanimatedModuleProxy::removeViewStyle(
@@ -572,8 +576,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
   cssTransitionsRegistry_->updateSettings(
       rt,
       transitionId.asNumber(),
-      parsePartialCSSTransitionSettings(rt, configUpdates),
-      getAnimationTimestamp_());
+      parsePartialCSSTransitionSettings(rt, configUpdates));
   maybeRunCSSLoop();
 }
 
@@ -710,12 +713,17 @@ void ReanimatedModuleProxy::performOperations() {
 
   {
     auto lock = updatesRegistryManager_->createLock();
+    const auto timestamp = getAnimationTimestamp_();
+
+    // Update CSS transitions and flush updates
+    cssTransitionsRegistry_->update(rt, timestamp);
+    cssTransitionsRegistry_->flushUpdates(rt, updatesBatch);
 
     // Flush all animated props updates
     animatedPropsRegistry_->flushUpdates(rt, updatesBatch);
 
     // Update CSS animations and flush updates
-    cssAnimationsRegistry_->update(rt, getAnimationTimestamp_());
+    cssAnimationsRegistry_->update(rt, timestamp);
     cssAnimationsRegistry_->flushUpdates(rt, updatesBatch);
   }
 

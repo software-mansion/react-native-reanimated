@@ -37,6 +37,7 @@ class GroupInterpolator : public Interpolator {
 
   void addOrUpdateInterpolator(
       jsi::Runtime &rt,
+            const ShadowNode::Shared &shadowNode,
       const std::string &propertyName,
       const jsi::Value &keyframes);
 };

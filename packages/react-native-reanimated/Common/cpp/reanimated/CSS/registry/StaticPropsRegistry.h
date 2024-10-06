@@ -18,6 +18,10 @@ class StaticPropsRegistry {
   folly::dynamic get(const Tag viewTag) const;
   void remove(const Tag viewTag);
 
+  bool hasObservers(const Tag viewTag) const {
+    return observers_.find(viewTag) != observers_.end();
+  }
+
   void addObserver(
       const unsigned observerId,
       const Tag viewTag,

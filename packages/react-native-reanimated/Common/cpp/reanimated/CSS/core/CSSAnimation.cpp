@@ -1,4 +1,4 @@
-#include <reanimated/CSS/CSSAnimation.h>
+#include <reanimated/CSS/core/CSSAnimation.h>
 
 namespace reanimated {
 
@@ -19,7 +19,7 @@ CSSAnimation::CSSAnimation(
           config.direction,
           config.easingFunction)),
       fillMode_(config.fillMode) {
-  styleInterpolator_.setKeyframes(rt, config.keyframeStyle);
+  styleInterpolator_.updateKeyframes(rt, shadowNode, config.keyframeStyle);
   // Register the current timestamp in the progress provider as the start
   // timestamp
   progressProvider_.start(startTime);

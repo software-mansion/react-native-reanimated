@@ -1,12 +1,12 @@
 #pragma once
 
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
-#include <reanimated/CSS/CSSAnimation.h>
-#include <reanimated/CSS/CSSTransition.h>
-#include <reanimated/CSS/prop/StaticPropsRegistry.h>
+#include <reanimated/CSS/core/CSSAnimation.h>
+#include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/CSS/prop/ViewStylesRepository.h>
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
+#include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>

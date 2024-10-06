@@ -31,13 +31,16 @@ class Interpolator {
   Interpolator(const std::vector<std::string> &propertyPath)
       : propertyPath_(propertyPath) {}
 
-  virtual void setKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) = 0;
-
   virtual jsi::Value getBackwardsFillValue(jsi::Runtime &rt) const = 0;
   virtual jsi::Value getForwardsFillValue(jsi::Runtime &rt) const = 0;
   virtual jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const = 0;
+
+  virtual void updateKeyframes(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const jsi::Value &keyframes) = 0;
 
   virtual jsi::Value update(const InterpolationUpdateContext context) = 0;
 

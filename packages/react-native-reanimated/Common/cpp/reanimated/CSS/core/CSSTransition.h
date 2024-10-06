@@ -3,9 +3,7 @@
 #include <reanimated/CSS/config/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/TransitionStyleInterpolator.h>
-#include <reanimated/CSS/progress/TransitionPropertyProgressProvider.h>
-
-#include <vector>
+#include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
 namespace reanimated {
 
@@ -25,39 +23,40 @@ class CSSTransition {
   ShadowNode::Shared getShadowNode() const {
     return shadowNode_;
   }
-  const PropertyNames &getPropertyNames() const {
+  const std::vector<std::string> &getPropertyNames() const {
     return propertyNames_;
   }
   double getMinDelay() const {
     return 0; // TODO
   }
   TransitionProgressState getState(const time_t timestamp) const {
-    return TransitionProgressState::FINISHED; // TODO
+    return TransitionProgressState::PENDING; // TODO
   }
   jsi::Value getViewStyle(jsi::Runtime &rt) const {
     return jsi::Value::undefined(); // TODO
   }
 
-  void run(jsi::Runtime &rt, const jsi::Value &changedProps);
-  jsi::Value update(jsi::Runtime &rt, time_t timestamp);
-
   void updateSettings(
       jsi::Runtime &rt,
-      const PartialCSSTransitionSettings &settings,
+      const PartialCSSTransitionSettings &settings);
+
+  void run(
+      jsi::Runtime &rt,
+      const jsi::Value &updatedProperties,
       const time_t timestamp);
+  jsi::Value update(jsi::Runtime &rt, time_t timestamp);
 
  private:
   const unsigned id_;
   const ShadowNode::Shared shadowNode_;
 
-  PropertyNames propertyNames_;
+  std::vector<std::string> propertyNames_;
   std::unordered_set<std::string> propertyNameSet_;
-  std::unordered_map<std::string, TransitionPropertyProgressProvider>
-      progressProviders_;
   TransitionStyleInterpolator styleInterpolator_;
+  TransitionProgressProvider progressProvider_;
 
-  std::pair<PropertyNames, PropertyNames> updatePropertyNames(
-      const PropertyNames &propertyNames);
+  std::pair<std::vector<std::string>, std::vector<std::string>>
+  updatePropertyNames(const std::vector<std::string> &propertyNames);
 };
 
 } // namespace reanimated
