@@ -3,35 +3,26 @@
 namespace reanimated {
 
 TransitionStyleInterpolator::TransitionStyleInterpolator(
-    const std::vector<std::string> &propertyNames,
+    const PropertyNames &propertyNames,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : viewStylesRepository_(viewStylesRepository),
       interpolators_(build(propertyNames, viewStylesRepository)) {}
 
-void TransitionStyleInterpolator::updateProperties(
-    const std::vector<std::string> &propertyNames) {
-  // Convert propertyNames array to an unordered_set for O(1) lookups
-  std::unordered_set<std::string> propertyNameSet;
-  propertyNameSet.reserve(propertyNames.size());
+void TransitionStyleInterpolator::addProperties(
+    const PropertyNames &propertyNames) {
   for (const auto &propertyName : propertyNames) {
-    propertyNameSet.insert(propertyName);
-  }
-
-  // Remove properties that are not present in the propertyNames array
-  for (auto it = interpolators_.begin(); it != interpolators_.end();) {
-    if (!propertyNameSet.contains(it->first)) {
-      it = interpolators_.erase(it);
-    } else {
-      ++it;
+    auto interpolator = interpolators_.find(propertyName);
+    if (interpolator != interpolators_.cend()) {
+      continue;
     }
+    interpolators_.emplace(propertyName, createInterpolator(propertyName));
   }
+}
 
-  // Add properties that are present in the properties array but not in the
-  // interpolators map
+void TransitionStyleInterpolator::removeProperties(
+    const PropertyNames &propertyNames) {
   for (const auto &propertyName : propertyNames) {
-    if (interpolators_.find(propertyName) == interpolators_.cend()) {
-      addProperty(propertyName);
-    }
+    interpolators_.erase(propertyName);
   }
 }
 
@@ -72,7 +63,7 @@ jsi::Value TransitionStyleInterpolator::update(
 }
 
 PropertiesInterpolators TransitionStyleInterpolator::build(
-    const std::vector<std::string> &propertyNames,
+    const PropertyNames &propertyNames,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
   PropertiesInterpolators interpolators;
 
@@ -81,23 +72,6 @@ PropertiesInterpolators TransitionStyleInterpolator::build(
   }
 
   return interpolators;
-}
-
-void TransitionStyleInterpolator::addProperty(const std::string &propertyName) {
-  auto interpolator = interpolators_.find(propertyName);
-
-  if (interpolator != interpolators_.cend()) {
-    throw std::invalid_argument(
-        "[Reanimated] Interpolator for property: " + propertyName +
-        " already exists");
-  }
-
-  interpolators_.emplace(propertyName, createInterpolator(propertyName));
-}
-
-void TransitionStyleInterpolator::removeProperty(
-    const std::string &propertyName) {
-  interpolators_.erase(propertyName);
 }
 
 std::shared_ptr<Interpolator> TransitionStyleInterpolator::createInterpolator(

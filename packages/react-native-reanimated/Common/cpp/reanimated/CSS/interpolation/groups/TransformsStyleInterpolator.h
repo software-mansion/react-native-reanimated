@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/groups/GroupInterpolator.h>
+#include <reanimated/CSS/util/props.h>
 
 #include <vector>
 

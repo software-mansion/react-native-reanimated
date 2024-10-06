@@ -180,7 +180,7 @@ export function createAnimatedComponent(
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles(animatedStyles);
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
-      this._CSSManager?.update(plainStyles, this._getViewInfo());
+      this._CSSManager?.attach(plainStyles, this._getViewInfo());
 
       const layout = this.props.layout;
       if (layout) {

@@ -25,7 +25,7 @@ class CSSTransition {
   ShadowNode::Shared getShadowNode() const {
     return shadowNode_;
   }
-  const std::vector<std::string> &getPropertyNames() const {
+  const PropertyNames &getPropertyNames() const {
     return propertyNames_;
   }
   double getMinDelay() const {
@@ -38,8 +38,7 @@ class CSSTransition {
     return jsi::Value::undefined(); // TODO
   }
 
-  void
-  run(jsi::Runtime &rt, const jsi::Value &oldProps, const jsi::Value &newProps);
+  void run(jsi::Runtime &rt, const jsi::Value &changedProps);
   jsi::Value update(jsi::Runtime &rt, time_t timestamp);
 
   void updateSettings(
@@ -51,8 +50,14 @@ class CSSTransition {
   const unsigned id_;
   const ShadowNode::Shared shadowNode_;
 
-  std::vector<std::string> propertyNames_;
+  PropertyNames propertyNames_;
+  std::unordered_set<std::string> propertyNameSet_;
+  std::unordered_map<std::string, TransitionPropertyProgressProvider>
+      progressProviders_;
   TransitionStyleInterpolator styleInterpolator_;
+
+  std::pair<PropertyNames, PropertyNames> updatePropertyNames(
+      const PropertyNames &propertyNames);
 };
 
 } // namespace reanimated

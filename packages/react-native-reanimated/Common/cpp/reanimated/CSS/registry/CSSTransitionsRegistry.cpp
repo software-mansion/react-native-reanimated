@@ -14,7 +14,6 @@ void CSSTransitionsRegistry::add(
   PropsObserver observer = createPropsObserver(id);
   staticPropsRegistry_->addObserver(
       id, transition->getShadowNode()->getTag(), observer);
-  operationsBatch_.emplace_back(TransitionOperation::ADD, id);
 }
 
 void CSSTransitionsRegistry::remove(const unsigned id) {
@@ -96,7 +95,6 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const unsigned id) {
              const jsi::Value &newProps) {
     const auto transitionOptional = getItem(id);
     if (!transitionOptional.has_value()) {
-      LOG(INFO) << "Transition not found";
       return;
     }
 
@@ -105,9 +103,12 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const unsigned id) {
     const auto changedProps =
         getChangedProps(rt, propertyNames, oldProps, newProps);
 
-    if (!changedProps.empty()) {
-      // TODO - start the transition for modified props
+    if (changedProps.isUndefined()) {
+      return;
     }
+
+    transition->run(rt, changedProps);
+    operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, id);
   };
 };
 

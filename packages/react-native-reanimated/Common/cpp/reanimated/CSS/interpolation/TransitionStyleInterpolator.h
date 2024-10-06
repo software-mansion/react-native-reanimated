@@ -5,13 +5,16 @@
 
 namespace reanimated {
 
+using PropertyNames = std::vector<std::string>;
+
 class TransitionStyleInterpolator {
  public:
   TransitionStyleInterpolator(
-      const std::vector<std::string> &propertyNames,
+      const PropertyNames &propertyNames,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  void updateProperties(const std::vector<std::string> &propertyNames);
+  void addProperties(const PropertyNames &propertyNames);
+  void removeProperties(const PropertyNames &propertyNames);
   jsi::Value update(
       const std::unordered_map<std::string, InterpolationUpdateContext>
           &contexts);
@@ -21,10 +24,8 @@ class TransitionStyleInterpolator {
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   PropertiesInterpolators build(
-      const std::vector<std::string> &propertyNames,
+      const PropertyNames &propertyNames,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
-  void addProperty(const std::string &propertyName);
-  void removeProperty(const std::string &propertyName);
 
   std::shared_ptr<Interpolator> createInterpolator(
       const std::string &propertyName);
