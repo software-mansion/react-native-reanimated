@@ -40,8 +40,7 @@ class CSSTransitionsRegistry
  private:
   std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
-  PropsObserver createPropsObserver(
-      const std::shared_ptr<CSSTransition> &transition);
+  PropsObserver createPropsObserver(const unsigned id);
 };
 
 } // namespace reanimated

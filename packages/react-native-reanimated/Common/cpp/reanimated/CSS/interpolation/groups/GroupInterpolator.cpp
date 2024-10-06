@@ -3,8 +3,12 @@
 namespace reanimated {
 
 GroupInterpolator::GroupInterpolator(
+    const PropertiesInterpolatorFactories &factories,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const std::vector<std::string> &propertyPath)
-    : Interpolator(propertyPath) {}
+    : factories_(factories),
+      viewStylesRepository_(viewStylesRepository),
+      Interpolator(propertyPath) {}
 
 jsi::Value GroupInterpolator::update(const InterpolationUpdateContext context) {
   return mapInterpolators(context.rt, [&](Interpolator &interpolator) {
@@ -30,6 +34,27 @@ jsi::Value GroupInterpolator::getStyleValue(
   return mapInterpolators(rt, [&](Interpolator &interpolator) {
     return interpolator.getStyleValue(rt, shadowNode);
   });
+}
+
+void GroupInterpolator::addOrUpdateInterpolator(
+    jsi::Runtime &rt,
+    const std::string &propertyName,
+    const jsi::Value &keyframes) {
+  if (interpolators_.find(propertyName) == interpolators_.cend()) {
+    auto factory = factories_.find(propertyName);
+    if (factory == factories_.cend()) {
+      throw std::invalid_argument(
+          "[Reanimated] No interpolator factory found for property: " +
+          propertyName);
+    }
+
+    std::vector<std::string> newPath = propertyPath_;
+    newPath.emplace_back(propertyName);
+    interpolators_.emplace(
+        propertyName, factory->second(viewStylesRepository_, newPath));
+  }
+
+  interpolators_.at(propertyName)->setKeyframes(rt, keyframes);
 }
 
 } // namespace reanimated

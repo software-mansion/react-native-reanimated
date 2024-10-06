@@ -23,13 +23,15 @@ class ValueInterpolator : public Interpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const std::vector<std::string> &propertyPath);
 
-  void initialize(jsi::Runtime &rt, const jsi::Value &keyframeArray);
-  jsi::Value update(const InterpolationUpdateContext context) override;
+  void setKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
+
   jsi::Value getBackwardsFillValue(jsi::Runtime &rt) const override;
   jsi::Value getForwardsFillValue(jsi::Runtime &rt) const override;
   jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
+
+  jsi::Value update(const InterpolationUpdateContext context) override;
 
  protected:
   virtual T prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)

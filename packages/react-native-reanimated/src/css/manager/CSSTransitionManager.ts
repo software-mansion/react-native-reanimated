@@ -32,8 +32,6 @@ export default class CSSTransitionManager {
     );
     this.normalizedTransitionProperties = normalizedConfig.transitionProperty;
 
-    console.log(normalizedConfig);
-
     registerCSSTransition(
       shadowNodeWrapper,
       this.transitionId,
@@ -67,10 +65,10 @@ export default class CSSTransitionManager {
         transitionConfig,
         style
       );
-      this.transitionConfig = transitionConfig;
-      this.normalizedTransitionProperties = configUpdates.transitionProperty;
 
       if (Object.keys(configUpdates).length > 0) {
+        this.transitionConfig = transitionConfig;
+        this.normalizedTransitionProperties = configUpdates.transitionProperty;
         updateCSSTransition(this.transitionId, configUpdates);
       }
     } else if (transitionConfig) {

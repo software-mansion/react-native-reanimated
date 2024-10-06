@@ -2,9 +2,10 @@
 
 namespace reanimated {
 
-void CSSAnimationsRegistry::add(const std::shared_ptr<CSSAnimation> &item) {
-  const auto id = item->getId();
-  registry_.insert({id, item});
+void CSSAnimationsRegistry::add(
+    const std::shared_ptr<CSSAnimation> &animation) {
+  const auto id = animation->getId();
+  registry_.insert({id, animation});
   operationsBatch_.emplace_back(AnimationOperation::ADD, id);
 }
 

@@ -43,6 +43,8 @@ class CSSRegistry : public UpdatesRegistry {
   std::unordered_set<unsigned> delayedIds_;
   DelayedQueue delayedItemsQueue_;
 
+  inline std::optional<std::shared_ptr<Item>> getItem(const unsigned id);
+
   virtual jsi::Value handleUpdate(
       jsi::Runtime &rt,
       const time_t timestamp,
@@ -68,8 +70,6 @@ class CSSRegistry : public UpdatesRegistry {
  private:
   void activateDelayedItems(const time_t timestamp);
   void flushOperations(jsi::Runtime &rt, const time_t timestamp);
-
-  inline std::optional<std::shared_ptr<Item>> getItem(const unsigned id);
 };
 
 } // namespace reanimated

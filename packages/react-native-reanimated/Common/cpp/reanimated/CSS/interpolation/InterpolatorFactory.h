@@ -15,10 +15,10 @@ namespace reanimated {
 namespace Interpolators {
 
 InterpolatorFactoryFunction object(
-    const ObjectPropertiesInterpolatorFactories &factories);
+    const PropertiesInterpolatorFactories &factories);
 
 InterpolatorFactoryFunction transforms(
-    const TransformPropertyInterpolatorFactories &factories);
+    const PropertiesInterpolatorFactories &factories);
 
 InterpolatorFactoryFunction color(
     const std::optional<ColorArray> &defaultValue);

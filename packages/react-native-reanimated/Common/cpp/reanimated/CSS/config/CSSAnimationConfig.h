@@ -11,7 +11,7 @@ enum class AnimationFillMode { NONE, FORWARDS, BACKWARDS, BOTH };
 enum class AnimationPlayState { RUNNING, PAUSED };
 
 struct CSSAnimationConfig {
-  jsi::Object keyframeStyle;
+  jsi::Value keyframeStyle;
   double duration;
   EasingFunction easingFunction;
   double delay;
@@ -31,7 +31,7 @@ struct PartialCSSAnimationSettings {
   std::optional<AnimationPlayState> playState;
 };
 
-inline jsi::Object getAnimationKeyframeStyle(
+inline jsi::Value getAnimationKeyframeStyle(
     jsi::Runtime &rt,
     const jsi::Object &config);
 

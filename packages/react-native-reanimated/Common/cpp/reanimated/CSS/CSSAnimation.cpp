@@ -11,10 +11,7 @@ CSSAnimation::CSSAnimation(
     const time_t startTime)
     : id_(id),
       shadowNode_(shadowNode),
-      styleInterpolator_(AnimationStyleInterpolator(
-          rt,
-          config.keyframeStyle,
-          viewStylesRepository)),
+      styleInterpolator_(AnimationStyleInterpolator(viewStylesRepository)),
       progressProvider_(AnimationProgressProvider(
           config.duration,
           config.delay,
@@ -22,6 +19,7 @@ CSSAnimation::CSSAnimation(
           config.direction,
           config.easingFunction)),
       fillMode_(config.fillMode) {
+  styleInterpolator_.setKeyframes(rt, config.keyframeStyle);
   // Register the current timestamp in the progress provider as the start
   // timestamp
   progressProvider_.start(startTime);
