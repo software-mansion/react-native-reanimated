@@ -59,6 +59,7 @@ export interface INativeEventsManager {
 }
 
 export interface ICSSManager {
+  attach(styles: StyleProps[], viewInfo: ViewInfo): void;
   update(styles: StyleProps[], viewInfo: ViewInfo): void;
   detach(viewTag: number): void;
 }
