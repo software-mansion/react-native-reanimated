@@ -10,6 +10,9 @@ class CSSAnimationsRegistry
   CSSAnimationsRegistry(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
+  void add(const std::shared_ptr<CSSAnimation> &animation) override;
+  void remove(const unsigned id) override;
+
  protected:
   jsi::Value handleUpdate(
       jsi::Runtime &rt,

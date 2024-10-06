@@ -9,8 +9,11 @@ import type {
   WorkletFunction,
   StyleProps,
 } from '../commonTypes';
-import type { NormalizedCSSAnimationConfig } from '../css';
-import type { NormalizedCSSTransitionConfig } from '../css/types';
+import type {
+  NormalizedCSSAnimationConfig,
+  NormalizedCSSAnimationSettings,
+  NormalizedCSSTransitionConfig,
+} from '../css';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
@@ -67,7 +70,7 @@ export interface ReanimatedModuleProxy {
 
   updateCSSAnimation(
     animationId: number,
-    animationConfig: Partial<NormalizedCSSAnimationConfig>
+    settingsUpdates: Partial<NormalizedCSSAnimationSettings>
   ): void;
 
   unregisterCSSAnimation(animationId: number): void;
@@ -80,7 +83,7 @@ export interface ReanimatedModuleProxy {
 
   updateCSSTransition(
     transitionId: number,
-    transitionConfig: NormalizedCSSTransitionConfig
+    configUpdates: Partial<NormalizedCSSTransitionConfig>
   ): void;
 
   unregisterCSSTransition(transitionId: number): void;

@@ -18,8 +18,8 @@ class CSSRegistry : public UpdatesRegistry {
  public:
   bool hasUpdates() const;
 
-  void add(const std::shared_ptr<Item> &item);
-  void remove(const unsigned id);
+  virtual void add(const std::shared_ptr<Item> &item) = 0;
+  virtual void remove(const unsigned id) = 0;
   void update(jsi::Runtime &rt, const time_t timestamp);
 
   void updateSettings(
@@ -40,7 +40,8 @@ class CSSRegistry : public UpdatesRegistry {
   OperationsBatch operationsBatch_;
 
   std::unordered_set<unsigned> runningIds_;
-  DelayedQueue delayedIds_;
+  std::unordered_set<unsigned> delayedIds_;
+  DelayedQueue delayedItemsQueue_;
 
   virtual jsi::Value handleUpdate(
       jsi::Runtime &rt,

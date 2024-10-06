@@ -6,7 +6,6 @@ import type {
   CSSKeyframeValue,
   CSSAnimationKeyframes,
   CSSKeyframeViewStyle,
-  CSSAnimationProperties,
   TransformsArray,
 } from '../../types';
 import { parseTransformString, isColorProp } from '../../utils';
@@ -25,10 +24,9 @@ type TemporaryTransforms = {
   previousTransformOffset: number;
 };
 
-export function processKeyframes(keyframes: CSSAnimationKeyframes): {
-  keyframeStyle: CSSKeyframeViewStyle;
-  animationProperties: CSSAnimationProperties;
-} {
+export function processKeyframes(
+  keyframes: CSSAnimationKeyframes
+): CSSKeyframeViewStyle {
   const normalizedKeyframes = normalizeKeyframesOffsets(keyframes);
 
   const keyframeStyle: CSSKeyframeViewStyle = {};
@@ -36,31 +34,23 @@ export function processKeyframes(keyframes: CSSAnimationKeyframes): {
     transforms: {},
     previousTransformOffset: -1,
   };
-  const animationProperties: CSSAnimationProperties = {};
 
   normalizedKeyframes.forEach(({ offset, style }) => {
     if (style) {
-      processStyleProperties(
-        offset,
-        style,
-        keyframeStyle,
-        temporaryTransforms,
-        animationProperties
-      );
+      processStyleProperties(offset, style, keyframeStyle, temporaryTransforms);
     }
   });
 
   addFormattedTransforms(keyframeStyle, temporaryTransforms.transforms);
 
-  return { keyframeStyle, animationProperties };
+  return keyframeStyle;
 }
 
 function processStyleProperties(
   offset: number,
   style: ViewStyle,
   keyframeStyle: CSSKeyframeViewStyle,
-  temporaryTransforms: TemporaryTransforms,
-  animationProperties: CSSAnimationProperties
+  temporaryTransforms: TemporaryTransforms
 ) {
   Object.entries(style).forEach(([property, value]) => {
     if (value === undefined) {
@@ -75,24 +65,12 @@ function processStyleProperties(
         prop,
         value,
         keyframeStyle,
-        temporaryTransforms,
-        animationProperties
+        temporaryTransforms
       );
     } else if (typeof value === 'string' && prop === 'transform') {
-      handleTransformString(
-        offset,
-        value,
-        temporaryTransforms,
-        animationProperties
-      );
+      handleTransformString(offset, value, temporaryTransforms);
     } else {
-      handlePrimitiveValue(
-        offset,
-        prop,
-        value,
-        keyframeStyle,
-        animationProperties
-      );
+      handlePrimitiveValue(offset, prop, value, keyframeStyle);
     }
   });
 }
@@ -102,8 +80,7 @@ function handleObjectValue(
   prop: keyof ViewStyle,
   value: any,
   keyframeStyle: CSSKeyframeViewStyle,
-  temporaryTransforms: TemporaryTransforms,
-  animationProperties: CSSAnimationProperties
+  temporaryTransforms: TemporaryTransforms
 ) {
   if (Array.isArray(value)) {
     if (prop !== 'transform') {
@@ -111,13 +88,11 @@ function handleObjectValue(
         ERROR_MESSAGES.unsupportedKeyframeValueType(prop)
       );
     }
-    addTransformValues(temporaryTransforms, value, offset, animationProperties);
+    addTransformValues(temporaryTransforms, value, offset);
   } else {
     const subStyle = keyframeStyle[prop] || {};
     Object.entries(value).forEach(([subProperty, subValue]) => {
       if (subValue !== undefined) {
-        (animationProperties[prop] as Record<string, boolean>)[subProperty] =
-          true;
         addSubPropertyValue(subStyle, subProperty, subValue, offset);
       }
     });
@@ -128,23 +103,16 @@ function handleObjectValue(
 function handleTransformString(
   offset: number,
   value: string,
-  temporaryTransforms: TemporaryTransforms,
-  animationProperties: CSSAnimationProperties
+  temporaryTransforms: TemporaryTransforms
 ) {
   const transformArray = parseTransformString(value);
-  addTransformValues(
-    temporaryTransforms,
-    transformArray,
-    offset,
-    animationProperties
-  );
+  addTransformValues(temporaryTransforms, transformArray, offset);
 }
 
 function addTransformValues(
   temporaryTransforms: TemporaryTransforms,
   transforms: TransformsArray,
-  offset: number,
-  animationProperties: CSSAnimationProperties
+  offset: number
 ) {
   const currentTransformProperties = new Set(
     transforms.flatMap((transform) => Object.keys(transform))
@@ -163,14 +131,8 @@ function addTransformValues(
     }
   );
 
-  if (!animationProperties.transform) {
-    animationProperties.transform = {};
-  }
-
   transforms.forEach((transform) => {
     Object.entries(transform).forEach(([property, value]) => {
-      (animationProperties.transform as Record<string, boolean>)[property] =
-        true;
       if (!temporaryTransforms.transforms[property]) {
         temporaryTransforms.transforms[property] = [];
       }
@@ -198,12 +160,10 @@ function handlePrimitiveValue(
   offset: number,
   prop: keyof ViewStyle,
   value: any,
-  keyframeStyle: CSSKeyframeViewStyle,
-  animationProperties: CSSAnimationProperties
+  keyframeStyle: CSSKeyframeViewStyle
 ) {
   if (!keyframeStyle[prop]) {
     (keyframeStyle as any)[prop] = [];
-    (animationProperties[prop] as any) = true;
   }
 
   let processedValue = value;

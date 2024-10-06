@@ -1,30 +1,43 @@
 'use strict';
 import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
-import { registerCSSTransition, unregisterCSSTransition } from '../native';
-import { normalizeCSSTransitionConfig } from '../normalization';
+import {
+  registerCSSTransition,
+  unregisterCSSTransition,
+  updateCSSTransition,
+} from '../native';
+import {
+  normalizeCSSTransitionConfig,
+  getNormalizedCSSTransitionConfigUpdates,
+} from '../normalization';
 import type { CSSTransitionConfig } from '../types';
-import type CSSIdManager from './CSSIdManager';
 
 export default class CSSTransitionManager {
-  private readonly cssIdManager: CSSIdManager;
-
   private transitionId?: number;
+  private normalizedTransitionProperties?: string[];
+  private transitionConfig?: CSSTransitionConfig;
 
-  constructor(cssIdManager: CSSIdManager) {
-    this.cssIdManager = cssIdManager;
-  }
+  static _nextId = 0;
 
-  attach(
+  private attach(
     transitionConfig: CSSTransitionConfig,
     shadowNodeWrapper: ShadowNodeWrapper,
     style: StyleProps
   ) {
-    this.transitionId = this.cssIdManager.getId();
+    this.transitionId = CSSTransitionManager._nextId++;
+    this.transitionConfig = transitionConfig;
+
+    const normalizedConfig = normalizeCSSTransitionConfig(
+      transitionConfig,
+      style
+    );
+    this.normalizedTransitionProperties = normalizedConfig.transitionProperty;
+
+    console.log(normalizedConfig);
 
     registerCSSTransition(
       shadowNodeWrapper,
       this.transitionId,
-      normalizeCSSTransitionConfig(transitionConfig, style)
+      normalizedConfig
     );
   }
 
@@ -32,20 +45,38 @@ export default class CSSTransitionManager {
     if (this.transitionId !== undefined) {
       unregisterCSSTransition(this.transitionId);
       this.transitionId = undefined;
+      this.normalizedTransitionProperties = undefined;
+      this.transitionConfig = undefined;
     }
   }
 
   update(
     wrapper: ShadowNodeWrapper,
     transitionConfig: CSSTransitionConfig | null,
-    newStyle: StyleProps
+    style: StyleProps
   ): void {
-    // TODO - implement
-    console.log(
-      'CSSTransitionManager.update',
-      wrapper,
-      transitionConfig,
-      newStyle
-    );
+    if (
+      this.transitionId !== undefined &&
+      this.transitionConfig !== undefined &&
+      this.normalizedTransitionProperties !== undefined &&
+      transitionConfig !== null
+    ) {
+      const configUpdates = getNormalizedCSSTransitionConfigUpdates(
+        this.normalizedTransitionProperties,
+        this.transitionConfig,
+        transitionConfig,
+        style
+      );
+      this.transitionConfig = transitionConfig;
+      this.normalizedTransitionProperties = configUpdates.transitionProperty;
+
+      if (Object.keys(configUpdates).length > 0) {
+        updateCSSTransition(this.transitionId, configUpdates);
+      }
+    } else if (transitionConfig) {
+      this.attach(transitionConfig, wrapper, style);
+    } else {
+      this.detach();
+    }
   }
 }

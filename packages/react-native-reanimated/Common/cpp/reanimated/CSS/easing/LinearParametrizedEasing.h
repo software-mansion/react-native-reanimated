@@ -1,7 +1,7 @@
 #pragma once
 
-#include <reanimated/CSS/util/Algorithms.h>
-#include <reanimated/CSS/util/EasingFunction.h>
+#include <reanimated/CSS/util/algorithms.h>
+#include <reanimated/CSS/util/easingFunction.h>
 
 #include <functional>
 #include <vector>

@@ -28,13 +28,13 @@ ObjectPropertiesInterpolators ObjectPropertiesInterpolator::build(
         object.getProperty(rt, jsi::PropNameID::forUtf8(rt, propName));
 
     auto factory = factories.find(propName);
-    if (factory == factories.end()) {
+    if (factory == factories.cend()) {
       throw std::invalid_argument(
           "[Reanimated] No matching interpolator factory found for property: " +
           propName);
     }
 
-    std::vector<std::string> newPath = this->propertyPath_;
+    std::vector<std::string> newPath = propertyPath_;
     newPath.emplace_back(propName);
     interpolators[propName] =
         factory->second(rt, propValue, viewStylesRepository, newPath);
@@ -49,15 +49,14 @@ jsi::Value ObjectPropertiesInterpolator::mapInterpolators(
   jsi::Object result(rt);
   bool allUndefined = true;
 
-  for (const auto &pair : interpolators_) {
-    const std::shared_ptr<Interpolator> &interpolator = pair.second;
+  for (const auto &[propName, interpolator] : interpolators_) {
     jsi::Value value = callback(*interpolator);
 
     if (!value.isUndefined()) {
       allUndefined = false;
     }
 
-    result.setProperty(rt, pair.first.c_str(), value);
+    result.setProperty(rt, propName.c_str(), value);
   }
 
   if (allUndefined) {

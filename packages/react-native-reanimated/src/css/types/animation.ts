@@ -22,21 +22,6 @@ type CreateKeyframeStyle<S> = {
 
 export type CSSKeyframeViewStyle = CreateKeyframeStyle<ViewStyle>;
 
-type CreateAnimationProperties<S> = {
-  [P in keyof S]: S[P] extends infer U | undefined
-    ? U extends object
-      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        U extends Array<any>
-        ? P extends 'transform'
-          ? Record<string, boolean>
-          : boolean
-        : Record<string, boolean>
-      : boolean
-    : never;
-};
-
-export type CSSAnimationProperties = CreateAnimationProperties<ViewStyle>;
-
 // BEFORE NORMALIZATION
 
 export type CSSAnimationKeyframeKey = `${number}%` | 'from' | 'to' | number;
@@ -63,14 +48,14 @@ export type CSSAnimationSettings = {
   animationDirection?: CSSAnimationDirection;
   animationFillMode?: CSSAnimationFillMode;
   animationPlayState?: CSSAnimationPlayState;
-  // This is still experimental in browsers and we might not want to support it
-  // when CSS animations in reanimated are released
-  // animationTimeline?: // TODO
+  // animationTimeline?: // TODO - This is still experimental in browsers and we might not want to support it when CSS animations in reanimated are released
 };
 
 export type CSSAnimationConfig = CSSAnimationSettings & {
   animationName: CSSAnimationKeyframes;
 };
+
+export type AnimationSettingProp = keyof CSSAnimationSettings;
 
 // AFTER NORMALIZATION
 

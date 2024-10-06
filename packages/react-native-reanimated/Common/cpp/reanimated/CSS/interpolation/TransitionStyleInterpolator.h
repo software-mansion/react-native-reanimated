@@ -1,44 +1,43 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/StyleInterpolatorsConfig.h>
-#include <reanimated/CSS/progress/TransitionPropertyProgressProvider.h>
+#include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
 
 namespace reanimated {
 
-struct PropertyInterpolatorState {
-  std::shared_ptr<Interpolator> interpolator;
-  std::shared_ptr<TransitionPropertyProgressProvider> progressProvider;
-};
-
-using TransitionPropertyStates =
-    std::unordered_map<std::string, std::shared_ptr<PropertyInterpolatorState>>;
-
-// We cannot re-use the logic from the ObjectPropertiesInterpolator class as
-// transition properties can be animated independently with different
-// progress values
 class TransitionStyleInterpolator {
  public:
   TransitionStyleInterpolator(
       jsi::Runtime &rt,
-      // TODO - move this to a setter function later on when we add re-renders
-      // support
-      const jsi::Array &properties,
-      double duration,
-      const EasingFunction &easingFunction,
-      double delay);
+      const jsi::Array &propertyNames,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  jsi::Value update(time_t timestamp);
+  std::vector<std::string> getPropertyNames() const {
+    return propertyNames_;
+  }
+
+  void updateProperties(jsi::Runtime &rt, const jsi::Array &propertyNames);
+  jsi::Value update(
+      jsi::Runtime &rt,
+      const std::unordered_map<std::string, InterpolationUpdateContext>
+          &contexts);
 
  private:
-  const TransitionPropertyStates states_;
+  ObjectPropertiesInterpolators interpolators_;
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  TransitionPropertyStates build(
+  std::vector<std::string> propertyNames_;
+
+  ObjectPropertiesInterpolators build(
       jsi::Runtime &rt,
-      const jsi::Array &properties,
-      double duration,
-      const EasingFunction &easingFunction,
-      double delay,
-      const ObjectPropertiesInterpolatorFactories &factories);
+      const jsi::Array &propertyNames,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
+  void addProperty(jsi::Runtime &rt, const std::string &propertyName);
+  void removeProperty(const std::string &propertyName);
+
+  // std::shared_ptr<Interpolator> createInterpolator(
+  //     jsi::Runtime &rt,
+  //     const std::string &propertyName);
 };
 
 } // namespace reanimated

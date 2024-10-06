@@ -6,15 +6,14 @@ CSSTransition::CSSTransition(
     jsi::Runtime &rt,
     const unsigned id,
     const ShadowNode::Shared shadowNode,
-    const CSSTransitionConfig &config)
+    const CSSTransitionConfig &config,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : id_(id),
       shadowNode_(shadowNode),
       styleInterpolator_(TransitionStyleInterpolator(
           rt,
           config.properties,
-          config.duration,
-          config.easingFunction,
-          config.delay)) {}
+          viewStylesRepository)) {}
 
 void CSSTransition::updateSettings(
     jsi::Runtime &rt,
@@ -23,11 +22,10 @@ void CSSTransition::updateSettings(
   // TODO
 }
 
-void CSSTransition::start(time_t timestamp) {
-  // TODO
-}
-
-void CSSTransition::finish(const bool revertChanges) {
+void CSSTransition::run(
+    jsi::Runtime &rt,
+    const jsi::Value &oldProps,
+    const jsi::Value &newProps) {
   // TODO
 }
 

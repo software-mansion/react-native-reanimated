@@ -8,18 +8,6 @@ bool CSSRegistry<Item, Operation>::hasUpdates() const {
 }
 
 template <typename Item, typename Operation>
-void CSSRegistry<Item, Operation>::add(const std::shared_ptr<Item> &item) {
-  const auto id = item->getId();
-  registry_.insert({id, item});
-  operationsBatch_.emplace_back(Operation::ADD, id);
-}
-
-template <typename Item, typename Operation>
-void CSSRegistry<Item, Operation>::remove(const unsigned id) {
-  operationsBatch_.emplace_back(Operation::REMOVE, id);
-}
-
-template <typename Item, typename Operation>
 void CSSRegistry<Item, Operation>::update(
     jsi::Runtime &rt,
     const time_t timestamp) {
@@ -37,8 +25,9 @@ void CSSRegistry<Item, Operation>::update(
     const auto item = itemOptional.value();
 
     const jsi::Value &updates = handleUpdate(rt, timestamp, item);
-
-    if (!updates.isUndefined()) {
+    if (updates.isUndefined()) {
+      operationsBatch_.emplace_back(Operation::DEACTIVATE, id);
+    } else {
       updatesBatch_.emplace_back(
           item->getShadowNode(), std::make_unique<jsi::Value>(rt, updates));
     }
@@ -64,10 +53,11 @@ void CSSRegistry<Item, Operation>::updateSettings(
 template <typename Item, typename Operation>
 void CSSRegistry<Item, Operation>::activateDelayedItems(
     const time_t timestamp) {
-  while (!delayedIds_.empty() && delayedIds_.top().first <= timestamp) {
-    const auto [_, id] = delayedIds_.top();
-    delayedIds_.pop();
-
+  while (!delayedItemsQueue_.empty() &&
+         delayedItemsQueue_.top().first <= timestamp) {
+    const auto [_, id] = delayedItemsQueue_.top();
+    delayedItemsQueue_.pop();
+    delayedIds_.erase(id);
     runningIds_.insert(id);
     operationsBatch_.emplace_back(Operation::ACTIVATE, id);
   }

@@ -123,7 +123,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   void updateCSSAnimation(
       jsi::Runtime &rt,
       const jsi::Value &animationId,
-      const jsi::Value &updatedSettings) override;
+      const jsi::Value &settingsUpdates) override;
   void unregisterCSSAnimation(const jsi::Value &animationId) override;
 
   void registerCSSTransition(
@@ -134,7 +134,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   void updateCSSTransition(
       jsi::Runtime &rt,
       const jsi::Value &transitionId,
-      const jsi::Value &transitionConfig) override;
+      const jsi::Value &configUpdates) override;
   void unregisterCSSTransition(const jsi::Value &transitionId) override;
 
   void dispatchCommand(

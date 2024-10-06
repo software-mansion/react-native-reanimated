@@ -1,6 +1,6 @@
 /**
- * This example is meant to be used for temporary purposes only.
- * Code in this file should be replaced with the actual example implementation.
+ * This example is meant to be used for temporary purposes only. Code in this
+ * file should be replaced with the actual example implementation.
  */
 
 import { Text, StyleSheet, View, SafeAreaView, Button } from 'react-native';
@@ -24,11 +24,12 @@ export default function PlaygroundExample() {
       <View style={styles.container}>
         <Text>Hello world!</Text>
         <Button
-          title={'Change state'}
+          title="Change state"
           onPress={() => {
             setState(state + 1);
             console.log();
-          }}></Button>
+          }}
+        />
         <Animated.View
           style={[
             {

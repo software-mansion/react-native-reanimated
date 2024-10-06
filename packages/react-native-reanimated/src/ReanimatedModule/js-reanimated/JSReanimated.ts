@@ -293,7 +293,7 @@ class JSReanimated implements IReanimatedModule {
 
   updateCSSAnimation(
     _animationId: number,
-    _updatedSettings: Partial<NormalizedCSSAnimationSettings>
+    _settingsUpdates: Partial<NormalizedCSSAnimationSettings>
   ): void {
     throw new ReanimatedError(
       '`updateCSSAnimation` is not available in JSReanimated.'
@@ -318,7 +318,7 @@ class JSReanimated implements IReanimatedModule {
 
   updateCSSTransition(
     _transitionId: number,
-    _transitionConfig: NormalizedCSSTransitionConfig
+    _configUpdates: Partial<NormalizedCSSTransitionConfig>
   ): void {
     throw new ReanimatedError(
       '`updateCSSTransition` is not available in JSReanimated.'

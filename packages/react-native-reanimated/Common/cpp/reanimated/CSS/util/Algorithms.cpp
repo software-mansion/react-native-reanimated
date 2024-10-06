@@ -1,4 +1,4 @@
-#include <reanimated/CSS/util/Algorithms.h>
+#include <reanimated/CSS/util/algorithms.h>
 
 namespace reanimated {
 
