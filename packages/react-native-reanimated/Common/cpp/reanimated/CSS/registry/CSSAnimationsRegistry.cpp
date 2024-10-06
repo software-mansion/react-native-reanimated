@@ -2,6 +2,15 @@
 
 namespace reanimated {
 
+void CSSAnimationsRegistry::updateSettings(
+    jsi::Runtime &rt,
+    const unsigned id,
+    const PartialCSSAnimationSettings &updatedSettings,
+    const time_t timestamp) {
+  registry_.at(id)->updateSettings(rt, updatedSettings, timestamp);
+  operationsBatch_.emplace_back(AnimationOperation::ACTIVATE, id);
+}
+
 void CSSAnimationsRegistry::add(
     const std::shared_ptr<CSSAnimation> &animation) {
   const auto id = animation->getId();
@@ -13,9 +22,48 @@ void CSSAnimationsRegistry::remove(const unsigned id) {
   operationsBatch_.emplace_back(AnimationOperation::REMOVE, id);
 }
 
-CSSAnimationsRegistry::CSSAnimationsRegistry(
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : viewStylesRepository_(viewStylesRepository) {}
+void CSSAnimationsRegistry::update(jsi::Runtime &rt, const time_t timestamp) {
+  // Activate all delayed animations that should start now
+  activateDelayedAnimations(timestamp);
+  // Flush all operations from the batch
+  flushOperations(rt, timestamp);
+
+  // Iterate over active animations and update them
+  for (const auto &id : runningAnimationIds_) {
+    const auto &animation = registry_.at(id);
+    const jsi::Value &updates = handleUpdate(rt, timestamp, animation);
+
+    if (updates.isUndefined()) {
+      operationsBatch_.emplace_back(AnimationOperation::DEACTIVATE, id);
+    } else {
+      updatesBatch_.emplace_back(
+          animation->getShadowNode(),
+          std::make_unique<jsi::Value>(rt, updates));
+    }
+  }
+}
+
+void CSSAnimationsRegistry::activateDelayedAnimations(const time_t timestamp) {
+  while (!delayedAnimationsQueue_.empty() &&
+         delayedAnimationsQueue_.top().first <= timestamp) {
+    const auto [_, id] = delayedAnimationsQueue_.top();
+    delayedAnimationsQueue_.pop();
+    delayedAnimationIds_.erase(id);
+    runningAnimationIds_.insert(id);
+    operationsBatch_.emplace_back(AnimationOperation::ACTIVATE, id);
+  }
+}
+
+void CSSAnimationsRegistry::flushOperations(
+    jsi::Runtime &rt,
+    const time_t timestamp) {
+  auto copiedOperationsBatch = std::move(operationsBatch_);
+  operationsBatch_.clear();
+
+  for (const auto &[operation, id] : copiedOperationsBatch) {
+    handleOperation(rt, operation, registry_.at(id), timestamp);
+  }
+}
 
 jsi::Value CSSAnimationsRegistry::handleUpdate(
     jsi::Runtime &rt,
@@ -73,8 +121,8 @@ void CSSAnimationsRegistry::addOperation(
 
   if (startTimestamp > timestamp) {
     // Add animation to the delayed animations queue
-    delayedIds_.insert(id);
-    delayedItemsQueue_.emplace(startTimestamp, id);
+    delayedAnimationIds_.insert(id);
+    delayedAnimationsQueue_.emplace(startTimestamp, id);
 
     // Apply animation backwards fill style if it exists
     const auto &fillStyle = animation->getBackwardsFillStyle(rt);
@@ -84,7 +132,7 @@ void CSSAnimationsRegistry::addOperation(
           std::make_unique<jsi::Value>(rt, fillStyle));
     }
   } else if (animation->getState(timestamp) != AnimationProgressState::PAUSED) {
-    runningIds_.insert(id);
+    runningAnimationIds_.insert(id);
   }
 }
 
@@ -106,17 +154,17 @@ void CSSAnimationsRegistry::removeOperation(
 
   const auto id = animation->getId();
   registry_.erase(id);
-  runningIds_.erase(id);
+  runningAnimationIds_.erase(id);
 }
 
 void CSSAnimationsRegistry::activateOperation(const unsigned id) {
-  runningIds_.insert(id);
+  runningAnimationIds_.insert(id);
 }
 
 void CSSAnimationsRegistry::deactivateOperation(
     const std::shared_ptr<CSSAnimation> &animation,
     const time_t timestamp) {
-  runningIds_.erase(animation->getId());
+  runningAnimationIds_.erase(animation->getId());
   const auto animationState = animation->getState(timestamp);
 
   // Remove tag from the registry if the animation is deactivated after

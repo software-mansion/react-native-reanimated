@@ -38,6 +38,7 @@ jsi::Value GroupInterpolator::getStyleValue(
 
 void GroupInterpolator::addOrUpdateInterpolator(
     jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode,
     const std::string &propertyName,
     const jsi::Value &keyframes) {
   if (interpolators_.find(propertyName) == interpolators_.cend()) {
@@ -54,7 +55,7 @@ void GroupInterpolator::addOrUpdateInterpolator(
         propertyName, factory->second(viewStylesRepository_, newPath));
   }
 
-  interpolators_.at(propertyName)->setKeyframes(rt, keyframes);
+  interpolators_.at(propertyName)->updateKeyframes(rt, shadowNode, keyframes);
 }
 
 } // namespace reanimated

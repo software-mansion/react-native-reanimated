@@ -8,7 +8,10 @@ class ObjectPropertiesInterpolator : public GroupInterpolator {
  public:
   using GroupInterpolator::GroupInterpolator;
 
-  void setKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
+  void updateKeyframes(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const jsi::Value &keyframes) override;
 
  protected:
   jsi::Value mapInterpolators(

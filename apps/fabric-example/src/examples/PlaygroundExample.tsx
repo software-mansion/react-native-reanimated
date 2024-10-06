@@ -36,7 +36,7 @@ export default function PlaygroundExample() {
               marginTop: 60,
               height: 65,
               transitionProperty: 'all',
-              transitionDuration: '1.5s',
+              transitionDuration: '0.5s',
               transitionTimingFunction: 'easeInOut',
             },
             stateToStyle(state),

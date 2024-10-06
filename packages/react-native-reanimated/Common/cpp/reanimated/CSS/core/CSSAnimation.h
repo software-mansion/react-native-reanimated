@@ -13,8 +13,6 @@ namespace reanimated {
 
 class CSSAnimation {
  public:
-  using PartialSettings = PartialCSSAnimationSettings;
-
   CSSAnimation(
       jsi::Runtime &rt,
       const unsigned id,

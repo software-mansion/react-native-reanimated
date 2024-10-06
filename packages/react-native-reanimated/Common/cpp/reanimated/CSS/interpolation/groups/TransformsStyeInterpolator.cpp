@@ -2,8 +2,9 @@
 
 namespace reanimated {
 
-void TransformsStyleInterpolator::setKeyframes(
+void TransformsStyleInterpolator::updateKeyframes(
     jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode,
     const jsi::Value &keyframes) {
   // TODO - add a possibility to remove interpolators that are no longer used
   // (for now, for simplicity, we only add new ones)
@@ -14,7 +15,8 @@ void TransformsStyleInterpolator::setKeyframes(
   orderedPropertyNames_ = orderedPropertyNames;
 
   for (const auto &propertyName : orderedPropertyNames) {
-    addOrUpdateInterpolator(rt, propertyName, transformsMap.at(propertyName));
+    addOrUpdateInterpolator(
+        rt, shadowNode, propertyName, transformsMap.at(propertyName));
   }
 }
 

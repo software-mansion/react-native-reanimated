@@ -10,9 +10,9 @@ namespace reanimated {
 class ProgressProvider {
  public:
   ProgressProvider(
-      double duration,
-      double delay,
-      EasingFunction easingFunction);
+      const double duration,
+      const double delay,
+      const EasingFunction easingFunction);
 
   double getCurrent() const {
     return currentProgress_.value_or(0);

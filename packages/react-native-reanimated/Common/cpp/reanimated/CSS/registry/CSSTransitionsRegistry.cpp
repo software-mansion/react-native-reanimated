@@ -3,12 +3,21 @@
 namespace reanimated {
 
 CSSTransitionsRegistry::CSSTransitionsRegistry(
-    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
-    : staticPropsRegistry_(staticPropsRegistry) {}
+    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
+    GetAnimationTimestampFunction &getCurrentTimestamp)
+    : staticPropsRegistry_(staticPropsRegistry),
+      getCurrentTimestamp_(getCurrentTimestamp) {}
+
+void CSSTransitionsRegistry::updateSettings(
+    jsi::Runtime &rt,
+    const unsigned id,
+    const PartialCSSTransitionSettings &updatedSettings) {
+  registry_.at(id)->updateSettings(rt, updatedSettings);
+  operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, id);
+}
 
 void CSSTransitionsRegistry::add(
     const std::shared_ptr<CSSTransition> &transition) {
-  LOG(INFO) << "Adding transition";
   const auto id = transition->getId();
   registry_.insert({id, transition});
   PropsObserver observer = createPropsObserver(id);
@@ -21,13 +30,57 @@ void CSSTransitionsRegistry::remove(const unsigned id) {
   staticPropsRegistry_->removeObserver(id);
 }
 
+void CSSTransitionsRegistry::update(jsi::Runtime &rt, const time_t timestamp) {
+  // Activate all delayed transitions that should start now
+  activateDelayedTransitions(timestamp);
+  // Flush all operations from the batch
+  flushOperations(rt, timestamp);
+
+  // Iterate over active transitions and update them
+  for (const auto &id : runningTransitionIds_) {
+    const auto &animation = registry_.at(id);
+    const jsi::Value &updates = handleUpdate(rt, timestamp, animation);
+
+    if (updates.isUndefined()) {
+      operationsBatch_.emplace_back(TransitionOperation::DEACTIVATE, id);
+    } else {
+      updatesBatch_.emplace_back(
+          animation->getShadowNode(),
+          std::make_unique<jsi::Value>(rt, updates));
+    }
+  }
+}
+
+void CSSTransitionsRegistry::activateDelayedTransitions(
+    const time_t timestamp) {
+  while (!delayedTransitionsQueue_.empty() &&
+         delayedTransitionsQueue_.top().first <= timestamp) {
+    const auto [_, id] = delayedTransitionsQueue_.top();
+    delayedTransitionsQueue_.pop();
+    delayedTransitionIds_.erase(id);
+    runningTransitionIds_.insert(id);
+    operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, id);
+  }
+}
+
+void CSSTransitionsRegistry::flushOperations(
+    jsi::Runtime &rt,
+    const time_t timestamp) {
+  auto copiedOperationsBatch = std::move(operationsBatch_);
+  operationsBatch_.clear();
+
+  for (const auto &[operation, id] : copiedOperationsBatch) {
+    handleOperation(rt, operation, registry_.at(id), timestamp);
+  }
+}
+
 jsi::Value CSSTransitionsRegistry::handleUpdate(
     jsi::Runtime &rt,
     const time_t timestamp,
     const std::shared_ptr<CSSTransition> &transition) {
   if (transition->getState(timestamp) == TransitionProgressState::PENDING) {
-    operationsBatch_.emplace_back(
-        TransitionOperation::DEACTIVATE, transition->getId());
+    // operationsBatch_.emplace_back(
+    //     TransitionOperation::DEACTIVATE, transition->getId());
   }
   return transition->update(rt, timestamp);
 }
@@ -38,9 +91,6 @@ void CSSTransitionsRegistry::handleOperation(
     const std::shared_ptr<CSSTransition> &transition,
     const time_t timestamp) {
   switch (operation) {
-    case TransitionOperation::ADD:
-      addOperation(rt, transition, timestamp);
-      break;
     case TransitionOperation::REMOVE:
       removeOperation(rt, transition);
       break;
@@ -53,18 +103,13 @@ void CSSTransitionsRegistry::handleOperation(
   }
 }
 
-void CSSTransitionsRegistry::addOperation(
-    jsi::Runtime &rt,
-    const std::shared_ptr<CSSTransition> &transition,
-    const time_t timestamp) {}
-
 void CSSTransitionsRegistry::removeOperation(
     jsi::Runtime &rt,
     const std::shared_ptr<CSSTransition> &transition) {
   const auto id = transition->getId();
 
   registry_.erase(id);
-  runningIds_.erase(id);
+  runningTransitionIds_.erase(id);
   staticPropsRegistry_->removeObserver(id);
   tagsToRemove_.insert(transition->getShadowNode()->getTag());
 
@@ -78,14 +123,14 @@ void CSSTransitionsRegistry::removeOperation(
 }
 
 void CSSTransitionsRegistry::activateOperation(const unsigned id) {
-  runningIds_.insert(id);
+  runningTransitionIds_.insert(id);
 }
 
 void CSSTransitionsRegistry::deactivateOperation(
     const std::shared_ptr<CSSTransition> &transition,
     const time_t timestamp) {
   const auto id = transition->getId();
-  runningIds_.erase(id);
+  // runningIds_.erase(id);
 }
 
 PropsObserver CSSTransitionsRegistry::createPropsObserver(const unsigned id) {
@@ -93,12 +138,7 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const unsigned id) {
              jsi::Runtime &rt,
              const jsi::Value &oldProps,
              const jsi::Value &newProps) {
-    const auto transitionOptional = getItem(id);
-    if (!transitionOptional.has_value()) {
-      return;
-    }
-
-    const auto &transition = transitionOptional.value();
+    const auto &transition = registry_.at(id);
     const auto &propertyNames = transition->getPropertyNames();
     const auto changedProps =
         getChangedProps(rt, propertyNames, oldProps, newProps);
@@ -107,7 +147,7 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const unsigned id) {
       return;
     }
 
-    transition->run(rt, changedProps);
+    transition->run(rt, changedProps, getCurrentTimestamp_());
     operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, id);
   };
 };

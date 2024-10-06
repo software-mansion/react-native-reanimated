@@ -12,11 +12,25 @@ ValueInterpolator<T>::ValueInterpolator(
       defaultStyleValue_(defaultStyleValue) {}
 
 template <typename T>
-void ValueInterpolator<T>::setKeyframes(
+void ValueInterpolator<T>::updateKeyframes(
     jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode,
     const jsi::Value &keyframes) {
-  keyframes_ = createKeyframes(rt, keyframes.asObject(rt).asArray(rt));
-  if (keyframes_->empty()) {
+  // If only one value is passed, treat it as the last keyframe with offset 1
+  if (!keyframes.isObject()) {
+    Keyframe<T> firstKeyframe;
+    if (previousValue_.has_value()) {
+      firstKeyframe = {0, previousValue_};
+    } else {
+      const auto styleValue = getStyleValue(rt, shadowNode);
+      firstKeyframe = {0, prepareKeyframeValue(rt, styleValue)};
+    }
+    keyframes_ = {firstKeyframe, {1, prepareKeyframeValue(rt, keyframes)}};
+  } else {
+    keyframes_ = createKeyframes(rt, keyframes.asObject(rt).asArray(rt));
+  }
+
+  if (keyframes_.empty()) {
     throw std::invalid_argument("[Reanimated] Keyframes cannot be empty.");
   }
   keyframeAfterIndex_ = 1;
@@ -24,14 +38,14 @@ void ValueInterpolator<T>::setKeyframes(
 
 template <typename T>
 jsi::Value ValueInterpolator<T>::getBackwardsFillValue(jsi::Runtime &rt) const {
-  const auto &value = keyframes_->front().value;
+  const auto &value = keyframes_.front().value;
   return value.has_value() ? convertResultToJSI(rt, value.value())
                            : jsi::Value::undefined();
 }
 
 template <typename T>
 jsi::Value ValueInterpolator<T>::getForwardsFillValue(jsi::Runtime &rt) const {
-  const auto &value = keyframes_->back().value;
+  const auto &value = keyframes_.back().value;
   return value.has_value() ? convertResultToJSI(rt, value.value())
                            : jsi::Value::undefined();
 }
@@ -76,8 +90,7 @@ jsi::Value ValueInterpolator<T>::update(
 }
 
 template <typename T>
-std::shared_ptr<const std::vector<Keyframe<T>>>
-ValueInterpolator<T>::createKeyframes(
+std::vector<Keyframe<T>> ValueInterpolator<T>::createKeyframes(
     jsi::Runtime &rt,
     const jsi::Array &keyframeArray) const {
   const size_t inputKeyframesCount = keyframeArray.size(rt);
@@ -93,13 +106,13 @@ ValueInterpolator<T>::createKeyframes(
   bool hasOffset1 = getKeyframeAtIndexOffset(inputKeyframesCount - 1) == 1;
 
   // Reserve space for the constant keyframes vector
-  std::vector<Keyframe<T>> keyframes_;
-  keyframes_.reserve(
+  std::vector<Keyframe<T>> keyframes;
+  keyframes.reserve(
       inputKeyframesCount + (hasOffset0 ? 0 : 1) + (hasOffset1 ? 0 : 1));
 
   // Insert the keyframe without value at offset 0 if it is not present
   if (!hasOffset0) {
-    keyframes_.push_back({0, std::nullopt});
+    keyframes.push_back({0, std::nullopt});
   }
 
   // Insert all provided keyframes
@@ -111,18 +124,18 @@ ValueInterpolator<T>::createKeyframes(
 
     // Add a keyframe with no value if there is not keyframe value specified
     if (value.isUndefined()) {
-      keyframes_.push_back({offset, std::nullopt});
+      keyframes.push_back({offset, std::nullopt});
     } else {
-      keyframes_.push_back({offset, prepareKeyframeValue(rt, value)});
+      keyframes.push_back({offset, prepareKeyframeValue(rt, value)});
     }
   }
 
   // Insert the keyframe without value at offset 1 if it is not present
   if (!hasOffset1) {
-    keyframes_.push_back({1, std::nullopt});
+    keyframes.push_back({1, std::nullopt});
   }
 
-  return std::make_shared<std::vector<Keyframe<T>>>(std::move(keyframes_));
+  return keyframes;
 }
 
 template <typename T>
@@ -151,11 +164,11 @@ Keyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
     bool shouldResolve,
     const InterpolationUpdateContext context) const {
   // This should never happen
-  if (index < 0 || index >= keyframes_->size()) {
+  if (index < 0 || index >= keyframes_.size()) {
     throw std::invalid_argument("[Reanimated] Keyframe index out of bounds.");
   }
 
-  const auto keyframe = keyframes_->at(index);
+  const auto keyframe = keyframes_.at(index);
   const double offset = keyframe.offset;
 
   if (shouldResolve) {
@@ -182,20 +195,18 @@ template <typename T>
 void ValueInterpolator<T>::updateCurrentKeyframes(
     const InterpolationUpdateContext context) {
   const bool isProgressLessThanHalf = context.progress < 0.5;
-
-  if (!context.previousProgress.has_value()) {
-    keyframeAfterIndex_ = isProgressLessThanHalf ? 1 : keyframes_->size() - 1;
-  }
-
-  const auto &keyframes = *keyframes_;
   const auto prevAfterIndex = keyframeAfterIndex_;
 
-  while (context.progress < 1 && keyframeAfterIndex_ < keyframes.size() - 1 &&
-         keyframes[keyframeAfterIndex_].offset <= context.progress)
+  if (!context.previousProgress.has_value()) {
+    keyframeAfterIndex_ = isProgressLessThanHalf ? 1 : keyframes_.size() - 1;
+  }
+
+  while (context.progress < 1 && keyframeAfterIndex_ < keyframes_.size() - 1 &&
+         keyframes_[keyframeAfterIndex_].offset <= context.progress)
     ++keyframeAfterIndex_;
 
   while (context.progress > 0 && keyframeAfterIndex_ > 1 &&
-         keyframes[keyframeAfterIndex_ - 1].offset >= context.progress)
+         keyframes_[keyframeAfterIndex_ - 1].offset >= context.progress)
     --keyframeAfterIndex_;
 
   if (context.previousProgress.has_value()) {

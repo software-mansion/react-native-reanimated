@@ -2,8 +2,9 @@
 
 namespace reanimated {
 
-void ObjectPropertiesInterpolator::setKeyframes(
+void ObjectPropertiesInterpolator::updateKeyframes(
     jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode,
     const jsi::Value &keyframes) {
   // TODO - add a possibility to remove interpolators that are no longer used
   // (for now, for simplicity, we only add new ones)
@@ -18,7 +19,7 @@ void ObjectPropertiesInterpolator::setKeyframes(
     const jsi::Value &keyframes = keyframesObject.getProperty(
         rt, jsi::PropNameID::forUtf8(rt, propertyName));
 
-    addOrUpdateInterpolator(rt, propertyName, keyframes);
+    addOrUpdateInterpolator(rt, shadowNode, propertyName, keyframes);
   }
 }
 
