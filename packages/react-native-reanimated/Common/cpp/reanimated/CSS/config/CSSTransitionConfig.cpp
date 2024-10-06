@@ -17,7 +17,7 @@ inline double getTransitionDuration(
 inline EasingFunction getTransitionTimingFunction(
     jsi::Runtime &rt,
     const jsi::Object &config) {
-  const auto str = config.getProperty(rt, "animationTimingFunction");
+  const auto str = config.getProperty(rt, "transitionTimingFunction");
   return getEasingFunction(rt, str);
 }
 

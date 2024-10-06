@@ -39,11 +39,9 @@ class ViewStylesRepository {
   jsi::Value getNodeProp(
       const ShadowNode::Shared &shadowNode,
       const std::string &propName);
-
   jsi::Value getParentNodeProp(
       const ShadowNode::Shared &shadowNode,
       const std::string &propName);
-
   jsi::Value getStyleProp(
       jsi::Runtime &rt,
       const Tag tag,

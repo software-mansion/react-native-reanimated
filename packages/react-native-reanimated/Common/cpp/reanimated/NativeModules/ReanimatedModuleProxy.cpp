@@ -84,7 +84,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       viewStylesRepository_(std::make_shared<ViewStylesRepository>(
           staticPropsRegistry_,
           animatedPropsRegistry_)),
-      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>()),
+      cssTransitionsRegistry_(
+          std::make_shared<CSSTransitionsRegistry>(staticPropsRegistry_)),
       cssAnimationsRegistry_(
           std::make_shared<CSSAnimationsRegistry>(viewStylesRepository_)),
 #else
@@ -533,11 +534,11 @@ void ReanimatedModuleProxy::registerCSSAnimation(
 void ReanimatedModuleProxy::updateCSSAnimation(
     jsi::Runtime &rt,
     const jsi::Value &animationId,
-    const jsi::Value &updatedSettings) {
+    const jsi::Value &settingsUpdates) {
   cssAnimationsRegistry_->updateSettings(
       rt,
       animationId.asNumber(),
-      parsePartialCSSAnimationSettings(rt, updatedSettings),
+      parsePartialCSSAnimationSettings(rt, settingsUpdates),
       getAnimationTimestamp_());
   maybeRunCSSLoop();
 }
@@ -558,7 +559,8 @@ void ReanimatedModuleProxy::registerCSSTransition(
       rt,
       transitionId.asNumber(),
       shadowNode,
-      parseCSSTransitionConfig(rt, transitionConfig));
+      parseCSSTransitionConfig(rt, transitionConfig),
+      viewStylesRepository_);
 
   cssTransitionsRegistry_->add(transition);
   maybeRunCSSLoop();
@@ -567,11 +569,11 @@ void ReanimatedModuleProxy::registerCSSTransition(
 void ReanimatedModuleProxy::updateCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &transitionId,
-    const jsi::Value &transitionConfig) {
+    const jsi::Value &configUpdates) {
   cssTransitionsRegistry_->updateSettings(
       rt,
       transitionId.asNumber(),
-      parsePartialCSSTransitionSettings(rt, transitionConfig),
+      parsePartialCSSTransitionSettings(rt, configUpdates),
       getAnimationTimestamp_());
   maybeRunCSSLoop();
 }

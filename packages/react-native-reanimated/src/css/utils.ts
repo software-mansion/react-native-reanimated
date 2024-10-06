@@ -2,16 +2,14 @@
 import { processCSSAnimationColor } from '../Colors';
 import type { StyleProps } from '../commonTypes';
 import type {
+  AnimationSettingProp,
   CSSAnimationConfig,
   CSSAnimationKeyframes,
-  CSSAnimationSettings,
   CSSTransitionConfig,
   CSSTransitionProperty,
   TransformsArray,
+  TransitionSettingProp,
 } from './types';
-
-type AnimationSettingProp = keyof CSSAnimationSettings;
-type TransitionSettingProp = keyof CSSTransitionConfig;
 
 const ANIMATION_SETTINGS: AnimationSettingProp[] = [
   'animationDuration',
@@ -144,3 +142,21 @@ export function extractCSSConfigsAndFlattenedStyles(
 
   return [finalAnimationConfig, finalTransitionConfig, flattenedStyle];
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const haveDifferentValues = <T extends Array<any>>(
+  arr1: T,
+  arr2: T
+): boolean => {
+  const countDiffs: Record<string, number> = {};
+  for (const value of arr1) {
+    countDiffs[value] = (countDiffs[value] || 0) + 1;
+  }
+  for (const value of arr2) {
+    countDiffs[value] = (countDiffs[value] || 0) - 1;
+    if (countDiffs[value] < 0) {
+      return true;
+    }
+  }
+  return Object.values(countDiffs).some((count) => count !== 0);
+};

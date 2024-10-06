@@ -1,11 +1,19 @@
 #pragma once
 
 #include <reanimated/CSS/registry/CSSRegistry.h>
+#include <reanimated/CSS/util/props.h>
 
 namespace reanimated {
 
 class CSSTransitionsRegistry
     : public CSSRegistry<CSSTransition, TransitionOperation> {
+ public:
+  CSSTransitionsRegistry(
+      const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
+
+  void add(const std::shared_ptr<CSSTransition> &transition) override;
+  void remove(const unsigned id) override;
+
  protected:
   jsi::Value handleUpdate(
       jsi::Runtime &rt,
@@ -28,6 +36,12 @@ class CSSTransitionsRegistry
   void deactivateOperation(
       const std::shared_ptr<CSSTransition> &transition,
       const time_t timestamp) override;
+
+ private:
+  std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
+
+  PropsObserver createPropsObserver(
+      const std::shared_ptr<CSSTransition> &transition);
 };
 
 } // namespace reanimated

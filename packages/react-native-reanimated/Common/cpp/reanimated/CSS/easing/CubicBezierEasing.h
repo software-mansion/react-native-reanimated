@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/util/EasingFunction.h>
+#include <reanimated/CSS/util/easingFunction.h>
 
 #include <cmath>
 #include <functional>

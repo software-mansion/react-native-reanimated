@@ -40,7 +40,7 @@ class Interpolator {
       const ShadowNode::Shared &shadowNode) const = 0;
 
  protected:
-  std::vector<std::string> propertyPath_;
+  const std::vector<std::string> propertyPath_;
 };
 
 using InterpolatorFactoryFunction = std::function<std::shared_ptr<Interpolator>(

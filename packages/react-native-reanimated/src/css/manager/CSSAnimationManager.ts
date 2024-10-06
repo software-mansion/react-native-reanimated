@@ -8,36 +8,26 @@ import {
   getNormalizedCSSAnimationSettingsUpdates,
   normalizeCSSAnimationConfig,
 } from '../normalization';
-import type { CSSAnimationConfig, CSSAnimationProperties } from '../types';
-import type CSSIdManager from './CSSIdManager';
+import type { CSSAnimationConfig } from '../types';
 
 export default class CSSAnimationManager {
-  private readonly cssIdManager: CSSIdManager;
-
   private animationId?: number;
   private serializedAnimationKeyframes?: string;
   private animationConfig?: CSSAnimationConfig;
-  private animationProperties?: CSSAnimationProperties;
 
-  constructor(cssIdManager: CSSIdManager) {
-    this.cssIdManager = cssIdManager;
-  }
+  static _nextId = 0;
 
-  attach(
+  private attach(
     animationConfig: CSSAnimationConfig,
     shadowNodeWrapper: ShadowNodeWrapper,
     serializedKeyframes?: string
   ) {
-    this.animationId = this.cssIdManager.getId();
+    this.animationId = CSSAnimationManager._nextId++;
     this.serializedAnimationKeyframes =
       serializedKeyframes ?? JSON.stringify(animationConfig.animationName);
     this.animationConfig = animationConfig;
 
-    const { normalizedConfig, animationProperties } =
-      normalizeCSSAnimationConfig(animationConfig);
-
-    this.animationProperties = animationProperties;
-
+    const normalizedConfig = normalizeCSSAnimationConfig(animationConfig);
     registerCSSAnimation(shadowNodeWrapper, this.animationId, normalizedConfig);
   }
 
@@ -47,7 +37,6 @@ export default class CSSAnimationManager {
       this.animationId = undefined;
       this.serializedAnimationKeyframes = undefined;
       this.animationConfig = undefined;
-      this.animationProperties = undefined;
     }
   }
 
@@ -58,8 +47,7 @@ export default class CSSAnimationManager {
     if (
       this.animationId !== undefined &&
       animationConfig &&
-      this.animationConfig &&
-      this.animationProperties
+      this.animationConfig
     ) {
       const serializedKeyframes = JSON.stringify(animationConfig.animationName);
       // Replace the animation by the new one if the keyframes have changed
@@ -74,6 +62,7 @@ export default class CSSAnimationManager {
           animationConfig
         );
         this.animationConfig = animationConfig;
+
         if (Object.keys(settingsUpdates).length > 0) {
           updateCSSAnimation(this.animationId, settingsUpdates);
         }

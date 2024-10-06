@@ -12,16 +12,14 @@ import type {
 } from '../../createAnimatedComponent/commonTypes';
 import CSSTransitionManager from './CSSTransitionManager';
 import CSSAnimationManager from './CSSAnimationManager';
-import CSSIdManager from './CSSIdManager';
 
 export default class CSSManager implements ICSSManager {
-  private readonly cssIdManager = CSSIdManager.getInstance();
   private readonly cssAnimationManager: CSSAnimationManager;
   private readonly cssTransitionManager: CSSTransitionManager;
 
   constructor() {
-    this.cssAnimationManager = new CSSAnimationManager(this.cssIdManager);
-    this.cssTransitionManager = new CSSTransitionManager(this.cssIdManager);
+    this.cssAnimationManager = new CSSAnimationManager();
+    this.cssTransitionManager = new CSSTransitionManager();
   }
 
   update(
@@ -36,9 +34,9 @@ export default class CSSManager implements ICSSManager {
       adaptViewConfig(viewConfig);
     }
 
-    setViewStyle(viewTag as number, style);
-    this.cssAnimationManager.update(wrapper, animationConfig);
     this.cssTransitionManager.update(wrapper, transitionConfig, style);
+    this.cssAnimationManager.update(wrapper, animationConfig);
+    setViewStyle(viewTag as number, style);
   }
 
   detach(viewTag: number): void {

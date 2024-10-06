@@ -29,9 +29,9 @@ export function registerCSSAnimation(
 
 export function updateCSSAnimation(
   animationId: number,
-  updatedSettings: Partial<NormalizedCSSAnimationSettings>
+  settingsUpdates: Partial<NormalizedCSSAnimationSettings>
 ) {
-  ReanimatedModule.updateCSSAnimation(animationId, updatedSettings);
+  ReanimatedModule.updateCSSAnimation(animationId, settingsUpdates);
 }
 
 export function unregisterCSSAnimation(animationId: number) {
@@ -52,9 +52,9 @@ export function registerCSSTransition(
 
 export function updateCSSTransition(
   transitionId: number,
-  transitionConfig: NormalizedCSSTransitionConfig
+  configUpdates: Partial<NormalizedCSSTransitionConfig>
 ) {
-  ReanimatedModule.updateCSSTransition(transitionId, transitionConfig);
+  ReanimatedModule.updateCSSTransition(transitionId, configUpdates);
 }
 
 export function unregisterCSSTransition(transitionId: number) {

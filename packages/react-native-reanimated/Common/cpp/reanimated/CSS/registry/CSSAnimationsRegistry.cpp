@@ -2,6 +2,16 @@
 
 namespace reanimated {
 
+void CSSAnimationsRegistry::add(const std::shared_ptr<CSSAnimation> &item) {
+  const auto id = item->getId();
+  registry_.insert({id, item});
+  operationsBatch_.emplace_back(AnimationOperation::ADD, id);
+}
+
+void CSSAnimationsRegistry::remove(const unsigned id) {
+  operationsBatch_.emplace_back(AnimationOperation::REMOVE, id);
+}
+
 CSSAnimationsRegistry::CSSAnimationsRegistry(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : viewStylesRepository_(viewStylesRepository) {}
@@ -57,10 +67,13 @@ void CSSAnimationsRegistry::addOperation(
     jsi::Runtime &rt,
     const std::shared_ptr<CSSAnimation> &animation,
     const time_t timestamp) {
+  const auto id = animation->getId();
   const auto startTimestamp = animation->getDelay() + animation->getStartTime();
+
   if (startTimestamp > timestamp) {
     // Add animation to the delayed animations queue
-    delayedIds_.emplace(startTimestamp, animation->getId());
+    delayedIds_.insert(id);
+    delayedItemsQueue_.emplace(startTimestamp, id);
 
     // Apply animation backwards fill style if it exists
     const auto &fillStyle = animation->getBackwardsFillStyle(rt);
@@ -70,7 +83,7 @@ void CSSAnimationsRegistry::addOperation(
           std::make_unique<jsi::Value>(rt, fillStyle));
     }
   } else if (animation->getState(timestamp) != AnimationProgressState::PAUSED) {
-    runningIds_.insert(animation->getId());
+    runningIds_.insert(id);
   }
 }
 

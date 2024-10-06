@@ -19,8 +19,11 @@ import { ReanimatedTurboModule } from '../specs';
 import { ReanimatedError } from '../errors';
 import { WorkletsModule } from '../worklets';
 import type { ReanimatedModuleProxy } from './reanimatedModuleProxy';
-import type { NormalizedCSSAnimationConfig } from '../css';
-import type { NormalizedCSSTransitionConfig } from '../css/types';
+import type {
+  NormalizedCSSAnimationConfig,
+  NormalizedCSSAnimationSettings,
+  NormalizedCSSTransitionConfig,
+} from '../css';
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
@@ -184,11 +187,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   updateCSSAnimation(
     animationId: number,
-    animationConfig: NormalizedCSSAnimationConfig
+    updatedSettings: Partial<NormalizedCSSAnimationSettings>
   ) {
     this.#reanimatedModuleProxy.updateCSSAnimation(
       animationId,
-      animationConfig
+      updatedSettings
     );
   }
 

@@ -1,8 +1,8 @@
+'use strict';
 import { ReanimatedError } from '../../../errors';
 import type {
   CSSAnimationConfig,
   NormalizedCSSAnimationConfig,
-  CSSAnimationProperties,
   CSSAnimationSettings,
   NormalizedCSSAnimationSettings,
 } from '../../types';
@@ -33,18 +33,14 @@ export function normalizeCSSAnimationConfig({
   animationDirection,
   animationFillMode,
   animationPlayState,
-}: CSSAnimationConfig): {
-  normalizedConfig: NormalizedCSSAnimationConfig;
-  animationProperties: CSSAnimationProperties;
-} {
+}: CSSAnimationConfig): NormalizedCSSAnimationConfig {
   if (!animationName || typeof animationName !== 'object') {
     throw new ReanimatedError(ERROR_MESSAGES.invalidAnimationName());
   }
 
-  const { keyframeStyle, animationProperties } =
-    processKeyframes(animationName);
+  const keyframeStyle = processKeyframes(animationName);
 
-  const normalizedConfig: NormalizedCSSAnimationConfig = {
+  return {
     animationName: keyframeStyle,
     animationDuration: normalizeDuration(animationDuration),
     animationTimingFunction: normalizeTimingFunction(animationTimingFunction),
@@ -54,18 +50,16 @@ export function normalizeCSSAnimationConfig({
     animationFillMode: normalizeFillMode(animationFillMode),
     animationPlayState: normalizePlayState(animationPlayState),
   };
-
-  return { normalizedConfig, animationProperties };
 }
 
 export function getNormalizedCSSAnimationSettingsUpdates(
   oldSettings: CSSAnimationSettings,
   newSettings: Partial<CSSAnimationSettings>
 ): Partial<NormalizedCSSAnimationSettings> {
-  const updatedSettings: Partial<NormalizedCSSAnimationSettings> = {};
+  const settingsUpdates: Partial<NormalizedCSSAnimationSettings> = {};
 
   if (newSettings.animationDuration !== oldSettings.animationDuration) {
-    updatedSettings.animationDuration = normalizeDuration(
+    settingsUpdates.animationDuration = normalizeDuration(
       newSettings.animationDuration
     );
   }
@@ -77,35 +71,35 @@ export function getNormalizedCSSAnimationSettingsUpdates(
           newSettings.animationTimingFunction
         )
   ) {
-    updatedSettings.animationTimingFunction = normalizeTimingFunction(
+    settingsUpdates.animationTimingFunction = normalizeTimingFunction(
       newSettings.animationTimingFunction
     );
   }
   if (newSettings.animationDelay !== oldSettings.animationDelay) {
-    updatedSettings.animationDelay = normalizeDelay(newSettings.animationDelay);
+    settingsUpdates.animationDelay = normalizeDelay(newSettings.animationDelay);
   }
   if (
     newSettings.animationIterationCount !== oldSettings.animationIterationCount
   ) {
-    updatedSettings.animationIterationCount = normalizeIterationCount(
+    settingsUpdates.animationIterationCount = normalizeIterationCount(
       newSettings.animationIterationCount
     );
   }
   if (newSettings.animationDirection !== oldSettings.animationDirection) {
-    updatedSettings.animationDirection = normalizeDirection(
+    settingsUpdates.animationDirection = normalizeDirection(
       newSettings.animationDirection
     );
   }
   if (newSettings.animationFillMode !== oldSettings.animationFillMode) {
-    updatedSettings.animationFillMode = normalizeFillMode(
+    settingsUpdates.animationFillMode = normalizeFillMode(
       newSettings.animationFillMode
     );
   }
   if (newSettings.animationPlayState !== oldSettings.animationPlayState) {
-    updatedSettings.animationPlayState = normalizePlayState(
+    settingsUpdates.animationPlayState = normalizePlayState(
       newSettings.animationPlayState
     );
   }
 
-  return updatedSettings;
+  return settingsUpdates;
 }
