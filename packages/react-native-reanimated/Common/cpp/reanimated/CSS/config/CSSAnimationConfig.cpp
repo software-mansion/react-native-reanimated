@@ -1,4 +1,4 @@
-#include <reanimated/CSS/configs/CSSAnimationConfig.h>
+#include <reanimated/CSS/config/CSSAnimationConfig.h>
 
 namespace reanimated {
 

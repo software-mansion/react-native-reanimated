@@ -1,4 +1,4 @@
-#include <reanimated/CSS/props/ViewStylesRepository.h>
+#include <reanimated/CSS/prop/ViewStylesRepository.h>
 
 namespace reanimated {
 

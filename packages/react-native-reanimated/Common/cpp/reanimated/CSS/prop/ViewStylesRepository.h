@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/props/StaticPropsRegistry.h>
+#include <reanimated/CSS/prop/StaticPropsRegistry.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
 #include <react/nativemodule/dom/NativeDOM.h>

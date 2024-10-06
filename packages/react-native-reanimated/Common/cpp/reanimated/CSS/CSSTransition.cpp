@@ -4,10 +4,12 @@ namespace reanimated {
 
 CSSTransition::CSSTransition(
     jsi::Runtime &rt,
-    ShadowNode::Shared shadowNode,
+    const unsigned id,
+    const ShadowNode::Shared shadowNode,
     const CSSTransitionConfig &config)
-    : shadowNode(shadowNode),
-      styleInterpolator(TransitionStyleInterpolator(
+    : id_(id),
+      shadowNode_(shadowNode),
+      styleInterpolator_(TransitionStyleInterpolator(
           rt,
           config.properties,
           config.duration,
@@ -16,7 +18,8 @@ CSSTransition::CSSTransition(
 
 void CSSTransition::updateSettings(
     jsi::Runtime &rt,
-    const jsi::Value &settings) {
+    const PartialCSSTransitionSettings &settings,
+    const time_t timestamp) {
   // TODO
 }
 

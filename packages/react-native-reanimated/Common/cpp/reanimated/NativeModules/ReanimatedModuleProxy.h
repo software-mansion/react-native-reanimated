@@ -3,11 +3,11 @@
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/CSSAnimation.h>
 #include <reanimated/CSS/CSSTransition.h>
-#include <reanimated/CSS/props/StaticPropsRegistry.h>
-#include <reanimated/CSS/props/ViewStylesRepository.h>
+#include <reanimated/CSS/prop/StaticPropsRegistry.h>
+#include <reanimated/CSS/prop/ViewStylesRepository.h>
+#include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
+#include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
-#include <reanimated/Fabric/updates/CSSAnimationsRegistry.h>
-#include <reanimated/Fabric/updates/CSSTransitionsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>

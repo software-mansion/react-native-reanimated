@@ -12,22 +12,22 @@ AnimationProgressProvider::AnimationProgressProvider(
       iterationCount_(iterationCount),
       direction_(direction) {}
 
-ProgressState AnimationProgressProvider::getState(
+AnimationProgressState AnimationProgressProvider::getState(
     const time_t timestamp) const {
   if (shouldFinish(timestamp)) {
-    return ProgressState::FINISHED;
+    return AnimationProgressState::FINISHED;
   }
   if (pauseTimestamp_ > 0) {
-    return ProgressState::PAUSED;
+    return AnimationProgressState::PAUSED;
   }
   if (!rawProgress_.has_value()) {
-    return ProgressState::PENDING;
+    return AnimationProgressState::PENDING;
   }
   const auto rawProgress = rawProgress_.value();
   if (rawProgress >= 1) {
-    return ProgressState::FINISHED;
+    return AnimationProgressState::FINISHED;
   }
-  return ProgressState::RUNNING;
+  return AnimationProgressState::RUNNING;
 }
 
 void AnimationProgressProvider::pause(const time_t timestamp) {
