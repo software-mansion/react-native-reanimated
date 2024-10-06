@@ -11,6 +11,13 @@ struct CSSTransitionConfig {
   double delay;
 };
 
+struct PartialCSSTransitionSettings {
+  std::optional<jsi::Array> properties;
+  std::optional<double> duration;
+  std::optional<EasingFunction> easingFunction;
+  std::optional<double> delay;
+};
+
 inline jsi::Array getTransitionProperty(
     jsi::Runtime &rt,
     const jsi::Object &config);
@@ -26,6 +33,10 @@ inline EasingFunction getTransitionTimingFunction(
 inline double getTransitionDelay(jsi::Runtime &rt, const jsi::Object &config);
 
 CSSTransitionConfig parseCSSTransitionConfig(
+    jsi::Runtime &rt,
+    const jsi::Value &config);
+
+PartialCSSTransitionSettings parsePartialCSSTransitionSettings(
     jsi::Runtime &rt,
     const jsi::Value &config);
 

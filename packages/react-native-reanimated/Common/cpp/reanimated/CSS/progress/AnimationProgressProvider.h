@@ -1,9 +1,16 @@
 #pragma once
 
-#include <reanimated/CSS/configs/CSSAnimationConfig.h>
+#include <reanimated/CSS/config/CSSAnimationConfig.h>
 #include <reanimated/CSS/progress/ProgressProvider.h>
 
 namespace reanimated {
+
+enum class AnimationProgressState {
+  PENDING, // When the animation is waiting for the delay to pass
+  RUNNING,
+  PAUSED,
+  FINISHED
+};
 
 class AnimationProgressProvider : public ProgressProvider {
  public:
@@ -22,7 +29,8 @@ class AnimationProgressProvider : public ProgressProvider {
     resetProgress();
     direction_ = direction;
   }
-  ProgressState getState(const time_t timestamp) const override;
+
+  AnimationProgressState getState(const time_t timestamp) const;
 
   void pause(const time_t timestamp);
   void play(const time_t timestamp);

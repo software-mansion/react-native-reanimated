@@ -46,7 +46,8 @@ jsi::Value CSSAnimation::getViewStyle(jsi::Runtime &rt) const {
 }
 
 void CSSAnimation::run(const time_t timestamp) {
-  if (progressProvider_.getState(timestamp) == ProgressState::FINISHED) {
+  if (progressProvider_.getState(timestamp) ==
+      AnimationProgressState::FINISHED) {
     return;
   }
   progressProvider_.play(timestamp);
@@ -59,12 +60,13 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, const time_t timestamp) {
   // (In general, it shouldn't be activated until the delay has passed but we
   // add this check to make sure that animation doesn't start with the negative
   // progress)
-  if (progressProvider_.getState(timestamp) == ProgressState::PENDING) {
+  if (progressProvider_.getState(timestamp) ==
+      AnimationProgressState::PENDING) {
     return getBackwardsFillStyle(rt);
   }
 
   const bool isFinished =
-      progressProvider_.getState(timestamp) == ProgressState::FINISHED;
+      progressProvider_.getState(timestamp) == AnimationProgressState::FINISHED;
   // Determine if the progress update direction has changed (e.g. because of
   // the easing used or the alternating animation direction)
   const bool directionChanged =

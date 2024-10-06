@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/configs/CSSAnimationConfig.h>
+#include <reanimated/CSS/config/CSSAnimationConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
@@ -8,10 +8,13 @@
 #include <react/renderer/core/ShadowNode.h>
 
 #include <chrono>
+
 namespace reanimated {
 
 class CSSAnimation {
  public:
+  using PartialSettings = PartialCSSAnimationSettings;
+
   CSSAnimation(
       jsi::Runtime &rt,
       const unsigned id,
@@ -34,7 +37,7 @@ class CSSAnimation {
     return fillMode_ == AnimationFillMode::BACKWARDS ||
         fillMode_ == AnimationFillMode::BOTH;
   }
-  ProgressState getState(const time_t timestamp) const {
+  AnimationProgressState getState(const time_t timestamp) const {
     return progressProvider_.getState(timestamp);
   }
   double getDelay() const {

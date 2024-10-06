@@ -1,4 +1,4 @@
-#include <reanimated/CSS/props/StaticPropsRegistry.h>
+#include <reanimated/CSS/prop/StaticPropsRegistry.h>
 
 namespace reanimated {
 

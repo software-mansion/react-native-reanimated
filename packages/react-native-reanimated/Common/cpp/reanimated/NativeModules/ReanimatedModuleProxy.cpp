@@ -554,11 +554,13 @@ void ReanimatedModuleProxy::registerCSSTransition(
     const jsi::Value &transitionConfig) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
-  auto transition = CSSTransition{
-      rt, shadowNode, parseCSSTransitionConfig(rt, transitionConfig)};
+  auto transition = std::make_shared<CSSTransition>(
+      rt,
+      transitionId.asNumber(),
+      shadowNode,
+      parseCSSTransitionConfig(rt, transitionConfig));
 
-  // TODO
-
+  cssTransitionsRegistry_->add(transition);
   maybeRunCSSLoop();
 }
 
@@ -566,13 +568,17 @@ void ReanimatedModuleProxy::updateCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &transitionId,
     const jsi::Value &transitionConfig) {
-  // TODO
+  cssTransitionsRegistry_->updateSettings(
+      rt,
+      transitionId.asNumber(),
+      parsePartialCSSTransitionSettings(rt, transitionConfig),
+      getAnimationTimestamp_());
   maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(
     const jsi::Value &transitionId) {
-  // TODO
+  cssTransitionsRegistry_->remove(transitionId.asNumber());
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -679,8 +685,8 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
 
     *cssLoop = [this, cssLoop](const double timestampMs) {
       performOperations();
-      if (cssAnimationsRegistry_->hasAnimationUpdates() ||
-          cssTransitionsRegistry_->hasRunningTransitions()) {
+      if (cssAnimationsRegistry_->hasUpdates() ||
+          cssTransitionsRegistry_->hasUpdates()) {
         jsi::Runtime &rt =
             workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
         requestRender_(*cssLoop, rt);

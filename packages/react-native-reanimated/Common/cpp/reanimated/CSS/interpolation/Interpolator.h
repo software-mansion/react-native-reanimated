@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/props/ViewStylesRepository.h>
+#include <reanimated/CSS/prop/ViewStylesRepository.h>
 
 #include <react/renderer/core/ShadowNode.h>
 

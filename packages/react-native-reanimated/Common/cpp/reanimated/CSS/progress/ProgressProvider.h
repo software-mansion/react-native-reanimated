@@ -7,13 +7,6 @@
 
 namespace reanimated {
 
-enum class ProgressState {
-  PENDING, // When the animation is waiting for the delay to pass
-  RUNNING,
-  PAUSED, // For css animations only
-  FINISHED
-};
-
 class ProgressProvider {
  public:
   ProgressProvider(
@@ -27,13 +20,12 @@ class ProgressProvider {
   std::optional<double> getPrevious() const {
     return previousProgress_;
   }
-  bool getStartTime() const {
+  time_t getStartTime() const {
     return startTime_;
   }
   double getDelay() const {
     return delay_;
   }
-  virtual ProgressState getState(const time_t timestamp) const = 0;
 
   void setDuration(const double duration) {
     resetProgress();
