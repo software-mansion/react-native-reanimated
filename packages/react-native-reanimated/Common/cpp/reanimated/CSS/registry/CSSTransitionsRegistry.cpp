@@ -8,9 +8,13 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
 
 void CSSTransitionsRegistry::add(
     const std::shared_ptr<CSSTransition> &transition) {
-  PropsObserver observer = createPropsObserver(transition);
+  LOG(INFO) << "Adding transition";
+  const auto id = transition->getId();
+  registry_.insert({id, transition});
+  PropsObserver observer = createPropsObserver(id);
   staticPropsRegistry_->addObserver(
-      transition->getId(), transition->getShadowNode()->getTag(), observer);
+      id, transition->getShadowNode()->getTag(), observer);
+  operationsBatch_.emplace_back(TransitionOperation::ADD, id);
 }
 
 void CSSTransitionsRegistry::remove(const unsigned id) {
@@ -85,22 +89,24 @@ void CSSTransitionsRegistry::deactivateOperation(
   runningIds_.erase(id);
 }
 
-PropsObserver CSSTransitionsRegistry::createPropsObserver(
-    const std::shared_ptr<CSSTransition> &transition) {
-  return [this, transition](
-             const jsi::Runtime &rt,
+PropsObserver CSSTransitionsRegistry::createPropsObserver(const unsigned id) {
+  return [this, id](
+             jsi::Runtime &rt,
              const jsi::Value &oldProps,
              const jsi::Value &newProps) {
+    const auto transitionOptional = getItem(id);
+    if (!transitionOptional.has_value()) {
+      LOG(INFO) << "Transition not found";
+      return;
+    }
+
+    const auto &transition = transitionOptional.value();
     const auto &propertyNames = transition->getPropertyNames();
-    const auto changedPropNames =
+    const auto changedProps =
         getChangedProps(rt, propertyNames, oldProps, newProps);
 
-    if (!changedPropNames.empty()) {
+    if (!changedProps.empty()) {
       // TODO - start the transition for modified props
-      LOG(INFO) << "Changed props:";
-      for (const auto &propName : changedPropNames) {
-        LOG(INFO) << propName;
-      }
     }
   };
 };

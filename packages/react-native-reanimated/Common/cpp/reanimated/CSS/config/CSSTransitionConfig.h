@@ -5,20 +5,20 @@
 namespace reanimated {
 
 struct CSSTransitionConfig {
-  jsi::Array properties;
+  std::vector<std::string> properties;
   double duration;
   EasingFunction easingFunction;
   double delay;
 };
 
 struct PartialCSSTransitionSettings {
-  std::optional<jsi::Array> properties;
+  std::optional<std::vector<std::string>> properties;
   std::optional<double> duration;
   std::optional<EasingFunction> easingFunction;
   std::optional<double> delay;
 };
 
-inline jsi::Array getTransitionProperty(
+inline std::vector<std::string> getTransitionProperty(
     jsi::Runtime &rt,
     const jsi::Object &config);
 

@@ -2,10 +2,10 @@
 
 namespace reanimated {
 
-inline jsi::Object getAnimationKeyframeStyle(
+inline jsi::Value getAnimationKeyframeStyle(
     jsi::Runtime &rt,
     const jsi::Object &config) {
-  return config.getProperty(rt, "animationName").asObject(rt);
+  return config.getProperty(rt, "animationName");
 }
 
 inline double getAnimationDuration(

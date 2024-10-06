@@ -14,7 +14,6 @@ class CSSTransition {
   using PartialSettings = PartialCSSTransitionSettings;
 
   CSSTransition(
-      jsi::Runtime &rt,
       const unsigned id,
       const ShadowNode::Shared shadowNode,
       const CSSTransitionConfig &config,
@@ -26,8 +25,8 @@ class CSSTransition {
   ShadowNode::Shared getShadowNode() const {
     return shadowNode_;
   }
-  std::vector<std::string> getPropertyNames() const {
-    return styleInterpolator_.getPropertyNames();
+  const std::vector<std::string> &getPropertyNames() const {
+    return propertyNames_;
   }
   double getMinDelay() const {
     return 0; // TODO
@@ -52,6 +51,7 @@ class CSSTransition {
   const unsigned id_;
   const ShadowNode::Shared shadowNode_;
 
+  std::vector<std::string> propertyNames_;
   TransitionStyleInterpolator styleInterpolator_;
 };
 

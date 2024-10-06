@@ -1,19 +1,19 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
-#include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
+#include <reanimated/CSS/interpolation/groups/GroupInterpolator.h>
 
 namespace reanimated {
 
 using namespace Interpolators;
 
-const ObjectPropertiesInterpolatorFactories styleInterpolatorFactories = []() {
+const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
   // Local constants
   const unsigned TRANSPARENT = 0x00000000;
 
   // Initialize the factories
   // TODO: Set proper default values for all the interpolators
-  return ObjectPropertiesInterpolatorFactories{
+  return PropertiesInterpolatorFactories{
       // Colors
       {"backgroundColor", color(TRANSPARENT)},
       {"borderBlockColor", color(TRANSPARENT)},

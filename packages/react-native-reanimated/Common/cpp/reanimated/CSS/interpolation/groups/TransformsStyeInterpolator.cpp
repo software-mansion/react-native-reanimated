@@ -42,44 +42,20 @@ extractTransformMapAndOrderedProperties(
   return {std::move(transformMap), std::move(orderedPropertyNames)};
 }
 
-TransformsStyleInterpolator::TransformsStyleInterpolator(
+void TransformsStyleInterpolator::setKeyframes(
     jsi::Runtime &rt,
-    const jsi::Array &transformsArray,
-    const TransformPropertyInterpolatorFactories &factories,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const std::vector<std::string> &propertyPath)
-    : GroupInterpolator(propertyPath),
-      interpolators_(
-          build(rt, transformsArray, viewStylesRepository, factories)) {}
+    const jsi::Value &keyframes) {
+  // TODO - add a possibility to remove interpolators that are no longer used
+  // (for now, for simplicity, we only add new ones)
+  const auto keyframesArray = keyframes.asObject(rt).asArray(rt);
 
-TransformPropertyInterpolators TransformsStyleInterpolator::build(
-    jsi::Runtime &rt,
-    const jsi::Array &transformsArray,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const TransformPropertyInterpolatorFactories &factories) const {
-  TransformPropertyInterpolators interpolators;
+  auto [transformsMap, orderedPropertyNames] =
+      extractTransformMapAndOrderedProperties(rt, keyframesArray);
+  orderedPropertyNames_ = orderedPropertyNames;
 
-  auto [transformMap, orderedPropertyNames] =
-      extractTransformMapAndOrderedProperties(rt, transformsArray);
-
-  for (const auto &propName : orderedPropertyNames) {
-    const jsi::Value &propValue = transformMap[propName];
-
-    auto factory = factories.find(propName);
-    if (factory == factories.end()) {
-      throw std::invalid_argument(
-          "[Reanimated] No matching interpolator factory found for property: " +
-          propName);
-    }
-
-    std::vector<std::string> newPath = this->propertyPath_;
-    newPath.emplace_back(propName);
-    interpolators.emplace_back(
-        propName,
-        factory->second(rt, propValue, viewStylesRepository, newPath));
+  for (const auto &propertyName : orderedPropertyNames) {
+    addOrUpdateInterpolator(rt, propertyName, transformsMap.at(propertyName));
   }
-
-  return interpolators;
 }
 
 jsi::Value TransformsStyleInterpolator::mapInterpolators(
@@ -88,13 +64,13 @@ jsi::Value TransformsStyleInterpolator::mapInterpolators(
   jsi::Array result(rt, interpolators_.size());
   size_t index = 0;
 
-  for (const auto &interpolator : interpolators_) {
-    jsi::Value value = callback(*interpolator.interpolator);
+  for (const auto &propertyName : orderedPropertyNames_) {
+    const auto &interpolator = interpolators_.at(propertyName);
+    jsi::Value value = callback(*interpolator);
 
     if (!value.isUndefined()) {
       jsi::Object obj(rt);
-      obj.setProperty(
-          rt, jsi::PropNameID::forUtf8(rt, interpolator.property), value);
+      obj.setProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName), value);
       result.setValueAtIndex(rt, index++, obj);
     }
   }

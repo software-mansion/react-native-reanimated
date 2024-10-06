@@ -51,6 +51,17 @@ void CSSRegistry<Item, Operation>::updateSettings(
 }
 
 template <typename Item, typename Operation>
+inline std::optional<std::shared_ptr<Item>>
+CSSRegistry<Item, Operation>::getItem(const unsigned id) {
+  const auto &it = registry_.find(id);
+  if (it == registry_.end()) {
+    operationsBatch_.emplace_back(Operation::REMOVE, id);
+    return std::nullopt;
+  }
+  return it->second;
+}
+
+template <typename Item, typename Operation>
 void CSSRegistry<Item, Operation>::activateDelayedItems(
     const time_t timestamp) {
   while (!delayedItemsQueue_.empty() &&
@@ -79,17 +90,6 @@ void CSSRegistry<Item, Operation>::flushOperations(
 
     handleOperation(rt, operation, item, timestamp);
   }
-}
-
-template <typename Item, typename Operation>
-inline std::optional<std::shared_ptr<Item>>
-CSSRegistry<Item, Operation>::getItem(const unsigned id) {
-  const auto &it = registry_.find(id);
-  if (it == registry_.end()) {
-    operationsBatch_.emplace_back(Operation::REMOVE, id);
-    return std::nullopt;
-  }
-  return it->second;
 }
 
 // Declare the types that will be used in the CSSRegistry class

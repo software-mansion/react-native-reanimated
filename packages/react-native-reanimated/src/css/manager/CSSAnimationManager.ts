@@ -61,9 +61,9 @@ export default class CSSAnimationManager {
           this.animationConfig,
           animationConfig
         );
-        this.animationConfig = animationConfig;
 
         if (Object.keys(settingsUpdates).length > 0) {
+          this.animationConfig = animationConfig;
           updateCSSAnimation(this.animationId, settingsUpdates);
         }
       }

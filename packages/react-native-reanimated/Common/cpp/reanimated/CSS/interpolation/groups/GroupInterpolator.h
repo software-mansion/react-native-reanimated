@@ -2,13 +2,21 @@
 
 #include <reanimated/CSS/interpolation/Interpolator.h>
 
-#include <string>
+#include <unordered_map>
 
 namespace reanimated {
 
+using PropertiesInterpolatorFactories =
+    std::unordered_map<std::string, InterpolatorFactoryFunction>;
+using PropertiesInterpolators =
+    std::unordered_map<std::string, std::shared_ptr<Interpolator>>;
+
 class GroupInterpolator : public Interpolator {
  public:
-  GroupInterpolator(const std::vector<std::string> &propertyPath);
+  GroupInterpolator(
+      const PropertiesInterpolatorFactories &factories,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+      const std::vector<std::string> &propertyPath);
 
   jsi::Value update(const InterpolationUpdateContext context) override;
   jsi::Value getBackwardsFillValue(jsi::Runtime &rt) const override;
@@ -18,9 +26,19 @@ class GroupInterpolator : public Interpolator {
       const ShadowNode::Shared &shadowNode) const override;
 
  protected:
+  const PropertiesInterpolatorFactories &factories_;
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+
+  PropertiesInterpolators interpolators_;
+
   virtual jsi::Value mapInterpolators(
       jsi::Runtime &rt,
       std::function<jsi::Value(Interpolator &)> callback) const = 0;
+
+  void addOrUpdateInterpolator(
+      jsi::Runtime &rt,
+      const std::string &propertyName,
+      const jsi::Value &keyframes);
 };
 
 } // namespace reanimated

@@ -2,10 +2,20 @@
 
 namespace reanimated {
 
-inline jsi::Array getTransitionProperty(
+inline std::vector<std::string> getTransitionProperty(
     jsi::Runtime &rt,
     const jsi::Object &config) {
-  return config.getProperty(rt, "transitionProperty").asObject(rt).asArray(rt);
+  std::vector<std::string> properties;
+
+  const auto propertiesArray =
+      config.getProperty(rt, "transitionProperty").asObject(rt).asArray(rt);
+  const auto propertiesCount = propertiesArray.size(rt);
+  for (size_t i = 0; i < propertiesCount; ++i) {
+    properties.push_back(
+        propertiesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
+  }
+
+  return properties;
 }
 
 inline double getTransitionDuration(

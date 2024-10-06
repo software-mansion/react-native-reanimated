@@ -556,7 +556,6 @@ void ReanimatedModuleProxy::registerCSSTransition(
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
   auto transition = std::make_shared<CSSTransition>(
-      rt,
       transitionId.asNumber(),
       shadowNode,
       parseCSSTransitionConfig(rt, transitionConfig),

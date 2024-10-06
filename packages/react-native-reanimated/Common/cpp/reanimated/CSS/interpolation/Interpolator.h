@@ -5,7 +5,6 @@
 #include <react/renderer/core/ShadowNode.h>
 
 #include <jsi/jsi.h>
-#include <memory>
 
 namespace reanimated {
 
@@ -32,20 +31,21 @@ class Interpolator {
   Interpolator(const std::vector<std::string> &propertyPath)
       : propertyPath_(propertyPath) {}
 
-  virtual jsi::Value update(const InterpolationUpdateContext context) = 0;
+  virtual void setKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) = 0;
+
   virtual jsi::Value getBackwardsFillValue(jsi::Runtime &rt) const = 0;
   virtual jsi::Value getForwardsFillValue(jsi::Runtime &rt) const = 0;
   virtual jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const = 0;
 
+  virtual jsi::Value update(const InterpolationUpdateContext context) = 0;
+
  protected:
   const std::vector<std::string> propertyPath_;
 };
 
 using InterpolatorFactoryFunction = std::function<std::shared_ptr<Interpolator>(
-    jsi::Runtime &rt,
-    const jsi::Value &value,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const std::vector<std::string> &propertyPath)>;
 

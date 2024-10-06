@@ -2,45 +2,24 @@
 
 namespace reanimated {
 
-ObjectPropertiesInterpolator::ObjectPropertiesInterpolator(
+void ObjectPropertiesInterpolator::setKeyframes(
     jsi::Runtime &rt,
-    const jsi::Object &object,
-    const ObjectPropertiesInterpolatorFactories &factories,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const std::vector<std::string> &propertyPath)
-    : GroupInterpolator(propertyPath),
-      interpolators_(build(rt, object, viewStylesRepository, factories)) {}
+    const jsi::Value &keyframes) {
+  // TODO - add a possibility to remove interpolators that are no longer used
+  // (for now, for simplicity, we only add new ones)
+  const jsi::Object keyframesObject = keyframes.getObject(rt);
 
-ObjectPropertiesInterpolators ObjectPropertiesInterpolator::build(
-    jsi::Runtime &rt,
-    const jsi::Object &object,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const ObjectPropertiesInterpolatorFactories &factories) {
-  ObjectPropertiesInterpolators interpolators;
-
-  jsi::Array propertyNames = object.getPropertyNames(rt);
+  jsi::Array propertyNames = keyframesObject.getPropertyNames(rt);
   size_t propertiesCount = propertyNames.size(rt);
 
   for (size_t i = 0; i < propertiesCount; ++i) {
-    std::string propName =
+    const std::string propertyName =
         propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    jsi::Value propValue =
-        object.getProperty(rt, jsi::PropNameID::forUtf8(rt, propName));
+    const jsi::Value &keyframes = keyframesObject.getProperty(
+        rt, jsi::PropNameID::forUtf8(rt, propertyName));
 
-    auto factory = factories.find(propName);
-    if (factory == factories.cend()) {
-      throw std::invalid_argument(
-          "[Reanimated] No matching interpolator factory found for property: " +
-          propName);
-    }
-
-    std::vector<std::string> newPath = propertyPath_;
-    newPath.emplace_back(propName);
-    interpolators[propName] =
-        factory->second(rt, propValue, viewStylesRepository, newPath);
+    addOrUpdateInterpolator(rt, propertyName, keyframes);
   }
-
-  return interpolators;
 }
 
 jsi::Value ObjectPropertiesInterpolator::mapInterpolators(
