@@ -12,7 +12,6 @@
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/REAIOSUIScheduler.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
-#import <reanimated/apple/native/REAMessageThread.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
 #ifndef NDEBUG

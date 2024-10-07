@@ -12,7 +12,7 @@
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <react/jni/CxxModuleWrapper.h>
-#include <react/jni/JMessageQueueThread.h>
+// #include <react/jni/JMessageQueueThread.h>
 #include <react/jni/JavaScriptExecutorHolder.h>
 #include <react/jni/WritableNativeMap.h>
 
@@ -160,8 +160,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
       jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
-      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
+      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
+  // ,
+  // jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
@@ -177,7 +178,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder,
       jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
       jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      // jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager);
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
@@ -287,8 +288,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
-      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
+      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations
+  // ,
+  // jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
@@ -304,7 +306,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       RuntimeExecutor runtimeExecutor,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      // jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager);
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
