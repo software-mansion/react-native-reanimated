@@ -12,17 +12,46 @@ void CSSAnimationsRegistry::updateSettings(
 }
 
 void CSSAnimationsRegistry::add(
-    const std::shared_ptr<CSSAnimation> &animation) {
+    jsi::Runtime &rt,
+    const std::shared_ptr<CSSAnimation> &animation,
+    const time_t timestamp) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   const auto id = animation->getId();
   registry_.insert({id, animation});
-  operationsBatch_.emplace_back(AnimationOperation::ADD, id);
+
+  // Apply animation backwards fill style if it exists
+  const auto &fillStyle = animation->getBackwardsFillStyle(rt);
+  if (!fillStyle.isUndefined()) {
+    const auto shadowNode = animation->getShadowNode();
+    updatesRegistry_[shadowNode->getTag()] =
+        std::make_pair(shadowNode, dynamicFromValue(rt, fillStyle));
+  }
+
+  const auto startTimestamp = animation->getDelay() + animation->getStartTime();
+  if (startTimestamp > timestamp) {
+    // Add animation to the delayed animations queue
+    delayedAnimationIds_.insert(id);
+    delayedAnimationsQueue_.emplace(startTimestamp, id);
+  } else if (animation->getState(timestamp) != AnimationProgressState::PAUSED) {
+    runningAnimationIds_.insert(id);
+  }
 }
 
 void CSSAnimationsRegistry::remove(const unsigned id) {
-  operationsBatch_.emplace_back(AnimationOperation::REMOVE, id);
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  runningAnimationIds_.erase(id);
+  // We currently support only one animation per shadow node, so we can safely
+  // remove the tag from the updates registry once the associated animation is
+  // removed
+  updatesRegistry_.erase(registry_.at(id)->getShadowNode()->getTag());
+  registry_.erase(id);
 }
 
 void CSSAnimationsRegistry::update(jsi::Runtime &rt, const time_t timestamp) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   // Activate all delayed animations that should start now
   activateDelayedAnimations(timestamp);
   // Flush all operations from the batch
@@ -49,8 +78,9 @@ void CSSAnimationsRegistry::activateDelayedAnimations(const time_t timestamp) {
     const auto [_, id] = delayedAnimationsQueue_.top();
     delayedAnimationsQueue_.pop();
     delayedAnimationIds_.erase(id);
-    runningAnimationIds_.insert(id);
-    operationsBatch_.emplace_back(AnimationOperation::ACTIVATE, id);
+    if (registry_.find(id) != registry_.end()) {
+      runningAnimationIds_.insert(id);
+    }
   }
 }
 
@@ -61,7 +91,12 @@ void CSSAnimationsRegistry::flushOperations(
   operationsBatch_.clear();
 
   for (const auto &[operation, id] : copiedOperationsBatch) {
-    handleOperation(rt, operation, registry_.at(id), timestamp);
+    const auto &animationIt = registry_.find(id);
+    // Handle the operation only if the animation was not removed from the
+    // registry
+    if (animationIt != registry_.end()) {
+      handleOperation(rt, operation, registry_.at(id), timestamp);
+    }
   }
 }
 
@@ -94,12 +129,6 @@ void CSSAnimationsRegistry::handleOperation(
     const std::shared_ptr<CSSAnimation> &animation,
     const time_t timestamp) {
   switch (operation) {
-    case AnimationOperation::ADD:
-      addOperation(rt, animation, timestamp);
-      break;
-    case AnimationOperation::REMOVE:
-      removeOperation(rt, animation);
-      break;
     case AnimationOperation::ACTIVATE:
       activateOperation(animation->getId());
       break;
@@ -110,51 +139,6 @@ void CSSAnimationsRegistry::handleOperation(
       finishOperation(rt, animation, timestamp);
       break;
   }
-}
-
-void CSSAnimationsRegistry::addOperation(
-    jsi::Runtime &rt,
-    const std::shared_ptr<CSSAnimation> &animation,
-    const time_t timestamp) {
-  const auto id = animation->getId();
-  const auto startTimestamp = animation->getDelay() + animation->getStartTime();
-
-  if (startTimestamp > timestamp) {
-    // Add animation to the delayed animations queue
-    delayedAnimationIds_.insert(id);
-    delayedAnimationsQueue_.emplace(startTimestamp, id);
-
-    // Apply animation backwards fill style if it exists
-    const auto &fillStyle = animation->getBackwardsFillStyle(rt);
-    if (!fillStyle.isUndefined()) {
-      updatesBatch_.emplace_back(
-          animation->getShadowNode(),
-          std::make_unique<jsi::Value>(rt, fillStyle));
-    }
-  } else if (animation->getState(timestamp) != AnimationProgressState::PAUSED) {
-    runningAnimationIds_.insert(id);
-  }
-}
-
-void CSSAnimationsRegistry::removeOperation(
-    jsi::Runtime &rt,
-    const std::shared_ptr<CSSAnimation> &animation) {
-  // We currently support only one animation per shadow node, so we can safely
-  // remove the tag from the updates registry once the associated animation is
-  // removed
-  tagsToRemove_.insert(animation->getShadowNode()->getTag());
-
-  // Restore the view style before animation removal
-  const jsi::Value &viewStyle = animation->getViewStyle(rt);
-  if (!viewStyle.isUndefined()) {
-    updatesBatch_.emplace_back(
-        animation->getShadowNode(),
-        std::make_unique<jsi::Value>(rt, viewStyle));
-  }
-
-  const auto id = animation->getId();
-  registry_.erase(id);
-  runningAnimationIds_.erase(id);
 }
 
 void CSSAnimationsRegistry::activateOperation(const unsigned id) {

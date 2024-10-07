@@ -523,15 +523,16 @@ void ReanimatedModuleProxy::registerCSSAnimation(
     const jsi::Value &animationConfig) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
+  const auto timestamp = getAnimationTimestamp_();
   auto animation = std::make_shared<CSSAnimation>(
       rt,
       animationId.asNumber(),
       shadowNode,
       parseCSSAnimationConfig(rt, animationConfig),
       viewStylesRepository_,
-      getAnimationTimestamp_());
+      timestamp);
 
-  cssAnimationsRegistry_->add(animation);
+  cssAnimationsRegistry_->add(rt, animation, timestamp);
   maybeRunCSSLoop();
 }
 
@@ -717,14 +718,14 @@ void ReanimatedModuleProxy::performOperations() {
 
     // Update CSS transitions and flush updates
     cssTransitionsRegistry_->update(rt, timestamp);
-    cssTransitionsRegistry_->flushUpdates(rt, updatesBatch);
+    cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, false);
 
     // Flush all animated props updates
-    animatedPropsRegistry_->flushUpdates(rt, updatesBatch);
+    animatedPropsRegistry_->flushUpdates(rt, updatesBatch, true);
 
     // Update CSS animations and flush updates
     cssAnimationsRegistry_->update(rt, timestamp);
-    cssAnimationsRegistry_->flushUpdates(rt, updatesBatch);
+    cssAnimationsRegistry_->flushUpdates(rt, updatesBatch, false);
   }
 
   ReanimatedSystraceSection s("performOperations");
