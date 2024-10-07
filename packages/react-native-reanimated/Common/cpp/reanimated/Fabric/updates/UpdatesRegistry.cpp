@@ -4,14 +4,15 @@ namespace reanimated {
 
 void UpdatesRegistry::flushUpdates(
     jsi::Runtime &rt,
-    UpdatesBatch &updatesBatch) {
+    UpdatesBatch &updatesBatch,
+    const bool merge) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   auto copiedUpdatesBatch = std::move(updatesBatch_);
   updatesBatch_.clear();
 
   // Store all updates in the registry for later use in the commit hook
-  flushUpdatesToRegistry(rt, copiedUpdatesBatch);
+  flushUpdatesToRegistry(rt, copiedUpdatesBatch, merge);
 
   // Flush the updates to the updatesBatch used to apply current changes
   for (auto &[shadowNode, props] : copiedUpdatesBatch) {
@@ -41,7 +42,7 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
   }
 }
 
-folly::dynamic UpdatesRegistry::get(Tag tag) const {
+folly::dynamic UpdatesRegistry::get(const Tag tag) const {
   std::lock_guard<std::mutex> lock{mutex_};
 
   auto it = updatesRegistry_.find(tag);
@@ -53,13 +54,14 @@ folly::dynamic UpdatesRegistry::get(Tag tag) const {
 
 void UpdatesRegistry::flushUpdatesToRegistry(
     jsi::Runtime &rt,
-    UpdatesBatch &updatesBatch) {
+    const UpdatesBatch &updatesBatch,
+    const bool merge) {
   for (auto &[shadowNode, props] : updatesBatch) {
     const auto tag = shadowNode->getTag();
     auto convertedProps = dynamicFromValue(rt, *props);
     auto it = updatesRegistry_.find(tag);
 
-    if (it == updatesRegistry_.cend()) {
+    if (it == updatesRegistry_.cend() || !merge) {
       updatesRegistry_[tag] = std::make_pair(shadowNode, convertedProps);
     } else {
       it->second.second.update(convertedProps);

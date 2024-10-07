@@ -22,20 +22,24 @@ using RegistryMap =
 
 class UpdatesRegistry {
  public:
-  void flushUpdates(jsi::Runtime &rt, UpdatesBatch &updatesBatch);
+  void
+  flushUpdates(jsi::Runtime &rt, UpdatesBatch &updatesBatch, const bool merge);
   void collectProps(PropsMap &propsMap);
-  folly::dynamic get(Tag tag) const;
+  folly::dynamic get(const Tag tag) const;
 
  protected:
+  mutable std::mutex mutex_;
+
   UpdatesBatch updatesBatch_;
   std::unordered_set<Tag> tagsToRemove_;
   RegistryMap updatesRegistry_;
 
-  void flushUpdatesToRegistry(jsi::Runtime &rt, UpdatesBatch &updatesBatch);
+  void flushUpdatesToRegistry(
+      jsi::Runtime &rt,
+      const UpdatesBatch &updatesBatch,
+      const bool merge);
 
  private:
-  mutable std::mutex mutex_;
-
   void runMarkedRemovals();
 };
 

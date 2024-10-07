@@ -9,7 +9,7 @@
 
 namespace reanimated {
 
-enum class AnimationOperation { ADD, REMOVE, ACTIVATE, DEACTIVATE, FINISH };
+enum class AnimationOperation { ACTIVATE, DEACTIVATE, FINISH };
 
 class CSSAnimationsRegistry : public UpdatesRegistry {
  public:
@@ -24,7 +24,10 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
       const PartialCSSAnimationSettings &updatedSettings,
       const time_t timestamp);
 
-  void add(const std::shared_ptr<CSSAnimation> &animation);
+  void add(
+      jsi::Runtime &rt,
+      const std::shared_ptr<CSSAnimation> &animation,
+      const time_t timestamp);
   void remove(const unsigned id);
   void update(jsi::Runtime &rt, const time_t timestamp);
 
@@ -56,13 +59,6 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
       const std::shared_ptr<CSSAnimation> &item,
       const time_t timestamp);
 
-  void addOperation(
-      jsi::Runtime &rt,
-      const std::shared_ptr<CSSAnimation> &animation,
-      const time_t timestamp);
-  void removeOperation(
-      jsi::Runtime &rt,
-      const std::shared_ptr<CSSAnimation> &animation);
   void activateOperation(const unsigned id);
   void deactivateOperation(
       const std::shared_ptr<CSSAnimation> &animation,

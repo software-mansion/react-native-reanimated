@@ -10,7 +10,7 @@ ViewStylesRepository::ViewStylesRepository(
 
 jsi::Value ViewStylesRepository::getNodeProp(
     const ShadowNode::Shared &shadowNode,
-    const std::string &propName) {
+    const std::string propName) {
   int tag = shadowNode->getTag();
 
   auto &cachedNode = shadowNodeCache_[tag];
@@ -47,7 +47,7 @@ jsi::Value ViewStylesRepository::getNodeProp(
 
 jsi::Value ViewStylesRepository::getParentNodeProp(
     const ShadowNode::Shared &shadowNode,
-    const std::string &propName) {
+    const std::string propName) {
   const auto surfaceId = shadowNode->getSurfaceId();
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 

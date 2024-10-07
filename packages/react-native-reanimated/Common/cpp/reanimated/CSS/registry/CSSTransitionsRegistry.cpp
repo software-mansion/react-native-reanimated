@@ -18,6 +18,8 @@ void CSSTransitionsRegistry::updateSettings(
 
 void CSSTransitionsRegistry::add(
     const std::shared_ptr<CSSTransition> &transition) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   const auto id = transition->getId();
   registry_.insert({id, transition});
   PropsObserver observer = createPropsObserver(id);
@@ -26,11 +28,16 @@ void CSSTransitionsRegistry::add(
 }
 
 void CSSTransitionsRegistry::remove(const unsigned id) {
-  operationsBatch_.emplace_back(TransitionOperation::REMOVE, id);
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  runningTransitionIds_.erase(id);
+  registry_.erase(id);
   staticPropsRegistry_->removeObserver(id);
 }
 
 void CSSTransitionsRegistry::update(jsi::Runtime &rt, const time_t timestamp) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   // Activate all delayed transitions that should start now
   activateDelayedTransitions(timestamp);
   // Flush all operations from the batch
@@ -91,34 +98,12 @@ void CSSTransitionsRegistry::handleOperation(
     const std::shared_ptr<CSSTransition> &transition,
     const time_t timestamp) {
   switch (operation) {
-    case TransitionOperation::REMOVE:
-      removeOperation(rt, transition);
-      break;
     case TransitionOperation::ACTIVATE:
       activateOperation(transition->getId());
       break;
     case TransitionOperation::DEACTIVATE:
       deactivateOperation(transition, timestamp);
       break;
-  }
-}
-
-void CSSTransitionsRegistry::removeOperation(
-    jsi::Runtime &rt,
-    const std::shared_ptr<CSSTransition> &transition) {
-  const auto id = transition->getId();
-
-  registry_.erase(id);
-  runningTransitionIds_.erase(id);
-  staticPropsRegistry_->removeObserver(id);
-  tagsToRemove_.insert(transition->getShadowNode()->getTag());
-
-  // Apply the view style before transition removal
-  const jsi::Value &viewStyle = transition->getViewStyle(rt);
-  if (!viewStyle.isUndefined()) {
-    updatesBatch_.emplace_back(
-        transition->getShadowNode(),
-        std::make_unique<jsi::Value>(rt, viewStyle));
   }
 }
 

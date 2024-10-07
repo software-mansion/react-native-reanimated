@@ -12,7 +12,7 @@
 
 namespace reanimated {
 
-enum class TransitionOperation { REMOVE, ACTIVATE, DEACTIVATE };
+enum class TransitionOperation { ACTIVATE, DEACTIVATE };
 
 class CSSTransitionsRegistry : public UpdatesRegistry {
  public:
@@ -65,9 +65,6 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
       const std::shared_ptr<CSSTransition> &transition,
       const time_t timestamp);
 
-  void removeOperation(
-      jsi::Runtime &rt,
-      const std::shared_ptr<CSSTransition> &transition);
   void activateOperation(const unsigned id);
   void deactivateOperation(
       const std::shared_ptr<CSSTransition> &transition,
