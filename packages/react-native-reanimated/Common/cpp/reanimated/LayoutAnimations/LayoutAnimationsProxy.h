@@ -20,7 +20,7 @@
 #include "LayoutAnimationsUtils.h"
 
 #include "SnapshotUtils.h"
-#include "UIScheduler.h"
+// #include "UIScheduler.h"
 
 namespace reanimated {
 

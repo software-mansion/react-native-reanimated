@@ -19,15 +19,15 @@ void SurfaceManager::updateWindow(
     const SurfaceId surfaceId,
     const double windowWidth,
     const double windowHeight) {
-  windows_.insert_or_assign(surfaceId, Rect{windowWidth, windowHeight});
+  windows_.insert_or_assign(surfaceId, Rectangle{windowWidth, windowHeight});
 }
 
-Rect SurfaceManager::getWindow(SurfaceId surfaceId) {
+Rectangle SurfaceManager::getWindow(SurfaceId surfaceId) {
   auto windowIt = windows_.find(surfaceId);
   if (windowIt != windows_.end()) {
     return windowIt->second;
   }
-  return Rect{0, 0};
+  return Rectangle{0, 0};
 }
 
 void Node::applyMutationToIndices(ShadowViewMutation mutation) {

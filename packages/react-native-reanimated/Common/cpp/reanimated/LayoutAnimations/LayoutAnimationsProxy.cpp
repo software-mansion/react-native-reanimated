@@ -8,7 +8,8 @@
 #include <set>
 #include <string>
 #include <utility>
-#include "YogaPropertySettingUtils.cpp"
+#include "LayoutAnimationsProxy.h"
+#include "YogaPropertySettingUtils.h"
 
 namespace reanimated {
 
@@ -632,7 +633,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
 
   uiScheduler_->scheduleOnUI(
       [finalView, current, parent, mutation, opacity, this, tag]() {
-        Rect window{};
+        Rectangle window{};
         {
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
           layoutAnimations_.insert_or_assign(
@@ -661,7 +662,7 @@ void LayoutAnimationsProxy::startExitingAnimation(
     auto oldView = mutation.oldChildShadowView;
     auto surfaceId = oldView.surfaceId;
 
-    Rect window{};
+    Rectangle window{};
     {
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
       createLayoutAnimation(mutation, oldView, tag);
@@ -689,7 +690,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     auto oldView = mutation.oldChildShadowView;
     auto newView = mutation.newChildShadowView;
 
-    Rect window{};
+    Rectangle window{};
     {
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
       createLayoutAnimation(mutation, oldView, tag);

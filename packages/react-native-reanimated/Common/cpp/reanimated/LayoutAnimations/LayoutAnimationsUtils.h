@@ -15,7 +15,7 @@
 
 namespace reanimated {
 
-struct Rect {
+struct Rectangle {
   double width, height;
 };
 
@@ -98,12 +98,12 @@ struct SurfaceManager {
       SurfaceId,
       std::shared_ptr<std::unordered_map<Tag, UpdateValues>>>
       props_;
-  mutable std::unordered_map<SurfaceId, Rect> windows_;
+  mutable std::unordered_map<SurfaceId, Rectangle> windows_;
 
   std::unordered_map<Tag, UpdateValues> &getUpdateMap(SurfaceId surfaceId);
   void
   updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight);
-  Rect getWindow(SurfaceId surfaceId);
+  Rectangle getWindow(SurfaceId surfaceId);
 };
 
 static inline void updateLayoutMetrics(

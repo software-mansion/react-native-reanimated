@@ -1,3 +1,6 @@
+#include "YogaPropertySettingUtils.h"
+#include "SnapshotUtils.h"
+
 namespace reanimated {
 void setYogaCurrentSnapshotProperties(
     const jsi::Object *yogaValues,

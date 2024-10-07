@@ -1,7 +1,8 @@
 #pragma once
 
+#include <reanimated/Fabric/PropsRegistry.h>
 #include "LayoutAnimationsManager.h"
-#include "PropsRegistry.h"
+#include "LayoutAnimationsUtils.h" // to use type Rectangle
 
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
@@ -65,7 +66,7 @@ inline Float floatFromYogaBorderWidthValue(const yoga::Style::Length &length) {
 
 struct LayoutSnapshot {
   double x, y, width, height, windowWidth, windowHeight;
-  LayoutSnapshot(const ShadowView &shadowView, Rect window) {
+  LayoutSnapshot(const ShadowView &shadowView, Rectangle window) {
     const auto &frame = shadowView.layoutMetrics.frame;
     x = frame.origin.x;
     y = frame.origin.y;
@@ -109,7 +110,7 @@ struct StyleSnapshot {
   StyleSnapshot(
       jsi::Runtime &runtime,
       const ShadowView &shadowView,
-      Rect window) {
+      Rectangle window) {
     const ViewProps *props =
         static_cast<const ViewProps *>(shadowView.props.get());
 
