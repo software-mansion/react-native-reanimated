@@ -19,10 +19,17 @@ using PropsMap =
     std::unordered_map<const ShadowNodeFamily *, std::vector<RawProps>>;
 using ChildrenMap =
     std::unordered_map<const ShadowNodeFamily *, std::unordered_set<int>>;
+using SealedMap =
+    std::unordered_map<const ShadowNodeFamily *, bool>;
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     const RootShadowNode &oldRootNode,
     const PropsMap &propsMap);
+
+RootShadowNode::Unshared cloneShadowTreeWithNewProps(
+    const RootShadowNode::Unshared &oldRootNode,
+    const PropsMap &propsMap,
+    bool canModifyRoot);
 
 } // namespace reanimated
 

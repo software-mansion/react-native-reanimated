@@ -26,7 +26,7 @@ ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
 
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
-    RootShadowNode::Shared const &,
+    RootShadowNode::Shared const &oldRootShadowNode,
     RootShadowNode::Unshared const &newRootShadowNode) noexcept {
   auto reaShadowNode =
       std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
@@ -53,7 +53,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
           propsMap[&family].emplace_back(props);
         });
 
-    rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
+    rootNode = cloneShadowTreeWithNewProps(newRootShadowNode, propsMap, &*oldRootShadowNode != &*newRootShadowNode);
 
     // If the commit comes from React Native then pause commits from
     // Reanimated since the ShadowTree to be committed by Reanimated may not
