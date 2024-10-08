@@ -17,8 +17,7 @@ void setYogaPropertiesForLayoutTransitionAnimation(
     const jsi::Object *yogaValues,
     jsi::Runtime &runtime,
     LayoutSnapshot currentValues,
-    LayoutSnapshot targetValues
-);
+    LayoutSnapshot targetValues);
 
 void setYogaPropertiesForStyleTransitionAnimation(
     const jsi::Object *yogaValues,

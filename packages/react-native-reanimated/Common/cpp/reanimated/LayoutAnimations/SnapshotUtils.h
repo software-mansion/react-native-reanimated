@@ -1,5 +1,5 @@
-
 #pragma once
+
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/PropsRegistry.h>
 #include "LayoutAnimationsManager.h"
