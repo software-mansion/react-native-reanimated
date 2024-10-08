@@ -1,18 +1,14 @@
 import {
   AnimatedProperties,
-  Playground,
   AnimationSettings,
   RealWorldExamples,
   Miscellaneous,
+  TestExamples,
 } from '../examples';
 import RouteCards from './cards';
 import type { RouteNames, Routes } from './types';
 
 const routes = {
-  Playground: {
-    name: 'Playground',
-    Component: Playground,
-  },
   AnimatedProperties: {
     name: 'Animated Properties',
     // CardComponent: RouteCards.AnimatedPropertiesCard,
@@ -121,6 +117,19 @@ const routes = {
       UpdatingAnimationSettings: {
         name: 'Updating Animation Settings',
         Component: Miscellaneous.UpdatingAnimationSettings,
+      },
+    },
+  },
+  TestExamples: {
+    name: 'Test Examples',
+    routes: {
+      Playground: {
+        name: 'Playground',
+        Component: TestExamples.Playground,
+      },
+      IterationCountAndFillMode: {
+        name: 'Iteration Count and Fill Mode',
+        Component: TestExamples.IterationCountAndFillMode,
       },
     },
   },

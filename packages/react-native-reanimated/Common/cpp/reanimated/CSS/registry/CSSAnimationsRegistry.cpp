@@ -169,15 +169,14 @@ void CSSAnimationsRegistry::finishOperation(
     const std::shared_ptr<CSSAnimation> &animation,
     const time_t timestamp) {
   deactivateOperation(animation, timestamp);
-  // Apply animation forwards fill style or revert changes applied during
-  // the animation
-  const jsi::Value &updates = animation->hasForwardsFillMode()
-      ? animation->getForwardsFillStyle(rt)
-      : animation->getViewStyle(rt);
-
-  if (!updates.isUndefined()) {
-    updatesBatch_.emplace_back(
-        animation->getShadowNode(), std::make_unique<jsi::Value>(rt, updates));
+  // Revert changes applied during animation if there is no forwards fill mode
+  if (!animation->hasForwardsFillMode()) {
+    const auto &viewStyle = animation->getViewStyle(rt);
+    if (!viewStyle.isUndefined()) {
+      updatesBatch_.emplace_back(
+          animation->getShadowNode(),
+          std::make_unique<jsi::Value>(rt, viewStyle));
+    }
   }
 }
 

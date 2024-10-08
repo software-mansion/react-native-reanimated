@@ -13,7 +13,7 @@ class RelativeOrNumericValueInterpolator
     : public ValueInterpolator<RelativeOrNumericInterpolatorValue> {
  public:
   RelativeOrNumericValueInterpolator(
-      TargetType relativeTo,
+      const TargetType relativeTo,
       const std::string &relativeProperty,
       const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
@@ -31,7 +31,7 @@ class RelativeOrNumericValueInterpolator
       const RelativeOrNumericInterpolatorValue &value) const override;
 
   RelativeOrNumericInterpolatorValue interpolate(
-      double localProgress,
+      const double localProgress,
       const RelativeOrNumericInterpolatorValue &fromValue,
       const RelativeOrNumericInterpolatorValue &toValue,
       const InterpolationUpdateContext context) const override;
@@ -41,7 +41,7 @@ class RelativeOrNumericValueInterpolator
   const std::string relativeProperty_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  double getRelativeValue(const InterpolationUpdateContext context) const;
+  double getRelativeValue(const ShadowNode::Shared &shadowNode) const;
 };
 
 } // namespace reanimated

@@ -15,7 +15,7 @@ struct ConversionRate {
 class WithUnitInterpolator : public NumericValueInterpolator {
  public:
   WithUnitInterpolator(
-      std::string baseUnit,
+      const std::string &baseUnit,
       const std::optional<double> &defaultStyleValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const std::vector<std::string> &propertyPath);
@@ -28,8 +28,8 @@ class WithUnitInterpolator : public NumericValueInterpolator {
       const override;
 
  private:
-  const std::string baseUnit;
-  static const std::unordered_map<std::string, ConversionRate> conversionRates;
+  const std::string baseUnit_;
+  static const std::unordered_map<std::string, ConversionRate> conversionRates_;
 
   double getConversionRate(const std::string &unit) const;
 
