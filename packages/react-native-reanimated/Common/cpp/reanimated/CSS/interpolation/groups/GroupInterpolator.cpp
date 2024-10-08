@@ -6,9 +6,9 @@ GroupInterpolator::GroupInterpolator(
     const PropertiesInterpolatorFactories &factories,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const std::vector<std::string> &propertyPath)
-    : factories_(factories),
-      viewStylesRepository_(viewStylesRepository),
-      Interpolator(propertyPath) {}
+    : Interpolator(propertyPath),
+      factories_(factories),
+      viewStylesRepository_(viewStylesRepository) {}
 
 jsi::Value GroupInterpolator::update(const InterpolationUpdateContext context) {
   return mapInterpolators(context.rt, [&](Interpolator &interpolator) {
@@ -16,15 +16,9 @@ jsi::Value GroupInterpolator::update(const InterpolationUpdateContext context) {
   });
 }
 
-jsi::Value GroupInterpolator::getBackwardsFillValue(jsi::Runtime &rt) const {
+jsi::Value GroupInterpolator::getCurrentValue(jsi::Runtime &rt) const {
   return mapInterpolators(rt, [&](Interpolator &interpolator) {
-    return interpolator.getBackwardsFillValue(rt);
-  });
-}
-
-jsi::Value GroupInterpolator::getForwardsFillValue(jsi::Runtime &rt) const {
-  return mapInterpolators(rt, [&](Interpolator &interpolator) {
-    return interpolator.getForwardsFillValue(rt);
+    return interpolator.getCurrentValue(rt);
   });
 }
 

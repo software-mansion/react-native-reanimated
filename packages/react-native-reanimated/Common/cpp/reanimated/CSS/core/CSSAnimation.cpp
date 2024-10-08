@@ -29,18 +29,10 @@ CSSAnimation::CSSAnimation(
   }
 }
 
-jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) const {
-  return hasBackwardsFillMode() ? styleInterpolator_.getBackwardsFillValue(rt)
-                                : jsi::Value::undefined();
-}
-
-jsi::Value CSSAnimation::getForwardsFillStyle(jsi::Runtime &rt) const {
-  return hasForwardsFillMode() ? styleInterpolator_.getForwardsFillValue(rt)
-                               : jsi::Value::undefined();
-}
-
-jsi::Value CSSAnimation::getViewStyle(jsi::Runtime &rt) const {
-  return styleInterpolator_.getStyleValue(rt, shadowNode_);
+jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) {
+  return hasBackwardsFillMode()
+      ? styleInterpolator_.update(createUpdateContext(rt, 0, false))
+      : jsi::Value::undefined();
 }
 
 void CSSAnimation::run(const time_t timestamp) {

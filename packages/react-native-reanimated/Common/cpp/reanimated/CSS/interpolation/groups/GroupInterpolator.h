@@ -19,8 +19,7 @@ class GroupInterpolator : public Interpolator {
       const std::vector<std::string> &propertyPath);
 
   jsi::Value update(const InterpolationUpdateContext context) override;
-  jsi::Value getBackwardsFillValue(jsi::Runtime &rt) const override;
-  jsi::Value getForwardsFillValue(jsi::Runtime &rt) const override;
+  jsi::Value getCurrentValue(jsi::Runtime &rt) const override;
   jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
@@ -37,7 +36,7 @@ class GroupInterpolator : public Interpolator {
 
   void addOrUpdateInterpolator(
       jsi::Runtime &rt,
-            const ShadowNode::Shared &shadowNode,
+      const ShadowNode::Shared &shadowNode,
       const std::string &propertyName,
       const jsi::Value &keyframes);
 };

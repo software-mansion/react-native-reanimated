@@ -44,9 +44,13 @@ class CSSAnimation {
   time_t getStartTime() const {
     return progressProvider_.getStartTime();
   }
-  jsi::Value getBackwardsFillStyle(jsi::Runtime &rt) const;
-  jsi::Value getForwardsFillStyle(jsi::Runtime &rt) const;
-  jsi::Value getViewStyle(jsi::Runtime &rt) const;
+  jsi::Value getCurrentStyle(jsi::Runtime &rt) const {
+    return styleInterpolator_.getCurrentValue(rt);
+  }
+  jsi::Value getViewStyle(jsi::Runtime &rt) const {
+    return styleInterpolator_.getStyleValue(rt, shadowNode_);
+  }
+  jsi::Value getBackwardsFillStyle(jsi::Runtime &rt);
 
   void run(const time_t timestamp);
   jsi::Value update(jsi::Runtime &rt, time_t timestamp);

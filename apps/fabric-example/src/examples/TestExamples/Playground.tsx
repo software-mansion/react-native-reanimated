@@ -7,7 +7,7 @@ import { Text, StyleSheet, View, SafeAreaView, Button } from 'react-native';
 import React from 'react';
 import Animated from 'react-native-reanimated';
 
-export default function PlaygroundExample() {
+export default function Playground() {
   const [state, setState] = React.useState(0);
   const viewStyles = [
     styles.style0,

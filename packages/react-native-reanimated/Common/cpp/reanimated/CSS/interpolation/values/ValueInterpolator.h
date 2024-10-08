@@ -28,8 +28,7 @@ class ValueInterpolator : public Interpolator {
       const ShadowNode::Shared &shadowNode,
       const jsi::Value &keyframes) override;
 
-  jsi::Value getBackwardsFillValue(jsi::Runtime &rt) const override;
-  jsi::Value getForwardsFillValue(jsi::Runtime &rt) const override;
+  jsi::Value getCurrentValue(jsi::Runtime &rt) const override;
   jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;

@@ -3,7 +3,7 @@
 namespace reanimated {
 
 RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
-    TargetType relativeTo,
+    const TargetType relativeTo,
     const std::string &relativeProperty,
     const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
@@ -14,9 +14,7 @@ RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
           propertyPath),
       relativeTo_(relativeTo),
       relativeProperty_(relativeProperty),
-      viewStylesRepository_(viewStylesRepository) {
-
-      };
+      viewStylesRepository_(viewStylesRepository) {};
 
 double RelativeOrNumericValueInterpolator::percentageToNumber(
     const std::string &value) {
@@ -55,28 +53,42 @@ jsi::Value RelativeOrNumericValueInterpolator::convertResultToJSI(
 
 RelativeOrNumericInterpolatorValue
 RelativeOrNumericValueInterpolator::interpolate(
-    double localProgress,
+    const double localProgress,
     const RelativeOrNumericInterpolatorValue &fromValue,
     const RelativeOrNumericInterpolatorValue &toValue,
     const InterpolationUpdateContext context) const {
-  double from =
-      (fromValue.isRelative ? getRelativeValue(context) : 1) * fromValue.value;
+  if (localProgress == 0) {
+    return fromValue;
+  }
+  if (localProgress == 1) {
+    return toValue;
+  }
+  // If both value types are the same, we can interpolate without reading the
+  // relative value from the shadow node
+  if (fromValue.isRelative == toValue.isRelative) {
+    return {
+        fromValue.value + (toValue.value - fromValue.value) * localProgress,
+        fromValue.isRelative};
+  }
+  // Otherwise, we need to read the relative value from the shadow node and
+  // interpolate values as numbers
+  double from = (fromValue.isRelative ? getRelativeValue(context.node) : 1) *
+      fromValue.value;
   double to =
-      (toValue.isRelative ? getRelativeValue(context) : 1) * toValue.value;
-
+      (toValue.isRelative ? getRelativeValue(context.node) : 1) * toValue.value;
   return {from + (to - from) * localProgress, false};
 }
 
 double RelativeOrNumericValueInterpolator::getRelativeValue(
-    const InterpolationUpdateContext context) const {
+    const ShadowNode::Shared &shadowNode) const {
   jsi::Value relativeValue;
 
   if (relativeTo_ == TargetType::PARENT) {
-    relativeValue = viewStylesRepository_->getParentNodeProp(
-        context.node, relativeProperty_);
+    relativeValue =
+        viewStylesRepository_->getParentNodeProp(shadowNode, relativeProperty_);
   } else {
     relativeValue =
-        viewStylesRepository_->getNodeProp(context.node, relativeProperty_);
+        viewStylesRepository_->getNodeProp(shadowNode, relativeProperty_);
   }
 
   if (relativeValue.isUndefined()) {

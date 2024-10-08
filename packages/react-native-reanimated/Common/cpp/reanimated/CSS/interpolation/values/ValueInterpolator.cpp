@@ -37,17 +37,10 @@ void ValueInterpolator<T>::updateKeyframes(
 }
 
 template <typename T>
-jsi::Value ValueInterpolator<T>::getBackwardsFillValue(jsi::Runtime &rt) const {
-  const auto &value = keyframes_.front().value;
-  return value.has_value() ? convertResultToJSI(rt, value.value())
-                           : jsi::Value::undefined();
-}
-
-template <typename T>
-jsi::Value ValueInterpolator<T>::getForwardsFillValue(jsi::Runtime &rt) const {
-  const auto &value = keyframes_.back().value;
-  return value.has_value() ? convertResultToJSI(rt, value.value())
-                           : jsi::Value::undefined();
+jsi::Value ValueInterpolator<T>::getCurrentValue(jsi::Runtime &rt) const {
+  return previousValue_.has_value()
+      ? convertResultToJSI(rt, previousValue_.value())
+      : jsi::Value::undefined();
 }
 
 template <typename T>

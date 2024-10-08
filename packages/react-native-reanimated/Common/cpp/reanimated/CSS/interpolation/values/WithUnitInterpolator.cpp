@@ -3,13 +3,13 @@
 namespace reanimated {
 
 const std::unordered_map<std::string, ConversionRate>
-    WithUnitInterpolator::conversionRates = {
+    WithUnitInterpolator::conversionRates_ = {
         {"rad", {"deg", 180.0 / M_PI}},
         {"deg", {"rad", M_PI / 180.0}},
 };
 
 WithUnitInterpolator::WithUnitInterpolator(
-    std::string baseUnit,
+    const std::string &baseUnit,
     const std::optional<double> &defaultStyleValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const std::vector<std::string> &propertyPath)
@@ -17,7 +17,7 @@ WithUnitInterpolator::WithUnitInterpolator(
           defaultStyleValue,
           viewStylesRepository,
           propertyPath),
-      baseUnit(baseUnit) {}
+      baseUnit_(baseUnit) {}
 
 double WithUnitInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
@@ -29,13 +29,13 @@ jsi::Value WithUnitInterpolator::convertResultToJSI(
     jsi::Runtime &rt,
     const double &value) const {
   std::ostringstream oss;
-  oss << value << baseUnit;
+  oss << value << baseUnit_;
   return jsi::String::createFromUtf8(rt, oss.str());
 }
 
 double WithUnitInterpolator::getConversionRate(const std::string &unit) const {
-  auto conversionRate = conversionRates.find(unit);
-  if (conversionRate == conversionRates.end()) {
+  auto conversionRate = conversionRates_.find(unit);
+  if (conversionRate == conversionRates_.end()) {
     throw std::invalid_argument(
         "[Reanimated] Conversion error: No valid conversion for unit: " + unit);
   }
@@ -51,7 +51,7 @@ double WithUnitInterpolator::convertFromString(const std::string &value) const {
     std::string matchedUnit = match[2].str();
 
     // If the unit is different than the base unit, convert it.
-    if (matchedUnit != baseUnit) {
+    if (matchedUnit != baseUnit_) {
       double conversionRate = getConversionRate(matchedUnit);
       return numericValue * conversionRate;
     }

@@ -13,10 +13,10 @@ using namespace react;
 
 struct InterpolationUpdateContext {
   jsi::Runtime &rt;
-  ShadowNode::Shared node;
-  double progress;
-  std::optional<double> previousProgress;
-  bool directionChanged;
+  const ShadowNode::Shared &node;
+  const double progress;
+  const std::optional<double> previousProgress;
+  const bool directionChanged;
 };
 
 struct RelativeOrNumericInterpolatorValue {
@@ -31,8 +31,7 @@ class Interpolator {
   Interpolator(const std::vector<std::string> &propertyPath)
       : propertyPath_(propertyPath) {}
 
-  virtual jsi::Value getBackwardsFillValue(jsi::Runtime &rt) const = 0;
-  virtual jsi::Value getForwardsFillValue(jsi::Runtime &rt) const = 0;
+  virtual jsi::Value getCurrentValue(jsi::Runtime &rt) const = 0;
   virtual jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const = 0;
