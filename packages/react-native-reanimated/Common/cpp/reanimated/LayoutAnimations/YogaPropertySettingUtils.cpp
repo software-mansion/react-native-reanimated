@@ -95,7 +95,7 @@ void setYogaPropertiesForEnteringAnimation(
     const jsi::Object *yogaValues,
     jsi::Runtime &runtime,
     LayoutSnapshot values) {
-  setYogaCurrentSnapshotProperties(yogaValues, runtime, values);
+  setYogaTargetSnapshotProperties(yogaValues, runtime, values);
   setYogaWindowDimensions(yogaValues, runtime, values);
 }
 
@@ -103,7 +103,7 @@ void setYogaPropertiesForExitingAnimation(
     const jsi::Object *yogaValues,
     jsi::Runtime &runtime,
     LayoutSnapshot values) {
-  setYogaTargetSnapshotProperties(yogaValues, runtime, values);
+  setYogaCurrentSnapshotProperties(yogaValues, runtime, values);
   setYogaWindowDimensions(yogaValues, runtime, values);
 }
 
