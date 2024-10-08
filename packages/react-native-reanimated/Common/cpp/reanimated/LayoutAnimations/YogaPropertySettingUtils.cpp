@@ -1,3 +1,6 @@
+#pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
+
 #include "YogaPropertySettingUtils.h"
 #include "SnapshotUtils.h"
 
@@ -150,3 +153,4 @@ void setYogaPropertiesForStyleTransitionAnimation(
   }
 }
 } // namespace reanimated
+#endif
