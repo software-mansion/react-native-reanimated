@@ -6,8 +6,9 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
 #include <set>
-#include "LayoutAnimationsProxy.h"
 #include <utility>
+
+#include "LayoutAnimationsProxy.h"
 #include "YogaPropertySettingUtils.h"
 
 namespace reanimated {
