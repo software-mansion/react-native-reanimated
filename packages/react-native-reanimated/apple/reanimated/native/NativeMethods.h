@@ -1,9 +1,9 @@
 #import <Foundation/Foundation.h>
-#import <RNReanimated/RNGestureHandlerStateManager.h>
 #import <React/RCTUIManager.h>
-#include <string>
-#include <utility>
-#include <vector>
+#import <reanimated/apple/RNGestureHandlerStateManager.h>
+#import <string>
+#import <utility>
+#import <vector>
 
 namespace reanimated {
 

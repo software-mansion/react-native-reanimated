@@ -2,7 +2,7 @@
 
 #include <utility>
 
-namespace reanimated {
+namespace worklets {
 
 AsyncQueue::AsyncQueue(std::string name)
     : state_(std::make_shared<AsyncQueueState>()) {
@@ -49,4 +49,4 @@ void AsyncQueue::push(std::function<void()> &&job) {
   state_->cv.notify_one();
 }
 
-} // namespace reanimated
+} // namespace worklets

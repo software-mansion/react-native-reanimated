@@ -21,6 +21,8 @@ on:
       - 'packages/react-native-reanimated/android/build.gradle'
       - 'packages/react-native-reanimated/scripts/cpplint.sh'
       - 'packages/react-native-reanimated/Common/cpp/**'
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   check:

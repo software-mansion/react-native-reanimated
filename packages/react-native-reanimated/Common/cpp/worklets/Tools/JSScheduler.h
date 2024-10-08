@@ -9,11 +9,11 @@
 using namespace facebook;
 using namespace react;
 
-using Job = std::function<void(jsi::Runtime &rt)>;
-
-namespace reanimated {
+namespace worklets {
 
 class JSScheduler {
+  using Job = std::function<void(jsi::Runtime &rt)>;
+
  public:
   // With `jsCallInvoker`.
   explicit JSScheduler(
@@ -38,4 +38,4 @@ class JSScheduler {
   const std::shared_ptr<CallInvoker> jsCallInvoker_ = nullptr;
 };
 
-} // namespace reanimated
+} // namespace worklets

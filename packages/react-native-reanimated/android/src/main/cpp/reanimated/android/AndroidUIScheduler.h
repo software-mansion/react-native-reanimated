@@ -13,6 +13,7 @@
 namespace reanimated {
 
 using namespace facebook;
+using namespace worklets;
 
 class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
  public:

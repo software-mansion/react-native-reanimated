@@ -1,5 +1,5 @@
-#include <reanimated/LayoutAnimations.h>
 #include <reanimated/Tools/FeaturesConfig.h>
+#include <reanimated/android/LayoutAnimations.h>
 
 namespace reanimated {
 

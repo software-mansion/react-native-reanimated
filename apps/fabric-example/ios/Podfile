@@ -9,7 +9,6 @@ require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-x
 
 ENV['RCT_NEW_ARCH_ENABLED'] = '1'
 ENV['REANIMATED_EXAMPLE_APP_NAME'] = 'FabricExample'
-min_ios_version_supported = '13.4'
 
 platform :ios, min_ios_version_supported
 prepare_react_native_project!

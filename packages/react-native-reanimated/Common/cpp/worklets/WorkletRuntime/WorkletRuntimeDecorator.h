@@ -9,7 +9,7 @@
 
 using namespace facebook;
 
-namespace reanimated {
+namespace worklets {
 
 class WorkletRuntimeDecorator {
  public:
@@ -19,4 +19,4 @@ class WorkletRuntimeDecorator {
       const std::shared_ptr<JSScheduler> &jsScheduler);
 };
 
-} // namespace reanimated
+} // namespace worklets

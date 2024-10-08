@@ -1,7 +1,3 @@
-#import <RNReanimated/FeaturesConfig.h>
-#import <RNReanimated/REASwizzledUIManager.h>
-#import <RNReanimated/REAUIKit.h>
-#import <RNReanimated/REAUtils.h>
 #import <React/RCTLayoutAnimation.h>
 #import <React/RCTLayoutAnimationGroup.h>
 #import <React/RCTRootShadowView.h>
@@ -9,6 +5,10 @@
 #import <React/RCTUIManager.h>
 #import <React/RCTUIManagerUtils.h>
 #import <objc/runtime.h>
+#import <reanimated/Tools/FeaturesConfig.h>
+#import <reanimated/apple/LayoutReanimation/REASwizzledUIManager.h>
+#import <reanimated/apple/REAUIKit.h>
+#import <reanimated/apple/REAUtils.h>
 
 @interface RCTUIManager (Reanimated)
 @property REAAnimationsManager *animationsManager;

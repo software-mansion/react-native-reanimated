@@ -18,6 +18,7 @@
 namespace reanimated {
 
 using namespace facebook;
+using namespace worklets;
 
 struct LayoutAnimationConfig {
   int tag;

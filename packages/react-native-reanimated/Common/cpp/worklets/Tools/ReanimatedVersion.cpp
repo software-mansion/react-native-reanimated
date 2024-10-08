@@ -13,7 +13,7 @@
 
 using namespace facebook;
 
-namespace reanimated {
+namespace worklets {
 
 std::string getReanimatedCppVersion() {
   return std::string(REANIMATED_VERSION_STRING);
@@ -92,4 +92,4 @@ bool matchVersion(const std::string &version1, const std::string &version2) {
 }
 #endif // NDEBUG
 
-}; // namespace reanimated
+}; // namespace worklets

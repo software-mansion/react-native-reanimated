@@ -4,6 +4,8 @@
 #include <iostream>
 #include <sstream>
 
+namespace worklets {
+
 const std::vector<std::string> SUPPORTED_ERROR_TYPES = {
     "Error",
     "AggregateError",
@@ -336,3 +338,5 @@ std::string stringifyJSIValue(jsi::Runtime &rt, const jsi::Value &value) {
 
   return serializer.stringifyJSIValueRecursively(value, true);
 }
+
+} // namespace worklets

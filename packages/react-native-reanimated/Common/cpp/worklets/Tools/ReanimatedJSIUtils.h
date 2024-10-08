@@ -8,8 +8,7 @@
 
 using namespace facebook;
 
-namespace reanimated {
-namespace jsi_utils {
+namespace worklets::jsi_utils {
 
 // `get` functions take a pointer to `jsi::Value` and
 // call an appropriate method to cast to the native type
@@ -172,5 +171,4 @@ jsi::Array convertStringToArray(
     const std::string &value,
     const unsigned int expectedSize);
 
-} // namespace jsi_utils
-} // namespace reanimated
+} // namespace worklets::jsi_utils

@@ -42,5 +42,16 @@ set_target_properties(
 target_link_libraries(
     reanimated
     worklets
-    ReactAndroid::react_nativemodule_core
 )
+
+if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
+    target_link_libraries(
+        reanimated
+        ReactAndroid::reactnative
+    )
+else()
+    target_link_libraries(
+        reanimated
+        ReactAndroid::react_nativemodule_core
+    )
+endif()

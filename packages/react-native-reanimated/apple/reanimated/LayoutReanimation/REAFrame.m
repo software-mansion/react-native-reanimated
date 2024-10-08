@@ -1,4 +1,4 @@
-#import <RNReanimated/REAFrame.h>
+#import <reanimated/apple/LayoutReanimation/REAFrame.h>
 
 @implementation REAFrame
 
