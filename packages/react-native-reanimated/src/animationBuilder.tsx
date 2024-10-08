@@ -7,40 +7,27 @@ import type { StyleProps } from './commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
 import { logger } from './logger';
 import type {
+  LayoutAnimationsValues,
   StyleTransitionAnimationFunction,
   StyleTransitionAnimationsValues,
 } from './layoutReanimation/animationBuilder/commonTypes';
 
-const propBaseList = [
-  `OriginX`,
-  `OriginY`,
-  `GlobalOriginX`,
-  `GlobalOriginY`,
-  'Width',
-  'Height',
-  'Opacity',
-  'BorderRadius',
-  ...(['Top', 'Bottom', 'Left', 'Right'] as const).map(
-    (direction) => `Border${direction}Width` as const
-  ),
-  ...(['TopLeft', 'TopRight', 'BottomLeft', 'BottomRight'] as const).map(
-    (direction) => `Border${direction}Radius` as const
-  ),
-] as const;
-
-const mockTargetValues = Object.fromEntries(
-  propBaseList.map((propName) => [`target${propName}`, 0])
-);
-const mockCurrentValues = Object.fromEntries(
-  propBaseList.map((propName) => [`current${propName}`, 0])
-);
-
-const mockValues = {
-  ...mockTargetValues,
-  ...mockCurrentValues,
+const mockValues: LayoutAnimationsValues = {
+  targetOriginX: 0,
+  targetOriginY: 0,
+  targetWidth: 0,
+  targetHeight: 0,
+  targetGlobalOriginX: 0,
+  targetGlobalOriginY: 0,
   windowWidth: 0,
   windowHeight: 0,
-} as StyleTransitionAnimationsValues;
+  currentOriginX: 0,
+  currentOriginY: 0,
+  currentWidth: 0,
+  currentHeight: 0,
+  currentGlobalOriginX: 0,
+  currentGlobalOriginY: 0,
+};
 
 function getCommonProperties(
   layoutStyle: StyleProps,
@@ -109,7 +96,9 @@ export function maybeBuild(
     const animationFactory = layoutAnimationOrBuilder.build();
 
     if (__DEV__ && style) {
-      const layoutAnimation = animationFactory(mockValues);
+      const layoutAnimation = animationFactory(
+        mockValues as StyleTransitionAnimationsValues
+      );
       maybeReportOverwrittenProperties(
         layoutAnimation.animations,
         style,
