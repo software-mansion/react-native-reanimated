@@ -1,6 +1,5 @@
-#pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
-
+#pragma once
 #include "YogaPropertySettingUtils.h"
 #include "SnapshotUtils.h"
 
