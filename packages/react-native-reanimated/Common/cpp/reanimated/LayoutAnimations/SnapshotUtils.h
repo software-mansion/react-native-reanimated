@@ -2,17 +2,9 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/PropsRegistry.h>
-#include "LayoutAnimationsManager.h"
 #include "LayoutAnimationsUtils.h" // to use type Rectangle
 
-#include <react/renderer/mounting/MountingOverrideDelegate.h>
-#include <react/renderer/mounting/ShadowView.h>
-#include <memory>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
-#include <vector>
 
 #ifdef __ANDROID__ // parse color on android
 #include <iomanip>

@@ -6,8 +6,6 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 
 #include <set>
-#include <string>
-#include <utility>
 #include "LayoutAnimationsProxy.h"
 #include "YogaPropertySettingUtils.h"
 

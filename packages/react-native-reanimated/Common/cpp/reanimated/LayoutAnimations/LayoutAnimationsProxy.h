@@ -3,7 +3,6 @@
 
 #include <reanimated/Fabric/PropsRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 
 #include <worklets/Tools/UIScheduler.h>
 
