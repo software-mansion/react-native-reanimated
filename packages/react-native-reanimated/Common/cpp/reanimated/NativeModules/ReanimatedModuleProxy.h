@@ -3,7 +3,7 @@
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
-#include <reanimated/CSS/prop/ViewStylesRepository.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>

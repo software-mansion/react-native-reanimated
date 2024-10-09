@@ -9,30 +9,18 @@ CSSTransition::CSSTransition(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : id_(id),
       shadowNode_(shadowNode),
-      propertyNames_(config.properties),
-      styleInterpolator_(
-          TransitionStyleInterpolator(config.properties, viewStylesRepository)),
+      properties_(config.properties),
+      styleInterpolator_(TransitionStyleInterpolator(viewStylesRepository)),
       progressProvider_(TransitionProgressProvider(
           config.duration,
           config.delay,
-          config.easingFunction)) {
-  progressProvider_.addProperties(config.properties);
-}
+          config.easingFunction)) {}
 
 void CSSTransition::updateSettings(
     jsi::Runtime &rt,
     const PartialCSSTransitionSettings &settings) {
   if (settings.properties.has_value()) {
-    const auto [addedProperties, removedProperties] =
-        updatePropertyNames(settings.properties.value());
-    if (!addedProperties.empty()) {
-      styleInterpolator_.addProperties(addedProperties);
-      progressProvider_.addProperties(addedProperties);
-    }
-    if (!removedProperties.empty()) {
-      styleInterpolator_.removeProperties(removedProperties);
-      progressProvider_.removeProperties(removedProperties);
-    }
+    // TODO - handle property updates
   }
   // TODO update other settings
 }
@@ -44,7 +32,7 @@ void CSSTransition::run(
   const auto updatedPropertyNames =
       updatedProperties.asObject(rt).getPropertyNames(rt);
 
-  std::vector<std::string> propertyNames;
+  PropertyNames propertyNames;
   const auto changedPropertiesCount = updatedPropertyNames.size(rt);
   propertyNames.reserve(changedPropertiesCount);
 
@@ -84,34 +72,6 @@ jsi::Value CSSTransition::update(jsi::Runtime &rt, time_t timestamp) {
   }
 
   return styleInterpolator_.update(contexts);
-}
-
-std::pair<std::vector<std::string>, std::vector<std::string>>
-CSSTransition::updatePropertyNames(
-    const std::vector<std::string> &propertyNames) {
-  std::unordered_set<std::string> newPropertyNameSet;
-  newPropertyNameSet.reserve(propertyNames.size());
-  for (const auto &propertyName : propertyNames) {
-    newPropertyNameSet.insert(propertyName);
-  }
-
-  std::vector<std::string> addedProperties;
-  for (const auto &propertyName : propertyNames) {
-    if (!propertyNameSet_.contains(propertyName)) {
-      addedProperties.push_back(propertyName);
-    }
-  }
-
-  std::vector<std::string> removedProperties;
-  for (const auto &propertyName : propertyNames_) {
-    if (!newPropertyNameSet.contains(propertyName)) {
-      removedProperties.push_back(propertyName);
-    }
-  }
-
-  propertyNames_ = propertyNames;
-  propertyNameSet_ = newPropertyNameSet;
-  return {addedProperties, removedProperties};
 }
 
 } // namespace reanimated

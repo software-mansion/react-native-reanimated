@@ -2,20 +2,41 @@
 
 namespace reanimated {
 
-inline std::vector<std::string> getTransitionProperty(
+TransitionProperties::TransitionProperties(
     jsi::Runtime &rt,
-    const jsi::Object &config) {
-  std::vector<std::string> properties;
+    const jsi::Value &transitionProperty)
+    : properties_(parseProperties(rt, transitionProperty)) {}
 
-  const auto propertiesArray =
-      config.getProperty(rt, "transitionProperty").asObject(rt).asArray(rt);
-  const auto propertiesCount = propertiesArray.size(rt);
-  for (size_t i = 0; i < propertiesCount; ++i) {
-    properties.push_back(
-        propertiesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
+std::optional<PropertyNames> TransitionProperties::get() const {
+  if (std::holds_alternative<PropertyNames>(properties_)) {
+    return std::get<PropertyNames>(properties_);
+  }
+  return std::nullopt; // All style properties can trigger transition
+}
+
+std::variant<PropertyNames, bool> TransitionProperties::parseProperties(
+    jsi::Runtime &rt,
+    const jsi::Value &transitionProperty) {
+  if (transitionProperty.isObject()) {
+    PropertyNames properties;
+
+    const auto propertiesArray = transitionProperty.asObject(rt).asArray(rt);
+    const auto propertiesCount = propertiesArray.size(rt);
+    for (size_t i = 0; i < propertiesCount; ++i) {
+      properties.emplace_back(
+          propertiesArray.getValueAtIndex(rt, i).asString(rt).utf8(rt));
+    }
+
+    return properties;
   }
 
-  return properties;
+  return true;
+};
+
+inline TransitionProperties getTransitionProperty(
+    jsi::Runtime &rt,
+    const jsi::Object &config) {
+  return TransitionProperties(rt, config.getProperty(rt, "transitionProperty"));
 }
 
 inline double getTransitionDuration(

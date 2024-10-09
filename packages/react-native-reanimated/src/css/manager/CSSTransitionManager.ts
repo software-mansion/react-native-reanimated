@@ -1,5 +1,5 @@
 'use strict';
-import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
+import type { ShadowNodeWrapper } from '../../commonTypes';
 import {
   registerCSSTransition,
   unregisterCSSTransition,
@@ -9,27 +9,26 @@ import {
   normalizeCSSTransitionConfig,
   getNormalizedCSSTransitionConfigUpdates,
 } from '../normalization';
-import type { CSSTransitionConfig } from '../types';
+import type {
+  CSSTransitionConfig,
+  NormalizedTransitionProperty,
+} from '../types';
 
 export default class CSSTransitionManager {
   private transitionId?: number;
-  private normalizedTransitionProperties?: string[];
+  private normalizedTransitionProperties?: NormalizedTransitionProperty;
   private transitionConfig?: CSSTransitionConfig;
 
   static _nextId = 0;
 
   private attach(
     transitionConfig: CSSTransitionConfig,
-    shadowNodeWrapper: ShadowNodeWrapper,
-    style: StyleProps
+    shadowNodeWrapper: ShadowNodeWrapper
   ) {
     this.transitionId = CSSTransitionManager._nextId++;
     this.transitionConfig = transitionConfig;
 
-    const normalizedConfig = normalizeCSSTransitionConfig(
-      transitionConfig,
-      style
-    );
+    const normalizedConfig = normalizeCSSTransitionConfig(transitionConfig);
     this.normalizedTransitionProperties = normalizedConfig.transitionProperty;
 
     registerCSSTransition(
@@ -50,8 +49,7 @@ export default class CSSTransitionManager {
 
   update(
     wrapper: ShadowNodeWrapper,
-    transitionConfig: CSSTransitionConfig | null,
-    style: StyleProps
+    transitionConfig: CSSTransitionConfig | null
   ): void {
     if (
       this.transitionId !== undefined &&
@@ -62,8 +60,7 @@ export default class CSSTransitionManager {
       const configUpdates = getNormalizedCSSTransitionConfigUpdates(
         this.normalizedTransitionProperties,
         this.transitionConfig,
-        transitionConfig,
-        style
+        transitionConfig
       );
 
       if (Object.keys(configUpdates).length > 0) {
@@ -72,7 +69,7 @@ export default class CSSTransitionManager {
         updateCSSTransition(this.transitionId, configUpdates);
       }
     } else if (transitionConfig) {
-      this.attach(transitionConfig, wrapper, style);
+      this.attach(transitionConfig, wrapper);
     } else {
       this.detach();
     }

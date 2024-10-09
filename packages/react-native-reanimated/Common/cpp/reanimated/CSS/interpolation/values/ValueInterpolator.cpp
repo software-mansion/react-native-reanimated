@@ -6,7 +6,7 @@ template <typename T>
 ValueInterpolator<T>::ValueInterpolator(
     const std::optional<T> &defaultStyleValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const std::vector<std::string> &propertyPath)
+    const PropertyPath &propertyPath)
     : Interpolator(propertyPath),
       viewStylesRepository_(viewStylesRepository),
       defaultStyleValue_(defaultStyleValue) {}

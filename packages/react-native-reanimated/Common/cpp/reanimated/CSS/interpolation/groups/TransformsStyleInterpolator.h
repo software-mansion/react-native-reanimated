@@ -22,7 +22,7 @@ class TransformsStyleInterpolator : public GroupInterpolator {
       std::function<jsi::Value(Interpolator &)> callback) const override;
 
  private:
-  std::vector<std::string> orderedPropertyNames_;
+  PropertyNames orderedPropertyNames_;
 };
 
 } // namespace reanimated

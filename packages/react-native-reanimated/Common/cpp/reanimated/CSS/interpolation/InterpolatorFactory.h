@@ -14,55 +14,57 @@
 namespace reanimated {
 namespace Interpolators {
 
-InterpolatorFactoryFunction object(
+std::shared_ptr<InterpolatorFactory> object(
     const PropertiesInterpolatorFactories &factories);
 
-InterpolatorFactoryFunction transforms(
+std::shared_ptr<InterpolatorFactory> transforms(
     const PropertiesInterpolatorFactories &factories);
 
-InterpolatorFactoryFunction color(
+std::shared_ptr<InterpolatorFactory> color(
     const std::optional<ColorArray> &defaultValue);
-InterpolatorFactoryFunction color(const unsigned &defaultValue) {
+std::shared_ptr<InterpolatorFactory> color(const unsigned &defaultValue) {
   return color(ColorValueInterpolator::toColorArray(defaultValue));
 }
-InterpolatorFactoryFunction color() {
+std::shared_ptr<InterpolatorFactory> color() {
   return color(std::nullopt);
 }
 
-InterpolatorFactoryFunction numeric(const std::optional<double> &defaultValue);
-InterpolatorFactoryFunction numeric() {
+std::shared_ptr<InterpolatorFactory> numeric(
+    const std::optional<double> &defaultValue);
+std::shared_ptr<InterpolatorFactory> numeric() {
   return numeric(std::nullopt);
 }
 
-InterpolatorFactoryFunction withUnit(
+std::shared_ptr<InterpolatorFactory> withUnit(
     std::string baseUnit,
     const std::optional<double> &defaultValue);
-InterpolatorFactoryFunction withUnit(std::string baseUnit) {
+std::shared_ptr<InterpolatorFactory> withUnit(std::string baseUnit) {
   return withUnit(baseUnit, std::nullopt);
 }
 
-InterpolatorFactoryFunction matrix(
+std::shared_ptr<InterpolatorFactory> matrix(
     const std::optional<std::vector<double>> &defaultValue);
-InterpolatorFactoryFunction matrix() {
+std::shared_ptr<InterpolatorFactory> matrix() {
   return matrix(std::nullopt);
 }
 
-InterpolatorFactoryFunction steps(const std::optional<int> &defaultValue);
-InterpolatorFactoryFunction steps() {
+std::shared_ptr<InterpolatorFactory> steps(
+    const std::optional<int> &defaultValue);
+std::shared_ptr<InterpolatorFactory> steps() {
   return steps(std::nullopt);
 }
 
-InterpolatorFactoryFunction discrete(
+std::shared_ptr<InterpolatorFactory> discrete(
     const std::optional<std::string> &defaultValue);
-InterpolatorFactoryFunction discrete() {
+std::shared_ptr<InterpolatorFactory> discrete() {
   return discrete(std::nullopt);
 }
 
-InterpolatorFactoryFunction relativeOrNumeric(
+std::shared_ptr<InterpolatorFactory> relativeOrNumeric(
     TargetType relativeTo,
     const std::string &relativeProperty,
     const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue);
-InterpolatorFactoryFunction relativeOrNumeric(
+std::shared_ptr<InterpolatorFactory> relativeOrNumeric(
     TargetType relativeTo,
     const std::string &relativeProperty,
     const double &defaultValue) {
@@ -71,7 +73,7 @@ InterpolatorFactoryFunction relativeOrNumeric(
       relativeProperty,
       RelativeOrNumericInterpolatorValue{defaultValue, false});
 }
-InterpolatorFactoryFunction relativeOrNumeric(
+std::shared_ptr<InterpolatorFactory> relativeOrNumeric(
     TargetType relativeTo,
     const std::string &relativeProperty,
     const std::string &defaultValue) {
@@ -82,7 +84,7 @@ InterpolatorFactoryFunction relativeOrNumeric(
       relativeProperty,
       RelativeOrNumericInterpolatorValue{convertedValue, true});
 }
-InterpolatorFactoryFunction relativeOrNumeric(
+std::shared_ptr<InterpolatorFactory> relativeOrNumeric(
     TargetType relativeTo,
     const std::string &relativeProperty) {
   return relativeOrNumeric(relativeTo, relativeProperty, std::nullopt);

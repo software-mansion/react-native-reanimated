@@ -28,6 +28,8 @@ export type TransitionSettingProp = keyof CSSTransitionConfig;
 
 // AFTER NORMALIZATION
 
+export type NormalizedTransitionProperty = string[] | 'all';
+
 export type NormalizedCSSTransitionSettings = {
   transitionDuration: number;
   transitionTimingFunction: NormalizedCSSTimingFunction;
@@ -35,5 +37,5 @@ export type NormalizedCSSTransitionSettings = {
 };
 
 export type NormalizedCSSTransitionConfig = NormalizedCSSTransitionSettings & {
-  transitionProperty: string[];
+  transitionProperty: NormalizedTransitionProperty;
 };

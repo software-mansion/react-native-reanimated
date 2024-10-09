@@ -1,4 +1,4 @@
-#include <reanimated/CSS/prop/ViewStylesRepository.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 
 namespace reanimated {
 
@@ -69,7 +69,7 @@ jsi::Value ViewStylesRepository::getParentNodeProp(
 jsi::Value ViewStylesRepository::getStyleProp(
     jsi::Runtime &rt,
     const Tag tag,
-    const std::vector<std::string> &propertyPath) {
+    const PropertyPath &propertyPath) {
   std::stringstream propertyPathStream;
   auto animatedValue =
       getPropertyValue(rt, animatedPropsRegistry_->get(tag), propertyPath);

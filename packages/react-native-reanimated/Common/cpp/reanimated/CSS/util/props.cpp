@@ -2,12 +2,12 @@
 
 namespace reanimated {
 
-std::pair<TransformsMap, std::vector<std::string>>
+std::pair<TransformsMap, PropertyNames>
 extractTransformsMapAndOrderedProperties(
     jsi::Runtime &rt,
     const jsi::Array &transformArray) {
   TransformsMap transformMap;
-  std::vector<std::string> orderedPropertyNames;
+  PropertyNames orderedPropertyNames;
 
   for (size_t i = 0; i < transformArray.size(rt); ++i) {
     jsi::Value arrayElement = transformArray.getValueAtIndex(rt, i);
@@ -156,7 +156,7 @@ jsi::Value getChangedTransforms(
 
 jsi::Value getChangedProps(
     jsi::Runtime &rt,
-    const std::vector<std::string> &propertyNames,
+    const PropertyNames &propertyNames,
     const jsi::Value &oldProps,
     const jsi::Value &newProps) {
   const auto oldObject = oldProps.asObject(rt);

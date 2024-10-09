@@ -1,7 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/interpolation/StyleInterpolatorsConfig.h>
+#include <reanimated/CSS/config/StyleInterpolatorsConfig.h>
 #include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
 
 namespace reanimated {
@@ -9,11 +9,10 @@ namespace reanimated {
 class TransitionStyleInterpolator {
  public:
   TransitionStyleInterpolator(
-      const std::vector<std::string> &propertyNames,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  void addProperties(const std::vector<std::string> &propertyNames);
-  void removeProperties(const std::vector<std::string> &propertyNames);
+  void addProperties(const PropertyNames &propertyNames);
+  void removeProperties(const PropertyNames &propertyNames);
   void updateProperties(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
@@ -27,9 +26,6 @@ class TransitionStyleInterpolator {
   PropertiesInterpolators interpolators_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  PropertiesInterpolators build(
-      const std::vector<std::string> &propertyNames,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
   std::shared_ptr<Interpolator> createInterpolator(
       const std::string &propertyName,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;

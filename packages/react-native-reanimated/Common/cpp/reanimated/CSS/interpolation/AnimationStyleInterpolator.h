@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/StyleInterpolatorsConfig.h>
+#include <reanimated/CSS/config/StyleInterpolatorsConfig.h>
 #include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
 
 namespace reanimated {
@@ -15,7 +15,7 @@ class AnimationStyleInterpolator : public ObjectPropertiesInterpolator {
       : ObjectPropertiesInterpolator(
             styleInterpolatorFactories,
             viewStylesRepository,
-            std::vector<std::string>()) {}
+            {}) {}
 };
 
 } // namespace reanimated

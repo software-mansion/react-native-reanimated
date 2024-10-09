@@ -23,8 +23,8 @@ class CSSTransition {
   ShadowNode::Shared getShadowNode() const {
     return shadowNode_;
   }
-  const std::vector<std::string> &getPropertyNames() const {
-    return propertyNames_;
+  const TransitionProperties &getProperties() const {
+    return properties_;
   }
   double getMinDelay() const {
     return 0; // TODO
@@ -50,13 +50,10 @@ class CSSTransition {
   const unsigned id_;
   const ShadowNode::Shared shadowNode_;
 
-  std::vector<std::string> propertyNames_;
+  TransitionProperties properties_;
   std::unordered_set<std::string> propertyNameSet_;
   TransitionStyleInterpolator styleInterpolator_;
   TransitionProgressProvider progressProvider_;
-
-  std::pair<std::vector<std::string>, std::vector<std::string>>
-  updatePropertyNames(const std::vector<std::string> &propertyNames);
 };
 
 } // namespace reanimated

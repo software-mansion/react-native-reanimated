@@ -12,7 +12,7 @@ WithUnitInterpolator::WithUnitInterpolator(
     const std::string &baseUnit,
     const std::optional<double> &defaultStyleValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const std::vector<std::string> &propertyPath)
+    const PropertyPath &propertyPath)
     : NumericValueInterpolator(
           defaultStyleValue,
           viewStylesRepository,

@@ -1,16 +1,14 @@
 'use strict';
-import type { ViewStyle } from 'react-native';
-import type { CSSTransitionProperty } from '../../types';
+import type {
+  CSSTransitionProperty,
+  NormalizedTransitionProperty,
+} from '../../types';
 
 export function normalizeTransitionProperty(
-  transitionProperty: CSSTransitionProperty,
-  viewStyle: ViewStyle
-): string[] {
-  if (Array.isArray(transitionProperty)) {
+  transitionProperty: CSSTransitionProperty
+): NormalizedTransitionProperty {
+  if (Array.isArray(transitionProperty) || transitionProperty === 'all') {
     return transitionProperty;
-  }
-  if (transitionProperty === 'all') {
-    return Object.keys(viewStyle);
   }
   if (transitionProperty === 'none') {
     return [];
