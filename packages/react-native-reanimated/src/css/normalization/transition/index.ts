@@ -1,8 +1,8 @@
 'use strict';
-import type { ViewStyle } from 'react-native';
 import type {
   CSSTransitionConfig,
   NormalizedCSSTransitionConfig,
+  NormalizedTransitionProperty,
 } from '../../types';
 import {
   normalizeDuration,
@@ -12,20 +12,14 @@ import {
 import { normalizeTransitionProperty } from './base';
 import { haveDifferentValues } from '../../utils';
 
-export function normalizeCSSTransitionConfig(
-  {
-    transitionProperty,
-    transitionDuration,
-    transitionTimingFunction,
-    transitionDelay,
-  }: CSSTransitionConfig,
-  viewStyle: ViewStyle
-): NormalizedCSSTransitionConfig {
+export function normalizeCSSTransitionConfig({
+  transitionProperty,
+  transitionDuration,
+  transitionTimingFunction,
+  transitionDelay,
+}: CSSTransitionConfig): NormalizedCSSTransitionConfig {
   return {
-    transitionProperty: normalizeTransitionProperty(
-      transitionProperty,
-      viewStyle
-    ),
+    transitionProperty: normalizeTransitionProperty(transitionProperty),
     transitionDuration: normalizeDuration(transitionDuration),
     transitionTimingFunction: normalizeTimingFunction(transitionTimingFunction),
     transitionDelay: normalizeDelay(transitionDelay),
@@ -33,25 +27,27 @@ export function normalizeCSSTransitionConfig(
 }
 
 export function getNormalizedCSSTransitionConfigUpdates(
-  oldNormalizedTransitionProperties: string[],
+  oldNormalizedTransitionProperties: NormalizedTransitionProperty,
   oldConfig: CSSTransitionConfig,
-  newConfig: Partial<CSSTransitionConfig>,
-  newViewStyle: ViewStyle
+  newConfig: Partial<CSSTransitionConfig>
 ): Partial<NormalizedCSSTransitionConfig> {
   const configUpdates: Partial<NormalizedCSSTransitionConfig> = {};
 
   const newNormalizedTransitionProperties = normalizeTransitionProperty(
-    newConfig.transitionProperty ?? 'none',
-    newViewStyle
+    newConfig.transitionProperty ?? 'none'
   );
 
   if (
-    oldNormalizedTransitionProperties.length !==
-      newNormalizedTransitionProperties.length ||
-    haveDifferentValues(
-      oldNormalizedTransitionProperties,
-      newNormalizedTransitionProperties
-    )
+    typeof oldNormalizedTransitionProperties !==
+      typeof newNormalizedTransitionProperties ||
+    (Array.isArray(oldNormalizedTransitionProperties) &&
+      Array.isArray(newNormalizedTransitionProperties) &&
+      (oldNormalizedTransitionProperties.length !==
+        newNormalizedTransitionProperties.length ||
+        haveDifferentValues(
+          oldNormalizedTransitionProperties,
+          newNormalizedTransitionProperties
+        )))
   ) {
     configUpdates.transitionProperty = newNormalizedTransitionProperties;
   }

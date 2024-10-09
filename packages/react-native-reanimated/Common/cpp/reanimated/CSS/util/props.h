@@ -1,10 +1,9 @@
 #pragma once
 
-#include <jsi/jsi.h>
+#include <reanimated/CSS/common/definitions.h>
 
-#include <string>
+#include <jsi/jsi.h>
 #include <unordered_map>
-#include <vector>
 
 using namespace facebook;
 

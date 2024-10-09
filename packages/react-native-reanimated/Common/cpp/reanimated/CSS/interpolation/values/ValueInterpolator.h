@@ -21,7 +21,7 @@ class ValueInterpolator : public Interpolator {
   explicit ValueInterpolator(
       const std::optional<T> &defaultStyleValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const std::vector<std::string> &propertyPath);
+      const PropertyPath &propertyPath);
 
   void updateKeyframes(
       jsi::Runtime &rt,

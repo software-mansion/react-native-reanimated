@@ -3,13 +3,11 @@
 namespace reanimated {
 
 TransitionStyleInterpolator::TransitionStyleInterpolator(
-    const std::vector<std::string> &propertyNames,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : viewStylesRepository_(viewStylesRepository),
-      interpolators_(build(propertyNames, viewStylesRepository)) {}
+    : viewStylesRepository_(viewStylesRepository) {}
 
 void TransitionStyleInterpolator::addProperties(
-    const std::vector<std::string> &propertyNames) {
+    const PropertyNames &propertyNames) {
   for (const auto &propertyName : propertyNames) {
     auto interpolator = interpolators_.find(propertyName);
     if (interpolator != interpolators_.cend()) {
@@ -21,7 +19,7 @@ void TransitionStyleInterpolator::addProperties(
 }
 
 void TransitionStyleInterpolator::removeProperties(
-    const std::vector<std::string> &propertyNames) {
+    const PropertyNames &propertyNames) {
   for (const auto &propertyName : propertyNames) {
     interpolators_.erase(propertyName);
   }
@@ -86,31 +84,18 @@ jsi::Value TransitionStyleInterpolator::update(
   return result;
 }
 
-PropertiesInterpolators TransitionStyleInterpolator::build(
-    const std::vector<std::string> &propertyNames,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
-  PropertiesInterpolators interpolators;
-
-  for (const auto &propertyName : propertyNames) {
-    interpolators.emplace(
-        propertyName, createInterpolator(propertyName, viewStylesRepository));
-  }
-
-  return interpolators;
-}
-
 std::shared_ptr<Interpolator> TransitionStyleInterpolator::createInterpolator(
     const std::string &propertyName,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
-  const auto factory = styleInterpolatorFactories.find(propertyName);
+  const auto factoryIt = styleInterpolatorFactories.find(propertyName);
 
-  if (factory == styleInterpolatorFactories.cend()) {
+  if (factoryIt == styleInterpolatorFactories.cend()) {
     throw std::invalid_argument(
         "[Reanimated] No matching interpolator factory found for property: " +
         propertyName);
   }
 
-  return factory->second(viewStylesRepository, {propertyName});
+  return factoryIt->second->create(viewStylesRepository, {propertyName});
 }
 
 } // namespace reanimated

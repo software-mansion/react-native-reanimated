@@ -124,16 +124,17 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const unsigned id) {
              const jsi::Value &oldProps,
              const jsi::Value &newProps) {
     const auto &transition = registry_.at(id);
-    const auto &propertyNames = transition->getPropertyNames();
-    const auto changedProps =
-        getChangedProps(rt, propertyNames, oldProps, newProps);
-
-    if (changedProps.isUndefined()) {
-      return;
-    }
-
-    transition->run(rt, changedProps, getCurrentTimestamp_());
-    operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, id);
+    // TODO - implement
+    //    const auto &propertyNames = transition->getPropertyNames();
+    //    const auto changedProps =
+    //        getChangedProps(rt, propertyNames, oldProps, newProps);
+    //
+    //    if (changedProps.isUndefined()) {
+    //      return;
+    //    }
+    //
+    //    transition->run(rt, changedProps, getCurrentTimestamp_());
+    //    operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, id);
   };
 };
 

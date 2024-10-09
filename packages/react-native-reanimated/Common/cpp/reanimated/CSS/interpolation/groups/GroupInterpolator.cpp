@@ -5,7 +5,7 @@ namespace reanimated {
 GroupInterpolator::GroupInterpolator(
     const PropertiesInterpolatorFactories &factories,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const std::vector<std::string> &propertyPath)
+    const PropertyPath &propertyPath)
     : Interpolator(propertyPath),
       factories_(factories),
       viewStylesRepository_(viewStylesRepository) {}
@@ -36,17 +36,19 @@ void GroupInterpolator::addOrUpdateInterpolator(
     const std::string &propertyName,
     const jsi::Value &keyframes) {
   if (interpolators_.find(propertyName) == interpolators_.cend()) {
-    auto factory = factories_.find(propertyName);
-    if (factory == factories_.cend()) {
+    auto factoryIt = factories_.find(propertyName);
+
+    if (factoryIt == factories_.cend()) {
       throw std::invalid_argument(
           "[Reanimated] No interpolator factory found for property: " +
           propertyName);
     }
 
-    std::vector<std::string> newPath = propertyPath_;
+    PropertyPath newPath = propertyPath_;
     newPath.emplace_back(propertyName);
     interpolators_.emplace(
-        propertyName, factory->second(viewStylesRepository_, newPath));
+        propertyName,
+        factoryIt->second->create(viewStylesRepository_, newPath));
   }
 
   interpolators_.at(propertyName)->updateKeyframes(rt, shadowNode, keyframes);

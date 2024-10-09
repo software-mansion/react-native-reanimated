@@ -1,24 +1,43 @@
 #pragma once
 
+#include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
+
+#include <variant>
+
+using namespace facebook;
 
 namespace reanimated {
 
+class TransitionProperties {
+ public:
+  TransitionProperties(jsi::Runtime &rt, const jsi::Value &transitionProperty);
+
+  std::optional<PropertyNames> get() const;
+
+ private:
+  std::variant<PropertyNames, bool> properties_;
+
+  std::variant<PropertyNames, bool> parseProperties(
+      jsi::Runtime &rt,
+      const jsi::Value &transitionProperty);
+};
+
 struct CSSTransitionConfig {
-  std::vector<std::string> properties;
+  TransitionProperties properties;
   double duration;
   EasingFunction easingFunction;
   double delay;
 };
 
 struct PartialCSSTransitionSettings {
-  std::optional<std::vector<std::string>> properties;
+  std::optional<TransitionProperties> properties;
   std::optional<double> duration;
   std::optional<EasingFunction> easingFunction;
   std::optional<double> delay;
 };
 
-inline std::vector<std::string> getTransitionProperty(
+inline TransitionProperties getTransitionProperty(
     jsi::Runtime &rt,
     const jsi::Object &config);
 

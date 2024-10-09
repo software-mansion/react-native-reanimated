@@ -45,7 +45,7 @@ TransitionProgressProvider::getPropertyProgressProvider(
 }
 
 void TransitionProgressProvider::addProperties(
-    const std::vector<std::string> &propertyNames) {
+    const PropertyNames &propertyNames) {
   for (const auto &propertyName : propertyNames) {
     propertyProgressProviders_.emplace(
         propertyName,
@@ -54,14 +54,14 @@ void TransitionProgressProvider::addProperties(
 }
 
 void TransitionProgressProvider::removeProperties(
-    const std::vector<std::string> &propertyNames) {
+    const PropertyNames &propertyNames) {
   for (const auto &propertyName : propertyNames) {
     propertyProgressProviders_.erase(propertyName);
   }
 }
 
 void TransitionProgressProvider::runProgressProviders(
-    const std::vector<std::string> &propertyNames,
+    const PropertyNames &propertyNames,
     const time_t timestamp) {
   for (const auto &propertyName : propertyNames) {
     auto &propertyProgressProvider =
@@ -88,7 +88,7 @@ void TransitionProgressProvider::runProgressProviders(
 void TransitionProgressProvider::update(const time_t timestamp) {
   activateDelayedProperties(timestamp);
 
-  std::vector<std::string> propertiesToDeactivate;
+  PropertyNames propertiesToDeactivate;
 
   for (const auto &propertyName : runningProperties_) {
     auto &propertyProgressProvider =

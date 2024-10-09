@@ -46,7 +46,7 @@ export default class CSSManager implements ICSSManager {
       setViewStyle(viewTag as number, style);
     }
 
-    this.cssTransitionManager.update(wrapper, transitionConfig, style);
+    this.cssTransitionManager.update(wrapper, transitionConfig);
     this.cssAnimationManager.update(wrapper, animationConfig);
 
     // If the update is called during component mount, we want to first - update

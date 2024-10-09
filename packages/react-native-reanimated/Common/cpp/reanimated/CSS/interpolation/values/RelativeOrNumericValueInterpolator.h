@@ -17,7 +17,7 @@ class RelativeOrNumericValueInterpolator
       const std::string &relativeProperty,
       const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const std::vector<std::string> &propertyPath);
+      const PropertyPath &propertyPath);
 
   static double percentageToNumber(const std::string &value);
 

@@ -18,7 +18,7 @@ class WithUnitInterpolator : public NumericValueInterpolator {
       const std::string &baseUnit,
       const std::optional<double> &defaultStyleValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const std::vector<std::string> &propertyPath);
+      const PropertyPath &propertyPath);
 
  protected:
   double prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
@@ -45,7 +46,7 @@ class ViewStylesRepository {
   jsi::Value getStyleProp(
       jsi::Runtime &rt,
       const Tag tag,
-      const std::vector<std::string> &propertyPath);
+      const PropertyPath &propertyPath);
 
   void clearNodesCache();
 
@@ -63,7 +64,7 @@ class ViewStylesRepository {
   jsi::Value getPropertyValue(
       jsi::Runtime &rt,
       const folly::dynamic &value,
-      const std::vector<std::string> &propertyPath);
+      const PropertyPath &propertyPath);
 };
 
 } // namespace reanimated

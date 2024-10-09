@@ -7,7 +7,7 @@ RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
     const std::string &relativeProperty,
     const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const std::vector<std::string> &propertyPath)
+    const PropertyPath &propertyPath)
     : ValueInterpolator<RelativeOrNumericInterpolatorValue>(
           defaultValue,
           viewStylesRepository,

@@ -51,10 +51,10 @@ class TransitionProgressProvider {
     easingFunction_ = easingFunction;
   }
 
-  void addProperties(const std::vector<std::string> &propertyNames);
-  void removeProperties(const std::vector<std::string> &propertyNames);
+  void addProperties(const PropertyNames &propertyNames);
+  void removeProperties(const PropertyNames &propertyNames);
   void runProgressProviders(
-      const std::vector<std::string> &propertyNames,
+      const PropertyNames &propertyNames,
       const time_t timestamp);
   void update(const time_t timestamp);
 

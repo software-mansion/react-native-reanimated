@@ -7,7 +7,7 @@
 namespace reanimated {
 
 using PropertiesInterpolatorFactories =
-    std::unordered_map<std::string, InterpolatorFactoryFunction>;
+    std::unordered_map<std::string, std::shared_ptr<InterpolatorFactory>>;
 using PropertiesInterpolators =
     std::unordered_map<std::string, std::shared_ptr<Interpolator>>;
 
@@ -16,7 +16,7 @@ class GroupInterpolator : public Interpolator {
   GroupInterpolator(
       const PropertiesInterpolatorFactories &factories,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const std::vector<std::string> &propertyPath);
+      const PropertyPath &propertyPath);
 
   jsi::Value update(const InterpolationUpdateContext context) override;
   jsi::Value getCurrentValue(jsi::Runtime &rt) const override;
