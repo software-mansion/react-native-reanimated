@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/Fabric/PropsRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
@@ -14,7 +15,7 @@
 
 namespace reanimated {
 
-struct Rect {
+struct Rectangle {
   double width, height;
 };
 
@@ -39,19 +40,6 @@ struct Frame {
 struct UpdateValues {
   Props::Shared newProps;
   Frame frame;
-};
-
-struct Snapshot {
-  double x, y, width, height, windowWidth, windowHeight;
-  Snapshot(const ShadowView &shadowView, Rect window) {
-    const auto &frame = shadowView.layoutMetrics.frame;
-    x = frame.origin.x;
-    y = frame.origin.y;
-    width = frame.size.width;
-    height = frame.size.height;
-    windowWidth = window.width;
-    windowHeight = window.height;
-  }
 };
 
 typedef enum ExitingState {
@@ -110,12 +98,12 @@ struct SurfaceManager {
       SurfaceId,
       std::shared_ptr<std::unordered_map<Tag, UpdateValues>>>
       props_;
-  mutable std::unordered_map<SurfaceId, Rect> windows_;
+  mutable std::unordered_map<SurfaceId, Rectangle> windows_;
 
   std::unordered_map<Tag, UpdateValues> &getUpdateMap(SurfaceId surfaceId);
   void
   updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight);
-  Rect getWindow(SurfaceId surfaceId);
+  Rectangle getWindow(SurfaceId surfaceId);
 };
 
 static inline void updateLayoutMetrics(
@@ -175,3 +163,4 @@ static inline void mergeAndSwap(
 }
 
 } // namespace reanimated
+#endif
