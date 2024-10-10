@@ -718,7 +718,7 @@ void ReanimatedModuleProxy::performOperations() {
 
     // Update CSS transitions and flush updates
     cssTransitionsRegistry_->update(rt, timestamp);
-    cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, false);
+    cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, true);
 
     // Flush all animated props updates
     animatedPropsRegistry_->flushUpdates(rt, updatesBatch, true);

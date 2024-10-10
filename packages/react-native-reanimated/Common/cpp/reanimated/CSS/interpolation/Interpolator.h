@@ -41,6 +41,11 @@ class Interpolator {
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       const jsi::Value &keyframes) = 0;
+  virtual void updateKeyframesFromStyleChange(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const jsi::Value &oldStyleValue,
+      const jsi::Value &newStyleValue) = 0;
 
   virtual jsi::Value update(const InterpolationUpdateContext context) = 0;
 
@@ -54,5 +59,8 @@ class InterpolatorFactory {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath) const = 0;
 };
+
+using PropertiesInterpolatorFactories =
+    std::unordered_map<std::string, std::shared_ptr<InterpolatorFactory>>;
 
 } // namespace reanimated

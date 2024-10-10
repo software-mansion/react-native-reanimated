@@ -18,8 +18,6 @@ void CSSTransitionsRegistry::updateSettings(
 
 void CSSTransitionsRegistry::add(
     const std::shared_ptr<CSSTransition> &transition) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
   const auto id = transition->getId();
   registry_.insert({id, transition});
   PropsObserver observer = createPropsObserver(id);
@@ -28,8 +26,6 @@ void CSSTransitionsRegistry::add(
 }
 
 void CSSTransitionsRegistry::remove(const unsigned id) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
   runningTransitionIds_.erase(id);
   registry_.erase(id);
   staticPropsRegistry_->removeObserver(id);
@@ -41,18 +37,19 @@ void CSSTransitionsRegistry::update(jsi::Runtime &rt, const time_t timestamp) {
   // Activate all delayed transitions that should start now
   activateDelayedTransitions(timestamp);
   // Flush all operations from the batch
-  flushOperations(rt, timestamp);
+  flushOperations();
 
   // Iterate over active transitions and update them
   for (const auto &id : runningTransitionIds_) {
-    const auto &animation = registry_.at(id);
-    const jsi::Value &updates = handleUpdate(rt, timestamp, animation);
+    const auto &transition = registry_.at(id);
+    const jsi::Value &updates = handleUpdate(rt, timestamp, transition);
 
     if (updates.isUndefined()) {
-      operationsBatch_.emplace_back(TransitionOperation::DEACTIVATE, id);
+      // TODO - uncomment once style interpolator is ready
+      // operationsBatch_.emplace_back(TransitionOperation::DEACTIVATE, id);
     } else {
       updatesBatch_.emplace_back(
-          animation->getShadowNode(),
+          transition->getShadowNode(),
           std::make_unique<jsi::Value>(rt, updates));
     }
   }
@@ -70,14 +67,14 @@ void CSSTransitionsRegistry::activateDelayedTransitions(
   }
 }
 
-void CSSTransitionsRegistry::flushOperations(
-    jsi::Runtime &rt,
-    const time_t timestamp) {
+void CSSTransitionsRegistry::flushOperations() {
   auto copiedOperationsBatch = std::move(operationsBatch_);
   operationsBatch_.clear();
 
   for (const auto &[operation, id] : copiedOperationsBatch) {
-    handleOperation(rt, operation, registry_.at(id), timestamp);
+    if (registry_.find(id) != registry_.end()) {
+      handleOperation(operation, id);
+    }
   }
 }
 
@@ -93,29 +90,16 @@ jsi::Value CSSTransitionsRegistry::handleUpdate(
 }
 
 void CSSTransitionsRegistry::handleOperation(
-    jsi::Runtime &rt,
     const TransitionOperation operation,
-    const std::shared_ptr<CSSTransition> &transition,
-    const time_t timestamp) {
+    const unsigned id) {
   switch (operation) {
     case TransitionOperation::ACTIVATE:
-      activateOperation(transition->getId());
+      runningTransitionIds_.insert(id);
       break;
     case TransitionOperation::DEACTIVATE:
-      deactivateOperation(transition, timestamp);
+      runningTransitionIds_.erase(id);
       break;
   }
-}
-
-void CSSTransitionsRegistry::activateOperation(const unsigned id) {
-  runningTransitionIds_.insert(id);
-}
-
-void CSSTransitionsRegistry::deactivateOperation(
-    const std::shared_ptr<CSSTransition> &transition,
-    const time_t timestamp) {
-  const auto id = transition->getId();
-  // runningIds_.erase(id);
 }
 
 PropsObserver CSSTransitionsRegistry::createPropsObserver(const unsigned id) {
@@ -124,17 +108,19 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const unsigned id) {
              const jsi::Value &oldProps,
              const jsi::Value &newProps) {
     const auto &transition = registry_.at(id);
-    // TODO - implement
-    //    const auto &propertyNames = transition->getPropertyNames();
-    //    const auto changedProps =
-    //        getChangedProps(rt, propertyNames, oldProps, newProps);
-    //
-    //    if (changedProps.isUndefined()) {
-    //      return;
-    //    }
-    //
-    //    transition->run(rt, changedProps, getCurrentTimestamp_());
-    //    operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, id);
+    const auto &transitionProperties = transition->getProperties();
+    const auto changedProps =
+        getChangedProps(rt, oldProps, newProps, transitionProperties.get());
+
+    if (!changedProps.changedPropertyNames.size()) {
+      return;
+    }
+
+    {
+      std::lock_guard<std::mutex> lock{mutex_};
+      transition->run(rt, changedProps, getCurrentTimestamp_());
+      operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, id);
+    }
   };
 };
 

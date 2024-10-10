@@ -16,22 +16,25 @@ struct Keyframe {
 template <typename T>
 class ValueInterpolator : public Interpolator {
  public:
-  ValueInterpolator() = default;
-
   explicit ValueInterpolator(
       const std::optional<T> &defaultStyleValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath);
 
-  void updateKeyframes(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      const jsi::Value &keyframes) override;
-
   jsi::Value getCurrentValue(jsi::Runtime &rt) const override;
   jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
+
+  virtual void updateKeyframes(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const jsi::Value &keyframes) override;
+  virtual void updateKeyframesFromStyleChange(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const jsi::Value &oldStyleValue,
+      const jsi::Value &newStyleValue) override;
 
   jsi::Value update(const InterpolationUpdateContext context) override;
 
@@ -57,10 +60,6 @@ class ValueInterpolator : public Interpolator {
   Keyframe<T> keyframeAfter_;
   std::optional<T> defaultStyleValue_; // Default style value
   std::optional<T> previousValue_; // Previous interpolation result
-
-  std::vector<Keyframe<T>> createKeyframes(
-      jsi::Runtime &rt,
-      const jsi::Array &keyframeArray) const;
 
   std::optional<T> getFallbackValue(
       const InterpolationUpdateContext context) const;

@@ -5,7 +5,11 @@
 #include <reanimated/CSS/interpolation/TransitionStyleInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
+#include <worklets/Tools/JSISerializer.h>
+
 namespace reanimated {
+
+using namespace worklets;
 
 class CSSTransition {
  public:
@@ -42,7 +46,7 @@ class CSSTransition {
 
   void run(
       jsi::Runtime &rt,
-      const jsi::Value &updatedProperties,
+      const ChangedProps &changedProps,
       const time_t timestamp);
   jsi::Value update(jsi::Runtime &rt, time_t timestamp);
 

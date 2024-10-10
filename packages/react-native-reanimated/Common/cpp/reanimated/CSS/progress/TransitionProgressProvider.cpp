@@ -4,9 +4,16 @@ namespace reanimated {
 
 // TransitionPropertyProgressProvider
 
-void TransitionPropertyProgressProvider::run(const time_t timestamp) {
-  resetProgress();
-  start(timestamp);
+TransitionProgressState TransitionPropertyProgressProvider::getState(
+    const time_t timestamp) const {
+  if (!rawProgress_.has_value()) {
+    return TransitionProgressState::PENDING;
+  }
+  const auto rawProgress = rawProgress_.value();
+  if (rawProgress >= 1) {
+    return TransitionProgressState::FINISHED;
+  }
+  return TransitionProgressState::RUNNING;
 }
 
 std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(
@@ -28,7 +35,7 @@ TransitionProgressProvider::TransitionProgressProvider(
     : duration_(duration), delay_(delay), easingFunction_(easingFunction) {}
 
 TransitionProgressState TransitionProgressProvider::getState() const {
-  if (!runningProperties_.empty()) {
+  if (!propertyProgressProviders_.empty()) {
     return TransitionProgressState::RUNNING;
   }
   return TransitionProgressState::PENDING;
@@ -44,75 +51,43 @@ TransitionProgressProvider::getPropertyProgressProvider(
   return it->second;
 }
 
-void TransitionProgressProvider::addProperties(
-    const PropertyNames &propertyNames) {
-  for (const auto &propertyName : propertyNames) {
-    propertyProgressProviders_.emplace(
-        propertyName,
-        TransitionPropertyProgressProvider(duration_, delay_, easingFunction_));
-  }
-}
-
-void TransitionProgressProvider::removeProperties(
-    const PropertyNames &propertyNames) {
-  for (const auto &propertyName : propertyNames) {
-    propertyProgressProviders_.erase(propertyName);
-  }
-}
-
 void TransitionProgressProvider::runProgressProviders(
-    const PropertyNames &propertyNames,
-    const time_t timestamp) {
-  for (const auto &propertyName : propertyNames) {
-    auto &propertyProgressProvider =
-        propertyProgressProviders_.at(propertyName);
-    propertyProgressProvider.resetProgress();
-    propertyProgressProvider.start(timestamp);
+    jsi::Runtime &rt,
+    const time_t timestamp,
+    const PropertyNames &changedPropertyNames) {
+  for (const auto &propertyName : changedPropertyNames) {
+    auto propertyProgressProviderIt =
+        propertyProgressProviders_.find(propertyName);
 
-    const auto startTimestamp = propertyProgressProvider.getStartTime() +
-        propertyProgressProvider.getDelay();
-
-    if (startTimestamp > timestamp) {
-      runningProperties_.erase(propertyName);
-      if (delayedProperties_.find(propertyName) != delayedProperties_.end()) {
-        // TODO - remove from delayed props queue
-      }
-      delayedPropertiesQueue_.emplace(startTimestamp, propertyName);
-      delayedProperties_.insert(propertyName);
+    if (propertyProgressProviderIt == propertyProgressProviders_.end()) {
+      propertyProgressProviderIt =
+          propertyProgressProviders_
+              .emplace(
+                  propertyName,
+                  TransitionPropertyProgressProvider(
+                      duration_, delay_, easingFunction_))
+              .first;
     } else {
-      runningProperties_.insert(propertyName);
+      propertyProgressProviderIt->second.resetProgress();
     }
+
+    propertyProgressProviderIt->second.start(timestamp);
   }
 }
 
 void TransitionProgressProvider::update(const time_t timestamp) {
-  activateDelayedProperties(timestamp);
+  for (const auto propertyName : propertiesToRemove_) {
+    propertyProgressProviders_.erase(propertyName);
+  }
+  propertiesToRemove_.clear();
 
-  PropertyNames propertiesToDeactivate;
-
-  for (const auto &propertyName : runningProperties_) {
-    auto &propertyProgressProvider =
-        propertyProgressProviders_.at(propertyName);
+  for (auto &[propertyName, propertyProgressProvider] :
+       propertyProgressProviders_) {
     propertyProgressProvider.update(timestamp);
     if (propertyProgressProvider.getState(timestamp) ==
-        TransitionProgressState::PENDING) {
-      // propertiesToDeactivate.emplace_back(propertyName);
+        TransitionProgressState::FINISHED) {
+      propertiesToRemove_.emplace_back(propertyName);
     }
-  }
-
-  for (const auto &propertyName : propertiesToDeactivate) {
-    runningProperties_.erase(propertyName);
-  }
-}
-
-void TransitionProgressProvider::activateDelayedProperties(
-    const time_t timestamp) {
-  while (!delayedPropertiesQueue_.empty() &&
-         delayedPropertiesQueue_.top().first <= timestamp) {
-    const auto [_, propertyName] = delayedPropertiesQueue_.top();
-    delayedPropertiesQueue_.pop();
-    delayedProperties_.erase(propertyName);
-    runningProperties_.insert(propertyName);
   }
 }
 

@@ -15,6 +15,11 @@ class TransformsStyleInterpolator : public GroupInterpolator {
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       const jsi::Value &keyframes) override;
+  void updateKeyframesFromStyleChange(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const jsi::Value &oldStyleValue,
+      const jsi::Value &newStyleValue) override;
 
  protected:
   jsi::Value mapInterpolators(
