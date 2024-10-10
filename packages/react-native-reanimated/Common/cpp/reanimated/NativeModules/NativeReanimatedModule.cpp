@@ -879,14 +879,6 @@ void NativeReanimatedModule::initializeLayoutAnimationsProxy() {
   }
 }
 
-void NativeReanimatedModule::initializeLayoutAnimations(SurfaceId surfaceId) {
-  uiManager_->getShadowTreeRegistry().visit(
-      surfaceId, [this](const ShadowTree &shadowTree) {
-        shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
-            layoutAnimationsProxy_);
-      });
-}
-
 #endif // RCT_NEW_ARCH_ENABLED
 
 jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(

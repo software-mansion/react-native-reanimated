@@ -139,8 +139,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void initializeLayoutAnimationsProxy();
 
-  void initializeLayoutAnimations(SurfaceId surfaceId);
-
   std::string obtainPropFromShadowNode(
       jsi::Runtime &rt,
       const std::string &propName,
