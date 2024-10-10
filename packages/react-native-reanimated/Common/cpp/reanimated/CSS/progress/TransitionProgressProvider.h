@@ -1,23 +1,20 @@
 #pragma once
 
 #include <reanimated/CSS/progress/ProgressProvider.h>
+#include <reanimated/CSS/util/props.h>
 
 #include <queue>
 #include <unordered_set>
 
 namespace reanimated {
 
-enum class TransitionProgressState { PENDING, RUNNING };
+enum class TransitionProgressState { PENDING, RUNNING, FINISHED };
 
 class TransitionPropertyProgressProvider : public ProgressProvider {
  public:
   using ProgressProvider::ProgressProvider;
 
-  TransitionProgressState getState(const time_t timestamp) const {
-    return TransitionProgressState::PENDING; // TODO
-  }
-
-  void run(const time_t timestamp);
+  TransitionProgressState getState(const time_t timestamp) const;
 
  protected:
   std::optional<double> calculateRawProgress(const time_t timestamp) override;
@@ -37,8 +34,9 @@ class TransitionProgressProvider {
   TransitionProgressState getState() const;
   std::optional<TransitionPropertyProgressProvider> getPropertyProgressProvider(
       const std::string &propertyName) const;
-  std::unordered_set<std::string> getRunningProperties() const {
-    return runningProperties_;
+  std::unordered_map<std::string, TransitionPropertyProgressProvider>
+  getPropertyProgressProviders() const {
+    return propertyProgressProviders_;
   }
 
   void setDuration(const double duration) {
@@ -51,30 +49,20 @@ class TransitionProgressProvider {
     easingFunction_ = easingFunction;
   }
 
-  void addProperties(const PropertyNames &propertyNames);
-  void removeProperties(const PropertyNames &propertyNames);
   void runProgressProviders(
-      const PropertyNames &propertyNames,
-      const time_t timestamp);
+      jsi::Runtime &rt,
+      const time_t timestamp,
+      const PropertyNames &changedPropertyNames);
   void update(const time_t timestamp);
 
  private:
-  using DelayedQueue = std::priority_queue<
-      std::pair<time_t, std::string>,
-      std::vector<std::pair<time_t, std::string>>,
-      std::greater<std::pair<time_t, std::string>>>;
-
   double duration_;
-  double delay_;
+  double delay_; // TODO - add delay support
   EasingFunction easingFunction_;
 
-  DelayedQueue delayedPropertiesQueue_;
-  std::unordered_set<std::string> runningProperties_;
-  std::unordered_set<std::string> delayedProperties_;
+  std::vector<std::string> propertiesToRemove_;
   std::unordered_map<std::string, TransitionPropertyProgressProvider>
       propertyProgressProviders_;
-
-  void activateDelayedProperties(const time_t timestamp);
 };
 
 } // namespace reanimated

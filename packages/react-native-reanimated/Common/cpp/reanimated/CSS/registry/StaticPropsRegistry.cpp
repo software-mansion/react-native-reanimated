@@ -10,11 +10,7 @@ void StaticPropsRegistry::set(
     remove(viewTag);
   } else {
     const auto newProps = dynamicFromValue(rt, props);
-    notifyObservers(
-        rt,
-        viewTag,
-        valueFromDynamic(rt, get(viewTag)),
-        valueFromDynamic(rt, newProps));
+    notifyObservers(rt, viewTag, valueFromDynamic(rt, get(viewTag)), props);
     registry_[viewTag] = newProps;
   }
 }

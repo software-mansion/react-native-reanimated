@@ -3,6 +3,7 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/config/StyleInterpolatorsConfig.h>
 #include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
+#include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
 namespace reanimated {
 
@@ -11,24 +12,20 @@ class TransitionStyleInterpolator {
   TransitionStyleInterpolator(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  void addProperties(const PropertyNames &propertyNames);
-  void removeProperties(const PropertyNames &propertyNames);
   void updateProperties(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
-      const jsi::Value &changedPropValues);
+      const ChangedProps &changedProps);
 
   jsi::Value update(
-      const std::unordered_map<std::string, InterpolationUpdateContext>
-          &contexts);
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const std::unordered_map<std::string, TransitionPropertyProgressProvider>
+          &progressProviders);
 
  private:
   PropertiesInterpolators interpolators_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-
-  std::shared_ptr<Interpolator> createInterpolator(
-      const std::string &propertyName,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
 };
 
 } // namespace reanimated

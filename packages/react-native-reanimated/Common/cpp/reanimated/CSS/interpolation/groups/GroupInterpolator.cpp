@@ -10,12 +10,6 @@ GroupInterpolator::GroupInterpolator(
       factories_(factories),
       viewStylesRepository_(viewStylesRepository) {}
 
-jsi::Value GroupInterpolator::update(const InterpolationUpdateContext context) {
-  return mapInterpolators(context.rt, [&](Interpolator &interpolator) {
-    return interpolator.update(context);
-  });
-}
-
 jsi::Value GroupInterpolator::getCurrentValue(jsi::Runtime &rt) const {
   return mapInterpolators(rt, [&](Interpolator &interpolator) {
     return interpolator.getCurrentValue(rt);
@@ -30,28 +24,10 @@ jsi::Value GroupInterpolator::getStyleValue(
   });
 }
 
-void GroupInterpolator::addOrUpdateInterpolator(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
-    const std::string &propertyName,
-    const jsi::Value &keyframes) {
-  if (interpolators_.find(propertyName) == interpolators_.cend()) {
-    auto factoryIt = factories_.find(propertyName);
-
-    if (factoryIt == factories_.cend()) {
-      throw std::invalid_argument(
-          "[Reanimated] No interpolator factory found for property: " +
-          propertyName);
-    }
-
-    PropertyPath newPath = propertyPath_;
-    newPath.emplace_back(propertyName);
-    interpolators_.emplace(
-        propertyName,
-        factoryIt->second->create(viewStylesRepository_, newPath));
-  }
-
-  interpolators_.at(propertyName)->updateKeyframes(rt, shadowNode, keyframes);
+jsi::Value GroupInterpolator::update(const InterpolationUpdateContext context) {
+  return mapInterpolators(context.rt, [&](Interpolator &interpolator) {
+    return interpolator.update(context);
+  });
 }
 
 } // namespace reanimated

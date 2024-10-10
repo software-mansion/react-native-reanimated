@@ -5,12 +5,12 @@ namespace reanimated {
 std::pair<TransformsMap, PropertyNames>
 extractTransformsMapAndOrderedProperties(
     jsi::Runtime &rt,
-    const jsi::Array &transformArray) {
+    const jsi::Array &transformsArray) {
   TransformsMap transformMap;
   PropertyNames orderedPropertyNames;
 
-  for (size_t i = 0; i < transformArray.size(rt); ++i) {
-    jsi::Value arrayElement = transformArray.getValueAtIndex(rt, i);
+  for (size_t i = 0; i < transformsArray.size(rt); ++i) {
+    jsi::Value arrayElement = transformsArray.getValueAtIndex(rt, i);
     if (arrayElement.isObject()) {
       jsi::Object transformObject = arrayElement.asObject(rt);
 
@@ -29,177 +29,282 @@ extractTransformsMapAndOrderedProperties(
   return {std::move(transformMap), std::move(orderedPropertyNames)};
 }
 
-jsi::Value getChangedPropsRecursive(
+std::pair<std::unique_ptr<jsi::Array>, std::unique_ptr<jsi::Array>>
+getChangedTransforms(
     jsi::Runtime &rt,
-    const jsi::Value &oldProp,
-    jsi::Value newProp) {
-  // If either value is not an object, directly compare them
-  if (!oldProp.isObject() || !newProp.isObject()) {
-    if (!jsi::Value::strictEquals(rt, oldProp, newProp)) {
-      return newProp;
-    }
-    return jsi::Value::undefined();
+    const jsi::Value &oldTransforms,
+    const jsi::Value &newTransforms) {
+  if (oldTransforms.isUndefined() && newTransforms.isUndefined()) {
+    return std::make_pair(nullptr, nullptr);
   }
 
-  // Recursively compare nested objects
+  if (oldTransforms.isUndefined()) {
+    return std::make_pair(
+        nullptr,
+        std::make_unique<jsi::Array>(newTransforms.asObject(rt).asArray(rt)));
+  }
+  if (newTransforms.isUndefined()) {
+    return std::make_pair(
+        std::make_unique<jsi::Array>(oldTransforms.asObject(rt).asArray(rt)),
+        nullptr);
+  }
+
+  auto oldArray = oldTransforms.asObject(rt).asArray(rt);
+  auto newArray = newTransforms.asObject(rt).asArray(rt);
+
+  if (oldArray.size(rt) != newArray.size(rt)) {
+    return std::make_pair(
+        std::make_unique<jsi::Array>(std::move(oldArray)),
+        std::make_unique<jsi::Array>(std::move(newArray)));
+  }
+
+  for (size_t i = 0; i < oldArray.size(rt); i++) {
+    const auto oldElement = oldArray.getValueAtIndex(rt, i);
+    const auto newElement = newArray.getValueAtIndex(rt, i);
+
+    if (oldElement.isObject() && newElement.isObject()) {
+      const auto oldObj = oldElement.asObject(rt);
+      const auto newObj = newElement.asObject(rt);
+
+      auto oldPropNames = oldObj.getPropertyNames(rt);
+      auto newPropNames = newObj.getPropertyNames(rt);
+
+      const auto oldKey =
+          oldPropNames.getValueAtIndex(rt, 0).asString(rt).utf8(rt);
+      const auto newKey =
+          newPropNames.getValueAtIndex(rt, 0).asString(rt).utf8(rt);
+
+      if (oldKey != newKey) {
+        return std::make_pair(
+            std::make_unique<jsi::Array>(std::move(oldArray)),
+            std::make_unique<jsi::Array>(std::move(newArray)));
+      }
+
+      const auto &oldVal = oldObj.getProperty(rt, oldKey.c_str());
+      const auto &newVal = newObj.getProperty(rt, newKey.c_str());
+
+      if (!jsi::Value::strictEquals(rt, oldVal, newVal)) {
+        return std::make_pair(
+            std::make_unique<jsi::Array>(std::move(oldArray)),
+            std::make_unique<jsi::Array>(std::move(newArray)));
+      }
+    } else {
+      return std::make_pair(
+          std::make_unique<jsi::Array>(std::move(oldArray)),
+          std::make_unique<jsi::Array>(std::move(newArray)));
+    }
+  }
+
+  return std::make_pair(nullptr, nullptr);
+}
+
+std::pair<PropertyValues, PropertyValues> getChangedPropsRecursive(
+    jsi::Runtime &rt,
+    jsi::Value &&oldProp,
+    jsi::Value &&newProp) {
+  if (!oldProp.isObject() || !newProp.isObject()) {
+    if (!jsi::Value::strictEquals(rt, oldProp, newProp)) {
+      return std::make_pair(
+          std::make_unique<jsi::Value>(std::move(oldProp)),
+          std::make_unique<jsi::Value>(std::move(newProp)));
+    }
+    return std::make_pair(nullptr, nullptr);
+  }
+
   const auto oldObj = oldProp.asObject(rt);
   const auto newObj = newProp.asObject(rt);
 
-  auto result = jsi::Object(rt);
-  bool allUndefined = true;
+  auto oldResult = std::make_unique<jsi::Object>(rt);
+  auto newResult = std::make_unique<jsi::Object>(rt);
+  bool oldHasChanges = false;
+  bool newHasChanges = false;
 
   const auto newPropertyNames = newObj.getPropertyNames(rt);
   const auto oldPropertyNames = oldObj.getPropertyNames(rt);
 
-  // Mark all props removed in the new object as undefined
-  const auto oldPropertyCount = oldPropertyNames.size(rt);
-  for (size_t i = 0; i < oldPropertyCount; i++) {
+  for (size_t i = 0; i < oldPropertyNames.size(rt); i++) {
     const auto propName =
         oldPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     if (!newObj.hasProperty(rt, propName.c_str())) {
-      result.setProperty(rt, propName.c_str(), jsi::Value::undefined());
-      allUndefined = false;
+      jsi::Value oldValue = oldObj.getProperty(rt, propName.c_str());
+      if (!oldValue.isUndefined()) {
+        oldResult->setProperty(rt, propName.c_str(), std::move(oldValue));
+        oldHasChanges = true;
+      }
     }
   }
 
-  // Iterate over all properties in the new object
-  const auto newPropertyCount = newPropertyNames.size(rt);
-  for (size_t i = 0; i < newPropertyCount; i++) {
+  for (size_t i = 0; i < newPropertyNames.size(rt); i++) {
     const auto propName =
         newPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto oldHasProperty = oldObj.hasProperty(rt, propName.c_str());
-    const auto newHasProperty = newObj.hasProperty(rt, propName.c_str());
+    jsi::Value newValue = newObj.getProperty(rt, propName.c_str());
 
-    if (oldHasProperty && newHasProperty) {
-      const auto changedProps = getChangedPropsRecursive(
-          rt,
-          oldObj.getProperty(rt, propName.c_str()),
-          newObj.getProperty(rt, propName.c_str()));
-      if (!changedProps.isUndefined()) {
-        result.setProperty(rt, propName.c_str(), changedProps);
-        allUndefined = false;
+    if (oldObj.hasProperty(rt, propName.c_str())) {
+      jsi::Value oldValue = oldObj.getProperty(rt, propName.c_str());
+      if (!oldValue.isUndefined() && !newValue.isUndefined()) {
+        auto [oldChangedProp, newChangedProp] = getChangedPropsRecursive(
+            rt, std::move(oldValue), std::move(newValue));
+        if (oldChangedProp && newChangedProp) {
+          oldResult->setProperty(rt, propName.c_str(), *oldChangedProp);
+          newResult->setProperty(rt, propName.c_str(), *newChangedProp);
+          oldHasChanges = true;
+          newHasChanges = true;
+        }
       }
-    } else if (oldHasProperty != newHasProperty) {
-      result.setProperty(
-          rt, propName.c_str(), newObj.getProperty(rt, propName.c_str()));
-      allUndefined = false;
+    } else if (!newValue.isUndefined()) {
+      newResult->setProperty(rt, propName.c_str(), std::move(newValue));
+      newHasChanges = true;
     }
   }
 
-  if (allUndefined) {
-    return jsi::Value::undefined();
+  if (!oldHasChanges && !newHasChanges) {
+    return std::make_pair(nullptr, nullptr);
   }
-  return result;
+
+  return std::make_pair(
+      oldHasChanges ? std::make_unique<jsi::Value>(std::move(*oldResult))
+                    : nullptr,
+      newHasChanges ? std::make_unique<jsi::Value>(std::move(*newResult))
+                    : nullptr);
 }
 
-jsi::Value getChangedTransforms(
+std::pair<PropertyValues, PropertyValues> getChangedValueForProp(
     jsi::Runtime &rt,
-    const jsi::Value &oldTransform,
-    const jsi::Value &newTransform) {
-  auto oldArray = oldTransform.asObject(rt).asArray(rt);
-  auto newArray = newTransform.asObject(rt).asArray(rt);
+    const jsi::Object &oldObject,
+    const jsi::Object &newObject,
+    const std::string &propName) {
+  const bool oldHasProperty = oldObject.hasProperty(rt, propName.c_str());
+  const bool newHasProperty = newObject.hasProperty(rt, propName.c_str());
 
-  auto [oldTransformMap, oldOrder] =
-      extractTransformsMapAndOrderedProperties(rt, oldArray);
-  auto [newTransformMap, newOrder] =
-      extractTransformsMapAndOrderedProperties(rt, newArray);
+  if (oldHasProperty && newHasProperty) {
+    if (propName == "transform") {
+      // Special case for transforms
+      auto [oldResult, newResult] = getChangedTransforms(
+          rt,
+          oldObject.getProperty(rt, propName.c_str()),
+          newObject.getProperty(rt, propName.c_str()));
+      if (oldResult && newResult) {
+        return std::make_pair(
+            std::make_unique<jsi::Value>(std::move(*oldResult)),
+            std::make_unique<jsi::Value>(std::move(*newResult)));
+      }
+      return std::make_pair(nullptr, nullptr);
+    } else {
+      auto oldVal = oldObject.getProperty(rt, propName.c_str());
+      auto newVal = newObject.getProperty(rt, propName.c_str());
 
-  std::vector<std::pair<std::string, jsi::Value>> changedTransforms;
+      if (oldVal.isObject() && newVal.isObject()) {
+        return getChangedPropsRecursive(
+            rt, std::move(oldVal), std::move(newVal));
+      } else if (!jsi::Value::strictEquals(rt, oldVal, newVal)) {
+        return std::make_pair(
+            std::make_unique<jsi::Value>(std::move(oldVal)),
+            std::make_unique<jsi::Value>(std::move(newVal)));
+      }
 
-  const auto oldSize = oldOrder.size();
-  const auto newSize = newOrder.size();
-  size_t i = 0, j = 0;
-
-  while (i < oldSize && j < newSize) {
-    if (newTransformMap.find(oldOrder[i]) == newTransformMap.end()) {
-      changedTransforms.emplace_back(oldOrder[i], jsi::Value::undefined());
-      i++;
-      continue;
+      return std::make_pair(nullptr, nullptr);
     }
-    if (oldTransformMap.find(newOrder[j]) == oldTransformMap.end()) {
-      changedTransforms.emplace_back(
-          newOrder[j], std::move(newTransformMap[newOrder[j]]));
-      j++;
-      continue;
+  }
+
+  // Check for property existing in only one of the objects
+  if (oldHasProperty) {
+    jsi::Value oldVal = oldObject.getProperty(rt, propName.c_str());
+    if (!oldVal.isUndefined()) {
+      return std::make_pair(
+          std::make_unique<jsi::Value>(std::move(oldVal)), nullptr);
     }
-    if (!jsi::Value::strictEquals(
-            rt, oldTransformMap[oldOrder[i]], newTransformMap[newOrder[j]])) {
-      changedTransforms.emplace_back(
-          newOrder[j], std::move(newTransformMap[newOrder[j]]));
+  } else if (newHasProperty) {
+    jsi::Value newVal = newObject.getProperty(rt, propName.c_str());
+    if (!newVal.isUndefined()) {
+      return std::make_pair(
+          nullptr, std::make_unique<jsi::Value>(std::move(newVal)));
     }
-    i++;
-    j++;
   }
 
-  for (; i < oldSize; i++) {
-    changedTransforms.emplace_back(oldOrder[i], jsi::Value::undefined());
-  }
-  for (; j < newSize; j++) {
-    changedTransforms.emplace_back(
-        newOrder[j], std::move(newTransformMap[newOrder[j]]));
-  }
-
-  if (changedTransforms.size() == 0) {
-    return jsi::Value::undefined();
-  }
-
-  auto result = jsi::Array(rt, changedTransforms.size());
-  for (size_t i = 0; i < changedTransforms.size(); i++) {
-    auto &[propName, propValue] = changedTransforms[i];
-    auto obj = jsi::Object(rt);
-    obj.setProperty(rt, propName.c_str(), propValue);
-    result.setValueAtIndex(rt, i, obj);
-  }
-
-  return result;
+  return std::make_pair(nullptr, nullptr);
 }
 
-jsi::Value getChangedProps(
+ChangedProps processPropertyChanges(
     jsi::Runtime &rt,
-    const PropertyNames &propertyNames,
+    const jsi::Object &oldObject,
+    const jsi::Object &newObject,
+    const PropertyNames &propertyNames) {
+  auto oldResult = std::make_unique<jsi::Object>(rt);
+  auto newResult = std::make_unique<jsi::Object>(rt);
+  PropertyNames changedPropertyNames;
+  bool oldHasChanges = false;
+  bool newHasChanges = false;
+
+  for (const auto &propName : propertyNames) {
+    const auto [oldChangedProp, newChangedProp] =
+        getChangedValueForProp(rt, oldObject, newObject, propName);
+
+    if (oldChangedProp) {
+      oldResult->setProperty(rt, propName.c_str(), *oldChangedProp);
+      oldHasChanges = true;
+      changedPropertyNames.push_back(propName);
+    }
+    if (newChangedProp) {
+      newResult->setProperty(rt, propName.c_str(), *newChangedProp);
+      newHasChanges = true;
+      changedPropertyNames.push_back(propName);
+    }
+  }
+
+  if (!oldHasChanges && !newHasChanges) {
+    return {
+        std::make_unique<jsi::Value>(jsi::Value::undefined()),
+        std::make_unique<jsi::Value>(jsi::Value::undefined()),
+        {}};
+  }
+
+  return {
+      oldHasChanges ? std::make_unique<jsi::Value>(std::move(*oldResult))
+                    : std::make_unique<jsi::Value>(jsi::Value::undefined()),
+      newHasChanges ? std::make_unique<jsi::Value>(std::move(*newResult))
+                    : std::make_unique<jsi::Value>(jsi::Value::undefined()),
+      std::move(changedPropertyNames)};
+}
+
+ChangedProps getChangedProps(
+    jsi::Runtime &rt,
     const jsi::Value &oldProps,
     const jsi::Value &newProps) {
   const auto oldObject = oldProps.asObject(rt);
   const auto newObject = newProps.asObject(rt);
 
-  auto result = jsi::Object(rt);
-  bool allUndefined = true;
+  const auto oldPropertyNames = oldObject.getPropertyNames(rt);
+  const auto newPropertyNames = newObject.getPropertyNames(rt);
 
-  // Iterate over all property names that need to be checked
-  for (const auto &propertyName : propertyNames) {
-    const auto propStr = propertyName.c_str();
-    const bool oldHasProperty = oldObject.hasProperty(rt, propStr);
-    const bool newHasProperty = newObject.hasProperty(rt, propStr);
+  std::unordered_set<std::string> allPropNames;
 
-    if (oldHasProperty && newHasProperty) {
-      jsi::Value changedProps;
-
-      if (propertyName == "transform") {
-        changedProps = getChangedTransforms(
-            rt,
-            oldObject.getProperty(rt, propStr),
-            newObject.getProperty(rt, propStr));
-      } else {
-        changedProps = getChangedPropsRecursive(
-            rt,
-            oldObject.getProperty(rt, propStr),
-            newObject.getProperty(rt, propStr));
-      }
-
-      if (!changedProps.isUndefined()) {
-        allUndefined = false;
-        result.setProperty(rt, propStr, changedProps);
-      }
-    } else if (oldHasProperty != newHasProperty) {
-      allUndefined = false;
-      result.setProperty(rt, propStr, newObject.getProperty(rt, propStr));
-    }
+  for (size_t i = 0; i < oldPropertyNames.size(rt); i++) {
+    const auto propName =
+        oldPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    allPropNames.insert(propName);
+  }
+  for (size_t i = 0; i < newPropertyNames.size(rt); i++) {
+    const auto propName =
+        newPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    allPropNames.insert(propName);
   }
 
-  if (allUndefined) {
-    return jsi::Value::undefined();
+  PropertyNames propNamesVec(allPropNames.begin(), allPropNames.end());
+
+  return processPropertyChanges(rt, oldObject, newObject, propNamesVec);
+}
+
+ChangedProps getChangedProps(
+    jsi::Runtime &rt,
+    const jsi::Value &oldProps,
+    const jsi::Value &newProps,
+    const std::optional<PropertyNames> &propertyNames) {
+  if (!propertyNames.has_value()) {
+    return getChangedProps(rt, oldProps, newProps);
   }
-  return result;
+
+  return processPropertyChanges(
+      rt, oldProps.asObject(rt), newProps.asObject(rt), propertyNames.value());
 }
 
 } // namespace reanimated

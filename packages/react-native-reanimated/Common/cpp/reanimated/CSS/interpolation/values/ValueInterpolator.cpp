@@ -12,31 +12,6 @@ ValueInterpolator<T>::ValueInterpolator(
       defaultStyleValue_(defaultStyleValue) {}
 
 template <typename T>
-void ValueInterpolator<T>::updateKeyframes(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
-    const jsi::Value &keyframes) {
-  // If only one value is passed, treat it as the last keyframe with offset 1
-  if (!keyframes.isObject()) {
-    Keyframe<T> firstKeyframe;
-    if (previousValue_.has_value()) {
-      firstKeyframe = {0, previousValue_};
-    } else {
-      const auto styleValue = getStyleValue(rt, shadowNode);
-      firstKeyframe = {0, prepareKeyframeValue(rt, styleValue)};
-    }
-    keyframes_ = {firstKeyframe, {1, prepareKeyframeValue(rt, keyframes)}};
-  } else {
-    keyframes_ = createKeyframes(rt, keyframes.asObject(rt).asArray(rt));
-  }
-
-  if (keyframes_.empty()) {
-    throw std::invalid_argument("[Reanimated] Keyframes cannot be empty.");
-  }
-  keyframeAfterIndex_ = 1;
-}
-
-template <typename T>
 jsi::Value ValueInterpolator<T>::getCurrentValue(jsi::Runtime &rt) const {
   return previousValue_.has_value()
       ? convertResultToJSI(rt, previousValue_.value())
@@ -49,6 +24,92 @@ jsi::Value ValueInterpolator<T>::getStyleValue(
     const ShadowNode::Shared &shadowNode) const {
   return viewStylesRepository_->getStyleProp(
       rt, shadowNode->getTag(), propertyPath_);
+}
+
+template <typename T>
+void ValueInterpolator<T>::updateKeyframes(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode,
+    const jsi::Value &keyframes) {
+  keyframeAfterIndex_ = 1;
+  const auto keyframeArray = keyframes.asObject(rt).asArray(rt);
+  const auto inputKeyframesCount = keyframeArray.size(rt);
+
+  auto getKeyframeAtIndexOffset = [&](size_t index) {
+    return keyframeArray.getValueAtIndex(rt, index)
+        .asObject(rt)
+        .getProperty(rt, "offset")
+        .asNumber();
+  };
+
+  bool hasOffset0 = getKeyframeAtIndexOffset(0) == 0;
+  bool hasOffset1 = getKeyframeAtIndexOffset(inputKeyframesCount - 1) == 1;
+
+  // Clear the existing keyframes_ property
+  keyframes_.clear();
+  keyframes_.reserve(
+      inputKeyframesCount + (hasOffset0 ? 0 : 1) + (hasOffset1 ? 0 : 1));
+
+  // Insert the keyframe without value at offset 0 if it is not present
+  if (!hasOffset0) {
+    keyframes_.push_back({0, std::nullopt});
+  }
+
+  // Insert all provided keyframes
+  for (size_t j = 0; j < inputKeyframesCount; ++j) {
+    jsi::Object keyframeObject =
+        keyframeArray.getValueAtIndex(rt, j).asObject(rt);
+    double offset = keyframeObject.getProperty(rt, "offset").asNumber();
+    jsi::Value value = keyframeObject.getProperty(rt, "value");
+
+    // Add a keyframe with no value if there is no keyframe value specified
+    if (value.isUndefined()) {
+      keyframes_.push_back({offset, std::nullopt});
+    } else {
+      keyframes_.push_back({offset, prepareKeyframeValue(rt, value)});
+    }
+  }
+
+  // Insert the keyframe without value at offset 1 if it is not present
+  if (!hasOffset1) {
+    keyframes_.push_back({1, std::nullopt});
+  }
+}
+
+template <typename T>
+void ValueInterpolator<T>::updateKeyframesFromStyleChange(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode,
+    const jsi::Value &oldStyleValue,
+    const jsi::Value &newStyleValue) {
+  keyframeAfterIndex_ = 1;
+  Keyframe<T> firstKeyframe, lastKeyframe;
+
+  // If the transition was interrupted, use the previous interpolation
+  // result as the first keyframe value
+  if (previousValue_.has_value()) {
+    firstKeyframe = {0, previousValue_};
+  } else {
+    // If the new transition of the property was started, use the old style
+    // value as the first keyframe value if it was provided
+    if (!oldStyleValue.isUndefined()) {
+      firstKeyframe = {0, prepareKeyframeValue(rt, oldStyleValue)};
+    }
+    // Otherwise, fallback to the default style value is no style value was
+    // provided for the view property
+    else {
+      firstKeyframe = {0, defaultStyleValue_};
+    }
+  }
+
+  // Animate to the default style value if the target value is undefined
+  if (newStyleValue.isUndefined()) {
+    lastKeyframe = {1, defaultStyleValue_};
+  } else {
+    lastKeyframe = {1, prepareKeyframeValue(rt, newStyleValue)};
+  }
+
+  keyframes_ = {firstKeyframe, lastKeyframe};
 }
 
 template <typename T>
@@ -80,55 +141,6 @@ jsi::Value ValueInterpolator<T>::update(
   previousValue_ = value;
 
   return convertResultToJSI(context.rt, value);
-}
-
-template <typename T>
-std::vector<Keyframe<T>> ValueInterpolator<T>::createKeyframes(
-    jsi::Runtime &rt,
-    const jsi::Array &keyframeArray) const {
-  const size_t inputKeyframesCount = keyframeArray.size(rt);
-
-  auto getKeyframeAtIndexOffset = [&](size_t index) {
-    return keyframeArray.getValueAtIndex(rt, index)
-        .asObject(rt)
-        .getProperty(rt, "offset")
-        .asNumber();
-  };
-
-  bool hasOffset0 = getKeyframeAtIndexOffset(0) == 0;
-  bool hasOffset1 = getKeyframeAtIndexOffset(inputKeyframesCount - 1) == 1;
-
-  // Reserve space for the constant keyframes vector
-  std::vector<Keyframe<T>> keyframes;
-  keyframes.reserve(
-      inputKeyframesCount + (hasOffset0 ? 0 : 1) + (hasOffset1 ? 0 : 1));
-
-  // Insert the keyframe without value at offset 0 if it is not present
-  if (!hasOffset0) {
-    keyframes.push_back({0, std::nullopt});
-  }
-
-  // Insert all provided keyframes
-  for (size_t j = 0; j < inputKeyframesCount; ++j) {
-    jsi::Object keyframeObject =
-        keyframeArray.getValueAtIndex(rt, j).asObject(rt);
-    double offset = keyframeObject.getProperty(rt, "offset").asNumber();
-    jsi::Value value = keyframeObject.getProperty(rt, "value");
-
-    // Add a keyframe with no value if there is not keyframe value specified
-    if (value.isUndefined()) {
-      keyframes.push_back({offset, std::nullopt});
-    } else {
-      keyframes.push_back({offset, prepareKeyframeValue(rt, value)});
-    }
-  }
-
-  // Insert the keyframe without value at offset 1 if it is not present
-  if (!hasOffset1) {
-    keyframes.push_back({1, std::nullopt});
-  }
-
-  return keyframes;
 }
 
 template <typename T>

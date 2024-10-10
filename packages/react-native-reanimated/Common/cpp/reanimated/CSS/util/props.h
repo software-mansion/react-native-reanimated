@@ -4,6 +4,7 @@
 
 #include <jsi/jsi.h>
 #include <unordered_map>
+#include <unordered_set>
 
 using namespace facebook;
 
@@ -11,14 +12,24 @@ namespace reanimated {
 
 using TransformsMap = std::unordered_map<std::string, jsi::Value>;
 
-std::pair<TransformsMap, std::vector<std::string>>
+struct ChangedProps {
+  PropertyValues oldProps;
+  PropertyValues newProps;
+  PropertyNames changedPropertyNames;
+};
+
+std::pair<TransformsMap, PropertyNames>
 extractTransformsMapAndOrderedProperties(
     jsi::Runtime &rt,
-    const jsi::Array &transformArray);
+    const jsi::Array &transformsArray);
 
-jsi::Value getChangedProps(
+ChangedProps getChangedProps(
     jsi::Runtime &rt,
-    const std::vector<std::string> &propertyNames,
+    const jsi::Value &oldProps,
+    const jsi::Value &newProps,
+    const std::optional<PropertyNames> &propertyNames);
+ChangedProps getChangedProps(
+    jsi::Runtime &rt,
     const jsi::Value &oldProps,
     const jsi::Value &newProps);
 

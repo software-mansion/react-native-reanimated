@@ -53,22 +53,13 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   DelayedQueue delayedTransitionsQueue_;
 
   void activateDelayedTransitions(const time_t timestamp);
-  void flushOperations(jsi::Runtime &rt, const time_t timestamp);
+  void flushOperations();
 
   jsi::Value handleUpdate(
       jsi::Runtime &rt,
       const time_t timestamp,
       const std::shared_ptr<CSSTransition> &transition);
-  void handleOperation(
-      jsi::Runtime &rt,
-      const TransitionOperation operation,
-      const std::shared_ptr<CSSTransition> &transition,
-      const time_t timestamp);
-
-  void activateOperation(const unsigned id);
-  void deactivateOperation(
-      const std::shared_ptr<CSSTransition> &transition,
-      const time_t timestamp);
+  void handleOperation(const TransitionOperation operation, const unsigned id);
 
   PropsObserver createPropsObserver(const unsigned id);
 };

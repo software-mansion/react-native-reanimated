@@ -3,20 +3,30 @@
  * file should be replaced with the actual example implementation.
  */
 
+import type { ViewStyle } from 'react-native';
 import { Text, StyleSheet, View, SafeAreaView, Button } from 'react-native';
 import React from 'react';
 import Animated from 'react-native-reanimated';
 
+const transitionStyles: ViewStyle[] = [
+  {},
+  {
+    transform: [{ rotate: '45deg' }],
+  },
+  {
+    transform: [{ translateY: 200 }, { rotate: '45deg' }, { scale: 2 }],
+    backgroundColor: 'blue',
+  },
+  {
+    transform: [{ rotate: '45deg' }, { translateY: 200 }],
+    backgroundColor: 'green',
+  },
+];
+
 export default function Playground() {
   const [state, setState] = React.useState(0);
-  const viewStyles = [
-    styles.style0,
-    styles.style1,
-    styles.style2,
-    styles.style3,
-  ];
   const stateToStyle = (num: number) => {
-    return viewStyles[num % 4];
+    return transitionStyles[num % transitionStyles.length];
   };
 
   return (
@@ -35,9 +45,11 @@ export default function Playground() {
             {
               marginTop: 60,
               height: 65,
+              width: 65,
               transitionProperty: 'all',
               transitionDuration: '0.5s',
               transitionTimingFunction: 'easeInOut',
+              backgroundColor: 'red',
             },
             stateToStyle(state),
           ]}
@@ -52,21 +64,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  style0: {
-    backgroundColor: 'green',
-    width: 200,
-  },
-  style1: {
-    backgroundColor: 'red',
-    width: 50,
-  },
-  style2: {
-    backgroundColor: 'blue',
-    width: 100,
-  },
-  style3: {
-    backgroundColor: 'purple',
-    width: 150,
   },
 });

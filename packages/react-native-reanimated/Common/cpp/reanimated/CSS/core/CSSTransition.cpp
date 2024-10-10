@@ -27,51 +27,24 @@ void CSSTransition::updateSettings(
 
 void CSSTransition::run(
     jsi::Runtime &rt,
-    const jsi::Value &updatedProperties,
+    const ChangedProps &changedProps,
     const time_t timestamp) {
-  const auto updatedPropertyNames =
-      updatedProperties.asObject(rt).getPropertyNames(rt);
-
-  PropertyNames propertyNames;
-  const auto changedPropertiesCount = updatedPropertyNames.size(rt);
-  propertyNames.reserve(changedPropertiesCount);
-
-  for (size_t i = 0; i < changedPropertiesCount; i++) {
-    propertyNames.push_back(
-        updatedPropertyNames.getValueAtIndex(rt, i).getString(rt).utf8(rt));
-  }
-
-  styleInterpolator_.updateProperties(rt, shadowNode_, updatedProperties);
-  progressProvider_.runProgressProviders(propertyNames, timestamp);
+  styleInterpolator_.updateProperties(rt, shadowNode_, changedProps);
+  progressProvider_.runProgressProviders(
+      rt, timestamp, changedProps.changedPropertyNames);
 }
 
 jsi::Value CSSTransition::update(jsi::Runtime &rt, time_t timestamp) {
   progressProvider_.update(timestamp);
 
-  const auto &runningProperties = progressProvider_.getRunningProperties();
-  if (runningProperties.empty()) {
-    return jsi::Value::undefined();
+  auto updates = styleInterpolator_.update(
+      rt, shadowNode_, progressProvider_.getPropertyProgressProviders());
+
+  if (!updates.isUndefined()) {
+    LOG(INFO) << "CSSTransition::update: " << stringifyJSIValue(rt, updates);
   }
 
-  std::unordered_map<std::string, InterpolationUpdateContext> contexts;
-  for (const auto &propertyName : runningProperties) {
-    const auto propertyProgressProvider =
-        progressProvider_.getPropertyProgressProvider(propertyName);
-    if (!propertyProgressProvider.has_value()) {
-      continue;
-    }
-
-    const auto &propertyProgress = propertyProgressProvider.value();
-    const InterpolationUpdateContext context{
-        .rt = rt,
-        .node = shadowNode_,
-        .progress = propertyProgress.getCurrent(),
-        .previousProgress = propertyProgress.getPrevious(),
-        .directionChanged = propertyProgress.hasDirectionChanged()};
-    contexts.emplace(propertyName, context);
-  }
-
-  return styleInterpolator_.update(contexts);
+  return updates;
 }
 
 } // namespace reanimated
