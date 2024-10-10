@@ -9,6 +9,7 @@ import {
   registerValue,
   getRegisteredValue,
   Presets,
+  wait,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 import { MutableAPI, ProgressBar } from './components';
@@ -52,6 +53,9 @@ describe(`_Array operations_ on sharedValue`, () => {
     await render(<ComponentToRender initialArray={initialArray} appendedArray={appendedArray} progress={progress} />);
     const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
     const expected = [...initialArray, ...appendedArray];
+    if (expected.length > 100) {
+      await wait(5000); // operations on big arrays are very slow
+    }
     expect(sharedValue.onJS).toBe(expected, ComparisonMode.ARRAY);
     expect(sharedValue.onUI).toBe(expected, ComparisonMode.ARRAY);
     await render(<ProgressBar progress={progress} />);
