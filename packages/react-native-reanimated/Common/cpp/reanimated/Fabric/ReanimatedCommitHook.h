@@ -51,7 +51,7 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
 
   SurfaceId currentMaxSurfaceId_ = -1;
 
-  std::mutex mutex_;
+  std::mutex mutex_; // Protects `currentMaxSurfaceId_`.
 };
 
 } // namespace reanimated
