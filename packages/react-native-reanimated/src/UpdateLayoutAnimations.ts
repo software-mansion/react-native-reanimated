@@ -1,18 +1,16 @@
 'use strict';
 import { isFabric, shouldBeUseWeb } from './PlatformChecker';
+import type {
+  LayoutAnimationBatchItem,
+  LayoutAnimationFunction,
+  SharedTransitionAnimationsFunction,
+  ProgressAnimationCallback,
+  LayoutAnimationType,
+} from './commonTypes';
 import {
   configureLayoutAnimationBatch,
   makeShareableCloneRecursive,
 } from './core';
-import type {
-  LayoutAnimationFunction,
-  LayoutAnimationType,
-} from './layoutReanimation';
-import type {
-  LayoutAnimationBatchItem,
-  ProgressAnimationCallback,
-  SharedTransitionAnimationsFunction,
-} from './layoutReanimation/animationBuilder/commonTypes';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];

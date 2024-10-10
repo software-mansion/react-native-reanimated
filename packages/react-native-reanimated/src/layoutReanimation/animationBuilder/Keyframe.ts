@@ -2,6 +2,9 @@
 import { Easing } from '../../Easing';
 import { withDelay, withSequence, withTiming } from '../../animation';
 import type {
+  StyleProps,
+  EasingFunction,
+  TransformArrayItem,
   AnimationFunction,
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
@@ -9,11 +12,6 @@ import type {
   MaybeInvalidKeyframeProps,
   StylePropsWithArrayTransform,
   ValidKeyframeProps,
-} from './commonTypes';
-import type {
-  StyleProps,
-  EasingFunction,
-  TransformArrayItem,
 } from '../../commonTypes';
 import { ReduceMotion } from '../../commonTypes';
 import {

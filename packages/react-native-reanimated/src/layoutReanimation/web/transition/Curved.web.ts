@@ -1,6 +1,6 @@
 'use strict';
+import { LayoutAnimationType } from '../../../commonTypes';
 import type { ReanimatedHTMLElement } from '../../../js-reanimated';
-import { LayoutAnimationType } from '../..';
 import type { WebEasingsNames } from '../Easing.web';
 import { getEasingByName } from '../Easing.web';
 import type { TransitionData } from '../animationParser';

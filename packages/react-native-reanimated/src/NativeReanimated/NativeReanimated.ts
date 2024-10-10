@@ -4,6 +4,7 @@ import type {
   Value3D,
   ValueRotation,
   ShareableRef,
+  LayoutAnimationBatchItem,
 } from '../commonTypes';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
@@ -12,7 +13,6 @@ import { getValueUnpackerCode } from '../valueUnpacker';
 import { isFabric } from '../PlatformChecker';
 import type React from 'react';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import type { LayoutAnimationBatchItem } from '../layoutReanimation/animationBuilder/commonTypes';
 import ReanimatedModule from '../specs/NativeReanimatedModule';
 import { ReanimatedError } from '../errors';
 

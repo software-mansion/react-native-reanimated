@@ -1,10 +1,10 @@
 'use strict';
+import { BaseAnimationBuilder } from '../animationBuilder';
 import type {
+  EasingFunction,
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
-} from '../animationBuilder/commonTypes';
-import { BaseAnimationBuilder } from '../animationBuilder';
-import type { EasingFunction } from '../../commonTypes';
+} from '../../commonTypes';
 import { Easing } from '../../Easing';
 import { withTiming } from '../../animation';
 import { assertEasingIsWorklet } from '../../animation/util';
