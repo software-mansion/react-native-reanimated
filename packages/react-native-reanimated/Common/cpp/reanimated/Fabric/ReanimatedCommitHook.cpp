@@ -15,8 +15,11 @@ namespace reanimated {
 
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<PropsRegistry> &propsRegistry,
-    const std::shared_ptr<UIManager> &uiManager)
-    : propsRegistry_(propsRegistry), uiManager_(uiManager) {
+    const std::shared_ptr<UIManager> &uiManager,
+    const std::function<void(SurfaceId)> initializeLayoutAnimations)
+    : propsRegistry_(propsRegistry),
+      uiManager_(uiManager),
+      initializeLayoutAnimations_(initializeLayoutAnimations) {
   uiManager_->registerCommitHook(*this);
 }
 
@@ -28,6 +31,16 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode) noexcept {
+  auto surfaceId = newRootShadowNode->getSurfaceId();
+
+  {
+    auto lock = std::unique_lock<std::mutex>(mutex_);
+    if (!initializedSurfaces_.contains(surfaceId)) {
+      initializeLayoutAnimations_(surfaceId);
+      initializedSurfaces_.insert(surfaceId);
+    }
+  }
+
   auto reaShadowNode =
       std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
           newRootShadowNode);

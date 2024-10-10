@@ -852,15 +852,17 @@ void NativeReanimatedModule::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
 
-  initializeLayoutAnimations();
+  initializeLayoutAnimationsProxy();
 
   mountHook_ =
       std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
-  commitHook_ =
-      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(
+      propsRegistry_, uiManager_, [this](SurfaceId surfaceId) {
+        initializeLayoutAnimations(surfaceId);
+      });
 }
 
-void NativeReanimatedModule::initializeLayoutAnimations() {
+void NativeReanimatedModule::initializeLayoutAnimationsProxy() {
   uiManager_->setAnimationDelegate(nullptr);
   auto scheduler = reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
   auto componentDescriptorRegistry =
@@ -876,13 +878,17 @@ void NativeReanimatedModule::initializeLayoutAnimations() {
         scheduler->getContextContainer(),
         uiWorkletRuntime_->getJSIRuntime(),
         uiScheduler_);
-    uiManager_->getShadowTreeRegistry().enumerate(
-        [this](const ShadowTree &shadowTree, bool &stop) {
-          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
-              layoutAnimationsProxy_);
-        });
   }
 }
+
+void NativeReanimatedModule::initializeLayoutAnimations(SurfaceId surfaceId) {
+  uiManager_->getShadowTreeRegistry().visit(
+      surfaceId, [this](const ShadowTree &shadowTree) {
+        shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
+            layoutAnimationsProxy_);
+      });
+}
+
 #endif // RCT_NEW_ARCH_ENABLED
 
 jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(

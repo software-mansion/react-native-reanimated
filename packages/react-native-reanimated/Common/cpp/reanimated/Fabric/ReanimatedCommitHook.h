@@ -15,7 +15,8 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
  public:
   ReanimatedCommitHook(
       const std::shared_ptr<PropsRegistry> &propsRegistry,
-      const std::shared_ptr<UIManager> &uiManager);
+      const std::shared_ptr<UIManager> &uiManager,
+      const std::function<void(SurfaceId)> initializeLayoutAnimations);
 
   ~ReanimatedCommitHook() noexcept override;
 
@@ -44,6 +45,12 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
   std::shared_ptr<PropsRegistry> propsRegistry_;
 
   std::shared_ptr<UIManager> uiManager_;
+
+  std::function<void(SurfaceId)> initializeLayoutAnimations_;
+
+  std::unordered_set<SurfaceId> initializedSurfaces_;
+
+  std::mutex mutex_;
 };
 
 } // namespace reanimated
