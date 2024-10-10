@@ -36,7 +36,7 @@ export function createUpdatesContainer() {
         for (const prop of propsToUpdate) {
           snapshot[prop] = isFabric
             ? global._obtainPropFabric(updateInfo?.shadowNodeWrapper, prop)
-            : global._obtainPropPaper(updateInfo?.tag, prop);
+            : global._obtainPropPaper(updateInfo.tag, prop);
         }
         values.push({
           tag: updateInfo.tag,
@@ -91,7 +91,9 @@ export function createUpdatesContainer() {
     if ('backgroundColor' in updatesCopy) {
       updatesCopy.backgroundColor = convertDecimalColor(updatesCopy.backgroundColor);
     }
-    _updateNativeSnapshot([{ tag, update }], jsUpdates.value.length - 1);
+    if (!global._IS_FABRIC) {
+      _updateNativeSnapshot([{ tag, update }], jsUpdates.value.length - 1);
+    }
     jsUpdates.modify(updates => {
       updates.push({
         tag,
@@ -138,6 +140,9 @@ export function createUpdatesContainer() {
     }
     const tag = component?.getTag();
     if (!tag || !(tag in sortedUpdates)) {
+      if (_IS_FABRIC && (-1) in sortedUpdates) {
+        return sortedUpdates[-1];
+      }
       throw new Error('Snapshot of given component not found');
     } else {
       return sortedUpdates[tag];
