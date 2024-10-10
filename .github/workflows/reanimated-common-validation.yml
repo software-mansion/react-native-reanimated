@@ -6,15 +6,19 @@ on:
     paths:
       - '.github/workflows/reanimated-common-validation.yml'
       - 'packages/react-native-reanimated/scripts/cpplint.sh'
+      - 'packages/react-native-reanimated/scripts/validate-includes.sh'
       - 'packages/react-native-reanimated/Common/cpp/**'
   pull_request:
     paths:
       - '.github/workflows/reanimated-common-validation.yml'
       - 'packages/react-native-reanimated/scripts/cpplint.sh'
+      - 'packages/react-native-reanimated/scripts/validate-includes.sh'
       - 'packages/react-native-reanimated/Common/cpp/**'
   merge_group:
     branches:
       - main
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -45,4 +49,4 @@ jobs:
 
       - name: Disallow DEBUG macros
         run: |
-          ! egrep -r '(#if DEBUG|#ifdef DEBUG)' packages/react-native-reanimated/Common/cpp/ packages/react-native-reanimated/apple/native/ packages/react-native-reanimated/android/src/main/cpp/
+          ! egrep -r '(#if DEBUG|#ifdef DEBUG)' packages/react-native-reanimated/Common/cpp/ packages/react-native-reanimated/apple/ packages/react-native-reanimated/android/src/main/cpp/

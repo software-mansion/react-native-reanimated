@@ -1,8 +1,9 @@
 #pragma once
 
-#include "JSLogger.h"
-#include "LayoutAnimationType.h"
-#include "Shareables.h"
+#include <reanimated/LayoutAnimations/LayoutAnimationType.h>
+
+#include <worklets/SharedItems/Shareables.h>
+#include <worklets/Tools/JSLogger.h>
 
 #include <jsi/jsi.h>
 #include <stdio.h>
@@ -17,6 +18,7 @@
 namespace reanimated {
 
 using namespace facebook;
+using namespace worklets;
 
 struct LayoutAnimationConfig {
   int tag;

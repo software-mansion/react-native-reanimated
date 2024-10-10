@@ -58,10 +58,7 @@ const functionArgsToWorkletize = new Map([
   ['executeOnUIRuntimeSync', [0]],
 ]);
 
-/**
- *
- * @returns `true` if the function was workletized, `false` otherwise.
- */
+/** @returns `true` if the function was workletized, `false` otherwise. */
 export function processIfAutoworkletizableCallback(
   path: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
@@ -87,8 +84,8 @@ export function processCalleesAutoworkletizableCallbacks(
     'name' in callee
       ? callee.name
       : 'property' in callee && 'name' in callee.property
-      ? callee.property.name
-      : undefined;
+        ? callee.property.name
+        : undefined;
   if (name === undefined) {
     return;
   }

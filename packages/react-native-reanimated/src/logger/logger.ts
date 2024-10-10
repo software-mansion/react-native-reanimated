@@ -1,6 +1,26 @@
 'use strict';
 import { addLogBoxLog } from './LogBox';
-import type { LogLevel, LogData } from './LogBox';
+import type { LogData, LogBoxLogLevel } from './LogBox';
+
+const DOCS_URL =
+  'https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration';
+const DOCS_REFERENCE = `If you don't want to see this message, you can disable the \`strict\` mode. Refer to:\n${DOCS_URL} for more details.`;
+
+type LogFunction = (data: LogData) => void;
+
+export enum LogLevel {
+  warn = 1,
+  error = 2,
+}
+
+export type LoggerConfig = {
+  level?: LogLevel;
+  strict?: boolean;
+};
+
+export type LoggerConfigInternal = {
+  logFunction: LogFunction;
+} & Required<LoggerConfig>;
 
 function logToConsole(data: LogData) {
   'worklet';
@@ -16,12 +36,18 @@ function logToConsole(data: LogData) {
   }
 }
 
+export const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
+  logFunction: logToConsole,
+  level: LogLevel.warn,
+  strict: true,
+};
+
 function formatMessage(message: string) {
   'worklet';
   return `[Reanimated] ${message}`;
 }
 
-function createLog(level: LogLevel, message: string): LogData {
+function createLog(level: LogBoxLogLevel, message: string): LogData {
   'worklet';
   const formattedMessage = formatMessage(message);
 
@@ -34,18 +60,14 @@ function createLog(level: LogLevel, message: string): LogData {
     category: formattedMessage,
     componentStack: [],
     componentStackType: null,
+    // eslint-disable-next-line reanimated/use-reanimated-error
     stack: new Error().stack,
   };
 }
 
-const loggerImpl = {
-  logFunction: logToConsole,
-};
-
 /**
- * Function that logs to LogBox and console.
- * Used to replace the default console logging with logging to LogBox
- * on the UI thread when runOnJS is available.
+ * Function that logs to LogBox and console. Used to replace the default console
+ * logging with logging to LogBox on the UI thread when runOnJS is available.
  *
  * @param data - The details of the log.
  */
@@ -55,27 +77,79 @@ export function logToLogBoxAndConsole(data: LogData) {
 }
 
 /**
+ * Registers the logger configuration. use it only for Worklet runtimes.
+ *
+ * @param config - The config to register.
+ */
+export function registerLoggerConfig(config: LoggerConfigInternal) {
+  'worklet';
+  global.__reanimatedLoggerConfig = config;
+}
+
+/**
  * Replaces the default log function with a custom implementation.
  *
  * @param logFunction - The custom log function.
  */
-export function replaceLoggerImplementation(
-  logFunction: (data: LogData) => void
+export function replaceLoggerImplementation(logFunction: LogFunction) {
+  'worklet';
+  registerLoggerConfig({ ...__reanimatedLoggerConfig, logFunction });
+}
+
+/**
+ * Updates logger configuration.
+ *
+ * @param options - The new logger configuration to apply.
+ *
+ *   - Level: The minimum log level to display.
+ *   - Strict: Whether to log warnings and errors that are not strict. Defaults to
+ *       false.
+ */
+export function updateLoggerConfig(options?: Partial<LoggerConfig>) {
+  'worklet';
+  registerLoggerConfig({
+    ...__reanimatedLoggerConfig,
+    // Don't reuse previous level and strict values from the global config
+    level: options?.level ?? LogLevel.warn,
+    strict: options?.strict ?? false,
+  });
+}
+
+type LogOptions = {
+  strict?: boolean;
+};
+
+function handleLog(
+  level: Exclude<LogBoxLogLevel, 'syntax' | 'fatal'>,
+  message: string,
+  options: LogOptions
 ) {
-  loggerImpl.logFunction = logFunction;
+  'worklet';
+  const config = __reanimatedLoggerConfig;
+  if (
+    // Don't log if the log is marked as strict-only and the config doesn't
+    // enable strict logging
+    (options.strict && !config.strict) ||
+    // Don't log if the log level is below the minimum configured level
+    LogLevel[level] < config.level
+  ) {
+    return;
+  }
+
+  if (options.strict) {
+    message += `\n\n${DOCS_REFERENCE}`;
+  }
+
+  config.logFunction(createLog(level, message));
 }
 
 export const logger = {
-  warn(message: string) {
+  warn(message: string, options: LogOptions = {}) {
     'worklet';
-    loggerImpl.logFunction(createLog('warn', message));
+    handleLog('warn', message, options);
   },
-  error(message: string) {
+  error(message: string, options: LogOptions = {}) {
     'worklet';
-    loggerImpl.logFunction(createLog('error', message));
-  },
-  fatal(message: string) {
-    'worklet';
-    loggerImpl.logFunction(createLog('fatal', message));
+    handleLog('error', message, options);
   },
 };

@@ -2,12 +2,13 @@
 import React from 'react';
 
 /**
- * We need to augment react types because rn for web provides non-standard way of measuring components by injecting `measure` method to the ref.
+ * We need to augment react types because rn for web provides non-standard way
+ * of measuring components by injecting `measure` method to the ref.
  *
  * Reference:
  * https://github.com/necolas/react-native-web/blob/c47bec7b93d6a3b7c31bbc8bb2e4acd117b79bfc/packages/react-native-web/src/modules/usePlatformMethods/index.js#L69
  * https://github.com/necolas/react-native-web/blob/c47bec7b93d6a3b7c31bbc8bb2e4acd117b79bfc/packages/react-native-web/src/exports/UIManager/index.js#L63
- *  */
+ */
 
 declare module 'react' {
   interface Component {

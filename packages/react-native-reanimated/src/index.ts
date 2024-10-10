@@ -5,6 +5,8 @@ import * as Animated from './Animated';
 
 export default Animated;
 
+export { configureReanimatedLogger } from './ConfigHelper';
+export { LogLevel as ReanimatedLogLevel } from './logger';
 export type { WorkletRuntime } from './core';
 export {
   runOnJS,
@@ -84,9 +86,7 @@ export type {
   InterpolateHSV,
 } from './interpolateColor';
 export {
-  /**
-   * @deprecated Please use {@link Extrapolation} instead.
-   */
+  /** @deprecated Please use {@link Extrapolation} instead. */
   Extrapolate,
   ColorSpace,
   interpolateColor,
@@ -122,6 +122,7 @@ export type {
   SharedTransitionAnimationsValues,
   ILayoutAnimationBuilder,
   IEntryExitAnimationBuilder,
+  BaseLayoutAnimationConfig,
 } from './layoutReanimation';
 export {
   BaseAnimationBuilder,

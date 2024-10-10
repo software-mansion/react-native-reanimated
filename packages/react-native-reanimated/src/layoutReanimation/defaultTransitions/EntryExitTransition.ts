@@ -250,7 +250,8 @@ export class EntryExitTransition
 }
 
 /**
- * @deprecated Please use `EntryExitTransition.entering(entering).exiting(exiting)` instead.
+ * @deprecated Please use
+ *   `EntryExitTransition.entering(entering).exiting(exiting)` instead.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions
  */
 export function combineTransition(

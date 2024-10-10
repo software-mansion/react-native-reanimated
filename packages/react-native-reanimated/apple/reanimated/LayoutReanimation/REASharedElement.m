@@ -1,4 +1,4 @@
-#import <RNReanimated/REASharedElement.h>
+#import <reanimated/apple/LayoutReanimation/REASharedElement.h>
 
 @implementation REASharedElement
 - (instancetype)initWithSourceView:(REAUIView *)sourceView

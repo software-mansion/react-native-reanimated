@@ -12,9 +12,11 @@ import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
 
 /**
- * Rotate from top on the X axis. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate from top on the X axis. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
@@ -62,9 +64,11 @@ export class FlipInXUp
 }
 
 /**
- * Rotate from left on the Y axis. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate from left on the Y axis. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
@@ -112,9 +116,11 @@ export class FlipInYLeft
 }
 
 /**
- * Rotate from bottom on the X axis. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate from bottom on the X axis. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
@@ -162,9 +168,11 @@ export class FlipInXDown
 }
 
 /**
- * Rotate from right on the Y axis. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate from right on the Y axis. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
@@ -212,9 +220,11 @@ export class FlipInYRight
 }
 
 /**
- * Eased rotate in on the X axis. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Eased rotate in on the X axis. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
@@ -257,9 +267,11 @@ export class FlipInEasyX
 }
 
 /**
- * Eased rotate in on the Y axis. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Eased rotate in on the Y axis. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
@@ -302,9 +314,11 @@ export class FlipInEasyY
 }
 
 /**
- * Rotate to top animation on the X axis. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate to top animation on the X axis. You can modify the behavior by
+ * chaining methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
@@ -357,9 +371,11 @@ export class FlipOutXUp
 }
 
 /**
- * Rotate to left on the Y axis. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate to left on the Y axis. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
@@ -412,9 +428,11 @@ export class FlipOutYLeft
 }
 
 /**
- * Rotate to bottom on the X axis. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate to bottom on the X axis. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
@@ -467,9 +485,11 @@ export class FlipOutXDown
 }
 
 /**
- * Rotate to right animation on the Y axis. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate to right animation on the Y axis. You can modify the behavior by
+ * chaining methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
@@ -522,9 +542,11 @@ export class FlipOutYRight
 }
 
 /**
- * Eased rotate on the X axis. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Eased rotate on the X axis. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */
@@ -567,9 +589,11 @@ export class FlipOutEasyX
 }
 
 /**
- * Eased rotate on the Y axis. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Eased rotate on the Y axis. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#flip
  */

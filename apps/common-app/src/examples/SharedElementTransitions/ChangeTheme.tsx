@@ -79,8 +79,8 @@ function getTheme(theme: boolean, disabled: boolean) {
   const transition = disabled
     ? undefined
     : theme
-    ? customTransition
-    : new SharedTransition();
+      ? customTransition
+      : new SharedTransition();
 
   return { style, transition };
 }

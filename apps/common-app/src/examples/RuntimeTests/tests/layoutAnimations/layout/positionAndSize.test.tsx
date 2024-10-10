@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   CurvedTransition,
   FadingTransition,
@@ -7,20 +6,7 @@ import {
   SequencedTransition,
   Easing,
 } from 'react-native-reanimated';
-import {
-  describe,
-  test,
-  mockAnimationTimer,
-  recordAnimationUpdates,
-  render,
-  expect,
-  unmockAnimationTimer,
-  clearRenderOutput,
-  getTestComponent,
-  waitForAnimationUpdates,
-  mockWindowDimensions,
-  unmockWindowDimensions,
-} from '../../../ReJest/RuntimeTestsApi';
+import { describe, test, expect } from '../../../ReJest/RuntimeTestsApi';
 import {
   CurvedSnapshot,
   FadingSnapshot,
@@ -30,26 +16,7 @@ import {
   TransitionSnapshot200ms,
   TransitionSnapshotNoModifiers,
 } from './layoutTransitionWithSize.snapshot';
-import { Direction, TransitionUpOrDown, TransitionLeftOrRight, TRANSITION_REF } from './TestComponents';
-
-async function getSnapshotUpdates(layout: any, direction: Direction, snapshotSize: number) {
-  await mockAnimationTimer();
-  await mockWindowDimensions();
-  const updatesContainer = await recordAnimationUpdates();
-  if (direction === Direction.UP || direction === Direction.DOWN) {
-    await render(<TransitionUpOrDown layout={layout} direction={direction} changeSize />);
-  } else {
-    await render(<TransitionLeftOrRight layout={layout} direction={direction} changeSize />);
-  }
-  await waitForAnimationUpdates(snapshotSize);
-  const component = getTestComponent(TRANSITION_REF);
-  const updates = updatesContainer.getUpdates(component);
-  await unmockAnimationTimer();
-  await unmockWindowDimensions();
-  await clearRenderOutput();
-
-  return updates;
-}
+import { Direction, getSnapshotUpdates } from './TestComponents';
 
 describe('Test predefined layout transitions', () => {
   test.each([LinearTransition, SequencedTransition, FadingTransition, JumpingTransition, CurvedTransition])(
@@ -58,7 +25,7 @@ describe('Test predefined layout transitions', () => {
       for (const direction of Object.values(Direction)) {
         const snapshotName = `${transition.name}_${direction}` as keyof typeof TransitionSnapshotNoModifiers;
         const snapshot = TransitionSnapshotNoModifiers[snapshotName];
-        const updates = await getSnapshotUpdates(transition, direction, snapshot.length);
+        const updates = await getSnapshotUpdates(transition, direction, snapshot.length, true);
         expect(updates).toMatchSnapshots(snapshot);
       }
     },
@@ -72,14 +39,14 @@ describe('Test predefined layout transitions, duration = 200ms', () => {
       for (const direction of Object.values(Direction)) {
         const snapshotName = `${transition.name}_${direction}` as keyof typeof TransitionSnapshot200ms;
         const snapshot = TransitionSnapshot200ms[snapshotName];
-        const updates = await getSnapshotUpdates(transition.duration(200), direction, snapshot.length);
+        const updates = await getSnapshotUpdates(transition.duration(200), direction, snapshot.length, true);
         expect(updates).toMatchSnapshots(snapshot);
       }
     },
   );
 });
 
-describe('Test LINEAR transition modifiers', () => {
+describe('Test **LINEAR** transition modifiers', () => {
   test.each([
     [LinearTransition.springify().damping(40).stiffness(1000), 'springify1'],
     [LinearTransition.stiffness(1000).springify().damping(40), 'springify1'], // Change the order of modifiers but keep the snapshot name
@@ -94,13 +61,13 @@ describe('Test LINEAR transition modifiers', () => {
     for (const direction of Object.values(Direction)) {
       const snapshotName = `LINEAR_${modifierName}_${direction}` as keyof typeof LinearSnapshot;
       const snapshot = LinearSnapshot[snapshotName];
-      const updates = await getSnapshotUpdates(transition, direction, snapshot.length);
+      const updates = await getSnapshotUpdates(transition, direction, snapshot.length, true);
       expect(updates).toMatchSnapshots(snapshot);
     }
   });
 });
 
-describe('Test SEQUENCED transition modifiers', () => {
+describe('Test **SEQUENCED** transition modifiers', () => {
   test.each([
     [SequencedTransition, 'default'],
     [SequencedTransition.duration(500), 'default'], // the default duration is 500
@@ -110,13 +77,13 @@ describe('Test SEQUENCED transition modifiers', () => {
     for (const direction of Object.values(Direction)) {
       const snapshotName = `SEQUENCED_${modifierName}_${direction}` as keyof typeof SequencedSnapshot;
       const snapshot = SequencedSnapshot[snapshotName];
-      const updates = await getSnapshotUpdates(transition, direction, snapshot.length);
+      const updates = await getSnapshotUpdates(transition, direction, snapshot.length, true);
       expect(updates).toMatchSnapshots(snapshot);
     }
   });
 });
 
-describe('Test FADING transition modifiers', () => {
+describe('Test **FADING** transition modifiers', () => {
   test.each([
     [FadingTransition, 'default'],
     [FadingTransition.duration(500), 'default'], // the default duration is 500
@@ -125,13 +92,13 @@ describe('Test FADING transition modifiers', () => {
     for (const direction of Object.values(Direction)) {
       const snapshotName = `FADING_${modifierName}_${direction}` as keyof typeof FadingSnapshot;
       const snapshot = FadingSnapshot[snapshotName];
-      const updates = await getSnapshotUpdates(transition, direction, snapshot.length);
+      const updates = await getSnapshotUpdates(transition, direction, snapshot.length, true);
       expect(updates).toMatchSnapshots(snapshot);
     }
   });
 });
 
-describe('Test JUMPING transition modifiers', () => {
+describe('Test **JUMPING** transition modifiers', () => {
   test.each([
     [JumpingTransition, 'default'],
     [JumpingTransition.duration(300), 'default'], // the default duration is 300
@@ -140,13 +107,13 @@ describe('Test JUMPING transition modifiers', () => {
     for (const direction of Object.values(Direction)) {
       const snapshotName = `JUMPING_${modifierName}_${direction}` as keyof typeof JumpingSnapshot;
       const snapshot = JumpingSnapshot[snapshotName];
-      const updates = await getSnapshotUpdates(transition, direction, snapshot.length);
+      const updates = await getSnapshotUpdates(transition, direction, snapshot.length, true);
       expect(updates).toMatchSnapshots(snapshot);
     }
   });
 });
 
-describe('Test CURVED transition modifiers', () => {
+describe('Test **CURVED** transition modifiers', () => {
   test.each([
     [CurvedTransition, 'default'],
     [CurvedTransition.duration(300), 'default'], // the default duration is 300
@@ -160,7 +127,7 @@ describe('Test CURVED transition modifiers', () => {
     for (const direction of Object.values(Direction)) {
       const snapshotName = `CURVED_${modifierName}_${direction}` as keyof typeof CurvedSnapshot;
       const snapshot = CurvedSnapshot[snapshotName];
-      const updates = await getSnapshotUpdates(transition, direction, snapshot.length);
+      const updates = await getSnapshotUpdates(transition, direction, snapshot.length, true);
       expect(updates).toMatchSnapshots(snapshot);
     }
   });

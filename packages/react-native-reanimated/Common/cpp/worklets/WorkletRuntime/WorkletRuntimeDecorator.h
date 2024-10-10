@@ -1,6 +1,6 @@
 #pragma once
 
-#include "JSScheduler.h"
+#include <worklets/Tools/JSScheduler.h>
 
 #include <jsi/jsi.h>
 
@@ -9,7 +9,7 @@
 
 using namespace facebook;
 
-namespace reanimated {
+namespace worklets {
 
 class WorkletRuntimeDecorator {
  public:
@@ -19,4 +19,4 @@ class WorkletRuntimeDecorator {
       const std::shared_ptr<JSScheduler> &jsScheduler);
 };
 
-} // namespace reanimated
+} // namespace worklets

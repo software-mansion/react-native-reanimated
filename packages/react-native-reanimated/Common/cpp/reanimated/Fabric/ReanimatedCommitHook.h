@@ -1,11 +1,11 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#include <reanimated/Fabric/PropsRegistry.h>
+
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
 #include <memory>
-
-#include "PropsRegistry.h"
 
 using namespace facebook::react;
 

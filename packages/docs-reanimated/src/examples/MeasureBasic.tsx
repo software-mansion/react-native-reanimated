@@ -1,18 +1,20 @@
 import React from 'react';
-import { Button, StyleSheet, View, Text } from 'react-native';
+import { Button, StyleSheet, View, TextInput } from 'react-native';
 import Animated, {
   MeasuredDimensions,
   measure,
-  runOnJS,
+  useAnimatedProps,
   useAnimatedRef,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
 export default function App() {
   const animatedRef = useAnimatedRef<Animated.View>();
   const width = useSharedValue<number>(100);
-  const [text, setText] = React.useState(width.value);
+  const text = useSharedValue(100);
 
   const handlePress = () => {
     width.value = withTiming(width.value + 50, {}, () => {
@@ -23,14 +25,21 @@ export default function App() {
         return;
       }
 
-      runOnJS(setText)(Math.floor(measurement.width));
+      text.value = Math.floor(measurement.width);
     });
   };
+
+  const animatedProps = useAnimatedProps(() => {
+    return {
+      text: `width: ${text.value}`,
+      defaultValue: `width: ${text.value}`,
+    };
+  });
 
   return (
     <View style={styles.container}>
       <Animated.View ref={animatedRef} style={{ ...styles.box, width }} />
-      <Text style={styles.label}>width: {text}</Text>
+      <AnimatedTextInput animatedProps={animatedProps} style={styles.label} />
       <Button onPress={handlePress} title="Click me" />
     </View>
   );
@@ -50,5 +59,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     marginVertical: 16,
     color: '#b58df1',
+    textAlign: 'center',
   },
 });

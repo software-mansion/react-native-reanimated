@@ -2,31 +2,34 @@ package com.swmansion.reanimated;
 
 import static com.swmansion.reanimated.Utils.simplifyStringNumbersList;
 
+import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.queue.MessageQueueThread;
+import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.nativeProxy.NativeProxyCommon;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class NativeProxy extends NativeProxyCommon {
   @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
 
+  @OptIn(markerClass = FrameworkAPI.class)
   public NativeProxy(ReactApplicationContext context, String valueUnpackerCode) {
     super(context);
-    CallInvokerHolderImpl holder =
-        (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
+    CallInvokerHolderImpl holder = (CallInvokerHolderImpl) context.getJSCallInvokerHolder();
     LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
     ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
     mHybridData =
         initHybrid(
-            context.getJavaScriptContextHolder().get(),
+            Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             holder,
             mAndroidUIScheduler,
             LayoutAnimations,
@@ -39,6 +42,7 @@ public class NativeProxy extends NativeProxyCommon {
     }
   }
 
+  @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
       long jsContext,
       CallInvokerHolderImpl jsCallInvokerHolder,

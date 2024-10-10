@@ -44,7 +44,7 @@ async function getFileAndUrls(dir) {
           let urls = Array.from(fileContent.matchAll(urlRegex), (m) => m[0]);
           urls = urls.filter((url) => !/({|})/.test(url));
           return urls.length > 0
-            ? urls.map((url) => ({ file: resource, url: url }))
+            ? urls.map((url) => ({ file: resource, url }))
             : [];
         } else {
           return [];
@@ -69,7 +69,8 @@ function validUrls(data) {
     if (
       currentData.url.includes('twitter.com') || // redirect issue
       currentData.url.includes('blog.swmansion.com') || // authorization issue
-      currentData.url.includes('opensource.org') // request from GitHub actions probably blocked
+      currentData.url.includes('opensource.org') || // request from GitHub actions probably blocked
+      currentData.url.includes('good+first+issue') // sometimes we don't have any issues with this label
     ) {
       index++;
       sendRequest();

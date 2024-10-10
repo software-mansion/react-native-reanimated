@@ -10,9 +10,11 @@ import type {
 } from '../animationBuilder/commonTypes';
 
 /**
- * Rotate to bottom from left edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate to bottom from left edge. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
@@ -62,9 +64,11 @@ export class RotateInDownLeft
 }
 
 /**
- * Rotate to bottom from right edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate to bottom from right edge. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
@@ -114,9 +118,11 @@ export class RotateInDownRight
 }
 
 /**
- * Rotate to top from left edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate to top from left edge. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
@@ -166,9 +172,11 @@ export class RotateInUpLeft
 }
 
 /**
- * Rotate to top from right edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate to top from right edge. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
@@ -218,9 +226,11 @@ export class RotateInUpRight
 }
 
 /**
- * Rotate to bottom from left edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate to bottom from left edge. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
@@ -282,9 +292,11 @@ export class RotateOutDownLeft
 }
 
 /**
- * Rotate to bottom from right edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate to bottom from right edge. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
@@ -346,9 +358,11 @@ export class RotateOutDownRight
 }
 
 /**
- * Rotate to top from left edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate to top from left edge. You can modify the behavior by chaining methods
+ * like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */
@@ -410,9 +424,11 @@ export class RotateOutUpLeft
 }
 
 /**
- * Rotate to top from right edge. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Rotate to top from right edge. You can modify the behavior by chaining
+ * methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#rotate
  */

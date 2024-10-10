@@ -5,7 +5,7 @@
 #import <React/RCTSurfacePresenterStub.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
-#import <RNReanimated/READisplayLink.h>
+#import <reanimated/apple/READisplayLink.h>
 
 @class REAModule;
 

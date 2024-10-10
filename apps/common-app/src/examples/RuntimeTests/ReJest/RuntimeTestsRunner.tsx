@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
 import { runTests, configure } from './RuntimeTestsApi';
 import { RenderLock } from './utils/SyncUIRunner';
+import { FlatList } from 'react-native-gesture-handler';
 
 export class ErrorBoundary extends React.Component<
   { children: React.JSX.Element | Array<React.JSX.Element> },
@@ -72,18 +73,18 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.flexOne}>
       {started ? null : (
         <>
           <TestSelector tests={tests} testSelectionCallbacks={testSelectionCallbacks} />
-          <Pressable onPressOut={handleStartClick} style={styles.button}>
-            <Text style={styles.buttonTextWhite}>Run tests</Text>
+          <Pressable onPressOut={handleStartClick} style={button}>
+            <Text style={whiteText}>Run tests</Text>
           </Pressable>
         </>
       )}
       {/* Don't render anything if component is undefined to prevent blinking */}
       {component || null}
-      {finished ? <Text style={styles.reloadText}>Reload the app to run the tests again</Text> : null}
+      {finished ? <Text style={navyText}>Reload the app to run the tests again</Text> : null}
     </View>
   );
 }
@@ -122,22 +123,24 @@ function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
   }
 
   return (
-    <View>
+    <View style={styles.flexOne}>
       <SelectAllButtonProps handleSelectAllClick={selectAllClick} select={true} />
       <SelectAllButtonProps handleSelectAllClick={selectAllClick} select={false} />
 
-      <View style={styles.selectButtonsFrame}>
-        {tests.map(testData => {
+      <FlatList
+        style={styles.selectButtonsFrame}
+        data={tests}
+        renderItem={({ item }) => {
           return (
             <SelectTest
-              key={testData.testSuiteName}
-              testSuiteName={testData.testSuiteName}
-              selectClick={() => selectClick(testData)}
+              key={item.testSuiteName}
+              testSuiteName={item.testSuiteName}
+              selectClick={() => selectClick(item)}
               selectedTests={selectedTests}
             />
           );
-        })}
-      </View>
+        }}
+      />
     </View>
   );
 }
@@ -166,8 +169,8 @@ function SelectTest({ testSuiteName, selectClick, selectedTests }: SelectTestPro
       onPressIn={() => handleSelectClickIn()}
       onPressOut={() => handleSelectClickOut()}>
       <View style={[styles.checkbox, selectedTests.get(testSuiteName) ? styles.checkedCheckbox : {}]} />
-      <View style={styles.selectButton}>
-        <Text style={styles.buttonText}>{testSuiteName}</Text>
+      <View style={selectButton}>
+        <Text style={navyText}>{testSuiteName}</Text>
       </View>
     </Pressable>
   );
@@ -194,28 +197,52 @@ function SelectAllButtonProps({ handleSelectAllClick, select }: SelectAllButtonP
     <Pressable
       onPressIn={handleSelectAllClickIn}
       onPressOut={() => handleSelectAllClickOut()}
-      style={[styles.selectAllButton, isPressed ? styles.pressedButton : {}]}>
-      <Text style={styles.buttonText}>{select ? 'Select all' : 'Deselect all'}</Text>
+      style={[selectAllButton, isPressed ? styles.pressedButton : {}]}>
+      <Text style={navyText}>{select ? 'Select all' : 'Deselect all'}</Text>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'column',
+const commonStyles = StyleSheet.create({
+  textCommon: {
+    fontSize: 20,
+    alignSelf: 'center',
   },
-  selectAllButton: {
-    marginVertical: 5,
-    marginHorizontal: 20,
+  buttonCommon: {
     height: 40,
-    borderWidth: 2,
-    borderRadius: 10,
-    backgroundColor: 'white',
-    borderColor: 'navy',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  whiteButtonCommon: {
+    borderWidth: 2,
+    backgroundColor: 'white',
+    borderColor: 'navy',
+    marginVertical: 5,
+    borderRadius: 10,
+  },
+});
+
+const basicStyles = StyleSheet.create({
+  selectAllButton: { marginHorizontal: 20 },
+  selectButton: { flex: 1 },
+  button: { backgroundColor: 'navy', zIndex: 1, height: 60, marginBottom: 40 },
+  navyText: { color: 'navy' },
+  whiteText: { color: 'white' },
+});
+
+const whiteButtonCommon = StyleSheet.flatten([commonStyles.buttonCommon, commonStyles.whiteButtonCommon]);
+const selectAllButton = StyleSheet.flatten([whiteButtonCommon, basicStyles.selectAllButton]);
+const selectButton = StyleSheet.flatten([whiteButtonCommon, basicStyles.selectButton]);
+const button = StyleSheet.flatten([commonStyles.buttonCommon, basicStyles.button]);
+const navyText = StyleSheet.flatten([commonStyles.textCommon, basicStyles.navyText]);
+const whiteText = StyleSheet.flatten([commonStyles.textCommon, basicStyles.whiteText]);
+
+const styles = StyleSheet.create({
+  flexOne: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+
   selectButtonsFrame: {
     borderRadius: 10,
     backgroundColor: 'lightblue',
@@ -223,32 +250,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 10,
   },
-  selectButton: {
-    height: 40,
-    borderWidth: 2,
-    marginVertical: 5,
-    borderRadius: 10,
-    backgroundColor: 'white',
-    borderColor: 'navy',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
-  },
-  button: {
-    height: 40,
-    backgroundColor: 'navy',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  buttonText: {
-    fontSize: 20,
-    color: 'navy',
-  },
-  buttonTextWhite: {
-    fontSize: 20,
-    color: 'white',
-  },
+
   buttonWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -265,11 +267,6 @@ const styles = StyleSheet.create({
   },
   checkedCheckbox: {
     backgroundColor: 'navy',
-  },
-  reloadText: {
-    fontSize: 20,
-    color: 'navy',
-    alignSelf: 'center',
   },
   pressedButton: {
     zIndex: 2,

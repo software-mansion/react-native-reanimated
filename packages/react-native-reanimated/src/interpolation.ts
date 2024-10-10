@@ -15,9 +15,7 @@ export enum Extrapolation {
   EXTEND = 'extend',
 }
 
-/**
- * Represents the possible values for extrapolation as a string.
- */
+/** Represents the possible values for extrapolation as a string. */
 type ExtrapolationAsString = 'identity' | 'clamp' | 'extend';
 
 interface InterpolationNarrowedInput {
@@ -27,9 +25,7 @@ interface InterpolationNarrowedInput {
   rightEdgeOutput: number;
 }
 
-/**
- * Allows to specify extrapolation for left and right edge of the interpolation.
- */
+/** Allows to specify extrapolation for left and right edge of the interpolation. */
 export interface ExtrapolationConfig {
   extrapolateLeft?: Extrapolation | string;
   extrapolateRight?: Extrapolation | string;
@@ -40,9 +36,7 @@ interface RequiredExtrapolationConfig {
   extrapolateRight: Extrapolation;
 }
 
-/**
- * Configuration options for extrapolation.
- */
+/** Configuration options for extrapolation. */
 export type ExtrapolationType =
   | ExtrapolationConfig
   | Extrapolation
@@ -170,10 +164,15 @@ function internalInterpolate(
 /**
  * Lets you map a value from one range to another using linear interpolation.
  *
- * @param value - A number from the `input` range that is going to be mapped to the `output` range.
- * @param inputRange - An array of numbers specifying the input range of the interpolation.
- * @param outputRange - An array of numbers specifying the output range of the interpolation.
- * @param extrapolate - determines what happens when the `value` goes beyond the `input` range. Defaults to `Extrapolation.EXTEND` - {@link ExtrapolationType}.
+ * @param value - A number from the `input` range that is going to be mapped to
+ *   the `output` range.
+ * @param inputRange - An array of numbers specifying the input range of the
+ *   interpolation.
+ * @param outputRange - An array of numbers specifying the output range of the
+ *   interpolation.
+ * @param extrapolate - Determines what happens when the `value` goes beyond the
+ *   `input` range. Defaults to `Extrapolation.EXTEND` -
+ *   {@link ExtrapolationType}.
  * @returns A mapped value within the output range.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/interpolate
  */
@@ -223,9 +222,12 @@ export function interpolate(
 /**
  * Lets you limit a value within a specified range.
  *
- * @param value - A number that will be returned as long as the provided value is in range between `min` and `max`.
- * @param min - A number which will be returned when provided `value` is lower than `min`.
- * @param max - A number which will be returned when provided `value` is higher than `max`.
+ * @param value - A number that will be returned as long as the provided value
+ *   is in range between `min` and `max`.
+ * @param min - A number which will be returned when provided `value` is lower
+ *   than `min`.
+ * @param max - A number which will be returned when provided `value` is higher
+ *   than `max`.
  * @returns A number between min and max bounds.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/utilities/clamp/
  */

@@ -14,8 +14,8 @@
 #import <React/RCTUIManagerObserverCoordinator.h>
 #import <React/RCTUIManagerUtils.h>
 
-#import <RNReanimated/REAAnimationsManager.h>
-#import <RNReanimated/REANodesManager.h>
+#import <reanimated/apple/LayoutReanimation/REAAnimationsManager.h>
+#import <reanimated/apple/REANodesManager.h>
 
 @interface REAModule : RCTEventEmitter
 #ifdef RCT_NEW_ARCH_ENABLED

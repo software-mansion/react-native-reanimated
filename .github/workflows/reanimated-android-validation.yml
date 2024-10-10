@@ -21,6 +21,8 @@ on:
       - 'packages/react-native-reanimated/android/build.gradle'
       - 'packages/react-native-reanimated/scripts/cpplint.sh'
       - 'packages/react-native-reanimated/Common/cpp/**'
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   check:
@@ -35,6 +37,12 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+      - name: Setup Java 17
+        # Using older versions of Java might cause the lint step to throw
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 17
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:

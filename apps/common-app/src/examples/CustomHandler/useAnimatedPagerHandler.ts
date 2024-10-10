@@ -7,7 +7,7 @@ import { useEvent, useHandler } from 'react-native-reanimated';
 import type { ReanimatedEvent } from 'react-native-reanimated';
 
 export function useAnimatedPagerScrollHandler<
-  TContext extends Record<string, unknown>
+  TContext extends Record<string, unknown>,
 >(
   handlers: {
     onPageScroll: (
@@ -37,7 +37,7 @@ export function useAnimatedPagerScrollHandler<
 }
 
 export function useAnimatedPagerScrollStateHandler<
-  TContext extends Record<string, unknown>
+  TContext extends Record<string, unknown>,
 >(
   handlers: {
     onPageScrollStateChanged: (
@@ -70,7 +70,7 @@ export function useAnimatedPagerScrollStateHandler<
 }
 
 export function useAnimatedPagerSelectedPageHandler<
-  TContext extends Record<string, unknown>
+  TContext extends Record<string, unknown>,
 >(
   handlers: {
     onPageSelected: (

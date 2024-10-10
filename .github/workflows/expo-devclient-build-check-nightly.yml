@@ -8,6 +8,7 @@ on:
       - .github/workflows/expo-devclient-build-check-nightly.yml
   schedule:
     - cron: '0 0 * * *' # after publishing new nightly version on NPM
+  workflow_call:
   workflow_dispatch:
 
 jobs:

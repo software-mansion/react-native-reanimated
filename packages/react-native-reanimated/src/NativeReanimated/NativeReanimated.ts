@@ -55,7 +55,8 @@ export interface NativeReanimatedModule {
   configureProps(uiProps: string[], nativeProps: string[]): void;
   subscribeForKeyboardEvents(
     handler: ShareableRef<number>,
-    isStatusBarTranslucent: boolean
+    isStatusBarTranslucent: boolean,
+    isNavigationBarTranslucent: boolean
   ): number;
   unsubscribeFromKeyboardEvents(listenerId: number): void;
   configureLayoutAnimationBatch(
@@ -213,11 +214,13 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   subscribeForKeyboardEvents(
     handler: ShareableRef<number>,
-    isStatusBarTranslucent: boolean
+    isStatusBarTranslucent: boolean,
+    isNavigationBarTranslucent: boolean
   ) {
     return this.InnerNativeModule.subscribeForKeyboardEvents(
       handler,
-      isStatusBarTranslucent
+      isStatusBarTranslucent,
+      isNavigationBarTranslucent
     );
   }
 

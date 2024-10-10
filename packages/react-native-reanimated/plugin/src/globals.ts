@@ -117,14 +117,15 @@ const notCapturedIdentifiers = [
   // Reanimated
   '_WORKLET',
   'ReanimatedError',
+  '__reanimatedLoggerConfig',
 ];
 
 /**
- * @deprecated Since we moved on to using `global.` prefix in Reanimated, we don't need to
- * capture these identifiers anymore. However, for safety reasons and 3rd party libraries,
- * we still keep them in the list.
+ * @deprecated Since we moved on to using `global.` prefix in Reanimated, we
+ *   don't need to capture these identifiers anymore. However, for safety
+ *   reasons and 3rd party libraries, we still keep them in the list.
  *
- * `_WORKLET` is the only exception since it's a part of the public API.
+ *   `_WORKLET` is the only exception since it's a part of the public API.
  */
 // eslint-disable-next-line camelcase
 const notCapturedIdentifiers_DEPRECATED = [
@@ -132,7 +133,8 @@ const notCapturedIdentifiers_DEPRECATED = [
   '_IS_FABRIC',
   '_log',
   '_toString',
-  '_scheduleOnJS',
+  '_scheduleHostFunctionOnJS',
+  '_scheduleRemoteFunctionOnJS',
   '_scheduleOnRuntime',
   '_makeShareableClone',
   '_updatePropsPaper',

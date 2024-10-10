@@ -1,10 +1,10 @@
 #pragma once
 
+#include <reanimated/NativeModules/NativeReanimatedModule.h>
+
 #include <jsi/jsi.h>
 
 #include <memory>
-
-#include "NativeReanimatedModule.h"
 
 using namespace facebook;
 

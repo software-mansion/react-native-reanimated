@@ -97,7 +97,8 @@ export function createAnimatedComponent<P extends object>(
 ): FunctionComponent<AnimateProps<P>> | ComponentClass<AnimateProps<P>>;
 
 /**
- * @deprecated Please use `Animated.FlatList` component instead of calling `Animated.createAnimatedComponent(FlatList)` manually.
+ * @deprecated Please use `Animated.FlatList` component instead of calling
+ *   `Animated.createAnimatedComponent(FlatList)` manually.
  */
 // @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
 export function createAnimatedComponent(
@@ -368,10 +369,11 @@ export function createAnimatedComponent(
         });
         if (IS_JEST) {
           /**
-           * We need to connect Jest's TestObject instance whose contains just props object
-           * with the updateProps() function where we update the properties of the component.
-           * We can't update props object directly because TestObject contains a copy of props - look at render function:
-           * const props = this._filterNonAnimatedProps(this.props);
+           * We need to connect Jest's TestObject instance whose contains just
+           * props object with the updateProps() function where we update the
+           * properties of the component. We can't update props object directly
+           * because TestObject contains a copy of props - look at render
+           * function: const props = this._filterNonAnimatedProps(this.props);
            */
           this.jestAnimatedStyle.value = {
             ...this.jestAnimatedStyle.value,

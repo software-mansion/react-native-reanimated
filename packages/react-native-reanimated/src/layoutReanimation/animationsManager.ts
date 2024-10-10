@@ -48,7 +48,8 @@ function createLayoutAnimationManager(): {
       tag: number,
       type: LayoutAnimationType,
       /**
-       * createLayoutAnimationManager creates an animation manager for both Layout animations and Shared Transition Elements animations.
+       * CreateLayoutAnimationManager creates an animation manager for both
+       * Layout animations and Shared Transition Elements animations.
        */
       yogaValues: Partial<SharedTransitionAnimationsValues>,
       config: (

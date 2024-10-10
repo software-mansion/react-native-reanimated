@@ -4,6 +4,7 @@ const {
 } = require('react-native-reanimated/metro-config');
 
 const path = require('path');
+// @ts-expect-error
 const exclusionList = require('metro-config/src/defaults/exclusionList');
 const escape = require('escape-string-regexp');
 
@@ -11,6 +12,7 @@ const root = path.resolve(__dirname, '../..');
 
 const modules = ['react-native'];
 
+/** @type {import('metro-config').MetroConfig} */
 const config = {
   projectRoot: __dirname,
   watchFolders: [root],
@@ -26,6 +28,7 @@ const config = {
     ),
 
     extraNodeModules: modules.reduce((acc, name) => {
+      // @ts-expect-error
       acc[name] = path.join(__dirname, 'node_modules', name);
       return acc;
     }, {}),
@@ -33,5 +36,6 @@ const config = {
 };
 
 module.exports = wrapWithReanimatedMetroConfig(
+  // @ts-expect-error Should be fixed with https://github.com/facebook/react-native/pull/46602
   mergeConfig(getDefaultConfig(__dirname), config)
 );
