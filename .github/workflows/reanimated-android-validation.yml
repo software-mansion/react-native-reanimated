@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.13]
     concurrency:
       group: validate-java-${{ github.ref }}
       cancel-in-progress: true
