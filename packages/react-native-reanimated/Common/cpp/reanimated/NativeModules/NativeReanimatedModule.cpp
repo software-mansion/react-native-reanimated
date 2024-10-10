@@ -857,9 +857,7 @@ void NativeReanimatedModule::initializeFabric(
   mountHook_ =
       std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
-      propsRegistry_, uiManager_, [this](SurfaceId surfaceId) {
-        initializeLayoutAnimations(surfaceId);
-      });
+      propsRegistry_, uiManager_, layoutAnimationsProxy_);
 }
 
 void NativeReanimatedModule::initializeLayoutAnimationsProxy() {
