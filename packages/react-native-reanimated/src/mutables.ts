@@ -157,7 +157,9 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
         mutable.value = newValue;
       })();
     },
-
+    get _initial(): Value {
+      return initial;
+    },
     get _value(): Value {
       throw new ReanimatedError(
         'Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
