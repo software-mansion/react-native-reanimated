@@ -34,7 +34,7 @@
 
 // Standard `__cplusplus` macro reference:
 // https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros
-#if REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 20202L
+#if REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 202002L
 // Implicit copy capture of `this` is deprecated in NDK27, which uses C++20.
 #define COPY_CAPTURE_WITH_THIS [ =, this ] // NOLINT (whitespace/braces)
 #else
@@ -42,7 +42,7 @@
 // explicitly disallows C++20 features, including the syntax above. Therefore we
 // fallback to the deprecated syntax here.
 #define COPY_CAPTURE_WITH_THIS [=] // NOLINT (whitespace/braces)
-#endif // REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 20202L
+#endif // REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 202002L
 
 using namespace facebook;
 
