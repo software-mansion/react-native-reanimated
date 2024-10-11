@@ -1,4 +1,4 @@
-#include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
+#include <reanimated/CSS/interpolation/properties/ValueInterpolator.h>
 
 namespace reanimated {
 
@@ -273,8 +273,8 @@ jsi::Value ValueInterpolator<T>::interpolateMissingValue(
 template class ValueInterpolator<int>;
 template class ValueInterpolator<double>;
 template class ValueInterpolator<std::string>;
-template class ValueInterpolator<std::vector<double>>;
 template class ValueInterpolator<ColorArray>;
 template class ValueInterpolator<RelativeOrNumericInterpolatorValue>;
+template class ValueInterpolator<Transform>;
 
 } // namespace reanimated

@@ -5,8 +5,6 @@
 
 #include <react/renderer/core/ShadowNode.h>
 
-#include <jsi/jsi.h>
-
 namespace reanimated {
 
 using namespace facebook;
@@ -19,13 +17,6 @@ struct InterpolationUpdateContext {
   const std::optional<double> previousProgress;
   const bool directionChanged;
 };
-
-struct RelativeOrNumericInterpolatorValue {
-  double value;
-  bool isRelative;
-};
-
-using ColorArray = std::array<uint8_t, 4>;
 
 class Interpolator {
  public:
@@ -59,6 +50,9 @@ class InterpolatorFactory {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath) const = 0;
 };
+
+using PropertiesInterpolators =
+    std::unordered_map<std::string, std::shared_ptr<Interpolator>>;
 
 using PropertiesInterpolatorFactories =
     std::unordered_map<std::string, std::shared_ptr<InterpolatorFactory>>;

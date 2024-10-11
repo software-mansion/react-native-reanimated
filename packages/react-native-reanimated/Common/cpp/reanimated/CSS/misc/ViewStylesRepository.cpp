@@ -136,7 +136,7 @@ jsi::Value ViewStylesRepository::getPropertyValue(
       }
 
       if (i + 1 >= propertyPath.size()) {
-        return jsi::Value::undefined();
+        return valueFromDynamic(rt, transform);
       }
 
       const std::string &transformPropName = propertyPath[i + 1];

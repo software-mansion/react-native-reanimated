@@ -184,11 +184,7 @@ function Roller() {
             style={[
               rollerStyles.dotWrapper,
               {
-                transform: [
-                  { translateY: '-50%' },
-                  { translateX: '-50%' },
-                  { rotate: `${startOffset}deg` },
-                ],
+                transform: [{ rotate: `${startOffset}deg` }],
                 animationName: {
                   to: {
                     transform: [{ rotate: `${360 + startOffset}deg` }],

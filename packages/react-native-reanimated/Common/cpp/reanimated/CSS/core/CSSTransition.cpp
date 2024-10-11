@@ -40,10 +40,6 @@ jsi::Value CSSTransition::update(jsi::Runtime &rt, time_t timestamp) {
   auto updates = styleInterpolator_.update(
       rt, shadowNode_, progressProvider_.getPropertyProgressProviders());
 
-  if (!updates.isUndefined()) {
-    LOG(INFO) << "CSSTransition::update: " << stringifyJSIValue(rt, updates);
-  }
-
   return updates;
 }
 

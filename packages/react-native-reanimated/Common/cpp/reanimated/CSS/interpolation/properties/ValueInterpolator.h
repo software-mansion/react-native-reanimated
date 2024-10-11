@@ -39,6 +39,8 @@ class ValueInterpolator : public Interpolator {
   jsi::Value update(const InterpolationUpdateContext context) override;
 
  protected:
+  std::optional<T> defaultStyleValue_; // Default style value
+
   virtual T prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const = 0;
 
@@ -58,7 +60,6 @@ class ValueInterpolator : public Interpolator {
   int keyframeAfterIndex_ = 1;
   Keyframe<T> keyframeBefore_;
   Keyframe<T> keyframeAfter_;
-  std::optional<T> defaultStyleValue_; // Default style value
   std::optional<T> previousValue_; // Previous interpolation result
 
   std::optional<T> getFallbackValue(
