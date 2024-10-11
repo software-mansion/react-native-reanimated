@@ -1,6 +1,10 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#include <react/renderer/core/ShadowNode.h>
+
+using namespace facebook::react;
+
 namespace reanimated {
 
 // We use this trait to mark that a commit was created by Reanimated.

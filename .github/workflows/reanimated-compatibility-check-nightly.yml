@@ -1,15 +1,15 @@
 name: Reanimated compatibility check [Nightly]
 on:
   pull_request:
-    paths:
-      - .github/workflows/reanimated-compatibility-check-nightly.yml
+    types: [opened, synchronize, labeled, unlabeled]
   schedule:
     - cron: '37 19 * * *'
+  workflow_call:
   workflow_dispatch:
 
 jobs:
   build:
-    if: github.repository == 'software-mansion/react-native-reanimated'
+    if: ${{github.repository == 'software-mansion/react-native-reanimated' && (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'Check compatibility'))}}
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:

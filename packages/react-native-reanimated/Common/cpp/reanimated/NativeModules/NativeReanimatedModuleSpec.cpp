@@ -1,4 +1,4 @@
-#include "NativeReanimatedModuleSpec.h"
+#include <reanimated/NativeModules/NativeReanimatedModuleSpec.h>
 
 #include <utility>
 

@@ -1,10 +1,13 @@
-#include "ReanimatedWorkletRuntimeDecorator.h"
-#include "JSISerializer.h"
-#include "PlatformLogger.h"
-#include "ReanimatedJSIUtils.h"
-#include "WorkletRuntime.h"
+#include <reanimated/RuntimeDecorators/ReanimatedWorkletRuntimeDecorator.h>
+#include <reanimated/Tools/PlatformLogger.h>
+
+#include <worklets/Tools/JSISerializer.h>
+#include <worklets/Tools/ReanimatedJSIUtils.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 namespace reanimated {
+
+using namespace worklets;
 
 void ReanimatedWorkletRuntimeDecorator::decorate(jsi::Runtime &rt) {
   jsi_utils::installJsiFunction(

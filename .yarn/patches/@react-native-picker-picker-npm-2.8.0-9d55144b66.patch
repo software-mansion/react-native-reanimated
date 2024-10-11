@@ -1,0 +1,30 @@
+diff --git a/android/src/main/jni/CMakeLists.txt b/android/src/main/jni/CMakeLists.txt
+index db67583f747279edc23dcf4e0da52485a6b52eb6..c69831a0d8780bc6f4497b9afc97a2f766361547 100644
+--- a/android/src/main/jni/CMakeLists.txt
++++ b/android/src/main/jni/CMakeLists.txt
+@@ -37,22 +37,9 @@ target_include_directories(
+ 
+ target_link_libraries(
+   ${LIB_TARGET_NAME}
+-  fbjni
+-  folly_runtime
+-  glog
+-  jsi
+-  react_codegen_rncore
+-  react_debug
+-  react_nativemodule_core
+-  react_render_componentregistry
+-  react_utils
+-  react_render_core
+-  react_render_debug
+-  react_render_graphics
+-  react_render_mapbuffer
+-  rrc_view
+-  turbomodulejsijni
+-  yoga
++  fbjni::fbjni
++  ReactAndroid::jsi
++  ReactAndroid::reactnative
+ )
+ 
+ target_compile_options(

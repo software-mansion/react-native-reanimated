@@ -1,30 +1,31 @@
 #pragma once
 
+#include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/NativeModules/NativeReanimatedModuleSpec.h>
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <reanimated/Tools/SingleInstanceChecker.h>
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <reanimated/Fabric/PropsRegistry.h>
+#include <reanimated/Fabric/ReanimatedCommitHook.h>
+#include <reanimated/Fabric/ReanimatedMountHook.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#endif // RCT_NEW_ARCH_ENABLED
+
+#include <worklets/Registries/EventHandlerRegistry.h>
+#include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/UIScheduler.h>
+
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManager.h>
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 #include <memory>
 #include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-#include "AnimatedSensorModule.h"
-#include "EventHandlerRegistry.h"
-#include "JSScheduler.h"
-#include "LayoutAnimationsManager.h"
-#include "NativeReanimatedModuleSpec.h"
-#include "PlatformDepMethodsHolder.h"
-#include "SingleInstanceChecker.h"
-#include "UIScheduler.h"
-
-#ifdef RCT_NEW_ARCH_ENABLED
-#include "LayoutAnimationsProxy.h"
-#include "PropsRegistry.h"
-#include "ReanimatedCommitHook.h"
-#include "ReanimatedMountHook.h"
-#endif
 
 namespace reanimated {
 
@@ -136,7 +137,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void initializeFabric(const std::shared_ptr<UIManager> &uiManager);
 
-  void initializeLayoutAnimations();
+  void initializeLayoutAnimationsProxy();
 
   std::string obtainPropFromShadowNode(
       jsi::Runtime &rt,

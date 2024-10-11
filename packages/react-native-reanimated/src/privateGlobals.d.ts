@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-var */
 'use strict';
+
+// This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
+// If it ever breaks, we should address it so we'd not pollute the user's global namespace.
+
 import type {
   StyleProps,
   MeasuredDimensions,
@@ -45,7 +49,8 @@ declare global {
     value: T,
     nativeStateSource?: object
   ) => FlatShareableRef<T>;
-  var _scheduleOnJS: (fun: (...args: A) => R, args?: A) => void;
+  var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
+  var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
     worklet: ShareableRef<() => void>

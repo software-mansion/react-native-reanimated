@@ -1,3 +1,15 @@
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <reanimated/android/AndroidUIScheduler.h>
+#include <reanimated/android/NativeProxy.h>
+
+#include <worklets/Tools/ReanimatedJSIUtils.h>
+#include <worklets/Tools/ReanimatedVersion.h>
+#include <worklets/WorkletRuntime/ReanimatedRuntime.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
+#include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
+
 #include <android/log.h>
 #include <fbjni/fbjni.h>
 #include <jsi/JSIDynamic.h>
@@ -5,23 +17,10 @@
 #include <react/jni/JMessageQueueThread.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
+
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/fabric/Binding.h>
 #endif
-
-#include <memory>
-#include <string>
-
-#include "AndroidUIScheduler.h"
-#include "LayoutAnimationsManager.h"
-#include "NativeProxy.h"
-#include "PlatformDepMethodsHolder.h"
-#include "RNRuntimeDecorator.h"
-#include "ReanimatedJSIUtils.h"
-#include "ReanimatedRuntime.h"
-#include "ReanimatedVersion.h"
-#include "WorkletRuntime.h"
-#include "WorkletRuntimeCollector.h"
 
 namespace reanimated {
 

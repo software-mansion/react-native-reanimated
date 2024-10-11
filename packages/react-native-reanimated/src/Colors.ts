@@ -335,11 +335,18 @@ export const ColorProperties = makeShareable([
   'borderBlockEndColor',
   'borderBlockStartColor',
   'color',
+  'outlineColor',
   'shadowColor',
   'textDecorationColor',
   'tintColor',
   'textShadowColor',
   'overlayColor',
+  // SVG color properties
+  'fill',
+  'floodColor',
+  'lightingColor',
+  'stopColor',
+  'stroke',
 ]);
 
 // // ts-prune-ignore-next Exported for the purpose of tests only

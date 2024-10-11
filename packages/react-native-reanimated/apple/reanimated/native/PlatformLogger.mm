@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
-#import <RNReanimated/PlatformLogger.h>
+#import <reanimated/Tools/PlatformLogger.h>
 
 namespace reanimated {
 

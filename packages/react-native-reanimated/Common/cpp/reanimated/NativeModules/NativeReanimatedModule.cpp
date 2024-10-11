@@ -1,37 +1,50 @@
-#include "NativeReanimatedModule.h"
+#include <reanimated/NativeModules/NativeReanimatedModule.h>
+#include <reanimated/RuntimeDecorators/ReanimatedWorkletRuntimeDecorator.h>
+#include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
+#include <reanimated/Tools/CollectionUtils.h>
+#include <reanimated/Tools/FeaturesConfig.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <react/renderer/uimanager/UIManagerBinding.h>
-#include <react/renderer/uimanager/primitives.h>
-#if REACT_NATIVE_MINOR_VERSION >= 73 && defined(RCT_NEW_ARCH_ENABLED)
-#include <react/utils/CoreFeatures.h>
-#endif
-#endif
+#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
+#endif // RCT_NEW_ARCH_ENABLED
 
-#include <functional>
-#include <iomanip>
-#include <sstream>
-#include <thread>
-#include <unordered_map>
-
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <react/renderer/scheduler/Scheduler.h>
-#include "ReanimatedCommitShadowNode.h"
-#include "ShadowTreeCloner.h"
-#endif
-
-#include "AsyncQueue.h"
-#include "CollectionUtils.h"
-#include "EventHandlerRegistry.h"
-#include "FeaturesConfig.h"
-#include "ReanimatedWorkletRuntimeDecorator.h"
-#include "Shareables.h"
-#include "UIRuntimeDecorator.h"
-#include "WorkletEventHandler.h"
+#include <worklets/Registries/EventHandlerRegistry.h>
+#include <worklets/SharedItems/Shareables.h>
+#include <worklets/Tools/AsyncQueue.h>
+#include <worklets/Tools/WorkletEventHandler.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
-#endif
+#endif // __ANDROID__
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <react/renderer/scheduler/Scheduler.h>
+#include <react/renderer/uimanager/UIManagerBinding.h>
+#include <react/renderer/uimanager/primitives.h>
+#if REACT_NATIVE_MINOR_VERSION >= 73
+#include <react/utils/CoreFeatures.h>
+#endif // REACT_NATIVE_MINOR_VERSION
+#endif // RCT_NEW_ARCH_ENABLED
+
+#include <functional>
+#include <utility>
+
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <iomanip>
+#endif // RCT_NEW_ARCH_ENABLED
+
+// Standard `__cplusplus` macro reference:
+// https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros
+#if REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 202002L
+// Implicit copy capture of `this` is deprecated in NDK27, which uses C++20.
+#define COPY_CAPTURE_WITH_THIS [ =, this ] // NOLINT (whitespace/braces)
+#else
+// React Native 0.75 is the last one which allows NDK23. NDK23 uses C++17 and
+// explicitly disallows C++20 features, including the syntax above. Therefore we
+// fallback to the deprecated syntax here.
+#define COPY_CAPTURE_WITH_THIS [=] // NOLINT (whitespace/braces)
+#endif // REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 202002L
 
 using namespace facebook;
 
@@ -198,13 +211,13 @@ void NativeReanimatedModule::scheduleOnUI(
     const jsi::Value &worklet) {
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt, worklet, "[Reanimated] Only worklets can be scheduled to run on UI.");
-  uiScheduler_->scheduleOnUI([=, this] {
+  uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
 #if JS_RUNTIME_HERMES
-    // JSI's scope defined here allows for JSI-objects to be cleared up after
-    // each runtime loop. Within these loops we typically create some temporary
-    // JSI objects and hence it allows for such objects to be garbage collected
-    // much sooner.
-    // Apparently the scope API is only supported on Hermes at the moment.
+    // JSI's scope defined here allows for JSI-objects to be cleared up
+    // after each runtime loop. Within these loops we typically create some
+    // temporary JSI objects and hence it allows for such objects to be
+    // garbage collected much sooner. Apparently the scope API is only
+    // supported on Hermes at the moment.
     const auto scope = jsi::Scope(uiWorkletRuntime_->getJSIRuntime());
 #endif
     uiWorkletRuntime_->runGuarded(shareableWorklet);
@@ -265,7 +278,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
       rt, worklet, "[Reanimated] Event handler must be a worklet.");
   int emitterReactTagInt = emitterReactTag.asNumber();
 
-  uiScheduler_->scheduleOnUI([=, this] {
+  uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
     auto handler = std::make_shared<WorkletEventHandler>(
         newRegistrationId, eventNameStr, emitterReactTagInt, handlerShareable);
     eventHandlerRegistry_->registerEventHandler(std::move(handler));
@@ -279,7 +292,9 @@ void NativeReanimatedModule::unregisterEventHandler(
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
   uiScheduler_->scheduleOnUI(
-      [=, this] { eventHandlerRegistry_->unregisterEventHandler(id); });
+      COPY_CAPTURE_WITH_THIS
+
+      { eventHandlerRegistry_->unregisterEventHandler(id); });
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -375,20 +390,23 @@ jsi::Value NativeReanimatedModule::getViewProp(
 
   const int viewTagInt = viewTag.asNumber();
 
-  uiScheduler_->scheduleOnUI([=, this]() {
-    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
-    const jsi::Value propNameValue =
-        jsi::String::createFromUtf8(uiRuntime, propNameStr);
-    const auto resultValue =
-        obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
-    const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
+  uiScheduler_->scheduleOnUI(
+      COPY_CAPTURE_WITH_THIS
 
-    jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
-      const auto resultValue =
-          jsi::String::createFromUtf8(rnRuntime, resultStr);
-      funPtr->call(rnRuntime, resultValue);
-    });
-  });
+      () {
+        jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+        const jsi::Value propNameValue =
+            jsi::String::createFromUtf8(uiRuntime, propNameStr);
+        const auto resultValue =
+            obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
+        const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
+
+        jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
+          const auto resultValue =
+              jsi::String::createFromUtf8(rnRuntime, resultStr);
+          funPtr->call(rnRuntime, resultValue);
+        });
+      });
   return jsi::Value::undefined();
 }
 
@@ -834,15 +852,15 @@ void NativeReanimatedModule::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
 
-  initializeLayoutAnimations();
+  initializeLayoutAnimationsProxy();
 
   mountHook_ =
       std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
-  commitHook_ =
-      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(
+      propsRegistry_, uiManager_, layoutAnimationsProxy_);
 }
 
-void NativeReanimatedModule::initializeLayoutAnimations() {
+void NativeReanimatedModule::initializeLayoutAnimationsProxy() {
   uiManager_->setAnimationDelegate(nullptr);
   auto scheduler = reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
   auto componentDescriptorRegistry =
@@ -858,13 +876,9 @@ void NativeReanimatedModule::initializeLayoutAnimations() {
         scheduler->getContextContainer(),
         uiWorkletRuntime_->getJSIRuntime(),
         uiScheduler_);
-    uiManager_->getShadowTreeRegistry().enumerate(
-        [this](const ShadowTree &shadowTree, bool &stop) {
-          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
-              layoutAnimationsProxy_);
-        });
   }
 }
+
 #endif // RCT_NEW_ARCH_ENABLED
 
 jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
@@ -877,7 +891,9 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
       handlerWorklet,
       "[Reanimated] Keyboard event handler must be a worklet.");
   return subscribeForKeyboardEventsFunction_(
-      [=, this](int keyboardState, int height) {
+      COPY_CAPTURE_WITH_THIS
+
+      (int keyboardState, int height) {
         uiWorkletRuntime_->runGuarded(
             shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },

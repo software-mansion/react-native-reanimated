@@ -1,12 +1,11 @@
 #pragma once
 
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <react/fabric/JFabricUIManager.h>
-#include <react/renderer/scheduler/Scheduler.h>
-#if REACT_NATIVE_MINOR_VERSION >= 74
-#include <react/jni/JRuntimeExecutor.h>
-#endif // REACT_NATIVE_MINOR_VERSION >= 74
-#endif
+#include <reanimated/NativeModules/NativeReanimatedModule.h>
+#include <reanimated/android/AndroidUIScheduler.h>
+#include <reanimated/android/JNIHelper.h>
+#include <reanimated/android/LayoutAnimations.h>
+
+#include <worklets/Tools/UIScheduler.h>
 
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
@@ -16,17 +15,19 @@
 #include <react/jni/JavaScriptExecutorHolder.h>
 #include <react/jni/WritableNativeMap.h>
 
+#ifdef RCT_NEW_ARCH_ENABLED
+#include <react/fabric/JFabricUIManager.h>
+#include <react/renderer/scheduler/Scheduler.h>
+#if REACT_NATIVE_MINOR_VERSION >= 74
+#include <react/jni/JRuntimeExecutor.h>
+#endif // REACT_NATIVE_MINOR_VERSION >= 74
+#endif // RCT_NEW_ARCH_ENABLED
+
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include "AndroidUIScheduler.h"
-#include "JNIHelper.h"
-#include "LayoutAnimations.h"
-#include "NativeReanimatedModule.h"
-#include "UIScheduler.h"
 
 namespace reanimated {
 

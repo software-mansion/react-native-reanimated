@@ -1,6 +1,6 @@
 #include <android/log.h>
 
-#include "PlatformLogger.h"
+#include <reanimated/Tools/PlatformLogger.h>
 
 constexpr const auto tag = "Reanimated";
 

@@ -1,11 +1,8 @@
-#include "AndroidUIScheduler.h"
+#include <reanimated/android/AndroidUIScheduler.h>
 
 #include <android/log.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
-
-#include <memory>
-#include <string>
 
 namespace reanimated {
 

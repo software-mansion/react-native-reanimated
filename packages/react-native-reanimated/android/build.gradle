@@ -147,7 +147,8 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
 def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
 
-def prefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
+def workletsPrefabHeadersDir = project.file("$buildDir/prefab-headers/worklets")
+def reanimatedPrefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
 
 def JS_RUNTIME = {
     // Override JS runtime with environment variable
@@ -231,11 +232,11 @@ android {
     }
 
     prefab {
-        reanimated {
-            headers prefabHeadersDir.absolutePath
-        }
         worklets {
-            headers prefabHeadersDir.absolutePath
+            headers workletsPrefabHeadersDir.absolutePath
+        }
+        reanimated {
+            headers reanimatedPrefabHeadersDir.absolutePath
         }
     }
 
@@ -264,7 +265,7 @@ android {
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
         buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
-        
+
         consumerProguardFiles 'proguard-rules.pro'
     }
     externalNativeBuild {
@@ -298,6 +299,10 @@ android {
     }
     packagingOptions {
         doNotStrip resolveBuildType() == 'debug' ? "**/**/*.so" : ''
+        // For some reason gradle only complains about the duplicated version of librrc_root and libreact_render libraries
+        // while there are more libraries copied in intermediates folder of the lib build directory, we exclude
+        // only the ones that make the build fail (ideally we should only include libreanimated but we
+        // are only allowed to specify exclude patterns)
         excludes = [
                 "META-INF",
                 "META-INF/**",
@@ -310,9 +315,13 @@ android {
                 "**/libhermes.so",
                 "**/libhermes-executor-debug.so",
                 "**/libhermes_executor.so",
+                "**/libhermestooling.so",
                 "**/libreactnativejni.so",
                 "**/libturbomodulejsijni.so",
+                "**/libreactnative.so",
                 "**/libreact_nativemodule_core.so",
+                "**/libreact_render*.so",
+                "**/librrc_root.so",
                 "**/libjscexecutor.so",
                 "**/libv8executor.so",
         ]
@@ -328,14 +337,6 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-    }
-    packagingOptions {
-        // For some reason gradle only complains about the duplicated version of librrc_root and libreact_render libraries
-        // while there are more libraries copied in intermediates folder of the lib build directory, we exclude
-        // only the ones that make the build fail (ideally we should only include libreanimated but we
-        // are only allowed to specify exlude patterns)
-        exclude "**/libreact_render*.so"
-        exclude "**/librrc_root.so"
     }
     sourceSets.main {
         java {
@@ -354,7 +355,7 @@ android {
                 }
             }
 
-            // ReanimatedUIManager & ReanimatedUIImplementation 
+            // ReanimatedUIManager & ReanimatedUIImplementation
             if (REACT_NATIVE_MINOR_VERSION <= 73) {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
             } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
@@ -370,7 +371,7 @@ android {
                 srcDirs += "src/reactNativeVersionPatch/ReactHost/latest"
             }
 
-            // ReactFeatureFlags 
+            // ReactFeatureFlags
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 if (REACT_NATIVE_MINOR_VERSION <= 72) {
                     srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/72"
@@ -395,8 +396,17 @@ android {
             // BorderRadiiDrawableUtils
             if (REACT_NATIVE_MINOR_VERSION <= 74) {
                 srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/74"
+            } else if (REACT_NATIVE_MINOR_VERSION <= 75) {
+                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/75"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/latest"
+            }
+
+            // ReanimatedNativeHierarchyManager
+            if (REACT_NATIVE_MINOR_VERSION <= 75) {
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedNativeHierarchyManager/75"
+            } else {
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedNativeHierarchyManager/latest"
             }
         }
     }
@@ -436,20 +446,18 @@ def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
     }
 }
 
-task prepareHeadersForPrefab(type: Copy) {
-    from("$projectDir/src/main/cpp/reanimated")
-    from("$projectDir/../Common/cpp/reanimated/AnimatedSensor")
-    from("$projectDir/../Common/cpp/reanimated/Fabric")
-    from("$projectDir/../Common/cpp/reanimated/LayoutAnimations")
-    from("$projectDir/../Common/cpp/reanimated/NativeModules")
-    from("$projectDir/../Common/cpp/reanimated/RuntimeDecorators")
-    from("$projectDir/../Common/cpp/reanimated/Tools")
-    from("$projectDir/../Common/cpp/worklets/Registries")
-    from("$projectDir/../Common/cpp/worklets/SharedItems")
-    from("$projectDir/../Common/cpp/worklets/Tools")
-    from("$projectDir/../Common/cpp/worklets/WorkletRuntime")
-    include("*.h")
-    into(prefabHeadersDir)
+task prepareWorkletsHeadersForPrefabs(type: Copy) {
+    from("$projectDir/src/main/cpp")
+    from("$projectDir/../Common/cpp")
+    include("worklets/**/*.h")
+    into(workletsPrefabHeadersDir)
+}
+
+task prepareReanimatedHeadersForPrefabs(type: Copy) {
+    from("$projectDir/src/main/cpp")
+    from("$projectDir/../Common/cpp")
+    include("reanimated/**/*.h")
+    into(reanimatedPrefabHeadersDir)
 }
 
 tasks.preBuild {
@@ -471,29 +479,8 @@ task printVersions {
 task createNativeDepsDirectories() {
     downloadsDir.mkdirs()
     thirdPartyNdkDir.mkdirs()
-    prefabHeadersDir.mkdirs()
-}
-
-def resolveTaskFactory(String taskName, String artifactLocalName, File reactNativeAndroidDownloadDir, File reanimatedDownloadDir) {
-    return tasks.create(name: taskName, dependsOn: createNativeDepsDirectories, type: Copy) {
-        from reactNativeAndroidDownloadDir
-        include artifactLocalName
-        into reanimatedDownloadDir
-
-        onlyIf {
-            // First we check whether the file is already in our download directory
-            if (file("$reanimatedDownloadDir/$artifactLocalName").isFile()) {
-                return false
-            }
-
-            // If it is not the case we check whether it was downloaded by ReactAndroid project
-            if (file("$reactNativeAndroidDownloadDir/$artifactLocalName").isFile()) {
-                return true
-            }
-
-            return false
-        }
-    }
+    workletsPrefabHeadersDir.mkdirs()
+    reanimatedPrefabHeadersDir.mkdirs()
 }
 
 task packageNdkLibs(type: Copy) {
@@ -540,7 +527,8 @@ def nativeBuildDependsOn(dependsOnTask) {
 }
 
 afterEvaluate {
-    preBuild.dependsOn(prepareHeadersForPrefab)
+    preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
+    preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
 
     tasks.forEach({ task ->
         if (task.name.contains("JniLibFolders")) {
