@@ -23,6 +23,7 @@ type NativeUpdate = {
 export function createUpdatesContainer() {
   const jsUpdates = makeMutable<Array<JsUpdate>>([]);
   const nativeSnapshots = makeMutable<Array<NativeUpdate>>([]);
+  const brokenNativeSnapshotsOnFabric = makeMutable(false);
 
   function _updateNativeSnapshot(updateInfos: JsUpdate[], jsUpdateIndex: number): void {
     'worklet';
@@ -82,17 +83,17 @@ export function createUpdatesContainer() {
 
   function pushLayoutAnimationUpdates(tag: number, update: Record<string, unknown>) {
     'worklet';
-    if (global._IS_FABRIC) {
-      // layout animation doesn't work on Fabric yet
-      return;
-    }
+
     // Deep Copy, works with nested objects, but doesn't copy functions (which should be fine here)
     const updatesCopy = JSON.parse(JSON.stringify(update));
     if ('backgroundColor' in updatesCopy) {
       updatesCopy.backgroundColor = convertDecimalColor(updatesCopy.backgroundColor);
     }
     if (!global._IS_FABRIC) {
+      // TODO Implement native snapshots for layout animations on Fabric
       _updateNativeSnapshot([{ tag, update }], jsUpdates.value.length - 1);
+    } else {
+      brokenNativeSnapshotsOnFabric.value = true;
     }
     jsUpdates.modify(updates => {
       updates.push({
@@ -108,6 +109,7 @@ export function createUpdatesContainer() {
     propsNames: string[],
   ): MultiViewSnapshot {
     const updatesForTag: Record<number, Array<OperationUpdate>> = {};
+
     for (const updateRequest of updates) {
       const { tag } = updateRequest;
 
@@ -136,6 +138,9 @@ export function createUpdatesContainer() {
       if (viewTags.length === 1) {
         return sortedUpdates[Number(viewTags[0])];
       }
+      if (viewTags.length === 0) {
+        throw new Error("Didn't record any snapshot");
+      }
       throw new Error('Recorded snapshots of many views, specify component you want to get snapshot of');
     }
     const tag = component?.getTag();
@@ -155,6 +160,9 @@ export function createUpdatesContainer() {
   }
 
   async function getNativeSnapshots(component?: TestComponent, propsNames: string[] = []): Promise<SingleViewSnapshot> {
+    if (brokenNativeSnapshotsOnFabric.value) {
+      return [];
+    }
     const nativeSnapshotsCount = nativeSnapshots.value.length;
     const jsUpdatesCount = jsUpdates.value.length;
     if (jsUpdatesCount === nativeSnapshotsCount) {
