@@ -19,7 +19,7 @@ function compareSnapshot(
     const expectMismatch = jsValue < 0 && expectNegativeValueMismatch;
     let valuesAreMatching = isEqual(jsValue, nativeValue);
 
-    if (key === 'opacity' && jsValue === 1 && nativeValue === undefined) {
+    if ((key as string) === 'opacity' && jsValue === 1 && nativeValue === undefined) {
       // undefined opacity may get translated into 1, as it is the default value
       valuesAreMatching = true;
     }
