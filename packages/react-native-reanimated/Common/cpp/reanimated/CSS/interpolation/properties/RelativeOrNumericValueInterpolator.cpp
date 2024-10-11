@@ -1,4 +1,4 @@
-#include <reanimated/CSS/interpolation/values/RelativeOrNumericValueInterpolator.h>
+#include <reanimated/CSS/interpolation/properties/RelativeOrNumericValueInterpolator.h>
 
 namespace reanimated {
 

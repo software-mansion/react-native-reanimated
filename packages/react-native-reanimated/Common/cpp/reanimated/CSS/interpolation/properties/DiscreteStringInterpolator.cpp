@@ -1,4 +1,4 @@
-#include <reanimated/CSS/interpolation/values/DiscreteStringInterpolator.h>
+#include <reanimated/CSS/interpolation/properties/DiscreteStringInterpolator.h>
 
 namespace reanimated {
 

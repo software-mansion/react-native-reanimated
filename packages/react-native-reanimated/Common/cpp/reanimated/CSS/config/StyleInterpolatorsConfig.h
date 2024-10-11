@@ -1,7 +1,6 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
-#include <reanimated/CSS/interpolation/groups/GroupInterpolator.h>
 
 namespace reanimated {
 
@@ -159,22 +158,7 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
        object({{"width", numeric()}, {"height", numeric()}})},
 
       // Transforms
-      {"transform",
-       transforms({
-           {"rotate", withUnit("deg", 0)},
-           {"rotateX", withUnit("deg", 0)},
-           {"rotateY", withUnit("deg", 0)},
-           {"rotateZ", withUnit("deg", 0)},
-           {"scale", numeric(1)},
-           {"scaleX", numeric(1)},
-           {"scaleY", numeric(1)},
-           {"translateX", relativeOrNumeric(TargetType::SELF, "width", 0)},
-           {"translateY", relativeOrNumeric(TargetType::SELF, "height", 0)},
-           {"skewX", withUnit("deg", 0)},
-           {"skewY", withUnit("deg", 0)},
-           {"matrix", matrix()},
-           {"perspective", numeric(0)},
-       })}};
+      {"transform", transforms(Transform::Identity())}};
 }();
 
 } // namespace reanimated

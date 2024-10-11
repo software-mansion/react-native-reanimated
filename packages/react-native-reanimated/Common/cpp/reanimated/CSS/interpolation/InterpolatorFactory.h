@@ -2,22 +2,17 @@
 
 #include <reanimated/CSS/interpolation/Interpolator.h>
 #include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
-#include <reanimated/CSS/interpolation/groups/TransformsStyleInterpolator.h>
-#include <reanimated/CSS/interpolation/values/ColorValueInterpolator.h>
-#include <reanimated/CSS/interpolation/values/DiscreteStringInterpolator.h>
-#include <reanimated/CSS/interpolation/values/MatrixValueInterpolator.h>
-#include <reanimated/CSS/interpolation/values/NumberStepsInterpolator.h>
-#include <reanimated/CSS/interpolation/values/NumericValueInterpolator.h>
-#include <reanimated/CSS/interpolation/values/RelativeOrNumericValueInterpolator.h>
-#include <reanimated/CSS/interpolation/values/WithUnitInterpolator.h>
+#include <reanimated/CSS/interpolation/properties/ColorValueInterpolator.h>
+#include <reanimated/CSS/interpolation/properties/DiscreteStringInterpolator.h>
+#include <reanimated/CSS/interpolation/properties/NumberStepsInterpolator.h>
+#include <reanimated/CSS/interpolation/properties/NumericValueInterpolator.h>
+#include <reanimated/CSS/interpolation/properties/RelativeOrNumericValueInterpolator.h>
+#include <reanimated/CSS/interpolation/properties/TransformsStyleInterpolator.h>
 
 namespace reanimated {
 namespace Interpolators {
 
 std::shared_ptr<InterpolatorFactory> object(
-    const PropertiesInterpolatorFactories &factories);
-
-std::shared_ptr<InterpolatorFactory> transforms(
     const PropertiesInterpolatorFactories &factories);
 
 std::shared_ptr<InterpolatorFactory> color(
@@ -33,19 +28,6 @@ std::shared_ptr<InterpolatorFactory> numeric(
     const std::optional<double> &defaultValue);
 std::shared_ptr<InterpolatorFactory> numeric() {
   return numeric(std::nullopt);
-}
-
-std::shared_ptr<InterpolatorFactory> withUnit(
-    std::string baseUnit,
-    const std::optional<double> &defaultValue);
-std::shared_ptr<InterpolatorFactory> withUnit(std::string baseUnit) {
-  return withUnit(baseUnit, std::nullopt);
-}
-
-std::shared_ptr<InterpolatorFactory> matrix(
-    const std::optional<std::vector<double>> &defaultValue);
-std::shared_ptr<InterpolatorFactory> matrix() {
-  return matrix(std::nullopt);
 }
 
 std::shared_ptr<InterpolatorFactory> steps(
@@ -89,6 +71,8 @@ std::shared_ptr<InterpolatorFactory> relativeOrNumeric(
     const std::string &relativeProperty) {
   return relativeOrNumeric(relativeTo, relativeProperty, std::nullopt);
 }
+
+std::shared_ptr<InterpolatorFactory> transforms(const Transform &defaultValue);
 
 } // namespace Interpolators
 } // namespace reanimated

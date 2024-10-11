@@ -11,12 +11,13 @@ export type CSSKeyframeValue<V> = {
 type CreateKeyframeStyle<S> = {
   [P in keyof S]: S[P] extends infer U | undefined
     ? U extends object
-      ? U extends Array<infer T>
-        ? P extends 'transform'
-          ? Array<{ [K in keyof T]: CSSKeyframeValue<T[K]> }>
-          : CSSKeyframeValue<U>
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        U extends Array<any>
+        ? CSSKeyframeValue<U> // If the value is an array, don't iterate over its values and treat it as the end value
         : { [K in keyof U]: CSSKeyframeValue<U[K]> }
-      : CSSKeyframeValue<U>
+      : P extends 'transform' // Don't allow transform to be passed as a string in keyframes
+        ? never
+        : CSSKeyframeValue<U>
     : never;
 };
 

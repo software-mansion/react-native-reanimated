@@ -2,6 +2,36 @@
 
 namespace reanimated {
 
+ObjectPropertiesInterpolator::ObjectPropertiesInterpolator(
+    const PropertiesInterpolatorFactories &factories,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    const PropertyPath &propertyPath)
+    : Interpolator(propertyPath),
+      factories_(factories),
+      viewStylesRepository_(viewStylesRepository) {}
+
+jsi::Value ObjectPropertiesInterpolator::getCurrentValue(
+    jsi::Runtime &rt) const {
+  return mapInterpolators(rt, [&](Interpolator &interpolator) {
+    return interpolator.getCurrentValue(rt);
+  });
+}
+
+jsi::Value ObjectPropertiesInterpolator::getStyleValue(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) const {
+  return mapInterpolators(rt, [&](Interpolator &interpolator) {
+    return interpolator.getStyleValue(rt, shadowNode);
+  });
+}
+
+jsi::Value ObjectPropertiesInterpolator::update(
+    const InterpolationUpdateContext context) {
+  return mapInterpolators(context.rt, [&](Interpolator &interpolator) {
+    return interpolator.update(context);
+  });
+}
+
 void ObjectPropertiesInterpolator::updateKeyframes(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode,
