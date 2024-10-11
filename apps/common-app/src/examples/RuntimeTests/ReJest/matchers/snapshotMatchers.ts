@@ -17,7 +17,13 @@ function compareSnapshot(
     const comparisonMode = isValidPropName(key) ? getComparisonModeForProp(key) : ComparisonMode.AUTO;
     const isEqual = getComparator(comparisonMode);
     const expectMismatch = jsValue < 0 && expectNegativeValueMismatch;
-    const valuesAreMatching = isEqual(jsValue, nativeValue);
+    let valuesAreMatching = isEqual(jsValue, nativeValue);
+
+    if (key === 'opacity' && jsValue === 1 && nativeValue === undefined) {
+      // undefined opacity may get translated into 1, as it is the default value
+      valuesAreMatching = true;
+    }
+
     if ((!valuesAreMatching && !expectMismatch) || (valuesAreMatching && expectMismatch)) {
       return false;
     }
