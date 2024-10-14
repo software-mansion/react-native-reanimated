@@ -157,6 +157,7 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
         mutable.value = newValue;
       })();
     },
+    
     get _value(): Value {
       throw new ReanimatedError(
         'Reading from `_value` directly is only possible on the UI runtime. Perhaps you passed an Animated Style to a non-animated component?'
@@ -207,6 +208,7 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
       checkInvalidWriteDuringRender();
       valueSetter(mutable as Mutable<Value>, newValue);
     },
+    
     get _value(): Value {
       return value;
     },
