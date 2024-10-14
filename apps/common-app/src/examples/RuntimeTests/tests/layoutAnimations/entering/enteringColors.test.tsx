@@ -9,12 +9,9 @@ import {
   recordAnimationUpdates,
   render,
   waitForAnimationUpdates,
-  useTestRef,
-  getTestComponent,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ColorSnapshots as Snapshots } from './entering.snapshot';
 
-const COMPONENT_REF = 'AnimatedComponent';
 const AnimatedComponent = ({ fromColor, toColor }: { fromColor: string; toColor: string }) => {
   const customAnim = () => {
     'worklet';
@@ -24,9 +21,8 @@ const AnimatedComponent = ({ fromColor, toColor }: { fromColor: string; toColor:
     const initialValues = { backgroundColor: fromColor };
     return { initialValues, animations };
   };
-  const ref = useTestRef(COMPONENT_REF);
 
-  return <Animated.View ref={ref} style={styles.colorBox} entering={customAnim} />;
+  return <Animated.View style={styles.colorBox} entering={customAnim} />;
 };
 
 async function getSnapshotUpdates(fromColor: string, toColor: string, snapshot: Array<any>) {
@@ -34,9 +30,8 @@ async function getSnapshotUpdates(fromColor: string, toColor: string, snapshot: 
   const updatesContainer = await recordAnimationUpdates();
   await render(<AnimatedComponent fromColor={fromColor} toColor={toColor} />);
   await waitForAnimationUpdates(snapshot.length);
-  const component = getTestComponent(COMPONENT_REF);
-  const updates = updatesContainer.getUpdates(component, ['backgroundColor']);
-  const nativeUpdates = await updatesContainer.getNativeSnapshots(component, ['backgroundColor']);
+  const updates = updatesContainer.getUpdates();
+  const nativeUpdates = await updatesContainer.getNativeSnapshots();
   return [updates, nativeUpdates];
 }
 

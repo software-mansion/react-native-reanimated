@@ -88,16 +88,17 @@ const TestComponent = ({
   );
 };
 
-async function getSnapshotUpdate(testAnimation: TestAnimation, delay: number, applyWithDelay: boolean) {
+async function getSnapshotUpdates(testAnimation: TestAnimation, delay: number) {
+  await unmockAnimationTimer();
   await mockAnimationTimer();
   const updatesContainerNoDelay = await recordAnimationUpdates();
-  await render(<TestComponent applyWithDelay={applyWithDelay} testAnimation={testAnimation} delay={delay} />);
-  await wait(350 + delay);
+  await render(<TestComponent applyWithDelay={false} testAnimation={testAnimation} delay={delay} />);
+  await wait(350);
 
-  const componentActive = getTestComponent(TEST_COMPONENT_ACTIVE_REF);
-  const componentPassive = getTestComponent(TEST_COMPONENT_PASSIVE_REF);
+  let componentActive = getTestComponent(TEST_COMPONENT_ACTIVE_REF);
+  let componentPassive = getTestComponent(TEST_COMPONENT_PASSIVE_REF);
 
-  const snapshots = {
+  const noDelaySnapshots = {
     active: updatesContainerNoDelay.getUpdates(componentActive),
     passive: updatesContainerNoDelay.getUpdates(componentPassive),
     activeNative: await updatesContainerNoDelay.getNativeSnapshots(componentActive),
@@ -105,8 +106,26 @@ async function getSnapshotUpdate(testAnimation: TestAnimation, delay: number, ap
   };
 
   await unmockAnimationTimer();
+  await mockAnimationTimer();
   await clearRenderOutput();
-  return snapshots;
+  const updatesContainerWithDelay = await recordAnimationUpdates();
+  await render(<TestComponent applyWithDelay={true} testAnimation={testAnimation} delay={delay} />);
+  await wait(350 + delay);
+  componentActive = getTestComponent(TEST_COMPONENT_ACTIVE_REF);
+  componentPassive = getTestComponent(TEST_COMPONENT_PASSIVE_REF);
+
+  const delaySnapshots = {
+    active: updatesContainerWithDelay.getUpdates(componentActive),
+    passive: updatesContainerWithDelay.getUpdates(componentPassive),
+    activeNative: await updatesContainerWithDelay.getNativeSnapshots(componentActive),
+    passiveNative: await updatesContainerWithDelay.getNativeSnapshots(componentPassive),
+  };
+  await clearRenderOutput();
+
+  return {
+    noDelaySnapshots,
+    delaySnapshots,
+  };
 }
 
 function compareActiveAndPassiveSnapshots(
@@ -126,10 +145,8 @@ function compareActiveAndPassiveSnapshots(
     };
   });
   expect([...filler, ...passive]).toMatchSnapshots(active);
-  const nativeSnapshotsFiller = _IS_FABRIC ? [{ width: 100 }] : [];
-
-  expect([...nativeSnapshotsFiller, ...active]).toMatchNativeSnapshots(activeNative);
-  expect([...nativeSnapshotsFiller, ...passive]).toMatchNativeSnapshots(passiveNative);
+  expect(active).toMatchNativeSnapshots(activeNative);
+  expect(passive).toMatchNativeSnapshots(passiveNative);
 }
 
 const testCases = [
@@ -143,8 +160,7 @@ const testCases = [
 for (const { testAnimation, delay } of testCases) {
   describe(`Apply **${delay}ms** delay to _${testAnimation}_`, () => {
     test('Components animated with `withDelay` of have same snapshot but moved in time', async () => {
-      const delaySnapshots = await getSnapshotUpdate(testAnimation, delay, true);
-      const noDelaySnapshots = await getSnapshotUpdate(testAnimation, 0, false);
+      const { delaySnapshots, noDelaySnapshots } = await getSnapshotUpdates(testAnimation, delay);
 
       compareActiveAndPassiveSnapshots(
         'Components animated _without_ withDelay in two different ways have matching snapshots',
