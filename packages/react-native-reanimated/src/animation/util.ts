@@ -38,6 +38,7 @@ import type { EasingFunctionFactory } from '../Easing';
 import { ReducedMotionManager } from '../ReducedMotion';
 import { logger } from '../logger';
 import { ReanimatedError } from '../errors';
+import { runOnUI } from '../threads';
 
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -541,9 +542,12 @@ export function defineAnimation<
 export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
-  if (sharedValue._initial != null) {
-    sharedValue.value = sharedValue._initial;
+  if (_WORKLET) {
+    sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
     return;
-  }
-  sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+  } 
+  runOnUI(() => {
+    'worklet';
+    sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+  })();
 }
