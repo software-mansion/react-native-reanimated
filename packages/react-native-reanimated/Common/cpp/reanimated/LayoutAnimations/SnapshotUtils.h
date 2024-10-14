@@ -120,10 +120,19 @@ struct StyleSnapshot {
     numericPropertiesValues = {
         opacity,
 
+#if REACT_NATIVE_MINOR_VERSION >= 76
+        // animating assymetrical border radius is not supported
+        // let's assume that vertical radius equals the horizontal radius
+        static_cast<double>(cascadedBorderMetrics.borderRadii.topLeft.vertical),
+        static_cast<double>(cascadedBorderMetrics.borderRadii.topRight.vertical),
+        static_cast<double>(cascadedBorderMetrics.borderRadii.bottomLeft.vertical),
+        static_cast<double>(cascadedBorderMetrics.borderRadii.bottomRight.vertical),
+#else
         static_cast<double>(cascadedBorderMetrics.borderRadii.topLeft),
         static_cast<double>(cascadedBorderMetrics.borderRadii.topRight),
         static_cast<double>(cascadedBorderMetrics.borderRadii.bottomLeft),
         static_cast<double>(cascadedBorderMetrics.borderRadii.bottomRight),
+#endif
 
         static_cast<double>(cascadedBorderMetrics.borderWidths.left),
         static_cast<double>(cascadedBorderMetrics.borderWidths.right),
