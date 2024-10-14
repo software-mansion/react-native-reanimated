@@ -1,8 +1,12 @@
-#include "JSScheduler.h"
+#include <worklets/Tools/JSScheduler.h>
+
+#include <utility>
+
 using namespace facebook;
 using namespace react;
 
-namespace reanimated {
+namespace worklets {
+
 JSScheduler::JSScheduler(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsCallInvoker)
@@ -33,4 +37,4 @@ const std::shared_ptr<CallInvoker> JSScheduler::getJSCallInvoker() const {
   return jsCallInvoker_;
 }
 
-} // namespace reanimated
+} // namespace worklets

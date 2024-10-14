@@ -9,8 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 configureReanimatedLogger({
-  // change to `false` or remove the `configureReanimatedLogger` call to
-  // disable the warning
+  // change to `false` to disable the warning
   strict: true,
 });
 

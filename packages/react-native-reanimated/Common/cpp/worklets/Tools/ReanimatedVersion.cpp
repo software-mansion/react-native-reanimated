@@ -1,8 +1,9 @@
-#include "ReanimatedVersion.h"
+#include <worklets/Tools/JSLogger.h>
+#include <worklets/Tools/ReanimatedVersion.h>
+
 #include <memory>
 #include <regex>
 #include <string>
-#include "JSLogger.h"
 
 #ifdef REANIMATED_VERSION
 #define STRINGIZE(x) #x
@@ -12,7 +13,7 @@
 
 using namespace facebook;
 
-namespace reanimated {
+namespace worklets {
 
 std::string getReanimatedCppVersion() {
   return std::string(REANIMATED_VERSION_STRING);
@@ -91,4 +92,4 @@ bool matchVersion(const std::string &version1, const std::string &version2) {
 }
 #endif // NDEBUG
 
-}; // namespace reanimated
+}; // namespace worklets

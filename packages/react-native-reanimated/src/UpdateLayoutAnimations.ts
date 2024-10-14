@@ -41,14 +41,23 @@ function createUpdateManager() {
 }
 
 /**
- * Lets you update the current configuration of the layout animation or shared element transition for a given component.
- * Configurations are batched and applied at the end of the current execution block, right before sending the response back to native.
+ * Lets you update the current configuration of the layout animation or shared
+ * element transition for a given component. Configurations are batched and
+ * applied at the end of the current execution block, right before sending the
+ * response back to native.
  *
  * @param viewTag - The tag of the component you'd like to configure.
- * @param type - The type of the animation you'd like to configure - {@link LayoutAnimationType}.
- * @param config - The animation configuration - {@link LayoutAnimationFunction}, {@link SharedTransitionAnimationsFunction}, {@link ProgressAnimationCallback} or {@link Keyframe}. Passing `undefined` will remove the animation.
- * @param sharedTransitionTag - The tag of the shared element transition you'd like to configure. Passing `undefined` will remove the transition.
- * @param isUnmounting - Determines whether the configuration should be included at the end of the batch, after all the non-deferred configurations (even those that were updated later). This is used to retain the correct ordering of shared elements. Defaults to `false`.
+ * @param type - The type of the animation you'd like to configure -
+ *   {@link LayoutAnimationType}.
+ * @param config - The animation configuration - {@link LayoutAnimationFunction},
+ *   {@link SharedTransitionAnimationsFunction}, {@link ProgressAnimationCallback}
+ *   or {@link Keyframe}. Passing `undefined` will remove the animation.
+ * @param sharedTransitionTag - The tag of the shared element transition you'd
+ *   like to configure. Passing `undefined` will remove the transition.
+ * @param isUnmounting - Determines whether the configuration should be included
+ *   at the end of the batch, after all the non-deferred configurations (even
+ *   those that were updated later). This is used to retain the correct ordering
+ *   of shared elements. Defaults to `false`.
  */
 export let updateLayoutAnimations: (
   viewTag: number,

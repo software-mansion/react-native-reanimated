@@ -12,9 +12,9 @@ Thank you for your interest in contributing to Reanimated! From triaging and com
 
 1. **Answering and handling open issues** &ndash; great way to contribute without writing a single line of code is triaging the issues. We often get issues that have generic errors, occur only in very specific cases, do not have proper example or reproducible repository. One of the ways to help is by preparing and filling the details, which will help other contributors get up to speed with the issue faster.
 
-2. **Helping with documentation** &ndash; helping with the documentation can be as simple as checking for speling and grammer. If you encounter situations that can be explained better or in more details, click **Edit this page** at the bottom of most pages to get started with your own contribution. You can also help updating the page structures from old versions, as some of them are still ported from Reanimated v2 docs. Read more about [helping with documentation](#helping-with-documentation).
+2. **Helping with documentation** &ndash; helping with documentation can be as simple as checking for spelling and grammar. If you encounter situations that can be explained better or in more details, click **Edit this page** at the bottom of most pages to get started with your own contribution. You can also help updating the page structures from old versions, as some of them are still ported from Reanimated v2 docs. Read more about [helping with documentation](#helping-with-documentation).
 
-3. **Reviewing Pull Requests** &ndash; reviewing Pull Requests is crucial as it may help catch corner cases or bugs that the contributor didn't notice. Every review matters as it may help us polish quality of the library.
+3. **Reviewing Pull Requests** &ndash; reviewing Pull Requests is crucial as it may help catch corner cases or bugs that the contributor may have missed. Every review matters, as it helps us polish the quality of the library.
 
 4. **Contributing to the Code** &ndash; contributions to the source code generally come in the form of Pull Requests. By contributing to the code you help us with solving issues, fixing bugs or introducing new, amazing features. If you want to start your adventure with open source it's good idea to take a look at [good first issue](https://github.com/software-mansion/react-native-reanimated/pulls?q=is%3Apr+is%3Aopen+label%3A%22good+first+issue%22) on GitHub. Read more about [contributing to code here](#contributing-to-the-code).
 
@@ -45,20 +45,20 @@ The React Native Reanimated repository is a monorepo with the following structur
 
 ## Handling open issues
 
-Understanding and reproducing the problem can be a very time consuming task. The great way to help other contributors get up to the speed with solving an issue is providing detailed description and a _reproducible_ example. The GitHub already has a template for creating issues, nevertheless we still encounter ones that don't have all the necessary details, like:
+Understanding and reproducing the problem can be a very time consuming task. A great way to help other contributors quickly get up to the speed with solving an issue is providing a detailed description and a _reproducible_ example. GitHub already has a template for creating issues, nevertheless we still encounter ones that don't have all the necessary details, like:
 
-- missing repository that we can clone and quickly see the problem,
+- a missing repository that we can clone to quickly see the problem,
 - very generic reproduction steps,
-- missing description,
-- not related or truncated stack trace.
+- an incomplete or missing description,
+- unrelated or truncated stack trace.
 
-What you can do is ask the owner for those details or try providing them by yourself. You can try reproducing the issue and filling the description so that other developers can work on solving it straight away! 🎉
+To help, you can ask the owner for these missing details or try to provide them yourself. You can try reproducing the issue and filling the description so that other developers can work on solving it right away! 🎉
 
 ## Helping with documentation
 
-One of many ways you can contribute to this project is by improving the documentation. We try to keep it up to date, but there is still plenty of room for improvement. It is also important to update the docs whenever you introduce changes to the API or you discover any inconsistency in the current API or behaviour. This is also one of the most straightforward ways to contribute. Some of the pages are still in old, v2 format. You can help us convert them to the Reanimated 3 structure.
+One of the many ways you can contribute to this project is by improving the documentation. We try to keep it up to date, but there is still plenty of room for improvement. It is also important to update the docs whenever you introduce changes to the API or you discover any inconsistencies in the current API or behaviour. This is one of the most straightforward ways to contribute. Some of the pages are still in old, v2 format and you can help us convert them to the Reanimated 3 structure.
 
-The Reanimated documentation is using Docusaurus and is hosted on GitHub Pages. The easiest way to start adding your changes is by clicking **Edit this page** located at the bottom of most pages.
+The Reanimated documentation uses Docusaurus and is hosted on GitHub Pages. The easiest way to start adding your changes is by clicking **Edit this page** located at the bottom of most pages.
 
 ### Editing source locally
 
@@ -89,7 +89,7 @@ Here you can find the most important parts of the `react-native-reanimated/packa
 
 ### Documentation page structure
 
-It's important that the structure of the site be consistent, as this helps developers navigate easily and quickly find what they are looking for. In v3 documentation, we assume a given page structure:
+It's important to maintain a consistent structure for the site, as this helps developers navigate easily and quickly find what they are looking for. In v3 documentation, we follow this page structure:
 
 1. **Introduction** &ndash; short introduction what given feature does.
 2. **Reference** &ndash; simplest possible usage showcase and type definitions, make sure that example code runs when someone copies it to quickly prototype.
@@ -99,17 +99,17 @@ It's important that the structure of the site be consistent, as this helps devel
 6. **Remarks** &ndash; make sure to highlight everything that might not be obvious i.e. platform specific quirks, compatibility issues, additional setups required.
 7. **Platform compatibility** &ndash; information about platforms that given feature supports.
 
-The structure may vary depending on given feature. If the one above doesn't seem to be good fit for you, try to find similar feature and see how it is documented.
+The structure may vary depending on the given feature. If the one above doesn't seem to be a good fit for you, try to find a similar feature and see how it is documented.
 
 ### Documentation writing style guide
 
-The developers want to find the solution to their problems as fast as possible. The speed of finding answers is the reason we optimize the documentation for [skimming](https://www.linkedin.com/pulse/skimming-vs-speed-reading-whats-difference-paul-nowak#:~:text=Skimming%20is%20a%20method%20of,have%20to%20read%20every%20word.). We believe that improvements to documentation have direct impact on the overall developer experience. This section contains a couple of good practices when writing a technical documentation. Treat these rules more like guidelines than the source of absolute truth.
+Developers want to find the solutions to their problems as fast as possible. To address this, we optimize our documentation for [skimming](https://www.linkedin.com/pulse/skimming-vs-speed-reading-whats-difference-paul-nowak#:~:text=Skimming%20is%20a%20method%20of,have%20to%20read%20every%20word.). We believe that improvements to documentation have a direct impact on the overall developer experience. This section outlines some best practices for writing technical documentation. Treat these guidelines as recommendations rather than absolute rules.
 
-If you have spare 2 hours, we highly recommend taking a free [Technical Writing One](https://developers.google.com/tech-writing/one/) course by Google.
+If you can spare 2 hours, we highly recommend taking a free [Technical Writing One](https://developers.google.com/tech-writing/one/) course by Google.
 
 ##### Avoid passive voice
 
-Most of the sentences in a technical documentation should be in active voice. Sentences in the active voice are usually simpler than the ones in the passive voice.
+Most sentences in technical documentation should use active voice. Sentences in active voice are usually simpler than those in passive voice.
 
 See the following examples:
 
@@ -155,7 +155,7 @@ Some acronyms, such as RN, can mean both React Native and React Navigation.
 
 When explaining topics that often use domain-specific acronyms, such as `JSI`, `JNI`, `JSC`, you should first introduce them. For example, JavaScript Core (JSC) or JavaScript Interface (JSI).
 
-The following rule doesn't apply for a globally established abbreviation like `UI`, `API`, `HTML`, `TS` etc.
+The following rule doesn't apply to globally established abbreviations like `UI`, `API`, `HTML`, `TS` etc.
 
 #### Use contractions
 
@@ -163,7 +163,7 @@ Prefer writing using contractions like `don't`, `doesn't`, `it's` instead of ful
 
 ### Embedding interactive examples
 
-We try to make the code examples as easy as it gets. This is why good, interactive examples are crucial. To create interactive examples in the documentation you can use `InteractiveExample` component. It takes `src` prop that expects source of a component that you can declare in `src/examples`, and a `component` prop that showcases given code.
+We try to make the code examples as easy as possible. This is why good, interactive examples are crucial. To create interactive examples in the documentation you can use `InteractiveExample` component. It takes `src` prop that expects source of a component that you can declare in `src/examples`, and a `component` prop that showcases given code.
 
 #### Example with a video
 
@@ -219,7 +219,7 @@ Our workflow usually starts from editing `apps/common-app/src/examples/EmptyExam
 
 :::info
 
-If you want to implement a new feature or fix a bug, but still are unsure after reading through this section or could use some guidance, you can reach Reanimated Team on [Discord](https://discord.com/channels/464786597288738816/1216675825584181330).
+If you want to implement a new feature or fix a bug, but still are unsure after reading through this section or could use some guidance, you can reach out to the Reanimated Team on [Discord](https://discord.com/channels/464786597288738816/1216675825584181330).
 
 :::
 

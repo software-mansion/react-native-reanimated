@@ -23,8 +23,11 @@ type DispatchCommand = <T extends Component>(
 /**
  * Lets you synchronously call a command of a native component.
  *
- * @param animatedRef - An [animated ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns) connected to the component you'd want to call the command on.
- * @param commandName - The name of the command to dispatch (e.g. `"focus"` or `"scrollToEnd"`).
+ * @param animatedRef - An [animated
+ *   ref](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedRef#returns)
+ *   connected to the component you'd want to call the command on.
+ * @param commandName - The name of the command to dispatch (e.g. `"focus"` or
+ *   `"scrollToEnd"`).
  * @param args - An optional array of arguments for the command.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/advanced/dispatchCommand
  */

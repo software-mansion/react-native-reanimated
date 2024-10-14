@@ -5,5 +5,5 @@
       "react-native-reanimated": ["./src"]
     }
   },
-  "include": ["src", "metro-config"]
+  "include": ["src"]
 }

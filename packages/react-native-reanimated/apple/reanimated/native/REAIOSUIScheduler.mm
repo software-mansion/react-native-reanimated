@@ -1,4 +1,4 @@
-#import <RNReanimated/REAIOSUIScheduler.h>
+#import <reanimated/apple/native/REAIOSUIScheduler.h>
 
 namespace reanimated {
 

@@ -28,7 +28,7 @@
     "@mdx-js/react": "^1.6.22",
     "@mui/material": "^5.12.0",
     "@shopify/flash-list": "^1.6.3",
-    "@swmansion/t-rex-ui": "^0.0.13",
+    "@swmansion/t-rex-ui": "^0.0.14",
     "@vercel/og": "^0.6.2",
     "babel-polyfill": "^6.26.0",
     "babel-preset-expo": "^9.2.2",

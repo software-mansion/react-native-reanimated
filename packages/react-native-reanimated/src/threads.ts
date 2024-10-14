@@ -12,9 +12,7 @@ import { ReanimatedError } from './errors';
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-/**
- * An array of [worklet, args] pairs.
- * */
+/** An array of [worklet, args] pairs. */
 let _runOnUIQueue: Array<[WorkletFunction<unknown[], unknown>, unknown[]]> = [];
 
 export function setupMicrotasks() {
@@ -56,14 +54,22 @@ export const callMicrotasks = SHOULD_BE_USE_WEB
   : callMicrotasksOnUIThread;
 
 /**
- * Lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ * Lets you asynchronously run
+ * [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize)
+ * functions on the [UI
+ * thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
  *
- * This method does not schedule the work immediately but instead waits for other worklets
- * to be scheduled within the same JS loop. It uses queueMicrotask to schedule all the worklets
- * at once making sure they will run within the same frame boundaries on the UI thread.
+ * This method does not schedule the work immediately but instead waits for
+ * other worklets to be scheduled within the same JS loop. It uses
+ * queueMicrotask to schedule all the worklets at once making sure they will run
+ * within the same frame boundaries on the UI thread.
  *
- * @param fun - A reference to a function you want to execute on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI) from the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
- * @returns A function that accepts arguments for the function passed as the first argument.
+ * @param fun - A reference to a function you want to execute on the [UI
+ *   thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI)
+ *   from the [JavaScript
+ *   thread](https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI).
+ * @returns A function that accepts arguments for the function passed as the
+ *   first argument.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnUI
  */
 // @ts-expect-error This overload is correct since it's what user sees in his code
@@ -155,9 +161,7 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
 export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
   worklet: (...args: Args) => ReturnValue
 ): WorkletFunction<Args, ReturnValue>;
-/**
- * Schedule a worklet to execute on the UI runtime skipping batching mechanism.
- */
+/** Schedule a worklet to execute on the UI runtime skipping batching mechanism. */
 export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => void {
@@ -203,11 +207,17 @@ function runWorkletOnJS<Args extends unknown[], ReturnValue>(
 }
 
 /**
- * Lets you asynchronously run non-[workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) functions that couldn't otherwise run on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
- * This applies to most external libraries as they don't have their functions marked with "worklet"; directive.
+ * Lets you asynchronously run
+ * non-[workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize)
+ * functions that couldn't otherwise run on the [UI
+ * thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
+ * This applies to most external libraries as they don't have their functions
+ * marked with "worklet"; directive.
  *
- * @param fun - A reference to a function you want to execute on the JavaScript thread from the UI thread.
- * @returns A function that accepts arguments for the function passed as the first argument.
+ * @param fun - A reference to a function you want to execute on the JavaScript
+ *   thread from the UI thread.
+ * @returns A function that accepts arguments for the function passed as the
+ *   first argument.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/runOnJS
  */
 export function runOnJS<Args extends unknown[], ReturnValue>(
@@ -244,8 +254,14 @@ export function runOnJS<Args extends unknown[], ReturnValue>(
     // reference to the original remote function in the `__remoteFunction` property.
     fun = (fun as FunDevRemote).__remoteFunction;
   }
+
+  const scheduleOnJS =
+    typeof fun === 'function'
+      ? global._scheduleHostFunctionOnJS
+      : global._scheduleRemoteFunctionOnJS;
+
   return (...args) => {
-    global._scheduleOnJS(
+    scheduleOnJS(
       fun as
         | ((...args: Args) => ReturnValue)
         | WorkletFunction<Args, ReturnValue>,

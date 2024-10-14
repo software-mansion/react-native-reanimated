@@ -5,7 +5,7 @@ import { ReanimatedError } from '../../errors';
 type FixedLengthArray<
   T,
   L extends number,
-  PassedObject = [T, ...Array<T>]
+  PassedObject = [T, ...Array<T>],
 > = PassedObject & {
   readonly length: L;
   [I: number]: T;

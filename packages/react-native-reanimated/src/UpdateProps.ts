@@ -4,7 +4,6 @@ import type { MutableRefObject } from 'react';
 import { processColorsInProps } from './Colors';
 import type {
   ShadowNodeWrapper,
-  SharedValue,
   StyleProps,
   AnimatedStyle,
 } from './commonTypes';
@@ -16,7 +15,7 @@ import { runOnUIImmediately } from './threads';
 import { ReanimatedError } from './errors';
 
 let updateProps: (
-  viewDescriptor: SharedValue<Descriptor[]>,
+  viewDescriptors: ViewDescriptorsWrapper,
   updates: StyleProps | AnimatedStyle<any>,
   isAnimatedProps?: boolean
 ) => void;
@@ -38,7 +37,7 @@ if (shouldBeUseWeb()) {
 }
 
 export const updatePropsJestWrapper = (
-  viewDescriptors: SharedValue<Descriptor[]>,
+  viewDescriptors: ViewDescriptorsWrapper,
   updates: AnimatedStyle<any>,
   animatedStyle: MutableRefObject<AnimatedStyle<any>>,
   adapters: ((updates: AnimatedStyle<any>) => void)[]
@@ -66,7 +65,7 @@ const createUpdatePropsManager = isFabric()
       }[] = [];
       return {
         update(
-          viewDescriptors: SharedValue<Descriptor[]>,
+          viewDescriptors: ViewDescriptorsWrapper,
           updates: StyleProps | AnimatedStyle<any>
         ) {
           viewDescriptors.value.forEach((viewDescriptor) => {
@@ -95,7 +94,7 @@ const createUpdatePropsManager = isFabric()
       }[] = [];
       return {
         update(
-          viewDescriptors: SharedValue<Descriptor[]>,
+          viewDescriptors: ViewDescriptorsWrapper,
           updates: StyleProps | AnimatedStyle<any>
         ) {
           viewDescriptors.value.forEach((viewDescriptor) => {
@@ -142,8 +141,16 @@ if (shouldBeUseWeb()) {
 
 export interface UpdatePropsManager {
   update(
-    viewDescriptors: SharedValue<Descriptor[]>,
+    viewDescriptors: ViewDescriptorsWrapper,
     updates: StyleProps | AnimatedStyle<any>
   ): void;
   flush(): void;
+}
+
+/**
+ * This used to be `SharedValue<Descriptors[]>` but objects holding just a
+ * single `value` prop are fine too.
+ */
+interface ViewDescriptorsWrapper {
+  value: Readonly<Descriptor[]>;
 }

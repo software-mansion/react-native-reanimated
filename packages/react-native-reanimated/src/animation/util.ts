@@ -108,8 +108,8 @@ export function recognizePrefixSuffix(
 }
 
 /**
- * Returns whether the motion should be reduced for a specified config.
- * By default returns the system setting.
+ * Returns whether the motion should be reduced for a specified config. By
+ * default returns the system setting.
  */
 const isReduceMotionOnUI = ReducedMotionManager.uiValue;
 export function getReduceMotionFromConfig(config?: ReduceMotion) {
@@ -120,8 +120,8 @@ export function getReduceMotionFromConfig(config?: ReduceMotion) {
 }
 
 /**
- * Returns the value that should be assigned to `animation.reduceMotion`
- * for a given config. If the config is not defined, `undefined` is returned.
+ * Returns the value that should be assigned to `animation.reduceMotion` for a
+ * given config. If the config is not defined, `undefined` is returned.
  */
 export function getReduceMotionForAnimation(config?: ReduceMotion) {
   'worklet';
@@ -504,14 +504,14 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
 
 type AnimationToDecoration<
   T extends AnimationObject | StyleLayoutAnimation,
-  U extends AnimationObject | StyleLayoutAnimation
+  U extends AnimationObject | StyleLayoutAnimation,
 > = T extends StyleLayoutAnimation
   ? Record<string, unknown>
   : U | (() => U) | AnimatableValue;
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation, // type that's supposed to be returned
-  U extends AnimationObject | StyleLayoutAnimation = T // type that's received
+  U extends AnimationObject | StyleLayoutAnimation = T, // type that's received
 >(starting: AnimationToDecoration<T, U>, factory: () => T): T {
   'worklet';
   if (IN_STYLE_UPDATER) {
@@ -534,7 +534,8 @@ export function defineAnimation<
 /**
  * Lets you cancel a running animation paired to a shared value.
  *
- * @param sharedValue - The shared value of a running animation that you want to cancel.
+ * @param sharedValue - The shared value of a running animation that you want to
+ *   cancel.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation
  */
 export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {

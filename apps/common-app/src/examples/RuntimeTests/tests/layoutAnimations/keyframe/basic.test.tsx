@@ -103,15 +103,7 @@ describe('entering with custom animation (withDelay + withTiming color changes) 
     100: { transform: [{ translateY: 200 }], easing: Easing.elastic(10) },
   }).duration(2000);
 
-  const linearAnimation1 = new Keyframe({
-    0: {
-      transform: [{ translateY: 0 }],
-      easing: Easing.elastic(10), // This easing is unused
-    },
-    100: { transform: [{ translateY: 200 }] },
-  }).duration(500);
-
-  const linearAnimation2 = new Keyframe({
+  const linearAnimation = new Keyframe({
     0: { transform: [{ translateY: 0 }] },
     100: { transform: [{ translateY: 200 }] },
   }).duration(500);
@@ -153,8 +145,7 @@ describe('entering with custom animation (withDelay + withTiming color changes) 
     [rotateAroundCornerAnimation, 'rotateAroundCorner'],
     [changeBordersAnimation, 'changeBorders'],
     [elasticAnimation, 'elastic'],
-    [linearAnimation1, 'linear'],
-    [linearAnimation2, 'linear'], // compare with the same snapshot as above
+    [linearAnimation, 'linear'],
   ] as Array<[ReanimatedKeyframe, keyof typeof Snapshots]>)(
     'Test keyframe animation **${1}**',
     async ([keyframeAnimation, snapshotName]) => {

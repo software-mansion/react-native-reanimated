@@ -2,13 +2,13 @@ name: V8 Reanimated build check [Nightly]
 env:
   YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
-  # Disabled until V8 gets support for RN 0.74
-  # pull_request:
-  # paths:
-  # - .github/workflows/build-v8-nightly.yml
-  # - .github/workflows/helper/configureV8.js
-  # schedule:
-  # - cron: '37 19 * * *'
+  pull_request:
+    paths:
+      - .github/workflows/V8-reanimated-build-check-nightly.yml
+      - .github/workflows/helper/configureV8.js
+  schedule:
+    - cron: '37 19 * * *'
+  workflow_call:
   workflow_dispatch:
 
 jobs:

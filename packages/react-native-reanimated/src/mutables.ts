@@ -18,7 +18,7 @@ function shouldWarnAboutAccessDuringRender() {
 function checkInvalidReadDuringRender() {
   if (shouldWarnAboutAccessDuringRender()) {
     logger.warn(
-      'Reading from `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.',
+      'Reading from `value` during component render. Please ensure that you do not access the `value` property or use `get` method of a shared value while React is rendering a component.',
       { strict: true }
     );
   }
@@ -27,7 +27,7 @@ function checkInvalidReadDuringRender() {
 function checkInvalidWriteDuringRender() {
   if (shouldWarnAboutAccessDuringRender()) {
     logger.warn(
-      'Writing to `value` during component render. Please ensure that you do not access the `value` property while React is rendering a component.',
+      'Writing to `value` during component render. Please ensure that you do not access the `value` property or use `set` method of a shared value while React is rendering a component.',
       { strict: true }
     );
   }
@@ -35,18 +35,54 @@ function checkInvalidWriteDuringRender() {
 
 type Listener<Value> = (newValue: Value) => void;
 
+type PartialMutable<Value> = Omit<Mutable<Value>, 'get' | 'set'>;
+
+/**
+ * Adds `get` and `set` methods to the mutable object to handle access to
+ * `value` property.
+ *
+ * React Compiler disallows modifying return values of hooks. Even though
+ * assignment to `value` is a setter invocation, Compiler's static analysis
+ * doesn't detect it. That's why we provide a second API for users using the
+ * Compiler.
+ */
+function addCompilerSafeGetAndSet<Value>(mutable: PartialMutable<Value>): void {
+  'worklet';
+  Object.defineProperties(mutable, {
+    get: {
+      value() {
+        return mutable.value;
+      },
+      configurable: false,
+      enumerable: false,
+    },
+    set: {
+      value(newValue: Value | ((value: Value) => Value)) {
+        if (typeof newValue === 'function') {
+          mutable.value = (newValue as (value: Value) => Value)(mutable.value);
+        } else {
+          mutable.value = newValue;
+        }
+      },
+      configurable: false,
+      enumerable: false,
+    },
+  });
+}
 /**
  * Hides the internal `_value` property of a mutable. It won't be visible to:
+ *
  * - `Object.keys`,
  * - `const prop in obj`,
- * - etc.
+ * - Etc.
  *
- * This way when the user accidentally sends the SharedValue to React, he won't get an obscure
- * error message.
+ * This way when the user accidentally sends the SharedValue to React, he won't
+ * get an obscure error message.
  *
- * We hide for both _React runtime_ and _Worklet runtime_ mutables for uniformity of behavior.
+ * We hide for both _React runtime_ and _Worklet runtime_ mutables for
+ * uniformity of behavior.
  */
-function hideInternalValueProp(mutable: Mutable) {
+function hideInternalValueProp<Value>(mutable: PartialMutable<Value>) {
   'worklet';
   Object.defineProperty(mutable, '_value', {
     configurable: false,
@@ -59,20 +95,13 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
   const listeners = new Map<number, Listener<Value>>();
   let value = initial;
 
-  const mutable: Mutable<Value> = {
+  const mutable: PartialMutable<Value> = {
     get value() {
       return value;
     },
     set value(newValue) {
-      valueSetter(mutable, newValue);
+      valueSetter(mutable as Mutable<Value>, newValue);
     },
-
-    /**
-     * _value prop should only be accessed by the valueSetter implementation
-     * which may make the decision about updating the mutable value depending
-     * on the provided new value. All other places should only attempt to modify
-     * the mutable by assigning to value prop directly.
-     */
     get _value(): Value {
       return value;
     },
@@ -82,10 +111,9 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
         listener(newValue);
       });
     },
-
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
-        mutable,
+        mutable as Mutable<Value>,
         modifier !== undefined ? modifier(value) : value,
         forceUpdate
       );
@@ -102,8 +130,9 @@ export function makeMutableUI<Value>(initial: Value): Mutable<Value> {
   };
 
   hideInternalValueProp(mutable);
+  addCompilerSafeGetAndSet(mutable);
 
-  return mutable;
+  return mutable as Mutable<Value>;
 }
 
 function makeMutableNative<Value>(initial: Value): Mutable<Value> {
@@ -114,13 +143,13 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
     },
   });
 
-  const mutable: Mutable<Value> = {
+  const mutable: PartialMutable<Value> = {
     get value(): Value {
       checkInvalidReadDuringRender();
       const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
         return sv.value;
       });
-      return uiValueGetter(mutable);
+      return uiValueGetter(mutable as Mutable<Value>);
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();
@@ -160,23 +189,24 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
   };
 
   hideInternalValueProp(mutable);
+  addCompilerSafeGetAndSet(mutable);
 
   shareableMappingCache.set(mutable, handle);
-  return mutable;
+  return mutable as Mutable<Value>;
 }
 
 function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
   let value: Value = initial;
   const listeners = new Map<number, Listener<Value>>();
 
-  const mutable: Mutable<Value> = {
+  const mutable: PartialMutable<Value> = {
     get value(): Value {
       checkInvalidReadDuringRender();
       return value;
     },
     set value(newValue) {
       checkInvalidWriteDuringRender();
-      valueSetter(mutable, newValue);
+      valueSetter(mutable as Mutable<Value>, newValue);
     },
 
     get _value(): Value {
@@ -191,7 +221,7 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
 
     modify: (modifier, forceUpdate = true) => {
       valueSetter(
-        mutable,
+        mutable as Mutable<Value>,
         modifier !== undefined ? modifier(mutable.value) : mutable.value,
         forceUpdate
       );
@@ -207,8 +237,9 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
   };
 
   hideInternalValueProp(mutable);
+  addCompilerSafeGetAndSet(mutable);
 
-  return mutable;
+  return mutable as Mutable<Value>;
 }
 
 export const makeMutable = SHOULD_BE_USE_WEB

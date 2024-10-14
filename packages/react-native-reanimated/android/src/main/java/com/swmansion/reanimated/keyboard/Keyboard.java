@@ -18,9 +18,10 @@ public class Keyboard {
     return mHeight;
   }
 
-  public void updateHeight(WindowInsetsCompat insets) {
+  public void updateHeight(WindowInsetsCompat insets, boolean isNavigationBarTranslucent) {
     int contentBottomInset = insets.getInsets(CONTENT_TYPE_MASK).bottom;
-    int systemBarBottomInset = insets.getInsets(SYSTEM_BAR_TYPE_MASK).bottom;
+    int systemBarBottomInset =
+        isNavigationBarTranslucent ? 0 : insets.getInsets(SYSTEM_BAR_TYPE_MASK).bottom;
     int keyboardHeightDip = contentBottomInset - systemBarBottomInset;
     int keyboardHeight = (int) PixelUtil.toDIPFromPixel(Math.max(0, keyboardHeightDip));
     if (keyboardHeight <= 0 && mState == KeyboardState.OPEN) {

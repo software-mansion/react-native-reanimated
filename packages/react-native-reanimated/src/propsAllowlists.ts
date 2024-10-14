@@ -5,9 +5,7 @@ type AllowlistsHolder = {
 };
 
 export const PropsAllowlists: AllowlistsHolder = {
-  /**
-   * Styles allowed to be direcly updated in UI thread
-   */
+  /** Styles allowed to be direcly updated in UI thread */
   UI_THREAD_PROPS_WHITELIST: {
     opacity: true,
     transform: true,
@@ -30,7 +28,8 @@ export const PropsAllowlists: AllowlistsHolder = {
     translateY: true,
   },
   /**
-   * Whitelist of view props that can be updated in native thread via UIManagerModule
+   * Whitelist of view props that can be updated in native thread via
+   * UIManagerModule
    */
   NATIVE_THREAD_PROPS_WHITELIST: {
     borderBottomWidth: true,

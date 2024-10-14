@@ -19,11 +19,15 @@ export type WorkletRuntime = {
 };
 
 /**
- * Lets you create a new JS runtime which can be used to run worklets possibly on different threads than JS or UI thread.
+ * Lets you create a new JS runtime which can be used to run worklets possibly
+ * on different threads than JS or UI thread.
  *
- * @param name - A name used to identify the runtime which will appear in devices list in Chrome DevTools.
- * @param initializer - An optional worklet that will be run synchronously on the same thread immediately after the runtime is created.
- * @returns WorkletRuntime which is a jsi::HostObject\<reanimated::WorkletRuntime\> - {@link WorkletRuntime}
+ * @param name - A name used to identify the runtime which will appear in
+ *   devices list in Chrome DevTools.
+ * @param initializer - An optional worklet that will be run synchronously on
+ *   the same thread immediately after the runtime is created.
+ * @returns WorkletRuntime which is a
+ *   `jsi::HostObject<reanimated::WorkletRuntime>` - {@link WorkletRuntime}
  * @see https://docs.swmansion.com/react-native-reanimated/docs/threading/createWorkletRuntime
  */
 // @ts-expect-error Check `runOnUI` overload.
@@ -57,9 +61,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
   worklet: (...args: Args) => ReturnValue
 ): WorkletFunction<Args, ReturnValue>;
-/**
- * Schedule a worklet to execute on the background queue.
- */
+/** Schedule a worklet to execute on the background queue. */
 export function runOnRuntime<Args extends unknown[], ReturnValue>(
   workletRuntime: WorkletRuntime,
   worklet: WorkletFunction<Args, ReturnValue>

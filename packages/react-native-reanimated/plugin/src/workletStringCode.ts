@@ -161,7 +161,8 @@ export function buildWorkletString(
 }
 
 /**
- * Function that restores recursive calls after the name of the worklet has changed.
+ * Function that restores recursive calls after the name of the worklet has
+ * changed.
  */
 function restoreRecursiveCalls(file: BabelFile, newName: string): void {
   traverse(file, {

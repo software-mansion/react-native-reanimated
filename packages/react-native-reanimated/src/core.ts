@@ -24,18 +24,15 @@ export { makeMutable } from './mutables';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
-/**
- * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1
- */
+/** @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1 */
 export const isReanimated3 = () => true;
 
 // Superseded by check in `/src/threads.ts`.
 // Used by `react-navigation` to detect if using Reanimated 2 or 3.
 /**
- * @deprecated This function was superseded by other checks.
- * We keep it here for backward compatibility reasons.
- * If you need to check if you are using Reanimated 3 or Reanimated 2
- * please use `isReanimated3` function instead.
+ * @deprecated This function was superseded by other checks. We keep it here for
+ *   backward compatibility reasons. If you need to check if you are using
+ *   Reanimated 3 or Reanimated 2 please use `isReanimated3` function instead.
  * @returns `true` in Reanimated 3, doesn't exist in Reanimated 2
  */
 export const isConfigured = isReanimated3;
@@ -114,7 +111,8 @@ export function subscribeForKeyboardEvents(
   }
   return NativeReanimatedModule.subscribeForKeyboardEvents(
     makeShareableCloneRecursive(handleAndFlushAnimationFrame),
-    options.isStatusBarTranslucentAndroid ?? false
+    options.isStatusBarTranslucentAndroid ?? false,
+    options.isNavigationBarTranslucentAndroid ?? false
   );
 }
 

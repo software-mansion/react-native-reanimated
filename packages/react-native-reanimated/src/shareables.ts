@@ -317,16 +317,17 @@ function isRemoteFunction<T>(value: {
 
 /**
  * We freeze
- * - arrays,
- * - remote functions,
- * - plain JS objects,
  *
- * that are transformed to a shareable with a meaningful warning.
- * This should help detect issues when someone modifies data after it's been converted.
- * Meaning that they may be doing a faulty assumption in their
- * code expecting that the updates are going to automatically propagate to
- * the object sent to the UI thread. If the user really wants some objects
- * to be mutable they should use shared values instead.
+ * - Arrays,
+ * - Remote functions,
+ * - Plain JS objects,
+ *
+ * That are transformed to a shareable with a meaningful warning. This should
+ * help detect issues when someone modifies data after it's been converted.
+ * Meaning that they may be doing a faulty assumption in their code expecting
+ * that the updates are going to automatically propagate to the object sent to
+ * the UI thread. If the user really wants some objects to be mutable they
+ * should use shared values instead.
  */
 function freezeObjectIfDev<T extends object>(value: T) {
   if (!__DEV__) {
@@ -418,9 +419,9 @@ function makeShareableNative<T extends object>(value: T): T {
 }
 
 /**
- * This function creates a value on UI with persistent state - changes to it on the UI
- * thread will be seen by all worklets. Use it when you want to create a value
- * that is read and written only on the UI thread.
+ * This function creates a value on UI with persistent state - changes to it on
+ * the UI thread will be seen by all worklets. Use it when you want to create a
+ * value that is read and written only on the UI thread.
  */
 export const makeShareable = SHOULD_BE_USE_WEB
   ? makeShareableJS

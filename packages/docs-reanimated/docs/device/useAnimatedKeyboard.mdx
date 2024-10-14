@@ -101,9 +101,13 @@ import AnimatedKeyboardSrc from '!!raw-loader!@site/src/examples/AnimatedKeyboar
 
 - On Android, using the `useAnimatedKeyboard` hook expands root view to full screen ([immersive mode](https://developer.android.com/develop/ui/views/layout/immersive)) and takes control over insets management.
 
-  - When `isStatusBarTranslucentAndroid` is `false` it applies the top and bottom margins according to the insets.
+  - When `isStatusBarTranslucentAndroid` is `false` it applies the top margin according to the insets.
 
-  - When `isStatusBarTranslucentAndroid` is `true` it applies bottom padding according to the navigation inset and sets top margin to `0`.
+  - When `isStatusBarTranslucentAndroid` is `true` it sets top margin to `0`.
+
+  - When `isNavigationBarTranslucentAndroid` is `false` it applies the bottom margin according to the insets.
+
+  - When `isNavigationBarTranslucentAndroid` is `true` it sets bottom margin to `0`.
 
 - On Android, when using navigation with native header, `isStatusBarTranslucentAndroid` doesn't affect the top inset.
 

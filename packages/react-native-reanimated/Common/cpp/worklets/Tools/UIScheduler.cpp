@@ -1,9 +1,9 @@
-#include "UIScheduler.h"
-#include "ReanimatedRuntime.h"
+#include <worklets/Tools/UIScheduler.h>
+#include <worklets/WorkletRuntime/ReanimatedRuntime.h>
 
 #include <utility>
 
-namespace reanimated {
+namespace worklets {
 
 void UIScheduler::scheduleOnUI(std::function<void()> job) {
   uiJobs_.push(std::move(job));
@@ -17,4 +17,4 @@ void UIScheduler::triggerUI() {
   }
 }
 
-} // namespace reanimated
+} // namespace worklets

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "JSScheduler.h"
+#include <worklets/Tools/JSScheduler.h>
 
 #include <memory>
 #include <string>
 
-namespace reanimated {
+namespace worklets {
 
 class JSLogger {
  public:
@@ -17,4 +17,4 @@ class JSLogger {
   const std::shared_ptr<JSScheduler> jsScheduler_;
 };
 
-} // namespace reanimated
+} // namespace worklets

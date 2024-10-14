@@ -1,5 +1,4 @@
 import { html } from 'code-tag';
-// @ts-expect-error Plugin types aren't emitted.
 import plugin from '../plugin';
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
@@ -2333,7 +2332,9 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       expect(code).toContain('var Clazz__classFactory = function ()');
       expect(code).toContainInWorkletString('Clazz__classFactory');
-      expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
+      expect(code).toContain(
+        'Clazz.Clazz__classFactory = _Clazz__classFactory'
+      );
       expect(code).toMatchSnapshot();
     });
 
@@ -2351,7 +2352,9 @@ describe('babel plugin', () => {
       expect(code).toContain('var Clazz = exports.Clazz = function ()');
       expect(code).toContain('var Clazz__classFactory = function ()');
       expect(code).toContainInWorkletString('Clazz__classFactory');
-      expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
+      expect(code).toContain(
+        'Clazz.Clazz__classFactory = _Clazz__classFactory'
+      );
       expect(code).toMatchSnapshot();
     });
 
@@ -2369,7 +2372,9 @@ describe('babel plugin', () => {
       expect(code).toContain('var Clazz = exports.default = function ()');
       expect(code).toContain('var Clazz__classFactory = function ()');
       expect(code).toContainInWorkletString('Clazz__classFactory');
-      expect(code).toContain('Clazz.Clazz__classFactory = Clazz__classFactory');
+      expect(code).toContain(
+        'Clazz.Clazz__classFactory = _Clazz__classFactory'
+      );
       expect(code).toMatchSnapshot();
     });
 
