@@ -203,6 +203,7 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
       checkInvalidReadDuringRender();
       return value;
     },
+    
     set value(newValue) {
       checkInvalidWriteDuringRender();
       valueSetter(mutable as Mutable<Value>, newValue);
