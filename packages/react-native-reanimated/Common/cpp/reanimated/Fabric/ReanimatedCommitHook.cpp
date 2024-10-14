@@ -15,8 +15,11 @@ namespace reanimated {
 
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<PropsRegistry> &propsRegistry,
-    const std::shared_ptr<UIManager> &uiManager)
-    : propsRegistry_(propsRegistry), uiManager_(uiManager) {
+    const std::shared_ptr<UIManager> &uiManager,
+    const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy)
+    : propsRegistry_(propsRegistry),
+      uiManager_(uiManager),
+      layoutAnimationsProxy_(layoutAnimationsProxy) {
   uiManager_->registerCommitHook(*this);
 }
 
@@ -28,6 +31,20 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode) noexcept {
+  auto surfaceId = newRootShadowNode->getSurfaceId();
+
+  {
+    auto lock = std::unique_lock<std::mutex>(mutex_);
+    if (surfaceId > currentMaxSurfaceId_) {
+      uiManager_->getShadowTreeRegistry().enumerate(
+          [this](const ShadowTree &shadowTree, bool &stop) {
+            shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
+                layoutAnimationsProxy_);
+          });
+      currentMaxSurfaceId_ = surfaceId;
+    }
+  }
+
   auto reaShadowNode =
       std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
           newRootShadowNode);
