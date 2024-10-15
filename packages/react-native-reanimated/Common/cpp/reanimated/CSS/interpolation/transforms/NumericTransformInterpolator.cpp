@@ -1,8 +1,8 @@
-#include <reanimated/CSS/interpolation/transforms/ScaleTransformInterpolator.h>
+#include <reanimated/CSS/interpolation/transforms/NumericTransformInterpolator.h>
 
 namespace reanimated {
 
-ScaleTransformInterpolator::ScaleTransformInterpolator(
+NumericTransformInterpolator::NumericTransformInterpolator(
     const double &defaultValue,
     const PropertyPath &propertyPath)
     : TransformInterpolator(propertyPath), defaultValue_(defaultValue) {}

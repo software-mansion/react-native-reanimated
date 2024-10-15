@@ -1,19 +1,12 @@
 #pragma once
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
-
-#include <jsi/jsi.h>
-#include <memory>
-#include <string>
-#include <type_traits>
-#include <vector>
-
-using namespace facebook;
+#include <reanimated/CSS/util/keyframes.h>
 
 namespace reanimated {
 
 template <typename T>
-struct Keyframe {
+struct ValueKeyframe {
   double offset;
   // If value is optional, the style value should be read from the view style
   std::optional<T> value;
@@ -27,18 +20,14 @@ class ValueInterpolator : public PropertyInterpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath);
 
-  jsi::Value getCurrentValue(jsi::Runtime &rt) const override;
   jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
 
-  virtual void updateKeyframes(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      const jsi::Value &keyframes) override;
+  virtual void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes)
+      override;
   virtual void updateKeyframesFromStyleChange(
       jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
       const jsi::Value &oldStyleValue,
       const jsi::Value &newStyleValue) override;
 
@@ -60,12 +49,12 @@ class ValueInterpolator : public PropertyInterpolator {
       const InterpolationUpdateContext context) const = 0;
 
  private:
-  std::vector<Keyframe<T>> keyframes_;
+  std::vector<ValueKeyframe<T>> keyframes_;
   std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   int keyframeAfterIndex_ = 1;
-  Keyframe<T> keyframeBefore_;
-  Keyframe<T> keyframeAfter_;
+  ValueKeyframe<T> keyframeBefore_;
+  ValueKeyframe<T> keyframeAfter_;
   std::optional<T> previousValue_; // Previous interpolation result
 
   std::optional<T> getFallbackValue(
@@ -75,7 +64,7 @@ class ValueInterpolator : public PropertyInterpolator {
       const std::optional<T> unresolvedValue,
       const InterpolationUpdateContext context) const;
 
-  Keyframe<T> getKeyframeAtIndex(
+  ValueKeyframe<T> getKeyframeAtIndex(
       int index,
       bool shouldResolve,
       const InterpolationUpdateContext context) const;
@@ -83,8 +72,8 @@ class ValueInterpolator : public PropertyInterpolator {
   void updateCurrentKeyframes(const InterpolationUpdateContext context);
 
   double calculateLocalProgress(
-      const Keyframe<T> &keyframeBefore,
-      const Keyframe<T> &keyframeAfter,
+      const ValueKeyframe<T> &keyframeBefore,
+      const ValueKeyframe<T> &keyframeAfter,
       const InterpolationUpdateContext context) const;
 
   jsi::Value interpolateMissingValue(

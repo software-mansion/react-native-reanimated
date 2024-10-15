@@ -19,7 +19,7 @@ RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
 UnitValue RelativeOrNumericValueInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
-  return UnitValue::fromJSIValue(rt, value);
+  return UnitValue(rt, value);
 }
 
 jsi::Value RelativeOrNumericValueInterpolator::convertResultToJSI(

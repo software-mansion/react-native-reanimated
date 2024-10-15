@@ -12,13 +12,6 @@ ValueInterpolator<T>::ValueInterpolator(
       defaultStyleValue_(defaultStyleValue) {}
 
 template <typename T>
-jsi::Value ValueInterpolator<T>::getCurrentValue(jsi::Runtime &rt) const {
-  return previousValue_.has_value()
-      ? convertResultToJSI(rt, previousValue_.value())
-      : jsi::Value::undefined();
-}
-
-template <typename T>
 jsi::Value ValueInterpolator<T>::getStyleValue(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode) const {
@@ -29,61 +22,29 @@ jsi::Value ValueInterpolator<T>::getStyleValue(
 template <typename T>
 void ValueInterpolator<T>::updateKeyframes(
     jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
     const jsi::Value &keyframes) {
   keyframeAfterIndex_ = 1;
-  const auto keyframeArray = keyframes.asObject(rt).asArray(rt);
-  const auto inputKeyframesCount = keyframeArray.size(rt);
+  const auto parsedKeyframes = parseJSIKeyframes(rt, keyframes);
 
-  auto getKeyframeAtIndexOffset = [&](size_t index) {
-    return keyframeArray.getValueAtIndex(rt, index)
-        .asObject(rt)
-        .getProperty(rt, "offset")
-        .asNumber();
-  };
-
-  bool hasOffset0 = getKeyframeAtIndexOffset(0) == 0;
-  bool hasOffset1 = getKeyframeAtIndexOffset(inputKeyframesCount - 1) == 1;
-
-  // Clear the existing keyframes_ property
   keyframes_.clear();
-  keyframes_.reserve(
-      inputKeyframesCount + (hasOffset0 ? 0 : 1) + (hasOffset1 ? 0 : 1));
+  keyframes_.reserve(parsedKeyframes.size());
 
-  // Insert the keyframe without value at offset 0 if it is not present
-  if (!hasOffset0) {
-    keyframes_.push_back({0, std::nullopt});
-  }
-
-  // Insert all provided keyframes
-  for (size_t j = 0; j < inputKeyframesCount; ++j) {
-    jsi::Object keyframeObject =
-        keyframeArray.getValueAtIndex(rt, j).asObject(rt);
-    double offset = keyframeObject.getProperty(rt, "offset").asNumber();
-    jsi::Value value = keyframeObject.getProperty(rt, "value");
-
-    // Add a keyframe with no value if there is no keyframe value specified
+  for (const auto &[offset, value] : parsedKeyframes) {
     if (value.isUndefined()) {
       keyframes_.push_back({offset, std::nullopt});
     } else {
       keyframes_.push_back({offset, prepareKeyframeValue(rt, value)});
     }
   }
-
-  // Insert the keyframe without value at offset 1 if it is not present
-  if (!hasOffset1) {
-    keyframes_.push_back({1, std::nullopt});
-  }
 }
 
 template <typename T>
 void ValueInterpolator<T>::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
     const jsi::Value &oldStyleValue,
     const jsi::Value &newStyleValue) {
   keyframeAfterIndex_ = 1;
-  Keyframe<T> firstKeyframe, lastKeyframe;
+  ValueKeyframe<T> firstKeyframe, lastKeyframe;
 
   // If the transition was interrupted, use the previous interpolation
   // result as the first keyframe value
@@ -164,7 +125,7 @@ std::optional<T> ValueInterpolator<T>::resolveKeyframeValue(
 }
 
 template <typename T>
-Keyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
+ValueKeyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
     int index,
     bool shouldResolve,
     const InterpolationUpdateContext context) const {
@@ -186,11 +147,12 @@ Keyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
       if (fallbackValue.has_value()) {
         unresolvedValue = fallbackValue.value();
       } else {
-        return Keyframe<T>{offset, std::nullopt};
+        return ValueKeyframe<T>{offset, std::nullopt};
       }
     }
 
-    return Keyframe<T>{offset, resolveKeyframeValue(unresolvedValue, context)};
+    return ValueKeyframe<T>{
+        offset, resolveKeyframeValue(unresolvedValue, context)};
   }
 
   return keyframe;
@@ -225,7 +187,7 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
     }
 
     if (context.directionChanged && previousValue_.has_value()) {
-      const Keyframe<T> keyframe = {
+      const ValueKeyframe<T> keyframe = {
           context.previousProgress.value(), previousValue_.value()};
       if (context.progress < context.previousProgress.value()) {
         keyframeAfter_ = keyframe;
@@ -243,8 +205,8 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
 
 template <typename T>
 double ValueInterpolator<T>::calculateLocalProgress(
-    const Keyframe<T> &keyframeBefore,
-    const Keyframe<T> &keyframeAfter,
+    const ValueKeyframe<T> &keyframeBefore,
+    const ValueKeyframe<T> &keyframeAfter,
     const InterpolationUpdateContext context) const {
   const double beforeOffset = keyframeBefore.offset;
   const double afterOffset = keyframeAfter.offset;
@@ -275,6 +237,5 @@ template class ValueInterpolator<double>;
 template class ValueInterpolator<std::string>;
 template class ValueInterpolator<ColorArray>;
 template class ValueInterpolator<UnitValue>;
-template class ValueInterpolator<Transform>;
 
 } // namespace reanimated

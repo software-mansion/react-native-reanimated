@@ -99,11 +99,10 @@ class AbsoluteTransformInterpolatorFactory
   const ValueType defaultValue_;
 };
 
-template <typename InterpolatorType, typename ValueType>
-class RelativeTransformInterpolatorFactory
+class RelativeOrNumericTransformInterpolatorFactory
     : public TransformInterpolatorFactory {
  public:
-  RelativeTransformInterpolatorFactory(
+  RelativeOrNumericTransformInterpolatorFactory(
       const RelativeTo relativeTo,
       const std::string &relativeProperty,
       const UnitValue &defaultValue)
@@ -114,7 +113,7 @@ class RelativeTransformInterpolatorFactory
   std::shared_ptr<TransformInterpolator> create(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath) const override {
-    return std::make_shared<InterpolatorType>(
+    return std::make_shared<RelativeOrNumericTransformInterpolator>(
         relativeTo_,
         relativeProperty_,
         defaultValue_,
@@ -180,44 +179,29 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
  * Transform interpolators
  */
 
-std::shared_ptr<TransformInterpolatorFactory> perspective(
+std::shared_ptr<TransformInterpolatorFactory> numericTransform(
     const double &defaultValue) {
   return std::make_shared<AbsoluteTransformInterpolatorFactory<
-      PerspectiveTransformInterpolator,
+      NumericTransformInterpolator,
       double>>(defaultValue);
 }
 
-std::shared_ptr<TransformInterpolatorFactory> rotate(
+std::shared_ptr<TransformInterpolatorFactory> angleTransform(
     const AngleValue &defaultValue) {
   return std::make_shared<AbsoluteTransformInterpolatorFactory<
-      RotateTransformInterpolator,
+      AngleTransformInterpolator,
       AngleValue>>(defaultValue);
 }
 
-std::shared_ptr<TransformInterpolatorFactory> scale(
-    const double &defaultValue) {
-  return std::make_shared<
-      AbsoluteTransformInterpolatorFactory<ScaleTransformInterpolator, double>>(
-      defaultValue);
-}
-
-std::shared_ptr<TransformInterpolatorFactory> translate(
+std::shared_ptr<TransformInterpolatorFactory> relativeOrNumericTransform(
     const RelativeTo relativeTo,
     const std::string &relativeProperty,
     const UnitValue &defaultValue) {
-  return std::make_shared<RelativeTransformInterpolatorFactory<
-      TranslateTransformInterpolator,
-      UnitValue>>(relativeTo, relativeProperty, defaultValue);
+  return std::make_shared<RelativeOrNumericTransformInterpolatorFactory>(
+      relativeTo, relativeProperty, defaultValue);
 }
 
-std::shared_ptr<TransformInterpolatorFactory> skew(
-    const AngleValue &defaultValue) {
-  return std::make_shared<AbsoluteTransformInterpolatorFactory<
-      SkewTransformInterpolator,
-      AngleValue>>(defaultValue);
-}
-
-std::shared_ptr<TransformInterpolatorFactory> matrix(
+std::shared_ptr<TransformInterpolatorFactory> matrixTransform(
     const TransformMatrix &defaultValue) {
   return std::make_shared<AbsoluteTransformInterpolatorFactory<
       MatrixTransformInterpolator,

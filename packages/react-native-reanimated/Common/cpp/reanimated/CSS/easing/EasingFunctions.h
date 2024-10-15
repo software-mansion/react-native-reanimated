@@ -5,8 +5,6 @@
 #include <reanimated/CSS/easing/StepsEasing.h>
 
 #include <jsi/jsi.h>
-#include <cmath>
-#include <functional>
 #include <string>
 #include <unordered_map>
 

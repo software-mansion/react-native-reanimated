@@ -3,12 +3,7 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
-#include <react/renderer/core/ShadowNode.h>
-
 namespace reanimated {
-
-using namespace facebook;
-using namespace react;
 
 struct InterpolationUpdateContext {
   jsi::Runtime &rt;
@@ -23,18 +18,15 @@ class PropertyInterpolator {
   PropertyInterpolator(const PropertyPath &propertyPath)
       : propertyPath_(propertyPath) {}
 
-  virtual jsi::Value getCurrentValue(jsi::Runtime &rt) const = 0;
   virtual jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const = 0;
 
   virtual void updateKeyframes(
       jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
       const jsi::Value &keyframes) = 0;
   virtual void updateKeyframesFromStyleChange(
       jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
       const jsi::Value &oldStyleValue,
       const jsi::Value &newStyleValue) = 0;
 

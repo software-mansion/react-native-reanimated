@@ -9,12 +9,10 @@
 #include <reanimated/CSS/interpolation/values/NumericValueInterpolator.h>
 #include <reanimated/CSS/interpolation/values/RelativeOrNumericValueInterpolator.h>
 
+#include <reanimated/CSS/interpolation/transforms/AngleTransformInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/MatrixTransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/PerspectiveTransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/RotateTransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/ScaleTransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/SkewTransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/TranslateTransformInterpolator.h>
+#include <reanimated/CSS/interpolation/transforms/NumericTransformInterpolator.h>
+#include <reanimated/CSS/interpolation/transforms/RelativeOrNumericTransformInterpolator.h>
 
 namespace reanimated {
 namespace Interpolators {
@@ -63,14 +61,14 @@ std::shared_ptr<PropertyInterpolatorFactory> relativeOrNumeric(
     const std::string &relativeProperty,
     const double &defaultValue) {
   return relativeOrNumeric(
-      relativeTo, relativeProperty, UnitValue::create(defaultValue));
+      relativeTo, relativeProperty, UnitValue(defaultValue));
 }
 std::shared_ptr<PropertyInterpolatorFactory> relativeOrNumeric(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
     const std::string &defaultValue) {
   return relativeOrNumeric(
-      relativeTo, relativeProperty, UnitValue::create(defaultValue));
+      relativeTo, relativeProperty, UnitValue(defaultValue));
 }
 std::shared_ptr<PropertyInterpolatorFactory> relativeOrNumeric(
     RelativeTo relativeTo,
@@ -85,45 +83,36 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
  * Transform interpolators
  */
 
-std::shared_ptr<TransformInterpolatorFactory> perspective(
+std::shared_ptr<TransformInterpolatorFactory> numericTransform(
     const double &defaultValue);
 
-std::shared_ptr<TransformInterpolatorFactory> rotate(
+std::shared_ptr<TransformInterpolatorFactory> angleTransform(
     const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolatorFactory> rotate(
+std::shared_ptr<TransformInterpolatorFactory> angleTransform(
     const std::string &defaultValue) {
-  return rotate(AngleValue::create(defaultValue));
+  return angleTransform(AngleValue(defaultValue));
 }
 
-std::shared_ptr<TransformInterpolatorFactory> scale(const double &defaultValue);
-
-std::shared_ptr<TransformInterpolatorFactory> translate(
+std::shared_ptr<TransformInterpolatorFactory> relativeOrNumericTransform(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
     const UnitValue &defaultValue);
-std::shared_ptr<TransformInterpolatorFactory> translate(
+std::shared_ptr<TransformInterpolatorFactory> relativeOrNumericTransform(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
     const double &defaultValue) {
-  return translate(
-      relativeTo, relativeProperty, UnitValue::create(defaultValue));
+  return relativeOrNumericTransform(
+      relativeTo, relativeProperty, UnitValue(defaultValue));
 }
-std::shared_ptr<TransformInterpolatorFactory> translate(
+std::shared_ptr<TransformInterpolatorFactory> relativeOrNumericTransform(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
     const std::string &defaultValue) {
-  return translate(
-      relativeTo, relativeProperty, UnitValue::create(defaultValue));
+  return relativeOrNumericTransform(
+      relativeTo, relativeProperty, UnitValue(defaultValue));
 }
 
-std::shared_ptr<TransformInterpolatorFactory> skew(
-    const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolatorFactory> skew(
-    const std::string &defaultValue) {
-  return skew(AngleValue::create(defaultValue));
-}
-
-std::shared_ptr<TransformInterpolatorFactory> matrix(
+std::shared_ptr<TransformInterpolatorFactory> matrixTransform(
     const TransformMatrix &defaultValue);
 
 } // namespace Interpolators

@@ -4,14 +4,14 @@
 
 namespace reanimated {
 
-class PerspectiveTransformInterpolator : public TransformInterpolator {
+class AngleTransformInterpolator : public TransformInterpolator {
  public:
-  PerspectiveTransformInterpolator(
-      const double &defaultValue,
+  AngleTransformInterpolator(
+      const AngleValue &defaultValue,
       const PropertyPath &propertyPath);
 
  private:
-  const double defaultValue_;
+  const AngleValue defaultValue_;
 };
 
 } // namespace reanimated

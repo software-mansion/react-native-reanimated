@@ -1,8 +1,8 @@
-#include <reanimated/CSS/interpolation/transforms/TranslateTransformInterpolator.h>
+#include <reanimated/CSS/interpolation/transforms/RelativeOrNumericTransformInterpolator.h>
 
 namespace reanimated {
 
-TranslateTransformInterpolator::TranslateTransformInterpolator(
+RelativeOrNumericTransformInterpolator::RelativeOrNumericTransformInterpolator(
     const RelativeTo relativeTo,
     const std::string &relativeProperty,
     const UnitValue &defaultValue,

@@ -1,8 +1,8 @@
-#include <reanimated/CSS/interpolation/transforms/RotateTransformInterpolator.h>
+#include <reanimated/CSS/interpolation/transforms/AngleTransformInterpolator.h>
 
 namespace reanimated {
 
-RotateTransformInterpolator::RotateTransformInterpolator(
+AngleTransformInterpolator::AngleTransformInterpolator(
     const AngleValue &defaultValue,
     const PropertyPath &propertyPath)
     : TransformInterpolator(propertyPath), defaultValue_(defaultValue) {}

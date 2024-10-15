@@ -29,7 +29,7 @@ void CSSTransition::run(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
     const time_t timestamp) {
-  styleInterpolator_.updateProperties(rt, shadowNode_, changedProps);
+  styleInterpolator_.updateProperties(rt, changedProps);
   progressProvider_.runProgressProviders(
       rt, timestamp, changedProps.changedPropertyNames);
 }
