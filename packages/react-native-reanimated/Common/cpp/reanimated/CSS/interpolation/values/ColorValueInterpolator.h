@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/properties/ValueInterpolator.h>
+#include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
 namespace reanimated {
 

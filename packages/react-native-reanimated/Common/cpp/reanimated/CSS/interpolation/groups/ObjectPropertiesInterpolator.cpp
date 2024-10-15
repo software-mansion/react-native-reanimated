@@ -6,13 +6,13 @@ ObjectPropertiesInterpolator::ObjectPropertiesInterpolator(
     const PropertiesInterpolatorFactories &factories,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const PropertyPath &propertyPath)
-    : Interpolator(propertyPath),
+    : PropertyInterpolator(propertyPath),
       factories_(factories),
       viewStylesRepository_(viewStylesRepository) {}
 
 jsi::Value ObjectPropertiesInterpolator::getCurrentValue(
     jsi::Runtime &rt) const {
-  return mapInterpolators(rt, [&](Interpolator &interpolator) {
+  return mapInterpolators(rt, [&](PropertyInterpolator &interpolator) {
     return interpolator.getCurrentValue(rt);
   });
 }
@@ -20,14 +20,14 @@ jsi::Value ObjectPropertiesInterpolator::getCurrentValue(
 jsi::Value ObjectPropertiesInterpolator::getStyleValue(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode) const {
-  return mapInterpolators(rt, [&](Interpolator &interpolator) {
+  return mapInterpolators(rt, [&](PropertyInterpolator &interpolator) {
     return interpolator.getStyleValue(rt, shadowNode);
   });
 }
 
 jsi::Value ObjectPropertiesInterpolator::update(
     const InterpolationUpdateContext context) {
-  return mapInterpolators(context.rt, [&](Interpolator &interpolator) {
+  return mapInterpolators(context.rt, [&](PropertyInterpolator &interpolator) {
     return interpolator.update(context);
   });
 }
@@ -51,7 +51,7 @@ void ObjectPropertiesInterpolator::updateKeyframes(
     auto interpolatorIt = interpolators_.find(propertyName);
 
     if (interpolatorIt == interpolators_.end()) {
-      const auto newInterpolator = createInterpolator(
+      const auto newInterpolator = createPropertyInterpolator(
           propertyName, propertyPath_, factories_, viewStylesRepository_);
       interpolatorIt =
           interpolators_.emplace(propertyName, newInterpolator).first;
@@ -79,7 +79,7 @@ void ObjectPropertiesInterpolator::updateKeyframesFromStyleChange(
     auto interpolatorIt = interpolators_.find(propertyName);
 
     if (interpolatorIt == interpolators_.end()) {
-      const auto newInterpolator = createInterpolator(
+      const auto newInterpolator = createPropertyInterpolator(
           propertyName, propertyPath_, factories_, viewStylesRepository_);
       interpolatorIt =
           interpolators_.emplace(propertyName, newInterpolator).first;
@@ -99,7 +99,7 @@ void ObjectPropertiesInterpolator::updateKeyframesFromStyleChange(
 
 jsi::Value ObjectPropertiesInterpolator::mapInterpolators(
     jsi::Runtime &rt,
-    std::function<jsi::Value(Interpolator &)> callback) const {
+    std::function<jsi::Value(PropertyInterpolator &)> callback) const {
   jsi::Object result(rt);
   bool allUndefined = true;
 

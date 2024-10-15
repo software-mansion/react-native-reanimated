@@ -18,9 +18,9 @@ struct InterpolationUpdateContext {
   const bool directionChanged;
 };
 
-class Interpolator {
+class PropertyInterpolator {
  public:
-  Interpolator(const PropertyPath &propertyPath)
+  PropertyInterpolator(const PropertyPath &propertyPath)
       : propertyPath_(propertyPath) {}
 
   virtual jsi::Value getCurrentValue(jsi::Runtime &rt) const = 0;
@@ -44,17 +44,17 @@ class Interpolator {
   const PropertyPath propertyPath_;
 };
 
-class InterpolatorFactory {
+class PropertyInterpolatorFactory {
  public:
-  virtual std::shared_ptr<Interpolator> create(
+  virtual std::shared_ptr<PropertyInterpolator> create(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath) const = 0;
 };
 
 using PropertiesInterpolators =
-    std::unordered_map<std::string, std::shared_ptr<Interpolator>>;
+    std::unordered_map<std::string, std::shared_ptr<PropertyInterpolator>>;
 
-using PropertiesInterpolatorFactories =
-    std::unordered_map<std::string, std::shared_ptr<InterpolatorFactory>>;
+using PropertiesInterpolatorFactories = std::
+    unordered_map<std::string, std::shared_ptr<PropertyInterpolatorFactory>>;
 
 } // namespace reanimated

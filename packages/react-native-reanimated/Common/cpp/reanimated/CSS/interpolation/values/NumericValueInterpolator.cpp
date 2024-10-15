@@ -1,4 +1,4 @@
-#include <reanimated/CSS/interpolation/properties/NumericValueInterpolator.h>
+#include <reanimated/CSS/interpolation/values/NumericValueInterpolator.h>
 
 namespace reanimated {
 

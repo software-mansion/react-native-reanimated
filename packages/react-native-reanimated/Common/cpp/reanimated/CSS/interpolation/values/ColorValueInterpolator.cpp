@@ -1,4 +1,4 @@
-#include <reanimated/CSS/interpolation/properties/ColorValueInterpolator.h>
+#include <reanimated/CSS/interpolation/values/ColorValueInterpolator.h>
 
 namespace reanimated {
 
