@@ -160,21 +160,20 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       // Transforms
       {"transform",
        transforms(
-           {{"perspective", numericTransform(1)},
-            {"rotate", angleTransform("0rad")},
-            {"rotateX", angleTransform("0rad")},
-            {"rotateY", angleTransform("0rad")},
-            {"rotateZ", angleTransform("0rad")},
-            {"scale", numericTransform(1)},
-            {"scaleX", numericTransform(1)},
-            {"scaleY", numericTransform(1)},
-            {"translateX",
-             relativeOrNumericTransform(RelativeTo::SELF, "width", 0)},
-            {"translateY",
-             relativeOrNumericTransform(RelativeTo::SELF, "height", 0)},
-            {"skewX", angleTransform("0rad")},
-            {"skewY", angleTransform("0rad")},
-            {"matrix", matrixTransform(TransformMatrix::Identity())}})}};
+           {{"perspective", perspective(1)},
+            {"rotate", rotate("0rad")},
+            {"rotateX", rotateX("0rad")},
+            {"rotateY", rotateY("0rad")},
+            {"rotateZ", rotateZ("0rad")},
+            {"scale", scale(1)},
+            {"scaleX", scaleX(1)},
+            {"scaleY", scaleY(1)},
+            {"translateX", translateX(RelativeTo::SELF, "width", 0)},
+            {"translateY", translateY(RelativeTo::SELF, "height", 0)},
+            {"skewX", skewX("0rad")},
+            {"skewY", skewY("0rad")},
+            {"matrix", matrix(TransformMatrix::Identity())}})},
+  };
 }();
 
 } // namespace reanimated

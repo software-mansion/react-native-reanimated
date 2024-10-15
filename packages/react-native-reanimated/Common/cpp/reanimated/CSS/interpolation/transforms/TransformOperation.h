@@ -24,6 +24,8 @@ enum class TransformOperationType {
   Unknown,
 };
 
+TransformOperationType getTransformOperationType(const std::string &property);
+
 // Base class for TransformOperation
 struct TransformOperation {
   virtual TransformOperationType getType() const = 0;
@@ -65,17 +67,17 @@ struct RotateOperation : public TransformOperation {
 };
 
 struct RotateXOperation : public RotateOperation {
-  RotateXOperation(const AngleValue &value);
+  using RotateOperation::RotateOperation;
   TransformOperationType getType() const override;
 };
 
 struct RotateYOperation : public RotateOperation {
-  RotateYOperation(const AngleValue &value);
+  using RotateOperation::RotateOperation;
   TransformOperationType getType() const override;
 };
 
 struct RotateZOperation : public RotateOperation {
-  RotateZOperation(const AngleValue &value);
+  using RotateOperation::RotateOperation;
   TransformOperationType getType() const override;
   bool canConvertTo(TransformOperationType type) const override;
   TransformOperations convertTo(TransformOperationType type) const override;
@@ -93,12 +95,12 @@ struct ScaleOperation : public TransformOperation {
 };
 
 struct ScaleXOperation : public ScaleOperation {
-  ScaleXOperation(double value);
+  using ScaleOperation::ScaleOperation;
   TransformOperationType getType() const override;
 };
 
 struct ScaleYOperation : public ScaleOperation {
-  ScaleYOperation(double value);
+  using ScaleOperation::ScaleOperation;
   TransformOperationType getType() const override;
 };
 

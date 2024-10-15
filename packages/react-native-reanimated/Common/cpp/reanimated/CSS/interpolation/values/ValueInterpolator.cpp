@@ -164,7 +164,7 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
   }
 
   while (keyframeAfterIndex_ < keyframes_.size() - 1 &&
-         keyframes_[keyframeAfterIndex_].offset <= context.progress)
+         keyframes_[keyframeAfterIndex_].offset < context.progress)
     ++keyframeAfterIndex_;
 
   while (keyframeAfterIndex_ > 1 &&

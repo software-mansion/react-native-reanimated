@@ -1,4 +1,4 @@
-#include <reanimated/CSS/TransformMatrix.h>
+#include <reanimated/CSS/interpolation/transforms/TransformMatrix.h>
 
 namespace reanimated {
 
@@ -11,12 +11,19 @@ TransformMatrix::TransformMatrix(jsi::Runtime &rt, const jsi::Value &value) {
         "[Reanimated] TransformMatrix should have 16 elements");
   }
 
-  // TODO - implement
+  for (size_t i = 0; i < MATRIX_SIZE; ++i) {
+    matrix_[i] = array.getValueAtIndex(rt, i).asNumber();
+  }
 }
 
 jsi::Value TransformMatrix::toJSIValue(jsi::Runtime &rt) const {
-  // TODO - implement
-  return jsi::Value::undefined();
+  jsi::Array result(rt, MATRIX_SIZE);
+
+  for (size_t i = 0; i < MATRIX_SIZE; ++i) {
+    result.setValueAtIndex(rt, i, matrix_[i]);
+  }
+
+  return result;
 }
 
 } // namespace reanimated

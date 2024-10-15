@@ -45,10 +45,13 @@ UnitValue RelativeOrNumericValueInterpolator::interpolate(
   }
   // If both value types are the same, we can interpolate without reading the
   // relative value from the shadow node
-  if (fromValue.isRelative == toValue.isRelative) {
+  // (also, when one of the values is 0, and the other is relative)
+  if ((fromValue.isRelative == toValue.isRelative) ||
+      (fromValue.isRelative && toValue.value == 0) ||
+      (toValue.isRelative && fromValue.value == 0)) {
     return {
         fromValue.value + (toValue.value - fromValue.value) * localProgress,
-        fromValue.isRelative};
+        fromValue.isRelative || toValue.isRelative};
   }
   // Otherwise, we need to read the relative value from the shadow node and
   // interpolate values as numbers
