@@ -3,8 +3,17 @@
 namespace reanimated {
 
 MatrixTransformInterpolator::MatrixTransformInterpolator(
-    const TransformMatrix &defaultValue,
-    const PropertyPath &propertyPath)
-    : TransformInterpolator(propertyPath), defaultValue_(defaultValue) {}
+    const TransformMatrix &defaultValue)
+    : TransformInterpolatorBase<MatrixOperation>(
+          std::make_shared<MatrixOperation>(defaultValue)) {}
+
+MatrixOperation MatrixTransformInterpolator::interpolate(
+    const double progress,
+    const MatrixOperation &fromOperation,
+    const MatrixOperation &toOperation,
+    const InterpolationUpdateContext &context) const {
+  // TODO implement matrix interpolation
+  return fromOperation;
+}
 
 } // namespace reanimated

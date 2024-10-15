@@ -20,7 +20,7 @@ struct TransformKeyframe {
 class TransformsStyleInterpolator : public PropertyInterpolator {
  public:
   TransformsStyleInterpolator(
-      const TransformsInterpolatorFactories &factories,
+      const TransformInterpolatorsMap &interpolators,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath);
 
@@ -37,13 +37,16 @@ class TransformsStyleInterpolator : public PropertyInterpolator {
       const jsi::Value &newStyleValue) override;
 
  private:
-  const TransformsInterpolatorFactories &factories_;
+  const TransformInterpolators interpolators_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   size_t keyframeIndex_ = 0;
   std::vector<const TransformKeyframe> keyframes_;
   TransformKeyframe currentKeyframe_;
   std::optional<TransformOperations> previousResult_;
+
+  TransformInterpolators convertInterpolators(
+      const TransformInterpolatorsMap &interpolators) const;
 
   std::optional<TransformOperations> parseTransformOperations(
       jsi::Runtime &rt,
@@ -63,6 +66,9 @@ class TransformsStyleInterpolator : public PropertyInterpolator {
 
   TransformOperations getFallbackValue(
       const InterpolationUpdateContext context) const;
+
+  std::shared_ptr<TransformOperation> getDefaultOperationOfType(
+      TransformOperationType type) const;
 
   TransformOperations resolveTransformOperations(
       const std::optional<TransformOperations> &unresolvedOperations,

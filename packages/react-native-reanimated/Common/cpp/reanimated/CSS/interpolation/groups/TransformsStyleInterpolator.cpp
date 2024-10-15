@@ -3,11 +3,11 @@
 namespace reanimated {
 
 TransformsStyleInterpolator::TransformsStyleInterpolator(
-    const TransformsInterpolatorFactories &factories,
+    const TransformInterpolatorsMap &interpolators,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const PropertyPath &propertyPath)
     : PropertyInterpolator(propertyPath),
-      factories_(factories),
+      interpolators_(convertInterpolators(interpolators)),
       viewStylesRepository_(viewStylesRepository) {}
 
 jsi::Value TransformsStyleInterpolator::getStyleValue(
@@ -19,9 +19,6 @@ jsi::Value TransformsStyleInterpolator::getStyleValue(
 
 jsi::Value TransformsStyleInterpolator::update(
     const InterpolationUpdateContext &context) {
-  // TODO - uncomment when ready
-  return jsi::Value::undefined();
-
   updateCurrentKeyframe(context);
 
   // Get or create the current keyframe
@@ -40,7 +37,6 @@ jsi::Value TransformsStyleInterpolator::update(
     keyframe = createTransformKeyframe(
         context.rt, keyframe.offset, fromOperations, toOperations);
   }
-
   // Calculate the local progress for the current keyframe
   const auto progress = calculateLocalProgress(context.progress);
   // Interpolate the current keyframe
@@ -99,6 +95,17 @@ void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
   // TODO
 }
 
+TransformInterpolators TransformsStyleInterpolator::convertInterpolators(
+    const TransformInterpolatorsMap &interpolators) const {
+  TransformInterpolators result;
+
+  for (const auto &[property, interpolator] : interpolators) {
+    result[getTransformOperationType(property)] = interpolator;
+  }
+
+  return result;
+}
+
 std::optional<TransformOperations>
 TransformsStyleInterpolator::parseTransformOperations(
     jsi::Runtime &rt,
@@ -148,8 +155,8 @@ TransformKeyframe TransformsStyleInterpolator::createTransformKeyframe(
 
   TransformOperations fromOperationsResult, toOperationsResult;
 
-  for (size_t i = 0, j = 0;
-       i < fromOperations.size() && j < toOperations.size();) {
+  size_t i = 0, j = 0;
+  while (i < fromOperations.size() && j < toOperations.size()) {
     const auto &fromOperation = fromOperations[i];
     const auto &toOperation = toOperations[j];
     const auto &fromType = fromOperation->getType();
@@ -187,21 +194,38 @@ TransformKeyframe TransformsStyleInterpolator::createTransformKeyframe(
                 fromOperations.begin() + i, fromOperations.end())));
         toOperationsResult.emplace_back(std::make_shared<MatrixOperation>(
             TransformOperations(toOperations.begin() + j, toOperations.end())));
-        break;
+        return {
+            offset,
+            std::move(fromOperationsResult),
+            std::move(toOperationsResult)};
       } else if (!fromExistsLaterInTo) {
         // If fromOperation does not exist later in toOperations, we can
         // interpolate it to the default value
         fromOperationsResult.emplace_back(fromOperation);
-        // TODO - add default in toOperationsResult of type fromType
+        toOperationsResult.emplace_back(getDefaultOperationOfType(toType));
         i++;
       } else {
         // If toOperation does not exist later in fromOperations, we can
         // interpolate it from the default value
+        fromOperationsResult.emplace_back(getDefaultOperationOfType(fromType));
         toOperationsResult.emplace_back(toOperation);
-        // TODO - add default in fromOperationsResult of type toType
         j++;
       }
     }
+  }
+
+  // Pair remaining operations with default values
+  // If from operations are remaining
+  for (; i < fromOperations.size(); ++i) {
+    fromOperationsResult.emplace_back(fromOperations[i]);
+    toOperationsResult.emplace_back(
+        getDefaultOperationOfType(fromOperations[i]->getType()));
+  }
+  // If to operations are remaining
+  for (; j < toOperations.size(); ++j) {
+    fromOperationsResult.emplace_back(
+        getDefaultOperationOfType(toOperations[j]->getType()));
+    toOperationsResult.emplace_back(toOperations[j]);
   }
 
   return {
@@ -223,7 +247,8 @@ void TransformsStyleInterpolator::addConvertedOperations(
     // can contain more operations derived from the source operation (we need to
     // pair them with operations of the same type with default values)
     if (k > 0) {
-      // TODO - add transform operations with default values to the target
+      targetResult.emplace_back(
+          getDefaultOperationOfType(convertedOps[k]->getType()));
     }
   }
 }
@@ -235,11 +260,17 @@ TransformOperations TransformsStyleInterpolator::getFallbackValue(
       .value_or(TransformOperations{});
 }
 
+std::shared_ptr<TransformOperation>
+TransformsStyleInterpolator::getDefaultOperationOfType(
+    TransformOperationType type) const {
+  return interpolators_.at(type)->getDefaultOperation();
+}
+
 TransformOperations TransformsStyleInterpolator::resolveTransformOperations(
     const std::optional<TransformOperations> &unresolvedOperations,
     const InterpolationUpdateContext &context) const {
   // TODO - implement once interpolators are ready
-  return {};
+  return unresolvedOperations.value_or(TransformOperations{});
 }
 
 TransformKeyframe TransformsStyleInterpolator::getKeyframeAtIndex(
@@ -301,11 +332,11 @@ void TransformsStyleInterpolator::updateCurrentKeyframe(
   }
 
   while (keyframeIndex_ < keyframes_.size() - 1 &&
-         keyframes_[keyframeIndex_].offset <= context.progress)
+         keyframes_[keyframeIndex_ + 1].offset < context.progress)
     ++keyframeIndex_;
 
   while (keyframeIndex_ > 0 &&
-         keyframes_[keyframeIndex_ - 1].offset >= context.progress)
+         keyframes_[keyframeIndex_].offset >= context.progress)
     --keyframeIndex_;
 
   if (context.previousProgress.has_value()) {
@@ -352,13 +383,10 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
   for (size_t i = 0; i < fromOperations.size(); ++i) {
     const auto fromOperation = fromOperations[i];
     const auto toOperation = toOperations[i];
-    // TODO - interpolate operation
-    LOG(INFO) << "Interpolating from: "
-              << stringifyJSIValue(
-                     context.rt, fromOperation->toJSIValue(context.rt))
-              << " to: "
-              << stringifyJSIValue(
-                     context.rt, toOperation->toJSIValue(context.rt));
+
+    const auto &interpolator = interpolators_.at(fromOperation->getType());
+    result.emplace_back(interpolator->interpolate(
+        localProgress, *fromOperation, *toOperation, context));
   }
 
   return result;

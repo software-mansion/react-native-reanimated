@@ -5,14 +5,17 @@
 
 namespace reanimated {
 
-class MatrixTransformInterpolator : public TransformInterpolator {
+class MatrixTransformInterpolator
+    : public TransformInterpolatorBase<MatrixOperation> {
  public:
-  MatrixTransformInterpolator(
-      const TransformMatrix &defaultValue,
-      const PropertyPath &propertyPath);
+  MatrixTransformInterpolator(const TransformMatrix &defaultValue);
 
- private:
-  const TransformMatrix defaultValue_;
+ protected:
+  MatrixOperation interpolate(
+      const double progress,
+      const MatrixOperation &fromOperation,
+      const MatrixOperation &toOperation,
+      const InterpolationUpdateContext &context) const override;
 };
 
 } // namespace reanimated

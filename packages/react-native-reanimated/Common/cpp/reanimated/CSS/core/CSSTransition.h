@@ -7,8 +7,6 @@
 
 namespace reanimated {
 
-using namespace worklets;
-
 class CSSTransition {
  public:
   using PartialSettings = PartialCSSTransitionSettings;

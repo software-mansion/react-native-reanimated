@@ -136,8 +136,9 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
 jsi::Value TransformOperation::toJSIValue(jsi::Runtime &rt) const {
   jsi::Object obj(rt);
   obj.setProperty(
-      rt, "type", jsi::String::createFromUtf8(rt, getOperationName(getType())));
-  obj.setProperty(rt, "value", valueToJSIValue(rt));
+      rt,
+      jsi::String::createFromUtf8(rt, getOperationName(getType())),
+      valueToJSIValue(rt));
   return obj;
 }
 
@@ -163,22 +164,16 @@ jsi::Value RotateOperation::valueToJSIValue(jsi::Runtime &rt) const {
 }
 
 // Derived RotateXOperation
-RotateXOperation::RotateXOperation(const AngleValue &value)
-    : RotateOperation(value) {}
 TransformOperationType RotateXOperation::getType() const {
   return TransformOperationType::RotateX;
 }
 
 // Derived RotateYOperation
-RotateYOperation::RotateYOperation(const AngleValue &value)
-    : RotateOperation(value) {}
 TransformOperationType RotateYOperation::getType() const {
   return TransformOperationType::RotateY;
 }
 
 // Derived RotateZOperation
-RotateZOperation::RotateZOperation(const AngleValue &value)
-    : RotateOperation(value) {}
 TransformOperationType RotateZOperation::getType() const {
   return TransformOperationType::RotateZ;
 }
@@ -219,13 +214,11 @@ TransformOperations ScaleOperation::convertTo(
 }
 
 // Derived ScaleXOperation
-ScaleXOperation::ScaleXOperation(double value) : ScaleOperation(value) {}
 TransformOperationType ScaleXOperation::getType() const {
   return TransformOperationType::ScaleX;
 }
 
 // Derived ScaleYOperation
-ScaleYOperation::ScaleYOperation(double value) : ScaleOperation(value) {}
 TransformOperationType ScaleYOperation::getType() const {
   return TransformOperationType::ScaleY;
 }
