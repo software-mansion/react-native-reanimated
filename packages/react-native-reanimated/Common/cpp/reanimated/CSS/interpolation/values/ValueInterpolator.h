@@ -1,10 +1,16 @@
 #pragma once
 
-#include <reanimated/CSS/interpolation/Interpolator.h>
+#include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
-namespace reanimated {
+#include <jsi/jsi.h>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 using namespace facebook;
+
+namespace reanimated {
 
 template <typename T>
 struct Keyframe {
@@ -14,7 +20,7 @@ struct Keyframe {
 };
 
 template <typename T>
-class ValueInterpolator : public Interpolator {
+class ValueInterpolator : public PropertyInterpolator {
  public:
   explicit ValueInterpolator(
       const std::optional<T> &defaultStyleValue,

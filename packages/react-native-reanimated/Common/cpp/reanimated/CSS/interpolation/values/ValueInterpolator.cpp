@@ -1,4 +1,4 @@
-#include <reanimated/CSS/interpolation/properties/ValueInterpolator.h>
+#include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
 namespace reanimated {
 
@@ -7,7 +7,7 @@ ValueInterpolator<T>::ValueInterpolator(
     const std::optional<T> &defaultStyleValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const PropertyPath &propertyPath)
-    : Interpolator(propertyPath),
+    : PropertyInterpolator(propertyPath),
       viewStylesRepository_(viewStylesRepository),
       defaultStyleValue_(defaultStyleValue) {}
 
@@ -274,7 +274,7 @@ template class ValueInterpolator<int>;
 template class ValueInterpolator<double>;
 template class ValueInterpolator<std::string>;
 template class ValueInterpolator<ColorArray>;
-template class ValueInterpolator<RelativeOrNumericInterpolatorValue>;
+template class ValueInterpolator<UnitValue>;
 template class ValueInterpolator<Transform>;
 
 } // namespace reanimated

@@ -1,13 +1,14 @@
 #pragma once
 
-#include <reanimated/CSS/util/interpolators.h>
+#include <reanimated/CSS/interpolation/PropertyInterpolator.h>
+#include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
 
 namespace reanimated {
 
-class ObjectPropertiesInterpolator : public PropertyInterpolator {
+class TransformsStyleInterpolator : public PropertyInterpolator {
  public:
-  ObjectPropertiesInterpolator(
-      const PropertiesInterpolatorFactories &factories,
+  TransformsStyleInterpolator(
+      const TransformsInterpolatorFactories &factories,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath);
 
@@ -29,14 +30,8 @@ class ObjectPropertiesInterpolator : public PropertyInterpolator {
       const jsi::Value &newStyleValue) override;
 
  private:
-  const PropertiesInterpolatorFactories &factories_;
+  const TransformsInterpolatorFactories &factories_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-
-  PropertiesInterpolators interpolators_;
-
-  jsi::Value mapInterpolators(
-      jsi::Runtime &rt,
-      std::function<jsi::Value(PropertyInterpolator &)> callback) const;
 };
 
 } // namespace reanimated

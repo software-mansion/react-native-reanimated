@@ -29,7 +29,7 @@ void TransitionStyleInterpolator::updateProperties(
         : jsi::Value::undefined();
 
     if (interpolatorIt == interpolators_.end()) {
-      const auto newInterpolator = createInterpolator(
+      const auto newInterpolator = createPropertyInterpolator(
           propertyName, {}, styleInterpolatorFactories, viewStylesRepository_);
       interpolatorIt =
           interpolators_.emplace(propertyName, newInterpolator).first;

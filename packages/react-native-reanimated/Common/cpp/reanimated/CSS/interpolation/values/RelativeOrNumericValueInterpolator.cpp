@@ -1,14 +1,14 @@
-#include <reanimated/CSS/interpolation/properties/RelativeOrNumericValueInterpolator.h>
+#include <reanimated/CSS/interpolation/values/RelativeOrNumericValueInterpolator.h>
 
 namespace reanimated {
 
 RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
-    const TargetType relativeTo,
+    const RelativeTo relativeTo,
     const std::string &relativeProperty,
-    const std::optional<RelativeOrNumericInterpolatorValue> &defaultValue,
+    const std::optional<UnitValue> &defaultValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const PropertyPath &propertyPath)
-    : ValueInterpolator<RelativeOrNumericInterpolatorValue>(
+    : ValueInterpolator<UnitValue>(
           defaultValue,
           viewStylesRepository,
           propertyPath),
@@ -16,34 +16,15 @@ RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
       relativeProperty_(relativeProperty),
       viewStylesRepository_(viewStylesRepository) {};
 
-double RelativeOrNumericValueInterpolator::percentageToNumber(
-    const std::string &value) {
-  std::string str = value;
-  if (str.back() == '%') {
-    str.pop_back();
-    return std::stod(str) / 100;
-  }
-  throw std::runtime_error(
-      "[Reanimated] RelativeOrNumericValueInterpolator: unsupported value: " +
-      str);
-}
-
-RelativeOrNumericInterpolatorValue
-RelativeOrNumericValueInterpolator::prepareKeyframeValue(
+UnitValue RelativeOrNumericValueInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
-  // Numeric value
-  if (value.isNumber()) {
-    return {value.asNumber(), false};
-  }
-  // Relative value
-  std::string str = value.asString(rt).utf8(rt);
-  return {percentageToNumber(str), true};
+  return UnitValue::fromJSIValue(rt, value);
 }
 
 jsi::Value RelativeOrNumericValueInterpolator::convertResultToJSI(
     jsi::Runtime &rt,
-    const RelativeOrNumericInterpolatorValue &value) const {
+    const UnitValue &value) const {
   if (value.isRelative) {
     return jsi::String::createFromUtf8(
         rt, std::to_string(value.value * 100) + "%");
@@ -51,11 +32,10 @@ jsi::Value RelativeOrNumericValueInterpolator::convertResultToJSI(
   return jsi::Value(value.value);
 }
 
-RelativeOrNumericInterpolatorValue
-RelativeOrNumericValueInterpolator::interpolate(
+UnitValue RelativeOrNumericValueInterpolator::interpolate(
     const double localProgress,
-    const RelativeOrNumericInterpolatorValue &fromValue,
-    const RelativeOrNumericInterpolatorValue &toValue,
+    const UnitValue &fromValue,
+    const UnitValue &toValue,
     const InterpolationUpdateContext context) const {
   if (localProgress == 0) {
     return fromValue;
@@ -83,7 +63,7 @@ double RelativeOrNumericValueInterpolator::getRelativeValue(
     const ShadowNode::Shared &shadowNode) const {
   jsi::Value relativeValue;
 
-  if (relativeTo_ == TargetType::PARENT) {
+  if (relativeTo_ == RelativeTo::PARENT) {
     relativeValue =
         viewStylesRepository_->getParentNodeProp(shadowNode, relativeProperty_);
   } else {
