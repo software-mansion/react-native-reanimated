@@ -31,7 +31,7 @@ class ValueInterpolator : public PropertyInterpolator {
       const jsi::Value &oldStyleValue,
       const jsi::Value &newStyleValue) override;
 
-  jsi::Value update(const InterpolationUpdateContext context) override;
+  jsi::Value update(const InterpolationUpdateContext &context) override;
 
  protected:
   std::optional<T> defaultStyleValue_; // Default style value
@@ -65,7 +65,7 @@ class ValueInterpolator : public PropertyInterpolator {
       const InterpolationUpdateContext context) const;
 
   ValueKeyframe<T> getKeyframeAtIndex(
-      int index,
+      size_t index,
       bool shouldResolve,
       const InterpolationUpdateContext context) const;
 

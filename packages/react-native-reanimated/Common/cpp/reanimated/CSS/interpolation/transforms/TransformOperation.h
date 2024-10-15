@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/common/definitions.h>
+#include <reanimated/CSS/interpolation/transforms/TransformMatrix.h>
 
 using namespace facebook;
 
@@ -25,19 +26,22 @@ enum class TransformOperationType {
 
 // Base class for TransformOperation
 struct TransformOperation {
-  virtual ~TransformOperation() = default;
-
   virtual TransformOperationType getType() const = 0;
   virtual jsi::Value valueToJSIValue(jsi::Runtime &rt) const = 0;
 
+  void assertCanConvertTo(TransformOperationType type) const;
+  virtual bool canConvertTo(TransformOperationType type) const;
+  virtual std::vector<std::shared_ptr<TransformOperation>> convertTo(
+      TransformOperationType type) const;
+
   static std::string getOperationName(TransformOperationType type);
-  static std::unique_ptr<TransformOperation> fromJSIValue(
+  static std::shared_ptr<TransformOperation> fromJSIValue(
       jsi::Runtime &rt,
       const jsi::Value &value);
   jsi::Value toJSIValue(jsi::Runtime &rt) const;
 };
 
-using TransformOperations = std::vector<std::unique_ptr<TransformOperation>>;
+using TransformOperations = std::vector<std::shared_ptr<TransformOperation>>;
 
 /**
  * Concrete transform operations
@@ -73,6 +77,8 @@ struct RotateYOperation : public RotateOperation {
 struct RotateZOperation : public RotateOperation {
   RotateZOperation(const AngleValue &value);
   TransformOperationType getType() const override;
+  bool canConvertTo(TransformOperationType type) const override;
+  TransformOperations convertTo(TransformOperationType type) const override;
 };
 
 // Scale
@@ -82,6 +88,8 @@ struct ScaleOperation : public TransformOperation {
   ScaleOperation(double value);
   TransformOperationType getType() const override;
   jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
+  bool canConvertTo(TransformOperationType type) const final;
+  TransformOperations convertTo(TransformOperationType type) const final;
 };
 
 struct ScaleXOperation : public ScaleOperation {
@@ -130,9 +138,12 @@ struct SkewYOperation : public TransformOperation {
 
 // Matrix
 struct MatrixOperation : public TransformOperation {
-  const MatrixArray value;
+  const TransformMatrix value;
+  // Operations to apply on the matrix before resolving the final value
+  const TransformOperations operations;
 
-  MatrixOperation(const MatrixArray &value);
+  MatrixOperation(const TransformMatrix &value);
+  MatrixOperation(const TransformOperations &operations);
   TransformOperationType getType() const override;
   jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
 };
