@@ -44,26 +44,31 @@ TransformOperationType getTransformOperationType(const std::string &property) {
   }
 }
 
-bool TransformOperation::canConvertTo(TransformOperationType type) const {
+bool TransformOperation::canConvertTo(const TransformOperationType type) const {
   return false;
 }
 
-void TransformOperation::assertCanConvertTo(TransformOperationType type) const {
+std::string getOperationNameFromType(const TransformOperationType type) {
+  return transformOperationStrings[static_cast<size_t>(type)];
+}
+
+void TransformOperation::assertCanConvertTo(
+    const TransformOperationType type) const {
   if (!canConvertTo(type)) {
     throw std::invalid_argument(
         "[Reanimated] Cannot convert transform operation to type: " +
-        getOperationName(type));
+        getOperationNameFromType(type));
   }
 }
 
 TransformOperations TransformOperation::convertTo(
-    TransformOperationType type) const {
+    const TransformOperationType type) const {
   throw std::invalid_argument(
       "[Reanimated] Cannot convert transform operation to type: " +
-      getOperationName(type));
+      getOperationNameFromType(type));
 }
 
-std::string TransformOperation::getOperationName(TransformOperationType type) {
+std::string TransformOperation::getOperationName() const {
   return transformOperationStrings[static_cast<size_t>(type)];
 }
 
@@ -137,7 +142,7 @@ jsi::Value TransformOperation::toJSIValue(jsi::Runtime &rt) const {
   jsi::Object obj(rt);
   obj.setProperty(
       rt,
-      jsi::String::createFromUtf8(rt, getOperationName(getType())),
+      jsi::String::createFromUtf8(rt, getOperationName()),
       valueToJSIValue(rt));
   return obj;
 }
@@ -145,61 +150,75 @@ jsi::Value TransformOperation::toJSIValue(jsi::Runtime &rt) const {
 /**
  * Concrete transform operations
  */
+TransformOperation::TransformOperation(const TransformOperationType type)
+    : type(type) {};
+
 // Perspective
-PerspectiveOperation::PerspectiveOperation(double value) : value(value) {}
-TransformOperationType PerspectiveOperation::getType() const {
-  return TransformOperationType::Perspective;
-}
+PerspectiveOperation::PerspectiveOperation(const double value)
+    : TransformOperation(TransformOperationType::Perspective), value(value) {}
 jsi::Value PerspectiveOperation::valueToJSIValue(jsi::Runtime &rt) const {
   return jsi::Value(value);
 }
+TransformMatrix PerspectiveOperation::toMatrix() const {
+  return TransformMatrix::Perspective(value);
+}
 
 // Rotate
-RotateOperation::RotateOperation(const AngleValue &value) : value(value) {}
-TransformOperationType RotateOperation::getType() const {
-  return TransformOperationType::Rotate;
-}
+RotateOperation::RotateOperation(const AngleValue &value)
+    : TransformOperation(TransformOperationType::Rotate), value(value) {}
+RotateOperation::RotateOperation(
+    const TransformOperationType type,
+    const AngleValue &value)
+    : TransformOperation(type), value(value) {}
 jsi::Value RotateOperation::valueToJSIValue(jsi::Runtime &rt) const {
   return value.toJSIValue(rt);
 }
-
-// Derived RotateXOperation
-TransformOperationType RotateXOperation::getType() const {
-  return TransformOperationType::RotateX;
+TransformMatrix RotateOperation::toMatrix() const {
+  return TransformMatrix::RotateZ(value.value);
 }
 
-// Derived RotateYOperation
-TransformOperationType RotateYOperation::getType() const {
-  return TransformOperationType::RotateY;
+RotateXOperation::RotateXOperation(const AngleValue &value)
+    : RotateOperation(TransformOperationType::RotateX, value) {}
+TransformMatrix RotateXOperation::toMatrix() const {
+  return TransformMatrix::RotateX(value.value);
 }
 
-// Derived RotateZOperation
-TransformOperationType RotateZOperation::getType() const {
-  return TransformOperationType::RotateZ;
+RotateYOperation::RotateYOperation(const AngleValue &value)
+    : RotateOperation(TransformOperationType::RotateY, value) {}
+TransformMatrix RotateYOperation::toMatrix() const {
+  return TransformMatrix::RotateY(value.value);
 }
-bool RotateZOperation::canConvertTo(TransformOperationType type) const {
+
+RotateZOperation::RotateZOperation(const AngleValue &value)
+    : RotateOperation(TransformOperationType::RotateZ, value) {}
+bool RotateZOperation::canConvertTo(const TransformOperationType type) const {
   return type == TransformOperationType::Rotate;
 }
 TransformOperations RotateZOperation::convertTo(
-    TransformOperationType type) const {
+    const TransformOperationType type) const {
   assertCanConvertTo(type);
   return {std::make_shared<RotateOperation>(value)};
 }
+TransformMatrix RotateZOperation::toMatrix() const {
+  return TransformMatrix::RotateZ(value.value);
+}
 
 // Scale
-ScaleOperation::ScaleOperation(double value) : value(value) {}
-TransformOperationType ScaleOperation::getType() const {
-  return TransformOperationType::Scale;
-}
+ScaleOperation::ScaleOperation(const double value)
+    : TransformOperation(TransformOperationType::Scale), value(value) {}
+ScaleOperation::ScaleOperation(
+    const TransformOperationType type,
+    const double value)
+    : TransformOperation(type), value(value) {}
 jsi::Value ScaleOperation::valueToJSIValue(jsi::Runtime &rt) const {
   return jsi::Value(value);
 }
-bool ScaleOperation::canConvertTo(TransformOperationType type) const {
+bool ScaleOperation::canConvertTo(const TransformOperationType type) const {
   return type == TransformOperationType::ScaleX ||
       type == TransformOperationType::ScaleY;
 }
 TransformOperations ScaleOperation::convertTo(
-    TransformOperationType type) const {
+    const TransformOperationType type) const {
   assertCanConvertTo(type);
 
   if (type == TransformOperationType::ScaleX) {
@@ -212,62 +231,148 @@ TransformOperations ScaleOperation::convertTo(
         std::make_shared<ScaleXOperation>(value)};
   }
 }
-
-// Derived ScaleXOperation
-TransformOperationType ScaleXOperation::getType() const {
-  return TransformOperationType::ScaleX;
+TransformMatrix ScaleOperation::toMatrix() const {
+  return TransformMatrix::Scale(value);
 }
 
-// Derived ScaleYOperation
-TransformOperationType ScaleYOperation::getType() const {
-  return TransformOperationType::ScaleY;
+ScaleXOperation::ScaleXOperation(const double value)
+    : ScaleOperation(TransformOperationType::ScaleX, value) {};
+TransformMatrix ScaleXOperation::toMatrix() const {
+  return TransformMatrix::ScaleX(value);
+}
+
+ScaleYOperation::ScaleYOperation(const double value)
+    : ScaleOperation(TransformOperationType::ScaleY, value) {};
+TransformMatrix ScaleYOperation::toMatrix() const {
+  return TransformMatrix::ScaleY(value);
 }
 
 // Translate
-TranslateXOperation::TranslateXOperation(const UnitValue &value)
-    : value(value) {}
-TransformOperationType TranslateXOperation::getType() const {
-  return TransformOperationType::TranslateX;
+TranslateOperation::TranslateOperation(
+    const TransformOperationType type,
+    const UnitValue &value)
+    : TransformOperation(type), value(value) {}
+bool TranslateOperation::isRelative() const {
+  return value.isRelative;
 }
-jsi::Value TranslateXOperation::valueToJSIValue(jsi::Runtime &rt) const {
+jsi::Value TranslateOperation::valueToJSIValue(jsi::Runtime &rt) const {
   return value.toJSIValue(rt);
+}
+TransformMatrix TranslateOperation::toMatrix() const {
+  return toMatrix(value.value);
+}
+TransformMatrix TranslateOperation::toMatrix(
+    const RelativeTo relativeTo,
+    const std::string &relativeProperty,
+    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
+  if (!value.isRelative) {
+    return toMatrix();
+  }
+  const auto &relativeValue = viewStylesRepository->getRelativeProperty(
+      relativeTo, relativeProperty, shadowNode);
+  return toMatrix(
+      relativeValue.isUndefined() ? 0 : value.value * relativeValue.asNumber());
+}
+
+TranslateXOperation::TranslateXOperation(const UnitValue &value)
+    : TranslateOperation(TransformOperationType::TranslateX, value) {};
+TransformMatrix TranslateXOperation::toMatrix(
+    const double resolvedValue) const {
+  if (value.isRelative) {
+    throw std::invalid_argument(
+        "[Reanimated] Cannot convert relative translateX to the matrix.");
+  }
+  return TransformMatrix::TranslateX(resolvedValue);
 }
 
 TranslateYOperation::TranslateYOperation(const UnitValue &value)
-    : value(value) {}
-TransformOperationType TranslateYOperation::getType() const {
-  return TransformOperationType::TranslateY;
-}
-jsi::Value TranslateYOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  return value.toJSIValue(rt);
+    : TranslateOperation(TransformOperationType::TranslateY, value) {};
+TransformMatrix TranslateYOperation::toMatrix(
+    const double resolvedValue) const {
+  if (value.isRelative) {
+    throw std::invalid_argument(
+        "[Reanimated] Cannot convert relative translateY to the matrix.");
+  }
+  return TransformMatrix::TranslateY(resolvedValue);
 }
 
 // Skew
-SkewXOperation::SkewXOperation(const AngleValue &value) : value(value) {}
-TransformOperationType SkewXOperation::getType() const {
-  return TransformOperationType::SkewX;
-}
-jsi::Value SkewXOperation::valueToJSIValue(jsi::Runtime &rt) const {
+SkewOperation::SkewOperation(
+    const TransformOperationType type,
+    const AngleValue &value)
+    : TransformOperation(type), value(value) {};
+jsi::Value SkewOperation::valueToJSIValue(jsi::Runtime &rt) const {
   return value.toJSIValue(rt);
 }
 
-SkewYOperation::SkewYOperation(const AngleValue &value) : value(value) {}
-TransformOperationType SkewYOperation::getType() const {
-  return TransformOperationType::SkewY;
+SkewXOperation::SkewXOperation(const AngleValue &value)
+    : SkewOperation(TransformOperationType::SkewX, value) {};
+TransformMatrix SkewXOperation::toMatrix() const {
+  return TransformMatrix::SkewX(value.value);
 }
-jsi::Value SkewYOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  return value.toJSIValue(rt);
+
+SkewYOperation::SkewYOperation(const AngleValue &value)
+    : SkewOperation(TransformOperationType::SkewY, value) {};
+TransformMatrix SkewYOperation::toMatrix() const {
+  return TransformMatrix::SkewY(value.value);
 }
 
 // Matrix
-MatrixOperation::MatrixOperation(const TransformMatrix &value) : value(value) {}
-MatrixOperation::MatrixOperation(const TransformOperations &operations)
-    : operations(operations) {}
-TransformOperationType MatrixOperation::getType() const {
-  return TransformOperationType::Matrix;
+std::variant<TransformMatrix, TransformOperations> simplifyOperations(
+    const TransformOperations &operations) {
+  TransformOperations simplifiedOperations;
+  TransformMatrix matrix = TransformMatrix::Identity();
+  bool hasSimplifications = false;
+
+  for (const auto &operation : operations) {
+    if (!operation->isRelative()) {
+      matrix = matrix * operation->toMatrix();
+      hasSimplifications = true;
+    } else {
+      if (hasSimplifications) {
+        simplifiedOperations.emplace_back(
+            std::make_shared<MatrixOperation>(matrix));
+        matrix = TransformMatrix::Identity();
+        hasSimplifications = false;
+      }
+      simplifiedOperations.emplace_back(operation);
+    }
+  }
+
+  if (hasSimplifications) {
+    if (simplifiedOperations.empty()) {
+      return matrix;
+    }
+
+    simplifiedOperations.emplace_back(
+        std::make_shared<MatrixOperation>(matrix));
+  }
+  
+  return simplifiedOperations;
 }
+
+MatrixOperation::MatrixOperation(const TransformMatrix &value)
+    : TransformOperation(TransformOperationType::Matrix),
+      valueOrOperations(value) {}
+MatrixOperation::MatrixOperation(const TransformOperations &operations)
+    // Simplify operations to reduce the number of matrix multiplications during
+    // matrix keyframe interpolation
+    : TransformOperation(TransformOperationType::Matrix),
+      valueOrOperations(simplifyOperations(operations)) {}
 jsi::Value MatrixOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  return value.toJSIValue(rt);
+  if (!std::holds_alternative<TransformMatrix>(valueOrOperations)) {
+    throw std::invalid_argument(
+        "[Reanimated] Cannot convert unprocessed transform operations to the JSI value.");
+  }
+  return std::get<TransformMatrix>(valueOrOperations).toJSIValue(rt);
+}
+TransformMatrix MatrixOperation::toMatrix() const {
+  if (!std::holds_alternative<TransformMatrix>(valueOrOperations)) {
+    throw std::invalid_argument(
+        "[Reanimated] Cannot convert unprocessed transform operations to the matrix.");
+  }
+  return std::get<TransformMatrix>(valueOrOperations);
 }
 
 } // namespace reanimated

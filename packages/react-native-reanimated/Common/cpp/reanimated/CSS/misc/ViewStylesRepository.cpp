@@ -66,6 +66,16 @@ jsi::Value ViewStylesRepository::getParentNodeProp(
   return getNodeProp(parentNode, propName);
 }
 
+jsi::Value ViewStylesRepository::getRelativeProperty(
+    const RelativeTo relativeTo,
+    const std::string &relativeProperty,
+    const ShadowNode::Shared &shadowNode) {
+  if (relativeTo == RelativeTo::PARENT) {
+    return getParentNodeProp(shadowNode, relativeProperty);
+  }
+  return getNodeProp(shadowNode, relativeProperty);
+}
+
 jsi::Value ViewStylesRepository::getStyleProp(
     jsi::Runtime &rt,
     const Tag tag,

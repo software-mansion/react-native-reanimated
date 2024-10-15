@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/util/interpolators.h>
 
 namespace reanimated {

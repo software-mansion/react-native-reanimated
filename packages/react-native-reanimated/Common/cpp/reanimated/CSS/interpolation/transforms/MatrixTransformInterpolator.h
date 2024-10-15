@@ -1,7 +1,7 @@
 #pragma once
 
+#include <reanimated/CSS/common/TransformMatrix.h>
 #include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/TransformMatrix.h>
 
 namespace reanimated {
 
