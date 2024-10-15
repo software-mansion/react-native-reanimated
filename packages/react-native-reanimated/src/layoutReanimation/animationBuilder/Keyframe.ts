@@ -105,7 +105,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     const duration: number = this.durationV ? this.durationV : 500;
     const animationKeyPoints: Array<number> = Array.from(
       Object.keys(this.definitions)
-    ).map((value) => parseInt(value, 10));
+    ).map(parseInt);
 
     const getAnimationDuration = (
       key: string,
