@@ -13,9 +13,9 @@ namespace reanimated {
 using TransformsMap = std::unordered_map<std::string, jsi::Value>;
 
 struct ChangedProps {
-  PropertyValues oldProps;
-  PropertyValues newProps;
-  PropertyNames changedPropertyNames;
+  const PropertyValues oldProps;
+  const PropertyValues newProps;
+  const PropertyNames changedPropertyNames;
 };
 
 std::pair<TransformsMap, PropertyNames>

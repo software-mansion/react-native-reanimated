@@ -146,11 +146,11 @@ TransformKeyframe TransformsStyleInterpolator::createTransformKeyframe(
 
   std::unordered_map<TransformOperationType, size_t> lastIndexInFrom;
   for (size_t idx = 0; idx < fromOperations.size(); ++idx) {
-    lastIndexInFrom[fromOperations[idx]->getType()] = idx;
+    lastIndexInFrom[fromOperations[idx]->type] = idx;
   }
   std::unordered_map<TransformOperationType, size_t> lastIndexInTo;
   for (size_t idx = 0; idx < toOperations.size(); ++idx) {
-    lastIndexInTo[toOperations[idx]->getType()] = idx;
+    lastIndexInTo[toOperations[idx]->type] = idx;
   }
 
   TransformOperations fromOperationsResult, toOperationsResult;
@@ -159,8 +159,8 @@ TransformKeyframe TransformsStyleInterpolator::createTransformKeyframe(
   while (i < fromOperations.size() && j < toOperations.size()) {
     const auto &fromOperation = fromOperations[i];
     const auto &toOperation = toOperations[j];
-    const auto &fromType = fromOperation->getType();
-    const auto &toType = toOperation->getType();
+    const auto &fromType = fromOperation->type;
+    const auto &toType = toOperation->type;
 
     if (fromType == toType) {
       fromOperationsResult.emplace_back(fromOperation);
@@ -219,12 +219,12 @@ TransformKeyframe TransformsStyleInterpolator::createTransformKeyframe(
   for (; i < fromOperations.size(); ++i) {
     fromOperationsResult.emplace_back(fromOperations[i]);
     toOperationsResult.emplace_back(
-        getDefaultOperationOfType(fromOperations[i]->getType()));
+        getDefaultOperationOfType(fromOperations[i]->type));
   }
   // If to operations are remaining
   for (; j < toOperations.size(); ++j) {
     fromOperationsResult.emplace_back(
-        getDefaultOperationOfType(toOperations[j]->getType()));
+        getDefaultOperationOfType(toOperations[j]->type));
     toOperationsResult.emplace_back(toOperations[j]);
   }
 
@@ -237,8 +237,7 @@ void TransformsStyleInterpolator::addConvertedOperations(
     const std::shared_ptr<TransformOperation> &targetOperation,
     TransformOperations &sourceResult,
     TransformOperations &targetResult) const {
-  const auto convertedOps =
-      sourceOperation->convertTo(targetOperation->getType());
+  const auto convertedOps = sourceOperation->convertTo(targetOperation->type);
 
   targetResult.emplace_back(targetOperation);
   for (size_t k = 0; k < convertedOps.size(); ++k) {
@@ -248,7 +247,7 @@ void TransformsStyleInterpolator::addConvertedOperations(
     // pair them with operations of the same type with default values)
     if (k > 0) {
       targetResult.emplace_back(
-          getDefaultOperationOfType(convertedOps[k]->getType()));
+          getDefaultOperationOfType(convertedOps[k]->type));
     }
   }
 }
@@ -384,7 +383,7 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
     const auto fromOperation = fromOperations[i];
     const auto toOperation = toOperations[i];
 
-    const auto &interpolator = interpolators_.at(fromOperation->getType());
+    const auto &interpolator = interpolators_.at(fromOperation->type);
     result.emplace_back(interpolator->interpolate(
         localProgress, *fromOperation, *toOperation, context));
   }

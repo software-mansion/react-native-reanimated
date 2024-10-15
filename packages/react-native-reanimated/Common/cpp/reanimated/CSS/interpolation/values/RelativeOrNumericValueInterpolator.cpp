@@ -64,21 +64,9 @@ UnitValue RelativeOrNumericValueInterpolator::interpolate(
 
 double RelativeOrNumericValueInterpolator::getRelativeValue(
     const ShadowNode::Shared &shadowNode) const {
-  jsi::Value relativeValue;
-
-  if (relativeTo_ == RelativeTo::PARENT) {
-    relativeValue =
-        viewStylesRepository_->getParentNodeProp(shadowNode, relativeProperty_);
-  } else {
-    relativeValue =
-        viewStylesRepository_->getNodeProp(shadowNode, relativeProperty_);
-  }
-
-  if (relativeValue.isUndefined()) {
-    return 0;
-  }
-
-  return relativeValue.asNumber();
+  const jsi::Value &relativeValue = viewStylesRepository_->getRelativeProperty(
+      relativeTo_, relativeProperty_, shadowNode);
+  return relativeValue.isNumber() ? relativeValue.asNumber() : 1;
 }
 
 } // namespace reanimated

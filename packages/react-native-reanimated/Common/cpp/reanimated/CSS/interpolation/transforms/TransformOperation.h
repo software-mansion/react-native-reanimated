@@ -1,9 +1,15 @@
 #pragma once
 
+#include <reanimated/CSS/common/AngleValue.h>
+#include <reanimated/CSS/common/TransformMatrix.h>
+#include <reanimated/CSS/common/UnitValue.h>
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/interpolation/transforms/TransformMatrix.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
+
+#include <variant>
 
 using namespace facebook;
+using namespace react;
 
 namespace reanimated {
 
@@ -28,19 +34,34 @@ TransformOperationType getTransformOperationType(const std::string &property);
 
 // Base class for TransformOperation
 struct TransformOperation {
-  virtual TransformOperationType getType() const = 0;
-  virtual jsi::Value valueToJSIValue(jsi::Runtime &rt) const = 0;
+  const TransformOperationType type;
 
-  void assertCanConvertTo(TransformOperationType type) const;
-  virtual bool canConvertTo(TransformOperationType type) const;
-  virtual std::vector<std::shared_ptr<TransformOperation>> convertTo(
-      TransformOperationType type) const;
+  TransformOperation(const TransformOperationType type);
 
-  static std::string getOperationName(TransformOperationType type);
+  std::string getOperationName() const;
+  virtual bool isRelative() const {
+    return false;
+  }
+
   static std::shared_ptr<TransformOperation> fromJSIValue(
       jsi::Runtime &rt,
       const jsi::Value &value);
   jsi::Value toJSIValue(jsi::Runtime &rt) const;
+  virtual jsi::Value valueToJSIValue(jsi::Runtime &rt) const = 0;
+
+  void assertCanConvertTo(const TransformOperationType type) const;
+  virtual bool canConvertTo(const TransformOperationType type) const;
+  virtual std::vector<std::shared_ptr<TransformOperation>> convertTo(
+      TransformOperationType type) const;
+
+  virtual TransformMatrix toMatrix() const = 0;
+  virtual TransformMatrix toMatrix(
+      const RelativeTo relativeTo,
+      const std::string &relativeProperty,
+      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
+    return toMatrix(); // Default for non-relative operations
+  }
 };
 
 using TransformOperations = std::vector<std::shared_ptr<TransformOperation>>;
@@ -52,9 +73,9 @@ using TransformOperations = std::vector<std::shared_ptr<TransformOperation>>;
 struct PerspectiveOperation : public TransformOperation {
   const double value;
 
-  PerspectiveOperation(double value);
-  TransformOperationType getType() const override;
+  PerspectiveOperation(const double value);
   jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
+  TransformMatrix toMatrix() const override;
 };
 
 // Rotate
@@ -62,92 +83,105 @@ struct RotateOperation : public TransformOperation {
   const AngleValue value;
 
   RotateOperation(const AngleValue &value);
-  TransformOperationType getType() const override;
+  RotateOperation(const TransformOperationType type, const AngleValue &value);
   jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
+  TransformMatrix toMatrix() const override;
 };
 
 struct RotateXOperation : public RotateOperation {
-  using RotateOperation::RotateOperation;
-  TransformOperationType getType() const override;
+  RotateXOperation(const AngleValue &value);
+  TransformMatrix toMatrix() const override;
 };
 
 struct RotateYOperation : public RotateOperation {
-  using RotateOperation::RotateOperation;
-  TransformOperationType getType() const override;
+  RotateYOperation(const AngleValue &value);
+  TransformMatrix toMatrix() const override;
 };
 
 struct RotateZOperation : public RotateOperation {
-  using RotateOperation::RotateOperation;
-  TransformOperationType getType() const override;
-  bool canConvertTo(TransformOperationType type) const override;
-  TransformOperations convertTo(TransformOperationType type) const override;
+  RotateZOperation(const AngleValue &value);
+  bool canConvertTo(const TransformOperationType type) const override;
+  TransformOperations convertTo(
+      const TransformOperationType type) const override;
+  TransformMatrix toMatrix() const override;
 };
 
 // Scale
 struct ScaleOperation : public TransformOperation {
   const double value;
 
-  ScaleOperation(double value);
-  TransformOperationType getType() const override;
+  ScaleOperation(const double value);
+  ScaleOperation(const TransformOperationType type, const double value);
   jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
-  bool canConvertTo(TransformOperationType type) const final;
-  TransformOperations convertTo(TransformOperationType type) const final;
+  bool canConvertTo(const TransformOperationType type) const final;
+  TransformOperations convertTo(const TransformOperationType type) const final;
+  TransformMatrix toMatrix() const override;
 };
 
 struct ScaleXOperation : public ScaleOperation {
-  using ScaleOperation::ScaleOperation;
-  TransformOperationType getType() const override;
+  ScaleXOperation(const double value);
+  TransformMatrix toMatrix() const override;
 };
 
 struct ScaleYOperation : public ScaleOperation {
-  using ScaleOperation::ScaleOperation;
-  TransformOperationType getType() const override;
+  ScaleYOperation(const double value);
+  TransformMatrix toMatrix() const override;
 };
 
 // Translate
-struct TranslateXOperation : public TransformOperation {
+struct TranslateOperation : public TransformOperation {
   const UnitValue value;
 
-  TranslateXOperation(const UnitValue &value);
-  TransformOperationType getType() const override;
+  TranslateOperation(const TransformOperationType type, const UnitValue &value);
+  bool isRelative() const override;
   jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
+  virtual TransformMatrix toMatrix(const double resolvedValue) const = 0;
+  TransformMatrix toMatrix() const override;
+  TransformMatrix toMatrix(
+      const RelativeTo relativeTo,
+      const std::string &relativeProperty,
+      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+      override;
 };
 
-struct TranslateYOperation : public TransformOperation {
-  const UnitValue value;
+struct TranslateXOperation : public TranslateOperation {
+  TranslateXOperation(const UnitValue &value);
+  TransformMatrix toMatrix(const double resolvedValue) const override;
+};
 
+struct TranslateYOperation : public TranslateOperation {
   TranslateYOperation(const UnitValue &value);
-  TransformOperationType getType() const override;
-  jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
+  TransformMatrix toMatrix(const double resolvedValue) const override;
 };
 
 // Skew
-struct SkewXOperation : public TransformOperation {
+struct SkewOperation : public TransformOperation {
   const AngleValue value;
 
-  SkewXOperation(const AngleValue &value);
-  TransformOperationType getType() const override;
+  SkewOperation(const TransformOperationType type, const AngleValue &value);
   jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
 };
 
-struct SkewYOperation : public TransformOperation {
-  const AngleValue value;
+struct SkewXOperation : public SkewOperation {
+  SkewXOperation(const AngleValue &value);
+  TransformMatrix toMatrix() const override;
+};
 
+struct SkewYOperation : public SkewOperation {
   SkewYOperation(const AngleValue &value);
-  TransformOperationType getType() const override;
-  jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
+  TransformMatrix toMatrix() const override;
 };
 
 // Matrix
 struct MatrixOperation : public TransformOperation {
-  const TransformMatrix value;
-  // Operations to apply on the matrix before resolving the final value
-  const TransformOperations operations;
+  const std::variant<TransformMatrix, TransformOperations> valueOrOperations;
 
   MatrixOperation(const TransformMatrix &value);
   MatrixOperation(const TransformOperations &operations);
-  TransformOperationType getType() const override;
+
   jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
+  TransformMatrix toMatrix() const override;
 };
 
 } // namespace reanimated
