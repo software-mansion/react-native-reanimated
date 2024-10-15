@@ -2,33 +2,48 @@
 
 namespace reanimated {
 
-UnitValue UnitValue::create(double value) {
-  return {value, false};
-}
+UnitValue::UnitValue(const double value) : value(value), isRelative(false) {}
 
-UnitValue UnitValue::create(const std::string &value) {
+UnitValue::UnitValue(const double value, const bool isRelative)
+    : value(value), isRelative(isRelative) {}
+
+UnitValue::UnitValue(const std::string &value) {
   std::string str = value;
   if (str.back() == '%') {
     str.pop_back();
-    return {std::stod(str) / 100, true};
+    this->value = std::stod(str) / 100;
+    this->isRelative = true;
+  } else {
+    throw std::runtime_error(
+        "[Reanimated] RelativeOrNumericValueInterpolator: unsupported value: " +
+        str);
   }
-  throw std::runtime_error(
-      "[Reanimated] RelativeOrNumericValueInterpolator: unsupported value: " +
-      str);
 }
 
-UnitValue UnitValue::fromJSIValue(jsi::Runtime &rt, const jsi::Value &value) {
+UnitValue::UnitValue(jsi::Runtime &rt, const jsi::Value &value) {
   if (value.isNumber()) {
-    return {value.asNumber(), false};
+    this->value = value.asNumber();
+    this->isRelative = false;
+  } else if (value.isString()) {
+    std::string strValue = value.asString(rt).utf8(rt);
+    *this = UnitValue(strValue); // Delegate to the string constructor
+  } else {
+    throw std::runtime_error(
+        "[Reanimated] RelativeOrNumericValueInterpolator: unsupported value type");
   }
-  if (value.isString()) {
-    return create(value.asString(rt).utf8(rt));
-  }
-  throw std::runtime_error(
-      "[Reanimated] RelativeOrNumericValueInterpolator: unsupported value type");
 }
 
-AngleValue AngleValue::create(const std::string &value) {
+jsi::Value UnitValue::toJSIValue(jsi::Runtime &rt) const {
+  if (isRelative) {
+    return jsi::String::createFromUtf8(rt, std::to_string(value * 100) + "%");
+  } else {
+    return jsi::Value(value);
+  }
+}
+
+AngleValue::AngleValue(const double value) : value(value) {}
+
+AngleValue::AngleValue(const std::string &value) {
   static const std::regex validNumberRegex(R"(^[-+]?\d*\.?\d+$)");
   static const std::unordered_map<std::string, double> unitFactors = {
       {"rad", 1},
@@ -56,18 +71,27 @@ AngleValue AngleValue::create(const std::string &value) {
 
   double numericValue = std::stod(numericPart);
 
-  return AngleValue{numericValue * it->second};
+  this->value = numericValue * it->second;
 }
 
-AngleValue AngleValue::fromJSIValue(
-    jsi::Runtime &rt,
-    const jsi::Value &jsiValue) {
+AngleValue::AngleValue(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   if (!jsiValue.isString()) {
     throw std::invalid_argument(
         "[Reanimated] Invalid angle value: " + stringifyJSIValue(rt, jsiValue));
   }
 
-  return create(jsiValue.asString(rt).utf8(rt));
+  std::string strValue = jsiValue.asString(rt).utf8(rt);
+  *this = AngleValue(strValue);
+}
+
+std::string AngleValue::toString() const {
+  std::ostringstream stream;
+  stream << std::fixed << std::setprecision(4) << value;
+  return stream.str() + "rad";
+}
+
+jsi::Value AngleValue::toJSIValue(jsi::Runtime &rt) const {
+  return jsi::String::createFromUtf8(rt, toString());
 }
 
 } // namespace reanimated

@@ -4,9 +4,9 @@
 
 namespace reanimated {
 
-class TranslateTransformInterpolator : public TransformInterpolator {
+class RelativeOrNumericTransformInterpolator : public TransformInterpolator {
  public:
-  TranslateTransformInterpolator(
+  RelativeOrNumericTransformInterpolator(
       const RelativeTo relativeTo,
       const std::string &relativeProperty,
       const UnitValue &defaultValue,

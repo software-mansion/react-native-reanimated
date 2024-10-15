@@ -11,20 +11,15 @@ class ObjectPropertiesInterpolator : public PropertyInterpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath);
 
-  jsi::Value getCurrentValue(jsi::Runtime &rt) const override;
   jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
 
   jsi::Value update(const InterpolationUpdateContext context) override;
 
-  void updateKeyframes(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      const jsi::Value &keyframes) override;
+  void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
       jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
       const jsi::Value &oldStyleValue,
       const jsi::Value &newStyleValue) override;
 

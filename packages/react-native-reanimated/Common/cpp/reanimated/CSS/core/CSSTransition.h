@@ -5,8 +5,6 @@
 #include <reanimated/CSS/interpolation/TransitionStyleInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
 namespace reanimated {
 
 using namespace worklets;

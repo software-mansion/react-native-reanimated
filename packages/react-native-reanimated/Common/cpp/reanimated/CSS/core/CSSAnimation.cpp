@@ -19,7 +19,7 @@ CSSAnimation::CSSAnimation(
           config.direction,
           config.easingFunction)),
       fillMode_(config.fillMode) {
-  styleInterpolator_.updateKeyframes(rt, shadowNode, config.keyframeStyle);
+  styleInterpolator_.updateKeyframes(rt, config.keyframeStyle);
   // Register the current timestamp in the progress provider as the start
   // timestamp
   progressProvider_.start(startTime);

@@ -5,8 +5,6 @@
 #include <reanimated/CSS/interpolation/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
-#include <react/renderer/core/ShadowNode.h>
-
 #include <chrono>
 
 namespace reanimated {
@@ -43,9 +41,6 @@ class CSSAnimation {
   }
   time_t getStartTime() const {
     return progressProvider_.getStartTime();
-  }
-  jsi::Value getCurrentStyle(jsi::Runtime &rt) const {
-    return styleInterpolator_.getCurrentValue(rt);
   }
   jsi::Value getViewStyle(jsi::Runtime &rt) const {
     return styleInterpolator_.getStyleValue(rt, shadowNode_);

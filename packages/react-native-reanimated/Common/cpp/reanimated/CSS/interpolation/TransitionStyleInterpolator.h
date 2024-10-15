@@ -12,10 +12,7 @@ class TransitionStyleInterpolator {
   TransitionStyleInterpolator(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  void updateProperties(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      const ChangedProps &changedProps);
+  void updateProperties(jsi::Runtime &rt, const ChangedProps &changedProps);
 
   jsi::Value update(
       jsi::Runtime &rt,

@@ -8,7 +8,6 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
 
 void TransitionStyleInterpolator::updateProperties(
     jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
     const ChangedProps &changedProps) {
   const bool hasOldProps = changedProps.oldProps->isObject();
   const bool hasNewProps = changedProps.newProps->isObject();
@@ -36,7 +35,7 @@ void TransitionStyleInterpolator::updateProperties(
     }
 
     interpolatorIt->second->updateKeyframesFromStyleChange(
-        rt, shadowNode, oldValue, newValue);
+        rt, oldValue, newValue);
   }
 }
 

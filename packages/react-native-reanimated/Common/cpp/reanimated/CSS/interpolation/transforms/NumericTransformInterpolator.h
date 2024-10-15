@@ -4,14 +4,14 @@
 
 namespace reanimated {
 
-class SkewTransformInterpolator : public TransformInterpolator {
+class NumericTransformInterpolator : public TransformInterpolator {
  public:
-  SkewTransformInterpolator(
-      const AngleValue &defaultValue,
+  NumericTransformInterpolator(
+      const double &defaultValue,
       const PropertyPath &propertyPath);
 
  private:
-  const AngleValue defaultValue_;
+  const double defaultValue_;
 };
 
 } // namespace reanimated

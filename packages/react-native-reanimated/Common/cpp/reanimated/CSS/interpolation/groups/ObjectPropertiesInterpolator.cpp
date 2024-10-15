@@ -10,13 +10,6 @@ ObjectPropertiesInterpolator::ObjectPropertiesInterpolator(
       factories_(factories),
       viewStylesRepository_(viewStylesRepository) {}
 
-jsi::Value ObjectPropertiesInterpolator::getCurrentValue(
-    jsi::Runtime &rt) const {
-  return mapInterpolators(rt, [&](PropertyInterpolator &interpolator) {
-    return interpolator.getCurrentValue(rt);
-  });
-}
-
 jsi::Value ObjectPropertiesInterpolator::getStyleValue(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode) const {
@@ -34,7 +27,6 @@ jsi::Value ObjectPropertiesInterpolator::update(
 
 void ObjectPropertiesInterpolator::updateKeyframes(
     jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
     const jsi::Value &keyframes) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
   // used  (for now, for simplicity, we only add new ones)
@@ -57,13 +49,12 @@ void ObjectPropertiesInterpolator::updateKeyframes(
           interpolators_.emplace(propertyName, newInterpolator).first;
     }
 
-    interpolatorIt->second->updateKeyframes(rt, shadowNode, keyframes);
+    interpolatorIt->second->updateKeyframes(rt, keyframes);
   }
 }
 
 void ObjectPropertiesInterpolator::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
     const jsi::Value &oldStyleValue,
     const jsi::Value &newStyleValue) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
@@ -87,7 +78,6 @@ void ObjectPropertiesInterpolator::updateKeyframesFromStyleChange(
 
     interpolatorIt->second->updateKeyframesFromStyleChange(
         rt,
-        shadowNode,
         oldStyleValue.isObject()
             ? oldStyleValue.asObject(rt).getProperty(rt, propertyName.c_str())
             : jsi::Value::undefined(),

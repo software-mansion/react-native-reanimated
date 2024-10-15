@@ -160,19 +160,21 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       // Transforms
       {"transform",
        transforms(
-           {{"perspective", perspective(1)},
-            {"rotate", rotate("0rad")},
-            {"rotateX", rotate("0rad")},
-            {"rotateY", rotate("0rad")},
-            {"rotateZ", rotate("0rad")},
-            {"scale", scale(1)},
-            {"scaleX", scale(1)},
-            {"scaleY", scale(1)},
-            {"translateX", translate(RelativeTo::SELF, "width", 0)},
-            {"translateY", translate(RelativeTo::SELF, "height", 0)},
-            {"skewX", skew("0rad")},
-            {"skewY", skew("0rad")},
-            {"matrix", matrix(TransformMatrix::Identity())}})}};
+           {{"perspective", numericTransform(1)},
+            {"rotate", angleTransform("0rad")},
+            {"rotateX", angleTransform("0rad")},
+            {"rotateY", angleTransform("0rad")},
+            {"rotateZ", angleTransform("0rad")},
+            {"scale", numericTransform(1)},
+            {"scaleX", numericTransform(1)},
+            {"scaleY", numericTransform(1)},
+            {"translateX",
+             relativeOrNumericTransform(RelativeTo::SELF, "width", 0)},
+            {"translateY",
+             relativeOrNumericTransform(RelativeTo::SELF, "height", 0)},
+            {"skewX", angleTransform("0rad")},
+            {"skewY", angleTransform("0rad")},
+            {"matrix", matrixTransform(TransformMatrix::Identity())}})}};
 }();
 
 } // namespace reanimated
