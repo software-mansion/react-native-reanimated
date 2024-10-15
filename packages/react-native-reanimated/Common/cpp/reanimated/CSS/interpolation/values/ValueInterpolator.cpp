@@ -75,7 +75,7 @@ void ValueInterpolator<T>::updateKeyframesFromStyleChange(
 
 template <typename T>
 jsi::Value ValueInterpolator<T>::update(
-    const InterpolationUpdateContext context) {
+    const InterpolationUpdateContext &context) {
   updateCurrentKeyframes(context);
 
   const auto localProgress =
@@ -126,14 +126,9 @@ std::optional<T> ValueInterpolator<T>::resolveKeyframeValue(
 
 template <typename T>
 ValueKeyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
-    int index,
+    size_t index,
     bool shouldResolve,
     const InterpolationUpdateContext context) const {
-  // This should never happen
-  if (index < 0 || index >= keyframes_.size()) {
-    throw std::invalid_argument("[Reanimated] Keyframe index out of bounds.");
-  }
-
   const auto keyframe = keyframes_.at(index);
   const double offset = keyframe.offset;
 
@@ -168,11 +163,11 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
     keyframeAfterIndex_ = isProgressLessThanHalf ? 1 : keyframes_.size() - 1;
   }
 
-  while (context.progress < 1 && keyframeAfterIndex_ < keyframes_.size() - 1 &&
+  while (keyframeAfterIndex_ < keyframes_.size() - 1 &&
          keyframes_[keyframeAfterIndex_].offset <= context.progress)
     ++keyframeAfterIndex_;
 
-  while (context.progress > 0 && keyframeAfterIndex_ > 1 &&
+  while (keyframeAfterIndex_ > 1 &&
          keyframes_[keyframeAfterIndex_ - 1].offset >= context.progress)
     --keyframeAfterIndex_;
 
@@ -184,15 +179,17 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
           context);
       keyframeAfter_ = getKeyframeAtIndex(
           keyframeAfterIndex_, keyframeAfterIndex_ < prevAfterIndex, context);
-    }
-
-    if (context.directionChanged && previousValue_.has_value()) {
+    } else if (context.directionChanged && previousValue_.has_value()) {
       const ValueKeyframe<T> keyframe = {
           context.previousProgress.value(), previousValue_.value()};
       if (context.progress < context.previousProgress.value()) {
+        keyframeBefore_ =
+            getKeyframeAtIndex(keyframeAfterIndex_ - 1, false, context);
         keyframeAfter_ = keyframe;
       } else {
         keyframeBefore_ = keyframe;
+        keyframeAfter_ =
+            getKeyframeAtIndex(keyframeAfterIndex_, false, context);
       }
     }
   } else {

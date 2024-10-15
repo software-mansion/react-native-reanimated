@@ -5,12 +5,6 @@
 
 namespace reanimated {
 
-struct TransformKeyframe {
-  double offset;
-  std::optional<std::vector<TransformOperation>> fromOperations;
-  std::optional<std::vector<TransformOperation>> toOperations;
-};
-
 class TransformInterpolator {
  public:
   TransformInterpolator(const PropertyPath &propertyPath)
