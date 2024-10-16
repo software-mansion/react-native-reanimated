@@ -46,7 +46,7 @@ public class NativeProxy extends NativeProxyCommon {
               fabricUIManager,
               valueUnpackerCode);
     } else {
-      CallInvokerHolderImpl holder =
+      CallInvokerHolderImpl callInvokerHolder =
           (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
       mHybridData =
           initHybrid(
