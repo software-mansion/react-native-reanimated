@@ -1,12 +1,9 @@
 package com.swmansion.reanimated;
 
-import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.RuntimeExecutor;
 import com.facebook.react.bridge.queue.MessageQueueThread;
-import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.uimanager.UIManagerHelper;
@@ -15,17 +12,17 @@ import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.nativeProxy.NativeProxyCommon;
 import java.util.HashMap;
-import java.util.Objects;
 
 public class NativeProxy extends NativeProxyCommon {
   @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
 
-  public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(
-      ReactApplicationContext context, String valueUnpackerCode) {
+  public NativeProxy(ReactApplicationContext context, String valueUnpackerCode) {
     super(context);
     ReactFeatureFlagsWrapper.enableMountHooks();
+    CallInvokerHolderImpl holder =
+        (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
 
     FabricUIManager fabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
@@ -34,29 +31,15 @@ public class NativeProxy extends NativeProxyCommon {
 
     ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
 
-    if (context.isBridgeless()) {
-      RuntimeExecutor runtimeExecutor = context.getRuntimeExecutor();
-      mHybridData =
-          initHybridBridgeless(
-              Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
-              runtimeExecutor,
-              mAndroidUIScheduler,
-              LayoutAnimations,
-              messageQueueThread,
-              fabricUIManager,
-              valueUnpackerCode);
-    } else {
-    CallInvokerHolderImpl holder = (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
-      mHybridData =
-          initHybrid(
-              Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
-              callInvokerHolder,
-              mAndroidUIScheduler,
-              LayoutAnimations,
-              messageQueueThread,
-              fabricUIManager,
-              valueUnpackerCode);
-    }
+    mHybridData =
+        initHybrid(
+            context.getJavaScriptContextHolder().get(),
+            holder,
+            mAndroidUIScheduler,
+            LayoutAnimations,
+            messageQueueThread,
+            fabricUIManager,
+            valueUnpackerCode);
     prepareLayoutAnimations(LayoutAnimations);
     installJSIBindings();
     if (BuildConfig.DEBUG) {
@@ -67,15 +50,6 @@ public class NativeProxy extends NativeProxyCommon {
   private native HybridData initHybrid(
       long jsContext,
       CallInvokerHolderImpl jsCallInvokerHolder,
-      AndroidUIScheduler androidUIScheduler,
-      LayoutAnimations LayoutAnimations,
-      MessageQueueThread messageQueueThread,
-      FabricUIManager fabricUIManager,
-      String valueUnpackerCode);
-
-  private native HybridData initHybridBridgeless(
-      long jsContext,
-      RuntimeExecutor runtimeExecutor,
       AndroidUIScheduler androidUIScheduler,
       LayoutAnimations LayoutAnimations,
       MessageQueueThread messageQueueThread,
