@@ -23,7 +23,7 @@ type NativeUpdate = {
 export function createUpdatesContainer() {
   const jsUpdates = makeMutable<Array<JsUpdate>>([]);
   const nativeSnapshots = makeMutable<Array<NativeUpdate>>([]);
-  const brokenNativeSnapshotsOnFabric = makeMutable(false);
+  const unimplementedNativeSnapshotsOnFabric = makeMutable(false);
 
   function _updateNativeSnapshot(updateInfos: JsUpdate[], jsUpdateIndex: number): void {
     'worklet';
@@ -52,6 +52,7 @@ export function createUpdatesContainer() {
 
   function _updateJsSnapshot(newUpdates: JsUpdate[]): void {
     'worklet';
+
     jsUpdates.modify(updates => {
       for (const update of newUpdates) {
         updates.push(update);
@@ -93,7 +94,7 @@ export function createUpdatesContainer() {
       // TODO Implement native snapshots for layout animations on Fabric
       _updateNativeSnapshot([{ tag, update }], jsUpdates.value.length - 1);
     } else {
-      brokenNativeSnapshotsOnFabric.value = true;
+      unimplementedNativeSnapshotsOnFabric.value = true;
     }
     jsUpdates.modify(updates => {
       updates.push({
@@ -160,7 +161,7 @@ export function createUpdatesContainer() {
   }
 
   async function getNativeSnapshots(component?: TestComponent, propsNames: string[] = []): Promise<SingleViewSnapshot> {
-    if (brokenNativeSnapshotsOnFabric.value) {
+    if (unimplementedNativeSnapshotsOnFabric.value) {
       return [];
     }
     const nativeSnapshotsCount = nativeSnapshots.value.length;
