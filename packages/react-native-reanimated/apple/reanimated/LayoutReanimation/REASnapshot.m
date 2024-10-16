@@ -39,15 +39,15 @@ const int DEFAULT_MODAL_TOP_OFFSET = 69; // Default iOS modal is shifted from sc
                 withOffsetY:(double)offsetY
 {
 #if TARGET_OS_OSX
-    NSView *mainWindow = UIApplication.sharedApplication.keyWindow.contentView;
+    NSView *mainWindowView = UIApplication.sharedApplication.keyWindow.contentView;
 #else
   REAUIView *mainWindow = RCTKeyWindow();
 #endif
-  CGPoint absolutePosition = [[view superview] convertPoint:view.center toView:mainWindow];
+  CGPoint absolutePosition = [[view superview] convertPoint:view.center toView:mainWindowView];
   _values = [NSMutableDictionary new];
 #if TARGET_OS_OSX
-  _values[@"windowWidth"] = [NSNumber numberWithDouble:mainWindow.frame.size.width];
-  _values[@"windowHeight"] = [NSNumber numberWithDouble:mainWindow.frame.size.height];
+  _values[@"windowWidth"] = [NSNumber numberWithDouble:mainWindowView.frame.size.width];
+  _values[@"windowHeight"] = [NSNumber numberWithDouble:mainWindowView.frame.size.height];
 #else
   _values[@"windowWidth"] = [NSNumber numberWithDouble:mainWindow.bounds.size.width];
   _values[@"windowHeight"] = [NSNumber numberWithDouble:mainWindow.bounds.size.height];
