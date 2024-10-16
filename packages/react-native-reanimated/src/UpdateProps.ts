@@ -32,6 +32,11 @@ if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
     processColorsInProps(updates);
+    if ('transformOrigin' in updates) {
+      if (!Array.isArray(updates.transformOrigin)) {
+        throw new ReanimatedError('Please use transformOrigin in array form');
+      }
+    }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
 }
