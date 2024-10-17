@@ -43,7 +43,7 @@ interface RuntimeTestRunnerProps {
 export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
   const [component, setComponent] = useState<ReactNode | null>(null);
   const [started, setStarted] = useState<boolean>(false);
-  const [finished, setFinished] = useState<boolean>(false);
+  const [output, setOutput] = useState<boolean | null>(null);
 
   const testSelectionCallbacks = useRef<Set<() => void>>(new Set());
 
@@ -61,8 +61,8 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
 
   async function run() {
     renderLock = configure({ render: setComponent });
-    await runTests();
-    setFinished(true);
+    const testsOutput = await runTests();
+    setOutput(testsOutput);
   }
 
   function handleStartClick() {
@@ -78,13 +78,21 @@ export default function RuntimeTestsRunner({ tests }: RuntimeTestRunnerProps) {
         <>
           <TestSelector tests={tests} testSelectionCallbacks={testSelectionCallbacks} />
           <Pressable onPressOut={handleStartClick} style={button}>
-            <Text style={whiteText}>Run tests</Text>
+            <Text style={whiteText} testID="run">
+              Run tests
+            </Text>
           </Pressable>
         </>
       )}
       {/* Don't render anything if component is undefined to prevent blinking */}
       {component || null}
-      {finished ? <Text style={navyText}>Reload the app to run the tests again</Text> : null}
+      {output !== null ? (
+        <Text style={navyText} testID="DONE">
+          Reload the app to run the tests again
+        </Text>
+      ) : null}
+      {output === true ? <Text testID="OK"> All tests passed</Text> : null}
+      {output === false ? <Text testID="FAIL"> Some tests failed</Text> : null}
     </View>
   );
 }
@@ -167,7 +175,8 @@ function SelectTest({ testSuiteName, selectClick, selectedTests }: SelectTestPro
     <Pressable
       style={[styles.buttonWrapper, isPressed ? styles.pressedButton : {}]}
       onPressIn={() => handleSelectClickIn()}
-      onPressOut={() => handleSelectClickOut()}>
+      onPressOut={() => handleSelectClickOut()}
+      testID={testSuiteName}>
       <View style={[styles.checkbox, selectedTests.get(testSuiteName) ? styles.checkedCheckbox : {}]} />
       <View style={selectButton}>
         <Text style={navyText}>{testSuiteName}</Text>
@@ -197,7 +206,8 @@ function SelectAllButtonProps({ handleSelectAllClick, select }: SelectAllButtonP
     <Pressable
       onPressIn={handleSelectAllClickIn}
       onPressOut={() => handleSelectAllClickOut()}
-      style={[selectAllButton, isPressed ? styles.pressedButton : {}]}>
+      style={[selectAllButton, isPressed ? styles.pressedButton : {}]}
+      testID={select ? 'select' : 'deselect'}>
       <Text style={navyText}>{select ? 'Select all' : 'Deselect all'}</Text>
     </Pressable>
   );
