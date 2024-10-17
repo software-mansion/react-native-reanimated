@@ -76,6 +76,12 @@ class LayoutAnimationsManager {
   std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
   std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;
+  // STYLE_TRANSITION animations are a subset of LAYOUT animations and use the
+  // same array to store the config
+  // We use this additional array to figure out if given LAYOUT animation is
+  // STYLE_TRANSITION too
+  std::unordered_map<int, bool> markLayoutAnimationAsStyleTransition_;
+
   std::unordered_map<int, std::shared_ptr<Shareable>>
       sharedTransitionAnimations_;
   std::unordered_set<int> ignoreProgressAnimationForTag_;

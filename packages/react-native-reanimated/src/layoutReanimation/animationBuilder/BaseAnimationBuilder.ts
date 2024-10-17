@@ -4,6 +4,7 @@ import type {
   EntryExitAnimationFunction,
   AnimationFunction,
   LayoutAnimationFunction,
+  StyleTransitionAnimationFunction,
 } from './commonTypes';
 
 import { ReduceMotion } from '../../commonTypes';
@@ -21,7 +22,10 @@ export class BaseAnimationBuilder {
     this: T
   ) => InstanceType<T>;
 
-  build = (): EntryExitAnimationFunction | LayoutAnimationFunction => {
+  build = ():
+    | EntryExitAnimationFunction
+    | LayoutAnimationFunction
+    | StyleTransitionAnimationFunction => {
     throw new ReanimatedError('Unimplemented method in child class.');
   };
 
@@ -157,7 +161,10 @@ export class BaseAnimationBuilder {
 
   static build<T extends typeof BaseAnimationBuilder>(
     this: T
-  ): EntryExitAnimationFunction | LayoutAnimationFunction {
+  ):
+    | EntryExitAnimationFunction
+    | LayoutAnimationFunction
+    | StyleTransitionAnimationFunction {
     const instance = this.createInstance();
     return instance.build();
   }

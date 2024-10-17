@@ -219,6 +219,7 @@ export {
   // Transitions
   Layout,
   LinearTransition,
+  LinearStyleTransition,
   FadingTransition,
   SequencedTransition,
   JumpingTransition,

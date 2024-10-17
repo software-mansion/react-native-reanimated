@@ -73,6 +73,12 @@ export type AnimatedComponentProps<P extends Record<string, unknown>> = P & {
     | typeof BaseAnimationBuilder
   ) &
     LayoutAnimationStaticContext;
+  styleTransition?: (
+    | BaseAnimationBuilder
+    | ILayoutAnimationBuilder
+    | typeof BaseAnimationBuilder
+  ) &
+    LayoutAnimationStaticContext;
   entering?: (
     | BaseAnimationBuilder
     | typeof BaseAnimationBuilder

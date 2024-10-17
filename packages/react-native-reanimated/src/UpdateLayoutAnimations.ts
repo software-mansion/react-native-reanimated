@@ -11,6 +11,7 @@ import type {
 import type {
   LayoutAnimationBatchItem,
   ProgressAnimationCallback,
+  StyleTransitionAnimationFunction,
   SharedTransitionAnimationsFunction,
 } from './layoutReanimation/animationBuilder/commonTypes';
 
@@ -65,6 +66,7 @@ export let updateLayoutAnimations: (
   config?:
     | Keyframe
     | LayoutAnimationFunction
+    | StyleTransitionAnimationFunction
     | SharedTransitionAnimationsFunction
     | ProgressAnimationCallback,
   sharedTransitionTag?: string,
