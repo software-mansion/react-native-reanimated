@@ -15,10 +15,7 @@ export default function DocSidebarWrapper(props) {
 
   const newItems = ['animations/withClamp'];
   const experimentalItems = ['shared-element-transitions/overview'];
-  const unreleasedItems = [
-    'debugging/accurate-call-stacks',
-    'debugging/logger-configuration',
-  ];
+  const unreleasedItems = [];
 
   return (
     <DocSidebar
