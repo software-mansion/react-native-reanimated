@@ -89,7 +89,7 @@ Pod::Spec.new do |s|
 
     ss.subspec "apple" do |sss|
       sss.source_files = "apple/reanimated/**/*.{mm,h,m}"
-      sss.header_dir = "reanimated/apple"
+      sss.header_dir = "reanimated"
       sss.header_mappings_dir = "apple/reanimated"
     end
   end
