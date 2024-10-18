@@ -58,10 +58,7 @@ if (IS_SET_CUSTOM) {
     }).stdout.trim();
     const shortCommit = currentCommit.slice(0, 9);
 
-    const [major, minor] = currentVersion.split('.');
-    const patch = 0;
-    const nextMinor = Number(minor) + 1;
-    version = `${major}.${nextMinor}.${patch}-nightly-${dateIdentifier}-${shortCommit}`;
+    version = `${currentVersion}-nightly-${dateIdentifier}-${shortCommit}`;
   } else if (IS_FRESH) {
     version = `${currentVersion}-${dateIdentifier}`;
   }

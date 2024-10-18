@@ -36,7 +36,7 @@
 
 // Standard `__cplusplus` macro reference:
 // https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros
-#if REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 20202L
+#if REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 202002L
 // Implicit copy capture of `this` is deprecated in NDK27, which uses C++20.
 #define COPY_CAPTURE_WITH_THIS [ =, this ] // NOLINT (whitespace/braces)
 #else
@@ -44,7 +44,7 @@
 // explicitly disallows C++20 features, including the syntax above. Therefore we
 // fallback to the deprecated syntax here.
 #define COPY_CAPTURE_WITH_THIS [=] // NOLINT (whitespace/braces)
-#endif // REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 20202L
+#endif // REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 202002L
 
 using namespace facebook;
 
@@ -852,15 +852,15 @@ void NativeReanimatedModule::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
 
-  initializeLayoutAnimations();
+  initializeLayoutAnimationsProxy();
 
   mountHook_ =
       std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
-  commitHook_ =
-      std::make_shared<ReanimatedCommitHook>(propsRegistry_, uiManager_);
+  commitHook_ = std::make_shared<ReanimatedCommitHook>(
+      propsRegistry_, uiManager_, layoutAnimationsProxy_);
 }
 
-void NativeReanimatedModule::initializeLayoutAnimations() {
+void NativeReanimatedModule::initializeLayoutAnimationsProxy() {
   uiManager_->setAnimationDelegate(nullptr);
   auto scheduler = reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
   auto componentDescriptorRegistry =
@@ -876,13 +876,9 @@ void NativeReanimatedModule::initializeLayoutAnimations() {
         scheduler->getContextContainer(),
         uiWorkletRuntime_->getJSIRuntime(),
         uiScheduler_);
-    uiManager_->getShadowTreeRegistry().enumerate(
-        [this](const ShadowTree &shadowTree, bool &stop) {
-          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
-              layoutAnimationsProxy_);
-        });
   }
 }
+
 #endif // RCT_NEW_ARCH_ENABLED
 
 jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(

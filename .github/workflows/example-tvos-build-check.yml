@@ -25,6 +25,8 @@ on:
       - packages/react-native-reanimated/Common/**
       - packages/react-native-reanimated/TVOSExample/package.json
       - packages/react-native-reanimated/TVOSExample/ios/**
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   build:

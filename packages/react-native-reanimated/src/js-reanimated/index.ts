@@ -18,9 +18,15 @@ global._makeShareableClone = () => {
   );
 };
 
-global._scheduleOnJS = () => {
+global._scheduleHostFunctionOnJS = () => {
   throw new ReanimatedError(
-    '_scheduleOnJS should never be called in JSReanimated.'
+    '_scheduleHostFunctionOnJS should never be called in JSReanimated.'
+  );
+};
+
+global._scheduleRemoteFunctionOnJS = () => {
+  throw new ReanimatedError(
+    '_scheduleHostFunctionOnJS should never be called in JSReanimated.'
   );
 };
 

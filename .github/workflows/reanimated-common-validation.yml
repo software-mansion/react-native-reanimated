@@ -17,6 +17,8 @@ on:
   merge_group:
     branches:
       - main
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -25,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.13]
 
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +39,7 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install cpplint
+          pip install cpplint==1.6.1
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 
