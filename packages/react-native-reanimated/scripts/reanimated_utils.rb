@@ -45,6 +45,10 @@ def find_config()
   react_native_common_dir_relative = Pathname.new(react_native_common_dir_absolute).relative_path_from(pods_root).to_s
   result[:react_native_common_dir] = react_native_common_dir_relative
 
+  react_native_reanimated_dir_absolute = File.join(__dir__, '..')
+  react_native_reanimated_dir_relative = Pathname.new(react_native_reanimated_dir_absolute).relative_path_from(pods_root).to_s
+  result[:react_native_reanimated_dir_from_pods_root] = react_native_reanimated_dir_relative
+
   return result
 end
 

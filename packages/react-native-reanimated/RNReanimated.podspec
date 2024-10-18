@@ -85,19 +85,19 @@ Pod::Spec.new do |s|
   s.subspec "reanimated" do |ss|
     ss.source_files = "Common/cpp/reanimated/**/*.{cpp,h}"
     ss.header_dir = "reanimated"
-    ss.header_mappings_dir = "/Users/tomekzaw/RNOS/react-native-reanimated/packages/react-native-reanimated/Common/cpp"
+    ss.header_mappings_dir = "#{Pod::Config.instance.project_pods_root}/#{$config[:react_native_reanimated_dir_from_pods_root]}/Common/cpp"
 
     ss.subspec "apple" do |sss|
       sss.source_files = "apple/reanimated/**/*.{mm,h,m}"
       sss.header_dir = "reanimated/apple"
-      sss.header_mappings_dir = "/Users/tomekzaw/RNOS/react-native-reanimated/packages/react-native-reanimated/apple"
+      sss.header_mappings_dir = "#{Pod::Config.instance.project_pods_root}/#{$config[:react_native_reanimated_dir_from_pods_root]}/apple"
     end
   end
 
   s.subspec "worklets" do |ss|
     ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
     ss.header_dir = "worklets"
-    ss.header_mappings_dir = "/Users/tomekzaw/RNOS/react-native-reanimated/packages/react-native-reanimated/Common/cpp"
+    ss.header_mappings_dir = "#{Pod::Config.instance.project_pods_root}/#{$config[:react_native_reanimated_dir_from_pods_root]}/Common/cpp"
   end
 
   gcc_debug_definitions = "$(inherited)"
@@ -108,7 +108,7 @@ Pod::Spec.new do |s|
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
     "DEFINES_MODULE" => "YES",
-    "HEADER_SEARCH_PATHS" => '"$(PODS_TARGET_SRCROOT)/ReactCommon" "$(PODS_TARGET_SRCROOT)" "$(PODS_ROOT)/RCT-Folly" "$(PODS_ROOT)/boost" "$(PODS_ROOT)/boost-for-react-native" "$(PODS_ROOT)/DoubleConversion" "$(PODS_ROOT)/Headers/Private/React-Core" "$(PODS_ROOT)/Headers/Private/Yoga"',
+    "HEADER_SEARCH_PATHS" => '"$(PODS_TARGET_SRCROOT)/ReactCommon" "$(PODS_CONFIGURATION_BUILD_DIR)/RNReanimated/RNReanimated.framework/Headers" "$(PODS_TARGET_SRCROOT)" "$(PODS_ROOT)/RCT-Folly" "$(PODS_ROOT)/boost" "$(PODS_ROOT)/boost-for-react-native" "$(PODS_ROOT)/DoubleConversion" "$(PODS_ROOT)/Headers/Private/React-Core" "$(PODS_ROOT)/Headers/Private/Yoga"',
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
     "GCC_PREPROCESSOR_DEFINITIONS[config=Debug]" => gcc_debug_definitions,
@@ -116,7 +116,7 @@ Pod::Spec.new do |s|
   }
   s.compiler_flags = "#{folly_compiler_flags} #{boost_compiler_flags}"
   s.xcconfig = {
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/Headers/Public/React-hermes\" \"$(PODS_ROOT)/Headers/Public/hermes-engine\" \"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/RNReanimated\" \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/Headers/Public/React-hermes\" \"$(PODS_ROOT)/Headers/Public/hermes-engine\" \"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
     "OTHER_CFLAGS" => "$(inherited) #{folly_flags} #{fabric_flags} #{example_flag} #{version_flag} #{debug_flag} #{compilation_metadata_generation_flag}"
   }
   s.requires_arc = true
