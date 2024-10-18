@@ -1,6 +1,8 @@
 'use strict';
 import type { Ref, Component } from 'react';
 import type {
+  EntryExitAnimationFunction,
+  ILayoutAnimationBuilder,
   ShadowNodeWrapper,
   SharedValue,
   StyleProps,
@@ -9,8 +11,6 @@ import type { ViewConfig } from '../ConfigHelper';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
   BaseAnimationBuilder,
-  EntryExitAnimationFunction,
-  ILayoutAnimationBuilder,
   SharedTransition,
 } from '../layoutReanimation';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';

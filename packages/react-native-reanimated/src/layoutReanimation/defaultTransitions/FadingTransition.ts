@@ -3,7 +3,7 @@ import { withDelay, withSequence, withTiming } from '../../animation';
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
-} from '../animationBuilder/commonTypes';
+} from '../../commonTypes';
 import { BaseAnimationBuilder } from '../animationBuilder';
 
 /**
