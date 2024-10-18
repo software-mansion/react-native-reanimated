@@ -14,6 +14,7 @@ import type {
   InnerDecayAnimation,
 } from './utils';
 import { rigidDecay } from './rigidDecay';
+import { ReanimatedError } from '../../errors';
 
 export type WithDecayConfig = DecayConfig;
 
@@ -27,26 +28,26 @@ function validateConfig(config: DefaultDecayConfig): void {
   'worklet';
   if (config.clamp) {
     if (!Array.isArray(config.clamp)) {
-      throw new Error(
-        `[Reanimated] \`config.clamp\` must be an array but is ${typeof config.clamp}.`
+      throw new ReanimatedError(
+        `\`config.clamp\` must be an array but is ${typeof config.clamp}.`
       );
     }
     if (config.clamp.length !== 2) {
-      throw new Error(
-        `[Reanimated] \`clamp array\` must contain 2 items but is given ${
+      throw new ReanimatedError(
+        `\`clamp array\` must contain 2 items but is given ${
           config.clamp.length as number
         }.`
       );
     }
   }
   if (config.velocityFactor <= 0) {
-    throw new Error(
-      `[Reanimated] \`config.velocityFactor\` must be greather then 0 but is ${config.velocityFactor}.`
+    throw new ReanimatedError(
+      `\`config.velocityFactor\` must be greater then 0 but is ${config.velocityFactor}.`
     );
   }
   if (config.rubberBandEffect && !config.clamp) {
-    throw new Error(
-      '[Reanimated] You need to set `clamp` property when using `rubberBandEffect`.'
+    throw new ReanimatedError(
+      'You need to set `clamp` property when using `rubberBandEffect`.'
     );
   }
 }
@@ -55,8 +56,11 @@ function validateConfig(config: DefaultDecayConfig): void {
  * Lets you create animations that mimic objects in motion with friction.
  *
  * @param config - The decay animation configuration - {@link DecayConfig}.
- * @param callback - A function called upon animation completion - {@link AnimationCallback}.
- * @returns An [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation.
+ * @param callback - A function called upon animation completion -
+ *   {@link AnimationCallback}.
+ * @returns An [animation
+ *   object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object)
+ *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withDecay
  */
 export const withDecay = function (

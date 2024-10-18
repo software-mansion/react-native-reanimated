@@ -15,7 +15,10 @@ import type { SingleViewSnapshot } from '../TestRunner/UpdatesContainer';
 export class Matchers {
   private _negation = false;
   // eslint-disable-next-line no-useless-constructor
-  constructor(private _currentValue: TestValue, private _testCase: TestCase) {}
+  constructor(
+    private _currentValue: TestValue,
+    private _testCase: TestCase,
+  ) {}
 
   get not() {
     this._negation = true;

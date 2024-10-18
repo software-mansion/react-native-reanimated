@@ -13,6 +13,7 @@ import type {
   AnimationObject,
   TransformArrayItem,
 } from '../../commonTypes';
+import { logger } from '../../logger';
 
 export class EntryExitTransition
   extends BaseAnimationBuilder
@@ -187,9 +188,7 @@ export class EntryExitTransition
         ).map((value) => {
           const objectKeys = Object.keys(value);
           if (objectKeys?.length < 1) {
-            console.error(
-              `[Reanimated]: \${value} is not a valid Transform object`
-            );
+            logger.error(`\${value} is not a valid Transform object`);
             return value;
           }
 
@@ -251,7 +250,8 @@ export class EntryExitTransition
 }
 
 /**
- * @deprecated Please use `EntryExitTransition.entering(entering).exiting(exiting)` instead.
+ * @deprecated Please use
+ *   `EntryExitTransition.entering(entering).exiting(exiting)` instead.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-transitions
  */
 export function combineTransition(

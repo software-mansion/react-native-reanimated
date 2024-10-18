@@ -55,9 +55,7 @@ export function processIfWorkletFile(
   return true;
 }
 
-/**
- * Adds a worklet directive to each viable top-level entity in the file.
- */
+/** Adds a worklet directive to each viable top-level entity in the file. */
 function processWorkletFile(programPath: NodePath<Program>) {
   const statements = programPath.get('body');
   dehoistCommonJSExports(programPath.node);
@@ -126,7 +124,8 @@ function processWorkletAggregator(objectPath: NodePath<ObjectExpression>) {
  *
  * `() => 1` becomes `() => { return 1 }`
  *
- * This is necessary because the worklet directive is only allowed on block statements.
+ * This is necessary because the worklet directive is only allowed on block
+ * statements.
  */
 function replaceImplicitReturnWithBlock(path: ArrowFunctionExpression) {
   if (!isBlockStatement(path.body)) {

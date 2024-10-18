@@ -34,6 +34,7 @@ import type {
   AnimatedStyle,
 } from '../commonTypes';
 import { isWorkletFunction } from '../commonTypes';
+import { ReanimatedError } from '../errors';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -379,19 +380,23 @@ function checkSharedValueUsage(
     prop !== null &&
     prop.value !== undefined
   ) {
-    // if shared value is passed insted of its value, throw an error
-    throw new Error(
-      `[Reanimated] Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
+    // if shared value is passed instead of its value, throw an error
+    throw new ReanimatedError(
+      `Invalid value passed to \`${currentKey}\`, maybe you forgot to use \`.value\`?`
     );
   }
 }
 
 /**
- * Lets you create a styles object, similar to StyleSheet styles, which can be animated using shared values.
+ * Lets you create a styles object, similar to StyleSheet styles, which can be
+ * animated using shared values.
  *
- * @param updater - A function returning an object with style properties you want to animate.
- * @param dependencies - An optional array of dependencies. Only relevant when using Reanimated without the Babel plugin on the Web.
- * @returns An animated style object which has to be passed to the `style` property of an Animated component you want to animate.
+ * @param updater - A function returning an object with style properties you
+ *   want to animate.
+ * @param dependencies - An optional array of dependencies. Only relevant when
+ *   using Reanimated without the Babel plugin on the Web.
+ * @returns An animated style object which has to be passed to the `style`
+ *   property of an Animated component you want to animate.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle
  */
 // You cannot pass Shared Values to `useAnimatedStyle` directly.
@@ -422,8 +427,8 @@ export function useAnimatedStyle<Style extends DefaultStyle>(
       !dependencies &&
       !isWorkletFunction(updater)
     ) {
-      throw new Error(
-        `[Reanimated] \`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
+      throw new ReanimatedError(
+        `\`useAnimatedStyle\` was used without a dependency array or Babel plugin. Please explicitly pass a dependency array, or enable the Babel plugin.
 For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support#web-without-the-babel-plugin\`.`
       );
     }

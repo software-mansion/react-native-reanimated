@@ -1,4 +1,4 @@
-#include "AnimatedSensorModule.h"
+#include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 
 #include <utility>
 

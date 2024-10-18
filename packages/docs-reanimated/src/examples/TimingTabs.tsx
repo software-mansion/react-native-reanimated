@@ -5,11 +5,13 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
+import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
 
 const TAB_WIDTH = 150;
 const TABS = ['Home', 'Search', 'Profile'];
 
 export default function App() {
+  const textColor = useThemedTextStyle();
   const offset = useSharedValue<number>(-TAB_WIDTH);
 
   const animatedStyles = useAnimatedStyle(() => ({
@@ -43,7 +45,7 @@ export default function App() {
               i !== TABS.length - 1 ? [styles.tab, styles.divider] : styles.tab
             }
             onPress={() => handlePress(tab)}>
-            <Text style={styles.tabLabel}>{tab}</Text>
+            <Text style={[styles.tabLabel, textColor]}>{tab}</Text>
           </Pressable>
         ))}
       </View>
@@ -79,7 +81,7 @@ const styles = StyleSheet.create({
   animatedBorder: {
     height: 8,
     width: 64,
-    backgroundColor: 'tomato',
+    backgroundColor: 'var(--swm-purple-dark-100)',
     borderRadius: 20,
   },
 });

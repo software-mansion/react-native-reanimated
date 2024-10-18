@@ -40,7 +40,12 @@ export default function RuntimeTestsExample() {
           testSuiteName: 'core',
           importTest: () => {
             require('./tests/core/cancelAnimation.test');
-            require('./tests/core/useSharedValue.test');
+
+            require('./tests/core/useSharedValue/numbers.test');
+            require('./tests/core/useSharedValue/arrays.test');
+            require('./tests/core/useSharedValue/objects.test');
+            require('./tests/core/useSharedValue/assigningObjects.test');
+
             require('./tests/core/useAnimatedStyle/reuseAnimatedStyle.test');
             require('./tests/core/useDerivedValue/basic.test');
             require('./tests/core/useDerivedValue/chain.test');
@@ -53,19 +58,36 @@ export default function RuntimeTestsExample() {
           },
         },
         {
-          testSuiteName: 'layoutAnimations',
+          testSuiteName: 'entering and exiting',
           importTest: () => {
             require('./tests/layoutAnimations/entering/enteringColors.test');
             require('./tests/layoutAnimations/entering/predefinedEntering.test');
             require('./tests/layoutAnimations/exiting/predefinedExiting.test');
-            require('./tests/layoutAnimations/layout/predefinedLayoutPosition.test');
+          },
+        },
+        {
+          testSuiteName: 'layout transitions',
+          importTest: () => {
+            describe('Compare layout transitions with **constant view size** with snapshots', () => {
+              require('./tests/layoutAnimations/layout/predefinedLayoutPosition.test');
+            });
+            describe('Compare predefined layout transitions including view **size changes** with snapshots', () => {
+              require('./tests/layoutAnimations/layout/positionAndSize.test');
+            });
+            require('./tests/layoutAnimations/layout/custom.test');
+          },
+        },
+        {
+          testSuiteName: 'keyframe animations',
+          importTest: () => {
+            require('./tests/layoutAnimations/keyframe/basic.test');
           },
         },
         {
           testSuiteName: 'advanced API',
           importTest: () => {
             require('./tests/advancedAPI/useFrameCallback.test');
-            // require('./tests/advancedAPI/measure.test'); // crash on Android
+            require('./tests/advancedAPI/measure.test');
           },
         },
         {
@@ -74,6 +96,13 @@ export default function RuntimeTestsExample() {
             require('./tests/plugin/fileWorkletization.test');
             require('./tests/plugin/contextObjects.test');
             require('./tests/plugin/workletClasses.test');
+            require('./tests/plugin/recursion.test');
+          },
+        },
+        {
+          testSuiteName: 'StrictMode',
+          importTest: () => {
+            require('./tests/StrictMode/StrictMode.test');
           },
         },
         {

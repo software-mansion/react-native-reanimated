@@ -3,6 +3,8 @@ require_relative '../node_modules/@react-native-community/cli-platform-ios/nativ
 
 ENV['REANIMATED_EXAMPLE_APP_NAME'] = 'MacOSExample-macos'
 
+require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-xcode-step.rb'
+
 prepare_react_native_project!
 
 target 'MacOSExample-macOS' do
@@ -25,4 +27,6 @@ target 'MacOSExample-macOS' do
   post_install do |installer|
     react_native_post_install(installer)
   end
+
+  add_clangd_generation_step()
 end

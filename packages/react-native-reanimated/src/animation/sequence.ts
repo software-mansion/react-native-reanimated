@@ -8,13 +8,18 @@ import type {
   ReduceMotion,
   Timestamp,
 } from '../commonTypes';
+import { logger } from '../logger';
 
 /**
  * Lets you run animations in a sequence.
  *
- * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System` - {@link ReduceMotion}.
+ * @param reduceMotion - Determines how the animation responds to the device's
+ *   reduced motion accessibility setting. Default to `ReduceMotion.System` -
+ *   {@link ReduceMotion}.
  * @param animations - Any number of animation objects to be run in a sequence.
- * @returns An [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation/
+ * @returns An [animation
+ *   object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object)
+ *   which holds the current state of the animation/
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSequence
  */
 export function withSequence<T extends AnimatableValue>(
@@ -44,7 +49,7 @@ export function withSequence(
   }
 
   if (_animations.length === 0) {
-    console.warn('[Reanimated] No animation was provided for the sequence');
+    logger.warn('No animation was provided for the sequence');
 
     return defineAnimation<SequenceAnimation>(0, () => {
       'worklet';

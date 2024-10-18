@@ -8,7 +8,7 @@ table {
 }
 
 @media (max-width: 1280px) {
-  table {
+  table:not([class*='platform-compatibility']) {
     display: block;
     width: 100%;
   }
@@ -18,10 +18,12 @@ table thead tr {
   border-bottom: 1px solid var(--ifm-table-border-color);
 }
 
-.platform-compatibility table {
-  display: table;
-  width: 100%;
+.platform-compatibility {
   table-layout: fixed;
+}
+
+.platform-compatibility td {
+  text-align: center;
 }
 
 .compatibility {

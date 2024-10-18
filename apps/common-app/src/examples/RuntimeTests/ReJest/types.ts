@@ -32,36 +32,29 @@ export enum DescribeDecorator {
 export enum TestDecorator {
   ONLY = 'only',
   SKIP = 'skip',
-  FAILING = 'failing',
-  WARN = 'warn',
 }
-
-export type BuildFunction = () => void | Promise<void>;
 
 export type TestCase = {
   name: string;
-  run: BuildFunction;
+  run: MaybeAsync<void>;
   componentsRefs: Record<string, ComponentRef>;
   callsRegistry: Record<string, CallTracker>;
   errors: string[];
   skip?: boolean;
-} & (
-  | {
-      decorator: TestDecorator.WARN | TestDecorator.FAILING;
-      warningMessage: string;
-    }
-  | { decorator: Exclude<TestDecorator, TestDecorator.WARN | TestDecorator.FAILING> | null }
-);
+  decorator?: TestDecorator | null;
+};
+
+export type MaybeAsync<T> = () => T | Promise<T>;
 
 export type TestSuite = {
   name: string;
-  buildSuite: BuildFunction;
+  buildSuite: MaybeAsync<void>;
   testCases: TestCase[];
   nestingLevel: number;
-  beforeAll?: () => void | Promise<void>;
-  afterAll?: () => void | Promise<void>;
-  beforeEach?: () => void | Promise<void>;
-  afterEach?: () => void | Promise<void>;
+  beforeAll?: MaybeAsync<void>;
+  afterAll?: MaybeAsync<void>;
+  beforeEach?: MaybeAsync<void>;
+  afterEach?: MaybeAsync<void>;
   skip?: boolean;
   decorator?: DescribeDecorator | null;
 };

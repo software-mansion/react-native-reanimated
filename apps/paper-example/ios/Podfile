@@ -5,6 +5,8 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
+require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-xcode-step.rb'
+
 ENV['REANIMATED_EXAMPLE_APP_NAME'] = 'Example'
 ENV['RCT_NEW_ARCH_ENABLED'] = '0'
 
@@ -40,4 +42,6 @@ target 'ReanimatedExample' do
       # :ccache_enabled => true
     )
   end
+
+  add_clangd_generation_step()
 end

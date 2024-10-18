@@ -4,12 +4,12 @@ import Animated, {
   useAnimatedRef,
   getRelativeCoords,
 } from 'react-native-reanimated';
-import { useColorScheme } from '@mui/material';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
 
 const RelativeCoords = () => {
   const animatedRef = useAnimatedRef();
-  const { colorScheme } = useColorScheme();
+  const textColor = useThemedTextStyle();
   const [coords, setCoords] = useState({ x: 0, y: 0 });
 
   const tapGesture = Gesture.Tap().onEnd((event) => {
@@ -22,9 +22,6 @@ const RelativeCoords = () => {
       setCoords(relativeCoords);
     }
   });
-
-  const textColor =
-    colorScheme === 'light' ? styles.darkText : styles.lightText;
 
   return (
     <View style={styles.container}>
@@ -73,12 +70,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Aeonik',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  lightText: {
-    color: 'var(--swm-off-white)',
-  },
-  darkText: {
-    color: 'var(--swm-navy-light-100)',
   },
 });
 

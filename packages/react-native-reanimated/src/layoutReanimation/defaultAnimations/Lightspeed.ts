@@ -9,9 +9,11 @@ import type {
 } from '../animationBuilder/commonTypes';
 
 /**
- * Entry from right animation with change in skew and opacity. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Entry from right animation with change in skew and opacity. You can modify
+ * the behavior by chaining methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#lightspeed
  */
@@ -71,9 +73,11 @@ export class LightSpeedInRight
 }
 
 /**
- * Entry from left animation with change in skew and opacity. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Entry from left animation with change in skew and opacity. You can modify the
+ * behavior by chaining methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `entering` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `entering` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#lightspeed
  */
@@ -133,9 +137,11 @@ export class LightSpeedInLeft
 }
 
 /**
- * Exit to right animation with change in skew and opacity. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Exit to right animation with change in skew and opacity. You can modify the
+ * behavior by chaining methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations#lightspeed
  */
@@ -187,9 +193,11 @@ export class LightSpeedOutRight
 }
 
 /**
- * Exit to left animation with change in skew and opacity. You can modify the behavior by chaining methods like `.springify()` or `.duration(500)`.
+ * Exit to left animation with change in skew and opacity. You can modify the
+ * behavior by chaining methods like `.springify()` or `.duration(500)`.
  *
- * You pass it to the `exiting` prop on [an Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
+ * You pass it to the `exiting` prop on [an Animated
+ * component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component).
  *
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations/#lightspeed
  */

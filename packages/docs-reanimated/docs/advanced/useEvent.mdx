@@ -4,39 +4,17 @@ sidebar_position: 4
 
 # useEvent
 
-import DocsCompatibilityInfo from '../_shared/_docs_compatibility_info.mdx';
+`useEvent` is a low-level hook. It returns event handler that will be called when native event occurs. You can use it to create custom event handler hooks, like [`useScrollViewOffset`](/docs/scroll/useScrollViewOffset/) or [`useAnimatedScrollHandler`](/docs/scroll/useAnimatedScrollHandler/).
 
-<DocsCompatibilityInfo />
-
-This is low-level hook returning event handler that will be invoked with native events, which should be used in order to create custom event handler hook like `useAnimatedGestureHandler` or `useAnimatedScrollHandler`.
-
-### Arguments
-
-#### `handler` [function]
-
-Handler will receive event object with native payload, that can be passed to custom handler hook's worklets.
-
-- `event` [object] - event object.
-  The payload can differ depending on the type of the event.
-
-#### `eventNames` [Array]
-
-Array of event names that will be handled by handler.
-
-#### `rebuilt` [boolean]
-
-Value indicating whether handler should be rebuilt.
-
-### Returns
-
-The hook returns event handler that will be invoked when native event is dispatched. That handler may be connected to multiple components and will be invoked for each one's specific events.
-
-## Example
+## Reference
 
 ```js
+import { useEvent } from 'react-native-reanimated';
+
 function useAnimatedPagerScrollHandler(handlers, dependencies) {
   const { context, doDependenciesDiffer } = useHandler(handlers, dependencies);
 
+  // highlight-start
   return useEvent(
     (event) => {
       'worklet';
@@ -47,6 +25,74 @@ function useAnimatedPagerScrollHandler(handlers, dependencies) {
       }
     },
     ['onPageScroll'],
-    doDependenciesDiffer,
+    doDependenciesDiffer
   );
+}
+// highlight-end
+
+return <Animated.View onScroll={useAnimatedPagerScrollHandler} />;
 ```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+function useEvent<
+  Event extends object,
+  Context extends Record<string, unknown> = never
+>(
+  handler: EventHandler<Event, Context>,
+  eventNames?: string[],
+  rebuild?: boolean
+): EventHandlerProcessed<Event, Context>;
+
+type EventHandler<
+  Event extends object,
+  Context extends Record<string, unknown> = never
+> = (event: ReanimatedEvent<Event>, context?: Context) => void;
+
+type EventHandlerProcessed<
+  Event extends object,
+  Context extends Record<string, unknown> = never
+> = (event: Event, context?: Context) => void;
+```
+
+</details>
+
+### Arguments
+
+#### `handler`
+
+Function that receives event object with native payload, that can be passed to custom handler hook's worklets.
+
+- `event` - event object.
+  The payload can differ depending on the type of the event.
+
+#### `eventNames` <Optional/>
+
+Array of event names that will be handled by handler.
+
+#### `rebuild` <Optional/>
+
+Value indicating whether handler should be rebuilt.
+
+### Returns
+
+The hook returns event handler that will be invoked when native event is dispatched. That handler may be connected to multiple components and will be invoked for each one's specific events.
+
+## Example
+
+import useEvent from '@site/src/examples/UseHandlerEventExample';
+import useEventSrc from '!!raw-loader!@site/src/examples/UseHandlerEventExample';
+
+<InteractiveExample src={useEventSrc} component={useEvent} />
+
+This example can be more easily implemented using [`useScrollViewOffset`](/docs/scroll/useScrollViewOffset/).
+
+## Remarks
+
+- Keep in mind that not all scroll events are supported on the web, only `onScroll` is available across browsers.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />

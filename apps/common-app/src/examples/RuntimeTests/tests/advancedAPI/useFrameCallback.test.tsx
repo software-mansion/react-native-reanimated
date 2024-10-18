@@ -55,17 +55,17 @@ describe('Test *****useFrameCallback*****', () => {
 
       return <View />;
     };
-    test.failing(
-      'frameCallback should be workletized',
-      'ReanimatedError: [Reanimated] Tried to synchronously call a non-worklet function `imNotAWorklet` on the UI thread.\nSee https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details., js engine: reanimated',
-      async () => {
+
+    test('frameCallback should be workletized', async () => {
+      await expect(async () => {
         await render(<InvalidFrameCallback />);
         await wait(200);
-      },
-    );
+      }).toThrow(
+        'ReanimatedError: [Reanimated] Tried to synchronously call a non-worklet function `imNotAWorklet` on the UI thread.\nSee https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-synchronously-call-a-non-worklet-function-on-the-ui-thread for more details., js engine: reanimated',
+      );
+    });
   });
 });
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

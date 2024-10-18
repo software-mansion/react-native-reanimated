@@ -1,5 +1,5 @@
-#include "LayoutAnimationsManager.h"
-#include "CollectionUtils.h"
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/Tools/CollectionUtils.h>
 
 #ifndef NDEBUG
 #include <utility>

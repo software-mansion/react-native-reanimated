@@ -1,3 +1,4 @@
+/** @type {import('eslint').ESLint.ConfigData} */
 module.exports = {
   root: true,
   overrides: [
@@ -8,6 +9,7 @@ module.exports = {
         project: true,
         tsconfigRootDir: __dirname,
       },
+      plugins: ['tsdoc'],
       extends: ['plugin:@typescript-eslint/recommended-type-checked'],
       rules: {
         '@typescript-eslint/no-unsafe-call': 'off',
@@ -39,6 +41,15 @@ module.exports = {
         '@typescript-eslint/no-non-null-assertion': 'off',
         '@typescript-eslint/no-duplicate-type-constituents': 'error',
         '@typescript-eslint/no-shadow': 'error',
+        'tsdoc/syntax': 'error',
+      },
+    },
+    {
+      files: ['*.js', '*.jsx'],
+      plugins: ['jsdoc'],
+      extends: ['plugin:jsdoc/recommended'],
+      rules: {
+        'jsdoc/tag-lines': 'off',
       },
     },
   ],
@@ -51,14 +62,7 @@ module.exports = {
     'plugin:import/typescript',
     'plugin:react-hooks/recommended',
   ],
-  plugins: [
-    'react',
-    'react-native',
-    'import',
-    'jest',
-    '@typescript-eslint',
-    'eslint-plugin-tsdoc',
-  ],
+  plugins: ['react', 'react-native', 'import', 'jest', '@typescript-eslint'],
   env: {
     'react-native/react-native': true,
     'jest/globals': true,
@@ -81,7 +85,6 @@ module.exports = {
     'no-use-before-define': 'off',
     eqeqeq: 'error',
     'no-unreachable': 'error',
-    'tsdoc/syntax': 'error',
     'jest/no-disabled-tests': 'warn',
     'jest/no-focused-tests': 'error',
     'jest/no-identical-title': 'error',

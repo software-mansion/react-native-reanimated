@@ -1,19 +1,22 @@
 'use strict';
+
 import { jsVersion } from './jsVersion';
+import { logger } from '../logger';
+import { ReanimatedError } from '../errors';
 
 export function checkCppVersion() {
   const cppVersion = global._REANIMATED_VERSION_CPP;
   if (cppVersion === undefined) {
-    console.warn(
-      `[Reanimated] Couldn't determine the version of the native part of Reanimated.
+    logger.warn(
+      `Couldn't determine the version of the native part of Reanimated.
     See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#couldnt-determine-the-version-of-the-native-part-of-reanimated\` for more details.`
     );
     return;
   }
   const ok = matchVersion(jsVersion, cppVersion);
   if (!ok) {
-    throw new Error(
-      `[Reanimated] Mismatch between JavaScript part and native part of Reanimated (${jsVersion} vs ${cppVersion}).
+    throw new ReanimatedError(
+      `Mismatch between JavaScript part and native part of Reanimated (${jsVersion} vs ${cppVersion}).
     See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-part-and-native-part-of-reanimated\` for more details.`
     );
   }

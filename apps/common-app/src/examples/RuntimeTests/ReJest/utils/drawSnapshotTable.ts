@@ -1,6 +1,8 @@
 import { isColor } from 'react-native-reanimated';
+import { ComparisonMode, isValidPropName } from '../types';
 import type { Mismatch, TestValue } from '../types';
 import { green, red, color, getColorSquare } from './stringFormatUtils';
+import { getComparator, getComparisonModeForProp } from '../matchers/Comparators';
 
 const VALUE_COLUMN_WIDTH = 15;
 const INDEX_COLUMN_WIDTH = 7;
@@ -105,7 +107,9 @@ function getComparisonRow(mismatch: Mismatch, keys: Array<string>) {
     const expectedValue = expectedSnapshot[key as keyof typeof expectedSnapshot];
     const capturedValue = capturedSnapshot[key as keyof typeof capturedSnapshot];
 
-    const match = expectedValue === capturedValue;
+    const comparisonMode = isValidPropName(key) ? getComparisonModeForProp(key) : ComparisonMode.AUTO;
+
+    const match = getComparator(comparisonMode)(expectedValue, capturedValue);
 
     const expectedAdjusted = adjustValueToLength(expectedValue, VALUE_COLUMN_WIDTH, key);
     const capturedAdjusted = adjustValueToLength(capturedValue, VALUE_COLUMN_WIDTH, key);

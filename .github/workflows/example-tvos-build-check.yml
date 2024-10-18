@@ -1,0 +1,63 @@
+name: Example tvOS build check
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  pull_request:
+    paths:
+      - .github/workflows/example-tvos-build-check.yml
+      - packages/react-native-reanimated/RNReanimated.podspec
+      - packages/react-native-reanimated/scripts/reanimated_utils.rb
+      - packages/react-native-reanimated/apple/**
+      - packages/react-native-reanimated/Common/**
+      - packages/react-native-reanimated/TVOSExample/package.json
+      - packages/react-native-reanimated/TVOSExample/ios/**
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/example-tvos-build-check.yml
+      - packages/react-native-reanimated/RNReanimated.podspec
+      - packages/react-native-reanimated/scripts/reanimated_utils.rb
+      - packages/react-native-reanimated/apple/**
+      - packages/react-native-reanimated/Common/**
+      - packages/react-native-reanimated/TVOSExample/package.json
+      - packages/react-native-reanimated/TVOSExample/ios/**
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: macos-14
+    env:
+      WORKING_DIRECTORY: apps/tvos-example
+    concurrency:
+      group: tvos-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+      # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
+      - name: Install Reanimated node_modules
+        working-directory: packages/react-native-reanimated
+        run: yarn install --immutable
+
+      - name: Install app node_modules
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn install --immutable
+
+      - name: Install Pods
+        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
+        run: |
+          bundle install
+          bundle exec pod install
+
+      - name: Build app
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn react-native-tvos run-ios --no-packager --scheme TVOSExample-tvOS --simulator "Apple TV"

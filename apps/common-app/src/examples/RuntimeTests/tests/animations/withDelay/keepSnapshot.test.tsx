@@ -21,7 +21,7 @@ import {
   mockAnimationTimer,
   clearRenderOutput,
 } from '../../../ReJest/RuntimeTestsApi';
-import type { SingleViewSnapshot } from '../../../ReJest/matchers/snapshotMatchers';
+import type { SingleViewSnapshot } from '../../../ReJest/TestRunner/UpdatesContainer';
 
 enum TestAnimation {
   TIMING = 'withTiming',
@@ -153,7 +153,7 @@ const testCases = [
   { testAnimation: TestAnimation.TIMING, delay: 0 },
   { testAnimation: TestAnimation.SEQUENCE, delay: 0 },
   { testAnimation: TestAnimation.TIMING, delay: 100 },
-  { testAnimation: TestAnimation.TIMING, delay: 1000 },
+  { testAnimation: TestAnimation.TIMING, delay: 500 },
   { testAnimation: TestAnimation.SEQUENCE, delay: 100 },
 ] as const;
 
@@ -170,6 +170,7 @@ for (const { testAnimation, delay } of testCases) {
         'Components animated _with_ withDelay in two different ways have matching snapshots',
         delaySnapshots,
       );
+
       // Create snapshot of static animation consisting of frame {width: 100} repeated multiple times
       const fillerSize = delaySnapshots.active.length - noDelaySnapshots.active.length;
       const filler = Array.from({ length: fillerSize }, () => {

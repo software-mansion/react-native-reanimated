@@ -6,27 +6,18 @@ export function convertDecimalColor(color: unknown): string {
     return `${color?.toString()}`;
   }
 
-  const size = 8;
-  let hexColor = '';
+  // eslint-disable-next-line no-bitwise
+  const posColor = color >= 0 ? color : 0xffffff & color;
+  let hexColor = posColor.toString(16);
 
-  if (color >= 0) {
-    hexColor = color.toString(16);
-
-    while (hexColor.length % size !== 0) {
-      hexColor = '' + 0 + hexColor;
-    }
-  } else {
-    let hexadecimal = Math.abs(color).toString(16);
-    while (hexColor.length % size !== 0) {
-      hexadecimal = '' + 0 + hexadecimal;
-    }
-
-    hexColor = '';
-    for (let i = 0; i < hexColor.length; i++) {
-      hexColor += (0x0f - parseInt(hexColor[i], 16)).toString(16);
-    }
-
-    hexColor = (0x01 + parseInt(hexColor, 16)).toString(16);
+  while (hexColor.length < 6) {
+    hexColor = '0' + hexColor;
   }
+  while (hexColor.length < 8) {
+    hexColor = 'f' + hexColor;
+  }
+
+  // color has now format #AA-RR-GG-BB, but we return #RR-GG-BB-AA, (A stands for alpha)
+
   return '#' + hexColor.slice(2) + hexColor.slice(0, 2);
 }

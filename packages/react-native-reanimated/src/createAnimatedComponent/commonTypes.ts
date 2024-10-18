@@ -101,19 +101,19 @@ export interface IAnimatedComponentInternal {
   _styles: StyleProps[] | null;
   _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   /**
-   * Used for Shared Element Transitions, Layout Animations and Animated Styles. It is not related to event handling.
+   * Used for Shared Element Transitions, Layout Animations and Animated Styles.
+   * It is not related to event handling.
    */
   _componentViewTag: number;
   _isFirstRender: boolean;
+  jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
   _component: AnimatedComponentRef | HTMLElement | null;
   _sharedElementTransition: SharedTransition | null;
   _jsPropsUpdater: IJSPropsUpdater;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
-  /**
-   * Doesn't exist on web.
-   */
+  /** Doesn't exist on web. */
   _NativeEventsManager?: INativeEventsManager;
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;

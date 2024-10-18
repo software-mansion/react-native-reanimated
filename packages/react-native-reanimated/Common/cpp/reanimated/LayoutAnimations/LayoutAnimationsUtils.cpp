@@ -1,5 +1,5 @@
 #ifdef RCT_NEW_ARCH_ENABLED
-#include "LayoutAnimationsUtils.h"
+#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 
 namespace reanimated {
 

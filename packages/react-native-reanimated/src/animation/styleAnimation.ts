@@ -12,6 +12,7 @@ import type {
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
 import { ColorProperties, processColor } from '../Colors';
+import { logger } from '../logger';
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined
@@ -185,7 +186,7 @@ export function withStyleAnimation(
             prevVal = (prevAnimation as any).current;
           }
           if (prevVal === undefined) {
-            console.warn(
+            logger.warn(
               `Initial values for animation are missing for property ${currentEntry.path.join(
                 '.'
               )}`

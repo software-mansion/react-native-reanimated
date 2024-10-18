@@ -96,7 +96,7 @@ LinearTransition.delay(500)
 
 ### Remarks
 
-- The animation will end if **both** the animation speed is below `restSpeedTreshold` and the distance to its end is less than `restDisplacementTreshold`. Keep in mind that if you haven't set one of the thresholds, its value will be set to the default.
+- The animation will end if **both** the animation speed is below `restSpeedThreshold` and the distance to its end is less than `restDisplacementThreshold`. Keep in mind that if you haven't set one of the thresholds, its value will be set to the default.
 
 ### Example
 
@@ -237,17 +237,17 @@ Curved transition enables animation of all parameters (`X`, `Y`, `width`, `heigh
 ### Reference
 
 ```js
-import { CurvedTransiton } from 'react-native-reanimated';
+import { CurvedTransition } from 'react-native-reanimated';
 
 function App() {
-  return <Animated.View layout={CurvedTransiton} />;
+  return <Animated.View layout={CurvedTransition} />;
 }
 ```
 
 ### Modifiers
 
 ```javascript
-CurvedTransiton.duration(1000)
+CurvedTransition.duration(1000)
   .delay(500)
   .easingX(Easing.in(Easing.exp))
   .easingY(Easing.out(Easing.quad))
@@ -332,10 +332,4 @@ EntryExitTransition.duration(1000)
 
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />

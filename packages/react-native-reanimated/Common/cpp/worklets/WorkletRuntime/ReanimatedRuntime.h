@@ -14,7 +14,7 @@
 #include <memory>
 #include <string>
 
-namespace reanimated {
+namespace worklets {
 
 using namespace facebook;
 using namespace react;
@@ -27,4 +27,4 @@ class ReanimatedRuntime {
       const std::string &name);
 };
 
-} // namespace reanimated
+} // namespace worklets

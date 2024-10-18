@@ -8,6 +8,8 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
+require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-xcode-step.rb'
+
 ENV['REANIMATED_EXAMPLE_APP_NAME'] = 'TVOSExample'
 
 prepare_react_native_project!
@@ -65,6 +67,7 @@ target 'TVOSExample-tvOS' do
     # Pods for testing
   end
 
+  add_clangd_generation_step()
 end
 
 post_install do |installer|

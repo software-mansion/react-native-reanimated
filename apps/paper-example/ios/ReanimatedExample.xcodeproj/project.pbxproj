@@ -229,6 +229,7 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
+				EC2A315BF2310B4CCE81E020 /* [CP-User] Generate metadata for clangd */,
 			);
 			buildRules = (
 			);
@@ -416,6 +417,17 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ReanimatedExample/Pods-ReanimatedExample-resources.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		EC2A315BF2310B4CCE81E020 /* [CP-User] Generate metadata for clangd */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = true;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "[CP-User] Generate metadata for clangd";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "../../../packages/react-native-reanimated/scripts/clangd-generate-xcode-metadata.sh";
 		};
 		F6A41C54EA430FDDC6A6ED99 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;

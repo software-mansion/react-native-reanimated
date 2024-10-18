@@ -15,11 +15,13 @@ export default function DocSidebarWrapper(props) {
 
   const newItems = ['animations/withClamp'];
   const experimentalItems = ['shared-element-transitions/overview'];
+  const unreleasedItems = [];
 
   return (
     <DocSidebar
       newItems={newItems}
       experimentalItems={experimentalItems}
+      unreleasedItems={unreleasedItems}
       heroImages={heroImages}
       titleImages={titleImages}
       {...props}

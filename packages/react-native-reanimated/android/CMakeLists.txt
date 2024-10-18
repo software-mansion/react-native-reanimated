@@ -4,8 +4,6 @@ cmake_minimum_required(VERSION 3.8)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
-
 if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 73)
     set(CMAKE_CXX_STANDARD 20)
 else()
@@ -48,9 +46,8 @@ endif()
 set(ignoreMe "${JS_RUNTIME_DIR}")
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
-set(ANDROID_SRC_DIR "${CMAKE_SOURCE_DIR}/src")
-set(WORKLETS_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/worklets")
-set(REANIMATED_COMMON_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp/reanimated")
+set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")
+set(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/src/main/worklets)
-add_subdirectory(${CMAKE_SOURCE_DIR}/src/main/reanimated)
+add_subdirectory("${ANDROID_CPP_DIR}/worklets")
+add_subdirectory("${ANDROID_CPP_DIR}/reanimated")

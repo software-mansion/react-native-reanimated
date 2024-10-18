@@ -162,7 +162,10 @@ export default function SpringExample() {
                 {
                   fontSize: useConfigWithDuration
                     ? 50
-                    : Math.min(0.75 * Number.parseFloat(mass), 40) + 10,
+                    : Math.min(
+                        0.75 * Number.parseFloat(mass === '' ? '0' : mass),
+                        40
+                      ) + 10,
                 },
               ]}>
               {/* Using here view with border radius would be more natural, but views with border radius and rotation are bugged on android */}

@@ -1,16 +1,11 @@
 #pragma once
 
+#include <ReactCommon/CallInvoker.h>
+#include <ReactCommon/TurboModule.h>
+
 #include <memory>
 #include <string>
 #include <vector>
-
-#ifdef ANDROID
-#include "TurboModule.h"
-#else
-#include <ReactCommon/TurboModule.h>
-#endif
-
-#include <ReactCommon/CallInvoker.h>
 
 using namespace facebook;
 using namespace react;
@@ -82,7 +77,8 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
   virtual jsi::Value subscribeForKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &keyboardEventContainer,
-      const jsi::Value &isStatusBarTranslucent) = 0;
+      const jsi::Value &isStatusBarTranslucent,
+      const jsi::Value &isNavigationBarTranslucent) = 0;
   virtual void unsubscribeFromKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &listenerId) = 0;

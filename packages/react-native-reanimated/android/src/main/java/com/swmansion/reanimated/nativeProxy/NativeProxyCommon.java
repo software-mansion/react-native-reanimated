@@ -30,6 +30,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public abstract class NativeProxyCommon {
@@ -39,10 +40,10 @@ public abstract class NativeProxyCommon {
 
   protected NodesManager mNodesManager;
   protected final WeakReference<ReactApplicationContext> mContext;
-  protected AndroidUIScheduler mAndroidUIScheduler;
-  private ReanimatedSensorContainer reanimatedSensorContainer;
+  protected final AndroidUIScheduler mAndroidUIScheduler;
+  private final ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
-  private KeyboardAnimationManager keyboardAnimationManager;
+  private final KeyboardAnimationManager keyboardAnimationManager;
   private Long firstUptime = SystemClock.uptimeMillis();
   private boolean slowAnimationsEnabled = false;
   private final int ANIMATIONS_DRAG_FACTOR = 10;
@@ -205,9 +206,11 @@ public abstract class NativeProxyCommon {
 
   @DoNotStrip
   public int subscribeForKeyboardEvents(
-      KeyboardWorkletWrapper keyboardWorkletWrapper, boolean isStatusBarTranslucent) {
+      KeyboardWorkletWrapper keyboardWorkletWrapper,
+      boolean isStatusBarTranslucent,
+      boolean isNavigationBarTranslucent) {
     return keyboardAnimationManager.subscribeForKeyboardUpdates(
-        keyboardWorkletWrapper, isStatusBarTranslucent);
+        keyboardWorkletWrapper, isStatusBarTranslucent, isNavigationBarTranslucent);
   }
 
   @DoNotStrip
@@ -226,12 +229,12 @@ public abstract class NativeProxyCommon {
       Log.w("[REANIMATED]", "You can not use LayoutAnimation with enabled Chrome Debugger");
       return;
     }
-    mNodesManager = mContext.get().getNativeModule(ReanimatedModule.class).getNodesManager();
+    mNodesManager =
+        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
+            .getNodesManager();
 
     AnimationsManager animationsManager =
-        mContext
-            .get()
-            .getNativeModule(ReanimatedModule.class)
+        Objects.requireNonNull(mContext.get().getNativeModule(ReanimatedModule.class))
             .getNodesManager()
             .getAnimationsManager();
 
