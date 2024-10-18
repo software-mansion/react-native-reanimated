@@ -85,19 +85,19 @@ Pod::Spec.new do |s|
   s.subspec "reanimated" do |ss|
     ss.source_files = "Common/cpp/reanimated/**/*.{cpp,h}"
     ss.header_dir = "reanimated"
-    ss.header_mappings_dir = "Common/cpp/reanimated"
+    ss.header_mappings_dir = "/Users/tomekzaw/RNOS/react-native-reanimated/packages/react-native-reanimated/Common/cpp"
 
     ss.subspec "apple" do |sss|
       sss.source_files = "apple/reanimated/**/*.{mm,h,m}"
       sss.header_dir = "reanimated/apple"
-      sss.header_mappings_dir = "apple/reanimated"
+      sss.header_mappings_dir = "/Users/tomekzaw/RNOS/react-native-reanimated/packages/react-native-reanimated/apple"
     end
   end
 
   s.subspec "worklets" do |ss|
     ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
     ss.header_dir = "worklets"
-    ss.header_mappings_dir = "Common/cpp/worklets"
+    ss.header_mappings_dir = "/Users/tomekzaw/RNOS/react-native-reanimated/packages/react-native-reanimated/Common/cpp"
   end
 
   gcc_debug_definitions = "$(inherited)"
