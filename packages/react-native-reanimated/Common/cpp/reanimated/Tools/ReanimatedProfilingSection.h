@@ -1,62 +1,128 @@
 #pragma once
 
-//#define REANIMATED_PROFILING
+#define REANIMATED_PROFILING
 
 #ifdef REANIMATED_PROFILING
 
-#ifdef ANDROID
-#include <android/trace.h>
-#else
+#if defined(__APPLE__)
+#include <os/trace_base.h>
+
+#if OS_LOG_TARGET_HAS_10_15_FEATURES
+#include <os/log.h>
 #include <os/signpost.h>
-const os_log_t log_handle = os_log_create("reanimated", OS_LOG_CATEGORY_POINTS_OF_INTEREST);
+#include <sstream>
+#endif
+
+#elif defined(ANDROID)
+
+#include <android/trace.h>
+
 #endif
 
 #endif
 
 namespace reanimated {
 
-// Convenience macros that allow for easy marking of relevant sections both on Android and iOS
+#if defined(ANDROID) && defined(REANIMATED_PROFILING)
 
-#ifdef REANIMATED_PROFILING
+struct ReanimatedSystraceSection {
+ public:
+  template <typename... ConvertsToStringPiece>
+  explicit ReanimatedSystraceSection(const char* name, ConvertsToStringPiece&&... args){
+    ATrace_beginSection(name);
+  }
 
-#ifdef ANDROID
+  ~ReanimatedSystraceSection() {
+    ATrace_endSection();
+  }
 
-// On android we use ATrace. The easiest way to produce a trace is to run profiling through Android Studio with System Trace recording.
-// The result can be viewed through Perfetto web UI.
+ private:
+};
 
-#define PROFILER_START(x) ATrace_beginSection(#x);
+#elif defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES && defined(REANIMATED_PROFILING)
 
-#define PROFILER_END(x) ATrace_endSection();
+template <typename T, typename = void>
+struct renderer {
+  static std::string render(const T& t) {
+    std::ostringstream oss;
+    oss << t;
+    return oss.str();
+  }
+};
+
+template <typename T>
+static auto render(const T& t)
+    -> decltype(renderer<T>::render(std::declval<const T&>())) {
+  return renderer<T>::render(t);
+}
+
+inline os_log_t instrumentsLogHandle = nullptr;
+
+static inline os_log_t getOrCreateInstrumentsLogHandle() {
+  if (!instrumentsLogHandle) {
+    instrumentsLogHandle = os_log_create(
+        "dev.reanimated.instruments", OS_LOG_CATEGORY_POINTS_OF_INTEREST);
+  }
+  return instrumentsLogHandle;
+}
+
+struct ReanimatedSystraceSection {
+ public:
+  template <typename... ConvertsToStringPiece>
+  explicit ReanimatedSystraceSection(const char* name, ConvertsToStringPiece&&... args){
+    os_log_t instrumentsLogHandle = reanimated::getOrCreateInstrumentsLogHandle();
+
+    // If the log isn't enabled, we don't want the performance overhead of the
+    // rest of the code below.
+    if (!os_signpost_enabled(instrumentsLogHandle)) {
+      return;
+    }
+
+    name_ = name;
+
+    const auto argsVector = std::vector<std::string>{reanimated::render(args)...};
+    std::string argsString = "";
+    for (size_t i = 0; i < argsVector.size(); i += 2) {
+      argsString += argsVector[i] + "=" + argsVector[i + 1] + ";";
+    }
+
+    signpostID_ = os_signpost_id_make_with_pointer(instrumentsLogHandle, this);
+
+    os_signpost_interval_begin(
+        instrumentsLogHandle,
+        signpostID_,
+        "Reanimated",
+        "%s begin: %s",
+        name,
+        argsString.c_str());
+  }
+
+  ~ReanimatedSystraceSection() {
+    // We don't need to gate on os_signpost_enabled here because it's already
+    // checked in os_signpost_interval_end.
+    os_signpost_interval_end(
+        reanimated::instrumentsLogHandle,
+        signpostID_,
+        "Reanimated",
+        "%s end",
+        name_.data());
+  }
+
+ private:
+  os_signpost_id_t signpostID_ = OS_SIGNPOST_ID_INVALID;
+  std::string_view name_;
+};
 
 #else
 
-// On iOS we use Xcode Instruments signposts. The trace can be produced and analyzed through Instruments.
-
-#define PROFILER_START(x) \
-void* pointer_##x = std::malloc(8); \
-os_signpost_id_t signpost_id_##x = os_signpost_id_make_with_pointer(log_handle, pointer_##x); \
-os_signpost_interval_begin(log_handle, signpost_id_##x, #x);
-
-#define PROFILER_END(x) \
-os_signpost_interval_end(log_handle, signpost_id_##x, #x); \
-std::free(pointer_##x);
-
-#endif // ANDROID
-
-#define PROFILER_WRAP(fn, x) \
-    PROFILER_START(x) \
-    fn; \
-    PROFILER_END(x)
-
-#else
-
-#define PROFILER_START(x)
-
-#define PROFILER_END(x)
-
-#define PROFILER_WRAP(fn, x) \
-    fn
+struct ReanimatedSystraceSection {
+ public:
+  template <typename... ConvertsToStringPiece>
+  explicit ReanimatedSystraceSection(
+      const char* name,
+       ConvertsToStringPiece&&... args) {}
+};
 
 #endif
 
-} // namespace reanimated
+}

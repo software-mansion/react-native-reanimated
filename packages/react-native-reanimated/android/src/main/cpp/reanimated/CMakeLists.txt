@@ -5,6 +5,8 @@ file(GLOB_RECURSE REANIMATED_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS "${ANDROID_CP
 
 find_package(ReactAndroid REQUIRED CONFIG)
 
+find_library(android-lib android)
+
 add_library(
     reanimated
     SHARED
@@ -55,3 +57,8 @@ else()
         ReactAndroid::react_nativemodule_core
     )
 endif()
+
+target_link_libraries(
+        reanimated
+        ${android-lib}
+)

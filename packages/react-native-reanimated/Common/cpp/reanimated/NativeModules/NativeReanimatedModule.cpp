@@ -3,6 +3,7 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/CollectionUtils.h>
 #include <reanimated/Tools/FeaturesConfig.h>
+#include <reanimated/Tools/ReanimatedProfilingSection.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
@@ -653,6 +654,7 @@ void NativeReanimatedModule::updateProps(
 }
 
 void NativeReanimatedModule::performOperations() {
+  ReanimatedSystraceSection s("performOperations", "size", operationsInBatch_.size());
   if (operationsInBatch_.empty() && tagsToRemove_.empty()) {
     // nothing to do
     return;
