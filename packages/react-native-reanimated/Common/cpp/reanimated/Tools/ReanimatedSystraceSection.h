@@ -9,6 +9,8 @@
 #include <os/log.h>
 #include <os/signpost.h>
 #include <sstream>
+#include <vector>
+#include <string>
 #endif
 
 #elif defined(ANDROID)
