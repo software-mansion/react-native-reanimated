@@ -1,7 +1,5 @@
 #pragma once
 
-#define REANIMATED_PROFILING
-
 #ifdef REANIMATED_PROFILING
 
 #if defined(__APPLE__)
@@ -39,6 +37,8 @@ struct ReanimatedSystraceSection {
  private:
 };
 
+// The apple part is copied from React Native
+// from https://github.com/facebook/react-native/blob/5697d923a05119314b4cfcd556cb243986637764/packages/react-native/ReactCommon/cxxreact/SystraceSection.h
 #elif defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES && defined(REANIMATED_PROFILING)
 
 template <typename T, typename = void>
