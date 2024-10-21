@@ -26,7 +26,9 @@ namespace reanimated {
 struct ReanimatedSystraceSection {
  public:
   template <typename... ConvertsToStringPiece>
-  explicit ReanimatedSystraceSection(const char* name, ConvertsToStringPiece&&... args){
+  explicit ReanimatedSystraceSection(
+      const char *name,
+      ConvertsToStringPiece &&...args) {
     ATrace_beginSection(name);
   }
 
@@ -38,12 +40,14 @@ struct ReanimatedSystraceSection {
 };
 
 // The apple part is copied from React Native
-// from https://github.com/facebook/react-native/blob/5697d923a05119314b4cfcd556cb243986637764/packages/react-native/ReactCommon/cxxreact/SystraceSection.h
-#elif defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES && defined(REANIMATED_PROFILING)
+// from
+// https://github.com/facebook/react-native/blob/5697d923a05119314b4cfcd556cb243986637764/packages/react-native/ReactCommon/cxxreact/SystraceSection.h
+#elif defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES && \
+    defined(REANIMATED_PROFILING)
 
 template <typename T, typename = void>
 struct renderer {
-  static std::string render(const T& t) {
+  static std::string render(const T &t) {
     std::ostringstream oss;
     oss << t;
     return oss.str();
@@ -51,8 +55,8 @@ struct renderer {
 };
 
 template <typename T>
-static auto render(const T& t)
-    -> decltype(renderer<T>::render(std::declval<const T&>())) {
+static auto render(const T &t)
+    -> decltype(renderer<T>::render(std::declval<const T &>())) {
   return renderer<T>::render(t);
 }
 
@@ -69,8 +73,11 @@ static inline os_log_t getOrCreateInstrumentsLogHandle() {
 struct ReanimatedSystraceSection {
  public:
   template <typename... ConvertsToStringPiece>
-  explicit ReanimatedSystraceSection(const char* name, ConvertsToStringPiece&&... args){
-    os_log_t instrumentsLogHandle = reanimated::getOrCreateInstrumentsLogHandle();
+  explicit ReanimatedSystraceSection(
+      const char *name,
+      ConvertsToStringPiece &&...args) {
+    os_log_t instrumentsLogHandle =
+        reanimated::getOrCreateInstrumentsLogHandle();
 
     // If the log isn't enabled, we don't want the performance overhead of the
     // rest of the code below.
@@ -80,7 +87,8 @@ struct ReanimatedSystraceSection {
 
     name_ = name;
 
-    const auto argsVector = std::vector<std::string>{reanimated::render(args)...};
+    const auto argsVector =
+        std::vector<std::string>{reanimated::render(args)...};
     std::string argsString = "";
     for (size_t i = 0; i < argsVector.size(); i += 2) {
       argsString += argsVector[i] + "=" + argsVector[i + 1] + ";";
@@ -119,10 +127,10 @@ struct ReanimatedSystraceSection {
  public:
   template <typename... ConvertsToStringPiece>
   explicit ReanimatedSystraceSection(
-      const char* name,
-       ConvertsToStringPiece&&... args) {}
+      const char *name,
+      ConvertsToStringPiece &&...args) {}
 };
 
 #endif
 
-}
+} // namespace reanimated
