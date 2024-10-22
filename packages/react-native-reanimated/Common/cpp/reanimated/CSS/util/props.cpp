@@ -307,4 +307,23 @@ ChangedProps getChangedProps(
       rt, oldProps.asObject(rt), newProps.asObject(rt), propertyNames.value());
 }
 
+jsi::Value mergeProps(
+    jsi::Runtime &rt,
+    const jsi::Value &props1,
+    const jsi::Value &props2) {
+  auto result = props1.isObject() ? props1.asObject(rt) : jsi::Object(rt);
+  auto overrides = props2.isObject() ? props2.asObject(rt) : jsi::Object(rt);
+
+  auto overridePropertyNames = overrides.getPropertyNames(rt);
+
+  for (size_t i = 0; i < overridePropertyNames.size(rt); i++) {
+    const auto propName =
+        overridePropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    result.setProperty(
+        rt, propName.c_str(), overrides.getProperty(rt, propName.c_str()));
+  }
+
+  return jsi::Value(std::move(result));
+}
+
 } // namespace reanimated

@@ -199,29 +199,24 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unregisterCSSAnimation(animationId);
   }
 
-  updateCSSTransition(
-    transitionId: number,
-    transitionConfig: NormalizedCSSTransitionConfig
-  ) {
-    this.#reanimatedModuleProxy.updateCSSTransition(
-      transitionId,
-      transitionConfig
-    );
-  }
-
   registerCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    transitionId: number,
     transitionConfig: NormalizedCSSTransitionConfig
   ) {
     this.#reanimatedModuleProxy.registerCSSTransition(
       shadowNodeWrapper,
-      transitionId,
       transitionConfig
     );
   }
 
-  unregisterCSSTransition(transitionId: number) {
-    this.#reanimatedModuleProxy.unregisterCSSTransition(transitionId);
+  updateCSSTransition(
+    viewTag: number,
+    configUpdates: Partial<NormalizedCSSTransitionConfig>
+  ) {
+    this.#reanimatedModuleProxy.updateCSSTransition(viewTag, configUpdates);
+  }
+
+  unregisterCSSTransition(viewTag: number) {
+    this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
   }
 }

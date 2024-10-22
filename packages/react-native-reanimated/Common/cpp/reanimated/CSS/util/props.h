@@ -2,11 +2,8 @@
 
 #include <reanimated/CSS/common/definitions.h>
 
-#include <jsi/jsi.h>
 #include <unordered_map>
 #include <unordered_set>
-
-using namespace facebook;
 
 namespace reanimated {
 
@@ -29,6 +26,11 @@ ChangedProps getChangedProps(
     const jsi::Value &newProps,
     const std::optional<PropertyNames> &propertyNames);
 ChangedProps getChangedProps(
+    jsi::Runtime &rt,
+    const jsi::Value &oldProps,
+    const jsi::Value &newProps);
+
+jsi::Value mergeProps(
     jsi::Runtime &rt,
     const jsi::Value &oldProps,
     const jsi::Value &newProps);

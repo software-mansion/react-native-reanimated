@@ -7,16 +7,12 @@
 #include <react/nativemodule/dom/NativeDOM.h>
 #include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/core/LayoutableShadowNode.h>
-#include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/dom/DOM.h>
 #include <react/renderer/graphics/Color.h>
-#include <react/renderer/uimanager/UIManager.h>
 
-#include <jsi/jsi.h>
 #include <map>
 #include <memory>
 #include <stdexcept>
-#include <string>
 
 namespace reanimated {
 

@@ -3,13 +3,12 @@
 namespace reanimated {
 
 CSSTransition::CSSTransition(
-    const unsigned id,
     const ShadowNode::Shared shadowNode,
     const CSSTransitionConfig &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : id_(id),
-      shadowNode_(shadowNode),
+    : shadowNode_(shadowNode),
       properties_(config.properties),
+      viewStylesRepository_(viewStylesRepository),
       styleInterpolator_(TransitionStyleInterpolator(viewStylesRepository)),
       progressProvider_(TransitionProgressProvider(
           config.duration,

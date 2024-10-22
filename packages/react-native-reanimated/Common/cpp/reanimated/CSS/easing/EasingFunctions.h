@@ -8,9 +8,9 @@
 #include <string>
 #include <unordered_map>
 
-using namespace facebook;
-
 namespace reanimated {
+
+using namespace facebook;
 
 extern const std::unordered_map<std::string, EasingFunction>
     predefinedEasingMap;

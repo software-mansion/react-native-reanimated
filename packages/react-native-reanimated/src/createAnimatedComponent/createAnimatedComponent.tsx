@@ -220,7 +220,6 @@ export function createAnimatedComponent(
       this._NativeEventsManager?.detachEvents();
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
       this._detachStyles();
-      this._CSSManager?.detach(this._componentViewTag);
       this._InlinePropManager.detachInlineProps();
       if (this.props.sharedTransitionTag) {
         this._configureSharedTransition(true);
