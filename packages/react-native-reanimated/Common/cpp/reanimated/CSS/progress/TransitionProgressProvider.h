@@ -14,7 +14,7 @@ class TransitionPropertyProgressProvider : public ProgressProvider {
  public:
   using ProgressProvider::ProgressProvider;
 
-  TransitionProgressState getState(const time_t timestamp) const;
+  TransitionProgressState getState() const;
 
  protected:
   std::optional<double> calculateRawProgress(const time_t timestamp) override;

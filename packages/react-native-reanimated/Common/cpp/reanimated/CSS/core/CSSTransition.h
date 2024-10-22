@@ -32,8 +32,11 @@ class CSSTransition {
   TransitionProgressState getState(const time_t timestamp) const {
     return TransitionProgressState::PENDING; // TODO
   }
-  jsi::Value getViewStyle(jsi::Runtime &rt) const {
-    return jsi::Value::undefined(); // TODO
+  jsi::Value getCurrentStyle(jsi::Runtime &rt) const {
+    return styleInterpolator_.getCurrentStyle(rt, shadowNode_, properties_);
+  }
+  jsi::Value getCurrentInterpolationStyle(jsi::Runtime &rt) const {
+    return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
   }
 
   void updateSettings(

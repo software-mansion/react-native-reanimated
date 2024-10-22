@@ -4,8 +4,7 @@ namespace reanimated {
 
 // TransitionPropertyProgressProvider
 
-TransitionProgressState TransitionPropertyProgressProvider::getState(
-    const time_t timestamp) const {
+TransitionProgressState TransitionPropertyProgressProvider::getState() const {
   if (!rawProgress_.has_value()) {
     return TransitionProgressState::PENDING;
   }
@@ -76,7 +75,7 @@ void TransitionProgressProvider::runProgressProviders(
 }
 
 void TransitionProgressProvider::update(const time_t timestamp) {
-  for (const auto propertyName : propertiesToRemove_) {
+  for (const auto &propertyName : propertiesToRemove_) {
     propertyProgressProviders_.erase(propertyName);
   }
   propertiesToRemove_.clear();
@@ -84,7 +83,7 @@ void TransitionProgressProvider::update(const time_t timestamp) {
   for (auto &[propertyName, propertyProgressProvider] :
        propertyProgressProviders_) {
     propertyProgressProvider.update(timestamp);
-    if (propertyProgressProvider.getState(timestamp) ==
+    if (propertyProgressProvider.getState() ==
         TransitionProgressState::FINISHED) {
       propertiesToRemove_.emplace_back(propertyName);
     }

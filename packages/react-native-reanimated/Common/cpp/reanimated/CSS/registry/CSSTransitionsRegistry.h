@@ -30,7 +30,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
         !operationsBatch_.empty();
   }
 
-  void add(const std::shared_ptr<CSSTransition> &transition);
+  void add(jsi::Runtime &rt, const std::shared_ptr<CSSTransition> &transition);
   void remove(const unsigned id);
   void update(jsi::Runtime &rt, const time_t timestamp);
 

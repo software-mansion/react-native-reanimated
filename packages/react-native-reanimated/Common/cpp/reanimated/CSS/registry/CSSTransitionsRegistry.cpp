@@ -17,12 +17,21 @@ void CSSTransitionsRegistry::updateSettings(
 }
 
 void CSSTransitionsRegistry::add(
+    jsi::Runtime &rt,
     const std::shared_ptr<CSSTransition> &transition) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   const auto id = transition->getId();
+  const auto &shadowNode = transition->getShadowNode();
+  const auto tag = shadowNode->getTag();
+
   registry_.insert({id, transition});
   PropsObserver observer = createPropsObserver(id);
-  staticPropsRegistry_->addObserver(
-      id, transition->getShadowNode()->getTag(), observer);
+  staticPropsRegistry_->addObserver(id, tag, observer);
+
+  const auto currentStyle = transition->getCurrentStyle(rt);
+  updatesRegistry_[tag] =
+      std::make_pair(shadowNode, dynamicFromValue(rt, currentStyle));
 }
 
 void CSSTransitionsRegistry::remove(const unsigned id) {
@@ -82,9 +91,9 @@ jsi::Value CSSTransitionsRegistry::handleUpdate(
     jsi::Runtime &rt,
     const time_t timestamp,
     const std::shared_ptr<CSSTransition> &transition) {
-  if (transition->getState(timestamp) == TransitionProgressState::PENDING) {
-    // operationsBatch_.emplace_back(
-    //     TransitionOperation::DEACTIVATE, transition->getId());
+  if (transition->getState(timestamp) == TransitionProgressState::FINISHED) {
+    operationsBatch_.emplace_back(
+        TransitionOperation::DEACTIVATE, transition->getId());
   }
   return transition->update(rt, timestamp);
 }
@@ -110,15 +119,24 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const unsigned id) {
     const auto &transition = registry_.at(id);
     const auto &transitionProperties = transition->getProperties();
     const auto changedProps =
-        getChangedProps(rt, oldProps, newProps, transitionProperties.get());
+        getChangedProps(rt, oldProps, newProps, transitionProperties);
 
     if (!changedProps.changedPropertyNames.size()) {
       return;
     }
+    const auto shadowNode = transition->getShadowNode();
 
     {
       std::lock_guard<std::mutex> lock{mutex_};
       transition->run(rt, changedProps, getCurrentTimestamp_());
+
+      // Update props in the updates registry with current interpolator values
+      // (this is required to prevent react native from overriding the values,
+      // especially when we use transformProperty 'all' and add new props to the
+      // style)
+      updatesRegistry_[shadowNode->getTag()].second.update(
+          dynamicFromValue(rt, transition->getCurrentInterpolationStyle(rt)));
+
       operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, id);
     }
   };

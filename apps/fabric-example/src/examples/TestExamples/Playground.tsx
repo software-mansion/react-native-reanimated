@@ -20,6 +20,8 @@ const transitionStyles: ViewStyle[] = [
   {
     transform: [{ translateY: 200 }, { rotate: '45deg' }, { scale: 2 }],
     backgroundColor: 'blue',
+    opacity: 0.5,
+    borderRadius: 100,
   },
   {
     transform: [
@@ -30,6 +32,7 @@ const transitionStyles: ViewStyle[] = [
       { rotateX: '35deg' },
     ],
     backgroundColor: 'green',
+    width: 200,
   },
 ];
 

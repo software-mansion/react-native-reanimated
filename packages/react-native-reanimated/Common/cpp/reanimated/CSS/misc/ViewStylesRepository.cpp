@@ -95,6 +95,24 @@ std::optional<double> ViewStylesRepository::resolveUnitValue(
   return value.value * relativeValue.getNumber();
 }
 
+jsi::Value ViewStylesRepository::getViewStyle(jsi::Runtime &rt, const Tag tag) {
+  const auto animatedStyle = animatedPropsRegistry_->get(tag);
+  const auto staticStyle = staticPropsRegistry_->get(tag);
+
+  if (animatedStyle.empty() && staticStyle.empty()) {
+    return jsi::Value::undefined();
+  }
+  if (animatedStyle.empty()) {
+    return valueFromDynamic(rt, staticStyle);
+  }
+  if (staticStyle.empty()) {
+    return valueFromDynamic(rt, animatedStyle);
+  }
+
+  const auto mergedStyle = folly::dynamic::merge(animatedStyle, staticStyle);
+  return valueFromDynamic(rt, mergedStyle);
+}
+
 jsi::Value ViewStylesRepository::getStyleProp(
     jsi::Runtime &rt,
     const Tag tag,

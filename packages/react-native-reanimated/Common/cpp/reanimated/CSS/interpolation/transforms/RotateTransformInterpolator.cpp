@@ -16,6 +16,10 @@ OperationType RotateTransformInterpolatorBase<OperationType>::interpolate(
     const TransformInterpolatorUpdateContext &context) const {
   const auto &fromAngle = fromOperation.value;
   const auto &toAngle = toOperation.value;
+
+  LOG(INFO) << "fromAngle: " << fromAngle.value << " toAngle: " << toAngle.value
+            << " progress: " << progress;
+
   return OperationType(
       fromAngle.value + (toAngle.value - fromAngle.value) * progress);
 }

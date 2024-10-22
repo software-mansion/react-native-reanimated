@@ -54,28 +54,26 @@ std::shared_ptr<PropertyInterpolatorFactory> discrete() {
   return discrete(std::nullopt);
 }
 
-std::shared_ptr<PropertyInterpolatorFactory> relativeOrNumeric(
+std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
     const std::optional<UnitValue> &defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> relativeOrNumeric(
+std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
     const double &defaultValue) {
-  return relativeOrNumeric(
-      relativeTo, relativeProperty, UnitValue(defaultValue));
+  return relOrNum(relativeTo, relativeProperty, UnitValue(defaultValue));
 }
-std::shared_ptr<PropertyInterpolatorFactory> relativeOrNumeric(
+std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
     const std::string &defaultValue) {
-  return relativeOrNumeric(
-      relativeTo, relativeProperty, UnitValue(defaultValue));
+  return relOrNum(relativeTo, relativeProperty, UnitValue(defaultValue));
 }
-std::shared_ptr<PropertyInterpolatorFactory> relativeOrNumeric(
+std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
     RelativeTo relativeTo,
     const std::string &relativeProperty) {
-  return relativeOrNumeric(relativeTo, relativeProperty, std::nullopt);
+  return relOrNum(relativeTo, relativeProperty, std::nullopt);
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> transforms(
