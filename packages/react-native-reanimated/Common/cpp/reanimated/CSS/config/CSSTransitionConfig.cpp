@@ -2,21 +2,11 @@
 
 namespace reanimated {
 
-TransitionProperties::TransitionProperties(
+inline TransitionProperties getTransitionProperty(
     jsi::Runtime &rt,
-    const jsi::Value &transitionProperty)
-    : properties_(parseProperties(rt, transitionProperty)) {}
+    const jsi::Object &config) {
+  const auto &transitionProperty = config.getProperty(rt, "transitionProperty");
 
-std::optional<PropertyNames> TransitionProperties::get() const {
-  if (std::holds_alternative<PropertyNames>(properties_)) {
-    return std::get<PropertyNames>(properties_);
-  }
-  return std::nullopt; // All style properties can trigger transition
-}
-
-std::variant<PropertyNames, bool> TransitionProperties::parseProperties(
-    jsi::Runtime &rt,
-    const jsi::Value &transitionProperty) {
   if (transitionProperty.isObject()) {
     PropertyNames properties;
 
@@ -30,13 +20,7 @@ std::variant<PropertyNames, bool> TransitionProperties::parseProperties(
     return properties;
   }
 
-  return true;
-};
-
-inline TransitionProperties getTransitionProperty(
-    jsi::Runtime &rt,
-    const jsi::Object &config) {
-  return TransitionProperties(rt, config.getProperty(rt, "transitionProperty"));
+  return std::nullopt;
 }
 
 inline double getTransitionDuration(

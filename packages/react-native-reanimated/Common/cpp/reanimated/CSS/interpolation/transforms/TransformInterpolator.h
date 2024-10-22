@@ -23,6 +23,7 @@ class TransformInterpolator {
       : defaultOperation_(defaultOperation) {}
 
   std::shared_ptr<TransformOperation> getDefaultOperation() const {
+    LOG(INFO) << "Get default operation: " << defaultOperation_;
     return defaultOperation_;
   }
 

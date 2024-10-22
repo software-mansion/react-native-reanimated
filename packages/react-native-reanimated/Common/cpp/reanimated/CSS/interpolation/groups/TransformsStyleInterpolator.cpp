@@ -17,6 +17,15 @@ jsi::Value TransformsStyleInterpolator::getStyleValue(
       rt, shadowNode->getTag(), propertyPath_);
 }
 
+jsi::Value TransformsStyleInterpolator::getCurrentValue(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) const {
+  if (previousResult_.has_value()) {
+    return convertResultToJSI(rt, previousResult_.value());
+  }
+  return getStyleValue(rt, shadowNode);
+}
+
 jsi::Value TransformsStyleInterpolator::update(
     const PropertyInterpolationUpdateContext &context) {
   updateCurrentKeyframe(context);
@@ -35,7 +44,7 @@ jsi::Value TransformsStyleInterpolator::update(
         ? keyframe->toOperations.value()
         : fallbackValue;
     keyframe = createTransformKeyframe(
-        context.rt, keyframe->offset, fromOperations, toOperations);
+        keyframe->fromOffset, keyframe->toOffset, fromOperations, toOperations);
   }
   // Calculate the local progress for the current keyframe
   const auto progress = calculateLocalProgress(context.progress);
@@ -77,8 +86,8 @@ void TransformsStyleInterpolator::updateKeyframes(
 
   for (size_t i = 0; i < keyframesCount; ++i) {
     keyframes_.push_back(createTransformKeyframe(
-        rt,
         operations[i].first,
+        operations[i + 1].first,
         operations[i].second,
         operations[i + 1].second));
   }
@@ -91,13 +100,14 @@ void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
   keyframeIndex_ = 0;
   keyframes_.clear();
   keyframes_.reserve(1);
-  keyframes_.push_back(createTransformKeyframe(
-      rt,
-      0,
+
+  const auto fromOperations =
       previousResult_.value_or(parseTransformOperations(rt, oldStyleValue)
-                                   .value_or(TransformOperations{})),
-      parseTransformOperations(rt, newStyleValue)
-          .value_or(TransformOperations{})));
+                                   .value_or(TransformOperations{}));
+  const auto toOperations = parseTransformOperations(rt, newStyleValue)
+                                .value_or(TransformOperations{});
+  keyframes_.push_back(
+      createTransformKeyframe(0, 1, fromOperations, toOperations));
 }
 
 std::optional<TransformOperations>
@@ -124,8 +134,8 @@ TransformsStyleInterpolator::parseTransformOperations(
 
 std::shared_ptr<TransformKeyframe>
 TransformsStyleInterpolator::createTransformKeyframe(
-    jsi::Runtime &rt,
-    const double offset,
+    const double fromOffset,
+    const double toOffset,
     const std::optional<TransformOperations> &fromOperationsOptional,
     const std::optional<TransformOperations> &toOperationsOptional) const {
   // If nullopt is passed, return values as is (we will have to read the
@@ -134,12 +144,39 @@ TransformsStyleInterpolator::createTransformKeyframe(
   if (!fromOperationsOptional.has_value() ||
       !toOperationsOptional.has_value()) {
     return std::make_shared<TransformKeyframe>(TransformKeyframe{
-        offset, fromOperationsOptional, toOperationsOptional});
+        fromOffset, toOffset, fromOperationsOptional, toOperationsOptional});
   }
 
-  const auto &fromOperations = fromOperationsOptional.value();
-  const auto &toOperations = toOperationsOptional.value();
+  const auto [fromOperations, toOperations] = createTransformInterpolationPair(
+      fromOperationsOptional.value(), toOperationsOptional.value());
+  return std::make_shared<TransformKeyframe>(
+      TransformKeyframe{fromOffset, toOffset, fromOperations, toOperations});
+}
 
+void TransformsStyleInterpolator::addConvertedOperations(
+    const std::shared_ptr<TransformOperation> &sourceOperation,
+    const std::shared_ptr<TransformOperation> &targetOperation,
+    TransformOperations &sourceResult,
+    TransformOperations &targetResult) const {
+  const auto convertedOps = sourceOperation->convertTo(targetOperation->type);
+
+  targetResult.emplace_back(targetOperation);
+  for (size_t k = 0; k < convertedOps.size(); ++k) {
+    sourceResult.emplace_back(convertedOps[k]);
+    // Converted operations will contain one operation with the same type and
+    // can contain more operations derived from the source operation (we need
+    // to pair them with operations of the same type with default values)
+    if (k > 0) {
+      targetResult.emplace_back(
+          getDefaultOperationOfType(convertedOps[k]->type));
+    }
+  }
+}
+
+std::pair<TransformOperations, TransformOperations>
+TransformsStyleInterpolator::createTransformInterpolationPair(
+    const TransformOperations &fromOperations,
+    const TransformOperations &toOperations) const {
   TransformOperations fromOperationsResult, toOperationsResult;
   size_t i = 0, j = 0;
 
@@ -224,12 +261,11 @@ TransformsStyleInterpolator::createTransformKeyframe(
     // the matrix transformation if at least one of other transformations is
     // present in the transforms array
     if (shouldInterpolateMatrices) {
-      return std::make_shared<TransformKeyframe>(TransformKeyframe{
-          offset,
+      return std::make_pair(
           TransformOperations{std::make_shared<MatrixOperation>(
               MatrixOperation(fromOperations))},
           TransformOperations{std::make_shared<MatrixOperation>(
-              MatrixOperation(toOperations))}});
+              MatrixOperation(toOperations))});
     }
   }
 
@@ -247,28 +283,7 @@ TransformsStyleInterpolator::createTransformKeyframe(
     toOperationsResult.emplace_back(toOperations[j]);
   }
 
-  return std::make_shared<TransformKeyframe>(
-      TransformKeyframe{offset, fromOperationsResult, toOperationsResult});
-}
-
-void TransformsStyleInterpolator::addConvertedOperations(
-    const std::shared_ptr<TransformOperation> &sourceOperation,
-    const std::shared_ptr<TransformOperation> &targetOperation,
-    TransformOperations &sourceResult,
-    TransformOperations &targetResult) const {
-  const auto convertedOps = sourceOperation->convertTo(targetOperation->type);
-
-  targetResult.emplace_back(targetOperation);
-  for (size_t k = 0; k < convertedOps.size(); ++k) {
-    sourceResult.emplace_back(convertedOps[k]);
-    // Converted operations will contain one operation with the same type and
-    // can contain more operations derived from the source operation (we need
-    // to pair them with operations of the same type with default values)
-    if (k > 0) {
-      targetResult.emplace_back(
-          getDefaultOperationOfType(convertedOps[k]->type));
-    }
-  }
+  return std::make_pair(fromOperationsResult, toOperationsResult);
 }
 
 TransformOperations TransformsStyleInterpolator::getFallbackValue(
@@ -285,10 +300,10 @@ TransformsStyleInterpolator::getDefaultOperationOfType(
 }
 
 TransformOperations TransformsStyleInterpolator::resolveTransformOperations(
-    const std::optional<TransformOperations> &unresolvedOperations,
+    const TransformOperations &unresolvedOperations,
     const PropertyInterpolationUpdateContext &context) const {
-  // TODO - implement once interpolators are ready
-  return unresolvedOperations.value_or(TransformOperations{});
+  return interpolateOperations(
+      0, unresolvedOperations, unresolvedOperations, context);
 }
 
 std::shared_ptr<TransformKeyframe>
@@ -310,14 +325,16 @@ TransformsStyleInterpolator::getKeyframeAtIndex(
   if (unresolvedOperations.has_value()) {
     if (resolveDirection < 0) {
       return std::make_shared<TransformKeyframe>(TransformKeyframe{
-          keyframe->offset,
-          resolveTransformOperations(unresolvedOperations, context),
+          keyframe->fromOffset,
+          keyframe->toOffset,
+          resolveTransformOperations(unresolvedOperations.value(), context),
           keyframe->toOperations});
     } else {
       return std::make_shared<TransformKeyframe>(TransformKeyframe{
-          keyframe->offset,
+          keyframe->fromOffset,
+          keyframe->toOffset,
           keyframe->fromOperations,
-          resolveTransformOperations(unresolvedOperations, context)});
+          resolveTransformOperations(unresolvedOperations.value(), context)});
     }
   }
 
@@ -325,19 +342,17 @@ TransformsStyleInterpolator::getKeyframeAtIndex(
   // value from the view style and create the new keyframe then
   const auto fallbackValue = getFallbackValue(context);
   if (resolveDirection < 0) {
-    const auto newKeyframe = createTransformKeyframe(
-        context.rt, keyframe->offset, fallbackValue, keyframe->toOperations);
-    return {std::make_shared<TransformKeyframe>(TransformKeyframe{
-        newKeyframe->offset,
-        resolveTransformOperations(newKeyframe->fromOperations, context),
-        newKeyframe->toOperations})};
+    return createTransformKeyframe(
+        keyframe->fromOffset,
+        keyframe->toOffset,
+        resolveTransformOperations(fallbackValue, context),
+        keyframe->toOperations);
   } else {
-    const auto newKeyframe = createTransformKeyframe(
-        context.rt, keyframe->offset, keyframe->fromOperations, fallbackValue);
-    return {std::make_shared<TransformKeyframe>(TransformKeyframe{
-        newKeyframe->offset,
-        newKeyframe->fromOperations,
-        resolveTransformOperations(newKeyframe->toOperations, context)})};
+    return createTransformKeyframe(
+        keyframe->fromOffset,
+        keyframe->toOffset,
+        keyframe->fromOperations,
+        resolveTransformOperations(fallbackValue, context));
   }
 }
 
@@ -351,11 +366,11 @@ void TransformsStyleInterpolator::updateCurrentKeyframe(
   }
 
   while (keyframeIndex_ < keyframes_.size() - 1 &&
-         keyframes_[keyframeIndex_ + 1]->offset < context.progress)
+         keyframes_[keyframeIndex_ + 1]->fromOffset < context.progress)
     ++keyframeIndex_;
 
   while (keyframeIndex_ > 0 &&
-         keyframes_[keyframeIndex_]->offset >= context.progress)
+         keyframes_[keyframeIndex_]->fromOffset >= context.progress)
     --keyframeIndex_;
 
   if (context.previousProgress.has_value()) {
@@ -366,14 +381,14 @@ void TransformsStyleInterpolator::updateCurrentKeyframe(
       currentKeyframe_ = getKeyframeAtIndex(keyframeIndex_, 0, context);
       if (context.progress < context.previousProgress.value()) {
         currentKeyframe_ = createTransformKeyframe(
-            context.rt,
-            currentKeyframe_->offset,
+            currentKeyframe_->fromOffset,
+            context.previousProgress.value(),
             currentKeyframe_->fromOperations,
             previousResult_);
       } else {
         currentKeyframe_ = createTransformKeyframe(
-            context.rt,
-            currentKeyframe_->offset,
+            context.previousProgress.value(),
+            currentKeyframe_->toOffset,
             previousResult_,
             currentKeyframe_->toOperations);
       }
@@ -386,10 +401,8 @@ void TransformsStyleInterpolator::updateCurrentKeyframe(
 
 double TransformsStyleInterpolator::calculateLocalProgress(
     const double progress) const {
-  const auto fromOffset = keyframes_[keyframeIndex_]->offset;
-  const auto toOffset = keyframeIndex_ < keyframes_.size() - 1
-      ? keyframes_[keyframeIndex_ + 1]->offset
-      : 1;
+  const auto fromOffset = currentKeyframe_->fromOffset;
+  const auto toOffset = currentKeyframe_->toOffset;
   if (toOffset == fromOffset) {
     return 1;
   }

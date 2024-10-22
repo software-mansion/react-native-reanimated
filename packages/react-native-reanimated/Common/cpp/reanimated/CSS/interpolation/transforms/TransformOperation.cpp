@@ -149,11 +149,14 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
 }
 
 jsi::Value TransformOperation::toJSIValue(jsi::Runtime &rt) const {
+  const auto &value = valueToJSIValue(rt);
+  if (value.isUndefined()) {
+    return jsi::Value::undefined();
+  }
+
   jsi::Object obj(rt);
   obj.setProperty(
-      rt,
-      jsi::String::createFromUtf8(rt, getOperationName()),
-      valueToJSIValue(rt));
+      rt, jsi::String::createFromUtf8(rt, getOperationName()), value);
   return obj;
 }
 
@@ -165,7 +168,8 @@ jsi::Value TransformOperation::toJSIValue(jsi::Runtime &rt) const {
 PerspectiveOperation::PerspectiveOperation(const double value)
     : TransformOperation(TransformOperationType::Perspective), value(value) {}
 jsi::Value PerspectiveOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  return jsi::Value(value);
+  // Perspective cannot be 0, so we return undefined in this case
+  return value != 0 ? jsi::Value(value) : jsi::Value::undefined();
 }
 TransformMatrix PerspectiveOperation::toMatrix() const {
   return TransformMatrix::Perspective(value);

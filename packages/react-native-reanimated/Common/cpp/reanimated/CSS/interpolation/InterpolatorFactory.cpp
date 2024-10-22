@@ -116,7 +116,7 @@ std::shared_ptr<PropertyInterpolatorFactory> discrete(
       defaultValue);
 }
 
-std::shared_ptr<PropertyInterpolatorFactory> relativeOrNumeric(
+std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
     const RelativeTo relativeTo,
     const std::string &relativeProperty,
     const std::optional<UnitValue> &defaultValue) {

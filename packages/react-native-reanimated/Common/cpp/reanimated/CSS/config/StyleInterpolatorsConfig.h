@@ -67,66 +67,66 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       // Props that can have relative or numeric values
       // TODO: Check which these props should be relative to with the
       // specification
-      {"borderBottomEndRadius", relativeOrNumeric(RelativeTo::SELF, "width")},
-      {"borderBottomLeftRadius", relativeOrNumeric(RelativeTo::SELF, "width")},
-      {"borderBottomRightRadius", relativeOrNumeric(RelativeTo::SELF, "width")},
-      {"borderBottomStartRadius", relativeOrNumeric(RelativeTo::SELF, "width")},
-      {"borderEndEndRadius", relativeOrNumeric(RelativeTo::SELF, "width")},
-      {"borderEndStartRadius", relativeOrNumeric(RelativeTo::SELF, "width")},
-      {"borderRadius", relativeOrNumeric(RelativeTo::SELF, "width")},
-      {"borderStartEndRadius", relativeOrNumeric(RelativeTo::SELF, "width")},
-      {"borderStartStartRadius", relativeOrNumeric(RelativeTo::SELF, "width")},
-      {"borderTopEndRadius", relativeOrNumeric(RelativeTo::SELF, "width")},
-      {"borderTopLeftRadius", relativeOrNumeric(RelativeTo::SELF, "width")},
-      {"borderTopRightRadius", relativeOrNumeric(RelativeTo::SELF, "width")},
-      {"borderTopStartRadius", relativeOrNumeric(RelativeTo::SELF, "width")},
+      {"borderBottomEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderBottomLeftRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderBottomRightRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderBottomStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderEndEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderEndStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderStartEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderStartStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderTopEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderTopLeftRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderTopRightRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderTopStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
 
-      {"top", relativeOrNumeric(RelativeTo::PARENT, "height", 0)},
-      {"bottom", relativeOrNumeric(RelativeTo::PARENT, "height", 0)},
-      {"left", relativeOrNumeric(RelativeTo::PARENT, "width", 0)},
-      {"right", relativeOrNumeric(RelativeTo::PARENT, "width", 0)},
+      {"top", relOrNum(RelativeTo::PARENT, "height", 0)},
+      {"bottom", relOrNum(RelativeTo::PARENT, "height", 0)},
+      {"left", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"right", relOrNum(RelativeTo::PARENT, "width", 0)},
 
       // TODO: Somehow handle case when the value is 'auto' string
       // check if we should animate in such a case
-      {"start", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"end", relativeOrNumeric(RelativeTo::PARENT, "width")},
+      {"start", relOrNum(RelativeTo::PARENT, "width")},
+      {"end", relOrNum(RelativeTo::PARENT, "width")},
       // TODO: This also can be auto or relative to width/height
-      {"flexBasis", relativeOrNumeric(RelativeTo::PARENT, "width")},
+      {"flexBasis", relOrNum(RelativeTo::PARENT, "width")},
       // TODO: This is relative to width for columns and height for rows
-      {"gap", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"rowGap", relativeOrNumeric(RelativeTo::PARENT, "height")},
-      {"columnGap", relativeOrNumeric(RelativeTo::PARENT, "width")},
+      {"gap", relOrNum(RelativeTo::PARENT, "width")},
+      {"rowGap", relOrNum(RelativeTo::PARENT, "height")},
+      {"columnGap", relOrNum(RelativeTo::PARENT, "width")},
 
       // Dimensions (relative to parent)
       // TODO: All of these also can have 'auto' value
-      {"height", relativeOrNumeric(RelativeTo::PARENT, "height")},
-      {"width", relativeOrNumeric(RelativeTo::PARENT, "width", "100%")},
-      {"maxHeight", relativeOrNumeric(RelativeTo::PARENT, "height")},
-      {"maxWidth", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"minHeight", relativeOrNumeric(RelativeTo::PARENT, "height")},
-      {"minWidth", relativeOrNumeric(RelativeTo::PARENT, "width")},
+      {"height", relOrNum(RelativeTo::PARENT, "height")},
+      {"width", relOrNum(RelativeTo::PARENT, "width", "100%")},
+      {"maxHeight", relOrNum(RelativeTo::PARENT, "height")},
+      {"maxWidth", relOrNum(RelativeTo::PARENT, "width")},
+      {"minHeight", relOrNum(RelativeTo::PARENT, "height")},
+      {"minWidth", relOrNum(RelativeTo::PARENT, "width")},
 
       // Margins (relative to parent width)
-      {"margin", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"marginBottom", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"marginEnd", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"marginHorizontal", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"marginLeft", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"marginRight", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"marginStart", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"marginTop", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"marginVertical", relativeOrNumeric(RelativeTo::PARENT, "width")},
+      {"margin", relOrNum(RelativeTo::PARENT, "width")},
+      {"marginBottom", relOrNum(RelativeTo::PARENT, "width")},
+      {"marginEnd", relOrNum(RelativeTo::PARENT, "width")},
+      {"marginHorizontal", relOrNum(RelativeTo::PARENT, "width")},
+      {"marginLeft", relOrNum(RelativeTo::PARENT, "width")},
+      {"marginRight", relOrNum(RelativeTo::PARENT, "width")},
+      {"marginStart", relOrNum(RelativeTo::PARENT, "width")},
+      {"marginTop", relOrNum(RelativeTo::PARENT, "width")},
+      {"marginVertical", relOrNum(RelativeTo::PARENT, "width")},
 
       // Paddings (relative to parent width)
-      {"padding", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"paddingBottom", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"paddingEnd", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"paddingHorizontal", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"paddingLeft", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"paddingRight", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"paddingStart", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"paddingTop", relativeOrNumeric(RelativeTo::PARENT, "width")},
-      {"paddingVertical", relativeOrNumeric(RelativeTo::PARENT, "width")},
+      {"padding", relOrNum(RelativeTo::PARENT, "width")},
+      {"paddingBottom", relOrNum(RelativeTo::PARENT, "width")},
+      {"paddingEnd", relOrNum(RelativeTo::PARENT, "width")},
+      {"paddingHorizontal", relOrNum(RelativeTo::PARENT, "width")},
+      {"paddingLeft", relOrNum(RelativeTo::PARENT, "width")},
+      {"paddingRight", relOrNum(RelativeTo::PARENT, "width")},
+      {"paddingStart", relOrNum(RelativeTo::PARENT, "width")},
+      {"paddingTop", relOrNum(RelativeTo::PARENT, "width")},
+      {"paddingVertical", relOrNum(RelativeTo::PARENT, "width")},
 
       // Numeric props
       {"opacity", numeric(1)},
@@ -150,7 +150,7 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
 
       // Other
       // TODO: Change to the proper interpolator
-      {"aspectRatio", relativeOrNumeric(RelativeTo::SELF, "width")},
+      {"aspectRatio", relOrNum(RelativeTo::SELF, "width")},
 
       // Complex Props (Objects)
       {"shadowOffset", object({{"width", numeric()}, {"height", numeric()}})},
@@ -160,7 +160,7 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       // Transforms
       {"transform",
        transforms(
-           {{"perspective", perspective(1)},
+           {{"perspective", perspective(0)}, // 0 means no perspective
             {"rotate", rotate("0rad")},
             {"rotateX", rotateX("0rad")},
             {"rotateY", rotateY("0rad")},

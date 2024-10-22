@@ -566,7 +566,7 @@ void ReanimatedModuleProxy::registerCSSTransition(
       parseCSSTransitionConfig(rt, transitionConfig),
       viewStylesRepository_);
 
-  cssTransitionsRegistry_->add(transition);
+  cssTransitionsRegistry_->add(rt, transition);
   maybeRunCSSLoop();
 }
 

@@ -3,25 +3,9 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
-#include <variant>
-
 using namespace facebook;
 
 namespace reanimated {
-
-class TransitionProperties {
- public:
-  TransitionProperties(jsi::Runtime &rt, const jsi::Value &transitionProperty);
-
-  std::optional<PropertyNames> get() const;
-
- private:
-  std::variant<PropertyNames, bool> properties_;
-
-  std::variant<PropertyNames, bool> parseProperties(
-      jsi::Runtime &rt,
-      const jsi::Value &transitionProperty);
-};
 
 struct CSSTransitionConfig {
   TransitionProperties properties;

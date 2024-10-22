@@ -11,6 +11,13 @@ using namespace facebook;
 using PropertyNames = std::vector<std::string>;
 using PropertyValues = std::unique_ptr<jsi::Value>;
 using PropertyPath = std::vector<std::string>;
+/**
+ * If nullopt - all style properties can trigger transition
+ * If empty vector - no style properties can trigger transition
+ * Otherwise - only specified style properties can trigger transition
+ */
+using TransitionProperties = std::optional<PropertyNames>;
+
 using EasingFunction = std::function<double(double)>;
 using ColorArray = std::array<uint8_t, 4>;
 using Vec16Array = std::array<double, 16>;
