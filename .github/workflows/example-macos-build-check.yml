@@ -27,6 +27,8 @@ on:
       - apps/macos-example/package.json
       - apps/macos-example/ios/**
       - apps/macos-example/macos/**
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   build:

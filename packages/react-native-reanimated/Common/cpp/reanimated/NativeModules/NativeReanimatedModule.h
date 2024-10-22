@@ -137,7 +137,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   void initializeFabric(const std::shared_ptr<UIManager> &uiManager);
 
-  void initializeLayoutAnimations();
+  void initializeLayoutAnimationsProxy();
 
   std::string obtainPropFromShadowNode(
       jsi::Runtime &rt,
