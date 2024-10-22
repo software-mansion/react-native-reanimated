@@ -1,9 +1,9 @@
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useNavigation } from '@react-navigation/native';
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
-import Animated, { FadeInRight, FadeInLeft } from 'react-native-reanimated';
+import Animated, { FadeInRight } from 'react-native-reanimated';
 import { spacing, colors, iconSizes } from '../../theme';
 import { getScreenTitle } from '../utils';
 import { Text } from '../../components';
@@ -15,17 +15,18 @@ type BackButtonProps = {
 
 const BackButton = memo(function BackButton({ tabRoutes }: BackButtonProps) {
   const navigation = useNavigation();
+  const [prevRoute, setPrevRoute] = useState<string>();
 
-  const state = navigation.getState();
-  if (!state) {
-    return null;
-  }
+  useEffect(() => {
+    return navigation.addListener('state', (e) => {
+      const { routes, index } = e.data.state;
+      setPrevRoute(routes[index - 1]?.key?.split('-')[0]);
+    });
+  }, [navigation]);
 
-  const { index, routes } = state;
-  const prevRoute = routes[index - 1];
   const routeNamesSet = new Set(tabRoutes.map(({ name }) => name));
-
-  if (!prevRoute || routes.every((route) => routeNamesSet.has(route.name))) {
+  const routes = navigation.getState()?.routes;
+  if (!prevRoute || routes?.every((route) => routeNamesSet.has(route.name))) {
     return null;
   }
 
@@ -41,9 +42,9 @@ const BackButton = memo(function BackButton({ tabRoutes }: BackButtonProps) {
         icon={faChevronLeft}
         size={iconSizes.xs}
       />
-      <Animated.View entering={FadeInRight} exiting={FadeInLeft}>
+      <Animated.View entering={FadeInRight}>
         <Text style={styles.backButtonText} variant="body1">
-          {getScreenTitle(prevRoute.name)}
+          {getScreenTitle(prevRoute)}
         </Text>
       </Animated.View>
     </TouchableOpacity>

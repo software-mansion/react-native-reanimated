@@ -8,6 +8,7 @@ import type {
 } from 'react-native-reanimated';
 import { colors, radius, sizes, spacing } from '../../../theme';
 import { useEffect, useState } from 'react';
+import { useIsFocused } from '@react-navigation/native';
 
 const MiscellaneousCard: RouteCardComponent = (props) => (
   <RouteCard
@@ -62,18 +63,27 @@ function Showcase() {
   const [animationIndex, setAnimationIndex] = useState(0);
 
   const { name: animationName, animation } = animations[animationIndex];
+  const isFocused = useIsFocused();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimationIndex((prev) => (prev + 1) % animations.length);
-    }, 2 * ANIMATION_DURATION);
+    if (isFocused) {
+      const interval = setInterval(() => {
+        setAnimationIndex((prev) => (prev + 1) % animations.length);
+      }, 2 * ANIMATION_DURATION);
 
-    return () => clearInterval(interval);
-  }, []);
+      return () => clearInterval(interval);
+    }
+  }, [isFocused]);
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.box, animation]} />
+      <Animated.View
+        style={[
+          styles.box,
+          animation,
+          { animationPlayState: isFocused ? 'running' : 'paused' },
+        ]}
+      />
       <Animated.View
         key={animationName}
         entering={FadeInLeft}

@@ -1,4 +1,4 @@
-import type { ViewStyle } from 'react-native';
+import type { TextStyle, ViewStyle } from 'react-native';
 import type { CSSTimeUnit } from './common';
 import type { CSSTimingFunction, NormalizedCSSTimingFunction } from '../easing';
 
@@ -8,7 +8,8 @@ export type CSSTransitionProperty =
   | 'all'
   | 'none'
   | keyof ViewStyle
-  | (keyof ViewStyle)[];
+  | keyof TextStyle
+  | (keyof ViewStyle | keyof TextStyle)[];
 export type CSSTransitionDuration = CSSTimeUnit;
 export type CSSTransitionTimingFunction = CSSTimingFunction;
 export type CSSTransitionDelay = CSSTimeUnit;
