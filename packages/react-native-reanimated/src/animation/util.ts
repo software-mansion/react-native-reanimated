@@ -544,10 +544,10 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   // setting the current value cancels the animation if one is currently running
   if (_WORKLET) {
     sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
-    return;
-  } 
-  runOnUI(() => {
-    'worklet';
-    sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+  } else {
+    runOnUI(() => {
+      'worklet';
+      sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+    }
   })();
 }
