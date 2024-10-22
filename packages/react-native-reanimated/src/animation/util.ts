@@ -533,7 +533,8 @@ export function defineAnimation<
 }
 
 /**
- * Lets you cancel a running animation paired to a shared value.
+ * Lets you cancel a running animation paired to a shared value. The
+ * cancellation is asynchronous.
  *
  * @param sharedValue - The shared value of a running animation that you want to
  *   cancel.
@@ -548,6 +549,6 @@ export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
     runOnUI(() => {
       'worklet';
       sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
-    }
-  })();
+    })();
+  }
 }
