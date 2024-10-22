@@ -1,10 +1,32 @@
 import type { RouteNames, Routes } from '../../navigation/types';
-import { AnimatedProperties, TestExamples, RealWorldExamples } from './screens';
+import {
+  AnimatedProperties,
+  TestExamples,
+  RealWorldExamples,
+  TransitionSettings,
+} from './screens';
 
 const routes = {
   AnimatedProperties: {
     name: 'Animated Properties',
     Component: AnimatedProperties,
+  },
+  TransitionSettings: {
+    name: 'Transition Settings',
+    routes: {
+      TransitionDuration: {
+        name: 'Transition Duration',
+        Component: TransitionSettings.TransitionDuration,
+      },
+      TransitionDelay: {
+        name: 'Transition Delay',
+        Component: TransitionSettings.TransitionDelay,
+      },
+      TransitionTimingFunction: {
+        name: 'Transition Timing Function',
+        Component: TransitionSettings.TransitionTimingFunction,
+      },
+    },
   },
   RealWorldExamples: {
     name: 'Real World Examples',

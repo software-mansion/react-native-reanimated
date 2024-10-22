@@ -70,17 +70,15 @@ function GalleryCard({
 }: GalleryCardProps) {
   const gradient = useMemo(
     () => (
-      <View style={styles.cardGradient}>
-        <Svg>
-          <Defs>
-            <LinearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={colors.black} stopOpacity="0" />
-              <Stop offset="1" stopColor={colors.black} stopOpacity="0.75" />
-            </LinearGradient>
-          </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#gradient)" />
-        </Svg>
-      </View>
+      <Svg>
+        <Defs>
+          <LinearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={colors.black} stopOpacity="0" />
+            <Stop offset="1" stopColor={colors.black} stopOpacity="0.75" />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="100%" fill="url(#gradient)" />
+      </Svg>
     ),
     []
   );
@@ -101,7 +99,17 @@ function GalleryCard({
       <View style={StyleSheet.absoluteFill}>
         <Image style={styles.cardImage} source={image} />
       </View>
-      {gradient}
+      <Animated.View
+        style={[
+          styles.cardGradient,
+          {
+            transitionProperty: 'opacity',
+            transitionDuration: 300,
+            opacity: expanded ? 1 : 0.75,
+          },
+        ]}>
+        {gradient}
+      </Animated.View>
       <View style={styles.cardContentWrapper}>
         <View style={flex.shrink}>
           <Animated.Text

@@ -30,9 +30,4 @@ ChangedProps getChangedProps(
     const jsi::Value &oldProps,
     const jsi::Value &newProps);
 
-jsi::Value mergeProps(
-    jsi::Runtime &rt,
-    const jsi::Value &oldProps,
-    const jsi::Value &newProps);
-
 }; // namespace reanimated

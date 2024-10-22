@@ -3,3 +3,4 @@ export * from './cards';
 export * from './layout';
 export * from './core';
 export * from './inputs';
+export * from './examples';

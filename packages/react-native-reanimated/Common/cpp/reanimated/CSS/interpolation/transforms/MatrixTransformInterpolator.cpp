@@ -14,14 +14,6 @@ MatrixOperation MatrixTransformInterpolator::interpolate(
     const TransformInterpolatorUpdateContext &context) const {
   const auto fromMatrix = matrixFromOperation(fromOperation, context);
   const auto toMatrix = matrixFromOperation(toOperation, context);
-
-  if (progress == 0) {
-    return fromMatrix;
-  }
-  if (progress == 1) {
-    return toMatrix;
-  }
-
   const auto decomposedFrom = fromMatrix.decompose();
   const auto decomposedTo = toMatrix.decompose();
 

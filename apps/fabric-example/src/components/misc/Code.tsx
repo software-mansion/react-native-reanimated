@@ -18,9 +18,10 @@ import { Text } from '../core';
 
 type CodeBlockProps = {
   code: string;
+  scrollable?: boolean;
 };
 
-export function CodeBlock({ code }: CodeBlockProps) {
+export function CodeBlock({ code, scrollable = true }: CodeBlockProps) {
   const formattedCode = useMemo(() => {
     // Remove empty lines at the beginning and end
     const result = code.replace(/^\s*\n/, '').replace(/\n\s*$/, '');
@@ -29,17 +30,23 @@ export function CodeBlock({ code }: CodeBlockProps) {
     return result.replace(new RegExp(`^ {${firstChar}}`, 'gm'), '');
   }, [code]);
 
-  return (
+  const content = (
+    <Text>
+      {formattedCode.split('\n').map((line, index) => (
+        <Text key={index} variant="code">
+          {index > 0 && '\n'}
+          {line}
+        </Text>
+      ))}
+    </Text>
+  );
+
+  return scrollable ? (
     <Scroll horizontal contentContainerStyle={styles.codeContainer}>
-      <Text>
-        {formattedCode.split('\n').map((line, index) => (
-          <Text key={index} variant="code">
-            {index > 0 && '\n'}
-            {line}
-          </Text>
-        ))}
-      </Text>
+      {content}
     </Scroll>
+  ) : (
+    content
   );
 }
 
@@ -102,5 +109,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     paddingVertical: 0,
     paddingBottom: spacing.sm,
+    alignItems: 'center',
   },
 });
