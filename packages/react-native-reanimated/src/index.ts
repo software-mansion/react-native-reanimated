@@ -294,14 +294,20 @@ export type {
   ScreenTransitionConfig,
 } from './screenTransition';
 export type {
-  CSSAnimationConfig,
   CSSAnimationKeyframes,
   CSSAnimationDuration,
+  CSSAnimationTimingFunction,
   CSSAnimationDelay,
   CSSAnimationIterationCount,
-  CSSAnimationTimingFunction,
   CSSAnimationDirection,
   CSSAnimationFillMode,
-  CSSAnimationSettings,
   CSSAnimationPlayState,
+  CSSAnimationConfig,
+  CSSAnimationSettings,
+  CSSTransitionProperty,
+  CSSTransitionDuration,
+  CSSTransitionTimingFunction,
+  CSSTransitionDelay,
+  CSSTransitionConfig,
+  CSSTransitionSettings,
 } from './css';

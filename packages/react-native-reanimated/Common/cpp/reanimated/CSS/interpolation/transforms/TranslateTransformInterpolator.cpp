@@ -19,13 +19,6 @@ OperationType TranslateTransformInterpolatorBase<OperationType>::interpolate(
     const OperationType &fromOperation,
     const OperationType &toOperation,
     const TransformInterpolatorUpdateContext &context) const {
-  if (progress == 0) {
-    return fromOperation;
-  }
-  if (progress == 1) {
-    return toOperation;
-  }
-
   const auto &fromValue = fromOperation.value;
   const auto &toValue = toOperation.value;
   // If both value types are the same, we can interpolate without reading the

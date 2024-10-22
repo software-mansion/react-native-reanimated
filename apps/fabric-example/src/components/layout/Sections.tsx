@@ -37,28 +37,6 @@ export function Section({
   );
 }
 
-export function SubSection({
-  children,
-  description,
-  fill,
-  title,
-  style,
-}: SectionProps) {
-  return (
-    <Animated.View
-      style={[styles.subSectionContainer, style, fill && flex.fill]}
-      layout={LinearTransition}>
-      <View style={styles.textWrapper}>
-        <Text variant="subHeading2">{title}</Text>
-        {description && <Text>{description}</Text>}
-      </View>
-      <Group style={[styles.subSectionContent, fill && flex.fill]}>
-        {children}
-      </Group>
-    </Animated.View>
-  );
-}
-
 const styles = StyleSheet.create({
   sectionContainer: {
     gap: spacing.xxs,

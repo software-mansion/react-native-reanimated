@@ -414,6 +414,13 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
     const TransformOperations &fromOperations,
     const TransformOperations &toOperations,
     const PropertyInterpolationUpdateContext &context) const {
+  if (localProgress <= 0) {
+    return fromOperations;
+  }
+  if (localProgress >= 1) {
+    return toOperations;
+  }
+
   TransformOperations result;
   result.reserve(fromOperations.size());
   const auto transformUpdateContext = createUpdateContext(context);

@@ -114,8 +114,15 @@ jsi::Value ValueInterpolator<T>::update(
     return interpolateMissingValue(localProgress, fromValue, toValue, context);
   }
 
-  T value =
-      interpolate(localProgress, fromValue.value(), toValue.value(), context);
+  T value;
+  if (localProgress >= 1) {
+    value = toValue.value();
+  } else if (localProgress <= 0) {
+    value = fromValue.value();
+  } else {
+    value =
+        interpolate(localProgress, fromValue.value(), toValue.value(), context);
+  }
   previousValue_ = value;
 
   return convertResultToJSI(context.rt, value);

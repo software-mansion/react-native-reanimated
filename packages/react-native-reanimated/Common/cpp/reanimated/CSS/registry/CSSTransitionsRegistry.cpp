@@ -12,6 +12,8 @@ void CSSTransitionsRegistry::updateSettings(
     jsi::Runtime &rt,
     const Tag viewTag,
     const PartialCSSTransitionSettings &updatedSettings) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   registry_.at(viewTag)->updateSettings(rt, updatedSettings);
   // TODO - activate if settings have changed
   // operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, viewTag);
@@ -134,9 +136,8 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
       // respective interpolators)
       const auto &interpolatedProps =
           transition->getCurrentInterpolationStyle(rt);
-      updatesRegistry_[viewTag] = std::make_pair(
-          shadowNode,
-          dynamicFromValue(rt, mergeProps(rt, newProps, interpolatedProps)));
+      updatesRegistry_[viewTag] =
+          std::make_pair(shadowNode, dynamicFromValue(rt, interpolatedProps));
 
       operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, viewTag);
     }
