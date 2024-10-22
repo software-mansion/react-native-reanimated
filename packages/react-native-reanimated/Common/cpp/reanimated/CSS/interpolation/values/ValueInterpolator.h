@@ -32,7 +32,7 @@ class ValueInterpolator : public PropertyInterpolator {
       const jsi::Value &oldStyleValue,
       const jsi::Value &newStyleValue) override;
 
-  jsi::Value update(const InterpolationUpdateContext &context) override;
+  jsi::Value update(const PropertyInterpolationUpdateContext &context) override;
 
  protected:
   std::optional<T> defaultStyleValue_; // Default style value
@@ -47,7 +47,7 @@ class ValueInterpolator : public PropertyInterpolator {
       double localProgress,
       const T &fromValue,
       const T &toValue,
-      const InterpolationUpdateContext context) const = 0;
+      const PropertyInterpolationUpdateContext context) const = 0;
 
  private:
   std::vector<ValueKeyframe<T>> keyframes_;
@@ -59,29 +59,29 @@ class ValueInterpolator : public PropertyInterpolator {
   std::optional<T> previousValue_; // Previous interpolation result
 
   std::optional<T> getFallbackValue(
-      const InterpolationUpdateContext context) const;
+      const PropertyInterpolationUpdateContext context) const;
 
   std::optional<T> resolveKeyframeValue(
       const std::optional<T> unresolvedValue,
-      const InterpolationUpdateContext context) const;
+      const PropertyInterpolationUpdateContext context) const;
 
   ValueKeyframe<T> getKeyframeAtIndex(
       size_t index,
       bool shouldResolve,
-      const InterpolationUpdateContext context) const;
+      const PropertyInterpolationUpdateContext context) const;
 
-  void updateCurrentKeyframes(const InterpolationUpdateContext context);
+  void updateCurrentKeyframes(const PropertyInterpolationUpdateContext context);
 
   double calculateLocalProgress(
       const ValueKeyframe<T> &keyframeBefore,
       const ValueKeyframe<T> &keyframeAfter,
-      const InterpolationUpdateContext context) const;
+      const PropertyInterpolationUpdateContext context) const;
 
   jsi::Value interpolateMissingValue(
       double localProgress,
       const std::optional<T> &fromValue,
       const std::optional<T> &toValue,
-      const InterpolationUpdateContext context) const;
+      const PropertyInterpolationUpdateContext context) const;
 };
 
 } // namespace reanimated

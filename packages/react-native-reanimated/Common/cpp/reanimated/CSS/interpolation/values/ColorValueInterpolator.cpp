@@ -31,7 +31,7 @@ ColorArray ColorValueInterpolator::interpolate(
     double localProgress,
     const ColorArray &fromValue,
     const ColorArray &toValue,
-    const InterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext context) const {
   ColorArray resultChannels;
   // interpolate rgb channels linear to progress
   for (int i = 0; i < 4; i++) {

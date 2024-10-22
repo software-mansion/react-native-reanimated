@@ -15,7 +15,7 @@ class ScaleTransformInterpolatorBase
       const double progress,
       const OperationType &fromOperation,
       const OperationType &toOperation,
-      const InterpolationUpdateContext &context) const override;
+      const TransformInterpolatorUpdateContext &context) const override;
 };
 
 class ScaleTransformInterpolator

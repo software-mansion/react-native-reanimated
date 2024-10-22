@@ -76,6 +76,25 @@ jsi::Value ViewStylesRepository::getRelativeProperty(
   return getNodeProp(shadowNode, relativeProperty);
 }
 
+std::optional<double> ViewStylesRepository::resolveUnitValue(
+    const UnitValue &value,
+    const ShadowNode::Shared &shadowNode,
+    const RelativeTo relativeTo,
+    const std::string &relativeProperty) {
+  if (!value.isRelative) {
+    return value.value;
+  }
+
+  const jsi::Value &relativeValue =
+      getRelativeProperty(relativeTo, relativeProperty, shadowNode);
+
+  if (!relativeValue.isNumber()) {
+    return std::nullopt;
+  }
+
+  return value.value * relativeValue.getNumber();
+}
+
 jsi::Value ViewStylesRepository::getStyleProp(
     jsi::Runtime &rt,
     const Tag tag,

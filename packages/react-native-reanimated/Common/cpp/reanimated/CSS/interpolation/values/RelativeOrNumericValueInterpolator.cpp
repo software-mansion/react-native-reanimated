@@ -36,7 +36,7 @@ UnitValue RelativeOrNumericValueInterpolator::interpolate(
     const double localProgress,
     const UnitValue &fromValue,
     const UnitValue &toValue,
-    const InterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext context) const {
   if (localProgress == 0) {
     return fromValue;
   }
@@ -55,18 +55,20 @@ UnitValue RelativeOrNumericValueInterpolator::interpolate(
   }
   // Otherwise, we need to read the relative value from the shadow node and
   // interpolate values as numbers
-  double from = (fromValue.isRelative ? getRelativeValue(context.node) : 1) *
-      fromValue.value;
-  double to =
-      (toValue.isRelative ? getRelativeValue(context.node) : 1) * toValue.value;
-  return {from + (to - from) * localProgress, false};
+  const auto from = resolveValue(fromValue, context.node);
+  const auto to = resolveValue(toValue, context.node);
+
+  if (!from.has_value() || !to.has_value()) {
+    return localProgress < 0.5 ? fromValue : toValue;
+  }
+  return {from.value() + (to.value() - from.value()) * localProgress};
 }
 
-double RelativeOrNumericValueInterpolator::getRelativeValue(
+std::optional<double> RelativeOrNumericValueInterpolator::resolveValue(
+    const UnitValue &value,
     const ShadowNode::Shared &shadowNode) const {
-  const jsi::Value &relativeValue = viewStylesRepository_->getRelativeProperty(
-      relativeTo_, relativeProperty_, shadowNode);
-  return relativeValue.isNumber() ? relativeValue.asNumber() : 1;
+  return viewStylesRepository_->resolveUnitValue(
+      value, shadowNode, relativeTo_, relativeProperty_);
 }
 
 } // namespace reanimated

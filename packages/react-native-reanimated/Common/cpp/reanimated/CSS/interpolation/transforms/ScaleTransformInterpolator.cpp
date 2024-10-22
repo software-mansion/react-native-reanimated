@@ -13,7 +13,7 @@ OperationType ScaleTransformInterpolatorBase<OperationType>::interpolate(
     const double progress,
     const OperationType &fromOperation,
     const OperationType &toOperation,
-    const InterpolationUpdateContext &context) const {
+    const TransformInterpolatorUpdateContext &context) const {
   return fromOperation.value +
       (toOperation.value - fromOperation.value) * progress;
 }

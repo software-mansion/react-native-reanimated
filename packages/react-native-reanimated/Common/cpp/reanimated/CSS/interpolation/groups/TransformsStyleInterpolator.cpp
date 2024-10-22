@@ -3,7 +3,7 @@
 namespace reanimated {
 
 TransformsStyleInterpolator::TransformsStyleInterpolator(
-    const TransformInterpolators &interpolators,
+    const std::shared_ptr<TransformInterpolators> &interpolators,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const PropertyPath &propertyPath)
     : PropertyInterpolator(propertyPath),
@@ -18,7 +18,7 @@ jsi::Value TransformsStyleInterpolator::getStyleValue(
 }
 
 jsi::Value TransformsStyleInterpolator::update(
-    const InterpolationUpdateContext &context) {
+    const PropertyInterpolationUpdateContext &context) {
   updateCurrentKeyframe(context);
 
   // Get or create the current keyframe
@@ -98,17 +98,6 @@ void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
                                    .value_or(TransformOperations{})),
       parseTransformOperations(rt, newStyleValue)
           .value_or(TransformOperations{})));
-}
-
-TransformInterpolators TransformsStyleInterpolator::convertInterpolators(
-    const TransformInterpolatorsMap &interpolators) const {
-  TransformInterpolators result;
-
-  for (const auto &[property, interpolator] : interpolators) {
-    result[getTransformOperationType(property)] = interpolator;
-  }
-
-  return result;
 }
 
 std::optional<TransformOperations>
@@ -283,7 +272,7 @@ void TransformsStyleInterpolator::addConvertedOperations(
 }
 
 TransformOperations TransformsStyleInterpolator::getFallbackValue(
-    const InterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext context) const {
   const jsi::Value &styleValue = getStyleValue(context.rt, context.node);
   return parseTransformOperations(context.rt, styleValue)
       .value_or(TransformOperations{});
@@ -291,22 +280,22 @@ TransformOperations TransformsStyleInterpolator::getFallbackValue(
 
 std::shared_ptr<TransformOperation>
 TransformsStyleInterpolator::getDefaultOperationOfType(
-    TransformOperationType type) const {
-  return interpolators_.at(type)->getDefaultOperation();
+    const TransformOperationType type) const {
+  return interpolators_->at(type)->getDefaultOperation();
 }
 
 TransformOperations TransformsStyleInterpolator::resolveTransformOperations(
     const std::optional<TransformOperations> &unresolvedOperations,
-    const InterpolationUpdateContext &context) const {
+    const PropertyInterpolationUpdateContext &context) const {
   // TODO - implement once interpolators are ready
   return unresolvedOperations.value_or(TransformOperations{});
 }
 
 std::shared_ptr<TransformKeyframe>
 TransformsStyleInterpolator::getKeyframeAtIndex(
-    size_t index,
-    int resolveDirection,
-    const InterpolationUpdateContext &context) const {
+    const size_t index,
+    const int resolveDirection,
+    const PropertyInterpolationUpdateContext &context) const {
   const auto &keyframe = keyframes_.at(index);
 
   if (resolveDirection == 0) {
@@ -353,7 +342,7 @@ TransformsStyleInterpolator::getKeyframeAtIndex(
 }
 
 void TransformsStyleInterpolator::updateCurrentKeyframe(
-    const InterpolationUpdateContext &context) {
+    const PropertyInterpolationUpdateContext &context) {
   const bool isProgressLessThanHalf = context.progress < 0.5;
   const auto prevIndex = keyframeIndex_;
 
@@ -411,17 +400,18 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
     const double localProgress,
     const TransformOperations &fromOperations,
     const TransformOperations &toOperations,
-    const InterpolationUpdateContext &context) const {
+    const PropertyInterpolationUpdateContext &context) const {
   TransformOperations result;
   result.reserve(fromOperations.size());
+  const auto transformUpdateContext = createUpdateContext(context);
 
   for (size_t i = 0; i < fromOperations.size(); ++i) {
     const auto fromOperation = fromOperations[i];
     const auto toOperation = toOperations[i];
 
-    const auto &interpolator = interpolators_.at(fromOperation->type);
+    const auto &interpolator = interpolators_->at(fromOperation->type);
     result.emplace_back(interpolator->interpolate(
-        localProgress, *fromOperation, *toOperation, context));
+        localProgress, *fromOperation, *toOperation, transformUpdateContext));
   }
 
   return result;
@@ -438,6 +428,13 @@ jsi::Value TransformsStyleInterpolator::convertResultToJSI(
   }
 
   return result;
+}
+
+TransformInterpolatorUpdateContext
+TransformsStyleInterpolator::createUpdateContext(
+    const PropertyInterpolationUpdateContext &context) const {
+  return TransformInterpolatorUpdateContext{
+      context.node, viewStylesRepository_, interpolators_};
 }
 
 } // namespace reanimated

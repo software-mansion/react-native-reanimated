@@ -18,7 +18,7 @@ int NumberStepsInterpolator::interpolate(
     double localProgress,
     const int &fromValue,
     const int &toValue,
-    const InterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext context) const {
   // TODO: Make sure it should work in this way for NumberStepsInterpolator
   int diff = toValue - fromValue;
   return fromValue + static_cast<int>(diff * localProgress);

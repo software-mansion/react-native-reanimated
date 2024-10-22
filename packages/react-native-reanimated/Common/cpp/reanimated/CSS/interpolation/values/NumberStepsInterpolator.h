@@ -19,7 +19,7 @@ class NumberStepsInterpolator : public ValueInterpolator<int> {
       double localProgress,
       const int &fromValue,
       const int &toValue,
-      const InterpolationUpdateContext context) const override;
+      const PropertyInterpolationUpdateContext context) const override;
 };
 
 } // namespace reanimated

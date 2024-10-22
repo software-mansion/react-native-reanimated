@@ -12,7 +12,7 @@ double NumericValueInterpolator::interpolate(
     double localProgress,
     const double &fromValue,
     const double &toValue,
-    const InterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext context) const {
   return fromValue + localProgress * (toValue - fromValue);
 }
 

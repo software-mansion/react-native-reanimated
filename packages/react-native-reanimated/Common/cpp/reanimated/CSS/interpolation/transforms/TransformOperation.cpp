@@ -269,19 +269,6 @@ jsi::Value TranslateOperation::valueToJSIValue(jsi::Runtime &rt) const {
 TransformMatrix TranslateOperation::toMatrix() const {
   return toMatrix(value.value);
 }
-TransformMatrix TranslateOperation::toMatrix(
-    const RelativeTo relativeTo,
-    const std::string &relativeProperty,
-    const ShadowNode::Shared &shadowNode,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
-  if (!value.isRelative) {
-    return toMatrix();
-  }
-  const auto &relativeValue = viewStylesRepository->getRelativeProperty(
-      relativeTo, relativeProperty, shadowNode);
-  return toMatrix(
-      relativeValue.isUndefined() ? 0 : value.value * relativeValue.asNumber());
-}
 
 TranslateXOperation::TranslateXOperation(const UnitValue &value)
     : TranslateOperation(TransformOperationType::TranslateX, value) {};

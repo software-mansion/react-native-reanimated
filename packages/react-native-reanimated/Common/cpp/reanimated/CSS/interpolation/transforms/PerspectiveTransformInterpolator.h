@@ -14,7 +14,7 @@ class PerspectiveTransformInterpolator
       const double progress,
       const PerspectiveOperation &fromOperation,
       const PerspectiveOperation &toOperation,
-      const InterpolationUpdateContext &context) const override;
+      const TransformInterpolatorUpdateContext &context) const override;
 };
 
 } // namespace reanimated

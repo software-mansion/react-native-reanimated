@@ -24,14 +24,16 @@ class RelativeOrNumericValueInterpolator : public ValueInterpolator<UnitValue> {
       const double localProgress,
       const UnitValue &fromValue,
       const UnitValue &toValue,
-      const InterpolationUpdateContext context) const override;
+      const PropertyInterpolationUpdateContext context) const override;
 
  private:
   const RelativeTo relativeTo_;
   const std::string relativeProperty_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  double getRelativeValue(const ShadowNode::Shared &shadowNode) const;
+  std::optional<double> resolveValue(
+      const UnitValue &value,
+      const ShadowNode::Shared &shadowNode) const;
 };
 
 } // namespace reanimated

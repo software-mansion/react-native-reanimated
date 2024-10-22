@@ -5,7 +5,7 @@
 
 namespace reanimated {
 
-struct InterpolationUpdateContext {
+struct PropertyInterpolationUpdateContext {
   jsi::Runtime &rt;
   const ShadowNode::Shared &node;
   const double progress;
@@ -30,7 +30,8 @@ class PropertyInterpolator {
       const jsi::Value &oldStyleValue,
       const jsi::Value &newStyleValue) = 0;
 
-  virtual jsi::Value update(const InterpolationUpdateContext &context) = 0;
+  virtual jsi::Value update(
+      const PropertyInterpolationUpdateContext &context) = 0;
 
  protected:
   const PropertyPath propertyPath_;

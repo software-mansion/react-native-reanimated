@@ -13,7 +13,7 @@ OperationType RotateTransformInterpolatorBase<OperationType>::interpolate(
     const double progress,
     const OperationType &fromOperation,
     const OperationType &toOperation,
-    const InterpolationUpdateContext &context) const {
+    const TransformInterpolatorUpdateContext &context) const {
   const auto &fromAngle = fromOperation.value;
   const auto &toAngle = toOperation.value;
   return OperationType(

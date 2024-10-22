@@ -16,7 +16,7 @@ class ObjectPropertiesInterpolator : public PropertyInterpolator {
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
 
-  jsi::Value update(const InterpolationUpdateContext &context) override;
+  jsi::Value update(const PropertyInterpolationUpdateContext &context) override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(

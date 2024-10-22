@@ -50,10 +50,11 @@ class CSSTransition {
   const unsigned id_;
   const ShadowNode::Shared shadowNode_;
 
-  TransitionProperties properties_;
-  std::unordered_set<std::string> propertyNameSet_;
   TransitionStyleInterpolator styleInterpolator_;
   TransitionProgressProvider progressProvider_;
+
+  TransitionProperties properties_;
+  std::unordered_set<std::string> propertyNameSet_;
 };
 
 } // namespace reanimated

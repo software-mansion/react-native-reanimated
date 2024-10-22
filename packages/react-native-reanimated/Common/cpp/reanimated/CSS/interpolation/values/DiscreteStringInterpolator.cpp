@@ -18,7 +18,7 @@ std::string DiscreteStringInterpolator::interpolate(
     double localProgress,
     const std::string &fromValue,
     const std::string &toValue,
-    const InterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext context) const {
   return localProgress < 0.5 ? fromValue : toValue;
 }
 

@@ -20,7 +20,7 @@ struct TransformKeyframe {
 class TransformsStyleInterpolator : public PropertyInterpolator {
  public:
   TransformsStyleInterpolator(
-      const TransformInterpolators &interpolators,
+      const std::shared_ptr<TransformInterpolators> &interpolators,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath);
 
@@ -28,7 +28,7 @@ class TransformsStyleInterpolator : public PropertyInterpolator {
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
 
-  jsi::Value update(const InterpolationUpdateContext &context) override;
+  jsi::Value update(const PropertyInterpolationUpdateContext &context) override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
@@ -37,16 +37,13 @@ class TransformsStyleInterpolator : public PropertyInterpolator {
       const jsi::Value &newStyleValue) override;
 
  private:
-  const TransformInterpolators interpolators_;
+  const std::shared_ptr<TransformInterpolators> interpolators_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   size_t keyframeIndex_ = 0;
   std::vector<std::shared_ptr<TransformKeyframe>> keyframes_;
   std::shared_ptr<TransformKeyframe> currentKeyframe_;
   std::optional<TransformOperations> previousResult_;
-
-  TransformInterpolators convertInterpolators(
-      const TransformInterpolatorsMap &interpolators) const;
 
   std::optional<TransformOperations> parseTransformOperations(
       jsi::Runtime &rt,
@@ -65,21 +62,21 @@ class TransformsStyleInterpolator : public PropertyInterpolator {
       TransformOperations &targetResult) const;
 
   TransformOperations getFallbackValue(
-      const InterpolationUpdateContext context) const;
+      const PropertyInterpolationUpdateContext context) const;
 
   std::shared_ptr<TransformOperation> getDefaultOperationOfType(
-      TransformOperationType type) const;
+      const TransformOperationType type) const;
 
   TransformOperations resolveTransformOperations(
       const std::optional<TransformOperations> &unresolvedOperations,
-      const InterpolationUpdateContext &context) const;
+      const PropertyInterpolationUpdateContext &context) const;
 
   std::shared_ptr<TransformKeyframe> getKeyframeAtIndex(
-      size_t index,
-      int resolveDirection, // < 0 - resolve from, > 0 - resolve to
-      const InterpolationUpdateContext &context) const;
+      const size_t index,
+      const int resolveDirection, // < 0 - resolve from, > 0 - resolve to
+      const PropertyInterpolationUpdateContext &context) const;
 
-  void updateCurrentKeyframe(const InterpolationUpdateContext &context);
+  void updateCurrentKeyframe(const PropertyInterpolationUpdateContext &context);
 
   inline double calculateLocalProgress(const double progress) const;
 
@@ -87,11 +84,14 @@ class TransformsStyleInterpolator : public PropertyInterpolator {
       const double localProgress,
       const TransformOperations &fromOperations,
       const TransformOperations &toOperations,
-      const InterpolationUpdateContext &context) const;
+      const PropertyInterpolationUpdateContext &context) const;
 
   jsi::Value convertResultToJSI(
       jsi::Runtime &rt,
       const TransformOperations &operations) const;
+
+  TransformInterpolatorUpdateContext createUpdateContext(
+      const PropertyInterpolationUpdateContext &context) const;
 };
 
 } // namespace reanimated
