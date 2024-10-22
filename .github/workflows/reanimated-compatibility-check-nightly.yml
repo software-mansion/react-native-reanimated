@@ -1,9 +1,6 @@
 name: Reanimated compatibility check [Nightly]
 on:
   pull_request:
-    types: [opened, synchronize, labeled, unlabeled]
-  schedule:
-    - cron: '37 19 * * *'
   workflow_call:
   workflow_dispatch:
 
