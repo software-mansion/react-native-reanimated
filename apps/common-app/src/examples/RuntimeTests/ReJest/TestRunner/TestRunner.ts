@@ -90,13 +90,14 @@ export class TestRunner {
     return new TestComponent(componentRef);
   }
 
-  public async runTests() {
+  public async runTests(): Promise<boolean> {
     console.log('\n');
     await this._testSuiteBuilder.buildTests();
     for (const testSuite of this._testSuiteBuilder.getTestSuites()) {
       await this.runTestSuite(testSuite);
     }
     this._testSummary.printSummary();
+    return this._testSummary.allTestsPassed();
   }
 
   private async runTestSuite(testSuite: TestSuite) {
