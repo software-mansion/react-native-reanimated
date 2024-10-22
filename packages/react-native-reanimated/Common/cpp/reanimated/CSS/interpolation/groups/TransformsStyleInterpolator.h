@@ -8,19 +8,19 @@
 namespace reanimated {
 
 struct TransformKeyframe {
-  double offset;
+  const double offset;
   // If the value is nullopt, we would have to read it from the view style
   // (in all other cases, both vectors will have the same number of elements of
   // corresponding types  - elements from the same index will form interpolation
   // pairs)
-  std::optional<TransformOperations> fromOperations;
-  std::optional<TransformOperations> toOperations;
+  const std::optional<TransformOperations> fromOperations;
+  const std::optional<TransformOperations> toOperations;
 };
 
 class TransformsStyleInterpolator : public PropertyInterpolator {
  public:
   TransformsStyleInterpolator(
-      const TransformInterpolatorsMap &interpolators,
+      const TransformInterpolators &interpolators,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath);
 
@@ -41,8 +41,8 @@ class TransformsStyleInterpolator : public PropertyInterpolator {
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   size_t keyframeIndex_ = 0;
-  std::vector<const TransformKeyframe> keyframes_;
-  TransformKeyframe currentKeyframe_;
+  std::vector<std::shared_ptr<TransformKeyframe>> keyframes_;
+  std::shared_ptr<TransformKeyframe> currentKeyframe_;
   std::optional<TransformOperations> previousResult_;
 
   TransformInterpolators convertInterpolators(
@@ -52,7 +52,7 @@ class TransformsStyleInterpolator : public PropertyInterpolator {
       jsi::Runtime &rt,
       const jsi::Value &values) const;
 
-  TransformKeyframe createTransformKeyframe(
+  std::shared_ptr<TransformKeyframe> createTransformKeyframe(
       jsi::Runtime &rt,
       const double offset,
       const std::optional<TransformOperations> &fromOperationsOptional,
@@ -74,7 +74,7 @@ class TransformsStyleInterpolator : public PropertyInterpolator {
       const std::optional<TransformOperations> &unresolvedOperations,
       const InterpolationUpdateContext &context) const;
 
-  TransformKeyframe getKeyframeAtIndex(
+  std::shared_ptr<TransformKeyframe> getKeyframeAtIndex(
       size_t index,
       int resolveDirection, // < 0 - resolve from, > 0 - resolve to
       const InterpolationUpdateContext &context) const;

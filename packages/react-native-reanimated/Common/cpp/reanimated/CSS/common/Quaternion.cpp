@@ -1,10 +1,21 @@
-#pragma once
-
 #include <reanimated/CSS/common/Quaternion.h>
 
 namespace reanimated {
 
-Quaternion Quaternion::slerp(const Quaternion &other, double t) {
+bool Quaternion::operator==(const Quaternion &other) const {
+  return x == other.x && y == other.y && z == other.z && w == other.w;
+}
+
+std::ostream &reanimated::operator<<(
+    std::ostream &os,
+    const Quaternion &quaternion) {
+  os << "Quaternion(" << quaternion.x << ", " << quaternion.y << ", "
+     << quaternion.z << ", " << quaternion.w << ")";
+  return os;
+}
+
+Quaternion Quaternion::interpolate(const double t, const Quaternion &other)
+    const {
   const double kEpsilon = 1e-5;
   Quaternion copy = *this;
 
@@ -37,18 +48,6 @@ Quaternion Quaternion::slerp(const Quaternion &other, double t) {
       copy.y * scale + other.y * invscale,
       copy.z * scale + other.z * invscale,
       copy.w * scale + other.w * invscale};
-}
-
-Quaternion Quaternion::accumulate(const Quaternion &other) {
-  return {
-      w * other.x + x * other.w + y * other.z - z * other.y,
-      w * other.y - x * other.z + y * other.w + z * other.x,
-      w * other.z + x * other.y - y * other.x + z * other.w,
-      w * other.w - x * other.x - y * other.y - z * other.z};
-}
-
-Quaternion Quaternion::interpolate(const Quaternion &other, double progress) {
-  return slerp(other, progress);
 }
 
 } // namespace reanimated

@@ -16,6 +16,8 @@ class MatrixTransformInterpolator
       const MatrixOperation &fromOperation,
       const MatrixOperation &toOperation,
       const InterpolationUpdateContext &context) const override;
+
+  TransformMatrix matrixFromOperation(const MatrixOperation &operation) const;
 };
 
 } // namespace reanimated

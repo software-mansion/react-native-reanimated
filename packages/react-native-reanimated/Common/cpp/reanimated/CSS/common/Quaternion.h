@@ -1,19 +1,19 @@
 #pragma once
 
 #include <cmath>
+#include <iostream>
 
 namespace reanimated {
 
 struct Quaternion {
   double x, y, z, w;
 
-  bool operator==(const Quaternion &other) const {
-    return x == other.x && y == other.y && z == other.z && w == other.w;
-  }
+  bool operator==(const Quaternion &other) const;
+  friend std::ostream &operator<<(
+      std::ostream &os,
+      const Quaternion &quaternion);
 
-  Quaternion slerp(const Quaternion &other, double progress);
-  Quaternion accumulate(const Quaternion &other);
-  Quaternion interpolate(const Quaternion &other, double progress);
+  Quaternion interpolate(const double progress, const Quaternion &other) const;
 };
 
 } // namespace reanimated
