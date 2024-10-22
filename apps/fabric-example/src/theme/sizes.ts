@@ -7,5 +7,5 @@ export const sizes = {
   xxl: 128,
   xxs: 16,
   xxxl: 192,
-  xxxs: 8
+  xxxs: 8,
 } as const;

@@ -19,7 +19,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import Scroll from './Scroll';
 
 const WINDOW_WIDTH = Dimensions.get('window').width;
 

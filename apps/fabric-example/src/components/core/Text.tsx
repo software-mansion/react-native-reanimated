@@ -5,8 +5,11 @@ import type {
 } from 'react-native';
 import { colors, text } from '../../theme';
 import type { FontVariant } from '../../types';
-import { navigate } from '../../navigation';
-import type { NavigationRouteName } from '../../navigation';
+import type {
+  AnimationsNavigationRouteName,
+  TransitionsNavigationRouteName,
+} from '../../examples';
+import { useNavigation } from '@react-navigation/native';
 
 const REGEX = /`([^`]+)`|\*\*([^*]+)\*\*/g; // Updated regex to capture both `code` and **bold** syntax
 
@@ -28,9 +31,9 @@ const VARIANT_COLORS: Record<FontVariant, string> = {
   code: colors.primaryDark,
 };
 
-type TextProps = RNTextProps & {
+export type TextProps = RNTextProps & {
   variant?: FontVariant;
-  navLink?: NavigationRouteName;
+  navLink?: AnimationsNavigationRouteName | TransitionsNavigationRouteName;
   center?: boolean;
 };
 
@@ -43,6 +46,8 @@ export default function Text({
   center,
   ...rest
 }: TextProps) {
+  const navigation = useNavigation();
+
   const getVariantProps = (textVariant: FontVariant, extraStyle = {}) => ({
     ...rest,
     style: [
@@ -61,7 +66,7 @@ export default function Text({
       navLink &&
       ((args: GestureResponderEvent) => {
         onPress?.(args);
-        navigate(navLink);
+        navigation.navigate(navLink as never);
       }),
   });
 

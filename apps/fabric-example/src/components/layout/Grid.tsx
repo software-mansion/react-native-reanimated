@@ -1,5 +1,5 @@
-import { Children, useMemo } from 'react';
-import type { PropsWithChildren, ReactNode } from 'react';
+import { useMemo } from 'react';
+import type { PropsWithChildren } from 'react';
 import type { ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import { spacing } from '../../theme';

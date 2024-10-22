@@ -8,5 +8,5 @@ export const spacing = {
   xxl: 48,
   xxs: 4,
   xxxl: 64,
-  xxxs: 2
+  xxxs: 2,
 } as const;

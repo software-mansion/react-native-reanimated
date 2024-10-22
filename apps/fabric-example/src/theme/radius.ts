@@ -8,5 +8,5 @@ export const radius = {
   xs: 4,
   xxl: 32,
   xxs: 2,
-  xxxl: 48
+  xxxl: 48,
 } as const;
