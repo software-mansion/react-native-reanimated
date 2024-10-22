@@ -124,6 +124,6 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
+    paddingVertical: spacing.md,
   },
 });

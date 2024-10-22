@@ -11,7 +11,7 @@ import {
   Stagger,
   Text,
 } from '../../../../components';
-import { colors, radius, sizes, spacing } from '../../../../theme';
+import { colors, flex, radius, sizes, spacing } from '../../../../theme';
 import Animated, {
   cubicBezier,
   LinearTransition,
@@ -113,6 +113,7 @@ export default function ChangingAnimation() {
                   title={item.name}
                   onPress={() => setSelectedIndex(index)}
                   disabled={selectedIndex === index}
+                  style={flex.grow}
                 />
               ))}
             </View>

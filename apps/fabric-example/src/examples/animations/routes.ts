@@ -109,6 +109,7 @@ const routes = {
   },
   Miscellaneous: {
     name: 'Miscellaneous',
+    CardComponent: RouteCards.MiscellaneousCard,
     routes: {
       ChangingAnimation: {
         name: 'Changing Animation',
@@ -122,6 +123,7 @@ const routes = {
   },
   TestExamples: {
     name: 'Test Examples',
+    CardComponent: RouteCards.TestExamplesCard,
     routes: {
       Playground: {
         name: 'Playground',

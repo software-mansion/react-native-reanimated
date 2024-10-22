@@ -40,14 +40,14 @@ export default function App() {
   }, []);
 
   return (
-    <PortalProvider>
-      <SafeAreaProvider>
-        <NavigationContainer
-          initialState={navigationState}
-          onStateChange={persistNavigationState}>
+    <SafeAreaProvider>
+      <NavigationContainer
+        initialState={navigationState}
+        onStateChange={persistNavigationState}>
+        <PortalProvider>
           <Navigator />
-        </NavigationContainer>
-      </SafeAreaProvider>
-    </PortalProvider>
+        </PortalProvider>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
