@@ -48,7 +48,7 @@ const rotateLeft: CSSAnimationConfig = {
       transform: [{ rotate: '-360deg' }],
     },
   },
-  animationDelay: -0.12 * ANIMATION_DURATION,
+  animationDelay: -0.1175 * ANIMATION_DURATION,
   ...sharedAnimationSettings,
 };
 
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   cog1: {
-    top: -spacing.xxl + 2,
+    top: -spacing.xxl + 1,
     left: -spacing.xl,
   },
   cog2: {

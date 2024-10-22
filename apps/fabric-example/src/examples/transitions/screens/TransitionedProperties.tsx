@@ -1,6 +1,6 @@
 import { ScrollScreen, Text } from '../../../components';
 
-export default function AnimatedProperties() {
+export default function TransitionedProperties() {
   return (
     <ScrollScreen>
       <Text>

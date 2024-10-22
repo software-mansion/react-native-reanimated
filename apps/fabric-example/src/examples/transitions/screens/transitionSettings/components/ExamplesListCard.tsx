@@ -1,4 +1,11 @@
-import { memo, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  memo,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { Button, Checkbox, Text } from '../../../../../components';
 import { colors, spacing } from '../../../../../theme';
 import { StyleSheet, View } from 'react-native';
@@ -10,7 +17,7 @@ import type {
 } from 'react-native-reanimated';
 import TransitionStyleChange from './TransitionStyleChange';
 import Animated, { LinearTransition } from 'react-native-reanimated';
-import { useDebounce } from '../../../../../hooks';
+import { useDebounce, useStableCallback } from '../../../../../hooks';
 
 const durationToNumber = (duration?: CSSTransitionDuration): number => {
   if (!duration) {
@@ -26,7 +33,7 @@ const durationToNumber = (duration?: CSSTransitionDuration): number => {
 };
 
 const getTimeout = (settings: CSSTransitionSettings): number => {
-  return Math.max(durationToNumber(settings.transitionDuration ?? 0), 2000);
+  return Math.max(durationToNumber(settings.transitionDuration ?? 0), 2500);
 };
 
 export type ExampleItemProps = CSSTransitionSettings & {
@@ -37,6 +44,7 @@ export type ExamplesListCardProps = {
   sharedConfig: CSSTransitionConfig;
   transitionStyles: StyleProps[];
   items: ExampleItemProps[];
+  displayStyleChanges: boolean;
   renderExample: (
     config: CSSTransitionConfig,
     style: StyleProps
@@ -48,11 +56,33 @@ export default function ExamplesListCard({
   transitionStyles,
   items,
   renderExample,
+  displayStyleChanges: inDisplayStyleChanges,
 }: ExamplesListCardProps) {
-  const [displayStyleChanges, setDisplayStyleChanges] = useState(true);
+  const [displayStyleChanges, setDisplayStyleChanges] = useState(
+    inDisplayStyleChanges
+  );
+  const exampleRefsRef = useRef<Record<string, ExampleRef | null>>({});
+
+  const handleReset = useCallback(() => {
+    Object.values(exampleRefsRef.current).forEach((ref) => {
+      ref?.reset();
+    });
+  }, []);
+
+  const handleRunAll = useCallback(() => {
+    Object.values(exampleRefsRef.current).forEach((ref) => {
+      ref?.run();
+    });
+  }, []);
 
   return (
     <View style={styles.container}>
+      <View style={styles.cardHeader}>
+        {items.length > 1 && (
+          <Button size="small" title="Run all" onPress={handleRunAll} />
+        )}
+        <Button size="small" title="Reset all" onPress={handleReset} />
+      </View>
       {items.map((item, index) => (
         <Example
           key={index}
@@ -61,6 +91,9 @@ export default function ExamplesListCard({
           item={item}
           renderExample={renderExample}
           displayStyleChanges={displayStyleChanges}
+          ref={(ref) => {
+            exampleRefsRef.current[item.label] = ref;
+          }}
         />
       ))}
       <Animated.View style={styles.cardFooter} layout={LinearTransition}>
@@ -74,6 +107,11 @@ export default function ExamplesListCard({
   );
 }
 
+type ExampleRef = {
+  run: () => void;
+  reset: () => void;
+};
+
 type ExampleProps = {
   sharedConfig: CSSTransitionConfig;
   transitionStyles: StyleProps[];
@@ -85,67 +123,91 @@ type ExampleProps = {
   ) => JSX.Element;
 };
 
-const Example = memo(function Example({
-  sharedConfig,
-  displayStyleChanges,
-  transitionStyles,
-  item,
-  renderExample,
-}: ExampleProps) {
-  const [currentStyleIndex, setCurrentStyleIndex] = useState(0);
-  const [showStyleChange, setShowStyleChange] = useState(false);
-  const styleChangeCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+const Example = memo(
+  forwardRef(function Example(
+    {
+      sharedConfig,
+      displayStyleChanges,
+      transitionStyles,
+      item,
+      renderExample,
+    }: ExampleProps,
+    ref: React.Ref<ExampleRef>
+  ) {
+    const [key, setKey] = useState(0);
+    const [currentStyleIndex, setCurrentStyleIndex] = useState(0);
+    const [showStyleChange, setShowStyleChange] = useState(false);
+    const styleChangeCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const debouncedStyleIndex = useDebounce(currentStyleIndex, 500);
-  const currentTransitionStyle = transitionStyles[currentStyleIndex];
+    const debouncedStyleIndex = useDebounce(currentStyleIndex, 500);
+    const currentTransitionStyle = transitionStyles[currentStyleIndex];
 
-  const handlePress = () => {
-    const nextIndex = (currentStyleIndex + 1) % transitionStyles.length;
-    setCurrentStyleIndex(nextIndex);
+    const handlePress = useStableCallback(() => {
+      const nextIndex = (currentStyleIndex + 1) % transitionStyles.length;
+      setCurrentStyleIndex(nextIndex);
 
-    setTimeout(() => {
-      if (displayStyleChanges) {
-        setShowStyleChange(true);
-        clearTimeout(styleChangeCloseTimeoutRef.current!);
-        styleChangeCloseTimeoutRef.current = setTimeout(() => {
+      setTimeout(() => {
+        if (displayStyleChanges) {
+          setShowStyleChange(true);
+          clearTimeout(styleChangeCloseTimeoutRef.current!);
+          styleChangeCloseTimeoutRef.current = setTimeout(() => {
+            setShowStyleChange(false);
+          }, getTimeout(item));
+        }
+      }, 0);
+    });
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        run: handlePress,
+        reset: () => {
+          setCurrentStyleIndex(0);
           setShowStyleChange(false);
-        }, getTimeout(item));
-      }
-    }, 0);
-  };
+          setKey((prevKey) => prevKey + 1);
+        },
+      }),
+      [handlePress]
+    );
 
-  return (
-    <Animated.View layout={LinearTransition} style={{ overflow: 'hidden' }}>
-      <View style={styles.exampleRow}>
-        <View style={styles.labelWrapper}>
-          <Text variant="label2" style={styles.label}>
-            {item.label}
-          </Text>
+    return (
+      <Animated.View layout={LinearTransition} style={{ overflow: 'hidden' }}>
+        <View style={styles.exampleRow}>
+          <View style={styles.labelWrapper}>
+            <Text variant="label2" style={styles.label}>
+              {item.label}
+            </Text>
+          </View>
+          <View style={styles.example} key={key}>
+            {renderExample(
+              {
+                ...sharedConfig,
+                ...item,
+              },
+              currentTransitionStyle
+            )}
+          </View>
+          <Button size="small" title="Run" onPress={handlePress} />
         </View>
-        <View style={styles.example}>
-          {renderExample(
-            {
-              ...sharedConfig,
-              ...item,
-            },
-            currentTransitionStyle
-          )}
-        </View>
-        <Button size="small" title="Run" onPress={handlePress} />
-      </View>
-      {displayStyleChanges && showStyleChange && (
-        <TransitionStyleChange
-          transitionStyles={transitionStyles}
-          activeStyleIndex={debouncedStyleIndex}
-        />
-      )}
-    </Animated.View>
-  );
-});
+        {displayStyleChanges && showStyleChange && (
+          <TransitionStyleChange
+            transitionStyles={transitionStyles}
+            activeStyleIndex={debouncedStyleIndex}
+          />
+        )}
+      </Animated.View>
+    );
+  })
+);
 
 const styles = StyleSheet.create({
   container: {
     gap: spacing.xs,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    justifyContent: 'flex-end',
   },
   cardFooter: {
     marginTop: spacing.xs,

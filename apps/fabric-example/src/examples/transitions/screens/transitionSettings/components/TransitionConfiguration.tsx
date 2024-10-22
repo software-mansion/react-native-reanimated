@@ -73,14 +73,14 @@ export default function TransitionConfiguration({
 
 const styles = StyleSheet.create({
   container: {
-    gap: spacing.sm,
+    gap: spacing.xxs,
   },
   section: {
     gap: spacing.xs,
   },
   codeStylesList: {
-    flex: 1,
     justifyContent: 'center',
+    paddingBottom: spacing.sm,
   },
   listSeparator: {
     alignItems: 'center',

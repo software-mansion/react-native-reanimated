@@ -16,6 +16,7 @@ type ExampleScreenProps = {
   sharedConfig: CSSTransitionConfig;
   cards: ExampleCardsSection[];
   transitionStyles: StyleProps[];
+  displayStyleChanges?: boolean;
   renderExample: (
     config: CSSTransitionConfig,
     style: StyleProps
@@ -27,6 +28,7 @@ export default function ExampleScreen({
   cards,
   transitionStyles,
   renderExample,
+  displayStyleChanges = true,
 }: ExampleScreenProps) {
   const configOverrides = useMemo(
     () => cards.flatMap((card) => card.items),
@@ -46,6 +48,7 @@ export default function ExampleScreen({
               items={card.items}
               renderExample={renderExample}
               transitionStyles={transitionStyles}
+              displayStyleChanges={displayStyleChanges}
             />
           </Section>
         ))}
