@@ -95,7 +95,8 @@ jsi::Value TransitionStyleInterpolator::getAllPropsStyle(
     const ShadowNode::Shared &shadowNode) const {
   const auto viewStyle =
       viewStylesRepository_->getViewStyle(rt, shadowNode->getTag());
-  auto result = viewStyle.asObject(rt);
+  auto result =
+      viewStyle.isUndefined() ? jsi::Object(rt) : viewStyle.asObject(rt);
 
   // Update result with current interpolators values
   for (auto it = interpolators_.begin(); it != interpolators_.end();) {
