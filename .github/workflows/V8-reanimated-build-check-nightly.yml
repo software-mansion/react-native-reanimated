@@ -8,6 +8,7 @@ on:
       - .github/workflows/helper/configureV8.js
   schedule:
     - cron: '37 19 * * *'
+  workflow_call:
   workflow_dispatch:
 
 jobs:

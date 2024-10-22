@@ -2,6 +2,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/Fabric/PropsRegistry.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 
 #include <react/renderer/uimanager/UIManagerCommitHook.h>
 
@@ -15,7 +16,8 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
  public:
   ReanimatedCommitHook(
       const std::shared_ptr<PropsRegistry> &propsRegistry,
-      const std::shared_ptr<UIManager> &uiManager);
+      const std::shared_ptr<UIManager> &uiManager,
+      const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy);
 
   ~ReanimatedCommitHook() noexcept override;
 
@@ -44,6 +46,12 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
   std::shared_ptr<PropsRegistry> propsRegistry_;
 
   std::shared_ptr<UIManager> uiManager_;
+
+  std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
+
+  SurfaceId currentMaxSurfaceId_ = -1;
+
+  std::mutex mutex_; // Protects `currentMaxSurfaceId_`.
 };
 
 } // namespace reanimated

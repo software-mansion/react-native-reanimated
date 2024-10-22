@@ -29,6 +29,8 @@ on:
       - apps/paper-example/ios/**
       - apps/fabric-example/package.json
       - apps/fabric-example/ios/**
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   build:
