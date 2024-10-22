@@ -13,6 +13,10 @@ const routes = {
         name: 'App Settings',
         Component: RealWorldExamples.AppSettings,
       },
+      FlexGallery: {
+        name: 'Flex Gallery',
+        Component: RealWorldExamples.FlexGallery,
+      },
     },
   },
   TestExamples: {
