@@ -556,12 +556,10 @@ void ReanimatedModuleProxy::unregisterCSSAnimation(
 void ReanimatedModuleProxy::registerCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &transitionId,
     const jsi::Value &transitionConfig) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
   auto transition = std::make_shared<CSSTransition>(
-      transitionId.asNumber(),
       shadowNode,
       parseCSSTransitionConfig(rt, transitionConfig),
       viewStylesRepository_);
@@ -572,18 +570,19 @@ void ReanimatedModuleProxy::registerCSSTransition(
 
 void ReanimatedModuleProxy::updateCSSTransition(
     jsi::Runtime &rt,
-    const jsi::Value &transitionId,
+    const jsi::Value &viewTag,
     const jsi::Value &configUpdates) {
   cssTransitionsRegistry_->updateSettings(
       rt,
-      transitionId.asNumber(),
+      viewTag.asNumber(),
       parsePartialCSSTransitionSettings(rt, configUpdates));
   maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSTransition(
-    const jsi::Value &transitionId) {
-  cssTransitionsRegistry_->remove(transitionId.asNumber());
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag) {
+  cssTransitionsRegistry_->remove(rt, viewTag.asNumber());
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -718,7 +717,7 @@ void ReanimatedModuleProxy::performOperations() {
 
     // Update CSS transitions and flush updates
     cssTransitionsRegistry_->update(rt, timestamp);
-    cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, true);
+    cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, false);
 
     // Flush all animated props updates
     animatedPropsRegistry_->flushUpdates(rt, updatesBatch, true);

@@ -77,14 +77,13 @@ export interface ReanimatedModuleProxy {
 
   registerCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,
-    transitionId: number,
     transitionConfig: NormalizedCSSTransitionConfig
   ): void;
 
   updateCSSTransition(
-    transitionId: number,
+    viewTag: number,
     configUpdates: Partial<NormalizedCSSTransitionConfig>
   ): void;
 
-  unregisterCSSTransition(transitionId: number): void;
+  unregisterCSSTransition(viewTag: number): void;
 }

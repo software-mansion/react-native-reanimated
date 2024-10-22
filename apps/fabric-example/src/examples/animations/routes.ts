@@ -11,7 +11,7 @@ import {
 const routes = {
   AnimatedProperties: {
     name: 'Animated Properties',
-    CardComponent: RouteCards.AnimatedPropertiesCard,
+    // CardComponent: RouteCards.AnimatedPropertiesCard,
     routes: {
       Dimensions: {
         name: 'Dimensions',
@@ -49,7 +49,7 @@ const routes = {
   },
   AnimationSettings: {
     name: 'Animation Settings',
-    CardComponent: RouteCards.AnimationSettingsCard,
+    // CardComponent: RouteCards.AnimationSettingsCard,
     routes: {
       Duration: {
         name: 'Duration',
@@ -83,7 +83,7 @@ const routes = {
   },
   RealWorldExamples: {
     name: 'Real World Examples',
-    CardComponent: RouteCards.RealWorldExamplesCard,
+    // CardComponent: RouteCards.RealWorldExamplesCard,
     routes: {
       SpinnersAndLoaders: {
         name: 'Spinners and Loaders',
@@ -109,7 +109,7 @@ const routes = {
   },
   Miscellaneous: {
     name: 'Miscellaneous',
-    CardComponent: RouteCards.MiscellaneousCard,
+    // CardComponent: RouteCards.MiscellaneousCard,
     routes: {
       ChangingAnimation: {
         name: 'Changing Animation',
@@ -123,7 +123,7 @@ const routes = {
   },
   TestExamples: {
     name: 'Test Examples',
-    CardComponent: RouteCards.TestExamplesCard,
+    // CardComponent: RouteCards.TestExamplesCard,
     routes: {
       Playground: {
         name: 'Playground',

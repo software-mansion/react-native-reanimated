@@ -30,7 +30,10 @@ jsi::Value ValueInterpolator<T>::getCurrentValue(
   if (!styleValue.isUndefined()) {
     return styleValue;
   }
-  return convertResultToJSI(rt, defaultStyleValue_.value());
+  if (defaultStyleValue_.has_value()) {
+    return convertResultToJSI(rt, defaultStyleValue_.value());
+  }
+  return jsi::Value::undefined();
 }
 
 template <typename T>

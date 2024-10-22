@@ -22,25 +22,25 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
 
   void updateSettings(
       jsi::Runtime &rt,
-      const unsigned id,
+      const Tag viewTag,
       const PartialCSSTransitionSettings &updatedSettings);
 
   bool hasUpdates() const {
-    return !runningTransitionIds_.empty() || !delayedTransitionIds_.empty() ||
+    return !runningTransitionTags_.empty() || !delayedTransitionTags_.empty() ||
         !operationsBatch_.empty();
   }
 
   void add(jsi::Runtime &rt, const std::shared_ptr<CSSTransition> &transition);
-  void remove(const unsigned id);
+  void remove(jsi::Runtime &rt, const Tag viewTag);
   void update(jsi::Runtime &rt, const time_t timestamp);
 
  private:
-  using Registry = std::unordered_map<unsigned, std::shared_ptr<CSSTransition>>;
-  using OperationsBatch = std::vector<std::pair<TransitionOperation, unsigned>>;
+  using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
+  using OperationsBatch = std::vector<std::pair<TransitionOperation, Tag>>;
   using DelayedQueue = std::priority_queue<
-      std::pair<time_t, unsigned>,
-      std::vector<std::pair<time_t, unsigned>>,
-      std::greater<std::pair<time_t, unsigned>>>;
+      std::pair<time_t, Tag>,
+      std::vector<std::pair<time_t, Tag>>,
+      std::greater<std::pair<time_t, Tag>>>;
 
   const GetAnimationTimestampFunction &getCurrentTimestamp_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
@@ -48,8 +48,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   Registry registry_;
   OperationsBatch operationsBatch_;
 
-  std::unordered_set<unsigned> runningTransitionIds_;
-  std::unordered_set<unsigned> delayedTransitionIds_;
+  std::unordered_set<Tag> runningTransitionTags_;
+  std::unordered_set<Tag> delayedTransitionTags_;
   DelayedQueue delayedTransitionsQueue_;
 
   void activateDelayedTransitions(const time_t timestamp);
@@ -59,9 +59,9 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
       jsi::Runtime &rt,
       const time_t timestamp,
       const std::shared_ptr<CSSTransition> &transition);
-  void handleOperation(const TransitionOperation operation, const unsigned id);
+  void handleOperation(const TransitionOperation operation, const Tag viewTag);
 
-  PropsObserver createPropsObserver(const unsigned id);
+  PropsObserver createPropsObserver(const Tag viewTag);
 };
 
 } // namespace reanimated

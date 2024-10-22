@@ -22,18 +22,16 @@ class StaticPropsRegistry {
     return observers_.find(viewTag) != observers_.end();
   }
 
-  void addObserver(
-      const unsigned observerId,
-      const Tag viewTag,
-      PropsObserver observer);
-  void removeObserver(const unsigned observerId);
+  void setObserver(const Tag viewTag, PropsObserver observer) {
+    observers_[viewTag] = observer;
+  }
+  void removeObserver(const Tag viewTag) {
+    observers_.erase(viewTag);
+  }
 
  private:
   std::unordered_map<Tag, folly::dynamic> registry_;
-
-  std::unordered_map<Tag, std::unordered_map<unsigned, PropsObserver>>
-      observers_;
-  std::unordered_map<unsigned, Tag> observerTags_;
+  std::unordered_map<Tag, PropsObserver> observers_;
 
   void notifyObservers(
       jsi::Runtime &rt,

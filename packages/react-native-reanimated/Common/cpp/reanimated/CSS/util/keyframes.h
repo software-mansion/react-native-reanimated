@@ -2,9 +2,9 @@
 
 #include <jsi/jsi.h>
 
-using namespace facebook;
-
 namespace reanimated {
+
+using namespace facebook;
 
 std::vector<std::pair<double, jsi::Value>> parseJSIKeyframes(
     jsi::Runtime &rt,

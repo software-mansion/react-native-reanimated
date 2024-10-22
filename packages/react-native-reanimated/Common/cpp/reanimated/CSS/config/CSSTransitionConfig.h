@@ -3,8 +3,6 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
-using namespace facebook;
-
 namespace reanimated {
 
 struct CSSTransitionConfig {

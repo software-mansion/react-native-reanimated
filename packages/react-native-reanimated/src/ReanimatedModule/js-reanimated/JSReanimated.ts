@@ -308,7 +308,6 @@ class JSReanimated implements IReanimatedModule {
 
   registerCSSTransition(
     _shadowNodeWrapper: ShadowNodeWrapper,
-    _transitionId: number,
     _transitionConfig: NormalizedCSSTransitionConfig
   ): void {
     throw new ReanimatedError(
@@ -317,7 +316,7 @@ class JSReanimated implements IReanimatedModule {
   }
 
   updateCSSTransition(
-    _transitionId: number,
+    _viewTag: number,
     _configUpdates: Partial<NormalizedCSSTransitionConfig>
   ): void {
     throw new ReanimatedError(
@@ -325,7 +324,7 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  unregisterCSSTransition(_transitionId: number): void {
+  unregisterCSSTransition(_viewTag: number): void {
     throw new ReanimatedError(
       '`unregisterCSSTransition` is not available in JSReanimated.'
     );

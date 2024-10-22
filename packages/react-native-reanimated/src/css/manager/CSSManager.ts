@@ -31,29 +31,29 @@ export default class CSSManager implements ICSSManager {
     { shadowNodeWrapper, viewConfig, viewTag }: ViewInfo,
     isMount = false
   ): void {
+    const tag = viewTag as number;
     const [animationConfig, transitionConfig, style] =
       extractCSSConfigsAndFlattenedStyles(styles);
-
     const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
-    if (viewConfig) {
-      adaptViewConfig(viewConfig);
-    }
 
     // If the update is called during component mount, we won't recognize style
     // changes and treat styles as initial, thus we need to set them before
     // attaching transition and animation
     if (isMount) {
-      setViewStyle(viewTag as number, style);
+      if (viewConfig) {
+        adaptViewConfig(viewConfig);
+      }
+      setViewStyle(tag, style);
     }
 
-    this.cssTransitionManager.update(wrapper, transitionConfig);
+    this.cssTransitionManager.update(wrapper, tag, transitionConfig);
     this.cssAnimationManager.update(wrapper, animationConfig);
 
     // If the update is called during component mount, we want to first - update
     // the transition or animation config, and then - set the style (which may
     // trigger the transition)
     if (!isMount) {
-      setViewStyle(viewTag as number, style);
+      setViewStyle(tag, style);
     }
   }
 

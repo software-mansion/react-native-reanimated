@@ -7,7 +7,7 @@ import type {
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import { colors, radius, sizes, spacing } from '../../../theme';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 
 const MiscellaneousCard: RouteCardComponent = (props) => (
@@ -64,14 +64,45 @@ function Showcase() {
 
   const { name: animationName, animation } = animations[animationIndex];
   const isFocused = useIsFocused();
+  const lastIterationStartTimestampRef = useRef(0);
+  const lastIterationElapsedTimeRef = useRef(0);
 
   useEffect(() => {
     if (isFocused) {
-      const interval = setInterval(() => {
-        setAnimationIndex((prev) => (prev + 1) % animations.length);
-      }, 2 * ANIMATION_DURATION);
+      // This timeout/interval logic ensures that the animation will be always changed
+      // after 2 iterations, even if the user left the screen during the iteration and
+      // came back later (the animation will be resumed at the same point as it was
+      // stopped and changed until the second iteration completes)
+      let interval: NodeJS.Timeout;
+      let timeout: NodeJS.Timeout;
 
-      return () => clearInterval(interval);
+      const changeAnimation = () => {
+        setAnimationIndex((prev) => (prev + 1) % animations.length);
+      };
+
+      const startInterval = () => {
+        interval = setInterval(() => {
+          lastIterationStartTimestampRef.current = Date.now();
+          changeAnimation();
+        }, 2 * ANIMATION_DURATION);
+      };
+
+      if (lastIterationElapsedTimeRef.current > 0) {
+        timeout = setTimeout(() => {
+          changeAnimation();
+          startInterval();
+        }, ANIMATION_DURATION - lastIterationElapsedTimeRef.current);
+      } else {
+        startInterval();
+      }
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(timeout);
+      };
+    } else {
+      lastIterationElapsedTimeRef.current =
+        Date.now() - lastIterationStartTimestampRef.current;
     }
   }, [isFocused]);
 

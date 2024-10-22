@@ -12,13 +12,12 @@ class CSSTransition {
   using PartialSettings = PartialCSSTransitionSettings;
 
   CSSTransition(
-      const unsigned id,
       const ShadowNode::Shared shadowNode,
       const CSSTransitionConfig &config,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  unsigned getId() const {
-    return id_;
+  Tag getViewTag() const {
+    return shadowNode_->getTag();
   }
   ShadowNode::Shared getShadowNode() const {
     return shadowNode_;
@@ -50,8 +49,8 @@ class CSSTransition {
   jsi::Value update(jsi::Runtime &rt, time_t timestamp);
 
  private:
-  const unsigned id_;
   const ShadowNode::Shared shadowNode_;
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   TransitionStyleInterpolator styleInterpolator_;
   TransitionProgressProvider progressProvider_;

@@ -40,23 +40,18 @@ export function unregisterCSSAnimation(animationId: number) {
 
 export function registerCSSTransition(
   shadowNodeWrapper: ShadowNodeWrapper,
-  transitionId: number,
   transitionConfig: NormalizedCSSTransitionConfig
 ) {
-  ReanimatedModule.registerCSSTransition(
-    shadowNodeWrapper,
-    transitionId,
-    transitionConfig
-  );
+  ReanimatedModule.registerCSSTransition(shadowNodeWrapper, transitionConfig);
 }
 
 export function updateCSSTransition(
-  transitionId: number,
+  viewTag: number,
   configUpdates: Partial<NormalizedCSSTransitionConfig>
 ) {
-  ReanimatedModule.updateCSSTransition(transitionId, configUpdates);
+  ReanimatedModule.updateCSSTransition(viewTag, configUpdates);
 }
 
-export function unregisterCSSTransition(transitionId: number) {
-  ReanimatedModule.unregisterCSSTransition(transitionId);
+export function unregisterCSSTransition(viewTag: number) {
+  ReanimatedModule.unregisterCSSTransition(viewTag);
 }

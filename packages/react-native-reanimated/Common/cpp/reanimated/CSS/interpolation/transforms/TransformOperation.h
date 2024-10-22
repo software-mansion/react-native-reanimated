@@ -1,11 +1,11 @@
 #pragma once
 
-#include <react/renderer/core/ShadowNode.h>
-
 #include <reanimated/CSS/common/AngleValue.h>
 #include <reanimated/CSS/common/TransformMatrix.h>
 #include <reanimated/CSS/common/UnitValue.h>
 #include <reanimated/CSS/common/definitions.h>
+
+#include <react/renderer/core/ShadowNode.h>
 
 #include <variant>
 

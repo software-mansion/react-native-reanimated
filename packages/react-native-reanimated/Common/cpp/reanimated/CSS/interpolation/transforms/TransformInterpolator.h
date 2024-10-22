@@ -1,6 +1,5 @@
 #pragma once
 
-#include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
@@ -23,7 +22,6 @@ class TransformInterpolator {
       : defaultOperation_(defaultOperation) {}
 
   std::shared_ptr<TransformOperation> getDefaultOperation() const {
-    LOG(INFO) << "Get default operation: " << defaultOperation_;
     return defaultOperation_;
   }
 

@@ -168,7 +168,7 @@ function Switch({
   onChange,
 }: SwitchProps) {
   return (
-    <Pressable style={styles.switch} onPress={onChange}>
+    <Pressable style={styles.switch} onPress={onChange} hitSlop={spacing.xxs}>
       <Animated.View
         style={[
           styles.switchBackground,

@@ -7,6 +7,7 @@ import { Dimensions, StyleSheet, View } from 'react-native';
 import { colors } from '../../../../theme';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
+import { BOTTOM_BAR_HEIGHT } from '../../../../navigation/constants';
 
 const EXAMPLE_SCALE = 0.85;
 
@@ -196,6 +197,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingBottom: BOTTOM_BAR_HEIGHT,
   },
   container: {
     width: CONTAINER_SIZE,
