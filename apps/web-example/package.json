@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
-    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/native": "^7.0.0-rc.20",
     "@shopify/flash-list": "^1.7.1",
     "common-app": "workspace:*",
     "expo": "~51.0.2",
