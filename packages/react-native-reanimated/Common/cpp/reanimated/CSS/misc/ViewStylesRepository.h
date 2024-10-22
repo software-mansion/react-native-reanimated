@@ -18,10 +18,10 @@
 #include <stdexcept>
 #include <string>
 
+namespace reanimated {
+
 using namespace facebook;
 using namespace react;
-
-namespace reanimated {
 
 struct CachedShadowNode {
   LayoutMetrics layoutMetrics;
@@ -54,6 +54,11 @@ class ViewStylesRepository {
       const RelativeTo relativeTo,
       const std::string &relativeProperty,
       const ShadowNode::Shared &shadowNode);
+  std::optional<double> resolveUnitValue(
+      const UnitValue &value,
+      const ShadowNode::Shared &shadowNode,
+      const RelativeTo relativeTo,
+      const std::string &relativeProperty);
 
   void clearNodesCache();
 

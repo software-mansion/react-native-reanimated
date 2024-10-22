@@ -75,7 +75,7 @@ void ValueInterpolator<T>::updateKeyframesFromStyleChange(
 
 template <typename T>
 jsi::Value ValueInterpolator<T>::update(
-    const InterpolationUpdateContext &context) {
+    const PropertyInterpolationUpdateContext &context) {
   updateCurrentKeyframes(context);
 
   const auto localProgress =
@@ -106,7 +106,7 @@ jsi::Value ValueInterpolator<T>::update(
 
 template <typename T>
 std::optional<T> ValueInterpolator<T>::getFallbackValue(
-    const InterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext context) const {
   const jsi::Value &styleValue = getStyleValue(context.rt, context.node);
   return styleValue.isUndefined()
       ? defaultStyleValue_
@@ -116,7 +116,7 @@ std::optional<T> ValueInterpolator<T>::getFallbackValue(
 template <typename T>
 std::optional<T> ValueInterpolator<T>::resolveKeyframeValue(
     const std::optional<T> unresolvedValue,
-    const InterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext context) const {
   if (!unresolvedValue.has_value()) {
     return std::nullopt;
   }
@@ -128,7 +128,7 @@ template <typename T>
 ValueKeyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
     size_t index,
     bool shouldResolve,
-    const InterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext context) const {
   const auto keyframe = keyframes_.at(index);
   const double offset = keyframe.offset;
 
@@ -155,7 +155,7 @@ ValueKeyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
 
 template <typename T>
 void ValueInterpolator<T>::updateCurrentKeyframes(
-    const InterpolationUpdateContext context) {
+    const PropertyInterpolationUpdateContext context) {
   const bool isProgressLessThanHalf = context.progress < 0.5;
   const auto prevAfterIndex = keyframeAfterIndex_;
 
@@ -204,7 +204,7 @@ template <typename T>
 double ValueInterpolator<T>::calculateLocalProgress(
     const ValueKeyframe<T> &keyframeBefore,
     const ValueKeyframe<T> &keyframeAfter,
-    const InterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext context) const {
   const double beforeOffset = keyframeBefore.offset;
   const double afterOffset = keyframeAfter.offset;
 
@@ -220,7 +220,7 @@ jsi::Value ValueInterpolator<T>::interpolateMissingValue(
     double localProgress,
     const std::optional<T> &fromValue,
     const std::optional<T> &toValue,
-    const InterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext context) const {
   return jsi::Value::undefined();
   const auto selectedValue = localProgress < 0.5 ? fromValue : toValue;
   return selectedValue.has_value()

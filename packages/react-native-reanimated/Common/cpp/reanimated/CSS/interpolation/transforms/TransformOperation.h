@@ -1,17 +1,18 @@
 #pragma once
 
+#include <react/renderer/core/ShadowNode.h>
+
 #include <reanimated/CSS/common/AngleValue.h>
 #include <reanimated/CSS/common/TransformMatrix.h>
 #include <reanimated/CSS/common/UnitValue.h>
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/misc/ViewStylesRepository.h>
 
 #include <variant>
 
+namespace reanimated {
+
 using namespace facebook;
 using namespace react;
-
-namespace reanimated {
 
 enum class TransformOperationType {
   Perspective,
@@ -60,13 +61,6 @@ struct TransformOperation {
       TransformOperationType type) const;
 
   virtual TransformMatrix toMatrix() const = 0;
-  virtual TransformMatrix toMatrix(
-      const RelativeTo relativeTo,
-      const std::string &relativeProperty,
-      const ShadowNode::Shared &shadowNode,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
-    return toMatrix(); // Default for non-relative operations
-  }
 };
 
 using TransformOperations = std::vector<std::shared_ptr<TransformOperation>>;
@@ -142,12 +136,6 @@ struct TranslateOperation : public TransformOperation {
   jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
   virtual TransformMatrix toMatrix(const double resolvedValue) const = 0;
   TransformMatrix toMatrix() const override;
-  TransformMatrix toMatrix(
-      const RelativeTo relativeTo,
-      const std::string &relativeProperty,
-      const ShadowNode::Shared &shadowNode,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      override;
 };
 
 struct TranslateXOperation : public TranslateOperation {

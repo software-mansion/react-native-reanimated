@@ -99,7 +99,7 @@ void CSSAnimation::updateSettings(
   }
 }
 
-InterpolationUpdateContext CSSAnimation::createUpdateContext(
+PropertyInterpolationUpdateContext CSSAnimation::createUpdateContext(
     jsi::Runtime &rt,
     const double progress,
     const bool directionChanged) const {

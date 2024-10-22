@@ -14,14 +14,27 @@ class TranslateTransformInterpolatorBase
       const UnitValue &defaultValue);
 
  protected:
-  const RelativeTo relativeTo_;
-  const std::string relativeProperty_;
-
   OperationType interpolate(
       const double progress,
       const OperationType &fromOperation,
       const OperationType &toOperation,
-      const InterpolationUpdateContext &context) const override;
+      const TransformInterpolatorUpdateContext &context) const override;
+  OperationType resolveOperation(
+      const OperationType &operation,
+      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+      const override;
+
+ private:
+  const RelativeTo relativeTo_;
+  const std::string relativeProperty_;
+
+  std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+
+  std::optional<double> resolveValue(
+      const UnitValue &value,
+      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
 };
 
 class TranslateXTransformInterpolator

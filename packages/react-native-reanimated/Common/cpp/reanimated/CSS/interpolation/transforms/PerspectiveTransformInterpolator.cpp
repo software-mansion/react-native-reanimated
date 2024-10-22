@@ -11,7 +11,7 @@ PerspectiveOperation PerspectiveTransformInterpolator::interpolate(
     const double progress,
     const PerspectiveOperation &fromOperation,
     const PerspectiveOperation &toOperation,
-    const InterpolationUpdateContext &context) const {
+      const TransformInterpolatorUpdateContext &context) const {
   return fromOperation.value +
       (toOperation.value - fromOperation.value) * progress;
 }

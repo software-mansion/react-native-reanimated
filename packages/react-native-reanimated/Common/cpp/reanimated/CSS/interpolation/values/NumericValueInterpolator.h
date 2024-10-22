@@ -21,7 +21,7 @@ class NumericValueInterpolator : public ValueInterpolator<double> {
       double localProgress,
       const double &fromValue,
       const double &toValue,
-      const InterpolationUpdateContext context) const override;
+      const PropertyInterpolationUpdateContext context) const override;
 };
 
 } // namespace reanimated

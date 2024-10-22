@@ -11,9 +11,9 @@ MatrixOperation MatrixTransformInterpolator::interpolate(
     const double progress,
     const MatrixOperation &fromOperation,
     const MatrixOperation &toOperation,
-    const InterpolationUpdateContext &context) const {
-  const auto fromMatrix = matrixFromOperation(fromOperation);
-  const auto toMatrix = matrixFromOperation(toOperation);
+    const TransformInterpolatorUpdateContext &context) const {
+  const auto fromMatrix = matrixFromOperation(fromOperation, context);
+  const auto toMatrix = matrixFromOperation(toOperation, context);
 
   if (progress == 0) {
     return fromMatrix;
@@ -30,25 +30,31 @@ MatrixOperation MatrixTransformInterpolator::interpolate(
   }
 
   return TransformMatrix::recompose(
-      decomposedFrom->interpolate(progress, *decomposedTo));
+      decomposedFrom->interpolate(progress, decomposedTo.value()));
 }
 
 TransformMatrix MatrixTransformInterpolator::matrixFromOperation(
-    const MatrixOperation &operation) const {
+    const MatrixOperation &operation,
+    const TransformInterpolatorUpdateContext &context) const {
   if (std::holds_alternative<TransformOperations>(
           operation.valueOrOperations)) {
     const auto operations =
         std::get<TransformOperations>(operation.valueOrOperations);
+
     TransformMatrix matrix = TransformMatrix::Identity();
+
     for (int i = operations.size() - 1; i >= 0; i--) {
-      const auto operation = operations[i];
+      auto operation = operations[i];
+
       if (operation->isRelative()) {
-        // TODO - handle relative transform operations
-        // matrix *= operation->toMatrix();
-      } else {
-        matrix *= operation->toMatrix();
+        const auto &interpolator = context.interpolators->at(operation->type);
+        operation = interpolator->resolveOperation(
+            *operation, context.node, context.viewStylesRepository);
       }
+
+      matrix *= operation->toMatrix();
     }
+
     return matrix;
   }
 

@@ -67,7 +67,7 @@ class RelativeOrNumericInterpolatorFactory
 class TransformsStyleInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   TransformsStyleInterpolatorFactory(
-      const TransformInterpolators &interpolators)
+      const std::shared_ptr<TransformInterpolators> &interpolators)
       : interpolators_(interpolators) {}
 
   std::shared_ptr<PropertyInterpolator> create(
@@ -78,7 +78,7 @@ class TransformsStyleInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
  protected:
-  const TransformInterpolators interpolators_;
+  const std::shared_ptr<TransformInterpolators> interpolators_;
 };
 
 /**
@@ -131,7 +131,8 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
   for (const auto &[property, interpolator] : interpolators) {
     result[getTransformOperationType(property)] = interpolator;
   }
-  return std::make_shared<TransformsStyleInterpolatorFactory>(result);
+  return std::make_shared<TransformsStyleInterpolatorFactory>(
+      std::make_shared<TransformInterpolators>(result));
 }
 
 /**

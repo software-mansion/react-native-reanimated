@@ -21,7 +21,7 @@ class ColorValueInterpolator : public ValueInterpolator<ColorArray> {
       double localProgress,
       const ColorArray &fromValue,
       const ColorArray &toValue,
-      const InterpolationUpdateContext context) const override;
+      const PropertyInterpolationUpdateContext context) const override;
 };
 
 } // namespace reanimated

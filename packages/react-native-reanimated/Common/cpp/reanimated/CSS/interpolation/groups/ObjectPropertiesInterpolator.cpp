@@ -19,7 +19,7 @@ jsi::Value ObjectPropertiesInterpolator::getStyleValue(
 }
 
 jsi::Value ObjectPropertiesInterpolator::update(
-    const InterpolationUpdateContext &context) {
+    const PropertyInterpolationUpdateContext &context) {
   return mapInterpolators(context.rt, [&](PropertyInterpolator &interpolator) {
     return interpolator.update(context);
   });

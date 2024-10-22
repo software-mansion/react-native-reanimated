@@ -5,8 +5,6 @@
 #include <reanimated/CSS/interpolation/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
-#include <chrono>
-
 namespace reanimated {
 
 class CSSAnimation {
@@ -58,12 +56,13 @@ class CSSAnimation {
  private:
   const unsigned id_;
   const ShadowNode::Shared shadowNode_;
-  AnimationFillMode fillMode_;
 
   AnimationStyleInterpolator styleInterpolator_;
   AnimationProgressProvider progressProvider_;
 
-  InterpolationUpdateContext createUpdateContext(
+  AnimationFillMode fillMode_;
+
+  PropertyInterpolationUpdateContext createUpdateContext(
       jsi::Runtime &rt,
       const double progress,
       const bool directionChanged) const;

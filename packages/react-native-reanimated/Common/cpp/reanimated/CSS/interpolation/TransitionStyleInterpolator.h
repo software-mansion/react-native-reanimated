@@ -21,8 +21,9 @@ class TransitionStyleInterpolator {
           &progressProviders);
 
  private:
-  PropertiesInterpolators interpolators_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+
+  PropertiesInterpolators interpolators_;
 };
 
 } // namespace reanimated

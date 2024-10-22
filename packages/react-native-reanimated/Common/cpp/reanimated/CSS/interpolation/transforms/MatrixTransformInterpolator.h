@@ -15,9 +15,11 @@ class MatrixTransformInterpolator
       const double progress,
       const MatrixOperation &fromOperation,
       const MatrixOperation &toOperation,
-      const InterpolationUpdateContext &context) const override;
+      const TransformInterpolatorUpdateContext &context) const override;
 
-  TransformMatrix matrixFromOperation(const MatrixOperation &operation) const;
+  TransformMatrix matrixFromOperation(
+      const MatrixOperation &operation,
+      const TransformInterpolatorUpdateContext &context) const;
 };
 
 } // namespace reanimated
