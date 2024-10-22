@@ -1,0 +1,14 @@
+{
+    "platforms": ["iOS", "Android"],
+
+    "reanimated_version": {
+        "3.16": {
+            "supported_react_native": {
+                "paper": ["0.75", "0.74", "0.73"],
+                "fabric":["0.74", "0.73"]
+            }
+        }
+    }
+}
+
+
