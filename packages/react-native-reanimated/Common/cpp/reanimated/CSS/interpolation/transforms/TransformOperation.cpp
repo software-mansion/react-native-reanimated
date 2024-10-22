@@ -44,12 +44,22 @@ TransformOperationType getTransformOperationType(const std::string &property) {
   }
 }
 
-bool TransformOperation::canConvertTo(const TransformOperationType type) const {
-  return false;
-}
-
 std::string getOperationNameFromType(const TransformOperationType type) {
   return transformOperationStrings[static_cast<size_t>(type)];
+}
+
+TransformOperation::TransformOperation(const TransformOperationType type)
+    : type(type) {};
+
+std::ostream &operator<<(
+    std::ostream &os,
+    const TransformOperation &operation) {
+  os << operation.getOperationName();
+  return os;
+}
+
+bool TransformOperation::canConvertTo(const TransformOperationType type) const {
+  return false;
 }
 
 void TransformOperation::assertCanConvertTo(
@@ -150,8 +160,6 @@ jsi::Value TransformOperation::toJSIValue(jsi::Runtime &rt) const {
 /**
  * Concrete transform operations
  */
-TransformOperation::TransformOperation(const TransformOperationType type)
-    : type(type) {};
 
 // Perspective
 PerspectiveOperation::PerspectiveOperation(const double value)
@@ -321,34 +329,40 @@ TransformMatrix SkewYOperation::toMatrix() const {
 // Matrix
 std::variant<TransformMatrix, TransformOperations> simplifyOperations(
     const TransformOperations &operations) {
-  TransformOperations simplifiedOperations;
+  TransformOperations reversedOperations;
   TransformMatrix matrix = TransformMatrix::Identity();
   bool hasSimplifications = false;
 
-  for (const auto &operation : operations) {
+  for (int i = operations.size() - 1; i >= 0; i--) {
+    const auto &operation = operations[i];
     if (!operation->isRelative()) {
-      matrix = matrix * operation->toMatrix();
+      matrix *= operation->toMatrix();
       hasSimplifications = true;
     } else {
       if (hasSimplifications) {
-        simplifiedOperations.emplace_back(
+        reversedOperations.emplace_back(
             std::make_shared<MatrixOperation>(matrix));
         matrix = TransformMatrix::Identity();
         hasSimplifications = false;
       }
-      simplifiedOperations.emplace_back(operation);
+      reversedOperations.emplace_back(operation);
     }
   }
 
   if (hasSimplifications) {
-    if (simplifiedOperations.empty()) {
+    if (reversedOperations.empty()) {
       return matrix;
     }
 
-    simplifiedOperations.emplace_back(
-        std::make_shared<MatrixOperation>(matrix));
+    reversedOperations.emplace_back(std::make_shared<MatrixOperation>(matrix));
   }
-  
+
+  TransformOperations simplifiedOperations;
+  simplifiedOperations.reserve(reversedOperations.size());
+  for (int i = reversedOperations.size() - 1; i >= 0; i--) {
+    simplifiedOperations.emplace_back(reversedOperations[i]);
+  }
+
   return simplifiedOperations;
 }
 

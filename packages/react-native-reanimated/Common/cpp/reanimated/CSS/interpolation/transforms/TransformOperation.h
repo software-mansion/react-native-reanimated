@@ -31,12 +31,17 @@ enum class TransformOperationType {
 };
 
 TransformOperationType getTransformOperationType(const std::string &property);
+std::string getOperationNameFromType(const TransformOperationType type);
 
 // Base class for TransformOperation
 struct TransformOperation {
   const TransformOperationType type;
 
   TransformOperation(const TransformOperationType type);
+
+  friend std::ostream &operator<<(
+      std::ostream &os,
+      const TransformOperation &operation);
 
   std::string getOperationName() const;
   virtual bool isRelative() const {

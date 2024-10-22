@@ -486,10 +486,10 @@ function DualRing() {
                   transform: [{ rotate: `${index * 180}deg` }],
                 },
                 to: {
-                  transform: [{ rotate: `${(index + 2) * 180}deg` }],
+                  transform: [{ rotate: `${(index + 1) * 180}deg` }],
                 },
               },
-              animationDuration: '1.2s',
+              animationDuration: '0.6s',
               animationTimingFunction: 'linear',
               animationIterationCount: 'infinite',
             },

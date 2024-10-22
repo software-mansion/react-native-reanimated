@@ -9,16 +9,26 @@ import React from 'react';
 import Animated from 'react-native-reanimated';
 
 const transitionStyles: ViewStyle[] = [
-  {},
   {
-    transform: [{ rotate: '45deg' }],
+    transform: [
+      { perspective: 100 },
+      { rotate: '45deg' },
+      { skewX: '45deg' },
+      { rotateX: '45deg' },
+    ],
   },
   {
     transform: [{ translateY: 200 }, { rotate: '45deg' }, { scale: 2 }],
     backgroundColor: 'blue',
   },
   {
-    transform: [{ rotate: '45deg' }, { translateY: 200 }],
+    transform: [
+      { perspective: 200 },
+      { rotate: '45deg' },
+      { translateY: 150 },
+      { rotateY: '-25deg' },
+      { rotateX: '35deg' },
+    ],
     backgroundColor: 'green',
   },
 ];
