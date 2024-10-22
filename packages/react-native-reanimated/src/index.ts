@@ -303,4 +303,5 @@ export type {
   CSSAnimationDirection,
   CSSAnimationFillMode,
   CSSAnimationSettings,
+  CSSAnimationPlayState,
 } from './css';

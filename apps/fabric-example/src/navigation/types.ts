@@ -1,3 +1,4 @@
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import type { RouteCardComponent } from '../components';
 
 export type Route = {
@@ -11,6 +12,12 @@ export type Route = {
 );
 
 export type Routes = Record<string, Route>;
+
+export type TabRoute = {
+  name: string;
+  icon: IconDefinition;
+  routes: Routes;
+};
 
 type Join<K, P> = K extends string | number
   ? P extends string | number

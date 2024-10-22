@@ -5,5 +5,5 @@ export const flex = {
   grow: { flexGrow: 1 },
   row: { flexDirection: 'row' },
   shrink: { flexShrink: 1 },
-  wrap: { flexWrap: 'wrap' }
+  wrap: { flexWrap: 'wrap' },
 } as const;
