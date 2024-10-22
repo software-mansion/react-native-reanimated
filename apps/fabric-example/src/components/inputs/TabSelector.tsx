@@ -141,6 +141,7 @@ function TabSelector<T extends string>({
         <TouchableOpacity
           onPress={() => onSelectTab(tabs[Math.max(activeTabIndex - 1, 0)])}
           disabled={prevDisabled}
+          hitSlop={spacing.md}
           style={prevDisabled && styles.disabledButton}>
           <FontAwesomeIcon icon={faChevronLeft} color={colors.foreground3} />
         </TouchableOpacity>
@@ -149,6 +150,7 @@ function TabSelector<T extends string>({
             onSelectTab(tabs[Math.min(activeTabIndex + 1, tabs.length - 1)])
           }
           disabled={nextDisabled}
+          hitSlop={spacing.md}
           style={nextDisabled && styles.disabledButton}>
           <FontAwesomeIcon icon={faChevronRight} color={colors.foreground3} />
         </TouchableOpacity>

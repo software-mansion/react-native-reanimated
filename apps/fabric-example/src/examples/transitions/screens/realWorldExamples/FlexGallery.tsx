@@ -162,7 +162,6 @@ const styles = StyleSheet.create({
     marginBottom: BOTTOM_BAR_HEIGHT + spacing.xl,
   },
   card: {
-    backgroundColor: 'red',
     borderRadius: radius.md,
     minHeight: sizes.lg,
     justifyContent: 'flex-end',

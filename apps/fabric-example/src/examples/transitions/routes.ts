@@ -1,6 +1,6 @@
 import type { RouteNames, Routes } from '../../navigation/types';
 import {
-  AnimatedProperties,
+  TransitionedProperties,
   TestExamples,
   RealWorldExamples,
   TransitionSettings,
@@ -8,8 +8,8 @@ import {
 
 const routes = {
   AnimatedProperties: {
-    name: 'Animated Properties',
-    Component: AnimatedProperties,
+    name: 'Transitioned Properties',
+    Component: TransitionedProperties,
   },
   TransitionSettings: {
     name: 'Transition Settings',

@@ -60,7 +60,7 @@ export default function AnimationTimingFunction() {
             {
               title: 'Cubic Bezier Easing',
               description:
-                'Specify a Bézier curve to shape the progress of an animation or a transition. It is defined by two control points (x1, y1, x2, y2) that mathematically describe the curve.',
+                'Specify a Bézier curve to shape the progress of an animation. It is defined by two control points (x1, y1, x2, y2) that mathematically describe the curve.',
               items: [
                 {
                   animationTimingFunction: cubicBezier(0.2, 0.9, 0.8, 0.25),

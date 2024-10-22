@@ -55,8 +55,9 @@ export default function TransitionStyleChange({
 
   return (
     <LayoutAnimationConfig skipEntering>
-      <Animated.View
-        style={styles.container}
+      <Animated.ScrollView
+        horizontal
+        contentContainerStyle={styles.container}
         layout={layoutTransition}
         exiting={FadeOut}>
         <CodeCard
@@ -79,7 +80,7 @@ export default function TransitionStyleChange({
           code={JSON.stringify(nextStyle, null, 2)}
           label="Next"
         />
-      </Animated.View>
+      </Animated.ScrollView>
     </LayoutAnimationConfig>
   );
 }
@@ -131,7 +132,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
-    padding: spacing.md,
+    paddingVertical: spacing.md,
   },
   iconWrapper: {
     paddingTop: spacing.md,

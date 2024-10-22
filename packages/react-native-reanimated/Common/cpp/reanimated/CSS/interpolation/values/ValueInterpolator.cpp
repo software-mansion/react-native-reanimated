@@ -115,9 +115,9 @@ jsi::Value ValueInterpolator<T>::update(
   }
 
   T value;
-  if (localProgress >= 1) {
+  if (localProgress == 1.0) {
     value = toValue.value();
-  } else if (localProgress <= 0) {
+  } else if (localProgress == 0.0) {
     value = fromValue.value();
   } else {
     value =
