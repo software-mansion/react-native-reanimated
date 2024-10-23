@@ -1,5 +1,5 @@
 {
-    "platforms": ["iOS", "Android"],
+    "platforms": "['iOS', 'Android']",
 
     "reanimated_version": {
         "3.16": {
