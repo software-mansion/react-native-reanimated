@@ -16,7 +16,7 @@ jobs:
     steps:
     - id: set-matrix
       run: |
-        JSON=$(cat commonData/compatibility.json)
+        JSON=$(cat ${GITHUB_ACTION_PATH}/../../commonData/compatibility.json)
 
         JSON="${content//'%'/'%25'}"
         JSON="${content//$'\n'/'%0A'}"
