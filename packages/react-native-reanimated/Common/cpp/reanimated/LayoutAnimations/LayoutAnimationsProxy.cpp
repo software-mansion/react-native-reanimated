@@ -1,6 +1,5 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/NativeModules/NativeReanimatedModule.h>
 
 #include <react/renderer/animations/utils.h>
@@ -8,6 +7,9 @@
 
 #include <set>
 #include <utility>
+
+#include "LayoutAnimationsProxy.h"
+#include "YogaPropertySettingUtils.h"
 
 namespace reanimated {
 
@@ -333,9 +335,14 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
       }
 
       case ShadowViewMutation::Type::Update: {
-        auto shouldAnimate = hasLayoutChanged(mutation);
-        if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT) ||
-            (!shouldAnimate && !layoutAnimations_.contains(tag))) {
+        auto hasLayoutAnimation =
+            layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT);
+        auto hasLayoutAndStyleAnimation =
+            layoutAnimationsManager_->hasLayoutAnimation(tag, STYLE_TRANSITION);
+        auto layoutChanged = hasLayoutChanged(mutation);
+        if (!hasLayoutAnimation ||
+            (!hasLayoutAndStyleAnimation && !layoutChanged &&
+             !layoutAnimations_.contains(tag))) {
           // We should cancel any ongoing animation here to ensure that the
           // proper final state is reached for this view However, due to how
           // RNSScreens handle adding headers (a second commit is triggered to
@@ -345,7 +352,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           // TODO: find a better solution for this problem
           filteredMutations.push_back(mutation);
           continue;
-        } else if (!shouldAnimate) {
+        } else if (!layoutChanged && !hasLayoutAndStyleAnimation) {
           updateOngoingAnimationTarget(tag, mutation);
           continue;
         }
@@ -353,7 +360,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         // store the oldChildShadowView, so that we can use this ShadowView when
         // the view is inserted
         oldShadowViewsForReparentings[tag] = mutation.oldChildShadowView;
-        startLayoutAnimation(tag, mutation);
+        startLayoutAnimation(tag, mutation, hasLayoutAndStyleAnimation);
         break;
       }
 
@@ -590,7 +597,6 @@ bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
 void LayoutAnimationsProxy::createLayoutAnimation(
     const ShadowViewMutation &mutation,
     ShadowView &oldView,
-    const SurfaceId &surfaceId,
     const int tag) const {
   int count = 1;
   auto layoutAnimationIt = layoutAnimations_.find(tag);
@@ -627,7 +633,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
 
   uiScheduler_->scheduleOnUI(
       [finalView, current, parent, mutation, opacity, this, tag]() {
-        Rect window{};
+        Rectangle window{};
         {
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
           layoutAnimations_.insert_or_assign(
@@ -636,16 +642,10 @@ void LayoutAnimationsProxy::startEnteringAnimation(
               surfaceManager.getWindow(mutation.newChildShadowView.surfaceId);
         }
 
-        Snapshot values(mutation.newChildShadowView, window);
+        LayoutSnapshot values(mutation.newChildShadowView, window);
         jsi::Object yogaValues(uiRuntime_);
-        yogaValues.setProperty(uiRuntime_, "targetOriginX", values.x);
-        yogaValues.setProperty(uiRuntime_, "targetGlobalOriginX", values.x);
-        yogaValues.setProperty(uiRuntime_, "targetOriginY", values.y);
-        yogaValues.setProperty(uiRuntime_, "targetGlobalOriginY", values.y);
-        yogaValues.setProperty(uiRuntime_, "targetWidth", values.width);
-        yogaValues.setProperty(uiRuntime_, "targetHeight", values.height);
-        yogaValues.setProperty(uiRuntime_, "windowWidth", values.windowWidth);
-        yogaValues.setProperty(uiRuntime_, "windowHeight", values.windowHeight);
+        setYogaPropertiesForEnteringAnimation(&yogaValues, uiRuntime_, values);
+
         layoutAnimationsManager_->startLayoutAnimation(
             uiRuntime_, tag, LayoutAnimationType::ENTERING, yogaValues);
       });
@@ -657,28 +657,21 @@ void LayoutAnimationsProxy::startExitingAnimation(
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start exiting animation for tag " << tag << std::endl;
 #endif
-  auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
-  uiScheduler_->scheduleOnUI([this, tag, mutation, surfaceId]() {
+  uiScheduler_->scheduleOnUI([this, tag, mutation]() {
     auto oldView = mutation.oldChildShadowView;
-    Rect window{};
+    auto surfaceId = oldView.surfaceId;
+
+    Rectangle window{};
     {
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-      createLayoutAnimation(mutation, oldView, surfaceId, tag);
+      createLayoutAnimation(mutation, oldView, tag);
       window = surfaceManager.getWindow(surfaceId);
     }
 
-    Snapshot values(oldView, window);
-
+    LayoutSnapshot values(oldView, window);
     jsi::Object yogaValues(uiRuntime_);
-    yogaValues.setProperty(uiRuntime_, "currentOriginX", values.x);
-    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginX", values.x);
-    yogaValues.setProperty(uiRuntime_, "currentOriginY", values.y);
-    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginY", values.y);
-    yogaValues.setProperty(uiRuntime_, "currentWidth", values.width);
-    yogaValues.setProperty(uiRuntime_, "currentHeight", values.height);
-    yogaValues.setProperty(uiRuntime_, "windowWidth", values.windowWidth);
-    yogaValues.setProperty(uiRuntime_, "windowHeight", values.windowHeight);
+    setYogaPropertiesForExitingAnimation(&yogaValues, uiRuntime_, values);
     layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime_, tag, LayoutAnimationType::EXITING, yogaValues);
     layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
@@ -687,40 +680,39 @@ void LayoutAnimationsProxy::startExitingAnimation(
 
 void LayoutAnimationsProxy::startLayoutAnimation(
     const int tag,
-    const ShadowViewMutation &mutation) const {
+    const ShadowViewMutation &mutation,
+    bool makeFullSnapshot) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start layout animation for tag " << tag << std::endl;
 #endif
-  auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
-  uiScheduler_->scheduleOnUI([this, mutation, surfaceId, tag]() {
+  uiScheduler_->scheduleOnUI([this, mutation, tag, makeFullSnapshot]() {
     auto oldView = mutation.oldChildShadowView;
-    Rect window{};
+    auto newView = mutation.newChildShadowView;
+
+    Rectangle window{};
     {
       auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-      createLayoutAnimation(mutation, oldView, surfaceId, tag);
-      window = surfaceManager.getWindow(surfaceId);
+      createLayoutAnimation(mutation, oldView, tag);
+      window = surfaceManager.getWindow(oldView.surfaceId);
     }
 
-    Snapshot currentValues(oldView, window);
-    Snapshot targetValues(mutation.newChildShadowView, window);
+    LayoutSnapshot currentValues(oldView, window);
+    LayoutSnapshot targetValues(newView, window);
 
     jsi::Object yogaValues(uiRuntime_);
-    yogaValues.setProperty(uiRuntime_, "currentOriginX", currentValues.x);
-    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginX", currentValues.x);
-    yogaValues.setProperty(uiRuntime_, "currentOriginY", currentValues.y);
-    yogaValues.setProperty(uiRuntime_, "currentGlobalOriginY", currentValues.y);
-    yogaValues.setProperty(uiRuntime_, "currentWidth", currentValues.width);
-    yogaValues.setProperty(uiRuntime_, "currentHeight", currentValues.height);
-    yogaValues.setProperty(uiRuntime_, "targetOriginX", targetValues.x);
-    yogaValues.setProperty(uiRuntime_, "targetGlobalOriginX", targetValues.x);
-    yogaValues.setProperty(uiRuntime_, "targetOriginY", targetValues.y);
-    yogaValues.setProperty(uiRuntime_, "targetGlobalOriginY", targetValues.y);
-    yogaValues.setProperty(uiRuntime_, "targetWidth", targetValues.width);
-    yogaValues.setProperty(uiRuntime_, "targetHeight", targetValues.height);
-    yogaValues.setProperty(uiRuntime_, "windowWidth", targetValues.windowWidth);
-    yogaValues.setProperty(
-        uiRuntime_, "windowHeight", targetValues.windowHeight);
+
+    setYogaPropertiesForLayoutTransitionAnimation(
+        &yogaValues, uiRuntime_, currentValues, targetValues);
+
+    if (makeFullSnapshot) {
+      StyleSnapshot currentStyleValues(uiRuntime_, oldView, window);
+      StyleSnapshot targetStyleValues(uiRuntime_, newView, window);
+
+      setYogaPropertiesForStyleTransitionAnimation(
+          &yogaValues, uiRuntime_, currentStyleValues, targetStyleValues);
+    }
+
     layoutAnimationsManager_->startLayoutAnimation(
         uiRuntime_, tag, LayoutAnimationType::LAYOUT, yogaValues);
   });

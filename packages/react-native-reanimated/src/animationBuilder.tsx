@@ -2,20 +2,23 @@
 import type {
   ILayoutAnimationBuilder,
   LayoutAnimationFunction,
-  LayoutAnimationsValues,
 } from './layoutReanimation';
 import type { StyleProps } from './commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
 import { logger } from './logger';
+import type {
+  LayoutAnimationsValues,
+  StyleTransitionAnimationFunction,
+  StyleTransitionAnimationsValues,
+} from './layoutReanimation/animationBuilder/commonTypes';
 
-const mockTargetValues: LayoutAnimationsValues = {
+const mockValues: LayoutAnimationsValues = {
   targetOriginX: 0,
   targetOriginY: 0,
   targetWidth: 0,
   targetHeight: 0,
   targetGlobalOriginX: 0,
   targetGlobalOriginY: 0,
-  targetBorderRadius: 0,
   windowWidth: 0,
   windowHeight: 0,
   currentOriginX: 0,
@@ -24,7 +27,6 @@ const mockTargetValues: LayoutAnimationsValues = {
   currentHeight: 0,
   currentGlobalOriginX: 0,
   currentGlobalOriginY: 0,
-  currentBorderRadius: 0,
 };
 
 function getCommonProperties(
@@ -76,21 +78,27 @@ export function maybeBuild(
   layoutAnimationOrBuilder:
     | ILayoutAnimationBuilder
     | LayoutAnimationFunction
+    | StyleTransitionAnimationFunction
     | Keyframe,
   style: NestedArray<StyleProps> | undefined,
   displayName: string
-): LayoutAnimationFunction | Keyframe {
+): LayoutAnimationFunction | StyleTransitionAnimationFunction | Keyframe {
   const isAnimationBuilder = (
-    value: ILayoutAnimationBuilder | LayoutAnimationFunction | Keyframe
+    value:
+      | ILayoutAnimationBuilder
+      | LayoutAnimationFunction
+      | StyleTransitionAnimationFunction
+      | Keyframe
   ): value is ILayoutAnimationBuilder =>
-    'build' in layoutAnimationOrBuilder &&
-    typeof layoutAnimationOrBuilder.build === 'function';
+    'build' in value && typeof value.build === 'function';
 
   if (isAnimationBuilder(layoutAnimationOrBuilder)) {
     const animationFactory = layoutAnimationOrBuilder.build();
 
     if (__DEV__ && style) {
-      const layoutAnimation = animationFactory(mockTargetValues);
+      const layoutAnimation = animationFactory(
+        mockValues as StyleTransitionAnimationsValues
+      );
       maybeReportOverwrittenProperties(
         layoutAnimation.animations,
         style,
