@@ -9,7 +9,7 @@ on:
 
 jobs:
   read-json:
-      if: github.repository == 'software-mansion/react-native-reanimated'
+    if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: 'ubuntu-latest'
     outputs:
       platforms: ${{ steps.set-matrix.outputs.platforms }}
