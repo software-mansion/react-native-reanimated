@@ -1,6 +1,9 @@
 name: Reanimated compatibility check [Nightly]
 on:
   pull_request:
+  merge_group:
+    branches:
+      - main
   workflow_call:
   workflow_dispatch:
 
