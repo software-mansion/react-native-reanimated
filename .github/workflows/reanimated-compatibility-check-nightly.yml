@@ -30,7 +30,7 @@ jobs:
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:
-        platform: "${{fromJson(needs.read-json.outputs.JSON.platforms)}}"
+        platform: "${{fromJson(needs.read-json.outputs.JSON).platforms}}"
         mode: ['Debug', 'Release']
         # TODO: Fetch compatibility in docs and here from common sources.
         # Update it when dropping support for RN versions.
