@@ -31,7 +31,7 @@ jobs:
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:
-        platform: "${{fromJson(\"{\"platforms\": \"['iOS', 'Android']\"}\").platforms}}"
+        platform: ${{fromJson(\"{\"platforms\": \"['iOS', 'Android']\"}\").platforms}}
         mode: ['Debug', 'Release']
         # TODO: Fetch compatibility in docs and here from common sources.
         # Update it when dropping support for RN versions.
