@@ -12,7 +12,7 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: 'ubuntu-latest'
     outputs:
-      platforms: ${{ steps.set-matrix.outputs.platforms }}
+      JSON: ${{ steps.set-matrix.outputs.JSON }}
     steps:
     - id: set-matrix
       run: |
@@ -22,7 +22,7 @@ jobs:
         JSON="${content//$'\n'/'%0A'}"
         JSON="${content//$'\r'/'%0D'}"
 
-        echo "::set-output name=platforms::$JSON"
+        echo "::set-output name=JSON::$JSON"
 
   build:
     needs: read-json
@@ -30,7 +30,7 @@ jobs:
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:
-        platform: "${{fromJson(needs.read-json.outputs.platforms)}}"
+        platform: "${{fromJson(needs.read-json.outputs.JSON.platforms)}}"
         mode: ['Debug', 'Release']
         # TODO: Fetch compatibility in docs and here from common sources.
         # Update it when dropping support for RN versions.
