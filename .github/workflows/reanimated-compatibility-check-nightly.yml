@@ -22,8 +22,8 @@ jobs:
         JSON="${content//$'\n'/'%0A'}"
         JSON="${content//$'\r'/'%0D'}"
 
-
-        echo "JSON=$JSON" >> "$GITHUB_OUTPUT"
+        echo "JSON=$(jq -c . < ${GITHUB_WORKSPACE}/../../commonData/compatibility.json)" >> $GITHUB_ENV
+        echo '${{ fromJson(env.JSON).platforms }}'
 
   build:
     needs: read-json
@@ -31,7 +31,7 @@ jobs:
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:
-        platform: ${{fromJson('\{\"platforms\": [\"iOS\", \"Android\"]\}')}}
+        platform: '${{ fromJson(env.JSON).platforms }}'
         mode: ['Debug', 'Release']
         # TODO: Fetch compatibility in docs and here from common sources.
         # Update it when dropping support for RN versions.
