@@ -9,16 +9,27 @@ on:
 
 jobs:
   read-json:
-    run: |
-      echo 'COMPATIBILITY_JSON<<EOF' >> $GITHUB_ENV
-      cat ../../commonData/compatibility.json >> $GITHUB_ENV
-      echo 'EOF' >> $GITHUB_ENV
+    runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
+    outputs:
+      platforms: ${{ steps.set-matrix.outputs.platforms }}
+    steps:
+    - id: set-matrix
+      run: |
+        JSON=$(cat ./your.json)
+
+        JSON="${content//'%'/'%25'}"
+        JSON="${content//$'\n'/'%0A'}"
+        JSON="${content//$'\r'/'%0D'}"
+
+        echo "::set-output name=matrix::${JSON//'%'/'%25'}"
+
   build:
+    needs: read-json
     if: ${{github.repository == 'software-mansion/react-native-reanimated' && (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'Check compatibility'))}}
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:
-        platform: '${{ fromJson(env.COMPATIBILITY_JSON).platforms }}'
+        platform:  ${{fromJson(needs.read-json.outputs.JSON)}}
         mode: ['Debug', 'Release']
         # TODO: Fetch compatibility in docs and here from common sources.
         # Update it when dropping support for RN versions.
