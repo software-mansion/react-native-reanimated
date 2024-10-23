@@ -15,7 +15,7 @@ jobs:
     steps:
     - id: set-matrix
       run: |
-        JSON=$(cat ./your.json)
+        JSON=$(cat ../../commonData/compatibility.json)
 
         JSON="${content//'%'/'%25'}"
         JSON="${content//$'\n'/'%0A'}"
