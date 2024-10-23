@@ -39,7 +39,7 @@ export default function AnimationDelay() {
         {
           title: 'Negative Delay',
           description:
-            'A negative value causes the animation to begin immediately, but partway through its cycle. For example, if you specify -1s as the animation delay time, the animation will begin immediately but will start 1 second into the animation sequence. ',
+            'A negative value causes the animation to begin immediately, but partway through its cycle. For example, if you specify -1s as the animation delay time, the animation will begin immediately but will start 1 second into the animation sequence.',
           items: [
             { label: '0s (default)' },
             { animationDelay: '-500ms', label: '-500ms' },

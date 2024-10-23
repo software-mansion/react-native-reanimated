@@ -17,15 +17,6 @@ jsi::Value TransformsStyleInterpolator::getStyleValue(
       rt, shadowNode->getTag(), propertyPath_);
 }
 
-jsi::Value TransformsStyleInterpolator::getCurrentValue(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) const {
-  if (previousResult_.has_value()) {
-    return convertResultToJSI(rt, previousResult_.value());
-  }
-  return getStyleValue(rt, shadowNode);
-}
-
 jsi::Value TransformsStyleInterpolator::update(
     const PropertyInterpolationUpdateContext &context) {
   updateCurrentKeyframe(context);

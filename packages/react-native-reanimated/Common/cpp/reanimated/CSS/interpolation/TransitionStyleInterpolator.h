@@ -12,14 +12,6 @@ class TransitionStyleInterpolator {
   TransitionStyleInterpolator(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  jsi::Value getCurrentStyle(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      const TransitionProperties &properties) const;
-  jsi::Value getCurrentInterpolationStyle(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const;
-
   jsi::Value update(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
@@ -32,14 +24,6 @@ class TransitionStyleInterpolator {
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   PropertiesInterpolators interpolators_;
-
-  jsi::Value getAllPropsStyle(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const;
-  jsi::Value getSpecificPropsStyle(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      const PropertyNames &propertyNames) const;
 };
 
 } // namespace reanimated

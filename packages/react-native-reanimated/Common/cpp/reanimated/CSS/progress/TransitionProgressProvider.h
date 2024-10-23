@@ -15,6 +15,7 @@ class TransitionPropertyProgressProvider : public ProgressProvider {
   using ProgressProvider::ProgressProvider;
 
   TransitionProgressState getState() const;
+  double getRemainingDelay(const time_t timestamp) const;
 
  protected:
   std::optional<double> calculateRawProgress(const time_t timestamp) override;
@@ -30,8 +31,8 @@ class TransitionProgressProvider {
       const double delay,
       const EasingFunction easingFunction);
 
-  // double getMinDelay() const;
   TransitionProgressState getState() const;
+  double getMinDelay(const time_t timestamp) const;
   std::optional<TransitionPropertyProgressProvider> getPropertyProgressProvider(
       const std::string &propertyName) const;
   std::unordered_map<std::string, TransitionPropertyProgressProvider>
@@ -57,7 +58,7 @@ class TransitionProgressProvider {
 
  private:
   double duration_;
-  double delay_; // TODO - add delay support
+  double delay_;
   EasingFunction easingFunction_;
 
   std::vector<std::string> propertiesToRemove_;

@@ -28,7 +28,7 @@ export default function ExampleScreen({
   cards,
   transitionStyles,
   renderExample,
-  displayStyleChanges = true,
+  displayStyleChanges = false,
 }: ExampleScreenProps) {
   const configOverrides = useMemo(
     () => cards.flatMap((card) => card.items),

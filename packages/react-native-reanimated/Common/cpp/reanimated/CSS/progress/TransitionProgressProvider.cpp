@@ -1,3 +1,4 @@
+#include <glog/logging.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
 namespace reanimated {
@@ -13,6 +14,11 @@ TransitionProgressState TransitionPropertyProgressProvider::getState() const {
     return TransitionProgressState::FINISHED;
   }
   return TransitionProgressState::RUNNING;
+}
+
+double TransitionPropertyProgressProvider::getRemainingDelay(
+    const time_t timestamp) const {
+  return delay_ - (timestamp - startTime_);
 }
 
 std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(
@@ -38,6 +44,20 @@ TransitionProgressState TransitionProgressProvider::getState() const {
     return TransitionProgressState::RUNNING;
   }
   return TransitionProgressState::PENDING;
+}
+
+double TransitionProgressProvider::getMinDelay(const time_t timestamp) const {
+  double minDelay = delay_;
+
+  for (const auto &[_, propertyProgressProvider] : propertyProgressProviders_) {
+    const auto remainingDelay =
+        propertyProgressProvider.getRemainingDelay(timestamp);
+    if (remainingDelay < minDelay) {
+      minDelay = remainingDelay;
+    }
+  }
+
+  return minDelay;
 }
 
 std::optional<TransitionPropertyProgressProvider>

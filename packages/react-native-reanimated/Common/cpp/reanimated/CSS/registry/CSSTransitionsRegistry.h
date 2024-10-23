@@ -14,6 +14,22 @@ namespace reanimated {
 
 enum class TransitionOperation { ACTIVATE, DEACTIVATE };
 
+struct DelayedTransition {
+  const Tag viewTag;
+  double startTimestamp;
+
+  DelayedTransition(const Tag viewTag, const double startTimestamp)
+      : viewTag(viewTag), startTimestamp(startTimestamp) {}
+};
+
+struct CompareDelayedTransition {
+  bool operator()(
+      const std::shared_ptr<DelayedTransition> &lhs,
+      const std::shared_ptr<DelayedTransition> &rhs) {
+    return lhs->startTimestamp > rhs->startTimestamp;
+  }
+};
+
 class CSSTransitionsRegistry : public UpdatesRegistry {
  public:
   CSSTransitionsRegistry(
@@ -26,7 +42,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
       const PartialCSSTransitionSettings &updatedSettings);
 
   bool hasUpdates() const {
-    return !runningTransitionTags_.empty() || !delayedTransitionTags_.empty() ||
+    return !runningTransitionTags_.empty() || !delayedTransitionsMap_.empty() ||
         !operationsBatch_.empty();
   }
 
@@ -38,9 +54,9 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
   using OperationsBatch = std::vector<std::pair<TransitionOperation, Tag>>;
   using DelayedQueue = std::priority_queue<
-      std::pair<time_t, Tag>,
-      std::vector<std::pair<time_t, Tag>>,
-      std::greater<std::pair<time_t, Tag>>>;
+      std::shared_ptr<DelayedTransition>,
+      std::vector<std::shared_ptr<DelayedTransition>>,
+      CompareDelayedTransition>;
 
   const GetAnimationTimestampFunction &getCurrentTimestamp_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
@@ -49,7 +65,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   OperationsBatch operationsBatch_;
 
   std::unordered_set<Tag> runningTransitionTags_;
-  std::unordered_set<Tag> delayedTransitionTags_;
+  std::unordered_map<Tag, std::shared_ptr<DelayedTransition>>
+      delayedTransitionsMap_;
   DelayedQueue delayedTransitionsQueue_;
 
   void activateDelayedTransitions(const time_t timestamp);
@@ -60,6 +77,9 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
       const time_t timestamp,
       const std::shared_ptr<CSSTransition> &transition);
   void handleOperation(const TransitionOperation operation, const Tag viewTag);
+
+  void activateOperation(const Tag viewTag);
+  void deactivateOperation(const Tag viewTag);
 
   PropsObserver createPropsObserver(const Tag viewTag);
 };

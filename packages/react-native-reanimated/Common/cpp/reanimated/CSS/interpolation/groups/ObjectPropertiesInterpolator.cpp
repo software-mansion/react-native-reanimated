@@ -18,14 +18,6 @@ jsi::Value ObjectPropertiesInterpolator::getStyleValue(
   });
 }
 
-jsi::Value ObjectPropertiesInterpolator::getCurrentValue(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) const {
-  return mapInterpolators(rt, [&](PropertyInterpolator &interpolator) {
-    return interpolator.getCurrentValue(rt, shadowNode);
-  });
-}
-
 jsi::Value ObjectPropertiesInterpolator::update(
     const PropertyInterpolationUpdateContext &context) {
   return mapInterpolators(context.rt, [&](PropertyInterpolator &interpolator) {
