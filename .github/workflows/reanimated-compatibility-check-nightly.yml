@@ -12,9 +12,9 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: 'ubuntu-latest'
     outputs:
-      JSON: ${{ steps.set-matrix.outputs.JSON }}
+      JSON: ${{ steps.set-json.outputs.JSON }}
     steps:
-    - id: set-matrix
+    - id: set-json
       run: |
         JSON="cat ${GITHUB_WORKSPACE}/../../commonData/compatibility.json"
 
@@ -22,7 +22,8 @@ jobs:
         JSON="${content//$'\n'/'%0A'}"
         JSON="${content//$'\r'/'%0D'}"
 
-        echo "::set-output name=JSON::$JSON"
+
+        echo "JSON=$JSON" >> "$GITHUB_OUTPUT"
 
   build:
     needs: read-json
