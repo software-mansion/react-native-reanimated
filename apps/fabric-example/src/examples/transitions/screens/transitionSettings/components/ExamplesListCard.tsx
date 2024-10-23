@@ -19,7 +19,9 @@ import TransitionStyleChange from './TransitionStyleChange';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useDebounce, useStableCallback } from '../../../../../hooks';
 
-const durationToNumber = (duration?: CSSTransitionDuration): number => {
+const MIN_STYLE_CHANGE_DURATION = 2500;
+
+const timeToNumber = (duration?: CSSTransitionDuration): number => {
   if (!duration) {
     return 0;
   }
@@ -32,8 +34,17 @@ const durationToNumber = (duration?: CSSTransitionDuration): number => {
   return parseFloat(duration) * 1000;
 };
 
-const getTimeout = (settings: CSSTransitionSettings): number => {
-  return Math.max(durationToNumber(settings.transitionDuration ?? 0), 2500);
+const getTimeout = (
+  sharedConfig: CSSTransitionConfig,
+  settings: CSSTransitionSettings
+): number => {
+  const duration = timeToNumber(
+    settings.transitionDuration ?? sharedConfig.transitionDuration ?? 0
+  );
+  const delay = timeToNumber(
+    settings.transitionDelay ?? sharedConfig.transitionDelay ?? 0
+  );
+  return Math.max(duration + delay, MIN_STYLE_CHANGE_DURATION);
 };
 
 export type ExampleItemProps = CSSTransitionSettings & {
@@ -150,9 +161,12 @@ const Example = memo(
         if (displayStyleChanges) {
           setShowStyleChange(true);
           clearTimeout(styleChangeCloseTimeoutRef.current!);
-          styleChangeCloseTimeoutRef.current = setTimeout(() => {
-            setShowStyleChange(false);
-          }, getTimeout(item));
+          styleChangeCloseTimeoutRef.current = setTimeout(
+            () => {
+              setShowStyleChange(false);
+            },
+            getTimeout(sharedConfig, item)
+          );
         }
       }, 0);
     });

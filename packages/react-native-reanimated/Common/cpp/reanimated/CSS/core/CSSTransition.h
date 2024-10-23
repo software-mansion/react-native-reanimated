@@ -25,24 +25,18 @@ class CSSTransition {
   const TransitionProperties &getProperties() const {
     return properties_;
   }
-  double getMinDelay() const {
-    return 0; // TODO
+  double getMinDelay(const time_t timestamp) const {
+    return progressProvider_.getMinDelay(timestamp);
   }
   TransitionProgressState getState(const time_t timestamp) const {
-    return TransitionProgressState::PENDING; // TODO
-  }
-  jsi::Value getCurrentStyle(jsi::Runtime &rt) const {
-    return styleInterpolator_.getCurrentStyle(rt, shadowNode_, properties_);
-  }
-  jsi::Value getCurrentInterpolationStyle(jsi::Runtime &rt) const {
-    return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
+    return progressProvider_.getState();
   }
 
   void updateSettings(
       jsi::Runtime &rt,
       const PartialCSSTransitionSettings &settings);
 
-  void run(
+  jsi::Value run(
       jsi::Runtime &rt,
       const ChangedProps &changedProps,
       const time_t timestamp);

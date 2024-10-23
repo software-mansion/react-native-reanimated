@@ -24,9 +24,6 @@ class ValueInterpolator : public PropertyInterpolator {
   jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
-  jsi::Value getCurrentValue(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const override;
 
   virtual void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes)
       override;

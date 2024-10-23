@@ -6,28 +6,6 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : viewStylesRepository_(viewStylesRepository) {}
 
-jsi::Value TransitionStyleInterpolator::getCurrentStyle(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
-    const TransitionProperties &properties) const {
-  return properties.has_value()
-      ? getSpecificPropsStyle(rt, shadowNode, properties.value())
-      : getAllPropsStyle(rt, shadowNode);
-}
-
-jsi::Value TransitionStyleInterpolator::getCurrentInterpolationStyle(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) const {
-  jsi::Object result(rt);
-
-  for (const auto &[propName, interpolator] : interpolators_) {
-    jsi::Value value = interpolator->getCurrentValue(rt, shadowNode);
-    result.setProperty(rt, propName.c_str(), value);
-  }
-
-  return result;
-}
-
 jsi::Value TransitionStyleInterpolator::update(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode,
@@ -88,50 +66,6 @@ void TransitionStyleInterpolator::updateProperties(
     interpolatorIt->second->updateKeyframesFromStyleChange(
         rt, oldValue, newValue);
   }
-}
-
-jsi::Value TransitionStyleInterpolator::getAllPropsStyle(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) const {
-  const auto viewStyle =
-      viewStylesRepository_->getViewStyle(rt, shadowNode->getTag());
-  auto result =
-      viewStyle.isUndefined() ? jsi::Object(rt) : viewStyle.asObject(rt);
-
-  // Update result with current interpolators values
-  for (auto it = interpolators_.begin(); it != interpolators_.end();) {
-    auto interpolator = it->second;
-    jsi::Value value = interpolator->getCurrentValue(rt, shadowNode);
-    result.setProperty(rt, it->first.c_str(), value);
-    it++;
-  }
-
-  return result;
-}
-
-jsi::Value TransitionStyleInterpolator::getSpecificPropsStyle(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
-    const PropertyNames &propertyNames) const {
-  jsi::Object result(rt);
-
-  for (const auto &propertyName : propertyNames) {
-    auto interpolatorIt = interpolators_.find(propertyName);
-
-    if (interpolatorIt == interpolators_.end()) {
-      // Get the view style value if there is no interpolator for the property
-      jsi::Value value = viewStylesRepository_->getStyleProp(
-          rt, shadowNode->getTag(), {propertyName});
-      result.setProperty(rt, propertyName.c_str(), value);
-    } else {
-      // Otherwise, get the current value from the interpolator
-      jsi::Value value =
-          interpolatorIt->second->getCurrentValue(rt, shadowNode);
-      result.setProperty(rt, propertyName.c_str(), value);
-    }
-  }
-
-  return result;
 }
 
 } // namespace reanimated

@@ -28,9 +28,6 @@ class TransformsStyleInterpolator : public PropertyInterpolator {
   jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
-  jsi::Value getCurrentValue(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const override;
 
   jsi::Value update(const PropertyInterpolationUpdateContext &context) override;
 

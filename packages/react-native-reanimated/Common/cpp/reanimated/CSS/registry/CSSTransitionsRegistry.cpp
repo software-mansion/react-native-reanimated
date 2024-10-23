@@ -54,9 +54,10 @@ void CSSTransitionsRegistry::update(jsi::Runtime &rt, const time_t timestamp) {
     const auto &transition = registry_.at(viewTag);
     const jsi::Value &updates = handleUpdate(rt, timestamp, transition);
 
-    if (updates.isUndefined()) {
+    if (transition->getState(timestamp) != TransitionProgressState::RUNNING) {
       operationsBatch_.emplace_back(TransitionOperation::DEACTIVATE, viewTag);
-    } else {
+    }
+    if (!updates.isUndefined()) {
       updatesBatch_.emplace_back(
           transition->getShadowNode(),
           std::make_unique<jsi::Value>(rt, updates));
@@ -67,12 +68,17 @@ void CSSTransitionsRegistry::update(jsi::Runtime &rt, const time_t timestamp) {
 void CSSTransitionsRegistry::activateDelayedTransitions(
     const time_t timestamp) {
   while (!delayedTransitionsQueue_.empty() &&
-         delayedTransitionsQueue_.top().first <= timestamp) {
-    const auto [_, viewTag] = delayedTransitionsQueue_.top();
+         delayedTransitionsQueue_.top()->startTimestamp <= timestamp) {
+    const auto &delayedTransition = delayedTransitionsQueue_.top();
+    const auto startTimestamp = delayedTransition->startTimestamp;
+    const auto viewTag = delayedTransition->viewTag;
     delayedTransitionsQueue_.pop();
-    delayedTransitionTags_.erase(viewTag);
-    runningTransitionTags_.insert(viewTag);
-    operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, viewTag);
+
+    // Add only these transitions which weren't marked for removal
+    if (startTimestamp != 0) {
+      delayedTransitionsMap_.erase(viewTag);
+      runningTransitionTags_.insert(viewTag);
+    }
   }
 }
 
@@ -103,12 +109,44 @@ void CSSTransitionsRegistry::handleOperation(
     const Tag viewTag) {
   switch (operation) {
     case TransitionOperation::ACTIVATE:
-      runningTransitionTags_.insert(viewTag);
+      activateOperation(viewTag);
       break;
     case TransitionOperation::DEACTIVATE:
-      runningTransitionTags_.erase(viewTag);
+      deactivateOperation(viewTag);
       break;
   }
+}
+
+void CSSTransitionsRegistry::activateOperation(const Tag viewTag) {
+  const auto transitionIt = registry_.find(viewTag);
+  if (transitionIt == registry_.end()) {
+    return;
+  }
+  const auto &transition = transitionIt->second;
+  const auto currentTimestamp = getCurrentTimestamp_();
+  const auto minDelay = transition->getMinDelay(currentTimestamp);
+
+  // Mark the already delayed transition for removal
+  const auto delayedTransitionIt = delayedTransitionsMap_.find(viewTag);
+  if (delayedTransitionIt != delayedTransitionsMap_.end()) {
+    delayedTransitionIt->second->startTimestamp = 0;
+  }
+
+  if (minDelay > 0) {
+    const auto delayedTransition = std::make_shared<DelayedTransition>(
+        viewTag, currentTimestamp + minDelay);
+    delayedTransitionsMap_[viewTag] = delayedTransition;
+    delayedTransitionsQueue_.push(delayedTransition);
+    if (runningTransitionTags_.find(viewTag) != runningTransitionTags_.end()) {
+      runningTransitionTags_.erase(viewTag);
+    }
+  } else {
+    runningTransitionTags_.insert(viewTag);
+  }
+}
+
+void CSSTransitionsRegistry::deactivateOperation(const Tag viewTag) {
+  runningTransitionTags_.erase(viewTag);
 }
 
 PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
@@ -124,21 +162,15 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
     if (!changedProps.changedPropertyNames.size()) {
       return;
     }
-    const auto shadowNode = transition->getShadowNode();
+    const auto &shadowNode = transition->getShadowNode();
 
     {
       std::lock_guard<std::mutex> lock{mutex_};
-      transition->run(rt, changedProps, getCurrentTimestamp_());
 
-      // Assign new props to the registry overridden with interpolated values
-      // for props that are/will be transitioned
-      // (we need to do this step after calling the run method that creates
-      // respective interpolators)
-      const auto &interpolatedProps =
-          transition->getCurrentInterpolationStyle(rt);
+      const auto &initialProps =
+          transition->run(rt, changedProps, getCurrentTimestamp_());
       updatesRegistry_[viewTag] =
-          std::make_pair(shadowNode, dynamicFromValue(rt, interpolatedProps));
-
+          std::make_pair(shadowNode, dynamicFromValue(rt, initialProps));
       operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, viewTag);
     }
   };

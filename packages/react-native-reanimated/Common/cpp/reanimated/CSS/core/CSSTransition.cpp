@@ -24,13 +24,16 @@ void CSSTransition::updateSettings(
   // TODO update other settings
 }
 
-void CSSTransition::run(
+jsi::Value CSSTransition::run(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
     const time_t timestamp) {
   styleInterpolator_.updateProperties(rt, changedProps);
   progressProvider_.runProgressProviders(
       rt, timestamp, changedProps.changedPropertyNames);
+  // Call update to calculate current interpolation values
+  // (e.g. to immediately apply final values for the 0 duration)
+  return update(rt, timestamp);
 }
 
 jsi::Value CSSTransition::update(jsi::Runtime &rt, time_t timestamp) {

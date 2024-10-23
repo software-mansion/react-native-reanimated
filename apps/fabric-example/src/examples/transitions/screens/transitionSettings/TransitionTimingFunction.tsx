@@ -31,7 +31,6 @@ export default function TransitionTimingFunction() {
     sharedConfig,
     transitionStyles,
     renderExample,
-    displayStyleChanges: false,
   };
 
   return (
