@@ -22,7 +22,7 @@ jobs:
         JSON="${content//$'\n'/'%0A'}"
         JSON="${content//$'\r'/'%0D'}"
 
-        echo "::set-output name=matrix::${JSON//'%'/'%25'}"
+        echo "::set-output name=platforms::$JSON"
 
   build:
     needs: read-json
