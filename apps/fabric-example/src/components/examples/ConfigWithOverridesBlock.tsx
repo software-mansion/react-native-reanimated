@@ -6,7 +6,7 @@ import { CodeBlock } from '../misc';
 
 type ConfigWithOverridesBlockProps<C, O> = {
   sharedConfig: C;
-  overrides: O[];
+  overrides?: O[];
 };
 
 function ConfigWithOverridesBlock<C extends AnyRecord, O extends AnyRecord>({

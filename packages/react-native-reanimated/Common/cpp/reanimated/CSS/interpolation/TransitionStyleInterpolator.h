@@ -12,13 +12,21 @@ class TransitionStyleInterpolator {
   TransitionStyleInterpolator(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
+  jsi::Value getCurrentInterpolationStyle(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode) const;
+
   jsi::Value update(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       const std::unordered_map<std::string, TransitionPropertyProgressProvider>
           &progressProviders);
 
-  void updateProperties(jsi::Runtime &rt, const ChangedProps &changedProps);
+  void discardIrrelevantInterpolators(
+      const std::unordered_set<std::string> &transitionPropertyNames);
+  void updateInterpolatedProperties(
+      jsi::Runtime &rt,
+      const ChangedProps &changedProps);
 
  private:
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;

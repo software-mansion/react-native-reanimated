@@ -4,7 +4,7 @@ import type { ExampleItemProps } from './ExamplesListCard';
 import type { CSSTransitionConfig, StyleProps } from 'react-native-reanimated';
 import { ScrollScreen, Section, Stagger } from '../../../../../components';
 import ExamplesListCard from './ExamplesListCard';
-import TransitionConfiguration from './TransitionConfiguration';
+import { TransitionConfiguration } from '../../../components';
 
 type ExampleCardsSection = {
   title: string;
@@ -13,7 +13,7 @@ type ExampleCardsSection = {
 };
 
 type ExampleScreenProps = {
-  sharedConfig: CSSTransitionConfig;
+  sharedConfig: Partial<CSSTransitionConfig>;
   cards: ExampleCardsSection[];
   transitionStyles: StyleProps[];
   displayStyleChanges?: boolean;

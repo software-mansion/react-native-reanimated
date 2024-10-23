@@ -20,6 +20,23 @@ jsi::Value ValueInterpolator<T>::getStyleValue(
 }
 
 template <typename T>
+jsi::Value ValueInterpolator<T>::getCurrentValue(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) const {
+  if (previousValue_.has_value()) {
+    return convertResultToJSI(rt, previousValue_.value());
+  }
+  auto styleValue = getStyleValue(rt, shadowNode);
+  if (!styleValue.isUndefined()) {
+    return styleValue;
+  }
+  if (defaultStyleValue_.has_value()) {
+    return convertResultToJSI(rt, defaultStyleValue_.value());
+  }
+  return jsi::Value::undefined();
+}
+
+template <typename T>
 void ValueInterpolator<T>::updateKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &keyframes) {

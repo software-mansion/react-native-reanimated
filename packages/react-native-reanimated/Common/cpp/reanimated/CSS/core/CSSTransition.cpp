@@ -19,7 +19,7 @@ void CSSTransition::updateSettings(
     jsi::Runtime &rt,
     const PartialCSSTransitionSettings &settings) {
   if (settings.properties.has_value()) {
-    // TODO - handle property updates
+    updateTransitionProperties(settings.properties.value());
   }
   // TODO update other settings
 }
@@ -28,7 +28,7 @@ jsi::Value CSSTransition::run(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
     const time_t timestamp) {
-  styleInterpolator_.updateProperties(rt, changedProps);
+  styleInterpolator_.updateInterpolatedProperties(rt, changedProps);
   progressProvider_.runProgressProviders(
       rt, timestamp, changedProps.changedPropertyNames);
   // Call update to calculate current interpolation values
@@ -43,6 +43,21 @@ jsi::Value CSSTransition::update(jsi::Runtime &rt, time_t timestamp) {
       rt, shadowNode_, progressProvider_.getPropertyProgressProviders());
 
   return updates;
+}
+
+void CSSTransition::updateTransitionProperties(
+    const TransitionProperties &properties) {
+  properties_ = properties;
+
+  const auto isAllProperties = !properties_.has_value();
+  if (isAllProperties) {
+    return;
+  }
+
+  const std::unordered_set<std::string> transitionPropertyNames(
+      properties_->begin(), properties_->end());
+  styleInterpolator_.discardIrrelevantInterpolators(transitionPropertyNames);
+  progressProvider_.discardIrrelevantProgressProviders(transitionPropertyNames);
 }
 
 } // namespace reanimated

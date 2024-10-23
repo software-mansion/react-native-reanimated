@@ -81,6 +81,20 @@ const routes = {
       },
     },
   },
+  Miscellaneous: {
+    name: 'Miscellaneous',
+    CardComponent: RouteCards.MiscellaneousCard,
+    routes: {
+      ChangingAnimation: {
+        name: 'Changing Animation',
+        Component: Miscellaneous.ChangingAnimation,
+      },
+      UpdatingAnimationSettings: {
+        name: 'Updating Animation Settings',
+        Component: Miscellaneous.UpdatingAnimationSettings,
+      },
+    },
+  },
   RealWorldExamples: {
     name: 'Real World Examples',
     CardComponent: RouteCards.RealWorldExamplesCard,
@@ -104,20 +118,6 @@ const routes = {
       SquishySquashy: {
         name: 'Squishy Squashy',
         Component: RealWorldExamples.SquishySquashy,
-      },
-    },
-  },
-  Miscellaneous: {
-    name: 'Miscellaneous',
-    CardComponent: RouteCards.MiscellaneousCard,
-    routes: {
-      ChangingAnimation: {
-        name: 'Changing Animation',
-        Component: Miscellaneous.ChangingAnimation,
-      },
-      UpdatingAnimationSettings: {
-        name: 'Updating Animation Settings',
-        Component: Miscellaneous.UpdatingAnimationSettings,
       },
     },
   },

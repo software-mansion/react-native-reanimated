@@ -15,9 +15,9 @@ import type {
   CSSTransitionSettings,
   StyleProps,
 } from 'react-native-reanimated';
-import TransitionStyleChange from './TransitionStyleChange';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useDebounce, useStableCallback } from '../../../../../hooks';
+import { TransitionStyleChange } from '../../../components';
 
 const MIN_STYLE_CHANGE_DURATION = 2500;
 
@@ -35,7 +35,7 @@ const timeToNumber = (duration?: CSSTransitionDuration): number => {
 };
 
 const getTimeout = (
-  sharedConfig: CSSTransitionConfig,
+  sharedConfig: Partial<CSSTransitionConfig>,
   settings: CSSTransitionSettings
 ): number => {
   const duration = timeToNumber(
@@ -47,12 +47,12 @@ const getTimeout = (
   return Math.max(duration + delay, MIN_STYLE_CHANGE_DURATION);
 };
 
-export type ExampleItemProps = CSSTransitionSettings & {
+export type ExampleItemProps = Partial<CSSTransitionConfig> & {
   label: string;
 };
 
 export type ExamplesListCardProps = {
-  sharedConfig: CSSTransitionConfig;
+  sharedConfig: Partial<CSSTransitionConfig>;
   transitionStyles: StyleProps[];
   items: ExampleItemProps[];
   displayStyleChanges: boolean;
@@ -124,7 +124,7 @@ type ExampleRef = {
 };
 
 type ExampleProps = {
-  sharedConfig: CSSTransitionConfig;
+  sharedConfig: Partial<CSSTransitionConfig>;
   transitionStyles: StyleProps[];
   item: ExampleItemProps;
   displayStyleChanges: boolean;
@@ -195,6 +195,7 @@ const Example = memo(
           <View style={styles.example} key={key}>
             {renderExample(
               {
+                transitionProperty: 'all',
                 ...sharedConfig,
                 ...item,
               },

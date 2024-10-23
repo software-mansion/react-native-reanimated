@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import { CodeBlock, Text } from '../../../../../components';
-import { colors, iconSizes, radius, spacing } from '../../../../../theme';
+import { CodeBlock, Text } from '../../../components';
+import { colors, iconSizes, radius, spacing } from '../../../theme';
 import { StyleSheet, View } from 'react-native';
 import type { LayoutAnimation, StyleProps } from 'react-native-reanimated';
 import Animated, {
@@ -15,7 +15,6 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const CARDS_ORDER_CHANGE_DELAY = 300;
-const ACTIVE_BORDER_CHANGE_DELAY = 300;
 
 const layoutTransition = LinearTransition.delay(CARDS_ORDER_CHANGE_DELAY);
 
@@ -109,8 +108,8 @@ function CodeCard({ code, active, label }: CodeCardProps) {
         {active && (
           <Animated.View
             style={styles.activeCardBackground}
-            entering={FadeIn.delay(ACTIVE_BORDER_CHANGE_DELAY)}
-            exiting={FadeOut.delay(ACTIVE_BORDER_CHANGE_DELAY)}
+            entering={FadeIn}
+            exiting={FadeOut}
           />
         )}
         <Animated.View

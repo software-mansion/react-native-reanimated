@@ -4,6 +4,7 @@ import {
   TestExamples,
   RealWorldExamples,
   TransitionSettings,
+  Miscellaneous,
 } from './screens';
 
 const routes = {
@@ -14,6 +15,10 @@ const routes = {
   TransitionSettings: {
     name: 'Transition Settings',
     routes: {
+      TransitionProperty: {
+        name: 'Transition Property',
+        Component: TransitionSettings.TransitionProperty,
+      },
       TransitionDuration: {
         name: 'Transition Duration',
         Component: TransitionSettings.TransitionDuration,
@@ -25,6 +30,15 @@ const routes = {
       TransitionTimingFunction: {
         name: 'Transition Timing Function',
         Component: TransitionSettings.TransitionTimingFunction,
+      },
+    },
+  },
+  Miscellaneous: {
+    name: 'Miscellaneous',
+    routes: {
+      ChangingTransitionProperty: {
+        name: 'Changing Transition Property',
+        Component: Miscellaneous.ChangingTransitionProperty,
       },
     },
   },

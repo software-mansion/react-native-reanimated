@@ -1,7 +1,10 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { colors, iconSizes, radius, sizes, spacing } from '../../theme';
 import { Text } from '../core';
-import Animated, { cubicBezier } from 'react-native-reanimated';
+import Animated, {
+  cubicBezier,
+  LinearTransition,
+} from 'react-native-reanimated';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faCheck } from '@fortawesome/free-solid-svg-icons';
 
@@ -13,7 +16,7 @@ type CheckboxProps = {
 
 export default function CheckBox({ selected, label, onChange }: CheckboxProps) {
   return (
-    <View style={styles.container}>
+    <Animated.View style={styles.container} layout={LinearTransition}>
       <Pressable style={styles.checkboxRow} onPress={() => onChange(!selected)}>
         <Animated.View
           style={[
@@ -43,7 +46,7 @@ export default function CheckBox({ selected, label, onChange }: CheckboxProps) {
         </Animated.View>
         <Text variant="label3">{label}</Text>
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }
 

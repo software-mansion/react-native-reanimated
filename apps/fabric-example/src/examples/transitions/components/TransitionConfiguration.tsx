@@ -1,23 +1,19 @@
-import { colors, radius, spacing } from '../../../../../theme';
-import {
-  CodeBlock,
-  ConfigWithOverridesBlock,
-  Text,
-} from '../../../../../components';
+import { colors, radius, spacing } from '../../../theme';
+import { CodeBlock, ConfigWithOverridesBlock, Text } from '../../../components';
 import type { ListRenderItem } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type { CSSTransitionConfig, StyleProps } from 'react-native-reanimated';
-import type { ExampleItemProps } from './ExamplesListCard';
+import type { ExampleItemProps } from '../screens/transitionSettings/components/ExamplesListCard';
 import Animated from 'react-native-reanimated';
 import { useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import { iconSizes } from '../../../../../theme/icons';
+import { iconSizes } from '../../../theme/icons';
 
 type TransitionConfigurationProps = {
-  sharedConfig: CSSTransitionConfig;
+  sharedConfig: Partial<CSSTransitionConfig>;
   transitionStyles: StyleProps[];
-  overrides: ExampleItemProps[];
+  overrides?: ExampleItemProps[];
 };
 
 export default function TransitionConfiguration({

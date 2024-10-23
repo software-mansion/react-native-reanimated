@@ -6,6 +6,19 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : viewStylesRepository_(viewStylesRepository) {}
 
+jsi::Value TransitionStyleInterpolator::getCurrentInterpolationStyle(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) const {
+  jsi::Object result(rt);
+
+  for (const auto &[propName, interpolator] : interpolators_) {
+    jsi::Value value = interpolator->getCurrentValue(rt, shadowNode);
+    result.setProperty(rt, propName.c_str(), value);
+  }
+
+  return result;
+}
+
 jsi::Value TransitionStyleInterpolator::update(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode,
@@ -35,7 +48,21 @@ jsi::Value TransitionStyleInterpolator::update(
   return result;
 }
 
-void TransitionStyleInterpolator::updateProperties(
+void TransitionStyleInterpolator::discardIrrelevantInterpolators(
+    const std::unordered_set<std::string> &transitionPropertyNames) {
+  for (auto it = interpolators_.begin(); it != interpolators_.end();) {
+    // Remove property interpolators for properties not specified in the
+    // transition property names
+    if (transitionPropertyNames.find(it->first) ==
+        transitionPropertyNames.end()) {
+      it = interpolators_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
+void TransitionStyleInterpolator::updateInterpolatedProperties(
     jsi::Runtime &rt,
     const ChangedProps &changedProps) {
   const bool hasOldProps = changedProps.oldProps->isObject();

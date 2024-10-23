@@ -5,7 +5,7 @@ import { colors, radius, sizes } from '../../../../theme';
 import { ExampleScreen } from './components';
 
 export default function TransitionDuration() {
-  const config: CSSTransitionConfig = {
+  const sharedConfig: CSSTransitionConfig = {
     transitionProperty: 'width',
     transitionTimingFunction: 'linear',
   };
@@ -21,7 +21,7 @@ export default function TransitionDuration() {
 
   return (
     <ExampleScreen
-      sharedConfig={config}
+      sharedConfig={sharedConfig}
       transitionStyles={[{ width: 0 }, { width: '100%' }]}
       cards={[
         {
