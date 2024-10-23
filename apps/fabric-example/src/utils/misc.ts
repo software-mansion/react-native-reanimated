@@ -50,7 +50,17 @@ export const getCodeWithOverrides = <C extends AnyRecord, O extends AnyRecord>(
     ]
       .map((key) => {
         const value = sharedConfig[key] ?? propertyOverrides[key]?.[0] ?? '';
-        let line = `${key}: ${isQuoted(value) ? value : JSON.stringify(value, null, 2)}`;
+
+        let parsedValue;
+        if (typeof value === 'object' && value.toString) {
+          parsedValue = value.toString();
+        } else if (isQuoted(value)) {
+          parsedValue = value;
+        } else {
+          parsedValue = JSON.stringify(value);
+        }
+
+        let line = `${key}: ${parsedValue}`;
         if (
           propertyOverrides[key] &&
           (propertyOverrides[key].length > 1 ||

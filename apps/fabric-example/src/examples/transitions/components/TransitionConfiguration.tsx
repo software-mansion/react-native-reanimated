@@ -1,4 +1,4 @@
-import { colors, radius, spacing } from '../../../theme';
+import { colors, flex, radius, spacing } from '../../../theme';
 import { CodeBlock, ConfigWithOverridesBlock, Text } from '../../../components';
 import type { ListRenderItem } from 'react-native';
 import { StyleSheet, View } from 'react-native';
@@ -75,12 +75,11 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   codeStylesList: {
-    justifyContent: 'center',
+    ...flex.center,
     paddingBottom: spacing.sm,
   },
   listSeparator: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    ...flex.center,
     padding: spacing.xs,
   },
   codeBlock: {

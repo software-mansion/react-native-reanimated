@@ -21,7 +21,15 @@ void CSSTransition::updateSettings(
   if (settings.properties.has_value()) {
     updateTransitionProperties(settings.properties.value());
   }
-  // TODO update other settings
+  if (settings.duration.has_value()) {
+    progressProvider_.setDuration(settings.duration.value());
+  }
+  if (settings.delay.has_value()) {
+    progressProvider_.setDelay(settings.delay.value());
+  }
+  if (settings.easingFunction.has_value()) {
+    progressProvider_.setEasingFunction(settings.easingFunction.value());
+  }
 }
 
 jsi::Value CSSTransition::run(

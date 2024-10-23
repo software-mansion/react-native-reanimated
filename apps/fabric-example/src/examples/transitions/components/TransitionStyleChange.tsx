@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { CodeBlock, Text } from '../../../components';
-import { colors, iconSizes, radius, spacing } from '../../../theme';
+import { colors, flex, iconSizes, radius, spacing } from '../../../theme';
 import { StyleSheet, View } from 'react-native';
 import type { LayoutAnimation, StyleProps } from 'react-native-reanimated';
 import Animated, {
@@ -125,11 +125,8 @@ function CodeCard({ code, active, label }: CodeCardProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.background1,
-    borderRadius: radius.md,
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    ...flex.center,
     gap: spacing.xs,
     paddingVertical: spacing.md,
   },

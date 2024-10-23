@@ -14,7 +14,7 @@ import type {
   CSSTransitionSettings,
   StyleProps,
 } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import {
   TransitionConfiguration,
   TransitionStyleChange,
@@ -143,12 +143,16 @@ export default function ChangingTransitionProperty() {
               />
             </View>
 
-            {displayStyleChanges && (
-              <TransitionStyleChange
-                transitionStyles={transitionStyles}
-                activeStyleIndex={currentStyleIndex}
-              />
-            )}
+            <Animated.View
+              style={styles.styleChangeWrapper}
+              layout={LinearTransition}>
+              {displayStyleChanges && (
+                <TransitionStyleChange
+                  transitionStyles={transitionStyles}
+                  activeStyleIndex={currentStyleIndex}
+                />
+              )}
+            </Animated.View>
 
             <Checkbox
               label="Display style changes"
@@ -193,5 +197,8 @@ const styles = StyleSheet.create({
     height: sizes.xxl,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  styleChangeWrapper: {
+    overflow: 'hidden',
   },
 });
