@@ -90,22 +90,13 @@ void TransitionProgressProvider::runProgressProviders(
     const time_t timestamp,
     const PropertyNames &changedPropertyNames) {
   for (const auto &propertyName : changedPropertyNames) {
-    auto propertyProgressProviderIt =
-        propertyProgressProviders_.find(propertyName);
-
-    if (propertyProgressProviderIt == propertyProgressProviders_.end()) {
-      propertyProgressProviderIt =
-          propertyProgressProviders_
-              .emplace(
-                  propertyName,
-                  TransitionPropertyProgressProvider(
-                      duration_, delay_, easingFunction_))
-              .first;
-    } else {
-      propertyProgressProviderIt->second.resetProgress();
-    }
-
-    propertyProgressProviderIt->second.start(timestamp);
+    // Always create the new progress provider with the new settings
+    propertyProgressProviders_
+        .insert_or_assign(
+            propertyName,
+            TransitionPropertyProgressProvider(
+                duration_, delay_, easingFunction_))
+        .first->second.start(timestamp);
   }
 }
 

@@ -40,6 +40,10 @@ const routes = {
         name: 'Changing Transition Property',
         Component: Miscellaneous.ChangingTransitionProperty,
       },
+      UpdatingTransitionSettings: {
+        name: 'Updating Transition Settings',
+        Component: Miscellaneous.UpdatingTransitionSettings,
+      },
     },
   },
   RealWorldExamples: {
