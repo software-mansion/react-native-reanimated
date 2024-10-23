@@ -16,7 +16,7 @@ jobs:
     steps:
     - id: set-matrix
       run: |
-        JSON="${ls -l} ${pwd}}"
+        JSON="ls  -l %{GITHUB_WORKSPACE}"
 
         JSON="${content//'%'/'%25'}"
         JSON="${content//$'\n'/'%0A'}"
