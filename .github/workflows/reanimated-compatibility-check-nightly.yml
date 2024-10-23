@@ -9,6 +9,7 @@ on:
 
 jobs:
   read-json:
+    runs-on: 'ubuntu-latest'
     outputs:
       platforms: ${{ steps.set-matrix.outputs.platforms }}
     steps:
@@ -28,7 +29,7 @@ jobs:
     runs-on: ${{matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:
-        platform:  ${{fromJson(needs.read-json.outputs.platforms)}}
+        platform:  ${{fromJson(needs.read-json.outputs.JSON)}}
         mode: ['Debug', 'Release']
         # TODO: Fetch compatibility in docs and here from common sources.
         # Update it when dropping support for RN versions.
