@@ -70,6 +70,21 @@ TransitionProgressProvider::getPropertyProgressProvider(
   return it->second;
 }
 
+void TransitionProgressProvider::discardIrrelevantProgressProviders(
+    const std::unordered_set<std::string> &transitionPropertyNames) {
+  for (auto it = propertyProgressProviders_.begin();
+       it != propertyProgressProviders_.end();) {
+    // Remove property progress providers for properties not specified in the
+    // transition property names
+    if (transitionPropertyNames.find(it->first) ==
+        transitionPropertyNames.end()) {
+      it = propertyProgressProviders_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
 void TransitionProgressProvider::runProgressProviders(
     jsi::Runtime &rt,
     const time_t timestamp,

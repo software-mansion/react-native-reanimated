@@ -31,6 +31,9 @@ class CSSTransition {
   TransitionProgressState getState(const time_t timestamp) const {
     return progressProvider_.getState();
   }
+  jsi::Value getCurrentInterpolationStyle(jsi::Runtime &rt) const {
+    return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
+  }
 
   void updateSettings(
       jsi::Runtime &rt,
@@ -50,7 +53,8 @@ class CSSTransition {
   TransitionProgressProvider progressProvider_;
 
   TransitionProperties properties_;
-  std::unordered_set<std::string> propertyNameSet_;
+
+  void updateTransitionProperties(const TransitionProperties &properties);
 };
 
 } // namespace reanimated

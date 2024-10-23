@@ -50,6 +50,8 @@ class TransitionProgressProvider {
     easingFunction_ = easingFunction;
   }
 
+  void discardIrrelevantProgressProviders(
+      const std::unordered_set<std::string> &transitionPropertyNames);
   void runProgressProviders(
       jsi::Runtime &rt,
       const time_t timestamp,

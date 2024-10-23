@@ -14,9 +14,16 @@ void CSSTransitionsRegistry::updateSettings(
     const PartialCSSTransitionSettings &updatedSettings) {
   std::lock_guard<std::mutex> lock{mutex_};
 
-  registry_.at(viewTag)->updateSettings(rt, updatedSettings);
-  // TODO - activate if settings have changed
-  // operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, viewTag);
+  const auto &transition = registry_.at(viewTag);
+  transition->updateSettings(rt, updatedSettings);
+
+  // Replace style overrides with the new ones if transition properties were
+  // updated (we want to keep overrides only for transitioned properties)
+  if (updatedSettings.properties.has_value()) {
+    const auto &currentStyle = transition->getCurrentInterpolationStyle(rt);
+    updatesRegistry_[viewTag] = std::make_pair(
+        transition->getShadowNode(), dynamicFromValue(rt, currentStyle));
+  }
 }
 
 void CSSTransitionsRegistry::add(
