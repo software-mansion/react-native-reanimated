@@ -55,3 +55,8 @@ else()
         ReactAndroid::react_nativemodule_core
     )
 endif()
+
+target_link_libraries(
+    reanimated
+    android
+)
