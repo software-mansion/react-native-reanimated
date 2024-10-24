@@ -19,8 +19,7 @@ if (IS_HELP) {
   console.warn(
     'Use --nightly or -n to set nightly version.\nUse --fresh or -f to set fresh version.\nElse pass the version as an argument.'
   );
-  process.exitCode = 1;
-  return;
+  process.exit(1);
 }
 
 if (IS_NIGHTLY && IS_FRESH) {
@@ -35,7 +34,7 @@ const currentVersion = packageJson.version;
 
 if (process.argv.length < 3) {
   console.log(currentVersion);
-  return;
+  process.exit(1);
 }
 
 let version;

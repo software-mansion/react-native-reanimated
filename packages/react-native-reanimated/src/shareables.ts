@@ -1,5 +1,4 @@
 'use strict';
-import NativeReanimatedModule from './NativeReanimated';
 import { isWorkletFunction } from './commonTypes';
 import type {
   ShareableRef,
@@ -14,6 +13,7 @@ import {
   shareableMappingFlag,
 } from './shareableMappingCache';
 import { logger } from './logger';
+import { ReanimatedModule } from './ReanimatedModule';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -273,7 +273,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
         shareableMappingCache.set(value, inaccessibleObject);
         return inaccessibleObject;
       }
-      const adapted = NativeReanimatedModule.makeShareableClone(
+      const adapted = ReanimatedModule.makeShareableClone(
         toAdapt,
         shouldPersistRemote,
         value
@@ -283,7 +283,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
       return adapted;
     }
   }
-  return NativeReanimatedModule.makeShareableClone(
+  return ReanimatedModule.makeShareableClone(
     value,
     shouldPersistRemote,
     undefined
