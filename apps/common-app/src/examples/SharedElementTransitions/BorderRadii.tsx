@@ -42,7 +42,7 @@ function Screen1({ navigation }: NativeStackScreenProps<ParamListBase>) {
 function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
-      <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
+      <Button title="go back" onPress={() => navigation.popTo('Screen1')} />
       <Animated.View
         style={styles.greenBoxScreenTwo}
         sharedTransitionTag="tag"

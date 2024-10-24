@@ -117,7 +117,7 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
           </Animated.Text>
         </Animated.View>
       ))}
-      <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
+      <Button title="go back" onPress={() => navigation.popTo('Screen1')} />
     </View>
   );
 }

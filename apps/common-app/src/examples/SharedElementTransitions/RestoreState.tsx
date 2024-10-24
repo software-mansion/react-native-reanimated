@@ -45,11 +45,11 @@ function Screen3({ navigation }: NativeStackScreenProps<ParamListBase>) {
     <View style={styles.container}>
       <Button
         title="go to screen1"
-        onPress={() => navigation.navigate('Screen1')}
+        onPress={() => navigation.popTo('Screen1')}
       />
       <Button
         title="go to screen2"
-        onPress={() => navigation.navigate('Screen2')}
+        onPress={() => navigation.popTo('Screen2')}
       />
     </View>
   );

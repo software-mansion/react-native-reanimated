@@ -21,7 +21,7 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.container}>
       <Animated.View style={styles.greenBox} sharedTransitionTag="tag1" />
-      <Button title="Screen1" onPress={() => navigation.navigate('Screen1')} />
+      <Button title="Screen1" onPress={() => navigation.popTo('Screen1')} />
       <Button title="Screen3" onPress={() => navigation.navigate('Screen3')} />
     </View>
   );
@@ -31,8 +31,8 @@ function Screen3({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (
     <View style={styles.flexOne}>
       <Animated.View style={styles.blueBox} sharedTransitionTag="tag1" />
-      <Button title="Screen1" onPress={() => navigation.navigate('Screen1')} />
-      <Button title="Screen2" onPress={() => navigation.navigate('Screen2')} />
+      <Button title="Screen1" onPress={() => navigation.popTo('Screen1')} />
+      <Button title="Screen2" onPress={() => navigation.popTo('Screen2')} />
     </View>
   );
 }

@@ -1,6 +1,10 @@
 import * as React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  NavigationIndependentTree,
+  useNavigation,
+} from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated, {
@@ -60,12 +64,14 @@ function SecondScreen() {
 
 export default function ScreenStackExample() {
   return (
-    <NavigationContainer independent={true}>
-      <Stack.Navigator>
-        <Stack.Screen name="First" component={FirstScreen} />
-        <Stack.Screen name="Second" component={SecondScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <NavigationIndependentTree>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen name="First" component={FirstScreen} />
+          <Stack.Screen name="Second" component={SecondScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </NavigationIndependentTree>
   );
 }
 
