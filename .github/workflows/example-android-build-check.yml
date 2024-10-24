@@ -25,6 +25,8 @@ on:
       - apps/paper-example/android/**
       - apps/fabric-example/package.json
       - apps/fabric-example/android/**
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   build:
