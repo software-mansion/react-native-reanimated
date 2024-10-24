@@ -22,7 +22,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Create React Native app
-        run: npx react-native init app
+        run:  npx @react-native-community/cli init app
       - name: Install Reanimated
         working-directory: app
         run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
