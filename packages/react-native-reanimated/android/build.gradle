@@ -196,9 +196,9 @@ buildscript {
         }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:7.3.1"
-        classpath "de.undercouch:gradle-download-task:5.0.1"
-        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.11.0"
+        classpath "com.android.tools.build:gradle:8.2.1"
+        classpath "de.undercouch:gradle-download-task:5.6.0"
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.25.0"
     }
 }
 
@@ -211,7 +211,7 @@ apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
 
 android {
-    compileSdkVersion safeExtGet("compileSdkVersion", 30)
+    compileSdkVersion safeExtGet("compileSdkVersion", 34)
 
     def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
     if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
@@ -241,8 +241,8 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion safeExtGet("minSdkVersion", 16)
-        targetSdkVersion safeExtGet("targetSdkVersion", 30)
+        minSdkVersion safeExtGet("minSdkVersion", 23)
+        targetSdkVersion safeExtGet("targetSdkVersion", 34)
         versionCode 1
         versionName "1.0"
         buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
