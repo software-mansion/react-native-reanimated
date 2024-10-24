@@ -23,7 +23,7 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
       - name: Create React Native App
-        run:  npx @react-native-community/cli init app
+        run: npx @react-native-community/cli init app
       - name: Install dependencies
         working-directory: app
         run: yarn
