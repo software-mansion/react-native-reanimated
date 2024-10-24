@@ -18,7 +18,7 @@ global._makeShareableClone = () => {
   );
 };
 
-global._scheduleOnJS = () => {
+global._scheduleHostFunctionOnJS = () => {
   throw new ReanimatedError(
     '`_scheduleOnJS` should never be called from React runtime.'
   );

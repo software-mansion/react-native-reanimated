@@ -51,7 +51,8 @@ declare global {
     value: T,
     nativeStateSource?: object
   ) => FlatShareableRef<T>;
-  var _scheduleOnJS: (fun: (...args: A) => R, args?: A) => void;
+  var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
+  var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
     worklet: ShareableRef<() => void>

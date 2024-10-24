@@ -17,6 +17,8 @@ on:
       - '.github/workflows/yarn-validation.yml'
       - '**/package.json'
       - '**/yarn.lock'
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   check:

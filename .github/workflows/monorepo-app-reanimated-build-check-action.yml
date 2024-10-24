@@ -38,9 +38,11 @@ jobs:
         run: yarn install
       - name: Create RootApp
         working-directory: monorepo
+        # TODO: Revise if we want to hardcode 0.73 here.
         run: npx react-native@0.73 init RootApp --skip-install --version 0.73
       - name: Create PackageApp
         working-directory: monorepo/packages
+        # TODO: Revise if we want to hardcode 0.73 here.
         run: npx react-native@0.73 init PackageApp --skip-install --version 0.73
 
       - name: Install dependencies for RootApp

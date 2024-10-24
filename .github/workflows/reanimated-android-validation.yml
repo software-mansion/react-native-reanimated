@@ -21,6 +21,8 @@ on:
       - 'packages/react-native-reanimated/android/build.gradle'
       - 'packages/react-native-reanimated/scripts/cpplint.sh'
       - 'packages/react-native-reanimated/Common/cpp/**'
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   check:
@@ -28,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.13]
     concurrency:
       group: validate-java-${{ github.ref }}
       cancel-in-progress: true
@@ -52,7 +54,7 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install cpplint
+          pip install cpplint==1.6.1
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
 

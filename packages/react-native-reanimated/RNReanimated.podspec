@@ -89,7 +89,7 @@ Pod::Spec.new do |s|
 
     ss.subspec "apple" do |sss|
       sss.source_files = "apple/reanimated/**/*.{mm,h,m}"
-      sss.header_dir = "reanimated/apple"
+      sss.header_dir = "reanimated"
       sss.header_mappings_dir = "apple/reanimated"
     end
   end
@@ -125,7 +125,17 @@ Pod::Spec.new do |s|
   }
   s.compiler_flags = "#{folly_compiler_flags} #{boost_compiler_flags}"
   s.xcconfig = {
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\" \"$(PODS_ROOT)/RCT-Folly\" \"$(PODS_ROOT)/Headers/Public/React-hermes\" \"$(PODS_ROOT)/Headers/Public/hermes-engine\" \"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
+    "HEADER_SEARCH_PATHS" => [
+      '"$(PODS_ROOT)/boost"',
+      '"$(PODS_ROOT)/boost-for-react-native"',
+      '"$(PODS_ROOT)/glog"',
+      '"$(PODS_ROOT)/RCT-Folly"',
+      '"$(PODS_ROOT)/Headers/Public/React-hermes"',
+      '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
+      "\"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
+      "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/apple\"",
+      "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/Common/cpp\"",
+    ].join(' '),
     "OTHER_CFLAGS" => "$(inherited) #{folly_flags} #{fabric_flags} #{example_flag} #{version_flag} #{debug_flag} #{compilation_metadata_generation_flag}"
   }
   s.requires_arc = true
