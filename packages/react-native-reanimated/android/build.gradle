@@ -382,14 +382,21 @@ android {
                 }
             }
 
-            // RuntimeExecutor
             if (IS_NEW_ARCHITECTURE_ENABLED) {
+                // RuntimeExecutor and CallInvokerHolder
                 if (REACT_NATIVE_MINOR_VERSION <= 73) {
-                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/73"
+                    srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/73"
                 } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/74"
+                    srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/74"
                 } else {
-                    srcDirs += "src/reactNativeVersionPatch/RuntimeExecutor/latest"
+                    srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/latest"
+                }
+            } else {
+                // CallInvokerHolder
+                if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                    srcDirs += "src/reactNativeVersionPatch/NativeProxyPaper/74"
+                } else {
+                    srcDirs += "src/reactNativeVersionPatch/NativeProxyPaper/latest"
                 }
             }
 
