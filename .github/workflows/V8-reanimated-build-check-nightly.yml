@@ -18,6 +18,8 @@ jobs:
     concurrency:
       group: build-v8-${{ github.ref }}
       cancel-in-progress: true
+    env:
+      APP_NAME: app
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -28,19 +30,22 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
-      - name: Create React Native app
-        run: npx react-native init app
+      - name: Create React Native App
+        run: npx react-native init ${{ env.APP_NAME }}
+      - name: Setup Yarn Modern
+        working-directory: ${{ env.APP_NAME }}
+        run: corepack enable && yarn set version berry
       - name: Install dependencies
-        working-directory: app
+        working-directory: ${{ env.APP_NAME }}
         run: yarn install
       - name: Install Reanimated
-        working-directory: app
+        working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
       - name: Install test dependencies
-        working-directory: app
+        working-directory: ${{ env.APP_NAME }}
         run: yarn add react-native-v8 v8-android-jit
       - name: Configure V8
         run: node reanimated_repo/.github/workflows/helper/configureV8.js
-      - name: Build Android app
-        working-directory: app/android
+      - name: Build Android ${{ env.APP_NAME }}
+        working-directory: ${{ env.APP_NAME }}/android
         run: ./gradlew assembleDebug --console=plain

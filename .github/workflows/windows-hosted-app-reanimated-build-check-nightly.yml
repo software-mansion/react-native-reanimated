@@ -17,6 +17,8 @@ jobs:
     concurrency:
       group: build-on-windows-${{ github.ref }}
       cancel-in-progress: true
+    env:
+      APP_NAME: app
     steps:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -24,13 +26,16 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
       - name: Create React Native App
-        run: npx react-native init app
+        run: npx react-native init ${{ env.APP_NAME }}
+      - name: Setup Yarn Modern
+        working-directory: ${{ env.APP_NAME }}
+        run: corepack enable && yarn set version berry
       - name: Install dependencies
-        working-directory: app
+        working-directory: ${{ env.APP_NAME }}
         run: yarn
       - name: Install Reanimated
-        working-directory: app
+        working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
       - name: Build Android App
-        working-directory: app/android
+        working-directory: ${{ env.APP_NAME }}/android
         run: ./gradlew assembleDebug --console=plain
