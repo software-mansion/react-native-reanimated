@@ -15,15 +15,6 @@ diff --git a/android/src/paper/java/com/reactnativepagerview/PagerViewViewManage
 index 959362c62af06f791088c416e2db8f1629ab63ce..6c1e385dbc4e78af2d0449498fcd77acda57482f 100644
 --- a/android/src/paper/java/com/reactnativepagerview/PagerViewViewManager.kt
 +++ b/android/src/paper/java/com/reactnativepagerview/PagerViewViewManager.kt
-@@ -34,7 +34,7 @@ class PagerViewViewManager : ViewGroupManager<NestedScrollableHost>() {
-         vp.adapter = ViewPagerAdapter()
-         //https://github.com/callstack/react-native-viewpager/issues/183
-         vp.isSaveEnabled = false
--        eventDispatcher = reactContext.getNativeModule(UIManagerModule::class.java)!!.eventDispatcher
-+        eventDispatcher = reactContext.getNativeModule(UIManagerModule::class.java)!!.getEventDispatcher()
- 
-         vp.post {
-             vp.registerOnPageChangeCallback(object : OnPageChangeCallback() {
 @@ -132,7 +132,7 @@ class PagerViewViewManager : ViewGroupManager<NestedScrollableHost>() {
                  PageSelectedEvent.EVENT_NAME, MapBuilder.of("registrationName", "onPageSelected"))
      }
