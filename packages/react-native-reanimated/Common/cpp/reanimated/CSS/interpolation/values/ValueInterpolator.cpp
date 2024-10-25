@@ -256,7 +256,7 @@ jsi::Value ValueInterpolator<T>::interpolateMissingValue(
 template class ValueInterpolator<int>;
 template class ValueInterpolator<double>;
 template class ValueInterpolator<std::string>;
-template class ValueInterpolator<ColorArray>;
+template class ValueInterpolator<Color>;
 template class ValueInterpolator<UnitValue>;
 
 } // namespace reanimated

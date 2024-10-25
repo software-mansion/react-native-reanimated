@@ -1,137 +1,146 @@
-import RouteCards from './routeCards';
+import routeCards from './routeCards';
 import type { RouteNames, Routes } from '../../navigation/types';
 import {
-  AnimatedProperties,
-  AnimationSettings,
-  Miscellaneous,
-  RealWorldExamples,
-  TestExamples,
+  animatedProperties,
+  animationSettings,
+  miscellaneous,
+  realWorldExamples,
+  testExamples,
 } from './screens';
 
 const routes = {
   AnimatedProperties: {
     name: 'Animated Properties',
-    CardComponent: RouteCards.AnimatedPropertiesCard,
+    CardComponent: routeCards.AnimatedPropertiesCard,
     routes: {
       Dimensions: {
         name: 'Dimensions',
-        Component: AnimatedProperties.Dimensions,
+        Component: animatedProperties.Dimensions,
       },
       FlexStyles: {
         name: 'Flex Styles',
-        Component: AnimatedProperties.FlexStyles,
+        Component: animatedProperties.FlexStyles,
       },
       Insets: {
         name: 'Insets',
-        Component: AnimatedProperties.Insets,
+        Component: animatedProperties.Insets,
       },
       Transforms: {
         name: 'Transforms',
-        Component: AnimatedProperties.Transforms,
+        Component: animatedProperties.Transforms,
       },
       Colors: {
         name: 'Colors',
-        Component: AnimatedProperties.Colors,
+        routes: {
+          ColorFormats: {
+            name: 'Color Formats',
+            Component: animatedProperties.colors.ColorFormats,
+          },
+          ColorFunctions: {
+            name: 'Color Properties',
+            Component: animatedProperties.colors.ColorProperties,
+          },
+        },
       },
       Borders: {
         name: 'Borders',
-        Component: AnimatedProperties.Borders,
+        Component: animatedProperties.Borders,
       },
       Margins: {
         name: 'Margins',
-        Component: AnimatedProperties.Margins,
+        Component: animatedProperties.Margins,
       },
       Paddings: {
         name: 'Paddings',
-        Component: AnimatedProperties.Paddings,
+        Component: animatedProperties.Paddings,
       },
     },
   },
   AnimationSettings: {
     name: 'Animation Settings',
-    CardComponent: RouteCards.AnimationSettingsCard,
+    CardComponent: routeCards.AnimationSettingsCard,
     routes: {
       Duration: {
         name: 'Duration',
-        Component: AnimationSettings.AnimationDuration,
+        Component: animationSettings.AnimationDuration,
       },
       TimingFunction: {
         name: 'Timing Function',
-        Component: AnimationSettings.AnimationTimingFunction,
+        Component: animationSettings.AnimationTimingFunction,
       },
       Delay: {
         name: 'Delay',
-        Component: AnimationSettings.AnimationDelay,
+        Component: animationSettings.AnimationDelay,
       },
       IterationCount: {
         name: 'Iteration Count',
-        Component: AnimationSettings.AnimationIterationCount,
+        Component: animationSettings.AnimationIterationCount,
       },
       Direction: {
         name: 'Direction',
-        Component: AnimationSettings.AnimationDirection,
+        Component: animationSettings.AnimationDirection,
       },
       FillMode: {
         name: 'Fill Mode',
-        Component: AnimationSettings.AnimationFillMode,
+        Component: animationSettings.AnimationFillMode,
       },
       PlayState: {
         name: 'Play State',
-        Component: AnimationSettings.AnimationPlayState,
+        Component: animationSettings.AnimationPlayState,
       },
     },
   },
   Miscellaneous: {
     name: 'Miscellaneous',
-    CardComponent: RouteCards.MiscellaneousCard,
+    CardComponent: routeCards.MiscellaneousCard,
     routes: {
       ChangingAnimation: {
         name: 'Changing Animation',
-        Component: Miscellaneous.ChangingAnimation,
+        Component: miscellaneous.ChangingAnimation,
       },
       UpdatingAnimationSettings: {
         name: 'Updating Animation Settings',
-        Component: Miscellaneous.UpdatingAnimationSettings,
+        Component: miscellaneous.UpdatingAnimationSettings,
       },
     },
   },
   RealWorldExamples: {
     name: 'Real World Examples',
-    CardComponent: RouteCards.RealWorldExamplesCard,
+    CardComponent: routeCards.RealWorldExamplesCard,
     routes: {
       SpinnersAndLoaders: {
         name: 'Spinners and Loaders',
-        Component: RealWorldExamples.SpinnersAndLoaders,
+        Component: realWorldExamples.SpinnersAndLoaders,
       },
       Emojis: {
         name: 'Emojis',
-        Component: RealWorldExamples.Emojis,
+        Component: realWorldExamples.Emojis,
       },
       Campfire: {
         name: 'Campfire',
-        Component: RealWorldExamples.Campfire,
+        Component: realWorldExamples.Campfire,
       },
       RocketInSpace: {
         name: 'Rocket In Space',
-        Component: RealWorldExamples.RocketInSpace,
+        Component: realWorldExamples.RocketInSpace,
       },
       SquishySquashy: {
         name: 'Squishy Squashy',
-        Component: RealWorldExamples.SquishySquashy,
+        Component: realWorldExamples.SquishySquashy,
       },
     },
   },
   TestExamples: {
     name: 'Test Examples',
-    CardComponent: RouteCards.TestExamplesCard,
+    CardComponent: routeCards.TestExamplesCard,
     routes: {
       Playground: {
         name: 'Playground',
-        Component: TestExamples.Playground,
+        Component: testExamples.Playground,
       },
       IterationCountAndFillMode: {
         name: 'Iteration Count and Fill Mode',
-        Component: TestExamples.IterationCountAndFillMode,
+        Component: testExamples.IterationCountAndFillMode,
       },
     },
   },

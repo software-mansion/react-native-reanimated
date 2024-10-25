@@ -4,23 +4,21 @@
 
 namespace reanimated {
 
-class ColorValueInterpolator : public ValueInterpolator<ColorArray> {
+class ColorValueInterpolator : public ValueInterpolator<Color> {
  public:
-  using ValueInterpolator<ColorArray>::ValueInterpolator;
-
-  static ColorArray toColorArray(unsigned color);
+  using ValueInterpolator<Color>::ValueInterpolator;
 
  protected:
-  ColorArray prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
+    Color prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const override;
 
-  jsi::Value convertResultToJSI(jsi::Runtime &rt, const ColorArray &value)
+  jsi::Value convertResultToJSI(jsi::Runtime &rt, const Color &value)
       const override;
 
-  ColorArray interpolate(
+    Color interpolate(
       double localProgress,
-      const ColorArray &fromValue,
-      const ColorArray &toValue,
+      const Color &fromValue,
+      const Color &toValue,
       const PropertyInterpolationUpdateContext context) const override;
 };
 

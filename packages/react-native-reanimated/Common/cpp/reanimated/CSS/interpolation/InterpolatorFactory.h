@@ -27,13 +27,9 @@ std::shared_ptr<PropertyInterpolatorFactory> object(
     const PropertiesInterpolatorFactories &factories);
 
 std::shared_ptr<PropertyInterpolatorFactory> color(
-    const std::optional<ColorArray> &defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> color(
-    const unsigned &defaultValue) {
-  return color(ColorValueInterpolator::toColorArray(defaultValue));
-}
+    const std::optional<Color> &defaultValue);
 std::shared_ptr<PropertyInterpolatorFactory> color() {
-  return color(std::nullopt);
+  return color(Color::Transparent);
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> numeric(

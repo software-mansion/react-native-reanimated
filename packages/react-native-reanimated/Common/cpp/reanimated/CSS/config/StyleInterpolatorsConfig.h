@@ -8,34 +8,36 @@ using namespace Interpolators;
 
 const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
   // Local constants
-  const unsigned TRANSPARENT = 0x00000000;
+  const auto BLACK = Color(0, 0, 0, 255);
+  const auto TRANSPARENT = Color::Transparent;
 
   // Initialize the factories
   // TODO: Set proper default values for all the interpolators
+  // TODO: Add value inheritance support
   return PropertiesInterpolatorFactories{
       // Colors
       {"backgroundColor", color(TRANSPARENT)},
-      {"borderBlockColor", color(TRANSPARENT)},
-      {"borderBlockEndColor", color(TRANSPARENT)},
-      {"borderBlockStartColor", color(TRANSPARENT)},
-      {"borderBottomColor", color(TRANSPARENT)},
-      {"borderColor", color(TRANSPARENT)},
-      {"borderEndColor", color(TRANSPARENT)},
-      {"borderLeftColor", color(TRANSPARENT)},
-      {"borderRightColor", color(TRANSPARENT)},
-      {"borderStartColor", color(TRANSPARENT)},
-      {"borderTopColor", color(TRANSPARENT)},
-      {"color", color(TRANSPARENT)},
-      {"overlayColor", color(TRANSPARENT)},
-      {"shadowColor", color(TRANSPARENT)},
-      {"textDecorationColor", color(TRANSPARENT)},
-      {"textShadowColor", color(TRANSPARENT)},
-      {"tintColor", color(TRANSPARENT)},
+      {"color", color(BLACK)},
+      {"textDecorationColor", color(BLACK)},
+      {"textShadowColor", color(BLACK)},
+      {"borderColor", color(BLACK)},
+      {"borderTopColor", color(BLACK)},
+      {"borderRightColor", color(BLACK)},
+      {"borderLeftColor", color(BLACK)},
+      {"borderBottomColor", color(BLACK)},
+      {"borderEndColor", color(BLACK)},
+      {"borderStartColor", color(BLACK)},
+      {"borderBlockColor", color(BLACK)},
+      {"borderBlockEndColor", color(BLACK)},
+      {"borderBlockStartColor", color(BLACK)},
+      {"shadowColor", color(BLACK)},
+      {"overlayColor", color(BLACK)},
+      {"tintColor", color(BLACK)},
 
       // Discrete props
       {"alignContent", discrete()},
       {"alignItems", discrete()},
-      {"alignTargetType::Self", discrete()},
+      {"alignSelf", discrete()},
       {"backfaceVisibility", discrete()},
       {"borderCurve", discrete()},
       {"borderStyle", discrete()},
@@ -137,7 +139,7 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       {"borderRightWidth", numeric()},
       {"borderStartWidth", numeric()},
       {"borderTopWidth", numeric()},
-      {"borderWidth", numeric()},
+      {"borderWidth", numeric(0)},
       {"flex", numeric()},
       {"flexGrow", numeric()},
       {"flexShrink", numeric()},

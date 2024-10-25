@@ -13,9 +13,9 @@ import { processCSSAnimationColor } from '../../../Colors';
 
 const ERROR_MESSAGES = {
   unsupportedKeyframeValueType: (prop: string) =>
-    `[Reanimated] Unsupported keyframe value type for "${prop}". Expected an array only for "transform".`,
+    `Unsupported keyframe value type for "${prop}". Expected an array only for "transform".`,
   unsupportedColorFormat: (value: any, prop: string) =>
-    `[Reanimated] Unsupported color format "${value}" for "${prop}".`,
+    `Unsupported color format "${value}" for "${prop}".`,
 };
 
 export function processKeyframes(
@@ -114,7 +114,7 @@ function handlePrimitiveValue(
   }
 
   let processedValue = value;
-  if (isColorProp(prop, value)) {
+  if (isColorProp(prop, value) && value !== 'transparent') {
     processedValue = processCSSAnimationColor(value);
     if (!processedValue) {
       throw new ReanimatedError(

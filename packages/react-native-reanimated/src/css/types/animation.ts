@@ -1,5 +1,5 @@
 'use strict';
-import type { TextStyle, ViewStyle } from 'react-native';
+import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 import type { CSSTimeUnit } from './common';
 import type { CSSTimingFunction, NormalizedCSSTimingFunction } from '../easing';
 
@@ -21,13 +21,15 @@ type CreateKeyframeStyle<S> = {
     : never;
 };
 
-export type CSSKeyframeViewStyle = CreateKeyframeStyle<ViewStyle | TextStyle>;
+export type CSSKeyframeViewStyle = CreateKeyframeStyle<
+  ViewStyle & TextStyle & ImageStyle
+>;
 
 // BEFORE NORMALIZATION
 
 export type CSSAnimationKeyframeKey = `${number}%` | 'from' | 'to' | number;
 export type CSSAnimationKeyframes = Partial<
-  Record<CSSAnimationKeyframeKey, ViewStyle | TextStyle>
+  Record<CSSAnimationKeyframeKey, ViewStyle & TextStyle & ImageStyle>
 >;
 export type CSSAnimationDuration = CSSTimeUnit;
 export type CSSAnimationTimingFunction = CSSTimingFunction;
