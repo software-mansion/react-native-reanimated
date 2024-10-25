@@ -32,8 +32,7 @@ jobs:
       - name: Install React Native
         run: yarn add react-native
       - name: Create app
-        run: |
-          yarn react-native init ${{ env.APP_NAME }} --pm yarn --skip-install --install-pods false --skip-git-init
+        run: yarn react-native init ${{ env.APP_NAME }} --pm yarn --skip-install
       - name: Setup Yarn Modern
         working-directory: ${{ env.APP_NAME }}
         run: touch yarn.lock && yarn set version berry
