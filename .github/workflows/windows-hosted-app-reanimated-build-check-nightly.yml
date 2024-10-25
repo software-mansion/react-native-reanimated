@@ -1,6 +1,4 @@
 name: Windows hosted app Reanimated build check [Nightly]
-env:
-  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
   pull_request:
     paths:
