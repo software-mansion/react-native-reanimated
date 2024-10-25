@@ -30,9 +30,9 @@ jobs:
         # rather vague errors. This is a workaround for that.
         run: corepack enable && yarn init --yes
       - name: Install React Native
-        run: yarn add react-native
+        run: yarn add @react-native-community/cli
       - name: Create app
-        run: yarn react-native init ${{ env.APP_NAME }} --pm yarn --skip-install
+        run: yarn @react-native-community/cli init ${{ env.APP_NAME }} --pm yarn --skip-install --install-pods false --skip-git-init
       - name: Setup Yarn Modern
         working-directory: ${{ env.APP_NAME }}
         run: touch yarn.lock && yarn set version berry
