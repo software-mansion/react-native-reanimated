@@ -58,8 +58,8 @@ export default class CSSManager implements ICSSManager {
   }
 
   detach(viewTag: number): void {
-    removeViewStyle(viewTag);
     this.cssAnimationManager.detach();
     this.cssTransitionManager.detach();
+    removeViewStyle(viewTag);
   }
 }
