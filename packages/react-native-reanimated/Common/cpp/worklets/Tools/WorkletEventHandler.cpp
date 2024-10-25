@@ -5,9 +5,9 @@ namespace worklets {
 void WorkletEventHandler::process(
     const std::shared_ptr<WorkletRuntime> &workletRuntime,
     const double eventTimestamp,
-    const jsi::Value &eventValue) const {
+    const facebook::jsi::Value &eventValue) const {
   workletRuntime->runGuarded(
-      handlerFunction_, jsi::Value(eventTimestamp), eventValue);
+      handlerFunction_, facebook::jsi::Value(eventTimestamp), eventValue);
 }
 
 uint64_t WorkletEventHandler::getHandlerId() const {

@@ -55,7 +55,7 @@ void EventHandlerRegistry::processEvent(
     const double eventTimestamp,
     const std::string &eventName,
     const int emitterReactTag,
-    const jsi::Value &eventPayload) {
+    const facebook::jsi::Value &eventPayload) {
   std::vector<std::shared_ptr<WorkletEventHandler>> handlersForEvent;
   {
     const std::lock_guard<std::mutex> lock(instanceMutex);
@@ -74,9 +74,9 @@ void EventHandlerRegistry::processEvent(
     }
   }
 
-  jsi::Runtime &rt = uiWorkletRuntime->getJSIRuntime();
+  facebook::jsi::Runtime &rt = uiWorkletRuntime->getJSIRuntime();
   eventPayload.asObject(rt).setProperty(
-      rt, "eventName", jsi::String::createFromUtf8(rt, eventName));
+      rt, "eventName", facebook::jsi::String::createFromUtf8(rt, eventName));
   for (auto handler : handlersForEvent) {
     handler->process(uiWorkletRuntime, eventTimestamp, eventPayload);
   }

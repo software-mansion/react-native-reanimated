@@ -7,7 +7,6 @@
 
 #include <jsi/jsi.h>
 #include <stdio.h>
-#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -17,19 +16,17 @@
 
 namespace reanimated {
 
-using namespace facebook;
-using namespace worklets;
-
 struct LayoutAnimationConfig {
   int tag;
   LayoutAnimationType type;
-  std::shared_ptr<Shareable> config;
+  std::shared_ptr<worklets::Shareable> config;
   std::string sharedTransitionTag;
 };
 
 class LayoutAnimationsManager {
  public:
-  explicit LayoutAnimationsManager(const std::shared_ptr<JSLogger> &jsLogger)
+  explicit LayoutAnimationsManager(
+      const std::shared_ptr<worklets::JSLogger> &jsLogger)
       : jsLogger_(jsLogger) {}
   void configureAnimationBatch(
       const std::vector<LayoutAnimationConfig> &layoutAnimationsBatch);
@@ -37,13 +34,13 @@ class LayoutAnimationsManager {
   bool shouldAnimateExiting(const int tag, const bool shouldAnimate);
   bool hasLayoutAnimation(const int tag, const LayoutAnimationType type);
   void startLayoutAnimation(
-      jsi::Runtime &rt,
+      facebook::jsi::Runtime &rt,
       const int tag,
       const LayoutAnimationType type,
-      const jsi::Object &values);
+      const facebook::jsi::Object &values);
   void clearLayoutAnimationConfig(const int tag);
   void clearSharedTransitionConfig(const int tag);
-  void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
+  void cancelLayoutAnimation(facebook::jsi::Runtime &rt, const int tag) const;
 #ifdef RCT_NEW_ARCH_ENABLED
   void transferConfigFromNativeID(const int nativeId, const int tag);
 #endif
@@ -57,10 +54,10 @@ class LayoutAnimationsManager {
 #endif
 
  private:
-  std::unordered_map<int, std::shared_ptr<Shareable>> &getConfigsForType(
-      const LayoutAnimationType type);
+  std::unordered_map<int, std::shared_ptr<worklets::Shareable>>
+      &getConfigsForType(const LayoutAnimationType type);
 
-  std::shared_ptr<JSLogger> jsLogger_;
+  std::shared_ptr<worklets::JSLogger> jsLogger_;
 #ifndef NDEBUG
   // This set's function is to detect duplicate sharedTags on a single screen
   // it contains strings in form: "reactScreenTag:sharedTag"
@@ -70,13 +67,16 @@ class LayoutAnimationsManager {
 #endif
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  std::unordered_map<int, std::shared_ptr<Shareable>>
+  std::unordered_map<int, std::shared_ptr<worklets::Shareable>>
       enteringAnimationsForNativeID_;
 #endif
-  std::unordered_map<int, std::shared_ptr<Shareable>> enteringAnimations_;
-  std::unordered_map<int, std::shared_ptr<Shareable>> exitingAnimations_;
-  std::unordered_map<int, std::shared_ptr<Shareable>> layoutAnimations_;
-  std::unordered_map<int, std::shared_ptr<Shareable>>
+  std::unordered_map<int, std::shared_ptr<worklets::Shareable>>
+      enteringAnimations_;
+  std::unordered_map<int, std::shared_ptr<worklets::Shareable>>
+      exitingAnimations_;
+  std::unordered_map<int, std::shared_ptr<worklets::Shareable>>
+      layoutAnimations_;
+  std::unordered_map<int, std::shared_ptr<worklets::Shareable>>
       sharedTransitionAnimations_;
   std::unordered_set<int> ignoreProgressAnimationForTag_;
   std::unordered_map<std::string, std::vector<int>> sharedTransitionGroups_;

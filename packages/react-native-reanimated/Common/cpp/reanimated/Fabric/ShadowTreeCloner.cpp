@@ -5,10 +5,12 @@
 #include <ranges>
 #include <utility>
 
+#include <memory>
+
 namespace reanimated {
 
-ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
-    const ShadowNode &shadowNode,
+facebook::react::ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
+    const facebook::react::ShadowNode &shadowNode,
     const ChildrenMap &childrenMap,
     const PropsMap &propsMap) {
   const auto family = &shadowNode.getFamily();
@@ -23,28 +25,29 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
     }
   }
 
-  Props::Shared newProps = nullptr;
+  facebook::react::Props::Shared newProps = nullptr;
 
   if (propsIt != propsMap.end()) {
-    PropsParserContext propsParserContext{
+    facebook::react::PropsParserContext propsParserContext{
         shadowNode.getSurfaceId(), *shadowNode.getContextContainer()};
     newProps = shadowNode.getProps();
     for (const auto &props : propsIt->second) {
       newProps = shadowNode.getComponentDescriptor().cloneProps(
-          propsParserContext, newProps, RawProps(props));
+          propsParserContext, newProps, facebook::react::RawProps(props));
     }
   }
 
   const auto result = shadowNode.clone(
-      {newProps ? newProps : ShadowNodeFragment::propsPlaceholder(),
-       std::make_shared<ShadowNode::ListOfShared>(children),
+      {newProps ? newProps
+                : facebook::react::ShadowNodeFragment::propsPlaceholder(),
+       std::make_shared<facebook::react::ShadowNode::ListOfShared>(children),
        shadowNode.getState()});
 
   return result;
 }
 
-RootShadowNode::Unshared cloneShadowTreeWithNewProps(
-    const RootShadowNode &oldRootNode,
+facebook::react::RootShadowNode::Unshared cloneShadowTreeWithNewProps(
+    const facebook::react::RootShadowNode &oldRootNode,
     const PropsMap &propsMap) {
   ChildrenMap childrenMap;
 
@@ -66,7 +69,7 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
 
   // This cast is safe, because this function returns a clone
   // of the oldRootNode, which is an instance of RootShadowNode
-  return std::static_pointer_cast<RootShadowNode>(
+  return std::static_pointer_cast<facebook::react::RootShadowNode>(
       cloneShadowTreeWithNewPropsRecursive(oldRootNode, childrenMap, propsMap));
 }
 

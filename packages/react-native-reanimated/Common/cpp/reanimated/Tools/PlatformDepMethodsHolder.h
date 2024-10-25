@@ -4,63 +4,62 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/core/ReactPrimitives.h>
-#endif
-
+#else
 #include <string>
 #include <utility>
 #include <vector>
-
-using namespace facebook;
-
-#ifdef RCT_NEW_ARCH_ENABLED
-using namespace react;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 namespace reanimated {
 
 #ifdef RCT_NEW_ARCH_ENABLED
 
-using SynchronouslyUpdateUIPropsFunction =
-    std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Object &props)>;
-using UpdatePropsFunction =
-    std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
-using RemoveFromPropsRegistryFunction =
-    std::function<void(jsi::Runtime &rt, const jsi::Value &viewTags)>;
-using ObtainPropFunction = std::function<jsi::Value(
-    jsi::Runtime &rt,
-    const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &propName)>;
+using SynchronouslyUpdateUIPropsFunction = std::function<void(
+    facebook::jsi::Runtime &rt,
+    facebook::react::Tag tag,
+    const facebook::jsi::Object &props)>;
+using UpdatePropsFunction = std::function<
+    void(facebook::jsi::Runtime &rt, const facebook::jsi::Value &operations)>;
+using RemoveFromPropsRegistryFunction = std::function<
+    void(facebook::jsi::Runtime &rt, const facebook::jsi::Value &viewTags)>;
+using ObtainPropFunction = std::function<facebook::jsi::Value(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &shadowNodeWrapper,
+    const facebook::jsi::Value &propName)>;
 using DispatchCommandFunction = std::function<void(
-    jsi::Runtime &rt,
-    const jsi::Value &shadowNodeValue,
-    const jsi::Value &commandNameValue,
-    const jsi::Value &argsValue)>;
-using MeasureFunction = std::function<
-    jsi::Value(jsi::Runtime &rt, const jsi::Value &shadowNodeValue)>;
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &shadowNodeValue,
+    const facebook::jsi::Value &commandNameValue,
+    const facebook::jsi::Value &argsValue)>;
+using MeasureFunction = std::function<facebook::jsi::Value(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &shadowNodeValue)>;
 
 #else
 
-using UpdatePropsFunction =
-    std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
+using UpdatePropsFunction = std::function<
+    void(facebook::jsi::Runtime &rt, const facebook::jsi::Value &operations)>;
 using ScrollToFunction = std::function<void(int, double, double, bool)>;
 using DispatchCommandFunction = std::function<void(
-    jsi::Runtime &rt,
+    facebook::jsi::Runtime &rt,
     const int viewTag,
-    const jsi::Value &commandNameValue,
-    const jsi::Value &argsValue)>;
+    const facebook::jsi::Value &commandNameValue,
+    const facebook::jsi::Value &argsValue)>;
 using MeasureFunction =
     std::function<std::vector<std::pair<std::string, double>>(int)>;
-using ObtainPropFunction =
-    std::function<jsi::Value(jsi::Runtime &, const int, const jsi::Value &)>;
+using ObtainPropFunction = std::function<facebook::jsi::Value(
+    facebook::jsi::Runtime &,
+    const int,
+    const facebook::jsi::Value &)>;
 
 #endif // RCT_NEW_ARCH_ENABLED
 
-using RequestRenderFunction =
-    std::function<void(std::function<void(const double)>, jsi::Runtime &)>;
+using RequestRenderFunction = std::function<
+    void(std::function<void(const double)>, facebook::jsi::Runtime &)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
-using ProgressLayoutAnimationFunction =
-    std::function<void(jsi::Runtime &, int, jsi::Object, bool)>;
+using ProgressLayoutAnimationFunction = std::function<
+    void(facebook::jsi::Runtime &, int, facebook::jsi::Object, bool)>;
 using EndLayoutAnimationFunction = std::function<void(int, bool)>;
 
 using RegisterSensorFunction =
@@ -68,9 +67,9 @@ using RegisterSensorFunction =
 using UnregisterSensorFunction = std::function<void(int)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
 using ConfigurePropsFunction = std::function<void(
-    jsi::Runtime &rt,
-    const jsi::Value &uiProps,
-    const jsi::Value &nativeProps)>;
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &uiProps,
+    const facebook::jsi::Value &nativeProps)>;
 using KeyboardEventSubscribeFunction =
     std::function<int(std::function<void(int, int)>, bool, bool)>;
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;

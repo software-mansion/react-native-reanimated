@@ -1,7 +1,5 @@
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 
-#include <utility>
-
 namespace reanimated {
 
 AnimatedSensorModule::AnimatedSensorModule(
@@ -14,19 +12,20 @@ AnimatedSensorModule::~AnimatedSensorModule() {
   assert(sensorsIds_.empty());
 }
 
-jsi::Value AnimatedSensorModule::registerSensor(
-    jsi::Runtime &rt,
-    const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
-    const jsi::Value &sensorTypeValue,
-    const jsi::Value &interval,
-    const jsi::Value &iosReferenceFrame,
-    const jsi::Value &sensorDataHandler) {
+facebook::jsi::Value AnimatedSensorModule::registerSensor(
+    facebook::jsi::Runtime &rt,
+    const std::shared_ptr<worklets::WorkletRuntime> &uiWorkletRuntime,
+    const facebook::jsi::Value &sensorTypeValue,
+    const facebook::jsi::Value &interval,
+    const facebook::jsi::Value &iosReferenceFrame,
+    const facebook::jsi::Value &sensorDataHandler) {
   SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
 
-  auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
-      rt,
-      sensorDataHandler,
-      "[Reanimated] Sensor event handler must be a worklet.");
+  auto shareableHandler =
+      worklets::extractShareableOrThrow<worklets::ShareableWorklet>(
+          rt,
+          sensorDataHandler,
+          "[Reanimated] Sensor event handler must be a worklet.");
 
   int sensorId = platformRegisterSensorFunction_(
       sensorType,
@@ -34,15 +33,15 @@ jsi::Value AnimatedSensorModule::registerSensor(
       iosReferenceFrame.asNumber(),
       [sensorType,
        shareableHandler,
-       weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
-          double newValues[], int orientationDegrees) {
+       weakUiWorkletRuntime = std::weak_ptr<worklets::WorkletRuntime>(
+           uiWorkletRuntime)](double newValues[], int orientationDegrees) {
         auto uiWorkletRuntime = weakUiWorkletRuntime.lock();
         if (uiWorkletRuntime == nullptr) {
           return;
         }
 
-        jsi::Runtime &uiRuntime = uiWorkletRuntime->getJSIRuntime();
-        jsi::Object value(uiRuntime);
+        facebook::jsi::Runtime &uiRuntime = uiWorkletRuntime->getJSIRuntime();
+        facebook::jsi::Object value(uiRuntime);
         if (sensorType == SensorType::ROTATION_VECTOR) {
           // TODO: timestamp should be provided by the platform implementation
           // such that the native side has a chance of providing a true event
@@ -67,10 +66,11 @@ jsi::Value AnimatedSensorModule::registerSensor(
   if (sensorId != -1) {
     sensorsIds_.insert(sensorId);
   }
-  return jsi::Value(sensorId);
+  return facebook::jsi::Value(sensorId);
 }
 
-void AnimatedSensorModule::unregisterSensor(const jsi::Value &sensorId) {
+void AnimatedSensorModule::unregisterSensor(
+    const facebook::jsi::Value &sensorId) {
   // It is called during sensor hook unmounting
   sensorsIds_.erase(sensorId.getNumber());
   platformUnregisterSensorFunction_(sensorId.asNumber());

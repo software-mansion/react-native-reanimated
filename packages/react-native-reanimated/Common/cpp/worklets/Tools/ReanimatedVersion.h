@@ -7,13 +7,13 @@
 #include <memory>
 #include <string>
 
-using namespace facebook;
-
 namespace worklets {
 
 std::string getReanimatedCppVersion();
-void injectReanimatedCppVersion(jsi::Runtime &);
+void injectReanimatedCppVersion(facebook::jsi::Runtime &);
 bool matchVersion(const std::string &, const std::string &);
-void checkJSVersion(jsi::Runtime &, const std::shared_ptr<JSLogger> &);
+void checkJSVersion(
+    facebook::jsi::Runtime &,
+    const std::shared_ptr<JSLogger> &);
 
 }; // namespace worklets

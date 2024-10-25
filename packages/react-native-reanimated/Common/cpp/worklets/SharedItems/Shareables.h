@@ -9,21 +9,19 @@
 #include <utility>
 #include <vector>
 
-using namespace facebook;
-
 namespace worklets {
 
-jsi::Function getValueUnpacker(jsi::Runtime &rt);
+facebook::jsi::Function getValueUnpacker(facebook::jsi::Runtime &rt);
 
 #ifndef NDEBUG
-jsi::Function getCallGuard(jsi::Runtime &rt);
+facebook::jsi::Function getCallGuard(facebook::jsi::Runtime &rt);
 #endif // NDEBUG
 
 // If possible, please use `WorkletRuntime::runGuarded` instead.
 template <typename... Args>
-inline jsi::Value runOnRuntimeGuarded(
-    jsi::Runtime &rt,
-    const jsi::Value &function,
+inline facebook::jsi::Value runOnRuntimeGuarded(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &function,
     Args &&...args) {
   // We only use callGuard in debug mode, otherwise we call the provided
   // function directly. CallGuard provides a way of capturing exceptions in
@@ -37,8 +35,8 @@ inline jsi::Value runOnRuntimeGuarded(
 }
 
 inline void cleanupIfRuntimeExists(
-    jsi::Runtime *rt,
-    std::unique_ptr<jsi::Value> &value) {
+    facebook::jsi::Runtime *rt,
+    std::unique_ptr<facebook::jsi::Value> &value) {
   if (rt != nullptr && !WorkletRuntimeRegistry::isRuntimeAlive(rt)) {
     // The below use of unique_ptr.release prevents the smart pointer from
     // calling the destructor of the kept object. This effectively results in
@@ -56,15 +54,15 @@ inline void cleanupIfRuntimeExists(
     // use which would require additional data structure and compute spent on
     // bookkeeping that only for the sake of destroying the values in time
     // before the runtime is terminated. Note that the underlying memory that
-    // jsi::Value refers to is managed by the VM and gets freed along with the
-    // runtime.
+    // facebook::jsi::Value refers to is managed by the VM and gets freed along
+    // with the runtime.
     value.release();
   }
 }
 
 class Shareable {
  public:
-  virtual jsi::Value toJSValue(jsi::Runtime &rt) = 0;
+  virtual facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) = 0;
 
   virtual ~Shareable();
 
@@ -101,23 +99,23 @@ class Shareable {
 template <typename BaseClass>
 class RetainingShareable : virtual public BaseClass {
  private:
-  jsi::Runtime *primaryRuntime_;
-  jsi::Runtime *secondaryRuntime_;
-  std::unique_ptr<jsi::Value> secondaryValue_;
+  facebook::jsi::Runtime *primaryRuntime_;
+  facebook::jsi::Runtime *secondaryRuntime_;
+  std::unique_ptr<facebook::jsi::Value> secondaryValue_;
 
  public:
   template <typename... Args>
-  explicit RetainingShareable(jsi::Runtime &rt, Args &&...args)
+  explicit RetainingShareable(facebook::jsi::Runtime &rt, Args &&...args)
       : BaseClass(rt, std::forward<Args>(args)...), primaryRuntime_(&rt) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt);
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt);
 
   ~RetainingShareable() {
     cleanupIfRuntimeExists(secondaryRuntime_, secondaryValue_);
   }
 };
 
-class ShareableJSRef : public jsi::HostObject {
+class ShareableJSRef : public facebook::jsi::HostObject {
  private:
   const std::shared_ptr<Shareable> value_;
 
@@ -131,30 +129,30 @@ class ShareableJSRef : public jsi::HostObject {
     return value_;
   }
 
-  static jsi::Object newHostObject(
-      jsi::Runtime &rt,
+  static facebook::jsi::Object newHostObject(
+      facebook::jsi::Runtime &rt,
       const std::shared_ptr<Shareable> &value) {
-    return jsi::Object::createFromHostObject(
+    return facebook::jsi::Object::createFromHostObject(
         rt, std::make_shared<ShareableJSRef>(value));
   }
 };
 
-jsi::Value makeShareableClone(
-    jsi::Runtime &rt,
-    const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource);
+facebook::jsi::Value makeShareableClone(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &value,
+    const facebook::jsi::Value &shouldRetainRemote,
+    const facebook::jsi::Value &nativeStateSource);
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
-    jsi::Runtime &rt,
-    const jsi::Value &maybeShareableValue,
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &maybeShareableValue,
     const std::string &errorMessage =
         "[Reanimated] Expecting the object to be of type ShareableJSRef.");
 
 template <typename T>
 std::shared_ptr<T> extractShareableOrThrow(
-    jsi::Runtime &rt,
-    const jsi::Value &shareableRef,
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &shareableRef,
     const std::string &errorMessage =
         "[Reanimated] Provided shareable object is of an incompatible type.") {
   auto res = std::dynamic_pointer_cast<T>(
@@ -167,9 +165,9 @@ std::shared_ptr<T> extractShareableOrThrow(
 
 class ShareableArray : public Shareable {
  public:
-  ShareableArray(jsi::Runtime &rt, const jsi::Array &array);
+  ShareableArray(facebook::jsi::Runtime &rt, const facebook::jsi::Array &array);
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override;
 
  protected:
   std::vector<std::shared_ptr<Shareable>> data_;
@@ -177,7 +175,9 @@ class ShareableArray : public Shareable {
 
 class ShareableObject : public Shareable {
  public:
-  ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
+  ShareableObject(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Object &object);
 
 #if defined(USE_HERMES) || REACT_NATIVE_MINOR_VERSION >= 74
 #define SUPPORTS_NATIVE_STATE 1
@@ -187,36 +187,38 @@ class ShareableObject : public Shareable {
 
 #if SUPPORTS_NATIVE_STATE
   ShareableObject(
-      jsi::Runtime &rt,
-      const jsi::Object &object,
-      const jsi::Value &nativeStateSource);
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Object &object,
+      const facebook::jsi::Value &nativeStateSource);
 #endif // SUPPORTS_NATIVE_STATE
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override;
 
  protected:
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
 #if SUPPORTS_NATIVE_STATE
-  std::shared_ptr<jsi::NativeState> nativeState_;
+  std::shared_ptr<facebook::jsi::NativeState> nativeState_;
 #endif // SUPPORTS_NATIVE_STATE
 };
 
 class ShareableHostObject : public Shareable {
  public:
   ShareableHostObject(
-      jsi::Runtime &,
-      const std::shared_ptr<jsi::HostObject> &hostObject)
+      facebook::jsi::Runtime &,
+      const std::shared_ptr<facebook::jsi::HostObject> &hostObject)
       : Shareable(HostObjectType), hostObject_(hostObject) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override;
 
  protected:
-  const std::shared_ptr<jsi::HostObject> hostObject_;
+  const std::shared_ptr<facebook::jsi::HostObject> hostObject_;
 };
 
 class ShareableHostFunction : public Shareable {
  public:
-  ShareableHostFunction(jsi::Runtime &rt, jsi::Function function)
+  ShareableHostFunction(
+      facebook::jsi::Runtime &rt,
+      facebook::jsi::Function function)
       : Shareable(HostFunctionType),
         hostFunction_(
             (assert(function.isHostFunction(rt)),
@@ -224,10 +226,10 @@ class ShareableHostFunction : public Shareable {
         name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
         paramCount_(function.getProperty(rt, "length").asNumber()) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override;
 
  protected:
-  const jsi::HostFunctionType hostFunction_;
+  const facebook::jsi::HostFunctionType hostFunction_;
   const std::string name_;
   const unsigned int paramCount_;
 };
@@ -235,11 +237,11 @@ class ShareableHostFunction : public Shareable {
 class ShareableArrayBuffer : public Shareable {
  public:
   ShareableArrayBuffer(
-      jsi::Runtime &rt,
+      facebook::jsi::Runtime &rt,
 #if REACT_NATIVE_MINOR_VERSION >= 72
-      const jsi::ArrayBuffer &arrayBuffer
+      const facebook::jsi::ArrayBuffer &arrayBuffer
 #else
-      jsi::ArrayBuffer arrayBuffer
+      facebook::jsi::ArrayBuffer arrayBuffer
 #endif
       )
       : Shareable(ArrayBufferType),
@@ -248,7 +250,7 @@ class ShareableArrayBuffer : public Shareable {
             arrayBuffer.data(rt) + arrayBuffer.size(rt)) {
   }
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override;
 
  protected:
   const std::vector<uint8_t> data_;
@@ -256,39 +258,44 @@ class ShareableArrayBuffer : public Shareable {
 
 class ShareableWorklet : public ShareableObject {
  public:
-  ShareableWorklet(jsi::Runtime &rt, const jsi::Object &worklet)
+  ShareableWorklet(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Object &worklet)
       : ShareableObject(rt, worklet) {
     valueType_ = WorkletType;
   }
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override;
 };
 
 class ShareableRemoteFunction
     : public Shareable,
       public std::enable_shared_from_this<ShareableRemoteFunction> {
  private:
-  jsi::Runtime *runtime_;
+  facebook::jsi::Runtime *runtime_;
 #ifndef NDEBUG
   const std::string name_;
 #endif
-  std::unique_ptr<jsi::Value> function_;
+  std::unique_ptr<facebook::jsi::Value> function_;
 
  public:
-  ShareableRemoteFunction(jsi::Runtime &rt, jsi::Function &&function)
+  ShareableRemoteFunction(
+      facebook::jsi::Runtime &rt,
+      facebook::jsi::Function &&function)
       : Shareable(RemoteFunctionType),
         runtime_(&rt),
 #ifndef NDEBUG
         name_(function.getProperty(rt, "name").asString(rt).utf8(rt)),
 #endif
-        function_(std::make_unique<jsi::Value>(rt, std::move(function))) {
+        function_(
+            std::make_unique<facebook::jsi::Value>(rt, std::move(function))) {
   }
 
   ~ShareableRemoteFunction() {
     cleanupIfRuntimeExists(runtime_, function_);
   }
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override;
 };
 
 class ShareableHandle : public Shareable {
@@ -298,12 +305,14 @@ class ShareableHandle : public Shareable {
   // since the final value is taken from a cache on the runtime which guarantees
   // sequential access.
   std::unique_ptr<ShareableObject> initializer_;
-  std::unique_ptr<jsi::Value> remoteValue_;
+  std::unique_ptr<facebook::jsi::Value> remoteValue_;
   mutable std::mutex initializationMutex_;
-  jsi::Runtime *remoteRuntime_;
+  facebook::jsi::Runtime *remoteRuntime_;
 
  public:
-  ShareableHandle(jsi::Runtime &rt, const jsi::Object &initializerObject)
+  ShareableHandle(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Object &initializerObject)
       : Shareable(HandleType),
         initializer_(std::make_unique<ShareableObject>(rt, initializerObject)) {
   }
@@ -312,7 +321,7 @@ class ShareableHandle : public Shareable {
     cleanupIfRuntimeExists(remoteRuntime_, remoteValue_);
   }
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override;
 };
 
 class ShareableString : public Shareable {
@@ -320,7 +329,7 @@ class ShareableString : public Shareable {
   explicit ShareableString(const std::string &string)
       : Shareable(StringType), data_(string) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override;
 
  protected:
   const std::string data_;
@@ -328,10 +337,12 @@ class ShareableString : public Shareable {
 
 class ShareableBigInt : public Shareable {
  public:
-  explicit ShareableBigInt(jsi::Runtime &rt, const jsi::BigInt &bigint)
+  explicit ShareableBigInt(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::BigInt &bigint)
       : Shareable(BigIntType), string_(bigint.toString(rt).utf8(rt)) {}
 
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &rt) override;
 
  protected:
   const std::string string_;
@@ -348,7 +359,7 @@ class ShareableScalar : public Shareable {
   ShareableScalar() : Shareable(UndefinedType) {}
   explicit ShareableScalar(std::nullptr_t) : Shareable(NullType) {}
 
-  jsi::Value toJSValue(jsi::Runtime &);
+  facebook::jsi::Value toJSValue(facebook::jsi::Runtime &);
 
  protected:
   union Data {

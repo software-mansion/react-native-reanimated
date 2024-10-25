@@ -12,31 +12,28 @@
 #include <utility>
 #include <vector>
 
-using namespace facebook;
-using namespace react;
-
 namespace worklets {
 
-class WorkletRuntime : public jsi::HostObject,
+class WorkletRuntime : public facebook::jsi::HostObject,
                        public std::enable_shared_from_this<WorkletRuntime> {
  public:
   explicit WorkletRuntime(
-      jsi::Runtime &rnRuntime,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
+      facebook::jsi::Runtime &rnRuntime,
+      const std::shared_ptr<facebook::react::MessageQueueThread> &jsQueue,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::string &name,
       const bool supportsLocking,
       const std::string &valueUnpackerCode);
 
-  jsi::Runtime &getJSIRuntime() const {
+  facebook::jsi::Runtime &getJSIRuntime() const {
     return *runtime_;
   }
 
   template <typename... Args>
-  inline jsi::Value runGuarded(
+  inline facebook::jsi::Value runGuarded(
       const std::shared_ptr<ShareableWorklet> &shareableWorklet,
       Args &&...args) const {
-    jsi::Runtime &rt = *runtime_;
+    facebook::jsi::Runtime &rt = *runtime_;
     return runOnRuntimeGuarded(
         rt, shareableWorklet->toJSValue(rt), std::forward<Args>(args)...);
   }
@@ -50,19 +47,24 @@ class WorkletRuntime : public jsi::HostObject,
         [=, self = shared_from_this()] { self->runGuarded(shareableWorklet); });
   }
 
-  jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
+  facebook::jsi::Value executeSync(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &worklet) const;
 
   std::string toString() const {
     return "[WorkletRuntime \"" + name_ + "\"]";
   }
 
-  jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
+  facebook::jsi::Value get(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::PropNameID &propName) override;
 
-  std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
+  std::vector<facebook::jsi::PropNameID> getPropertyNames(
+      facebook::jsi::Runtime &rt) override;
 
  private:
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
-  const std::shared_ptr<jsi::Runtime> runtime_;
+  const std::shared_ptr<facebook::jsi::Runtime> runtime_;
 #ifndef NDEBUG
   const bool supportsLocking_;
 #endif
@@ -73,12 +75,12 @@ class WorkletRuntime : public jsi::HostObject,
 // This function needs to be non-inline to avoid problems with dynamic_cast on
 // Android
 std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &value);
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &value);
 
 void scheduleOnRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue);
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &workletRuntimeValue,
+    const facebook::jsi::Value &shareableWorkletValue);
 
 } // namespace worklets

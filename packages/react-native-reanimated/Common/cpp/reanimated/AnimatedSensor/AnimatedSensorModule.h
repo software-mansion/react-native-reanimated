@@ -12,9 +12,6 @@
 
 namespace reanimated {
 
-using namespace facebook;
-using namespace worklets;
-
 enum SensorType {
   ACCELEROMETER = 1,
   GYROSCOPE = 2,
@@ -33,14 +30,14 @@ class AnimatedSensorModule {
       const PlatformDepMethodsHolder &platformDepMethodsHolder);
   ~AnimatedSensorModule();
 
-  jsi::Value registerSensor(
-      jsi::Runtime &rt,
-      const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
-      const jsi::Value &sensorType,
-      const jsi::Value &interval,
-      const jsi::Value &iosReferenceFrame,
-      const jsi::Value &sensorDataContainer);
-  void unregisterSensor(const jsi::Value &sensorId);
+  facebook::jsi::Value registerSensor(
+      facebook::jsi::Runtime &rt,
+      const std::shared_ptr<worklets::WorkletRuntime> &uiWorkletRuntime,
+      const facebook::jsi::Value &sensorType,
+      const facebook::jsi::Value &interval,
+      const facebook::jsi::Value &iosReferenceFrame,
+      const facebook::jsi::Value &sensorDataContainer);
+  void unregisterSensor(const facebook::jsi::Value &sensorId);
   void unregisterAllSensors();
 };
 

@@ -33,20 +33,10 @@
 #else
 #include <hermes/inspector/RuntimeAdapter.h>
 #include <hermes/inspector/chrome/Registration.h>
-#endif
+#endif // REACT_NATIVE_MINOR_VERSION >= 73
 #endif // HERMES_ENABLE_DEBUGGER
 
 namespace worklets {
-
-using namespace facebook;
-using namespace react;
-#if HERMES_ENABLE_DEBUGGER
-#if REACT_NATIVE_MINOR_VERSION >= 73
-using namespace facebook::hermes::inspector_modern;
-#else
-using namespace facebook::hermes::inspector;
-#endif
-#endif // HERMES_ENABLE_DEBUGGER
 
 // ReentrancyCheck is copied from React Native
 // from ReactCommon/hermes/executor/HermesExecutorFactory.cpp
@@ -126,11 +116,11 @@ struct ReanimatedReentrancyCheck {
 // more about this in ReactCommon/jsi/jsi/Decorator.h or by following this link:
 // https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/jsi/jsi/decorator.h
 class ReanimatedHermesRuntime
-    : public jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck> {
+    : public facebook::jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck> {
  public:
   ReanimatedHermesRuntime(
       std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
+      const std::shared_ptr<facebook::react::MessageQueueThread> &jsQueue,
       const std::string &name);
   ~ReanimatedHermesRuntime();
 
@@ -138,7 +128,11 @@ class ReanimatedHermesRuntime
   std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;
   ReanimatedReentrancyCheck reentrancyCheck_;
 #if HERMES_ENABLE_DEBUGGER
-  chrome::DebugSessionToken debugToken_;
+#if REACT_NATIVE_MINOR_VERSION >= 73
+  facebook::hermes::inspector_modern::chrome::DebugSessionToken debugToken_;
+#else
+  facebook::hermes::inspector::chrome::DebugSessionToken debugToken_;
+#endif // REACT_NATIVE_MINOR_VERSION >= 73
 #endif // HERMES_ENABLE_DEBUGGER
 };
 

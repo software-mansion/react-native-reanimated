@@ -4,11 +4,11 @@
 namespace reanimated {
 
 void RNRuntimeDecorator::decorate(
-    jsi::Runtime &rnRuntime,
+    facebook::jsi::Runtime &rnRuntime,
     const std::shared_ptr<NativeReanimatedModule> &nativeReanimatedModule) {
   rnRuntime.global().setProperty(rnRuntime, "_WORKLET", false);
 
-  jsi::Runtime &uiRuntime = nativeReanimatedModule->getUIRuntime();
+  facebook::jsi::Runtime &uiRuntime = nativeReanimatedModule->getUIRuntime();
   auto workletRuntimeValue =
       rnRuntime.global()
           .getPropertyAsObject(rnRuntime, "ArrayBuffer")
@@ -34,7 +34,7 @@ void RNRuntimeDecorator::decorate(
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, nativeReanimatedModule->getJSLogger());
 #endif // NDEBUG
-  injectReanimatedCppVersion(rnRuntime);
+  worklets::injectReanimatedCppVersion(rnRuntime);
 
   rnRuntime.global().setProperty(
       rnRuntime,
@@ -44,7 +44,8 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(
       rnRuntime,
       "__reanimatedModuleProxy",
-      jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
+      facebook::jsi::Object::createFromHostObject(
+          rnRuntime, nativeReanimatedModule));
 }
 
 } // namespace reanimated

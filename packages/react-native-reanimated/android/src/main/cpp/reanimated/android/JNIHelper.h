@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fbjni/detail/CoreClasses.h>
 #include <fbjni/fbjni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
@@ -9,22 +10,21 @@
 #include <string>
 
 namespace reanimated {
-
-using namespace facebook::jni;
-using namespace facebook;
-using namespace react;
-
 struct JNIHelper {
-  struct PropsMap : jni::JavaClass<PropsMap, JMap<JString, JObject>> {
+  struct PropsMap
+      : facebook::jni::JavaClass<
+            PropsMap,
+            facebook::jni::
+                JMap<facebook::jni::JString, facebook::jni::JObject>> {
     static constexpr auto kJavaDescriptor = "Ljava/util/HashMap;";
 
-    static local_ref<PropsMap> create();
-    void put(const std::string &key, jni::local_ref<JObject> object);
+    static facebook::jni::local_ref<PropsMap> create();
+    void put(const std::string &key, facebook::jni::local_ref<JObject> object);
   };
 
-  static jni::local_ref<PropsMap> ConvertToPropsMap(
-      jsi::Runtime &rt,
-      const jsi::Object &props);
+  static facebook::jni::local_ref<PropsMap> ConvertToPropsMap(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Object &props);
 };
 
 }; // namespace reanimated

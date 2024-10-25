@@ -3,26 +3,27 @@
 
 namespace reanimated {
 
-std::unordered_map<Tag, UpdateValues> &SurfaceManager::getUpdateMap(
-    SurfaceId surfaceId) {
+std::unordered_map<facebook::react::Tag, UpdateValues>
+    &SurfaceManager::getUpdateMap(facebook::react::SurfaceId surfaceId) {
   auto props = props_.find(surfaceId);
   if (props != props_.end()) {
     return *props->second;
   }
 
-  auto newProps = std::make_shared<std::unordered_map<Tag, UpdateValues>>();
+  auto newProps = std::make_shared<
+      std::unordered_map<facebook::react::Tag, UpdateValues>>();
   props_.insert_or_assign(surfaceId, newProps);
   return *newProps;
 }
 
 void SurfaceManager::updateWindow(
-    const SurfaceId surfaceId,
+    const facebook::react::SurfaceId surfaceId,
     const double windowWidth,
     const double windowHeight) {
   windows_.insert_or_assign(surfaceId, Rect{windowWidth, windowHeight});
 }
 
-Rect SurfaceManager::getWindow(SurfaceId surfaceId) {
+Rect SurfaceManager::getWindow(facebook::react::SurfaceId surfaceId) {
   auto windowIt = windows_.find(surfaceId);
   if (windowIt != windows_.end()) {
     return windowIt->second;
@@ -30,12 +31,14 @@ Rect SurfaceManager::getWindow(SurfaceId surfaceId) {
   return Rect{0, 0};
 }
 
-void Node::applyMutationToIndices(ShadowViewMutation mutation) {
+void Node::applyMutationToIndices(
+    facebook::react::ShadowViewMutation mutation) {
   if (tag != mutation.parentShadowView.tag) {
     return;
   }
 
-  int delta = mutation.type == ShadowViewMutation::Insert ? 1 : -1;
+  int delta =
+      mutation.type == facebook::react::ShadowViewMutation::Insert ? 1 : -1;
   for (int i = children.size() - 1; i >= 0; i--) {
     if (children[i]->mutation.index < mutation.index) {
       return;

@@ -9,7 +9,7 @@ std::lock_guard<std::mutex> PropsRegistry::createLock() const {
 }
 
 void PropsRegistry::update(
-    const ShadowNode::Shared &shadowNode,
+    const facebook::react::ShadowNode::Shared &shadowNode,
     folly::dynamic &&props) {
   const auto tag = shadowNode->getTag();
   const auto it = map_.find(tag);
@@ -24,15 +24,16 @@ void PropsRegistry::update(
   }
 }
 
-void PropsRegistry::for_each(std::function<void(
-                                 const ShadowNodeFamily &family,
-                                 const folly::dynamic &props)> callback) const {
+void PropsRegistry::for_each(
+    std::function<void(
+        const facebook::react::ShadowNodeFamily &family,
+        const folly::dynamic &props)> callback) const {
   for (const auto &[_, value] : map_) {
     callback(value.first->getFamily(), value.second);
   }
 }
 
-void PropsRegistry::remove(const Tag tag) {
+void PropsRegistry::remove(const facebook::react::Tag tag) {
   map_.erase(tag);
 }
 

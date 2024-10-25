@@ -4,24 +4,21 @@
 #include <react/renderer/core/PropsParserContext.h>
 #include <react/renderer/uimanager/UIManager.h>
 
-#include <memory>
-#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-using namespace facebook;
-using namespace react;
-
 namespace reanimated {
 
-using PropsMap =
-    std::unordered_map<const ShadowNodeFamily *, std::vector<RawProps>>;
-using ChildrenMap =
-    std::unordered_map<const ShadowNodeFamily *, std::unordered_set<int>>;
+using PropsMap = std::unordered_map<
+    const facebook::react::ShadowNodeFamily *,
+    std::vector<facebook::react::RawProps>>;
+using ChildrenMap = std::unordered_map<
+    const facebook::react::ShadowNodeFamily *,
+    std::unordered_set<int>>;
 
-RootShadowNode::Unshared cloneShadowTreeWithNewProps(
-    const RootShadowNode &oldRootNode,
+facebook::react::RootShadowNode::Unshared cloneShadowTreeWithNewProps(
+    const facebook::react::RootShadowNode &oldRootNode,
     const PropsMap &propsMap);
 
 } // namespace reanimated

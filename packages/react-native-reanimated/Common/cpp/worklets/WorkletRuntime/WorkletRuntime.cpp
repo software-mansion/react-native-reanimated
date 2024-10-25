@@ -24,22 +24,22 @@ class AroundLock {
   }
 };
 
-class LockableRuntime : public jsi::WithRuntimeDecorator<AroundLock> {
+class LockableRuntime : public facebook::jsi::WithRuntimeDecorator<AroundLock> {
   AroundLock aroundLock_;
-  std::shared_ptr<jsi::Runtime> runtime_;
+  std::shared_ptr<facebook::jsi::Runtime> runtime_;
 
  public:
   explicit LockableRuntime(
-      std::shared_ptr<jsi::Runtime> &runtime,
+      std::shared_ptr<facebook::jsi::Runtime> &runtime,
       const std::shared_ptr<std::recursive_mutex> &runtimeMutex)
-      : jsi::WithRuntimeDecorator<AroundLock>(*runtime, aroundLock_),
+      : facebook::jsi::WithRuntimeDecorator<AroundLock>(*runtime, aroundLock_),
         aroundLock_(runtimeMutex),
         runtime_(std::move(runtime)) {}
 };
 
-static std::shared_ptr<jsi::Runtime> makeRuntime(
-    jsi::Runtime &runtime,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
+static std::shared_ptr<facebook::jsi::Runtime> makeRuntime(
+    facebook::jsi::Runtime &runtime,
+    const std::shared_ptr<facebook::react::MessageQueueThread> &jsQueue,
     const std::string &name,
     const bool supportsLocking,
     const std::shared_ptr<std::recursive_mutex> &runtimeMutex) {
@@ -52,8 +52,8 @@ static std::shared_ptr<jsi::Runtime> makeRuntime(
 }
 
 WorkletRuntime::WorkletRuntime(
-    jsi::Runtime &rnRuntime,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
+    facebook::jsi::Runtime &rnRuntime,
+    const std::shared_ptr<facebook::react::MessageQueueThread> &jsQueue,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::string &name,
     const bool supportsLocking,
@@ -69,11 +69,11 @@ WorkletRuntime::WorkletRuntime(
       supportsLocking_(supportsLocking),
 #endif
       name_(name) {
-  jsi::Runtime &rt = *runtime_;
+  facebook::jsi::Runtime &rt = *runtime_;
   WorkletRuntimeCollector::install(rt);
   WorkletRuntimeDecorator::decorate(rt, name, jsScheduler);
 
-  auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
+  auto codeBuffer = std::make_shared<const facebook::jsi::StringBuffer>(
       "(" + valueUnpackerCode + "\n)");
   auto valueUnpacker = rt.evaluateJavaScript(codeBuffer, "valueUnpacker")
                            .asObject(rt)
@@ -81,9 +81,9 @@ WorkletRuntime::WorkletRuntime(
   rt.global().setProperty(rt, "__valueUnpacker", valueUnpacker);
 }
 
-jsi::Value WorkletRuntime::executeSync(
-    jsi::Runtime &rt,
-    const jsi::Value &worklet) const {
+facebook::jsi::Value WorkletRuntime::executeSync(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &worklet) const {
   assert(
       supportsLocking_ &&
       ("[Reanimated] Runtime \"" + name_ + "\" doesn't support locking.")
@@ -93,51 +93,54 @@ jsi::Value WorkletRuntime::executeSync(
       worklet,
       "[Reanimated] Only worklets can be executed synchronously on UI runtime.");
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-  jsi::Runtime &uiRuntime = getJSIRuntime();
+  facebook::jsi::Runtime &uiRuntime = getJSIRuntime();
   auto result = runGuarded(shareableWorklet);
   auto shareableResult = extractShareableOrThrow(uiRuntime, result);
   lock.unlock();
   return shareableResult->toJSValue(rt);
 }
 
-jsi::Value WorkletRuntime::get(
-    jsi::Runtime &rt,
-    const jsi::PropNameID &propName) {
+facebook::jsi::Value WorkletRuntime::get(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::PropNameID &propName) {
   auto name = propName.utf8(rt);
   if (name == "toString") {
-    return jsi::Function::createFromHostFunction(
+    return facebook::jsi::Function::createFromHostFunction(
         rt,
         propName,
         0,
-        [this](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *, size_t)
-            -> jsi::Value {
-          return jsi::String::createFromUtf8(rt, toString());
+        [this](
+            facebook::jsi::Runtime &rt,
+            const facebook::jsi::Value &,
+            const facebook::jsi::Value *,
+            size_t) -> facebook::jsi::Value {
+          return facebook::jsi::String::createFromUtf8(rt, toString());
         });
   }
   if (name == "name") {
-    return jsi::String::createFromUtf8(rt, name_);
+    return facebook::jsi::String::createFromUtf8(rt, name_);
   }
-  return jsi::Value::undefined();
+  return facebook::jsi::Value::undefined();
 }
 
-std::vector<jsi::PropNameID> WorkletRuntime::getPropertyNames(
-    jsi::Runtime &rt) {
-  std::vector<jsi::PropNameID> result;
-  result.push_back(jsi::PropNameID::forUtf8(rt, "toString"));
-  result.push_back(jsi::PropNameID::forUtf8(rt, "name"));
+std::vector<facebook::jsi::PropNameID> WorkletRuntime::getPropertyNames(
+    facebook::jsi::Runtime &rt) {
+  std::vector<facebook::jsi::PropNameID> result;
+  result.push_back(facebook::jsi::PropNameID::forUtf8(rt, "toString"));
+  result.push_back(facebook::jsi::PropNameID::forUtf8(rt, "name"));
   return result;
 }
 
 std::shared_ptr<WorkletRuntime> extractWorkletRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &value) {
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &value) {
   return value.getObject(rt).getHostObject<WorkletRuntime>(rt);
 }
 
 void scheduleOnRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue) {
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &workletRuntimeValue,
+    const facebook::jsi::Value &shareableWorkletValue) {
   auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt,

@@ -7,15 +7,12 @@
 #include <react/renderer/core/ComponentDescriptor.h>
 
 #include <unordered_map>
-#include <vector>
-
-using namespace facebook::react;
 
 namespace reanimated {
 
 ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<PropsRegistry> &propsRegistry,
-    const std::shared_ptr<UIManager> &uiManager,
+    const std::shared_ptr<facebook::react::UIManager> &uiManager,
     const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy)
     : propsRegistry_(propsRegistry),
       uiManager_(uiManager),
@@ -27,17 +24,19 @@ ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
   uiManager_->unregisterCommitHook(*this);
 }
 
-RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
-    ShadowTree const &,
-    RootShadowNode::Shared const &,
-    RootShadowNode::Unshared const &newRootShadowNode) noexcept {
+facebook::react::RootShadowNode::Unshared
+ReanimatedCommitHook::shadowTreeWillCommit(
+    facebook::react::ShadowTree const &,
+    facebook::react::RootShadowNode::Shared const &,
+    facebook::react::RootShadowNode::Unshared const
+        &newRootShadowNode) noexcept {
   auto surfaceId = newRootShadowNode->getSurfaceId();
 
   {
     auto lock = std::unique_lock<std::mutex>(mutex_);
     if (surfaceId > currentMaxSurfaceId_) {
       uiManager_->getShadowTreeRegistry().enumerate(
-          [this](const ShadowTree &shadowTree, bool &stop) {
+          [this](const facebook::react::ShadowTree &shadowTree, bool &stop) {
             shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
                 layoutAnimationsProxy_);
           });
@@ -59,14 +58,15 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   // ShadowTree not commited by Reanimated, apply updates from PropsRegistry
   reaShadowNode->unsetReanimatedMountTrait();
-  RootShadowNode::Unshared rootNode = newRootShadowNode;
+  facebook::react::RootShadowNode::Unshared rootNode = newRootShadowNode;
   PropsMap propsMap;
 
   {
     auto lock = propsRegistry_->createLock();
 
     propsRegistry_->for_each(
-        [&](const ShadowNodeFamily &family, const folly::dynamic &props) {
+        [&](const facebook::react::ShadowNodeFamily &family,
+            const folly::dynamic &props) {
           propsMap[&family].emplace_back(props);
         });
 

@@ -19,12 +19,13 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/uimanager/UIManager.h>
+
+#include <unordered_set>
+#include <utility>
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <memory>
 #include <string>
-#include <unordered_set>
-#include <utility>
 #include <vector>
 
 namespace reanimated {
@@ -32,10 +33,10 @@ namespace reanimated {
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
-      jsi::Runtime &rnRuntime,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::shared_ptr<UIScheduler> &uiScheduler,
+      facebook::jsi::Runtime &rnRuntime,
+      const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
+      const std::shared_ptr<facebook::react::MessageQueueThread> &jsQueue,
+      const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
       const std::string &valueUnpackerCode,
       const bool isBridgeless,
@@ -43,57 +44,61 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   ~NativeReanimatedModule();
 
-  jsi::Value makeShareableClone(
-      jsi::Runtime &rt,
-      const jsi::Value &value,
-      const jsi::Value &shouldRetainRemote,
-      const jsi::Value &nativeStateSource) override;
+  facebook::jsi::Value makeShareableClone(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &value,
+      const facebook::jsi::Value &shouldRetainRemote,
+      const facebook::jsi::Value &nativeStateSource) override;
 
-  void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
-  jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
-      override;
+  void scheduleOnUI(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &worklet) override;
+  facebook::jsi::Value executeOnUIRuntimeSync(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &worklet) override;
 
-  jsi::Value createWorkletRuntime(
-      jsi::Runtime &rt,
-      const jsi::Value &name,
-      const jsi::Value &initializer) override;
-  jsi::Value scheduleOnRuntime(
-      jsi::Runtime &rt,
-      const jsi::Value &workletRuntimeValue,
-      const jsi::Value &shareableWorkletValue) override;
+  facebook::jsi::Value createWorkletRuntime(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &name,
+      const facebook::jsi::Value &initializer) override;
+  facebook::jsi::Value scheduleOnRuntime(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &workletRuntimeValue,
+      const facebook::jsi::Value &shareableWorkletValue) override;
 
-  jsi::Value registerEventHandler(
-      jsi::Runtime &rt,
-      const jsi::Value &worklet,
-      const jsi::Value &eventName,
-      const jsi::Value &emitterReactTag) override;
+  facebook::jsi::Value registerEventHandler(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &worklet,
+      const facebook::jsi::Value &eventName,
+      const facebook::jsi::Value &emitterReactTag) override;
   void unregisterEventHandler(
-      jsi::Runtime &rt,
-      const jsi::Value &registrationId) override;
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &registrationId) override;
 
-  jsi::Value getViewProp(
-      jsi::Runtime &rt,
+  facebook::jsi::Value getViewProp(
+      facebook::jsi::Runtime &rt,
 #ifdef RCT_NEW_ARCH_ENABLED
-      const jsi::Value &shadowNodeWrapper,
+      const facebook::jsi::Value &shadowNodeWrapper,
 #else
-      const jsi::Value &viewTag,
+      const facebook::jsi::Value &viewTag,
 #endif
-      const jsi::Value &propName,
-      const jsi::Value &callback) override;
+      const facebook::jsi::Value &propName,
+      const facebook::jsi::Value &callback) override;
 
-  jsi::Value enableLayoutAnimations(jsi::Runtime &rt, const jsi::Value &config)
-      override;
-  jsi::Value configureProps(
-      jsi::Runtime &rt,
-      const jsi::Value &uiProps,
-      const jsi::Value &nativeProps) override;
-  jsi::Value configureLayoutAnimationBatch(
-      jsi::Runtime &rt,
-      const jsi::Value &layoutAnimationsBatch) override;
+  facebook::jsi::Value enableLayoutAnimations(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &config) override;
+  facebook::jsi::Value configureProps(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &uiProps,
+      const facebook::jsi::Value &nativeProps) override;
+  facebook::jsi::Value configureLayoutAnimationBatch(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &layoutAnimationsBatch) override;
   void setShouldAnimateExiting(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &shouldAnimate) override;
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &viewTag,
+      const facebook::jsi::Value &shouldAnimate) override;
 
   void onRender(double timestampMs);
 
@@ -106,69 +111,80 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   bool handleEvent(
       const std::string &eventName,
       const int emitterReactTag,
-      const jsi::Value &payload,
+      const facebook::jsi::Value &payload,
       double currentTime);
 
-  inline std::shared_ptr<JSLogger> getJSLogger() const {
+  inline std::shared_ptr<worklets::JSLogger> getJSLogger() const {
     return jsLogger_;
   }
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
+  bool handleRawEvent(
+      const facebook::react::RawEvent &rawEvent,
+      double currentTime);
 
-  void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
+  void updateProps(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &operations);
 
-  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &viewTags);
+  void removeFromPropsRegistry(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &viewTags);
 
   void performOperations();
 
   void dispatchCommand(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeValue,
-      const jsi::Value &commandNameValue,
-      const jsi::Value &argsValue);
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &shadowNodeValue,
+      const facebook::jsi::Value &commandNameValue,
+      const facebook::jsi::Value &argsValue);
 
-  jsi::String obtainProp(
-      jsi::Runtime &rt,
-      const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &propName);
+  facebook::jsi::String obtainProp(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &shadowNodeWrapper,
+      const facebook::jsi::Value &propName);
 
-  jsi::Value measure(jsi::Runtime &rt, const jsi::Value &shadowNodeValue);
+  facebook::jsi::Value measure(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &shadowNodeValue);
 
-  void initializeFabric(const std::shared_ptr<UIManager> &uiManager);
+  void initializeFabric(
+      const std::shared_ptr<facebook::react::UIManager> &uiManager);
 
   void initializeLayoutAnimationsProxy();
 
   std::string obtainPropFromShadowNode(
-      jsi::Runtime &rt,
+      facebook::jsi::Runtime &rt,
       const std::string &propName,
-      const ShadowNode::Shared &shadowNode);
+      const facebook::react::ShadowNode::Shared &shadowNode);
 #endif
 
-  jsi::Value registerSensor(
-      jsi::Runtime &rt,
-      const jsi::Value &sensorType,
-      const jsi::Value &interval,
-      const jsi::Value &iosReferenceFrame,
-      const jsi::Value &sensorDataContainer) override;
-  void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId) override;
+  facebook::jsi::Value registerSensor(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &sensorType,
+      const facebook::jsi::Value &interval,
+      const facebook::jsi::Value &iosReferenceFrame,
+      const facebook::jsi::Value &sensorDataContainer) override;
+  void unregisterSensor(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &sensorId) override;
 
   void cleanupSensors();
 
-  jsi::Value subscribeForKeyboardEvents(
-      jsi::Runtime &rt,
-      const jsi::Value &keyboardEventContainer,
-      const jsi::Value &isStatusBarTranslucent,
-      const jsi::Value &isNavigationBarTranslucent) override;
+  facebook::jsi::Value subscribeForKeyboardEvents(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &keyboardEventContainer,
+      const facebook::jsi::Value &isStatusBarTranslucent,
+      const facebook::jsi::Value &isNavigationBarTranslucent) override;
   void unsubscribeFromKeyboardEvents(
-      jsi::Runtime &rt,
-      const jsi::Value &listenerId) override;
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &listenerId) override;
 
   inline LayoutAnimationsManager &layoutAnimationsManager() {
     return *layoutAnimationsManager_;
   }
 
-  inline jsi::Runtime &getUIRuntime() const {
+  inline facebook::jsi::Runtime &getUIRuntime() const {
     return uiWorkletRuntime_->getJSIRuntime();
   }
 
@@ -183,30 +199,34 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  private:
   void commonInit(const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
-  void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
+  void requestAnimationFrame(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &callback);
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
-  jsi::Value filterNonAnimatableProps(
-      jsi::Runtime &rt,
-      const jsi::Value &props);
+  bool isThereAnyLayoutProp(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Object &props);
+  facebook::jsi::Value filterNonAnimatableProps(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
   const bool isBridgeless_;
   const bool isReducedMotion_;
-  const std::shared_ptr<MessageQueueThread> jsQueue_;
-  const std::shared_ptr<JSScheduler> jsScheduler_;
-  const std::shared_ptr<UIScheduler> uiScheduler_;
-  std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
+  const std::shared_ptr<facebook::react::MessageQueueThread> jsQueue_;
+  const std::shared_ptr<worklets::JSScheduler> jsScheduler_;
+  const std::shared_ptr<worklets::UIScheduler> uiScheduler_;
+  std::shared_ptr<worklets::WorkletRuntime> uiWorkletRuntime_;
   std::string valueUnpackerCode_;
 
-  std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
+  std::unique_ptr<worklets::EventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;
-  std::vector<std::shared_ptr<jsi::Value>> frameCallbacks_;
+  std::vector<std::shared_ptr<facebook::jsi::Value>> frameCallbacks_;
   volatile bool renderRequested_{false};
   const std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
-  const std::shared_ptr<JSLogger> jsLogger_;
+  const std::shared_ptr<worklets::JSLogger> jsLogger_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -215,21 +235,23 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
   std::unordered_set<std::string>
       animatablePropNames_; // filled by configureProps
-  std::shared_ptr<UIManager> uiManager_;
+  std::shared_ptr<facebook::react::UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
 
   // After app reload, surfaceId on iOS is still 1 but on Android it's 11.
   // We can store surfaceId of the most recent ShadowNode as a workaround.
-  SurfaceId surfaceId_ = -1;
+  facebook::react::SurfaceId surfaceId_ = -1;
 
-  std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
+  std::vector<std::pair<
+      facebook::react::ShadowNode::Shared,
+      std::unique_ptr<facebook::jsi::Value>>>
       operationsInBatch_; // TODO: refactor std::pair to custom struct
 
   std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
 
-  std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
+  std::vector<facebook::react::Tag> tagsToRemove_; // from `propsRegistry_`
 #else
   const ObtainPropFunction obtainPropFunction_;
   const ConfigurePropsFunction configurePropsPlatformFunction_;

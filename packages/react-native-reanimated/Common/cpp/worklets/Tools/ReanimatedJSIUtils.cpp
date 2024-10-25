@@ -1,12 +1,11 @@
 #include <worklets/Tools/ReanimatedJSIUtils.h>
+#include <sstream>
 #include <vector>
-
-using namespace facebook;
 
 namespace worklets::jsi_utils {
 
-jsi::Array convertStringToArray(
-    jsi::Runtime &rt,
+facebook::jsi::Array convertStringToArray(
+    facebook::jsi::Runtime &rt,
     const std::string &value,
     const unsigned int expectedSize) {
   std::vector<float> transformMatrixList;
@@ -16,7 +15,7 @@ jsi::Array convertStringToArray(
       std::istream_iterator<float>(),
       std::back_inserter(transformMatrixList));
   assert(transformMatrixList.size() == expectedSize);
-  jsi::Array matrix(rt, expectedSize);
+  facebook::jsi::Array matrix(rt, expectedSize);
   for (unsigned int i = 0; i < expectedSize; i++) {
     matrix.setValueAtIndex(rt, i, transformMatrixList[i]);
   }

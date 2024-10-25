@@ -10,22 +10,20 @@
 
 namespace reanimated {
 
-using namespace facebook::react;
-
-class ReanimatedMountHook : public UIManagerMountHook {
+class ReanimatedMountHook : public facebook::react::UIManagerMountHook {
  public:
   ReanimatedMountHook(
       const std::shared_ptr<PropsRegistry> &propsRegistry,
-      const std::shared_ptr<UIManager> &uiManager);
+      const std::shared_ptr<facebook::react::UIManager> &uiManager);
   ~ReanimatedMountHook() noexcept override;
 
   void shadowTreeDidMount(
-      RootShadowNode::Shared const &rootShadowNode,
+      facebook::react::RootShadowNode::Shared const &rootShadowNode,
       double mountTime) noexcept override;
 
  private:
   const std::shared_ptr<PropsRegistry> propsRegistry_;
-  const std::shared_ptr<UIManager> uiManager_;
+  const std::shared_ptr<facebook::react::UIManager> uiManager_;
 };
 
 } // namespace reanimated
