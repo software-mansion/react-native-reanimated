@@ -51,7 +51,7 @@ jobs:
         run: touch yarn.lock
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
-        run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
+        run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
       - name: Install Paper Pods (iOS)
         if: ${{ matrix.react-native-architecture == 'Paper' && matrix.platform == 'iOS' }}
         working-directory: app/ios
