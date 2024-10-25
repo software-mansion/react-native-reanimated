@@ -219,6 +219,7 @@ export function createAnimatedComponent(
     componentWillUnmount() {
       this._NativeEventsManager?.detachEvents();
       this._jsPropsUpdater.removeOnJSPropsChangeListener(this);
+      this._CSSManager?.detach(this._componentViewTag);
       this._detachStyles();
       this._InlinePropManager.detachInlineProps();
       if (this.props.sharedTransitionTag) {

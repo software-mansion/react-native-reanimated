@@ -97,7 +97,10 @@ function addTransformValues(
   if (!keyframeStyle.transform) {
     keyframeStyle.transform = [];
   }
-  (keyframeStyle.transform as any).push({ offset, value: transforms });
+  (keyframeStyle.transform as any[]).push({
+    offset,
+    value: transforms,
+  });
 }
 
 function handlePrimitiveValue(
