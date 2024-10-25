@@ -38,14 +38,20 @@ jobs:
       - name: Install dependencies
         working-directory: ${{ env.APP_NAME }}
         run: yarn install
+      - name: Debug print
+        working-directory: ${{ env.APP_NAME }}
+        run: ls node_modules && ls node_modules/@react-native && ls node_modules/@react-native/gradle-plugin
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
       - name: Install test dependencies
         working-directory: ${{ env.APP_NAME }}
         run: yarn add react-native-v8 v8-android-jit
+      - name: Debug print
+        working-directory: ${{ env.APP_NAME }}
+        run: ls node_modules && ls node_modules/@react-native && ls node_modules/@react-native/gradle-plugin
       - name: Configure V8
         run: node reanimated_repo/.github/workflows/helper/configureV8.js
-      - name: Build Android ${{ env.APP_NAME }}
+      - name: Build Android
         working-directory: ${{ env.APP_NAME }}/android
         run: ./gradlew assembleDebug --console=plain
