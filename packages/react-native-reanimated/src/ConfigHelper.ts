@@ -1,11 +1,18 @@
 'use strict';
 import { PropsAllowlists } from './propsAllowlists';
-import { jsiConfigureProps } from './core';
+import { executeOnUIRuntimeSync, jsiConfigureProps } from './core';
+import { ReanimatedError } from './errors';
+import { updateLoggerConfig } from './logger';
+import type { LoggerConfig } from './logger';
+import { shouldBeUseWeb } from './PlatformChecker';
+
+const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+
 function assertNoOverlapInLists() {
   for (const key in PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST) {
     if (key in PropsAllowlists.UI_THREAD_PROPS_WHITELIST) {
-      throw new Error(
-        `[Reanimated] Property \`${key}\` was whitelisted both as UI and native prop. Please remove it from one of the lists.`
+      throw new ReanimatedError(
+        `Property \`${key}\` was whitelisted both as UI and native prop. Please remove it from one of the lists.`
       );
     }
   }
@@ -50,6 +57,24 @@ export function addWhitelistedUIProps(props: Record<string, boolean>): void {
   }
 }
 
+/**
+ * Updates Reanimated logger config with the user-provided configuration. Will
+ * affect Reanimated code executed after call to this function so it should be
+ * called before any Reanimated code is executed to take effect. Each call to
+ * this function will override the previous configuration (it's recommended to
+ * call it only once).
+ *
+ * @param config - The new logger configuration to apply.
+ */
+export function configureReanimatedLogger(config: LoggerConfig) {
+  // Update the configuration object in the React runtime
+  updateLoggerConfig(config);
+  // Register the updated configuration in the UI runtime
+  if (!SHOULD_BE_USE_WEB) {
+    executeOnUIRuntimeSync(updateLoggerConfig)(config);
+  }
+}
+
 const PROCESSED_VIEW_NAMES = new Set();
 
 export interface ViewConfig {
@@ -57,8 +82,8 @@ export interface ViewConfig {
   validAttributes: Record<string, unknown>;
 }
 /**
- * updates UI props whitelist for given view host instance
- * this will work just once for every view name
+ * Updates UI props whitelist for given view host instance this will work just
+ * once for every view name
  */
 
 export function adaptViewConfig(viewConfig: ViewConfig): void {

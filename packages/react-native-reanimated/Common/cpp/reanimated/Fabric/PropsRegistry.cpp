@@ -1,6 +1,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include "PropsRegistry.h"
+#include <reanimated/Fabric/PropsRegistry.h>
 
 namespace reanimated {
 

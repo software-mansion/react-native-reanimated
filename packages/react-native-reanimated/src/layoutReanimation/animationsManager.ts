@@ -1,14 +1,14 @@
 'use strict';
 import { withStyleAnimation } from '../animation/styleAnimation';
-import type { SharedValue } from '../commonTypes';
-import { makeMutableUI } from '../mutables';
-import { LayoutAnimationType } from './animationBuilder';
-import { runOnUIImmediately } from '../threads';
+import { LayoutAnimationType } from '../commonTypes';
 import type {
-  SharedTransitionAnimationsValues,
   LayoutAnimation,
   LayoutAnimationStartFunction,
-} from './animationBuilder/commonTypes';
+  SharedTransitionAnimationsValues,
+  SharedValue,
+} from '../commonTypes';
+import { makeMutableUI } from '../mutables';
+import { runOnUIImmediately } from '../threads';
 
 const TAG_OFFSET = 1e9;
 
@@ -48,7 +48,8 @@ function createLayoutAnimationManager(): {
       tag: number,
       type: LayoutAnimationType,
       /**
-       * createLayoutAnimationManager creates an animation manager for both Layout animations and Shared Transition Elements animations.
+       * CreateLayoutAnimationManager creates an animation manager for both
+       * Layout animations and Shared Transition Elements animations.
        */
       yogaValues: Partial<SharedTransitionAnimationsValues>,
       config: (

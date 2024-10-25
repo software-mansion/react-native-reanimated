@@ -1,16 +1,16 @@
 #pragma once
 
+#include <worklets/SharedItems/Shareables.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
+
 #include <jsi/jsi.h>
+
 #include <memory>
 #include <string>
-#include <utility>
-
-#include "Shareables.h"
-#include "WorkletRuntime.h"
 
 using namespace facebook;
 
-namespace reanimated {
+namespace worklets {
 
 class WorkletEventHandler {
   const uint64_t handlerId_;
@@ -38,4 +38,4 @@ class WorkletEventHandler {
   bool shouldIgnoreEmitterReactTag() const;
 };
 
-} // namespace reanimated
+} // namespace worklets

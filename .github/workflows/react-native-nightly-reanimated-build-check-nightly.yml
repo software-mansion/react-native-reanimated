@@ -7,12 +7,13 @@ on:
       - .github/workflows/react-native-nightly-reanimated-build-check-nightly.yml
   schedule:
     - cron: '37 19 * * *'
+  workflow_call:
   workflow_dispatch:
 
 jobs:
   build_ios:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: $${{ matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
+    runs-on: ${{ matrix.platform == 'iOS' && 'macos-14' || 'ubuntu-latest'}}
     strategy:
       matrix:
         react-native-architecture: ['Paper', 'Fabric']

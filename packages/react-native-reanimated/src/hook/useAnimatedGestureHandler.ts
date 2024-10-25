@@ -49,7 +49,7 @@ export type GestureHandlerEvent<Event extends object> =
 
 type GestureHandler<
   Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler>,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 > = (
   eventPayload: ReanimatedEvent<Event>,
   context: Context,
@@ -58,7 +58,7 @@ type GestureHandler<
 
 export interface GestureHandlers<
   Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler>,
-  Context extends Record<string, unknown>
+  Context extends Record<string, unknown>,
 > {
   [key: string]: GestureHandler<Event, Context> | undefined;
   onStart?: GestureHandler<Event, Context>;
@@ -70,14 +70,17 @@ export interface GestureHandlers<
 }
 
 /**
- * @deprecated useAnimatedGestureHandler is an old API which is no longer supported.
+ * @deprecated UseAnimatedGestureHandler is an old API which is no longer
+ *   supported.
  *
- * Please check https://docs.swmansion.com/react-native-gesture-handler/docs/guides/upgrading-to-2/
- * for information about how to migrate to `react-native-gesture-handler` v2
+ *   Please check
+ *   https://docs.swmansion.com/react-native-gesture-handler/docs/guides/upgrading-to-2/
+ *   for information about how to migrate to `react-native-gesture-handler` v2
  */
 export function useAnimatedGestureHandler<
-  Event extends NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler> = DefaultEvent,
-  Context extends Record<string, unknown> = Record<string, unknown>
+  Event extends
+    NativeEventWrapper<PropsUsedInUseAnimatedGestureHandler> = DefaultEvent,
+  Context extends Record<string, unknown> = Record<string, unknown>,
 >(handlers: GestureHandlers<Event, Context>, dependencies?: DependencyList) {
   type WebOrNativeEvent = Event | ReanimatedEvent<Event>;
 

@@ -7,24 +7,32 @@ import {
   createTextShadowValue,
 } from './webUtils';
 import { PropsAllowlists } from '../propsAllowlists';
+import { logger } from '../logger';
+import { ReanimatedError } from '../errors';
 
 const reanimatedJS = new JSReanimated();
 
 global._makeShareableClone = () => {
-  throw new Error(
-    '[Reanimated] _makeShareableClone should never be called in JSReanimated.'
+  throw new ReanimatedError(
+    '_makeShareableClone should never be called in JSReanimated.'
   );
 };
 
-global._scheduleOnJS = () => {
-  throw new Error(
-    '[Reanimated] _scheduleOnJS should never be called in JSReanimated.'
+global._scheduleHostFunctionOnJS = () => {
+  throw new ReanimatedError(
+    '_scheduleHostFunctionOnJS should never be called in JSReanimated.'
+  );
+};
+
+global._scheduleRemoteFunctionOnJS = () => {
+  throw new ReanimatedError(
+    '_scheduleHostFunctionOnJS should never be called in JSReanimated.'
   );
 };
 
 global._scheduleOnRuntime = () => {
-  throw new Error(
-    '[Reanimated] _scheduleOnRuntime should never be called in JSReanimated.'
+  throw new ReanimatedError(
+    '_scheduleOnRuntime should never be called in JSReanimated.'
   );
 };
 
@@ -94,8 +102,8 @@ export const _updatePropsJS = (
     } else {
       const componentName =
         'className' in component ? component?.className : '';
-      console.warn(
-        `[Reanimated] It's not possible to manipulate the component ${componentName}`
+      logger.warn(
+        `It's not possible to manipulate the component ${componentName}`
       );
     }
   }

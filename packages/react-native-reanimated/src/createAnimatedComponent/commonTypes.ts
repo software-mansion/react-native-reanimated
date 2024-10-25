@@ -1,6 +1,8 @@
 'use strict';
 import type { Ref, Component } from 'react';
 import type {
+  EntryExitAnimationFunction,
+  ILayoutAnimationBuilder,
   ShadowNodeWrapper,
   SharedValue,
   StyleProps,
@@ -9,8 +11,6 @@ import type { ViewConfig } from '../ConfigHelper';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
   BaseAnimationBuilder,
-  EntryExitAnimationFunction,
-  ILayoutAnimationBuilder,
   SharedTransition,
 } from '../layoutReanimation';
 import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -101,7 +101,8 @@ export interface IAnimatedComponentInternal {
   _styles: StyleProps[] | null;
   _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   /**
-   * Used for Shared Element Transitions, Layout Animations and Animated Styles. It is not related to event handling.
+   * Used for Shared Element Transitions, Layout Animations and Animated Styles.
+   * It is not related to event handling.
    */
   _componentViewTag: number;
   _isFirstRender: boolean;
@@ -112,9 +113,7 @@ export interface IAnimatedComponentInternal {
   _jsPropsUpdater: IJSPropsUpdater;
   _InlinePropManager: IInlinePropManager;
   _PropsFilter: IPropsFilter;
-  /**
-   * Doesn't exist on web.
-   */
+  /** Doesn't exist on web. */
   _NativeEventsManager?: INativeEventsManager;
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;

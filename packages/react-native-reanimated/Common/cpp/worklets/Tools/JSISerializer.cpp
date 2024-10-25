@@ -1,8 +1,10 @@
-#include "JSISerializer.h"
+#include <worklets/Tools/JSISerializer.h>
 
 #include <cxxabi.h>
 #include <iostream>
 #include <sstream>
+
+namespace worklets {
 
 const std::vector<std::string> SUPPORTED_ERROR_TYPES = {
     "Error",
@@ -336,3 +338,5 @@ std::string stringifyJSIValue(jsi::Runtime &rt, const jsi::Value &value) {
 
   return serializer.stringifyJSIValueRecursively(value, true);
 }
+
+} // namespace worklets

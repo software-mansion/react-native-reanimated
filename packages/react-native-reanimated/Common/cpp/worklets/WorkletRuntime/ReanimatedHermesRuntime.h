@@ -36,7 +36,7 @@
 #endif
 #endif // HERMES_ENABLE_DEBUGGER
 
-namespace reanimated {
+namespace worklets {
 
 using namespace facebook;
 using namespace react;
@@ -142,6 +142,6 @@ class ReanimatedHermesRuntime
 #endif // HERMES_ENABLE_DEBUGGER
 };
 
-} // namespace reanimated
+} // namespace worklets
 
 #endif // JS_RUNTIME_HERMES

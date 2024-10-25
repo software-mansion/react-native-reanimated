@@ -5,4 +5,9 @@ export declare const rules: {
     [],
     TSESLint.RuleListener
   >;
+  'use-reanimated-error': TSESLint.RuleModule<
+    'useReanimatedError',
+    [],
+    TSESLint.RuleListener
+  >;
 };

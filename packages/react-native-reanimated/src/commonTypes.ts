@@ -6,6 +6,195 @@ import type {
   ImageStyle,
 } from 'react-native';
 
+export type LayoutAnimationsOptions =
+  | 'originX'
+  | 'originY'
+  | 'width'
+  | 'height'
+  | 'borderRadius'
+  | 'globalOriginX'
+  | 'globalOriginY';
+
+type CurrentLayoutAnimationsValues = {
+  [K in LayoutAnimationsOptions as `current${Capitalize<string & K>}`]: number;
+};
+
+type TargetLayoutAnimationsValues = {
+  [K in LayoutAnimationsOptions as `target${Capitalize<string & K>}`]: number;
+};
+
+interface WindowDimensions {
+  windowWidth: number;
+  windowHeight: number;
+}
+
+export interface KeyframeProps extends StyleProps {
+  easing?: EasingFunction;
+}
+
+type FirstFrame =
+  | {
+      0: KeyframeProps & { easing?: never };
+      from?: never;
+    }
+  | {
+      0?: never;
+      from: KeyframeProps & { easing?: never };
+    };
+
+type LastFrame =
+  | { 100?: KeyframeProps; to?: never }
+  | { 100?: never; to: KeyframeProps };
+
+export type ValidKeyframeProps = FirstFrame &
+  LastFrame &
+  Record<number, KeyframeProps>;
+
+export type MaybeInvalidKeyframeProps = Record<number, KeyframeProps> & {
+  to?: KeyframeProps;
+  from?: KeyframeProps;
+};
+
+export type LayoutAnimation = {
+  initialValues: StyleProps;
+  animations: StyleProps;
+  callback?: (finished: boolean) => void;
+};
+
+export type AnimationFunction = (a?: any, b?: any, c?: any) => any; // this is just a temporary mock
+
+export type EntryAnimationsValues = TargetLayoutAnimationsValues &
+  WindowDimensions;
+
+export type ExitAnimationsValues = CurrentLayoutAnimationsValues &
+  WindowDimensions;
+
+export type EntryExitAnimationFunction =
+  | ((targetValues: EntryAnimationsValues) => LayoutAnimation)
+  | ((targetValues: ExitAnimationsValues) => LayoutAnimation)
+  | (() => LayoutAnimation);
+
+export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
+
+export type LayoutAnimationsValues = CurrentLayoutAnimationsValues &
+  TargetLayoutAnimationsValues &
+  WindowDimensions;
+
+export interface SharedTransitionAnimationsValues
+  extends LayoutAnimationsValues {
+  currentTransformMatrix: number[];
+  targetTransformMatrix: number[];
+}
+
+export type SharedTransitionAnimationsFunction = (
+  values: SharedTransitionAnimationsValues
+) => LayoutAnimation;
+
+export enum LayoutAnimationType {
+  ENTERING = 1,
+  EXITING = 2,
+  LAYOUT = 3,
+  SHARED_ELEMENT_TRANSITION = 4,
+  SHARED_ELEMENT_TRANSITION_PROGRESS = 5,
+}
+
+export type LayoutAnimationFunction = (
+  targetValues: LayoutAnimationsValues
+) => LayoutAnimation;
+
+export type LayoutAnimationStartFunction = (
+  tag: number,
+  type: LayoutAnimationType,
+  yogaValues: Partial<SharedTransitionAnimationsValues>,
+  config: (arg: Partial<SharedTransitionAnimationsValues>) => LayoutAnimation
+) => void;
+
+export interface ILayoutAnimationBuilder {
+  build: () => LayoutAnimationFunction;
+}
+
+export interface BaseLayoutAnimationConfig {
+  duration?: number;
+  easing?: EasingFunction;
+  type?: AnimationFunction;
+  damping?: number;
+  dampingRatio?: number;
+  mass?: number;
+  stiffness?: number;
+  overshootClamping?: number;
+  restDisplacementThreshold?: number;
+  restSpeedThreshold?: number;
+}
+
+export interface BaseBuilderAnimationConfig extends BaseLayoutAnimationConfig {
+  rotate?: number | string;
+}
+
+export type LayoutAnimationAndConfig = [
+  AnimationFunction,
+  BaseBuilderAnimationConfig,
+];
+
+export interface IEntryExitAnimationBuilder {
+  build: () => EntryExitAnimationFunction;
+}
+
+export interface IEntryAnimationBuilder {
+  build: () => AnimationConfigFunction<EntryAnimationsValues>;
+}
+
+export interface IExitAnimationBuilder {
+  build: () => AnimationConfigFunction<ExitAnimationsValues>;
+}
+
+export type ProgressAnimationCallback = (
+  viewTag: number,
+  progress: number
+) => void;
+
+export type ProgressAnimation = (
+  viewTag: number,
+  values: SharedTransitionAnimationsValues,
+  progress: number
+) => void;
+
+export type CustomProgressAnimation = (
+  values: SharedTransitionAnimationsValues,
+  progress: number
+) => StyleProps;
+
+/**
+ * Used to configure the `.defaultTransitionType()` shared transition modifier.
+ *
+ * @experimental
+ */
+export enum SharedTransitionType {
+  ANIMATION = 'animation',
+  PROGRESS_ANIMATION = 'progressAnimation',
+}
+
+export type EntryExitAnimationsValues =
+  | EntryAnimationsValues
+  | ExitAnimationsValues;
+
+export type StylePropsWithArrayTransform = StyleProps & {
+  transform?: TransformArrayItem[];
+};
+
+export interface LayoutAnimationBatchItem {
+  viewTag: number;
+  type: LayoutAnimationType;
+  config:
+    | ShareableRef<
+        | Keyframe
+        | LayoutAnimationFunction
+        | SharedTransitionAnimationsFunction
+        | ProgressAnimationCallback
+      >
+    | undefined;
+  sharedTransitionTag?: string;
+}
+
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface StyleProps extends ViewStyle, TextStyle {
   originX?: number;
@@ -14,12 +203,19 @@ export interface StyleProps extends ViewStyle, TextStyle {
 }
 
 /**
- * A value that can be used both on the [JavaScript thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread) and the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
+ * A value that can be used both on the [JavaScript
+ * thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread)
+ * and the [UI
+ * thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
  *
- * Shared values are defined using [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue) hook. You access and modify shared values by their `.value` property.
+ * Shared values are defined using
+ * [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue)
+ * hook. You access and modify shared values by their `.value` property.
  */
 export interface SharedValue<Value = unknown> {
   value: Value;
+  get(): Value;
+  set(value: Value | ((value: Value) => Value)): void;
   addListener: (listenerID: number, listener: (value: Value) => void) => void;
   removeListener: (listenerID: number) => void;
   modify: (
@@ -28,9 +224,27 @@ export interface SharedValue<Value = unknown> {
   ) => void;
 }
 
+/**
+ * Due to pattern of `MaybeSharedValue` type present in `AnimatedProps`
+ * (`AnimatedStyle`), contravariance breaks types for animated styles etc.
+ * Instead of refactoring the code with small chances of success, we just
+ * disable contravariance for `SharedValue` in this problematic case.
+ */
+type SharedValueDisableContravariance<Value = unknown> = Omit<
+  SharedValue<Value>,
+  'set'
+>;
+
 export interface Mutable<Value = unknown> extends SharedValue<Value> {
   _isReanimatedSharedValue: true;
   _animation?: AnimationObject<Value> | null; // only in Native
+  /**
+   * `_value` prop should only be accessed by the `valueSetter` implementation
+   * which may make the decision about updating the mutable value depending on
+   * the provided new value. All other places should only attempt to modify the
+   * mutable by assigning to `value` prop directly or by calling the `set`
+   * method.
+   */
   _value: Value;
 }
 
@@ -46,10 +260,9 @@ export type ShareableRef<T = unknown> = {
 };
 
 // In case of objects with depth or arrays of objects or arrays of arrays etc.
-// we add this utility type that makes it a SharaebleRef of the outermost type.
-export type FlatShareableRef<T> = T extends ShareableRef<infer U>
-  ? ShareableRef<U>
-  : ShareableRef<T>;
+// we add this utility type that makes it a `SharaebleRef` of the outermost type.
+export type FlatShareableRef<T> =
+  T extends ShareableRef<infer U> ? ShareableRef<U> : ShareableRef<T>;
 
 export type MapperRawInputs = unknown[];
 
@@ -68,7 +281,7 @@ export type MapperRegistry = {
 export type WorkletStackDetails = [
   error: Error,
   lineOffset: number,
-  columnOffset: number
+  columnOffset: number,
 ];
 
 type WorkletClosure = Record<string, unknown>;
@@ -96,42 +309,45 @@ interface WorkletBaseRelease extends WorkletBaseCommon {
 
 interface WorkletBaseDev extends WorkletBaseCommon {
   __initData: WorkletInitDataDev;
-  /**
-   * `__stackDetails` is removed after parsing.
-   */
+  /** `__stackDetails` is removed after parsing. */
   __stackDetails?: WorkletStackDetails;
 }
 
 export type WorkletFunction<
   Args extends unknown[] = unknown[],
-  ReturnValue = unknown
+  ReturnValue = unknown,
 > = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
 
 /**
- * This function allows you to determine if a given function is a worklet. It only works
- * with Reanimated Babel plugin enabled. Unless you are doing something with internals of
- * Reanimated you shouldn't need to use this function.
+ * This function allows you to determine if a given function is a worklet. It
+ * only works with Reanimated Babel plugin enabled. Unless you are doing
+ * something with internals of Reanimated you shouldn't need to use this
+ * function.
  *
  * ### Note
- * Do not call it before the worklet is declared, as it will always return false then. E.g.:
+ *
+ * Do not call it before the worklet is declared, as it will always return false
+ * then. E.g.:
  *
  * ```ts
  * isWorkletFunction(myWorklet); // Will always return false.
  *
  * function myWorklet() {
  *   'worklet';
- * };
+ * }
  * ```
  *
  * ### Maintainer note
- * This function works well on the JS thread performance-wise, since the JIT can inline it.
- * However, on other threads it will not get optimized and we will get a function call overhead.
- * We want to change it in the future, but it's not feasible at the moment.
+ *
+ * This function works well on the JS thread performance-wise, since the JIT can
+ * inline it. However, on other threads it will not get optimized and we will
+ * get a function call overhead. We want to change it in the future, but it's
+ * not feasible at the moment.
  */
 export function isWorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
-  BuildType extends WorkletBaseDev | WorkletBaseRelease = WorkletBaseDev
+  BuildType extends WorkletBaseDev | WorkletBaseRelease = WorkletBaseDev,
 >(value: unknown): value is WorkletFunction<Args, ReturnValue> & BuildType {
   'worklet';
   // Since host objects always return true for `in` operator, we have to use dot notation to check if the property exists.
@@ -227,7 +443,9 @@ export type AnimatedSensor<T extends Value3D | ValueRotation> = {
 };
 
 /**
- * A function called upon animation completion. If the animation is cancelled, the callback will receive `false` as the argument; otherwise, it will receive `true`.
+ * A function called upon animation completion. If the animation is cancelled,
+ * the callback will receive `false` as the argument; otherwise, it will receive
+ * `true`.
  */
 export type AnimationCallback = (
   finished?: boolean,
@@ -279,8 +497,10 @@ export type AnimatedKeyboardInfo = {
 };
 
 /**
- * @param x - A number representing X coordinate relative to the parent component.
- * @param y - A number representing Y coordinate relative to the parent component.
+ * @param x - A number representing X coordinate relative to the parent
+ *   component.
+ * @param y - A number representing Y coordinate relative to the parent
+ *   component.
  * @param width - A number representing the width of the component.
  * @param height - A number representing the height of the component.
  * @param pageX - A number representing X coordinate relative to the screen.
@@ -298,10 +518,12 @@ export interface MeasuredDimensions {
 
 export interface AnimatedKeyboardOptions {
   isStatusBarTranslucentAndroid?: boolean;
+  isNavigationBarTranslucentAndroid?: boolean;
 }
 
 /**
- * @param System - If the `Reduce motion` accessibility setting is enabled on the device, disable the animation. Otherwise, enable the animation.
+ * @param System - If the `Reduce motion` accessibility setting is enabled on
+ *   the device, disable the animation. Otherwise, enable the animation.
  * @param Always - Disable the animation.
  * @param Never - Enable the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility
@@ -321,24 +543,28 @@ export type TransformArrayItem = Extract<
 
 type MaybeSharedValue<Value> =
   | Value
-  | (Value extends AnimatableValue ? SharedValue<Value> : never);
+  | (Value extends AnimatableValue
+      ? SharedValueDisableContravariance<Value>
+      : never);
 
 type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
-  ? SharedValue<Item[]> | (MaybeSharedValueRecursive<Item> | Item)[]
-  : Value extends object
   ?
-      | SharedValue<Value>
-      | {
-          [Key in keyof Value]:
-            | MaybeSharedValueRecursive<Value[Key]>
-            | Value[Key];
-        }
-  : MaybeSharedValue<Value>;
+      | SharedValueDisableContravariance<Item[]>
+      | (MaybeSharedValueRecursive<Item> | Item)[]
+  : Value extends object
+    ?
+        | SharedValueDisableContravariance<Value>
+        | {
+            [Key in keyof Value]:
+              | MaybeSharedValueRecursive<Value[Key]>
+              | Value[Key];
+          }
+    : MaybeSharedValue<Value>;
 
 type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
 
 // Ideally we want AnimatedStyle to not be generic, but there are
-// so many depenedencies on it being generic that it's not feasible at the moment.
+// so many dependencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<Style = DefaultStyle> =
   | Style
   | MaybeSharedValueRecursive<Style>;
@@ -347,14 +573,10 @@ export type AnimatedTransform = MaybeSharedValueRecursive<
   TransformsStyle['transform']
 >;
 
-/**
- * @deprecated Please use {@link AnimatedStyle} type instead.
- */
+/** @deprecated Please use {@link AnimatedStyle} type instead. */
 export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
 
-/**
- * @deprecated This type is no longer relevant.
- */
+/** @deprecated This type is no longer relevant. */
 export type StylesOrDefault<T> = 'style' extends keyof T
   ? MaybeSharedValueRecursive<T['style']>
   : Record<string, unknown>;

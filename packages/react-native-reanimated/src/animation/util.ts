@@ -36,13 +36,16 @@ import {
 import { shouldBeUseWeb } from '../PlatformChecker';
 import type { EasingFunctionFactory } from '../Easing';
 import { ReducedMotionManager } from '../ReducedMotion';
+import { logger } from '../logger';
+import { ReanimatedError } from '../errors';
+import { runOnUI } from '../threads';
 
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 if (__DEV__ && ReducedMotionManager.jsValue) {
-  console.warn(
-    `[Reanimated] Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
+  logger.warn(
+    `Reduced motion setting is enabled on this device. This warning is visible only in the development mode. Some animations will be disabled by default. You can override the behavior for individual animations, see https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#reduced-motion-setting-is-enabled-on-this-device.`
   );
 }
 
@@ -65,8 +68,8 @@ export function assertEasingIsWorklet(
   }
 
   if (!isWorkletFunction(easing)) {
-    throw new Error(
-      '[Reanimated] The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
+    throw new ReanimatedError(
+      'The easing function is not a worklet. Please make sure you import `Easing` from react-native-reanimated.'
     );
   }
 }
@@ -93,7 +96,7 @@ export function recognizePrefixSuffix(
       /([A-Za-z]*)(-?\d*\.?\d*)([eE][-+]?[0-9]+)?([A-Za-z%]*)/
     );
     if (!match) {
-      throw new Error("[Reanimated] Couldn't parse animation value.");
+      throw new ReanimatedError("Couldn't parse animation value.");
     }
     const prefix = match[1];
     const suffix = match[4];
@@ -106,8 +109,8 @@ export function recognizePrefixSuffix(
 }
 
 /**
- * Returns whether the motion should be reduced for a specified config.
- * By default returns the system setting.
+ * Returns whether the motion should be reduced for a specified config. By
+ * default returns the system setting.
  */
 const isReduceMotionOnUI = ReducedMotionManager.uiValue;
 export function getReduceMotionFromConfig(config?: ReduceMotion) {
@@ -118,8 +121,8 @@ export function getReduceMotionFromConfig(config?: ReduceMotion) {
 }
 
 /**
- * Returns the value that should be assigned to `animation.reduceMotion`
- * for a given config. If the config is not defined, `undefined` is returned.
+ * Returns the value that should be assigned to `animation.reduceMotion` for a
+ * given config. If the config is not defined, `undefined` is returned.
  */
 export function getReduceMotionForAnimation(config?: ReduceMotion) {
   'worklet';
@@ -502,14 +505,14 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
 
 type AnimationToDecoration<
   T extends AnimationObject | StyleLayoutAnimation,
-  U extends AnimationObject | StyleLayoutAnimation
+  U extends AnimationObject | StyleLayoutAnimation,
 > = T extends StyleLayoutAnimation
   ? Record<string, unknown>
   : U | (() => U) | AnimatableValue;
 
 export function defineAnimation<
   T extends AnimationObject | StyleLayoutAnimation, // type that's supposed to be returned
-  U extends AnimationObject | StyleLayoutAnimation = T // type that's received
+  U extends AnimationObject | StyleLayoutAnimation = T, // type that's received
 >(starting: AnimationToDecoration<T, U>, factory: () => T): T {
   'worklet';
   if (IN_STYLE_UPDATER) {
@@ -530,13 +533,22 @@ export function defineAnimation<
 }
 
 /**
- * Lets you cancel a running animation paired to a shared value.
+ * Lets you cancel a running animation paired to a shared value. The
+ * cancellation is asynchronous.
  *
- * @param sharedValue - The shared value of a running animation that you want to cancel.
+ * @param sharedValue - The shared value of a running animation that you want to
+ *   cancel.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation
  */
 export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
-  sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+  if (_WORKLET) {
+    sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+  } else {
+    runOnUI(() => {
+      'worklet';
+      sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+    })();
+  }
 }

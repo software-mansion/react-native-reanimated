@@ -4,7 +4,7 @@ title: Examples
 sidebar_label: Examples
 ---
 
-The source code for the example (showcase) app is under the [`Example/`](https://github.com/software-mansion/react-native-reanimated/blob/main/Example/) directory.
+The source code for the example (showcase) app is under the [`Example/`](https://github.com/software-mansion/react-native-reanimated/tree/v1/Example) directory.
 
 In order to run it you need to run those commands (starting at main directory):
 

@@ -1,3 +1,4 @@
+/** @type {import('eslint').ESLint.ConfigData} */
 module.exports = {
   root: true,
   extends: ['@react-native', 'prettier', '../../.eslintrc.js'],

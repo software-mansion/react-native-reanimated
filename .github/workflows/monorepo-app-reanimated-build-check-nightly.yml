@@ -21,6 +21,7 @@ on:
       - packages/react-native-reanimated/android/build.gradle
   schedule:
     - cron: '37 19 * * *' # at 21:37 every day
+  workflow_call:
   workflow_dispatch:
 
 jobs:

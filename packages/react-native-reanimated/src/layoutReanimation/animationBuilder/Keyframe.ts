@@ -2,22 +2,23 @@
 import { Easing } from '../../Easing';
 import { withDelay, withSequence, withTiming } from '../../animation';
 import type {
+  StyleProps,
+  EasingFunction,
+  TransformArrayItem,
   AnimationFunction,
   EntryExitAnimationFunction,
   IEntryExitAnimationBuilder,
   KeyframeProps,
+  MaybeInvalidKeyframeProps,
   StylePropsWithArrayTransform,
-} from './commonTypes';
-import type {
-  StyleProps,
-  EasingFunction,
-  TransformArrayItem,
+  ValidKeyframeProps,
 } from '../../commonTypes';
 import { ReduceMotion } from '../../commonTypes';
 import {
   assertEasingIsWorklet,
   getReduceMotionFromConfig,
 } from '../../animation/util';
+import { ReanimatedError } from '../../errors';
 
 interface KeyframePoint {
   duration: number;
@@ -28,19 +29,20 @@ interface ParsedKeyframesDefinition {
   initialValues: StyleProps;
   keyframes: Record<string, KeyframePoint[]>;
 }
+
 class InnerKeyframe implements IEntryExitAnimationBuilder {
   durationV?: number;
   delayV?: number;
   reduceMotionV: ReduceMotion = ReduceMotion.System;
   callbackV?: (finished: boolean) => void;
-  definitions: Record<string, KeyframeProps>;
+  definitions: MaybeInvalidKeyframeProps;
 
   /*
     Keyframe definition should be passed in the constructor as the map
     which keys are between range 0 - 100 (%) and correspond to the point in the animation progress.
   */
-  constructor(definitions: Record<string, KeyframeProps>) {
-    this.definitions = definitions;
+  constructor(definitions: ValidKeyframeProps) {
+    this.definitions = definitions as MaybeInvalidKeyframeProps;
   }
 
   private parseDefinitions(): ParsedKeyframesDefinition {
@@ -54,8 +56,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     */
     if (this.definitions.from) {
       if (this.definitions['0']) {
-        throw new Error(
-          "[Reanimated] You cannot provide both keyframe 0 and 'from' as they both specified initial values."
+        throw new ReanimatedError(
+          "You cannot provide both keyframe 0 and 'from' as they both specified initial values."
         );
       }
       this.definitions['0'] = this.definitions.from;
@@ -63,20 +65,20 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     }
     if (this.definitions.to) {
       if (this.definitions['100']) {
-        throw new Error(
-          "[Reanimated] You cannot provide both keyframe 100 and 'to' as they both specified values at the end of the animation."
+        throw new ReanimatedError(
+          "You cannot provide both keyframe 100 and 'to' as they both specified values at the end of the animation."
         );
       }
       this.definitions['100'] = this.definitions.to;
       delete this.definitions.to;
     }
     /* 
-       One of the assumptions is that keyframe  0 is required to properly set initial values.
-       Every other keyframe should contain properties from the set provided as initial values.
+      One of the assumptions is that keyframe  0 is required to properly set initial values.
+      Every other keyframe should contain properties from the set provided as initial values.
     */
     if (!this.definitions['0']) {
-      throw new Error(
-        "[Reanimated] Please provide 0 or 'from' keyframe with initial state of your object."
+      throw new ReanimatedError(
+        "Please provide 0 or 'from' keyframe with initial state of your object."
       );
     }
     const initialValues: StyleProps = this.definitions['0'] as StyleProps;
@@ -99,9 +101,9 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     });
 
     const duration: number = this.durationV ? this.durationV : 500;
-    const animationKeyPoints: Array<string> = Array.from(
+    const animationKeyPoints: Array<number> = Array.from(
       Object.keys(this.definitions)
-    );
+    ).map(Number);
 
     const getAnimationDuration = (
       key: string,
@@ -130,8 +132,8 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       easing?: EasingFunction;
     }): void => {
       if (!(key in parsedKeyframes)) {
-        throw new Error(
-          "[Reanimated] Keyframe can contain only that set of properties that were provide with initial values (keyframe 0 or 'from')"
+        throw new ReanimatedError(
+          "Keyframe can contain only that set of properties that were provide with initial values (keyframe 0 or 'from')"
         );
       }
 
@@ -146,12 +148,12 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
       });
     };
     animationKeyPoints
-      .filter((value: string) => parseInt(value) !== 0)
-      .sort((a: string, b: string) => parseInt(a) - parseInt(b))
-      .forEach((keyPoint: string) => {
-        if (parseInt(keyPoint) < 0 || parseInt(keyPoint) > 100) {
-          throw new Error(
-            '[Reanimated] Keyframe should be in between range 0 - 100.'
+      .filter((value: number) => value !== 0)
+      .sort((a: number, b: number) => a - b)
+      .forEach((keyPoint: number) => {
+        if (keyPoint < 0 || keyPoint > 100) {
+          throw new ReanimatedError(
+            'Keyframe should be in between range 0 - 100.'
           );
         }
         const keyframe: KeyframeProps = this.definitions[keyPoint];
@@ -161,7 +163,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
           addKeyPoint({
             key,
             value,
-            currentKeyPoint: parseInt(keyPoint),
+            currentKeyPoint: keyPoint,
             easing,
           });
         Object.keys(keyframe).forEach((key: string) => {
@@ -302,14 +304,12 @@ function makeKeyframeKey(index: number, transformProp: string) {
   return `${index}_transform:${transformProp}`;
 }
 
-// TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 export declare class ReanimatedKeyframe {
-  constructor(definitions: Record<string, KeyframeProps>);
+  constructor(definitions: ValidKeyframeProps);
   duration(durationMs: number): ReanimatedKeyframe;
   delay(delayMs: number): ReanimatedKeyframe;
   reduceMotion(reduceMotionV: ReduceMotion): ReanimatedKeyframe;
   withCallback(callback: (finished: boolean) => void): ReanimatedKeyframe;
 }
 
-// TODO TYPESCRIPT This temporary cast is to get rid of .d.ts file.
-export const Keyframe = InnerKeyframe as unknown as typeof ReanimatedKeyframe;
+export const Keyframe = InnerKeyframe as typeof ReanimatedKeyframe;

@@ -1,13 +1,12 @@
 #pragma once
 
+#include <worklets/Tools/ThreadSafeQueue.h>
+
 #include <ReactCommon/CallInvoker.h>
 
 #include <atomic>
-#include <memory>
 
-#include "ThreadSafeQueue.h"
-
-namespace reanimated {
+namespace worklets {
 
 class UIScheduler {
  public:
@@ -20,4 +19,4 @@ class UIScheduler {
   ThreadSafeQueue<std::function<void()>> uiJobs_;
 };
 
-} // namespace reanimated
+} // namespace worklets

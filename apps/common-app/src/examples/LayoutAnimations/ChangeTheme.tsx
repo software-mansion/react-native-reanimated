@@ -30,16 +30,16 @@ function List() {
             layout: undefined,
           }
         : theme
-        ? {
-            entering: RotateInUpRight,
-            exiting: RotateOutUpLeft,
-            layout: Layout.easing(Easing.exp).delay(200),
-          }
-        : {
-            entering: SlideInRight,
-            exiting: SlideOutLeft,
-            layout: Layout.springify().delay(200),
-          },
+          ? {
+              entering: RotateInUpRight,
+              exiting: RotateOutUpLeft,
+              layout: Layout.easing(Easing.exp).delay(200),
+            }
+          : {
+              entering: SlideInRight,
+              exiting: SlideOutLeft,
+              layout: Layout.springify().delay(200),
+            },
     [disabled, theme]
   );
 

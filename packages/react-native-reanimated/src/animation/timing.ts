@@ -19,8 +19,11 @@ import type {
  * The timing animation configuration.
  *
  * @param duration - Length of the animation (in milliseconds). Defaults to 300.
- * @param easing - An easing function which defines the animation curve. Defaults to `Easing.inOut(Easing.quad)`.
- * @param reduceMotion - Determines how the animation responds to the device's reduced motion accessibility setting. Default to `ReduceMotion.System` - {@link ReduceMotion}.
+ * @param easing - An easing function which defines the animation curve.
+ *   Defaults to `Easing.inOut(Easing.quad)`.
+ * @param reduceMotion - Determines how the animation responds to the device's
+ *   reduced motion accessibility setting. Default to `ReduceMotion.System` -
+ *   {@link ReduceMotion}.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming#config-
  */
 interface TimingConfig {
@@ -57,10 +60,14 @@ type withTimingType = <T extends AnimatableValue>(
 /**
  * Lets you create an animation based on duration and easing.
  *
- * @param toValue - The value on which the animation will come at rest - {@link AnimatableValue}.
+ * @param toValue - The value on which the animation will come at rest -
+ *   {@link AnimatableValue}.
  * @param config - The timing animation configuration - {@link TimingConfig}.
- * @param callback - A function called on animation complete - {@link AnimationCallback}.
- * @returns An [animation object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object) which holds the current state of the animation.
+ * @param callback - A function called on animation complete -
+ *   {@link AnimationCallback}.
+ * @returns An [animation
+ *   object](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animation-object)
+ *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming
  */
 export const withTiming = function (
