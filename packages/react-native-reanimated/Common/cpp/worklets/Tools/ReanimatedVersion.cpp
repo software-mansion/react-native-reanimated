@@ -11,20 +11,18 @@
 #define REANIMATED_VERSION_STRING STRINGIZE2(REANIMATED_VERSION)
 #endif // REANIMATED_VERSION
 
-using namespace facebook;
-
 namespace worklets {
 
 std::string getReanimatedCppVersion() {
   return std::string(REANIMATED_VERSION_STRING);
 }
 
-void injectReanimatedCppVersion(jsi::Runtime &rnRuntime) {
+void injectReanimatedCppVersion(facebook::jsi::Runtime &rnRuntime) {
   auto version = getReanimatedCppVersion();
   rnRuntime.global().setProperty(
       rnRuntime,
       "_REANIMATED_VERSION_CPP",
-      jsi::String::createFromUtf8(rnRuntime, version));
+      facebook::jsi::String::createFromUtf8(rnRuntime, version));
 }
 
 #ifndef NDEBUG
@@ -53,7 +51,7 @@ bool matchVersion(const std::string &version1, const std::string &version2) {
 }
 
 void checkJSVersion(
-    jsi::Runtime &rnRuntime,
+    facebook::jsi::Runtime &rnRuntime,
     const std::shared_ptr<JSLogger> &jsLogger) {
   auto cppVersion = getReanimatedCppVersion();
 
@@ -80,7 +78,7 @@ void checkJSVersion(
 }
 #else
 void checkJSVersion(
-    jsi::Runtime &rnRuntime,
+    facebook::jsi::Runtime &rnRuntime,
     const std::shared_ptr<JSLogger> &jsLogger) {
   // In release builds we don't check the version, hence
   // this function is a NOOP.

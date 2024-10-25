@@ -25,16 +25,13 @@
 
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
 namespace reanimated {
 
-using namespace facebook;
-using namespace facebook::jni;
-
-class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
+class AnimationFrameCallback
+    : public facebook::jni::HybridClass<AnimationFrameCallback> {
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/nativeProxy/AnimationFrameCallback;";
@@ -59,15 +56,15 @@ class AnimationFrameCallback : public HybridClass<AnimationFrameCallback> {
   std::function<void(double)> callback_;
 };
 
-class EventHandler : public HybridClass<EventHandler> {
+class EventHandler : public facebook::jni::HybridClass<EventHandler> {
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/nativeProxy/EventHandler;";
 
   void receiveEvent(
-      jni::alias_ref<JString> eventKey,
+      facebook::jni::alias_ref<facebook::jni::JString> eventKey,
       jint emitterReactTag,
-      jni::alias_ref<react::WritableMap> event) {
+      facebook::jni::alias_ref<facebook::react::WritableMap> event) {
     handler_(eventKey, emitterReactTag, event);
   }
 
@@ -80,23 +77,28 @@ class EventHandler : public HybridClass<EventHandler> {
  private:
   friend HybridBase;
 
-  explicit EventHandler(std::function<void(
-                            jni::alias_ref<JString>,
-                            jint emitterReactTag,
-                            jni::alias_ref<react::WritableMap>)> handler)
+  explicit EventHandler(
+      std::function<void(
+          facebook::jni::alias_ref<facebook::jni::JString>,
+          jint emitterReactTag,
+          facebook::jni::alias_ref<facebook::react::WritableMap>)> handler)
       : handler_(std::move(handler)) {}
 
-  std::function<
-      void(jni::alias_ref<JString>, jint, jni::alias_ref<react::WritableMap>)>
+  std::function<void(
+      facebook::jni::alias_ref<facebook::jni::JString>,
+      jint,
+      facebook::jni::alias_ref<facebook::react::WritableMap>)>
       handler_;
 };
 
-class SensorSetter : public HybridClass<SensorSetter> {
+class SensorSetter : public facebook::jni::HybridClass<SensorSetter> {
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/nativeProxy/SensorSetter;";
 
-  void sensorSetter(jni::alias_ref<JArrayFloat> value, int orientationDegrees) {
+  void sensorSetter(
+      facebook::jni::alias_ref<facebook::jni::JArrayFloat> value,
+      int orientationDegrees) {
     size_t size = value->size();
     auto elements = value->getRegion(0, size);
     double array[7];
@@ -121,7 +123,8 @@ class SensorSetter : public HybridClass<SensorSetter> {
   std::function<void(double[], int)> callback_;
 };
 
-class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
+class KeyboardWorkletWrapper
+    : public facebook::jni::HybridClass<KeyboardWorkletWrapper> {
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/keyboard/KeyboardWorkletWrapper;";
@@ -145,33 +148,40 @@ class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
   std::function<void(int, int)> callback_;
 };
 
-class NativeProxy : public jni::HybridClass<NativeProxy> {
+class NativeProxy : public facebook::jni::HybridClass<NativeProxy> {
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/NativeProxy;";
-  static jni::local_ref<jhybriddata> initHybrid(
-      jni::alias_ref<jhybridobject> jThis,
+  static facebook::jni::local_ref<jhybriddata> initHybrid(
+      facebook::jni::alias_ref<jhybridobject> jThis,
       jlong jsContext,
-      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
+      facebook::jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
-      jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
-      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      facebook::jni::alias_ref<AndroidUIScheduler::javaobject>
+          androidUiScheduler,
+      facebook::jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+      facebook::jni::alias_ref<
+          facebook::react::JavaMessageQueueThread::javaobject>
+          messageQueueThread,
 #ifdef RCT_NEW_ARCH_ENABLED
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+      facebook::jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager,
 #endif
       const std::string &valueUnpackerCode);
 
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-  static jni::local_ref<jhybriddata> initHybridBridgeless(
-      jni::alias_ref<jhybridobject> jThis,
+  static facebook::jni::local_ref<jhybriddata> initHybridBridgeless(
+      facebook::jni::alias_ref<jhybridobject> jThis,
       jlong jsContext,
-      jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder,
-      jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
-      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+      facebook::jni::alias_ref<facebook::react::JRuntimeExecutor::javaobject>
+          runtimeExecutorHolder,
+      facebook::jni::alias_ref<AndroidUIScheduler::javaobject>
+          androidUiScheduler,
+      facebook::jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+      facebook::jni::alias_ref<
+          facebook::react::JavaMessageQueueThread::javaobject>
+          messageQueueThread,
+      facebook::jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager,
       const std::string &valueUnpackerCode);
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
@@ -181,12 +191,12 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 
  private:
   friend HybridBase;
-  jni::global_ref<NativeProxy::javaobject> javaPart_;
-  jsi::Runtime *rnRuntime_;
+  facebook::jni::global_ref<NativeProxy::javaobject> javaPart_;
+  facebook::jsi::Runtime *rnRuntime_;
   std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
-  jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
+  facebook::jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
 #ifndef NDEBUG
-  void checkJavaVersion(jsi::Runtime &);
+  void checkJavaVersion(facebook::jsi::Runtime &);
   void injectCppVersion();
 #endif // NDEBUG
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -197,9 +207,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void installJSIBindings();
 #ifdef RCT_NEW_ARCH_ENABLED
   void synchronouslyUpdateUIProps(
-      jsi::Runtime &rt,
-      Tag viewTag,
-      const jsi::Object &props);
+      facebook::jsi::Runtime &rt,
+      facebook::react::Tag viewTag,
+      const facebook::jsi::Object &props);
 #endif
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setupLayoutAnimations();
@@ -210,7 +220,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const int emitterReactTag);
   void performOperations();
   bool getIsReducedMotion();
-  void requestRender(std::function<void(double)> onRender, jsi::Runtime &rt);
+  void requestRender(
+      std::function<void(double)> onRender,
+      facebook::jsi::Runtime &rt);
   void registerEventHandler();
   void maybeFlushUIUpdatesQueue();
   void setGestureState(int handlerTag, int newState);
@@ -228,30 +240,34 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
-  jsi::Value
-  obtainProp(jsi::Runtime &rt, const int viewTag, const jsi::Value &propName);
+  facebook::jsi::Value obtainProp(
+      facebook::jsi::Runtime &rt,
+      const int viewTag,
+      const facebook::jsi::Value &propName);
   void configureProps(
-      jsi::Runtime &rt,
-      const jsi::Value &uiProps,
-      const jsi::Value &nativeProps);
-  void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &uiProps,
+      const facebook::jsi::Value &nativeProps);
+  void updateProps(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &operations);
   void scrollTo(int viewTag, double x, double y, bool animated);
   void dispatchCommand(
-      jsi::Runtime &rt,
+      facebook::jsi::Runtime &rt,
       const int viewTag,
-      const jsi::Value &commandNameValue,
-      const jsi::Value &argsValue);
+      const facebook::jsi::Value &commandNameValue,
+      const facebook::jsi::Value &argsValue);
   std::vector<std::pair<std::string, double>> measure(int viewTag);
 #endif
   void handleEvent(
-      jni::alias_ref<JString> eventName,
+      facebook::jni::alias_ref<facebook::jni::JString> eventName,
       jint emitterReactTag,
-      jni::alias_ref<react::WritableMap> event);
+      facebook::jni::alias_ref<facebook::react::WritableMap> event);
 
   void progressLayoutAnimation(
-      jsi::Runtime &rt,
+      facebook::jsi::Runtime &rt,
       int tag,
-      const jsi::Object &newProps,
+      const facebook::jsi::Object &newProps,
       bool isSharedTransition);
 
   /***
@@ -271,39 +287,45 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   }
 
   template <class Signature>
-  JMethod<Signature> getJniMethod(std::string const &methodName) {
+  facebook::jni::JMethod<Signature> getJniMethod(
+      std::string const &methodName) {
     return javaPart_->getClass()->getMethod<Signature>(methodName.c_str());
   }
 
   explicit NativeProxy(
-      jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      jsi::Runtime *rnRuntime,
+      facebook::jni::alias_ref<NativeProxy::jhybridobject> jThis,
+      facebook::jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<UIScheduler> &uiScheduler,
-      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
+      facebook::jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
+      facebook::jni::alias_ref<
+          facebook::react::JavaMessageQueueThread::javaobject>
+          messageQueueThread,
 #ifdef RCT_NEW_ARCH_ENABLED
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+      facebook::jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager,
 #endif
       const std::string &valueUnpackerCode);
 
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
   explicit NativeProxy(
-      jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      jsi::Runtime *rnRuntime,
-      RuntimeExecutor runtimeExecutor,
-      const std::shared_ptr<UIScheduler> &uiScheduler,
-      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+      facebook::jni::alias_ref<NativeProxy::jhybridobject> jThis,
+      facebook::jsi::Runtime *rnRuntime,
+      facebook::react::RuntimeExecutor runtimeExecutor,
+      const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
+      facebook::jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
+      facebook::jni::alias_ref<
+          facebook::react::JavaMessageQueueThread::javaobject>
+          messageQueueThread,
+      facebook::jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
           fabricUIManager,
       const std::string &valueUnpackerCode);
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-                      &fabricUIManager);
+  void commonInit(
+      facebook::jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+          &fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
 };
 

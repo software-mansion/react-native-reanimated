@@ -18,22 +18,25 @@ namespace reanimated {
 // On android this code will be sometimes executed on the JS thread.
 // That's why we have to schedule some of animation manager function on the UI
 // thread
-std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
-    SurfaceId surfaceId,
-    MountingTransaction::Number transactionNumber,
-    const TransactionTelemetry &telemetry,
-    ShadowViewMutationList mutations) const {
+std::optional<facebook::react::MountingTransaction>
+LayoutAnimationsProxy::pullTransaction(
+    facebook::react::SurfaceId surfaceId,
+    facebook::react::MountingTransaction::Number transactionNumber,
+    const facebook::react::TransactionTelemetry &telemetry,
+    facebook::react::ShadowViewMutationList mutations) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << std::endl;
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " "
             << surfaceId << std::endl;
 #endif
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  PropsParserContext propsParserContext{surfaceId, *contextContainer_};
-  ShadowViewMutationList filteredMutations;
+  facebook::react::PropsParserContext propsParserContext{
+      surfaceId, *contextContainer_};
+  facebook::react::ShadowViewMutationList filteredMutations;
 
   std::vector<std::shared_ptr<MutationNode>> roots;
-  std::unordered_map<Tag, ShadowView> movedViews;
+  std::unordered_map<facebook::react::Tag, facebook::react::ShadowView>
+      movedViews;
 
   parseRemoveMutations(movedViews, mutations, roots);
 
@@ -44,13 +47,14 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 
   addOngoingAnimations(surfaceId, filteredMutations);
 
-  return MountingTransaction{
+  return facebook::react::MountingTransaction{
       surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
+std::optional<facebook::react::SurfaceId>
+LayoutAnimationsProxy::progressLayoutAnimation(
     int tag,
-    const jsi::Object &newStyle) {
+    const facebook::jsi::Object &newStyle) {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "progress layout animation for tag " << tag << std::endl;
 #endif
@@ -65,13 +69,13 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
 
   maybeRestoreOpacity(layoutAnimation, newStyle);
 
-  auto rawProps =
-      std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
+  auto rawProps = std::make_shared<facebook::react::RawProps>(
+      uiRuntime_, facebook::jsi::Value(uiRuntime_, newStyle));
 
-  PropsParserContext propsParserContext{
+  facebook::react::PropsParserContext propsParserContext{
       layoutAnimation.finalView->surfaceId, *contextContainer_};
 #ifdef ANDROID
-  rawProps = std::make_shared<RawProps>(folly::dynamic::merge(
+  rawProps = std::make_shared<facebook::react::RawProps>(folly::dynamic::merge(
       layoutAnimation.finalView->props->rawProps, (folly::dynamic)*rawProps));
 #endif
   auto newProps =
@@ -88,9 +92,8 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
   return layoutAnimation.finalView->surfaceId;
 }
 
-std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
-    int tag,
-    bool shouldRemove) {
+std::optional<facebook::react::SurfaceId>
+LayoutAnimationsProxy::endLayoutAnimation(int tag, bool shouldRemove) {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "end layout animation for " << tag << " - should remove "
             << shouldRemove << std::endl;
@@ -135,11 +138,14 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
  traversals and index maintenance
  */
 void LayoutAnimationsProxy::parseRemoveMutations(
-    std::unordered_map<Tag, ShadowView> &movedViews,
-    ShadowViewMutationList &mutations,
+    std::unordered_map<facebook::react::Tag, facebook::react::ShadowView>
+        &movedViews,
+    facebook::react::ShadowViewMutationList &mutations,
     std::vector<std::shared_ptr<MutationNode>> &roots) const {
-  std::set<Tag> deletedViews;
-  std::unordered_map<Tag, std::vector<std::shared_ptr<MutationNode>>>
+  std::set<facebook::react::Tag> deletedViews;
+  std::unordered_map<
+      facebook::react::Tag,
+      std::vector<std::shared_ptr<MutationNode>>>
       childrenForTag, unflattenedChildrenForTag;
 
   std::vector<std::shared_ptr<MutationNode>> mutationNodes;
@@ -147,10 +153,10 @@ void LayoutAnimationsProxy::parseRemoveMutations(
   // iterate from the end, so that parents appear before children
   for (auto it = mutations.rbegin(); it != mutations.rend(); it++) {
     auto &mutation = *it;
-    if (mutation.type == ShadowViewMutation::Delete) {
+    if (mutation.type == facebook::react::ShadowViewMutation::Delete) {
       deletedViews.insert(mutation.oldChildShadowView.tag);
     }
-    if (mutation.type == ShadowViewMutation::Remove) {
+    if (mutation.type == facebook::react::ShadowViewMutation::Remove) {
       updateIndexForMutation(mutation);
       auto tag = mutation.oldChildShadowView.tag;
       auto parentTag = mutation.parentShadowView.tag;
@@ -202,7 +208,7 @@ void LayoutAnimationsProxy::parseRemoveMutations(
       mutationNode->parent = parent;
       mutationNode->unflattenedParent = unflattenedParent;
     }
-    if (mutation.type == ShadowViewMutation::Update &&
+    if (mutation.type == facebook::react::ShadowViewMutation::Update &&
         movedViews.contains(mutation.newChildShadowView.tag)) {
       auto node = nodeForTag_[mutation.newChildShadowView.tag];
       auto mutationNode = std::static_pointer_cast<MutationNode>(node);
@@ -234,7 +240,7 @@ void LayoutAnimationsProxy::parseRemoveMutations(
 }
 
 void LayoutAnimationsProxy::handleRemovals(
-    ShadowViewMutationList &filteredMutations,
+    facebook::react::ShadowViewMutationList &filteredMutations,
     std::vector<std::shared_ptr<MutationNode>> &roots) const {
   // iterate from the end, so that children
   // with higher indices appear first in the mutations list
@@ -246,8 +252,9 @@ void LayoutAnimationsProxy::handleRemovals(
       node->unflattenedParent->removeChildFromUnflattenedTree(node); //???
       if (node->state != MOVED) {
         maybeCancelAnimation(node->tag);
-        filteredMutations.push_back(ShadowViewMutation::DeleteMutation(
-            node->mutation.oldChildShadowView));
+        filteredMutations.push_back(
+            facebook::react::ShadowViewMutation::DeleteMutation(
+                node->mutation.oldChildShadowView));
         nodeForTag_.erase(node->tag);
 #ifdef LAYOUT_ANIMATIONS_LOGS
         LOG(INFO) << "delete " << node->tag << std::endl;
@@ -266,26 +273,29 @@ void LayoutAnimationsProxy::handleRemovals(
 }
 
 void LayoutAnimationsProxy::handleUpdatesAndEnterings(
-    ShadowViewMutationList &filteredMutations,
-    const std::unordered_map<Tag, ShadowView> &movedViews,
-    ShadowViewMutationList &mutations,
-    const PropsParserContext &propsParserContext,
-    SurfaceId surfaceId) const {
-  std::unordered_map<Tag, ShadowView> oldShadowViewsForReparentings;
+    facebook::react::ShadowViewMutationList &filteredMutations,
+    const std::unordered_map<facebook::react::Tag, facebook::react::ShadowView>
+        &movedViews,
+    facebook::react::ShadowViewMutationList &mutations,
+    const facebook::react::PropsParserContext &propsParserContext,
+    facebook::react::SurfaceId surfaceId) const {
+  std::unordered_map<facebook::react::Tag, facebook::react::ShadowView>
+      oldShadowViewsForReparentings;
   for (auto &mutation : mutations) {
     maybeUpdateWindowDimensions(mutation, surfaceId);
 
-    Tag tag = mutation.type == ShadowViewMutation::Type::Create ||
-            mutation.type == ShadowViewMutation::Type::Insert
+    facebook::react::Tag tag =
+        mutation.type == facebook::react::ShadowViewMutation::Type::Create ||
+            mutation.type == facebook::react::ShadowViewMutation::Type::Insert
         ? mutation.newChildShadowView.tag
         : mutation.oldChildShadowView.tag;
 
     switch (mutation.type) {
-      case ShadowViewMutation::Type::Create: {
+      case facebook::react::ShadowViewMutation::Type::Create: {
         filteredMutations.push_back(mutation);
         break;
       }
-      case ShadowViewMutation::Type::Insert: {
+      case facebook::react::ShadowViewMutation::Type::Insert: {
         updateIndexForMutation(mutation);
         if (nodeForTag_.contains(mutation.parentShadowView.tag)) {
           nodeForTag_[mutation.parentShadowView.tag]->applyMutationToIndices(
@@ -296,10 +306,11 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
-              filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-                  mutation.parentShadowView,
-                  oldShadowViewsForReparentings[tag],
-                  mutation.index));
+              filteredMutations.push_back(
+                  facebook::react::ShadowViewMutation::InsertMutation(
+                      mutation.parentShadowView,
+                      oldShadowViewsForReparentings[tag],
+                      mutation.index));
             } else {
               filteredMutations.push_back(mutation);
             }
@@ -307,8 +318,9 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
           }
 
           auto oldView = *layoutAnimationIt->second.currentView;
-          filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-              mutation.parentShadowView, oldView, mutation.index));
+          filteredMutations.push_back(
+              facebook::react::ShadowViewMutation::InsertMutation(
+                  mutation.parentShadowView, oldView, mutation.index));
           continue;
         }
 
@@ -324,15 +336,18 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         filteredMutations.push_back(mutation);
 
         // temporarily set opacity to 0 to prevent flickering on android
-        std::shared_ptr<ShadowView> newView =
+        std::shared_ptr<facebook::react::ShadowView> newView =
             cloneViewWithoutOpacity(mutation, propsParserContext);
 
-        filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
-            mutation.newChildShadowView, *newView, mutation.parentShadowView));
+        filteredMutations.push_back(
+            facebook::react::ShadowViewMutation::UpdateMutation(
+                mutation.newChildShadowView,
+                *newView,
+                mutation.parentShadowView));
         break;
       }
 
-      case ShadowViewMutation::Type::Update: {
+      case facebook::react::ShadowViewMutation::Type::Update: {
         auto shouldAnimate = hasLayoutChanged(mutation);
         if (!layoutAnimationsManager_->hasLayoutAnimation(tag, LAYOUT) ||
             (!shouldAnimate && !layoutAnimations_.contains(tag))) {
@@ -357,8 +372,8 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
         break;
       }
 
-      case ShadowViewMutation::Type::Remove:
-      case ShadowViewMutation::Type::Delete: {
+      case facebook::react::ShadowViewMutation::Type::Remove:
+      case facebook::react::ShadowViewMutation::Type::Delete: {
         break;
       }
 
@@ -369,8 +384,8 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
 }
 
 void LayoutAnimationsProxy::addOngoingAnimations(
-    SurfaceId surfaceId,
-    ShadowViewMutationList &mutations) const {
+    facebook::react::SurfaceId surfaceId,
+    facebook::react::ShadowViewMutationList &mutations) const {
   auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
   for (auto &[tag, updateValues] : updateMap) {
     auto layoutAnimationIt = layoutAnimations_.find(tag);
@@ -381,11 +396,12 @@ void LayoutAnimationsProxy::addOngoingAnimations(
 
     auto &layoutAnimation = layoutAnimationIt->second;
 
-    auto newView = std::make_shared<ShadowView>(*layoutAnimation.finalView);
+    auto newView = std::make_shared<facebook::react::ShadowView>(
+        *layoutAnimation.finalView);
     newView->props = updateValues.newProps;
     updateLayoutMetrics(newView->layoutMetrics, updateValues.frame);
 
-    mutations.push_back(ShadowViewMutation::UpdateMutation(
+    mutations.push_back(facebook::react::ShadowViewMutation::UpdateMutation(
         *layoutAnimation.currentView, *newView, *layoutAnimation.parentView));
     layoutAnimation.currentView = newView;
   }
@@ -394,7 +410,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(
 
 void LayoutAnimationsProxy::endAnimationsRecursively(
     std::shared_ptr<MutationNode> node,
-    ShadowViewMutationList &mutations) const {
+    facebook::react::ShadowViewMutationList &mutations) const {
   maybeCancelAnimation(node->tag);
   node->state = DELETED;
   // iterate from the end, so that children
@@ -412,14 +428,14 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "delete " << node->tag << std::endl;
 #endif
-  mutations.push_back(
-      ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
+  mutations.push_back(facebook::react::ShadowViewMutation::DeleteMutation(
+      node->mutation.oldChildShadowView));
 }
 
 void LayoutAnimationsProxy::maybeDropAncestors(
     std::shared_ptr<Node> parent,
     std::shared_ptr<MutationNode> child,
-    ShadowViewMutationList &cleanupMutations) const {
+    facebook::react::ShadowViewMutationList &cleanupMutations) const {
   parent->removeChildFromUnflattenedTree(child);
   if (!parent->isMutationMode()) {
     return;
@@ -436,14 +452,15 @@ void LayoutAnimationsProxy::maybeDropAncestors(
     LOG(INFO) << "delete " << node->tag << std::endl;
 #endif
     cleanupMutations.push_back(
-        ShadowViewMutation::DeleteMutation(node->mutation.oldChildShadowView));
+        facebook::react::ShadowViewMutation::DeleteMutation(
+            node->mutation.oldChildShadowView));
     maybeDropAncestors(node->unflattenedParent, node, cleanupMutations);
   }
 }
 
-const ComponentDescriptor &
+const facebook::react::ComponentDescriptor &
 LayoutAnimationsProxy::getComponentDescriptorForShadowView(
-    const ShadowView &shadowView) const {
+    const facebook::react::ShadowView &shadowView) const {
   return componentDescriptorRegistry_->at(shadowView.componentHandle);
 }
 
@@ -452,7 +469,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
     bool shouldRemoveSubviewsWithoutAnimations,
     bool shouldAnimate,
     bool isScreenPop,
-    ShadowViewMutationList &mutations) const {
+    facebook::react::ShadowViewMutationList &mutations) const {
   if (isRNSScreen(node)) {
     isScreenPop = true;
   }
@@ -512,7 +529,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
 #ifdef LAYOUT_ANIMATIONS_LOGS
       LOG(INFO) << "delete " << subNode->tag << std::endl;
 #endif
-      mutations.push_back(ShadowViewMutation::DeleteMutation(
+      mutations.push_back(facebook::react::ShadowViewMutation::DeleteMutation(
           subNode->mutation.oldChildShadowView));
     } else {
       subNode->state = WAITING;
@@ -552,7 +569,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
 }
 
 void LayoutAnimationsProxy::updateIndexForMutation(
-    ShadowViewMutation &mutation) const {
+    facebook::react::ShadowViewMutation &mutation) const {
   if (mutation.index == -1) {
     return;
   }
@@ -588,9 +605,9 @@ bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
 }
 
 void LayoutAnimationsProxy::createLayoutAnimation(
-    const ShadowViewMutation &mutation,
-    ShadowView &oldView,
-    const SurfaceId &surfaceId,
+    const facebook::react::ShadowViewMutation &mutation,
+    facebook::react::ShadowView &oldView,
+    const facebook::react::SurfaceId &surfaceId,
     const int tag) const {
   int count = 1;
   auto layoutAnimationIt = layoutAnimations_.find(tag);
@@ -601,28 +618,32 @@ void LayoutAnimationsProxy::createLayoutAnimation(
     count = layoutAnimation.count + 1;
   }
 
-  auto finalView = std::make_shared<ShadowView>(
-      mutation.type == ShadowViewMutation::Remove
+  auto finalView = std::make_shared<facebook::react::ShadowView>(
+      mutation.type == facebook::react::ShadowViewMutation::Remove
           ? mutation.oldChildShadowView
           : mutation.newChildShadowView);
-  auto currentView = std::make_shared<ShadowView>(oldView);
-  auto parentView = std::make_shared<ShadowView>(mutation.parentShadowView);
+  auto currentView = std::make_shared<facebook::react::ShadowView>(oldView);
+  auto parentView =
+      std::make_shared<facebook::react::ShadowView>(mutation.parentShadowView);
   layoutAnimations_.insert_or_assign(
       tag, LayoutAnimation{finalView, currentView, parentView, {}, count});
 }
 
 void LayoutAnimationsProxy::startEnteringAnimation(
     const int tag,
-    ShadowViewMutation &mutation) const {
+    facebook::react::ShadowViewMutation &mutation) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start entering animation for tag " << tag << std::endl;
 #endif
-  auto finalView = std::make_shared<ShadowView>(mutation.newChildShadowView);
-  auto current = std::make_shared<ShadowView>(mutation.newChildShadowView);
-  auto parent = std::make_shared<ShadowView>(mutation.parentShadowView);
+  auto finalView = std::make_shared<facebook::react::ShadowView>(
+      mutation.newChildShadowView);
+  auto current = std::make_shared<facebook::react::ShadowView>(
+      mutation.newChildShadowView);
+  auto parent =
+      std::make_shared<facebook::react::ShadowView>(mutation.parentShadowView);
 
-  auto &viewProps =
-      static_cast<const ViewProps &>(*mutation.newChildShadowView.props);
+  auto &viewProps = static_cast<const facebook::react::ViewProps &>(
+      *mutation.newChildShadowView.props);
   auto opacity = viewProps.opacity;
 
   uiScheduler_->scheduleOnUI(
@@ -637,7 +658,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
         }
 
         Snapshot values(mutation.newChildShadowView, window);
-        jsi::Object yogaValues(uiRuntime_);
+        facebook::jsi::Object yogaValues(uiRuntime_);
         yogaValues.setProperty(uiRuntime_, "targetOriginX", values.x);
         yogaValues.setProperty(uiRuntime_, "targetGlobalOriginX", values.x);
         yogaValues.setProperty(uiRuntime_, "targetOriginY", values.y);
@@ -653,7 +674,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
 
 void LayoutAnimationsProxy::startExitingAnimation(
     const int tag,
-    ShadowViewMutation &mutation) const {
+    facebook::react::ShadowViewMutation &mutation) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start exiting animation for tag " << tag << std::endl;
 #endif
@@ -670,7 +691,7 @@ void LayoutAnimationsProxy::startExitingAnimation(
 
     Snapshot values(oldView, window);
 
-    jsi::Object yogaValues(uiRuntime_);
+    facebook::jsi::Object yogaValues(uiRuntime_);
     yogaValues.setProperty(uiRuntime_, "currentOriginX", values.x);
     yogaValues.setProperty(uiRuntime_, "currentGlobalOriginX", values.x);
     yogaValues.setProperty(uiRuntime_, "currentOriginY", values.y);
@@ -687,7 +708,7 @@ void LayoutAnimationsProxy::startExitingAnimation(
 
 void LayoutAnimationsProxy::startLayoutAnimation(
     const int tag,
-    const ShadowViewMutation &mutation) const {
+    const facebook::react::ShadowViewMutation &mutation) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "start layout animation for tag " << tag << std::endl;
 #endif
@@ -705,7 +726,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
     Snapshot currentValues(oldView, window);
     Snapshot targetValues(mutation.newChildShadowView, window);
 
-    jsi::Object yogaValues(uiRuntime_);
+    facebook::jsi::Object yogaValues(uiRuntime_);
     yogaValues.setProperty(uiRuntime_, "currentOriginX", currentValues.x);
     yogaValues.setProperty(uiRuntime_, "currentGlobalOriginX", currentValues.x);
     yogaValues.setProperty(uiRuntime_, "currentOriginY", currentValues.y);
@@ -728,9 +749,10 @@ void LayoutAnimationsProxy::startLayoutAnimation(
 
 void LayoutAnimationsProxy::updateOngoingAnimationTarget(
     const int tag,
-    const ShadowViewMutation &mutation) const {
+    const facebook::react::ShadowViewMutation &mutation) const {
   layoutAnimations_[tag].finalView =
-      std::make_shared<ShadowView>(mutation.newChildShadowView);
+      std::make_shared<facebook::react::ShadowView>(
+          mutation.newChildShadowView);
 }
 
 void LayoutAnimationsProxy::maybeCancelAnimation(const int tag) const {
@@ -760,30 +782,32 @@ void LayoutAnimationsProxy::transferConfigFromNativeID(
 // When entering animations start, we temporarily set opacity to 0
 // so that we can immediately insert the view at the right position
 // and schedule the animation on the UI thread
-std::shared_ptr<ShadowView> LayoutAnimationsProxy::cloneViewWithoutOpacity(
+std::shared_ptr<facebook::react::ShadowView>
+LayoutAnimationsProxy::cloneViewWithoutOpacity(
     facebook::react::ShadowViewMutation &mutation,
-    const PropsParserContext &propsParserContext) const {
-  auto newView = std::make_shared<ShadowView>(mutation.newChildShadowView);
+    const facebook::react::PropsParserContext &propsParserContext) const {
+  auto newView = std::make_shared<facebook::react::ShadowView>(
+      mutation.newChildShadowView);
   folly::dynamic opacity = folly::dynamic::object("opacity", 0);
   auto newProps = getComponentDescriptorForShadowView(*newView).cloneProps(
-      propsParserContext, newView->props, RawProps(opacity));
+      propsParserContext, newView->props, facebook::react::RawProps(opacity));
   newView->props = newProps;
   return newView;
 }
 
 void LayoutAnimationsProxy::maybeRestoreOpacity(
     LayoutAnimation &layoutAnimation,
-    const jsi::Object &newStyle) const {
+    const facebook::jsi::Object &newStyle) const {
   if (layoutAnimation.opacity && !newStyle.hasProperty(uiRuntime_, "opacity")) {
     newStyle.setProperty(
-        uiRuntime_, "opacity", jsi::Value(*layoutAnimation.opacity));
+        uiRuntime_, "opacity", facebook::jsi::Value(*layoutAnimation.opacity));
     layoutAnimation.opacity.reset();
   }
 }
 
 void LayoutAnimationsProxy::maybeUpdateWindowDimensions(
     facebook::react::ShadowViewMutation &mutation,
-    SurfaceId surfaceId) const {
+    facebook::react::SurfaceId surfaceId) const {
   // This is a hacky way to obtain the window dimensions.
   // We can identify the root, by checking if its tag is equal to the surfaceId
   if (mutation.parentShadowView.tag == surfaceId) {

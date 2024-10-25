@@ -1,3 +1,5 @@
+#include <fbjni/detail/References-forward.h>
+#include <fbjni/detail/References.h>
 #include <reanimated/android/AndroidUIScheduler.h>
 
 #include <android/log.h>
@@ -6,16 +8,14 @@
 
 namespace reanimated {
 
-using namespace facebook;
-using namespace react;
-
-class UISchedulerWrapper : public UIScheduler {
+class UISchedulerWrapper : public worklets::UIScheduler {
  private:
-  jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler_;
+  facebook::jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler_;
 
  public:
   explicit UISchedulerWrapper(
-      jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler)
+      facebook::jni::global_ref<AndroidUIScheduler::javaobject>
+          androidUiScheduler)
       : androidUiScheduler_(androidUiScheduler) {}
 
   void scheduleOnUI(std::function<void()> job) override {
@@ -30,13 +30,12 @@ class UISchedulerWrapper : public UIScheduler {
 };
 
 AndroidUIScheduler::AndroidUIScheduler(
-    jni::alias_ref<AndroidUIScheduler::javaobject> jThis)
-    : javaPart_(jni::make_global(jThis)),
-      uiScheduler_(
-          std::make_shared<UISchedulerWrapper>(jni::make_global(jThis))) {}
+    facebook::jni::alias_ref<AndroidUIScheduler::javaobject> jThis)
+    : javaPart_(make_global(jThis)),
+      uiScheduler_(std::make_shared<UISchedulerWrapper>(make_global(jThis))) {}
 
-jni::local_ref<AndroidUIScheduler::jhybriddata> AndroidUIScheduler::initHybrid(
-    jni::alias_ref<jhybridobject> jThis) {
+facebook::jni::local_ref<AndroidUIScheduler::jhybriddata>
+AndroidUIScheduler::initHybrid(facebook::jni::alias_ref<jhybridobject> jThis) {
   return makeCxxInstance(jThis);
 }
 

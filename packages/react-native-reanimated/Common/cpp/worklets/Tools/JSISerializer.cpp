@@ -1,8 +1,8 @@
 #include <worklets/Tools/JSISerializer.h>
 
 #include <cxxabi.h>
-#include <iostream>
 #include <sstream>
+#include <vector>
 
 namespace worklets {
 
@@ -61,8 +61,8 @@ const std::vector<std::string> SUPPORTED_REFLECTION_TYPES = {
 };
 
 static inline std::string getObjectTypeName(
-    jsi::Runtime &rt,
-    const jsi::Object &object) {
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Object &object) {
   return object.getPropertyAsObject(rt, "constructor")
       .getProperty(rt, "name")
       .toString(rt)
@@ -70,15 +70,15 @@ static inline std::string getObjectTypeName(
 }
 
 static inline bool isInstanceOf(
-    jsi::Runtime &rt,
-    const jsi::Object &object,
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Object &object,
     const std::string &type) {
   return getObjectTypeName(rt, object) == type;
 }
 
 static inline bool isInstanceOfAny(
-    jsi::Runtime &rt,
-    const jsi::Object &object,
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Object &object,
     const std::vector<std::string> &supportedTypes) {
   auto instanceType = getObjectTypeName(rt, object);
 
@@ -87,26 +87,27 @@ static inline bool isInstanceOfAny(
       supportedTypes.end();
 }
 
-JSISerializer::JSISerializer(jsi::Runtime &rt)
+JSISerializer::JSISerializer(facebook::jsi::Runtime &rt)
     : rt_(rt),
       visitedNodes_(rt_.global()
                         .getPropertyAsFunction(rt_, "Set")
                         .callAsConstructor(rt_)
                         .asObject(rt_)) {}
 
-std::string JSISerializer::stringifyWithName(const jsi::Object &object) {
+std::string JSISerializer::stringifyWithName(
+    const facebook::jsi::Object &object) {
   std::stringstream ss;
   ss << '[' << getObjectTypeName(rt_, object) << ']';
 
   return ss.str();
 }
 
-std::string JSISerializer::stringifyArray(const jsi::Array &arr) {
+std::string JSISerializer::stringifyArray(const facebook::jsi::Array &arr) {
   std::stringstream ss;
   ss << '[';
 
   for (size_t i = 0, length = arr.size(rt_); i < length; i++) {
-    jsi::Value element = arr.getValueAtIndex(rt_, i);
+    facebook::jsi::Value element = arr.getValueAtIndex(rt_, i);
     ss << stringifyJSIValueRecursively(element);
     if (i != length - 1) {
       ss << ", ";
@@ -118,9 +119,11 @@ std::string JSISerializer::stringifyArray(const jsi::Array &arr) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyFunction(const jsi::Function &func) {
+std::string JSISerializer::stringifyFunction(
+    const facebook::jsi::Function &func) {
   std::stringstream ss;
-  auto kind = (func.isHostFunction(rt_) ? "jsi::HostFunction" : "Function");
+  auto kind =
+      (func.isHostFunction(rt_) ? "facebook::jsi::HostFunction" : "Function");
   auto name = func.getProperty(rt_, "name").toString(rt_).utf8(rt_);
   name = name.empty() ? "anonymous" : name;
 
@@ -128,16 +131,17 @@ std::string JSISerializer::stringifyFunction(const jsi::Function &func) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyHostObject(jsi::HostObject &hostObject) {
+std::string JSISerializer::stringifyHostObject(
+    facebook::jsi::HostObject &hostObject) {
   int status = -1;
   char *hostObjClassName =
       abi::__cxa_demangle(typeid(hostObject).name(), NULL, NULL, &status);
   if (status != 0) {
-    return "[jsi::HostObject]";
+    return "[facebook::jsi::HostObject]";
   }
 
   std::stringstream ss;
-  ss << "[jsi::HostObject(" << hostObjClassName << ")";
+  ss << "[facebook::jsi::HostObject(" << hostObjClassName << ")";
   std::free(hostObjClassName);
 
   auto props = hostObject.getPropertyNames(rt_);
@@ -162,14 +166,16 @@ std::string JSISerializer::stringifyHostObject(jsi::HostObject &hostObject) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyObject(const jsi::Object &object) {
+std::string JSISerializer::stringifyObject(
+    const facebook::jsi::Object &object) {
   std::stringstream ss;
   ss << '{';
 
   auto props = object.getPropertyNames(rt_);
 
   for (size_t i = 0, propsCount = props.size(rt_); i < propsCount; i++) {
-    jsi::String propName = props.getValueAtIndex(rt_, i).toString(rt_);
+    facebook::jsi::String propName =
+        props.getValueAtIndex(rt_, i).toString(rt_);
     ss << '"' << propName.utf8(rt_) << '"' << ": "
        << stringifyJSIValueRecursively(object.getProperty(rt_, propName));
     if (i != propsCount - 1) {
@@ -182,19 +188,19 @@ std::string JSISerializer::stringifyObject(const jsi::Object &object) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyError(const jsi::Object &object) {
+std::string JSISerializer::stringifyError(const facebook::jsi::Object &object) {
   std::stringstream ss;
   ss << '[' << object.getProperty(rt_, "name").toString(rt_).utf8(rt_) << ": "
      << object.getProperty(rt_, "message").toString(rt_).utf8(rt_) << ']';
   return ss.str();
 }
 
-std::string JSISerializer::stringifySet(const jsi::Object &object) {
+std::string JSISerializer::stringifySet(const facebook::jsi::Object &object) {
   std::stringstream ss;
-  jsi::Function arrayFrom = rt_.global()
-                                .getPropertyAsObject(rt_, "Array")
-                                .getPropertyAsFunction(rt_, "from");
-  jsi::Object result = arrayFrom.call(rt_, object).asObject(rt_);
+  facebook::jsi::Function arrayFrom = rt_.global()
+                                          .getPropertyAsObject(rt_, "Array")
+                                          .getPropertyAsFunction(rt_, "from");
+  facebook::jsi::Object result = arrayFrom.call(rt_, object).asObject(rt_);
 
   if (!result.isArray(rt_)) {
     return "[Set]";
@@ -215,12 +221,12 @@ std::string JSISerializer::stringifySet(const jsi::Object &object) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyMap(const jsi::Object &object) {
+std::string JSISerializer::stringifyMap(const facebook::jsi::Object &object) {
   std::stringstream ss;
-  jsi::Function arrayFrom = rt_.global()
-                                .getPropertyAsObject(rt_, "Array")
-                                .getPropertyAsFunction(rt_, "from");
-  jsi::Object result = arrayFrom.call(rt_, object).asObject(rt_);
+  facebook::jsi::Function arrayFrom = rt_.global()
+                                          .getPropertyAsObject(rt_, "Array")
+                                          .getPropertyAsFunction(rt_, "from");
+  facebook::jsi::Object result = arrayFrom.call(rt_, object).asObject(rt_);
 
   if (!result.isArray(rt_)) {
     return "[Map]";
@@ -245,7 +251,8 @@ std::string JSISerializer::stringifyMap(const jsi::Object &object) {
   return ss.str();
 }
 
-std::string JSISerializer::stringifyRecursiveType(const jsi::Object &object) {
+std::string JSISerializer::stringifyRecursiveType(
+    const facebook::jsi::Object &object) {
   auto type = getObjectTypeName(rt_, object);
 
   if (type == "Array") {
@@ -257,7 +264,8 @@ std::string JSISerializer::stringifyRecursiveType(const jsi::Object &object) {
   return "...";
 }
 
-std::string JSISerializer::stringifyWithToString(const jsi::Object &object) {
+std::string JSISerializer::stringifyWithToString(
+    const facebook::jsi::Object &object) {
   return object.getPropertyAsFunction(rt_, "toString")
       .callWithThis(rt_, object)
       .toString(rt_)
@@ -265,7 +273,7 @@ std::string JSISerializer::stringifyWithToString(const jsi::Object &object) {
 }
 
 std::string JSISerializer::stringifyJSIValueRecursively(
-    const jsi::Value &value,
+    const facebook::jsi::Value &value,
     bool isTopLevel) {
   if (value.isBool() || value.isNumber()) {
     return value.toString(rt_).utf8(rt_);
@@ -287,7 +295,7 @@ std::string JSISerializer::stringifyJSIValueRecursively(
     return "null";
   }
   if (value.isObject()) {
-    jsi::Object object = value.asObject(rt_);
+    facebook::jsi::Object object = value.asObject(rt_);
 
     if (hasBeenVisited(object)) {
       return stringifyRecursiveType(object);
@@ -333,7 +341,9 @@ std::string JSISerializer::stringifyJSIValueRecursively(
   throw std::runtime_error("[Reanimated] Unsupported value type.");
 }
 
-std::string stringifyJSIValue(jsi::Runtime &rt, const jsi::Value &value) {
+std::string stringifyJSIValue(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &value) {
   JSISerializer serializer(rt);
 
   return serializer.stringifyJSIValueRecursively(value, true);

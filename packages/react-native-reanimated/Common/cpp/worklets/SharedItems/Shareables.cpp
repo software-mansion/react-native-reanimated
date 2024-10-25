@@ -1,10 +1,8 @@
 #include <worklets/SharedItems/Shareables.h>
 
-using namespace facebook;
-
 namespace worklets {
 
-jsi::Function getValueUnpacker(jsi::Runtime &rt) {
+facebook::jsi::Function getValueUnpacker(facebook::jsi::Runtime &rt) {
   auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
   assert(valueUnpacker.isObject() && "valueUnpacker not found");
   return valueUnpacker.asObject(rt).asFunction(rt);
@@ -19,7 +17,7 @@ static const auto callGuardLambda = [](facebook::jsi::Runtime &rt,
   return args[0].asObject(rt).asFunction(rt).call(rt, args + 1, count - 1);
 };
 
-jsi::Function getCallGuard(jsi::Runtime &rt) {
+facebook::jsi::Function getCallGuard(facebook::jsi::Runtime &rt) {
   auto callGuard = rt.global().getProperty(rt, "__callGuardDEV");
   if (callGuard.isObject()) {
     // Use JS implementation if `__callGuardDEV` has already been installed.
@@ -32,17 +30,20 @@ jsi::Function getCallGuard(jsi::Runtime &rt) {
   // the C++ implementation doesn't intercept errors and simply throws them as
   // C++ exceptions which crashes the app. We assume that installing the guard
   // doesn't throw any errors.
-  return jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, "callGuard"), 1, callGuardLambda);
+  return facebook::jsi::Function::createFromHostFunction(
+      rt,
+      facebook::jsi::PropNameID::forAscii(rt, "callGuard"),
+      1,
+      callGuardLambda);
 }
 
 #endif // NDEBUG
 
-jsi::Value makeShareableClone(
-    jsi::Runtime &rt,
-    const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource) {
+facebook::jsi::Value makeShareableClone(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &value,
+    const facebook::jsi::Value &shouldRetainRemote,
+    const facebook::jsi::Value &nativeStateSource) {
   std::shared_ptr<Shareable> shareable;
   if (value.isObject()) {
     auto object = value.asObject(rt);
@@ -123,8 +124,8 @@ jsi::Value makeShareableClone(
 }
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
-    jsi::Runtime &rt,
-    const jsi::Value &maybeShareableValue,
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &maybeShareableValue,
     const std::string &errorMessage) {
   if (maybeShareableValue.isObject()) {
     auto object = maybeShareableValue.asObject(rt);
@@ -147,7 +148,8 @@ std::shared_ptr<Shareable> Shareable::undefined() {
 }
 
 template <typename BaseClass>
-jsi::Value RetainingShareable<BaseClass>::toJSValue(jsi::Runtime &rt) {
+facebook::jsi::Value RetainingShareable<BaseClass>::toJSValue(
+    facebook::jsi::Runtime &rt) {
   if (&rt == primaryRuntime_) {
     // TODO: it is suboptimal to generate new object every time getJS is
     // called on host runtime – the objects we are generating already exists
@@ -159,19 +161,21 @@ jsi::Value RetainingShareable<BaseClass>::toJSValue(jsi::Runtime &rt) {
   }
   if (secondaryValue_ == nullptr) {
     auto value = BaseClass::toJSValue(rt);
-    secondaryValue_ = std::make_unique<jsi::Value>(rt, value);
+    secondaryValue_ = std::make_unique<facebook::jsi::Value>(rt, value);
     secondaryRuntime_ = &rt;
     return value;
   }
   if (&rt == secondaryRuntime_) {
-    return jsi::Value(rt, *secondaryValue_);
+    return facebook::jsi::Value(rt, *secondaryValue_);
   }
   return BaseClass::toJSValue(rt);
 }
 
 ShareableJSRef::~ShareableJSRef() {}
 
-ShareableArray::ShareableArray(jsi::Runtime &rt, const jsi::Array &array)
+ShareableArray::ShareableArray(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Array &array)
     : Shareable(ArrayType) {
   auto size = array.size(rt);
   data_.reserve(size);
@@ -180,16 +184,17 @@ ShareableArray::ShareableArray(jsi::Runtime &rt, const jsi::Array &array)
   }
 }
 
-jsi::Value ShareableArray::toJSValue(jsi::Runtime &rt) {
+facebook::jsi::Value ShareableArray::toJSValue(facebook::jsi::Runtime &rt) {
   auto size = data_.size();
-  auto ary = jsi::Array(rt, size);
+  auto ary = facebook::jsi::Array(rt, size);
   for (size_t i = 0; i < size; i++) {
     ary.setValueAtIndex(rt, i, data_[i]->toJSValue(rt));
   }
   return ary;
 }
 
-jsi::Value ShareableArrayBuffer::toJSValue(jsi::Runtime &rt) {
+facebook::jsi::Value ShareableArrayBuffer::toJSValue(
+    facebook::jsi::Runtime &rt) {
   auto size = static_cast<int>(data_.size());
   auto arrayBuffer = rt.global()
                          .getPropertyAsFunction(rt, "ArrayBuffer")
@@ -200,7 +205,9 @@ jsi::Value ShareableArrayBuffer::toJSValue(jsi::Runtime &rt) {
   return arrayBuffer;
 }
 
-ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
+ShareableObject::ShareableObject(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Object &object)
     : Shareable(ObjectType) {
   auto propertyNames = object.getPropertyNames(rt);
   auto size = propertyNames.size(rt);
@@ -219,9 +226,9 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
 
 #if SUPPORTS_NATIVE_STATE
 ShareableObject::ShareableObject(
-    jsi::Runtime &rt,
-    const jsi::Object &object,
-    const jsi::Value &nativeStateSource)
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Object &object,
+    const facebook::jsi::Value &nativeStateSource)
     : ShareableObject(rt, object) {
   if (nativeStateSource.isObject() &&
       nativeStateSource.asObject(rt).hasNativeState(rt)) {
@@ -230,12 +237,12 @@ ShareableObject::ShareableObject(
 }
 #endif // SUPPORTS_NATIVE_STATE
 
-jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
-  auto obj = jsi::Object(rt);
+facebook::jsi::Value ShareableObject::toJSValue(facebook::jsi::Runtime &rt) {
+  auto obj = facebook::jsi::Object(rt);
   for (size_t i = 0, size = data_.size(); i < size; i++) {
     obj.setProperty(
         rt,
-        jsi::String::createFromUtf8(rt, data_[i].first),
+        facebook::jsi::String::createFromUtf8(rt, data_[i].first),
         data_[i].second->toJSValue(rt));
   }
 #if SUPPORTS_NATIVE_STATE
@@ -246,48 +253,55 @@ jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
   return obj;
 }
 
-jsi::Value ShareableHostObject::toJSValue(jsi::Runtime &rt) {
-  return jsi::Object::createFromHostObject(rt, hostObject_);
+facebook::jsi::Value ShareableHostObject::toJSValue(
+    facebook::jsi::Runtime &rt) {
+  return facebook::jsi::Object::createFromHostObject(rt, hostObject_);
 }
 
-jsi::Value ShareableHostFunction::toJSValue(jsi::Runtime &rt) {
-  return jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forUtf8(rt, name_), paramCount_, hostFunction_);
+facebook::jsi::Value ShareableHostFunction::toJSValue(
+    facebook::jsi::Runtime &rt) {
+  return facebook::jsi::Function::createFromHostFunction(
+      rt,
+      facebook::jsi::PropNameID::forUtf8(rt, name_),
+      paramCount_,
+      hostFunction_);
 }
 
-jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
+facebook::jsi::Value ShareableWorklet::toJSValue(facebook::jsi::Runtime &rt) {
   assert(
       std::any_of(
           data_.cbegin(),
           data_.cend(),
           [](const auto &item) { return item.first == "__workletHash"; }) &&
       "ShareableWorklet doesn't have `__workletHash` property");
-  jsi::Value obj = ShareableObject::toJSValue(rt);
+  facebook::jsi::Value obj = ShareableObject::toJSValue(rt);
   return getValueUnpacker(rt).call(
-      rt, obj, jsi::String::createFromAscii(rt, "Worklet"));
+      rt, obj, facebook::jsi::String::createFromAscii(rt, "Worklet"));
 }
 
-jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
+facebook::jsi::Value ShareableRemoteFunction::toJSValue(
+    facebook::jsi::Runtime &rt) {
   if (&rt == runtime_) {
-    return jsi::Value(rt, *function_);
+    return facebook::jsi::Value(rt, *function_);
   } else {
 #ifndef NDEBUG
     return getValueUnpacker(rt).call(
         rt,
         ShareableJSRef::newHostObject(rt, shared_from_this()),
-        jsi::String::createFromAscii(rt, "RemoteFunction"),
-        jsi::String::createFromUtf8(rt, name_));
+        facebook::jsi::String::createFromAscii(rt, "RemoteFunction"),
+        facebook::jsi::String::createFromUtf8(rt, name_));
 #else
     return ShareableJSRef::newHostObject(rt, shared_from_this());
 #endif
   }
 }
 
-jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
+facebook::jsi::Value ShareableHandle::toJSValue(facebook::jsi::Runtime &rt) {
   if (remoteValue_ == nullptr) {
     auto initObj = initializer_->toJSValue(rt);
-    auto value = std::make_unique<jsi::Value>(getValueUnpacker(rt).call(
-        rt, initObj, jsi::String::createFromAscii(rt, "Handle")));
+    auto value =
+        std::make_unique<facebook::jsi::Value>(getValueUnpacker(rt).call(
+            rt, initObj, facebook::jsi::String::createFromAscii(rt, "Handle")));
 
     // We are locking the initialization here since the thread that is
     // initalizing can be pre-empted on runtime lock. E.g.
@@ -302,29 +316,29 @@ jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
       remoteRuntime_ = &rt;
     }
   }
-  return jsi::Value(rt, *remoteValue_);
+  return facebook::jsi::Value(rt, *remoteValue_);
 }
 
-jsi::Value ShareableString::toJSValue(jsi::Runtime &rt) {
-  return jsi::String::createFromUtf8(rt, data_);
+facebook::jsi::Value ShareableString::toJSValue(facebook::jsi::Runtime &rt) {
+  return facebook::jsi::String::createFromUtf8(rt, data_);
 }
 
-jsi::Value ShareableBigInt::toJSValue(jsi::Runtime &rt) {
+facebook::jsi::Value ShareableBigInt::toJSValue(facebook::jsi::Runtime &rt) {
   return rt.global()
       .getPropertyAsFunction(rt, "BigInt")
-      .call(rt, jsi::String::createFromUtf8(rt, string_));
+      .call(rt, facebook::jsi::String::createFromUtf8(rt, string_));
 }
 
-jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
+facebook::jsi::Value ShareableScalar::toJSValue(facebook::jsi::Runtime &) {
   switch (valueType_) {
     case Shareable::UndefinedType:
-      return jsi::Value();
+      return facebook::jsi::Value();
     case Shareable::NullType:
-      return jsi::Value(nullptr);
+      return facebook::jsi::Value(nullptr);
     case Shareable::BooleanType:
-      return jsi::Value(data_.boolean);
+      return facebook::jsi::Value(data_.boolean);
     case Shareable::NumberType:
-      return jsi::Value(data_.number);
+      return facebook::jsi::Value(data_.number);
     default:
       throw std::runtime_error(
           "[Reanimated] Attempted to convert object that's not of a scalar type.");

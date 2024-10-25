@@ -16,14 +16,11 @@
 
 namespace worklets {
 
-using namespace facebook;
-using namespace react;
-
 class ReanimatedRuntime {
  public:
-  static std::shared_ptr<jsi::Runtime> make(
-      jsi::Runtime &rnRuntime,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
+  static std::shared_ptr<facebook::jsi::Runtime> make(
+      facebook::jsi::Runtime &rnRuntime,
+      const std::shared_ptr<facebook::react::MessageQueueThread> &jsQueue,
       const std::string &name);
 };
 

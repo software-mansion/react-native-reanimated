@@ -24,27 +24,26 @@
 
 namespace reanimated {
 
-using namespace facebook;
-using namespace react;
-
 NativeProxy::NativeProxy(
-    jni::alias_ref<NativeProxy::javaobject> jThis,
-    jsi::Runtime *rnRuntime,
+    facebook::jni::alias_ref<NativeProxy::javaobject> jThis,
+    facebook::jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-    const std::shared_ptr<UIScheduler> &uiScheduler,
-    jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
+    facebook::jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
+    facebook::jni::alias_ref<
+        facebook::react::JavaMessageQueueThread::javaobject> messageQueueThread,
 #ifdef RCT_NEW_ARCH_ENABLED
-    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+    facebook::jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager,
 #endif
     const std::string &valueUnpackerCode)
-    : javaPart_(jni::make_global(jThis)),
+    : javaPart_(facebook::jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
           *rnRuntime,
-          std::make_shared<JSScheduler>(*rnRuntime, jsCallInvoker),
-          std::make_shared<JMessageQueueThread>(messageQueueThread),
+          std::make_shared<worklets::JSScheduler>(*rnRuntime, jsCallInvoker),
+          std::make_shared<facebook::react::JMessageQueueThread>(
+              messageQueueThread),
           uiScheduler,
           getPlatformDependentMethods(),
           valueUnpackerCode,
@@ -58,21 +57,23 @@ NativeProxy::NativeProxy(
 
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 NativeProxy::NativeProxy(
-    jni::alias_ref<NativeProxy::javaobject> jThis,
-    jsi::Runtime *rnRuntime,
-    RuntimeExecutor runtimeExecutor,
-    const std::shared_ptr<UIScheduler> &uiScheduler,
-    jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+    facebook::jni::alias_ref<NativeProxy::javaobject> jThis,
+    facebook::jsi::Runtime *rnRuntime,
+    facebook::react::RuntimeExecutor runtimeExecutor,
+    const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
+    facebook::jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
+    facebook::jni::alias_ref<
+        facebook::react::JavaMessageQueueThread::javaobject> messageQueueThread,
+    facebook::jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager,
     const std::string &valueUnpackerCode)
-    : javaPart_(jni::make_global(jThis)),
+    : javaPart_(facebook::jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
           *rnRuntime,
-          std::make_shared<JSScheduler>(*rnRuntime, runtimeExecutor),
-          std::make_shared<JMessageQueueThread>(messageQueueThread),
+          std::make_shared<worklets::JSScheduler>(*rnRuntime, runtimeExecutor),
+          std::make_shared<facebook::react::JMessageQueueThread>(
+              messageQueueThread),
           uiScheduler,
           getPlatformDependentMethods(),
           valueUnpackerCode,
@@ -85,7 +86,7 @@ NativeProxy::NativeProxy(
 
 #ifdef RCT_NEW_ARCH_ENABLED
 void NativeProxy::commonInit(
-    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+    facebook::jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         &fabricUIManager) {
   const auto &uiManager =
       fabricUIManager->getBinding()->getScheduler()->getUIManager();
@@ -112,16 +113,17 @@ NativeProxy::~NativeProxy() {
   nativeReanimatedModule_->cleanupSensors();
 }
 
-jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
-    jni::alias_ref<jhybridobject> jThis,
+facebook::jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
+    facebook::jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
-    jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
+    facebook::jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
-    jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
-    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    facebook::jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
+    facebook::jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+    facebook::jni::alias_ref<
+        facebook::react::JavaMessageQueueThread::javaobject> messageQueueThread,
 #ifdef RCT_NEW_ARCH_ENABLED
-    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+    facebook::jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager,
 #endif
     const std::string &valueUnpackerCode) {
@@ -129,7 +131,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
   auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
   return makeCxxInstance(
       jThis,
-      (jsi::Runtime *)jsContext,
+      (facebook::jsi::Runtime *)jsContext,
       jsCallInvoker,
       uiScheduler,
       make_global(layoutAnimations),
@@ -141,21 +143,24 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 }
 
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybridBridgeless(
-    jni::alias_ref<jhybridobject> jThis,
+facebook::jni::local_ref<NativeProxy::jhybriddata>
+NativeProxy::initHybridBridgeless(
+    facebook::jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
-    jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder,
-    jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
-    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-    jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
+    facebook::jni::alias_ref<facebook::react::JRuntimeExecutor::javaobject>
+        runtimeExecutorHolder,
+    facebook::jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
+    facebook::jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+    facebook::jni::alias_ref<
+        facebook::react::JavaMessageQueueThread::javaobject> messageQueueThread,
+    facebook::jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager,
     const std::string &valueUnpackerCode) {
   auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
   auto runtimeExecutor = runtimeExecutorHolder->cthis()->get();
   return makeCxxInstance(
       jThis,
-      (jsi::Runtime *)jsContext,
+      (facebook::jsi::Runtime *)jsContext,
       runtimeExecutor,
       uiScheduler,
       make_global(layoutAnimations),
@@ -166,7 +171,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybridBridgeless(
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
 
 #ifndef NDEBUG
-void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
+void NativeProxy::checkJavaVersion(facebook::jsi::Runtime &rnRuntime) {
   std::string javaVersion;
   try {
     javaVersion =
@@ -179,7 +184,7 @@ void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
         "See `https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#c-side-failed-to-resolve-java-code-version` for more details.");
   }
 
-  auto cppVersion = getReanimatedCppVersion();
+  auto cppVersion = worklets::getReanimatedCppVersion();
   if (cppVersion != javaVersion) {
     throw std::runtime_error(
         std::string(
@@ -190,11 +195,12 @@ void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
 }
 
 void NativeProxy::injectCppVersion() {
-  auto cppVersion = getReanimatedCppVersion();
+  auto cppVersion = worklets::getReanimatedCppVersion();
   try {
     static const auto method =
-        getJniMethod<void(jni::local_ref<JString>)>("setCppVersion");
-    method(javaPart_.get(), make_jstring(cppVersion));
+        getJniMethod<void(facebook::jni::local_ref<facebook::jni::JString>)>(
+            "setCppVersion");
+    method(javaPart_.get(), facebook::jni::make_jstring(cppVersion));
   } catch (std::exception &) {
     throw std::runtime_error(
         std::string(
@@ -205,8 +211,8 @@ void NativeProxy::injectCppVersion() {
 #endif // NDEBUG
 
 void NativeProxy::installJSIBindings() {
-  jsi::Runtime &rnRuntime = *rnRuntime_;
-  WorkletRuntimeCollector::install(rnRuntime);
+  facebook::jsi::Runtime &rnRuntime = *rnRuntime_;
+  worklets::WorkletRuntimeCollector::install(rnRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule_);
 #ifndef NDEBUG
   checkJavaVersion(rnRuntime);
@@ -252,7 +258,7 @@ void NativeProxy::registerNatives() {
 
 void NativeProxy::requestRender(
     std::function<void(double)> onRender,
-    jsi::Runtime &) {
+    facebook::jsi::Runtime &) {
   static const auto method =
       getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
   method(
@@ -277,46 +283,52 @@ void NativeProxy::maybeFlushUIUpdatesQueue() {
 #ifdef RCT_NEW_ARCH_ENABLED
 // nothing
 #else
-jsi::Value NativeProxy::obtainProp(
-    jsi::Runtime &rt,
+facebook::jsi::Value NativeProxy::obtainProp(
+    facebook::jsi::Runtime &rt,
     const int viewTag,
-    const jsi::Value &propName) {
+    const facebook::jsi::Value &propName) {
   static const auto method =
-      getJniMethod<jni::local_ref<JString>(int, jni::local_ref<JString>)>(
-          "obtainProp");
-  local_ref<JString> propNameJStr =
-      jni::make_jstring(propName.asString(rt).utf8(rt).c_str());
+      getJniMethod<facebook::jni::local_ref<facebook::jni::JString>(
+          int, facebook::jni::local_ref<facebook::jni::JString>)>("obtainProp");
+  facebook::jni::local_ref<facebook::jni::JString> propNameJStr =
+      facebook::jni::make_jstring(propName.asString(rt).utf8(rt).c_str());
   auto result = method(javaPart_.get(), viewTag, propNameJStr);
   std::string str = result->toStdString();
-  return jsi::Value(rt, jsi::String::createFromAscii(rt, str));
+  return facebook::jsi::Value(
+      rt, facebook::jsi::String::createFromAscii(rt, str));
 }
 
 void NativeProxy::configureProps(
-    jsi::Runtime &rt,
-    const jsi::Value &uiProps,
-    const jsi::Value &nativeProps) {
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &uiProps,
+    const facebook::jsi::Value &nativeProps) {
   static const auto method = getJniMethod<void(
-      ReadableNativeArray::javaobject, ReadableNativeArray::javaobject)>(
-      "configureProps");
+      facebook::react::ReadableNativeArray::javaobject,
+      facebook::react::ReadableNativeArray::javaobject)>("configureProps");
   method(
       javaPart_.get(),
-      ReadableNativeArray::newObjectCxxArgs(jsi::dynamicFromValue(rt, uiProps))
+      facebook::react::ReadableNativeArray::newObjectCxxArgs(
+          facebook::jsi::dynamicFromValue(rt, uiProps))
           .get(),
-      ReadableNativeArray::newObjectCxxArgs(
-          jsi::dynamicFromValue(rt, nativeProps))
+      facebook::react::ReadableNativeArray::newObjectCxxArgs(
+          facebook::jsi::dynamicFromValue(rt, nativeProps))
           .get());
 }
 
-void NativeProxy::updateProps(jsi::Runtime &rt, const jsi::Value &operations) {
-  static const auto method =
-      getJniMethod<void(int, JMap<JString, JObject>::javaobject)>(
-          "updateProps");
+void NativeProxy::updateProps(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &operations) {
+  static const auto method = getJniMethod<void(
+      int,
+      facebook::jni::JMap<facebook::jni::JString, facebook::jni::JObject>::
+          javaobject)>("updateProps");
   auto array = operations.asObject(rt).asArray(rt);
   size_t length = array.size(rt);
   for (size_t i = 0; i < length; ++i) {
     auto item = array.getValueAtIndex(rt, i).asObject(rt);
     int viewTag = item.getProperty(rt, "tag").asNumber();
-    const jsi::Object &props = item.getProperty(rt, "updates").asObject(rt);
+    const facebook::jsi::Object &props =
+        item.getProperty(rt, "updates").asObject(rt);
     method(
         javaPart_.get(),
         viewTag,
@@ -330,32 +342,41 @@ void NativeProxy::scrollTo(int viewTag, double x, double y, bool animated) {
   method(javaPart_.get(), viewTag, x, y, animated);
 }
 
-inline jni::local_ref<ReadableArray::javaobject> castReadableArray(
-    jni::local_ref<ReadableNativeArray::javaobject> const &nativeArray) {
-  return make_local(
-      reinterpret_cast<ReadableArray::javaobject>(nativeArray.get()));
+inline facebook::jni::local_ref<facebook::react::ReadableArray::javaobject>
+castReadableArray(
+    facebook::jni::local_ref<
+        facebook::react::ReadableNativeArray::javaobject> const &nativeArray) {
+  return facebook::jni::make_local(
+      reinterpret_cast<facebook::react::ReadableArray::javaobject>(
+          nativeArray.get()));
 }
 
 void NativeProxy::dispatchCommand(
-    jsi::Runtime &rt,
+    facebook::jsi::Runtime &rt,
     const int viewTag,
-    const jsi::Value &commandNameValue,
-    const jsi::Value &argsValue) {
+    const facebook::jsi::Value &commandNameValue,
+    const facebook::jsi::Value &argsValue) {
   static const auto method = getJniMethod<void(
-      int, jni::local_ref<JString>, jni::local_ref<ReadableArray::javaobject>)>(
+      int,
+      facebook::jni::local_ref<facebook::jni::JString>,
+      facebook::jni::local_ref<facebook::react::ReadableArray::javaobject>)>(
       "dispatchCommand");
-  local_ref<JString> commandId =
-      jni::make_jstring(commandNameValue.asString(rt).utf8(rt).c_str());
-  jni::local_ref<ReadableArray::javaobject> commandArgs =
-      castReadableArray(ReadableNativeArray::newObjectCxxArgs(
-          jsi::dynamicFromValue(rt, argsValue)));
+  facebook::jni::local_ref<facebook::jni::JString> commandId =
+      facebook::jni::make_jstring(
+          commandNameValue.asString(rt).utf8(rt).c_str());
+  facebook::jni::local_ref<facebook::react::ReadableArray::javaobject>
+      commandArgs = castReadableArray(
+          facebook::react::ReadableNativeArray::newObjectCxxArgs(
+              facebook::jsi::dynamicFromValue(rt, argsValue)));
   method(javaPart_.get(), viewTag, commandId, commandArgs);
 }
 
 std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
   static const auto method =
-      getJniMethod<local_ref<JArrayFloat>(int)>("measure");
-  local_ref<JArrayFloat> output = method(javaPart_.get(), viewTag);
+      getJniMethod<facebook::jni::local_ref<facebook::jni::JArrayFloat>(int)>(
+          "measure");
+  facebook::jni::local_ref<facebook::jni::JArrayFloat> output =
+      method(javaPart_.get(), viewTag);
   size_t size = output->size();
   auto elements = output->getRegion(0, size);
 
@@ -371,21 +392,26 @@ std::vector<std::pair<std::string, double>> NativeProxy::measure(int viewTag) {
 #endif // RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
-inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
-    jni::local_ref<ReadableNativeMap::javaobject> const &nativeMap) {
-  return make_local(reinterpret_cast<ReadableMap::javaobject>(nativeMap.get()));
+inline facebook::jni::local_ref<facebook::react::ReadableMap::javaobject>
+castReadableMap(
+    facebook::jni::local_ref<
+        facebook::react::ReadableNativeMap::javaobject> const &nativeMap) {
+  return facebook::jni::make_local(
+      reinterpret_cast<facebook::react::ReadableMap::javaobject>(
+          nativeMap.get()));
 }
 
 void NativeProxy::synchronouslyUpdateUIProps(
-    jsi::Runtime &rt,
-    Tag tag,
-    const jsi::Object &props) {
-  static const auto method =
-      getJniMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
-          "synchronouslyUpdateUIProps");
-  jni::local_ref<ReadableMap::javaobject> uiProps =
-      castReadableMap(ReadableNativeMap::newObjectCxxArgs(
-          jsi::dynamicFromValue(rt, jsi::Value(rt, props))));
+    facebook::jsi::Runtime &rt,
+    facebook::react::Tag tag,
+    const facebook::jsi::Object &props) {
+  static const auto method = getJniMethod<void(
+      int, facebook::jni::local_ref<facebook::react::ReadableMap::javaobject>)>(
+      "synchronouslyUpdateUIProps");
+  facebook::jni::local_ref<facebook::react::ReadableMap::javaobject> uiProps =
+      castReadableMap(facebook::react::ReadableNativeMap::newObjectCxxArgs(
+          facebook::jsi::dynamicFromValue(
+              rt, facebook::jsi::Value(rt, props))));
   method(javaPart_.get(), tag, uiProps);
 }
 #endif
@@ -440,15 +466,16 @@ double NativeProxy::getAnimationTimestamp() {
 }
 
 void NativeProxy::handleEvent(
-    jni::alias_ref<JString> eventName,
+    facebook::jni::alias_ref<facebook::jni::JString> eventName,
     jint emitterReactTag,
-    jni::alias_ref<react::WritableMap> event) {
+    facebook::jni::alias_ref<facebook::react::WritableMap> event) {
   // handles RCTEvents from RNGestureHandler
   if (event.get() == nullptr) {
     // Ignore events with null payload.
     return;
   }
-  // TODO: convert event directly to jsi::Value without JSON serialization
+  // TODO: convert event directly to facebook::jsi::Value without JSON
+  // serialization
   std::string eventAsString;
   try {
     eventAsString = event->toString();
@@ -469,10 +496,10 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
-  jsi::Value payload;
+  facebook::jsi::Runtime &rt = nativeReanimatedModule_->getUIRuntime();
+  facebook::jsi::Value payload;
   try {
-    payload = jsi::Value::createFromJsonUtf8(
+    payload = facebook::jsi::Value::createFromJsonUtf8(
         rt, reinterpret_cast<uint8_t *>(&eventJSON[0]), eventJSON.size());
   } catch (std::exception &) {
     // Ignore events with malformed JSON payload.
@@ -484,9 +511,9 @@ void NativeProxy::handleEvent(
 }
 
 void NativeProxy::progressLayoutAnimation(
-    jsi::Runtime &rt,
+    facebook::jsi::Runtime &rt,
     int tag,
-    const jsi::Object &newProps,
+    const facebook::jsi::Object &newProps,
     bool isSharedTransition) {
   auto newPropsJNI = JNIHelper::ConvertToPropsMap(rt, newProps);
   layoutAnimations_->cthis()->progressLayoutAnimation(
@@ -570,19 +597,23 @@ void NativeProxy::setupLayoutAnimations() {
 
   layoutAnimations_->cthis()->setAnimationStartingBlock(
       [weakNativeReanimatedModule](
-          int tag, int type, alias_ref<JMap<jstring, jstring>> values) {
+          int tag,
+          int type,
+          facebook::jni::alias_ref<facebook::jni::JMap<jstring, jstring>>
+              values) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-          jsi::Runtime &rt = nativeReanimatedModule->getUIRuntime();
-          jsi::Object yogaValues(rt);
+          facebook::jsi::Runtime &rt = nativeReanimatedModule->getUIRuntime();
+          facebook::jsi::Object yogaValues(rt);
           for (const auto &entry : *values) {
             try {
               std::string keyString = entry.first->toStdString();
               std::string valueString = entry.second->toStdString();
-              auto key = jsi::String::createFromAscii(rt, keyString);
+              auto key = facebook::jsi::String::createFromAscii(rt, keyString);
               if (keyString == "currentTransformMatrix" ||
                   keyString == "targetTransformMatrix") {
-                jsi::Array matrix =
-                    jsi_utils::convertStringToArray(rt, valueString, 9);
+                facebook::jsi::Array matrix =
+                    worklets::jsi_utils::convertStringToArray(
+                        rt, valueString, 9);
                 yogaValues.setProperty(rt, key, matrix);
               } else {
                 auto value = stod(valueString);
@@ -638,7 +669,7 @@ void NativeProxy::setupLayoutAnimations() {
   layoutAnimations_->cthis()->setCancelAnimationForTag(
       [weakNativeReanimatedModule](int tag) {
         if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-          jsi::Runtime &rt = nativeReanimatedModule->getUIRuntime();
+          facebook::jsi::Runtime &rt = nativeReanimatedModule->getUIRuntime();
           nativeReanimatedModule->layoutAnimationsManager()
               .cancelLayoutAnimation(rt, tag);
         }

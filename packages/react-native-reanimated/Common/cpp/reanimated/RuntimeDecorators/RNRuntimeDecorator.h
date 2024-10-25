@@ -6,14 +6,12 @@
 
 #include <memory>
 
-using namespace facebook;
-
 namespace reanimated {
 
 class RNRuntimeDecorator {
  public:
   static void decorate(
-      jsi::Runtime &rnRuntime,
+      facebook::jsi::Runtime &rnRuntime,
       const std::shared_ptr<NativeReanimatedModule> &nativeReanimatedModule);
 };
 

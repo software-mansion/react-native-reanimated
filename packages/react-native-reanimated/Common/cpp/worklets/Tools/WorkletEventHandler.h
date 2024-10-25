@@ -8,8 +8,6 @@
 #include <memory>
 #include <string>
 
-using namespace facebook;
-
 namespace worklets {
 
 class WorkletEventHandler {
@@ -31,7 +29,7 @@ class WorkletEventHandler {
   void process(
       const std::shared_ptr<WorkletRuntime> &workletRuntime,
       double eventTimestamp,
-      const jsi::Value &eventValue) const;
+      const facebook::jsi::Value &eventValue) const;
   uint64_t getHandlerId() const;
   const std::string &getEventName() const;
   uint64_t getEmitterReactTag() const;

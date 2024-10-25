@@ -4,103 +4,101 @@
 #include <ReactCommon/TurboModule.h>
 
 #include <memory>
-#include <string>
-#include <vector>
-
-using namespace facebook;
-using namespace react;
 
 namespace reanimated {
 
-class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
+class JSI_EXPORT NativeReanimatedModuleSpec
+    : public facebook::react::TurboModule {
  protected:
   explicit NativeReanimatedModuleSpec(
-      const std::shared_ptr<CallInvoker> &jsInvoker);
+      const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker);
 
  public:
   // SharedValue
-  virtual jsi::Value makeShareableClone(
-      jsi::Runtime &rt,
-      const jsi::Value &value,
-      const jsi::Value &shouldRetainRemote,
-      const jsi::Value &nativeStateSource) = 0;
+  virtual facebook::jsi::Value makeShareableClone(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &value,
+      const facebook::jsi::Value &shouldRetainRemote,
+      const facebook::jsi::Value &nativeStateSource) = 0;
 
   // Scheduling
-  virtual void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) = 0;
-  virtual jsi::Value executeOnUIRuntimeSync(
-      jsi::Runtime &rt,
-      const jsi::Value &worklet) = 0;
+  virtual void scheduleOnUI(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &worklet) = 0;
+  virtual facebook::jsi::Value executeOnUIRuntimeSync(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &worklet) = 0;
 
   // Worklet runtime
-  virtual jsi::Value createWorkletRuntime(
-      jsi::Runtime &rt,
-      const jsi::Value &name,
-      const jsi::Value &initializer) = 0;
-  virtual jsi::Value scheduleOnRuntime(
-      jsi::Runtime &rt,
-      const jsi::Value &workletRuntimeValue,
-      const jsi::Value &shareableWorkletValue) = 0;
+  virtual facebook::jsi::Value createWorkletRuntime(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &name,
+      const facebook::jsi::Value &initializer) = 0;
+  virtual facebook::jsi::Value scheduleOnRuntime(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &workletRuntimeValue,
+      const facebook::jsi::Value &shareableWorkletValue) = 0;
 
   // events
-  virtual jsi::Value registerEventHandler(
-      jsi::Runtime &rt,
-      const jsi::Value &worklet,
-      const jsi::Value &eventName,
-      const jsi::Value &emitterReactTag) = 0;
+  virtual facebook::jsi::Value registerEventHandler(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &worklet,
+      const facebook::jsi::Value &eventName,
+      const facebook::jsi::Value &emitterReactTag) = 0;
   virtual void unregisterEventHandler(
-      jsi::Runtime &rt,
-      const jsi::Value &registrationId) = 0;
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &registrationId) = 0;
 
   // views
-  virtual jsi::Value getViewProp(
-      jsi::Runtime &rt,
+  virtual facebook::jsi::Value getViewProp(
+      facebook::jsi::Runtime &rt,
 #ifdef RCT_NEW_ARCH_ENABLED
-      const jsi::Value &shadowNodeWrapper,
+      const facebook::jsi::Value &shadowNodeWrapper,
 #else
-      const jsi::Value &viewTag,
+      const facebook::jsi::Value &viewTag,
 #endif
-      const jsi::Value &propName,
-      const jsi::Value &callback) = 0;
+      const facebook::jsi::Value &propName,
+      const facebook::jsi::Value &callback) = 0;
 
   // sensors
-  virtual jsi::Value registerSensor(
-      jsi::Runtime &rt,
-      const jsi::Value &sensorType,
-      const jsi::Value &interval,
-      const jsi::Value &iosReferenceFrame,
-      const jsi::Value &sensorDataContainer) = 0;
+  virtual facebook::jsi::Value registerSensor(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &sensorType,
+      const facebook::jsi::Value &interval,
+      const facebook::jsi::Value &iosReferenceFrame,
+      const facebook::jsi::Value &sensorDataContainer) = 0;
   virtual void unregisterSensor(
-      jsi::Runtime &rt,
-      const jsi::Value &sensorId) = 0;
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &sensorId) = 0;
 
   // keyboard
-  virtual jsi::Value subscribeForKeyboardEvents(
-      jsi::Runtime &rt,
-      const jsi::Value &keyboardEventContainer,
-      const jsi::Value &isStatusBarTranslucent,
-      const jsi::Value &isNavigationBarTranslucent) = 0;
+  virtual facebook::jsi::Value subscribeForKeyboardEvents(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &keyboardEventContainer,
+      const facebook::jsi::Value &isStatusBarTranslucent,
+      const facebook::jsi::Value &isNavigationBarTranslucent) = 0;
   virtual void unsubscribeFromKeyboardEvents(
-      jsi::Runtime &rt,
-      const jsi::Value &listenerId) = 0;
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &listenerId) = 0;
 
   // other
-  virtual jsi::Value enableLayoutAnimations(
-      jsi::Runtime &rt,
-      const jsi::Value &config) = 0;
-  virtual jsi::Value configureProps(
-      jsi::Runtime &rt,
-      const jsi::Value &uiProps,
-      const jsi::Value &nativeProps) = 0;
+  virtual facebook::jsi::Value enableLayoutAnimations(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &config) = 0;
+  virtual facebook::jsi::Value configureProps(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &uiProps,
+      const facebook::jsi::Value &nativeProps) = 0;
 
   // layout animations
-  virtual jsi::Value configureLayoutAnimationBatch(
-      jsi::Runtime &rt,
-      const jsi::Value &layoutAnimationsBatch) = 0;
+  virtual facebook::jsi::Value configureLayoutAnimationBatch(
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &layoutAnimationsBatch) = 0;
 
   virtual void setShouldAnimateExiting(
-      jsi::Runtime &rt,
-      const jsi::Value &viewTag,
-      const jsi::Value &shouldAnimate) = 0;
+      facebook::jsi::Runtime &rt,
+      const facebook::jsi::Value &viewTag,
+      const facebook::jsi::Value &shouldAnimate) = 0;
 };
 
 } // namespace reanimated

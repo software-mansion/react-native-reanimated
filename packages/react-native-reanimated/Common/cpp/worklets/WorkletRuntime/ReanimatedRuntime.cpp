@@ -16,12 +16,9 @@
 
 namespace worklets {
 
-using namespace facebook;
-using namespace react;
-
-std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
-    jsi::Runtime &rnRuntime,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
+std::shared_ptr<facebook::jsi::Runtime> ReanimatedRuntime::make(
+    facebook::jsi::Runtime &rnRuntime,
+    const std::shared_ptr<facebook::react::MessageQueueThread> &jsQueue,
     const std::string &name) {
   (void)rnRuntime; // used only for V8
 #if JS_RUNTIME_HERMES

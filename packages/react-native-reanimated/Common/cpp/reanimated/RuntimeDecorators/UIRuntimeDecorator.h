@@ -4,17 +4,15 @@
 
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
-using namespace facebook;
-
 namespace reanimated {
 
 using RequestAnimationFrameFunction =
-    std::function<void(jsi::Runtime &, const jsi::Value &)>;
+    std::function<void(facebook::jsi::Runtime &, const facebook::jsi::Value &)>;
 
 class UIRuntimeDecorator {
  public:
   static void decorate(
-      jsi::Runtime &uiRuntime,
+      facebook::jsi::Runtime &uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
       const RemoveFromPropsRegistryFunction removeFromPropsRegistry,
 #else

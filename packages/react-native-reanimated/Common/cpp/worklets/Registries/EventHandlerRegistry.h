@@ -11,8 +11,6 @@
 #include <unordered_map>
 #include <utility>
 
-using namespace facebook;
-
 namespace worklets {
 
 class WorkletEventHandler;
@@ -39,7 +37,7 @@ class EventHandlerRegistry {
       const double eventTimestamp,
       const std::string &eventName,
       const int emitterReactTag,
-      const jsi::Value &eventPayload);
+      const facebook::jsi::Value &eventPayload);
 
   bool isAnyHandlerWaitingForEvent(
       const std::string &eventName,

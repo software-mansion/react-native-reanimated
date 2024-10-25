@@ -8,7 +8,7 @@
 
 #include <memory>
 #include <unordered_map>
-#include <unordered_set>
+#include <unordered_set> // USED ON PAPER
 #include <utility>
 #include <vector>
 
@@ -20,7 +20,9 @@ struct Rect {
 
 struct Frame {
   std::optional<double> x, y, width, height;
-  Frame(jsi::Runtime &runtime, const jsi::Object &newStyle) {
+  Frame(
+      facebook::jsi::Runtime &runtime,
+      const facebook::jsi::Object &newStyle) {
     if (newStyle.hasProperty(runtime, "originX")) {
       x = newStyle.getProperty(runtime, "originX").asNumber();
     }
@@ -37,13 +39,13 @@ struct Frame {
 };
 
 struct UpdateValues {
-  Props::Shared newProps;
+  facebook::react::Props::Shared newProps;
   Frame frame;
 };
 
 struct Snapshot {
   double x, y, width, height, windowWidth, windowHeight;
-  Snapshot(const ShadowView &shadowView, Rect window) {
+  Snapshot(const facebook::react::ShadowView &shadowView, Rect window) {
     const auto &frame = shadowView.layoutMetrics.frame;
     x = frame.origin.x;
     y = frame.origin.y;
@@ -72,14 +74,14 @@ struct MutationNode;
 struct Node {
   std::vector<std::shared_ptr<MutationNode>> children, unflattenedChildren;
   std::shared_ptr<Node> parent, unflattenedParent;
-  Tag tag;
+  facebook::react::Tag tag;
   void removeChildFromUnflattenedTree(std::shared_ptr<MutationNode> child);
-  void applyMutationToIndices(ShadowViewMutation mutation);
+  void applyMutationToIndices(facebook::react::ShadowViewMutation mutation);
   void insertChildren(std::vector<std::shared_ptr<MutationNode>> &newChildren);
   void insertUnflattenedChildren(
       std::vector<std::shared_ptr<MutationNode>> &newChildren);
   virtual bool isMutationMode();
-  explicit Node(const Tag tag) : tag(tag) {}
+  explicit Node(const facebook::react::Tag tag) : tag(tag) {}
   Node(Node &&node)
       : children(std::move(node.children)),
         unflattenedChildren(std::move(node.unflattenedChildren)),
@@ -95,31 +97,34 @@ struct Node {
  Represents a view that was removed from the ShadowTree
  */
 struct MutationNode : public Node {
-  ShadowViewMutation mutation;
-  std::unordered_set<Tag> animatedChildren;
+  facebook::react::ShadowViewMutation mutation;
+  std::unordered_set<facebook::react::Tag> animatedChildren;
   ExitingState state = UNDEFINED;
-  explicit MutationNode(ShadowViewMutation &mutation)
+  explicit MutationNode(facebook::react::ShadowViewMutation &mutation)
       : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
-  MutationNode(ShadowViewMutation &mutation, Node &&node)
+  MutationNode(facebook::react::ShadowViewMutation &mutation, Node &&node)
       : Node(std::move(node)), mutation(mutation) {}
   bool isMutationMode() override;
 };
 
 struct SurfaceManager {
   mutable std::unordered_map<
-      SurfaceId,
-      std::shared_ptr<std::unordered_map<Tag, UpdateValues>>>
+      facebook::react::SurfaceId,
+      std::shared_ptr<std::unordered_map<facebook::react::Tag, UpdateValues>>>
       props_;
-  mutable std::unordered_map<SurfaceId, Rect> windows_;
+  mutable std::unordered_map<facebook::react::SurfaceId, Rect> windows_;
 
-  std::unordered_map<Tag, UpdateValues> &getUpdateMap(SurfaceId surfaceId);
-  void
-  updateWindow(SurfaceId surfaceId, double windowWidth, double windowHeight);
-  Rect getWindow(SurfaceId surfaceId);
+  std::unordered_map<facebook::react::Tag, UpdateValues> &getUpdateMap(
+      facebook::react::SurfaceId surfaceId);
+  void updateWindow(
+      facebook::react::SurfaceId surfaceId,
+      double windowWidth,
+      double windowHeight);
+  Rect getWindow(facebook::react::SurfaceId surfaceId);
 };
 
 static inline void updateLayoutMetrics(
-    LayoutMetrics &layoutMetrics,
+    facebook::react::LayoutMetrics &layoutMetrics,
     Frame &frame) {
   // we use optional's here to avoid overwriting non-animated values
   if (frame.width) {
@@ -144,7 +149,8 @@ static inline bool isRNSScreen(std::shared_ptr<MutationNode> node) {
           node->mutation.oldChildShadowView.componentName, "RNSScreen");
 }
 
-static inline bool hasLayoutChanged(const ShadowViewMutation &mutation) {
+static inline bool hasLayoutChanged(
+    const facebook::react::ShadowViewMutation &mutation) {
   return mutation.oldChildShadowView.layoutMetrics.frame !=
       mutation.newChildShadowView.layoutMetrics.frame;
 }

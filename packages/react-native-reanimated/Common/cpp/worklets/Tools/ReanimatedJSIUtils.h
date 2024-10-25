@@ -1,64 +1,69 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <sstream>
 #include <string>
 #include <tuple>
 #include <utility>
 
-using namespace facebook;
-
 namespace worklets::jsi_utils {
 
-// `get` functions take a pointer to `jsi::Value` and
+// `get` functions take a pointer to `facebook::jsi::Value` and
 // call an appropriate method to cast to the native type
 template <typename T>
-inline T get(jsi::Runtime &rt, const jsi::Value *value);
+inline T get(facebook::jsi::Runtime &rt, const facebook::jsi::Value *value);
 
 template <>
-inline double get<double>(jsi::Runtime &, const jsi::Value *value) {
+inline double get<double>(
+    facebook::jsi::Runtime &,
+    const facebook::jsi::Value *value) {
   return value->asNumber();
 }
 
 template <>
-inline int get<int>(jsi::Runtime &, const jsi::Value *value) {
+inline int get<int>(
+    facebook::jsi::Runtime &,
+    const facebook::jsi::Value *value) {
   return value->asNumber();
 }
 
 template <>
-inline bool get<bool>(jsi::Runtime &, const jsi::Value *value) {
+inline bool get<bool>(
+    facebook::jsi::Runtime &,
+    const facebook::jsi::Value *value) {
   if (!value->isBool()) {
-    throw jsi::JSINativeException("[Reanimated] Expected a boolean.");
+    throw facebook::jsi::JSINativeException("[Reanimated] Expected a boolean.");
   }
   return value->getBool();
 }
 
 template <>
-inline jsi::Object get<jsi::Object>(jsi::Runtime &rt, const jsi::Value *value) {
+inline facebook::jsi::Object get<facebook::jsi::Object>(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value *value) {
   return value->asObject(rt);
 }
 
 template <>
-inline jsi::Value const &get<jsi::Value const &>(
-    jsi::Runtime &,
-    const jsi::Value *value) {
+inline facebook::jsi::Value const &get<facebook::jsi::Value const &>(
+    facebook::jsi::Runtime &,
+    const facebook::jsi::Value *value) {
   return *value;
 }
 
 // `convertArgs` functions take a variadic template parameter of target (C++)
-// argument types `Targs` and a `jsi::Value` array `args`, and converts `args`
-// to a tuple of typed C++ arguments to be passed to the native implementation.
-// This is accomplished by dispatching (at compile time) to the correct
-// implementation based on the first type of `Targs`, using SFINAE to select the
-// correct specialization, and concatenating with the result of recursion on the
-// rest of `Targs`
+// argument types `Targs` and a `facebook::jsi::Value` array `args`, and
+// converts `args` to a tuple of typed C++ arguments to be passed to the native
+// implementation. This is accomplished by dispatching (at compile time) to the
+// correct implementation based on the first type of `Targs`, using SFINAE to
+// select the correct specialization, and concatenating with the result of
+// recursion on the rest of `Targs`
 
 // BEGIN implementations for `convertArgs` specializations.
 // specialization for empty `Targs` - returns an empty tuple
 template <typename... Args>
 inline std::enable_if_t<(sizeof...(Args) == 0), std::tuple<>> convertArgs(
-    jsi::Runtime &,
-    const jsi::Value *) {
+    facebook::jsi::Runtime &,
+    const facebook::jsi::Value *) {
   return std::make_tuple();
 }
 
@@ -67,8 +72,8 @@ inline std::enable_if_t<(sizeof...(Args) == 0), std::tuple<>> convertArgs(
 // and returns the concatenation of results
 template <typename T, typename... Rest>
 inline std::tuple<T, Rest...> convertArgs(
-    jsi::Runtime &rt,
-    const jsi::Value *args) {
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value *args) {
   auto arg = std::tuple<T>(get<T>(rt, args));
   auto rest = convertArgs<Rest...>(rt, std::next(args));
   return std::tuple_cat(std::move(arg), std::move(rest));
@@ -80,8 +85,8 @@ inline std::tuple<T, Rest...> convertArgs(
 template <typename Ret, typename... Args>
 std::tuple<Args...> getArgsForFunction(
     std::function<Ret(Args...)>,
-    jsi::Runtime &rt,
-    const jsi::Value *args,
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value *args,
     const size_t count) {
   assert(sizeof...(Args) == count);
   return convertArgs<Args...>(rt, args);
@@ -91,10 +96,10 @@ std::tuple<Args...> getArgsForFunction(
 // native C++ types needed to call `function`,
 // passing `rt` as the first argument
 template <typename Ret, typename... Args>
-std::tuple<jsi::Runtime &, Args...> getArgsForFunction(
-    std::function<Ret(jsi::Runtime &, Args...)>,
-    jsi::Runtime &rt,
-    const jsi::Value *args,
+std::tuple<facebook::jsi::Runtime &, Args...> getArgsForFunction(
+    std::function<Ret(facebook::jsi::Runtime &, Args...)>,
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value *args,
     const size_t count) {
   assert(sizeof...(Args) == count);
   return std::tuple_cat(std::tie(rt), convertArgs<Args...>(rt, args));
@@ -102,7 +107,7 @@ std::tuple<jsi::Runtime &, Args...> getArgsForFunction(
 
 // calls `function` with `args`
 template <typename Ret, typename... Args>
-inline jsi::Value apply(
+inline facebook::jsi::Value apply(
     std::function<Ret(Args...)> function,
     std::tuple<Args...> args) {
   return std::apply(function, std::move(args));
@@ -111,21 +116,21 @@ inline jsi::Value apply(
 // calls void-returning `function` with `args`,
 // and returns `undefined`
 template <typename... Args>
-inline jsi::Value apply(
+inline facebook::jsi::Value apply(
     std::function<void(Args...)> function,
     std::tuple<Args...> args) {
   std::apply(function, std::move(args));
-  return jsi::Value::undefined();
+  return facebook::jsi::Value::undefined();
 }
 
 // returns a function with JSI calling convention
 // from a native function `function`
 template <typename Fun>
-jsi::HostFunctionType createHostFunction(Fun function) {
+facebook::jsi::HostFunctionType createHostFunction(Fun function) {
   return [function](
-             jsi::Runtime &rt,
-             const jsi::Value &,
-             const jsi::Value *args,
+             facebook::jsi::Runtime &rt,
+             const facebook::jsi::Value &,
+             const facebook::jsi::Value *args,
              const size_t count) {
     auto argz = getArgsForFunction(function, rt, args, count);
     return apply(function, std::move(argz));
@@ -141,7 +146,7 @@ struct takes_runtime {
 
 // specialization for `function<Ret(Runtime &, Rest...)`
 template <typename... Rest>
-struct takes_runtime<jsi::Runtime &, Rest...> {
+struct takes_runtime<facebook::jsi::Runtime &, Rest...> {
   static constexpr size_t value = 1;
 };
 
@@ -150,24 +155,31 @@ struct takes_runtime<jsi::Runtime &, Rest...> {
 // in the `rt` JS runtime
 template <typename Ret, typename... Args>
 void installJsiFunction(
-    jsi::Runtime &rt,
+    facebook::jsi::Runtime &rt,
     std::string_view name,
     std::function<Ret(Args...)> function) {
   auto clb = createHostFunction(function);
   auto argsCount = sizeof...(Args) - takes_runtime<Args...>::value;
-  jsi::Value jsiFunction = jsi::Function::createFromHostFunction(
-      rt, jsi::PropNameID::forAscii(rt, name.data()), argsCount, clb);
+  facebook::jsi::Value jsiFunction =
+      facebook::jsi::Function::createFromHostFunction(
+          rt,
+          facebook::jsi::PropNameID::forAscii(rt, name.data()),
+          argsCount,
+          clb);
   rt.global().setProperty(rt, name.data(), jsiFunction);
 }
 
 // this should take care of passing types convertible to `function`
 template <typename Fun>
-void installJsiFunction(jsi::Runtime &rt, std::string_view name, Fun function) {
+void installJsiFunction(
+    facebook::jsi::Runtime &rt,
+    std::string_view name,
+    Fun function) {
   installJsiFunction(rt, name, std::function(std::forward<Fun>(function)));
 }
 
-jsi::Array convertStringToArray(
-    jsi::Runtime &rt,
+facebook::jsi::Array convertStringToArray(
+    facebook::jsi::Runtime &rt,
     const std::string &value,
     const unsigned int expectedSize);
 

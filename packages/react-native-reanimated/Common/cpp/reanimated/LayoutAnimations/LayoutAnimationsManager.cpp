@@ -109,42 +109,42 @@ void LayoutAnimationsManager::clearLayoutAnimationConfig(const int tag) {
 }
 
 void LayoutAnimationsManager::startLayoutAnimation(
-    jsi::Runtime &rt,
+    facebook::jsi::Runtime &rt,
     const int tag,
     const LayoutAnimationType type,
-    const jsi::Object &values) {
-  std::shared_ptr<Shareable> config, viewShareable;
+    const facebook::jsi::Object &values) {
+  std::shared_ptr<worklets::Shareable> config, viewShareable;
   {
     auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
     config = getConfigsForType(type)[tag];
   }
   // TODO: cache the following!!
-  jsi::Value layoutAnimationRepositoryAsValue =
+  facebook::jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
           .getPropertyAsObject(rt, "global")
           .getProperty(rt, "LayoutAnimationsManager");
-  jsi::Function startAnimationForTag =
+  facebook::jsi::Function startAnimationForTag =
       layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
           rt, "start");
   startAnimationForTag.call(
       rt,
-      jsi::Value(tag),
-      jsi::Value(static_cast<int>(type)),
+      facebook::jsi::Value(tag),
+      facebook::jsi::Value(static_cast<int>(type)),
       values,
       config->toJSValue(rt));
 }
 
 void LayoutAnimationsManager::cancelLayoutAnimation(
-    jsi::Runtime &rt,
+    facebook::jsi::Runtime &rt,
     const int tag) const {
-  jsi::Value layoutAnimationRepositoryAsValue =
+  facebook::jsi::Value layoutAnimationRepositoryAsValue =
       rt.global()
           .getPropertyAsObject(rt, "global")
           .getProperty(rt, "LayoutAnimationsManager");
-  jsi::Function cancelLayoutAnimation =
+  facebook::jsi::Function cancelLayoutAnimation =
       layoutAnimationRepositoryAsValue.getObject(rt).getPropertyAsFunction(
           rt, "stop");
-  cancelLayoutAnimation.call(rt, jsi::Value(tag));
+  cancelLayoutAnimation.call(rt, facebook::jsi::Value(tag));
 }
 
 /*
@@ -209,7 +209,7 @@ void LayoutAnimationsManager::checkDuplicateSharedTag(
 }
 #endif // NDEBUG
 
-std::unordered_map<int, std::shared_ptr<Shareable>> &
+std::unordered_map<int, std::shared_ptr<worklets::Shareable>> &
 LayoutAnimationsManager::getConfigsForType(const LayoutAnimationType type) {
   switch (type) {
     case ENTERING:

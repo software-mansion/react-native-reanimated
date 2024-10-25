@@ -9,12 +9,11 @@
 
 namespace reanimated {
 
-using namespace facebook::jni;
-using namespace facebook;
-
-class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
-  using AnimationStartingBlock =
-      std::function<void(int, int, alias_ref<JMap<jstring, jstring>>)>;
+class LayoutAnimations : public facebook::jni::HybridClass<LayoutAnimations> {
+  using AnimationStartingBlock = std::function<void(
+      int,
+      int,
+      facebook::jni::alias_ref<facebook::jni::JMap<jstring, jstring>>)>;
   using HasAnimationBlock = std::function<bool(int, int)>;
   using ShouldAnimateExitingBlock = std::function<bool(int, bool)>;
 #ifndef NDEBUG
@@ -28,14 +27,14 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/layoutReanimation/LayoutAnimations;";
-  static jni::local_ref<jhybriddata> initHybrid(
-      jni::alias_ref<jhybridobject> jThis);
+  static facebook::jni::local_ref<jhybriddata> initHybrid(
+      facebook::jni::alias_ref<jhybridobject> jThis);
   static void registerNatives();
 
   void startAnimationForTag(
       int tag,
       int type,
-      alias_ref<JMap<jstring, jstring>> values);
+      facebook::jni::alias_ref<facebook::jni::JMap<jstring, jstring>> values);
   bool hasAnimationForTag(int tag, int type);
   bool shouldAnimateExiting(int tag, bool shouldAnimate);
   bool isLayoutAnimationEnabled();
@@ -59,17 +58,18 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
 
   void progressLayoutAnimation(
       int tag,
-      const jni::local_ref<JNIHelper::PropsMap> &updates,
+      const facebook::jni::local_ref<JNIHelper::PropsMap> &updates,
       bool isSharedTransition);
   void endLayoutAnimation(int tag, bool removeView);
   void clearAnimationConfigForTag(int tag);
   void cancelAnimationForTag(int tag);
   int findPrecedingViewTagForTransition(int tag);
-  jni::local_ref<JArrayInt> getSharedGroup(const int tag);
+  facebook::jni::local_ref<facebook::jni::JArrayInt> getSharedGroup(
+      const int tag);
 
  private:
   friend HybridBase;
-  jni::global_ref<LayoutAnimations::javaobject> javaPart_;
+  facebook::jni::global_ref<LayoutAnimations::javaobject> javaPart_;
   AnimationStartingBlock animationStartingBlock_;
   HasAnimationBlock hasAnimationBlock_;
   ShouldAnimateExitingBlock shouldAnimateExitingBlock_;
@@ -83,7 +83,7 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
 #endif
 
   explicit LayoutAnimations(
-      jni::alias_ref<LayoutAnimations::jhybridobject> jThis);
+      facebook::jni::alias_ref<LayoutAnimations::jhybridobject> jThis);
 };
 
 }; // namespace reanimated

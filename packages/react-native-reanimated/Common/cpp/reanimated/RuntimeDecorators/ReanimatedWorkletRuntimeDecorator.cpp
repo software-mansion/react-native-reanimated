@@ -7,12 +7,12 @@
 
 namespace reanimated {
 
-using namespace worklets;
-
-void ReanimatedWorkletRuntimeDecorator::decorate(jsi::Runtime &rt) {
-  jsi_utils::installJsiFunction(
-      rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) {
-        PlatformLogger::log(stringifyJSIValue(rt, value));
+void ReanimatedWorkletRuntimeDecorator::decorate(facebook::jsi::Runtime &rt) {
+  worklets::jsi_utils::installJsiFunction(
+      rt,
+      "_log",
+      [](facebook::jsi::Runtime &rt, const facebook::jsi::Value &value) {
+        PlatformLogger::log(worklets::stringifyJSIValue(rt, value));
       });
 }
 

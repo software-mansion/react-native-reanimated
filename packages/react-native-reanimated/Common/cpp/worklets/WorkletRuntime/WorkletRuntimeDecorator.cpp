@@ -19,8 +19,8 @@ static inline double performanceNow() {
   return duration / NANOSECONDS_IN_MILLISECOND;
 }
 
-static inline std::vector<jsi::Value> parseArgs(
-    jsi::Runtime &rt,
+static inline std::vector<facebook::jsi::Value> parseArgs(
+    facebook::jsi::Runtime &rt,
     std::shared_ptr<ShareableArray> shareableArgs) {
   if (shareableArgs == nullptr) {
     return {};
@@ -28,7 +28,7 @@ static inline std::vector<jsi::Value> parseArgs(
 
   auto argsArray = shareableArgs->toJSValue(rt).asObject(rt).asArray(rt);
   auto argsSize = argsArray.size(rt);
-  std::vector<jsi::Value> result(argsSize);
+  std::vector<facebook::jsi::Value> result(argsSize);
   for (size_t i = 0; i < argsSize; i++) {
     result[i] = argsArray.getValueAtIndex(rt, i);
   }
@@ -36,7 +36,7 @@ static inline std::vector<jsi::Value> parseArgs(
 }
 
 void WorkletRuntimeDecorator::decorate(
-    jsi::Runtime &rt,
+    facebook::jsi::Runtime &rt,
     const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
@@ -44,7 +44,8 @@ void WorkletRuntimeDecorator::decorate(
 
   rt.global().setProperty(rt, "_WORKLET", true);
 
-  rt.global().setProperty(rt, "_LABEL", jsi::String::createFromAscii(rt, name));
+  rt.global().setProperty(
+      rt, "_LABEL", facebook::jsi::String::createFromAscii(rt, name));
 
 #ifdef RCT_NEW_ARCH_ENABLED
   constexpr auto isFabric = true;
@@ -54,11 +55,11 @@ void WorkletRuntimeDecorator::decorate(
   rt.global().setProperty(rt, "_IS_FABRIC", isFabric);
 
 #ifndef NDEBUG
-  auto evalWithSourceUrl = [](jsi::Runtime &rt,
-                              const jsi::Value &thisValue,
-                              const jsi::Value *args,
-                              size_t count) -> jsi::Value {
-    auto code = std::make_shared<const jsi::StringBuffer>(
+  auto evalWithSourceUrl = [](facebook::jsi::Runtime &rt,
+                              const facebook::jsi::Value &thisValue,
+                              const facebook::jsi::Value *args,
+                              size_t count) -> facebook::jsi::Value {
+    auto code = std::make_shared<const facebook::jsi::StringBuffer>(
         args[0].asString(rt).utf8(rt));
     std::string url;
     if (count > 1 && args[1].isString()) {
@@ -69,36 +70,39 @@ void WorkletRuntimeDecorator::decorate(
   rt.global().setProperty(
       rt,
       "evalWithSourceUrl",
-      jsi::Function::createFromHostFunction(
+      facebook::jsi::Function::createFromHostFunction(
           rt,
-          jsi::PropNameID::forAscii(rt, "evalWithSourceUrl"),
+          facebook::jsi::PropNameID::forAscii(rt, "evalWithSourceUrl"),
           1,
           evalWithSourceUrl));
 #endif // NDEBUG
 
-  jsi_utils::installJsiFunction(
-      rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {
-        return jsi::String::createFromUtf8(rt, stringifyJSIValue(rt, value));
+  worklets::jsi_utils::installJsiFunction(
+      rt,
+      "_toString",
+      [](facebook::jsi::Runtime &rt, const facebook::jsi::Value &value) {
+        return facebook::jsi::String::createFromUtf8(
+            rt, stringifyJSIValue(rt, value));
       });
 
-  jsi_utils::installJsiFunction(
+  worklets::jsi_utils::installJsiFunction(
       rt,
       "_makeShareableClone",
-      [](jsi::Runtime &rt,
-         const jsi::Value &value,
-         const jsi::Value &nativeStateSource) {
-        auto shouldRetainRemote = jsi::Value::undefined();
+      [](facebook::jsi::Runtime &rt,
+         const facebook::jsi::Value &value,
+         const facebook::jsi::Value &nativeStateSource) {
+        auto shouldRetainRemote = facebook::jsi::Value::undefined();
         return makeShareableClone(
             rt, value, shouldRetainRemote, nativeStateSource);
       });
 
-  jsi_utils::installJsiFunction(
+  worklets::jsi_utils::installJsiFunction(
       rt,
       "_scheduleRemoteFunctionOnJS",
       [jsScheduler](
-          jsi::Runtime &rt,
-          const jsi::Value &funValue,
-          const jsi::Value &argsValue) {
+          facebook::jsi::Runtime &rt,
+          const facebook::jsi::Value &funValue,
+          const facebook::jsi::Value &argsValue) {
         auto shareableRemoteFun = extractShareableOrThrow<
             ShareableRemoteFunction>(
             rt,
@@ -110,7 +114,7 @@ void WorkletRuntimeDecorator::decorate(
             : extractShareableOrThrow<ShareableArray>(
                   rt, argsValue, "[Reanimated] Args must be an array.");
 
-        jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
+        jsScheduler->scheduleOnJS([=](facebook::jsi::Runtime &rt) {
           auto fun =
               shareableRemoteFun->toJSValue(rt).asObject(rt).asFunction(rt);
           if (shareableArgs == nullptr) {
@@ -119,18 +123,20 @@ void WorkletRuntimeDecorator::decorate(
           } else {
             auto args = parseArgs(rt, shareableArgs);
             fun.call(
-                rt, const_cast<const jsi::Value *>(args.data()), args.size());
+                rt,
+                const_cast<const facebook::jsi::Value *>(args.data()),
+                args.size());
           }
         });
       });
 
-  jsi_utils::installJsiFunction(
+  worklets::jsi_utils::installJsiFunction(
       rt,
       "_scheduleHostFunctionOnJS",
       [jsScheduler](
-          jsi::Runtime &rt,
-          const jsi::Value &hostFunValue,
-          const jsi::Value &argsValue) {
+          facebook::jsi::Runtime &rt,
+          const facebook::jsi::Value &hostFunValue,
+          const facebook::jsi::Value &argsValue) {
         auto hostFun =
             hostFunValue.asObject(rt).asFunction(rt).getHostFunction(rt);
 
@@ -139,37 +145,37 @@ void WorkletRuntimeDecorator::decorate(
             : extractShareableOrThrow<ShareableArray>(
                   rt, argsValue, "[Reanimated] Args must be an array.");
 
-        jsScheduler->scheduleOnJS([=](jsi::Runtime &rt) {
+        jsScheduler->scheduleOnJS([=](facebook::jsi::Runtime &rt) {
           auto args = parseArgs(rt, shareableArgs);
           hostFun(
               rt,
-              jsi::Value::undefined(),
-              const_cast<const jsi::Value *>(args.data()),
+              facebook::jsi::Value::undefined(),
+              const_cast<const facebook::jsi::Value *>(args.data()),
               args.size());
         });
       });
 
-  jsi_utils::installJsiFunction(
+  worklets::jsi_utils::installJsiFunction(
       rt,
       "_scheduleOnRuntime",
-      [](jsi::Runtime &rt,
-         const jsi::Value &workletRuntimeValue,
-         const jsi::Value &shareableWorkletValue) {
+      [](facebook::jsi::Runtime &rt,
+         const facebook::jsi::Value &workletRuntimeValue,
+         const facebook::jsi::Value &shareableWorkletValue) {
         scheduleOnRuntime(rt, workletRuntimeValue, shareableWorkletValue);
       });
 
-  jsi::Object performance(rt);
+  facebook::jsi::Object performance(rt);
   performance.setProperty(
       rt,
       "now",
-      jsi::Function::createFromHostFunction(
+      facebook::jsi::Function::createFromHostFunction(
           rt,
-          jsi::PropNameID::forAscii(rt, "now"),
+          facebook::jsi::PropNameID::forAscii(rt, "now"),
           0,
-          [](jsi::Runtime &runtime,
-             const jsi::Value &,
-             const jsi::Value *args,
-             size_t count) { return jsi::Value(performanceNow()); }));
+          [](facebook::jsi::Runtime &runtime,
+             const facebook::jsi::Value &,
+             const facebook::jsi::Value *args,
+             size_t count) { return facebook::jsi::Value(performanceNow()); }));
   rt.global().setProperty(rt, "performance", performance);
 }
 

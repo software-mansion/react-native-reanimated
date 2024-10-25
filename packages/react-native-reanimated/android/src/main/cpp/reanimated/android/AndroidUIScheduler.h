@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fbjni/detail/Hybrid.h>
+#include <fbjni/detail/References-forward.h>
 #include <worklets/Tools/UIScheduler.h>
 
 #include <fbjni/fbjni.h>
@@ -12,18 +14,16 @@
 
 namespace reanimated {
 
-using namespace facebook;
-using namespace worklets;
-
-class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
+class AndroidUIScheduler
+    : public facebook::jni::HybridClass<AndroidUIScheduler> {
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/AndroidUIScheduler;";
-  static jni::local_ref<jhybriddata> initHybrid(
-      jni::alias_ref<jhybridobject> jThis);
+  static facebook::jni::local_ref<jhybriddata> initHybrid(
+      facebook::jni::alias_ref<jhybridobject> jThis);
   static void registerNatives();
 
-  std::shared_ptr<UIScheduler> getUIScheduler() {
+  std::shared_ptr<worklets::UIScheduler> getUIScheduler() {
     return uiScheduler_;
   }
 
@@ -34,11 +34,11 @@ class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
 
   void triggerUI();
 
-  jni::global_ref<AndroidUIScheduler::javaobject> javaPart_;
-  std::shared_ptr<UIScheduler> uiScheduler_;
+  facebook::jni::global_ref<AndroidUIScheduler::javaobject> javaPart_;
+  std::shared_ptr<worklets::UIScheduler> uiScheduler_;
 
   explicit AndroidUIScheduler(
-      jni::alias_ref<AndroidUIScheduler::jhybridobject> jThis);
+      facebook::jni::alias_ref<AndroidUIScheduler::jhybridobject> jThis);
 };
 
 } // namespace reanimated

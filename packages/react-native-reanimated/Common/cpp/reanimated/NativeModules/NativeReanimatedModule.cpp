@@ -46,8 +46,6 @@
 #define COPY_CAPTURE_WITH_THIS [=] // NOLINT (whitespace/braces)
 #endif // REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 202002L
 
-using namespace facebook;
-
 #if REACT_NATIVE_MINOR_VERSION == 73 && defined(RCT_NEW_ARCH_ENABLED)
 // Android can't find the definition of this static field
 bool CoreFeatures::useNativeState;
@@ -56,10 +54,10 @@ bool CoreFeatures::useNativeState;
 namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(
-    jsi::Runtime &rnRuntime,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::shared_ptr<UIScheduler> &uiScheduler,
+    facebook::jsi::Runtime &rnRuntime,
+    const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
+    const std::shared_ptr<facebook::react::MessageQueueThread> &jsQueue,
+    const std::shared_ptr<worklets::UIScheduler> &uiScheduler,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
     const std::string &valueUnpackerCode,
     const bool isBridgeless,
@@ -71,7 +69,7 @@ NativeReanimatedModule::NativeReanimatedModule(
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
-      uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
+      uiWorkletRuntime_(std::make_shared<worklets::WorkletRuntime>(
           rnRuntime,
           jsQueue,
           jsScheduler_,
@@ -79,14 +77,14 @@ NativeReanimatedModule::NativeReanimatedModule(
           true /* supportsLocking */,
           valueUnpackerCode)),
       valueUnpackerCode_(valueUnpackerCode),
-      eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
+      eventHandlerRegistry_(std::make_unique<worklets::EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       onRenderCallback_([this](const double timestampMs) {
         renderRequested_ = false;
         onRender(timestampMs);
       }),
       animatedSensorModule_(platformDepMethodsHolder),
-      jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
+      jsLogger_(std::make_shared<worklets::JSLogger>(jsScheduler_)),
       layoutAnimationsManager_(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -109,40 +107,48 @@ NativeReanimatedModule::NativeReanimatedModule(
 void NativeReanimatedModule::commonInit(
     const PlatformDepMethodsHolder &platformDepMethodsHolder) {
   auto requestAnimationFrame =
-      [this](jsi::Runtime &rt, const jsi::Value &callback) {
+      [this](facebook::jsi::Runtime &rt, const facebook::jsi::Value &callback) {
         this->requestAnimationFrame(rt, callback);
       };
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  auto updateProps = [this](jsi::Runtime &rt, const jsi::Value &operations) {
+  auto updateProps = [this](
+                         facebook::jsi::Runtime &rt,
+                         const facebook::jsi::Value &operations) {
     this->updateProps(rt, operations);
   };
 
   auto removeFromPropsRegistry =
-      [this](jsi::Runtime &rt, const jsi::Value &viewTags) {
+      [this](facebook::jsi::Runtime &rt, const facebook::jsi::Value &viewTags) {
         this->removeFromPropsRegistry(rt, viewTags);
       };
 
-  auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
+  auto measure = [this](
+                     facebook::jsi::Runtime &rt,
+                     const facebook::jsi::Value &shadowNodeValue) {
     return this->measure(rt, shadowNodeValue);
   };
 
   auto dispatchCommand = [this](
-                             jsi::Runtime &rt,
-                             const jsi::Value &shadowNodeValue,
-                             const jsi::Value &commandNameValue,
-                             const jsi::Value &argsValue) {
+                             facebook::jsi::Runtime &rt,
+                             const facebook::jsi::Value &shadowNodeValue,
+                             const facebook::jsi::Value &commandNameValue,
+                             const facebook::jsi::Value &argsValue) {
     this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
   };
   ProgressLayoutAnimationFunction progressLayoutAnimation =
-      [this](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool) {
+      [this](
+          facebook::jsi::Runtime &rt,
+          int tag,
+          const facebook::jsi::Object &newStyle,
+          bool) {
         auto surfaceId =
             layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
         if (!surfaceId) {
           return;
         }
         uiManager_->getShadowTreeRegistry().visit(
-            *surfaceId, [](const ShadowTree &shadowTree) {
+            *surfaceId, [](const facebook::react::ShadowTree &shadowTree) {
               shadowTree.notifyDelegatesOfUpdates();
             });
       };
@@ -156,20 +162,20 @@ void NativeReanimatedModule::commonInit(
         }
 
         uiManager_->getShadowTreeRegistry().visit(
-            *surfaceId, [](const ShadowTree &shadowTree) {
+            *surfaceId, [](const facebook::react::ShadowTree &shadowTree) {
               shadowTree.notifyDelegatesOfUpdates();
             });
       };
 
   auto obtainProp = [this](
-                        jsi::Runtime &rt,
-                        const jsi::Value &shadowNodeWrapper,
-                        const jsi::Value &propName) {
+                        facebook::jsi::Runtime &rt,
+                        const facebook::jsi::Value &shadowNodeWrapper,
+                        const facebook::jsi::Value &propName) {
     return this->obtainProp(rt, shadowNodeWrapper, propName);
   };
 #endif
 
-  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+  facebook::jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
   UIRuntimeDecorator::decorate(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -207,10 +213,13 @@ NativeReanimatedModule::~NativeReanimatedModule() {
 }
 
 void NativeReanimatedModule::scheduleOnUI(
-    jsi::Runtime &rt,
-    const jsi::Value &worklet) {
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
-      rt, worklet, "[Reanimated] Only worklets can be scheduled to run on UI.");
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &worklet) {
+  auto shareableWorklet =
+      worklets::extractShareableOrThrow<worklets::ShareableWorklet>(
+          rt,
+          worklet,
+          "[Reanimated] Only worklets can be scheduled to run on UI.");
   uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
 #if JS_RUNTIME_HERMES
     // JSI's scope defined here allows for JSI-objects to be cleared up
@@ -218,78 +227,80 @@ void NativeReanimatedModule::scheduleOnUI(
     // temporary JSI objects and hence it allows for such objects to be
     // garbage collected much sooner. Apparently the scope API is only
     // supported on Hermes at the moment.
-    const auto scope = jsi::Scope(uiWorkletRuntime_->getJSIRuntime());
+    const auto scope = facebook::jsi::Scope(uiWorkletRuntime_->getJSIRuntime());
 #endif
     uiWorkletRuntime_->runGuarded(shareableWorklet);
   });
 }
 
-jsi::Value NativeReanimatedModule::executeOnUIRuntimeSync(
-    jsi::Runtime &rt,
-    const jsi::Value &worklet) {
+facebook::jsi::Value NativeReanimatedModule::executeOnUIRuntimeSync(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &worklet) {
   return uiWorkletRuntime_->executeSync(rt, worklet);
 }
 
-jsi::Value NativeReanimatedModule::createWorkletRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &name,
-    const jsi::Value &initializer) {
-  auto workletRuntime = std::make_shared<WorkletRuntime>(
+facebook::jsi::Value NativeReanimatedModule::createWorkletRuntime(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &name,
+    const facebook::jsi::Value &initializer) {
+  auto workletRuntime = std::make_shared<worklets::WorkletRuntime>(
       rt,
       jsQueue_,
       jsScheduler_,
       name.asString(rt).utf8(rt),
       false /* supportsLocking */,
       valueUnpackerCode_);
-  auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
-      rt, initializer, "[Reanimated] Initializer must be a worklet.");
+  auto initializerShareable =
+      worklets::extractShareableOrThrow<worklets::ShareableWorklet>(
+          rt, initializer, "[Reanimated] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
   ReanimatedWorkletRuntimeDecorator::decorate(workletRuntime->getJSIRuntime());
-  return jsi::Object::createFromHostObject(rt, workletRuntime);
+  return facebook::jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
-jsi::Value NativeReanimatedModule::scheduleOnRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue) {
-  reanimated::scheduleOnRuntime(rt, workletRuntimeValue, shareableWorkletValue);
-  return jsi::Value::undefined();
+facebook::jsi::Value NativeReanimatedModule::scheduleOnRuntime(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &workletRuntimeValue,
+    const facebook::jsi::Value &shareableWorkletValue) {
+  worklets::scheduleOnRuntime(rt, workletRuntimeValue, shareableWorkletValue);
+  return facebook::jsi::Value::undefined();
 }
 
-jsi::Value NativeReanimatedModule::makeShareableClone(
-    jsi::Runtime &rt,
-    const jsi::Value &value,
-    const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource) {
-  return reanimated::makeShareableClone(
+facebook::jsi::Value NativeReanimatedModule::makeShareableClone(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &value,
+    const facebook::jsi::Value &shouldRetainRemote,
+    const facebook::jsi::Value &nativeStateSource) {
+  return worklets::makeShareableClone(
       rt, value, shouldRetainRemote, nativeStateSource);
 }
 
-jsi::Value NativeReanimatedModule::registerEventHandler(
-    jsi::Runtime &rt,
-    const jsi::Value &worklet,
-    const jsi::Value &eventName,
-    const jsi::Value &emitterReactTag) {
+facebook::jsi::Value NativeReanimatedModule::registerEventHandler(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &worklet,
+    const facebook::jsi::Value &eventName,
+    const facebook::jsi::Value &emitterReactTag) {
   static uint64_t NEXT_EVENT_HANDLER_ID = 1;
 
   uint64_t newRegistrationId = NEXT_EVENT_HANDLER_ID++;
   auto eventNameStr = eventName.asString(rt).utf8(rt);
-  auto handlerShareable = extractShareableOrThrow<ShareableWorklet>(
-      rt, worklet, "[Reanimated] Event handler must be a worklet.");
+  auto handlerShareable =
+      worklets::extractShareableOrThrow<worklets::ShareableWorklet>(
+          rt, worklet, "[Reanimated] Event handler must be a worklet.");
   int emitterReactTagInt = emitterReactTag.asNumber();
 
   uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
-    auto handler = std::make_shared<WorkletEventHandler>(
+    auto handler = std::make_shared<worklets::WorkletEventHandler>(
         newRegistrationId, eventNameStr, emitterReactTagInt, handlerShareable);
     eventHandlerRegistry_->registerEventHandler(std::move(handler));
   });
 
-  return jsi::Value(static_cast<double>(newRegistrationId));
+  return facebook::jsi::Value(static_cast<double>(newRegistrationId));
 }
 
 void NativeReanimatedModule::unregisterEventHandler(
-    jsi::Runtime &,
-    const jsi::Value &registrationId) {
+    facebook::jsi::Runtime &,
+    const facebook::jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
   uiScheduler_->scheduleOnUI(
       COPY_CAPTURE_WITH_THIS
@@ -312,17 +323,18 @@ static inline std::string intColorToHex(const int val) {
 }
 
 std::string NativeReanimatedModule::obtainPropFromShadowNode(
-    jsi::Runtime &rt,
+    facebook::jsi::Runtime &rt,
     const std::string &propName,
-    const ShadowNode::Shared &shadowNode) {
+    const facebook::react::ShadowNode::Shared &shadowNode) {
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
   if (propName == "width" || propName == "height" || propName == "top" ||
       propName == "left") {
     // These props are calculated from frame
-    auto layoutableShadowNode = dynamic_cast<LayoutableShadowNode const *>(
-        newestCloneOfShadowNode.get());
+    auto layoutableShadowNode =
+        dynamic_cast<facebook::react::LayoutableShadowNode const *>(
+            newestCloneOfShadowNode.get());
     const auto &frame = layoutableShadowNode->layoutMetrics_.frame;
 
     if (propName == "width") {
@@ -337,7 +349,8 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
   } else {
     // These props are calculated from viewProps
     auto props = newestCloneOfShadowNode->getProps();
-    auto viewProps = std::static_pointer_cast<const ViewProps>(props);
+    auto viewProps =
+        std::static_pointer_cast<const facebook::react::ViewProps>(props);
     if (propName == "opacity") {
       return std::to_string(viewProps->opacity);
     } else if (propName == "zIndex") {
@@ -354,38 +367,39 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
       "` with function `getViewProp` is not supported"));
 }
 
-jsi::Value NativeReanimatedModule::getViewProp(
-    jsi::Runtime &rnRuntime,
-    const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &propName,
-    const jsi::Value &callback) {
+facebook::jsi::Value NativeReanimatedModule::getViewProp(
+    facebook::jsi::Runtime &rnRuntime,
+    const facebook::jsi::Value &shadowNodeWrapper,
+    const facebook::jsi::Value &propName,
+    const facebook::jsi::Value &callback) {
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
-  const auto funPtr = std::make_shared<jsi::Function>(
+  const auto funPtr = std::make_shared<facebook::jsi::Function>(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
-  const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
-  uiScheduler_->scheduleOnUI([=]() {
-    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+  const auto shadowNode =
+      facebook::react::shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
+  uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS() {
+    facebook::jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     const auto resultStr =
         obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
 
-    jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
+    jsScheduler_->scheduleOnJS([=](facebook::jsi::Runtime &rnRuntime) {
       const auto resultValue =
-          jsi::String::createFromUtf8(rnRuntime, resultStr);
+          facebook::jsi::String::createFromUtf8(rnRuntime, resultStr);
       funPtr->call(rnRuntime, resultValue);
     });
   });
-  return jsi::Value::undefined();
+  return facebook::jsi::Value::undefined();
 }
 
 #else
 
-jsi::Value NativeReanimatedModule::getViewProp(
-    jsi::Runtime &rnRuntime,
-    const jsi::Value &viewTag,
-    const jsi::Value &propName,
-    const jsi::Value &callback) {
+facebook::jsi::Value NativeReanimatedModule::getViewProp(
+    facebook::jsi::Runtime &rnRuntime,
+    const facebook::jsi::Value &viewTag,
+    const facebook::jsi::Value &propName,
+    const facebook::jsi::Value &callback) {
   const auto propNameStr = propName.asString(rnRuntime).utf8(rnRuntime);
-  const auto funPtr = std::make_shared<jsi::Function>(
+  const auto funPtr = std::make_shared<facebook::jsi::Function>(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
 
   const int viewTagInt = viewTag.asNumber();
@@ -394,35 +408,35 @@ jsi::Value NativeReanimatedModule::getViewProp(
       COPY_CAPTURE_WITH_THIS
 
       () {
-        jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
-        const jsi::Value propNameValue =
-            jsi::String::createFromUtf8(uiRuntime, propNameStr);
+        facebook::jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+        const facebook::jsi::Value propNameValue =
+            facebook::jsi::String::createFromUtf8(uiRuntime, propNameStr);
         const auto resultValue =
             obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
         const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
 
-        jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
+        jsScheduler_->scheduleOnJS([=](facebook::jsi::Runtime &rnRuntime) {
           const auto resultValue =
-              jsi::String::createFromUtf8(rnRuntime, resultStr);
+              facebook::jsi::String::createFromUtf8(rnRuntime, resultStr);
           funPtr->call(rnRuntime, resultValue);
         });
       });
-  return jsi::Value::undefined();
+  return facebook::jsi::Value::undefined();
 }
 
 #endif
 
-jsi::Value NativeReanimatedModule::enableLayoutAnimations(
-    jsi::Runtime &,
-    const jsi::Value &config) {
+facebook::jsi::Value NativeReanimatedModule::enableLayoutAnimations(
+    facebook::jsi::Runtime &,
+    const facebook::jsi::Value &config) {
   FeaturesConfig::setLayoutAnimationEnabled(config.getBool());
-  return jsi::Value::undefined();
+  return facebook::jsi::Value::undefined();
 }
 
-jsi::Value NativeReanimatedModule::configureProps(
-    jsi::Runtime &rt,
-    const jsi::Value &uiProps,
-    const jsi::Value &nativeProps) {
+facebook::jsi::Value NativeReanimatedModule::configureProps(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &uiProps,
+    const facebook::jsi::Value &nativeProps) {
 #ifdef RCT_NEW_ARCH_ENABLED
   auto uiPropsArray = uiProps.asObject(rt).asArray(rt);
   for (size_t i = 0; i < uiPropsArray.size(rt); ++i) {
@@ -439,12 +453,12 @@ jsi::Value NativeReanimatedModule::configureProps(
   configurePropsPlatformFunction_(rt, uiProps, nativeProps);
 #endif // RCT_NEW_ARCH_ENABLED
 
-  return jsi::Value::undefined();
+  return facebook::jsi::Value::undefined();
 }
 
-jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
-    jsi::Runtime &rt,
-    const jsi::Value &layoutAnimationsBatch) {
+facebook::jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &layoutAnimationsBatch) {
   auto array = layoutAnimationsBatch.asObject(rt).asArray(rt);
   size_t length = array.size(rt);
   std::vector<LayoutAnimationConfig> batch(length);
@@ -458,10 +472,11 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
     if (config.isUndefined()) {
       batchItem.config = nullptr;
     } else {
-      batchItem.config = extractShareableOrThrow<ShareableObject>(
-          rt,
-          config,
-          "[Reanimated] Layout animation config must be an object.");
+      batchItem.config =
+          worklets::extractShareableOrThrow<worklets::ShareableObject>(
+              rt,
+              config,
+              "[Reanimated] Layout animation config must be an object.");
     }
     if (batch[i].type != SHARED_ELEMENT_TRANSITION &&
         batch[i].type != SHARED_ELEMENT_TRANSITION_PROGRESS) {
@@ -475,13 +490,13 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
     }
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
-  return jsi::Value::undefined();
+  return facebook::jsi::Value::undefined();
 }
 
 void NativeReanimatedModule::setShouldAnimateExiting(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTag,
-    const jsi::Value &shouldAnimate) {
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &viewTag,
+    const facebook::jsi::Value &shouldAnimate) {
   layoutAnimationsManager_->setShouldAnimateExiting(
       viewTag.asNumber(), shouldAnimate.getBool());
 }
@@ -494,16 +509,17 @@ bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
 }
 
 void NativeReanimatedModule::requestAnimationFrame(
-    jsi::Runtime &rt,
-    const jsi::Value &callback) {
-  frameCallbacks_.push_back(std::make_shared<jsi::Value>(rt, callback));
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &callback) {
+  frameCallbacks_.push_back(
+      std::make_shared<facebook::jsi::Value>(rt, callback));
   maybeRequestRender();
 }
 
 void NativeReanimatedModule::maybeRequestRender() {
   if (!renderRequested_) {
     renderRequested_ = true;
-    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+    facebook::jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     requestRender_(onRenderCallback_, uiRuntime);
   }
 }
@@ -511,19 +527,19 @@ void NativeReanimatedModule::maybeRequestRender() {
 void NativeReanimatedModule::onRender(double timestampMs) {
   auto callbacks = std::move(frameCallbacks_);
   frameCallbacks_.clear();
-  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
-  jsi::Value timestamp{timestampMs};
+  facebook::jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+  facebook::jsi::Value timestamp{timestampMs};
   for (const auto &callback : callbacks) {
-    runOnRuntimeGuarded(uiRuntime, *callback, timestamp);
+    worklets::runOnRuntimeGuarded(uiRuntime, *callback, timestamp);
   }
 }
 
-jsi::Value NativeReanimatedModule::registerSensor(
-    jsi::Runtime &rt,
-    const jsi::Value &sensorType,
-    const jsi::Value &interval,
-    const jsi::Value &iosReferenceFrame,
-    const jsi::Value &sensorDataHandler) {
+facebook::jsi::Value NativeReanimatedModule::registerSensor(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &sensorType,
+    const facebook::jsi::Value &interval,
+    const facebook::jsi::Value &iosReferenceFrame,
+    const facebook::jsi::Value &sensorDataHandler) {
   return animatedSensorModule_.registerSensor(
       rt,
       uiWorkletRuntime_,
@@ -534,8 +550,8 @@ jsi::Value NativeReanimatedModule::registerSensor(
 }
 
 void NativeReanimatedModule::unregisterSensor(
-    jsi::Runtime &,
-    const jsi::Value &sensorId) {
+    facebook::jsi::Runtime &,
+    const facebook::jsi::Value &sensorId) {
   animatedSensorModule_.unregisterSensor(sensorId);
 }
 
@@ -545,9 +561,9 @@ void NativeReanimatedModule::cleanupSensors() {
 
 #ifdef RCT_NEW_ARCH_ENABLED
 bool NativeReanimatedModule::isThereAnyLayoutProp(
-    jsi::Runtime &rt,
-    const jsi::Object &props) {
-  const jsi::Array propNames = props.getPropertyNames(rt);
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Object &props) {
+  const facebook::jsi::Array propNames = props.getPropertyNames(rt);
   for (size_t i = 0; i < propNames.size(rt); ++i) {
     const std::string propName =
         propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
@@ -560,25 +576,26 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
   return false;
 }
 
-jsi::Value NativeReanimatedModule::filterNonAnimatableProps(
-    jsi::Runtime &rt,
-    const jsi::Value &props) {
-  jsi::Object nonAnimatableProps(rt);
+facebook::jsi::Value NativeReanimatedModule::filterNonAnimatableProps(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &props) {
+  facebook::jsi::Object nonAnimatableProps(rt);
   bool hasAnyNonAnimatableProp = false;
-  const jsi::Object &propsObject = props.asObject(rt);
-  const jsi::Array &propNames = propsObject.getPropertyNames(rt);
+  const facebook::jsi::Object &propsObject = props.asObject(rt);
+  const facebook::jsi::Array &propNames = propsObject.getPropertyNames(rt);
   for (size_t i = 0; i < propNames.size(rt); ++i) {
     const std::string &propName =
         propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     if (!collection::contains(animatablePropNames_, propName)) {
       hasAnyNonAnimatableProp = true;
       const auto &propNameStr = propName.c_str();
-      const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
+      const facebook::jsi::Value &propValue =
+          propsObject.getProperty(rt, propNameStr);
       nonAnimatableProps.setProperty(rt, propNameStr, propValue);
     }
   }
   if (!hasAnyNonAnimatableProp) {
-    return jsi::Value::undefined();
+    return facebook::jsi::Value::undefined();
   }
   return nonAnimatableProps;
 }
@@ -587,7 +604,7 @@ jsi::Value NativeReanimatedModule::filterNonAnimatableProps(
 bool NativeReanimatedModule::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
-    const jsi::Value &payload,
+    const facebook::jsi::Value &payload,
     double currentTime) {
   eventHandlerRegistry_->processEvent(
       uiWorkletRuntime_, currentTime, eventName, emitterReactTag, payload);
@@ -599,9 +616,9 @@ bool NativeReanimatedModule::handleEvent(
 
 #ifdef RCT_NEW_ARCH_ENABLED
 bool NativeReanimatedModule::handleRawEvent(
-    const RawEvent &rawEvent,
+    const facebook::react::RawEvent &rawEvent,
     double currentTime) {
-  const EventTarget *eventTarget = rawEvent.eventTarget.get();
+  const facebook::react::EventTarget *eventTarget = rawEvent.eventTarget.get();
   if (eventTarget == nullptr) {
     // after app reload scrollView is unmounted and its content offset is set
     // to 0 and view is thrown into recycle pool setting content offset
@@ -616,13 +633,13 @@ bool NativeReanimatedModule::handleRawEvent(
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
-  jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
+  facebook::jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
 #if REACT_NATIVE_MINOR_VERSION >= 73
   const auto &eventPayload = rawEvent.eventPayload;
-  jsi::Value payload = eventPayload->asJSIValue(rt);
+  facebook::jsi::Value payload = eventPayload->asJSIValue(rt);
 #else
   const auto &payloadFactory = rawEvent.payloadFactory;
-  jsi::Value payload = payloadFactory(rt);
+  facebook::jsi::Value payload = payloadFactory(rt);
 #endif
 
   auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
@@ -635,17 +652,18 @@ bool NativeReanimatedModule::handleRawEvent(
 }
 
 void NativeReanimatedModule::updateProps(
-    jsi::Runtime &rt,
-    const jsi::Value &operations) {
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &operations) {
   auto array = operations.asObject(rt).asArray(rt);
   size_t length = array.size(rt);
   for (size_t i = 0; i < length; ++i) {
     auto item = array.getValueAtIndex(rt, i).asObject(rt);
     auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
-    auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-    const jsi::Value &updates = item.getProperty(rt, "updates");
+    auto shadowNode =
+        facebook::react::shadowNodeFromValue(rt, shadowNodeWrapper);
+    const facebook::jsi::Value &updates = item.getProperty(rt, "updates");
     operationsInBatch_.emplace_back(
-        shadowNode, std::make_unique<jsi::Value>(rt, updates));
+        shadowNode, std::make_unique<facebook::jsi::Value>(rt, updates));
 
     // TODO: support multiple surfaces
     surfaceId_ = shadowNode->getSurfaceId();
@@ -661,7 +679,7 @@ void NativeReanimatedModule::performOperations() {
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_.clear();
 
-  jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
+  facebook::jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
 
   {
     auto lock = propsRegistry_->createLock();
@@ -690,17 +708,18 @@ void NativeReanimatedModule::performOperations() {
   }
 
   for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-    const jsi::Value &nonAnimatableProps = filterNonAnimatableProps(rt, *props);
+    const facebook::jsi::Value &nonAnimatableProps =
+        filterNonAnimatableProps(rt, *props);
     if (nonAnimatableProps.isUndefined()) {
       continue;
     }
-    Tag viewTag = shadowNode->getTag();
-    jsi::Value maybeJSPropsUpdater =
+    facebook::react::Tag viewTag = shadowNode->getTag();
+    facebook::jsi::Value maybeJSPropsUpdater =
         rt.global().getProperty(rt, "updateJSProps");
     assert(
         maybeJSPropsUpdater.isObject() &&
         "[Reanimated] `updateJSProps` not found");
-    jsi::Function jsPropsUpdater =
+    facebook::jsi::Function jsPropsUpdater =
         maybeJSPropsUpdater.asObject(rt).asFunction(rt);
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
@@ -717,7 +736,7 @@ void NativeReanimatedModule::performOperations() {
     // If there's no layout props to be updated, we can apply the updates
     // directly onto the components and skip the commit.
     for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-      Tag tag = shadowNode->getTag();
+      facebook::react::Tag tag = shadowNode->getTag();
       synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
     }
     return;
@@ -735,46 +754,47 @@ void NativeReanimatedModule::performOperations() {
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
-  shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
-    shadowTree.commit(
-        [&](RootShadowNode const &oldRootShadowNode)
-            -> RootShadowNode::Unshared {
-          PropsMap propsMap;
-          for (auto &[shadowNode, props] : copiedOperationsQueue) {
-            auto family = &shadowNode->getFamily();
-            react_native_assert(family->getSurfaceId() == surfaceId_);
-            propsMap[family].emplace_back(rt, std::move(*props));
+  shadowTreeRegistry.visit(
+      surfaceId_, [&](facebook::react::ShadowTree const &shadowTree) {
+        shadowTree.commit(
+            [&](facebook::react::RootShadowNode const &oldRootShadowNode)
+                -> facebook::react::RootShadowNode::Unshared {
+              PropsMap propsMap;
+              for (auto &[shadowNode, props] : copiedOperationsQueue) {
+                auto family = &shadowNode->getFamily();
+                react_native_assert(family->getSurfaceId() == surfaceId_);
+                propsMap[family].emplace_back(rt, std::move(*props));
 
-            if (propsRegistry_->shouldReanimatedSkipCommit()) {
-              return nullptr;
-            }
-          }
+                if (propsRegistry_->shouldReanimatedSkipCommit()) {
+                  return nullptr;
+                }
+              }
 
-          auto rootNode =
-              cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+              auto rootNode =
+                  cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
 
-          // Mark the commit as Reanimated commit so that we can distinguish it
-          // in ReanimatedCommitHook.
+              // Mark the commit as Reanimated commit so that we can distinguish
+              // it in ReanimatedCommitHook.
 
-          auto reaShadowNode =
-              std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
-                  rootNode);
-          reaShadowNode->setReanimatedCommitTrait();
+              auto reaShadowNode =
+                  std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
+                      rootNode);
+              reaShadowNode->setReanimatedCommitTrait();
 
-          return rootNode;
-        },
-        {/* .enableStateReconciliation = */
-         false,
-         /* .mountSynchronously = */ true,
-         /* .shouldYield = */ [this]() {
-           return propsRegistry_->shouldReanimatedSkipCommit();
-         }});
-  });
+              return rootNode;
+            },
+            {/* .enableStateReconciliation = */
+             false,
+             /* .mountSynchronously = */ true,
+             /* .shouldYield = */ [this]() {
+               return propsRegistry_->shouldReanimatedSkipCommit();
+             }});
+      });
 }
 
 void NativeReanimatedModule::removeFromPropsRegistry(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTags) {
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &viewTags) {
   auto array = viewTags.asObject(rt).asArray(rt);
   for (size_t i = 0, size = array.size(rt); i < size; ++i) {
     tagsToRemove_.push_back(array.getValueAtIndex(rt, i).asNumber());
@@ -782,49 +802,53 @@ void NativeReanimatedModule::removeFromPropsRegistry(
 }
 
 void NativeReanimatedModule::dispatchCommand(
-    jsi::Runtime &rt,
-    const jsi::Value &shadowNodeValue,
-    const jsi::Value &commandNameValue,
-    const jsi::Value &argsValue) {
-  ShadowNode::Shared shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
-  std::string commandName = stringFromValue(rt, commandNameValue);
-  folly::dynamic args = commandArgsFromValue(rt, argsValue);
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &shadowNodeValue,
+    const facebook::jsi::Value &commandNameValue,
+    const facebook::jsi::Value &argsValue) {
+  facebook::react::ShadowNode::Shared shadowNode =
+      facebook::react::shadowNodeFromValue(rt, shadowNodeValue);
+  std::string commandName =
+      facebook::react::stringFromValue(rt, commandNameValue);
+  folly::dynamic args = facebook::react::commandArgsFromValue(rt, argsValue);
   uiManager_->dispatchCommand(shadowNode, commandName, args);
 }
 
-jsi::String NativeReanimatedModule::obtainProp(
-    jsi::Runtime &rt,
-    const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &propName) {
-  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+facebook::jsi::String NativeReanimatedModule::obtainProp(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &shadowNodeWrapper,
+    const facebook::jsi::Value &propName) {
+  facebook::jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
   const auto propNameStr = propName.asString(rt).utf8(rt);
-  const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+  const auto shadowNode =
+      facebook::react::shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto resultStr =
       obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
-  return jsi::String::createFromUtf8(rt, resultStr);
+  return facebook::jsi::String::createFromUtf8(rt, resultStr);
 }
 
-jsi::Value NativeReanimatedModule::measure(
-    jsi::Runtime &rt,
-    const jsi::Value &shadowNodeValue) {
+facebook::jsi::Value NativeReanimatedModule::measure(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &shadowNodeValue) {
   // based on implementation from UIManagerBinding.cpp
 
-  auto shadowNode = shadowNodeFromValue(rt, shadowNodeValue);
+  auto shadowNode = facebook::react::shadowNodeFromValue(rt, shadowNodeValue);
   auto layoutMetrics = uiManager_->getRelativeLayoutMetrics(
       *shadowNode, nullptr, {/* .includeTransform = */ true});
 
-  if (layoutMetrics == EmptyLayoutMetrics) {
+  if (layoutMetrics == facebook::react::EmptyLayoutMetrics) {
     // Originally, in this case React Native returns `{0, 0, 0, 0, 0, 0}`,
     // most likely due to the type of measure callback function which accepts
     // just an array of numbers (not null). In Reanimated, `measure` returns
     // `MeasuredDimensions | null`.
-    return jsi::Value::null();
+    return facebook::jsi::Value::null();
   }
   auto newestCloneOfShadowNode =
       uiManager_->getNewestCloneOfShadowNode(*shadowNode);
 
   auto layoutableShadowNode =
-      dynamic_cast<LayoutableShadowNode const *>(newestCloneOfShadowNode.get());
+      dynamic_cast<facebook::react::LayoutableShadowNode const *>(
+          newestCloneOfShadowNode.get());
   facebook::react::Point originRelativeToParent =
       layoutableShadowNode != nullptr
       ? layoutableShadowNode->getLayoutMetrics().frame.origin
@@ -832,24 +856,30 @@ jsi::Value NativeReanimatedModule::measure(
 
   auto frame = layoutMetrics.frame;
 
-  jsi::Object result(rt);
+  facebook::jsi::Object result(rt);
   result.setProperty(
-      rt, "x", jsi::Value(static_cast<double>(originRelativeToParent.x)));
+      rt,
+      "x",
+      facebook::jsi::Value(static_cast<double>(originRelativeToParent.x)));
   result.setProperty(
-      rt, "y", jsi::Value(static_cast<double>(originRelativeToParent.y)));
+      rt,
+      "y",
+      facebook::jsi::Value(static_cast<double>(originRelativeToParent.y)));
   result.setProperty(
-      rt, "width", jsi::Value(static_cast<double>(frame.size.width)));
+      rt, "width", facebook::jsi::Value(static_cast<double>(frame.size.width)));
   result.setProperty(
-      rt, "height", jsi::Value(static_cast<double>(frame.size.height)));
+      rt,
+      "height",
+      facebook::jsi::Value(static_cast<double>(frame.size.height)));
   result.setProperty(
-      rt, "pageX", jsi::Value(static_cast<double>(frame.origin.x)));
+      rt, "pageX", facebook::jsi::Value(static_cast<double>(frame.origin.x)));
   result.setProperty(
-      rt, "pageY", jsi::Value(static_cast<double>(frame.origin.y)));
+      rt, "pageY", facebook::jsi::Value(static_cast<double>(frame.origin.y)));
   return result;
 }
 
 void NativeReanimatedModule::initializeFabric(
-    const std::shared_ptr<UIManager> &uiManager) {
+    const std::shared_ptr<facebook::react::UIManager> &uiManager) {
   uiManager_ = uiManager;
 
   initializeLayoutAnimationsProxy();
@@ -862,10 +892,12 @@ void NativeReanimatedModule::initializeFabric(
 
 void NativeReanimatedModule::initializeLayoutAnimationsProxy() {
   uiManager_->setAnimationDelegate(nullptr);
-  auto scheduler = reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
+  auto scheduler =
+      reinterpret_cast<facebook::react::Scheduler *>(uiManager_->getDelegate());
   auto componentDescriptorRegistry =
       scheduler->getContextContainer()
-          ->at<std::weak_ptr<const ComponentDescriptorRegistry>>(
+          ->at<std::weak_ptr<
+              const facebook::react::ComponentDescriptorRegistry>>(
               "ComponentDescriptorRegistry_DO_NOT_USE_PRETTY_PLEASE")
           .lock();
 
@@ -881,29 +913,32 @@ void NativeReanimatedModule::initializeLayoutAnimationsProxy() {
 
 #endif // RCT_NEW_ARCH_ENABLED
 
-jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
-    jsi::Runtime &rt,
-    const jsi::Value &handlerWorklet,
-    const jsi::Value &isStatusBarTranslucent,
-    const jsi::Value &isNavigationBarTranslucent) {
-  auto shareableHandler = extractShareableOrThrow<ShareableWorklet>(
-      rt,
-      handlerWorklet,
-      "[Reanimated] Keyboard event handler must be a worklet.");
+facebook::jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
+    facebook::jsi::Runtime &rt,
+    const facebook::jsi::Value &handlerWorklet,
+    const facebook::jsi::Value &isStatusBarTranslucent,
+    const facebook::jsi::Value &isNavigationBarTranslucent) {
+  auto shareableHandler =
+      worklets::extractShareableOrThrow<worklets::ShareableWorklet>(
+          rt,
+          handlerWorklet,
+          "[Reanimated] Keyboard event handler must be a worklet.");
   return subscribeForKeyboardEventsFunction_(
       COPY_CAPTURE_WITH_THIS
 
       (int keyboardState, int height) {
         uiWorkletRuntime_->runGuarded(
-            shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
+            shareableHandler,
+            facebook::jsi::Value(keyboardState),
+            facebook::jsi::Value(height));
       },
       isStatusBarTranslucent.getBool(),
       isNavigationBarTranslucent.getBool());
 }
 
 void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
-    jsi::Runtime &,
-    const jsi::Value &listenerId) {
+    facebook::jsi::Runtime &,
+    const facebook::jsi::Value &listenerId) {
   unsubscribeFromKeyboardEventsFunction_(listenerId.asNumber());
 }
 

@@ -7,14 +7,12 @@
 #include <memory>
 #include <string>
 
-using namespace facebook;
-
 namespace worklets {
 
 class WorkletRuntimeDecorator {
  public:
   static void decorate(
-      jsi::Runtime &rt,
+      facebook::jsi::Runtime &rt,
       const std::string &name,
       const std::shared_ptr<JSScheduler> &jsScheduler);
 };

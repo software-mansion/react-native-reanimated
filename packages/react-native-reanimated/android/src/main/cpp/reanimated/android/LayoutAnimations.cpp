@@ -4,11 +4,11 @@
 namespace reanimated {
 
 LayoutAnimations::LayoutAnimations(
-    jni::alias_ref<LayoutAnimations::javaobject> jThis)
-    : javaPart_(jni::make_global(jThis)) {}
+    facebook::jni::alias_ref<LayoutAnimations::javaobject> jThis)
+    : javaPart_(facebook::jni::make_global(jThis)) {}
 
-jni::local_ref<LayoutAnimations::jhybriddata> LayoutAnimations::initHybrid(
-    jni::alias_ref<jhybridobject> jThis) {
+facebook::jni::local_ref<LayoutAnimations::jhybriddata>
+LayoutAnimations::initHybrid(facebook::jni::alias_ref<jhybridobject> jThis) {
   return makeCxxInstance(jThis);
 }
 
@@ -20,18 +20,21 @@ void LayoutAnimations::setAnimationStartingBlock(
 void LayoutAnimations::startAnimationForTag(
     int tag,
     int type,
-    alias_ref<JMap<jstring, jstring>> values) {
+    facebook::jni::alias_ref<facebook::jni::JMap<jstring, jstring>> values) {
   this->animationStartingBlock_(tag, type, values);
 }
 
 void LayoutAnimations::progressLayoutAnimation(
     int tag,
-    const jni::local_ref<JNIHelper::PropsMap> &updates,
+    const facebook::jni::local_ref<JNIHelper::PropsMap> &updates,
     bool isSharedTransition) {
-  static const auto method =
-      javaPart_->getClass()
-          ->getMethod<void(int, JMap<JString, JObject>::javaobject, bool)>(
-              "progressLayoutAnimation");
+  static const auto method = javaPart_->getClass()
+                                 ->getMethod<void(
+                                     int,
+                                     facebook::jni::JMap<
+                                         facebook::jni::JString,
+                                         facebook::jni::JObject>::javaobject,
+                                     bool)>("progressLayoutAnimation");
   method(javaPart_.get(), tag, updates.get(), isSharedTransition);
 }
 
@@ -108,9 +111,10 @@ int LayoutAnimations::findPrecedingViewTagForTransition(int tag) {
   return findPrecedingViewTagForTransitionBlock_(tag);
 }
 
-jni::local_ref<JArrayInt> LayoutAnimations::getSharedGroup(const int tag) {
+facebook::jni::local_ref<facebook::jni::JArrayInt>
+LayoutAnimations::getSharedGroup(const int tag) {
   const auto &group = getSharedGroupBlock_(tag);
-  auto jGroup = JArrayInt::newArray(group.size());
+  auto jGroup = facebook::jni::JArrayInt::newArray(group.size());
   jGroup->setRegion(0, group.size(), group.data());
   return jGroup;
 }

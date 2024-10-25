@@ -7,7 +7,7 @@ namespace reanimated {
 
 ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<PropsRegistry> &propsRegistry,
-    const std::shared_ptr<UIManager> &uiManager)
+    const std::shared_ptr<facebook::react::UIManager> &uiManager)
     : propsRegistry_(propsRegistry), uiManager_(uiManager) {
   uiManager_->registerMountHook(*this);
 }
@@ -17,11 +17,12 @@ ReanimatedMountHook::~ReanimatedMountHook() noexcept {
 }
 
 void ReanimatedMountHook::shadowTreeDidMount(
-    RootShadowNode::Shared const &rootShadowNode,
+    facebook::react::RootShadowNode::Shared const &rootShadowNode,
     double) noexcept {
   auto reaShadowNode =
       std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
-          std::const_pointer_cast<RootShadowNode>(rootShadowNode));
+          std::const_pointer_cast<facebook::react::RootShadowNode>(
+              rootShadowNode));
 
   if (reaShadowNode->hasReanimatedMountTrait()) {
     // We mark reanimated commits with ReanimatedMountTrait. We don't want other
@@ -41,22 +42,24 @@ void ReanimatedMountHook::shadowTreeDidMount(
 
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
   shadowTreeRegistry.visit(
-      rootShadowNode->getSurfaceId(), [&](ShadowTree const &shadowTree) {
+      rootShadowNode->getSurfaceId(),
+      [&](facebook::react::ShadowTree const &shadowTree) {
         shadowTree.commit(
-            [&](RootShadowNode const &oldRootShadowNode)
-                -> RootShadowNode::Unshared {
+            [&](facebook::react::RootShadowNode const &oldRootShadowNode)
+                -> facebook::react::RootShadowNode::Unshared {
               PropsMap propsMap;
 
-              RootShadowNode::Unshared rootNode =
-                  std::static_pointer_cast<RootShadowNode>(
+              facebook::react::RootShadowNode::Unshared rootNode =
+                  std::static_pointer_cast<facebook::react::RootShadowNode>(
                       oldRootShadowNode.ShadowNode::clone({}));
               {
                 auto lock = propsRegistry_->createLock();
 
-                propsRegistry_->for_each([&](const ShadowNodeFamily &family,
-                                             const folly::dynamic &props) {
-                  propsMap[&family].emplace_back(props);
-                });
+                propsRegistry_->for_each(
+                    [&](const facebook::react::ShadowNodeFamily &family,
+                        const folly::dynamic &props) {
+                      propsMap[&family].emplace_back(props);
+                    });
 
                 rootNode =
                     cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
