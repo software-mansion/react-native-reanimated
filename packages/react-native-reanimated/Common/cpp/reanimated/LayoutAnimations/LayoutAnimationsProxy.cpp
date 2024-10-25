@@ -785,7 +785,8 @@ void LayoutAnimationsProxy::maybeUpdateWindowDimensions(
     facebook::react::ShadowViewMutation &mutation,
     SurfaceId surfaceId) const {
   if (mutation.type == ShadowViewMutation::Update &&
-      !std::strcmp(mutation.oldChildShadowView.componentName, RootComponentName)) {
+      !std::strcmp(
+          mutation.oldChildShadowView.componentName, RootComponentName)) {
     surfaceManager.updateWindow(
         surfaceId,
         mutation.newChildShadowView.layoutMetrics.frame.size.width,
