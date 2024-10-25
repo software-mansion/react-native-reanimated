@@ -34,13 +34,10 @@ jobs:
         run: npx react-native init ${{ env.APP_NAME }} --skip-install
       - name: Setup Yarn Modern
         working-directory: ${{ env.APP_NAME }}
-        run: touch yarn.lock && corepack enable && yarn set version berry
+        run: touch yarn.lock && corepack enable && yarn set version berry && yarn config set nodeLinker node-modules
       - name: Install dependencies
         working-directory: ${{ env.APP_NAME }}
         run: yarn install
-      - name: Debug print
-        working-directory: ${{ env.APP_NAME }}
-        run: ls node_modules && ls node_modules/@react-native && ls node_modules/@react-native/gradle-plugin
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"

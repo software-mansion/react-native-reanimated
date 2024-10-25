@@ -29,7 +29,7 @@ jobs:
         run: npx react-native init ${{ env.APP_NAME }} --skip-install
       - name: Setup Yarn Modern
         working-directory: ${{ env.APP_NAME }}
-        run: touch yarn.lock && corepack enable && yarn set version berry
+        run: touch yarn.lock && corepack enable && yarn set version berry && yarn config set nodeLinker node-modules
       - name: Install dependencies
         working-directory: ${{ env.APP_NAME }}
         run: yarn
