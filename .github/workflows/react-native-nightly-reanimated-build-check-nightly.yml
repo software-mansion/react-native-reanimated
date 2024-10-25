@@ -48,10 +48,7 @@ jobs:
           yarn react-native init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }} --pm yarn --skip-install --install-pods false --skip-git-init
       - name: Setup Yarn Modern
         working-directory: ${{ env.APP_NAME }}
-        run: yarn set version berry
-      - name: Add yarn.lock in app
-        working-directory: ${{ env.APP_NAME }}
-        run: touch yarn.lock
+        run: touch yarn.lock && yarn set version berry
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"

@@ -31,10 +31,10 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
       - name: Create React Native App
-        run: npx react-native init ${{ env.APP_NAME }}
+        run: npx react-native init ${{ env.APP_NAME }} --skip-install
       - name: Setup Yarn Modern
         working-directory: ${{ env.APP_NAME }}
-        run: corepack enable && yarn set version berry
+        run: touch yarn.lock && corepack enable && yarn set version berry
       - name: Install dependencies
         working-directory: ${{ env.APP_NAME }}
         run: yarn install
