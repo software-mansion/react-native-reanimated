@@ -32,7 +32,7 @@ jobs:
       - name: Install React Native
         run: yarn add @react-native-community/cli
       - name: Create app
-        run: yarn @react-native-community/cli init ${{ env.APP_NAME }} --pm yarn --skip-install --install-pods false --skip-git-init
+        run: yarn rnc-cli init ${{ env.APP_NAME }} --pm yarn --skip-install --install-pods false --skip-git-init
       - name: Setup Yarn Modern
         working-directory: ${{ env.APP_NAME }}
         run: touch yarn.lock && yarn set version berry
