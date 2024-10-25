@@ -28,9 +28,7 @@ jobs:
       - name: Setup Yarn
         # Sometimes `npx react-native init` fails due to dependency mismatches or other
         # rather vague errors. This is a workaround for that.
-        run: corepack enable
-      - name: Init yarn repo
-        run: yarn init
+        run: corepack enable && yarn init --yes
       - name: Install React Native
         run: yarn add react-native
       - name: Create app
