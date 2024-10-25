@@ -1,10 +1,10 @@
 import type { RouteNames, Routes } from '../../navigation/types';
 import {
   TransitionedProperties,
-  TestExamples,
-  RealWorldExamples,
-  TransitionSettings,
-  Miscellaneous,
+  testExamples,
+  realWorldExamples,
+  transitionSettings,
+  miscellaneous,
 } from './screens';
 
 const routes = {
@@ -17,19 +17,19 @@ const routes = {
     routes: {
       TransitionProperty: {
         name: 'Transition Property',
-        Component: TransitionSettings.TransitionProperty,
+        Component: transitionSettings.TransitionProperty,
       },
       TransitionDuration: {
         name: 'Transition Duration',
-        Component: TransitionSettings.TransitionDuration,
+        Component: transitionSettings.TransitionDuration,
       },
       TransitionDelay: {
         name: 'Transition Delay',
-        Component: TransitionSettings.TransitionDelay,
+        Component: transitionSettings.TransitionDelay,
       },
       TransitionTimingFunction: {
         name: 'Transition Timing Function',
-        Component: TransitionSettings.TransitionTimingFunction,
+        Component: transitionSettings.TransitionTimingFunction,
       },
     },
   },
@@ -38,11 +38,11 @@ const routes = {
     routes: {
       ChangingTransitionProperty: {
         name: 'Changing Transition Property',
-        Component: Miscellaneous.ChangingTransitionProperty,
+        Component: miscellaneous.ChangingTransitionProperty,
       },
       UpdatingTransitionSettings: {
         name: 'Updating Transition Settings',
-        Component: Miscellaneous.UpdatingTransitionSettings,
+        Component: miscellaneous.UpdatingTransitionSettings,
       },
     },
   },
@@ -51,11 +51,11 @@ const routes = {
     routes: {
       AppSettings: {
         name: 'App Settings',
-        Component: RealWorldExamples.AppSettings,
+        Component: realWorldExamples.AppSettings,
       },
       FlexGallery: {
         name: 'Flex Gallery',
-        Component: RealWorldExamples.FlexGallery,
+        Component: realWorldExamples.FlexGallery,
       },
     },
   },
@@ -64,7 +64,7 @@ const routes = {
     routes: {
       Playground: {
         name: 'Playground',
-        Component: TestExamples.Playground,
+        Component: testExamples.Playground,
       },
     },
   },

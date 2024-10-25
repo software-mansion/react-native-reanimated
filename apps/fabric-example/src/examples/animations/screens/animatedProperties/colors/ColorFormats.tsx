@@ -3,23 +3,46 @@ import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import { ScrollScreen, Section } from '../../../../components';
-import { sizes, radius } from '../../../../theme';
+import { ScrollScreen, Section, TabView } from '../../../../../components';
+import { sizes, radius } from '../../../../../theme';
 import Animated from 'react-native-reanimated';
-import type { ExampleCardProps } from './components';
-import { VerticalExampleCard } from './components';
-import { formatAnimationCode } from '../../../../utils';
+import type { ExampleCardProps } from '../components';
+import { VerticalExampleCard } from '../components';
+import { formatAnimationCode } from '../../../../../utils';
 
-export default function Colors() {
-  const sharedConfig: CSSAnimationSettings = {
-    animationIterationCount: 'infinite',
-    animationDirection: 'alternate',
-    animationDuration: '4s',
-  };
+const sharedConfig: CSSAnimationSettings = {
+  animationIterationCount: 'infinite',
+  animationDuration: '3s',
+  animationDirection: 'alternate',
+  animationTimingFunction: 'easeInOut',
+};
 
+export default function ColorsFormats() {
+  return (
+    <TabView>
+      <TabView.Tab name="Predefined">
+        <PredefinedColors />
+      </TabView.Tab>
+      <TabView.Tab name="RGB / RGBA">
+        <RgbAndRgbaColors />
+      </TabView.Tab>
+      <TabView.Tab name="Hex">
+        <HexColors />
+      </TabView.Tab>
+      <TabView.Tab name="HSL / HSLA">
+        <HslAndHslaColors />
+      </TabView.Tab>
+      <TabView.Tab name="HWB">
+        <HwbColors />
+      </TabView.Tab>
+    </TabView>
+  );
+}
+
+function PredefinedColors() {
   return (
     <ScrollScreen>
-      <Section title="Predefined colors">
+      <Section title="Predefined Colors">
         <Example
           config={{
             animationName: {
@@ -34,7 +57,13 @@ export default function Colors() {
           }}
         />
       </Section>
+    </ScrollScreen>
+  );
+}
 
+function RgbAndRgbaColors() {
+  return (
+    <ScrollScreen>
       <Section title="RGB and RGBA">
         <Example
           config={{
@@ -65,7 +94,13 @@ export default function Colors() {
           title="RGBA"
         />
       </Section>
+    </ScrollScreen>
+  );
+}
 
+function HexColors() {
+  return (
+    <ScrollScreen>
       <Section title="RGB and RGBA hex">
         <Example
           config={{
@@ -124,7 +159,13 @@ export default function Colors() {
           title="#RRGGBBAA"
         />
       </Section>
+    </ScrollScreen>
+  );
+}
 
+function HslAndHslaColors() {
+  return (
+    <ScrollScreen>
       <Section title="HSL and HSLA">
         <Example
           config={{
@@ -155,7 +196,13 @@ export default function Colors() {
           title="HSLA"
         />
       </Section>
+    </ScrollScreen>
+  );
+}
 
+function HwbColors() {
+  return (
+    <ScrollScreen>
       <Section title="HWB">
         <Example
           config={{
@@ -179,7 +226,7 @@ type ExampleProps = Omit<ExampleCardProps, 'code'> & {
   config: CSSAnimationConfig;
 };
 
-export function Example({ config, ...cardProps }: ExampleProps) {
+function Example({ config, ...cardProps }: ExampleProps) {
   return (
     <VerticalExampleCard
       code={formatAnimationCode(config)}

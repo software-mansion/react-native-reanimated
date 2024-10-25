@@ -27,6 +27,8 @@ export default class CSSAnimationManager {
       serializedKeyframes ?? JSON.stringify(animationConfig.animationName);
     this.animationConfig = animationConfig;
 
+    console.log(JSON.stringify(animationConfig, null, 2));
+
     const normalizedConfig = normalizeCSSAnimationConfig(animationConfig);
     registerCSSAnimation(shadowNodeWrapper, this.animationId, normalizedConfig);
   }

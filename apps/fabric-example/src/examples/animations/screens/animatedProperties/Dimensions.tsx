@@ -324,7 +324,7 @@ type ExampleProps = Omit<ExampleCardProps, 'code'> & {
   height?: DimensionValue;
 };
 
-export function Example({
+function Example({
   config,
   width = sizes.md,
   height = sizes.md,

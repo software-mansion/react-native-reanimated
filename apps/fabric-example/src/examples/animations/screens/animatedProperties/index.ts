@@ -1,5 +1,5 @@
 import Borders from './Borders';
-import Colors from './Colors';
+import colors from './colors';
 import Dimensions from './Dimensions';
 import FlexStyles from './FlexStyles';
 import Insets from './Insets';
@@ -10,7 +10,7 @@ import Transforms from './Transforms';
 
 export default {
   Dimensions,
-  Colors,
+  colors,
   Borders,
   FlexStyles,
   Insets,

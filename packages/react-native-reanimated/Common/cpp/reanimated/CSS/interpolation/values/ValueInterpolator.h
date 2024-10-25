@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/CSS/common/Color.h>
 #include <reanimated/CSS/common/UnitValue.h>
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/util/keyframes.h>

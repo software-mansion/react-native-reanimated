@@ -91,10 +91,9 @@ std::shared_ptr<PropertyInterpolatorFactory> object(
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> color(
-    const std::optional<ColorArray> &defaultValue) {
+    const std::optional<Color> &defaultValue) {
   return std::make_shared<
-      ValueInterpolatorFactory<ColorValueInterpolator, ColorArray>>(
-      defaultValue);
+      ValueInterpolatorFactory<ColorValueInterpolator, Color>>(defaultValue);
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> numeric(

@@ -1,5 +1,5 @@
 export { default as TransitionedProperties } from './TransitionedProperties';
-export { default as TransitionSettings } from './transitionSettings';
-export { default as Miscellaneous } from './miscellaneous';
-export { default as RealWorldExamples } from './realWorldExamples';
-export { default as TestExamples } from './testExamples';
+export { default as transitionSettings } from './transitionSettings';
+export { default as miscellaneous } from './miscellaneous';
+export { default as realWorldExamples } from './realWorldExamples';
+export { default as testExamples } from './testExamples';

@@ -1,5 +1,5 @@
-export { default as AnimatedProperties } from './animatedProperties';
-export { default as AnimationSettings } from './animationSettings';
-export { default as RealWorldExamples } from './realWorldExamples';
-export { default as Miscellaneous } from './miscellaneous';
-export { default as TestExamples } from './testExamples';
+export { default as animatedProperties } from './animatedProperties';
+export { default as animationSettings } from './animationSettings';
+export { default as realWorldExamples } from './realWorldExamples';
+export { default as miscellaneous } from './miscellaneous';
+export { default as testExamples } from './testExamples';
