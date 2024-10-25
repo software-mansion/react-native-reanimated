@@ -39,7 +39,7 @@ function logToConsole(data: LogData) {
 export const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
   logFunction: logToConsole,
   level: LogLevel.warn,
-  strict: true,
+  strict: false,
 };
 
 function formatMessage(message: string) {
@@ -110,8 +110,8 @@ export function updateLoggerConfig(options?: Partial<LoggerConfig>) {
   registerLoggerConfig({
     ...__reanimatedLoggerConfig,
     // Don't reuse previous level and strict values from the global config
-    level: options?.level ?? LogLevel.warn,
-    strict: options?.strict ?? false,
+    level: options?.level ?? DEFAULT_LOGGER_CONFIG.level,
+    strict: options?.strict ?? DEFAULT_LOGGER_CONFIG.strict,
   });
 }
 
