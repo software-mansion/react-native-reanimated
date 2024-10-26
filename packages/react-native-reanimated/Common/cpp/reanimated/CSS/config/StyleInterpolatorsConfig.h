@@ -109,15 +109,15 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       {"minWidth", relOrNum(RelativeTo::PARENT, "width")},
 
       // Margins (relative to parent width)
-      {"margin", relOrNum(RelativeTo::PARENT, "width")},
-      {"marginBottom", relOrNum(RelativeTo::PARENT, "width")},
-      {"marginEnd", relOrNum(RelativeTo::PARENT, "width")},
-      {"marginHorizontal", relOrNum(RelativeTo::PARENT, "width")},
-      {"marginLeft", relOrNum(RelativeTo::PARENT, "width")},
-      {"marginRight", relOrNum(RelativeTo::PARENT, "width")},
-      {"marginStart", relOrNum(RelativeTo::PARENT, "width")},
-      {"marginTop", relOrNum(RelativeTo::PARENT, "width")},
-      {"marginVertical", relOrNum(RelativeTo::PARENT, "width")},
+      {"margin", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"marginTop", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"marginRight", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"marginBottom", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"marginLeft", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"marginStart", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"marginEnd", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"marginHorizontal", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"marginVertical", relOrNum(RelativeTo::PARENT, "width", 0)},
 
       // Paddings (relative to parent width)
       {"padding", relOrNum(RelativeTo::PARENT, "width")},
