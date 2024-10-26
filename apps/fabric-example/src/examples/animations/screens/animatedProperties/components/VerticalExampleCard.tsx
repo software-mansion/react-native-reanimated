@@ -49,19 +49,20 @@ export default function VerticalExampleCard({
               </Animated.View>
             )}
           </Animated.View>
-          <AnimatedTouchableOpacity
-            onPress={() => setIsExpanded(!isExpanded)}
-            style={styles.expandButton}
-            layout={LinearTransition}>
-            <FontAwesomeIcon
-              icon={isExpanded ? faChevronUp : faChevronDown}
-              size={sizes.xxxs}
-              color={colors.primary}
-            />
-            <Text variant="label2" style={styles.expandButtonText}>
-              {isExpanded ? 'Collapse' : 'Expand'}
-            </Text>
-          </AnimatedTouchableOpacity>
+          <Animated.View layout={LinearTransition}>
+            <TouchableOpacity
+              onPress={() => setIsExpanded(!isExpanded)}
+              style={styles.expandButton}>
+              <FontAwesomeIcon
+                icon={isExpanded ? faChevronUp : faChevronDown}
+                size={sizes.xxxs}
+                color={colors.primary}
+              />
+              <Text variant="label2" style={styles.expandButtonText}>
+                {isExpanded ? 'Collapse' : 'Expand'}
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
           {/* Example */}
           <Animated.View
             layout={LinearTransition}
@@ -117,6 +118,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.xs,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   expandButtonText: {
     color: colors.primary,

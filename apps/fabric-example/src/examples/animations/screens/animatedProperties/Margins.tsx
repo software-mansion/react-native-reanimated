@@ -25,7 +25,6 @@ export default function Margins() {
       <TabView.Tab name="Relative">
         <RelativeMargins />
       </TabView.Tab>
-      {/* TODO - uncomment this examples tab once we can properly calculate relative margins */}
       {/* <TabView.Tab name="Mixed">
         <MixedMargins />
       </TabView.Tab> */}
@@ -192,10 +191,12 @@ function Example({ config, ...cardProps }: ExampleProps) {
 const styles = StyleSheet.create({
   boxesRow: {
     flexDirection: 'row',
+    borderRadius: radius.sm,
     backgroundColor: colors.background3,
   },
   boxWrapper: {
     backgroundColor: colors.primaryLight,
+    borderRadius: radius.sm,
   },
   box: {
     backgroundColor: colors.primary,

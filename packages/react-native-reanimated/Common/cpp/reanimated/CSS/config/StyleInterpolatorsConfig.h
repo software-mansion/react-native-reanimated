@@ -119,16 +119,16 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       {"marginHorizontal", relOrNum(RelativeTo::PARENT, "width", 0)},
       {"marginVertical", relOrNum(RelativeTo::PARENT, "width", 0)},
 
-      // Paddings (relative to parent width)
-      {"padding", relOrNum(RelativeTo::PARENT, "width")},
-      {"paddingBottom", relOrNum(RelativeTo::PARENT, "width")},
-      {"paddingEnd", relOrNum(RelativeTo::PARENT, "width")},
-      {"paddingHorizontal", relOrNum(RelativeTo::PARENT, "width")},
-      {"paddingLeft", relOrNum(RelativeTo::PARENT, "width")},
-      {"paddingRight", relOrNum(RelativeTo::PARENT, "width")},
-      {"paddingStart", relOrNum(RelativeTo::PARENT, "width")},
-      {"paddingTop", relOrNum(RelativeTo::PARENT, "width")},
-      {"paddingVertical", relOrNum(RelativeTo::PARENT, "width")},
+      // Paddings (relative to self width)
+      {"padding", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"paddingTop", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"paddingRight", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"paddingBottom", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"paddingLeft", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"paddingStart", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"paddingEnd", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"paddingHorizontal", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"paddingVertical", relOrNum(RelativeTo::PARENT, "width", 0)},
 
       // Numeric props
       {"opacity", numeric(1)},
