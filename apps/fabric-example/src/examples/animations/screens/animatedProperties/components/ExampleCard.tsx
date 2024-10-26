@@ -1,4 +1,4 @@
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { flex, colors, radius, spacing } from '../../../../../theme';
 import { useState } from 'react';
 import type { PropsWithChildren } from 'react';
@@ -12,9 +12,6 @@ import Animated, {
   FadeInDown,
 } from 'react-native-reanimated';
 import { ExpandableCard, CodeBlock, Text } from '../../../../../components';
-
-const AnimatedTouchableOpacity =
-  Animated.createAnimatedComponent(TouchableOpacity);
 
 export type ExampleCardProps = PropsWithChildren<{
   title?: string;
@@ -88,9 +85,7 @@ export default function ExampleCard({
             )}
           </Animated.View>
           {/* Example */}
-          <AnimatedTouchableOpacity
-            onPress={() => setIsExpanded(true)}
-            disabled={isExpanded}
+          <Animated.View
             style={[
               styles.itemWrapper,
               flex.center,
@@ -122,7 +117,7 @@ export default function ExampleCard({
                 {children}
               </Animated.View>
             </Animated.View>
-          </AnimatedTouchableOpacity>
+          </Animated.View>
         </View>
       </ExpandableCard>
     </LayoutAnimationConfig>

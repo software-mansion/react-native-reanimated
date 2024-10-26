@@ -11,29 +11,29 @@ import type { ExampleCardProps } from './components';
 import { ExampleCard } from './components';
 import { formatAnimationCode } from '../../../../utils';
 
+const SHARED_SETTINGS: CSSAnimationSettings = {
+  animationIterationCount: 'infinite',
+  animationDirection: 'alternate',
+  animationDuration: '1s',
+};
+
 export default function Dimensions() {
   return (
     <TabView>
       <TabView.Tab name="Absolute">
-        <AbsoluteDimensionsExample />
+        <AbsoluteDimensions />
       </TabView.Tab>
       <TabView.Tab name="Relative">
-        <RelativeDimensionsExample />
+        <RelativeDimensions />
       </TabView.Tab>
       <TabView.Tab name="Mixed">
-        <MixedDimensionsExample />
+        <MixedDimensions />
       </TabView.Tab>
     </TabView>
   );
 }
 
-function AbsoluteDimensionsExample() {
-  const sharedConfig: CSSAnimationSettings = {
-    animationIterationCount: 'infinite',
-    animationDirection: 'alternate',
-    animationDuration: '1s',
-  };
-
+function AbsoluteDimensions() {
   return (
     <ScrollScreen>
       <Section title="Width">
@@ -47,7 +47,7 @@ function AbsoluteDimensionsExample() {
                 width: 100,
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           title="Width"
         />
@@ -63,7 +63,7 @@ function AbsoluteDimensionsExample() {
                 minWidth: 100,
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           width={75}
           title="Min Width"
@@ -80,7 +80,7 @@ function AbsoluteDimensionsExample() {
                 maxWidth: 100,
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           width={75}
           title="Max Width"
@@ -98,7 +98,7 @@ function AbsoluteDimensionsExample() {
                 height: 100,
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           title="Height"
         />
@@ -113,7 +113,7 @@ function AbsoluteDimensionsExample() {
                 minHeight: 100,
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           height={75}
           title="Min Height"
@@ -129,7 +129,7 @@ function AbsoluteDimensionsExample() {
                 maxHeight: 100,
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           height={75}
           title="Max Height"
@@ -139,13 +139,7 @@ function AbsoluteDimensionsExample() {
   );
 }
 
-function RelativeDimensionsExample() {
-  const sharedConfig: CSSAnimationSettings = {
-    animationIterationCount: 'infinite',
-    animationDirection: 'alternate',
-    animationDuration: '1s',
-  };
-
+function RelativeDimensions() {
   return (
     <ScrollScreen>
       <Section title="Width">
@@ -159,7 +153,7 @@ function RelativeDimensionsExample() {
                 width: '75%',
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           title="Width"
         />
@@ -175,7 +169,7 @@ function RelativeDimensionsExample() {
                 minWidth: '75%',
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           width="50%"
           title="Min Width"
@@ -192,7 +186,7 @@ function RelativeDimensionsExample() {
                 maxWidth: '75%',
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           width="50%"
           title="Max Width"
@@ -210,7 +204,7 @@ function RelativeDimensionsExample() {
                 height: '75%',
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           title="Height"
         />
@@ -226,7 +220,7 @@ function RelativeDimensionsExample() {
                 minHeight: '75%',
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           height="50%"
           title="Min Height"
@@ -243,7 +237,7 @@ function RelativeDimensionsExample() {
                 maxHeight: '75%',
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           height="50%"
           title="Max Height"
@@ -253,12 +247,7 @@ function RelativeDimensionsExample() {
   );
 }
 
-function MixedDimensionsExample() {
-  const sharedConfig: CSSAnimationSettings = {
-    animationIterationCount: 'infinite',
-    animationDuration: '2.5s',
-  };
-
+function MixedDimensions() {
   return (
     <ScrollScreen>
       <Section title="Width">
@@ -281,7 +270,7 @@ function MixedDimensionsExample() {
                 width: 25,
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           title="Width"
           collapsedExampleHeight={300}
@@ -308,7 +297,7 @@ function MixedDimensionsExample() {
                 height: 25,
               },
             },
-            ...sharedConfig,
+            ...SHARED_SETTINGS,
           }}
           title="Width"
           collapsedExampleHeight={300}
