@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/CSS/common/Color.h>
+#include <reanimated/CSS/common/TransformOrigin.h>
 #include <reanimated/CSS/common/UnitValue.h>
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/util/keyframes.h>
@@ -40,6 +41,7 @@ class ValueInterpolator : public PropertyInterpolator {
 
  protected:
   std::optional<T> defaultStyleValue_; // Default style value
+  std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   virtual T prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const = 0;
@@ -55,7 +57,6 @@ class ValueInterpolator : public PropertyInterpolator {
 
  private:
   std::vector<ValueKeyframe<T>> keyframes_;
-  std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   int keyframeAfterIndex_ = 1;
   ValueKeyframe<T> keyframeBefore_;

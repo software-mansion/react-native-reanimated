@@ -9,7 +9,7 @@ import type {
   NormalizedCSSAnimationKeyframe,
   CSSAnimationPlayState,
 } from '../../types';
-import { isNumber } from '../../utils';
+import { isNumber } from '../../utils/typeGuards';
 import {
   OFFSET_REGEX,
   VALID_ANIMATION_DIRECTIONS,

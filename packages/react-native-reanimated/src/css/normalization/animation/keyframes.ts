@@ -7,9 +7,10 @@ import type {
   CSSKeyframeViewStyle,
   TransformsArray,
 } from '../../types';
-import { parseTransformString, isColorProp } from '../../utils';
 import { normalizeKeyframesOffsets } from './base';
 import { processCSSAnimationColor } from '../../../Colors';
+import { normalizeTransformOrigin, normalizeTransformString } from '../common';
+import { isColorProp, isTransformOrigin } from '../../utils/typeGuards';
 
 const ERROR_MESSAGES = {
   unsupportedKeyframeValueType: (prop: string) =>
@@ -85,7 +86,7 @@ function handleTransformsString(
   value: string,
   keyframeStyle: CSSKeyframeViewStyle
 ) {
-  const transformArray = parseTransformString(value);
+  const transformArray = normalizeTransformString(value);
   addTransformValues(offset, transformArray, keyframeStyle);
 }
 
@@ -121,6 +122,8 @@ function handlePrimitiveValue(
         ERROR_MESSAGES.unsupportedColorFormat(value, prop)
       );
     }
+  } else if (isTransformOrigin(prop, value)) {
+    processedValue = normalizeTransformOrigin(value);
   }
 
   (keyframeStyle[prop] as any[]).push({ offset, value: processedValue });

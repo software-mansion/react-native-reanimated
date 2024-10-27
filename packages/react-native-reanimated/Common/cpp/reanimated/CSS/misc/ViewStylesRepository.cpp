@@ -66,35 +66,6 @@ jsi::Value ViewStylesRepository::getParentNodeProp(
   return getNodeProp(parentNode, propName);
 }
 
-jsi::Value ViewStylesRepository::getRelativeProperty(
-    const RelativeTo relativeTo,
-    const std::string &relativeProperty,
-    const ShadowNode::Shared &shadowNode) {
-  if (relativeTo == RelativeTo::PARENT) {
-    return getParentNodeProp(shadowNode, relativeProperty);
-  }
-  return getNodeProp(shadowNode, relativeProperty);
-}
-
-std::optional<double> ViewStylesRepository::resolveUnitValue(
-    const UnitValue &value,
-    const ShadowNode::Shared &shadowNode,
-    const RelativeTo relativeTo,
-    const std::string &relativeProperty) {
-  if (!value.isRelative) {
-    return value.value;
-  }
-
-  const jsi::Value &relativeValue =
-      getRelativeProperty(relativeTo, relativeProperty, shadowNode);
-
-  if (!relativeValue.isNumber()) {
-    return std::nullopt;
-  }
-
-  return value.value * relativeValue.getNumber();
-}
-
 jsi::Value ViewStylesRepository::getViewStyle(jsi::Runtime &rt, const Tag tag) {
   const auto animatedStyle = animatedPropsRegistry_->get(tag);
   const auto staticStyle = staticPropsRegistry_->get(tag);

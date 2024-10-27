@@ -28,13 +28,6 @@ class TranslateTransformInterpolatorBase
  private:
   const RelativeTo relativeTo_;
   const std::string relativeProperty_;
-
-  std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-
-  std::optional<double> resolveValue(
-      const UnitValue &value,
-      const ShadowNode::Shared &shadowNode,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const;
 };
 
 class TranslateXTransformInterpolator

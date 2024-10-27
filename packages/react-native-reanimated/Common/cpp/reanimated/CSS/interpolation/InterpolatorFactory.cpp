@@ -123,6 +123,13 @@ std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
       relativeTo, relativeProperty, defaultValue);
 }
 
+std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
+    const TransformOrigin &defaultValue) {
+  return std::make_shared<
+      ValueInterpolatorFactory<TransformOriginInterpolator, TransformOrigin>>(
+      defaultValue);
+}
+
 std::shared_ptr<PropertyInterpolatorFactory> transforms(
     const TransformInterpolatorsMap &interpolators) {
   TransformInterpolators result;
