@@ -1,10 +1,10 @@
 'use strict';
-
 export * from './native';
 export * from './normalization';
 export * from './easing';
 export * from './manager';
-export { extractCSSConfigsAndFlattenedStyles } from './utils';
+export * from './utils/style';
+export * from './utils/comparison';
 export type {
   CSSAnimationKeyframes,
   CSSAnimationDuration,

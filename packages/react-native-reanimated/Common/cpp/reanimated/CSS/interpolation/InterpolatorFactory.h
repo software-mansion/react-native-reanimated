@@ -8,6 +8,7 @@
 #include <reanimated/CSS/interpolation/values/NumberStepsInterpolator.h>
 #include <reanimated/CSS/interpolation/values/NumericValueInterpolator.h>
 #include <reanimated/CSS/interpolation/values/RelativeOrNumericValueInterpolator.h>
+#include <reanimated/CSS/interpolation/values/TransformOriginInterpolator.h>
 
 #include <reanimated/CSS/interpolation/transforms/MatrixTransformInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/PerspectiveTransformInterpolator.h>
@@ -70,6 +71,15 @@ std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
     RelativeTo relativeTo,
     const std::string &relativeProperty) {
   return relOrNum(relativeTo, relativeProperty, std::nullopt);
+}
+
+std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
+    const TransformOrigin &defaultValue);
+std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
+    const std::variant<double, std::string> &x,
+    const std::variant<double, std::string> &y,
+    const double z) {
+  return transformOrigin(TransformOrigin(x, y, z));
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> transforms(

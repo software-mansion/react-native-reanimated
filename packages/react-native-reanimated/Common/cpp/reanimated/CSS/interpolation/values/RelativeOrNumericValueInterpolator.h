@@ -29,11 +29,6 @@ class RelativeOrNumericValueInterpolator : public ValueInterpolator<UnitValue> {
  private:
   const RelativeTo relativeTo_;
   const std::string relativeProperty_;
-  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-
-  std::optional<double> resolveValue(
-      const UnitValue &value,
-      const ShadowNode::Shared &shadowNode) const;
 };
 
 } // namespace reanimated

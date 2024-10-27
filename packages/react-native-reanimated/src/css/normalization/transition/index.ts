@@ -4,13 +4,13 @@ import type {
   NormalizedCSSTransitionConfig,
   NormalizedTransitionProperty,
 } from '../../types';
+import { haveDifferentValues } from '../../utils/comparison';
 import {
   normalizeDuration,
   normalizeTimingFunction,
   normalizeDelay,
 } from '../common';
 import { normalizeTransitionProperty } from './base';
-import { haveDifferentValues } from '../../utils';
 
 export function normalizeCSSTransitionConfig({
   transitionProperty,

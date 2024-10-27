@@ -258,5 +258,6 @@ template class ValueInterpolator<double>;
 template class ValueInterpolator<std::string>;
 template class ValueInterpolator<Color>;
 template class ValueInterpolator<UnitValue>;
+template class ValueInterpolator<TransformOrigin>;
 
 } // namespace reanimated

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/CSS/common/UnitValue.h>
+#include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
@@ -45,16 +45,6 @@ class ViewStylesRepository {
       jsi::Runtime &rt,
       const Tag tag,
       const PropertyPath &propertyPath);
-
-  jsi::Value getRelativeProperty(
-      const RelativeTo relativeTo,
-      const std::string &relativeProperty,
-      const ShadowNode::Shared &shadowNode);
-  std::optional<double> resolveUnitValue(
-      const UnitValue &value,
-      const ShadowNode::Shared &shadowNode,
-      const RelativeTo relativeTo,
-      const std::string &relativeProperty);
 
   void clearNodesCache();
 

@@ -61,7 +61,6 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       {"textDecorationLine", discrete()},
       {"textDecorationStyle", discrete()},
       {"textTransform", discrete()},
-      {"transformOrigin", discrete()},
       {"userSelect", discrete()},
       {"verticalAlign", discrete()},
       {"writingDirection", discrete()},
@@ -161,6 +160,7 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
        object({{"width", numeric()}, {"height", numeric()}})},
 
       // Transforms
+      {"transformOrigin", transformOrigin("50%", "50%", 0)},
       {"transform",
        transforms(
            {{"perspective", perspective(0)}, // 0 means no perspective
