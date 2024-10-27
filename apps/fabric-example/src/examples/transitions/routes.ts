@@ -1,7 +1,7 @@
 import routeCards from './routeCards';
 import type { RouteNames, Routes } from '../../navigation/types';
 import {
-  TransitionedProperties,
+  AnimatedProperties,
   testExamples,
   realWorldExamples,
   transitionSettings,
@@ -10,11 +10,13 @@ import {
 
 const routes = {
   AnimatedProperties: {
-    name: 'Transitioned Properties',
-    Component: TransitionedProperties,
+    CardComponent: routeCards.AnimatedPropertiesCard,
+    name: 'Animated Properties',
+    Component: AnimatedProperties,
   },
   TransitionSettings: {
     name: 'Transition Settings',
+    CardComponent: routeCards.TransitionSettingsCard,
     routes: {
       TransitionProperty: {
         name: 'Transition Property',
@@ -36,6 +38,7 @@ const routes = {
   },
   Miscellaneous: {
     name: 'Miscellaneous',
+    CardComponent: routeCards.MiscellaneousCard,
     routes: {
       ChangingTransitionProperty: {
         name: 'Changing Transition Property',
@@ -55,13 +58,13 @@ const routes = {
         name: 'App Settings',
         Component: realWorldExamples.AppSettings,
       },
-      CircularPopupMenu: {
-        name: 'Circular Popup Menu',
-        Component: realWorldExamples.CircularPopupMenu,
-      },
       FlexGallery: {
         name: 'Flex Gallery',
         Component: realWorldExamples.FlexGallery,
+      },
+      CircularPopupMenu: {
+        name: 'Circular Popup Menu',
+        Component: realWorldExamples.CircularPopupMenu,
       },
       HamburgerMenuButtons: {
         name: 'Hamburger Menu Buttons',
@@ -71,6 +74,7 @@ const routes = {
   },
   TestExamples: {
     name: 'Test Examples',
+    CardComponent: routeCards.TestExamplesCard,
     routes: {
       Playground: {
         name: 'Playground',

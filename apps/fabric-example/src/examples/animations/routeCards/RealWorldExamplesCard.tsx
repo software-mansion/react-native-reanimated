@@ -11,9 +11,9 @@ import type { RouteCardComponent } from '../../../components';
 import { colors, sizes, flex } from '../../../theme';
 import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationConfig } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
+import Animated, { cubicBezier } from 'react-native-reanimated';
 import type { PropsWithChildren } from 'react';
-import { useFocusPlayState } from './utils';
+import { useFocusPlayState } from '../../../hooks';
 
 const TIME_MULTIPLIER = 1;
 
@@ -43,7 +43,7 @@ const mainFlameAnimation: CSSAnimationConfig = {
     },
   },
   animationDuration: `${TIME_MULTIPLIER * 0.2}s`,
-  // animationTimingFunction: 'cubic-bezier(0.175, 0.885, 0.42, 1.41)', // TODO - add this once timing functions are merged
+  animationTimingFunction: cubicBezier(0.175, 0.885, 0.42, 1.41),
   animationIterationCount: 'infinite',
 };
 
@@ -58,7 +58,7 @@ const propulsedFlameAnimation: CSSAnimationConfig = {
     },
   },
   animationDuration: `${TIME_MULTIPLIER * 0.6}s`,
-  // animationTimingFunction: 'ease-in', // TODO - add this once timing functions are merged
+  animationTimingFunction: 'easeIn',
   animationIterationCount: 'infinite',
 };
 
@@ -73,7 +73,7 @@ const propulsedSparkAnimation: CSSAnimationConfig = {
     },
   },
   animationDuration: `${TIME_MULTIPLIER * 0.48}s`,
-  // animationTimingFunction: 'ease-in', // TODO - add this once timing functions are merged
+  animationTimingFunction: 'easeIn',
   animationIterationCount: 'infinite',
 };
 
@@ -93,7 +93,7 @@ const SPARK_TRANSLATIONS = [
 const RealWorldExamplesCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
-    description="Simple and complex animations that can be used in apps"
+    description="Simple and complex **animations** that can be **used in apps**"
     showcaseScale={1.5}>
     <Showcase />
   </RouteCard>

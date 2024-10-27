@@ -72,6 +72,9 @@ export default function ChangingTransitionProperty() {
   const [displayStyleChanges, setDisplayStyleChanges] = useState(true);
 
   useEffect(() => {
+    setTimeout(() => {
+      setCurrentStyleIndex(1);
+    }, 250);
     const interval = setInterval(() => {
       setCurrentStyleIndex((prev) => (prev + 1) % transitionStyles.length);
     }, 2000);

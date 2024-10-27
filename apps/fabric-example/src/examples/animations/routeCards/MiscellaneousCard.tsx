@@ -13,7 +13,7 @@ import { useIsFocused } from '@react-navigation/native';
 const MiscellaneousCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
-    description="Changing animation, animation settings updates and more">
+    description="**Changing** animation, animation **settings updates** and more">
     <Showcase />
   </RouteCard>
 );
