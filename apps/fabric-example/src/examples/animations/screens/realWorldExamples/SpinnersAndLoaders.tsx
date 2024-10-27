@@ -30,21 +30,21 @@ export default function SpinnersAndLoaders() {
         staggerInterval={100}
         columnGap={spacing.sm}
         rowGap={spacing.md}>
-        <Example title="Spinner" Emoji={Spinner} />
-        <Example title="Ring" Emoji={Ring} />
-        <Example title="Roller" Emoji={Roller} />
-        <Example title="Default" Emoji={Default} />
-        <Example title="Ellipsis" Emoji={Ellipsis} />
-        <Example title="Grid" Emoji={Grid} />
-        <Example title="Ripple" Emoji={Ripple} />
-        <Example title="Dual Ring" Emoji={DualRing} />
-        <Example title="Rectangle Bounce" Emoji={RectangleBounce} />
-        <Example title="Pulse" Emoji={Pulse} />
-        <Example title="Double Pulse" Emoji={DoublePulse} />
-        <Example title="Rectangle" Emoji={Rectangle} />
-        <Example title="Three Dots" Emoji={ThreeDots} />
-        <Example title="Cubes" Emoji={Cubes} />
-        <Example title="Diamond" Emoji={Diamond} />
+        <Example title="Spinner" Component={Spinner} />
+        <Example title="Ring" Component={Ring} />
+        <Example title="Roller" Component={Roller} />
+        <Example title="Default" Component={Default} />
+        <Example title="Ellipsis" Component={Ellipsis} />
+        <Example title="Grid" Component={Grid} />
+        <Example title="Ripple" Component={Ripple} />
+        <Example title="Dual Ring" Component={DualRing} />
+        <Example title="Rectangle Bounce" Component={RectangleBounce} />
+        <Example title="Pulse" Component={Pulse} />
+        <Example title="Double Pulse" Component={DoublePulse} />
+        <Example title="Rectangle" Component={Rectangle} />
+        <Example title="Three Dots" Component={ThreeDots} />
+        <Example title="Cubes" Component={Cubes} />
+        <Example title="Diamond" Component={Diamond} />
       </GridLayout>
     </ScrollScreen>
   );
@@ -52,14 +52,14 @@ export default function SpinnersAndLoaders() {
 
 type ExampleProps = {
   title: string;
-  Emoji: ComponentType;
+  Component: ComponentType;
 };
 
-function Example({ title, Emoji }: ExampleProps) {
+function Example({ title, Component }: ExampleProps) {
   return (
     <View style={sharedStyles.cell}>
       <Stagger delay={50}>
-        <Emoji />
+        <Component />
         <Text variant="label2" center>
           {title}
         </Text>
