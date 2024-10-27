@@ -57,6 +57,10 @@ const routes = {
         name: 'Flex Gallery',
         Component: realWorldExamples.FlexGallery,
       },
+      HamburgerMenuButtons: {
+        name: 'Hamburger Menu Buttons',
+        Component: realWorldExamples.HamburgerMenuButtons,
+      },
     },
   },
   TestExamples: {

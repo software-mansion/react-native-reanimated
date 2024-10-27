@@ -43,6 +43,7 @@ void CSSTransitionsRegistry::remove(jsi::Runtime &rt, const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   staticPropsRegistry_->removeObserver(viewTag);
+  delayedTransitionsMap_.erase(viewTag);
   runningTransitionTags_.erase(viewTag);
   updatesRegistry_.erase(viewTag);
   registry_.erase(viewTag);
@@ -82,7 +83,8 @@ void CSSTransitionsRegistry::activateDelayedTransitions(
     delayedTransitionsQueue_.pop();
 
     // Add only these transitions which weren't marked for removal
-    if (startTimestamp != 0) {
+    // and weren't removed in the meantime
+    if (startTimestamp != 0 && registry_.find(viewTag) != registry_.end()) {
       delayedTransitionsMap_.erase(viewTag);
       runningTransitionTags_.insert(viewTag);
     }

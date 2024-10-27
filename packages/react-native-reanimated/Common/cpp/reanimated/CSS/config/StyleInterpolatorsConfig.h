@@ -61,6 +61,7 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       {"textDecorationLine", discrete()},
       {"textDecorationStyle", discrete()},
       {"textTransform", discrete()},
+      {"transformOrigin", discrete()},
       {"userSelect", discrete()},
       {"verticalAlign", discrete()},
       {"writingDirection", discrete()},
