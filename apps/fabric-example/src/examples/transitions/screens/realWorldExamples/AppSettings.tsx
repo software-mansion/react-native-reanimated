@@ -229,10 +229,8 @@ function FontSizeButton({ fontSize, active, onPress }: FontSizeButtonProps) {
         style={[
           styles.fontSizeBackground,
           {
-            transitionProperty: 'all',
+            transitionProperty: 'opacity',
             transitionDuration: 200,
-            transitionTimingFunction: cubicBezier(0.15, 1.41, 1, 1.51),
-            transform: [{ scale: active ? 1 : 0.5 }],
             opacity: active ? 1 : 0,
           },
         ]}

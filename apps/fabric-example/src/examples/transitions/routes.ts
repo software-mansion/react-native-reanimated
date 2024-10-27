@@ -1,3 +1,4 @@
+import routeCards from './routeCards';
 import type { RouteNames, Routes } from '../../navigation/types';
 import {
   TransitionedProperties,
@@ -48,10 +49,15 @@ const routes = {
   },
   RealWorldExamples: {
     name: 'Real World Examples',
+    CardComponent: routeCards.RealWorldExamplesCard,
     routes: {
       AppSettings: {
         name: 'App Settings',
         Component: realWorldExamples.AppSettings,
+      },
+      CircularPopupMenu: {
+        name: 'Circular Popup Menu',
+        Component: realWorldExamples.CircularPopupMenu,
       },
       FlexGallery: {
         name: 'Flex Gallery',
