@@ -9,12 +9,12 @@ import Animated from 'react-native-reanimated';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faCog } from '@fortawesome/free-solid-svg-icons';
 import { colors, sizes, spacing } from '../../../theme';
-import { useFocusPlayState } from './utils';
+import { useFocusPlayState } from '../../../hooks';
 
 const TestExamplesCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
-    description="Examples to test edge cases, performance, etc. (useful for devs)">
+    description="Examples to test **edge cases**, **performance**, etc. (useful for devs)">
     <Showcase />
   </RouteCard>
 );

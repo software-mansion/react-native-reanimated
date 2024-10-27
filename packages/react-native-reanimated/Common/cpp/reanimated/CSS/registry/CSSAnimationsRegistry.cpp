@@ -7,6 +7,8 @@ void CSSAnimationsRegistry::updateSettings(
     const unsigned id,
     const PartialCSSAnimationSettings &updatedSettings,
     const time_t timestamp) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
   registry_.at(id)->updateSettings(rt, updatedSettings, timestamp);
   operationsBatch_.emplace_back(AnimationOperation::ACTIVATE, id);
 }

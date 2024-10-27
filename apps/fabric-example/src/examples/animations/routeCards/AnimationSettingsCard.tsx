@@ -8,7 +8,7 @@ import type {
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
-import { useFocusPlayState } from './utils';
+import { useFocusPlayState } from '../../../hooks';
 
 const animationSettings: CSSAnimationSettings = {
   animationDuration: '2s',

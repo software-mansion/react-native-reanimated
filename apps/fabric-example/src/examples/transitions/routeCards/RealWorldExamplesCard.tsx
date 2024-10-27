@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { RouteCard } from '../../../components';
 import type { RouteCardComponent } from '../../../components';
 import {
@@ -27,7 +27,7 @@ import { useFocusEffect } from '@react-navigation/native';
 const RealWorldExamplesCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
-    description="Simple and complex animations that can be used in apps">
+    description="Examples showing **use of transitions** in real-world scenarios">
     <Showcase />
   </RouteCard>
 );
@@ -46,7 +46,7 @@ function Showcase() {
 
   useFocusEffect(
     useCallback(() => {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         setOpen(true);
       }, 250);
 
@@ -55,6 +55,7 @@ function Showcase() {
       }, 1500);
 
       return () => {
+        clearTimeout(timeout);
         clearInterval(interval);
       };
     }, [])
@@ -76,7 +77,7 @@ function Showcase() {
             backgroundColor: open ? colors.primaryDark : colors.primary,
           },
         ]}>
-        <MenuButton open={open} onPress={setOpen} />
+        <MenuButton open={open} />
       </Animated.View>
     </View>
   );
@@ -86,10 +87,9 @@ const BUTTON_SIZE = sizes.xxs;
 
 type MenuButtonProps = {
   open: boolean;
-  onPress: (isOpen: boolean) => void;
 };
 
-function MenuButton({ open, onPress }: MenuButtonProps) {
+function MenuButton({ open }: MenuButtonProps) {
   const transitionConfig: CSSTransitionConfig = {
     transitionProperty: 'all',
     transitionDuration: 200,
@@ -97,7 +97,7 @@ function MenuButton({ open, onPress }: MenuButtonProps) {
   const lineStyle = [transitionConfig, styles.menuButtonLine];
 
   return (
-    <Pressable style={styles.menuButton} onPress={() => onPress(!open)}>
+    <View style={styles.menuButton}>
       <Animated.View
         style={[
           lineStyle,
@@ -126,7 +126,7 @@ function MenuButton({ open, onPress }: MenuButtonProps) {
           },
         ]}
       />
-    </Pressable>
+    </View>
   );
 }
 

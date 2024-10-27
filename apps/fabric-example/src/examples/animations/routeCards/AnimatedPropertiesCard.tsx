@@ -9,7 +9,7 @@ import Animated from 'react-native-reanimated';
 import { colors, radius, sizes, spacing } from '../../../theme';
 import { Children } from 'react';
 import type { ReactNode } from 'react';
-import { useFocusPlayState } from './utils';
+import { useFocusPlayState } from '../../../hooks';
 
 const scrollAnimation: CSSAnimationConfig = {
   animationName: {

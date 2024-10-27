@@ -24,6 +24,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 
 const AnimatedTouchableOpacity =
   Animated.createAnimatedComponent(TouchableOpacity);
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function CircularPopupMenu() {
   return (
@@ -50,7 +51,8 @@ function CircularMenu() {
       {MENU_ITEMS.map((item, index) => (
         <MenuItem key={index} icon={item.icon} open={open} index={index} />
       ))}
-      <Animated.View
+      <AnimatedPressable
+        onPress={() => setOpen(!open)}
         style={[
           styles.menuButtonWrapper,
           {
@@ -61,8 +63,8 @@ function CircularMenu() {
             backgroundColor: open ? colors.primaryDark : colors.primary,
           },
         ]}>
-        <MenuButton open={open} onPress={setOpen} />
-      </Animated.View>
+        <MenuButton open={open} />
+      </AnimatedPressable>
     </View>
   );
 }
@@ -71,10 +73,9 @@ const BUTTON_SIZE = sizes.xs;
 
 type MenuButtonProps = {
   open: boolean;
-  onPress: (isOpen: boolean) => void;
 };
 
-function MenuButton({ open, onPress }: MenuButtonProps) {
+function MenuButton({ open }: MenuButtonProps) {
   const transitionConfig: CSSTransitionConfig = {
     transitionProperty: 'all',
     transitionDuration: 200,
@@ -82,7 +83,7 @@ function MenuButton({ open, onPress }: MenuButtonProps) {
   const lineStyle = [transitionConfig, styles.menuButtonLine];
 
   return (
-    <Pressable style={styles.menuButton} onPress={() => onPress(!open)}>
+    <View style={styles.menuButton}>
       <Animated.View
         style={[
           lineStyle,
@@ -111,7 +112,7 @@ function MenuButton({ open, onPress }: MenuButtonProps) {
           },
         ]}
       />
-    </Pressable>
+    </View>
   );
 }
 

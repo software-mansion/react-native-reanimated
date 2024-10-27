@@ -41,8 +41,8 @@ export function normalizeTransformOrigin(
   const firstIsVertical = isVerticalKeyword(firstValue);
 
   return [
-    resolveValue(firstIsVertical ? secondValue : firstValue, false),
-    resolveValue(firstIsVertical ? firstValue : secondValue, true),
+    resolveValue((firstIsVertical ? secondValue : firstValue) ?? '50%', false),
+    resolveValue((firstIsVertical ? firstValue : secondValue) ?? '50%', true),
     validateNumber(thirdValue ?? 0),
   ];
 }
