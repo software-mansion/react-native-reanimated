@@ -1019,7 +1019,7 @@ PODS:
     - React-Core
   - RNCPicker (2.8.0):
     - React-Core
-  - RNGestureHandler (2.20.0):
+  - RNGestureHandler (2.20.2):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1269,11 +1269,11 @@ SPEC CHECKSUMS:
   ReactCommon: 0ccb181104be8de0f3d1afc56e362e1e103702b3
   RNCAsyncStorage: ec53e44dc3e75b44aa2a9f37618a49c3bc080a7a
   RNCPicker: 0173dedc74776227ec6dcc61bb85cd9f07bbb2ac
-  RNGestureHandler: bb81850add626ddd265294323310fec6e861c96b
-  RNReanimated: d3f3b578b15878865911addbea874b3e5cfb1f2a
+  RNGestureHandler: 93938f47763bf404d697f7c5d63c280ae4d732e4
+  RNReanimated: e9af702223a21fb8cf3d5336303bfa3522d88541
   RNSVG: 01eb8d8a0e2289ec3ecc9626ce920e00d2174992
   SocketRocket: f6c6249082c011e6de2de60ed641ef8bbe0cfac9
-  Yoga: 329461de6a23b9e0c108d197fd0f6e87c8c8ecf2
+  Yoga: 0639c9c8a20ae8043b0b64e2ef6d7a2cd5806aac
 
 PODFILE CHECKSUM: ddae34ca2842288eb8f70e6df3c2d638c2f56027
 
