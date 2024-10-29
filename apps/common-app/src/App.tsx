@@ -171,7 +171,7 @@ function BackButton(props: HeaderBackButtonProps) {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   return (
-    <HeaderBackButton {...props} onPress={() => navigation.popTo('Home')} />
+    <HeaderBackButton {...props} onPress={() => navigation.goBack()} />
   );
 }
 
