@@ -34,7 +34,7 @@ const currentVersion = packageJson.version;
 
 if (process.argv.length < 3) {
   console.log(currentVersion);
-  process.exit(1);
+  process.exit(0);
 }
 
 let version;
