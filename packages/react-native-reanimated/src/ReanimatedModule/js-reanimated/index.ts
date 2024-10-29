@@ -1,38 +1,32 @@
 'use strict';
-import JSReanimated from './JSReanimated';
-import type { StyleProps, AnimatedStyle } from '../commonTypes';
+import type { StyleProps, AnimatedStyle } from '../../commonTypes';
 import {
   createReactDOMStyle,
   createTransformValue,
   createTextShadowValue,
 } from './webUtils';
-import { PropsAllowlists } from '../propsAllowlists';
-import { logger } from '../logger';
-import { ReanimatedError } from '../errors';
+import { PropsAllowlists } from '../../propsAllowlists';
+import { logger } from '../../logger';
+import { ReanimatedError } from '../../errors';
 
-const reanimatedJS = new JSReanimated();
+export { createJSReanimatedModule } from './JSReanimated';
 
+// TODO: Install these global functions in a more suitable location.
 global._makeShareableClone = () => {
   throw new ReanimatedError(
-    '_makeShareableClone should never be called in JSReanimated.'
+    '`_makeShareableClone` should never be called from React runtime.'
   );
 };
 
 global._scheduleHostFunctionOnJS = () => {
   throw new ReanimatedError(
-    '_scheduleHostFunctionOnJS should never be called in JSReanimated.'
-  );
-};
-
-global._scheduleRemoteFunctionOnJS = () => {
-  throw new ReanimatedError(
-    '_scheduleHostFunctionOnJS should never be called in JSReanimated.'
+    '`_scheduleOnJS` should never be called from React runtime.'
   );
 };
 
 global._scheduleOnRuntime = () => {
   throw new ReanimatedError(
-    '_scheduleOnRuntime should never be called in JSReanimated.'
+    '`_scheduleOnRuntime` should never be called from React runtime.'
   );
 };
 
@@ -57,6 +51,7 @@ export interface ReanimatedHTMLElement extends HTMLElement {
   removedAfterAnimation?: boolean;
 }
 
+// TODO: Move these functions outside of index file.
 export const _updatePropsJS = (
   // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   updates: StyleProps | AnimatedStyle<any>,
@@ -174,5 +169,3 @@ const updatePropsDOM = (
 function isNativeProp(propName: string): boolean {
   return !!PropsAllowlists.NATIVE_THREAD_PROPS_WHITELIST[propName];
 }
-
-export default reanimatedJS;

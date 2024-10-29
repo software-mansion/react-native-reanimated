@@ -5,6 +5,7 @@ import type {
   ValueRotation,
   ShareableRef,
   LayoutAnimationBatchItem,
+  IReanimatedModule,
 } from '../commonTypes';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
@@ -13,11 +14,15 @@ import { getValueUnpackerCode } from '../valueUnpacker';
 import { isFabric } from '../PlatformChecker';
 import type React from 'react';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import ReanimatedModule from '../specs/NativeReanimatedModule';
+import { ReanimatedTurboModule } from '../specs';
 import { ReanimatedError } from '../errors';
 
+export function createNativeReanimatedModule() {
+  return new NativeReanimatedModule();
+}
+
 // this is the type of `__reanimatedModuleProxy` which is injected using JSI
-export interface NativeReanimatedModule {
+export interface ReanimatedModuleProxy {
   makeShareableClone<T>(
     value: T,
     shouldPersistRemote: boolean,
@@ -77,8 +82,8 @@ See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshoo
   }
 }
 
-export class NativeReanimated {
-  private InnerNativeModule: NativeReanimatedModule;
+class NativeReanimatedModule implements IReanimatedModule {
+  #reanimatedModuleProxy: ReanimatedModuleProxy;
 
   constructor() {
     // These checks have to split since version checking depend on the execution order
@@ -87,8 +92,7 @@ export class NativeReanimated {
     }
     global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined) {
-      const valueUnpackerCode = getValueUnpackerCode();
-      ReanimatedModule?.installTurboModule(valueUnpackerCode);
+      ReanimatedTurboModule?.installTurboModule(getValueUnpackerCode());
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(
@@ -99,7 +103,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     if (__DEV__) {
       checkCppVersion();
     }
-    this.InnerNativeModule = global.__reanimatedModuleProxy;
+    this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
   }
 
   makeShareableClone<T>(
@@ -107,7 +111,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     shouldPersistRemote: boolean,
     nativeStateSource?: object
   ) {
-    return this.InnerNativeModule.makeShareableClone(
+    return this.#reanimatedModuleProxy.makeShareableClone(
       value,
       shouldPersistRemote,
       nativeStateSource
@@ -115,22 +119,22 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   scheduleOnUI<T>(shareable: ShareableRef<T>) {
-    return this.InnerNativeModule.scheduleOnUI(shareable);
+    return this.#reanimatedModuleProxy.scheduleOnUI(shareable);
   }
 
   executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R {
-    return this.InnerNativeModule.executeOnUIRuntimeSync(shareable);
+    return this.#reanimatedModuleProxy.executeOnUIRuntimeSync(shareable);
   }
 
   createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
-    return this.InnerNativeModule.createWorkletRuntime(name, initializer);
+    return this.#reanimatedModuleProxy.createWorkletRuntime(name, initializer);
   }
 
   scheduleOnRuntime<T>(
     workletRuntime: WorkletRuntime,
     shareableWorklet: ShareableRef<T>
   ) {
-    return this.InnerNativeModule.scheduleOnRuntime(
+    return this.#reanimatedModuleProxy.scheduleOnRuntime(
       workletRuntime,
       shareableWorklet
     );
@@ -142,7 +146,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     iosReferenceFrame: number,
     handler: ShareableRef<(data: Value3D | ValueRotation) => void>
   ) {
-    return this.InnerNativeModule.registerSensor(
+    return this.#reanimatedModuleProxy.registerSensor(
       sensorType,
       interval,
       iosReferenceFrame,
@@ -151,7 +155,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   unregisterSensor(sensorId: number) {
-    return this.InnerNativeModule.unregisterSensor(sensorId);
+    return this.#reanimatedModuleProxy.unregisterSensor(sensorId);
   }
 
   registerEventHandler<T>(
@@ -159,7 +163,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     eventName: string,
     emitterReactTag: number
   ) {
-    return this.InnerNativeModule.registerEventHandler(
+    return this.#reanimatedModuleProxy.registerEventHandler(
       eventHandler,
       eventName,
       emitterReactTag
@@ -167,7 +171,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   unregisterEventHandler(id: number) {
-    return this.InnerNativeModule.unregisterEventHandler(id);
+    return this.#reanimatedModuleProxy.unregisterEventHandler(id);
   }
 
   getViewProp<T>(
@@ -181,35 +185,37 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       shadowNodeWrapper = getShadowNodeWrapperFromRef(
         component as React.Component
       );
-      return this.InnerNativeModule.getViewProp(
+      return this.#reanimatedModuleProxy.getViewProp(
         shadowNodeWrapper,
         propName,
         callback
       );
     }
 
-    return this.InnerNativeModule.getViewProp(viewTag, propName, callback);
+    return this.#reanimatedModuleProxy.getViewProp(viewTag, propName, callback);
   }
 
   configureLayoutAnimationBatch(
     layoutAnimationsBatch: LayoutAnimationBatchItem[]
   ) {
-    this.InnerNativeModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
+    this.#reanimatedModuleProxy.configureLayoutAnimationBatch(
+      layoutAnimationsBatch
+    );
   }
 
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean) {
-    this.InnerNativeModule.setShouldAnimateExitingForTag(
+    this.#reanimatedModuleProxy.setShouldAnimateExitingForTag(
       viewTag,
       shouldAnimate
     );
   }
 
   enableLayoutAnimations(flag: boolean) {
-    this.InnerNativeModule.enableLayoutAnimations(flag);
+    this.#reanimatedModuleProxy.enableLayoutAnimations(flag);
   }
 
   configureProps(uiProps: string[], nativeProps: string[]) {
-    this.InnerNativeModule.configureProps(uiProps, nativeProps);
+    this.#reanimatedModuleProxy.configureProps(uiProps, nativeProps);
   }
 
   subscribeForKeyboardEvents(
@@ -217,7 +223,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     isStatusBarTranslucent: boolean,
     isNavigationBarTranslucent: boolean
   ) {
-    return this.InnerNativeModule.subscribeForKeyboardEvents(
+    return this.#reanimatedModuleProxy.subscribeForKeyboardEvents(
       handler,
       isStatusBarTranslucent,
       isNavigationBarTranslucent
@@ -225,6 +231,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   unsubscribeFromKeyboardEvents(listenerId: number) {
-    this.InnerNativeModule.unsubscribeFromKeyboardEvents(listenerId);
+    this.#reanimatedModuleProxy.unsubscribeFromKeyboardEvents(listenerId);
   }
 }

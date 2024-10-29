@@ -28,9 +28,9 @@ import type { TransitionData } from './animationParser';
 import { Keyframe } from '../animationBuilder';
 import { makeElementVisible } from './componentStyle';
 import { EasingNameSymbol } from '../../Easing';
-import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import { logger } from '../../logger';
 import { LayoutAnimationType } from '../../commonTypes';
+import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,
