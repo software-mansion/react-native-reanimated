@@ -29,6 +29,7 @@
 
 #include <functional>
 #include <utility>
+#include <unordered_map>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <iomanip>
