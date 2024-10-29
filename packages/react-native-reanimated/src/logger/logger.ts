@@ -39,7 +39,7 @@ function logToConsole(data: LogData) {
 export const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
   logFunction: logToConsole,
   level: LogLevel.warn,
-  strict: false,
+  strict: true,
 };
 
 function formatMessage(message: string) {
