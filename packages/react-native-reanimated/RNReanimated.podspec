@@ -82,18 +82,6 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
-  s.subspec "reanimated" do |ss|
-    ss.source_files = "Common/cpp/reanimated/**/*.{cpp,h}"
-    ss.header_dir = "reanimated"
-    ss.header_mappings_dir = "Common/cpp/reanimated"
-
-    ss.subspec "apple" do |sss|
-      sss.source_files = "apple/reanimated/**/*.{mm,h,m}"
-      sss.header_dir = "reanimated"
-      sss.header_mappings_dir = "apple/reanimated"
-    end
-  end
-
   s.subspec "worklets" do |ss|
     ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
     ss.header_dir = "worklets"
@@ -104,8 +92,20 @@ Pod::Spec.new do |s|
       # 🐍🐍🐍
       # Thank you for your understanding.
       sss.source_files = "apple/worklets/**/*.{mm,h,m}"
-      sss.header_dir = "worklets/apple"
+      sss.header_dir = "worklets"
       sss.header_mappings_dir = "apple/worklets"
+    end
+  end
+
+  s.subspec "reanimated" do |ss|
+    ss.source_files = "Common/cpp/reanimated/**/*.{cpp,h}"
+    ss.header_dir = "reanimated"
+    ss.header_mappings_dir = "Common/cpp/reanimated"
+
+    ss.subspec "apple" do |sss|
+      sss.source_files = "apple/reanimated/**/*.{mm,h,m}"
+      sss.header_dir = "reanimated"
+      sss.header_mappings_dir = "apple/reanimated"
     end
   end
 
