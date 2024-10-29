@@ -3,6 +3,7 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/CollectionUtils.h>
 #include <reanimated/Tools/FeaturesConfig.h>
+#include <unordered_map>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
@@ -29,7 +30,6 @@
 
 #include <functional>
 #include <utility>
-#include <unordered_map>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <iomanip>
