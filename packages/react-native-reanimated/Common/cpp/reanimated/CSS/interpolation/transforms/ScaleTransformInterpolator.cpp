@@ -4,7 +4,7 @@ namespace reanimated {
 
 template <typename OperationType>
 ScaleTransformInterpolatorBase<OperationType>::ScaleTransformInterpolatorBase(
-    const double &defaultValue)
+    const double defaultValue)
     : TransformInterpolatorBase<OperationType>(
           std::make_shared<OperationType>(defaultValue)) {}
 
@@ -14,8 +14,9 @@ OperationType ScaleTransformInterpolatorBase<OperationType>::interpolate(
     const OperationType &fromOperation,
     const OperationType &toOperation,
     const TransformInterpolatorUpdateContext &context) const {
-  return fromOperation.value +
-      (toOperation.value - fromOperation.value) * progress;
+  return OperationType(
+      fromOperation.value +
+      (toOperation.value - fromOperation.value) * progress);
 }
 
 // Declare types for ScaleTransformInterpolator

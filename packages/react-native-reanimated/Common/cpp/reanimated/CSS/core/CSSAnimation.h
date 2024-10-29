@@ -11,11 +11,11 @@ class CSSAnimation {
  public:
   CSSAnimation(
       jsi::Runtime &rt,
-      const unsigned id,
-      const ShadowNode::Shared shadowNode,
+      unsigned id,
+      const ShadowNode::Shared &shadowNode,
       const CSSAnimationConfig &config,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const time_t startTime);
+      time_t startTime);
 
   unsigned getId() const {
     return id_;
@@ -31,13 +31,13 @@ class CSSAnimation {
     return fillMode_ == AnimationFillMode::BACKWARDS ||
         fillMode_ == AnimationFillMode::BOTH;
   }
-  AnimationProgressState getState(const time_t timestamp) const {
+  AnimationProgressState getState(double timestamp) const {
     return progressProvider_.getState(timestamp);
   }
   double getDelay() const {
     return progressProvider_.getDelay();
   }
-  time_t getStartTime() const {
+  double getStartTime() const {
     return progressProvider_.getStartTime();
   }
   jsi::Value getViewStyle(jsi::Runtime &rt) const {
@@ -45,13 +45,12 @@ class CSSAnimation {
   }
   jsi::Value getBackwardsFillStyle(jsi::Runtime &rt);
 
-  void run(const time_t timestamp);
-  jsi::Value update(jsi::Runtime &rt, time_t timestamp);
+  void run(double timestamp);
+  jsi::Value update(jsi::Runtime &rt, double timestamp);
 
   void updateSettings(
-      jsi::Runtime &rt,
       const PartialCSSAnimationSettings &updatedSettings,
-      const time_t timestamp);
+      double timestamp);
 
  private:
   const unsigned id_;
@@ -64,8 +63,8 @@ class CSSAnimation {
 
   PropertyInterpolationUpdateContext createUpdateContext(
       jsi::Runtime &rt,
-      const double progress,
-      const bool directionChanged) const;
+      double progress,
+      bool directionChanged) const;
 };
 
 } // namespace reanimated

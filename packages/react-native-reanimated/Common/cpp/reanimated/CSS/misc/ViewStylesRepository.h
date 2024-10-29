@@ -4,7 +4,7 @@
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
-#include <react/nativemodule/dom/NativeDOM.h>
+// #include <react/nativemodule/dom/NativeDOM.h>
 #include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/core/LayoutableShadowNode.h>
 #include <react/renderer/dom/DOM.h>

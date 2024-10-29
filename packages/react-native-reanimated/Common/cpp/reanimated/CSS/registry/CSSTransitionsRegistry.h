@@ -18,7 +18,7 @@ struct DelayedTransition {
   const Tag viewTag;
   double startTimestamp;
 
-  DelayedTransition(const Tag viewTag, const double startTimestamp)
+  DelayedTransition(Tag viewTag, double startTimestamp)
       : viewTag(viewTag), startTimestamp(startTimestamp) {}
 };
 
@@ -34,11 +34,11 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
  public:
   CSSTransitionsRegistry(
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
-      GetAnimationTimestampFunction &getCurrentTimestamp);
+      const GetAnimationTimestampFunction &getCurrentTimestamp);
 
   void updateSettings(
       jsi::Runtime &rt,
-      const Tag viewTag,
+      Tag viewTag,
       const PartialCSSTransitionSettings &updatedSettings);
 
   bool hasUpdates() const {
@@ -46,9 +46,9 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
         !operationsBatch_.empty();
   }
 
-  void add(jsi::Runtime &rt, const std::shared_ptr<CSSTransition> &transition);
-  void remove(jsi::Runtime &rt, const Tag viewTag);
-  void update(jsi::Runtime &rt, const time_t timestamp);
+  void add(const std::shared_ptr<CSSTransition> &transition);
+  void remove(Tag viewTag);
+  void update(jsi::Runtime &rt, double timestamp);
 
  private:
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
@@ -69,19 +69,19 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
       delayedTransitionsMap_;
   DelayedQueue delayedTransitionsQueue_;
 
-  void activateDelayedTransitions(const time_t timestamp);
+  void activateDelayedTransitions(double timestamp);
   void flushOperations();
 
   jsi::Value handleUpdate(
       jsi::Runtime &rt,
-      const time_t timestamp,
+      double timestamp,
       const std::shared_ptr<CSSTransition> &transition);
-  void handleOperation(const TransitionOperation operation, const Tag viewTag);
+  void handleOperation(TransitionOperation operation, Tag viewTag);
 
-  void activateOperation(const Tag viewTag);
-  void deactivateOperation(const Tag viewTag);
+  void activateOperation(Tag viewTag);
+  void deactivateOperation(Tag viewTag);
 
-  PropsObserver createPropsObserver(const Tag viewTag);
+  PropsObserver createPropsObserver(Tag viewTag);
 };
 
 } // namespace reanimated

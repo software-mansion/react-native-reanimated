@@ -3,7 +3,7 @@
 namespace reanimated {
 
 PerspectiveTransformInterpolator::PerspectiveTransformInterpolator(
-    const double &defaultValue)
+    const double defaultValue)
     : TransformInterpolatorBase<PerspectiveOperation>(
           std::make_shared<PerspectiveOperation>(defaultValue)) {}
 
@@ -13,12 +13,13 @@ PerspectiveOperation PerspectiveTransformInterpolator::interpolate(
     const PerspectiveOperation &toOperation,
     const TransformInterpolatorUpdateContext &context) const {
   if (toOperation.value == 0)
-    return 0;
+    return PerspectiveOperation(0);
   if (fromOperation.value == 0)
-    return toOperation.value;
+    return PerspectiveOperation(toOperation.value);
 
-  return fromOperation.value +
-      (toOperation.value - fromOperation.value) * progress;
+  return PerspectiveOperation(
+      fromOperation.value +
+      (toOperation.value - fromOperation.value) * progress);
 }
 
 } // namespace reanimated

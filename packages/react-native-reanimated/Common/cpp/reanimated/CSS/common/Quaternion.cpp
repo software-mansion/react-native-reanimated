@@ -6,9 +6,7 @@ bool Quaternion::operator==(const Quaternion &other) const {
   return x == other.x && y == other.y && z == other.z && w == other.w;
 }
 
-std::ostream &reanimated::operator<<(
-    std::ostream &os,
-    const Quaternion &quaternion) {
+std::ostream &operator<<(std::ostream &os, const Quaternion &quaternion) {
   os << "Quaternion(" << quaternion.x << ", " << quaternion.y << ", "
      << quaternion.z << ", " << quaternion.w << ")";
   return os;

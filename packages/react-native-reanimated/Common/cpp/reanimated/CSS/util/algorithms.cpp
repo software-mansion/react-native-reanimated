@@ -2,7 +2,9 @@
 
 namespace reanimated {
 
-size_t firstSmallerThanOrEqualBinsearch(double x, std::vector<double> arr) {
+size_t firstSmallerThanOrEqualBinsearch(
+    const double x,
+    const std::vector<double> &arr) {
   size_t left = 0;
   size_t right = arr.size() - 1;
   // Binsearch to find the first progress coordinate smaller or equal than the x

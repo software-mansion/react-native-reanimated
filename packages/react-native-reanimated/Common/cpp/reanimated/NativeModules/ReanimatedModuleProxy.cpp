@@ -74,20 +74,20 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
       layoutAnimationsManager_(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
+      getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
-      getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef RCT_NEW_ARCH_ENABLED
-      synchronouslyUpdateUIPropsFunction_(
-          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
-      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
-          staticPropsRegistry_,
-          animatedPropsRegistry_)),
+      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
           getAnimationTimestamp_)),
-      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
+      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
+          staticPropsRegistry_,
+          animatedPropsRegistry_)),
+      synchronouslyUpdateUIPropsFunction_(
+          platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(
@@ -541,7 +541,6 @@ void ReanimatedModuleProxy::updateCSSAnimation(
     const jsi::Value &animationId,
     const jsi::Value &settingsUpdates) {
   cssAnimationsRegistry_->updateSettings(
-      rt,
       animationId.asNumber(),
       parsePartialCSSAnimationSettings(rt, settingsUpdates),
       getAnimationTimestamp_());
@@ -564,7 +563,7 @@ void ReanimatedModuleProxy::registerCSSTransition(
       parseCSSTransitionConfig(rt, transitionConfig),
       viewStylesRepository_);
 
-  cssTransitionsRegistry_->add(rt, transition);
+  cssTransitionsRegistry_->add(transition);
   maybeRunCSSLoop();
 }
 
@@ -582,7 +581,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
 void ReanimatedModuleProxy::unregisterCSSTransition(
     jsi::Runtime &rt,
     const jsi::Value &viewTag) {
-  cssTransitionsRegistry_->remove(rt, viewTag.asNumber());
+  cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED

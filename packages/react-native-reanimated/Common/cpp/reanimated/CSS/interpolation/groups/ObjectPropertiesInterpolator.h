@@ -11,6 +11,7 @@ class ObjectPropertiesInterpolator : public PropertyInterpolator {
       const PropertiesInterpolatorFactories &factories,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath);
+  virtual ~ObjectPropertiesInterpolator() = default;
 
   jsi::Value getStyleValue(
       jsi::Runtime &rt,
@@ -35,7 +36,7 @@ class ObjectPropertiesInterpolator : public PropertyInterpolator {
 
   jsi::Value mapInterpolators(
       jsi::Runtime &rt,
-      std::function<jsi::Value(PropertyInterpolator &)> callback) const;
+      const std::function<jsi::Value(PropertyInterpolator &)>& callback) const;
 };
 
 } // namespace reanimated

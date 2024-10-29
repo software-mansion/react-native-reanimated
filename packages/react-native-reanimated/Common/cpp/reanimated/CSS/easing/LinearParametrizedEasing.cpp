@@ -3,8 +3,8 @@
 double interpolateValue(
     double x,
     size_t leftIdx,
-    std::vector<double> arrX,
-    std::vector<double> arrY) {
+    const std::vector<double> &arrX,
+    const std::vector<double> &arrY) {
   if (leftIdx == arrX.size() - 1) {
     // We are exactly on the last point of the curve, we just return its y
     // coordinate
@@ -21,8 +21,8 @@ double interpolateValue(
 namespace reanimated {
 
 EasingFunction createLinearEasingFunction(
-    std::vector<double> arrX,
-    std::vector<double> arrY) {
+    const std::vector<double>& arrX,
+    const std::vector<double>& arrY) {
   return [=](double x) {
     size_t leftIdx = firstSmallerThanOrEqualBinsearch(x, arrX);
     return interpolateValue(x, leftIdx, arrX, arrY);

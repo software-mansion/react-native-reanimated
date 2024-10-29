@@ -10,9 +10,9 @@ namespace reanimated {
 class ProgressProvider {
  public:
   ProgressProvider(
-      const double duration,
-      const double delay,
-      const EasingFunction easingFunction);
+      double duration,
+      double delay,
+      const EasingFunction &easingFunction);
 
   double getCurrent() const {
     return currentProgress_.value_or(0);
@@ -27,31 +27,31 @@ class ProgressProvider {
     return delay_;
   }
 
-  void setDuration(const double duration) {
+  void setDuration(double duration) {
     resetProgress();
     duration_ = duration;
   }
-  void setEasingFunction(const EasingFunction easingFunction) {
+  void setEasingFunction(const EasingFunction &easingFunction) {
     resetProgress();
     easingFunction_ = easingFunction;
   }
-  void setDelay(const double delay) {
+  void setDelay(double delay) {
     resetProgress();
     delay_ = delay;
   }
 
   bool hasDirectionChanged() const;
 
-  void start(const time_t timestamp);
+  void start(double timestamp);
   virtual void resetProgress();
-  void update(const time_t timestamp);
+  void update(double timestamp);
 
  protected:
   double duration_;
   double delay_;
   EasingFunction easingFunction_;
 
-  time_t startTime_ = 0;
+  double startTime_ = 0;
 
   std::optional<double> rawProgress_;
   // These progress values are resulting progress returned by the `get` method
@@ -64,7 +64,7 @@ class ProgressProvider {
    * Calculates the progress of the animation at the given timestamp without
    * applying any decorations (e.g. animation direction, easing)
    */
-  virtual std::optional<double> calculateRawProgress(time_t timestamp) = 0;
+  virtual std::optional<double> calculateRawProgress(double timestamp) = 0;
 
   /**
    * Decorates the calculated progress with additional information when
@@ -75,7 +75,7 @@ class ProgressProvider {
   }
 
  private:
-  std::optional<double> calculateProgress(time_t timestamp);
+  std::optional<double> calculateProgress(double timestamp);
 };
 
 } // namespace reanimated

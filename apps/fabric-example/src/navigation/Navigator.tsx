@@ -99,6 +99,7 @@ export default function Navigator() {
         screenOptions={{
           headerLeft: () => <BackButton tabRoutes={routesArray} />,
           headerTintColor: colors.foreground1,
+          animation: 'slide_from_right',
         }}>
         {Object.entries(tabRoutes).flatMap(([key, value]) =>
           createStackScreens(value.routes, key, value.name)

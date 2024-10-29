@@ -17,8 +17,7 @@ OperationType RotateTransformInterpolatorBase<OperationType>::interpolate(
   const auto &fromAngle = fromOperation.value;
   const auto &toAngle = toOperation.value;
 
-  return OperationType(
-      fromAngle.value + (toAngle.value - fromAngle.value) * progress);
+  return OperationType(AngleValue(fromAngle.value + (toAngle.value - fromAngle.value) * progress));
 }
 
 // Declare types for RotateTransformInterpolator

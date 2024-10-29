@@ -5,7 +5,7 @@ namespace reanimated {
 template <typename OperationType>
 TranslateTransformInterpolatorBase<OperationType>::
     TranslateTransformInterpolatorBase(
-        RelativeTo relativeTo,
+        const RelativeTo relativeTo,
         const std::string &relativeProperty,
         const UnitValue &defaultValue)
     : TransformInterpolatorBase<OperationType>(
@@ -19,7 +19,7 @@ OperationType TranslateTransformInterpolatorBase<OperationType>::interpolate(
     const OperationType &fromOperation,
     const OperationType &toOperation,
     const TransformInterpolatorUpdateContext &context) const {
-  return fromOperation.value.interpolate(
+  return OperationType(fromOperation.value.interpolate(
       progress,
       toOperation.value,
       {
@@ -27,7 +27,7 @@ OperationType TranslateTransformInterpolatorBase<OperationType>::interpolate(
           .viewStylesRepository = context.viewStylesRepository,
           .relativeProperty = relativeProperty_,
           .relativeTo = relativeTo_,
-      });
+      }));
 }
 
 template <typename OperationType>

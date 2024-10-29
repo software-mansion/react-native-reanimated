@@ -4,7 +4,7 @@
 
 namespace reanimated {
 
-class ColorValueInterpolator : public ValueInterpolator<Color> {
+class ColorValueInterpolator final : public ValueInterpolator<Color> {
  public:
   using ValueInterpolator<Color>::ValueInterpolator;
 
@@ -19,7 +19,7 @@ class ColorValueInterpolator : public ValueInterpolator<Color> {
       double localProgress,
       const Color &fromValue,
       const Color &toValue,
-      const PropertyInterpolationUpdateContext context) const override;
+      const PropertyInterpolationUpdateContext &context) const override;
 };
 
 } // namespace reanimated

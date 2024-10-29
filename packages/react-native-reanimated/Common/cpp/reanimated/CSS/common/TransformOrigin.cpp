@@ -7,10 +7,13 @@ TransformOrigin::TransformOrigin() : x(0.), y(0.), z(0.) {}
 TransformOrigin::TransformOrigin(
     const std::variant<double, std::string> &x,
     const std::variant<double, std::string> &y,
-    double z)
+    const double z)
     : x(valueFromVariant(x)), y(valueFromVariant(y)), z(z) {}
 
-TransformOrigin::TransformOrigin(UnitValue x, UnitValue y, UnitValue z)
+TransformOrigin::TransformOrigin(
+    const UnitValue &x,
+    const UnitValue &y,
+    const UnitValue &z)
     : x(x), y(y), z(z) {}
 
 TransformOrigin::TransformOrigin(jsi::Runtime &rt, const jsi::Value &value) {

@@ -5,21 +5,21 @@
 
 namespace reanimated {
 
-class MatrixTransformInterpolator
+class MatrixTransformInterpolator final
     : public TransformInterpolatorBase<MatrixOperation> {
  public:
-  MatrixTransformInterpolator(const TransformMatrix &defaultValue);
+  explicit MatrixTransformInterpolator(const TransformMatrix &defaultValue);
 
  protected:
   MatrixOperation interpolate(
-      const double progress,
+      double progress,
       const MatrixOperation &fromOperation,
       const MatrixOperation &toOperation,
       const TransformInterpolatorUpdateContext &context) const override;
 
-  TransformMatrix matrixFromOperation(
+  static TransformMatrix matrixFromOperation(
       const MatrixOperation &operation,
-      const TransformInterpolatorUpdateContext &context) const;
+      const TransformInterpolatorUpdateContext &context);
 };
 
 } // namespace reanimated

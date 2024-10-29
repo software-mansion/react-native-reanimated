@@ -14,7 +14,7 @@ TransformOriginInterpolator::TransformOriginInterpolator(
 TransformOrigin TransformOriginInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
-  return TransformOrigin(rt, value);
+  return {rt, value};
 }
 
 jsi::Value TransformOriginInterpolator::convertResultToJSI(
@@ -31,7 +31,7 @@ TransformOrigin TransformOriginInterpolator::interpolate(
     const double localProgress,
     const TransformOrigin &fromValue,
     const TransformOrigin &toValue,
-    const PropertyInterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext &context) const {
   return TransformOrigin(
       fromValue.x.interpolate(
           localProgress,

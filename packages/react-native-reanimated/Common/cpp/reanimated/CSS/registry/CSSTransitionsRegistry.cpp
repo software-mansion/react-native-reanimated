@@ -4,9 +4,9 @@ namespace reanimated {
 
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
-    GetAnimationTimestampFunction &getCurrentTimestamp)
-    : staticPropsRegistry_(staticPropsRegistry),
-      getCurrentTimestamp_(getCurrentTimestamp) {}
+    const GetAnimationTimestampFunction &getCurrentTimestamp)
+    : getCurrentTimestamp_(getCurrentTimestamp),
+      staticPropsRegistry_(staticPropsRegistry) {}
 
 void CSSTransitionsRegistry::updateSettings(
     jsi::Runtime &rt,
@@ -15,7 +15,7 @@ void CSSTransitionsRegistry::updateSettings(
   std::lock_guard<std::mutex> lock{mutex_};
 
   const auto &transition = registry_.at(viewTag);
-  transition->updateSettings(rt, updatedSettings);
+  transition->updateSettings(updatedSettings);
 
   // Replace style overrides with the new ones if transition properties were
   // updated (we want to keep overrides only for transitioned properties)
@@ -27,7 +27,6 @@ void CSSTransitionsRegistry::updateSettings(
 }
 
 void CSSTransitionsRegistry::add(
-    jsi::Runtime &rt,
     const std::shared_ptr<CSSTransition> &transition) {
   std::lock_guard<std::mutex> lock{mutex_};
 
@@ -39,7 +38,7 @@ void CSSTransitionsRegistry::add(
   staticPropsRegistry_->setObserver(viewTag, observer);
 }
 
-void CSSTransitionsRegistry::remove(jsi::Runtime &rt, const Tag viewTag) {
+void CSSTransitionsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   staticPropsRegistry_->removeObserver(viewTag);
@@ -49,7 +48,7 @@ void CSSTransitionsRegistry::remove(jsi::Runtime &rt, const Tag viewTag) {
   registry_.erase(viewTag);
 }
 
-void CSSTransitionsRegistry::update(jsi::Runtime &rt, const time_t timestamp) {
+void CSSTransitionsRegistry::update(jsi::Runtime &rt, const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   // Activate all delayed transitions that should start now
@@ -62,7 +61,7 @@ void CSSTransitionsRegistry::update(jsi::Runtime &rt, const time_t timestamp) {
     const auto &transition = registry_.at(viewTag);
     const jsi::Value &updates = handleUpdate(rt, timestamp, transition);
 
-    if (transition->getState(timestamp) != TransitionProgressState::RUNNING) {
+    if (transition->getState() != TransitionProgressState::RUNNING) {
       operationsBatch_.emplace_back(TransitionOperation::DEACTIVATE, viewTag);
     }
     if (!updates.isUndefined()) {
@@ -74,7 +73,7 @@ void CSSTransitionsRegistry::update(jsi::Runtime &rt, const time_t timestamp) {
 }
 
 void CSSTransitionsRegistry::activateDelayedTransitions(
-    const time_t timestamp) {
+    const double timestamp) {
   while (!delayedTransitionsQueue_.empty() &&
          delayedTransitionsQueue_.top()->startTimestamp <= timestamp) {
     const auto &delayedTransition = delayedTransitionsQueue_.top();
@@ -104,9 +103,9 @@ void CSSTransitionsRegistry::flushOperations() {
 
 jsi::Value CSSTransitionsRegistry::handleUpdate(
     jsi::Runtime &rt,
-    const time_t timestamp,
+    const double timestamp,
     const std::shared_ptr<CSSTransition> &transition) {
-  if (transition->getState(timestamp) == TransitionProgressState::FINISHED) {
+  if (transition->getState() == TransitionProgressState::FINISHED) {
     operationsBatch_.emplace_back(
         TransitionOperation::DEACTIVATE, transition->getViewTag());
   }
@@ -115,7 +114,7 @@ jsi::Value CSSTransitionsRegistry::handleUpdate(
 
 void CSSTransitionsRegistry::handleOperation(
     const TransitionOperation operation,
-    const Tag viewTag) {
+    Tag viewTag) {
   switch (operation) {
     case TransitionOperation::ACTIVATE:
       activateOperation(viewTag);
@@ -168,7 +167,7 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
     const auto changedProps =
         getChangedProps(rt, oldProps, newProps, transitionProperties);
 
-    if (!changedProps.changedPropertyNames.size()) {
+    if (changedProps.changedPropertyNames.empty()) {
       return;
     }
     const auto &shadowNode = transition->getShadowNode();
@@ -183,6 +182,6 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
       operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, viewTag);
     }
   };
-};
+}
 
 } // namespace reanimated

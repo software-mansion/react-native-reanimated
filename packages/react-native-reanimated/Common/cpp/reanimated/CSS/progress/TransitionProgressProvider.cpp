@@ -1,4 +1,3 @@
-#include <glog/logging.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
 namespace reanimated {
@@ -17,17 +16,17 @@ TransitionProgressState TransitionPropertyProgressProvider::getState() const {
 }
 
 double TransitionPropertyProgressProvider::getRemainingDelay(
-    const time_t timestamp) const {
+    const double timestamp) const {
   return delay_ - (timestamp - startTime_);
 }
 
 std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(
-    const time_t timestamp) {
+    const double timestamp) {
   return getElapsedTime(timestamp) / duration_;
 }
 
 double TransitionPropertyProgressProvider::getElapsedTime(
-    const time_t timestamp) const {
+    const double timestamp) const {
   return timestamp - (startTime_ + delay_);
 }
 
@@ -36,7 +35,7 @@ double TransitionPropertyProgressProvider::getElapsedTime(
 TransitionProgressProvider::TransitionProgressProvider(
     const double duration,
     const double delay,
-    const EasingFunction easingFunction)
+    const EasingFunction &easingFunction)
     : duration_(duration), delay_(delay), easingFunction_(easingFunction) {}
 
 TransitionProgressState TransitionProgressProvider::getState() const {
@@ -46,7 +45,7 @@ TransitionProgressState TransitionProgressProvider::getState() const {
   return TransitionProgressState::PENDING;
 }
 
-double TransitionProgressProvider::getMinDelay(const time_t timestamp) const {
+double TransitionProgressProvider::getMinDelay(const double timestamp) const {
   double minDelay = delay_;
 
   for (const auto &[_, propertyProgressProvider] : propertyProgressProviders_) {
@@ -58,16 +57,6 @@ double TransitionProgressProvider::getMinDelay(const time_t timestamp) const {
   }
 
   return minDelay;
-}
-
-std::optional<TransitionPropertyProgressProvider>
-TransitionProgressProvider::getPropertyProgressProvider(
-    const std::string &propertyName) const {
-  const auto &it = propertyProgressProviders_.find(propertyName);
-  if (it == propertyProgressProviders_.end()) {
-    return std::nullopt;
-  }
-  return it->second;
 }
 
 void TransitionProgressProvider::discardIrrelevantProgressProviders(
@@ -87,7 +76,7 @@ void TransitionProgressProvider::discardIrrelevantProgressProviders(
 
 void TransitionProgressProvider::runProgressProviders(
     jsi::Runtime &rt,
-    const time_t timestamp,
+    const double timestamp,
     const PropertyNames &changedPropertyNames) {
   for (const auto &propertyName : changedPropertyNames) {
     // Always create the new progress provider with the new settings
@@ -100,7 +89,7 @@ void TransitionProgressProvider::runProgressProviders(
   }
 }
 
-void TransitionProgressProvider::update(const time_t timestamp) {
+void TransitionProgressProvider::update(const double timestamp) {
   for (const auto &propertyName : propertiesToRemove_) {
     propertyProgressProviders_.erase(propertyName);
   }

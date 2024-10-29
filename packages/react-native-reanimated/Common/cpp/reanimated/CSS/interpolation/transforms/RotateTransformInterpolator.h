@@ -8,41 +8,41 @@ template <typename OperationType>
 class RotateTransformInterpolatorBase
     : public TransformInterpolatorBase<OperationType> {
  public:
-  RotateTransformInterpolatorBase(const AngleValue &defaultValue);
+  explicit RotateTransformInterpolatorBase(const AngleValue &defaultValue);
 
  protected:
   OperationType interpolate(
-      const double progress,
+      double progress,
       const OperationType &fromOperation,
       const OperationType &toOperation,
       const TransformInterpolatorUpdateContext &context) const override;
 };
 
-class RotateTransformInterpolator
+class RotateTransformInterpolator final
     : public RotateTransformInterpolatorBase<RotateOperation> {
  public:
-  RotateTransformInterpolator(const AngleValue &defaultValue)
+  explicit RotateTransformInterpolator(const AngleValue &defaultValue)
       : RotateTransformInterpolatorBase(defaultValue) {}
 };
 
-class RotateXTransformInterpolator
+class RotateXTransformInterpolator final
     : public RotateTransformInterpolatorBase<RotateXOperation> {
  public:
-  RotateXTransformInterpolator(const AngleValue &defaultValue)
+  explicit RotateXTransformInterpolator(const AngleValue &defaultValue)
       : RotateTransformInterpolatorBase(defaultValue) {}
 };
 
-class RotateYTransformInterpolator
+class RotateYTransformInterpolator final
     : public RotateTransformInterpolatorBase<RotateYOperation> {
  public:
-  RotateYTransformInterpolator(const AngleValue &defaultValue)
+  explicit RotateYTransformInterpolator(const AngleValue &defaultValue)
       : RotateTransformInterpolatorBase(defaultValue) {}
 };
 
-class RotateZTransformInterpolator
+class RotateZTransformInterpolator final
     : public RotateTransformInterpolatorBase<RotateZOperation> {
  public:
-  RotateZTransformInterpolator(const AngleValue &defaultValue)
+  explicit RotateZTransformInterpolator(const AngleValue &defaultValue)
       : RotateTransformInterpolatorBase(defaultValue) {}
 };
 

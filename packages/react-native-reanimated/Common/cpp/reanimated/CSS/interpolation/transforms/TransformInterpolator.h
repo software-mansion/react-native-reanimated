@@ -31,7 +31,7 @@ class TransformInterpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       const = 0;
   virtual std::shared_ptr<TransformOperation> interpolate(
-      const double progress,
+      double progress,
       const TransformOperation &fromOperation,
       const TransformOperation &toOperation,
       const UpdateContext &context) const = 0;
@@ -78,7 +78,7 @@ class TransformInterpolatorBase : public TransformInterpolator {
   }
 
   virtual OperationType interpolate(
-      const double progress,
+      double progress,
       const OperationType &fromOperation,
       const OperationType &toOperation,
       const UpdateContext &context) const = 0;

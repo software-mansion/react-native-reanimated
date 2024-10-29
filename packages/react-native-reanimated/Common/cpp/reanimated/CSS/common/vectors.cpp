@@ -10,7 +10,7 @@ const double &Vector3D::operator[](const size_t idx) const {
   return vec[idx];
 }
 
-Vector3D &Vector3D::operator*=(double scalar) {
+Vector3D &Vector3D::operator*=(const double scalar) {
   vec[0] *= scalar;
   vec[1] *= scalar;
   vec[2] *= scalar;

@@ -16,9 +16,9 @@ using namespace worklets;
 struct AngleValue {
   double value;
 
-  AngleValue() {};
-  AngleValue(const double value);
-  AngleValue(const std::string &rotationString);
+  AngleValue() = default;
+  explicit AngleValue(double value);
+  explicit AngleValue(const std::string &rotationString);
   AngleValue(jsi::Runtime &rt, const jsi::Value &value);
 
   std::string toString() const;

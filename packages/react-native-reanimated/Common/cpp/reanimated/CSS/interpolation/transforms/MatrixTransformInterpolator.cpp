@@ -18,24 +18,24 @@ MatrixOperation MatrixTransformInterpolator::interpolate(
   const auto decomposedTo = toMatrix.decompose();
 
   if (!decomposedFrom.has_value() || !decomposedTo.has_value()) {
-    return progress < 0.5 ? fromMatrix : toMatrix;
+    return MatrixOperation(progress < 0.5 ? fromMatrix : toMatrix);
   }
 
-  return TransformMatrix::recompose(
-      decomposedFrom->interpolate(progress, decomposedTo.value()));
+  return MatrixOperation(TransformMatrix::recompose(
+      decomposedFrom->interpolate(progress, decomposedTo.value())));
 }
 
 TransformMatrix MatrixTransformInterpolator::matrixFromOperation(
-    const MatrixOperation &operation,
-    const TransformInterpolatorUpdateContext &context) const {
+    const MatrixOperation &matrixOperation,
+    const TransformInterpolatorUpdateContext &context) {
   if (std::holds_alternative<TransformOperations>(
-          operation.valueOrOperations)) {
+          matrixOperation.valueOrOperations)) {
     const auto operations =
-        std::get<TransformOperations>(operation.valueOrOperations);
+        std::get<TransformOperations>(matrixOperation.valueOrOperations);
 
     TransformMatrix matrix = TransformMatrix::Identity();
 
-    for (int i = operations.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(operations.size()) - 1; i >= 0; i--) {
       auto operation = operations[i];
 
       if (operation->isRelative()) {
@@ -50,7 +50,7 @@ TransformMatrix MatrixTransformInterpolator::matrixFromOperation(
     return matrix;
   }
 
-  return std::get<TransformMatrix>(operation.valueOrOperations);
+  return std::get<TransformMatrix>(matrixOperation.valueOrOperations);
 }
 
 } // namespace reanimated

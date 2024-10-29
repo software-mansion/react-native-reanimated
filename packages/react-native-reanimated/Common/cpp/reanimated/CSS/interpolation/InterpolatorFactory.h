@@ -17,8 +17,7 @@
 #include <reanimated/CSS/interpolation/transforms/SkewTransformInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TranslateTransformInterpolator.h>
 
-namespace reanimated {
-namespace Interpolators {
+namespace reanimated::Interpolators {
 
 /**
  * Property interpolators
@@ -29,27 +28,19 @@ std::shared_ptr<PropertyInterpolatorFactory> object(
 
 std::shared_ptr<PropertyInterpolatorFactory> color(
     const std::optional<Color> &defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> color() {
-  return color(Color::Transparent);
-}
+std::shared_ptr<PropertyInterpolatorFactory> color();
 
 std::shared_ptr<PropertyInterpolatorFactory> numeric(
     const std::optional<double> &defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> numeric() {
-  return numeric(std::nullopt);
-}
+std::shared_ptr<PropertyInterpolatorFactory> numeric();
 
 std::shared_ptr<PropertyInterpolatorFactory> steps(
     const std::optional<int> &defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> steps() {
-  return steps(std::nullopt);
-}
+std::shared_ptr<PropertyInterpolatorFactory> steps();
 
 std::shared_ptr<PropertyInterpolatorFactory> discrete(
     const std::optional<std::string> &defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> discrete() {
-  return discrete(std::nullopt);
-}
+std::shared_ptr<PropertyInterpolatorFactory> discrete();
 
 std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
     RelativeTo relativeTo,
@@ -58,29 +49,21 @@ std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
 std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
-    const double &defaultValue) {
-  return relOrNum(relativeTo, relativeProperty, UnitValue(defaultValue));
-}
+    const double defaultValue);
 std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
-    const std::string &defaultValue) {
-  return relOrNum(relativeTo, relativeProperty, UnitValue(defaultValue));
-}
+    const std::string &defaultValue);
 std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
     RelativeTo relativeTo,
-    const std::string &relativeProperty) {
-  return relOrNum(relativeTo, relativeProperty, std::nullopt);
-}
+    const std::string &relativeProperty);
 
 std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
     const TransformOrigin &defaultValue);
 std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
     const std::variant<double, std::string> &x,
     const std::variant<double, std::string> &y,
-    const double z) {
-  return transformOrigin(TransformOrigin(x, y, z));
-}
+    double z);
 
 std::shared_ptr<PropertyInterpolatorFactory> transforms(
     const TransformInterpolatorsMap &interpolators);
@@ -89,31 +72,20 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
  * Transform interpolators
  */
 
-std::shared_ptr<TransformInterpolator> perspective(const double &defaultValue);
+std::shared_ptr<TransformInterpolator> perspective(const double defaultValue);
 
 std::shared_ptr<TransformInterpolator> rotate(const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolator> rotate(const std::string &defaultValue) {
-  return rotate(AngleValue(defaultValue));
-}
+std::shared_ptr<TransformInterpolator> rotate(const std::string &defaultValue);
 std::shared_ptr<TransformInterpolator> rotateX(const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolator> rotateX(
-    const std::string &defaultValue) {
-  return rotateX(AngleValue(defaultValue));
-}
+std::shared_ptr<TransformInterpolator> rotateX(const std::string &defaultValue);
 std::shared_ptr<TransformInterpolator> rotateY(const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolator> rotateY(
-    const std::string &defaultValue) {
-  return rotateY(AngleValue(defaultValue));
-}
+std::shared_ptr<TransformInterpolator> rotateY(const std::string &defaultValue);
 std::shared_ptr<TransformInterpolator> rotateZ(const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolator> rotateZ(
-    const std::string &defaultValue) {
-  return rotateZ(AngleValue(defaultValue));
-}
+std::shared_ptr<TransformInterpolator> rotateZ(const std::string &defaultValue);
 
-std::shared_ptr<TransformInterpolator> scale(const double &defaultValue);
-std::shared_ptr<TransformInterpolator> scaleX(const double &defaultValue);
-std::shared_ptr<TransformInterpolator> scaleY(const double &defaultValue);
+std::shared_ptr<TransformInterpolator> scale(const double defaultValue);
+std::shared_ptr<TransformInterpolator> scaleX(const double defaultValue);
+std::shared_ptr<TransformInterpolator> scaleY(const double defaultValue);
 
 std::shared_ptr<TransformInterpolator> translateX(
     RelativeTo relativeTo,
@@ -122,9 +94,7 @@ std::shared_ptr<TransformInterpolator> translateX(
 std::shared_ptr<TransformInterpolator> translateX(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
-    const double &defaultValue) {
-  return translateX(relativeTo, relativeProperty, UnitValue(defaultValue));
-}
+    const double defaultValue);
 std::shared_ptr<TransformInterpolator> translateY(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
@@ -132,21 +102,14 @@ std::shared_ptr<TransformInterpolator> translateY(
 std::shared_ptr<TransformInterpolator> translateY(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
-    const double &defaultValue) {
-  return translateY(relativeTo, relativeProperty, UnitValue(defaultValue));
-}
+    const double defaultValue);
 
 std::shared_ptr<TransformInterpolator> skewX(const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolator> skewX(const std::string &defaultValue) {
-  return skewX(AngleValue(defaultValue));
-}
+std::shared_ptr<TransformInterpolator> skewX(const std::string &defaultValue);
 std::shared_ptr<TransformInterpolator> skewY(const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolator> skewY(const std::string &defaultValue) {
-  return skewY(AngleValue(defaultValue));
-}
+std::shared_ptr<TransformInterpolator> skewY(const std::string &defaultValue);
 
 std::shared_ptr<TransformInterpolator> matrix(
     const TransformMatrix &defaultValue);
 
-} // namespace Interpolators
-} // namespace reanimated
+} // namespace reanimated::Interpolators

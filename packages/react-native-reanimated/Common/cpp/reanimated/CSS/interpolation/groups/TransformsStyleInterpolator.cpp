@@ -113,7 +113,7 @@ void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
 std::optional<TransformOperations>
 TransformsStyleInterpolator::parseTransformOperations(
     jsi::Runtime &rt,
-    const jsi::Value &values) const {
+    const jsi::Value &values) {
   if (values.isUndefined()) {
     return std::nullopt;
   }
@@ -287,7 +287,7 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
 }
 
 TransformOperations TransformsStyleInterpolator::getFallbackValue(
-    const PropertyInterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext &context) const {
   const jsi::Value &styleValue = getStyleValue(context.rt, context.node);
   return parseTransformOperations(context.rt, styleValue)
       .value_or(TransformOperations{});
@@ -426,8 +426,8 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
   const auto transformUpdateContext = createUpdateContext(context);
 
   for (size_t i = 0; i < fromOperations.size(); ++i) {
-    const auto fromOperation = fromOperations[i];
-    const auto toOperation = toOperations[i];
+    const auto& fromOperation = fromOperations[i];
+    const auto& toOperation = toOperations[i];
 
     const auto &interpolator = interpolators_->at(fromOperation->type);
     result.emplace_back(interpolator->interpolate(
@@ -439,7 +439,7 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
 
 jsi::Value TransformsStyleInterpolator::convertResultToJSI(
     jsi::Runtime &rt,
-    const TransformOperations &operations) const {
+    const TransformOperations &operations) {
   jsi::Array result(rt, operations.size());
 
   for (size_t i = 0; i < operations.size(); ++i) {

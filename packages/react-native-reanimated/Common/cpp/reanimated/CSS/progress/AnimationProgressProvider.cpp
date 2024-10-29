@@ -7,13 +7,13 @@ AnimationProgressProvider::AnimationProgressProvider(
     const double delay,
     const double iterationCount,
     const AnimationDirection direction,
-    const EasingFunction easingFunction)
+    const EasingFunction &easingFunction)
     : ProgressProvider(duration, delay, easingFunction),
       iterationCount_(iterationCount),
       direction_(direction) {}
 
 AnimationProgressState AnimationProgressProvider::getState(
-    const time_t timestamp) const {
+    const double timestamp) const {
   if (shouldFinish(timestamp)) {
     return AnimationProgressState::FINISHED;
   }
@@ -30,11 +30,11 @@ AnimationProgressState AnimationProgressProvider::getState(
   return AnimationProgressState::RUNNING;
 }
 
-void AnimationProgressProvider::pause(const time_t timestamp) {
+void AnimationProgressProvider::pause(const double timestamp) {
   pauseTimestamp_ = timestamp;
 }
 
-void AnimationProgressProvider::play(const time_t timestamp) {
+void AnimationProgressProvider::play(const double timestamp) {
   if (pauseTimestamp_ > 0) {
     pausedTimeBefore_ += timestamp - pauseTimestamp_;
   }
@@ -48,12 +48,12 @@ void AnimationProgressProvider::resetProgress() {
 }
 
 inline time_t AnimationProgressProvider::getTotalPausedTime(
-    const time_t timestamp) const {
+    const double timestamp) const {
   return pauseTimestamp_ > 0 ? timestamp - pauseTimestamp_ + pausedTimeBefore_
                              : pausedTimeBefore_;
 }
 
-bool AnimationProgressProvider::shouldFinish(const time_t timestamp) const {
+bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
   if (iterationCount_ == 0) {
     return true;
   }
@@ -65,7 +65,7 @@ bool AnimationProgressProvider::shouldFinish(const time_t timestamp) const {
 }
 
 std::optional<double> AnimationProgressProvider::calculateRawProgress(
-    const time_t timestamp) {
+    const double timestamp) {
   const double currentIterationElapsedTime = timestamp -
       (startTime_ + delay_ + previousIterationsDuration_ +
        getTotalPausedTime(timestamp));

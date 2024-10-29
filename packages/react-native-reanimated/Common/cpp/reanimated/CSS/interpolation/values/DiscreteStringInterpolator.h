@@ -4,7 +4,7 @@
 
 namespace reanimated {
 
-class DiscreteStringInterpolator : public ValueInterpolator<std::string> {
+class DiscreteStringInterpolator final : public ValueInterpolator<std::string> {
  public:
   using ValueInterpolator<std::string>::ValueInterpolator;
 
@@ -19,7 +19,7 @@ class DiscreteStringInterpolator : public ValueInterpolator<std::string> {
       double localProgress,
       const std::string &fromValue,
       const std::string &toValue,
-      const PropertyInterpolationUpdateContext context) const override;
+      const PropertyInterpolationUpdateContext &context) const override;
 };
 
 } // namespace reanimated

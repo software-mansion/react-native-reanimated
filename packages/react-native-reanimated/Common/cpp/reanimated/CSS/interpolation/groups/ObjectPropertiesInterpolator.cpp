@@ -46,7 +46,7 @@ void ObjectPropertiesInterpolator::updateKeyframes(
   for (size_t i = 0; i < propertiesCount; ++i) {
     const std::string propertyName =
         propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const jsi::Value &keyframes = keyframesObject.getProperty(
+    const jsi::Value &propertyKeyframes = keyframesObject.getProperty(
         rt, jsi::PropNameID::forUtf8(rt, propertyName));
     auto interpolatorIt = interpolators_.find(propertyName);
 
@@ -57,7 +57,7 @@ void ObjectPropertiesInterpolator::updateKeyframes(
           interpolators_.emplace(propertyName, newInterpolator).first;
     }
 
-    interpolatorIt->second->updateKeyframes(rt, keyframes);
+    interpolatorIt->second->updateKeyframes(rt, propertyKeyframes);
   }
 }
 
@@ -97,7 +97,7 @@ void ObjectPropertiesInterpolator::updateKeyframesFromStyleChange(
 
 jsi::Value ObjectPropertiesInterpolator::mapInterpolators(
     jsi::Runtime &rt,
-    std::function<jsi::Value(PropertyInterpolator &)> callback) const {
+    const std::function<jsi::Value(PropertyInterpolator &)>& callback) const {
   jsi::Object result(rt);
   bool allUndefined = true;
 

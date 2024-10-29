@@ -13,7 +13,7 @@ struct Quaternion {
       std::ostream &os,
       const Quaternion &quaternion);
 
-  Quaternion interpolate(const double progress, const Quaternion &other) const;
+  Quaternion interpolate(double progress, const Quaternion &other) const;
 };
 
 } // namespace reanimated

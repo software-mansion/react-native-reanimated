@@ -9,10 +9,10 @@ double NumericValueInterpolator::prepareKeyframeValue(
 }
 
 double NumericValueInterpolator::interpolate(
-    double localProgress,
+    const double localProgress,
     const double &fromValue,
     const double &toValue,
-    const PropertyInterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext &context) const {
   return fromValue + localProgress * (toValue - fromValue);
 }
 

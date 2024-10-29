@@ -3,20 +3,19 @@
 namespace reanimated {
 
 void CSSAnimationsRegistry::updateSettings(
-    jsi::Runtime &rt,
     const unsigned id,
     const PartialCSSAnimationSettings &updatedSettings,
-    const time_t timestamp) {
+    const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
 
-  registry_.at(id)->updateSettings(rt, updatedSettings, timestamp);
+  registry_.at(id)->updateSettings(updatedSettings, timestamp);
   operationsBatch_.emplace_back(AnimationOperation::ACTIVATE, id);
 }
 
 void CSSAnimationsRegistry::add(
     jsi::Runtime &rt,
     const std::shared_ptr<CSSAnimation> &animation,
-    const time_t timestamp) {
+    const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   const auto id = animation->getId();
@@ -51,7 +50,7 @@ void CSSAnimationsRegistry::remove(const unsigned id) {
   registry_.erase(id);
 }
 
-void CSSAnimationsRegistry::update(jsi::Runtime &rt, const time_t timestamp) {
+void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   // Activate all delayed animations that should start now
@@ -74,7 +73,7 @@ void CSSAnimationsRegistry::update(jsi::Runtime &rt, const time_t timestamp) {
   }
 }
 
-void CSSAnimationsRegistry::activateDelayedAnimations(const time_t timestamp) {
+void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
   while (!delayedAnimationsQueue_.empty() &&
          delayedAnimationsQueue_.top().first <= timestamp) {
     const auto [_, id] = delayedAnimationsQueue_.top();
@@ -88,7 +87,7 @@ void CSSAnimationsRegistry::activateDelayedAnimations(const time_t timestamp) {
 
 void CSSAnimationsRegistry::flushOperations(
     jsi::Runtime &rt,
-    const time_t timestamp) {
+    const double timestamp) {
   auto copiedOperationsBatch = std::move(operationsBatch_);
   operationsBatch_.clear();
 
@@ -104,7 +103,7 @@ void CSSAnimationsRegistry::flushOperations(
 
 jsi::Value CSSAnimationsRegistry::handleUpdate(
     jsi::Runtime &rt,
-    const time_t timestamp,
+    const double timestamp,
     const std::shared_ptr<CSSAnimation> &animation) {
   switch (animation->getState(timestamp)) {
     case AnimationProgressState::PENDING:
@@ -129,7 +128,7 @@ void CSSAnimationsRegistry::handleOperation(
     jsi::Runtime &rt,
     const AnimationOperation operation,
     const std::shared_ptr<CSSAnimation> &animation,
-    const time_t timestamp) {
+    const double timestamp) {
   switch (operation) {
     case AnimationOperation::ACTIVATE:
       activateOperation(animation->getId());
@@ -149,7 +148,7 @@ void CSSAnimationsRegistry::activateOperation(const unsigned id) {
 
 void CSSAnimationsRegistry::deactivateOperation(
     const std::shared_ptr<CSSAnimation> &animation,
-    const time_t timestamp) {
+    const double timestamp) {
   runningAnimationIds_.erase(animation->getId());
   const auto animationState = animation->getState(timestamp);
 
@@ -169,7 +168,7 @@ void CSSAnimationsRegistry::deactivateOperation(
 void CSSAnimationsRegistry::finishOperation(
     jsi::Runtime &rt,
     const std::shared_ptr<CSSAnimation> &animation,
-    const time_t timestamp) {
+    const double timestamp) {
   deactivateOperation(animation, timestamp);
   // Revert changes applied during animation if there is no forwards fill mode
   if (!animation->hasForwardsFillMode()) {

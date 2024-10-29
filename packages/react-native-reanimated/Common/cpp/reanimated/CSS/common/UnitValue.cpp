@@ -39,7 +39,7 @@ jsi::Value UnitValue::toJSIValue(jsi::Runtime &rt) const {
   if (isRelative) {
     return jsi::String::createFromUtf8(rt, std::to_string(value * 100) + "%");
   } else {
-    return jsi::Value(value);
+    return {value};
   }
 }
 

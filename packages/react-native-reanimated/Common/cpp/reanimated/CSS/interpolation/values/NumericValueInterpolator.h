@@ -14,14 +14,14 @@ class NumericValueInterpolator : public ValueInterpolator<double> {
 
   jsi::Value convertResultToJSI(jsi::Runtime &rt, const double &value)
       const override {
-    return jsi::Value(value);
+    return {value};
   }
 
   double interpolate(
       double localProgress,
       const double &fromValue,
       const double &toValue,
-      const PropertyInterpolationUpdateContext context) const override;
+      const PropertyInterpolationUpdateContext &context) const override;
 };
 
 } // namespace reanimated

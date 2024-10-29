@@ -8,7 +8,7 @@ namespace reanimated {
 ReanimatedMountHook::ReanimatedMountHook(
     const std::shared_ptr<UIManager> &uiManager,
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager)
-    : updatesRegistryManager_(updatesRegistryManager), uiManager_(uiManager) {
+    : uiManager_(uiManager), updatesRegistryManager_(updatesRegistryManager) {
   uiManager_->registerMountHook(*this);
 }
 

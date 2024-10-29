@@ -9,7 +9,7 @@
 namespace reanimated {
 
 EasingFunction createStepsEasingFunction(
-    std::vector<double> arrX,
-    std::vector<double> arrY);
+    const std::vector<double> &arrX,
+    const std::vector<double> &arrY);
 
 } // namespace reanimated

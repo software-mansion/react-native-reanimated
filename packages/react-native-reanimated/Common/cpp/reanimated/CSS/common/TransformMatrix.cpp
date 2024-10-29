@@ -23,14 +23,6 @@ std::ostream &operator<<(
   return os;
 }
 
-// clang-format off
-const Matrix4x4 TransformMatrix::IDENTITY_MATRIX_4x4 = {{
-    {1, 0, 0, 0},
-    {0, 1, 0, 0},
-    {0, 0, 1, 0},
-    {0, 0, 0, 1}}};
-// clang-format on
-
 TransformMatrix::TransformMatrix(const Vec16Array &matrix) {
   for (size_t i = 0; i < 16; ++i) {
     matrix_[i / 4][i % 4] = matrix[i];
@@ -414,7 +406,7 @@ std::optional<DecomposedTransformMatrix> TransformMatrix::decompose() const {
     rows[i] = {matrixCp[i][0], matrixCp[i][1], matrixCp[i][2]};
   }
 
-  auto [scale, skew] = matrixCp.computeScaleAndSkew(rows);
+  auto [scale, skew] = computeScaleAndSkew(rows);
 
   // At this point, the matrix (in rows) is orthonormal.
   // Check for a coordinate system flip.  If the determinant
@@ -425,7 +417,7 @@ std::optional<DecomposedTransformMatrix> TransformMatrix::decompose() const {
       rows[i] *= -1;
     }
   }
-  const auto rotation = matrixCp.computeQuaternion(rows);
+  const auto rotation = computeQuaternion(rows);
 
   return DecomposedTransformMatrix{
       .scale = scale,
@@ -452,16 +444,16 @@ TransformMatrix TransformMatrix::recompose(
 
   // Apply skew
   auto tmp = TransformMatrix::Identity();
-  if (decomposed.skew[2]) { // YZ
+  if (decomposed.skew[2] != 0) { // YZ
     tmp[2][1] = decomposed.skew[2];
     result = tmp * result;
   }
-  if (decomposed.skew[1]) { // XZ
+  if (decomposed.skew[1] != 0) { // XZ
     tmp[2][1] = 0;
     tmp[2][0] = decomposed.skew[1];
     result = tmp * result;
   }
-  if (decomposed.skew[0]) { // XY
+  if (decomposed.skew[0] != 0) { // XY
     tmp[2][0] = 0;
     tmp[1][0] = decomposed.skew[0];
     result = tmp * result;
@@ -528,7 +520,7 @@ Vector3D TransformMatrix::getTranslation() const {
 }
 
 std::pair<Vector3D, Vector3D> TransformMatrix::computeScaleAndSkew(
-    std::array<Vector3D, 3> &rows) const {
+    std::array<Vector3D, 3> &rows) {
   Vector3D scale, skew;
 
   // Compute X scale factor and normalize first row
@@ -560,7 +552,7 @@ std::pair<Vector3D, Vector3D> TransformMatrix::computeScaleAndSkew(
 }
 
 Quaternion TransformMatrix::computeQuaternion(
-    std::array<Vector3D, 3> &rows) const {
+    std::array<Vector3D, 3> &rows) {
   double m00 = rows[0][0];
   double m01 = rows[0][1];
   double m02 = rows[0][2];

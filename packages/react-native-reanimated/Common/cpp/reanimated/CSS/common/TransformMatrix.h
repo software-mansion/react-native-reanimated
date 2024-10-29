@@ -18,31 +18,31 @@ struct DecomposedTransformMatrix {
       const DecomposedTransformMatrix &decomposed);
 
   DecomposedTransformMatrix interpolate(
-      const double progress,
+      double progress,
       const DecomposedTransformMatrix &other) const;
 };
 
 class TransformMatrix {
  public:
-  TransformMatrix(const Vec16Array &matrix);
-  TransformMatrix(const Matrix4x4 &matrix);
+  explicit TransformMatrix(const Vec16Array &matrix);
+  explicit TransformMatrix(const Matrix4x4 &matrix);
   TransformMatrix(jsi::Runtime &rt, const jsi::Value &value);
 
   static TransformMatrix Identity();
-  static TransformMatrix Perspective(const double value);
-  static TransformMatrix RotateX(const double value);
-  static TransformMatrix RotateY(const double value);
-  static TransformMatrix RotateZ(const double value);
-  static TransformMatrix Scale(const double value);
-  static TransformMatrix ScaleX(const double value);
-  static TransformMatrix ScaleY(const double value);
-  static TransformMatrix TranslateX(const double value);
-  static TransformMatrix TranslateY(const double value);
-  static TransformMatrix SkewX(const double value);
-  static TransformMatrix SkewY(const double value);
+  static TransformMatrix Perspective(double value);
+  static TransformMatrix RotateX(double value);
+  static TransformMatrix RotateY(double value);
+  static TransformMatrix RotateZ(double value);
+  static TransformMatrix Scale(double value);
+  static TransformMatrix ScaleX(double value);
+  static TransformMatrix ScaleY(double value);
+  static TransformMatrix TranslateX(double value);
+  static TransformMatrix TranslateY(double value);
+  static TransformMatrix SkewX(double value);
+  static TransformMatrix SkewY(double value);
 
-  std::array<double, 4> &operator[](const size_t rowIdx);
-  const std::array<double, 4> &operator[](const size_t rowIdx) const;
+  std::array<double, 4> &operator[](size_t rowIdx);
+  const std::array<double, 4> &operator[](size_t rowIdx) const;
   TransformMatrix operator*(const TransformMatrix &rhs) const;
   TransformMatrix operator*=(const TransformMatrix &rhs);
   friend std::ostream &operator<<(
@@ -70,22 +70,20 @@ class TransformMatrix {
 
   std::optional<Vector4D> computePerspective() const;
   Vector3D getTranslation() const;
-  std::pair<Vector3D, Vector3D> computeScaleAndSkew(
-      std::array<Vector3D, 3> &rows) const;
-  Quaternion computeQuaternion(std::array<Vector3D, 3> &columns) const;
+  static std::pair<Vector3D, Vector3D> computeScaleAndSkew(
+      std::array<Vector3D, 3> &rows) ;
+  static Quaternion computeQuaternion(std::array<Vector3D, 3> &columns);
 
   inline static double determinant3x3(
-      const double a,
-      const double b,
-      const double c,
-      const double d,
-      const double e,
-      const double f,
-      const double g,
-      const double h,
-      const double i);
-
-  static const Matrix4x4 IDENTITY_MATRIX_4x4;
+      double a,
+      double b,
+      double c,
+      double d,
+      double e,
+      double f,
+      double g,
+      double h,
+      double i);
 };
 
 Vector4D operator*(const Vector4D &v, const TransformMatrix &m);

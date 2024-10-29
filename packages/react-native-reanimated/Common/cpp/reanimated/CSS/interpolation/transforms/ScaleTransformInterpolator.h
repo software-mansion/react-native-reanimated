@@ -8,34 +8,35 @@ template <typename OperationType>
 class ScaleTransformInterpolatorBase
     : public TransformInterpolatorBase<OperationType> {
  public:
-  ScaleTransformInterpolatorBase(const double &defaultValue);
+  explicit ScaleTransformInterpolatorBase(double defaultValue);
+  virtual ~ScaleTransformInterpolatorBase() = default;
 
  protected:
   OperationType interpolate(
-      const double progress,
+      double progress,
       const OperationType &fromOperation,
       const OperationType &toOperation,
       const TransformInterpolatorUpdateContext &context) const override;
 };
 
-class ScaleTransformInterpolator
+class ScaleTransformInterpolator final
     : public ScaleTransformInterpolatorBase<ScaleOperation> {
  public:
-  ScaleTransformInterpolator(const double &defaultValue)
+  explicit ScaleTransformInterpolator(double defaultValue)
       : ScaleTransformInterpolatorBase(defaultValue) {}
 };
 
-class ScaleXTransformInterpolator
+class ScaleXTransformInterpolator final
     : public ScaleTransformInterpolatorBase<ScaleXOperation> {
  public:
-  ScaleXTransformInterpolator(const double &defaultValue)
+  explicit ScaleXTransformInterpolator(double defaultValue)
       : ScaleTransformInterpolatorBase(defaultValue) {}
 };
 
-class ScaleYTransformInterpolator
+class ScaleYTransformInterpolator final
     : public ScaleTransformInterpolatorBase<ScaleYOperation> {
  public:
-  ScaleYTransformInterpolator(const double &defaultValue)
+  explicit ScaleYTransformInterpolator(double defaultValue)
       : ScaleTransformInterpolatorBase(defaultValue) {}
 };
 

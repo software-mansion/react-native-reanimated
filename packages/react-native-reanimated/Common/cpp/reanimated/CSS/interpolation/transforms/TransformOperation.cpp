@@ -49,7 +49,7 @@ std::string getOperationNameFromType(const TransformOperationType type) {
 }
 
 TransformOperation::TransformOperation(const TransformOperationType type)
-    : type(type) {};
+    : type(type) {}
 
 std::ostream &operator<<(
     std::ostream &os,
@@ -58,24 +58,25 @@ std::ostream &operator<<(
   return os;
 }
 
-bool TransformOperation::canConvertTo(const TransformOperationType type) const {
+bool TransformOperation::canConvertTo(
+    const TransformOperationType targetType) const {
   return false;
 }
 
 void TransformOperation::assertCanConvertTo(
-    const TransformOperationType type) const {
-  if (!canConvertTo(type)) {
+    const TransformOperationType targetType) const {
+  if (!canConvertTo(targetType)) {
     throw std::invalid_argument(
         "[Reanimated] Cannot convert transform operation to type: " +
-        getOperationNameFromType(type));
+        getOperationNameFromType(targetType));
   }
 }
 
 TransformOperations TransformOperation::convertTo(
-    const TransformOperationType type) const {
+    const TransformOperationType targetType) const {
   throw std::invalid_argument(
       "[Reanimated] Cannot convert transform operation to type: " +
-      getOperationNameFromType(type));
+      getOperationNameFromType(targetType));
 }
 
 std::string TransformOperation::getOperationName() const {
@@ -248,13 +249,13 @@ TransformMatrix ScaleOperation::toMatrix() const {
 }
 
 ScaleXOperation::ScaleXOperation(const double value)
-    : ScaleOperation(TransformOperationType::ScaleX, value) {};
+    : ScaleOperation(TransformOperationType::ScaleX, value) {}
 TransformMatrix ScaleXOperation::toMatrix() const {
   return TransformMatrix::ScaleX(value);
 }
 
 ScaleYOperation::ScaleYOperation(const double value)
-    : ScaleOperation(TransformOperationType::ScaleY, value) {};
+    : ScaleOperation(TransformOperationType::ScaleY, value) {}
 TransformMatrix ScaleYOperation::toMatrix() const {
   return TransformMatrix::ScaleY(value);
 }
@@ -275,7 +276,7 @@ TransformMatrix TranslateOperation::toMatrix() const {
 }
 
 TranslateXOperation::TranslateXOperation(const UnitValue &value)
-    : TranslateOperation(TransformOperationType::TranslateX, value) {};
+    : TranslateOperation(TransformOperationType::TranslateX, value) {}
 TransformMatrix TranslateXOperation::toMatrix(
     const double resolvedValue) const {
   if (value.isRelative) {
@@ -286,7 +287,7 @@ TransformMatrix TranslateXOperation::toMatrix(
 }
 
 TranslateYOperation::TranslateYOperation(const UnitValue &value)
-    : TranslateOperation(TransformOperationType::TranslateY, value) {};
+    : TranslateOperation(TransformOperationType::TranslateY, value) {}
 TransformMatrix TranslateYOperation::toMatrix(
     const double resolvedValue) const {
   if (value.isRelative) {
@@ -300,19 +301,19 @@ TransformMatrix TranslateYOperation::toMatrix(
 SkewOperation::SkewOperation(
     const TransformOperationType type,
     const AngleValue &value)
-    : TransformOperation(type), value(value) {};
+    : TransformOperation(type), value(value) {}
 jsi::Value SkewOperation::valueToJSIValue(jsi::Runtime &rt) const {
   return value.toJSIValue(rt);
 }
 
 SkewXOperation::SkewXOperation(const AngleValue &value)
-    : SkewOperation(TransformOperationType::SkewX, value) {};
+    : SkewOperation(TransformOperationType::SkewX, value) {}
 TransformMatrix SkewXOperation::toMatrix() const {
   return TransformMatrix::SkewX(value.value);
 }
 
 SkewYOperation::SkewYOperation(const AngleValue &value)
-    : SkewOperation(TransformOperationType::SkewY, value) {};
+    : SkewOperation(TransformOperationType::SkewY, value) {}
 TransformMatrix SkewYOperation::toMatrix() const {
   return TransformMatrix::SkewY(value.value);
 }
@@ -324,7 +325,7 @@ std::variant<TransformMatrix, TransformOperations> simplifyOperations(
   TransformMatrix matrix = TransformMatrix::Identity();
   bool hasSimplifications = false;
 
-  for (int i = operations.size() - 1; i >= 0; i--) {
+  for (int i = static_cast<int>(operations.size()) - 1; i >= 0; i--) {
     const auto &operation = operations[i];
     if (!operation->isRelative()) {
       matrix *= operation->toMatrix();
@@ -350,7 +351,7 @@ std::variant<TransformMatrix, TransformOperations> simplifyOperations(
 
   TransformOperations simplifiedOperations;
   simplifiedOperations.reserve(reversedOperations.size());
-  for (int i = reversedOperations.size() - 1; i >= 0; i--) {
+  for (int i = static_cast<int>(reversedOperations.size()) - 1; i >= 0; i--) {
     simplifiedOperations.emplace_back(reversedOperations[i]);
   }
 

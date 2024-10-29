@@ -22,14 +22,14 @@ struct UnitValue {
   bool isRelative;
 
   UnitValue();
-  UnitValue(const double value);
-  UnitValue(const double value, const bool isRelative);
+  UnitValue(double value);
+  UnitValue(double value, bool isRelative);
   UnitValue(const std::string &value);
   UnitValue(jsi::Runtime &rt, const jsi::Value &value);
 
   jsi::Value toJSIValue(jsi::Runtime &rt) const;
   UnitValue interpolate(
-      const double progress,
+      double progress,
       const UnitValue &to,
       const UnitValueInterpolationContext &context) const;
 

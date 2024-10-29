@@ -5,10 +5,10 @@ namespace reanimated {
 ProgressProvider::ProgressProvider(
     const double duration,
     const double delay,
-    const EasingFunction easingFunction)
+    const EasingFunction &easingFunction)
     : duration_(duration), delay_(delay), easingFunction_(easingFunction) {}
 
-void ProgressProvider::start(const time_t timestamp) {
+void ProgressProvider::start(const double timestamp) {
   startTime_ = timestamp;
 }
 
@@ -19,14 +19,14 @@ void ProgressProvider::resetProgress() {
   previousToPreviousProgress_.reset();
 }
 
-void ProgressProvider::update(const time_t timestamp) {
+void ProgressProvider::update(const double timestamp) {
   previousToPreviousProgress_ = previousProgress_;
   previousProgress_ = currentProgress_;
   currentProgress_ = calculateProgress(timestamp);
 }
 
 std::optional<double> ProgressProvider::calculateProgress(
-    const time_t timestamp) {
+    const double timestamp) {
   if (duration_ == 0) {
     rawProgress_ = 1;
     return 1;

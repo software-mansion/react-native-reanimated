@@ -30,6 +30,7 @@ const COLORS = {
   blue: '#548dff',
   red: '#f55064',
   base: '#f7d154',
+  baseTransparent: 'rgba(247, 209, 84, 0.01)',
 };
 
 export default function Emojis() {
@@ -550,10 +551,11 @@ const wowStyles = StyleSheet.create({
     width: 0.3 * EMOJI_SIZE,
     height: 0.3 * EMOJI_SIZE,
     borderWidth: 0.05 * EMOJI_SIZE,
-    borderTopColor: COLORS.black,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: 'transparent',
+    // use this trick with border colors to properly apply color only for
+    // the top border and leave other borders "transparent" on Android
+    // (Android border colors support is pretty limited)
+    borderColor: COLORS.baseTransparent,
+    borderBlockStartColor: COLORS.black,
     borderRadius: '50%',
   },
   eyes: {
@@ -721,10 +723,8 @@ const sadStyles = StyleSheet.create({
     width: 0.3 * EMOJI_SIZE,
     height: 0.3 * EMOJI_SIZE,
     borderWidth: 0.05 * EMOJI_SIZE,
-    borderTopColor: COLORS.black,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: 'transparent',
+    borderColor: COLORS.baseTransparent,
+    borderBlockStartColor: COLORS.black,
     borderRadius: '50%',
   },
   eyes: {
@@ -744,10 +744,8 @@ const sadStyles = StyleSheet.create({
     transform: [{ scaleY: 1.25 }],
     borderRadius: '50%',
     borderWidth: 0.04 * EMOJI_SIZE,
-    borderTopColor: COLORS.black,
-    borderBottomColor: 'transparent',
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
+    borderColor: COLORS.baseTransparent,
+    borderBlockStartColor: COLORS.black,
   },
   tearWrapper: {
     position: 'absolute',
@@ -898,10 +896,8 @@ const angryStyles = StyleSheet.create({
     width: 0.45 * EMOJI_SIZE,
     height: 0.4 * EMOJI_SIZE,
     borderWidth: 0.04 * EMOJI_SIZE,
-    borderTopColor: 'transparent',
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: COLORS.black,
+    borderColor: COLORS.baseTransparent,
+    borderBlockEndColor: COLORS.black,
     borderRadius: '50%',
     top: 0.095 * EMOJI_SIZE,
   },

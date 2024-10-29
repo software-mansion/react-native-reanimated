@@ -5,7 +5,7 @@ namespace reanimated {
 Color ColorValueInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
-  return Color(rt, value);
+  return {rt, value};
 }
 
 jsi::Value ColorValueInterpolator::convertResultToJSI(
@@ -15,10 +15,10 @@ jsi::Value ColorValueInterpolator::convertResultToJSI(
 }
 
 Color ColorValueInterpolator::interpolate(
-    double localProgress,
+    const double localProgress,
     const Color &fromValue,
     const Color &toValue,
-    const PropertyInterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext &context) const {
   return fromValue.interpolate(toValue, localProgress);
 }
 
