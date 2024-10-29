@@ -6,7 +6,7 @@
     "build": "yarn patch-package",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "lint": "eslint --max-warnings=0 .",
+    "lint": "eslint --max-warnings=0 --ignore-pattern 'common-app/' .",
     "format": "prettier --write --list-different .",
     "start": "react-native start",
     "test": "jest"
