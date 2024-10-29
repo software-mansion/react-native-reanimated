@@ -16,12 +16,15 @@ export interface IReanimatedModule {
     iosReferenceFrame: number,
     handler: ShareableRef<(data: Value3D | ValueRotation) => void>
   ): number;
+
   unregisterSensor(sensorId: number): void;
+
   registerEventHandler<TValue>(
     eventHandler: ShareableRef<TValue>,
     eventName: string,
     emitterReactTag: number
   ): number;
+
   unregisterEventHandler(id: number): void;
 
   getViewProp<TValue>(
