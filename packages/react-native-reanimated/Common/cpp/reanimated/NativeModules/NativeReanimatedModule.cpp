@@ -740,18 +740,17 @@ void NativeReanimatedModule::performOperations() {
     auto family = &shadowNode->getFamily();
     react_native_assert(family->getSurfaceId() == surfaceId);
     propsMapBySurface[surfaceId][family].emplace_back(rt, std::move(*props));
-  };
+  }
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
       shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode)
               -> RootShadowNode::Unshared {
-                  
             if (propsRegistry_->shouldReanimatedSkipCommit()) {
               return nullptr;
             }
-                  
+
             auto rootNode =
                 cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
 
