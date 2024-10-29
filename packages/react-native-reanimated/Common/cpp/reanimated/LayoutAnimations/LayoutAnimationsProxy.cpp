@@ -784,13 +784,13 @@ void LayoutAnimationsProxy::maybeRestoreOpacity(
 void LayoutAnimationsProxy::maybeUpdateWindowDimensions(
     facebook::react::ShadowViewMutation &mutation,
     SurfaceId surfaceId) const {
-  // This is a hacky way to obtain the window dimensions.
-  // We can identify the root, by checking if its tag is equal to the surfaceId
-  if (mutation.parentShadowView.tag == surfaceId) {
+  if (mutation.type == ShadowViewMutation::Update &&
+      !std::strcmp(
+          mutation.oldChildShadowView.componentName, RootComponentName)) {
     surfaceManager.updateWindow(
         surfaceId,
-        mutation.parentShadowView.layoutMetrics.frame.size.width,
-        mutation.parentShadowView.layoutMetrics.frame.size.height);
+        mutation.newChildShadowView.layoutMetrics.frame.size.width,
+        mutation.newChildShadowView.layoutMetrics.frame.size.height);
   }
 }
 
