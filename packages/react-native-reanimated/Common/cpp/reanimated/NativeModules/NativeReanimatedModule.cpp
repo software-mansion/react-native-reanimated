@@ -646,9 +646,6 @@ void NativeReanimatedModule::updateProps(
     const jsi::Value &updates = item.getProperty(rt, "updates");
     operationsInBatch_.emplace_back(
         shadowNode, std::make_unique<jsi::Value>(rt, updates));
-
-    // TODO: support multiple surfaces
-    surfaceId_ = shadowNode->getSurfaceId();
   }
 }
 
@@ -704,72 +701,77 @@ void NativeReanimatedModule::performOperations() {
         maybeJSPropsUpdater.asObject(rt).asFunction(rt);
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
-
-  bool hasLayoutUpdates = false;
-  for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-    if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
-      hasLayoutUpdates = true;
-      break;
-    }
-  }
-
-  if (!hasLayoutUpdates) {
-    // If there's no layout props to be updated, we can apply the updates
-    // directly onto the components and skip the commit.
-    for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-      Tag tag = shadowNode->getTag();
-      synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
-    }
-    return;
-  }
-
-  if (propsRegistry_->shouldReanimatedSkipCommit()) {
-    // It may happen that `performOperations` is called on the UI thread
-    // while React Native tries to commit a new tree on the JS thread.
-    // In this case, we should skip the commit here and let React Native do
-    // it. The commit will include the current values from PropsRegistry which
-    // will be applied in ReanimatedCommitHook.
-    return;
-  }
-
-  react_native_assert(uiManager_ != nullptr);
-  const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-
-  shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
-    shadowTree.commit(
-        [&](RootShadowNode const &oldRootShadowNode)
-            -> RootShadowNode::Unshared {
-          PropsMap propsMap;
-          for (auto &[shadowNode, props] : copiedOperationsQueue) {
-            auto family = &shadowNode->getFamily();
-            react_native_assert(family->getSurfaceId() == surfaceId_);
-            propsMap[family].emplace_back(rt, std::move(*props));
-
-            if (propsRegistry_->shouldReanimatedSkipCommit()) {
-              return nullptr;
+  
+    
+    
+        bool hasLayoutUpdates = false;
+        
+        for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+            if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
+                hasLayoutUpdates = true;
+                break;
             }
-          }
-
-          auto rootNode =
-              cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
-
-          // Mark the commit as Reanimated commit so that we can distinguish it
-          // in ReanimatedCommitHook.
-
-          auto reaShadowNode =
-              std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
-                  rootNode);
-          reaShadowNode->setReanimatedCommitTrait();
-
-          return rootNode;
-        },
-        {/* .enableStateReconciliation = */
-         false,
-         /* .mountSynchronously = */ true,
-         /* .shouldYield = */ [this]() {
-           return propsRegistry_->shouldReanimatedSkipCommit();
-         }});
-  });
+        }
+        
+        if (!hasLayoutUpdates) {
+            // If there's no layout props to be updated, we can apply the updates
+            // directly onto the components and skip the commit.
+            for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+                    Tag tag = shadowNode->getTag();
+                    synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
+                    
+            }
+            return;
+        }
+        
+        if (propsRegistry_->shouldReanimatedSkipCommit()) {
+            // It may happen that `performOperations` is called on the UI thread
+            // while React Native tries to commit a new tree on the JS thread.
+            // In this case, we should skip the commit here and let React Native do
+            // it. The commit will include the current values from PropsRegistry which
+            // will be applied in ReanimatedCommitHook.
+            return;
+        }
+        
+        
+        react_native_assert(uiManager_ != nullptr);
+        const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
+        
+    for (auto &[shadowNode, props] : copiedOperationsQueue) {
+        SurfaceId surfaceId_ = shadowNode->getSurfaceId();
+        shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
+            shadowTree.commit(
+                              [&](RootShadowNode const &oldRootShadowNode)
+                              -> RootShadowNode::Unshared {
+                                    PropsMap propsMap;
+                                    auto family = &shadowNode->getFamily();
+                                    react_native_assert(family->getSurfaceId() == surfaceId_);
+                                    propsMap[family].emplace_back(rt, std::move(*props));
+                                
+                                    if (propsRegistry_->shouldReanimatedSkipCommit()) {
+                                        return nullptr;
+                                    }
+                                  
+                                  auto rootNode =
+                                  cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+                                  
+                                  // Mark the commit as Reanimated commit so that we can distinguish it
+                                  // in ReanimatedCommitHook.
+                                  
+                                  auto reaShadowNode =
+                                  std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
+                                                                                            rootNode);
+                                  reaShadowNode->setReanimatedCommitTrait();
+                                  
+                                  return rootNode;
+                              },
+                              {/* .enableStateReconciliation = */
+                                  false,
+                                  /* .mountSynchronously = */ true,
+                                  /* .shouldYield = */ [this]() {
+                                      return propsRegistry_->shouldReanimatedSkipCommit();
+                                  }});
+        });}
 }
 
 void NativeReanimatedModule::removeFromPropsRegistry(
