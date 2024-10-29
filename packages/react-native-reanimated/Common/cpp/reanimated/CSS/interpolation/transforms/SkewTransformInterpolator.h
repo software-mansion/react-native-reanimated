@@ -4,17 +4,17 @@
 
 namespace reanimated {
 
-class SkewXTransformInterpolator
+class SkewXTransformInterpolator final
     : public RotateTransformInterpolatorBase<SkewXOperation> {
  public:
-  SkewXTransformInterpolator(const AngleValue &defaultValue)
+  explicit SkewXTransformInterpolator(const AngleValue &defaultValue)
       : RotateTransformInterpolatorBase(defaultValue) {}
 };
 
-class SkewYTransformInterpolator
+class SkewYTransformInterpolator final
     : public RotateTransformInterpolatorBase<SkewYOperation> {
  public:
-  SkewYTransformInterpolator(const AngleValue &defaultValue)
+  explicit SkewYTransformInterpolator(const AngleValue &defaultValue)
       : RotateTransformInterpolatorBase(defaultValue) {}
 };
 

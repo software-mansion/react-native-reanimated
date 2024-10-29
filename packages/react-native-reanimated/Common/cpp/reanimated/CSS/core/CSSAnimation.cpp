@@ -5,10 +5,10 @@ namespace reanimated {
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
     const unsigned id,
-    const ShadowNode::Shared shadowNode,
+    const ShadowNode::Shared &shadowNode,
     const CSSAnimationConfig &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const time_t startTime)
+    time_t startTime)
     : id_(id),
       shadowNode_(shadowNode),
       styleInterpolator_(AnimationStyleInterpolator(viewStylesRepository)),
@@ -35,7 +35,7 @@ jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) {
       : jsi::Value::undefined();
 }
 
-void CSSAnimation::run(const time_t timestamp) {
+void CSSAnimation::run(const double timestamp) {
   if (progressProvider_.getState(timestamp) ==
       AnimationProgressState::FINISHED) {
     return;
@@ -43,7 +43,7 @@ void CSSAnimation::run(const time_t timestamp) {
   progressProvider_.play(timestamp);
 }
 
-jsi::Value CSSAnimation::update(jsi::Runtime &rt, const time_t timestamp) {
+jsi::Value CSSAnimation::update(jsi::Runtime &rt, const double timestamp) {
   progressProvider_.update(timestamp);
 
   // Check if the animation has not started yet because of the delay
@@ -69,9 +69,8 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, const time_t timestamp) {
 }
 
 void CSSAnimation::updateSettings(
-    jsi::Runtime &rt,
     const PartialCSSAnimationSettings &updatedSettings,
-    const time_t timestamp) {
+    const double timestamp) {
   if (updatedSettings.duration.has_value()) {
     progressProvider_.setDuration(updatedSettings.duration.value());
   }
@@ -108,7 +107,7 @@ PropertyInterpolationUpdateContext CSSAnimation::createUpdateContext(
       shadowNode_,
       progress,
       progressProvider_.getPrevious(),
-      progressProvider_.hasDirectionChanged()};
+      directionChanged};
 }
 
 } // namespace reanimated

@@ -4,24 +4,26 @@ namespace reanimated {
 
 AngleValue::AngleValue(const double value) : value(value) {}
 
-AngleValue::AngleValue(const std::string &value) {
+AngleValue::AngleValue(const std::string &rotationString) {
   static const std::regex validNumberRegex(R"(^[-+]?\d*\.?\d+$)");
   static const std::unordered_map<std::string, double> unitFactors = {
       {"rad", 1},
       {"deg", M_PI / 180},
   };
 
-  size_t pos = value.find_first_not_of("0123456789.-+");
+  size_t pos = rotationString.find_first_not_of("0123456789.-+");
 
   if (pos == std::string::npos) {
-    throw std::invalid_argument("[Reanimated] Invalid angle value: " + value);
+    throw std::invalid_argument(
+        "[Reanimated] Invalid angle value: " + rotationString);
   }
 
-  std::string numericPart = value.substr(0, pos);
-  std::string unitPart = value.substr(pos);
+  std::string numericPart = rotationString.substr(0, pos);
+  std::string unitPart = rotationString.substr(pos);
 
   if (!std::regex_match(numericPart, validNumberRegex)) {
-    throw std::invalid_argument("[Reanimated] Invalid angle value: " + value);
+    throw std::invalid_argument(
+        "[Reanimated] Invalid angle value: " + rotationString);
   }
 
   // Lookup the unit and convert to radians

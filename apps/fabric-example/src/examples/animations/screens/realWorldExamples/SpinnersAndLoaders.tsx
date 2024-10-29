@@ -170,8 +170,8 @@ const ringStyles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: SPINNER_SIZE / 2,
     borderWidth: 0.1 * SPINNER_SIZE,
-    borderColor: 'transparent',
-    borderTopColor: colors.primary,
+    borderColor: 'rgba(0, 0, 0, 0.01)',
+    borderBlockStartColor: colors.primary,
   },
 });
 
@@ -480,27 +480,21 @@ const rippleStyles = StyleSheet.create({
 function DualRing() {
   return (
     <View style={sharedStyles.loader}>
-      {Array.from({ length: 2 }).map((_, index) => (
-        <Animated.View
-          key={index}
-          style={[
-            dualRingStyles.part,
-            {
-              animationName: {
-                from: {
-                  transform: [{ rotate: `${index * 180}deg` }],
-                },
-                to: {
-                  transform: [{ rotate: `${(index + 1) * 180}deg` }],
-                },
+      <Animated.View
+        style={[
+          dualRingStyles.part,
+          {
+            animationName: {
+              to: {
+                transform: [{ rotate: '180deg' }],
               },
-              animationDuration: '0.6s',
-              animationTimingFunction: 'linear',
-              animationIterationCount: 'infinite',
             },
-          ]}
-        />
-      ))}
+            animationDuration: '0.6s',
+            animationTimingFunction: 'linear',
+            animationIterationCount: 'infinite',
+          },
+        ]}
+      />
     </View>
   );
 }
@@ -510,8 +504,9 @@ const dualRingStyles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: SPINNER_SIZE / 2,
     borderWidth: 0.1 * SPINNER_SIZE,
-    borderColor: 'transparent',
-    borderTopColor: colors.primary,
+    borderColor: 'rgba(0, 0, 0, 0.01)',
+    borderBlockStartColor: colors.primary,
+    borderBlockEndColor: colors.primary,
   },
 });
 

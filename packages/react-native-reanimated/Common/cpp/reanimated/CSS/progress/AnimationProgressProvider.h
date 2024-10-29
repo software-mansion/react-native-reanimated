@@ -15,31 +15,31 @@ enum class AnimationProgressState {
 class AnimationProgressProvider : public ProgressProvider {
  public:
   AnimationProgressProvider(
-      const double duration,
-      const double delay,
-      const double iterationCount,
-      const AnimationDirection direction,
-      const EasingFunction easingFunction);
+      double duration,
+      double delay,
+      double iterationCount,
+      AnimationDirection direction,
+      const EasingFunction &easingFunction);
 
-  void setIterationCount(const double iterationCount) {
+  void setIterationCount(double iterationCount) {
     resetProgress();
     iterationCount_ = iterationCount;
   }
-  void setDirection(const AnimationDirection direction) {
+  void setDirection(AnimationDirection direction) {
     resetProgress();
     direction_ = direction;
   }
 
-  AnimationProgressState getState(const time_t timestamp) const;
+  AnimationProgressState getState(double timestamp) const;
 
-  void pause(const time_t timestamp);
-  void play(const time_t timestamp);
+  void pause(double timestamp);
+  void play(double timestamp);
   void resetProgress() override;
 
  protected:
-  std::optional<double> calculateRawProgress(const time_t timestamp) override;
+  std::optional<double> calculateRawProgress(double timestamp) override;
 
-  double decorateProgress(const double progress) const override {
+  double decorateProgress(double progress) const override {
     return applyAnimationDirection(progress);
   }
 
@@ -52,11 +52,11 @@ class AnimationProgressProvider : public ProgressProvider {
   time_t pauseTimestamp_ = 0;
   time_t pausedTimeBefore_ = 0;
 
-  inline time_t getTotalPausedTime(const time_t timestamp) const;
-  bool shouldFinish(const time_t timestamp) const;
+  inline time_t getTotalPausedTime(double timestamp) const;
+  bool shouldFinish(double timestamp) const;
 
-  double updateIterationProgress(const double currentIterationElapsedTime);
-  double applyAnimationDirection(const double iterationProgress) const;
+  double updateIterationProgress(double currentIterationElapsedTime);
+  double applyAnimationDirection(double iterationProgress) const;
 };
 
 } // namespace reanimated

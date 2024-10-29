@@ -15,7 +15,7 @@ class TranslateTransformInterpolatorBase
 
  protected:
   OperationType interpolate(
-      const double progress,
+      double progress,
       const OperationType &fromOperation,
       const OperationType &toOperation,
       const TransformInterpolatorUpdateContext &context) const override;
@@ -30,7 +30,7 @@ class TranslateTransformInterpolatorBase
   const std::string relativeProperty_;
 };
 
-class TranslateXTransformInterpolator
+class TranslateXTransformInterpolator final
     : public TranslateTransformInterpolatorBase<TranslateXOperation> {
  public:
   TranslateXTransformInterpolator(
@@ -43,7 +43,7 @@ class TranslateXTransformInterpolator
             defaultValue) {}
 };
 
-class TranslateYTransformInterpolator
+class TranslateYTransformInterpolator final
     : public TranslateTransformInterpolatorBase<TranslateYOperation> {
  public:
   TranslateYTransformInterpolator(

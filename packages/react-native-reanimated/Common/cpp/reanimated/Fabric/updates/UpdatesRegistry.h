@@ -22,10 +22,9 @@ using RegistryMap =
 
 class UpdatesRegistry {
  public:
-  void
-  flushUpdates(jsi::Runtime &rt, UpdatesBatch &updatesBatch, const bool merge);
+  void flushUpdates(jsi::Runtime &rt, UpdatesBatch &updatesBatch, bool merge);
   void collectProps(PropsMap &propsMap);
-  folly::dynamic get(const Tag tag) const;
+  folly::dynamic get(Tag tag) const;
 
  protected:
   mutable std::mutex mutex_;
@@ -37,7 +36,7 @@ class UpdatesRegistry {
   void flushUpdatesToRegistry(
       jsi::Runtime &rt,
       const UpdatesBatch &updatesBatch,
-      const bool merge);
+      bool merge);
 
  private:
   void runMarkedRemovals();

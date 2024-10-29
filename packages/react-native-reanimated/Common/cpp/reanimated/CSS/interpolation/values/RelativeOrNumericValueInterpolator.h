@@ -4,7 +4,7 @@
 
 namespace reanimated {
 
-class RelativeOrNumericValueInterpolator : public ValueInterpolator<UnitValue> {
+class RelativeOrNumericValueInterpolator final : public ValueInterpolator<UnitValue> {
  public:
   RelativeOrNumericValueInterpolator(
       const RelativeTo relativeTo,
@@ -24,7 +24,7 @@ class RelativeOrNumericValueInterpolator : public ValueInterpolator<UnitValue> {
       const double localProgress,
       const UnitValue &fromValue,
       const UnitValue &toValue,
-      const PropertyInterpolationUpdateContext context) const override;
+      const PropertyInterpolationUpdateContext &context) const override;
 
  private:
   const RelativeTo relativeTo_;

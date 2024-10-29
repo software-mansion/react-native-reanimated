@@ -3,7 +3,7 @@
 namespace reanimated {
 
 RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
-    const RelativeTo relativeTo,
+    RelativeTo relativeTo,
     const std::string &relativeProperty,
     const std::optional<UnitValue> &defaultValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
@@ -18,7 +18,7 @@ RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
 UnitValue RelativeOrNumericValueInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
-  return UnitValue(rt, value);
+  return {rt, value};
 }
 
 jsi::Value RelativeOrNumericValueInterpolator::convertResultToJSI(
@@ -31,7 +31,7 @@ UnitValue RelativeOrNumericValueInterpolator::interpolate(
     const double localProgress,
     const UnitValue &fromValue,
     const UnitValue &toValue,
-    const PropertyInterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext &context) const {
   return fromValue.interpolate(
       localProgress,
       toValue,

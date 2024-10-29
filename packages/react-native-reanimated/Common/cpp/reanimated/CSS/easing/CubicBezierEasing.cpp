@@ -2,20 +2,25 @@
 
 namespace reanimated {
 
-double sampleCurveX(double t, double x1, double x2) {
+double sampleCurveX(const double t, const double x1, const double x2) {
   return 3 * (1 - t) * (1 - t) * t * x1 + 3 * (1 - t) * t * t * x2 + t * t * t;
 }
 
-double sampleCurveY(double t, double y1, double y2) {
+double sampleCurveY(const double t, const double y1, const double y2) {
   return 3 * (1 - t) * (1 - t) * t * y1 + 3 * (1 - t) * t * t * y2 + t * t * t;
 }
 
-double sampleCurveDerivativeX(double t, double x1, double x2) {
+double
+sampleCurveDerivativeX(const double t, const double x1, const double x2) {
   return -6 * (1 - t) * t * x1 + 3 * (1 - t) * (1 - t) * x1 +
       6 * (1 - t) * t * x2 - 6 * t * t * x2 + 3 * t * t;
 }
 
-double solveCurveX(double x, double x1, double x2, double epsilon) {
+double solveCurveX(
+    const double x,
+    const double x1,
+    const double x2,
+    const double epsilon) {
   double t0 = 0.0, t1 = 1.0, t2 = x, xValue, dX;
   int iterations = 0;
   while (iterations < 8) {
@@ -47,8 +52,11 @@ double solveCurveX(double x, double x1, double x2, double epsilon) {
   return t2;
 }
 
-EasingFunction
-createBezierFunction(double x1, double y1, double x2, double y2) {
+EasingFunction createBezierFunction(
+    const double x1,
+    const double y1,
+    const double x2,
+    const double y2) {
   return [=](double x) {
     double t = solveCurveX(x, x1, x2);
     return sampleCurveY(t, y1, y2);

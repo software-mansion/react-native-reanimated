@@ -10,7 +10,7 @@ namespace reanimated {
 // same as interpolating object properties
 class AnimationStyleInterpolator : public ObjectPropertiesInterpolator {
  public:
-  AnimationStyleInterpolator(
+  explicit AnimationStyleInterpolator(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       : ObjectPropertiesInterpolator(
             styleInterpolatorFactories,

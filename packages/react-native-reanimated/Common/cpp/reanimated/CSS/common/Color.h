@@ -17,21 +17,21 @@ enum class ColorType {
 class Color {
  public:
   Color();
-  Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a);
-  Color(unsigned char r, unsigned char g, unsigned char b);
+  Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+  Color(uint8_t r, uint8_t g, uint8_t b);
   Color(jsi::Runtime &rt, const jsi::Value &value);
 
   static const Color Transparent;
 
-  std::string toString() const;
   jsi::Value toJSIValue(jsi::Runtime &rt) const;
+  std::string toString() const;
   Color interpolate(const Color &to, double progress) const;
 
  private:
   ColorArray channels;
   ColorType type;
 
-  Color(ColorType colorType) : channels{0, 0, 0, 0}, type(colorType) {}
+  explicit Color(ColorType colorType) : channels{0, 0, 0, 0}, type(colorType) {}
 };
 
 } // namespace reanimated

@@ -648,7 +648,10 @@ export function isColor(value: unknown): boolean {
 
 const IS_ANDROID = isAndroid();
 
-export function processColor(color: unknown): number | null | undefined {
+export function processColor(
+  color: unknown,
+  convertToSignedOnAndroid = true
+): number | null | undefined {
   'worklet';
   let normalizedColor = processColorInitially(color);
   if (normalizedColor === null || normalizedColor === undefined) {
@@ -659,7 +662,7 @@ export function processColor(color: unknown): number | null | undefined {
     return null;
   }
 
-  if (IS_ANDROID) {
+  if (IS_ANDROID && convertToSignedOnAndroid) {
     // Android use 32 bit *signed* integer to represent the color
     // We utilize the fact that bitwise operations in JS also operates on
     // signed 32 bit integers, so that we can use those to convert from
@@ -727,9 +730,9 @@ export function toGammaSpace(
 
 export function processCSSAnimationColor(value: string | number) {
   if (typeof value === 'string') {
-    return processColor(value);
+    return processColor(value, false);
   } else {
     // case of number format 0xRRGGBBAA format needs to be re-formatted
-    return processColor(`#${value.toString(16).padStart(8, '0')}`);
+    return processColor(`#${value.toString(16).padStart(8, '0')}`, false);
   }
 }

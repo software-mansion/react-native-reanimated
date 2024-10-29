@@ -3,20 +3,19 @@
 namespace reanimated {
 
 CSSTransition::CSSTransition(
-    const ShadowNode::Shared shadowNode,
+    const ShadowNode::Shared &shadowNode,
     const CSSTransitionConfig &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : shadowNode_(shadowNode),
-      properties_(config.properties),
       viewStylesRepository_(viewStylesRepository),
       styleInterpolator_(TransitionStyleInterpolator(viewStylesRepository)),
       progressProvider_(TransitionProgressProvider(
           config.duration,
           config.delay,
-          config.easingFunction)) {}
+          config.easingFunction)),
+      properties_(config.properties) {}
 
 void CSSTransition::updateSettings(
-    jsi::Runtime &rt,
     const PartialCSSTransitionSettings &settings) {
   if (settings.properties.has_value()) {
     updateTransitionProperties(settings.properties.value());
@@ -35,7 +34,7 @@ void CSSTransition::updateSettings(
 jsi::Value CSSTransition::run(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
-    const time_t timestamp) {
+    const double timestamp) {
   styleInterpolator_.updateInterpolatedProperties(rt, changedProps);
   progressProvider_.runProgressProviders(
       rt, timestamp, changedProps.changedPropertyNames);
@@ -44,7 +43,7 @@ jsi::Value CSSTransition::run(
   return update(rt, timestamp);
 }
 
-jsi::Value CSSTransition::update(jsi::Runtime &rt, time_t timestamp) {
+jsi::Value CSSTransition::update(jsi::Runtime &rt, const double timestamp) {
   progressProvider_.update(timestamp);
 
   auto updates = styleInterpolator_.update(

@@ -4,7 +4,7 @@
 
 namespace reanimated {
 
-class TransformOriginInterpolator : public ValueInterpolator<TransformOrigin> {
+class TransformOriginInterpolator final : public ValueInterpolator<TransformOrigin> {
  public:
   TransformOriginInterpolator(
       const std::optional<TransformOrigin> &defaultValue,
@@ -20,10 +20,10 @@ class TransformOriginInterpolator : public ValueInterpolator<TransformOrigin> {
       const override;
 
   TransformOrigin interpolate(
-      const double localProgress,
+      double localProgress,
       const TransformOrigin &fromValue,
       const TransformOrigin &toValue,
-      const PropertyInterpolationUpdateContext context) const override;
+      const PropertyInterpolationUpdateContext &context) const override;
 };
 
 } // namespace reanimated

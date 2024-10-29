@@ -15,10 +15,10 @@ jsi::Value DiscreteStringInterpolator::convertResultToJSI(
 }
 
 std::string DiscreteStringInterpolator::interpolate(
-    double localProgress,
+    const double localProgress,
     const std::string &fromValue,
     const std::string &toValue,
-    const PropertyInterpolationUpdateContext context) const {
+    const PropertyInterpolationUpdateContext &context) const {
   return localProgress < 0.5 ? fromValue : toValue;
 }
 

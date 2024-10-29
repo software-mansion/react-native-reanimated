@@ -18,7 +18,7 @@ struct TransformKeyframe {
   const std::optional<TransformOperations> toOperations;
 };
 
-class TransformsStyleInterpolator : public PropertyInterpolator {
+class TransformsStyleInterpolator final : public PropertyInterpolator {
  public:
   TransformsStyleInterpolator(
       const std::shared_ptr<TransformInterpolators> &interpolators,
@@ -49,12 +49,12 @@ class TransformsStyleInterpolator : public PropertyInterpolator {
   std::shared_ptr<TransformKeyframe> currentKeyframe_;
   std::optional<TransformOperations> previousResult_;
 
-  std::optional<TransformOperations> parseTransformOperations(
+  static std::optional<TransformOperations> parseTransformOperations(
       jsi::Runtime &rt,
-      const jsi::Value &values) const;
+      const jsi::Value &values) ;
   std::shared_ptr<TransformKeyframe> createTransformKeyframe(
-      const double fromOffset,
-      const double toOffset,
+      double fromOffset,
+      double toOffset,
       const std::optional<TransformOperations> &fromOperationsOptional,
       const std::optional<TransformOperations> &toOperationsOptional) const;
   std::pair<TransformOperations, TransformOperations>
@@ -67,28 +67,28 @@ class TransformsStyleInterpolator : public PropertyInterpolator {
       TransformOperations &sourceResult,
       TransformOperations &targetResult) const;
   std::shared_ptr<TransformOperation> getDefaultOperationOfType(
-      const TransformOperationType type) const;
+      TransformOperationType type) const;
 
   TransformOperations getFallbackValue(
-      const PropertyInterpolationUpdateContext context) const;
+      const PropertyInterpolationUpdateContext &context) const;
   TransformOperations resolveTransformOperations(
       const TransformOperations &unresolvedOperations,
       const PropertyInterpolationUpdateContext &context) const;
   std::shared_ptr<TransformKeyframe> getKeyframeAtIndex(
-      const size_t index,
-      const int resolveDirection, // < 0 - resolve from, > 0 - resolve to
+      size_t index,
+      int resolveDirection, // < 0 - resolve from, > 0 - resolve to
       const PropertyInterpolationUpdateContext &context) const;
   void updateCurrentKeyframe(const PropertyInterpolationUpdateContext &context);
-  inline double calculateLocalProgress(const double progress) const;
+  inline double calculateLocalProgress(double progress) const;
   TransformOperations interpolateOperations(
-      const double localProgress,
+      double localProgress,
       const TransformOperations &fromOperations,
       const TransformOperations &toOperations,
       const PropertyInterpolationUpdateContext &context) const;
 
-  jsi::Value convertResultToJSI(
+  static jsi::Value convertResultToJSI(
       jsi::Runtime &rt,
-      const TransformOperations &operations) const;
+      const TransformOperations &operations) ;
   TransformInterpolatorUpdateContext createUpdateContext(
       const PropertyInterpolationUpdateContext &context) const;
 };

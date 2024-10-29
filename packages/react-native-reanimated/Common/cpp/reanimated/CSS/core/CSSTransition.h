@@ -9,10 +9,8 @@ namespace reanimated {
 
 class CSSTransition {
  public:
-  using PartialSettings = PartialCSSTransitionSettings;
-
   CSSTransition(
-      const ShadowNode::Shared shadowNode,
+      const ShadowNode::Shared &shadowNode,
       const CSSTransitionConfig &config,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
@@ -25,25 +23,21 @@ class CSSTransition {
   const TransitionProperties &getProperties() const {
     return properties_;
   }
-  double getMinDelay(const time_t timestamp) const {
+  double getMinDelay(double timestamp) const {
     return progressProvider_.getMinDelay(timestamp);
   }
-  TransitionProgressState getState(const time_t timestamp) const {
+  TransitionProgressState getState() const {
     return progressProvider_.getState();
   }
   jsi::Value getCurrentInterpolationStyle(jsi::Runtime &rt) const {
     return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
   }
 
-  void updateSettings(
-      jsi::Runtime &rt,
-      const PartialCSSTransitionSettings &settings);
+  void updateSettings(const PartialCSSTransitionSettings &settings);
 
-  jsi::Value run(
-      jsi::Runtime &rt,
-      const ChangedProps &changedProps,
-      const time_t timestamp);
-  jsi::Value update(jsi::Runtime &rt, time_t timestamp);
+  jsi::Value
+  run(jsi::Runtime &rt, const ChangedProps &changedProps, double timestamp);
+  jsi::Value update(jsi::Runtime &rt, double timestamp);
 
  private:
   const ShadowNode::Shared shadowNode_;

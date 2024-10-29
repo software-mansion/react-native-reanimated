@@ -4,14 +4,14 @@
 
 namespace reanimated {
 
-class PerspectiveTransformInterpolator
+class PerspectiveTransformInterpolator final
     : public TransformInterpolatorBase<PerspectiveOperation> {
  public:
-  PerspectiveTransformInterpolator(const double &defaultValue);
+  explicit PerspectiveTransformInterpolator(double defaultValue);
 
  protected:
   PerspectiveOperation interpolate(
-      const double progress,
+      double progress,
       const PerspectiveOperation &fromOperation,
       const PerspectiveOperation &toOperation,
       const TransformInterpolatorUpdateContext &context) const override;

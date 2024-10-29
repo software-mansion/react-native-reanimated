@@ -19,17 +19,16 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
   }
 
   void updateSettings(
-      jsi::Runtime &rt,
-      const unsigned id,
+      unsigned id,
       const PartialCSSAnimationSettings &updatedSettings,
-      const time_t timestamp);
+      double timestamp);
 
   void add(
       jsi::Runtime &rt,
       const std::shared_ptr<CSSAnimation> &animation,
-      const time_t timestamp);
-  void remove(const unsigned id);
-  void update(jsi::Runtime &rt, const time_t timestamp);
+      double timestamp);
+  void remove(unsigned id);
+  void update(jsi::Runtime &rt, double timestamp);
 
  private:
   using Registry = std::unordered_map<unsigned, std::shared_ptr<CSSAnimation>>;
@@ -46,27 +45,27 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
   std::unordered_set<unsigned> delayedAnimationIds_;
   DelayedQueue delayedAnimationsQueue_;
 
-  void activateDelayedAnimations(const time_t timestamp);
-  void flushOperations(jsi::Runtime &rt, const time_t timestamp);
+  void activateDelayedAnimations(double timestamp);
+  void flushOperations(jsi::Runtime &rt, double timestamp);
 
   jsi::Value handleUpdate(
       jsi::Runtime &rt,
-      const time_t timestamp,
+      double timestamp,
       const std::shared_ptr<CSSAnimation> &item);
   void handleOperation(
       jsi::Runtime &rt,
-      const AnimationOperation operation,
+      AnimationOperation operation,
       const std::shared_ptr<CSSAnimation> &item,
-      const time_t timestamp);
+      double timestamp);
 
   void activateOperation(const unsigned id);
   void deactivateOperation(
       const std::shared_ptr<CSSAnimation> &animation,
-      const time_t timestamp);
+      double timestamp);
   void finishOperation(
       jsi::Runtime &rt,
       const std::shared_ptr<CSSAnimation> &animation,
-      const time_t timestamp);
+      double timestamp);
 };
 
 } // namespace reanimated

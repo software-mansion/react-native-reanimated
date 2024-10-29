@@ -45,6 +45,7 @@ class PropertyInterpolatorFactory {
   virtual std::shared_ptr<PropertyInterpolator> create(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath) const = 0;
+  virtual ~PropertyInterpolatorFactory() = default;
 };
 
 using PropertiesInterpolators =

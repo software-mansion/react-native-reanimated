@@ -4,7 +4,7 @@
 
 namespace reanimated {
 
-class NumberStepsInterpolator : public ValueInterpolator<int> {
+class NumberStepsInterpolator final : public ValueInterpolator<int> {
  public:
   using ValueInterpolator<int>::ValueInterpolator;
 
@@ -19,7 +19,7 @@ class NumberStepsInterpolator : public ValueInterpolator<int> {
       double localProgress,
       const int &fromValue,
       const int &toValue,
-      const PropertyInterpolationUpdateContext context) const override;
+      const PropertyInterpolationUpdateContext &context) const override;
 };
 
 } // namespace reanimated

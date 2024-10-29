@@ -1,12 +1,14 @@
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 
-namespace reanimated {
-namespace Interpolators {
+#include <utility>
+
+namespace reanimated::Interpolators {
 
 class ObjectInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   ObjectInterpolatorFactory(const PropertiesInterpolatorFactories &factories)
-      : factories_(factories) {}
+      : factories_(std::move(factories)) {}
+  virtual ~ObjectInterpolatorFactory() = default;
 
   std::shared_ptr<PropertyInterpolator> create(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
@@ -22,7 +24,8 @@ class ObjectInterpolatorFactory : public PropertyInterpolatorFactory {
 template <typename InterpolatorType, typename ValueType>
 class ValueInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
-  ValueInterpolatorFactory(const std::optional<ValueType> &defaultValue)
+  explicit ValueInterpolatorFactory(
+      const std::optional<ValueType> &defaultValue)
       : defaultValue_(defaultValue) {}
 
   std::shared_ptr<PropertyInterpolator> create(
@@ -36,16 +39,16 @@ class ValueInterpolatorFactory : public PropertyInterpolatorFactory {
   const std::optional<ValueType> defaultValue_;
 };
 
-class RelativeOrNumericInterpolatorFactory
+class RelativeOrNumericInterpolatorFactory final
     : public PropertyInterpolatorFactory {
  public:
   RelativeOrNumericInterpolatorFactory(
       const RelativeTo relativeTo,
       const std::string &relativeProperty,
       const std::optional<UnitValue> &defaultValue)
-      : defaultValue_(defaultValue),
-        relativeTo_(relativeTo),
-        relativeProperty_(relativeProperty) {}
+      : relativeTo_(relativeTo),
+        relativeProperty_(relativeProperty),
+        defaultValue_(defaultValue) {}
 
   std::shared_ptr<PropertyInterpolator> create(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
@@ -64,9 +67,10 @@ class RelativeOrNumericInterpolatorFactory
   const std::optional<UnitValue> defaultValue_;
 };
 
-class TransformsStyleInterpolatorFactory : public PropertyInterpolatorFactory {
+class TransformsStyleInterpolatorFactory final
+    : public PropertyInterpolatorFactory {
  public:
-  TransformsStyleInterpolatorFactory(
+  explicit TransformsStyleInterpolatorFactory(
       const std::shared_ptr<TransformInterpolators> &interpolators)
       : interpolators_(interpolators) {}
 
@@ -95,11 +99,17 @@ std::shared_ptr<PropertyInterpolatorFactory> color(
   return std::make_shared<
       ValueInterpolatorFactory<ColorValueInterpolator, Color>>(defaultValue);
 }
+std::shared_ptr<PropertyInterpolatorFactory> color() {
+  return color(std::nullopt);
+}
 
 std::shared_ptr<PropertyInterpolatorFactory> numeric(
     const std::optional<double> &defaultValue) {
   return std::make_shared<
       ValueInterpolatorFactory<NumericValueInterpolator, double>>(defaultValue);
+}
+std::shared_ptr<PropertyInterpolatorFactory> numeric() {
+  return numeric(std::nullopt);
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> steps(
@@ -107,12 +117,18 @@ std::shared_ptr<PropertyInterpolatorFactory> steps(
   return std::make_shared<
       ValueInterpolatorFactory<NumberStepsInterpolator, int>>(defaultValue);
 }
+std::shared_ptr<PropertyInterpolatorFactory> steps() {
+  return steps(std::nullopt);
+}
 
 std::shared_ptr<PropertyInterpolatorFactory> discrete(
     const std::optional<std::string> &defaultValue) {
   return std::make_shared<
       ValueInterpolatorFactory<DiscreteStringInterpolator, std::string>>(
       defaultValue);
+}
+std::shared_ptr<PropertyInterpolatorFactory> discrete() {
+  return discrete(std::nullopt);
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
@@ -122,12 +138,35 @@ std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
   return std::make_shared<RelativeOrNumericInterpolatorFactory>(
       relativeTo, relativeProperty, defaultValue);
 }
+std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
+    const RelativeTo relativeTo,
+    const std::string &relativeProperty,
+    const double defaultValue) {
+  return relOrNum(relativeTo, relativeProperty, UnitValue(defaultValue));
+}
+std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
+    const RelativeTo relativeTo,
+    const std::string &relativeProperty,
+    const std::string &defaultValue) {
+  return relOrNum(relativeTo, relativeProperty, UnitValue(defaultValue));
+}
+std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
+    const RelativeTo relativeTo,
+    const std::string &relativeProperty) {
+  return relOrNum(relativeTo, relativeProperty, std::nullopt);
+}
 
 std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
     const TransformOrigin &defaultValue) {
   return std::make_shared<
       ValueInterpolatorFactory<TransformOriginInterpolator, TransformOrigin>>(
       defaultValue);
+}
+std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
+    const std::variant<double, std::string> &x,
+    const std::variant<double, std::string> &y,
+    const double z) {
+  return transformOrigin(TransformOrigin(x, y, z));
 }
 
 std::shared_ptr<PropertyInterpolatorFactory> transforms(
@@ -145,30 +184,45 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
  * Transform interpolators
  */
 
-std::shared_ptr<TransformInterpolator> perspective(const double &defaultValue) {
+std::shared_ptr<TransformInterpolator> perspective(const double defaultValue) {
   return std::make_shared<PerspectiveTransformInterpolator>(defaultValue);
 }
 
 std::shared_ptr<TransformInterpolator> rotate(const AngleValue &defaultValue) {
   return std::make_shared<RotateTransformInterpolator>(defaultValue);
 }
+std::shared_ptr<TransformInterpolator> rotate(const std::string &defaultValue) {
+  return rotate(AngleValue(defaultValue));
+}
 std::shared_ptr<TransformInterpolator> rotateX(const AngleValue &defaultValue) {
   return std::make_shared<RotateXTransformInterpolator>(defaultValue);
+}
+std::shared_ptr<TransformInterpolator> rotateX(
+    const std::string &defaultValue) {
+  return rotateX(AngleValue(defaultValue));
 }
 std::shared_ptr<TransformInterpolator> rotateY(const AngleValue &defaultValue) {
   return std::make_shared<RotateYTransformInterpolator>(defaultValue);
 }
+std::shared_ptr<TransformInterpolator> rotateY(
+    const std::string &defaultValue) {
+  return rotateY(AngleValue(defaultValue));
+}
 std::shared_ptr<TransformInterpolator> rotateZ(const AngleValue &defaultValue) {
   return std::make_shared<RotateZTransformInterpolator>(defaultValue);
 }
+std::shared_ptr<TransformInterpolator> rotateZ(
+    const std::string &defaultValue) {
+  return rotateZ(AngleValue(defaultValue));
+}
 
-std::shared_ptr<TransformInterpolator> scale(const double &defaultValue) {
+std::shared_ptr<TransformInterpolator> scale(const double defaultValue) {
   return std::make_shared<ScaleTransformInterpolator>(defaultValue);
 }
-std::shared_ptr<TransformInterpolator> scaleX(const double &defaultValue) {
+std::shared_ptr<TransformInterpolator> scaleX(const double defaultValue) {
   return std::make_shared<ScaleXTransformInterpolator>(defaultValue);
 }
-std::shared_ptr<TransformInterpolator> scaleY(const double &defaultValue) {
+std::shared_ptr<TransformInterpolator> scaleY(const double defaultValue) {
   return std::make_shared<ScaleYTransformInterpolator>(defaultValue);
 }
 
@@ -179,6 +233,12 @@ std::shared_ptr<TransformInterpolator> translateX(
   return std::make_shared<TranslateXTransformInterpolator>(
       relativeTo, relativeProperty, defaultValue);
 }
+std::shared_ptr<TransformInterpolator> translateX(
+    RelativeTo relativeTo,
+    const std::string &relativeProperty,
+    const double defaultValue) {
+  return translateX(relativeTo, relativeProperty, UnitValue(defaultValue));
+}
 std::shared_ptr<TransformInterpolator> translateY(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
@@ -186,12 +246,24 @@ std::shared_ptr<TransformInterpolator> translateY(
   return std::make_shared<TranslateYTransformInterpolator>(
       relativeTo, relativeProperty, defaultValue);
 }
+std::shared_ptr<TransformInterpolator> translateY(
+    RelativeTo relativeTo,
+    const std::string &relativeProperty,
+    const double defaultValue) {
+  return translateY(relativeTo, relativeProperty, UnitValue(defaultValue));
+}
 
 std::shared_ptr<TransformInterpolator> skewX(const AngleValue &defaultValue) {
   return std::make_shared<SkewXTransformInterpolator>(defaultValue);
 }
+std::shared_ptr<TransformInterpolator> skewX(const std::string &defaultValue) {
+  return skewX(AngleValue(defaultValue));
+}
 std::shared_ptr<TransformInterpolator> skewY(const AngleValue &defaultValue) {
   return std::make_shared<SkewYTransformInterpolator>(defaultValue);
+}
+std::shared_ptr<TransformInterpolator> skewY(const std::string &defaultValue) {
+  return skewY(AngleValue(defaultValue));
 }
 
 std::shared_ptr<TransformInterpolator> matrix(
@@ -199,5 +271,4 @@ std::shared_ptr<TransformInterpolator> matrix(
   return std::make_shared<MatrixTransformInterpolator>(defaultValue);
 }
 
-} // namespace Interpolators
-} // namespace reanimated
+} // namespace reanimated::Interpolators
