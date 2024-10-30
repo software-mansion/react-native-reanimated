@@ -8,7 +8,7 @@ require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-x
 prepare_react_native_project!
 
 target 'MacOSExample-macOS' do
-  platform :macos, '10.15'
+  platform :macos, '11.0'
   use_native_modules!
 
   # Flags change depending on the env values.
@@ -18,8 +18,6 @@ target 'MacOSExample-macOS' do
     :path => '../node_modules/react-native-macos',
     :hermes_enabled => false,
     :fabric_enabled => ENV['RCT_NEW_ARCH_ENABLED'] == '1',
-    # Flipper is not compatible w/ macOS
-    :flipper_configuration => FlipperConfiguration.disabled,
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
