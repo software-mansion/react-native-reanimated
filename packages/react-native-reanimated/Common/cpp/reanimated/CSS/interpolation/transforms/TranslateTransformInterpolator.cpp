@@ -3,18 +3,17 @@
 namespace reanimated {
 
 template <typename OperationType>
-TranslateTransformInterpolatorBase<OperationType>::
-    TranslateTransformInterpolatorBase(
-        const RelativeTo relativeTo,
-        const std::string &relativeProperty,
-        const UnitValue &defaultValue)
+TranslateTransformInterpolator<OperationType>::TranslateTransformInterpolator(
+    const RelativeTo relativeTo,
+    const std::string &relativeProperty,
+    const UnitValue &defaultValue)
     : TransformInterpolatorBase<OperationType>(
           std::make_shared<OperationType>(defaultValue)),
       relativeTo_(relativeTo),
       relativeProperty_(relativeProperty) {}
 
 template <typename OperationType>
-OperationType TranslateTransformInterpolatorBase<OperationType>::interpolate(
+OperationType TranslateTransformInterpolator<OperationType>::interpolate(
     const double progress,
     const OperationType &fromOperation,
     const OperationType &toOperation,
@@ -31,8 +30,7 @@ OperationType TranslateTransformInterpolatorBase<OperationType>::interpolate(
 }
 
 template <typename OperationType>
-OperationType
-TranslateTransformInterpolatorBase<OperationType>::resolveOperation(
+OperationType TranslateTransformInterpolator<OperationType>::resolveOperation(
     const OperationType &operation,
     const ShadowNode::Shared &shadowNode,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
@@ -45,8 +43,8 @@ TranslateTransformInterpolatorBase<OperationType>::resolveOperation(
   return OperationType(resolvedValue.value_or(0.));
 }
 
-// Declare types for TranslateTransformInterpolator
-template class TranslateTransformInterpolatorBase<TranslateXOperation>;
-template class TranslateTransformInterpolatorBase<TranslateYOperation>;
+// Declare types for translate transform interpolators
+template class TranslateTransformInterpolator<TranslateXOperation>;
+template class TranslateTransformInterpolator<TranslateYOperation>;
 
 } // namespace reanimated

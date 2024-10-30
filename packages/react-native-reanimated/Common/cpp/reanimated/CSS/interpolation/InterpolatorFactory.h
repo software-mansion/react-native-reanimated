@@ -10,11 +10,10 @@
 #include <reanimated/CSS/interpolation/values/RelativeOrNumericValueInterpolator.h>
 #include <reanimated/CSS/interpolation/values/TransformOriginInterpolator.h>
 
+#include <reanimated/CSS/interpolation/transforms/AngleTransformInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/MatrixTransformInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/PerspectiveTransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/RotateTransformInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/ScaleTransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/SkewTransformInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TranslateTransformInterpolator.h>
 
 namespace reanimated::Interpolators {

@@ -5,10 +5,10 @@
 namespace reanimated {
 
 template <typename OperationType>
-class TranslateTransformInterpolatorBase
+class TranslateTransformInterpolator final
     : public TransformInterpolatorBase<OperationType> {
  public:
-  TranslateTransformInterpolatorBase(
+  TranslateTransformInterpolator(
       RelativeTo relativeTo,
       const std::string &relativeProperty,
       const UnitValue &defaultValue);
@@ -28,32 +28,6 @@ class TranslateTransformInterpolatorBase
  private:
   const RelativeTo relativeTo_;
   const std::string relativeProperty_;
-};
-
-class TranslateXTransformInterpolator final
-    : public TranslateTransformInterpolatorBase<TranslateXOperation> {
- public:
-  TranslateXTransformInterpolator(
-      RelativeTo relativeTo,
-      const std::string &relativeProperty,
-      const UnitValue &defaultValue)
-      : TranslateTransformInterpolatorBase(
-            relativeTo,
-            relativeProperty,
-            defaultValue) {}
-};
-
-class TranslateYTransformInterpolator final
-    : public TranslateTransformInterpolatorBase<TranslateYOperation> {
- public:
-  TranslateYTransformInterpolator(
-      RelativeTo relativeTo,
-      const std::string &relativeProperty,
-      const UnitValue &defaultValue)
-      : TranslateTransformInterpolatorBase(
-            relativeTo,
-            relativeProperty,
-            defaultValue) {}
 };
 
 } // namespace reanimated
