@@ -189,27 +189,31 @@ std::shared_ptr<TransformInterpolator> perspective(const double defaultValue) {
 }
 
 std::shared_ptr<TransformInterpolator> rotate(const AngleValue &defaultValue) {
-  return std::make_shared<RotateTransformInterpolator>(defaultValue);
+  return std::make_shared<AngleTransformInterpolator<RotateOperation>>(
+      defaultValue);
 }
 std::shared_ptr<TransformInterpolator> rotate(const std::string &defaultValue) {
   return rotate(AngleValue(defaultValue));
 }
 std::shared_ptr<TransformInterpolator> rotateX(const AngleValue &defaultValue) {
-  return std::make_shared<RotateXTransformInterpolator>(defaultValue);
+  return std::make_shared<AngleTransformInterpolator<RotateXOperation>>(
+      defaultValue);
 }
 std::shared_ptr<TransformInterpolator> rotateX(
     const std::string &defaultValue) {
   return rotateX(AngleValue(defaultValue));
 }
 std::shared_ptr<TransformInterpolator> rotateY(const AngleValue &defaultValue) {
-  return std::make_shared<RotateYTransformInterpolator>(defaultValue);
+  return std::make_shared<AngleTransformInterpolator<RotateYOperation>>(
+      defaultValue);
 }
 std::shared_ptr<TransformInterpolator> rotateY(
     const std::string &defaultValue) {
   return rotateY(AngleValue(defaultValue));
 }
 std::shared_ptr<TransformInterpolator> rotateZ(const AngleValue &defaultValue) {
-  return std::make_shared<RotateZTransformInterpolator>(defaultValue);
+  return std::make_shared<AngleTransformInterpolator<RotateZOperation>>(
+      defaultValue);
 }
 std::shared_ptr<TransformInterpolator> rotateZ(
     const std::string &defaultValue) {
@@ -217,20 +221,23 @@ std::shared_ptr<TransformInterpolator> rotateZ(
 }
 
 std::shared_ptr<TransformInterpolator> scale(const double defaultValue) {
-  return std::make_shared<ScaleTransformInterpolator>(defaultValue);
+  return std::make_shared<ScaleTransformInterpolator<ScaleOperation>>(
+      defaultValue);
 }
 std::shared_ptr<TransformInterpolator> scaleX(const double defaultValue) {
-  return std::make_shared<ScaleXTransformInterpolator>(defaultValue);
+  return std::make_shared<ScaleTransformInterpolator<ScaleXOperation>>(
+      defaultValue);
 }
 std::shared_ptr<TransformInterpolator> scaleY(const double defaultValue) {
-  return std::make_shared<ScaleYTransformInterpolator>(defaultValue);
+  return std::make_shared<ScaleTransformInterpolator<ScaleYOperation>>(
+      defaultValue);
 }
 
 std::shared_ptr<TransformInterpolator> translateX(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
     const UnitValue &defaultValue) {
-  return std::make_shared<TranslateXTransformInterpolator>(
+  return std::make_shared<TranslateTransformInterpolator<TranslateXOperation>>(
       relativeTo, relativeProperty, defaultValue);
 }
 std::shared_ptr<TransformInterpolator> translateX(
@@ -243,7 +250,7 @@ std::shared_ptr<TransformInterpolator> translateY(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
     const UnitValue &defaultValue) {
-  return std::make_shared<TranslateYTransformInterpolator>(
+  return std::make_shared<TranslateTransformInterpolator<TranslateYOperation>>(
       relativeTo, relativeProperty, defaultValue);
 }
 std::shared_ptr<TransformInterpolator> translateY(
@@ -254,13 +261,15 @@ std::shared_ptr<TransformInterpolator> translateY(
 }
 
 std::shared_ptr<TransformInterpolator> skewX(const AngleValue &defaultValue) {
-  return std::make_shared<SkewXTransformInterpolator>(defaultValue);
+  return std::make_shared<AngleTransformInterpolator<SkewXOperation>>(
+      defaultValue);
 }
 std::shared_ptr<TransformInterpolator> skewX(const std::string &defaultValue) {
   return skewX(AngleValue(defaultValue));
 }
 std::shared_ptr<TransformInterpolator> skewY(const AngleValue &defaultValue) {
-  return std::make_shared<SkewYTransformInterpolator>(defaultValue);
+  return std::make_shared<AngleTransformInterpolator<SkewYOperation>>(
+      defaultValue);
 }
 std::shared_ptr<TransformInterpolator> skewY(const std::string &defaultValue) {
   return skewY(AngleValue(defaultValue));

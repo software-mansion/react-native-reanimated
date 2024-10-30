@@ -30,7 +30,10 @@ export function extractCSSConfigsAndFlattenedStyles(
 
   for (const style of styles) {
     for (const prop in style) {
-      const value = style[prop];
+      let value = style[prop];
+      if (value === 'auto') {
+        value = undefined;
+      }
 
       if (prop === 'animationName') {
         animationName = value as CSSAnimationKeyframes;

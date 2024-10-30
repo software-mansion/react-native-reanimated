@@ -5,10 +5,10 @@
 namespace reanimated {
 
 template <typename OperationType>
-class ScaleTransformInterpolator final
+class AngleTransformInterpolator final
     : public TransformInterpolatorBase<OperationType> {
  public:
-  explicit ScaleTransformInterpolator(double defaultValue);
+  explicit AngleTransformInterpolator(const AngleValue &defaultValue);
 
  protected:
   OperationType interpolate(

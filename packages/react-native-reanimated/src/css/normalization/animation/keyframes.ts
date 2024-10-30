@@ -124,6 +124,8 @@ function handlePrimitiveValue(
     }
   } else if (isTransformOrigin(prop, value)) {
     processedValue = normalizeTransformOrigin(value);
+  } else if (value === 'auto') {
+    processedValue = undefined;
   }
 
   (keyframeStyle[prop] as any[]).push({ offset, value: processedValue });
