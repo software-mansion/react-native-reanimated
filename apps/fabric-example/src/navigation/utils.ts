@@ -1,6 +1,6 @@
-import type { Route, Routes } from './types';
+import type { Route, RouteWithRoutes } from './types';
 
-export function hasRoutes(route: Route): route is { routes: Routes } & Route {
+export function isRouteWithRoutes(route: Route): route is RouteWithRoutes {
   return 'routes' in route;
 }
 
