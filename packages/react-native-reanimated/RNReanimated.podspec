@@ -3,7 +3,6 @@ require_relative './scripts/reanimated_utils'
 
 reanimated_package_json = JSON.parse(File.read(File.join(__dir__, "package.json")))
 $config = find_config()
-assert_latest_react_native_with_new_architecture($config, reanimated_package_json)
 assert_minimal_react_native_version($config)
 
 $new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
