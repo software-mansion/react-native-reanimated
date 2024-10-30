@@ -12,7 +12,7 @@ export type TransformOrigin = string | Array<string | number>;
 // AFTER NORMALIZATION
 
 export type NormalizedTransformOrigin = [
-  string | number,
-  string | number,
+  `${number}%` | number,
+  `${number}%` | number,
   number,
 ];

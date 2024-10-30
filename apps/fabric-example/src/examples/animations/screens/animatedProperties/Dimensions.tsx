@@ -11,12 +11,6 @@ import type { ExampleCardProps } from './components';
 import { ExampleCard, VerticalExampleCard } from './components';
 import { formatAnimationCode } from '../../../../utils';
 
-const SHARED_SETTINGS: CSSAnimationSettings = {
-  animationIterationCount: 'infinite',
-  animationDirection: 'alternate',
-  animationDuration: '1s',
-};
-
 export default function Dimensions() {
   return (
     <TabView>
@@ -32,6 +26,12 @@ export default function Dimensions() {
     </TabView>
   );
 }
+
+const SHARED_SETTINGS: CSSAnimationSettings = {
+  animationIterationCount: 'infinite',
+  animationDirection: 'alternate',
+  animationDuration: '1s',
+};
 
 const SHARED_EXAMPLES: {
   sectionTitle: string;

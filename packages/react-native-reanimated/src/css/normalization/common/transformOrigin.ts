@@ -1,76 +1,77 @@
 'use strict';
 import { ReanimatedError } from '../../../errors';
 import type { NormalizedTransformOrigin, TransformOrigin } from '../../types';
-import { isNumber } from '../../utils/typeGuards';
 
-const HORIZONTAL_KEYWORDS: Record<string, string> = {
+const HORIZONTAL_KEYWORDS = {
   left: '0%',
   center: '50%',
   right: '100%',
-};
-
-const VERTICAL_KEYWORDS: Record<string, string> = {
-  top: '0%',
-  center: '50%',
-  bottom: '100%',
-};
+} as const;
+const VERTICAL_KEYWORDS = { top: '0%', center: '50%', bottom: '100%' } as const;
 
 const ERROR_MESSAGES = {
   invalidTransformOrigin: (value: TransformOrigin) =>
-    `Invalid transformOrigin value: ${JSON.stringify(value)}. Must have 1-3 values.`,
-  invalidValueType: (value: string | number) =>
-    `Invalid value: ${value}. Must be a number, percentage, or a valid keyword.`,
-  invalidZOffset: (value: string | number) =>
-    `Invalid z-offset value: ${value}. Must be a number.`,
+    `Invalid transformOrigin: ${JSON.stringify(value)}. Expected 1-3 values.`,
+  invalidComponent: (component: string | number, origin: TransformOrigin) =>
+    `Invalid component "${component}" in transformOrigin ${JSON.stringify(origin)}. Must be a number, percentage, or a valid keyword. Ensure the order of x and y components is correct.`,
 };
 
 export function normalizeTransformOrigin(
   transformOrigin: TransformOrigin
 ): NormalizedTransformOrigin {
-  const valuesArray = Array.isArray(transformOrigin)
+  const components = Array.isArray(transformOrigin)
     ? transformOrigin
-    : transformOrigin.split(' ');
+    : transformOrigin.split(/\s+/);
 
-  if (valuesArray.length > 3) {
+  if (components.length < 1 || components.length > 3) {
     throw new ReanimatedError(
       ERROR_MESSAGES.invalidTransformOrigin(transformOrigin)
     );
   }
 
-  const [firstValue, secondValue, thirdValue] = valuesArray;
-  const firstIsVertical = isVerticalKeyword(firstValue);
+  // Swap x and y components if they are in the wrong order
+  if (
+    components[0] in VERTICAL_KEYWORDS &&
+    (components[1] === undefined || components[1] in HORIZONTAL_KEYWORDS)
+  ) {
+    [components[0], components[1]] = [components[1], components[0]];
+  }
 
-  return [
-    resolveValue((firstIsVertical ? secondValue : firstValue) ?? '50%', false),
-    resolveValue((firstIsVertical ? firstValue : secondValue) ?? '50%', true),
-    validateNumber(thirdValue ?? 0),
+  console.log(components, transformOrigin);
+
+  const result = [
+    normalizeComponent(components[0] ?? '50%', HORIZONTAL_KEYWORDS),
+    normalizeComponent(components[1] ?? '50%', VERTICAL_KEYWORDS),
+    normalizeComponent(components[2] ?? 0),
   ];
-}
 
-function resolveValue(
-  value: number | string,
-  isVertical: boolean
-): number | string {
-  if (typeof value === 'number' || isNumber(+value) || value.endsWith('%')) {
-    return value;
+  const invalidIdx = result.indexOf(null);
+  if (invalidIdx !== -1) {
+    throw new ReanimatedError(
+      ERROR_MESSAGES.invalidComponent(components[invalidIdx], transformOrigin)
+    );
   }
 
-  const conversions = isVertical ? VERTICAL_KEYWORDS : HORIZONTAL_KEYWORDS;
-  const resolved = conversions[value];
-  if (resolved !== undefined) {
-    return resolved;
-  }
-
-  throw new ReanimatedError(ERROR_MESSAGES.invalidValueType(value));
+  return result as NormalizedTransformOrigin;
 }
 
-function validateNumber(value: number | string): number {
-  if (typeof value === 'number') {
-    return value;
+function normalizeComponent(
+  component: string | number,
+  keywords?: Record<string, `${number}%`>
+): number | `${number}%` | null {
+  if (keywords && component in keywords) {
+    return keywords[component];
+  } else if (typeof component === 'number') {
+    return component;
   }
-  throw new ReanimatedError(ERROR_MESSAGES.invalidZOffset(value));
-}
 
-function isVerticalKeyword(value: number | string): boolean {
-  return typeof value === 'string' && value in VERTICAL_KEYWORDS;
+  const num = parseFloat(component);
+  if (!isNaN(num)) {
+    if (component.endsWith('%')) {
+      return `${num}%`;
+    }
+    return num;
+  }
+
+  return null;
 }

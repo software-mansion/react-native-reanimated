@@ -1,13 +1,14 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet, View } from 'react-native';
 import type { Routes, TabRoute } from './types';
-import { getScreenTitle, hasRoutes } from './utils';
-import { Stagger, RouteCard, Scroll } from '../components';
-import { spacing, colors, flex } from '../theme';
+import { getScreenTitle, isRouteWithRoutes } from './utils';
+import { Stagger, RouteCard, Scroll, Text } from '../components';
+import { spacing, colors, flex, radius, iconSizes } from '../theme';
 import { faExchange, faFire } from '@fortawesome/free-solid-svg-icons';
 import { animationRoutes, transitionRoutes } from '../examples';
 import { BackButton, BottomTabBar } from './components';
 import { useSharedValue } from 'react-native-reanimated';
+import type { FontVariant } from '../types';
 
 // We use stack navigator to mimic the tab navigator, thus top-level routes will be
 // displayed as tabs in the bottom tab bar
@@ -26,19 +27,56 @@ const tabRoutes = {
 
 const Stack = createNativeStackNavigator<Record<string, React.ComponentType>>();
 
-function createRoutesScreen(routes: Routes, path: string): React.ComponentType {
+function createRouteCards(
+  routes: Routes,
+  path: string,
+  parentFlatten = false,
+  nestingDepth = 0
+): React.ReactNode {
+  return Object.entries(routes).flatMap(([key, value]) => {
+    if (parentFlatten && isRouteWithRoutes(value)) {
+      return [
+        <View
+          key={key}
+          style={[
+            styles.listTitleWrapper,
+            { paddingLeft: nestingDepth * spacing.md },
+          ]}>
+          {nestingDepth > 0 && <View style={styles.listBullet} />}
+          <Text
+            variant={`heading${Math.min(nestingDepth + 3, 4)}` as FontVariant}>
+            {value.name}
+          </Text>
+        </View>,
+        createRouteCards(
+          value.routes,
+          `${path}/${key}`,
+          value.flatten,
+          nestingDepth + 1
+        ),
+      ];
+    }
+
+    const { name, CardComponent = RouteCard } = value;
+    return (
+      <View key={key} style={{ paddingLeft: (nestingDepth - 1) * spacing.md }}>
+        <CardComponent route={`${path}/${key}`} title={name} />
+      </View>
+    );
+  });
+}
+
+function createRoutesScreen(
+  routes: Routes,
+  path: string,
+  flatten: boolean
+): React.ComponentType {
   function RoutesScreen() {
     return (
       <Scroll
         contentContainerStyle={styles.scrollViewContent}
         withBottomBarSpacing>
-        <Stagger>
-          {Object.entries(routes).map(
-            ([key, { CardComponent = RouteCard, name }]) => (
-              <CardComponent key={key} route={`${path}/${key}`} title={name} />
-            )
-          )}
-        </Stagger>
+        <Stagger>{createRouteCards(routes, path, flatten)}</Stagger>
       </Scroll>
     );
   }
@@ -51,24 +89,34 @@ function createRoutesScreen(routes: Routes, path: string): React.ComponentType {
 export function createStackScreens(
   routes: Routes,
   path: string,
-  parentName?: string
+  parentName?: string,
+  flatten = false,
+  parentFlattened = false
 ): Array<React.ReactNode> {
   return [
     // Create a screen for the navigation routes
-    <Stack.Screen
-      component={createRoutesScreen(routes, path)}
-      key={path}
-      name={path}
-      options={{
-        contentStyle: styles.content,
-        title: parentName ?? getScreenTitle(path),
-      }}
-    />,
+    !parentFlattened && (
+      <Stack.Screen
+        component={createRoutesScreen(routes, path, flatten)}
+        key={path}
+        name={path}
+        options={{
+          contentStyle: styles.content,
+          title: parentName ?? getScreenTitle(path),
+        }}
+      />
+    ),
     // Create screens for all nested routes or components
     ...Object.entries(routes).flatMap(([key, value]) => {
       const newPath = `${path}/${key}`;
-      if (hasRoutes(value)) {
-        return createStackScreens(value.routes, newPath, value.name);
+      if (isRouteWithRoutes(value)) {
+        return createStackScreens(
+          value.routes,
+          newPath,
+          value.name,
+          value.flatten,
+          flatten
+        );
       }
       return (
         <Stack.Screen
@@ -126,5 +174,16 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+  },
+  listTitleWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  listBullet: {
+    backgroundColor: colors.foreground1,
+    width: iconSizes.xs,
+    height: iconSizes.xs,
+    marginRight: spacing.sm,
+    borderRadius: radius.full,
   },
 });

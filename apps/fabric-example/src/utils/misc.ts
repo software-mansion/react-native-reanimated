@@ -53,7 +53,11 @@ export const getCodeWithOverrides = <C extends AnyRecord, O extends AnyRecord>(
 
         let parsedValue;
         if (typeof value === 'object' && value.toString) {
-          parsedValue = value.toString();
+          const stringified = JSON.stringify(value, null, 2);
+          parsedValue =
+            JSON.parse(stringified) === stringified
+              ? value.toString()
+              : stringified;
         } else if (isQuoted(value)) {
           parsedValue = value;
         } else {

@@ -6,7 +6,7 @@ import Insets from './Insets';
 import Margins from './Margins';
 import Paddings from './Paddings';
 import Shadows from './Shadows';
-import Transforms from './Transforms';
+import transforms from './transforms';
 
 export default {
   Dimensions,
@@ -17,5 +17,5 @@ export default {
   Margins,
   Paddings,
   Shadows,
-  Transforms,
+  transforms,
 };

@@ -27,7 +27,55 @@ const routes = {
       },
       Transforms: {
         name: 'Transforms',
-        Component: animatedProperties.Transforms,
+        flatten: true,
+        routes: {
+          TransformProperties: {
+            name: 'Transform Properties',
+            routes: {
+              Perspective: {
+                name: 'Perspective',
+                Component:
+                  animatedProperties.transforms.transformProperties.Perspective,
+              },
+              Rotate: {
+                name: 'Rotate',
+                Component:
+                  animatedProperties.transforms.transformProperties.Rotate,
+              },
+              Scale: {
+                name: 'Scale',
+                Component:
+                  animatedProperties.transforms.transformProperties.Scale,
+              },
+              Translate: {
+                name: 'Translate',
+                Component:
+                  animatedProperties.transforms.transformProperties.Translate,
+              },
+              Skew: {
+                name: 'Skew',
+                Component:
+                  animatedProperties.transforms.transformProperties.Skew,
+              },
+              Matrix: {
+                name: 'Matrix',
+                Component:
+                  animatedProperties.transforms.transformProperties.Matrix,
+              },
+            },
+          },
+          RelatedProperties: {
+            name: 'Related Properties',
+            routes: {
+              TransformOrigin: {
+                name: 'Transform Origin',
+                Component:
+                  animatedProperties.transforms.relatedProperties
+                    .TransformOrigin,
+              },
+            },
+          },
+        },
       },
       Colors: {
         name: 'Colors',

@@ -1,15 +1,21 @@
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import type { RouteCardComponent } from '../components';
 
-export type Route = {
+export type Route = RouteWithRoutes | RouteWithComponent;
+
+type SharedRouteProps = {
   name: string;
   CardComponent?: RouteCardComponent;
-} & (
-  | {
-      routes: Routes;
-    }
-  | { Component: React.ComponentType }
-);
+};
+
+export type RouteWithRoutes = SharedRouteProps & {
+  flatten?: true;
+  routes: Routes;
+};
+
+export type RouteWithComponent = SharedRouteProps & {
+  Component: React.ComponentType;
+};
 
 export type Routes = Record<string, Route>;
 

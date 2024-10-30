@@ -2,19 +2,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ViewStyle } from 'react-native';
 import { ReanimatedError } from '../../../errors';
-import type {
-  CSSAnimationKeyframes,
-  CSSKeyframeViewStyle,
-  TransformsArray,
-} from '../../types';
+import type { CSSAnimationKeyframes, CSSKeyframeViewStyle } from '../../types';
 import { normalizeKeyframesOffsets } from './base';
 import { processCSSAnimationColor } from '../../../Colors';
 import { normalizeTransformOrigin, normalizeTransformString } from '../common';
 import { isColorProp, isTransformOrigin } from '../../utils/typeGuards';
 
 const ERROR_MESSAGES = {
-  unsupportedKeyframeValueType: (prop: string) =>
-    `Unsupported keyframe value type for "${prop}". Expected an array only for "transform".`,
   unsupportedColorFormat: (value: any, prop: string) =>
     `Unsupported color format "${value}" for "${prop}".`,
 };
@@ -64,12 +58,7 @@ function handleObjectValue(
   keyframeStyle: CSSKeyframeViewStyle
 ) {
   if (Array.isArray(value)) {
-    if (prop !== 'transform') {
-      throw new ReanimatedError(
-        ERROR_MESSAGES.unsupportedKeyframeValueType(prop)
-      );
-    }
-    addTransformValues(offset, value, keyframeStyle);
+    handlePrimitiveValue(offset, prop, value, keyframeStyle);
   } else {
     const subStyle = keyframeStyle[prop] || {};
     Object.entries(value).forEach(([subProperty, subValue]) => {
@@ -87,21 +76,7 @@ function handleTransformsString(
   keyframeStyle: CSSKeyframeViewStyle
 ) {
   const transformArray = normalizeTransformString(value);
-  addTransformValues(offset, transformArray, keyframeStyle);
-}
-
-function addTransformValues(
-  offset: number,
-  transforms: TransformsArray,
-  keyframeStyle: CSSKeyframeViewStyle
-) {
-  if (!keyframeStyle.transform) {
-    keyframeStyle.transform = [];
-  }
-  (keyframeStyle.transform as any[]).push({
-    offset,
-    value: transforms,
-  });
+  handlePrimitiveValue(offset, 'transform', transformArray, keyframeStyle);
 }
 
 function handlePrimitiveValue(
