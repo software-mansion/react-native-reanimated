@@ -1,5 +1,5 @@
 'use strict';
-import NativeReanimatedModule from './NativeReanimated';
+import { ReanimatedModule } from './ReanimatedModule';
 import { isWeb, shouldBeUseWeb, isFabric } from './PlatformChecker';
 import type {
   AnimatedKeyboardOptions,
@@ -50,7 +50,7 @@ export function getViewProp<T>(
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return new Promise((resolve, reject) => {
-    return NativeReanimatedModule.getViewProp(
+    return ReanimatedModule.getViewProp(
       viewTag,
       propName,
       component,
@@ -84,7 +84,7 @@ export function registerEventHandler<T>(
     global.__flushAnimationFrame(eventTimestamp);
     global.__frameTimestamp = undefined;
   }
-  return NativeReanimatedModule.registerEventHandler(
+  return ReanimatedModule.registerEventHandler(
     makeShareableCloneRecursive(handleAndFlushAnimationFrame),
     eventName,
     emitterReactTag
@@ -92,7 +92,7 @@ export function registerEventHandler<T>(
 }
 
 export function unregisterEventHandler(id: number): void {
-  return NativeReanimatedModule.unregisterEventHandler(id);
+  return ReanimatedModule.unregisterEventHandler(id);
 }
 
 export function subscribeForKeyboardEvents(
@@ -109,7 +109,7 @@ export function subscribeForKeyboardEvents(
     global.__flushAnimationFrame(now);
     global.__frameTimestamp = undefined;
   }
-  return NativeReanimatedModule.subscribeForKeyboardEvents(
+  return ReanimatedModule.subscribeForKeyboardEvents(
     makeShareableCloneRecursive(handleAndFlushAnimationFrame),
     options.isStatusBarTranslucentAndroid ?? false,
     options.isNavigationBarTranslucentAndroid ?? false
@@ -117,7 +117,7 @@ export function subscribeForKeyboardEvents(
 }
 
 export function unsubscribeFromKeyboardEvents(listenerId: number): void {
-  return NativeReanimatedModule.unsubscribeFromKeyboardEvents(listenerId);
+  return ReanimatedModule.unsubscribeFromKeyboardEvents(listenerId);
 }
 
 export function registerSensor(
@@ -172,27 +172,27 @@ export function enableLayoutAnimations(
       enableLayoutAnimations: flag,
       setByUser: true,
     };
-    NativeReanimatedModule.enableLayoutAnimations(flag);
+    ReanimatedModule.enableLayoutAnimations(flag);
   } else if (
     !featuresConfig.setByUser &&
     featuresConfig.enableLayoutAnimations !== flag
   ) {
     featuresConfig.enableLayoutAnimations = flag;
-    NativeReanimatedModule.enableLayoutAnimations(flag);
+    ReanimatedModule.enableLayoutAnimations(flag);
   }
 }
 
 export function configureLayoutAnimationBatch(
   layoutAnimationsBatch: LayoutAnimationBatchItem[]
 ): void {
-  NativeReanimatedModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
+  ReanimatedModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
 }
 
 export function setShouldAnimateExitingForTag(
   viewTag: number | HTMLElement,
   shouldAnimate: boolean
 ) {
-  NativeReanimatedModule.setShouldAnimateExitingForTag(
+  ReanimatedModule.setShouldAnimateExitingForTag(
     viewTag as number,
     shouldAnimate
   );
@@ -203,6 +203,6 @@ export function jsiConfigureProps(
   nativeProps: string[]
 ): void {
   if (!SHOULD_BE_USE_WEB) {
-    NativeReanimatedModule.configureProps(uiProps, nativeProps);
+    ReanimatedModule.configureProps(uiProps, nativeProps);
   }
 }
