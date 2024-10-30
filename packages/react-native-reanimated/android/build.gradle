@@ -458,7 +458,7 @@ task prepareReanimatedHeadersForPrefabs(type: Copy) {
 }
 
 tasks.preBuild {
-assertMinimalReactNativeVersion
+    dependsOn assertMinimalReactNativeVersion
 }
 
 task cleanCmakeCache() {
