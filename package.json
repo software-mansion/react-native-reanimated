@@ -7,7 +7,13 @@
       "packages/react-native-reanimated",
       "packages/eslint-plugin-reanimated",
       "packages/react-native-reanimated/plugin",
-      "apps/*"
+      "apps/common-app",
+      "apps/paper-example",
+      "apps/fabric-example",
+      "apps/macos-example",
+      "apps/tvos-example",
+      "apps/web-example",
+      "apps/next-example"
     ]
   },
   "private": true,
