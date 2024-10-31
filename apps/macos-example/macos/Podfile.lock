@@ -1210,6 +1210,8 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - react-native-safe-area-context (4.13.1):
+    - React-Core
   - React-nativeconfig (0.75.13)
   - React-NativeModulesApple (0.75.13):
     - glog
@@ -1455,9 +1457,9 @@ PODS:
     - React-utils (= 0.75.13)
   - RNCAsyncStorage (1.24.0):
     - React-Core
-  - RNCPicker (2.8.0):
+  - RNCPicker (2.9.0):
     - React-Core
-  - RNGestureHandler (2.20.0):
+  - RNGestureHandler (2.20.2):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1565,7 +1567,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNSVG (15.8.0-rc.1):
+  - RNSVG (15.8.0):
     - React-Core
   - SocketRocket (0.7.0)
   - Yoga (0.0.0)
@@ -1607,6 +1609,7 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native-macos/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native-macos/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native-macos/ReactCommon/react/nativemodule/microtasks`)
+  - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - React-nativeconfig (from `../node_modules/react-native-macos/ReactCommon`)
   - React-NativeModulesApple (from `../node_modules/react-native-macos/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-perflogger (from `../node_modules/react-native-macos/ReactCommon/reactperflogger`)
@@ -1709,6 +1712,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-macos/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/react-native-macos/ReactCommon/react/nativemodule/microtasks"
+  react-native-safe-area-context:
+    :path: "../node_modules/react-native-safe-area-context"
   React-nativeconfig:
     :path: "../node_modules/react-native-macos/ReactCommon"
   React-NativeModulesApple:
@@ -1809,6 +1814,7 @@ SPEC CHECKSUMS:
   React-logger: 833be969bc3fa6cdec4e8d4d17da0a4adb56a7d9
   React-Mapbuffer: d473bad154e9e075a55f817d5ef33b87937a46c0
   React-microtasksnativemodule: 20510f9fca779fba67abd8ca164b5ea44ca03304
+  react-native-safe-area-context: 004fe00b8c5aae5d57de1c27ff728cf6d3918b03
   React-nativeconfig: 5c2aaf96afeb7d45c925329feb609785add2a1a4
   React-NativeModulesApple: e97929d0bb6db0312a15cbbfc1c1c466b8f3936b
   React-perflogger: 177ffbe623576b6f3b889bc805a883d8e452a24b
@@ -1835,13 +1841,13 @@ SPEC CHECKSUMS:
   ReactCodegen: 2987e13bcf036a2a2bdb324f8707d22761ad20f9
   ReactCommon: 1f073a117cae46d35c6bbc0f1dcf8d25b4e79d7e
   RNCAsyncStorage: ec53e44dc3e75b44aa2a9f37618a49c3bc080a7a
-  RNCPicker: 0173dedc74776227ec6dcc61bb85cd9f07bbb2ac
-  RNGestureHandler: 18b9b5d65c77c4744a640f69b7fccdd47ed935c0
+  RNCPicker: f963e01f78e546a93b98aa201501713dbda14e94
+  RNGestureHandler: 82f59e40580e0c2f8262552c149716511131b412
   RNReanimated: 8b9e602d3bc250cfd046c584454aa2a2efa8bd7e
-  RNSVG: 01eb8d8a0e2289ec3ecc9626ce920e00d2174992
+  RNSVG: 8b1a777d54096b8c2a0fd38fc9d5a454332bbb4d
   SocketRocket: 9ee265c4b5ae2382d18e4ee1d2dd2d7af0ff1ab5
   Yoga: a7f65c1fd1394973b9ea40c9c270530e9d7cd2e7
 
-PODFILE CHECKSUM: 187cf60851898fbd04382003f30245317a2c5d7b
+PODFILE CHECKSUM: 8d50cc2acc9f6a6b1a12bd9106b86385ad72266f
 
 COCOAPODS: 1.16.1

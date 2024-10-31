@@ -10,7 +10,7 @@
     "@babel/plugin-transform-unicode-regex": "^7.24.7",
     "@babel/traverse": "^7.20.0",
     "@babel/types": "^7.20.0",
-    "@react-native/eslint-config": "0.76.0-rc.3",
+    "@react-native/eslint-config": "0.76.0",
     "@types/node": "^18.15.11",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
