@@ -15,7 +15,7 @@ fabric_flags = $new_arch_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 example_flag = $config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
 version_flag = "-DREANIMATED_VERSION=#{reanimated_package_json['version']}"
 debug_flag = is_release ? '-DNDEBUG' : ''
-ios_min_version = $config[:react_native_minor_version] >= 73 ? '13.4' : '9.0'
+ios_min_version = '13.4'
 
 # Directory in which data for further processing for clangd will be stored.
 compilation_metadata_dir = "CompilationDatabase"
@@ -33,9 +33,6 @@ def self.install_modules_dependencies_legacy(s)
   s.dependency "RCTRequired"
   s.dependency "RCTTypeSafety"
   s.dependency 'FBLazyVector'
-  if $config[:react_native_minor_version] <= 71
-    s.dependency 'FBReactNativeSpec'
-  end
   s.dependency 'React-Core'
   s.dependency 'React-CoreModules'
   s.dependency 'React-Core/DevSupport'
@@ -57,12 +54,12 @@ def self.install_modules_dependencies_legacy(s)
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
-  if using_hermes && !$config[:is_tvos_target] && $config[:react_native_minor_version] >= 70
+  if using_hermes && !$config[:is_tvos_target]
     s.dependency 'React-hermes'
     s.dependency 'hermes-engine'
   end
   s.dependency 'React-callinvoker'
-  if $config[:react_native_minor_version] >= 72 && !$new_arch_enabled
+  if !$new_arch_enabled
     s.dependency 'React-RCTAppDelegate'
   end
 end
@@ -100,7 +97,7 @@ Pod::Spec.new do |s|
   end
 
   gcc_debug_definitions = "$(inherited)"
-  if $config[:react_native_minor_version] >= 73 || !is_release
+  if !is_release
     gcc_debug_definitions << " HERMES_ENABLE_DEBUGGER=1"
   end
 

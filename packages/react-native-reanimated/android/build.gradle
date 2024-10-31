@@ -436,10 +436,11 @@ android {
 }
 
 def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
-    onlyIf { REACT_NATIVE_MINOR_VERSION < 74 }
+    // If you change the minimal React Native version remember to update Compatibility Table in docs
+    def minimalReactNativeVersion = 74
+    onlyIf { REACT_NATIVE_MINOR_VERSION < minimalReactNativeVersion }
     doFirst {
-        // If you change the minimal React Native version remember to update Compatibility Table in docs
-        throw new GradleException("[Reanimated] Unsupported React Native version. Please use 0.74 or newer.")
+        throw new GradleException("[Reanimated] Unsupported React Native version. Please use $minimalReactNativeVersion. or newer.")
     }
 }
 
