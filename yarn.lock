@@ -8795,8 +8795,8 @@ __metadata:
     react-native-gesture-handler: "npm:2.20.2"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "patch:react-native-safe-area-context@npm%3A4.11.0#~/.yarn/patches/react-native-safe-area-context-npm-4.11.0-f8b3b898df.patch"
-    react-native-screens: "patch:react-native-screens@npm%3A3.34.0#~/.yarn/patches/react-native-screens-npm-3.34.0-3babbb1374.patch"
+    react-native-safe-area-context: "npm:^4.13.1"
+    react-native-screens: "npm:3.35.0"
     react-native-svg: "npm:15.8.0-rc.1"
     react-strict-dom: "npm:0.0.27"
     typescript: "npm:~5.3.0"
@@ -11362,8 +11362,8 @@ __metadata:
     react-native-gesture-handler: "npm:2.20.2"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "patch:react-native-safe-area-context@npm%3A4.11.0#~/.yarn/patches/react-native-safe-area-context-npm-4.11.0-f8b3b898df.patch"
-    react-native-screens: "patch:react-native-screens@npm%3A3.34.0#~/.yarn/patches/react-native-screens-npm-3.34.0-3babbb1374.patch"
+    react-native-safe-area-context: "npm:^4.13.1"
+    react-native-screens: "npm:3.35.0"
     react-native-svg: "npm:15.8.0-rc.1"
     react-test-renderer: "npm:18.3.1"
     typescript: "npm:~5.3.0"
@@ -14781,8 +14781,8 @@ __metadata:
     react-native-macos: "npm:^0.73.0-0"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "patch:react-native-safe-area-context@npm%3A4.11.0#~/.yarn/patches/react-native-safe-area-context-npm-4.11.0-f8b3b898df.patch"
-    react-native-screens: "patch:react-native-screens@npm%3A3.34.0#~/.yarn/patches/react-native-screens-npm-3.34.0-3babbb1374.patch"
+    react-native-safe-area-context: "npm:^4.13.1"
+    react-native-screens: "npm:3.35.0"
     react-native-svg: "npm:15.8.0-rc.1"
     react-test-renderer: "npm:18.2.0"
     typescript: "npm:~5.3.0"
@@ -16830,8 +16830,8 @@ __metadata:
     react-native-gesture-handler: "npm:2.20.2"
     react-native-pager-view: "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "patch:react-native-safe-area-context@npm%3A4.11.0#~/.yarn/patches/react-native-safe-area-context-npm-4.11.0-f8b3b898df.patch"
-    react-native-screens: "patch:react-native-screens@npm%3A3.34.0#~/.yarn/patches/react-native-screens-npm-3.34.0-3babbb1374.patch"
+    react-native-safe-area-context: "npm:^4.13.1"
+    react-native-screens: "npm:3.35.0"
     react-native-svg: "npm:15.8.0-rc.1"
     react-test-renderer: "npm:18.3.1"
     typescript: "npm:~5.3.0"
@@ -17854,49 +17854,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native-safe-area-context@npm:4.11.0":
-  version: 4.11.0
-  resolution: "react-native-safe-area-context@npm:4.11.0"
+"react-native-safe-area-context@npm:^4.13.1":
+  version: 4.13.1
+  resolution: "react-native-safe-area-context@npm:4.13.1"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/f2e616ad3087ebf1ad34f90f4eadc2d6865d3d56bba83bcfb9d04020b4344d892e347b7f55dcd996c4d2edf21b589a5ce710a52e62a7bd86597ed34d130599b2
+  checksum: 10/022098fb1922aeb30e9bfc935906cf38e815fbcabfb04a8ba9b973a25cbece2b5affefcad88dcfc2a1086785182c0168600ae61bd422a22f2268f019257a6494
   languageName: node
   linkType: hard
 
-"react-native-safe-area-context@patch:react-native-safe-area-context@npm%3A4.11.0#~/.yarn/patches/react-native-safe-area-context-npm-4.11.0-f8b3b898df.patch":
-  version: 4.11.0
-  resolution: "react-native-safe-area-context@patch:react-native-safe-area-context@npm%3A4.11.0#~/.yarn/patches/react-native-safe-area-context-npm-4.11.0-f8b3b898df.patch::version=4.11.0&hash=51dcee"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/b499c30e8968622f40bc293450c005ea7244bed039859722fedf02fa6a7f2de842a352092bdf8cfd59f58efe43b87735c37821dc32dae47bcaf245844f5f86b2
-  languageName: node
-  linkType: hard
-
-"react-native-screens@npm:3.34.0":
-  version: 3.34.0
-  resolution: "react-native-screens@npm:3.34.0"
+"react-native-screens@npm:3.35.0":
+  version: 3.35.0
+  resolution: "react-native-screens@npm:3.35.0"
   dependencies:
     react-freeze: "npm:^1.0.0"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/dfcbde7de4aae27980191bc64861190b2edece8f0e3988ef7e83ee6a7895df35fe006024d8fa0611cefc1e7dd6d574ce598f1dcb036750dc6b0a5fca073dd2b9
-  languageName: node
-  linkType: hard
-
-"react-native-screens@patch:react-native-screens@npm%3A3.34.0#~/.yarn/patches/react-native-screens-npm-3.34.0-3babbb1374.patch":
-  version: 3.34.0
-  resolution: "react-native-screens@patch:react-native-screens@npm%3A3.34.0#~/.yarn/patches/react-native-screens-npm-3.34.0-3babbb1374.patch::version=3.34.0&hash=847887"
-  dependencies:
-    react-freeze: "npm:^1.0.0"
-    warn-once: "npm:^0.1.0"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/fdea2372b4ff515411aec4cfec72ac1b79832f64b05f4a2777465c7baa590b22d97ca04e17e9e93965c9685dbb13e3d119531dad70f8886e69bbf47498bd5ac2
+  checksum: 10/18085fb68bb2349330cb9b536f79161474788bc478b4b13e23de26d80b68000c60c0b79ba19d430ed0693350c062863f0620da6397d3bd24da08c09181c0fcfd
   languageName: node
   linkType: hard
 
