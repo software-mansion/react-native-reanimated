@@ -27,7 +27,7 @@
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "^4.13.1",
     "react-native-screens": "3.35.0",
-    "react-native-svg": "15.8.0-rc.1"
+    "react-native-svg": "^15.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
