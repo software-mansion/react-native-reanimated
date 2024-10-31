@@ -1,10 +1,11 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, TouchableOpacity } from 'react-native';
-import { colors, radius, spacing } from '../../theme';
-import { Text } from '../core';
-import type { FontVariant } from '../../types';
 
-type ButtonSize = 'small' | 'medium' | 'large';
+import { Text } from '@/components/core';
+import { colors, radius, spacing } from '@/theme';
+import type { FontVariant } from '@/types';
+
+type ButtonSize = 'large' | 'medium' | 'small';
 
 const BUTTON_VARIANTS: Record<
   ButtonSize,
@@ -13,29 +14,29 @@ const BUTTON_VARIANTS: Record<
     buttonStyle: ViewStyle;
   }
 > = {
-  small: {
-    fontVariant: 'label3',
+  large: {
     buttonStyle: {
-      paddingVertical: spacing.xs,
-      paddingHorizontal: spacing.xs,
-      borderRadius: radius.sm,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
     },
+    fontVariant: 'label1',
   },
   medium: {
-    fontVariant: 'label2',
     buttonStyle: {
-      paddingVertical: spacing.xs,
-      paddingHorizontal: spacing.sm,
       borderRadius: radius.sm,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
     },
+    fontVariant: 'label2',
   },
-  large: {
-    fontVariant: 'label1',
+  small: {
     buttonStyle: {
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.md,
-      borderRadius: radius.md,
+      borderRadius: radius.sm,
+      paddingHorizontal: spacing.xs,
+      paddingVertical: spacing.xs,
     },
+    fontVariant: 'label3',
   },
 };
 
@@ -49,22 +50,22 @@ type ButtonProps = {
 };
 
 export default function Button({
-  title,
-  onPress,
-  style,
-  size = 'medium',
   activeOpacity = 0.6,
   disabled = false,
+  onPress,
+  size = 'medium',
+  style,
+  title,
 }: ButtonProps) {
-  const { fontVariant, buttonStyle } = BUTTON_VARIANTS[size];
+  const { buttonStyle, fontVariant } = BUTTON_VARIANTS[size];
 
   return (
     <TouchableOpacity
-      onPress={onPress}
       activeOpacity={activeOpacity}
       disabled={disabled}
-      style={[styles.button, style, buttonStyle, disabled && styles.disabled]}>
-      <Text variant={fontVariant} style={styles.text}>
+      style={[styles.button, style, buttonStyle, disabled && styles.disabled]}
+      onPress={onPress}>
+      <Text style={styles.text} variant={fontVariant}>
         {title}
       </Text>
     </TouchableOpacity>
@@ -73,9 +74,9 @@ export default function Button({
 
 const styles = StyleSheet.create({
   button: {
+    alignItems: 'center',
     backgroundColor: colors.primary,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   disabled: {
     opacity: 0.6,

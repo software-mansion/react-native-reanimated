@@ -1,23 +1,27 @@
-import Svg, {
-  Defs,
-  LinearGradient,
-  Stop,
-  Rect,
-  Polygon,
-  Circle,
-} from 'react-native-svg';
-import { RouteCard } from '../../../components';
-import type { RouteCardComponent } from '../../../components';
-import { colors, sizes, flex } from '../../../theme';
+import type { PropsWithChildren } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationConfig } from 'react-native-reanimated';
 import Animated, { cubicBezier } from 'react-native-reanimated';
-import type { PropsWithChildren } from 'react';
-import { useFocusPlayState } from '../../../hooks';
+import {
+  Circle,
+  Defs,
+  LinearGradient,
+  Polygon,
+  Rect,
+  Stop,
+  Svg,
+} from 'react-native-svg';
+
+import type { RouteCardComponent } from '@/components';
+import { RouteCard } from '@/components';
+import { useFocusPlayState } from '@/hooks';
+import { colors, flex, sizes } from '@/theme';
 
 const TIME_MULTIPLIER = 1;
 
 const turbulenceAnimation: CSSAnimationConfig = {
+  animationDuration: `${TIME_MULTIPLIER * 0.4}s`,
+  animationIterationCount: 'infinite',
   animationName: {
     '0%': {
       transform: 'scale(1) translate(0, 0)',
@@ -29,11 +33,11 @@ const turbulenceAnimation: CSSAnimationConfig = {
       transform: 'scale(1) translate(0, 0)',
     },
   },
-  animationDuration: `${TIME_MULTIPLIER * 0.4}s`,
-  animationIterationCount: 'infinite',
 };
 
 const mainFlameAnimation: CSSAnimationConfig = {
+  animationDuration: `${TIME_MULTIPLIER * 0.2}s`,
+  animationIterationCount: 'infinite',
   animationName: {
     from: {
       transform: [{ translateY: '5%' }],
@@ -42,39 +46,37 @@ const mainFlameAnimation: CSSAnimationConfig = {
       transform: [{ translateY: 0 }],
     },
   },
-  animationDuration: `${TIME_MULTIPLIER * 0.2}s`,
   animationTimingFunction: cubicBezier(0.175, 0.885, 0.42, 1.41),
-  animationIterationCount: 'infinite',
 };
 
 const propulsedFlameAnimation: CSSAnimationConfig = {
+  animationDuration: `${TIME_MULTIPLIER * 0.6}s`,
+  animationIterationCount: 'infinite',
   animationName: {
     from: {
       transform: [{ translateY: '-25%' }],
     },
     to: {
-      transform: [{ translateY: '150%' }, { scale: 0.7 }],
       opacity: 0,
+      transform: [{ translateY: '150%' }, { scale: 0.7 }],
     },
   },
-  animationDuration: `${TIME_MULTIPLIER * 0.6}s`,
   animationTimingFunction: 'easeIn',
-  animationIterationCount: 'infinite',
 };
 
 const propulsedSparkAnimation: CSSAnimationConfig = {
+  animationDuration: `${TIME_MULTIPLIER * 0.48}s`,
+  animationIterationCount: 'infinite',
   animationName: {
     from: {
       transform: [{ translateY: 0 }],
     },
     to: {
-      transform: [{ translateY: '500%' }],
       opacity: 0,
+      transform: [{ translateY: '500%' }],
     },
   },
-  animationDuration: `${TIME_MULTIPLIER * 0.48}s`,
   animationTimingFunction: 'easeIn',
-  animationIterationCount: 'infinite',
 };
 
 const SMALL_FLAME_TRANSLATIONS = [
@@ -118,15 +120,15 @@ function Showcase() {
                 mainFlameAnimation,
                 { animationPlayState: useFocusPlayState() },
               ]}>
-              <Flame width={sizes.xs} height={sizes.md} />
+              <Flame height={sizes.md} width={sizes.xs} />
             </Animated.View>
             {/* Small flames */}
             {SMALL_FLAME_TRANSLATIONS.map((translation, index) => (
-              <SmallFlame key={index} index={index} {...translation} />
+              <SmallFlame index={index} key={index} {...translation} />
             ))}
             {/* Sparks */}
             {SPARK_TRANSLATIONS.map((translation, index) => (
-              <Spark key={index} index={index} {...translation} />
+              <Spark index={index} key={index} {...translation} />
             ))}
           </View>
         </View>
@@ -142,14 +144,13 @@ type RocketProps = {
 function Rocket({ size }: RocketProps) {
   return (
     <Svg
-      style={{
-        width: size,
-        height: size,
-      }}
       viewBox="0 0 180 179" // Set the fixed viewBox based on the original SVG dimensions
-    >
+      style={{
+        height: size,
+        width: size,
+      }}>
       <Defs>
-        <LinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+        <LinearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
           <Stop offset="0" stopColor={colors.background2} />
           <Stop offset="65%" stopColor={colors.background2} />
           <Stop offset="65%" stopColor={colors.background3} />
@@ -158,26 +159,26 @@ function Rocket({ size }: RocketProps) {
       </Defs>
 
       {/* Capsule base */}
-      <Rect x="34" y="62" width="112" height="94" fill="url(#grad)" />
+      <Rect fill="url(#grad)" height="94" width="112" x="34" y="62" />
 
       {/* Capsule top */}
-      <Polygon points="90 0, 34 62, 146 62" fill="url(#grad)" />
+      <Polygon fill="url(#grad)" points="90 0, 34 62, 146 62" />
 
       {/* Window */}
-      <Circle cx="90" cy="92" r="35" fill={colors.primary} />
-      <Circle cx="90" cy="92" r="22" fill={colors.primaryDark} />
+      <Circle cx="90" cy="92" fill={colors.primary} r="35" />
+      <Circle cx="90" cy="92" fill={colors.primaryDark} r="22" />
 
       {/* Exhaust */}
       <Polygon
-        points="40 156, 49 179, 131 179, 140 156"
         fill={colors.primary}
+        points="40 156, 49 179, 131 179, 140 156"
       />
 
       {/* Wings */}
-      <Polygon points="9 95, 33 80, 33 150, 0 160" fill={colors.primary} />
+      <Polygon fill={colors.primary} points="9 95, 33 80, 33 150, 0 160" />
       <Polygon
-        points="171 95, 147 80, 147 150, 180 160"
         fill={colors.primary}
+        points="171 95, 147 80, 147 150, 180 160"
       />
     </Svg>
   );
@@ -188,11 +189,11 @@ type FlameProps = {
   height: number;
 };
 
-function Flame({ width, height }: FlameProps) {
+function Flame({ height, width }: FlameProps) {
   return (
-    <Svg width={width} height={height}>
+    <Svg height={height} width={width}>
       <Defs>
-        <LinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+        <LinearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
           <Stop offset="0" stopColor={colors.primaryLight} />
           <Stop offset="50%" stopColor={colors.primaryLight} />
           <Stop offset="50%" stopColor={colors.primaryDark} />
@@ -200,10 +201,10 @@ function Flame({ width, height }: FlameProps) {
         </LinearGradient>
       </Defs>
       <Polygon
+        fill="url(#grad)"
         points={`0 ${height / 2}, ${width / 2} 0, ${width} ${height / 2}, ${
           width / 2
         } ${height}`}
-        fill="url(#grad)"
       />
     </Svg>
   );
@@ -216,7 +217,7 @@ type SmallFlameProps = {
   zIndex?: number;
 };
 
-function SmallFlame({ x, y, index, zIndex }: SmallFlameProps) {
+function SmallFlame({ index, x, y, zIndex }: SmallFlameProps) {
   return (
     <RelativeTransform x={x} y={y} zIndex={zIndex}>
       <Animated.View
@@ -227,7 +228,7 @@ function SmallFlame({ x, y, index, zIndex }: SmallFlameProps) {
             animationPlayState: useFocusPlayState(),
           },
         ]}>
-        <Flame width={sizes.xxxs} height={sizes.xxs} />
+        <Flame height={sizes.xxs} width={sizes.xxxs} />
       </Animated.View>
     </RelativeTransform>
   );
@@ -239,7 +240,7 @@ type SparkProps = {
   index: number;
 };
 
-function Spark({ x, y, index }: SparkProps) {
+function Spark({ index, x, y }: SparkProps) {
   return (
     <RelativeTransform x={x} y={y} zIndex={-1}>
       <Animated.View
@@ -247,10 +248,10 @@ function Spark({ x, y, index }: SparkProps) {
           propulsedSparkAnimation,
           styles.spark,
           {
-            backgroundColor:
-              index % 2 === 0 ? colors.primaryLight : colors.primaryDark,
             animationDelay: `${-index * 0.4 * TIME_MULTIPLIER}s`,
             animationPlayState: useFocusPlayState(),
+            backgroundColor:
+              index % 2 === 0 ? colors.primaryLight : colors.primaryDark,
           },
         ]}
       />
@@ -264,13 +265,13 @@ type RelativeTransformProps = PropsWithChildren<{
   zIndex?: number;
 }>;
 
-function RelativeTransform({ x, y, zIndex, children }: RelativeTransformProps) {
+function RelativeTransform({ children, x, y, zIndex }: RelativeTransformProps) {
   return (
     <View
       style={[
         {
-          position: 'absolute',
           left: `${(x + 0.5) * 100}%`,
+          position: 'absolute',
           top: `${y * 100}%`,
           transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
           zIndex,
@@ -282,6 +283,13 @@ function RelativeTransform({ x, y, zIndex, children }: RelativeTransformProps) {
 }
 
 const styles = StyleSheet.create({
+  exhaustFlames: {
+    left: '50%',
+    position: 'absolute',
+    top: '90%',
+    transform: [{ translateX: '-50%' }, { translateY: '-25%' }],
+    zIndex: -1,
+  },
   scene: {
     transform: [
       { translateX: '10%' },
@@ -289,14 +297,7 @@ const styles = StyleSheet.create({
       { rotate: '25deg' },
     ],
   },
-  exhaustFlames: {
-    position: 'absolute',
-    left: '50%',
-    top: '90%',
-    transform: [{ translateX: '-50%' }, { translateY: '-25%' }],
-    zIndex: -1,
-  },
-  spark: { width: 0.5 * sizes.xxxs, height: 0.5 * sizes.xxxs },
+  spark: { height: 0.5 * sizes.xxxs, width: 0.5 * sizes.xxxs },
 });
 
 export default RealWorldExamplesCard;

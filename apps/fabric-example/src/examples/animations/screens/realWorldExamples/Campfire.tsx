@@ -6,35 +6,36 @@
 import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
-import { radius } from '../../../../theme';
+
+import { radius } from '@/theme';
 
 const ANIMATION_DURATION = 1500;
 const FLAMES_COUNT = 4;
 
 const COLORS = {
   black: '#111217',
-  brownLight: '#70392F',
   brownDark: '#612E25',
-  yellow: '#FFDC01',
+  brownLight: '#70392F',
   orange: '#FDAC01',
   red: '#F73B01',
+  yellow: '#FFDC01',
 };
 
 export default function Campfire() {
   const flameOdd: CSSAnimationKeyframes = {
     '0%': {
-      width: '0%',
+      backgroundColor: COLORS.yellow,
+      bottom: '0%',
       height: '0%',
       right: '0%',
-      bottom: '0%',
-      backgroundColor: COLORS.yellow,
+      width: '0%',
       zIndex: 1000000,
     },
     '25%': {
-      width: '100%',
+      bottom: '2%',
       height: '100%',
       right: '1%',
-      bottom: '2%',
+      width: '100%',
     },
     '40%': {
       backgroundColor: COLORS.orange,
@@ -42,28 +43,28 @@ export default function Campfire() {
     },
     '100%': {
       backgroundColor: COLORS.red,
-      zIndex: -10,
-      right: '150%',
       bottom: '170%',
-      width: '0%',
       height: '0%',
+      right: '150%',
+      width: '0%',
+      zIndex: -10,
     },
   };
 
   const flameEven: CSSAnimationKeyframes = {
     '0%': {
-      width: '0%',
+      backgroundColor: COLORS.yellow,
+      bottom: '0%',
       height: '0%',
       right: '0%',
-      bottom: '0%',
-      backgroundColor: COLORS.yellow,
+      width: '0%',
       zIndex: 1000000,
     },
     '25%': {
-      width: '100%',
+      bottom: '1%',
       height: '100%',
       right: '2%',
-      bottom: '1%',
+      width: '100%',
     },
     '40%': {
       backgroundColor: COLORS.orange,
@@ -71,11 +72,11 @@ export default function Campfire() {
     },
     '100%': {
       backgroundColor: COLORS.red,
-      zIndex: -10,
-      right: '170%',
       bottom: '150%',
-      width: '0%',
       height: '0%',
+      right: '170%',
+      width: '0%',
+      zIndex: -10,
     },
   };
 
@@ -89,10 +90,10 @@ export default function Campfire() {
               style={[
                 styles.flame,
                 {
-                  animationName: index % 2 === 0 ? flameEven : flameOdd,
-                  animationDuration: ANIMATION_DURATION,
                   animationDelay: (ANIMATION_DURATION / 4) * index,
+                  animationDuration: ANIMATION_DURATION,
                   animationIterationCount: 'infinite',
+                  animationName: index % 2 === 0 ? flameEven : flameOdd,
                   animationTimingFunction: 'easeIn',
                 },
               ]}
@@ -109,43 +110,43 @@ export default function Campfire() {
 }
 
 const styles = StyleSheet.create({
+  campfire: {
+    alignItems: 'center',
+    width: '40%',
+  },
   container: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: COLORS.black,
-  },
-  campfire: {
-    width: '40%',
-    alignItems: 'center',
-  },
-  flames: {
-    width: '60%',
-    aspectRatio: 1,
-    transform: [{ rotate: '45deg' }],
+    flex: 1,
+    justifyContent: 'center',
   },
   flame: {
-    position: 'absolute',
     backgroundColor: COLORS.yellow,
     borderRadius: radius.md,
+    position: 'absolute',
   },
-  logs: {
-    width: '100%',
-    aspectRatio: 6,
+  flames: {
+    aspectRatio: 1,
+    transform: [{ rotate: '45deg' }],
+    width: '60%',
   },
   log: {
-    position: 'absolute',
-    left: '50%',
-    height: '100%',
-    width: '100%',
     borderRadius: radius.sm,
+    height: '100%',
+    left: '50%',
+    position: 'absolute',
+    width: '100%',
   },
   logDark: {
-    transform: [{ translateX: '-50%' }, { rotate: '-20deg' }],
     backgroundColor: COLORS.brownDark,
+    transform: [{ translateX: '-50%' }, { rotate: '-20deg' }],
   },
   logLight: {
-    transform: [{ translateX: '-50%' }, { rotate: '20deg' }],
     backgroundColor: COLORS.brownLight,
+    transform: [{ translateX: '-50%' }, { rotate: '20deg' }],
+  },
+  logs: {
+    aspectRatio: 6,
+    width: '100%',
   },
 });

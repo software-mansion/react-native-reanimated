@@ -1,23 +1,24 @@
+import type { ReactNode } from 'react';
+import { Children } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { RouteCardComponent } from '../../../components';
-import { RouteCard } from '../../../components';
 import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
-import { colors, radius, sizes, spacing } from '../../../theme';
-import { Children } from 'react';
-import type { ReactNode } from 'react';
-import { useFocusPlayState } from '../../../hooks';
+
+import type { RouteCardComponent } from '@/components';
+import { RouteCard } from '@/components';
+import { useFocusPlayState } from '@/hooks';
+import { colors, radius, sizes, spacing } from '@/theme';
 
 const scrollAnimation: CSSAnimationConfig = {
+  animationIterationCount: 'infinite',
   animationName: {
     to: {
       transform: [{ translateY: '-50%' }],
     },
   },
-  animationIterationCount: 'infinite',
   animationTimingFunction: 'linear',
 };
 
@@ -85,29 +86,29 @@ function DimensionsExample() {
         styles.box,
         exampleAnimationSettings,
         {
+          animationDirection: 'alternate',
           animationName: {
             '0%': {
-              width: sizes.xxs,
               height: sizes.xxs,
+              width: sizes.xxs,
             },
             '12.5%': {
-              width: 2 * sizes.xxs,
               height: sizes.xxs,
+              width: 2 * sizes.xxs,
             },
             '37.5%': {
-              width: 2 * sizes.xxs,
               height: 2 * sizes.xxs,
+              width: 2 * sizes.xxs,
             },
             '62.5%': {
-              width: sizes.xxs,
               height: 2 * sizes.xxs,
+              width: sizes.xxs,
             },
             '87.5%': {
-              width: sizes.xxs,
               height: sizes.xxs,
+              width: sizes.xxs,
             },
           },
-          animationDirection: 'alternate',
           animationPlayState: useFocusPlayState(),
         },
       ]}
@@ -124,28 +125,28 @@ function InsetsExample() {
         {
           animationName: {
             '0%': {
-              top: -sizes.xxs,
               left: 0,
+              top: -sizes.xxs,
             },
             '25%': {
               left: sizes.xxs,
               top: 0,
             },
             '50%': {
-              top: sizes.xxs,
               left: 0,
+              top: sizes.xxs,
             },
             '75%': {
               left: -sizes.xxs,
               top: 0,
             },
             '100%': {
-              top: -sizes.xxs,
               left: 0,
+              top: -sizes.xxs,
             },
           },
-          animationTimingFunction: 'linear',
           animationPlayState: useFocusPlayState(),
+          animationTimingFunction: 'linear',
         },
       ]}
     />
@@ -237,34 +238,34 @@ function BorderRadiusExample() {
         {
           animationName: {
             '0%': {
-              borderTopLeftRadius: radius.xs,
-              borderTopRightRadius: radius.lg,
               borderBottomLeftRadius: radius.md,
               borderBottomRightRadius: radius.xs,
+              borderTopLeftRadius: radius.xs,
+              borderTopRightRadius: radius.lg,
             },
             '25%': {
-              borderTopLeftRadius: radius.md,
-              borderTopRightRadius: radius.xs,
               borderBottomLeftRadius: radius.lg,
               borderBottomRightRadius: radius.md,
+              borderTopLeftRadius: radius.md,
+              borderTopRightRadius: radius.xs,
             },
             '50%': {
-              borderTopLeftRadius: radius.lg,
-              borderTopRightRadius: radius.md,
               borderBottomLeftRadius: radius.xs,
               borderBottomRightRadius: radius.lg,
+              borderTopLeftRadius: radius.lg,
+              borderTopRightRadius: radius.md,
             },
             '75%': {
+              borderBottomLeftRadius: radius.md,
+              borderBottomRightRadius: radius.xs,
               borderTopLeftRadius: radius.xs,
               borderTopRightRadius: radius.md,
-              borderBottomLeftRadius: radius.md,
-              borderBottomRightRadius: radius.xs,
             },
             '100%': {
-              borderTopLeftRadius: radius.xs,
-              borderTopRightRadius: radius.lg,
               borderBottomLeftRadius: radius.md,
               borderBottomRightRadius: radius.xs,
+              borderTopLeftRadius: radius.xs,
+              borderTopRightRadius: radius.lg,
             },
           },
           animationPlayState: useFocusPlayState(),
@@ -275,45 +276,45 @@ function BorderRadiusExample() {
 }
 
 const styles = StyleSheet.create({
+  box: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.xs,
+    height: sizes.xxs,
+    width: sizes.xxs,
+  },
+  boxLarge: {
+    height: sizes.xs,
+    width: sizes.xs,
+  },
   container: {
-    width: '100%',
     flex: 1,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  example: {
+    alignItems: 'center',
+    aspectRatio: 1,
+    backgroundColor: colors.background1,
+    borderRadius: radius.sm,
+    justifyContent: 'center',
     overflow: 'hidden',
   },
   exampleContainer: {
-    position: 'absolute',
-    width: '75%',
+    height: sizes.xxxl,
     left: '50%',
+    position: 'absolute',
     transform: [
       { translateX: '-50%' },
       { rotate: '5deg' },
       { translateY: -spacing.xs },
     ],
-    height: sizes.xxxl,
+    width: '75%',
   },
   examples: {
     backgroundColor: colors.primaryLight,
-    paddingVertical: spacing.sm / 2,
-    paddingHorizontal: spacing.sm,
     gap: spacing.sm,
-  },
-  example: {
-    backgroundColor: colors.background1,
-    borderRadius: radius.sm,
-    overflow: 'hidden',
-    aspectRatio: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  box: {
-    width: sizes.xxs,
-    height: sizes.xxs,
-    backgroundColor: colors.primary,
-    borderRadius: radius.xs,
-  },
-  boxLarge: {
-    width: sizes.xs,
-    height: sizes.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm / 2,
   },
 });
 

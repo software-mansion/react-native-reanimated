@@ -1,20 +1,27 @@
+import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
+import { StyleSheet } from 'react-native';
 import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import { ScrollScreen, Section, TabView } from '../../../../../components';
-import type { ExampleCardProps } from '../components';
-import { VerticalExampleCard } from '../components';
-import { formatAnimationCode } from '../../../../../utils';
 import Animated from 'react-native-reanimated';
-import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
-import { StyleSheet } from 'react-native';
-import { colors, radius, sizes, spacing } from '../../../../../theme';
+
+import type { ExampleCardProps } from '@/components';
+import {
+  ScrollScreen,
+  Section,
+  TabView,
+  VerticalExampleCard,
+} from '@/components';
+import { colors, radius, sizes, spacing } from '@/theme';
+import { formatAnimationCode } from '@/utils';
+
+import splashImage from './images/splash.png';
 
 const sharedConfig: CSSAnimationSettings = {
-  animationIterationCount: 'infinite',
-  animationDuration: '3s',
   animationDirection: 'alternate',
+  animationDuration: '3s',
+  animationIterationCount: 'infinite',
   animationTimingFunction: 'easeInOut',
 };
 
@@ -42,32 +49,32 @@ function BackgroundColors() {
     <ScrollScreen>
       <Section title="Background Colors">
         <ViewExample
+          title="View backgroundColor"
           config={{
             animationName: {
-              from: {
-                backgroundColor: 'red',
-              },
               '50%': {
                 backgroundColor: 'cyan',
+              },
+              from: {
+                backgroundColor: 'red',
               },
             },
             ...sharedConfig,
           }}
-          title="View backgroundColor"
         />
         <TextExample
+          title="Text backgroundColor"
           config={{
             animationName: {
-              from: {
-                backgroundColor: 'red',
-              },
               '50%': {
                 backgroundColor: 'cyan',
+              },
+              from: {
+                backgroundColor: 'red',
               },
             },
             ...sharedConfig,
           }}
-          title="Text backgroundColor"
         />
       </Section>
     </ScrollScreen>
@@ -79,18 +86,18 @@ function TextColors() {
     <ScrollScreen>
       <Section title="Text Colors">
         <TextExample
+          title="color"
           config={{
             animationName: {
-              from: {
-                color: 'rosybrown',
-              },
               '50%': {
                 color: 'gold',
+              },
+              from: {
+                color: 'rosybrown',
               },
             },
             ...sharedConfig,
           }}
-          title="color"
         />
         {/* TODO - uncomment when issue with RN warning is fixed */}
         {/* <TextExample
@@ -127,97 +134,97 @@ function BorderColors() {
       <Section title="Border Colors">
         <ViewExample
           style={{ borderWidth: spacing.md }}
+          title="borderColor"
           config={{
             animationName: {
-              from: {
-                borderColor: 'violet',
-              },
               '50%': {
                 borderColor: 'teal',
               },
+              from: {
+                borderColor: 'violet',
+              },
             },
             ...sharedConfig,
           }}
-          title="borderColor"
         />
         <ViewExample
+          description="(or borderBlockStartColor)"
           style={{ borderWidth: spacing.md }}
+          title="borderTopColor"
           config={{
             animationName: {
-              from: {
-                borderTopColor: 'violet',
-              },
               '50%': {
                 borderTopColor: 'teal',
               },
+              from: {
+                borderTopColor: 'violet',
+              },
             },
             ...sharedConfig,
           }}
-          title="borderTopColor"
-          description="(or borderBlockStartColor)"
         />
         <ViewExample
+          description="(or borderEndColor)"
           style={{ borderWidth: spacing.md }}
+          title="borderRightColor"
           config={{
             animationName: {
-              from: {
-                borderRightColor: 'violet',
-              },
               '50%': {
                 borderRightColor: 'teal',
               },
+              from: {
+                borderRightColor: 'violet',
+              },
             },
             ...sharedConfig,
           }}
-          title="borderRightColor"
-          description="(or borderEndColor)"
         />
         <ViewExample
+          description="(or borderBlockEndColor)"
           style={{ borderWidth: spacing.md }}
+          title="borderBottomColor"
           config={{
             animationName: {
-              from: {
-                borderBottomColor: 'violet',
-              },
               '50%': {
                 borderBottomColor: 'teal',
               },
+              from: {
+                borderBottomColor: 'violet',
+              },
             },
             ...sharedConfig,
           }}
-          title="borderBottomColor"
-          description="(or borderBlockEndColor)"
         />
         <ViewExample
+          description="(or borderStartColor)"
           style={{ borderWidth: spacing.md }}
+          title="borderLeftColor"
           config={{
             animationName: {
-              from: {
-                borderLeftColor: 'violet',
-              },
               '50%': {
                 borderLeftColor: 'teal',
               },
+              from: {
+                borderLeftColor: 'violet',
+              },
             },
             ...sharedConfig,
           }}
-          title="borderLeftColor"
-          description="(or borderStartColor)"
         />
         <ViewExample
           style={{ borderWidth: spacing.md }}
+          title="borderBlockColor"
           config={{
             animationName: {
-              from: {
-                borderBlockColor: 'violet',
-              },
               '50%': {
                 borderBlockColor: 'teal',
+              },
+              from: {
+                borderBlockColor: 'violet',
               },
             },
             ...sharedConfig,
           }}
-          title="borderBlockColor"
         />
       </Section>
     </ScrollScreen>
@@ -229,28 +236,26 @@ function OtherColors() {
     <ScrollScreen>
       <Section title="Other Colors">
         <ViewExample
-          style={{
-            shadowRadius: spacing.sm,
-            backgroundColor: colors.primary,
-            shadowOpacity: 1,
-          }}
+          title="shadowColor"
           config={{
             animationName: {
-              from: {
-                shadowColor: 'aqua',
-              },
               '50%': {
                 shadowColor: 'indigo',
+              },
+              from: {
+                shadowColor: 'aqua',
               },
             },
             ...sharedConfig,
           }}
-          title="shadowColor"
+          style={{
+            backgroundColor: colors.primary,
+            shadowOpacity: 1,
+            shadowRadius: spacing.sm,
+          }}
         />
         <ImageExample
-          style={{
-            overlayColor: colors.primary,
-          }}
+          title="overlayColor"
           config={{
             animationName: {
               from: {
@@ -262,18 +267,20 @@ function OtherColors() {
             },
             ...sharedConfig,
           }}
-          title="overlayColor"
+          style={{
+            overlayColor: colors.primary,
+          }}
         />
       </Section>
     </ScrollScreen>
   );
 }
 
-type ExampleProps<S> = Omit<ExampleCardProps, 'code'> & {
+type ExampleProps<S> = {
   style?: S;
   config: CSSAnimationConfig;
   renderExample: (config: CSSAnimationConfig, style?: S) => JSX.Element;
-};
+} & Omit<ExampleCardProps, 'code'>;
 
 function Example<S>({
   config,
@@ -316,7 +323,7 @@ const ImageExample = (props: ConcreteExampleProps<ImageStyle>) => (
     {...props}
     renderExample={(...styleProps) => (
       <Animated.Image
-        source={require('./images/splash.png')}
+        source={splashImage}
         // TODO - fix tintColor (animation is applied only if this style
         // prop is listed in the view style and is not empty)
         style={[styles.box, ...styleProps, { tintColor: 'transparent' }]}
@@ -327,12 +334,12 @@ const ImageExample = (props: ConcreteExampleProps<ImageStyle>) => (
 
 const styles = StyleSheet.create({
   box: {
-    width: sizes.xl,
-    height: sizes.xl,
     borderRadius: radius.sm,
+    height: sizes.xl,
+    width: sizes.xl,
   },
   text: {
-    fontSize: sizes.md,
     borderRadius: radius.sm,
+    fontSize: sizes.md,
   },
 });

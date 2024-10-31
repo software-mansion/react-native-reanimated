@@ -1,11 +1,12 @@
 import type { PropsWithChildren, ReactNode } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
+
+import { Text } from '@/components/core';
+import { flex, spacing } from '@/theme';
 
 import Group from './Group';
-import { colors, flex, spacing } from '../../theme';
-import Animated, { LinearTransition } from 'react-native-reanimated';
-import { Text } from '../core';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -19,13 +20,13 @@ export function Section({
   children,
   description,
   fill,
-  title,
   style,
+  title,
 }: SectionProps) {
   return (
     <Animated.View
-      style={[styles.sectionContainer, style, fill && flex.fill]}
-      layout={LinearTransition}>
+      layout={LinearTransition}
+      style={[styles.sectionContainer, style, fill && flex.fill]}>
       <View style={styles.textWrapper}>
         <Text variant="heading3">{title}</Text>
         {description && <Text>{description}</Text>}
@@ -43,18 +44,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     overflow: 'hidden',
   },
-  subSectionContainer: {
-    gap: spacing.xxs,
-    marginTop: spacing.xs,
-  },
   sectionContent: {
     marginTop: spacing.sm,
-  },
-  subSectionContent: {
-    backgroundColor: colors.background2,
-    padding: spacing.xs,
-    marginHorizontal: spacing.sm,
-    marginVertical: spacing.xxs,
   },
   textWrapper: {
     gap: spacing.xs,

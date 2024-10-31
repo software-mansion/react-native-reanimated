@@ -1,17 +1,17 @@
-import AnimationDuration from './AnimationDuration';
-import AnimationTimingFunction from './AnimationTimingFunction';
 import AnimationDelay from './AnimationDelay';
-import AnimationIterationCount from './AnimationIterationCount';
 import AnimationDirection from './AnimationDirection';
+import AnimationDuration from './AnimationDuration';
 import AnimationFillMode from './AnimationFillMode';
+import AnimationIterationCount from './AnimationIterationCount';
 import AnimationPlayState from './AnimationPlayState';
+import AnimationTimingFunction from './AnimationTimingFunction';
 
 export default {
-  AnimationDuration,
-  AnimationTimingFunction,
   AnimationDelay,
-  AnimationIterationCount,
   AnimationDirection,
+  AnimationDuration,
   AnimationFillMode,
+  AnimationIterationCount,
   AnimationPlayState,
+  AnimationTimingFunction,
 };

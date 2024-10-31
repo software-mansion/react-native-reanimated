@@ -1,19 +1,25 @@
-import { colors, radius, sizes, spacing } from '../../../../theme';
-import { ScrollScreen, Section, TabView } from '../../../../components';
+import { StyleSheet, View } from 'react-native';
 import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import type { ExampleCardProps } from './components';
-import { ExampleCard, VerticalExampleCard } from './components';
-import { formatAnimationCode } from '../../../../utils';
-import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import type { ExampleCardProps } from '@/components';
+import {
+  ExampleCard,
+  ScrollScreen,
+  Section,
+  TabView,
+  VerticalExampleCard,
+} from '@/components';
+import { colors, radius, sizes, spacing } from '@/theme';
+import { formatAnimationCode } from '@/utils';
+
 const SHARED_SETTINGS: CSSAnimationSettings = {
-  animationIterationCount: 'infinite',
   animationDirection: 'alternate',
   animationDuration: '1s',
+  animationIterationCount: 'infinite',
 };
 
 export default function Paddings() {
@@ -34,34 +40,34 @@ export default function Paddings() {
 
 const SHARED_EXAMPLES = [
   {
-    title: 'Padding',
     property: 'padding',
+    title: 'Padding',
   },
   {
-    title: 'Top Padding',
     property: 'paddingTop',
+    title: 'Top Padding',
   },
   {
-    title: 'Right Padding',
-    property: 'paddingRight',
     description: '(or paddingEnd)',
+    property: 'paddingRight',
+    title: 'Right Padding',
   },
   {
-    title: 'Bottom Padding',
     property: 'paddingBottom',
+    title: 'Bottom Padding',
   },
   {
-    title: 'Left Padding',
-    property: 'paddingLeft',
     description: '(or paddingStart)',
+    property: 'paddingLeft',
+    title: 'Left Padding',
   },
   {
-    title: 'Horizontal Padding',
     property: 'paddingHorizontal',
+    title: 'Horizontal Padding',
   },
   {
-    title: 'Vertical Padding',
     property: 'paddingVertical',
+    title: 'Vertical Padding',
   },
 ];
 
@@ -69,11 +75,11 @@ function AbsolutePaddings() {
   return (
     <ScrollScreen>
       <Section title="Absolute Padding">
-        {SHARED_EXAMPLES.map(({ title, property, description }) => (
+        {SHARED_EXAMPLES.map(({ description, property, title }) => (
           <Example
+            description={description}
             key={title}
             title={title}
-            description={description}
             config={{
               animationName: {
                 to: {
@@ -93,13 +99,13 @@ function RelativePaddings() {
   return (
     <ScrollScreen>
       <Section
-        title="Relative Padding"
-        description="All relative paddings are calculated based on the width of the parent element.">
-        {SHARED_EXAMPLES.map(({ title, property, description }) => (
+        description="All relative paddings are calculated based on the width of the parent element."
+        title="Relative Padding">
+        {SHARED_EXAMPLES.map(({ description, property, title }) => (
           <Example
+            description={description}
             key={title}
             title={title}
-            description={description}
             config={{
               animationName: {
                 to: {
@@ -117,8 +123,8 @@ function RelativePaddings() {
 
 function MixedPaddings() {
   const sharedSettings: CSSAnimationSettings = {
-    animationIterationCount: 'infinite',
     animationDuration: '3s',
+    animationIterationCount: 'infinite',
   };
 
   return (
@@ -153,14 +159,14 @@ function MixedPaddings() {
   );
 }
 
-type ExampleProps = Omit<ExampleCardProps, 'code'> & {
+type ExampleProps = {
   config: CSSAnimationConfig;
   CardComponent?: React.ComponentType<ExampleCardProps>;
-};
+} & Omit<ExampleCardProps, 'code'>;
 
 function Example({
-  config,
   CardComponent = ExampleCard,
+  config,
   ...cardProps
 }: ExampleProps) {
   return (
@@ -185,7 +191,7 @@ const styles = StyleSheet.create({
   boxInner: {
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
-    width: '100%',
     height: '100%',
+    width: '100%',
   },
 });

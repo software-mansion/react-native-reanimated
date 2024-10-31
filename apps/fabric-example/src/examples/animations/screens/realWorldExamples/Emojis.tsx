@@ -3,13 +3,12 @@
  * https://codepen.io/AshBardhan/pen/dNKwXz?editors=1100
  */
 
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { colors, radius, spacing } from '../../../../theme';
-import { Dimensions, StyleSheet, View } from 'react-native';
 import { faHeart, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import type { ComponentType } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
-import { Grid, ScrollScreen, Stagger, Text } from '../../../../components';
 import {
   Circle,
   Defs,
@@ -19,35 +18,37 @@ import {
   Stop,
   Svg,
 } from 'react-native-svg';
-import type { ComponentType } from 'react';
+
+import { Grid, ScrollScreen, Stagger, Text } from '@/components';
+import { colors, radius, spacing } from '@/theme';
 
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const EMOJI_SIZE = 0.2 * WINDOW_WIDTH;
 
 const COLORS = {
-  white: '#ffffff',
+  base: '#f7d154',
+  baseTransparent: 'rgba(247, 209, 84, 0.01)',
   black: '#000000',
   blue: '#548dff',
   red: '#f55064',
-  base: '#f7d154',
-  baseTransparent: 'rgba(247, 209, 84, 0.01)',
+  white: '#ffffff',
 };
 
 export default function Emojis() {
   return (
     <ScrollScreen contentContainerStyle={{ paddingVertical: spacing.lg }}>
       <Grid
-        columns={3}
-        staggerInterval={100}
         columnGap={spacing.sm}
-        rowGap={spacing.md}>
-        <Example title="Like" Emoji={LikeEmoji} />
-        <Example title="Heart" Emoji={HeartEmoji} />
-        <Example title="HaHa" Emoji={HaHaEmoji} />
-        <Example title="Yay" Emoji={YayEmoji} />
-        <Example title="Wow" Emoji={WowEmoji} />
-        <Example title="Sad" Emoji={SadEmoji} />
-        <Example title="Angry" Emoji={AngryEmoji} />
+        columns={3}
+        rowGap={spacing.md}
+        staggerInterval={100}>
+        <Example Emoji={LikeEmoji} title="Like" />
+        <Example Emoji={HeartEmoji} title="Heart" />
+        <Example Emoji={HaHaEmoji} title="HaHa" />
+        <Example Emoji={YayEmoji} title="Yay" />
+        <Example Emoji={WowEmoji} title="Wow" />
+        <Example Emoji={SadEmoji} title="Sad" />
+        <Example Emoji={AngryEmoji} title="Angry" />
       </Grid>
     </ScrollScreen>
   );
@@ -58,7 +59,7 @@ type ExampleProps = {
   Emoji: ComponentType;
 };
 
-function Example({ title, Emoji }: ExampleProps) {
+function Example({ Emoji, title }: ExampleProps) {
   return (
     <View style={sharedStyles.cell}>
       <Stagger delay={50}>
@@ -71,19 +72,19 @@ function Example({ title, Emoji }: ExampleProps) {
 
 const sharedStyles = StyleSheet.create({
   cell: {
+    alignItems: 'center',
     backgroundColor: colors.background1,
     borderRadius: radius.md,
-    alignItems: 'center',
-    padding: spacing.sm,
     gap: spacing.sm,
+    padding: spacing.sm,
     width: '100%',
   },
   emoji: {
-    width: EMOJI_SIZE,
-    height: EMOJI_SIZE,
-    borderRadius: radius.full,
-    justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: radius.full,
+    height: EMOJI_SIZE,
+    justifyContent: 'center',
+    width: EMOJI_SIZE,
   },
 });
 
@@ -109,16 +110,16 @@ function LikeEmoji() {
         style={[
           likeStyles.icon,
           {
-            animationName: like,
             animationDuration: '2s',
-            animationTimingFunction: 'linear',
             animationIterationCount: 'infinite',
+            animationName: like,
+            animationTimingFunction: 'linear',
           },
         ]}>
         <FontAwesomeIcon
+          color={COLORS.white}
           icon={faThumbsUp}
           size={0.6 * EMOJI_SIZE}
-          color={COLORS.white}
         />
       </Animated.View>
     </View>
@@ -149,16 +150,16 @@ function HeartEmoji() {
     <View style={heartStyles.emoji}>
       <Animated.View
         style={{
-          animationName: heart,
-          animationDuration: '1s',
-          animationTimingFunction: 'linear',
-          animationIterationCount: 'infinite',
           animationDirection: 'alternate',
+          animationDuration: '1s',
+          animationIterationCount: 'infinite',
+          animationName: heart,
+          animationTimingFunction: 'linear',
         }}>
         <FontAwesomeIcon
+          color={COLORS.white}
           icon={faHeart}
           size={0.6 * EMOJI_SIZE}
-          color={COLORS.white}
         />
       </Animated.View>
     </View>
@@ -239,10 +240,10 @@ function HaHaEmoji() {
         style={[
           hahaStyles.face,
           {
-            animationName: hahaFace,
             animationDuration: '2s',
-            animationTimingFunction: 'linear',
             animationIterationCount: 'infinite',
+            animationName: hahaFace,
+            animationTimingFunction: 'linear',
           },
         ]}>
         <View style={hahaStyles.eyes}>
@@ -269,10 +270,10 @@ function HaHaEmoji() {
           style={[
             hahaStyles.mouth,
             {
-              animationName: hahaMouth,
               animationDuration: '2s',
-              animationTimingFunction: 'linear',
               animationIterationCount: 'infinite',
+              animationName: hahaMouth,
+              animationTimingFunction: 'linear',
             },
           ]}>
           <View style={hahaStyles.tongue} />
@@ -287,36 +288,36 @@ const hahaStyles = StyleSheet.create({
     ...sharedStyles.emoji,
     backgroundColor: COLORS.base,
   },
-  face: {
-    alignItems: 'center',
-    gap: 0.15 * EMOJI_SIZE,
+  eye: {
+    backgroundColor: COLORS.black,
+    borderRadius: radius.full,
+    height: 0.055 * EMOJI_SIZE,
+    width: 0.225 * EMOJI_SIZE,
   },
   eyes: {
     flexDirection: 'row',
     gap: 0.2 * EMOJI_SIZE,
   },
-  eye: {
-    width: 0.225 * EMOJI_SIZE,
-    height: 0.055 * EMOJI_SIZE,
-    borderRadius: radius.full,
-    backgroundColor: COLORS.black,
+  face: {
+    alignItems: 'center',
+    gap: 0.15 * EMOJI_SIZE,
   },
   mouth: {
-    width: 0.6 * EMOJI_SIZE,
-    height: 0.3 * EMOJI_SIZE,
+    backgroundColor: COLORS.black,
     borderBottomLeftRadius: radius.full,
     borderBottomRightRadius: radius.full,
+    height: 0.3 * EMOJI_SIZE,
     overflow: 'hidden',
-    backgroundColor: COLORS.black,
+    width: 0.6 * EMOJI_SIZE,
   },
   tongue: {
-    width: 0.6 * EMOJI_SIZE,
-    height: 0.5 * EMOJI_SIZE,
+    backgroundColor: COLORS.red,
+    borderRadius: '50%',
     bottom: '-50%',
+    height: 0.5 * EMOJI_SIZE,
     left: '50%',
     transform: [{ translateX: '-50%' }],
-    borderRadius: '50%',
-    backgroundColor: COLORS.red,
+    width: 0.6 * EMOJI_SIZE,
   },
 });
 
@@ -335,11 +336,11 @@ function YayEmoji() {
       style={[
         yayStyles.emoji,
         {
-          animationName: yay,
-          animationDuration: '1s',
-          animationTimingFunction: 'linear',
-          animationIterationCount: 'infinite',
           animationDirection: 'alternate',
+          animationDuration: '1s',
+          animationIterationCount: 'infinite',
+          animationName: yay,
+          animationTimingFunction: 'linear',
         },
       ]}>
       <View style={yayStyles.eyeBrows}>
@@ -347,29 +348,29 @@ function YayEmoji() {
         <View style={yayStyles.eyeBrow} />
       </View>
       <Svg
-        width={EMOJI_SIZE}
         height={0.5 * EMOJI_SIZE}
-        style={yayStyles.cheeks}>
+        style={yayStyles.cheeks}
+        width={EMOJI_SIZE}>
         <Defs>
-          <RadialGradient id="grad" cx="50%" cy="50%" rx="50%" ry="50%">
+          <RadialGradient cx="50%" cy="50%" id="grad" rx="50%" ry="50%">
             <Stop offset="0" stopColor={COLORS.red} stopOpacity="0.3" />
             <Stop offset="0.3" stopColor={COLORS.red} stopOpacity="0.3" />
             <Stop offset="0.85" stopColor={COLORS.red} stopOpacity="0" />
           </RadialGradient>
         </Defs>
         <Rect
+          fill="url(#grad)"
+          height={0.5 * EMOJI_SIZE}
+          width={0.5 * EMOJI_SIZE}
           x="0"
           y="0"
-          width={0.5 * EMOJI_SIZE}
-          height={0.5 * EMOJI_SIZE}
-          fill="url(#grad)"
         />
         <Rect
+          fill="url(#grad)"
+          height={0.5 * EMOJI_SIZE}
+          width={0.5 * EMOJI_SIZE}
           x="50%"
           y="0"
-          width={0.5 * EMOJI_SIZE}
-          height={0.5 * EMOJI_SIZE}
-          fill="url(#grad)"
         />
       </Svg>
       <View style={yayStyles.mouth} />
@@ -378,39 +379,39 @@ function YayEmoji() {
 }
 
 const yayStyles = StyleSheet.create({
+  cheeks: {
+    position: 'absolute',
+  },
   emoji: {
     ...sharedStyles.emoji,
     backgroundColor: COLORS.base,
     overflow: 'hidden',
   },
-  eyeBrows: {
-    flexDirection: 'row',
-    top: -0.1 * EMOJI_SIZE,
-    gap: 0.05 * EMOJI_SIZE,
-  },
-  cheeks: {
-    position: 'absolute',
-  },
   eyeBrow: {
+    borderBottomWidth: 0,
+    borderColor: COLORS.black,
     borderTopLeftRadius: radius.full,
     borderTopRightRadius: radius.full,
-    height: 0.15 * EMOJI_SIZE,
-    width: 0.3 * EMOJI_SIZE,
     borderWidth: 0.05 * EMOJI_SIZE,
-    borderColor: COLORS.black,
-    borderBottomWidth: 0,
+    height: 0.15 * EMOJI_SIZE,
     transform: [{ scaleY: 1.1 }],
+    width: 0.3 * EMOJI_SIZE,
+  },
+  eyeBrows: {
+    flexDirection: 'row',
+    gap: 0.05 * EMOJI_SIZE,
+    top: -0.1 * EMOJI_SIZE,
   },
   mouth: {
-    top: -0.05 * EMOJI_SIZE,
-    width: 0.5 * EMOJI_SIZE,
-    height: 0.25 * EMOJI_SIZE,
     borderBottomLeftRadius: 0.3 * EMOJI_SIZE,
     borderBottomRightRadius: 0.3 * EMOJI_SIZE,
-    borderWidth: 0.06 * EMOJI_SIZE,
     borderColor: COLORS.black,
     borderTopWidth: 0,
+    borderWidth: 0.06 * EMOJI_SIZE,
+    height: 0.25 * EMOJI_SIZE,
+    top: -0.05 * EMOJI_SIZE,
     transform: [{ scaleY: 0.7 }],
+    width: 0.5 * EMOJI_SIZE,
   },
 });
 
@@ -438,6 +439,9 @@ function WowEmoji() {
   };
 
   const wowBrows: CSSAnimationKeyframes = {
+    '0%': {
+      top: -0.075 * EMOJI_SIZE,
+    },
     '15%': {
       top: 0.025 * EMOJI_SIZE,
     },
@@ -450,41 +454,38 @@ function WowEmoji() {
     '100%': {
       top: -0.075 * EMOJI_SIZE,
     },
-    '0%': {
-      top: -0.075 * EMOJI_SIZE,
-    },
   };
 
   const wowMouth: CSSAnimationKeyframes = {
     '10%': {
-      width: 0.15 * EMOJI_SIZE,
       top: -0.1 * EMOJI_SIZE,
       transform: [{ scaleY: 1 }],
+      width: 0.15 * EMOJI_SIZE,
     },
     '30%': {
-      width: 0.15 * EMOJI_SIZE,
       top: -0.1 * EMOJI_SIZE,
       transform: [{ scaleY: 1 }],
+      width: 0.15 * EMOJI_SIZE,
     },
     '50%': {
-      width: 0.25 * EMOJI_SIZE,
       top: -0.075 * EMOJI_SIZE,
       transform: [{ scaleY: 1.25 }],
+      width: 0.25 * EMOJI_SIZE,
     },
     '70%': {
-      width: 0.25 * EMOJI_SIZE,
       top: -0.075 * EMOJI_SIZE,
       transform: [{ scaleY: 1.25 }],
+      width: 0.25 * EMOJI_SIZE,
     },
     '75%': {
-      width: 0.25 * EMOJI_SIZE,
       top: 0,
       transform: [{ scaleY: 1.5 }],
+      width: 0.25 * EMOJI_SIZE,
     },
     '100%': {
-      width: 0.25 * EMOJI_SIZE,
       top: 0,
       transform: [{ scaleY: 1.5 }],
+      width: 0.25 * EMOJI_SIZE,
     },
   };
 
@@ -494,20 +495,20 @@ function WowEmoji() {
         style={[
           wowStyles.face,
           {
-            animationName: wowFace,
             animationDuration: '3s',
-            animationTimingFunction: 'linear',
             animationIterationCount: 'infinite',
+            animationName: wowFace,
+            animationTimingFunction: 'linear',
           },
         ]}>
         <Animated.View
           style={[
             wowStyles.eyeBrows,
             {
-              animationName: wowBrows,
               animationDuration: '3s',
-              animationTimingFunction: 'linear',
               animationIterationCount: 'infinite',
+              animationName: wowBrows,
+              animationTimingFunction: 'linear',
             },
           ]}>
           <View style={wowStyles.eyeBrow} />
@@ -523,10 +524,10 @@ function WowEmoji() {
           style={[
             wowStyles.mouth,
             {
-              animationName: wowMouth,
               animationDuration: '3s',
-              animationTimingFunction: 'linear',
               animationIterationCount: 'infinite',
+              animationName: wowMouth,
+              animationTimingFunction: 'linear',
             },
           ]}
         />
@@ -540,42 +541,42 @@ const wowStyles = StyleSheet.create({
     ...sharedStyles.emoji,
     backgroundColor: COLORS.base,
   },
-  face: {
-    alignItems: 'center',
+  eye: {
+    backgroundColor: COLORS.black,
+    borderRadius: '50%',
+    height: 0.12 * EMOJI_SIZE,
+    transform: [{ scaleY: 1.5 }],
+    width: 0.12 * EMOJI_SIZE,
+  },
+  eyeBrow: {
+    borderBlockStartColor: COLORS.black,
+    // (Android border colors support is pretty limited)
+    borderColor: COLORS.baseTransparent,
+    borderRadius: '50%',
+    // use this trick with border colors to properly apply color only for
+    // the top border and leave other borders "transparent" on Android
+    borderWidth: 0.05 * EMOJI_SIZE,
+    height: 0.3 * EMOJI_SIZE,
+    width: 0.3 * EMOJI_SIZE,
   },
   eyeBrows: {
     flexDirection: 'row',
     gap: 0.075 * EMOJI_SIZE,
-  },
-  eyeBrow: {
-    width: 0.3 * EMOJI_SIZE,
-    height: 0.3 * EMOJI_SIZE,
-    borderWidth: 0.05 * EMOJI_SIZE,
-    // use this trick with border colors to properly apply color only for
-    // the top border and leave other borders "transparent" on Android
-    // (Android border colors support is pretty limited)
-    borderColor: COLORS.baseTransparent,
-    borderBlockStartColor: COLORS.black,
-    borderRadius: '50%',
   },
   eyes: {
     flexDirection: 'row',
     gap: 0.25 * EMOJI_SIZE,
     top: -0.15 * EMOJI_SIZE,
   },
-  eye: {
-    width: 0.12 * EMOJI_SIZE,
-    height: 0.12 * EMOJI_SIZE,
-    borderRadius: '50%',
-    transform: [{ scaleY: 1.5 }],
-    backgroundColor: COLORS.black,
+  face: {
+    alignItems: 'center',
   },
   mouth: {
     aspectRatio: 1,
-    width: 0.25 * EMOJI_SIZE,
-    transform: [{ scaleY: 1.25 }],
-    borderRadius: '50%',
     backgroundColor: COLORS.black,
+    borderRadius: '50%',
+    transform: [{ scaleY: 1.25 }],
+    width: 0.25 * EMOJI_SIZE,
   },
 });
 
@@ -661,10 +662,10 @@ function SadEmoji() {
         style={[
           sadStyles.face,
           {
-            animationName: sadFace,
             animationDuration: '2s',
-            animationTimingFunction: 'linear',
             animationIterationCount: 'infinite',
+            animationName: sadFace,
+            animationTimingFunction: 'linear',
           },
         ]}>
         <View style={sadStyles.eyeBrows}>
@@ -682,10 +683,10 @@ function SadEmoji() {
             style={[
               sadStyles.tearWrapper,
               {
-                animationName: tearDrop,
                 animationDuration: '2s',
-                animationTimingFunction: 'linear',
                 animationIterationCount: 'infinite',
+                animationName: tearDrop,
+                animationTimingFunction: 'linear',
               },
             ]}>
             <View style={sadStyles.tear} />
@@ -695,10 +696,10 @@ function SadEmoji() {
           style={[
             sadStyles.mouth,
             {
-              animationName: sadMouth,
               animationDuration: '2s',
-              animationTimingFunction: 'linear',
               animationIterationCount: 'infinite',
+              animationName: sadMouth,
+              animationTimingFunction: 'linear',
             },
           ]}
         />
@@ -712,64 +713,57 @@ const sadStyles = StyleSheet.create({
     ...sharedStyles.emoji,
     backgroundColor: COLORS.base,
   },
-  face: {
-    alignItems: 'center',
+  eye: {
+    backgroundColor: COLORS.black,
+    borderRadius: '50%',
+    height: 0.12 * EMOJI_SIZE,
+    width: 0.12 * EMOJI_SIZE,
+  },
+  eyeBrow: {
+    borderBlockStartColor: COLORS.black,
+    borderColor: COLORS.baseTransparent,
+    borderRadius: '50%',
+    borderWidth: 0.05 * EMOJI_SIZE,
+    height: 0.3 * EMOJI_SIZE,
+    width: 0.3 * EMOJI_SIZE,
   },
   eyeBrows: {
     flexDirection: 'row',
     gap: 0.125 * EMOJI_SIZE,
-  },
-  eyeBrow: {
-    width: 0.3 * EMOJI_SIZE,
-    height: 0.3 * EMOJI_SIZE,
-    borderWidth: 0.05 * EMOJI_SIZE,
-    borderColor: COLORS.baseTransparent,
-    borderBlockStartColor: COLORS.black,
-    borderRadius: '50%',
   },
   eyes: {
     flexDirection: 'row',
     gap: 0.3 * EMOJI_SIZE,
     top: -0.175 * EMOJI_SIZE,
   },
-  eye: {
-    width: 0.12 * EMOJI_SIZE,
-    height: 0.12 * EMOJI_SIZE,
-    borderRadius: '50%',
-    backgroundColor: COLORS.black,
+  face: {
+    alignItems: 'center',
   },
   mouth: {
-    width: 0.35 * EMOJI_SIZE,
-    height: 0.35 * EMOJI_SIZE,
-    transform: [{ scaleY: 1.25 }],
+    borderBlockStartColor: COLORS.black,
+    borderColor: COLORS.baseTransparent,
     borderRadius: '50%',
     borderWidth: 0.04 * EMOJI_SIZE,
-    borderColor: COLORS.baseTransparent,
-    borderBlockStartColor: COLORS.black,
+    height: 0.35 * EMOJI_SIZE,
+    transform: [{ scaleY: 1.25 }],
+    width: 0.35 * EMOJI_SIZE,
+  },
+  tear: {
+    backgroundColor: COLORS.blue,
+    borderRadius: '50%',
+    borderTopLeftRadius: 0,
+    height: 0.25 * EMOJI_SIZE,
+    transform: [{ rotate: '45deg' }],
+    width: 0.25 * EMOJI_SIZE,
   },
   tearWrapper: {
     position: 'absolute',
-  },
-  tear: {
-    width: 0.25 * EMOJI_SIZE,
-    height: 0.25 * EMOJI_SIZE,
-    transform: [{ rotate: '45deg' }],
-    borderRadius: '50%',
-    borderTopLeftRadius: 0,
-    backgroundColor: COLORS.blue,
   },
 });
 
 function AngryEmoji() {
   const angryFace: CSSAnimationKeyframes = {
     '35%': {
-      transform: [
-        { translateX: 0 },
-        { translateY: 0.1 * EMOJI_SIZE },
-        { scale: 0.9 },
-      ],
-    },
-    '60%': {
       transform: [
         { translateX: 0 },
         { translateY: 0.1 * EMOJI_SIZE },
@@ -804,6 +798,13 @@ function AngryEmoji() {
         { scale: 0.9 },
       ],
     },
+    '60%': {
+      transform: [
+        { translateX: 0 },
+        { translateY: 0.1 * EMOJI_SIZE },
+        { scale: 0.9 },
+      ],
+    },
   };
 
   const angryMouth: CSSAnimationKeyframes = {
@@ -818,11 +819,11 @@ function AngryEmoji() {
   return (
     <View style={angryStyles.emoji}>
       <Svg
-        width={EMOJI_SIZE}
         height={EMOJI_SIZE}
-        style={StyleSheet.absoluteFill}>
+        style={StyleSheet.absoluteFill}
+        width={EMOJI_SIZE}>
         <Defs>
-          <LinearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+          <LinearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
             <Stop offset="0" stopColor={COLORS.red} stopOpacity="1" />
             <Stop offset="0.9" stopColor={COLORS.red} stopOpacity="0" />
           </LinearGradient>
@@ -830,18 +831,18 @@ function AngryEmoji() {
         <Circle
           cx={0.5 * EMOJI_SIZE}
           cy={0.5 * EMOJI_SIZE}
-          r={0.5 * EMOJI_SIZE}
           fill="url(#grad)"
+          r={0.5 * EMOJI_SIZE}
         />
       </Svg>
       <Animated.View
         style={[
           angryStyles.face,
           {
-            animationName: angryFace,
             animationDuration: '2s',
-            animationTimingFunction: 'linear',
             animationIterationCount: 'infinite',
+            animationName: angryFace,
+            animationTimingFunction: 'linear',
           },
         ]}>
         <View style={angryStyles.eyeBrows}>
@@ -868,10 +869,10 @@ function AngryEmoji() {
           style={[
             angryStyles.mouth,
             {
-              animationName: angryMouth,
               animationDuration: '2s',
-              animationTimingFunction: 'linear',
               animationIterationCount: 'infinite',
+              animationName: angryMouth,
+              animationTimingFunction: 'linear',
             },
           ]}
         />
@@ -885,38 +886,38 @@ const angryStyles = StyleSheet.create({
     ...sharedStyles.emoji,
     backgroundColor: COLORS.base,
   },
-  face: {
-    alignItems: 'center',
+  eye: {
+    backgroundColor: COLORS.black,
+    borderRadius: '50%',
+    height: 0.12 * EMOJI_SIZE,
+    width: 0.12 * EMOJI_SIZE,
+  },
+  eyeBrow: {
+    borderBlockEndColor: COLORS.black,
+    borderColor: COLORS.baseTransparent,
+    borderRadius: '50%',
+    borderWidth: 0.04 * EMOJI_SIZE,
+    height: 0.4 * EMOJI_SIZE,
+    top: 0.095 * EMOJI_SIZE,
+    width: 0.45 * EMOJI_SIZE,
   },
   eyeBrows: {
     flexDirection: 'row',
     gap: 0.01 * EMOJI_SIZE,
-  },
-  eyeBrow: {
-    width: 0.45 * EMOJI_SIZE,
-    height: 0.4 * EMOJI_SIZE,
-    borderWidth: 0.04 * EMOJI_SIZE,
-    borderColor: COLORS.baseTransparent,
-    borderBlockEndColor: COLORS.black,
-    borderRadius: '50%',
-    top: 0.095 * EMOJI_SIZE,
   },
   eyes: {
     flexDirection: 'row',
     gap: 0.3 * EMOJI_SIZE,
     top: 0.075 * EMOJI_SIZE,
   },
-  eye: {
-    width: 0.12 * EMOJI_SIZE,
-    height: 0.12 * EMOJI_SIZE,
-    borderRadius: '50%',
-    backgroundColor: COLORS.black,
+  face: {
+    alignItems: 'center',
   },
   mouth: {
-    width: 0.3 * EMOJI_SIZE,
-    height: 0.3 * EMOJI_SIZE,
-    borderRadius: '50%',
     backgroundColor: COLORS.black,
+    borderRadius: '50%',
+    height: 0.3 * EMOJI_SIZE,
     transform: [{ scaleY: 0.5 }],
+    width: 0.3 * EMOJI_SIZE,
   },
 });

@@ -1,13 +1,13 @@
-import SpinnersAndLoaders from './SpinnersAndLoaders';
-import Emojis from './Emojis';
 import Campfire from './Campfire';
+import Emojis from './Emojis';
 import RocketInSpace from './RocketInSpace';
+import SpinnersAndLoaders from './SpinnersAndLoaders';
 import SquishySquashy from './SquishySquashy';
 
 export default {
-  SpinnersAndLoaders,
-  Emojis,
   Campfire,
-  SquishySquashy,
+  Emojis,
   RocketInSpace,
+  SpinnersAndLoaders,
+  SquishySquashy,
 };

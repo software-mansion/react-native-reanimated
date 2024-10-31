@@ -3,17 +3,22 @@ import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import { ScrollScreen, Section, TabView } from '../../../../../components';
-import { sizes, radius } from '../../../../../theme';
 import Animated from 'react-native-reanimated';
-import type { ExampleCardProps } from '../components';
-import { VerticalExampleCard } from '../components';
-import { formatAnimationCode } from '../../../../../utils';
+
+import type { ExampleCardProps } from '@/components';
+import {
+  ScrollScreen,
+  Section,
+  TabView,
+  VerticalExampleCard,
+} from '@/components';
+import { radius, sizes } from '@/theme';
+import { formatAnimationCode } from '@/utils';
 
 const sharedConfig: CSSAnimationSettings = {
-  animationIterationCount: 'infinite',
-  animationDuration: '3s',
   animationDirection: 'alternate',
+  animationDuration: '3s',
+  animationIterationCount: 'infinite',
   animationTimingFunction: 'easeInOut',
 };
 
@@ -66,6 +71,7 @@ function RgbAndRgbaColors() {
     <ScrollScreen>
       <Section title="RGB and RGBA">
         <Example
+          title="RGB"
           config={{
             animationName: {
               from: {
@@ -77,9 +83,9 @@ function RgbAndRgbaColors() {
             },
             ...sharedConfig,
           }}
-          title="RGB"
         />
         <Example
+          title="RGBA"
           config={{
             animationName: {
               from: {
@@ -91,7 +97,6 @@ function RgbAndRgbaColors() {
             },
             ...sharedConfig,
           }}
-          title="RGBA"
         />
       </Section>
     </ScrollScreen>
@@ -103,6 +108,7 @@ function HexColors() {
     <ScrollScreen>
       <Section title="RGB and RGBA hex">
         <Example
+          title="#RGB"
           config={{
             animationName: {
               from: {
@@ -114,9 +120,9 @@ function HexColors() {
             },
             ...sharedConfig,
           }}
-          title="#RGB"
         />
         <Example
+          title="#RGBA"
           config={{
             animationName: {
               from: {
@@ -128,9 +134,9 @@ function HexColors() {
             },
             ...sharedConfig,
           }}
-          title="#RGBA"
         />
         <Example
+          title="#RRGGBB"
           config={{
             animationName: {
               from: {
@@ -142,9 +148,9 @@ function HexColors() {
             },
             ...sharedConfig,
           }}
-          title="#RRGGBB"
         />
         <Example
+          title="#RRGGBBAA"
           config={{
             animationName: {
               from: {
@@ -156,7 +162,6 @@ function HexColors() {
             },
             ...sharedConfig,
           }}
-          title="#RRGGBBAA"
         />
       </Section>
     </ScrollScreen>
@@ -168,6 +173,7 @@ function HslAndHslaColors() {
     <ScrollScreen>
       <Section title="HSL and HSLA">
         <Example
+          title="HSL"
           config={{
             animationName: {
               from: {
@@ -179,9 +185,9 @@ function HslAndHslaColors() {
             },
             ...sharedConfig,
           }}
-          title="HSL"
         />
         <Example
+          title="HSLA"
           config={{
             animationName: {
               from: {
@@ -193,7 +199,6 @@ function HslAndHslaColors() {
             },
             ...sharedConfig,
           }}
-          title="HSLA"
         />
       </Section>
     </ScrollScreen>
@@ -222,9 +227,9 @@ function HwbColors() {
   );
 }
 
-type ExampleProps = Omit<ExampleCardProps, 'code'> & {
+type ExampleProps = {
   config: CSSAnimationConfig;
-};
+} & Omit<ExampleCardProps, 'code'>;
 
 function Example({ config, ...cardProps }: ExampleProps) {
   return (
@@ -239,8 +244,8 @@ function Example({ config, ...cardProps }: ExampleProps) {
 
 const styles = StyleSheet.create({
   box: {
-    width: sizes.xl,
-    height: sizes.xl,
     borderRadius: radius.sm,
+    height: sizes.xl,
+    width: sizes.xl,
   },
 });

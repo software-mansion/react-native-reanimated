@@ -1,23 +1,25 @@
 import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationConfig } from 'react-native-reanimated';
-import { sizes, colors, radius } from '../../../../theme';
 import Animated from 'react-native-reanimated';
+
+import { colors, radius, sizes } from '@/theme';
+
 import { ExampleScreen } from './components';
 
 export default function AnimationFillMode() {
   const config: CSSAnimationConfig = {
+    animationDelay: '1s',
+    animationDuration: '2s',
     animationName: {
       from: {
         backgroundColor: colors.primaryDark,
       },
       to: {
+        backgroundColor: colors.primaryDark,
         left: '100%',
         transform: [{ translateX: '-100%' }],
-        backgroundColor: colors.primaryDark,
       },
     },
-    animationDuration: '2s',
-    animationDelay: '1s',
   };
 
   const renderExample = (exampleConfig: CSSAnimationConfig) => (
@@ -32,13 +34,13 @@ export default function AnimationFillMode() {
       renderExample={renderExample}
       cards={[
         {
-          title: 'Fill Mode',
           items: [
             { animationFillMode: 'none', label: 'none (default)' },
             { animationFillMode: 'forwards', label: 'forwards' },
             { animationFillMode: 'backwards', label: 'backwards' },
             { animationFillMode: 'both', label: 'both' },
           ],
+          title: 'Fill Mode',
         },
       ]}
     />

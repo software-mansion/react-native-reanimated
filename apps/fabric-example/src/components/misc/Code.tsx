@@ -4,7 +4,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
-import { ExpandableCard } from '../cards';
 import Animated, {
   FadeInDown,
   FadeInUp,
@@ -12,9 +11,11 @@ import Animated, {
   FadeOutUp,
   LayoutAnimationConfig,
 } from 'react-native-reanimated';
-import { colors, radius, spacing } from '../../theme';
-import { Scroll } from '../layout';
-import { Text } from '../core';
+
+import { ExpandableCard } from '@/components/cards';
+import { Text } from '@/components/core';
+import { Scroll } from '@/components/layout';
+import { colors, radius, spacing } from '@/theme';
 
 type CodeBlockProps = {
   code: string;
@@ -42,7 +43,7 @@ export function CodeBlock({ code, scrollable = true }: CodeBlockProps) {
   );
 
   return scrollable ? (
-    <Scroll horizontal contentContainerStyle={styles.codeContainer}>
+    <Scroll contentContainerStyle={styles.codeContainer} horizontal>
       {content}
     </Scroll>
   ) : (
@@ -60,10 +61,10 @@ type ExpandableCodeBlockProps = {
 
 export function ExpandableCodeBlock({
   collapsedCode,
-  expandedCode,
-  style,
-  showExpandOverlay = false,
   expanded = false,
+  expandedCode,
+  showExpandOverlay = false,
+  style,
 }: ExpandableCodeBlockProps) {
   const [isExpanded, setIsExpanded] = useState(expanded);
 
@@ -73,9 +74,9 @@ export function ExpandableCodeBlock({
     <LayoutAnimationConfig skipEntering skipExiting>
       <ExpandableCard
         expanded={isExpanded}
+        showExpandOverlay={showExpandOverlay}
         style={style}
-        onChange={setIsExpanded}
-        showExpandOverlay={showExpandOverlay}>
+        onChange={setIsExpanded}>
         {isExpanded && (
           <Animated.View
             entering={FadeInUp}
@@ -102,13 +103,13 @@ export function ExpandableCodeBlock({
 const styles = StyleSheet.create({
   block: {
     backgroundColor: colors.background2,
-    padding: spacing.xs,
     borderRadius: radius.sm,
+    padding: spacing.xs,
   },
   codeContainer: {
+    alignItems: 'center',
+    paddingBottom: spacing.sm,
     paddingHorizontal: 0,
     paddingVertical: 0,
-    paddingBottom: spacing.sm,
-    alignItems: 'center',
   },
 });

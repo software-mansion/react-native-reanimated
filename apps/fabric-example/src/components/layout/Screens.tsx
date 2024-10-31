@@ -1,4 +1,5 @@
 import React from 'react';
+
 import type { ScrollProps } from './Scroll';
 import Scroll from './Scroll';
 

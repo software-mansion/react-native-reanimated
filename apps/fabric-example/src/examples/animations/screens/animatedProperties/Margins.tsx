@@ -1,19 +1,19 @@
-import { ScrollScreen, Section, TabView } from '../../../../components';
-import type { ExampleCardProps } from './components';
-import { ExampleCard } from './components';
+import { StyleSheet, View } from 'react-native';
 import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import { formatAnimationCode } from '../../../../utils';
 import Animated from 'react-native-reanimated';
-import { StyleSheet, View } from 'react-native';
-import { colors, radius, sizes, spacing } from '../../../../theme';
+
+import type { ExampleCardProps } from '@/components';
+import { ExampleCard, ScrollScreen, Section, TabView } from '@/components';
+import { colors, radius, sizes, spacing } from '@/theme';
+import { formatAnimationCode } from '@/utils';
 
 const SHARED_SETTINGS: CSSAnimationSettings = {
-  animationIterationCount: 'infinite',
   animationDirection: 'alternate',
   animationDuration: '1s',
+  animationIterationCount: 'infinite',
 };
 
 export default function Margins() {
@@ -34,34 +34,34 @@ export default function Margins() {
 
 const SHARED_EXAMPLES = [
   {
-    title: 'Margin',
     property: 'margin',
+    title: 'Margin',
   },
   {
-    title: 'Top Margin',
     property: 'marginTop',
+    title: 'Top Margin',
   },
   {
-    title: 'Right Margin',
-    property: 'marginRight',
     description: '(or marginEnd)',
+    property: 'marginRight',
+    title: 'Right Margin',
   },
   {
-    title: 'Bottom Margin',
     property: 'marginBottom',
+    title: 'Bottom Margin',
   },
   {
-    title: 'Left Margin',
-    property: 'marginLeft',
     description: '(or marginStart)',
+    property: 'marginLeft',
+    title: 'Left Margin',
   },
   {
-    title: 'Horizontal Margin',
     property: 'marginHorizontal',
+    title: 'Horizontal Margin',
   },
   {
-    title: 'Vertical Margin',
     property: 'marginVertical',
+    title: 'Vertical Margin',
   },
 ];
 
@@ -69,9 +69,11 @@ function AbsoluteMargins() {
   return (
     <ScrollScreen>
       <Section title="Absolute Margins">
-        {SHARED_EXAMPLES.map(({ title, property, description }) => (
+        {SHARED_EXAMPLES.map(({ description, property, title }) => (
           <Example
+            description={description}
             key={title}
+            title={title}
             config={{
               animationName: {
                 to: {
@@ -80,8 +82,6 @@ function AbsoluteMargins() {
               },
               ...SHARED_SETTINGS,
             }}
-            description={description}
-            title={title}
           />
         ))}
       </Section>
@@ -93,11 +93,13 @@ function RelativeMargins() {
   return (
     <ScrollScreen>
       <Section
-        title="Relative Margins"
-        description="Relative margins are a bit weird. Yoga doesn't apply them properly, thus they don't work the same as in CSS.">
-        {SHARED_EXAMPLES.map(({ title, property, description }) => (
+        description="Relative margins are a bit weird. Yoga doesn't apply them properly, thus they don't work the same as in CSS."
+        title="Relative Margins">
+        {SHARED_EXAMPLES.map(({ description, property, title }) => (
           <Example
+            description={description}
             key={title}
+            title={title}
             config={{
               animationName: {
                 from: {
@@ -109,8 +111,6 @@ function RelativeMargins() {
               },
               ...SHARED_SETTINGS,
             }}
-            description={description}
-            title={title}
           />
         ))}
       </Section>
@@ -118,56 +118,56 @@ function RelativeMargins() {
   );
 }
 
-function MixedMargins() {
-  return (
-    <ScrollScreen>
-      <Section title="Mixed Margins">
-        <Example
-          config={{
-            animationName: {
-              from: {
-                margin: spacing.md,
-              },
-              to: {
-                margin: '40%',
-              },
-            },
-            ...SHARED_SETTINGS,
-          }}
-          title="Mixed Margins"
-        />
+// function MixedMargins() {
+//   return (
+//     <ScrollScreen>
+//       <Section title="Mixed Margins">
+//         <Example
+//           config={{
+//             animationName: {
+//               from: {
+//                 margin: spacing.md,
+//               },
+//               to: {
+//                 margin: '40%',
+//               },
+//             },
+//             ...SHARED_SETTINGS,
+//           }}
+//           title="Mixed Margins"
+//         />
 
-        <Example
-          config={{
-            animationName: {
-              from: {
-                marginRight: 0,
-              },
-              '25%': {
-                marginRight: '50%',
-              },
-              '50%': {
-                marginRight: spacing.md,
-              },
-              '75%': {
-                marginRight: '25%',
-              },
-              to: {
-                marginRight: 0,
-              },
-            },
-            ...SHARED_SETTINGS,
-          }}
-          title="Horizontal Margin"
-        />
-      </Section>
-    </ScrollScreen>
-  );
-}
+//         <Example
+//           config={{
+//             animationName: {
+//               from: {
+//                 marginRight: 0,
+//               },
+//               '25%': {
+//                 marginRight: '50%',
+//               },
+//               '50%': {
+//                 marginRight: spacing.md,
+//               },
+//               '75%': {
+//                 marginRight: '25%',
+//               },
+//               to: {
+//                 marginRight: 0,
+//               },
+//             },
+//             ...SHARED_SETTINGS,
+//           }}
+//           title="Horizontal Margin"
+//         />
+//       </Section>
+//     </ScrollScreen>
+//   );
+// }
 
-type ExampleProps = Omit<ExampleCardProps, 'code'> & {
+type ExampleProps = {
   config: CSSAnimationConfig;
-};
+} & Omit<ExampleCardProps, 'code'>;
 
 function Example({ config, ...cardProps }: ExampleProps) {
   return (
@@ -189,22 +189,22 @@ function Example({ config, ...cardProps }: ExampleProps) {
 }
 
 const styles = StyleSheet.create({
-  boxesRow: {
-    flexDirection: 'row',
+  animatedBox: {
+    backgroundColor: colors.primaryDark,
+  },
+  box: {
+    backgroundColor: colors.primary,
     borderRadius: radius.sm,
-    backgroundColor: colors.background3,
+    height: sizes.sm,
+    width: sizes.sm,
   },
   boxWrapper: {
     backgroundColor: colors.primaryLight,
     borderRadius: radius.sm,
   },
-  box: {
-    backgroundColor: colors.primary,
-    width: sizes.sm,
-    height: sizes.sm,
+  boxesRow: {
+    backgroundColor: colors.background3,
     borderRadius: radius.sm,
-  },
-  animatedBox: {
-    backgroundColor: colors.primaryDark,
+    flexDirection: 'row',
   },
 });

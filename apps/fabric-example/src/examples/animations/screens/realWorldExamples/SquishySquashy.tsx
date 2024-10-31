@@ -4,10 +4,11 @@
  */
 
 import { Dimensions, StyleSheet, View } from 'react-native';
-import { colors } from '../../../../theme';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
-import { BOTTOM_BAR_HEIGHT } from '../../../../navigation/constants';
+
+import { BOTTOM_BAR_HEIGHT } from '@/navigation/constants';
+import { colors } from '@/theme';
 
 const EXAMPLE_SCALE = 0.85;
 
@@ -180,9 +181,9 @@ export default function SquishySquashy() {
           style={[
             styles.box,
             {
-              animationName: move,
               animationDuration: '6s',
               animationIterationCount: 'infinite',
+              animationName: move,
               animationTimingFunction: 'linear',
             },
           ]}
@@ -193,20 +194,20 @@ export default function SquishySquashy() {
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: BOTTOM_BAR_HEIGHT,
+  box: {
+    backgroundColor: colors.primary,
+    height: BOX_SIZE,
+    width: BOX_SIZE,
   },
   container: {
-    width: CONTAINER_SIZE,
-    height: CONTAINER_SIZE,
     backgroundColor: colors.background2,
+    height: CONTAINER_SIZE,
+    width: CONTAINER_SIZE,
   },
-  box: {
-    width: BOX_SIZE,
-    height: BOX_SIZE,
-    backgroundColor: colors.primary,
+  wrapper: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    paddingBottom: BOTTOM_BAR_HEIGHT,
   },
 });

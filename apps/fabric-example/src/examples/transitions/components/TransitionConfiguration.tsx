@@ -1,25 +1,26 @@
-import { colors, flex, radius, spacing } from '../../../theme';
-import { CodeBlock, ConfigWithOverridesBlock, Text } from '../../../components';
+import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { useCallback } from 'react';
 import type { ListRenderItem } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type { CSSTransitionConfig, StyleProps } from 'react-native-reanimated';
-import type { ExampleItemProps } from '../screens/transitionSettings/components/ExamplesListCard';
 import Animated from 'react-native-reanimated';
-import { useCallback } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import { iconSizes } from '../../../theme/icons';
+
+import { CodeBlock, ConfigWithOverridesBlock, Text } from '@/components';
+import type { ExampleItemProps } from '@/examples/transitions/screens/transitionSettings/components/ExamplesListCard';
+import { colors, flex, radius, spacing } from '@/theme';
+import { iconSizes } from '@/theme/icons';
 
 type TransitionConfigurationProps = {
   sharedConfig: Partial<CSSTransitionConfig>;
-  transitionStyles: StyleProps[];
-  overrides?: ExampleItemProps[];
+  transitionStyles: Array<StyleProps>;
+  overrides?: Array<ExampleItemProps>;
 };
 
 export default function TransitionConfiguration({
+  overrides,
   sharedConfig,
   transitionStyles,
-  overrides,
 }: TransitionConfigurationProps) {
   const renderItem = useCallback<ListRenderItem<StyleProps>>(
     ({ item }) => (
@@ -34,8 +35,8 @@ export default function TransitionConfiguration({
     () => (
       <View style={styles.listSeparator}>
         <FontAwesomeIcon
-          icon={faArrowRight}
           color={colors.primary}
+          icon={faArrowRight}
           size={iconSizes.md}
         />
       </View>
@@ -48,10 +49,10 @@ export default function TransitionConfiguration({
       <View style={styles.section}>
         <Text variant="subHeading2">Transition styles</Text>
         <Animated.FlatList
-          data={transitionStyles}
-          renderItem={renderItem}
           contentContainerStyle={styles.codeStylesList}
+          data={transitionStyles}
           ItemSeparatorComponent={renderSeparator}
+          renderItem={renderItem}
           horizontal
         />
       </View>
@@ -59,8 +60,8 @@ export default function TransitionConfiguration({
       <View style={styles.section}>
         <Text variant="subHeading2">Transition settings</Text>
         <ConfigWithOverridesBlock
-          sharedConfig={sharedConfig}
           overrides={overrides}
+          sharedConfig={sharedConfig}
         />
       </View>
     </View>
@@ -68,23 +69,23 @@ export default function TransitionConfiguration({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: spacing.xxs,
-  },
-  section: {
-    gap: spacing.xs,
+  codeBlock: {
+    backgroundColor: colors.background2,
+    borderRadius: radius.sm,
+    padding: spacing.xs,
   },
   codeStylesList: {
     ...flex.center,
     paddingBottom: spacing.sm,
   },
+  container: {
+    gap: spacing.xxs,
+  },
   listSeparator: {
     ...flex.center,
     padding: spacing.xs,
   },
-  codeBlock: {
-    borderRadius: radius.sm,
-    backgroundColor: colors.background2,
-    padding: spacing.xs,
+  section: {
+    gap: spacing.xs,
   },
 });

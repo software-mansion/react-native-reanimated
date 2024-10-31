@@ -1,10 +1,11 @@
-import { useCallback, useState } from 'react';
-import type { RouteCardComponent } from '../../../components';
-import { RouteCard } from '../../../components';
-import { StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { colors, sizes, spacing } from '../../../theme';
+import { useCallback, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+
+import type { RouteCardComponent } from '@/components';
+import { RouteCard } from '@/components';
+import { colors, sizes, spacing } from '@/theme';
 
 const TransitionSettingsCard: RouteCardComponent = (props) => (
   <RouteCard
@@ -64,11 +65,11 @@ function Showcase() {
             style={[
               styles.bar,
               {
-                transitionProperty: 'height',
-                transitionDuration: 300,
-                transitionDelay: index * 75,
-                transitionTimingFunction: 'easeInOut',
                 height,
+                transitionDelay: index * 75,
+                transitionDuration: 300,
+                transitionProperty: 'height',
+                transitionTimingFunction: 'easeInOut',
               },
             ]}
           />
@@ -80,22 +81,22 @@ function Showcase() {
 }
 
 const styles = StyleSheet.create({
+  bar: {
+    backgroundColor: colors.primary,
+    width: sizes.xxxs,
+  },
+  bars: {
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    gap: spacing.xxxs,
+    height: sizes.md,
+  },
   container: {
     gap: spacing.xxxs,
   },
   horizontalLine: {
+    backgroundColor: colors.primary,
     height: 5,
-    backgroundColor: colors.primary,
-  },
-  bars: {
-    flexDirection: 'row',
-    gap: spacing.xxxs,
-    height: sizes.md,
-    alignItems: 'flex-end',
-  },
-  bar: {
-    width: sizes.xxxs,
-    backgroundColor: colors.primary,
   },
 });
 

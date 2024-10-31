@@ -1,28 +1,27 @@
-import { StyleSheet, TouchableOpacity } from 'react-native';
-import { flex, colors, radius, spacing, sizes } from '../../../../../theme';
+import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useState } from 'react';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, {
   FadeInDown,
   FadeInUp,
   LayoutAnimationConfig,
   LinearTransition,
 } from 'react-native-reanimated';
-import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { ExpandableCard, CodeBlock, Text } from '../../../../../components';
-import type { ExampleCardProps } from './ExampleCard';
 
-const AnimatedTouchableOpacity =
-  Animated.createAnimatedComponent(TouchableOpacity);
+import { CodeBlock, ExpandableCard, Text } from '@/components';
+import { colors, flex, radius, sizes, spacing } from '@/theme';
+
+import type { ExampleCardProps } from './ExampleCard';
 
 export default function VerticalExampleCard({
   children,
-  title,
   code,
   collapsedCode,
-  description,
   collapsedExampleHeight = 150,
+  description,
   minExampleHeight,
+  title,
 }: ExampleCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -30,35 +29,35 @@ export default function VerticalExampleCard({
     <LayoutAnimationConfig skipEntering skipExiting>
       <ExpandableCard expanded={true}>
         {title && (
-          <Text variant="subHeading2" style={styles.title}>
+          <Text style={styles.title} variant="subHeading2">
             {title}
           </Text>
         )}
         {description && <Text style={styles.description}>{description}</Text>}
         <Animated.View style={styles.itemsContainer}>
           {/* Code block */}
-          <Animated.View style={styles.itemWrapper} layout={LinearTransition}>
+          <Animated.View layout={LinearTransition} style={styles.itemWrapper}>
             {collapsedCode && !isExpanded && (
-              <Animated.View style={styles.collapsedCode} entering={FadeInDown}>
+              <Animated.View entering={FadeInDown} style={styles.collapsedCode}>
                 <CodeBlock code={collapsedCode} />
               </Animated.View>
             )}
             {code && isExpanded && (
-              <Animated.View style={styles.expandedCode} entering={FadeInUp}>
+              <Animated.View entering={FadeInUp} style={styles.expandedCode}>
                 <CodeBlock code={code} />
               </Animated.View>
             )}
           </Animated.View>
           <Animated.View layout={LinearTransition}>
             <TouchableOpacity
-              onPress={() => setIsExpanded(!isExpanded)}
-              style={styles.expandButton}>
+              style={styles.expandButton}
+              onPress={() => setIsExpanded(!isExpanded)}>
               <FontAwesomeIcon
+                color={colors.primary}
                 icon={isExpanded ? faChevronUp : faChevronDown}
                 size={sizes.xxxs}
-                color={colors.primary}
               />
-              <Text variant="label2" style={styles.expandButtonText}>
+              <Text style={styles.expandButtonText} variant="label2">
                 {isExpanded ? 'Collapse' : 'Expand'}
               </Text>
             </TouchableOpacity>
@@ -71,7 +70,7 @@ export default function VerticalExampleCard({
               flex.center,
               {
                 minHeight:
-                  minExampleHeight ||
+                  minExampleHeight ??
                   Math.min(
                     minExampleHeight ?? collapsedExampleHeight,
                     collapsedExampleHeight
@@ -87,16 +86,27 @@ export default function VerticalExampleCard({
 }
 
 const styles = StyleSheet.create({
-  title: {
-    marginBottom: spacing.xs,
+  collapsedCode: {
+    backgroundColor: colors.background2,
+    height: 'auto',
+    padding: spacing.xs,
   },
   description: {
     marginBottom: spacing.sm,
   },
-  itemsContainer: {
-    gap: spacing.sm,
-    flexDirection: 'column',
+  expandButton: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs,
+    justifyContent: 'center',
+  },
+  expandButtonText: {
+    color: colors.primary,
+  },
+  expandedCode: {
+    backgroundColor: colors.background2,
     height: 'auto',
+    padding: spacing.xs,
   },
   itemWrapper: {
     backgroundColor: colors.background2,
@@ -104,23 +114,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     padding: spacing.xs,
   },
-  expandedCode: {
+  itemsContainer: {
+    flexDirection: 'column',
+    gap: spacing.sm,
     height: 'auto',
-    padding: spacing.xs,
-    backgroundColor: colors.background2,
   },
-  collapsedCode: {
-    height: 'auto',
-    padding: spacing.xs,
-    backgroundColor: colors.background2,
-  },
-  expandButton: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  expandButtonText: {
-    color: colors.primary,
+  title: {
+    marginBottom: spacing.xs,
   },
 });

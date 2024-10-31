@@ -1,20 +1,21 @@
 import { StyleSheet, View } from 'react-native';
-import type { RouteCardComponent } from '../../../components';
-import { RouteCard } from '../../../components';
-import { colors, radius, sizes, spacing } from '../../../theme';
 import type {
   CSSAnimationConfig,
   CSSAnimationDelay,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
-import { useFocusPlayState } from '../../../hooks';
+
+import type { RouteCardComponent } from '@/components';
+import { RouteCard } from '@/components';
+import { useFocusPlayState } from '@/hooks';
+import { colors, radius, sizes, spacing } from '@/theme';
 
 const animationSettings: CSSAnimationSettings = {
+  animationDirection: 'alternate',
   animationDuration: '2s',
   animationIterationCount: 'infinite',
   animationTimingFunction: 'easeInOut',
-  animationDirection: 'alternate',
 };
 
 const thumbAnimation: CSSAnimationConfig = {
@@ -80,34 +81,34 @@ function Showcase() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.xxs,
-  },
   bar: {
+    alignItems: 'center',
     height: sizes.lg,
     width: sizes.xxxs,
-    alignItems: 'center',
+  },
+  barThumb: {
+    backgroundColor: colors.primaryDark,
+    borderRadius: radius.full,
+    height: sizes.xxxs,
+    position: 'absolute',
+    transform: [{ translateY: '-50%' }],
+    width: sizes.xxxs,
   },
   barTrack: {
-    height: '100%',
-    width: '50%',
     backgroundColor: colors.primaryLight,
     borderRadius: radius.full,
+    height: '100%',
+    width: '50%',
   },
   barTrackInner: {
     backgroundColor: colors.primary,
     borderRadius: radius.full,
     width: '100%',
   },
-  barThumb: {
-    position: 'absolute',
-    transform: [{ translateY: '-50%' }],
-    width: sizes.xxxs,
-    height: sizes.xxxs,
-    backgroundColor: colors.primaryDark,
-    borderRadius: radius.full,
+  container: {
+    flexDirection: 'row',
+    gap: spacing.xxs,
+    justifyContent: 'center',
   },
 });
 

@@ -1,21 +1,22 @@
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import type { RouteCardComponent } from '../components';
 
-export type Route = RouteWithRoutes | RouteWithComponent;
+import type { RouteCardComponent } from '@/components';
+
+export type Route = RouteWithComponent | RouteWithRoutes;
 
 type SharedRouteProps = {
   name: string;
   CardComponent?: RouteCardComponent;
 };
 
-export type RouteWithRoutes = SharedRouteProps & {
+export type RouteWithRoutes = {
   flatten?: true;
   routes: Routes;
-};
+} & SharedRouteProps;
 
-export type RouteWithComponent = SharedRouteProps & {
+type RouteWithComponent = {
   Component: React.ComponentType;
-};
+} & SharedRouteProps;
 
 export type Routes = Record<string, Route>;
 
@@ -25,17 +26,17 @@ export type TabRoute = {
   routes: Routes;
 };
 
-type Join<K, P> = K extends string | number
-  ? P extends string | number
+type Join<K, P> = K extends number | string
+  ? P extends number | string
     ? `${K}/${P}`
     : never
   : never;
 
 export type RouteNames<P extends string, T extends Routes> =
-  | P
-  | Join<P, keyof T>
   | {
       [K in keyof T]: T[K] extends { routes: Routes }
         ? RouteNames<Join<P, K>, T[K]['routes']>
         : never;
-    }[keyof T];
+    }[keyof T]
+  | Join<P, keyof T>
+  | P;

@@ -1,11 +1,15 @@
 import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationConfig } from 'react-native-reanimated';
-import { sizes, colors, radius } from '../../../../theme';
 import Animated from 'react-native-reanimated';
+
+import { colors, radius, sizes } from '@/theme';
+
 import { ExampleScreen } from './components';
 
 export default function AnimationDirection() {
   const config: CSSAnimationConfig = {
+    animationDuration: '3s',
+    animationIterationCount: 'infinite',
     animationName: {
       from: {
         width: 0,
@@ -14,8 +18,6 @@ export default function AnimationDirection() {
         width: '100%',
       },
     },
-    animationIterationCount: 'infinite',
-    animationDuration: '3s',
   };
 
   const renderExample = (exampleConfig: CSSAnimationConfig) => (
@@ -30,7 +32,6 @@ export default function AnimationDirection() {
       renderExample={renderExample}
       cards={[
         {
-          title: 'Animation Direction',
           description:
             'Alternate animations change direction on each iteration. Changes are visible only if the number of iterations is greater than one.',
           items: [
@@ -42,6 +43,7 @@ export default function AnimationDirection() {
               label: 'alternateReverse',
             },
           ],
+          title: 'Animation Direction',
         },
       ]}
     />

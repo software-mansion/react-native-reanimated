@@ -1,20 +1,22 @@
 import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationConfig } from 'react-native-reanimated';
-import { colors, radius, sizes } from '../../../../theme';
 import Animated, { cubicBezier, linear, steps } from 'react-native-reanimated';
+
+import { TabView } from '@/components';
+import { colors, radius, sizes } from '@/theme';
+
 import { ExampleScreen } from './components';
-import { TabView } from '../../../../components';
 
 export default function AnimationTimingFunction() {
   const config: CSSAnimationConfig = {
+    animationDuration: '2s',
+    animationIterationCount: 'infinite',
     animationName: {
       to: {
         left: '100%',
         transform: [{ translateX: '-100%' }],
       },
     },
-    animationIterationCount: 'infinite',
-    animationDuration: '2s',
   };
 
   const renderExample = (exampleConfig: CSSAnimationConfig) => (
@@ -33,7 +35,6 @@ export default function AnimationTimingFunction() {
           renderExample={renderExample}
           cards={[
             {
-              title: 'Predefined Easings',
               items: [
                 { animationTimingFunction: 'ease', label: 'ease' },
                 { animationTimingFunction: 'easeIn', label: 'easeIn' },
@@ -42,12 +43,13 @@ export default function AnimationTimingFunction() {
                 { animationTimingFunction: 'linear', label: 'linear' },
                 { animationTimingFunction: 'stepStart', label: 'stepStart' },
                 {
-                  animationTimingFunction: 'stepEnd',
-                  animationIterationCount: 1,
                   animationFillMode: 'forwards',
+                  animationIterationCount: 1,
+                  animationTimingFunction: 'stepEnd',
                   label: 'stepEnd',
                 },
               ],
+              title: 'Predefined Easings',
             },
           ]}
         />
@@ -58,7 +60,6 @@ export default function AnimationTimingFunction() {
           renderExample={renderExample}
           cards={[
             {
-              title: 'Cubic Bezier Easing',
               description:
                 'Specify a Bézier curve to shape the progress of an animation. It is defined by two control points (x1, y1, x2, y2) that mathematically describe the curve.',
               items: [
@@ -75,6 +76,7 @@ export default function AnimationTimingFunction() {
                   label: 'cubicBezier(\n 0.3, 0, 1, 0\n)',
                 },
               ],
+              title: 'Cubic Bezier Easing',
             },
           ]}
         />
@@ -85,28 +87,28 @@ export default function AnimationTimingFunction() {
           renderExample={renderExample}
           cards={[
             {
-              title: 'Linear Easing with points',
               description:
                 "Specify a simple polygonal chain that always starts at an x-value of 0 and ends at an x-value of 1. You can either specify the points' y and x coordinates or leave the x coordinates to be inferred.",
               items: [
                 {
                   animationTimingFunction: linear([
                     0,
-                    { y: 0.25, x: '75%' },
+                    { x: '75%', y: 0.25 },
                     1,
                   ]),
                   label: "linear([\n 0,\n {y: 0.25, x: '75%'},\n 1\n])",
                 },
                 {
                   animationTimingFunction: linear([
-                    { y: 0.6, x: '0%' },
-                    { y: 0.1, x: '50%' },
-                    { y: 1, x: '100%' },
+                    { x: '0%', y: 0.6 },
+                    { x: '50%', y: 0.1 },
+                    { x: '100%', y: 1 },
                   ]),
                   label:
                     "linear([\n {y: 0.6, x: '0%'},\n {y: 0.1, x: '50%'},\n {y: 1, x: '100%'}\n])",
                 },
               ],
+              title: 'Linear Easing with points',
             },
           ]}
         />
@@ -117,7 +119,6 @@ export default function AnimationTimingFunction() {
           renderExample={renderExample}
           cards={[
             {
-              title: 'Steps Easing',
               description:
                 'Creates an easing function that makes given number of even steps over increasing y-values. The second argument is a modifier that adds jumps before or after the steps.',
               items: [
@@ -138,6 +139,7 @@ export default function AnimationTimingFunction() {
                   label: "steps(3, 'jumpBoth')",
                 },
               ],
+              title: 'Steps Easing',
             },
           ]}
         />
@@ -153,14 +155,14 @@ const styles = StyleSheet.create({
     height: sizes.sm,
     width: sizes.sm,
   },
-  outerWrapper: {
-    backgroundColor: colors.background2,
-    paddingHorizontal: sizes.sm / 2,
-    borderRadius: radius.sm,
-    overflow: 'hidden',
-  },
   innerWrapper: {
     backgroundColor: colors.primaryLight,
     borderRadius: radius.sm,
+  },
+  outerWrapper: {
+    backgroundColor: colors.background2,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+    paddingHorizontal: sizes.sm / 2,
   },
 });

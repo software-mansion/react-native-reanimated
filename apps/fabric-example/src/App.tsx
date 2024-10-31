@@ -1,12 +1,12 @@
+import { PortalProvider } from '@gorhom/portal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NavigationState } from '@react-navigation/native';
 import { NavigationContainer } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
-import { PortalProvider } from '@gorhom/portal';
-
-import { noop } from './utils';
-import { Navigator } from './navigation';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { Navigator } from './navigation';
+import { noop } from './utils';
 
 const PERSISTENCE_KEY = 'NAVIGATION_STATE';
 

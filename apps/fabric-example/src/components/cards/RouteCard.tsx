@@ -3,8 +3,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useNavigation } from '@react-navigation/native';
 import type { PropsWithChildren } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { colors, radius, sizes, spacing } from '../../theme';
-import { Text } from '../core';
+
+import { Text } from '@/components/core';
+import { colors, radius, sizes, spacing } from '@/theme';
 
 type RouteCardProps = PropsWithChildren<{
   title: string;
@@ -19,10 +20,10 @@ export type RouteCardComponent = (
 
 export default function RouteCard({
   children,
-  route,
-  title,
   description,
+  route,
   showcaseScale = 1,
+  title,
 }: RouteCardProps) {
   const navigation = useNavigation();
   return (
@@ -34,7 +35,7 @@ export default function RouteCard({
       }}>
       <View style={styles.content}>
         <View style={styles.textColumn}>
-          <Text variant="label1" style={styles.title}>
+          <Text style={styles.title} variant="label1">
             {title}
           </Text>
           {description && <Text variant="body1">{description}</Text>}
@@ -68,10 +69,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   showcase: {
-    justifyContent: 'center',
     alignItems: 'center',
-    flexBasis: sizes.xl,
     alignSelf: 'stretch',
+    flexBasis: sizes.xl,
+    justifyContent: 'center',
   },
   textColumn: {
     flexShrink: 1,

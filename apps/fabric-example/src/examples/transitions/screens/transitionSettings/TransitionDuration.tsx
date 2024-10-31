@@ -1,7 +1,9 @@
-import type { CSSTransitionConfig, StyleProps } from 'react-native-reanimated';
 import { StyleSheet, View } from 'react-native';
+import type { CSSTransitionConfig, StyleProps } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
-import { colors, radius, sizes } from '../../../../theme';
+
+import { colors, radius, sizes } from '@/theme';
+
 import { ExampleScreen } from './components';
 
 export default function TransitionDuration() {
@@ -21,19 +23,19 @@ export default function TransitionDuration() {
 
   return (
     <ExampleScreen
+      renderExample={renderExample}
       sharedConfig={sharedConfig}
       transitionStyles={[{ width: 0 }, { width: '100%' }]}
       cards={[
         {
-          title: 'Positive Duration',
           items: [
-            { transitionDuration: '800ms', label: '800ms' },
-            { transitionDuration: '2s', label: '2s' },
-            { transitionDuration: 3500, label: '3500' },
+            { label: '800ms', transitionDuration: '800ms' },
+            { label: '2s', transitionDuration: '2s' },
+            { label: '3500', transitionDuration: 3500 },
           ],
+          title: 'Positive Duration',
         },
         {
-          title: 'Zero Duration',
           description: (
             <>
               If duration is not specified or is set to 0 (0s, 0ms, 0), style
@@ -42,13 +44,13 @@ export default function TransitionDuration() {
           ),
           items: [
             {
-              transitionDuration: '0s',
               label: '0s (default)',
+              transitionDuration: '0s',
             },
           ],
+          title: 'Zero Duration',
         },
       ]}
-      renderExample={renderExample}
     />
   );
 }

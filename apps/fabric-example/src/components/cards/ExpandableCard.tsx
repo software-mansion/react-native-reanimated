@@ -1,16 +1,17 @@
+import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import type { PropsWithChildren } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, {
   LinearTransition,
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
-import { colors, sizes, spacing } from '../../theme';
-import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, TouchableOpacity } from 'react-native';
-import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
-import { Text } from '../core';
+import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
+
+import { Text } from '@/components/core';
+import { colors, sizes, spacing } from '@/theme';
 
 export type ExpandableCardProps = PropsWithChildren<{
   expanded: boolean;
@@ -21,11 +22,11 @@ export type ExpandableCardProps = PropsWithChildren<{
 }>;
 
 export default function ExpandableCard({
-  onChange,
-  expanded,
   children,
-  showExpandOverlay,
+  expanded,
+  onChange,
   overlayHeight = sizes.lg,
+  showExpandOverlay,
   style,
 }: ExpandableCardProps) {
   const animatedGradientStyle = useAnimatedStyle(() => ({
@@ -45,8 +46,8 @@ export default function ExpandableCard({
       {/* Overlay */}
       {showExpandOverlay && (
         <Animated.View
-          style={[styles.overlay, { height: overlayHeight }]}
-          layout={LinearTransition}>
+          layout={LinearTransition}
+          style={[styles.overlay, { height: overlayHeight }]}>
           <Animated.View style={[styles.gradient, animatedGradientStyle]}>
             <Svg height={overlayHeight} width="100%">
               <Defs>
@@ -75,14 +76,14 @@ export default function ExpandableCard({
 
           {/* Expand/Collapse button */}
           <TouchableOpacity
-            onPress={() => onChange?.(!expanded)}
-            style={styles.expandButton}>
+            style={styles.expandButton}
+            onPress={() => onChange?.(!expanded)}>
             <FontAwesomeIcon
+              color={colors.primary}
               icon={expanded ? faChevronUp : faChevronDown}
               size={sizes.xxxs}
-              color={colors.primary}
             />
-            <Text variant="label2" style={styles.expandButtonText}>
+            <Text style={styles.expandButtonText} variant="label2">
               {expanded ? 'Collapse' : 'Expand'}
             </Text>
           </TouchableOpacity>
@@ -96,25 +97,25 @@ const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
   },
-  overlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'flex-end',
+  expandButton: {
     alignItems: 'center',
-    pointerEvents: 'box-none',
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  expandButtonText: {
+    color: colors.primary,
   },
   gradient: {
     ...StyleSheet.absoluteFillObject,
     pointerEvents: 'none',
   },
-  expandButton: {
-    flexDirection: 'row',
-    gap: spacing.xs,
+  overlay: {
     alignItems: 'center',
-  },
-  expandButtonText: {
-    color: colors.primary,
+    bottom: 0,
+    justifyContent: 'flex-end',
+    left: 0,
+    pointerEvents: 'box-none',
+    position: 'absolute',
+    right: 0,
   },
 });

@@ -1,36 +1,42 @@
+import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useMemo, useState } from 'react';
-import { BOTTOM_BAR_HEIGHT } from '../../../../navigation/constants';
-import { colors, flex, radius, sizes, spacing } from '../../../../theme';
 import type { ImageSourcePropType } from 'react-native';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { cubicBezier } from 'react-native-reanimated';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
+
+import { BOTTOM_BAR_HEIGHT } from '@/navigation/constants';
+import { colors, flex, radius, sizes, spacing } from '@/theme';
+
+import newYorkImage from './images/new-york.jpg';
+import parisImage from './images/paris.jpg';
+import tokyoImage from './images/tokyo.jpg';
+import veniceImage from './images/venice.jpg';
 
 const AnimatedTouchableOpacity =
   Animated.createAnimatedComponent(TouchableOpacity);
 
 const CARDS = [
   {
-    title: 'Paris',
     description: 'The city of love, where dreams come true',
-    image: require('./images/paris.jpg'),
+    image: parisImage,
+    title: 'Paris',
   },
   {
-    title: 'Venice',
     description: 'The floating city surrounded by water',
-    image: require('./images/venice.jpg'),
+    image: veniceImage,
+    title: 'Venice',
   },
   {
-    title: 'New York',
     description: 'The city that never sleeps',
-    image: require('./images/new-york.jpg'),
+    image: newYorkImage,
+    title: 'New York',
   },
   {
-    title: 'Tokyo',
     description: 'The city of neon lights and sushi',
-    image: require('./images/tokyo.jpg'),
+    image: tokyoImage,
+    title: 'Tokyo',
   },
 ];
 
@@ -39,13 +45,13 @@ export default function FlexGallery() {
 
   return (
     <View style={styles.container}>
-      {CARDS.map(({ title, description, image }, idx) => (
+      {CARDS.map(({ description, image, title }, idx) => (
         <GalleryCard
-          key={idx}
-          title={title}
           description={description}
           expanded={idx === expandedIdx}
           image={image}
+          key={idx}
+          title={title}
           onPress={() => setExpandedIdx(idx)}
         />
       ))}
@@ -62,22 +68,22 @@ type GalleryCardProps = {
 };
 
 function GalleryCard({
+  description,
   expanded,
+  image,
   onPress,
   title,
-  image,
-  description,
 }: GalleryCardProps) {
   const gradient = useMemo(
     () => (
       <Svg>
         <Defs>
-          <LinearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
+          <LinearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
             <Stop offset="0" stopColor={colors.black} stopOpacity="0" />
             <Stop offset="1" stopColor={colors.black} stopOpacity="0.75" />
           </LinearGradient>
         </Defs>
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#gradient)" />
+        <Rect fill="url(#gradient)" height="100%" width="100%" x="0" y="0" />
       </Svg>
     ),
     []
@@ -86,26 +92,26 @@ function GalleryCard({
   return (
     <AnimatedTouchableOpacity
       activeOpacity={expanded ? 0.8 : 1}
-      onPress={onPress}
       style={[
         styles.card,
         {
-          transitionProperty: 'flexGrow',
-          transitionDuration: 300,
-          transitionTimingFunction: 'easeInOut',
           flexGrow: expanded ? 100 : 1,
+          transitionDuration: 300,
+          transitionProperty: 'flexGrow',
+          transitionTimingFunction: 'easeInOut',
         },
-      ]}>
+      ]}
+      onPress={onPress}>
       <View style={StyleSheet.absoluteFill}>
-        <Image style={styles.cardImage} source={image} />
+        <Image source={image} style={styles.cardImage} />
       </View>
       <Animated.View
         style={[
           styles.cardGradient,
           {
-            transitionProperty: 'opacity',
-            transitionDuration: 300,
             opacity: expanded ? 1 : 0.75,
+            transitionDuration: 300,
+            transitionProperty: 'opacity',
           },
         ]}>
         {gradient}
@@ -116,9 +122,9 @@ function GalleryCard({
             style={[
               styles.cardTitle,
               {
-                transitionProperty: 'fontSize',
-                transitionDuration: 300,
                 fontSize: expanded ? 32 : 20,
+                transitionDuration: 300,
+                transitionProperty: 'fontSize',
               },
             ]}>
             {title}
@@ -127,10 +133,10 @@ function GalleryCard({
             style={[
               styles.cardDescription,
               {
-                transitionProperty: 'all',
-                transitionDuration: 300,
                 maxHeight: expanded ? sizes.lg : 0,
                 opacity: expanded ? 1 : 0,
+                transitionDuration: 300,
+                transitionProperty: 'all',
               },
             ]}>
             {description}
@@ -138,14 +144,14 @@ function GalleryCard({
         </View>
         <Animated.View
           style={{
-            transitionProperty: 'transform',
-            transitionDuration: 200,
-            transitionTimingFunction: cubicBezier(0.5, -0.6, 0.6, 1.5),
             transform: [{ rotate: expanded ? '0deg' : '90deg' }],
+            transitionDuration: 200,
+            transitionProperty: 'transform',
+            transitionTimingFunction: cubicBezier(0.5, -0.6, 0.6, 1.5),
           }}>
           <FontAwesomeIcon
-            icon={faChevronRight}
             color={colors.white}
+            icon={faChevronRight}
             size={20}
           />
         </Animated.View>
@@ -155,46 +161,46 @@ function GalleryCard({
 }
 
 const styles = StyleSheet.create({
+  card: {
+    borderRadius: radius.md,
+    justifyContent: 'flex-end',
+    minHeight: sizes.lg,
+    overflow: 'hidden',
+    padding: spacing.md,
+  },
+  cardContentWrapper: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.lg,
+    justifyContent: 'space-between',
+  },
+  cardDescription: {
+    color: '#eee',
+    flexShrink: 1,
+    fontSize: 14,
+  },
+  cardGradient: {
+    bottom: 0,
+    height: sizes.xxxl,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+  },
+  cardImage: {
+    height: '100%',
+    objectFit: 'cover',
+    width: '100%',
+  },
+  cardTitle: {
+    color: colors.white,
+    fontSize: 20,
+    fontWeight: 'bold',
+    paddingBottom: spacing.xxs,
+  },
   container: {
     flex: 1,
     gap: spacing.sm,
-    padding: spacing.md,
     marginBottom: BOTTOM_BAR_HEIGHT + spacing.xl,
-  },
-  card: {
-    borderRadius: radius.md,
-    minHeight: sizes.lg,
-    justifyContent: 'flex-end',
     padding: spacing.md,
-    overflow: 'hidden',
-  },
-  cardContentWrapper: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: spacing.lg,
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: colors.white,
-    paddingBottom: spacing.xxs,
-  },
-  cardDescription: {
-    fontSize: 14,
-    color: '#eee',
-    flexShrink: 1,
-  },
-  cardImage: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-  cardGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: sizes.xxxl,
   },
 });

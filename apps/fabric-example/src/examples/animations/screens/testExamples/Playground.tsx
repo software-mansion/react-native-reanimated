@@ -3,9 +3,8 @@
  * file should be replaced with the actual example implementation.
  */
 
-import { Text, StyleSheet, View, SafeAreaView } from 'react-native';
-
 import React from 'react';
+import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 export default function Playground() {
@@ -15,9 +14,8 @@ export default function Playground() {
         <Text>Hello world!</Text>
         <Animated.View
           style={{
-            height: 65,
-            backgroundColor: 'gray',
-            width: 200,
+            animationDuration: '10s',
+            animationIterationCount: 'infinite',
             animationName: {
               0: {
                 width: 200,
@@ -29,9 +27,10 @@ export default function Playground() {
                 width: 200,
               },
             },
-            animationDuration: '10s',
             animationTimingFunction: 'linear',
-            animationIterationCount: 'infinite',
+            backgroundColor: 'gray',
+            height: 65,
+            width: 200,
           }}>
           <View style={styles.row}>
             <View style={[styles.grow, { backgroundColor: 'blue' }]} />
@@ -42,14 +41,9 @@ export default function Playground() {
 
           <Animated.View
             style={{
-              height: '100%',
-              backgroundColor: 'gold',
-              shadowColor: 'black',
-              width: 20,
+              animationDuration: '10s',
+              animationIterationCount: 'infinite',
               animationName: {
-                from: {
-                  width: 20,
-                },
                 0.1: {
                   width: '75%',
                 },
@@ -77,10 +71,15 @@ export default function Playground() {
                 0.9: {
                   width: '75%',
                 },
+                from: {
+                  width: 20,
+                },
               },
-              animationDuration: '10s',
               animationTimingFunction: 'linear',
-              animationIterationCount: 'infinite',
+              backgroundColor: 'gold',
+              height: '100%',
+              shadowColor: 'black',
+              width: 20,
             }}
           />
         </Animated.View>
@@ -91,19 +90,19 @@ export default function Playground() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
+  },
+  grow: {
+    flexGrow: 1,
   },
   row: {
     flexDirection: 'row',
     height: '50%',
-    position: 'absolute',
-    top: 0,
     left: 0,
+    position: 'absolute',
     right: 0,
-  },
-  grow: {
-    flexGrow: 1,
+    top: 0,
   },
 });

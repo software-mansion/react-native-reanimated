@@ -1,14 +1,15 @@
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import type {
   CSSTransitionProperty,
   StyleProps,
 } from 'react-native-reanimated';
-import type { RouteCardComponent } from '../../../components';
-import { RouteCard, Text } from '../../../components';
-import { useCallback, useState } from 'react';
-import { colors, flex, radius, sizes, spacing } from '../../../theme';
 import Animated, { FadeInLeft, FadeOutRight } from 'react-native-reanimated';
-import { StyleSheet, View } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+
+import type { RouteCardComponent } from '@/components';
+import { RouteCard, Text } from '@/components';
+import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const MiscellaneousCard: RouteCardComponent = (props) => (
   <RouteCard
@@ -18,7 +19,7 @@ const MiscellaneousCard: RouteCardComponent = (props) => (
   </RouteCard>
 );
 
-const TRANSITION_PROPERTIES: CSSTransitionProperty[] = [
+const TRANSITION_PROPERTIES: Array<CSSTransitionProperty> = [
   'all',
   ['width', 'height'],
   'width',
@@ -26,9 +27,9 @@ const TRANSITION_PROPERTIES: CSSTransitionProperty[] = [
   'none',
 ];
 
-const TRANSITION_STYLES: StyleProps[] = [
-  { width: sizes.sm, height: sizes.sm, backgroundColor: colors.primary },
-  { width: sizes.lg, height: sizes.lg, backgroundColor: colors.primaryDark },
+const TRANSITION_STYLES: Array<StyleProps> = [
+  { backgroundColor: colors.primary, height: sizes.sm, width: sizes.sm },
+  { backgroundColor: colors.primaryDark, height: sizes.lg, width: sizes.lg },
 ];
 
 function Showcase() {
@@ -68,16 +69,16 @@ function Showcase() {
             styles.box,
             TRANSITION_STYLES[styleIndex],
             {
-              transitionProperty,
               transitionDuration: 300,
+              transitionProperty,
             },
           ]}
         />
       </View>
       <Animated.View
-        key={transitionPropertyIndex}
         entering={FadeInLeft}
-        exiting={FadeOutRight}>
+        exiting={FadeOutRight}
+        key={transitionPropertyIndex}>
         <Text variant="label3">
           {Array.isArray(transitionProperty)
             ? transitionProperty.join(', ')
@@ -89,18 +90,18 @@ function Showcase() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    ...flex.center,
-    gap: spacing.xxs,
-  },
-  boxContainer: {
-    ...flex.center,
-    width: sizes.lg,
-    height: sizes.lg,
-  },
   box: {
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
+  },
+  boxContainer: {
+    ...flex.center,
+    height: sizes.lg,
+    width: sizes.lg,
+  },
+  container: {
+    ...flex.center,
+    gap: spacing.xxs,
   },
 });
 

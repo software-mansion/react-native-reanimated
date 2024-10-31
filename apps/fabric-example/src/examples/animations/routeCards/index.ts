@@ -7,7 +7,7 @@ import TestExamplesCard from './TestExamplesCard';
 export default {
   AnimatedPropertiesCard,
   AnimationSettingsCard,
-  RealWorldExamplesCard,
   MiscellaneousCard,
+  RealWorldExamplesCard,
   TestExamplesCard,
 };

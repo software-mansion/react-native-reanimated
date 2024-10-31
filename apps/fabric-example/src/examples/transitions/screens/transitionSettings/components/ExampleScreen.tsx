@@ -1,21 +1,23 @@
-import { useMemo } from 'react';
 import type { ReactNode } from 'react';
-import type { ExampleItemProps } from './ExamplesListCard';
+import { useMemo } from 'react';
 import type { CSSTransitionConfig, StyleProps } from 'react-native-reanimated';
-import { ScrollScreen, Section, Stagger } from '../../../../../components';
+
+import { ScrollScreen, Section, Stagger } from '@/components';
+import { TransitionConfiguration } from '@/examples/transitions/components';
+
+import type { ExampleItemProps } from './ExamplesListCard';
 import ExamplesListCard from './ExamplesListCard';
-import { TransitionConfiguration } from '../../../components';
 
 type ExampleCardsSection = {
   title: string;
-  items: ExampleItemProps[];
+  items: Array<ExampleItemProps>;
   description?: ReactNode;
 };
 
 type ExampleScreenProps = {
   sharedConfig: Partial<CSSTransitionConfig>;
-  cards: ExampleCardsSection[];
-  transitionStyles: StyleProps[];
+  cards: Array<ExampleCardsSection>;
+  transitionStyles: Array<StyleProps>;
   displayStyleChanges?: boolean;
   renderExample: (
     config: CSSTransitionConfig,
@@ -24,11 +26,11 @@ type ExampleScreenProps = {
 };
 
 export default function ExampleScreen({
-  sharedConfig,
   cards,
-  transitionStyles,
-  renderExample,
   displayStyleChanges = false,
+  renderExample,
+  sharedConfig,
+  transitionStyles,
 }: ExampleScreenProps) {
   const configOverrides = useMemo(
     () => cards.flatMap((card) => card.items),
@@ -40,26 +42,26 @@ export default function ExampleScreen({
       <Stagger>
         {cards.map((card, index) => (
           <Section
+            description={card.description}
             key={index}
-            title={card.title}
-            description={card.description}>
+            title={card.title}>
             <ExamplesListCard
-              sharedConfig={sharedConfig}
+              displayStyleChanges={displayStyleChanges}
               items={card.items}
               renderExample={renderExample}
+              sharedConfig={sharedConfig}
               transitionStyles={transitionStyles}
-              displayStyleChanges={displayStyleChanges}
             />
           </Section>
         ))}
 
         <Section
-          title="Transition configuration"
-          description="Transition configuration consists of the style changes that will be animated and the transition settings.">
+          description="Transition configuration consists of the style changes that will be animated and the transition settings."
+          title="Transition configuration">
           <TransitionConfiguration
+            overrides={configOverrides}
             sharedConfig={sharedConfig}
             transitionStyles={transitionStyles}
-            overrides={configOverrides}
           />
         </Section>
       </Stagger>

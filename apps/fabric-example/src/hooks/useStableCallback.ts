@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
-import type { AnyFunction } from '../types';
+
+import type { AnyFunction } from '@/types';
 
 export default function useStableCallback<C extends AnyFunction>(callback: C) {
   const callbackRef = useRef(callback);

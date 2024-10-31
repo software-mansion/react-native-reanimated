@@ -1,14 +1,15 @@
+import { useIsFocused } from '@react-navigation/native';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { RouteCardComponent } from '../../../components';
-import { RouteCard, Text } from '../../../components';
-import Animated, { FadeInLeft, FadeOutRight } from 'react-native-reanimated';
 import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import { colors, radius, sizes, spacing } from '../../../theme';
-import { useEffect, useRef, useState } from 'react';
-import { useIsFocused } from '@react-navigation/native';
+import Animated, { FadeInLeft, FadeOutRight } from 'react-native-reanimated';
+
+import type { RouteCardComponent } from '@/components';
+import { RouteCard, Text } from '@/components';
+import { colors, radius, sizes, spacing } from '@/theme';
 
 const MiscellaneousCard: RouteCardComponent = (props) => (
   <RouteCard
@@ -22,8 +23,8 @@ const ANIMATION_DURATION = 1500;
 
 const sharedConfig: CSSAnimationSettings = {
   animationDuration: ANIMATION_DURATION,
-  animationTimingFunction: 'easeInOut',
   animationIterationCount: 'infinite',
+  animationTimingFunction: 'easeInOut',
 };
 
 const rollAnimation: CSSAnimationConfig = {
@@ -54,15 +55,15 @@ const fadeAnimation: CSSAnimationConfig = {
 };
 
 const animations = [
-  { name: 'Roll', animation: rollAnimation },
-  { name: 'Color', animation: colorAnimation },
-  { name: 'Fade', animation: fadeAnimation },
+  { animation: rollAnimation, name: 'Roll' },
+  { animation: colorAnimation, name: 'Color' },
+  { animation: fadeAnimation, name: 'Fade' },
 ];
 
 function Showcase() {
   const [animationIndex, setAnimationIndex] = useState(0);
 
-  const { name: animationName, animation } = animations[animationIndex];
+  const { animation, name: animationName } = animations[animationIndex];
   const isFocused = useIsFocused();
   const lastIterationStartTimestampRef = useRef(0);
   const lastIterationElapsedTimeRef = useRef(0);
@@ -100,10 +101,9 @@ function Showcase() {
         clearInterval(interval);
         clearTimeout(timeout);
       };
-    } else {
-      lastIterationElapsedTimeRef.current =
-        Date.now() - lastIterationStartTimestampRef.current;
     }
+    lastIterationElapsedTimeRef.current =
+      Date.now() - lastIterationStartTimestampRef.current;
   }, [isFocused]);
 
   return (
@@ -116,9 +116,9 @@ function Showcase() {
         ]}
       />
       <Animated.View
-        key={animationName}
         entering={FadeInLeft}
-        exiting={FadeOutRight}>
+        exiting={FadeOutRight}
+        key={animationName}>
         <Text variant="label3">{animationName}</Text>
       </Animated.View>
     </View>
@@ -126,17 +126,17 @@ function Showcase() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingTop: spacing.lg,
-  },
   box: {
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
     height: sizes.md,
     width: sizes.md,
+  },
+  container: {
+    alignItems: 'center',
+    gap: spacing.xs,
+    justifyContent: 'center',
+    paddingTop: spacing.lg,
   },
 });
 

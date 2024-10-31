@@ -3,16 +3,9 @@
  * https://codepen.io/Ferie/pen/wQMvXV?editors=1100
  */
 
-import { StyleSheet, View } from 'react-native';
-import { colors, radius, spacing } from '../../../../theme';
 import type { ComponentType } from 'react';
 import React from 'react';
-import {
-  Grid as GridLayout,
-  ScrollScreen,
-  Stagger,
-  Text,
-} from '../../../../components';
+import { StyleSheet, View } from 'react-native';
 import type {
   CSSAnimationConfig,
   CSSAnimationKeyframes,
@@ -20,31 +13,34 @@ import type {
 } from 'react-native-reanimated';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 
+import { Grid as GridLayout, ScrollScreen, Stagger, Text } from '@/components';
+import { colors, radius, spacing } from '@/theme';
+
 const SPINNER_SIZE = 60;
 
 export default function SpinnersAndLoaders() {
   return (
     <ScrollScreen contentContainerStyle={{ paddingVertical: spacing.lg }}>
       <GridLayout
-        columns={3}
-        staggerInterval={100}
         columnGap={spacing.sm}
-        rowGap={spacing.md}>
-        <Example title="Spinner" Component={Spinner} />
-        <Example title="Ring" Component={Ring} />
-        <Example title="Roller" Component={Roller} />
-        <Example title="Default" Component={Default} />
-        <Example title="Ellipsis" Component={Ellipsis} />
-        <Example title="Grid" Component={Grid} />
-        <Example title="Ripple" Component={Ripple} />
-        <Example title="Dual Ring" Component={DualRing} />
-        <Example title="Rectangle Bounce" Component={RectangleBounce} />
-        <Example title="Pulse" Component={Pulse} />
-        <Example title="Double Pulse" Component={DoublePulse} />
-        <Example title="Rectangle" Component={Rectangle} />
-        <Example title="Three Dots" Component={ThreeDots} />
-        <Example title="Cubes" Component={Cubes} />
-        <Example title="Diamond" Component={Diamond} />
+        columns={3}
+        rowGap={spacing.md}
+        staggerInterval={100}>
+        <Example Component={Spinner} title="Spinner" />
+        <Example Component={Ring} title="Ring" />
+        <Example Component={Roller} title="Roller" />
+        <Example Component={Default} title="Default" />
+        <Example Component={Ellipsis} title="Ellipsis" />
+        <Example Component={Grid} title="Grid" />
+        <Example Component={Ripple} title="Ripple" />
+        <Example Component={DualRing} title="Dual Ring" />
+        <Example Component={RectangleBounce} title="Rectangle Bounce" />
+        <Example Component={Pulse} title="Pulse" />
+        <Example Component={DoublePulse} title="Double Pulse" />
+        <Example Component={Rectangle} title="Rectangle" />
+        <Example Component={ThreeDots} title="Three Dots" />
+        <Example Component={Cubes} title="Cubes" />
+        <Example Component={Diamond} title="Diamond" />
       </GridLayout>
     </ScrollScreen>
   );
@@ -55,7 +51,7 @@ type ExampleProps = {
   Component: ComponentType;
 };
 
-function Example({ title, Component }: ExampleProps) {
+function Example({ Component, title }: ExampleProps) {
   return (
     <View style={sharedStyles.cell}>
       <Stagger delay={50}>
@@ -69,19 +65,19 @@ function Example({ title, Component }: ExampleProps) {
 }
 
 const sharedStyles = StyleSheet.create({
-  loader: {
-    width: SPINNER_SIZE,
-    height: SPINNER_SIZE,
-  },
   cell: {
+    alignItems: 'center',
     backgroundColor: colors.background1,
     borderRadius: radius.md,
-    alignItems: 'center',
+    flex: 1,
+    gap: spacing.sm,
     justifyContent: 'space-between',
     padding: spacing.sm,
-    gap: spacing.sm,
     width: '100%',
-    flex: 1,
+  },
+  loader: {
+    height: SPINNER_SIZE,
+    width: SPINNER_SIZE,
   },
 });
 
@@ -105,15 +101,15 @@ function Spinner() {
             style={[
               spinnerStyles.bar,
               {
+                animationDelay: `${-(11 - index) / 10}s`,
+                animationDuration: '1.2s',
+                animationIterationCount: 'infinite',
                 animationName: {
                   to: {
                     opacity: 0,
                   },
                 },
-                animationDuration: '1.2s',
                 animationTimingFunction: 'linear',
-                animationIterationCount: 'infinite',
-                animationDelay: `${-(11 - index) / 10}s`,
               },
             ]}
           />
@@ -124,18 +120,18 @@ function Spinner() {
 }
 
 const spinnerStyles = StyleSheet.create({
-  barWrapper: {
-    transformOrigin: '0 0',
-    position: 'absolute',
-    left: '50%',
-    top: '50%',
-  },
   bar: {
+    backgroundColor: colors.primary,
     borderRadius: SPINNER_SIZE,
     height: (1 / 6) * SPINNER_SIZE,
-    width: (1 / 12) * SPINNER_SIZE,
-    backgroundColor: colors.primary,
     top: 0.4 * SPINNER_SIZE,
+    width: (1 / 12) * SPINNER_SIZE,
+  },
+  barWrapper: {
+    left: '50%',
+    position: 'absolute',
+    top: '50%',
+    transformOrigin: '0 0',
   },
 });
 
@@ -148,15 +144,15 @@ function Ring() {
           style={[
             ringStyles.part,
             {
+              animationDelay: `${-0.15 * (index + 1)}s`,
+              animationDuration: '1.2s',
+              animationIterationCount: 'infinite',
               animationName: {
                 to: {
                   transform: [{ rotate: '360deg' }],
                 },
               },
-              animationDuration: '1.2s',
               animationTimingFunction: cubicBezier(0.5, 0, 0.5, 1),
-              animationIterationCount: 'infinite',
-              animationDelay: `${-0.15 * (index + 1)}s`,
             },
           ]}
         />
@@ -168,10 +164,10 @@ function Ring() {
 const ringStyles = StyleSheet.create({
   part: {
     ...StyleSheet.absoluteFillObject,
+    borderBlockStartColor: colors.primary,
+    borderColor: 'rgba(0, 0, 0, 0.01)',
     borderRadius: SPINNER_SIZE / 2,
     borderWidth: 0.1 * SPINNER_SIZE,
-    borderColor: 'rgba(0, 0, 0, 0.01)',
-    borderBlockStartColor: colors.primary,
   },
 });
 
@@ -189,16 +185,16 @@ function Roller() {
             style={[
               rollerStyles.dotWrapper,
               {
-                transform: [{ rotate: `${startOffset}deg` }],
+                animationDelay: `${-0.036 * (index + 1)}s`,
+                animationDuration: '1.2s',
+                animationIterationCount: 'infinite',
                 animationName: {
                   to: {
                     transform: [{ rotate: `${360 + startOffset}deg` }],
                   },
                 },
-                animationDuration: '1.2s',
-                animationDelay: `${-0.036 * (index + 1)}s`,
-                animationIterationCount: 'infinite',
                 animationTimingFunction: cubicBezier(0.5, 0, 0.5, 1),
+                transform: [{ rotate: `${startOffset}deg` }],
               },
             ]}>
             <View style={[rollerStyles.dot]} />
@@ -210,18 +206,18 @@ function Roller() {
 }
 
 const rollerStyles = StyleSheet.create({
-  dotWrapper: {
-    transformOrigin: '0 0',
-    position: 'absolute',
-    left: '50%',
-    top: '50%',
-  },
   dot: {
-    width: 0.1 * SPINNER_SIZE,
-    height: 0.1 * SPINNER_SIZE,
-    borderRadius: '50%',
-    top: 0.4 * SPINNER_SIZE,
     backgroundColor: colors.primary,
+    borderRadius: '50%',
+    height: 0.1 * SPINNER_SIZE,
+    top: 0.4 * SPINNER_SIZE,
+    width: 0.1 * SPINNER_SIZE,
+  },
+  dotWrapper: {
+    left: '50%',
+    position: 'absolute',
+    top: '50%',
+    transformOrigin: '0 0',
   },
 });
 
@@ -245,6 +241,9 @@ function Default() {
             style={[
               defaultStyles.dot,
               {
+                animationDelay: `${-(11 - index) / 10}s`,
+                animationDuration: '1.2s',
+                animationIterationCount: 'infinite',
                 animationName: {
                   '0%': {
                     transform: [{ scale: 1 }],
@@ -252,20 +251,17 @@ function Default() {
                   '20%': {
                     transform: [{ scale: 1 }],
                   },
+                  '50%': {
+                    transform: [{ scale: 1.5 }],
+                  },
                   '80%': {
                     transform: [{ scale: 1 }],
                   },
                   '100%': {
                     transform: [{ scale: 1 }],
                   },
-                  '50%': {
-                    transform: [{ scale: 1.5 }],
-                  },
                 },
-                animationDuration: '1.2s',
                 animationTimingFunction: 'linear',
-                animationIterationCount: 'infinite',
-                animationDelay: `${-(11 - index) / 10}s`,
               },
             ]}
           />
@@ -276,18 +272,18 @@ function Default() {
 }
 
 const defaultStyles = StyleSheet.create({
-  dotWrapper: {
-    transformOrigin: '0 0',
-    position: 'absolute',
-    left: '50%',
-    top: '50%',
-  },
   dot: {
-    width: 0.1 * SPINNER_SIZE,
-    height: 0.1 * SPINNER_SIZE,
-    borderRadius: '50%',
-    top: 0.4 * SPINNER_SIZE,
     backgroundColor: colors.primary,
+    borderRadius: '50%',
+    height: 0.1 * SPINNER_SIZE,
+    top: 0.4 * SPINNER_SIZE,
+    width: 0.1 * SPINNER_SIZE,
+  },
+  dotWrapper: {
+    left: '50%',
+    position: 'absolute',
+    top: '50%',
+    transformOrigin: '0 0',
   },
 });
 
@@ -322,18 +318,8 @@ function Ellipsis() {
         style={[
           ellipsisStyles.dot,
           {
-            left: 0.1 * SPINNER_SIZE,
             animationName: ellipsis1,
-            ...animationSettings,
-          },
-        ]}
-      />
-      <Animated.View
-        style={[
-          ellipsisStyles.dot,
-          {
             left: 0.1 * SPINNER_SIZE,
-            animationName: ellipsis2,
             ...animationSettings,
           },
         ]}
@@ -342,8 +328,18 @@ function Ellipsis() {
         style={[
           ellipsisStyles.dot,
           {
+            animationName: ellipsis2,
+            left: 0.1 * SPINNER_SIZE,
+            ...animationSettings,
+          },
+        ]}
+      />
+      <Animated.View
+        style={[
+          ellipsisStyles.dot,
+          {
+            animationName: ellipsis2,
             left: 0.4 * SPINNER_SIZE,
-            animationName: ellipsis2,
             ...animationSettings,
           },
         ]}
@@ -352,8 +348,8 @@ function Ellipsis() {
         style={[
           ellipsisStyles.dot,
           {
-            left: 0.7 * SPINNER_SIZE,
             animationName: ellipsis3,
+            left: 0.7 * SPINNER_SIZE,
             ...animationSettings,
           },
         ]}
@@ -364,12 +360,12 @@ function Ellipsis() {
 
 const ellipsisStyles = StyleSheet.create({
   dot: {
+    backgroundColor: colors.primary,
+    borderRadius: '50%',
+    height: 0.2 * SPINNER_SIZE,
     position: 'absolute',
     top: 0.4 * SPINNER_SIZE,
     width: 0.2 * SPINNER_SIZE,
-    height: 0.2 * SPINNER_SIZE,
-    borderRadius: '50%',
-    backgroundColor: colors.primary,
   },
 });
 
@@ -387,15 +383,15 @@ function Grid() {
             style={[
               gridStyles.dot,
               {
+                animationDelay: `${delay}s`,
+                animationDuration: '1.2s',
+                animationIterationCount: 'infinite',
                 animationName: {
                   '50%': {
                     opacity: 0.5,
                   },
                 },
-                animationDuration: '1.2s',
                 animationTimingFunction: 'linear',
-                animationIterationCount: 'infinite',
-                animationDelay: `${delay}s`,
               },
             ]}
           />
@@ -406,38 +402,38 @@ function Grid() {
 }
 
 const gridStyles = StyleSheet.create({
+  dot: {
+    backgroundColor: colors.primary,
+    borderRadius: '50%',
+    height: 0.275 * SPINNER_SIZE,
+    width: 0.275 * SPINNER_SIZE,
+  },
   grid: {
     ...sharedStyles.loader,
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 0.0875 * SPINNER_SIZE,
   },
-  dot: {
-    width: 0.275 * SPINNER_SIZE,
-    height: 0.275 * SPINNER_SIZE,
-    borderRadius: '50%',
-    backgroundColor: colors.primary,
-  },
 });
 
 function Ripple() {
   const ripple: CSSAnimationKeyframes = {
     from: {
+      height: 0,
       opacity: 1,
       width: 0,
-      height: 0,
     },
     to: {
+      height: SPINNER_SIZE,
       opacity: 0,
       width: SPINNER_SIZE,
-      height: SPINNER_SIZE,
     },
   };
 
   const animationSettings: CSSAnimationSettings = {
     animationDuration: '1s',
-    animationTimingFunction: cubicBezier(0, 0.2, 0.8, 1),
     animationIterationCount: 'infinite',
+    animationTimingFunction: cubicBezier(0, 0.2, 0.8, 1),
   };
 
   return (
@@ -467,13 +463,13 @@ function Ripple() {
 
 const rippleStyles = StyleSheet.create({
   ripple: {
-    position: 'absolute',
-    borderWidth: 0.05 * SPINNER_SIZE,
+    borderColor: colors.primary,
     borderRadius: '50%',
+    borderWidth: 0.05 * SPINNER_SIZE,
     left: '50%',
+    position: 'absolute',
     top: '50%',
     transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
-    borderColor: colors.primary,
   },
 });
 
@@ -484,14 +480,14 @@ function DualRing() {
         style={[
           dualRingStyles.part,
           {
+            animationDuration: '0.6s',
+            animationIterationCount: 'infinite',
             animationName: {
               to: {
                 transform: [{ rotate: '180deg' }],
               },
             },
-            animationDuration: '0.6s',
             animationTimingFunction: 'linear',
-            animationIterationCount: 'infinite',
           },
         ]}
       />
@@ -502,11 +498,11 @@ function DualRing() {
 const dualRingStyles = StyleSheet.create({
   part: {
     ...StyleSheet.absoluteFillObject,
+    borderBlockEndColor: colors.primary,
+    borderBlockStartColor: colors.primary,
+    borderColor: 'rgba(0, 0, 0, 0.01)',
     borderRadius: SPINNER_SIZE / 2,
     borderWidth: 0.1 * SPINNER_SIZE,
-    borderColor: 'rgba(0, 0, 0, 0.01)',
-    borderBlockStartColor: colors.primary,
-    borderBlockEndColor: colors.primary,
   },
 });
 
@@ -519,6 +515,9 @@ function RectangleBounce() {
           style={[
             RectangleBounceStyles.bar,
             {
+              animationDelay: `${-1.5 + 0.1 * index}s`,
+              animationDuration: '1.5s',
+              animationIterationCount: 'infinite',
               animationName: {
                 '0%': {
                   transform: [{ scaleY: 0.4 }],
@@ -533,10 +532,7 @@ function RectangleBounce() {
                   transform: [{ scaleY: 0.4 }],
                 },
               },
-              animationDuration: '1.5s',
               animationTimingFunction: 'easeInOut',
-              animationIterationCount: 'infinite',
-              animationDelay: `${-1.5 + 0.1 * index}s`,
             },
           ]}
         />
@@ -546,16 +542,16 @@ function RectangleBounce() {
 }
 
 const RectangleBounceStyles = StyleSheet.create({
+  bar: {
+    backgroundColor: colors.primary,
+    height: '75%',
+    width: '15%',
+  },
   loader: {
     ...sharedStyles.loader,
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-evenly',
-  },
-  bar: {
-    width: '15%',
-    height: '75%',
-    backgroundColor: colors.primary,
   },
 });
 
@@ -566,18 +562,18 @@ function Pulse() {
         style={[
           pulseStyles.pulse,
           {
+            animationDuration: '1.5s',
+            animationIterationCount: 'infinite',
             animationName: {
               from: {
-                transform: [{ scale: 0 }],
                 opacity: 0.8,
+                transform: [{ scale: 0 }],
               },
               to: {
                 opacity: 0,
               },
             },
-            animationDuration: '1.5s',
             animationTimingFunction: 'easeOut',
-            animationIterationCount: 'infinite',
           },
         ]}
       />
@@ -587,15 +583,17 @@ function Pulse() {
 
 const pulseStyles = StyleSheet.create({
   pulse: {
-    width: '100%',
-    height: '100%',
-    borderRadius: '50%',
     backgroundColor: colors.primary,
+    borderRadius: '50%',
+    height: '100%',
+    width: '100%',
   },
 });
 
 function DoublePulse() {
   const pulse: CSSAnimationConfig = {
+    animationDuration: '1.5s',
+    animationIterationCount: 'infinite',
     animationName: {
       from: {
         transform: [{ scale: 0 }],
@@ -604,9 +602,7 @@ function DoublePulse() {
         opacity: 0,
       },
     },
-    animationDuration: '1.5s',
     animationTimingFunction: 'easeOut',
-    animationIterationCount: 'infinite',
   };
 
   return (
@@ -628,8 +624,8 @@ function DoublePulse() {
 const doublePulseStyles = StyleSheet.create({
   pulse: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: '50%',
     backgroundColor: colors.primary,
+    borderRadius: '50%',
   },
 });
 
@@ -640,15 +636,17 @@ function Rectangle() {
         style={[
           rectangleStyles.rectangle,
           {
+            animationDuration: '1.2s',
+            animationIterationCount: 'infinite',
             animationName: {
-              from: {
-                transform: [{ perspective: 2 * SPINNER_SIZE }],
-              },
               '50%': {
                 transform: [
                   { perspective: 2 * SPINNER_SIZE },
                   { rotateX: '-180deg' },
                 ],
+              },
+              from: {
+                transform: [{ perspective: 2 * SPINNER_SIZE }],
               },
               to: {
                 transform: [
@@ -658,9 +656,7 @@ function Rectangle() {
                 ],
               },
             },
-            animationDuration: '1.2s',
             animationTimingFunction: 'easeInOut',
-            animationIterationCount: 'infinite',
           },
         ]}
       />
@@ -671,13 +667,13 @@ function Rectangle() {
 const rectangleStyles = StyleSheet.create({
   loader: {
     ...sharedStyles.loader,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   rectangle: {
-    width: '75%',
-    height: '75%',
     backgroundColor: colors.primary,
+    height: '75%',
+    width: '75%',
   },
 });
 
@@ -690,6 +686,9 @@ function ThreeDots() {
           style={[
             threeDotsStyles.dot,
             {
+              animationDelay: `${-0.16 * (2 - index)}s`,
+              animationDuration: '1.5s',
+              animationIterationCount: 'infinite',
               animationName: {
                 '0%': {
                   transform: [{ scale: 0 }],
@@ -704,10 +703,7 @@ function ThreeDots() {
                   transform: [{ scale: 0 }],
                 },
               },
-              animationDuration: '1.5s',
               animationTimingFunction: 'easeInOut',
-              animationIterationCount: 'infinite',
-              animationDelay: `${-0.16 * (2 - index)}s`,
             },
           ]}
         />
@@ -717,17 +713,17 @@ function ThreeDots() {
 }
 
 const threeDotsStyles = StyleSheet.create({
+  dot: {
+    backgroundColor: colors.primary,
+    borderRadius: '50%',
+    height: 0.25 * SPINNER_SIZE,
+    width: 0.25 * SPINNER_SIZE,
+  },
   loader: {
     ...sharedStyles.loader,
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-evenly',
-  },
-  dot: {
-    width: 0.25 * SPINNER_SIZE,
-    height: 0.25 * SPINNER_SIZE,
-    borderRadius: '50%',
-    backgroundColor: colors.primary,
   },
 });
 
@@ -747,6 +743,9 @@ function Cubes() {
             style={[
               cubesStyles.cube,
               {
+                animationDelay: `${delay}s`,
+                animationDuration: '1.5s',
+                animationIterationCount: 'infinite',
                 animationName: {
                   '0%': {
                     transform: [{ scale: 1 }],
@@ -761,10 +760,7 @@ function Cubes() {
                     transform: [{ scale: 1 }],
                   },
                 },
-                animationDuration: '1.5s',
                 animationTimingFunction: 'easeInOut',
-                animationIterationCount: 'infinite',
-                animationDelay: `${delay}s`,
               },
             ]}
           />
@@ -775,15 +771,15 @@ function Cubes() {
 }
 
 const cubesStyles = StyleSheet.create({
+  cube: {
+    backgroundColor: colors.primary,
+    height: (1 / 3) * SPINNER_SIZE,
+    width: (1 / 3) * SPINNER_SIZE,
+  },
   loader: {
     ...sharedStyles.loader,
     flexDirection: 'row',
     flexWrap: 'wrap',
-  },
-  cube: {
-    width: (1 / 3) * SPINNER_SIZE,
-    height: (1 / 3) * SPINNER_SIZE,
-    backgroundColor: colors.primary,
   },
 });
 
@@ -801,54 +797,54 @@ function Diamond() {
         style={[
           diamondStyles.part,
           {
-            animationName: {
-              '0%': {
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateX: '-180deg' },
-                ],
-                opacity: 0,
-              },
-              '10%': {
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateX: '-180deg' },
-                ],
-                opacity: 0,
-              },
-              '25%': {
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateX: '0deg' },
-                ],
-                opacity: 1,
-              },
-              '75%': {
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateX: '0deg' },
-                ],
-                opacity: 1,
-              },
-              '90%': {
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateY: '180deg' },
-                ],
-                opacity: 0,
-              },
-              '100%': {
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateY: '180deg' },
-                ],
-                opacity: 0,
-              },
-            },
+            animationDelay: `${-0.3 * (4 - order)}s`,
             animationDuration: '2.4s',
             animationIterationCount: 'infinite',
+            animationName: {
+              '0%': {
+                opacity: 0,
+                transform: [
+                  { perspective: 2 * SPINNER_SIZE },
+                  { rotateX: '-180deg' },
+                ],
+              },
+              '10%': {
+                opacity: 0,
+                transform: [
+                  { perspective: 2 * SPINNER_SIZE },
+                  { rotateX: '-180deg' },
+                ],
+              },
+              '25%': {
+                opacity: 1,
+                transform: [
+                  { perspective: 2 * SPINNER_SIZE },
+                  { rotateX: '0deg' },
+                ],
+              },
+              '75%': {
+                opacity: 1,
+                transform: [
+                  { perspective: 2 * SPINNER_SIZE },
+                  { rotateX: '0deg' },
+                ],
+              },
+              '90%': {
+                opacity: 0,
+                transform: [
+                  { perspective: 2 * SPINNER_SIZE },
+                  { rotateY: '180deg' },
+                ],
+              },
+              '100%': {
+                opacity: 0,
+                transform: [
+                  { perspective: 2 * SPINNER_SIZE },
+                  { rotateY: '180deg' },
+                ],
+              },
+            },
             animationTimingFunction: 'linear',
-            animationDelay: `${-0.3 * (4 - order)}s`,
           },
         ]}
       />
@@ -870,25 +866,25 @@ function Diamond() {
 const DIAMOND_SIZE = (SPINNER_SIZE * Math.sqrt(2)) / 2;
 
 const diamondStyles = StyleSheet.create({
-  loader: {
-    ...sharedStyles.loader,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   diamond: {
-    width: DIAMOND_SIZE,
-    height: DIAMOND_SIZE,
-    transform: [{ rotate: '45deg' }],
     flexDirection: 'row',
     flexWrap: 'wrap',
+    height: DIAMOND_SIZE,
+    transform: [{ rotate: '45deg' }],
+    width: DIAMOND_SIZE,
   },
-  partWrapper: {
-    width: '50%',
-    height: '50%',
+  loader: {
+    ...sharedStyles.loader,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   part: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.primary,
     transformOrigin: '100% 100%',
+  },
+  partWrapper: {
+    height: '50%',
+    width: '50%',
   },
 });

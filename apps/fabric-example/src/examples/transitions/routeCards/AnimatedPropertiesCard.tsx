@@ -1,20 +1,21 @@
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import type { ReactNode } from 'react';
+import { Children, useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { RouteCardComponent } from '../../../components';
-import { RouteCard } from '../../../components';
 import type { CSSAnimationConfig } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
-import { colors, flex, radius, sizes, spacing } from '../../../theme';
-import { Children, useCallback, useState } from 'react';
-import type { ReactNode } from 'react';
-import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+
+import type { RouteCardComponent } from '@/components';
+import { RouteCard } from '@/components';
+import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const scrollAnimation: CSSAnimationConfig = {
+  animationIterationCount: 'infinite',
   animationName: {
     to: {
       transform: [{ translateY: '-50%' }],
     },
   },
-  animationIterationCount: 'infinite',
   animationTimingFunction: 'linear',
 };
 
@@ -71,34 +72,34 @@ function Examples({ children }: { children: ReactNode }) {
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
     flex: 1,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  example: {
+    alignItems: 'center',
+    aspectRatio: 1,
+    backgroundColor: colors.background1,
+    borderRadius: radius.sm,
+    justifyContent: 'center',
     overflow: 'hidden',
   },
   exampleContainer: {
-    position: 'absolute',
-    width: '75%',
+    height: sizes.xxxl,
     left: '50%',
+    position: 'absolute',
     transform: [
       { translateX: '-40%' },
       { rotate: '-5deg' },
       { translateY: -spacing.xs },
     ],
-    height: sizes.xxxl,
+    width: '75%',
   },
   examples: {
     backgroundColor: colors.primaryLight,
-    paddingVertical: spacing.sm / 2,
-    paddingHorizontal: spacing.sm,
     gap: spacing.sm,
-  },
-  example: {
-    backgroundColor: colors.background1,
-    borderRadius: radius.sm,
-    overflow: 'hidden',
-    aspectRatio: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm / 2,
   },
 });
 
@@ -125,9 +126,9 @@ function FlexExample() {
           style={[
             flexStyles.box,
             {
-              transitionProperty: 'flex',
-              transitionDuration: 300,
               flex: index === expandedIndex ? 2 : 1,
+              transitionDuration: 300,
+              transitionProperty: 'flex',
             },
           ]}
         />
@@ -137,16 +138,16 @@ function FlexExample() {
 }
 
 const flexStyles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    width: '75%',
-    height: sizes.xxs,
-    gap: 1,
-  },
   box: {
-    width: '100%',
     backgroundColor: colors.primary,
     borderRadius: radius.xs,
+    width: '100%',
+  },
+  container: {
+    flexDirection: 'row',
+    gap: 1,
+    height: sizes.xxs,
+    width: '75%',
   },
 });
 
@@ -169,7 +170,7 @@ function PaddingExample() {
     <Animated.View
       style={[
         paddingStyles.box,
-        { transitionProperty: 'padding', transitionDuration: 300, padding },
+        { padding, transitionDuration: 300, transitionProperty: 'padding' },
       ]}>
       <View style={paddingStyles.boxInner} />
     </Animated.View>
@@ -186,8 +187,8 @@ const paddingStyles = StyleSheet.create({
   boxInner: {
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
-    width: '100%',
     height: '100%',
+    width: '100%',
   },
 });
 
@@ -214,9 +215,9 @@ function MarginsExample() {
           marginStyles.box,
           marginStyles.boxAnimated,
           {
-            transitionProperty: 'margin',
-            transitionDuration: 300,
             margin,
+            transitionDuration: 300,
+            transitionProperty: 'margin',
           },
         ]}
       />
@@ -226,19 +227,19 @@ function MarginsExample() {
 }
 
 const marginStyles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 1,
-  },
   box: {
-    width: 12,
-    height: 12,
     backgroundColor: colors.primary,
     borderRadius: radius.xs,
+    height: 12,
+    width: 12,
   },
   boxAnimated: {
     backgroundColor: colors.primaryDark,
+  },
+  container: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 1,
   },
 });
 
@@ -264,18 +265,18 @@ function TextColorsExample() {
       style={[
         textColorsStyles.textWrapper,
         {
-          transitionProperty: 'backgroundColor',
-          transitionDuration: 300,
           backgroundColor: COLORS[(colorIndex + 1) % COLORS.length],
+          transitionDuration: 300,
+          transitionProperty: 'backgroundColor',
         },
       ]}>
       <Animated.Text
         style={[
           textColorsStyles.text,
           {
-            transitionProperty: 'color',
-            transitionDuration: 300,
             color: COLORS[colorIndex],
+            transitionDuration: 300,
+            transitionProperty: 'color',
           },
         ]}>
         Aa
@@ -285,16 +286,16 @@ function TextColorsExample() {
 }
 
 const textColorsStyles = StyleSheet.create({
+  text: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
   textWrapper: {
     ...flex.center,
-    width: sizes.sm,
-    height: sizes.sm,
     backgroundColor: colors.primaryLight,
     borderRadius: radius.sm,
-  },
-  text: {
-    fontWeight: 'bold',
-    fontSize: 14,
+    height: sizes.sm,
+    width: sizes.sm,
   },
 });
 

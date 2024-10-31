@@ -1,4 +1,3 @@
-import { colors, flex, radius, sizes } from '../../../../theme';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSTransitionConfig,
@@ -6,6 +5,9 @@ import type {
   StyleProps,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
+
+import { colors, flex, radius, sizes } from '@/theme';
+
 import { ExampleScreen } from './components';
 
 export default function TransitionProperty() {
@@ -24,44 +26,44 @@ export default function TransitionProperty() {
 
   return (
     <ExampleScreen
+      renderExample={renderExample}
       sharedConfig={sharedConfig}
-      transitionStyles={[
-        { width: sizes.xs, height: sizes.xs, backgroundColor: colors.primary },
-        {
-          width: sizes.lg,
-          height: sizes.lg,
-          backgroundColor: colors.primaryDark,
-        },
-      ]}
       cards={[
         {
-          title: 'Transition Property',
           description:
             "Only properties listed in 'transitionProperty' will animate when changed. In the examples below, style changes are the same but transition properties are different.",
           items: [
-            { transitionProperty: 'width', label: '"width"' },
-            { transitionProperty: 'height', label: '"height"' },
+            { label: '"width"', transitionProperty: 'width' },
+            { label: '"height"', transitionProperty: 'height' },
             {
-              transitionProperty: ['width', 'height'],
               label: '["width", "height"]',
+              transitionProperty: ['width', 'height'],
             },
-            { transitionProperty: 'all', label: '"all"' },
+            { label: '"all"', transitionProperty: 'all' },
           ],
+          title: 'Transition Property',
         },
       ]}
-      renderExample={renderExample}
+      transitionStyles={[
+        { backgroundColor: colors.primary, height: sizes.xs, width: sizes.xs },
+        {
+          backgroundColor: colors.primaryDark,
+          height: sizes.lg,
+          width: sizes.lg,
+        },
+      ]}
     />
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    ...flex.center,
-    height: sizes.xl,
-    borderRadius: radius.sm,
-    backgroundColor: colors.background2,
-  },
   box: {
     borderRadius: radius.sm,
+  },
+  wrapper: {
+    ...flex.center,
+    backgroundColor: colors.background2,
+    borderRadius: radius.sm,
+    height: sizes.xl,
   },
 });

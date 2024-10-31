@@ -1,15 +1,20 @@
-import { StyleSheet } from 'react-native';
 import type { ViewStyle } from 'react-native';
-import { ScrollScreen, Section, TabView } from '../../../../../../components';
-import { VerticalExampleCard } from '../../components';
-import type { ExampleCardProps } from '../../components';
-import Animated, { normalizeTransformOrigin } from 'react-native-reanimated';
+import { StyleSheet } from 'react-native';
 import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import { formatAnimationCode } from '../../../../../../utils';
-import { colors, radius, sizes } from '../../../../../../theme';
+import Animated, { normalizeTransformOrigin } from 'react-native-reanimated';
+
+import type { ExampleCardProps } from '@/components';
+import {
+  ScrollScreen,
+  Section,
+  TabView,
+  VerticalExampleCard,
+} from '@/components';
+import { colors, radius, sizes } from '@/theme';
+import { formatAnimationCode } from '@/utils';
 
 export default function TransformOrigin() {
   return (
@@ -30,27 +35,26 @@ export default function TransformOrigin() {
   );
 }
 
-type TransformOrigin = ViewStyle['transformOrigin'];
+type TransformOriginProp = ViewStyle['transformOrigin'];
 
-type Examples = {
+type Examples = Array<{
   title: string;
   description?: string;
-  examples: {
+  examples: Array<{
     title: string;
-    transformOrigins: TransformOrigin[];
+    transformOrigins: Array<TransformOriginProp>;
     description?: string;
-  }[];
-}[];
+  }>;
+}>;
 
 const SHARED_SETTINGS: CSSAnimationSettings = {
+  animationDuration: '3s',
   animationIterationCount: 'infinite',
   animationTimingFunction: 'linear',
-  animationDuration: '3s',
 };
 
 const KEYWORD_EXAMPLES: Examples = [
   {
-    title: 'Single value',
     description:
       'When transform origin is a single keyword value. It is applied only to one axis (`right` and `left` to the **x axis**, `top` and `bottom` to the **y axis**, and `center` to both). The second axis is set to `center` by default.',
     examples: [
@@ -67,9 +71,9 @@ const KEYWORD_EXAMPLES: Examples = [
         transformOrigins: ['left', 'center', 'center', 'top'],
       },
     ],
+    title: 'Single value',
   },
   {
-    title: 'Two values',
     description:
       'When transform origin is a combination of two keyword values. The `top`/`bottom` value is applied to the **y axis** and the `left`/`right` value is applied to the **x axis**. `center` is applied to the **x axis** if is used as the first value or to the **y axis** if is used as the second value.',
     examples: [
@@ -86,12 +90,12 @@ const KEYWORD_EXAMPLES: Examples = [
         transformOrigins: ['left top', 'center', 'right top'],
       },
     ],
+    title: 'Two values',
   },
 ];
 
 const ABSOLUTE_EXAMPLES: Examples = [
   {
-    title: 'Single value',
     description:
       'Single value specified in pixels (or as a number). It is applied only to the **x axis**. The second axis is set to `center` by default.',
     examples: [
@@ -104,9 +108,9 @@ const ABSOLUTE_EXAMPLES: Examples = [
         transformOrigins: [[-50], [100]],
       },
     ],
+    title: 'Single value',
   },
   {
-    title: 'Two values',
     description:
       'Two values specified in pixels (or as a number). The first value is applied to the **x axis** and the second value is applied to the **y axis**.',
     examples: [
@@ -122,12 +126,12 @@ const ABSOLUTE_EXAMPLES: Examples = [
         ],
       },
     ],
+    title: 'Two values',
   },
 ];
 
 const RELATIVE_EXAMPLES: Examples = [
   {
-    title: 'Single value',
     description:
       'Single value specified in percentage. It is applied only to the **x axis** and is relative to the **width** of the element. The second axis is set to `center` by default.',
     examples: [
@@ -136,9 +140,9 @@ const RELATIVE_EXAMPLES: Examples = [
         transformOrigins: ['-50%', '100%'],
       },
     ],
+    title: 'Single value',
   },
   {
-    title: 'Two values',
     description:
       'Two values specified in percentage. The first value is applied to the **x axis** and is relative to the **width** of the element. The second value is applied to the **y axis** and is relative to the **height** of the element.',
     examples: [
@@ -147,12 +151,12 @@ const RELATIVE_EXAMPLES: Examples = [
         transformOrigins: ['-50% -50%', '100% 100%'],
       },
     ],
+    title: 'Two values',
   },
 ];
 
 const MIXED_EXAMPLES: Examples = [
   {
-    title: 'Single value',
     description:
       'Single value specified in pixels, as a number, in percentage, or as a keyword.',
     examples: [
@@ -161,9 +165,9 @@ const MIXED_EXAMPLES: Examples = [
         transformOrigins: ['-75px', '50%', [-25], 'center'],
       },
     ],
+    title: 'Single value',
   },
   {
-    title: 'Two values',
     description:
       'Two values specified in pixels, as a number, in percentage, or as a keyword.',
     examples: [
@@ -177,6 +181,7 @@ const MIXED_EXAMPLES: Examples = [
         ],
       },
     ],
+    title: 'Two values',
   },
 ];
 
@@ -189,20 +194,20 @@ function ExamplesScreen({ examples }: ExamplesScreenProps) {
     <ScrollScreen>
       {examples.map(
         ({
-          title: sectionTitle,
           description: sectionDescription,
           examples: sectionExamples,
+          title: sectionTitle,
         }) => (
           <Section
-            title={sectionTitle}
+            description={sectionDescription}
             key={sectionTitle}
-            description={sectionDescription}>
-            {sectionExamples.map(({ title, transformOrigins, description }) => (
+            title={sectionTitle}>
+            {sectionExamples.map(({ description, title, transformOrigins }) => (
               <Example
+                description={description}
                 key={title}
                 title={title}
                 transformOrigins={transformOrigins}
-                description={description}
               />
             ))}
           </Section>
@@ -212,9 +217,9 @@ function ExamplesScreen({ examples }: ExamplesScreenProps) {
   );
 }
 
-type ExampleProps = Omit<ExampleCardProps, 'code'> & {
-  transformOrigins: TransformOrigin[];
-};
+type ExampleProps = {
+  transformOrigins: Array<TransformOriginProp>;
+} & Omit<ExampleCardProps, 'code'>;
 
 const calculateOffset = (index: number, step: number) => {
   const offset = index * step;
@@ -230,8 +235,8 @@ function Example({ transformOrigins, ...cardProps }: ExampleProps) {
         return [
           calculateOffset(index, step),
           {
-            transformOrigin: origin,
             transform: [{ rotate: `${index * 360}deg` }],
+            transformOrigin: origin,
           },
         ];
       })
@@ -245,8 +250,8 @@ function Example({ transformOrigins, ...cardProps }: ExampleProps) {
         return [
           calculateOffset(index, step),
           {
-            top: y,
             left: x,
+            top: y,
             transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
           },
         ];
@@ -258,8 +263,8 @@ function Example({ transformOrigins, ...cardProps }: ExampleProps) {
   return (
     <VerticalExampleCard
       {...cardProps}
-      collapsedCode={JSON.stringify(boxAnimation.animationName, null, 2)}
-      code={formatAnimationCode(boxAnimation)}>
+      code={formatAnimationCode(boxAnimation)}
+      collapsedCode={JSON.stringify(boxAnimation.animationName, null, 2)}>
       <Animated.View style={[styles.box, boxAnimation]}>
         <Animated.View style={[styles.originDot, originDotAnimation]} />
       </Animated.View>
@@ -269,16 +274,16 @@ function Example({ transformOrigins, ...cardProps }: ExampleProps) {
 
 const styles = StyleSheet.create({
   box: {
-    width: sizes.md,
-    height: sizes.md,
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
+    height: sizes.md,
+    width: sizes.md,
   },
   originDot: {
-    position: 'absolute',
     backgroundColor: colors.primaryDark,
-    width: sizes.xxxs,
-    height: sizes.xxxs,
     borderRadius: radius.full,
+    height: sizes.xxxs,
+    position: 'absolute',
+    width: sizes.xxxs,
   },
 });

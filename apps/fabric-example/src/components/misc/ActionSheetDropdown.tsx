@@ -1,3 +1,4 @@
+import { Portal } from '@gorhom/portal';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { useMemo, useRef, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
@@ -10,8 +11,8 @@ import {
   View,
 } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { spacing } from '../../theme';
-import { Portal } from '@gorhom/portal';
+
+import { spacing } from '@/theme';
 
 export interface ActionSheetOption {
   key: string;
@@ -28,10 +29,10 @@ type LayoutMeasurements = {
 
 type DropdownState = {
   isOpen: boolean;
-  toggleMeasurements: (LayoutMeasurements & { sticky?: boolean }) | null;
+  toggleMeasurements: ({ sticky?: boolean } & LayoutMeasurements) | null;
 };
 
-export type ActionSheetDropdownStyleOptions = {
+type ActionSheetDropdownStyleOptions = {
   alignment?: 'left' | 'right';
   sticky?: boolean;
   offsetX?: number;
@@ -41,20 +42,20 @@ export type ActionSheetDropdownStyleOptions = {
 };
 
 type ActionSheetDropdownProps = PropsWithChildren<{
-  options: ActionSheetOption[];
-  styleOptions?: ActionSheetDropdownStyleOptions & {
+  options: Array<ActionSheetOption>;
+  styleOptions?: {
     backdropOpacity?: number;
     dropdownStyle?: StyleProp<ViewStyle>;
-  };
+  } & ActionSheetDropdownStyleOptions;
   onOpen?: () => void;
   onClose?: () => void;
 }>;
 
 export default function ActionSheetDropdown({
   children,
-  styleOptions,
-  onOpen,
   onClose,
+  onOpen,
+  styleOptions,
   ...contentProps
 }: ActionSheetDropdownProps): JSX.Element {
   const containerRef = useRef<View>(null);
@@ -73,11 +74,11 @@ export default function ActionSheetDropdown({
         setState({
           isOpen: true,
           toggleMeasurements: {
-            x,
-            y,
-            width,
             height,
             sticky: styleOptions?.sticky,
+            width,
+            x,
+            y,
           },
         });
       });
@@ -94,7 +95,7 @@ export default function ActionSheetDropdown({
       <Pressable onPress={openDropdown}>
         {/* collapsable property prevents removing view on Android. Without this property we were
         getting undefined in measureInWindow callback. (https://reactnative.dev/docs/view.html#collapsable-android) */}
-        <View ref={containerRef} collapsable={false}>
+        <View collapsable={false} ref={containerRef}>
           {children}
         </View>
       </Pressable>
@@ -105,12 +106,12 @@ export default function ActionSheetDropdown({
             <Backdrop handleClose={closeDropdown} />
             <DropdownContent
               {...contentProps}
-              style={styleOptions?.dropdownStyle}
               alignment={styleOptions?.alignment}
-              offsetX={styleOptions?.offsetX}
-              offsetY={styleOptions?.offsetY}
               dropdownMaxHeight={styleOptions?.dropdownMaxHeight}
               handleClose={closeDropdown}
+              offsetX={styleOptions?.offsetX}
+              offsetY={styleOptions?.offsetY}
+              style={styleOptions?.dropdownStyle}
               toggleMeasurements={toggleMeasurements}
             />
           </>
@@ -121,7 +122,7 @@ export default function ActionSheetDropdown({
 }
 
 type DropdownContentProps = {
-  options: ActionSheetOption[];
+  options: Array<ActionSheetOption>;
   toggleMeasurements: LayoutMeasurements;
   alignment?: 'left' | 'right';
   offsetX?: number;
@@ -132,14 +133,14 @@ type DropdownContentProps = {
 };
 
 function DropdownContent({
-  options,
   alignment = 'left',
-  toggleMeasurements,
-  offsetX = 0,
-  offsetY = spacing.xxs,
   dropdownMaxHeight,
   handleClose,
+  offsetX = 0,
+  offsetY = spacing.xxs,
+  options,
   style,
+  toggleMeasurements,
 }: DropdownContentProps): JSX.Element {
   const [overflowsContainer, setOverflowsContainer] = useState(false);
   const windowDimensions = Dimensions.get('window');
@@ -152,11 +153,11 @@ function DropdownContent({
       };
     }
     return {
+      maxWidth: toggleMeasurements.x + toggleMeasurements.width - spacing.sm,
       right:
         windowDimensions.width -
         (toggleMeasurements.x + toggleMeasurements.width) -
         offsetX,
-      maxWidth: toggleMeasurements.x + toggleMeasurements.width - spacing.sm,
     };
   }, [alignment, windowDimensions.width, toggleMeasurements, offsetX]);
 

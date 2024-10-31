@@ -4,7 +4,6 @@
  */
 
 import { Dimensions, StyleSheet, View } from 'react-native';
-import { spacing } from '../../../../theme';
 import type { CSSAnimationConfig } from 'react-native-reanimated';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 import {
@@ -17,19 +16,23 @@ import {
   Svg,
 } from 'react-native-svg';
 
+import { spacing } from '@/theme';
+
 const COLORS = {
-  purple: '#743388',
-  darkPurple: '#272425',
-  orange: '#EF8B32',
-  red: '#E82134',
   bg: '#1D1D1D',
+  darkPurple: '#272425',
   gray: '#CCC',
   grayLighter: '#E0E0E0',
   grayLightest: '#F3F3F3',
+  orange: '#EF8B32',
+  purple: '#743388',
+  red: '#E82134',
   white: '#FFF',
 };
 
 const turbulenceAnimation: CSSAnimationConfig = {
+  animationDuration: '0.2s',
+  animationIterationCount: 'infinite',
   animationName: {
     '0%': {
       transform: 'scale(1) translate(0, 0) rotate(45deg)',
@@ -41,11 +44,12 @@ const turbulenceAnimation: CSSAnimationConfig = {
       transform: 'scale(1) translate(0, 0) rotate(45deg)',
     },
   },
-  animationDuration: '0.2s',
-  animationIterationCount: 'infinite',
 };
 
 const hyperspaceAnimation: CSSAnimationConfig = {
+  animationDuration: '0.4s',
+  animationFillMode: 'both',
+  animationIterationCount: 'infinite',
   animationName: {
     from: {
       opacity: 1,
@@ -56,12 +60,11 @@ const hyperspaceAnimation: CSSAnimationConfig = {
       transform: [{ scaleY: 1 }, { translateY: 600 }],
     },
   },
-  animationDuration: '0.4s',
-  animationIterationCount: 'infinite',
-  animationFillMode: 'both',
 };
 
 const mainFlameAnimation: CSSAnimationConfig = {
+  animationDuration: '0.1s',
+  animationIterationCount: 'infinite',
   animationName: {
     from: {
       transform: [{ translateY: 5 }],
@@ -70,39 +73,37 @@ const mainFlameAnimation: CSSAnimationConfig = {
       transform: [{ translateY: 0 }],
     },
   },
-  animationDuration: '0.1s',
   animationTimingFunction: cubicBezier(0.175, 0.885, 0.42, 1.41),
-  animationIterationCount: 'infinite',
 };
 
 const propulsedFlameAnimation: CSSAnimationConfig = {
+  animationDuration: '0.3s',
+  animationIterationCount: 'infinite',
   animationName: {
     from: {
       transform: [{ translateY: -10 }],
     },
     to: {
-      transform: [{ translateY: 50 }, { scale: 0.7 }],
       opacity: 0,
+      transform: [{ translateY: 50 }, { scale: 0.7 }],
     },
   },
-  animationDuration: '0.3s',
   animationTimingFunction: 'easeIn',
-  animationIterationCount: 'infinite',
 };
 
 const propulsedSparkAnimation: CSSAnimationConfig = {
+  animationDuration: '0.24s',
+  animationIterationCount: 'infinite',
   animationName: {
     from: {
       transform: [{ translateY: 0 }],
     },
     to: {
-      transform: [{ translateY: 100 }],
       opacity: 0,
+      transform: [{ translateY: 100 }],
     },
   },
-  animationDuration: '0.24s',
   animationTimingFunction: 'easeIn',
-  animationIterationCount: 'infinite',
 };
 
 const STAR_POSITIONS = [
@@ -144,7 +145,7 @@ export default function RocketInSpace() {
         <Animated.View style={turbulenceAnimation}>
           <Svg style={styles.rocket}>
             <Defs>
-              <LinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+              <LinearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
                 <Stop offset="0" stopColor={COLORS.grayLightest} />
                 <Stop offset="65%" stopColor={COLORS.grayLightest} />
                 <Stop offset="65%" stopColor={COLORS.grayLighter} />
@@ -153,26 +154,26 @@ export default function RocketInSpace() {
             </Defs>
 
             {/* Capsule base */}
-            <Rect x="34" y="62" width="112" height="94" fill="url(#grad)" />
+            <Rect fill="url(#grad)" height="94" width="112" x="34" y="62" />
 
             {/* Capsule top */}
-            <Polygon points="90 0, 34 62, 146 62" fill="url(#grad)" />
+            <Polygon fill="url(#grad)" points="90 0, 34 62, 146 62" />
 
             {/* Window */}
-            <Circle cx="90" cy="92" r="35" fill={COLORS.purple} />
-            <Circle cx="90" cy="92" r="22" fill={COLORS.darkPurple} />
+            <Circle cx="90" cy="92" fill={COLORS.purple} r="35" />
+            <Circle cx="90" cy="92" fill={COLORS.darkPurple} r="22" />
 
             {/* Exhaust */}
             <Polygon
-              points="40 156, 49 179, 131 179, 140 156"
               fill={COLORS.purple}
+              points="40 156, 49 179, 131 179, 140 156"
             />
 
             {/* Wings */}
-            <Polygon points="9 95, 33 80, 33 150, 0 160" fill={COLORS.purple} />
+            <Polygon fill={COLORS.purple} points="9 95, 33 80, 33 150, 0 160" />
             <Polygon
-              points="171 95, 147 80, 147 150, 180 160"
               fill={COLORS.purple}
+              points="171 95, 147 80, 147 150, 180 160"
             />
           </Svg>
 
@@ -195,16 +196,16 @@ type StarProps = {
   delay: number;
 };
 
-function Star({ x, y, delay }: StarProps) {
+function Star({ delay, x, y }: StarProps) {
   return (
     <Animated.View
       style={[
         styles.star,
         hyperspaceAnimation,
         {
-          top: y,
-          left: x,
           animationDelay: `${delay}s`,
+          left: x,
+          top: y,
         },
       ]}
     />
@@ -218,20 +219,20 @@ type ExhaustFlameProps = {
 
 function ExhaustFlame({ x, y }: ExhaustFlameProps) {
   return (
-    <View style={[styles.exhaustFlame, { top: y, left: x }]}>
+    <View style={[styles.exhaustFlame, { left: x, top: y }]}>
       {/* Sparks */}
       {EXHAUST_FLAME_POSITIONS.map((spark, index) => (
         <Spark
           key={index}
           {...spark}
-          delay={-index * 0.1}
           color={index % 2 ? COLORS.orange : COLORS.red}
+          delay={-index * 0.1}
         />
       ))}
 
       {/* Main flame */}
       <Animated.View style={mainFlameAnimation}>
-        <Flame width={80} height={200} />
+        <Flame height={200} width={80} />
       </Animated.View>
 
       {/* Small flames */}
@@ -241,14 +242,14 @@ function ExhaustFlame({ x, y }: ExhaustFlameProps) {
           style={[
             propulsedFlameAnimation,
             {
+              animationDelay: `${-index * 0.2}s`,
+              left: flame.x,
               position: 'absolute',
               top: flame.y,
-              left: flame.x,
               zIndex: index === 0 ? -1 : 1,
-              animationDelay: `${-index * 0.2}s`,
             },
           ]}>
-          <Flame width={20} height={40} />
+          <Flame height={40} width={20} />
         </Animated.View>
       ))}
     </View>
@@ -260,11 +261,11 @@ type FlameProps = {
   height: number;
 };
 
-function Flame({ width, height }: FlameProps) {
+function Flame({ height, width }: FlameProps) {
   return (
-    <Svg width={width} height={height}>
+    <Svg height={height} width={width}>
       <Defs>
-        <LinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+        <LinearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
           <Stop offset="0" stopColor={COLORS.orange} />
           <Stop offset="50%" stopColor={COLORS.orange} />
           <Stop offset="50%" stopColor={COLORS.red} />
@@ -272,10 +273,10 @@ function Flame({ width, height }: FlameProps) {
         </LinearGradient>
       </Defs>
       <Polygon
+        fill="url(#grad)"
         points={`0 ${height / 2}, ${width / 2} 0, ${width} ${height / 2}, ${
           width / 2
         } ${height}`}
-        fill="url(#grad)"
       />
     </Svg>
   );
@@ -288,17 +289,17 @@ type SparkProps = {
   color: string;
 };
 
-function Spark({ x, y, delay, color }: SparkProps) {
+function Spark({ color, delay, x, y }: SparkProps) {
   return (
     <Animated.View
       style={[
         styles.spark,
         propulsedSparkAnimation,
         {
-          top: y,
-          left: x,
-          backgroundColor: color,
           animationDelay: `${delay}s`,
+          backgroundColor: color,
+          left: x,
+          top: y,
         },
       ]}
     />
@@ -308,34 +309,34 @@ function Spark({ x, y, delay, color }: SparkProps) {
 // TODO - maybe export StyleSheet from reanimated that accepts animations
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'center',
     backgroundColor: COLORS.bg,
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scene: {
-    padding: spacing.lg,
-    paddingLeft: 100,
-    paddingBottom: 80,
-    transform: [{ scale: Dimensions.get('window').width / 375 }],
-  },
-  rocket: {
-    width: 180,
-    height: 179,
-  },
-  star: {
-    position: 'absolute',
-    width: 4,
-    height: 20,
-    backgroundColor: COLORS.white,
   },
   exhaustFlame: {
     position: 'absolute',
     zIndex: -1,
   },
+  rocket: {
+    height: 179,
+    width: 180,
+  },
+  scene: {
+    padding: spacing.lg,
+    paddingBottom: 80,
+    paddingLeft: 100,
+    transform: [{ scale: Dimensions.get('window').width / 375 }],
+  },
   spark: {
+    height: 10,
     position: 'absolute',
     width: 10,
-    height: 10,
+  },
+  star: {
+    backgroundColor: COLORS.white,
+    height: 20,
+    position: 'absolute',
+    width: 4,
   },
 });

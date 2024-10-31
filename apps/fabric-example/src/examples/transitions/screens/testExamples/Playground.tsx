@@ -3,12 +3,12 @@
  * file should be replaced with the actual example implementation.
  */
 
+import { useState } from 'react';
 import type { ViewStyle } from 'react-native';
-import { Text, StyleSheet, View, SafeAreaView, Button } from 'react-native';
-import React from 'react';
+import { Button, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-const transitionStyles: ViewStyle[] = [
+const transitionStyles: Array<ViewStyle> = [
   {
     transform: [
       { perspective: 100 },
@@ -18,12 +18,13 @@ const transitionStyles: ViewStyle[] = [
     ],
   },
   {
-    transform: [{ translateY: 200 }, { rotate: '45deg' }, { scale: 2 }],
     backgroundColor: 'blue',
-    opacity: 0.5,
     borderRadius: 100,
+    opacity: 0.5,
+    transform: [{ translateY: 200 }, { rotate: '45deg' }, { scale: 2 }],
   },
   {
+    backgroundColor: 'green',
     transform: [
       { perspective: 200 },
       { rotate: '45deg' },
@@ -31,13 +32,12 @@ const transitionStyles: ViewStyle[] = [
       { rotateY: '-25deg' },
       { rotateX: '35deg' },
     ],
-    backgroundColor: 'green',
     width: 200,
   },
 ];
 
 export default function Playground() {
-  const [state, setState] = React.useState(0);
+  const [state, setState] = useState(0);
   const stateToStyle = (num: number) => {
     return transitionStyles[num % transitionStyles.length];
   };
@@ -50,19 +50,18 @@ export default function Playground() {
           title="Change state"
           onPress={() => {
             setState(state + 1);
-            console.log();
           }}
         />
         <Animated.View
           style={[
             {
-              marginTop: 60,
-              height: 65,
-              width: 65,
-              transitionProperty: 'all',
-              transitionDuration: '0.5s',
-              transitionTimingFunction: 'easeInOut',
               backgroundColor: 'red',
+              height: 65,
+              marginTop: 60,
+              transitionDuration: '0.5s',
+              transitionProperty: 'all',
+              transitionTimingFunction: 'easeInOut',
+              width: 65,
             },
             stateToStyle(state),
           ]}
@@ -74,8 +73,8 @@ export default function Playground() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
   },
 });
