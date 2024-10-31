@@ -11,9 +11,6 @@ target 'MacOSExample-macOS' do
   platform :macos, '11.0'
   use_native_modules!
 
-  # Flags change depending on the env values.
-  flags = get_default_flags()
-
   use_react_native!(
     :path => '../node_modules/react-native-macos',
     :hermes_enabled => false,
