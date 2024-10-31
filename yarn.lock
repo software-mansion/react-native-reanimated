@@ -4760,23 +4760,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-picker/picker@npm:2.8.0":
-  version: 2.8.0
-  resolution: "@react-native-picker/picker@npm:2.8.0"
+"@react-native-picker/picker@npm:^2.9.0":
+  version: 2.9.0
+  resolution: "@react-native-picker/picker@npm:2.9.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/95a5c3cefe689e4e5195a741ac5409a847d7345476e0781d9a2ddf3835203ec0b34a3f28c8d31158b15aa00212819a54afa4cda740d0e4cafe4c0c70e1962e6f
-  languageName: node
-  linkType: hard
-
-"@react-native-picker/picker@patch:@react-native-picker/picker@npm%3A2.8.0#~/.yarn/patches/@react-native-picker-picker-npm-2.8.0-9d55144b66.patch":
-  version: 2.8.0
-  resolution: "@react-native-picker/picker@patch:@react-native-picker/picker@npm%3A2.8.0#~/.yarn/patches/@react-native-picker-picker-npm-2.8.0-9d55144b66.patch::version=2.8.0&hash=edc879"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/e62f133486f369da80eb5fe5c4ba2d1b241d046c6f9a1b1e4463acf09d1237e687b4190bbddd287e8e87b37ae8794d0654deeef62af0ff23158de77179557307
+  checksum: 10/a2442d55b9fc239eb9109cfcfc9d6b749619bc0e79c0f43d2ced618e27f485b26bde84ba6965f1e172242bf479566c17ae39e5de7b3f2e782bde81c9e61e2fd9
   languageName: node
   linkType: hard
 
@@ -8776,7 +8766,7 @@ __metadata:
     "@react-native-async-storage/async-storage": "npm:^1.24.0"
     "@react-native-community/slider": "patch:@react-native-community/slider@npm%3A4.5.3#~/.yarn/patches/@react-native-community-slider-npm-4.5.3-6fedb47a11.patch"
     "@react-native-masked-view/masked-view": "npm:^0.3.1"
-    "@react-native-picker/picker": "patch:@react-native-picker/picker@npm%3A2.8.0#~/.yarn/patches/@react-native-picker-picker-npm-2.8.0-9d55144b66.patch"
+    "@react-native-picker/picker": "npm:^2.9.0"
     "@react-navigation/bottom-tabs": "npm:^6.6.1"
     "@react-navigation/native": "npm:^6.1.18"
     "@react-navigation/native-stack": "npm:^6.11.0"
@@ -11341,7 +11331,7 @@ __metadata:
     "@react-native-community/cli-platform-ios": "npm:15.0.0"
     "@react-native-community/slider": "patch:@react-native-community/slider@npm%3A4.5.3#~/.yarn/patches/@react-native-community-slider-npm-4.5.3-6fedb47a11.patch"
     "@react-native-masked-view/masked-view": "npm:^0.3.1"
-    "@react-native-picker/picker": "patch:@react-native-picker/picker@npm%3A2.8.0#~/.yarn/patches/@react-native-picker-picker-npm-2.8.0-9d55144b66.patch"
+    "@react-native-picker/picker": "npm:^2.9.0"
     "@react-native/babel-preset": "npm:0.76.1"
     "@react-native/eslint-config": "npm:0.76.1"
     "@react-native/metro-config": "npm:0.76.1"
@@ -14759,7 +14749,7 @@ __metadata:
     "@react-native-async-storage/async-storage": "npm:^1.24.0"
     "@react-native-community/slider": "patch:@react-native-community/slider@npm%3A4.5.3#~/.yarn/patches/@react-native-community-slider-npm-4.5.3-6fedb47a11.patch"
     "@react-native-masked-view/masked-view": "npm:^0.3.1"
-    "@react-native-picker/picker": "patch:@react-native-picker/picker@npm%3A2.8.0#~/.yarn/patches/@react-native-picker-picker-npm-2.8.0-9d55144b66.patch"
+    "@react-native-picker/picker": "npm:^2.9.0"
     "@react-native/babel-preset": "npm:0.73.21"
     "@react-native/eslint-config": "npm:0.73.2"
     "@react-native/metro-config": "npm:0.73.5"
@@ -16808,7 +16798,7 @@ __metadata:
     "@react-native-community/cli-platform-ios": "npm:15.0.0"
     "@react-native-community/slider": "patch:@react-native-community/slider@npm%3A4.5.3#~/.yarn/patches/@react-native-community-slider-npm-4.5.3-6fedb47a11.patch"
     "@react-native-masked-view/masked-view": "npm:^0.3.1"
-    "@react-native-picker/picker": "patch:@react-native-picker/picker@npm%3A2.8.0#~/.yarn/patches/@react-native-picker-picker-npm-2.8.0-9d55144b66.patch"
+    "@react-native-picker/picker": "npm:^2.9.0"
     "@react-native/babel-preset": "npm:0.76.1"
     "@react-native/eslint-config": "npm:0.76.1"
     "@react-native/metro-config": "npm:0.76.1"

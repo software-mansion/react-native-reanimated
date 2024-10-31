@@ -1557,7 +1557,7 @@ PODS:
     - React-Core
   - RNCMaskedView (0.3.1):
     - React-Core
-  - RNCPicker (2.8.0):
+  - RNCPicker (2.9.0):
     - React-Core
   - RNFlashList (1.7.1):
     - DoubleConversion
@@ -2016,7 +2016,7 @@ SPEC CHECKSUMS:
   ReactCommon: 422e364463f33e336fc4db196aeb50fd801d90d6
   RNCAsyncStorage: ec53e44dc3e75b44aa2a9f37618a49c3bc080a7a
   RNCMaskedView: 090213d32d8b3bb83a4dcb7d12c18f0152591906
-  RNCPicker: 0173dedc74776227ec6dcc61bb85cd9f07bbb2ac
+  RNCPicker: f963e01f78e546a93b98aa201501713dbda14e94
   RNFlashList: 115dd44377580761bff386a0caebf165424cf16f
   RNGestureHandler: 511250b190a284388f9dd0d2e56c1df76f14cfb8
   RNReanimated: 9ef3b1908a15b0b778edd6dacad9c71e7fe9e849
