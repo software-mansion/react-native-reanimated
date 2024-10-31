@@ -1285,7 +1285,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context (4.11.0):
+  - react-native-safe-area-context (4.13.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1298,8 +1298,8 @@ PODS:
     - React-featureflags
     - React-graphics
     - React-ImageManager
-    - react-native-safe-area-context/common (= 4.11.0)
-    - react-native-safe-area-context/fabric (= 4.11.0)
+    - react-native-safe-area-context/common (= 4.13.1)
+    - react-native-safe-area-context/fabric (= 4.13.1)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1308,7 +1308,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context/common (4.11.0):
+  - react-native-safe-area-context/common (4.13.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1329,7 +1329,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context/fabric (4.11.0):
+  - react-native-safe-area-context/fabric (4.13.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2195,7 +2195,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 3146a13424f9fec2ea1f1462d49d566e4d69b732
   React-microtasksnativemodule: 02d218c79c72d373a92a8552183f4ead0d1c6e05
   react-native-pager-view: 94195f1bf32e7f78359fa20057c97e632364a08b
-  react-native-safe-area-context: f1fda705dfe14355f41933debb5932887e234cc5
+  react-native-safe-area-context: 52956274cbb1f9313ba6969de5c33e57218c0206
   react-native-slider: 0c1a612ffba2d3de8d0c525254e43d20bfc037aa
   React-nativeconfig: 93fe8c85a8c40820c57814e30f3e44b94c995a7b
   React-NativeModulesApple: b3e076fd0d7b73417fe1e8c8b26e3c57ae9b74aa

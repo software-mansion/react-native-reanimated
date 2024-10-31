@@ -8793,7 +8793,7 @@ __metadata:
     react: "npm:18.3.1"
     react-native: "npm:^0.76.1"
     react-native-gesture-handler: "npm:2.20.2"
-    react-native-pager-view: "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch"
+    react-native-pager-view: "npm:^6.4.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:^4.13.1"
     react-native-screens: "npm:3.35.0"
@@ -11360,7 +11360,7 @@ __metadata:
     react: "npm:18.3.1"
     react-native: "npm:^0.76.1"
     react-native-gesture-handler: "npm:2.20.2"
-    react-native-pager-view: "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch"
+    react-native-pager-view: "npm:^6.4.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:^4.13.1"
     react-native-screens: "npm:3.35.0"
@@ -14779,7 +14779,7 @@ __metadata:
     react-native: "npm:0.73.4"
     react-native-gesture-handler: "npm:2.20.2"
     react-native-macos: "npm:^0.73.0-0"
-    react-native-pager-view: "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch"
+    react-native-pager-view: "npm:^6.4.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:^4.13.1"
     react-native-screens: "npm:3.35.0"
@@ -16828,7 +16828,7 @@ __metadata:
     react: "npm:18.3.1"
     react-native: "npm:^0.76.1"
     react-native-gesture-handler: "npm:2.20.2"
-    react-native-pager-view: "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch"
+    react-native-pager-view: "npm:^6.4.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:^4.13.1"
     react-native-screens: "npm:3.35.0"
@@ -17743,23 +17743,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-pager-view@npm:6.4.1":
+"react-native-pager-view@npm:^6.4.1":
   version: 6.4.1
   resolution: "react-native-pager-view@npm:6.4.1"
   peerDependencies:
     react: "*"
     react-native: "*"
   checksum: 10/5f9cbce2d49d607fb9f241a37fee393024e13c77c8f1bea9a11c8de7e737dcdabe2590c95f282868ac119cf4d520fc83439a537d034563254ab34527351d80ae
-  languageName: node
-  linkType: hard
-
-"react-native-pager-view@patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch":
-  version: 6.4.1
-  resolution: "react-native-pager-view@patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch::version=6.4.1&hash=0b2394"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/e63cf306943141a2fdd6570b45e364b5f366d02cbde36e4c42692f9eb764339f574a307cff7d80ccbcfab73c4c2c1d7dfcc478b4fe63a919a69b45be9a87b13f
   languageName: node
   linkType: hard
 
