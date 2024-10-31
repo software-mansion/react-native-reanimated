@@ -1,8 +1,14 @@
-import { View, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
+import Animated, {
+  cubicBezier,
+  LinearTransition,
+} from 'react-native-reanimated';
+
 import {
   Button,
   CodeBlock,
@@ -10,19 +16,14 @@ import {
   Section,
   Stagger,
   Text,
-} from '../../../../components';
-import { colors, flex, radius, sizes, spacing } from '../../../../theme';
-import Animated, {
-  cubicBezier,
-  LinearTransition,
-} from 'react-native-reanimated';
-import { useState } from 'react';
-import { formatAnimationCode } from '../../../../utils';
+} from '@/components';
+import { colors, flex, radius, sizes, spacing } from '@/theme';
+import { formatAnimationCode } from '@/utils';
 
 const sharedConfig: CSSAnimationSettings = {
   animationDuration: '1s',
-  animationTimingFunction: 'easeInOut',
   animationIterationCount: 'infinite',
+  animationTimingFunction: 'easeInOut',
 };
 
 const wiggleAnimation: CSSAnimationConfig = {
@@ -77,15 +78,15 @@ const rollAnimation: CSSAnimationConfig = {
 };
 
 const ANIMATIONS = [
-  { name: 'Wiggle', animation: wiggleAnimation },
-  { name: 'Fade', animation: fadeAnimation },
-  { name: 'Color', animation: colorAnimation },
-  { name: 'Jump', animation: jumpAnimation },
-  { name: 'Roll', animation: rollAnimation },
+  { animation: wiggleAnimation, name: 'Wiggle' },
+  { animation: fadeAnimation, name: 'Fade' },
+  { animation: colorAnimation, name: 'Color' },
+  { animation: jumpAnimation, name: 'Jump' },
+  { animation: rollAnimation, name: 'Roll' },
 ];
 
 export default function ChangingAnimation() {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
+  const [selectedIndex, setSelectedIndex] = useState<null | number>(0);
 
   const animation =
     selectedIndex !== null ? ANIMATIONS[selectedIndex].animation : null;
@@ -94,26 +95,26 @@ export default function ChangingAnimation() {
     <ScrollScreen>
       <Stagger>
         <Section
-          title="Changing Animation"
-          description="Select one of the predefined animations and see that the box animation changes to the selected one.">
+          description="Select one of the predefined animations and see that the box animation changes to the selected one."
+          title="Changing Animation">
           <View style={styles.content}>
             <View style={styles.buttonRow}>
               <Text variant="label1">Remove animation</Text>
               <Button
+                disabled={!animation}
                 title="Remove"
                 onPress={() => setSelectedIndex(null)}
-                disabled={!animation}
               />
             </View>
 
             <View style={styles.buttons}>
               {ANIMATIONS.map((item, index) => (
                 <Button
+                  disabled={selectedIndex === index}
                   key={index}
+                  style={flex.grow}
                   title={item.name}
                   onPress={() => setSelectedIndex(index)}
-                  disabled={selectedIndex === index}
-                  style={flex.grow}
                 />
               ))}
             </View>
@@ -125,9 +126,9 @@ export default function ChangingAnimation() {
         </Section>
 
         <Section
-          title="Animation Configuration"
-          description="Selected animation configuration">
-          <Animated.View style={styles.codeWrapper} layout={LinearTransition}>
+          description="Selected animation configuration"
+          title="Animation Configuration">
+          <Animated.View layout={LinearTransition} style={styles.codeWrapper}>
             {animation ? (
               <CodeBlock code={formatAnimationCode(animation)} />
             ) : (
@@ -141,13 +142,16 @@ export default function ChangingAnimation() {
 }
 
 const styles = StyleSheet.create({
-  content: {
-    gap: spacing.xs,
+  box: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.sm,
+    height: sizes.md,
+    width: sizes.md,
   },
   buttonRow: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
   buttons: {
     flexDirection: 'row',
@@ -155,22 +159,19 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     justifyContent: 'space-between',
   },
+  codeWrapper: {
+    backgroundColor: colors.background2,
+    borderRadius: radius.sm,
+    padding: spacing.xs,
+  },
+  content: {
+    gap: spacing.xs,
+  },
   preview: {
+    alignItems: 'center',
     backgroundColor: colors.background2,
     borderRadius: radius.md,
     height: sizes.xxl,
     justifyContent: 'center',
-    alignItems: 'center',
-  },
-  box: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.sm,
-    height: sizes.md,
-    width: sizes.md,
-  },
-  codeWrapper: {
-    backgroundColor: colors.background2,
-    padding: spacing.xs,
-    borderRadius: radius.sm,
   },
 });

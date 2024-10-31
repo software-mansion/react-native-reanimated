@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
 import type { PropsWithChildren } from 'react';
+import { useMemo } from 'react';
 import type { ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
-import { spacing } from '../../theme';
 import Animated, { LinearTransition } from 'react-native-reanimated';
-import { Stagger } from '../misc';
+
+import { Stagger } from '@/components/misc';
+import { spacing } from '@/theme';
 
 type GridProps = PropsWithChildren<{
   columns: number;
@@ -17,14 +18,14 @@ type GridProps = PropsWithChildren<{
 }>;
 
 export default function Grid({
-  columns,
   children,
   columnGap,
-  rowGap,
+  columns,
   gap,
+  rowGap,
   squareCells,
-  style,
   staggerInterval = -1,
+  style,
 }: GridProps) {
   const cGap = columnGap ?? gap ?? spacing.none;
   const rGap = rowGap ?? gap ?? spacing.none;
@@ -32,11 +33,11 @@ export default function Grid({
   const cellStyle = useMemo<ViewStyle>(
     () => ({
       ...styles.cell,
-      flexBasis: `${100 / columns}%`,
+      alignItems: 'stretch',
       aspectRatio: squareCells ? 1 : undefined,
+      flexBasis: `${100 / columns}%`,
       paddingHorizontal: cGap / 2,
       paddingVertical: rGap / 2,
-      alignItems: 'stretch',
     }),
     [columns, squareCells, cGap, rGap]
   );
@@ -52,7 +53,7 @@ export default function Grid({
         },
         style,
       ]}>
-      <Stagger wrapperStye={() => cellStyle} interval={staggerInterval}>
+      <Stagger interval={staggerInterval} wrapperStye={() => cellStyle}>
         {children}
       </Stagger>
     </Animated.View>
@@ -60,12 +61,12 @@ export default function Grid({
 }
 
 const styles = StyleSheet.create({
+  cell: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   container: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-  },
-  cell: {
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });

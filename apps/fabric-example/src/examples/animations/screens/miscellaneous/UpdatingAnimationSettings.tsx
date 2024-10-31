@@ -1,9 +1,15 @@
-import { View, StyleSheet } from 'react-native';
+import { useCallback, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import type {
   CSSAnimationConfig,
   CSSAnimationKeyframes,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
+import Animated, {
+  cubicBezier,
+  LinearTransition,
+} from 'react-native-reanimated';
+
 import {
   Button,
   CodeBlock,
@@ -12,14 +18,9 @@ import {
   SelectListDropdown,
   Stagger,
   Text,
-} from '../../../../components';
-import { colors, flex, radius, sizes, spacing } from '../../../../theme';
-import Animated, {
-  cubicBezier,
-  LinearTransition,
-} from 'react-native-reanimated';
-import { useCallback, useState } from 'react';
-import { formatAnimationCode, typedMemo } from '../../../../utils';
+} from '@/components';
+import { colors, flex, radius, sizes, spacing } from '@/theme';
+import { formatAnimationCode, typedMemo } from '@/utils';
 
 const keyframes: CSSAnimationKeyframes = {
   to: {
@@ -28,7 +29,12 @@ const keyframes: CSSAnimationKeyframes = {
 };
 
 const SETTINGS_OPTIONS = {
+  animationDelay: ['-5s', '0s', '1s', '2s', '5s'],
+  animationDirection: ['normal', 'reverse', 'alternate', 'alternateReverse'],
   animationDuration: ['1s', '2s', '5s', '10s'],
+  animationFillMode: ['none', 'forwards', 'backwards', 'both'],
+  animationIterationCount: [1, 2, 'infinite'],
+  animationPlayState: ['running', 'paused'],
   animationTimingFunction: [
     'ease',
     'linear',
@@ -36,13 +42,8 @@ const SETTINGS_OPTIONS = {
     'easeOut',
     cubicBezier(0.42, 0, 0.58, 1),
   ],
-  animationDelay: ['-5s', '0s', '1s', '2s', '5s'],
-  animationIterationCount: [1, 2, 'infinite'],
-  animationDirection: ['normal', 'reverse', 'alternate', 'alternateReverse'],
-  animationFillMode: ['none', 'forwards', 'backwards', 'both'],
-  animationPlayState: ['running', 'paused'],
 } satisfies {
-  [K in keyof CSSAnimationSettings]: CSSAnimationSettings[K][];
+  [K in keyof CSSAnimationSettings]: Array<CSSAnimationSettings[K]>;
 };
 
 const BUTTONS_ROW_OPTIONS = new Set<keyof typeof SETTINGS_OPTIONS>([
@@ -52,13 +53,13 @@ const BUTTONS_ROW_OPTIONS = new Set<keyof typeof SETTINGS_OPTIONS>([
 const DEFAULT_SETTINGS: {
   [K in keyof typeof SETTINGS_OPTIONS]: (typeof SETTINGS_OPTIONS)[K][number];
 } = {
-  animationDuration: '2s',
-  animationTimingFunction: 'ease',
   animationDelay: '0s',
-  animationIterationCount: 1,
   animationDirection: 'normal',
+  animationDuration: '2s',
   animationFillMode: 'none',
+  animationIterationCount: 1,
   animationPlayState: 'paused',
+  animationTimingFunction: 'ease',
 };
 
 export default function UpdatingAnimationSettings() {
@@ -96,8 +97,8 @@ export default function UpdatingAnimationSettings() {
     <ScrollScreen>
       <Stagger>
         <Section
-          title="Updating Animation Settings"
-          description="Select one of predefined values for each of the animation properties and observe how the animation changes">
+          description="Select one of predefined values for each of the animation properties and observe how the animation changes"
+          title="Updating Animation Settings">
           <View style={styles.content}>
             <View style={styles.config}>
               {Object.entries(SETTINGS_OPTIONS).map(
@@ -106,8 +107,8 @@ export default function UpdatingAnimationSettings() {
                   return (
                     <ConfigOptionsRow
                       key={propertyName}
-                      propertyName={key}
                       options={options}
+                      propertyName={key}
                       selected={animationConfig[key]}
                       onSelect={handleOptionSelect}
                     />
@@ -122,22 +123,22 @@ export default function UpdatingAnimationSettings() {
               <View style={styles.resetButtonRow}>
                 <Text variant="label1">Reset settings</Text>
                 <Button
+                  style={styles.resetButton}
                   title="Reset"
                   onPress={handleResetSettings}
-                  style={styles.resetButton}
                 />
               </View>
               <View style={styles.resetButtonRow}>
                 <Text variant="label1">Restart animation</Text>
                 <Button
+                  style={styles.resetButton}
                   title="Restart"
                   onPress={handleRestartAnimation}
-                  style={styles.resetButton}
                 />
               </View>
             </Animated.View>
 
-            <Animated.View style={styles.preview} layout={LinearTransition}>
+            <Animated.View layout={LinearTransition} style={styles.preview}>
               <Animated.View
                 key={viewKey}
                 style={[styles.box, animationConfig]}
@@ -147,9 +148,9 @@ export default function UpdatingAnimationSettings() {
         </Section>
 
         <Section
-          title="Animation Configuration"
-          description="Selected animation configuration">
-          <Animated.View style={styles.codeWrapper} layout={LinearTransition}>
+          description="Selected animation configuration"
+          title="Animation Configuration">
+          <Animated.View layout={LinearTransition} style={styles.codeWrapper}>
             <CodeBlock code={formatAnimationCode(animationConfig)} />
           </Animated.View>
         </Section>
@@ -160,17 +161,17 @@ export default function UpdatingAnimationSettings() {
 
 type ConfigOptionsRowProps<T extends keyof CSSAnimationSettings> = {
   propertyName: T;
-  options: CSSAnimationSettings[T][];
+  options: Array<CSSAnimationSettings[T]>;
   selected: CSSAnimationSettings[T];
   onSelect: (propertyName: T, value: CSSAnimationSettings[T]) => void;
 };
 
 const ConfigOptionsRow = typedMemo(function ConfigOptionsRow<
   T extends keyof typeof SETTINGS_OPTIONS,
->({ propertyName, options, onSelect, selected }: ConfigOptionsRowProps<T>) {
+>({ onSelect, options, propertyName, selected }: ConfigOptionsRowProps<T>) {
   return (
     <View style={styles.configRow}>
-      <Text variant="label2" style={flex.shrink}>
+      <Text style={flex.shrink} variant="label2">
         {propertyName}
       </Text>
 
@@ -180,25 +181,25 @@ const ConfigOptionsRow = typedMemo(function ConfigOptionsRow<
             (option) =>
               option && (
                 <Button
-                  size="small"
+                  disabled={selected === option}
                   key={option.toString()}
+                  size="small"
                   title={option.toString()}
                   onPress={() => onSelect(propertyName, option)}
-                  disabled={selected === option}
                 />
               )
           )}
         </View>
       ) : (
         <SelectListDropdown
-          styleOptions={{ inputStyle: styles.selectInput }}
           alignment="right"
+          selected={selected}
+          styleOptions={{ inputStyle: styles.selectInput }}
           options={options.map((option) => ({
             label: option?.toString() ?? '',
             value: option,
           }))}
           onSelect={(option) => onSelect(propertyName, option)}
-          selected={selected}
         />
       )}
     </View>
@@ -206,54 +207,54 @@ const ConfigOptionsRow = typedMemo(function ConfigOptionsRow<
 });
 
 const styles = StyleSheet.create({
-  content: {
-    gap: spacing.sm,
-  },
-  resetButtons: {
-    gap: spacing.xxs,
-  },
-  resetButtonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  resetButton: {
-    width: 75,
-  },
-  config: {
-    gap: spacing.xs,
-  },
-  configRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  selectInput: {
-    width: sizes.xxl,
-  },
-  buttons: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    flexWrap: 'wrap',
-    flexShrink: 1,
-  },
-  preview: {
-    backgroundColor: colors.background2,
-    borderRadius: radius.md,
-    height: sizes.xxl,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   box: {
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
     height: sizes.md,
     width: sizes.md,
   },
+  buttons: {
+    flexDirection: 'row',
+    flexShrink: 1,
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
   codeWrapper: {
     backgroundColor: colors.background2,
-    padding: spacing.xs,
     borderRadius: radius.sm,
+    padding: spacing.xs,
+  },
+  config: {
+    gap: spacing.xs,
+  },
+  configRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+    justifyContent: 'space-between',
+  },
+  content: {
+    gap: spacing.sm,
+  },
+  preview: {
+    alignItems: 'center',
+    backgroundColor: colors.background2,
+    borderRadius: radius.md,
+    height: sizes.xxl,
+    justifyContent: 'center',
+  },
+  resetButton: {
+    width: 75,
+  },
+  resetButtonRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  resetButtons: {
+    gap: spacing.xxs,
+  },
+  selectInput: {
+    width: sizes.xxl,
   },
 });

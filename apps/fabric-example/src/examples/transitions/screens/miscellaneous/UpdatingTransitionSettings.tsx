@@ -1,4 +1,15 @@
-import { typedMemo } from '../../../../utils';
+import { useCallback, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type {
+  CSSTransitionConfig,
+  CSSTransitionSettings,
+  StyleProps,
+} from 'react-native-reanimated';
+import Animated, {
+  cubicBezier,
+  LinearTransition,
+} from 'react-native-reanimated';
+
 import {
   Button,
   Checkbox,
@@ -7,25 +18,16 @@ import {
   SelectListDropdown,
   Stagger,
   Text,
-} from '../../../../components';
-import { useCallback, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, {
-  cubicBezier,
-  LinearTransition,
-} from 'react-native-reanimated';
-import { colors, flex, radius, sizes, spacing } from '../../../../theme';
-import type {
-  CSSTransitionConfig,
-  CSSTransitionSettings,
-  StyleProps,
-} from 'react-native-reanimated';
+} from '@/components';
 import {
   TransitionConfiguration,
   TransitionStyleChange,
-} from '../../components';
+} from '@/examples/transitions/components';
+import { colors, flex, radius, sizes, spacing } from '@/theme';
+import { typedMemo } from '@/utils';
 
 const SETTINGS_OPTIONS = {
+  transitionDelay: ['-5s', '0s', '1s', '2s', '5s'],
   transitionDuration: [0, '250ms', '1s', '2s', '5s', '10s'],
   transitionTimingFunction: [
     'ease',
@@ -34,20 +36,19 @@ const SETTINGS_OPTIONS = {
     'easeOut',
     cubicBezier(0.42, 0, 0.58, 1),
   ],
-  transitionDelay: ['-5s', '0s', '1s', '2s', '5s'],
 } satisfies {
-  [K in keyof CSSTransitionSettings]: CSSTransitionSettings[K][];
+  [K in keyof CSSTransitionSettings]: Array<CSSTransitionSettings[K]>;
 };
 
 const DEFAULT_SETTINGS: {
   [K in keyof typeof SETTINGS_OPTIONS]: (typeof SETTINGS_OPTIONS)[K][number];
 } = {
+  transitionDelay: '0s',
   transitionDuration: '1s',
   transitionTimingFunction: 'ease',
-  transitionDelay: '0s',
 };
 
-const transitionStyles: StyleProps[] = [
+const transitionStyles: Array<StyleProps> = [
   { width: sizes.md },
   { width: sizes.xxxl },
 ];
@@ -86,8 +87,8 @@ export default function UpdatingTransitionSettings() {
     <ScrollScreen>
       <Stagger>
         <Section
-          title="Updating Transition Settings"
-          description="Select one of predefined values for each of the transition properties and observe how the transition changes">
+          description="Select one of predefined values for each of the transition properties and observe how the transition changes"
+          title="Updating Transition Settings">
           <View style={styles.content}>
             <View style={styles.config}>
               {Object.entries(SETTINGS_OPTIONS).map(
@@ -96,8 +97,8 @@ export default function UpdatingTransitionSettings() {
                   return (
                     <ConfigOptionsRow
                       key={propertyName}
-                      propertyName={key}
                       options={options}
+                      propertyName={key}
                       selected={transitionConfig[key]}
                       onSelect={handleOptionSelect}
                     />
@@ -110,27 +111,27 @@ export default function UpdatingTransitionSettings() {
               <View style={styles.buttonRow}>
                 <Text variant="label1">Reset settings</Text>
                 <Button
+                  style={styles.button}
                   title="Reset"
                   onPress={handleResetSettings}
-                  style={styles.button}
                 />
               </View>
 
               <View style={styles.buttonRow}>
                 <Text variant="label1">Run transition</Text>
                 <Button
+                  style={styles.button}
                   title="Run"
                   onPress={() =>
                     setCurrentStyleIndex(
                       (prev) => (prev + 1) % transitionStyles.length
                     )
                   }
-                  style={styles.button}
                 />
               </View>
             </Animated.View>
 
-            <Animated.View style={styles.preview} layout={LinearTransition}>
+            <Animated.View layout={LinearTransition} style={styles.preview}>
               <Animated.View
                 style={[
                   styles.box,
@@ -141,27 +142,27 @@ export default function UpdatingTransitionSettings() {
             </Animated.View>
 
             <Animated.View
-              style={styles.styleChangeWrapper}
-              layout={LinearTransition}>
+              layout={LinearTransition}
+              style={styles.styleChangeWrapper}>
               {displayStyleChanges && (
                 <TransitionStyleChange
-                  transitionStyles={transitionStyles}
                   activeStyleIndex={currentStyleIndex}
+                  transitionStyles={transitionStyles}
                 />
               )}
             </Animated.View>
 
             <Checkbox
               label="Display style changes"
-              onChange={setDisplayStyleChanges}
               selected={displayStyleChanges}
+              onChange={setDisplayStyleChanges}
             />
           </View>
         </Section>
 
         <Section
-          title="Transition configuration"
-          description="Transition configuration consists of the style changes that will be animated and the transition settings.">
+          description="Transition configuration consists of the style changes that will be animated and the transition settings."
+          title="Transition configuration">
           <TransitionConfiguration
             sharedConfig={transitionConfig}
             transitionStyles={transitionStyles}
@@ -174,72 +175,72 @@ export default function UpdatingTransitionSettings() {
 
 type ConfigOptionsRowProps<T extends keyof CSSTransitionSettings> = {
   propertyName: T;
-  options: CSSTransitionSettings[T][];
+  options: Array<CSSTransitionSettings[T]>;
   selected: CSSTransitionSettings[T];
   onSelect: (propertyName: T, value: CSSTransitionSettings[T]) => void;
 };
 
 const ConfigOptionsRow = typedMemo(function ConfigOptionsRow<
   T extends keyof typeof SETTINGS_OPTIONS,
->({ propertyName, options, onSelect, selected }: ConfigOptionsRowProps<T>) {
+>({ onSelect, options, propertyName, selected }: ConfigOptionsRowProps<T>) {
   return (
     <View style={styles.configRow}>
-      <Text variant="label2" style={flex.shrink}>
+      <Text style={flex.shrink} variant="label2">
         {propertyName}
       </Text>
 
       <SelectListDropdown
-        styleOptions={{ inputStyle: styles.selectInput }}
         alignment="right"
+        selected={selected}
+        styleOptions={{ inputStyle: styles.selectInput }}
         options={options.map((option) => ({
           label: option?.toString() ?? '',
           value: option,
         }))}
         onSelect={(option) => onSelect(propertyName, option)}
-        selected={selected}
       />
     </View>
   );
 });
 
 const styles = StyleSheet.create({
-  content: {
-    gap: spacing.sm,
-  },
-  config: {
-    gap: spacing.xs,
-  },
-  configRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  selectInput: {
-    width: sizes.xxl,
-  },
-  preview: {
-    backgroundColor: colors.background2,
-    borderRadius: radius.md,
-    height: sizes.xxl,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   box: {
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
     height: sizes.md,
   },
+  button: {
+    width: 75,
+  },
+  buttonRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   buttons: {
     gap: spacing.xxxs,
   },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  config: {
+    gap: spacing.xs,
   },
-  button: {
-    width: 75,
+  configRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+    justifyContent: 'space-between',
+  },
+  content: {
+    gap: spacing.sm,
+  },
+  preview: {
+    alignItems: 'center',
+    backgroundColor: colors.background2,
+    borderRadius: radius.md,
+    height: sizes.xxl,
+    justifyContent: 'center',
+  },
+  selectInput: {
+    width: sizes.xxl,
   },
   styleChangeWrapper: {
     overflow: 'hidden',

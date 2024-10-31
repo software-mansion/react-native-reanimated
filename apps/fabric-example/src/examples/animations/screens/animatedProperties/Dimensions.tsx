@@ -4,12 +4,18 @@ import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import { ScrollScreen, Section, TabView } from '../../../../components';
-import { sizes, colors, radius } from '../../../../theme';
 import Animated from 'react-native-reanimated';
-import type { ExampleCardProps } from './components';
-import { ExampleCard, VerticalExampleCard } from './components';
-import { formatAnimationCode } from '../../../../utils';
+
+import type { ExampleCardProps } from '@/components';
+import {
+  ExampleCard,
+  ScrollScreen,
+  Section,
+  TabView,
+  VerticalExampleCard,
+} from '@/components';
+import { colors, radius, sizes } from '@/theme';
+import { formatAnimationCode } from '@/utils';
 
 export default function Dimensions() {
   return (
@@ -28,73 +34,77 @@ export default function Dimensions() {
 }
 
 const SHARED_SETTINGS: CSSAnimationSettings = {
-  animationIterationCount: 'infinite',
   animationDirection: 'alternate',
   animationDuration: '1s',
+  animationIterationCount: 'infinite',
 };
 
-const SHARED_EXAMPLES: {
+const SHARED_EXAMPLES: Array<{
   sectionTitle: string;
-  examples: {
+  examples: Array<{
     title: string;
     property: string;
     width?: DimensionValue;
     height?: DimensionValue;
     description?: string;
-  }[];
-}[] = [
+  }>;
+}> = [
   {
-    sectionTitle: 'Width',
     examples: [
       {
-        title: 'Width',
         property: 'width',
+        title: 'Width',
       },
       {
-        title: 'Min Width',
+        description: 'When width is set to 75',
         property: 'minWidth',
+        title: 'Min Width',
         width: 75,
-        description: 'When width is set to 75',
       },
       {
-        title: 'Max Width',
-        property: 'maxWidth',
-        width: 75,
         description: 'When width is set to 75',
+        property: 'maxWidth',
+        title: 'Max Width',
+        width: 75,
       },
     ],
+    sectionTitle: 'Width',
   },
   {
-    sectionTitle: 'Height',
     examples: [
       {
-        title: 'Height',
         property: 'height',
+        title: 'Height',
       },
       {
-        title: 'Min Height',
+        description: 'When height is set to 75',
+        height: 75,
         property: 'minHeight',
-        height: 75,
-        description: 'When height is set to 75',
+        title: 'Min Height',
       },
       {
-        title: 'Max Height',
-        property: 'maxHeight',
-        height: 75,
         description: 'When height is set to 75',
+        height: 75,
+        property: 'maxHeight',
+        title: 'Max Height',
       },
     ],
+    sectionTitle: 'Height',
   },
 ];
 
 function AbsoluteDimensions() {
   return (
     <ScrollScreen>
-      {SHARED_EXAMPLES.map(({ sectionTitle, examples }) => (
+      {SHARED_EXAMPLES.map(({ examples, sectionTitle }) => (
         <Section key={sectionTitle} title={sectionTitle}>
-          {examples.map(({ title, property, width, height, description }) => (
+          {examples.map(({ description, height, property, title, width }) => (
             <Example
+              description={description}
+              height={height}
               key={title}
+              title={title}
+              width={width}
               config={{
                 animationName: {
                   from: {
@@ -106,10 +116,6 @@ function AbsoluteDimensions() {
                 },
                 ...SHARED_SETTINGS,
               }}
-              title={title}
-              width={width}
-              height={height}
-              description={description}
             />
           ))}
         </Section>
@@ -121,11 +127,15 @@ function AbsoluteDimensions() {
 function RelativeDimensions() {
   return (
     <ScrollScreen>
-      {SHARED_EXAMPLES.map(({ sectionTitle, examples }) => (
+      {SHARED_EXAMPLES.map(({ examples, sectionTitle }) => (
         <Section key={sectionTitle} title={sectionTitle}>
-          {examples.map(({ title, property, width, height, description }) => (
+          {examples.map(({ description, height, property, title, width }) => (
             <Example
+              description={description}
+              height={height}
               key={title}
+              title={title}
+              width={width}
               config={{
                 animationName: {
                   from: {
@@ -137,10 +147,6 @@ function RelativeDimensions() {
                 },
                 ...SHARED_SETTINGS,
               }}
-              title={title}
-              width={width}
-              height={height}
-              description={description}
             />
           ))}
         </Section>
@@ -151,8 +157,8 @@ function RelativeDimensions() {
 
 function MixedDimensions() {
   const sharedSettings: CSSAnimationSettings = {
-    animationIterationCount: 'infinite',
     animationDuration: '3s',
+    animationIterationCount: 'infinite',
   };
 
   return (
@@ -160,6 +166,7 @@ function MixedDimensions() {
       <Section title="Width">
         <Example
           CardComponent={VerticalExampleCard}
+          title="Width"
           config={{
             animationName: {
               '0%': {
@@ -180,12 +187,13 @@ function MixedDimensions() {
             },
             ...sharedSettings,
           }}
-          title="Width"
         />
       </Section>
 
       <Section title="Height">
         <Example
+          collapsedExampleHeight={300}
+          title="Width"
           config={{
             animationName: {
               '0%': {
@@ -206,26 +214,24 @@ function MixedDimensions() {
             },
             ...sharedSettings,
           }}
-          title="Width"
-          collapsedExampleHeight={300}
         />
       </Section>
     </ScrollScreen>
   );
 }
 
-type ExampleProps = Omit<ExampleCardProps, 'code'> & {
+type ExampleProps = {
   config: CSSAnimationConfig;
   CardComponent?: React.ComponentType<ExampleCardProps>;
   width?: DimensionValue;
   height?: DimensionValue;
-};
+} & Omit<ExampleCardProps, 'code'>;
 
 function Example({
-  config,
-  width = sizes.md,
-  height = sizes.md,
   CardComponent = ExampleCard,
+  config,
+  height = sizes.md,
+  width = sizes.md,
   ...cardProps
 }: ExampleProps) {
   return (
@@ -233,7 +239,7 @@ function Example({
       code={formatAnimationCode(config)}
       collapsedCode={JSON.stringify(config.animationName, null, 2)}
       {...cardProps}>
-      <Animated.View style={[styles.box, config, { width, height }]} />
+      <Animated.View style={[styles.box, config, { height, width }]} />
     </CardComponent>
   );
 }

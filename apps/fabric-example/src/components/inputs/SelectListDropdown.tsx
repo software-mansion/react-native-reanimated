@@ -1,16 +1,17 @@
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
-import { colors, flex, iconSizes, radius, spacing } from '../../theme';
-import { Text } from '../core';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { ActionSheetDropdown } from '../misc';
+
+import { Text } from '@/components/core';
+import { ActionSheetDropdown } from '@/components/misc';
+import { colors, flex, iconSizes, radius, spacing } from '@/theme';
 
 export type SelectListOption<T> = {
   label: string;
@@ -18,7 +19,7 @@ export type SelectListOption<T> = {
 };
 
 type SelectListsDropdownProps<T> = {
-  options: SelectListOption<T>[];
+  options: Array<SelectListOption<T>>;
   selected: T;
   alignment?: 'left' | 'right';
   styleOptions?: {
@@ -29,11 +30,11 @@ type SelectListsDropdownProps<T> = {
 };
 
 export default function SelectListDropdown<T>({
+  alignment,
+  onSelect,
   options,
   selected,
-  alignment,
   styleOptions,
-  onSelect,
 }: SelectListsDropdownProps<T>) {
   const isExpanded = useSharedValue(false);
   const progress = useDerivedValue(() => withTiming(+isExpanded.value));
@@ -58,21 +59,21 @@ export default function SelectListDropdown<T>({
 
   return (
     <ActionSheetDropdown
+      options={dropdownOptions}
       styleOptions={{
         alignment,
         dropdownStyle: [styles.dropdown, styleOptions?.dropdownStyle],
       }}
-      options={dropdownOptions}
-      onOpen={() => (isExpanded.value = true)}
-      onClose={() => (isExpanded.value = false)}>
+      onClose={() => (isExpanded.value = false)}
+      onOpen={() => (isExpanded.value = true)}>
       <View style={[styles.input, styleOptions?.inputStyle]}>
-        <Text variant="subHeading3" style={flex.shrink} numberOfLines={1}>
+        <Text numberOfLines={1} style={flex.shrink} variant="subHeading3">
           {selectedLabel}
         </Text>
         <Animated.View style={animatedArrowStyle}>
           <FontAwesomeIcon
-            icon={faChevronDown}
             color={colors.foreground2}
+            icon={faChevronDown}
             size={iconSizes.xs}
           />
         </Animated.View>
@@ -91,8 +92,8 @@ function DropdownOption({ label, selected, style }: DropdownOptionProps) {
   return (
     <View style={[styles.option, style]}>
       <Text
-        variant="subHeading3"
-        style={[styles.optionText, selected && styles.selectedOptionText]}>
+        style={[styles.optionText, selected && styles.selectedOptionText]}
+        variant="subHeading3">
         {label}
       </Text>
     </View>
@@ -100,22 +101,22 @@ function DropdownOption({ label, selected, style }: DropdownOptionProps) {
 }
 
 const styles = StyleSheet.create({
-  input: {
-    backgroundColor: colors.background2,
-    borderColor: colors.background3,
-    borderWidth: 1,
-    borderRadius: radius.xs,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.xxs,
-    flexDirection: 'row',
-    gap: spacing.xs,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   dropdown: {
     backgroundColor: colors.background2,
     borderRadius: radius.sm,
     paddingVertical: spacing.xs,
+  },
+  input: {
+    alignItems: 'center',
+    backgroundColor: colors.background2,
+    borderColor: colors.background3,
+    borderRadius: radius.xs,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xxs,
   },
   option: {
     paddingHorizontal: spacing.md,

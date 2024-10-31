@@ -27,10 +27,10 @@ type StaggerProps = PropsWithChildren<{
 export default function Stagger({
   ParentComponent,
   children,
-  interval = 100,
   delay = 0,
-  wrapperStye,
+  interval = 100,
   itemLayout = LinearTransition,
+  wrapperStye,
 }: StaggerProps) {
   const childrenArray = Children.toArray(children);
 
@@ -40,12 +40,12 @@ export default function Stagger({
 
     const wrappedChild = (
       <Animated.View
+        key={index}
+        layout={itemLayout}
+        style={style}
         entering={
           interval >= 0 ? FadeInDown.delay(delay + index * interval) : undefined
-        }
-        layout={itemLayout}
-        key={index}
-        style={style}>
+        }>
         {child}
       </Animated.View>
     );

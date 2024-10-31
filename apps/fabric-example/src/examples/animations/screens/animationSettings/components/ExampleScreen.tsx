@@ -1,18 +1,20 @@
-import type { CSSAnimationConfig } from 'react-native-reanimated';
-import type { ExampleItemProps } from './ExamplesListCard';
-import {
-  Stagger,
-  Section,
-  ScrollScreen,
-  ConfigWithOverridesBlock,
-} from '../../../../../components';
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
+import type { CSSAnimationConfig } from 'react-native-reanimated';
+
+import {
+  ConfigWithOverridesBlock,
+  ScrollScreen,
+  Section,
+  Stagger,
+} from '@/components';
+
+import type { ExampleItemProps } from './ExamplesListCard';
 import ExamplesListCard from './ExamplesListCard';
 
 type ExampleCardSection = {
   title: string;
-  items: ExampleItemProps[];
+  items: Array<ExampleItemProps>;
   description?: ReactNode;
   allowPause?: boolean;
   onTogglePause?: (paused: boolean) => void;
@@ -20,13 +22,13 @@ type ExampleCardSection = {
 
 type ExampleScreenProps = {
   config: CSSAnimationConfig;
-  cards: ExampleCardSection[];
+  cards: Array<ExampleCardSection>;
   renderExample: (config: CSSAnimationConfig) => JSX.Element;
 };
 
 export default function ExampleScreen({
-  config,
   cards,
+  config,
   renderExample,
 }: ExampleScreenProps) {
   const configOverrides = useMemo(
@@ -39,25 +41,25 @@ export default function ExampleScreen({
       <Stagger>
         {cards.map((card) => (
           <Section
+            description={card.description}
             key={card.title}
-            title={card.title}
-            description={card.description}>
+            title={card.title}>
             <ExamplesListCard
+              allowPause={card.allowPause}
               config={config}
               items={card.items}
               renderExample={renderExample}
-              allowPause={card.allowPause}
               onTogglePause={card.onTogglePause}
             />
           </Section>
         ))}
 
         <Section
-          title="Animation configuration"
-          description="Animation configuration shared between examples.">
+          description="Animation configuration shared between examples."
+          title="Animation configuration">
           <ConfigWithOverridesBlock
-            sharedConfig={config}
             overrides={configOverrides}
+            sharedConfig={config}
           />
         </Section>
       </Stagger>

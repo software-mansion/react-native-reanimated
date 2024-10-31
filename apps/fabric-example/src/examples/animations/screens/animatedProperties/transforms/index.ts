@@ -1,7 +1,7 @@
-import transformProperties from './transformProperties';
 import relatedProperties from './relatedProperties';
+import transformProperties from './transformProperties';
 
 export default {
-  transformProperties,
   relatedProperties,
+  transformProperties,
 };

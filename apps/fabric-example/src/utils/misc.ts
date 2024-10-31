@@ -1,4 +1,8 @@
-import type { AnyRecord } from '../types';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import type { AnyRecord } from '@/types';
 
 export const noop = () => {
   // Do nothing
@@ -6,8 +10,8 @@ export const noop = () => {
 
 export const getCodeWithOverrides = <C extends AnyRecord, O extends AnyRecord>(
   sharedConfig: C,
-  overrides: O[] = [],
-  excludeKeys: string[] = []
+  overrides: Array<O> = [],
+  excludeKeys: Array<string> = []
 ): string => {
   const propertyOverrides: AnyRecord = {};
   const excludeSet = new Set(excludeKeys);

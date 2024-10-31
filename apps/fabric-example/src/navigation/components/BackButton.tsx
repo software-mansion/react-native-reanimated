@@ -4,13 +4,14 @@ import { useNavigation } from '@react-navigation/native';
 import { memo, useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
-import { spacing, colors, iconSizes } from '../../theme';
-import { getScreenTitle } from '../utils';
-import { Text } from '../../components';
-import type { Route } from '../types';
+
+import { Text } from '@/components';
+import type { Route } from '@/navigation/types';
+import { getScreenTitle } from '@/navigation/utils';
+import { colors, iconSizes, spacing } from '@/theme';
 
 type BackButtonProps = {
-  tabRoutes: Route[];
+  tabRoutes: Array<Route>;
 };
 
 const BackButton = memo(function BackButton({ tabRoutes }: BackButtonProps) {
@@ -19,7 +20,7 @@ const BackButton = memo(function BackButton({ tabRoutes }: BackButtonProps) {
 
   useEffect(() => {
     return navigation.addListener('state', (e) => {
-      const { routes, index } = e.data.state;
+      const { index, routes } = e.data.state;
       setPrevRoute(routes[index - 1]?.key?.split('-')[0]);
     });
   }, [navigation]);

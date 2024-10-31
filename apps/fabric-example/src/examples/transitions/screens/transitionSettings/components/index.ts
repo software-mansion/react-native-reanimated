@@ -1,3 +1,2 @@
-export { default as ExamplesListCard } from './ExamplesListCard';
+export { TransitionStyleChange } from '../../../components';
 export { default as ExampleScreen } from './ExampleScreen';
-export { default as TransitionStyleChange } from '../../../components/TransitionStyleChange';

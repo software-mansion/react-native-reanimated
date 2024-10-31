@@ -9,13 +9,13 @@ import Shadows from './Shadows';
 import transforms from './transforms';
 
 export default {
-  Dimensions,
-  colors,
   Borders,
+  Dimensions,
   FlexStyles,
   Insets,
   Margins,
   Paddings,
   Shadows,
+  colors,
   transforms,
 };

@@ -1,11 +1,13 @@
+/* eslint-disable perfectionist/sort-objects */
+import type { RouteNames, Routes } from '@/navigation/types';
+
 import routeCards from './routeCards';
-import type { RouteNames, Routes } from '../../navigation/types';
 import {
   AnimatedProperties,
-  testExamples,
-  realWorldExamples,
-  transitionSettings,
   miscellaneous,
+  realWorldExamples,
+  testExamples,
+  transitionSettings,
 } from './screens';
 
 const routes = {

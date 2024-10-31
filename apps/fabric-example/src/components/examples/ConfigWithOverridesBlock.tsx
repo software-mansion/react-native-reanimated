@@ -1,17 +1,18 @@
 import { StyleSheet, View } from 'react-native';
-import type { AnyRecord } from '../../types';
-import { colors, radius, spacing } from '../../theme';
-import { getCodeWithOverrides, typedMemo } from '../../utils';
-import { CodeBlock } from '../misc';
+
+import { CodeBlock } from '@/components/misc';
+import { colors, radius, spacing } from '@/theme';
+import type { AnyRecord } from '@/types';
+import { getCodeWithOverrides, typedMemo } from '@/utils';
 
 type ConfigWithOverridesBlockProps<C, O> = {
   sharedConfig: C;
-  overrides?: O[];
+  overrides?: Array<O>;
 };
 
 function ConfigWithOverridesBlock<C extends AnyRecord, O extends AnyRecord>({
-  sharedConfig,
   overrides,
+  sharedConfig,
 }: ConfigWithOverridesBlockProps<C, O>) {
   const code = getCodeWithOverrides(sharedConfig, overrides, ['label']);
 
@@ -25,8 +26,8 @@ function ConfigWithOverridesBlock<C extends AnyRecord, O extends AnyRecord>({
 const styles = StyleSheet.create({
   codeBlock: {
     backgroundColor: colors.background2,
-    padding: spacing.xs,
     borderRadius: radius.sm,
+    padding: spacing.xs,
   },
 });
 

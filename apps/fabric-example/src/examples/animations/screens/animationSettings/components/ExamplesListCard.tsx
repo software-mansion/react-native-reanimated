@@ -1,30 +1,31 @@
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import { spacing } from '../../../../../theme';
-import { Button, Text } from '../../../../../components';
-import { useState } from 'react';
 
-export type ExampleItemProps = CSSAnimationSettings & {
+import { Button, Text } from '@/components';
+import { spacing } from '@/theme';
+
+export type ExampleItemProps = {
   label: string;
-};
+} & CSSAnimationSettings;
 
-export type ExamplesListCardProps = {
+type ExamplesListCardProps = {
   config: CSSAnimationConfig;
-  items: ExampleItemProps[];
+  items: Array<ExampleItemProps>;
   allowPause?: boolean;
   renderExample: (config: CSSAnimationConfig) => JSX.Element;
   onTogglePause?: (paused: boolean) => void;
 };
 
 export default function ExamplesListCard({
+  allowPause,
   config,
   items,
-  renderExample,
-  allowPause,
   onTogglePause,
+  renderExample,
 }: ExamplesListCardProps) {
   const [isPaused, setIsPaused] = useState(false);
 
@@ -50,7 +51,7 @@ export default function ExamplesListCard({
         {/* Labels column */}
         <View style={[styles.column, { flexShrink: 1 }]}>
           {items.map((item, index) => (
-            <Text variant="label2" style={styles.label} key={index}>
+            <Text key={index} style={styles.label} variant="label2">
               {item.label}
             </Text>
           ))}
@@ -74,25 +75,25 @@ export default function ExamplesListCard({
 }
 
 const styles = StyleSheet.create({
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  column: {
+    gap: spacing.xs,
+    justifyContent: 'space-around',
+    maxWidth: '55%',
+  },
   container: {
     gap: spacing.xs,
   },
   examples: {
-    gap: spacing.xs,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  column: {
-    justifyContent: 'space-around',
     gap: spacing.xs,
-    maxWidth: '55%',
+    justifyContent: 'space-between',
   },
   label: {
     flexShrink: 1,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
   },
   pauseButton: {
     width: 72,

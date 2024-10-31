@@ -25,15 +25,15 @@ export type FontVariant =
   | 'body1'
   | 'body2'
   | 'body3'
+  | 'code'
   | 'heading1'
   | 'heading2'
   | 'heading3'
   | 'heading4'
+  | 'inlineCode'
   | 'label1'
   | 'label2'
   | 'label3'
   | 'subHeading1'
   | 'subHeading2'
-  | 'subHeading3'
-  | 'inlineCode'
-  | 'code';
+  | 'subHeading3';

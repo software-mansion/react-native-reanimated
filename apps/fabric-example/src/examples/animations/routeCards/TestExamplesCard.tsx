@@ -1,15 +1,16 @@
+import { faCog } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { StyleSheet, View } from 'react-native';
-import { RouteCard } from '../../../components';
-import type { RouteCardComponent } from '../../../components';
 import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faCog } from '@fortawesome/free-solid-svg-icons';
-import { colors, sizes, spacing } from '../../../theme';
-import { useFocusPlayState } from '../../../hooks';
+
+import type { RouteCardComponent } from '@/components';
+import { RouteCard } from '@/components';
+import { useFocusPlayState } from '@/hooks';
+import { colors, sizes, spacing } from '@/theme';
 
 const TestExamplesCard: RouteCardComponent = (props) => (
   <RouteCard
@@ -22,9 +23,9 @@ const TestExamplesCard: RouteCardComponent = (props) => (
 const ANIMATION_DURATION = 6000;
 
 const sharedAnimationSettings: CSSAnimationSettings = {
+  animationDuration: ANIMATION_DURATION,
   animationIterationCount: 'infinite',
   animationTimingFunction: 'linear',
-  animationDuration: ANIMATION_DURATION,
 };
 
 const rotateRight: CSSAnimationConfig = {
@@ -40,6 +41,7 @@ const rotateRight: CSSAnimationConfig = {
 };
 
 const rotateLeft: CSSAnimationConfig = {
+  animationDelay: -0.1175 * ANIMATION_DURATION,
   animationName: {
     from: {
       transform: [{ rotate: '0deg' }],
@@ -48,7 +50,6 @@ const rotateLeft: CSSAnimationConfig = {
       transform: [{ rotate: '-360deg' }],
     },
   },
-  animationDelay: -0.1175 * ANIMATION_DURATION,
   ...sharedAnimationSettings,
 };
 
@@ -63,9 +64,9 @@ function Showcase() {
           { animationPlayState: useFocusPlayState() },
         ]}>
         <FontAwesomeIcon
+          color={colors.primaryDark}
           icon={faCog}
           size={sizes.lg}
-          color={colors.primaryDark}
         />
       </Animated.View>
       <Animated.View
@@ -75,7 +76,7 @@ function Showcase() {
           rotateLeft,
           { animationPlayState: useFocusPlayState() },
         ]}>
-        <FontAwesomeIcon icon={faCog} size={sizes.md} color={colors.primary} />
+        <FontAwesomeIcon color={colors.primary} icon={faCog} size={sizes.md} />
       </Animated.View>
     </View>
   );
@@ -86,8 +87,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   cog1: {
-    top: -spacing.xxl + 1,
     left: -spacing.xl,
+    top: -spacing.xxl + 1,
   },
   cog2: {
     left: spacing.xxs,

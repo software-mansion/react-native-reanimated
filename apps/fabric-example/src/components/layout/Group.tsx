@@ -1,8 +1,9 @@
 import type { PropsWithChildren } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
-import { colors, radius, spacing } from '../../theme';
 import Animated, { LinearTransition } from 'react-native-reanimated';
+
+import { colors, radius, spacing } from '@/theme';
 
 type GroupProps = PropsWithChildren<{
   bordered?: boolean;

@@ -1,3 +1,5 @@
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { PropsWithChildren, ReactElement } from 'react';
 import {
   Children,
@@ -8,10 +10,6 @@ import {
   useState,
 } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import { colors, flex, spacing } from '../../theme';
-import { TabSelector } from '../inputs';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   useAnimatedReaction,
@@ -20,27 +18,35 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { TabSelector } from '@/components/inputs';
+import { colors, flex, spacing } from '@/theme';
+
 const WINDOW_WIDTH = Dimensions.get('window').width;
 
 type TabProps = PropsWithChildren<{
   name: string;
 }>;
 
-type TabPropsInternal = TabProps & {
+type TabPropsInternal = {
   index: number;
   rendered: boolean;
   selectedTabIndex: SharedValue<number>;
   previousSelectedTabIndex: SharedValue<number>;
-};
+} & TabProps;
 
 const Tab = memo(function Tab({
   children,
-  rendered,
   index,
-  selectedTabIndex,
   previousSelectedTabIndex,
+  rendered,
+  selectedTabIndex,
 }: TabPropsInternal): ReactElement {
   const animatedTabStyle = useAnimatedStyle(() => ({
+    opacity:
+      index === selectedTabIndex.value ||
+      index === previousSelectedTabIndex.value
+        ? 1
+        : 0,
     transform: [
       {
         translateX: withTiming(
@@ -54,11 +60,6 @@ const Tab = memo(function Tab({
         scale: withTiming(index === selectedTabIndex.value ? 1 : 0.9),
       },
     ],
-    opacity:
-      index === selectedTabIndex.value ||
-      index === previousSelectedTabIndex.value
-        ? 1
-        : 0,
   }));
 
   return (
@@ -125,11 +126,11 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
       <View style={flex.fill}>
         {childrenArray.map((child, index) =>
           cloneElement(child, {
+            index,
             key: index,
+            previousSelectedTabIndex,
             rendered: index === 0 || screenTransitionFinished,
             selectedTabIndex,
-            previousSelectedTabIndex,
-            index,
           })
         )}
       </View>
@@ -138,20 +139,17 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
 };
 
 const styles = StyleSheet.create({
+  tab: {
+    ...StyleSheet.absoluteFillObject,
+  },
   tabBar: {
     backgroundColor: colors.white,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    zIndex: 1,
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: spacing.xs },
+    shadowOffset: { height: spacing.xs, width: 0 },
     shadowOpacity: 0.05,
-  },
-  fullWidth: {
-    width: '100%',
-  },
-  tab: {
-    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
   },
 });
 

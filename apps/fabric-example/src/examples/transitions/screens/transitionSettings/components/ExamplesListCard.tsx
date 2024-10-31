@@ -6,8 +6,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Button, Checkbox, Text } from '../../../../../components';
-import { colors, spacing } from '../../../../../theme';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSTransitionConfig,
@@ -16,8 +14,11 @@ import type {
   StyleProps,
 } from 'react-native-reanimated';
 import Animated, { LinearTransition } from 'react-native-reanimated';
-import { useDebounce, useStableCallback } from '../../../../../hooks';
-import { TransitionStyleChange } from '../../../components';
+
+import { Button, Checkbox, Text } from '@/components';
+import { TransitionStyleChange } from '@/examples/transitions/components';
+import { useDebounce, useStableCallback } from '@/hooks';
+import { colors, spacing } from '@/theme';
 
 const MIN_STYLE_CHANGE_DURATION = 2500;
 
@@ -47,14 +48,14 @@ const getTimeout = (
   return Math.max(duration + delay, MIN_STYLE_CHANGE_DURATION);
 };
 
-export type ExampleItemProps = Partial<CSSTransitionConfig> & {
+export type ExampleItemProps = {
   label: string;
-};
+} & Partial<CSSTransitionConfig>;
 
-export type ExamplesListCardProps = {
+type ExamplesListCardProps = {
   sharedConfig: Partial<CSSTransitionConfig>;
-  transitionStyles: StyleProps[];
-  items: ExampleItemProps[];
+  transitionStyles: Array<StyleProps>;
+  items: Array<ExampleItemProps>;
   displayStyleChanges: boolean;
   renderExample: (
     config: CSSTransitionConfig,
@@ -63,11 +64,11 @@ export type ExamplesListCardProps = {
 };
 
 export default function ExamplesListCard({
-  sharedConfig,
-  transitionStyles,
+  displayStyleChanges: inDisplayStyleChanges,
   items,
   renderExample,
-  displayStyleChanges: inDisplayStyleChanges,
+  sharedConfig,
+  transitionStyles,
 }: ExamplesListCardProps) {
   const [displayStyleChanges, setDisplayStyleChanges] = useState(
     inDisplayStyleChanges
@@ -96,22 +97,22 @@ export default function ExamplesListCard({
       </View>
       {items.map((item, index) => (
         <Example
+          displayStyleChanges={displayStyleChanges}
+          item={item}
           key={index}
+          renderExample={renderExample}
           sharedConfig={sharedConfig}
           transitionStyles={transitionStyles}
-          item={item}
-          renderExample={renderExample}
-          displayStyleChanges={displayStyleChanges}
           ref={(ref) => {
             exampleRefsRef.current[item.label] = ref;
           }}
         />
       ))}
-      <Animated.View style={styles.cardFooter} layout={LinearTransition}>
+      <Animated.View layout={LinearTransition} style={styles.cardFooter}>
         <Checkbox
+          label="Display style changes"
           selected={displayStyleChanges}
           onChange={setDisplayStyleChanges}
-          label="Display style changes"
         />
       </Animated.View>
     </View>
@@ -125,7 +126,7 @@ type ExampleRef = {
 
 type ExampleProps = {
   sharedConfig: Partial<CSSTransitionConfig>;
-  transitionStyles: StyleProps[];
+  transitionStyles: Array<StyleProps>;
   item: ExampleItemProps;
   displayStyleChanges: boolean;
   renderExample: (
@@ -137,11 +138,11 @@ type ExampleProps = {
 const Example = memo(
   forwardRef(function Example(
     {
-      sharedConfig,
       displayStyleChanges,
-      transitionStyles,
       item,
       renderExample,
+      sharedConfig,
+      transitionStyles,
     }: ExampleProps,
     ref: React.Ref<ExampleRef>
   ) {
@@ -174,12 +175,12 @@ const Example = memo(
     useImperativeHandle(
       ref,
       () => ({
-        run: handlePress,
         reset: () => {
           setCurrentStyleIndex(0);
           setShowStyleChange(false);
           setKey((prevKey) => prevKey + 1);
         },
+        run: handlePress,
       }),
       [handlePress]
     );
@@ -188,11 +189,11 @@ const Example = memo(
       <Animated.View layout={LinearTransition} style={{ overflow: 'hidden' }}>
         <View style={styles.exampleRow}>
           <View style={styles.labelWrapper}>
-            <Text variant="label2" style={styles.label}>
+            <Text style={styles.label} variant="label2">
               {item.label}
             </Text>
           </View>
-          <View style={styles.example} key={key}>
+          <View key={key} style={styles.example}>
             {renderExample(
               {
                 transitionProperty: 'all',
@@ -206,8 +207,8 @@ const Example = memo(
         </View>
         {displayStyleChanges && showStyleChange && (
           <TransitionStyleChange
-            transitionStyles={transitionStyles}
             activeStyleIndex={debouncedStyleIndex}
+            transitionStyles={transitionStyles}
           />
         )}
       </Animated.View>
@@ -216,35 +217,30 @@ const Example = memo(
 );
 
 const styles = StyleSheet.create({
-  container: {
-    gap: spacing.xs,
+  cardFooter: {
+    backgroundColor: colors.background1,
+    marginTop: spacing.xs,
   },
   cardHeader: {
     flexDirection: 'row',
     gap: spacing.xs,
     justifyContent: 'flex-end',
   },
-  cardFooter: {
-    marginTop: spacing.xs,
-    backgroundColor: colors.background1,
-  },
-  column: {
-    justifyContent: 'space-around',
-    gap: spacing.xs,
-    maxWidth: '55%',
-  },
-  exampleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  container: {
     gap: spacing.xs,
   },
   example: {
     flexGrow: 1,
   },
-  labelWrapper: {
-    flexBasis: '40%',
+  exampleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs,
   },
   label: {
     flexShrink: 1,
+  },
+  labelWrapper: {
+    flexBasis: '40%',
   },
 });

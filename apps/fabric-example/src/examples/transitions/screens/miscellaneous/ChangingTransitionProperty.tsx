@@ -1,11 +1,3 @@
-import { colors, flex, radius, sizes, spacing } from '../../../../theme';
-import {
-  Button,
-  Checkbox,
-  ScrollScreen,
-  Section,
-  Stagger,
-} from '../../../../components';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
@@ -15,10 +7,13 @@ import type {
   StyleProps,
 } from 'react-native-reanimated';
 import Animated, { LinearTransition } from 'react-native-reanimated';
+
+import { Button, Checkbox, ScrollScreen, Section, Stagger } from '@/components';
 import {
   TransitionConfiguration,
   TransitionStyleChange,
-} from '../../components';
+} from '@/examples/transitions/components';
+import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const PROPERTIES = [
   'none',
@@ -28,14 +23,14 @@ const PROPERTIES = [
   'backgroundColor',
   'borderRadius',
   'all',
-] satisfies CSSTransitionProperty[];
+] satisfies Array<CSSTransitionProperty>;
 
 const transitionSettings: CSSTransitionSettings = {
   transitionDuration: '1s',
   transitionTimingFunction: 'easeInOut',
 };
 
-const transitionStyles: StyleProps[] = [
+const transitionStyles: Array<StyleProps> = [
   {
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
@@ -46,8 +41,8 @@ const transitionStyles: StyleProps[] = [
     backgroundColor: colors.primaryDark,
     borderRadius: '50%',
     height: sizes.xl,
-    width: sizes.xl,
     transform: [{ rotate: '360deg' }],
+    width: sizes.xl,
   },
   {
     backgroundColor: colors.primaryDark,
@@ -59,14 +54,14 @@ const transitionStyles: StyleProps[] = [
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
     height: sizes.xl,
-    width: sizes.md,
     transform: [{ rotate: '180deg' }],
+    width: sizes.md,
   },
 ];
 
 export default function ChangingTransitionProperty() {
   const [transitionProperty, setTransitionProperty] = useState<
-    string | string[]
+    Array<string> | string
   >('all');
   const [currentStyleIndex, setCurrentStyleIndex] = useState(0);
   const [displayStyleChanges, setDisplayStyleChanges] = useState(true);
@@ -120,22 +115,22 @@ export default function ChangingTransitionProperty() {
     <ScrollScreen>
       <Stagger>
         <Section
-          title="Transition Property"
-          description="This example shows how selected transition properties affect view style changes. You can observe which properties are being animated when the style is changing.">
+          description="This example shows how selected transition properties affect view style changes. You can observe which properties are being animated when the style is changing."
+          title="Transition Property">
           <View style={styles.content}>
             <View style={styles.buttons}>
               {PROPERTIES.map((property, index) => (
                 <Button
+                  activeOpacity={1}
                   key={index}
                   title={property}
-                  onPress={() => handleSelect(property)}
-                  activeOpacity={1}
                   style={[
                     flex.grow,
                     isSelected(property)
                       ? styles.activeButton
                       : styles.inactiveButton,
                   ]}
+                  onPress={() => handleSelect(property)}
                 />
               ))}
             </View>
@@ -147,27 +142,27 @@ export default function ChangingTransitionProperty() {
             </View>
 
             <Animated.View
-              style={styles.styleChangeWrapper}
-              layout={LinearTransition}>
+              layout={LinearTransition}
+              style={styles.styleChangeWrapper}>
               {displayStyleChanges && (
                 <TransitionStyleChange
-                  transitionStyles={transitionStyles}
                   activeStyleIndex={currentStyleIndex}
+                  transitionStyles={transitionStyles}
                 />
               )}
             </Animated.View>
 
             <Checkbox
               label="Display style changes"
-              onChange={setDisplayStyleChanges}
               selected={displayStyleChanges}
+              onChange={setDisplayStyleChanges}
             />
           </View>
         </Section>
 
         <Section
-          title="Transition configuration"
-          description="Transition configuration consists of the style changes that will be animated and the transition settings.">
+          description="Transition configuration consists of the style changes that will be animated and the transition settings."
+          title="Transition configuration">
           <TransitionConfiguration
             sharedConfig={transitionConfig}
             transitionStyles={transitionStyles}
@@ -179,8 +174,8 @@ export default function ChangingTransitionProperty() {
 }
 
 const styles = StyleSheet.create({
-  content: {
-    gap: spacing.xs,
+  activeButton: {
+    backgroundColor: colors.primary,
   },
   buttons: {
     flexDirection: 'row',
@@ -188,18 +183,18 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     justifyContent: 'space-between',
   },
+  content: {
+    gap: spacing.xs,
+  },
   inactiveButton: {
     backgroundColor: colors.primaryLight,
   },
-  activeButton: {
-    backgroundColor: colors.primary,
-  },
   preview: {
+    alignItems: 'center',
     backgroundColor: colors.background2,
     borderRadius: radius.md,
     height: sizes.xxl,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   styleChangeWrapper: {
     overflow: 'hidden',

@@ -1,24 +1,26 @@
-import type { CSSAnimationConfig } from 'react-native-reanimated';
-import { colors, radius, sizes } from '../../../../theme';
-import { StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { ExampleScreen } from './components';
 import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type { CSSAnimationConfig } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+
+import { colors, radius, sizes } from '@/theme';
+
+import { ExampleScreen } from './components';
 
 export default function AnimationPlayState() {
   const [isPaused, setIsPaused] = useState(false);
 
   const config: CSSAnimationConfig = {
+    animationDelay: '-1s',
+    animationDirection: 'alternate',
+    animationDuration: '2s',
+    animationIterationCount: 'infinite',
     animationName: {
       to: {
         left: '100%',
         transform: [{ translateX: '-100%' }],
       },
     },
-    animationDelay: '-1s',
-    animationDuration: '2s',
-    animationIterationCount: 'infinite',
-    animationDirection: 'alternate',
     animationTimingFunction: 'easeInOut',
   };
 
@@ -34,17 +36,17 @@ export default function AnimationPlayState() {
       renderExample={renderExample}
       cards={[
         {
-          title: 'Play State',
           items: [
             { animationPlayState: 'running', label: 'Running (default)' },
             { animationPlayState: 'paused', label: 'Paused' },
           ],
+          title: 'Play State',
         },
         {
-          title: 'Toggling Play State',
-          items: [{ label: `state: ${isPaused ? 'Paused' : 'Running'}` }],
           allowPause: true,
+          items: [{ label: `state: ${isPaused ? 'Paused' : 'Running'}` }],
           onTogglePause: setIsPaused,
+          title: 'Toggling Play State',
         },
       ]}
     />

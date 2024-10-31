@@ -67,7 +67,7 @@ function adjustLightness(color: string, percentage: number): string {
       return p;
     };
 
-    let r: number, g: number, b: number;
+    let b: number, g: number, r: number;
 
     if (s === 0) {
       r = g = b = l;

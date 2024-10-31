@@ -1,4 +1,4 @@
-import { ScrollScreen, Text } from '../../../components';
+import { ScrollScreen, Text } from '@/components';
 
 export default function AnimatedProperties() {
   return (
@@ -7,7 +7,7 @@ export default function AnimatedProperties() {
         Transition property animations use the same logic as animations, but
         they are triggered by changes in the properties of the component. Go to
         the{' '}
-        <Text variant="label2" navLink="Animations/AnimatedProperties">
+        <Text navLink="Animations/AnimatedProperties" variant="label2">
           Animated Properties
         </Text>{' '}
         screen in the animations tab to see how this works.

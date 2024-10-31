@@ -1,17 +1,18 @@
-import { View, StyleSheet } from 'react-native';
-import { flex, colors, radius, spacing } from '../../../../../theme';
-import { useState } from 'react';
 import type { PropsWithChildren } from 'react';
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
+  FadeInDown,
+  FadeOutDown,
+  LayoutAnimationConfig,
   LinearTransition,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-  LayoutAnimationConfig,
-  FadeOutDown,
-  FadeInDown,
 } from 'react-native-reanimated';
-import { ExpandableCard, CodeBlock, Text } from '../../../../../components';
+
+import { CodeBlock, ExpandableCard, Text } from '@/components';
+import { colors, flex, radius, spacing } from '@/theme';
 
 export type ExampleCardProps = PropsWithChildren<{
   title?: string;
@@ -24,12 +25,12 @@ export type ExampleCardProps = PropsWithChildren<{
 
 export default function ExampleCard({
   children,
-  title,
   code,
   collapsedCode,
-  description,
   collapsedExampleHeight = 150,
+  description,
   minExampleHeight,
+  title,
 }: ExampleCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const exampleContainerDimensions = useSharedValue<{
@@ -42,11 +43,11 @@ export default function ExampleCard({
       return {};
     }
 
-    const { width, height } = exampleContainerDimensions.value;
+    const { height, width } = exampleContainerDimensions.value;
 
     return {
-      width: withTiming(width),
       height: withTiming(height),
+      width: withTiming(width),
     };
   });
 
@@ -54,10 +55,10 @@ export default function ExampleCard({
     <LayoutAnimationConfig skipEntering skipExiting>
       <ExpandableCard
         expanded={isExpanded}
-        onChange={setIsExpanded}
-        showExpandOverlay>
+        showExpandOverlay
+        onChange={setIsExpanded}>
         {title && (
-          <Text variant="subHeading2" style={styles.title}>
+          <Text style={styles.title} variant="subHeading2">
             {title}
           </Text>
         )}
@@ -71,37 +72,37 @@ export default function ExampleCard({
             { height: isExpanded ? 'auto' : collapsedExampleHeight },
           ]}>
           {/* Code block */}
-          <Animated.View style={styles.itemWrapper} layout={LinearTransition}>
+          <Animated.View layout={LinearTransition} style={styles.itemWrapper}>
             <CodeBlock code={code} />
             {/* Render collapsedCode block as an overlay to ensure that the layout
             transition is smooth when the container is expanded/collapsed */}
             {collapsedCode && !isExpanded && (
               <Animated.View
-                style={styles.collapsedCodeOverlay}
+                entering={FadeInDown}
                 exiting={FadeOutDown}
-                entering={FadeInDown}>
+                style={styles.collapsedCodeOverlay}>
                 <CodeBlock code={collapsedCode} />
               </Animated.View>
             )}
           </Animated.View>
           {/* Example */}
           <Animated.View
+            layout={LinearTransition}
             style={[
               styles.itemWrapper,
               flex.center,
               {
                 minHeight:
-                  minExampleHeight ||
+                  minExampleHeight ??
                   Math.min(minExampleHeight ?? 150, collapsedExampleHeight),
               },
             ]}
-            layout={LinearTransition}
             onLayout={({
               nativeEvent: {
-                layout: { width, height },
+                layout: { height, width },
               },
             }) => {
-              exampleContainerDimensions.value = { width, height };
+              exampleContainerDimensions.value = { height, width };
             }}>
             {/* This is a tricky way to ensure that the example is centered withing
             the parent container during the layout transition. To do this, we wrap the
@@ -111,8 +112,8 @@ export default function ExampleCard({
             the parent component and its dimensions are smoothly updated when the layout
             changes. */}
             <Animated.View
-              style={styles.exampleOuterContainer}
-              layout={LinearTransition}>
+              layout={LinearTransition}
+              style={styles.exampleOuterContainer}>
               <Animated.View style={[flex.center, animatedExampleStyle]}>
                 {children}
               </Animated.View>
@@ -125,37 +126,37 @@ export default function ExampleCard({
 }
 
 const styles = StyleSheet.create({
-  title: {
-    marginBottom: spacing.xs,
+  collapsedCodeOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.background2,
+    padding: spacing.xs,
   },
   description: {
     marginBottom: spacing.sm,
+  },
+  exampleOuterContainer: {
+    ...flex.center,
+    height: 0,
+    width: 0,
+  },
+  itemWrapper: {
+    backgroundColor: colors.background2,
+    borderRadius: radius.sm,
+    flexBasis: '50%',
+    overflow: 'hidden',
+    padding: spacing.xs,
   },
   itemsContainer: {
     gap: spacing.sm,
   },
   itemsContainerCollapsed: {
-    paddingRight: spacing.sm,
     flexDirection: 'row',
+    paddingRight: spacing.sm,
   },
   itemsContainerExpanded: {
     flexDirection: 'column',
   },
-  itemWrapper: {
-    flexBasis: '50%',
-    backgroundColor: colors.background2,
-    borderRadius: radius.sm,
-    overflow: 'hidden',
-    padding: spacing.xs,
-  },
-  exampleOuterContainer: {
-    ...flex.center,
-    width: 0,
-    height: 0,
-  },
-  collapsedCodeOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    padding: spacing.xs,
-    backgroundColor: colors.background2,
+  title: {
+    marginBottom: spacing.xs,
   },
 });

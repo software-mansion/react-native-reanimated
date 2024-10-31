@@ -1,9 +1,10 @@
-import { darken, lighten } from '../../../../utils';
-import { colors, flex, radius, sizes, spacing } from '../../../../theme';
 import type { PropsWithChildren } from 'react';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { cubicBezier } from 'react-native-reanimated';
+
+import { colors, flex, radius, sizes, spacing } from '@/theme';
+import { darken, lighten } from '@/utils';
 
 const FONT_SIZES = [16, 18, 22];
 const COLORS = ['#7A58E2', '#3CADA4', '#3592DE', '#C14E9A', '#F38C65'];
@@ -29,23 +30,23 @@ export default function AppSettings() {
 
   return (
     <Animated.ScrollView
+      contentContainerStyle={flex.fill}
       style={[
         flex.fill,
         {
-          transitionProperty: 'backgroundColor',
-          transitionDuration: 200,
           backgroundColor: bgColor,
+          transitionDuration: 200,
+          transitionProperty: 'backgroundColor',
         },
-      ]}
-      contentContainerStyle={flex.fill}>
+      ]}>
       <View style={styles.container}>
-        <SettingsSection title="General" accentColor={theme}>
+        <SettingsSection accentColor={theme} title="General">
           {switchOptions.map((option, index) => (
             <SettingsRow key={option}>
               <Switch
-                inactiveBackgroundColor={fgColor}
-                activeBackgroundColor={theme}
                 active={selectedOptions.has(index)}
+                activeBackgroundColor={theme}
+                inactiveBackgroundColor={fgColor}
                 onChange={() => {
                   const newOptions = new Set(selectedOptions);
                   if (selectedOptions.has(index)) {
@@ -63,7 +64,7 @@ export default function AppSettings() {
           ))}
         </SettingsSection>
 
-        <SettingsSection title="Appearance" accentColor={theme}>
+        <SettingsSection accentColor={theme} title="Appearance">
           <SettingsRow>
             <Label color={fgColor} fontSize={fontSize}>
               Font Size
@@ -71,9 +72,9 @@ export default function AppSettings() {
             <View style={styles.colorSwatches}>
               {FONT_SIZES.map((size) => (
                 <FontSizeButton
-                  key={size}
-                  fontSize={size}
                   active={fontSize === size}
+                  fontSize={size}
+                  key={size}
                   onPress={() => setFontSize(size)}
                 />
               ))}
@@ -86,9 +87,9 @@ export default function AppSettings() {
             <View style={styles.colorSwatches}>
               {COLORS.map((color) => (
                 <ColorSwatch
-                  key={color}
-                  color={color}
                   active={theme === color}
+                  color={color}
+                  key={color}
                   onPress={() => setTheme(color)}
                 />
               ))}
@@ -106,9 +107,9 @@ type SettingsSectionProps = PropsWithChildren<{
 }>;
 
 function SettingsSection({
-  title,
   accentColor,
   children,
+  title,
 }: SettingsSectionProps) {
   return (
     <View>
@@ -117,9 +118,9 @@ function SettingsSection({
         style={[
           styles.separator,
           {
-            transitionProperty: 'backgroundColor',
-            transitionDuration: 200,
             backgroundColor: accentColor,
+            transitionDuration: 200,
+            transitionProperty: 'backgroundColor',
           },
         ]}
       />
@@ -147,7 +148,7 @@ function Label({ children, color, fontSize }: LabelProps) {
     <Animated.Text
       style={[
         styles.label,
-        { transitionProperty: 'all', transitionDuration: 200, color, fontSize },
+        { color, fontSize, transitionDuration: 200, transitionProperty: 'all' },
       ]}>
       {children}
     </Animated.Text>
@@ -162,23 +163,23 @@ type SwitchProps = {
 };
 
 function Switch({
-  inactiveBackgroundColor,
-  activeBackgroundColor,
   active,
+  activeBackgroundColor,
+  inactiveBackgroundColor,
   onChange,
 }: SwitchProps) {
   return (
-    <Pressable style={styles.switch} onPress={onChange} hitSlop={spacing.xxs}>
+    <Pressable hitSlop={spacing.xxs} style={styles.switch} onPress={onChange}>
       <Animated.View
         style={[
           styles.switchBackground,
           {
-            transitionProperty: 'all',
-            transitionDuration: 300,
-            opacity: active ? 1 : 0.5,
             backgroundColor: active
               ? activeBackgroundColor
               : inactiveBackgroundColor,
+            opacity: active ? 1 : 0.5,
+            transitionDuration: 300,
+            transitionProperty: 'all',
           },
         ]}
       />
@@ -187,11 +188,11 @@ function Switch({
         style={[
           styles.switchThumb,
           {
-            transitionProperty: 'all',
-            transitionDuration: 500,
-            transitionTimingFunction: cubicBezier(0.2, 0.9, 0.5, 1),
-            transform: [{ translateX: active ? '-100%' : 0 }],
             left: active ? '100%' : 0,
+            transform: [{ translateX: active ? '-100%' : 0 }],
+            transitionDuration: 500,
+            transitionProperty: 'all',
+            transitionTimingFunction: cubicBezier(0.2, 0.9, 0.5, 1),
           },
         ]}>
         <Animated.View
@@ -200,14 +201,14 @@ function Switch({
             {
               // Use animation instead of transition here to ensure that it
               // runs only when the switch state changes from inactive to
+              animationDuration: 300,
               // active (transition will react to both changes)
               animationName: active
                 ? {
-                    from: { transform: [{ scale: 1 }], opacity: 0.75 },
-                    to: { transform: [{ scale: 2 }], opacity: 0 },
+                    from: { opacity: 0.75, transform: [{ scale: 1 }] },
+                    to: { opacity: 0, transform: [{ scale: 2 }] },
                   }
                 : undefined,
-              animationDuration: 300,
             },
           ]}
         />
@@ -222,16 +223,16 @@ type FontSizeButtonProps = {
   onPress: () => void;
 };
 
-function FontSizeButton({ fontSize, active, onPress }: FontSizeButtonProps) {
+function FontSizeButton({ active, fontSize, onPress }: FontSizeButtonProps) {
   return (
     <Pressable style={styles.fontSizeButton} onPress={onPress}>
       <Animated.View
         style={[
           styles.fontSizeBackground,
           {
-            transitionProperty: 'opacity',
-            transitionDuration: 200,
             opacity: active ? 1 : 0,
+            transitionDuration: 200,
+            transitionProperty: 'opacity',
           },
         ]}
       />
@@ -246,16 +247,16 @@ type ColorSwatchProps = {
   onPress: () => void;
 };
 
-function ColorSwatch({ color, active, onPress }: ColorSwatchProps) {
+function ColorSwatch({ active, color, onPress }: ColorSwatchProps) {
   return (
     <AnimatedPressable
       style={[
         styles.colorSwatch,
         {
-          transitionProperty: 'borderWidth',
-          transitionDuration: 300,
           backgroundColor: color,
           borderWidth: active ? 4 : 1,
+          transitionDuration: 300,
+          transitionProperty: 'borderWidth',
         },
       ]}
       onPress={onPress}
@@ -264,39 +265,65 @@ function ColorSwatch({ color, active, onPress }: ColorSwatchProps) {
 }
 
 const styles = StyleSheet.create({
+  colorSwatch: {
+    borderColor: colors.white,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    height: sizes.sm,
+    width: sizes.sm,
+  },
+  colorSwatches: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
   container: {
     flex: 1,
+    gap: spacing.xxl,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xl,
-    gap: spacing.xxl,
   },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
+  fontSizeBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: radius.full,
+    borderWidth: 1,
+  },
+  fontSizeButton: {
+    ...flex.center,
+    height: sizes.sm,
+    width: sizes.sm,
+  },
+  fontSizeText: {
     color: colors.white,
-  },
-  separator: {
-    height: 3,
-    width: sizes.md,
-    marginTop: spacing.md,
-    marginBottom: spacing.xl,
-  },
-  sectionContent: {
-    gap: spacing.md,
-  },
-  settingsRow: {
-    flexDirection: 'row',
-    gap: spacing.lg,
-    alignItems: 'center',
   },
   label: {
     fontSize: 16,
   },
-  switch: {
+  sectionContent: {
+    gap: spacing.md,
+  },
+  sectionTitle: {
+    color: colors.white,
+    fontSize: 22,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+  },
+  separator: {
+    height: 3,
+    marginBottom: spacing.xl,
+    marginTop: spacing.md,
     width: sizes.md,
+  },
+  settingsRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.lg,
+  },
+  switch: {
     justifyContent: 'center',
     padding: spacing.xxxs,
+    width: sizes.md,
   },
   switchBackground: {
     ...StyleSheet.absoluteFillObject,
@@ -304,39 +331,13 @@ const styles = StyleSheet.create({
   },
   switchThumb: {
     backgroundColor: colors.white,
-    width: 20,
-    height: 20,
     borderRadius: radius.full,
+    height: 20,
+    width: 20,
   },
   thumbPressIndicator: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.white,
     borderRadius: radius.full,
-  },
-  fontSizeButton: {
-    ...flex.center,
-    width: sizes.sm,
-    height: sizes.sm,
-  },
-  fontSizeBackground: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: radius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-  },
-  fontSizeText: {
-    color: colors.white,
-  },
-  colorSwatches: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  colorSwatch: {
-    width: sizes.sm,
-    height: sizes.sm,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.white,
   },
 });

@@ -1,29 +1,30 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
 import type { ScrollViewProps } from 'react-native';
-import { flex, spacing } from '../../theme';
-import { BOTTOM_BAR_HEIGHT } from '../../navigation/constants';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export type ScrollProps = ScrollViewProps & {
+import { BOTTOM_BAR_HEIGHT } from '@/navigation';
+import { flex, spacing } from '@/theme';
+
+export type ScrollProps = {
   fill?: boolean;
   withBottomBarSpacing?: boolean;
-};
+} & ScrollViewProps;
 
 export default function Scroll({
+  children,
+  contentContainerStyle,
   fill = true,
   style,
-  contentContainerStyle,
   withBottomBarSpacing,
-  children,
   ...rest
 }: ScrollProps) {
   const insets = useSafeAreaInsets();
 
   return (
     <ScrollView
-      style={[style, fill && flex.fill]}
-      showsVerticalScrollIndicator={false}
       contentContainerStyle={[styles.contentContainer, contentContainerStyle]}
+      showsVerticalScrollIndicator={false}
+      style={[style, fill && flex.fill]}
       {...rest}>
       {children}
       {withBottomBarSpacing && (
@@ -35,8 +36,8 @@ export default function Scroll({
 
 const styles = StyleSheet.create({
   contentContainer: {
+    gap: spacing.xxs,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    gap: spacing.xxs,
   },
 });

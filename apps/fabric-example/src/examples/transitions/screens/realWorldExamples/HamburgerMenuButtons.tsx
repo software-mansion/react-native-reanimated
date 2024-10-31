@@ -1,16 +1,11 @@
-import { colors, flex, radius, spacing } from '../../../../theme';
-import {
-  Button,
-  Grid,
-  ScrollScreen,
-  Stagger,
-  Text,
-} from '../../../../components';
-import { useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { CSSTransitionConfig } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
+
+import { Button, Grid, ScrollScreen, Stagger, Text } from '@/components';
+import { colors, flex, radius, spacing } from '@/theme';
 
 const BUTTON_SIZE = 36;
 
@@ -39,48 +34,48 @@ export default function HamburgerMenuButtons() {
         />
       </View>
       <Grid
-        columns={3}
-        staggerInterval={100}
         columnGap={spacing.sm}
-        rowGap={spacing.md}>
-        <Example title="Simple" Component={Simple} autoOpen={autoOpen} />
-        <Example title="Left Arrow" Component={LeftArrow} autoOpen={autoOpen} />
+        columns={3}
+        rowGap={spacing.md}
+        staggerInterval={100}>
+        <Example autoOpen={autoOpen} Component={Simple} title="Simple" />
+        <Example autoOpen={autoOpen} Component={LeftArrow} title="Left Arrow" />
         <Example
-          title="Right Arrow"
+          autoOpen={autoOpen}
           Component={RightArrow}
-          autoOpen={autoOpen}
+          title="Right Arrow"
         />
-        <Example title="To Plus" Component={ToPlus} autoOpen={autoOpen} />
-        <Example title="To Minus" Component={ToMinus} autoOpen={autoOpen} />
-        <Example title="In Circle" Component={InCircle} autoOpen={autoOpen} />
-        <Example title="Skew" Component={Skew} autoOpen={autoOpen} />
-        <Example title="Rotate" Component={Rotate} autoOpen={autoOpen} />
+        <Example autoOpen={autoOpen} Component={ToPlus} title="To Plus" />
+        <Example autoOpen={autoOpen} Component={ToMinus} title="To Minus" />
+        <Example autoOpen={autoOpen} Component={InCircle} title="In Circle" />
+        <Example autoOpen={autoOpen} Component={Skew} title="Skew" />
+        <Example autoOpen={autoOpen} Component={Rotate} title="Rotate" />
         <Example
-          title="To Plus and Rotate"
+          autoOpen={autoOpen}
           Component={ToPlusAndRotate}
-          autoOpen={autoOpen}
+          title="To Plus and Rotate"
         />
-        <Example title="Split" Component={Split} autoOpen={autoOpen} />
+        <Example autoOpen={autoOpen} Component={Split} title="Split" />
         <Example
-          title="Two Bars Simple"
+          autoOpen={autoOpen}
           Component={TwoBarsSimple}
-          autoOpen={autoOpen}
+          title="Two Bars Simple"
         />
         <Example
-          title="Two Bars Rotating"
+          autoOpen={autoOpen}
           Component={TwoBarsRotating}
-          autoOpen={autoOpen}
+          title="Two Bars Rotating"
         />
         <Example
-          title="Split and Fly Away"
+          autoOpen={autoOpen}
           Component={SplitAndFlyAway}
-          autoOpen={autoOpen}
+          title="Split and Fly Away"
         />
-        <Example title="Fly Away" Component={FlyAway} autoOpen={autoOpen} />
+        <Example autoOpen={autoOpen} Component={FlyAway} title="Fly Away" />
         <Example
-          title="Many Rotations"
-          Component={ManyRotations}
           autoOpen={autoOpen}
+          Component={ManyRotations}
+          title="Many Rotations"
         />
       </Grid>
     </ScrollScreen>
@@ -89,8 +84,8 @@ export default function HamburgerMenuButtons() {
 
 const styles = StyleSheet.create({
   buttons: {
-    marginBottom: spacing.xs,
     alignItems: 'flex-end',
+    marginBottom: spacing.xs,
   },
 });
 
@@ -104,7 +99,7 @@ type ExampleProps = {
   autoOpen?: boolean;
 };
 
-function Example({ title, autoOpen, Component }: ExampleProps) {
+function Example({ Component, autoOpen, title }: ExampleProps) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -128,33 +123,33 @@ function Example({ title, autoOpen, Component }: ExampleProps) {
 }
 
 const sharedStyles = StyleSheet.create({
-  container: {
-    width: BUTTON_SIZE,
-    height: BUTTON_SIZE,
-    justifyContent: 'center',
-  },
-  line: {
-    width: BUTTON_SIZE,
-    position: 'absolute',
-    height: 5,
-    backgroundColor: colors.primary,
-    borderRadius: radius.full,
-  },
   cell: {
+    alignItems: 'center',
     backgroundColor: colors.background1,
     borderRadius: radius.md,
-    alignItems: 'center',
+    flex: 1,
+    gap: spacing.sm,
     justifyContent: 'space-between',
     padding: spacing.sm,
-    gap: spacing.sm,
     width: '100%',
-    flex: 1,
+  },
+  container: {
+    height: BUTTON_SIZE,
+    justifyContent: 'center',
+    width: BUTTON_SIZE,
+  },
+  line: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.full,
+    height: 5,
+    position: 'absolute',
+    width: BUTTON_SIZE,
   },
 });
 
 const SHARED_CONFIG: CSSTransitionConfig = {
-  transitionProperty: 'all',
   transitionDuration: 300,
+  transitionProperty: 'all',
   transitionTimingFunction: 'easeOut',
 };
 
@@ -307,11 +302,11 @@ function ToMinus({ open }: ExampleComponentProps) {
         style={[
           lineStyle,
           {
+            opacity: open ? 0 : 1,
             transform: [
               { translateY: -BUTTON_SIZE / 4 },
               { translateX: open ? -BUTTON_SIZE : 0 },
             ],
-            opacity: open ? 0 : 1,
           },
         ]}
       />
@@ -320,11 +315,11 @@ function ToMinus({ open }: ExampleComponentProps) {
         style={[
           lineStyle,
           {
+            opacity: open ? 0 : 1,
             transform: [
               { translateY: BUTTON_SIZE / 4 },
               { translateX: open ? BUTTON_SIZE : 0 },
             ],
-            opacity: open ? 0 : 1,
           },
         ]}
       />
@@ -349,9 +344,9 @@ function InCircle({ open }: ExampleComponentProps) {
         style={[
           lineStyle,
           {
+            height: open ? 4 : 5,
             transform: [{ translateY: open ? 0 : -BUTTON_SIZE / 4 }],
             width: open ? 0.6 * BUTTON_SIZE : BUTTON_SIZE,
-            height: open ? 4 : 5,
           },
         ]}
       />
@@ -359,9 +354,9 @@ function InCircle({ open }: ExampleComponentProps) {
         style={[
           lineStyle,
           {
+            height: open ? 4 : 5,
             opacity: open ? 0 : 1,
             width: open ? 0.6 * BUTTON_SIZE : BUTTON_SIZE,
-            height: open ? 4 : 5,
           },
         ]}
       />
@@ -369,11 +364,11 @@ function InCircle({ open }: ExampleComponentProps) {
         style={[
           lineStyle,
           {
+            height: open ? 4 : 5,
             transform: open
               ? [{ rotate: '90deg' }]
               : [{ translateY: BUTTON_SIZE / 4 }],
             width: open ? 0.6 * BUTTON_SIZE : BUTTON_SIZE,
-            height: open ? 4 : 5,
           },
         ]}
       />
@@ -384,10 +379,10 @@ function InCircle({ open }: ExampleComponentProps) {
 const inCircleStyles = StyleSheet.create({
   container: {
     ...flex.center,
-    borderWidth: 4,
-    width: '100%',
-    height: '100%',
     borderRadius: radius.full,
+    borderWidth: 4,
+    height: '100%',
+    width: '100%',
   },
 });
 
@@ -397,9 +392,9 @@ function Skew({ open }: ExampleComponentProps) {
   return (
     <Animated.View
       style={{
-        transitionProperty: 'transform',
-        transitionDuration: 300,
         transform: [{ rotate: open ? '35deg' : '0deg' }],
+        transitionDuration: 300,
+        transitionProperty: 'transform',
       }}>
       <Animated.View
         style={[
@@ -436,10 +431,10 @@ function Rotate({ open }: ExampleComponentProps) {
   return (
     <Animated.View
       style={{
-        transitionProperty: 'transform',
-        transitionDuration: 300,
-        transform: [{ rotate: open ? '90deg' : '0deg' }],
         alignItems: 'center',
+        transform: [{ rotate: open ? '90deg' : '0deg' }],
+        transitionDuration: 300,
+        transitionProperty: 'transform',
       }}>
       <Animated.View
         style={[
@@ -476,11 +471,11 @@ function ToPlusAndRotate({ open }: ExampleComponentProps) {
   return (
     <Animated.View
       style={{
-        transitionProperty: 'transform',
-        transitionDuration: 200,
-        transitionDelay: open ? 300 : 0,
-        transform: [{ rotate: open ? '45deg' : '0deg' }],
         alignItems: 'center',
+        transform: [{ rotate: open ? '45deg' : '0deg' }],
+        transitionDelay: open ? 300 : 0,
+        transitionDuration: 200,
+        transitionProperty: 'transform',
       }}>
       <Animated.View
         style={[
@@ -592,11 +587,11 @@ const splitStyles = StyleSheet.create({
     width: BUTTON_SIZE,
   },
   splitLine: {
-    position: 'absolute',
-    width: 0.6 * BUTTON_SIZE,
-    height: 5,
     backgroundColor: colors.primary,
     borderRadius: radius.full,
+    height: 5,
+    position: 'absolute',
+    width: 0.6 * BUTTON_SIZE,
   },
   splitLineRight: {
     right: 0,
@@ -677,9 +672,9 @@ function SplitAndFlyAway({ open }: ExampleComponentProps) {
         splitAndFlyAwayStyles.linesRow,
         SHARED_CONFIG,
         {
-          transitionDelay: open ? 0 : 300,
           gap: open ? BUTTON_SIZE : 0,
           opacity: open ? 0 : 1,
+          transitionDelay: open ? 0 : 300,
         },
       ]}>
       <View style={leftLineStyle} />
@@ -696,8 +691,8 @@ function SplitAndFlyAway({ open }: ExampleComponentProps) {
             sharedStyles.line,
             SHARED_CONFIG,
             {
-              transitionDelay: open ? 300 : 0,
               transform: [{ rotate: open ? '45deg' : '0deg' }],
+              transitionDelay: open ? 300 : 0,
             },
           ]}
         />
@@ -706,8 +701,8 @@ function SplitAndFlyAway({ open }: ExampleComponentProps) {
             sharedStyles.line,
             SHARED_CONFIG,
             {
-              transitionDelay: open ? 300 : 0,
               transform: [{ rotate: open ? '-45deg' : '0deg' }],
+              transitionDelay: open ? 300 : 0,
             },
           ]}
         />
@@ -726,17 +721,17 @@ const splitAndFlyAwayStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   splitLine: {
-    width: 0.5 * BUTTON_SIZE,
-    height: 5,
     backgroundColor: colors.primary,
+    height: 5,
+    width: 0.5 * BUTTON_SIZE,
   },
   splitLineLeft: {
-    borderTopLeftRadius: radius.full,
     borderBottomLeftRadius: radius.full,
+    borderTopLeftRadius: radius.full,
   },
   splitLineRight: {
-    borderTopRightRadius: radius.full,
     borderBottomRightRadius: radius.full,
+    borderTopRightRadius: radius.full,
   },
 });
 
@@ -792,10 +787,10 @@ const flyAwayStyles = StyleSheet.create({
     gap: BUTTON_SIZE / 4,
   },
   line: {
-    width: BUTTON_SIZE,
-    height: 5,
     backgroundColor: colors.primary,
     borderRadius: radius.full,
+    height: 5,
+    width: BUTTON_SIZE,
   },
 });
 

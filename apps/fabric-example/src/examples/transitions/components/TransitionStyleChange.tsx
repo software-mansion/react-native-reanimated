@@ -1,51 +1,52 @@
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import { CodeBlock, Text } from '../../../components';
-import { colors, flex, iconSizes, radius, spacing } from '../../../theme';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { StyleSheet, View } from 'react-native';
 import type { LayoutAnimation, StyleProps } from 'react-native-reanimated';
 import Animated, {
-  LinearTransition,
   FadeIn,
-  FadeOut,
-  withTiming,
-  withDelay,
   FadeInRight,
+  FadeOut,
   LayoutAnimationConfig,
+  LinearTransition,
+  withDelay,
+  withTiming,
 } from 'react-native-reanimated';
+
+import { CodeBlock, Text } from '@/components';
+import { colors, flex, iconSizes, radius, spacing } from '@/theme';
 
 const CARDS_ORDER_CHANGE_DELAY = 300;
 
 const layoutTransition = LinearTransition.delay(CARDS_ORDER_CHANGE_DELAY);
 
-export const ScaleDown = (): LayoutAnimation => {
+const ScaleDown = (): LayoutAnimation => {
   'worklet';
   const progress = withDelay(
     CARDS_ORDER_CHANGE_DELAY,
     withTiming(0, { duration: 200 })
   );
   const animations = {
-    transform: [{ scale: progress }],
     opacity: progress,
+    transform: [{ scale: progress }],
   };
   const initialValues = {
-    transform: [{ scale: 1 }],
     opacity: 1,
+    transform: [{ scale: 1 }],
   };
   return {
-    initialValues,
     animations,
+    initialValues,
   };
 };
 
 type TransitionStyleChangeProps = {
-  transitionStyles: StyleProps[];
+  transitionStyles: Array<StyleProps>;
   activeStyleIndex: number;
 };
 
 export default function TransitionStyleChange({
-  transitionStyles,
   activeStyleIndex,
+  transitionStyles,
 }: TransitionStyleChangeProps) {
   const nextStyleIndex = (activeStyleIndex + 1) % transitionStyles.length;
 
@@ -55,28 +56,28 @@ export default function TransitionStyleChange({
   return (
     <LayoutAnimationConfig skipEntering>
       <Animated.ScrollView
-        horizontal
         contentContainerStyle={styles.container}
+        exiting={FadeOut}
         layout={layoutTransition}
-        exiting={FadeOut}>
+        horizontal>
         <CodeCard
-          key={activeStyleIndex}
           code={JSON.stringify(activeStyle, null, 2)}
+          key={activeStyleIndex}
           label="Current"
           active
         />
 
-        <Animated.View style={styles.iconWrapper} layout={layoutTransition}>
+        <Animated.View layout={layoutTransition} style={styles.iconWrapper}>
           <FontAwesomeIcon
+            color={colors.primary}
             icon={faArrowRight}
             size={iconSizes.md}
-            color={colors.primary}
           />
         </Animated.View>
 
         <CodeCard
-          key={nextStyleIndex}
           code={JSON.stringify(nextStyle, null, 2)}
+          key={nextStyleIndex}
           label="Next"
         />
       </Animated.ScrollView>
@@ -91,32 +92,32 @@ type CodeCardProps = {
   onFinish?: () => void;
 };
 
-function CodeCard({ code, active, label }: CodeCardProps) {
+function CodeCard({ active, code, label }: CodeCardProps) {
   return (
     <Animated.View
       layout={layoutTransition}
       style={[styles.codeCardWrapper, { zIndex: active ? 1 : 0 }]}>
       {label && (
         <Animated.View
-          style={styles.labelWrapper}
           entering={FadeInRight.delay(CARDS_ORDER_CHANGE_DELAY)}
-          exiting={FadeOut}>
+          exiting={FadeOut}
+          style={styles.labelWrapper}>
           <Text variant="label3">{label}</Text>
         </Animated.View>
       )}
       <View>
         {active && (
           <Animated.View
-            style={styles.activeCardBackground}
             entering={FadeIn}
             exiting={FadeOut}
+            style={styles.activeCardBackground}
           />
         )}
         <Animated.View
-          style={styles.codeBlock}
+          entering={FadeIn.delay(CARDS_ORDER_CHANGE_DELAY)}
           exiting={ScaleDown}
-          entering={FadeIn.delay(CARDS_ORDER_CHANGE_DELAY)}>
-          <CodeBlock scrollable={false} code={code} />
+          style={styles.codeBlock}>
+          <CodeBlock code={code} scrollable={false} />
         </Animated.View>
       </View>
     </Animated.View>
@@ -124,6 +125,20 @@ function CodeCard({ code, active, label }: CodeCardProps) {
 }
 
 const styles = StyleSheet.create({
+  activeCardBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+  },
+  codeBlock: {
+    backgroundColor: colors.background2,
+    borderRadius: radius.sm,
+    margin: spacing.xxs,
+    padding: spacing.xs,
+  },
+  codeCardWrapper: {
+    flexGrow: 1,
+  },
   container: {
     flexDirection: 'row',
     ...flex.center,
@@ -133,22 +148,8 @@ const styles = StyleSheet.create({
   iconWrapper: {
     paddingTop: spacing.md,
   },
-  codeCardWrapper: {
-    flexGrow: 1,
-  },
   labelWrapper: {
     marginBottom: spacing.xxs,
     paddingLeft: spacing.xxs,
-  },
-  activeCardBackground: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-  },
-  codeBlock: {
-    borderRadius: radius.sm,
-    backgroundColor: colors.background2,
-    padding: spacing.xs,
-    margin: spacing.xxs,
   },
 });

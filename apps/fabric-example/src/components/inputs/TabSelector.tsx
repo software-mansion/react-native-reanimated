@@ -1,3 +1,8 @@
+import {
+  faChevronLeft,
+  faChevronRight,
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useEffect, useMemo } from 'react';
 import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, {
@@ -9,15 +14,11 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { colors, radius, spacing } from '../../theme';
-import { typedMemo } from '../../utils';
-import { Text } from '../core';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import {
-  faChevronLeft,
-  faChevronRight,
-} from '@fortawesome/free-solid-svg-icons';
+
+import { Text } from '@/components/core';
+import { colors, radius, spacing } from '@/theme';
+import { typedMemo } from '@/utils';
 
 const TABS_GAP = spacing.xxxs;
 
@@ -70,10 +71,10 @@ function TabSelector<T extends string>({
 
   const gradient = useMemo(
     () => (
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <Svg>
           <Defs>
-            <LinearGradient id="gradient" x1="0" y1="0" x2="1" y2="0">
+            <LinearGradient id="gradient" x1="0" x2="1" y1="0" y2="0">
               <Stop
                 offset="0.05"
                 stopColor={colors.background1}
@@ -96,7 +97,7 @@ function TabSelector<T extends string>({
               />
             </LinearGradient>
           </Defs>
-          <Rect x="0" y="0" height="100%" width="100%" fill="url(#gradient)" />
+          <Rect fill="url(#gradient)" height="100%" width="100%" x="0" y="0" />
         </Svg>
       </View>
     ),
@@ -110,8 +111,8 @@ function TabSelector<T extends string>({
     <Animated.View style={animatedStyle}>
       <Animated.ScrollView
         ref={scrollViewRef}
-        horizontal
         showsHorizontalScrollIndicator={false}
+        horizontal
         onLayout={({
           nativeEvent: {
             layout: { width },
@@ -125,12 +126,12 @@ function TabSelector<T extends string>({
             <Tab
               key={tab}
               selected={tab === selectedTab}
+              title={tab}
               onPress={() => onSelectTab(tab)}
               onMeasure={runOnUI((width) => {
                 tabWidths.value[index] = width;
                 tabWidths.value = [...tabWidths.value];
               })}
-              title={tab}
             />
           ))}
         </View>
@@ -139,20 +140,20 @@ function TabSelector<T extends string>({
       {gradient}
       <View style={styles.buttons}>
         <TouchableOpacity
-          onPress={() => onSelectTab(tabs[Math.max(activeTabIndex - 1, 0)])}
           disabled={prevDisabled}
           hitSlop={spacing.md}
-          style={prevDisabled && styles.disabledButton}>
-          <FontAwesomeIcon icon={faChevronLeft} color={colors.foreground3} />
+          style={prevDisabled && styles.disabledButton}
+          onPress={() => onSelectTab(tabs[Math.max(activeTabIndex - 1, 0)])}>
+          <FontAwesomeIcon color={colors.foreground3} icon={faChevronLeft} />
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() =>
-            onSelectTab(tabs[Math.min(activeTabIndex + 1, tabs.length - 1)])
-          }
           disabled={nextDisabled}
           hitSlop={spacing.md}
-          style={nextDisabled && styles.disabledButton}>
-          <FontAwesomeIcon icon={faChevronRight} color={colors.foreground3} />
+          style={nextDisabled && styles.disabledButton}
+          onPress={() =>
+            onSelectTab(tabs[Math.min(activeTabIndex + 1, tabs.length - 1)])
+          }>
+          <FontAwesomeIcon color={colors.foreground3} icon={faChevronRight} />
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -166,17 +167,17 @@ type TabProps = {
   onMeasure: (width: number) => void;
 };
 
-function Tab({ title, onPress, selected, onMeasure }: TabProps) {
+function Tab({ onMeasure, onPress, selected, title }: TabProps) {
   return (
     <Pressable
-      onPress={onPress}
       style={[styles.tab, selected && styles.activeTab]}
+      onPress={onPress}
       onLayout={({
         nativeEvent: {
           layout: { width },
         },
       }) => onMeasure(width)}>
-      <Text variant="label2" style={selected && styles.activeTabText}>
+      <Text style={selected && styles.activeTabText} variant="label2">
         {title}
       </Text>
     </Pressable>
@@ -184,15 +185,6 @@ function Tab({ title, onPress, selected, onMeasure }: TabProps) {
 }
 
 const styles = StyleSheet.create({
-  tabs: {
-    gap: TABS_GAP,
-    flexDirection: 'row',
-  },
-  tab: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.full,
-  },
   activeTab: {
     backgroundColor: colors.primary,
   },
@@ -201,12 +193,21 @@ const styles = StyleSheet.create({
   },
   buttons: {
     ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
   disabledButton: {
     opacity: 0.5,
+  },
+  tab: {
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  tabs: {
+    flexDirection: 'row',
+    gap: TABS_GAP,
   },
 });
 
