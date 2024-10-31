@@ -179,104 +179,97 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
     const TransformOperations &toOperations) const {
   TransformOperations fromOperationsResult, toOperationsResult;
   size_t i = 0, j = 0;
+  bool shouldInterpolateMatrices = false;
 
-  if (!fromOperations.empty() && !toOperations.empty()) {
-    std::unordered_map<TransformOperationType, size_t> lastIndexInFrom;
-    for (size_t idx = 0; idx < fromOperations.size(); ++idx) {
-      lastIndexInFrom[fromOperations[idx]->type] = idx;
+  // Build index maps and check for matrix operation
+  std::unordered_map<TransformOperationType, size_t> lastIndexInFrom,
+      lastIndexInTo;
+  for (size_t idx = 0; idx < fromOperations.size(); ++idx) {
+    if (fromOperations[idx]->type == TransformOperationType::Matrix) {
+      shouldInterpolateMatrices = true;
+      break;
     }
-    std::unordered_map<TransformOperationType, size_t> lastIndexInTo;
-    for (size_t idx = 0; idx < toOperations.size(); ++idx) {
-      lastIndexInTo[toOperations[idx]->type] = idx;
+    lastIndexInFrom[fromOperations[idx]->type] = idx;
+  }
+  for (size_t idx = 0; idx < toOperations.size() && !shouldInterpolateMatrices;
+       ++idx) {
+    if (toOperations[idx]->type == TransformOperationType::Matrix) {
+      shouldInterpolateMatrices = true;
+      break;
     }
-    bool shouldInterpolateMatrices = false;
+    lastIndexInTo[toOperations[idx]->type] = idx;
+  }
 
-    while (i < fromOperations.size() && j < toOperations.size()) {
-      const auto &fromOperation = fromOperations[i];
-      const auto &toOperation = toOperations[j];
-      const auto &fromType = fromOperation->type;
-      const auto &toType = toOperation->type;
+  while (!shouldInterpolateMatrices && i < fromOperations.size() &&
+         j < toOperations.size()) {
+    const auto &fromOperation = fromOperations[i];
+    const auto &toOperation = toOperations[j];
 
-      if (fromType == TransformOperationType::Matrix ||
-          toType == TransformOperationType::Matrix) {
+    // Case 1: Types match directly
+    if (fromOperation->type == toOperation->type) {
+      fromOperationsResult.emplace_back(fromOperation);
+      toOperationsResult.emplace_back(toOperation);
+      i++;
+      j++;
+    }
+    // Case 2: Operations can be converted to each other's type
+    else if (fromOperation->canConvertTo(toOperation->type)) {
+      addConvertedOperations(
+          fromOperation, toOperation, fromOperationsResult, toOperationsResult);
+      i++;
+      j++;
+    } else if (toOperation->canConvertTo(fromOperation->type)) {
+      addConvertedOperations(
+          toOperation, fromOperation, toOperationsResult, fromOperationsResult);
+      i++;
+      j++;
+    }
+    // Case 3: Use default values if no conversion possible
+    else {
+      bool toExistsLaterInFrom = lastIndexInFrom.count(toOperation->type) &&
+          lastIndexInFrom[toOperation->type] > i;
+      bool fromExistsLaterInTo = lastIndexInTo.count(fromOperation->type) &&
+          lastIndexInTo[fromOperation->type] > j;
+
+      if (toExistsLaterInFrom == fromExistsLaterInTo) {
+        // If neither exists later, or both exist later (were reordered), we
+        // cannot interpolate the operations directly and we need to convert
+        // these operations to matrices
         shouldInterpolateMatrices = true;
         break;
-      }
-
-      if (fromType == toType) {
+      } else if (!fromExistsLaterInTo) {
+        // If fromOperation does not exist later in toOperations, we can
+        // interpolate it to the default value
         fromOperationsResult.emplace_back(fromOperation);
-        toOperationsResult.emplace_back(toOperation);
+        toOperationsResult.emplace_back(
+            getDefaultOperationOfType(fromOperation->type));
         i++;
-        j++;
-      }
-      // Check if fromOperation can be converted to toOperation's type
-      else if (fromOperation->canConvertTo(toType)) {
-        addConvertedOperations(
-            fromOperation,
-            toOperation,
-            fromOperationsResult,
-            toOperationsResult);
-        i++;
-        j++;
-      }
-      // Check if toOperation can be converted to fromOperation's type
-      else if (toOperation->canConvertTo(fromType)) {
-        addConvertedOperations(
-            toOperation,
-            fromOperation,
-            toOperationsResult,
-            fromOperationsResult);
-        i++;
-        j++;
       } else {
-        bool toExistsLaterInFrom = lastIndexInFrom[toType] > i;
-        bool fromExistsLaterInTo = lastIndexInTo[fromType] > j;
-
-        if (toExistsLaterInFrom == fromExistsLaterInTo) {
-          // If neither exists later, or both exist later (were reordered), we
-          // cannot interpolate the operations directly and we need to convert
-          // these operations to matrices
-          shouldInterpolateMatrices = true;
-          break;
-        } else if (!fromExistsLaterInTo) {
-          // If fromOperation does not exist later in toOperations, we can
-          // interpolate it to the default value
-          fromOperationsResult.emplace_back(fromOperation);
-          toOperationsResult.emplace_back(getDefaultOperationOfType(fromType));
-          i++;
-        } else {
-          // If toOperation does not exist later in fromOperations, we can
-          // interpolate it from the default value
-          fromOperationsResult.emplace_back(getDefaultOperationOfType(toType));
-          toOperationsResult.emplace_back(toOperation);
-          j++;
-        }
+        // If toOperation does not exist later in fromOperations, we can
+        // interpolate it from the default value
+        fromOperationsResult.emplace_back(
+            getDefaultOperationOfType(toOperation->type));
+        toOperationsResult.emplace_back(toOperation);
+        j++;
       }
-    }
-
-    // If at least one matrix operation is found in the transform operations or
-    // we cannot interpolate between keyframes without converting part of them
-    // to the matrix, we would have to convert ALL operations to matrices
-    // because React Native transformations implementation is broken and ignores
-    // the matrix transformation if at least one of other transformations is
-    // present in the transforms array
-    if (shouldInterpolateMatrices) {
-      return std::make_pair(
-          TransformOperations{std::make_shared<MatrixOperation>(
-              MatrixOperation(fromOperations))},
-          TransformOperations{std::make_shared<MatrixOperation>(
-              MatrixOperation(toOperations))});
     }
   }
 
-  // Pair remaining operations with default values
-  // If from operations are remaining
+  // Convert all operations to matrices if matrix interpolation is required
+  if (shouldInterpolateMatrices) {
+    return std::make_pair(
+        TransformOperations{
+            std::make_shared<MatrixOperation>(MatrixOperation(fromOperations))},
+        TransformOperations{
+            std::make_shared<MatrixOperation>(MatrixOperation(toOperations))});
+  }
+
+  // Add remaining operations with default values
   for (; i < fromOperations.size(); ++i) {
     fromOperationsResult.emplace_back(fromOperations[i]);
     toOperationsResult.emplace_back(
         getDefaultOperationOfType(fromOperations[i]->type));
   }
-  // If to operations are remaining
   for (; j < toOperations.size(); ++j) {
     fromOperationsResult.emplace_back(
         getDefaultOperationOfType(toOperations[j]->type));
@@ -414,21 +407,15 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
     const TransformOperations &fromOperations,
     const TransformOperations &toOperations,
     const PropertyInterpolationUpdateContext &context) const {
-  if (localProgress == 0.0) {
-    return fromOperations;
-  }
-  if (localProgress == 1.0) {
-    return toOperations;
-  }
-
   TransformOperations result;
   result.reserve(fromOperations.size());
   const auto transformUpdateContext = createUpdateContext(context);
 
   for (size_t i = 0; i < fromOperations.size(); ++i) {
-    const auto& fromOperation = fromOperations[i];
-    const auto& toOperation = toOperations[i];
+    const auto &fromOperation = fromOperations[i];
+    const auto &toOperation = toOperations[i];
 
+    // fromOperation and toOperation have the same type
     const auto &interpolator = interpolators_->at(fromOperation->type);
     result.emplace_back(interpolator->interpolate(
         localProgress, *fromOperation, *toOperation, transformUpdateContext));

@@ -321,20 +321,48 @@ TransformMatrix SkewYOperation::toMatrix() const {
 // Matrix
 std::variant<TransformMatrix, TransformOperations> simplifyOperations(
     const TransformOperations &operations) {
+  // Initialize the stack with the reversed list of operations
+  std::vector<std::shared_ptr<TransformOperation>> operationsStack(
+      operations.begin(), operations.end());
   TransformOperations reversedOperations;
-  TransformMatrix matrix = TransformMatrix::Identity();
+  TransformMatrix simplifiedMatrix = TransformMatrix::Identity();
   bool hasSimplifications = false;
 
-  for (int i = static_cast<int>(operations.size()) - 1; i >= 0; i--) {
-    const auto &operation = operations[i];
+  while (!operationsStack.empty()) {
+    auto operation = operationsStack.back();
+    operationsStack.pop_back();
+
+    if (operation->type == TransformOperationType::Matrix) {
+      const auto matrixOperation =
+          std::static_pointer_cast<MatrixOperation>(operation);
+      if (std::holds_alternative<TransformOperations>(
+              matrixOperation->valueOrOperations)) {
+        // If the current operation is a matrix created from other operations,
+        // add all of these operations to the stack
+        for (auto &op : std::get<TransformOperations>(
+                 matrixOperation->valueOrOperations)) {
+          operationsStack.push_back(op);
+        }
+        continue;
+      }
+    }
+
     if (!operation->isRelative()) {
-      matrix *= operation->toMatrix();
+      // If the operation is not relative, it can be simplified (converted to
+      // the matrix and multiplied)
+      const auto operationMatrix = operation->toMatrix();
+      simplifiedMatrix = hasSimplifications
+          ? (simplifiedMatrix * operationMatrix)
+          : operationMatrix;
       hasSimplifications = true;
     } else {
+      // If the current operation is relative, we need to add the current
+      // simplified matrix to the list of operations before adding the relative
+      // operation
       if (hasSimplifications) {
         reversedOperations.emplace_back(
-            std::make_shared<MatrixOperation>(matrix));
-        matrix = TransformMatrix::Identity();
+            std::make_shared<MatrixOperation>(simplifiedMatrix));
+        simplifiedMatrix = TransformMatrix::Identity();
         hasSimplifications = false;
       }
       reversedOperations.emplace_back(operation);
@@ -342,20 +370,19 @@ std::variant<TransformMatrix, TransformOperations> simplifyOperations(
   }
 
   if (hasSimplifications) {
-    if (reversedOperations.empty()) {
-      return matrix;
+    // We can return just a single matrix if there are no operations or the
+    // only operation is a simplified matrix (when hasSimplifications is true)
+    if (reversedOperations.size() <= 1) {
+      return simplifiedMatrix;
     }
-
-    reversedOperations.emplace_back(std::make_shared<MatrixOperation>(matrix));
+    // Otherwise, add the last simplified matrix to the list of operations
+    reversedOperations.emplace_back(
+        std::make_shared<MatrixOperation>(simplifiedMatrix));
   }
 
-  TransformOperations simplifiedOperations;
-  simplifiedOperations.reserve(reversedOperations.size());
-  for (int i = static_cast<int>(reversedOperations.size()) - 1; i >= 0; i--) {
-    simplifiedOperations.emplace_back(reversedOperations[i]);
-  }
-
-  return simplifiedOperations;
+  // Reverse the list of operations to maintain the order
+  std::reverse(reversedOperations.begin(), reversedOperations.end());
+  return reversedOperations;
 }
 
 MatrixOperation::MatrixOperation(const TransformMatrix &value)
