@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   sectionContent: {
+    gap: spacing.sm,
     marginTop: spacing.sm,
   },
   textWrapper: {

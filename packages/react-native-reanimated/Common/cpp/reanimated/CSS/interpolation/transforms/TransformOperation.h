@@ -101,8 +101,7 @@ struct RotateYOperation final : public RotateOperation {
 struct RotateZOperation final : public RotateOperation {
   explicit RotateZOperation(const AngleValue &value);
   bool canConvertTo(TransformOperationType type) const override;
-  TransformOperations convertTo(
-      TransformOperationType type) const override;
+  TransformOperations convertTo(TransformOperationType type) const override;
   TransformMatrix toMatrix() const override;
 };
 
