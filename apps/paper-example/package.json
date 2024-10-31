@@ -25,8 +25,8 @@
     "react-native-gesture-handler": "2.20.2",
     "react-native-pager-view": "patch:react-native-pager-view@npm%3A6.4.1#~/.yarn/patches/react-native-pager-view-npm-6.4.1-2322ade6e0.patch",
     "react-native-reanimated": "workspace:*",
-    "react-native-safe-area-context": "patch:react-native-safe-area-context@npm%3A4.11.0#~/.yarn/patches/react-native-safe-area-context-npm-4.11.0-f8b3b898df.patch",
-    "react-native-screens": "patch:react-native-screens@npm%3A3.34.0#~/.yarn/patches/react-native-screens-npm-3.34.0-3babbb1374.patch",
+    "react-native-safe-area-context": "^4.13.1",
+    "react-native-screens": "3.35.0",
     "react-native-svg": "15.8.0-rc.1"
   },
   "devDependencies": {
