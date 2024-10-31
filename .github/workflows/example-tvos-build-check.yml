@@ -60,4 +60,4 @@ jobs:
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn react-native-tvos run-ios --no-packager --scheme TVOSExample-tvOS --simulator "Apple TV"
+        run: yarn react-native run-ios --no-packager --scheme TVOSExample --simulator "Apple TV"
