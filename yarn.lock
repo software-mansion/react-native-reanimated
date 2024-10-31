@@ -4724,17 +4724,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-community/slider@npm:4.5.3":
-  version: 4.5.3
-  resolution: "@react-native-community/slider@npm:4.5.3"
-  checksum: 10/d610ba2f0d48f5bcacef6dea7a55f5861ecc8cde599f478fd317cc9c4922853d1b67b5ed628c39c7eed2349b9ba914a4899b093a1d5fcb0a462663d50de1dcc5
-  languageName: node
-  linkType: hard
-
-"@react-native-community/slider@patch:@react-native-community/slider@npm%3A4.5.3#~/.yarn/patches/@react-native-community-slider-npm-4.5.3-6fedb47a11.patch":
-  version: 4.5.3
-  resolution: "@react-native-community/slider@patch:@react-native-community/slider@npm%3A4.5.3#~/.yarn/patches/@react-native-community-slider-npm-4.5.3-6fedb47a11.patch::version=4.5.3&hash=c89668"
-  checksum: 10/2024ce00359435c6691f7b1bde252b8540beff9602baa18a80c267579096510f8eaf9ed433292115fbde8c90cd72ea06be4d7d355c36fef41f8dd29e7742447c
+"@react-native-community/slider@npm:^4.5.5":
+  version: 4.5.5
+  resolution: "@react-native-community/slider@npm:4.5.5"
+  checksum: 10/8c49f7e0b7d7c37b91c936805106e88ee31011dc210d5c237c07e35d330870536b560b48e6212195fffc2e2706b16c31715b6cebbb2cc33127702bff9850f134
   languageName: node
   linkType: hard
 
@@ -8764,7 +8757,7 @@ __metadata:
   resolution: "common-app@workspace:apps/common-app"
   dependencies:
     "@react-native-async-storage/async-storage": "npm:^1.24.0"
-    "@react-native-community/slider": "patch:@react-native-community/slider@npm%3A4.5.3#~/.yarn/patches/@react-native-community-slider-npm-4.5.3-6fedb47a11.patch"
+    "@react-native-community/slider": "npm:^4.5.5"
     "@react-native-masked-view/masked-view": "npm:^0.3.1"
     "@react-native-picker/picker": "npm:^2.9.0"
     "@react-navigation/bottom-tabs": "npm:^6.6.1"
@@ -11329,7 +11322,7 @@ __metadata:
     "@react-native-community/cli": "npm:15.0.0"
     "@react-native-community/cli-platform-android": "npm:15.0.0"
     "@react-native-community/cli-platform-ios": "npm:15.0.0"
-    "@react-native-community/slider": "patch:@react-native-community/slider@npm%3A4.5.3#~/.yarn/patches/@react-native-community-slider-npm-4.5.3-6fedb47a11.patch"
+    "@react-native-community/slider": "npm:^4.5.5"
     "@react-native-masked-view/masked-view": "npm:^0.3.1"
     "@react-native-picker/picker": "npm:^2.9.0"
     "@react-native/babel-preset": "npm:0.76.1"
@@ -14747,7 +14740,7 @@ __metadata:
     "@babel/preset-env": "npm:^7.20.0"
     "@babel/runtime": "npm:^7.20.0"
     "@react-native-async-storage/async-storage": "npm:^1.24.0"
-    "@react-native-community/slider": "patch:@react-native-community/slider@npm%3A4.5.3#~/.yarn/patches/@react-native-community-slider-npm-4.5.3-6fedb47a11.patch"
+    "@react-native-community/slider": "npm:^4.5.5"
     "@react-native-masked-view/masked-view": "npm:^0.3.1"
     "@react-native-picker/picker": "npm:^2.9.0"
     "@react-native/babel-preset": "npm:0.73.21"
@@ -16796,7 +16789,7 @@ __metadata:
     "@react-native-community/cli": "npm:15.0.0"
     "@react-native-community/cli-platform-android": "npm:15.0.0"
     "@react-native-community/cli-platform-ios": "npm:15.0.0"
-    "@react-native-community/slider": "patch:@react-native-community/slider@npm%3A4.5.3#~/.yarn/patches/@react-native-community-slider-npm-4.5.3-6fedb47a11.patch"
+    "@react-native-community/slider": "npm:^4.5.5"
     "@react-native-masked-view/masked-view": "npm:^0.3.1"
     "@react-native-picker/picker": "npm:^2.9.0"
     "@react-native/babel-preset": "npm:0.76.1"

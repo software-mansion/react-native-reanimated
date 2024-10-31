@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@react-native-async-storage/async-storage": "^1.24.0",
-    "@react-native-community/slider": "patch:@react-native-community/slider@npm%3A4.5.3#~/.yarn/patches/@react-native-community-slider-npm-4.5.3-6fedb47a11.patch",
+    "@react-native-community/slider": "^4.5.5",
     "@react-native-masked-view/masked-view": "^0.3.1",
     "@react-native-picker/picker": "^2.9.0",
     "@react-navigation/bottom-tabs": "^6.6.1",
