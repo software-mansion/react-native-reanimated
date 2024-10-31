@@ -8,6 +8,7 @@ import {
 import { SensorType } from '../../commonTypes';
 import type {
   IReanimatedModule,
+  IWorkletsModule,
   ShareableRef,
   Value3D,
   ValueRotation,
@@ -17,8 +18,9 @@ import { mockedRequestAnimationFrame } from '../../mockedRequestAnimationFrame';
 import type { WorkletRuntime } from '../../runtimes';
 import { logger } from '../../logger';
 import { ReanimatedError } from '../../errors';
+import { WorkletsModule } from '../../worklets';
 
-export function createJSReanimatedModule() {
+export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();
 }
 
@@ -31,6 +33,11 @@ const requestAnimationFrameImpl =
     : globalThis.requestAnimationFrame;
 
 class JSReanimated implements IReanimatedModule {
+  /**
+   * We keep the instance of `WorkletsModule` here to keep correct coupling of
+   * the modules and initialization order.
+   */
+  #workletsModule: IWorkletsModule = WorkletsModule;
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;

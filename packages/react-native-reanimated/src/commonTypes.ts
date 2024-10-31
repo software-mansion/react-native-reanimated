@@ -7,6 +7,8 @@ import type {
 } from 'react-native';
 import type { WorkletRuntime } from './runtimes';
 
+export interface IWorkletsModule {}
+
 export interface IReanimatedModule {
   registerSensor(
     sensorType: number,
