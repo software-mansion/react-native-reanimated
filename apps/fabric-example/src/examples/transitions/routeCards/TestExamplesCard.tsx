@@ -11,7 +11,7 @@ import { colors, radius, sizes } from '@/theme';
 const TestExamplesCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
-    description="Examples to debug **edge cases**, test **performance**, etc.">
+    description="Examples to test **edge cases**, **performance**, etc. (useful for devs)">
     <Showcase />
   </RouteCard>
 );

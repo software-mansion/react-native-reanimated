@@ -7,6 +7,7 @@ import { Dimensions, StyleSheet, View } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
+import { Screen } from '@/components';
 import { BOTTOM_BAR_HEIGHT } from '@/navigation/constants';
 import { colors } from '@/theme';
 
@@ -175,7 +176,7 @@ export default function SquishySquashy() {
     CONTAINER_SIZE;
 
   return (
-    <View style={styles.wrapper}>
+    <Screen style={styles.wrapper}>
       <View style={[styles.container, { transform: [{ scale }] }]}>
         <Animated.View
           style={[
@@ -189,7 +190,7 @@ export default function SquishySquashy() {
           ]}
         />
       </View>
-    </View>
+    </Screen>
   );
 }
 

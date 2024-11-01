@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from 'react';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import Animated, {
   FadeInDown,
   FadeOutDown,
@@ -81,7 +82,11 @@ export default function ExampleCard({
                 entering={FadeInDown}
                 exiting={FadeOutDown}
                 style={styles.collapsedCodeOverlay}>
-                <CodeBlock code={collapsedCode} />
+                <Pressable
+                  style={flex.fill}
+                  onPress={() => setIsExpanded(true)}>
+                  <CodeBlock code={collapsedCode} />
+                </Pressable>
               </Animated.View>
             )}
           </Animated.View>
@@ -104,7 +109,7 @@ export default function ExampleCard({
             }) => {
               exampleContainerDimensions.value = { height, width };
             }}>
-            {/* This is a tricky way to ensure that the example is centered withing
+            {/* This is a tricky way to ensure that the example is centered within
             the parent container during the layout transition. To do this, we wrap the
             example in a parent with 0x0 dimensions, which is centered in its parent and
             render another example wrapper with measured example container dimensions set

@@ -5,10 +5,8 @@ import type {
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
-import type { ExampleCardProps } from '@/components';
-import { ExampleCard, ScrollScreen, Section, TabView } from '@/components';
+import { ExamplesScreen } from '@/components';
 import { colors, radius, sizes, spacing } from '@/theme';
-import { formatAnimationCode } from '@/utils';
 
 const SHARED_SETTINGS: CSSAnimationSettings = {
   animationDirection: 'alternate',
@@ -16,23 +14,7 @@ const SHARED_SETTINGS: CSSAnimationSettings = {
   animationIterationCount: 'infinite',
 };
 
-export default function Margins() {
-  return (
-    <TabView>
-      <TabView.Tab name="Absolute">
-        <AbsoluteMargins />
-      </TabView.Tab>
-      <TabView.Tab name="Relative">
-        <RelativeMargins />
-      </TabView.Tab>
-      {/* <TabView.Tab name="Mixed">
-        <MixedMargins />
-      </TabView.Tab> */}
-    </TabView>
-  );
-}
-
-const SHARED_EXAMPLES = [
+const EXAMPLES = [
   {
     property: 'margin',
     title: 'Margin',
@@ -65,59 +47,73 @@ const SHARED_EXAMPLES = [
   },
 ];
 
-function AbsoluteMargins() {
+function renderExample({ config }: { config: CSSAnimationConfig }) {
   return (
-    <ScrollScreen>
-      <Section title="Absolute Margins">
-        {SHARED_EXAMPLES.map(({ description, property, title }) => (
-          <Example
-            description={description}
-            key={title}
-            title={title}
-            config={{
-              animationName: {
-                to: {
-                  [property]: spacing.md,
-                },
-              },
-              ...SHARED_SETTINGS,
-            }}
-          />
-        ))}
-      </Section>
-    </ScrollScreen>
+    <>
+      <View style={styles.box} />
+      <View style={styles.boxesRow}>
+        <View style={styles.box} />
+        <View style={styles.boxWrapper}>
+          <Animated.View style={[styles.box, styles.animatedBox, config]} />
+        </View>
+        <View style={styles.box} />
+      </View>
+      <View style={styles.box} />
+    </>
   );
 }
 
-function RelativeMargins() {
+export default function Margins() {
   return (
-    <ScrollScreen>
-      <Section
-        description="Relative margins are a bit weird. Yoga doesn't apply them properly, thus they don't work the same as in CSS."
-        title="Relative Margins">
-        {SHARED_EXAMPLES.map(({ description, property, title }) => (
-          <Example
-            description={description}
-            key={title}
-            title={title}
-            config={{
-              animationName: {
-                from: {
-                  [property]: '10%',
-                },
-                to: {
-                  [property]: '40%',
-                },
+    <ExamplesScreen<{ property: string }>
+      tabs={[
+        {
+          buildConfig: ({ property }) => ({
+            ...SHARED_SETTINGS,
+            animationName: {
+              to: {
+                [property]: spacing.md,
               },
-              ...SHARED_SETTINGS,
-            }}
-          />
-        ))}
-      </Section>
-    </ScrollScreen>
+            },
+          }),
+          name: 'Absolute',
+          renderExample,
+          sections: [
+            {
+              examples: EXAMPLES,
+              title: 'Absolute Margins',
+            },
+          ],
+        },
+        {
+          buildConfig: ({ property }) => ({
+            ...SHARED_SETTINGS,
+            animationName: {
+              from: {
+                [property]: '10%',
+              },
+              to: {
+                [property]: '40%',
+              },
+            },
+          }),
+          name: 'Relative',
+          renderExample,
+          sections: [
+            {
+              description:
+                "Relative margins are a bit weird. Yoga doesn't apply them properly, thus they don't work the same as in CSS.",
+              examples: EXAMPLES,
+              title: 'Relative Margins',
+            },
+          ],
+        },
+      ]}
+    />
   );
 }
 
+// TODO - Implement MixedMargins example once relative margins are supported
 // function MixedMargins() {
 //   return (
 //     <ScrollScreen>
@@ -164,29 +160,6 @@ function RelativeMargins() {
 //     </ScrollScreen>
 //   );
 // }
-
-type ExampleProps = {
-  config: CSSAnimationConfig;
-} & Omit<ExampleCardProps, 'code'>;
-
-function Example({ config, ...cardProps }: ExampleProps) {
-  return (
-    <ExampleCard
-      code={formatAnimationCode(config)}
-      collapsedCode={JSON.stringify(config.animationName, null, 2)}
-      {...cardProps}>
-      <View style={styles.box} />
-      <View style={styles.boxesRow}>
-        <View style={styles.box} />
-        <View style={styles.boxWrapper}>
-          <Animated.View style={[styles.box, styles.animatedBox, config]} />
-        </View>
-        <View style={styles.box} />
-      </View>
-      <View style={styles.box} />
-    </ExampleCard>
-  );
-}
 
 const styles = StyleSheet.create({
   animatedBox: {

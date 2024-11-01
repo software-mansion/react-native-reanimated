@@ -5,38 +5,14 @@ import type {
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
-import type { ExampleCardProps } from '@/components';
-import {
-  ExampleCard,
-  ScrollScreen,
-  Section,
-  TabView,
-  VerticalExampleCard,
-} from '@/components';
+import { ExamplesScreen, VerticalExampleCard } from '@/components';
 import { colors, radius, sizes, spacing } from '@/theme';
-import { formatAnimationCode } from '@/utils';
 
 const SHARED_SETTINGS: CSSAnimationSettings = {
   animationDirection: 'alternate',
   animationDuration: '1s',
   animationIterationCount: 'infinite',
 };
-
-export default function Paddings() {
-  return (
-    <TabView>
-      <TabView.Tab name="Absolute">
-        <AbsolutePaddings />
-      </TabView.Tab>
-      <TabView.Tab name="Relative">
-        <RelativePaddings />
-      </TabView.Tab>
-      <TabView.Tab name="Mixed">
-        <MixedPaddings />
-      </TabView.Tab>
-    </TabView>
-  );
-}
 
 const SHARED_EXAMPLES = [
   {
@@ -71,113 +47,94 @@ const SHARED_EXAMPLES = [
   },
 ];
 
-function AbsolutePaddings() {
+function renderExample({ config }: { config: CSSAnimationConfig }) {
   return (
-    <ScrollScreen>
-      <Section title="Absolute Padding">
-        {SHARED_EXAMPLES.map(({ description, property, title }) => (
-          <Example
-            description={description}
-            key={title}
-            title={title}
-            config={{
-              animationName: {
-                to: {
-                  [property]: spacing.md,
-                },
-              },
-              ...SHARED_SETTINGS,
-            }}
-          />
-        ))}
-      </Section>
-    </ScrollScreen>
+    <Animated.View style={[styles.box, config]}>
+      <View style={styles.boxInner} />
+    </Animated.View>
   );
 }
 
-function RelativePaddings() {
+export default function Paddings() {
   return (
-    <ScrollScreen>
-      <Section
-        description="All relative paddings are calculated based on the width of the parent element."
-        title="Relative Padding">
-        {SHARED_EXAMPLES.map(({ description, property, title }) => (
-          <Example
-            description={description}
-            key={title}
-            title={title}
-            config={{
-              animationName: {
-                to: {
-                  [property]: '25%',
-                },
-              },
-              ...SHARED_SETTINGS,
-            }}
-          />
-        ))}
-      </Section>
-    </ScrollScreen>
-  );
-}
-
-function MixedPaddings() {
-  const sharedSettings: CSSAnimationSettings = {
-    animationDuration: '3s',
-    animationIterationCount: 'infinite',
-  };
-
-  return (
-    <ScrollScreen>
-      <Section title="Mixed Padding">
-        <Example
-          CardComponent={VerticalExampleCard}
-          title="Mixed Padding"
-          config={{
+    <ExamplesScreen<{ property: string }>
+      tabs={[
+        {
+          buildConfig: ({ property }) => ({
             animationName: {
-              '0%': {
-                padding: 0,
-              },
-              '25%': {
-                padding: '5%',
-              },
-              '50%': {
-                padding: spacing.xxs,
-              },
-              '75%': {
-                padding: '20%',
-              },
-              '100%': {
-                padding: 0,
+              to: {
+                [property]: spacing.md,
               },
             },
-            ...sharedSettings,
-          }}
-        />
-      </Section>
-    </ScrollScreen>
-  );
-}
-
-type ExampleProps = {
-  config: CSSAnimationConfig;
-  CardComponent?: React.ComponentType<ExampleCardProps>;
-} & Omit<ExampleCardProps, 'code'>;
-
-function Example({
-  CardComponent = ExampleCard,
-  config,
-  ...cardProps
-}: ExampleProps) {
-  return (
-    <CardComponent
-      {...cardProps}
-      code={formatAnimationCode(config)}
-      collapsedCode={JSON.stringify(config.animationName, null, 2)}>
-      <Animated.View style={[styles.box, config]}>
-        <View style={styles.boxInner} />
-      </Animated.View>
-    </CardComponent>
+            ...SHARED_SETTINGS,
+          }),
+          name: 'Absolute',
+          renderExample,
+          sections: [
+            {
+              examples: SHARED_EXAMPLES,
+              title: 'Absolute Padding',
+            },
+          ],
+        },
+        {
+          buildConfig: ({ property }) => ({
+            animationName: {
+              to: {
+                [property]: '25%',
+              },
+            },
+            ...SHARED_SETTINGS,
+          }),
+          name: 'Relative',
+          renderExample,
+          sections: [
+            {
+              description:
+                'All relative paddings are calculated based on the width of the parent element.',
+              examples: SHARED_EXAMPLES,
+              title: 'Relative Padding',
+            },
+          ],
+        },
+        {
+          buildConfig: ({ property }) => ({
+            animationName: {
+              '0%': {
+                [property]: 0,
+              },
+              '25%': {
+                [property]: '5%',
+              },
+              '50%': {
+                [property]: spacing.xxs,
+              },
+              '75%': {
+                [property]: '20%',
+              },
+              '100%': {
+                [property]: 0,
+              },
+            },
+            ...SHARED_SETTINGS,
+          }),
+          name: 'Mixed',
+          renderExample,
+          sections: [
+            {
+              CardComponent: VerticalExampleCard,
+              examples: [
+                {
+                  property: 'padding',
+                  title: 'Mixed Padding',
+                },
+              ],
+              title: 'Mixed Padding',
+            },
+          ],
+        },
+      ]}
+    />
   );
 }
 

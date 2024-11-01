@@ -14,7 +14,7 @@ import { colors, radius, sizes, spacing } from '@/theme';
 const MiscellaneousCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
-    description="**Changing** animation, animation **settings updates** and more">
+    description="**Changing** animation, animation **settings updates** and so on">
     <Showcase />
   </RouteCard>
 );

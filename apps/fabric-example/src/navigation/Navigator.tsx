@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 
-import { RouteCard, Scroll, Stagger, Text } from '@/components';
+import { RouteCard, ScrollScreen, Stagger, Text } from '@/components';
 import { animationRoutes, transitionRoutes } from '@/examples';
 import { colors, flex, iconSizes, radius, spacing } from '@/theme';
 import type { FontVariant } from '@/types';
@@ -75,11 +75,11 @@ function createRoutesScreen(
 ): React.ComponentType {
   function RoutesScreen() {
     return (
-      <Scroll
-        contentContainerStyle={styles.scrollViewContent}
-        withBottomBarSpacing>
-        <Stagger>{createRouteCards(routes, path, flatten)}</Stagger>
-      </Scroll>
+      <ScrollScreen contentContainerStyle={styles.scrollViewContent}>
+        <Stagger interval={50}>
+          {createRouteCards(routes, path, flatten)}
+        </Stagger>
+      </ScrollScreen>
     );
   }
 
@@ -149,7 +149,13 @@ export default function Navigator() {
         screenOptions={{
           animation: 'slide_from_right',
           headerLeft: () => <BackButton tabRoutes={routesArray} />,
+          headerStyle: {
+            backgroundColor: colors.background1,
+          },
           headerTintColor: colors.foreground1,
+          headerTitleAlign: 'center',
+          statusBarColor: colors.background1,
+          statusBarStyle: 'dark',
         }}>
         {Object.entries(tabRoutes).flatMap(([key, value]) =>
           createStackScreens(value.routes, key, value.name)
@@ -178,6 +184,6 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingTop: spacing.md,
   },
 });

@@ -22,7 +22,7 @@ const scrollAnimation: CSSAnimationConfig = {
 const AnimatedPropertiesCard: RouteCardComponent = (props) => (
   <RouteCard
     {...props}
-    description="Animated properties like **flex styles**, **margins**, **dimensions** and more">
+    description="Animated properties like **flex styles**, **margins**, **dimensions** and others">
     <Showcase />
   </RouteCard>
 );

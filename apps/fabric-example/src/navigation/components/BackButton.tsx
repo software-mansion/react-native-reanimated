@@ -57,6 +57,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.xxs,
+    marginRight: spacing.xs,
+    paddingTop: spacing.xxs,
   },
   backButtonText: {
     color: colors.primary,

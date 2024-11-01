@@ -14,95 +14,142 @@ const routes = {
   AnimatedProperties: {
     name: 'Animated Properties',
     CardComponent: routeCards.AnimatedPropertiesCard,
+    flatten: true,
     routes: {
-      Dimensions: {
-        name: 'Dimensions',
-        Component: animatedProperties.Dimensions,
-      },
-      FlexStyles: {
-        name: 'Flex Styles',
-        Component: animatedProperties.FlexStyles,
-      },
-      Insets: {
-        name: 'Insets',
-        Component: animatedProperties.Insets,
-      },
-      Transforms: {
-        name: 'Transforms',
-        flatten: true,
+      LayoutAndPositioning: {
+        name: 'Layout and Positioning',
         routes: {
-          TransformProperties: {
-            name: 'Transform Properties',
-            routes: {
-              Perspective: {
-                name: 'Perspective',
-                Component:
-                  animatedProperties.transforms.transformProperties.Perspective,
-              },
-              Rotate: {
-                name: 'Rotate',
-                Component:
-                  animatedProperties.transforms.transformProperties.Rotate,
-              },
-              Scale: {
-                name: 'Scale',
-                Component:
-                  animatedProperties.transforms.transformProperties.Scale,
-              },
-              Translate: {
-                name: 'Translate',
-                Component:
-                  animatedProperties.transforms.transformProperties.Translate,
-              },
-              Skew: {
-                name: 'Skew',
-                Component:
-                  animatedProperties.transforms.transformProperties.Skew,
-              },
-              Matrix: {
-                name: 'Matrix',
-                Component:
-                  animatedProperties.transforms.transformProperties.Matrix,
-              },
-            },
+          FlexBox: {
+            name: 'FlexBox',
+            routes: {},
           },
-          RelatedProperties: {
-            name: 'Related Properties',
-            routes: {
-              TransformOrigin: {
-                name: 'Transform Origin',
-                Component:
-                  animatedProperties.transforms.relatedProperties
-                    .TransformOrigin,
-              },
-            },
+          Dimensions: {
+            name: 'Dimensions',
+            Component: animatedProperties.Dimensions,
+          },
+          Margins: {
+            name: 'Margins',
+            Component: animatedProperties.Margins,
+          },
+          Paddings: {
+            name: 'Paddings',
+            Component: animatedProperties.Paddings,
+          },
+          Insets: {
+            name: 'Insets',
+            Component: animatedProperties.Insets,
+          },
+          Others: {
+            name: 'Others',
+            routes: {},
           },
         },
       },
-      Colors: {
-        name: 'Colors',
+      Appearance: {
+        name: 'Appearance',
         routes: {
-          ColorFormats: {
-            name: 'Color Formats',
-            Component: animatedProperties.colors.ColorFormats,
+          Colors: {
+            name: 'Colors',
+            routes: {
+              ColorFormats: {
+                name: 'Color Formats',
+                Component: animatedProperties.colors.ColorFormats,
+              },
+              ColorFunctions: {
+                name: 'Color Properties',
+                Component: animatedProperties.colors.ColorProperties,
+              },
+            },
           },
-          ColorFunctions: {
-            name: 'Color Properties',
-            Component: animatedProperties.colors.ColorProperties,
+          Shadows: {
+            name: 'Shadows',
+            routes: {},
+          },
+          Borders: {
+            name: 'Borders',
+            Component: animatedProperties.Borders,
+          },
+          Transforms: {
+            name: 'Transforms',
+            flatten: true,
+            routes: {
+              TransformProperties: {
+                name: 'Transform Properties',
+                routes: {
+                  Perspective: {
+                    name: 'Perspective',
+                    Component:
+                      animatedProperties.transforms.transformProperties
+                        .Perspective,
+                  },
+                  Rotate: {
+                    name: 'Rotate',
+                    Component:
+                      animatedProperties.transforms.transformProperties.Rotate,
+                  },
+                  Scale: {
+                    name: 'Scale',
+                    Component:
+                      animatedProperties.transforms.transformProperties.Scale,
+                  },
+                  Translate: {
+                    name: 'Translate',
+                    Component:
+                      animatedProperties.transforms.transformProperties
+                        .Translate,
+                  },
+                  Skew: {
+                    name: 'Skew',
+                    Component:
+                      animatedProperties.transforms.transformProperties.Skew,
+                  },
+                  Matrix: {
+                    name: 'Matrix',
+                    Component:
+                      animatedProperties.transforms.transformProperties.Matrix,
+                  },
+                },
+              },
+              RelatedProperties: {
+                name: 'Related Properties',
+                routes: {
+                  TransformOrigin: {
+                    name: 'Transform Origin',
+                    Component:
+                      animatedProperties.transforms.relatedProperties
+                        .TransformOrigin,
+                  },
+                },
+              },
+            },
+          },
+          Others: {
+            name: 'Others',
+            routes: {},
           },
         },
       },
-      Borders: {
-        name: 'Borders',
-        Component: animatedProperties.Borders,
+      Typography: {
+        name: 'Typography',
+        routes: {
+          Font: {
+            name: 'Font',
+            routes: {},
+          },
+        },
       },
-      Margins: {
-        name: 'Margins',
-        Component: animatedProperties.Margins,
-      },
-      Paddings: {
-        name: 'Paddings',
-        Component: animatedProperties.Paddings,
+      Others: {
+        name: 'Others',
+        routes: {
+          Image: {
+            name: 'Image',
+            routes: {},
+          },
+          Cursor: {
+            name: 'Cursor',
+            routes: {},
+          },
+        },
       },
     },
   },

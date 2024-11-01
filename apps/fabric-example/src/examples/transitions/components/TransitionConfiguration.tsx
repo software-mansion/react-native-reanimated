@@ -2,9 +2,8 @@ import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useCallback } from 'react';
 import type { ListRenderItem } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import type { CSSTransitionConfig, StyleProps } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
 
 import { CodeBlock, ConfigWithOverridesBlock, Text } from '@/components';
 import type { ExampleItemProps } from '@/examples/transitions/screens/transitionSettings/components/ExamplesListCard';
@@ -48,10 +47,14 @@ export default function TransitionConfiguration({
     <View style={styles.container}>
       <View style={styles.section}>
         <Text variant="subHeading2">Transition styles</Text>
-        <Animated.FlatList
+        <FlatList
           contentContainerStyle={styles.codeStylesList}
           data={transitionStyles}
           ItemSeparatorComponent={renderSeparator}
+          removeClippedSubviews={false}
+          // TODO - remove once react-native-screens are updated to the
+          // version where this issue is fixed
+          // https://github.com/software-mansion/react-native-screens/issues/2339
           renderItem={renderItem}
           horizontal
         />
