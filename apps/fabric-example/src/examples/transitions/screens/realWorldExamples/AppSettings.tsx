@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 
+import { Screen } from '@/components';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 import { darken, lighten } from '@/utils';
 
@@ -29,75 +30,77 @@ export default function AppSettings() {
   const fgColor = lighten(theme, 50);
 
   return (
-    <Animated.ScrollView
-      contentContainerStyle={flex.fill}
-      style={[
-        flex.fill,
-        {
-          backgroundColor: bgColor,
-          transitionDuration: 200,
-          transitionProperty: 'backgroundColor',
-        },
-      ]}>
-      <View style={styles.container}>
-        <SettingsSection accentColor={theme} title="General">
-          {switchOptions.map((option, index) => (
-            <SettingsRow key={option}>
-              <Switch
-                active={selectedOptions.has(index)}
-                activeBackgroundColor={theme}
-                inactiveBackgroundColor={fgColor}
-                onChange={() => {
-                  const newOptions = new Set(selectedOptions);
-                  if (selectedOptions.has(index)) {
-                    newOptions.delete(index);
-                  } else {
-                    newOptions.add(index);
-                  }
-                  setSelectedOptions(newOptions);
-                }}
-              />
-              <Label color={fgColor} fontSize={fontSize}>
-                {option}
-              </Label>
-            </SettingsRow>
-          ))}
-        </SettingsSection>
+    <Screen>
+      <Animated.ScrollView
+        contentContainerStyle={flex.fill}
+        style={[
+          flex.fill,
+          {
+            backgroundColor: bgColor,
+            transitionDuration: 200,
+            transitionProperty: 'backgroundColor',
+          },
+        ]}>
+        <View style={styles.container}>
+          <SettingsSection accentColor={theme} title="General">
+            {switchOptions.map((option, index) => (
+              <SettingsRow key={option}>
+                <Switch
+                  active={selectedOptions.has(index)}
+                  activeBackgroundColor={theme}
+                  inactiveBackgroundColor={fgColor}
+                  onChange={() => {
+                    const newOptions = new Set(selectedOptions);
+                    if (selectedOptions.has(index)) {
+                      newOptions.delete(index);
+                    } else {
+                      newOptions.add(index);
+                    }
+                    setSelectedOptions(newOptions);
+                  }}
+                />
+                <Label color={fgColor} fontSize={fontSize}>
+                  {option}
+                </Label>
+              </SettingsRow>
+            ))}
+          </SettingsSection>
 
-        <SettingsSection accentColor={theme} title="Appearance">
-          <SettingsRow>
-            <Label color={fgColor} fontSize={fontSize}>
-              Font Size
-            </Label>
-            <View style={styles.colorSwatches}>
-              {FONT_SIZES.map((size) => (
-                <FontSizeButton
-                  active={fontSize === size}
-                  fontSize={size}
-                  key={size}
-                  onPress={() => setFontSize(size)}
-                />
-              ))}
-            </View>
-          </SettingsRow>
-          <SettingsRow>
-            <Label color={fgColor} fontSize={fontSize}>
-              Theme
-            </Label>
-            <View style={styles.colorSwatches}>
-              {COLORS.map((color) => (
-                <ColorSwatch
-                  active={theme === color}
-                  color={color}
-                  key={color}
-                  onPress={() => setTheme(color)}
-                />
-              ))}
-            </View>
-          </SettingsRow>
-        </SettingsSection>
-      </View>
-    </Animated.ScrollView>
+          <SettingsSection accentColor={theme} title="Appearance">
+            <SettingsRow>
+              <Label color={fgColor} fontSize={fontSize}>
+                Font Size
+              </Label>
+              <View style={styles.colorSwatches}>
+                {FONT_SIZES.map((size) => (
+                  <FontSizeButton
+                    active={fontSize === size}
+                    fontSize={size}
+                    key={size}
+                    onPress={() => setFontSize(size)}
+                  />
+                ))}
+              </View>
+            </SettingsRow>
+            <SettingsRow>
+              <Label color={fgColor} fontSize={fontSize}>
+                Theme
+              </Label>
+              <View style={styles.colorSwatches}>
+                {COLORS.map((color) => (
+                  <ColorSwatch
+                    active={theme === color}
+                    color={color}
+                    key={color}
+                    onPress={() => setTheme(color)}
+                  />
+                ))}
+              </View>
+            </SettingsRow>
+          </SettingsSection>
+        </View>
+      </Animated.ScrollView>
+    </Screen>
   );
 }
 

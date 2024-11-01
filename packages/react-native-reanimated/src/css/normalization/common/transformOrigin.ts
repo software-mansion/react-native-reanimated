@@ -37,8 +37,6 @@ export function normalizeTransformOrigin(
     [components[0], components[1]] = [components[1], components[0]];
   }
 
-  console.log(components, transformOrigin);
-
   const result = [
     normalizeComponent(components[0] ?? '50%', HORIZONTAL_KEYWORDS),
     normalizeComponent(components[1] ?? '50%', VERTICAL_KEYWORDS),

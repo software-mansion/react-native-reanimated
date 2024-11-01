@@ -3,7 +3,7 @@ import { ReanimatedError } from '../../../errors';
 import type {
   CSSAnimationDirection,
   CSSAnimationFillMode,
-  CSSAnimationKeyframeKey,
+  CSSAnimationKeyframeOffset,
   CSSAnimationIterationCount,
   CSSAnimationKeyframes,
   NormalizedCSSAnimationKeyframe,
@@ -18,9 +18,9 @@ import {
 } from './constants';
 
 const ERROR_MESSAGES = {
-  unsupportedKeyframe: (key: CSSAnimationKeyframeKey) =>
+  unsupportedKeyframe: (key: CSSAnimationKeyframeOffset) =>
     `Unsupported keyframe "${key}". Only numbers, "from", and "to" are supported.`,
-  invalidOffsetRange: (key: CSSAnimationKeyframeKey) =>
+  invalidOffsetRange: (key: CSSAnimationKeyframeOffset) =>
     `Invalid keyframe offset "${key}". Expected a number between 0 and 1.`,
   unsupportedAnimationDirection: (direction: CSSAnimationDirection) =>
     `Unsupported animation direction "${direction}".`,
@@ -34,7 +34,7 @@ const ERROR_MESSAGES = {
     `Unsupported play state "${playState}".`,
 };
 
-function normalizeOffset(key: CSSAnimationKeyframeKey): number {
+function normalizeOffset(key: CSSAnimationKeyframeOffset): number {
   if (key === 'from') {
     return 0;
   }
@@ -64,7 +64,7 @@ export function normalizeKeyframesOffsets(
 ): Array<NormalizedCSSAnimationKeyframe> {
   return Object.entries(keyframes)
     .map(([key, style = {}]) => ({
-      offset: normalizeOffset(key as CSSAnimationKeyframeKey),
+      offset: normalizeOffset(key as CSSAnimationKeyframeOffset),
       style,
     }))
     .sort((a, b) => a.offset - b.offset)

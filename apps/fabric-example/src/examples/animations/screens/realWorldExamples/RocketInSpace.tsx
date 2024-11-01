@@ -16,6 +16,7 @@ import {
   Svg,
 } from 'react-native-svg';
 
+import { Screen } from '@/components';
 import { spacing } from '@/theme';
 
 const COLORS = {
@@ -140,7 +141,7 @@ const SPARK_POSITIONS = [
 
 export default function RocketInSpace() {
   return (
-    <View style={styles.container}>
+    <Screen style={styles.container}>
       <View style={styles.scene}>
         <Animated.View style={turbulenceAnimation}>
           <Svg style={styles.rocket}>
@@ -186,7 +187,7 @@ export default function RocketInSpace() {
           ))}
         </Animated.View>
       </View>
-    </View>
+    </Screen>
   );
 }
 

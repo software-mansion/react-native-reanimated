@@ -3,9 +3,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NavigationState } from '@react-navigation/native';
 import { NavigationContainer } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { Navigator } from './navigation';
+import { flex } from './theme';
 import { noop } from './utils';
 
 const PERSISTENCE_KEY = 'NAVIGATION_STATE';
@@ -41,13 +43,15 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer
-        initialState={navigationState}
-        onStateChange={persistNavigationState}>
-        <PortalProvider>
-          <Navigator />
-        </PortalProvider>
-      </NavigationContainer>
+      <GestureHandlerRootView style={flex.fill}>
+        <NavigationContainer
+          initialState={navigationState}
+          onStateChange={persistNavigationState}>
+          <PortalProvider>
+            <Navigator />
+          </PortalProvider>
+        </NavigationContainer>
+      </GestureHandlerRootView>
     </SafeAreaProvider>
   );
 }

@@ -13,7 +13,7 @@ import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
 import type { CSSTransitionConfig } from 'react-native-reanimated';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 
-import { ScrollScreen } from '@/components';
+import { Screen, ScrollScreen } from '@/components';
 import { colors, flex, iconSizes, radius, sizes, spacing } from '@/theme';
 
 const AnimatedTouchableOpacity =
@@ -41,7 +41,7 @@ function CircularMenu() {
   const [open, setOpen] = useState(false);
 
   return (
-    <View style={flex.center}>
+    <Screen style={flex.center}>
       {MENU_ITEMS.map((item, index) => (
         <MenuItem icon={item.icon} index={index} key={index} open={open} />
       ))}
@@ -59,7 +59,7 @@ function CircularMenu() {
         onPress={() => setOpen(!open)}>
         <MenuButton open={open} />
       </AnimatedPressable>
-    </View>
+    </Screen>
   );
 }
 

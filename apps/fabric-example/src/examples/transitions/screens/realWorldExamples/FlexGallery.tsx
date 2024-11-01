@@ -6,6 +6,7 @@ import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
 
+import { Screen } from '@/components';
 import { BOTTOM_BAR_HEIGHT } from '@/navigation/constants';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
@@ -44,7 +45,7 @@ export default function FlexGallery() {
   const [expandedIdx, setExpandedIdx] = useState(0);
 
   return (
-    <View style={styles.container}>
+    <Screen style={styles.container}>
       {CARDS.map(({ description, image, title }, idx) => (
         <GalleryCard
           description={description}
@@ -55,7 +56,7 @@ export default function FlexGallery() {
           onPress={() => setExpandedIdx(idx)}
         />
       ))}
-    </View>
+    </Screen>
   );
 }
 

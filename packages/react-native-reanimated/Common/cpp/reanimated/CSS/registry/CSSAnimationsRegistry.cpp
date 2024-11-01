@@ -21,7 +21,7 @@ void CSSAnimationsRegistry::add(
   const auto id = animation->getId();
   registry_.insert({id, animation});
 
-  // Apply animation backwards fill style if it exists
+  // Apply animation backwards fill style if it was set
   const auto &fillStyle = animation->getBackwardsFillStyle(rt);
   if (!fillStyle.isUndefined()) {
     const auto shadowNode = animation->getShadowNode();

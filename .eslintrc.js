@@ -57,7 +57,6 @@ module.exports = {
     requireConfigFile: false,
   },
   extends: [
-    'standard',
     'prettier',
     'plugin:import/typescript',
     'plugin:react-hooks/recommended',

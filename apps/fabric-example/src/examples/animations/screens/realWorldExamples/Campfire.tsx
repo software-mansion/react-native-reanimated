@@ -7,6 +7,7 @@ import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
+import { Screen } from '@/components';
 import { radius } from '@/theme';
 
 const ANIMATION_DURATION = 1500;
@@ -81,7 +82,7 @@ export default function Campfire() {
   };
 
   return (
-    <View style={styles.container}>
+    <Screen style={styles.container}>
       <View style={styles.campfire}>
         <View style={styles.flames}>
           {Array.from({ length: FLAMES_COUNT }).map((_, index) => (
@@ -105,7 +106,7 @@ export default function Campfire() {
           <View style={[styles.log, styles.logLight]} />
         </View>
       </View>
-    </View>
+    </Screen>
   );
 }
 

@@ -40,16 +40,18 @@ export default function RouteCard({
           </Text>
           {description && <Text variant="body1">{description}</Text>}
         </View>
-        {children && (
-          <View
-            style={[
-              styles.showcase,
-              { transform: [{ scale: showcaseScale }] },
-            ]}>
-            {children}
-          </View>
-        )}
-        <FontAwesomeIcon color={colors.foreground3} icon={faChevronRight} />
+        <View style={styles.showcaseWrapper}>
+          {children && (
+            <View
+              style={[
+                styles.showcase,
+                { transform: [{ scale: showcaseScale }] },
+              ]}>
+              {children}
+            </View>
+          )}
+          <FontAwesomeIcon color={colors.foreground3} icon={faChevronRight} />
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -60,10 +62,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background1,
     borderRadius: radius.md,
     gap: spacing.md,
+    justifyContent: 'center',
     paddingHorizontal: spacing.lg,
   },
   content: {
-    alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.sm,
     justifyContent: 'space-between',
@@ -73,10 +75,17 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     flexBasis: sizes.xl,
     justifyContent: 'center',
+    minHeight: 110,
+  },
+  showcaseWrapper: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
   textColumn: {
     flexShrink: 1,
     gap: spacing.xxs,
+    justifyContent: 'space-evenly',
     paddingVertical: spacing.md,
   },
   title: {

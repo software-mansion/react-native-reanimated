@@ -27,9 +27,9 @@ export type CSSKeyframeViewStyle = CreateKeyframeStyle<
 
 // BEFORE NORMALIZATION
 
-export type CSSAnimationKeyframeKey = `${number}%` | 'from' | 'to' | number;
+export type CSSAnimationKeyframeOffset = `${number}%` | 'from' | 'to' | number;
 export type CSSAnimationKeyframes = Partial<
-  Record<CSSAnimationKeyframeKey, ViewStyle & TextStyle & ImageStyle>
+  Record<CSSAnimationKeyframeOffset, ViewStyle & TextStyle & ImageStyle>
 >;
 export type CSSAnimationDuration = CSSTimeUnit;
 export type CSSAnimationTimingFunction = CSSTimingFunction;
