@@ -1,4 +1,9 @@
 'use strict';
-export * from './transforms';
-export * from './settings';
-export * from './transformOrigin';
+export { normalizeTransformString } from './transformString';
+export {
+  normalizeDelay,
+  normalizeDuration,
+  normalizeTimingFunction,
+} from './settings';
+export { normalizeTransformOrigin } from './transformOrigin';
+export { normalizeStyle } from './style';

@@ -1,0 +1,166 @@
+import { ReanimatedError } from '../../../errors';
+import type {
+  ParametrizedTimingFunction,
+  PredefinedTimingFunction,
+} from '../../easing';
+import { cubicBezier, linear, steps } from '../../easing';
+import type { CSSTimeUnit } from '../../types';
+import {
+  ERROR_MESSAGES,
+  normalizeDelay,
+  normalizeDuration,
+  normalizeTimingFunction,
+  VALID_PREDEFINED_TIMING_FUNCTIONS,
+} from './settings';
+
+type TestCases = [CSSTimeUnit, number][];
+
+describe(normalizeDelay, () => {
+  describe('when number is passed', () => {
+    it.each([100, 0, -100])('returns %p', (delay) => {
+      expect(normalizeDelay(delay)).toBe(delay);
+    });
+  });
+
+  describe('when milliseconds are passed', () => {
+    it.each([
+      ['100ms', 100],
+      ['0ms', 0],
+      ['-100ms', -100],
+    ] satisfies TestCases)('converts %p to %p', (delay, expected) => {
+      expect(normalizeDelay(delay)).toBe(expected);
+    });
+  });
+
+  describe('when seconds are passed', () => {
+    it.each([
+      ['1s', 1000],
+      ['0.1s', 100],
+      ['-1s', -1000],
+    ] satisfies TestCases)('converts %p to %p', (delay, expected) => {
+      expect(normalizeDelay(delay)).toBe(expected);
+    });
+  });
+
+  describe('when invalid value is passed', () => {
+    it.each(['invalid', 'mss', '100mms', '1', '1.1', ''])(
+      'throws an error for %p',
+      (delay) => {
+        const value = delay as CSSTimeUnit;
+        expect(() => normalizeDelay(value)).toThrow(
+          new ReanimatedError(ERROR_MESSAGES.invalidDelay(value))
+        );
+      }
+    );
+  });
+});
+
+describe(normalizeDuration, () => {
+  describe('when number is passed', () => {
+    it.each([100, 0])('returns %p', (duration) => {
+      expect(normalizeDuration(duration)).toBe(duration);
+    });
+  });
+
+  describe('when milliseconds are passed', () => {
+    it.each([
+      ['100ms', 100],
+      ['0ms', 0],
+    ] satisfies TestCases)('converts %p to %p', (duration, expected) => {
+      expect(normalizeDuration(duration)).toBe(expected);
+    });
+  });
+
+  describe('when seconds are passed', () => {
+    it.each([
+      ['1s', 1000],
+      ['0.1s', 100],
+    ] satisfies TestCases)('converts %p to %p', (duration, expected) => {
+      expect(normalizeDuration(duration)).toBe(expected);
+    });
+  });
+
+  describe('when invalid value is passed', () => {
+    it.each(['invalid', 'mss', '100mms', '1', '1.1', ''])(
+      'throws an error for %p',
+      (duration) => {
+        const value = duration as CSSTimeUnit;
+        expect(() => normalizeDuration(value)).toThrow(
+          new ReanimatedError(ERROR_MESSAGES.invalidDuration(value))
+        );
+      }
+    );
+  });
+
+  describe('when negative duration is passed', () => {
+    it.each(['-100ms', '-1s', -100])('throws an error for %p', (duration) => {
+      const value = duration as CSSTimeUnit;
+      expect(() => normalizeDuration(value)).toThrow(
+        new ReanimatedError(ERROR_MESSAGES.negativeDuration(value))
+      );
+    });
+  });
+});
+
+describe(normalizeTimingFunction, () => {
+  describe('predefined timing function', () => {
+    describe('when valid function is passed', () => {
+      it.each([...VALID_PREDEFINED_TIMING_FUNCTIONS])(
+        'returns %p',
+        (timingFunction) => {
+          expect(normalizeTimingFunction(timingFunction)).toBe(timingFunction);
+        }
+      );
+    });
+
+    describe('when invalid function is passed', () => {
+      it.each(['invalid', 'ease-in', 'ease-out', ''])(
+        'throws an error for %p',
+        (timingFunction) => {
+          const value = timingFunction as PredefinedTimingFunction;
+          expect(() => normalizeTimingFunction(value)).toThrow(
+            new ReanimatedError(
+              ERROR_MESSAGES.invalidPredefinedTimingFunction(value)
+            )
+          );
+        }
+      );
+    });
+  });
+
+  describe('parametrized timing function', () => {
+    describe('when valid function is passed', () => {
+      it.each([
+        cubicBezier(0.25, 0.1, 0.25, 1),
+        cubicBezier(0.42, 0, 1, 1),
+        linear([0, { x: '75%', y: 0.25 }, 1]),
+        linear([
+          { x: '0%', y: 0.6 },
+          { x: '50%', y: 0.1 },
+          { x: '100%', y: 1 },
+        ]),
+        steps(4, 'start'),
+        steps(2, 'end'),
+        steps(5, 'jumpNone'),
+      ])('returns normalized value for %p', (timingFunction) => {
+        expect(normalizeTimingFunction(timingFunction)).toEqual(
+          timingFunction.normalize()
+        );
+      });
+    });
+
+    describe('when invalid function is passed', () => {
+      it.each([() => 'invalid', () => 0, {}, []])(
+        'throws an error for %p',
+        (timingFunction) => {
+          const value = timingFunction as ParametrizedTimingFunction;
+          expect(() => normalizeTimingFunction(value)).toThrow(
+            new ReanimatedError(
+              ERROR_MESSAGES.invalidParametrizedTimingFunction(value)
+            )
+          );
+        }
+      );
+    });
+  });
+});

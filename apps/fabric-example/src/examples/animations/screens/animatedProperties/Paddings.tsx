@@ -99,6 +99,8 @@ export default function Paddings() {
         },
         {
           buildConfig: ({ property }) => ({
+            animationDuration: '3s',
+            animationIterationCount: 'infinite',
             animationName: {
               '0%': {
                 [property]: 0,
@@ -116,7 +118,6 @@ export default function Paddings() {
                 [property]: 0,
               },
             },
-            ...SHARED_SETTINGS,
           }),
           name: 'Mixed',
           renderExample,

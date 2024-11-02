@@ -2,6 +2,7 @@ import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import Animated, {
   FadeInDown,
   FadeInUp,
@@ -39,7 +40,11 @@ export default function VerticalExampleCard({
           <Animated.View layout={LinearTransition} style={styles.itemWrapper}>
             {collapsedCode && !isExpanded && (
               <Animated.View entering={FadeInDown} style={styles.collapsedCode}>
-                <CodeBlock code={collapsedCode} />
+                <Pressable
+                  style={flex.fill}
+                  onPress={() => setIsExpanded(true)}>
+                  <CodeBlock code={collapsedCode} />
+                </Pressable>
               </Animated.View>
             )}
             {code && isExpanded && (

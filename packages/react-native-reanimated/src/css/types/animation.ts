@@ -21,7 +21,7 @@ type CreateKeyframeStyle<S> = {
     : never;
 };
 
-export type CSSKeyframeViewStyle = CreateKeyframeStyle<
+export type CSSKeyframeStyleProps = CreateKeyframeStyle<
   ViewStyle & TextStyle & ImageStyle
 >;
 
@@ -78,5 +78,5 @@ export type NormalizedCSSAnimationSettings = {
 };
 
 export type NormalizedCSSAnimationConfig = NormalizedCSSAnimationSettings & {
-  animationName: CSSKeyframeViewStyle;
+  animationName: CSSKeyframeStyleProps;
 };
