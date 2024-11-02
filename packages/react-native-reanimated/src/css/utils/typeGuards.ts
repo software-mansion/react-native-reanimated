@@ -1,9 +1,5 @@
 'use strict';
-import type {
-  AnimationSettingProp,
-  TransformOrigin,
-  TransitionSettingProp,
-} from '../types';
+import type { AnimationSettingProp, TransitionSettingProp } from '../types';
 
 const ANIMATION_SETTINGS: AnimationSettingProp[] = [
   'animationDuration',
@@ -45,21 +41,14 @@ export const isNumber = (value: unknown): value is number =>
   typeof value === 'number' && !isNaN(value);
 
 export const isPercentage = (value: string | number): value is `${number}%` => {
-  return typeof value === 'string' && value.endsWith('%');
+  return typeof value === 'string' && /^-?\d+(\.\d+)?%$/.test(value);
 };
 
 export const isAngleValue = (
   value: string | number
 ): value is `${number}deg` | `${number}rad` => {
-  return (
-    typeof value === 'string' &&
-    (value.endsWith('deg') || value.endsWith('rad'))
-  );
+  return typeof value === 'string' && /^-?\d+(\.\d+)?(deg|rad)$/.test(value);
 };
 
-export const isTransformOrigin = (
-  prop: string,
-  value: unknown
-): value is TransformOrigin =>
-  prop === 'transformOrigin' &&
-  (typeof value === 'string' || Array.isArray(value));
+export const isNumberArray = (value: unknown): value is number[] =>
+  Array.isArray(value) && value.every(isNumber);

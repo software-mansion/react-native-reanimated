@@ -1,23 +1,13 @@
 'use strict';
-import { processCSSAnimationColor } from '../../Colors';
 import type { StyleProps } from '../../commonTypes';
-import {
-  normalizeTransformOrigin,
-  normalizeTransformString,
-} from '../normalization';
+import { normalizeStyle } from '../normalization';
 import type {
   CSSAnimationConfig,
   CSSAnimationKeyframes,
   CSSTransitionConfig,
   CSSTransitionProperty,
 } from '../types';
-import {
-  isAnimationSetting,
-  isColorProp,
-  isTransformOrigin,
-  isTransformString,
-  isTransitionSetting,
-} from './typeGuards';
+import { isAnimationSetting, isTransitionSetting } from './typeGuards';
 
 export function extractCSSConfigsAndFlattenedStyles(
   styles: StyleProps[]
@@ -30,11 +20,7 @@ export function extractCSSConfigsAndFlattenedStyles(
 
   for (const style of styles) {
     for (const prop in style) {
-      let value = style[prop];
-      if (value === 'auto') {
-        value = undefined;
-      }
-
+      const value = style[prop];
       if (prop === 'animationName') {
         animationName = value as CSSAnimationKeyframes;
       } else if (prop === 'transitionProperty') {
@@ -43,12 +29,6 @@ export function extractCSSConfigsAndFlattenedStyles(
         animationConfig[prop] = value;
       } else if (isTransitionSetting(prop)) {
         transitionConfig[prop] = value;
-      } else if (isTransformString(prop, value)) {
-        flattenedStyle[prop] = normalizeTransformString(value);
-      } else if (isColorProp(prop, value)) {
-        flattenedStyle[prop] = processCSSAnimationColor(value);
-      } else if (isTransformOrigin(prop, value)) {
-        flattenedStyle[prop] = normalizeTransformOrigin(value);
       } else {
         flattenedStyle[prop] = value;
       }
@@ -68,5 +48,9 @@ export function extractCSSConfigsAndFlattenedStyles(
     ? ({ ...transitionConfig, transitionProperty } as CSSTransitionConfig)
     : null;
 
-  return [finalAnimationConfig, finalTransitionConfig, flattenedStyle];
+  return [
+    finalAnimationConfig,
+    finalTransitionConfig,
+    normalizeStyle(flattenedStyle),
+  ];
 }

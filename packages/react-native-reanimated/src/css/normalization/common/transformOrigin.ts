@@ -2,18 +2,27 @@
 import { ReanimatedError } from '../../../errors';
 import type { NormalizedTransformOrigin, TransformOrigin } from '../../types';
 
-const HORIZONTAL_KEYWORDS = {
-  left: '0%',
+type KeywordConversions = Record<string, `${number}%` | number>;
+
+const HORIZONTAL_KEYWORDS: KeywordConversions = {
+  left: 0,
   center: '50%',
   right: '100%',
-} as const;
-const VERTICAL_KEYWORDS = { top: '0%', center: '50%', bottom: '100%' } as const;
+} satisfies KeywordConversions;
 
-const ERROR_MESSAGES = {
+const VERTICAL_KEYWORDS = {
+  top: 0,
+  center: '50%',
+  bottom: '100%',
+} satisfies KeywordConversions;
+
+export const ERROR_MESSAGES = {
   invalidTransformOrigin: (value: TransformOrigin) =>
     `Invalid transformOrigin: ${JSON.stringify(value)}. Expected 1-3 values.`,
   invalidComponent: (component: string | number, origin: TransformOrigin) =>
-    `Invalid component "${component}" in transformOrigin ${JSON.stringify(origin)}. Must be a number, percentage, or a valid keyword. Ensure the order of x and y components is correct.`,
+    `Invalid component "${component}" in transformOrigin ${JSON.stringify(origin)}. Must be a number, percentage, or a valid keyword.`,
+  invalidKeyword: (keyword: string, axis: 'x' | 'y', validKeywords: string[]) =>
+    `"${keyword}" is not a valid keyword for the ${axis}-axis. Must be one of: ${validKeywords.join(', ')}.`,
 };
 
 export function normalizeTransformOrigin(
@@ -43,19 +52,12 @@ export function normalizeTransformOrigin(
     normalizeComponent(components[2] ?? 0),
   ];
 
-  const invalidIdx = result.indexOf(null);
-  if (invalidIdx !== -1) {
-    throw new ReanimatedError(
-      ERROR_MESSAGES.invalidComponent(components[invalidIdx], transformOrigin)
-    );
-  }
-
-  return result as NormalizedTransformOrigin;
+  return validateResult(result, components, transformOrigin);
 }
 
 function normalizeComponent(
   component: string | number,
-  keywords?: Record<string, `${number}%`>
+  keywords?: KeywordConversions
 ): number | `${number}%` | null {
   if (keywords && component in keywords) {
     return keywords[component];
@@ -65,11 +67,54 @@ function normalizeComponent(
 
   const num = parseFloat(component);
   if (!isNaN(num)) {
-    if (component.endsWith('%')) {
+    if (component.endsWith('%') && num !== 0) {
       return `${num}%`;
     }
     return num;
   }
 
   return null;
+}
+
+function validateResult(
+  result: Array<null | `${number}%` | number>,
+  components: (string | number)[],
+  transformOrigin: TransformOrigin
+): NormalizedTransformOrigin {
+  const nullIdx = result.indexOf(null);
+
+  if (nullIdx !== -1) {
+    const invalidComponent = components[nullIdx];
+
+    if (nullIdx === 0 && invalidComponent in VERTICAL_KEYWORDS) {
+      throw new ReanimatedError(
+        ERROR_MESSAGES.invalidKeyword(
+          invalidComponent as string,
+          'x',
+          Object.keys(HORIZONTAL_KEYWORDS)
+        )
+      );
+    }
+    if (nullIdx === 1 && invalidComponent in HORIZONTAL_KEYWORDS) {
+      throw new ReanimatedError(
+        ERROR_MESSAGES.invalidKeyword(
+          invalidComponent as string,
+          'y',
+          Object.keys(VERTICAL_KEYWORDS)
+        )
+      );
+    }
+
+    throw new ReanimatedError(
+      ERROR_MESSAGES.invalidComponent(components[nullIdx], transformOrigin)
+    );
+  }
+
+  if (result[2] !== undefined && typeof result[2] !== 'number') {
+    throw new ReanimatedError(
+      ERROR_MESSAGES.invalidComponent(components[2], transformOrigin)
+    );
+  }
+
+  return result as NormalizedTransformOrigin;
 }

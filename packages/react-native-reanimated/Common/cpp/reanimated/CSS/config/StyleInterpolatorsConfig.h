@@ -34,11 +34,8 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       // check if we should animate in such a case
       {"start", relOrNum(RelativeTo::PARENT, "width")},
       {"end", relOrNum(RelativeTo::PARENT, "width")},
-      // TODO: This also can be auto or relative to width/height
-      // TODO: This is relative to width for columns and height for rows
-      {"gap", relOrNum(RelativeTo::PARENT, "width")},
-      {"rowGap", relOrNum(RelativeTo::PARENT, "height")},
-      {"columnGap", relOrNum(RelativeTo::PARENT, "width")},
+      {"rowGap", relOrNum(RelativeTo::SELF, "height", 0)},
+      {"columnGap", relOrNum(RelativeTo::SELF, "width", 0)},
 
       // DIMENSIONS
       {"height", relOrNum(RelativeTo::PARENT, "height")},

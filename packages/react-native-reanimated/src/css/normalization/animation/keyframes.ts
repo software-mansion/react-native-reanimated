@@ -1,119 +1,100 @@
 'use strict';
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { ViewStyle } from 'react-native';
 import { ReanimatedError } from '../../../errors';
-import type { CSSAnimationKeyframes, CSSKeyframeViewStyle } from '../../types';
-import { normalizeKeyframesOffsets } from './base';
-import { processCSSAnimationColor } from '../../../Colors';
-import { normalizeTransformOrigin, normalizeTransformString } from '../common';
-import { isColorProp, isTransformOrigin } from '../../utils/typeGuards';
+import type {
+  CSSAnimationKeyframeOffset,
+  CSSAnimationKeyframes,
+  CSSKeyframeStyleProps,
+  NormalizedCSSAnimationKeyframe,
+} from '../../types';
+import { isNumber } from '../../utils';
+import { OFFSET_REGEX } from './constants';
+import { normalizeStyle } from '../common';
+import type { AnyRecord } from '../../types';
 
 const ERROR_MESSAGES = {
-  unsupportedColorFormat: (value: any, prop: string) =>
-    `Unsupported color format "${value}" for "${prop}".`,
+  unsupportedKeyframe: (key: CSSAnimationKeyframeOffset) =>
+    `Unsupported keyframe "${key}". Only numbers, "from", and "to" are supported.`,
+  invalidOffsetRange: (key: CSSAnimationKeyframeOffset) =>
+    `Invalid keyframe offset "${key}". Expected a number between 0 and 1.`,
 };
 
-export function processKeyframes(
+function normalizeOffset(key: CSSAnimationKeyframeOffset): number {
+  if (key === 'from') {
+    return 0;
+  }
+  if (key === 'to') {
+    return 1;
+  }
+
+  let offset: number | undefined;
+  if (typeof key === 'number' || !isNaN(+key)) {
+    offset = +key;
+  } else if (OFFSET_REGEX.test(key)) {
+    offset = parseFloat(key) / 100;
+  }
+
+  if (!isNumber(offset)) {
+    throw new ReanimatedError(ERROR_MESSAGES.unsupportedKeyframe(key));
+  }
+  if (offset < 0 || offset > 1) {
+    throw new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(key));
+  }
+
+  return offset;
+}
+
+function normalizeKeyframes(
   keyframes: CSSAnimationKeyframes
-): CSSKeyframeViewStyle {
-  const normalizedKeyframes = normalizeKeyframesOffsets(keyframes);
+): Array<NormalizedCSSAnimationKeyframe> {
+  return Object.entries(keyframes)
+    .map(([key, style = {}]) => ({
+      offset: normalizeOffset(key as CSSAnimationKeyframeOffset),
+      style: normalizeStyle(style),
+    }))
+    .sort((a, b) => a.offset - b.offset)
+    .reduce((acc, keyframe) => {
+      const lastKeyframe = acc[acc.length - 1];
+      if (lastKeyframe && lastKeyframe.offset === keyframe.offset) {
+        lastKeyframe.style = { ...lastKeyframe.style, ...keyframe.style };
+      } else {
+        acc.push(keyframe);
+      }
+      return acc;
+    }, [] as Array<NormalizedCSSAnimationKeyframe>);
+}
 
-  const keyframeStyle: CSSKeyframeViewStyle = {};
+export function createKeyframeStyle(
+  keyframes: CSSAnimationKeyframes
+): CSSKeyframeStyleProps {
+  const keyframeStyle: CSSKeyframeStyleProps = {};
 
-  normalizedKeyframes.forEach(({ offset, style }) => {
-    if (style) {
-      processStyleProperties(offset, style, keyframeStyle);
-    }
-  });
+  normalizeKeyframes(keyframes).forEach(({ offset, style }) =>
+    processStyleProperties(offset, style, keyframeStyle)
+  );
 
   return keyframeStyle;
 }
 
-function processStyleProperties(
+function processStyleProperties<S extends AnyRecord>(
   offset: number,
-  style: ViewStyle,
-  keyframeStyle: CSSKeyframeViewStyle
+  style: S,
+  keyframeStyle: AnyRecord
 ) {
   Object.entries(style).forEach(([property, value]) => {
     if (value === undefined) {
       return;
     }
 
-    const prop = property as keyof ViewStyle;
-
-    if (typeof value === 'object') {
-      handleObjectValue(offset, prop, value, keyframeStyle);
-    } else if (typeof value === 'string' && prop === 'transform') {
-      handleTransformsString(offset, value, keyframeStyle);
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      if (!keyframeStyle[property]) {
+        keyframeStyle[property] = {};
+      }
+      processStyleProperties(offset, value, keyframeStyle[property]);
     } else {
-      handlePrimitiveValue(offset, prop, value, keyframeStyle);
+      if (!keyframeStyle[property]) {
+        keyframeStyle[property] = [];
+      }
+      keyframeStyle[property].push({ offset, value });
     }
   });
-}
-
-function handleObjectValue(
-  offset: number,
-  prop: keyof ViewStyle,
-  value: any,
-  keyframeStyle: CSSKeyframeViewStyle
-) {
-  if (Array.isArray(value)) {
-    handlePrimitiveValue(offset, prop, value, keyframeStyle);
-  } else {
-    const subStyle = keyframeStyle[prop] || {};
-    Object.entries(value).forEach(([subProperty, subValue]) => {
-      if (subValue !== undefined) {
-        addSubPropertyValue(subStyle, subProperty, subValue, offset);
-      }
-    });
-    (keyframeStyle[prop] as typeof subStyle) = subStyle;
-  }
-}
-
-function handleTransformsString(
-  offset: number,
-  value: string,
-  keyframeStyle: CSSKeyframeViewStyle
-) {
-  const transformArray = normalizeTransformString(value);
-  handlePrimitiveValue(offset, 'transform', transformArray, keyframeStyle);
-}
-
-function handlePrimitiveValue(
-  offset: number,
-  prop: keyof ViewStyle,
-  value: any,
-  keyframeStyle: CSSKeyframeViewStyle
-) {
-  if (!keyframeStyle[prop]) {
-    (keyframeStyle as any)[prop] = [];
-  }
-
-  let processedValue = value;
-  if (isColorProp(prop, value) && value !== 'transparent') {
-    processedValue = processCSSAnimationColor(value);
-    if (!processedValue) {
-      throw new ReanimatedError(
-        ERROR_MESSAGES.unsupportedColorFormat(value, prop)
-      );
-    }
-  } else if (isTransformOrigin(prop, value)) {
-    processedValue = normalizeTransformOrigin(value);
-  } else if (value === 'auto') {
-    processedValue = undefined;
-  }
-
-  (keyframeStyle[prop] as any[]).push({ offset, value: processedValue });
-}
-
-function addSubPropertyValue(
-  subStyle: Record<string, any>,
-  subProperty: string,
-  subValue: any,
-  offset: number
-) {
-  if (!subStyle[subProperty]) {
-    subStyle[subProperty] = [];
-  }
-  subStyle[subProperty].push({ offset, value: subValue });
 }

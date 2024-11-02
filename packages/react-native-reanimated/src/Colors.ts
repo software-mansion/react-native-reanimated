@@ -643,7 +643,7 @@ export function isColor(value: unknown): boolean {
   if (typeof value !== 'string') {
     return false;
   }
-  return processColorInitially(value) != null;
+  return processColorInitially(value) !== null;
 }
 
 const IS_ANDROID = isAndroid();
@@ -728,8 +728,11 @@ export function toGammaSpace(
   return res as ParsedColorArray;
 }
 
-export function processCSSAnimationColor(value: string | number) {
+export function normalizeCSSAnimationColor(value: string | number) {
   if (typeof value === 'string') {
+    if (value === 'transparent') {
+      return value;
+    }
     return processColor(value, false);
   } else {
     // case of number format 0xRRGGBBAA format needs to be re-formatted
