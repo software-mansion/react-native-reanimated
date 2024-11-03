@@ -11,11 +11,11 @@ import { OFFSET_REGEX } from './constants';
 import { normalizeStyle } from '../common';
 import type { AnyRecord } from '../../types';
 
-const ERROR_MESSAGES = {
-  unsupportedKeyframe: (key: CSSAnimationKeyframeOffset) =>
-    `Unsupported keyframe "${key}". Only numbers, "from", and "to" are supported.`,
+export const ERROR_MESSAGES = {
+  invalidOffsetType: (key: CSSAnimationKeyframeOffset) =>
+    `Invalid keyframe offset type "${key}". Only numbers, "from", and "to" are supported.`,
   invalidOffsetRange: (key: CSSAnimationKeyframeOffset) =>
-    `Invalid keyframe offset "${key}". Expected a number between 0 and 1.`,
+    `Invalid keyframe offset range "${key}". Expected a number between 0 and 1.`,
 };
 
 function normalizeOffset(key: CSSAnimationKeyframeOffset): number {
@@ -34,7 +34,7 @@ function normalizeOffset(key: CSSAnimationKeyframeOffset): number {
   }
 
   if (!isNumber(offset)) {
-    throw new ReanimatedError(ERROR_MESSAGES.unsupportedKeyframe(key));
+    throw new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(key));
   }
   if (offset < 0 || offset > 1) {
     throw new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(key));
@@ -63,18 +63,6 @@ function normalizeKeyframes(
     }, [] as Array<NormalizedCSSAnimationKeyframe>);
 }
 
-export function createKeyframeStyle(
-  keyframes: CSSAnimationKeyframes
-): CSSKeyframeStyleProps {
-  const keyframeStyle: CSSKeyframeStyleProps = {};
-
-  normalizeKeyframes(keyframes).forEach(({ offset, style }) =>
-    processStyleProperties(offset, style, keyframeStyle)
-  );
-
-  return keyframeStyle;
-}
-
 function processStyleProperties<S extends AnyRecord>(
   offset: number,
   style: S,
@@ -97,4 +85,16 @@ function processStyleProperties<S extends AnyRecord>(
       keyframeStyle[property].push({ offset, value });
     }
   });
+}
+
+export function createKeyframeStyle(
+  keyframes: CSSAnimationKeyframes
+): CSSKeyframeStyleProps {
+  const keyframeStyle: CSSKeyframeStyleProps = {};
+
+  normalizeKeyframes(keyframes).forEach(({ offset, style }) =>
+    processStyleProperties(offset, style, keyframeStyle)
+  );
+
+  return keyframeStyle;
 }

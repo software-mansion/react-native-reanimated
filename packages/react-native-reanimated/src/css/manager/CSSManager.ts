@@ -1,17 +1,14 @@
 'use strict';
 import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
 import { adaptViewConfig } from '../../ConfigHelper';
-import {
-  extractCSSConfigsAndFlattenedStyles,
-  removeViewStyle,
-  setViewStyle,
-} from '..';
+import { removeViewStyle, setViewStyle } from '../native';
 import type {
   ICSSManager,
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
 import CSSTransitionManager from './CSSTransitionManager';
 import CSSAnimationManager from './CSSAnimationManager';
+import { extractCSSConfigsAndFlattenedStyles } from '../utils';
 
 export default class CSSManager implements ICSSManager {
   private readonly cssAnimationManager: CSSAnimationManager;

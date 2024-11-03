@@ -68,9 +68,7 @@ export default class CSSTransitionManager {
           updateCSSTransition(viewTag, configUpdates);
         }
       } else {
-        // This is added just for safety but there should be no transition
-        // in this case
-        this.detach();
+        this.detach(); // This detach is added just for safety, it should not be needed
         this.attach(wrapper, viewTag, transitionConfig);
       }
     } else {

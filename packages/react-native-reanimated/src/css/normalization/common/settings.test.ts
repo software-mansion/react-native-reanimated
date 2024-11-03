@@ -16,6 +16,10 @@ import {
 type TestCases = [CSSTimeUnit, number][];
 
 describe(normalizeDelay, () => {
+  it('returns 0 by default', () => {
+    expect(normalizeDelay()).toBe(0);
+  });
+
   describe('when number is passed', () => {
     it.each([100, 0, -100])('returns %p', (delay) => {
       expect(normalizeDelay(delay)).toBe(delay);
@@ -56,6 +60,10 @@ describe(normalizeDelay, () => {
 });
 
 describe(normalizeDuration, () => {
+  it('returns 0 by default', () => {
+    expect(normalizeDuration()).toBe(0);
+  });
+
   describe('when number is passed', () => {
     it.each([100, 0])('returns %p', (duration) => {
       expect(normalizeDuration(duration)).toBe(duration);
@@ -103,6 +111,10 @@ describe(normalizeDuration, () => {
 });
 
 describe(normalizeTimingFunction, () => {
+  it('returns "ease" by default', () => {
+    expect(normalizeTimingFunction()).toBe('ease');
+  });
+
   describe('predefined timing function', () => {
     describe('when valid function is passed', () => {
       it.each([...VALID_PREDEFINED_TIMING_FUNCTIONS])(
