@@ -24,7 +24,7 @@ export function normalizeStyle(style: StyleProps): StyleProps {
 
     if (isColorProp(key, propValue)) {
       const normalizedColor = normalizeCSSAnimationColor(propValue);
-      if (normalizedColor === null) {
+      if (!normalizedColor && normalizedColor !== 0) {
         throw new ReanimatedError(ERROR_MESSAGES.invalidColor(propValue));
       }
       entries.push([key, normalizedColor]);

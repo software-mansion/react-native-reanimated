@@ -20,17 +20,17 @@ import {
   VALID_PLAY_STATES,
 } from './constants';
 
-const ERROR_MESSAGES = {
-  unsupportedAnimationDirection: (direction: CSSAnimationDirection) =>
-    `Unsupported animation direction "${direction}".`,
+export const ERROR_MESSAGES = {
+  invalidAnimationDirection: (direction: CSSAnimationDirection) =>
+    `Invalid animation direction "${direction}".`,
   invalidIterationCount: (iterationCount: CSSAnimationIterationCount) =>
     `Invalid iteration count "${iterationCount}". Expected a number or "infinite".`,
   negativeIterationCount: (iterationCount: number) =>
     `Iteration count cannot be negative, received "${iterationCount}".`,
-  unsupportedFillMode: (fillMode: CSSAnimationFillMode) =>
-    `Unsupported fill mode "${fillMode}".`,
-  unsupportedPlayState: (playState: CSSAnimationPlayState) =>
-    `Unsupported play state "${playState}".`,
+  invalidFillMode: (fillMode: CSSAnimationFillMode) =>
+    `Invalid fill mode "${fillMode}".`,
+  invalidPlayState: (playState: CSSAnimationPlayState) =>
+    `Invalid play state "${playState}".`,
 };
 
 export function normalizeDirection(
@@ -38,7 +38,7 @@ export function normalizeDirection(
 ): CSSAnimationDirection {
   if (!VALID_ANIMATION_DIRECTIONS.has(direction)) {
     throw new ReanimatedError(
-      ERROR_MESSAGES.unsupportedAnimationDirection(direction)
+      ERROR_MESSAGES.invalidAnimationDirection(direction)
     );
   }
   return direction;
@@ -65,7 +65,7 @@ export function normalizeFillMode(
   fillMode: CSSAnimationFillMode = 'none'
 ): CSSAnimationFillMode {
   if (!VALID_FILL_MODES.has(fillMode)) {
-    throw new ReanimatedError(ERROR_MESSAGES.unsupportedFillMode(fillMode));
+    throw new ReanimatedError(ERROR_MESSAGES.invalidFillMode(fillMode));
   }
   return fillMode;
 }
@@ -74,7 +74,7 @@ export function normalizePlayState(
   playState: CSSAnimationPlayState = 'running'
 ): CSSAnimationPlayState {
   if (!VALID_PLAY_STATES.has(playState)) {
-    throw new ReanimatedError(ERROR_MESSAGES.unsupportedPlayState(playState));
+    throw new ReanimatedError(ERROR_MESSAGES.invalidPlayState(playState));
   }
   return playState;
 }
@@ -91,12 +91,12 @@ export function getNormalizedCSSAnimationSettingsUpdates(
     );
   }
   if (
-    typeof oldSettings.animationTimingFunction === 'string'
-      ? oldSettings.animationTimingFunction !==
+    oldSettings.animationTimingFunction !==
+      newSettings.animationTimingFunction &&
+    (typeof oldSettings.animationTimingFunction !== 'object' ||
+      !oldSettings.animationTimingFunction?.equals(
         newSettings.animationTimingFunction
-      : !oldSettings.animationTimingFunction?.equals(
-          newSettings.animationTimingFunction
-        )
+      ))
   ) {
     settingsUpdates.animationTimingFunction = normalizeTimingFunction(
       newSettings.animationTimingFunction
