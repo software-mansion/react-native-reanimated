@@ -426,9 +426,8 @@ void LayoutAnimationsProxy::maybeDropAncestors(
   }
 
   auto node = std::static_pointer_cast<MutationNode>(parent);
-  node->animatedChildren.erase(child->tag);
 
-  if (node->animatedChildren.empty() && node->state != ANIMATING) {
+  if (node->children.size() == 0 && node->state != ANIMATING) {
     nodeForTag_.erase(node->tag);
     cleanupMutations.push_back(node->mutation);
     maybeCancelAnimation(node->tag);
@@ -482,7 +481,6 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
 #endif
     if (subNode->state != UNDEFINED && subNode->state != MOVED) {
       if (shouldAnimate && subNode->state != DEAD) {
-        node->animatedChildren.insert(subNode->tag);
         hasAnimatedChildren = true;
       } else {
         endAnimationsRecursively(subNode, mutations);
@@ -498,8 +496,8 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
       LOG(INFO) << "child " << subNode->tag
                 << " start animations returned true " << std::endl;
 #endif
-      node->animatedChildren.insert(subNode->tag);
       hasAnimatedChildren = true;
+      node->state = WAITING;
     } else if (subNode->state == MOVED) {
       mutations.push_back(subNode->mutation);
       toBeRemoved.push_back(subNode);
@@ -544,11 +542,7 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
     layoutAnimationsManager_->clearLayoutAnimationConfig(node->tag);
   }
 
-  if (!wantAnimateExit) {
-    return false;
-  }
-
-  return true;
+  return wantAnimateExit;
 }
 
 void LayoutAnimationsProxy::updateIndexForMutation(
