@@ -75,21 +75,7 @@ type BoxProps = {
 const Box = ({ option, isActive, onSelect }: BoxProps) => {
   return (
     <TouchableOpacity
-      style={[
-        styles.boxContainer,
-        isActive && {
-          boxShadow: [
-            {
-              inset: true,
-              offsetX: 0,
-              offsetY: 0,
-              blurRadius: 10,
-              color: 'black',
-              spreadDistance: 1,
-            },
-          ],
-        },
-      ]}
+      style={[styles.boxContainer, isActive && { borderColor: '#AAFFAA' }]}
       activeOpacity={0.6}
       onPress={() => onSelect(option)}>
       <View style={styles.boxContent}>
@@ -304,8 +290,8 @@ const styles = StyleSheet.create({
   boxContainer: {
     width: 150,
     borderRadius: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    backgroundColor: '#5555FF',
+    borderWidth: 2,
+    backgroundColor: '#5555FF77',
   },
   boxContent: {
     justifyContent: 'center',
