@@ -43,6 +43,9 @@ class CSSAnimation {
   jsi::Value getViewStyle(jsi::Runtime &rt) const {
     return styleInterpolator_.getStyleValue(rt, shadowNode_);
   }
+  jsi::Value resetStyle(jsi::Runtime &rt) {
+    return styleInterpolator_.reset(rt, shadowNode_);
+  }
   jsi::Value getBackwardsFillStyle(jsi::Runtime &rt);
 
   void run(double timestamp);

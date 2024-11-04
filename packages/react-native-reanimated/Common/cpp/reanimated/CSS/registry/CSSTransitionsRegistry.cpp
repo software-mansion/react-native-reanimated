@@ -53,21 +53,24 @@ void CSSTransitionsRegistry::update(jsi::Runtime &rt, const double timestamp) {
 
   // Activate all delayed transitions that should start now
   activateDelayedTransitions(timestamp);
-  // Flush all operations from the batch
-  flushOperations();
 
   // Iterate over active transitions and update them
-  for (const auto &viewTag : runningTransitionTags_) {
+  for (auto it = runningTransitionTags_.begin();
+       it != runningTransitionTags_.end();) {
+    const auto &viewTag = *it;
     const auto &transition = registry_.at(viewTag);
-    const jsi::Value &updates = handleUpdate(rt, timestamp, transition);
 
-    if (transition->getState() != TransitionProgressState::RUNNING) {
-      operationsBatch_.emplace_back(TransitionOperation::DEACTIVATE, viewTag);
-    }
+    const jsi::Value &updates = transition->update(rt, timestamp);
     if (!updates.isUndefined()) {
       updatesBatch_.emplace_back(
           transition->getShadowNode(),
           std::make_unique<jsi::Value>(rt, updates));
+    }
+
+    if (transition->getState() != TransitionProgressState::RUNNING) {
+      it = runningTransitionTags_.erase(it);
+    } else {
+      ++it;
     }
   }
 }
@@ -90,47 +93,9 @@ void CSSTransitionsRegistry::activateDelayedTransitions(
   }
 }
 
-void CSSTransitionsRegistry::flushOperations() {
-  auto copiedOperationsBatch = std::move(operationsBatch_);
-  operationsBatch_.clear();
-
-  for (const auto &[operation, viewTag] : copiedOperationsBatch) {
-    if (registry_.find(viewTag) != registry_.end()) {
-      handleOperation(operation, viewTag);
-    }
-  }
-}
-
-jsi::Value CSSTransitionsRegistry::handleUpdate(
-    jsi::Runtime &rt,
-    const double timestamp,
+void CSSTransitionsRegistry::activateTransition(
     const std::shared_ptr<CSSTransition> &transition) {
-  if (transition->getState() == TransitionProgressState::FINISHED) {
-    operationsBatch_.emplace_back(
-        TransitionOperation::DEACTIVATE, transition->getViewTag());
-  }
-  return transition->update(rt, timestamp);
-}
-
-void CSSTransitionsRegistry::handleOperation(
-    const TransitionOperation operation,
-    Tag viewTag) {
-  switch (operation) {
-    case TransitionOperation::ACTIVATE:
-      activateOperation(viewTag);
-      break;
-    case TransitionOperation::DEACTIVATE:
-      deactivateOperation(viewTag);
-      break;
-  }
-}
-
-void CSSTransitionsRegistry::activateOperation(const Tag viewTag) {
-  const auto transitionIt = registry_.find(viewTag);
-  if (transitionIt == registry_.end()) {
-    return;
-  }
-  const auto &transition = transitionIt->second;
+  const auto viewTag = transition->getViewTag();
   const auto currentTimestamp = getCurrentTimestamp_();
   const auto minDelay = transition->getMinDelay(currentTimestamp);
 
@@ -151,10 +116,6 @@ void CSSTransitionsRegistry::activateOperation(const Tag viewTag) {
   } else {
     runningTransitionTags_.insert(viewTag);
   }
-}
-
-void CSSTransitionsRegistry::deactivateOperation(const Tag viewTag) {
-  runningTransitionTags_.erase(viewTag);
 }
 
 PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
@@ -179,7 +140,7 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
           transition->run(rt, changedProps, getCurrentTimestamp_());
       updatesRegistry_[viewTag] =
           std::make_pair(shadowNode, dynamicFromValue(rt, initialProps));
-      operationsBatch_.emplace_back(TransitionOperation::ACTIVATE, viewTag);
+      activateTransition(transition);
     }
   };
 }

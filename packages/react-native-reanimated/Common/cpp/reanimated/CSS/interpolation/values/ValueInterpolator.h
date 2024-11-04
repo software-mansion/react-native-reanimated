@@ -39,6 +39,8 @@ class ValueInterpolator : public PropertyInterpolator {
       const jsi::Value &newStyleValue) override;
 
   jsi::Value update(const PropertyInterpolationUpdateContext &context) override;
+  jsi::Value reset(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
+      override;
 
  protected:
   std::optional<T> defaultStyleValue_; // Default style value
@@ -76,7 +78,8 @@ class ValueInterpolator : public PropertyInterpolator {
       bool shouldResolve,
       const PropertyInterpolationUpdateContext &context) const;
 
-  void updateCurrentKeyframes(const PropertyInterpolationUpdateContext &context);
+  void updateCurrentKeyframes(
+      const PropertyInterpolationUpdateContext &context);
 
   double calculateLocalProgress(
       const ValueKeyframe<T> &keyframeBefore,

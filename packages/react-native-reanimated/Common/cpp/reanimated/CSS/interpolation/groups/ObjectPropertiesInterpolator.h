@@ -21,6 +21,8 @@ class ObjectPropertiesInterpolator : public PropertyInterpolator {
       const ShadowNode::Shared &shadowNode) const override;
 
   jsi::Value update(const PropertyInterpolationUpdateContext &context) override;
+  jsi::Value reset(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
+      override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
@@ -36,7 +38,7 @@ class ObjectPropertiesInterpolator : public PropertyInterpolator {
 
   jsi::Value mapInterpolators(
       jsi::Runtime &rt,
-      const std::function<jsi::Value(PropertyInterpolator &)>& callback) const;
+      const std::function<jsi::Value(PropertyInterpolator &)> &callback) const;
 };
 
 } // namespace reanimated

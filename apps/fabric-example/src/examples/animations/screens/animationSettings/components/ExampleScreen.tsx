@@ -4,9 +4,11 @@ import type { CSSAnimationConfig } from 'react-native-reanimated';
 
 import {
   ConfigWithOverridesBlock,
-  ScrollScreen,
+  Screen,
+  Scroll,
   Section,
   Stagger,
+  TabView,
 } from '@/components';
 
 import type { ExampleItemProps } from './ExamplesListCard';
@@ -20,24 +22,28 @@ type ExampleCardSection = {
   onTogglePause?: (paused: boolean) => void;
 };
 
-type ExampleScreenProps = {
-  config: CSSAnimationConfig;
-  cards: Array<ExampleCardSection>;
-  renderExample: (config: CSSAnimationConfig) => JSX.Element;
-};
+type ExampleScreenProps =
+  | {
+      tabs: Array<
+        {
+          name: string;
+        } & ExampleScreenContentProps
+      >;
+    }
+  | ExampleScreenContentProps;
 
-export default function ExampleScreen({
+function ExampleScreenContent({
   cards,
   config,
   renderExample,
-}: ExampleScreenProps) {
+}: ExampleScreenContentProps) {
   const configOverrides = useMemo(
-    () => cards.flatMap((card) => card.items),
+    () => cards?.flatMap((card) => card.items),
     [cards]
   );
 
   return (
-    <ScrollScreen>
+    <Scroll withBottomBarSpacing>
       <Stagger>
         {cards.map((card) => (
           <Section
@@ -63,6 +69,34 @@ export default function ExampleScreen({
           />
         </Section>
       </Stagger>
-    </ScrollScreen>
+    </Scroll>
+  );
+}
+
+type ExampleScreenContentProps = {
+  config: CSSAnimationConfig;
+  cards: Array<ExampleCardSection>;
+  renderExample: (config: CSSAnimationConfig) => JSX.Element;
+};
+
+export default function ExampleScreen(props: ExampleScreenProps) {
+  if ('tabs' in props) {
+    return (
+      <Screen>
+        <TabView>
+          {props.tabs.map((tab) => (
+            <TabView.Tab key={tab.name} name={tab.name}>
+              <ExampleScreenContent {...tab} />
+            </TabView.Tab>
+          ))}
+        </TabView>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen>
+      <ExampleScreenContent {...props} />
+    </Screen>
   );
 }

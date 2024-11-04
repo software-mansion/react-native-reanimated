@@ -9,7 +9,7 @@ void CSSAnimationsRegistry::updateSettings(
   std::lock_guard<std::mutex> lock{mutex_};
 
   registry_.at(id)->updateSettings(updatedSettings, timestamp);
-  operationsBatch_.emplace_back(AnimationOperation::ACTIVATE, id);
+  runningAnimationIds_.insert(id);
 }
 
 void CSSAnimationsRegistry::add(
@@ -55,20 +55,45 @@ void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
 
   // Activate all delayed animations that should start now
   activateDelayedAnimations(timestamp);
-  // Flush all operations from the batch
-  flushOperations(rt, timestamp);
 
   // Iterate over active animations and update them
-  for (const auto &id : runningAnimationIds_) {
+  for (auto it = runningAnimationIds_.begin();
+       it != runningAnimationIds_.end();) {
+    const auto &id = *it;
     const auto &animation = registry_.at(id);
-    const jsi::Value &updates = handleUpdate(rt, timestamp, animation);
 
+    if (animation->getState(timestamp) == AnimationProgressState::PENDING) {
+      animation->run(timestamp);
+    }
+
+    const auto updates = animation->update(rt, timestamp);
     if (updates.isUndefined()) {
-      operationsBatch_.emplace_back(AnimationOperation::DEACTIVATE, id);
+      updatesRegistry_.erase(animation->getShadowNode()->getTag());
     } else {
       updatesBatch_.emplace_back(
           animation->getShadowNode(),
           std::make_unique<jsi::Value>(rt, updates));
+    }
+
+    const auto newState = animation->getState(timestamp);
+    if (newState == AnimationProgressState::FINISHED) {
+      // Revert changes applied during animation if there is no forwards fill
+      // mode
+      if (!animation->hasForwardsFillMode()) {
+        const auto &viewStyle = animation->resetStyle(rt);
+        if (!viewStyle.isUndefined()) {
+          updatesBatch_.emplace_back(
+              animation->getShadowNode(),
+              std::make_unique<jsi::Value>(rt, viewStyle));
+        }
+        tagsToRemove_.insert(animation->getShadowNode()->getTag());
+      }
+    }
+
+    if (newState != AnimationProgressState::RUNNING) {
+      it = runningAnimationIds_.erase(it);
+    } else {
+      ++it;
     }
   }
 }
@@ -81,102 +106,6 @@ void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
     delayedAnimationIds_.erase(id);
     if (registry_.find(id) != registry_.end()) {
       runningAnimationIds_.insert(id);
-    }
-  }
-}
-
-void CSSAnimationsRegistry::flushOperations(
-    jsi::Runtime &rt,
-    const double timestamp) {
-  auto copiedOperationsBatch = std::move(operationsBatch_);
-  operationsBatch_.clear();
-
-  for (const auto &[operation, id] : copiedOperationsBatch) {
-    const auto &animationIt = registry_.find(id);
-    // Handle the operation only if the animation was not removed from the
-    // registry
-    if (animationIt != registry_.end()) {
-      handleOperation(rt, operation, registry_.at(id), timestamp);
-    }
-  }
-}
-
-jsi::Value CSSAnimationsRegistry::handleUpdate(
-    jsi::Runtime &rt,
-    const double timestamp,
-    const std::shared_ptr<CSSAnimation> &animation) {
-  switch (animation->getState(timestamp)) {
-    case AnimationProgressState::PENDING:
-      animation->run(timestamp);
-      break;
-    case AnimationProgressState::PAUSED:
-      operationsBatch_.emplace_back(
-          AnimationOperation::DEACTIVATE, animation->getId());
-      break;
-    case AnimationProgressState::FINISHED:
-      operationsBatch_.emplace_back(
-          AnimationOperation::FINISH, animation->getId());
-      break;
-    default:
-      break;
-  }
-
-  return animation->update(rt, timestamp);
-}
-
-void CSSAnimationsRegistry::handleOperation(
-    jsi::Runtime &rt,
-    const AnimationOperation operation,
-    const std::shared_ptr<CSSAnimation> &animation,
-    const double timestamp) {
-  switch (operation) {
-    case AnimationOperation::ACTIVATE:
-      activateOperation(animation->getId());
-      break;
-    case AnimationOperation::DEACTIVATE:
-      deactivateOperation(animation, timestamp);
-      break;
-    case AnimationOperation::FINISH:
-      finishOperation(rt, animation, timestamp);
-      break;
-  }
-}
-
-void CSSAnimationsRegistry::activateOperation(const unsigned id) {
-  runningAnimationIds_.insert(id);
-}
-
-void CSSAnimationsRegistry::deactivateOperation(
-    const std::shared_ptr<CSSAnimation> &animation,
-    const double timestamp) {
-  runningAnimationIds_.erase(animation->getId());
-  const auto animationState = animation->getState(timestamp);
-
-  // Remove tag from the registry if the animation is deactivated after
-  // finishing and has no forwards fill mode or if the animation is deactivated
-  // before starting and has no backwards fill mode
-  // (the only one other case when the animation can be deactivated is setting
-  // its play state to paused - in such a case we don't want to remove the tag)
-  if ((animationState == AnimationProgressState::PENDING &&
-       !animation->hasBackwardsFillMode()) ||
-      (animationState == AnimationProgressState::FINISHED &&
-       !animation->hasForwardsFillMode())) {
-    tagsToRemove_.insert(animation->getShadowNode()->getTag());
-  }
-}
-
-void CSSAnimationsRegistry::finishOperation(
-    jsi::Runtime &rt,
-    const std::shared_ptr<CSSAnimation> &animation,
-    const double timestamp) {
-  deactivateOperation(animation, timestamp);
-  // Revert changes applied during animation if there is no forwards fill mode
-  if (!animation->hasForwardsFillMode()) {
-    const auto &viewStyle = animation->getViewStyle(rt);
-    if (!viewStyle.isUndefined()) {
-      updatesBatch_.emplace_back(
-          animation->getShadowNode(),
-          std::make_unique<jsi::Value>(rt, viewStyle));
     }
   }
 }

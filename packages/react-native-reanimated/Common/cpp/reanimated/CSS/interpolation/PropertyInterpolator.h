@@ -35,6 +35,9 @@ class PropertyInterpolator {
 
   virtual jsi::Value update(
       const PropertyInterpolationUpdateContext &context) = 0;
+  virtual jsi::Value reset(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode) = 0;
 
  protected:
   const PropertyPath propertyPath_;

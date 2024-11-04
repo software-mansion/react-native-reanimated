@@ -129,6 +129,23 @@ jsi::Value ValueInterpolator<T>::update(
 }
 
 template <typename T>
+jsi::Value ValueInterpolator<T>::reset(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) {
+  previousValue_ = std::nullopt;
+  auto resetValue = getStyleValue(rt, shadowNode);
+
+  if (!resetValue.isUndefined()) {
+    return convertResultToJSI(rt, prepareKeyframeValue(rt, resetValue));
+  }
+  if (defaultStyleValue_.has_value()) {
+    return convertResultToJSI(rt, defaultStyleValue_.value());
+  }
+
+  return resetValue;
+}
+
+template <typename T>
 std::optional<T> ValueInterpolator<T>::getFallbackValue(
     const PropertyInterpolationUpdateContext &context) const {
   const jsi::Value &styleValue = getStyleValue(context.rt, context.node);
@@ -144,7 +161,7 @@ std::optional<T> ValueInterpolator<T>::resolveKeyframeValue(
   if (!unresolvedValue.has_value()) {
     return std::nullopt;
   }
-  const auto& value = unresolvedValue.value();
+  const auto &value = unresolvedValue.value();
   return interpolate(0, value, value, context);
 }
 

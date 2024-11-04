@@ -74,7 +74,7 @@ export const text: Record<FontVariant, FontStyle> = {
     fontStyle: 'normal',
     fontWeight: '400',
     letterSpacing: 0.4,
-    lineHeight: 12,
+    lineHeight: 18,
   },
   label1: {
     fontFamily: BASE_FONT,
