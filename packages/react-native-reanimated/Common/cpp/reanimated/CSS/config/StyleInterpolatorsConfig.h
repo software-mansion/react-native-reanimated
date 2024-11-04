@@ -21,11 +21,11 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       // FLEXBOX
       // TODO
       {"flex", numeric()},
+      {"flexDirection", discrete()},
       {"flexGrow", numeric()},
-      {"flexShrink", numeric()},
+      {"flexShrink", numeric(0)},
       {"flexBasis", relOrNum(RelativeTo::PARENT, "width")},
       {"flexWrap", discrete()},
-      {"flexDirection", discrete()},
       {"justifyContent", discrete()},
       {"alignContent", discrete()},
       {"alignItems", discrete()},

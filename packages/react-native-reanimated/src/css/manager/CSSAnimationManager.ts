@@ -22,12 +22,13 @@ export default class CSSAnimationManager {
     shadowNodeWrapper: ShadowNodeWrapper,
     serializedKeyframes?: string
   ) {
+    const normalizedConfig = normalizeCSSAnimationConfig(animationConfig);
+
     this.animationId = CSSAnimationManager._nextId++;
     this.serializedAnimationKeyframes =
       serializedKeyframes ?? JSON.stringify(animationConfig.animationName);
     this.animationConfig = animationConfig;
 
-    const normalizedConfig = normalizeCSSAnimationConfig(animationConfig);
     registerCSSAnimation(shadowNodeWrapper, this.animationId, normalizedConfig);
   }
 

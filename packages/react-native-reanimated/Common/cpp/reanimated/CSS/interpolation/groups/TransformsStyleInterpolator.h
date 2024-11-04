@@ -33,6 +33,8 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const ShadowNode::Shared &shadowNode) const override;
 
   jsi::Value update(const PropertyInterpolationUpdateContext &context) override;
+  jsi::Value reset(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
+      override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
@@ -51,7 +53,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
 
   static std::optional<TransformOperations> parseTransformOperations(
       jsi::Runtime &rt,
-      const jsi::Value &values) ;
+      const jsi::Value &values);
   std::shared_ptr<TransformKeyframe> createTransformKeyframe(
       double fromOffset,
       double toOffset,
@@ -88,7 +90,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
 
   static jsi::Value convertResultToJSI(
       jsi::Runtime &rt,
-      const TransformOperations &operations) ;
+      const TransformOperations &operations);
   TransformInterpolatorUpdateContext createUpdateContext(
       const PropertyInterpolationUpdateContext &context) const;
 };

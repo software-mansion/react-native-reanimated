@@ -21,7 +21,12 @@ const routes = {
         routes: {
           FlexBox: {
             name: 'FlexBox',
-            routes: {},
+            routes: {
+              FlexDirection: {
+                name: 'Flex Direction',
+                Component: animatedProperties.flexBox.FlexDirection,
+              },
+            },
           },
           Dimensions: {
             name: 'Dimensions',

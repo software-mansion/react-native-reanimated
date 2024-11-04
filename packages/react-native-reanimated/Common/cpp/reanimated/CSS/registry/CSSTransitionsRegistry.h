@@ -12,8 +12,6 @@
 
 namespace reanimated {
 
-enum class TransitionOperation { ACTIVATE, DEACTIVATE };
-
 struct DelayedTransition {
   const Tag viewTag;
   double startTimestamp;
@@ -42,8 +40,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
       const PartialCSSTransitionSettings &updatedSettings);
 
   bool hasUpdates() const {
-    return !runningTransitionTags_.empty() || !delayedTransitionsMap_.empty() ||
-        !operationsBatch_.empty();
+    return !runningTransitionTags_.empty() || !delayedTransitionsMap_.empty();
   }
 
   void add(const std::shared_ptr<CSSTransition> &transition);
@@ -52,7 +49,6 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
 
  private:
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;
-  using OperationsBatch = std::vector<std::pair<TransitionOperation, Tag>>;
   using DelayedQueue = std::priority_queue<
       std::shared_ptr<DelayedTransition>,
       std::vector<std::shared_ptr<DelayedTransition>>,
@@ -62,7 +58,6 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
   Registry registry_;
-  OperationsBatch operationsBatch_;
 
   std::unordered_set<Tag> runningTransitionTags_;
   std::unordered_map<Tag, std::shared_ptr<DelayedTransition>>
@@ -70,17 +65,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   DelayedQueue delayedTransitionsQueue_;
 
   void activateDelayedTransitions(double timestamp);
-  void flushOperations();
-
-  jsi::Value handleUpdate(
-      jsi::Runtime &rt,
-      double timestamp,
-      const std::shared_ptr<CSSTransition> &transition);
-  void handleOperation(TransitionOperation operation, Tag viewTag);
-
-  void activateOperation(Tag viewTag);
-  void deactivateOperation(Tag viewTag);
-
+  void activateTransition(const std::shared_ptr<CSSTransition> &transition);
   PropsObserver createPropsObserver(Tag viewTag);
 };
 

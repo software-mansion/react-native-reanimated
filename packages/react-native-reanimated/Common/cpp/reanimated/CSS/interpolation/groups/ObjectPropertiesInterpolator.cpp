@@ -33,6 +33,14 @@ jsi::Value ObjectPropertiesInterpolator::update(
   });
 }
 
+jsi::Value ObjectPropertiesInterpolator::reset(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) {
+  return mapInterpolators(rt, [&](PropertyInterpolator &interpolator) {
+    return interpolator.reset(rt, shadowNode);
+  });
+}
+
 void ObjectPropertiesInterpolator::updateKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &keyframes) {
@@ -97,7 +105,7 @@ void ObjectPropertiesInterpolator::updateKeyframesFromStyleChange(
 
 jsi::Value ObjectPropertiesInterpolator::mapInterpolators(
     jsi::Runtime &rt,
-    const std::function<jsi::Value(PropertyInterpolator &)>& callback) const {
+    const std::function<jsi::Value(PropertyInterpolator &)> &callback) const {
   jsi::Object result(rt);
   bool allUndefined = true;
 

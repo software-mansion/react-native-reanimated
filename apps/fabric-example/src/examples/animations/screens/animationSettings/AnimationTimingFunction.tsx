@@ -2,7 +2,6 @@ import { StyleSheet, View } from 'react-native';
 import type { CSSAnimationConfig } from 'react-native-reanimated';
 import Animated, { cubicBezier, linear, steps } from 'react-native-reanimated';
 
-import { TabView } from '@/components';
 import { colors, radius, sizes } from '@/theme';
 
 import { ExampleScreen } from './components';
@@ -28,12 +27,10 @@ export default function AnimationTimingFunction() {
   );
 
   return (
-    <TabView>
-      <TabView.Tab name="Predefined">
-        <ExampleScreen
-          config={config}
-          renderExample={renderExample}
-          cards={[
+    <ExampleScreen
+      tabs={[
+        {
+          cards: [
             {
               items: [
                 { animationTimingFunction: 'ease', label: 'ease' },
@@ -51,14 +48,13 @@ export default function AnimationTimingFunction() {
               ],
               title: 'Predefined Easings',
             },
-          ]}
-        />
-      </TabView.Tab>
-      <TabView.Tab name="CubicBezier">
-        <ExampleScreen
-          config={config}
-          renderExample={renderExample}
-          cards={[
+          ],
+          config,
+          name: 'Predefined',
+          renderExample,
+        },
+        {
+          cards: [
             {
               description:
                 'Specify a Bézier curve to shape the progress of an animation. It is defined by two control points (x1, y1, x2, y2) that mathematically describe the curve.',
@@ -78,14 +74,13 @@ export default function AnimationTimingFunction() {
               ],
               title: 'Cubic Bezier Easing',
             },
-          ]}
-        />
-      </TabView.Tab>
-      <TabView.Tab name="Linear">
-        <ExampleScreen
-          config={config}
-          renderExample={renderExample}
-          cards={[
+          ],
+          config,
+          name: 'CubicBezier',
+          renderExample,
+        },
+        {
+          cards: [
             {
               description:
                 "Specify a simple polygonal chain that always starts at an x-value of 0 and ends at an x-value of 1. You can either specify the points' y and x coordinates or leave the x coordinates to be inferred.",
@@ -110,14 +105,13 @@ export default function AnimationTimingFunction() {
               ],
               title: 'Linear Easing with points',
             },
-          ]}
-        />
-      </TabView.Tab>
-      <TabView.Tab name="Steps">
-        <ExampleScreen
-          config={config}
-          renderExample={renderExample}
-          cards={[
+          ],
+          config,
+          name: 'Linear',
+          renderExample,
+        },
+        {
+          cards: [
             {
               description:
                 'Creates an easing function that makes given number of even steps over increasing y-values. The second argument is a modifier that adds jumps before or after the steps.',
@@ -141,10 +135,13 @@ export default function AnimationTimingFunction() {
               ],
               title: 'Steps Easing',
             },
-          ]}
-        />
-      </TabView.Tab>
-    </TabView>
+          ],
+          config,
+          name: 'Steps',
+          renderExample,
+        },
+      ]}
+    />
   );
 }
 

@@ -61,6 +61,22 @@ jsi::Value TransformsStyleInterpolator::update(
   return updates;
 }
 
+jsi::Value TransformsStyleInterpolator::reset(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) {
+  previousResult_ = std::nullopt;
+  auto resetStyle = getStyleValue(rt, shadowNode);
+
+  if (resetStyle.isUndefined()) {
+    jsi::Array transformsArray(rt, 1);
+    transformsArray.setValueAtIndex(
+        rt, 0, MatrixOperation(TransformMatrix::Identity()).toJSIValue(rt));
+    return transformsArray;
+  }
+
+  return resetStyle;
+}
+
 void TransformsStyleInterpolator::updateKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &keyframes) {
