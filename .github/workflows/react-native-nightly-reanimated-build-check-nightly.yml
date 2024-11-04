@@ -1,6 +1,6 @@
 name: React Native nightly Reanimated build check [Nightly]
 env:
-  YARN_ENABLE_HARDENED_MODE: 0
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
   pull_request:
     paths:
@@ -46,19 +46,19 @@ jobs:
       - name: Create app
         run: |
           yarn react-native init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }} --pm yarn --skip-install --install-pods false --skip-git-init
-      - name: Add yarn.lock in app
+      - name: Setup Yarn Modern
         working-directory: ${{ env.APP_NAME }}
-        run: touch yarn.lock
+        run: touch yarn.lock && yarn set version berry
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
-        run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
+        run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
       - name: Install Paper Pods (iOS)
         if: ${{ matrix.react-native-architecture == 'Paper' && matrix.platform == 'iOS' }}
-        working-directory: app/ios
+        working-directory: ${{ env.APP_NAME }}/ios
         run: bundle install && bundle exec pod install
       - name: Install Fabric Pods (iOS)
         if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'iOS' }}
-        working-directory: app/ios
+        working-directory: ${{ env.APP_NAME }}/ios
         run: RCT_NEW_ARCH_ENABLED=1 bundle install && bundle exec pod install
       - name: Setup Fabric (Android)
         if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'Android' }}
