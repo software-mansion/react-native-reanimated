@@ -497,7 +497,6 @@ bool LayoutAnimationsProxy::startAnimationsRecursively(
                 << " start animations returned true " << std::endl;
 #endif
       hasAnimatedChildren = true;
-      node->state = WAITING;
     } else if (subNode->state == MOVED) {
       mutations.push_back(subNode->mutation);
       toBeRemoved.push_back(subNode);
