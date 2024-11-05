@@ -6,8 +6,8 @@ import { render, wait, describe, getRegisteredValue, registerValue, test, expect
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
 class WorkletClass {
-  __workletClass = true;
-  value = 0;
+  __workletClass: boolean = true;
+  value: number = 0;
   getOne() {
     return 1;
   }

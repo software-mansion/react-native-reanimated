@@ -2627,5 +2627,22 @@ describe('babel plugin', () => {
       expect(code).toHaveWorkletData(6);
       expect(code).toMatchSnapshot();
     });
+
+    it('workletizes TypeScript classes', () => {
+      const input = html`<script>
+        class Clazz {
+          __workletClass = true;
+          value: number;
+
+          constructor(value: number) {
+            this.value = value;
+          }
+        }`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain('Clazz__classFactory');
+      expect(code).toContainInWorkletString('Clazz__classFactory');
+      expect(code).toMatchSnapshot();
+    });
   });
 });

@@ -1,5 +1,5 @@
 import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
-import { transformSync, traverse } from '@babel/core';
+import { traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   File as BabelFile,
@@ -34,6 +34,7 @@ import * as fs from 'fs';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
+import { workletTransformSync } from './transform';
 
 const MOCK_SOURCE_MAP = 'mock source map';
 
@@ -130,8 +131,8 @@ export function buildWorkletString(
     }
   }
 
-  const transformed = transformSync(code, {
-    plugins: [prependClosureVariablesIfNecessary(closureVariables)],
+  const transformed = workletTransformSync(code, {
+    extraPlugins: [getClosurePlugin(closureVariables)],
     compact: true,
     sourceMaps: includeSourceMap,
     inputSourceMap: inputMap,
@@ -222,9 +223,8 @@ function prependRecursiveDeclaration(path: NodePath<WorkletizableFunction>) {
   }
 }
 
-function prependClosureVariablesIfNecessary(
-  closureVariables: Array<Identifier>
-): PluginItem {
+/** Prepends necessary closure variables to the worklet function. */
+function getClosurePlugin(closureVariables: Array<Identifier>): PluginItem {
   const closureDeclaration = variableDeclaration('const', [
     variableDeclarator(
       objectPattern(
