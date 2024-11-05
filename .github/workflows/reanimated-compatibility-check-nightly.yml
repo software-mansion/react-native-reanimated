@@ -57,7 +57,7 @@ jobs:
       - name: Install Pods
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
-        run: bundle install && bundle exec pod install
+        run: bundle install && bundle exec pod update
       - name: Setup Fabric (Android)
         if: ${{ matrix.platform == 'Android' && matrix.react-native.architecture == 'Fabric' }}
         working-directory: ${{ env.APP_NAME }}/android
