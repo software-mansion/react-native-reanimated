@@ -132,6 +132,7 @@ export function buildWorkletString(
   }
 
   const transformed = workletTransformSync(code, {
+    filename: state.file.opts.filename,
     extraPlugins: [getClosurePlugin(closureVariables)],
     compact: true,
     sourceMaps: includeSourceMap,

@@ -14,21 +14,13 @@ export function workletTransformSync(
   });
 }
 
-const presets = [require.resolve('@babel/preset-typescript')];
+const presets: PluginItem[] = [require.resolve('@babel/preset-typescript')];
 
-const plugins = [
-  require.resolve('@babel/plugin-transform-shorthand-properties'),
-  require.resolve('@babel/plugin-transform-arrow-functions'),
-  require.resolve('@babel/plugin-transform-optional-chaining'),
-  require.resolve('@babel/plugin-transform-nullish-coalescing-operator'),
-  [
-    require.resolve('@babel/plugin-transform-template-literals'),
-    { loose: true },
-  ],
-];
+const plugins: PluginItem[] = [];
 
 interface WorkletTransformOptions
   extends Omit<TransformOptions, 'plugins' | 'presets'> {
   extraPlugins?: PluginItem[];
   extraPresets?: PluginItem[];
+  filename: TransformOptions['filename'];
 }
