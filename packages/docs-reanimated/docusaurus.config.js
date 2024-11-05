@@ -78,6 +78,9 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       image: 'img/og-image.png',
+      colorMode: {
+        respectPrefersColorScheme: true,
+      },
       metadata: [
         { name: 'og:image:width', content: '1200' },
         { name: 'og:image:height', content: '630' },
