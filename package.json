@@ -23,7 +23,6 @@
     "format": "yarn workspaces foreach -A -p run format"
   },
   "devDependencies": {
-    "@react-native-community/cli": "^15.0.1",
     "eslint": "^8.57.0",
     "eslint-plugin-jsdoc": "^50.2.2",
     "husky": "^9.0.11",
