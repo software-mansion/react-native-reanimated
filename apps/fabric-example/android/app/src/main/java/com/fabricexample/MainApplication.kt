@@ -11,6 +11,9 @@ import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
+import com.facebook.react.config.ReactFeatureFlags
+import com.facebook.react.internal.featureflags.ReactNativeFeatureFlags
+import com.facebook.react.internal.featureflags.ReactNativeNewArchitectureFeatureFlagsDefaults
 
 class MainApplication : Application(), ReactApplication {
 
@@ -40,5 +43,18 @@ class MainApplication : Application(), ReactApplication {
       // If you opted-in for the New Architecture, we load the native entry point for this app.
       load(bridgelessEnabled = true)
     }
+    // workaround for RN not allowing recursive commits
+    // this flag will be removed soon (hopefully)
+      ReactNativeFeatureFlags.dangerouslyReset();
+      ReactNativeFeatureFlags.override(
+          object : ReactNativeNewArchitectureFeatureFlagsDefaults(newArchitectureEnabled = true) {
+              override fun useFabricInterop(): Boolean = true
+
+              override fun enableEventEmitterRetentionDuringGesturesOnAndroid(): Boolean =
+                  true
+
+              override fun allowRecursiveCommitsWithSynchronousMountOnAndroid(): Boolean =
+                  true
+          })
   }
 }
