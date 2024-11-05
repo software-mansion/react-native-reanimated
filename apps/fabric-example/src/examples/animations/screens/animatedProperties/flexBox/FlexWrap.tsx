@@ -6,35 +6,32 @@ import { colors, radius, sizes } from '@/theme';
 
 const BOX_COLORS = [colors.primaryLight, colors.primary, colors.primaryDark];
 
-export default function FlexDirection() {
+export default function FlexWrap() {
   return (
     <ExamplesScreen
       CardComponent={VerticalExampleCard}
       buildConfig={() => ({
-        animationDuration: '4s',
+        animationDuration: '5s',
         animationIterationCount: 'infinite',
         animationName: {
           '0%': {
-            flexDirection: 'column',
-          },
-          '25%': {
-            flexDirection: 'row',
+            flexWrap: 'nowrap',
           },
           '50%': {
-            flexDirection: 'column-reverse',
+            flexWrap: 'wrap',
           },
-          '75%': {
-            flexDirection: 'row-reverse',
+          '100%': {
+            flexWrap: 'nowrap',
           },
         },
         animationTimingFunction: 'linear',
       })}
       renderExample={({ config }) => (
         <Animated.View style={[StyleSheet.absoluteFill, config]}>
-          {BOX_COLORS.map((color, index) => (
+          {Array.from({ length: 5 }).map((_, index) => (
             <View
               key={index}
-              style={[styles.box, { backgroundColor: color }]}
+              style={[styles.box, { backgroundColor: BOX_COLORS[index % 3] }]}
             />
           ))}
         </Animated.View>
@@ -44,12 +41,12 @@ export default function FlexDirection() {
           examples: [
             {
               description:
-                "`flexDirection` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
-              minExampleHeight: sizes.xxxl,
-              title: 'Changing Flex Direction',
+                "`flexWrap` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
+              minExampleHeight: 3.5 * sizes.md,
+              title: 'Changing Flex Wrap',
             },
           ],
-          title: 'Flex Direction',
+          title: 'Flex Wrap',
         },
       ]}
     />

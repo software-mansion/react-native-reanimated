@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import type { CSSTransitionConfig, StyleProps } from 'react-native-reanimated';
 
-import { ScrollScreen, Section, Stagger } from '@/components';
+import { Screen, Scroll, Section, Stagger, TabView } from '@/components';
 import { TransitionConfiguration } from '@/examples/transitions/components';
 
 import type { ExampleItemProps } from './ExamplesListCard';
@@ -14,7 +14,7 @@ type ExampleCardsSection = {
   description?: ReactNode;
 };
 
-type ExampleScreenProps = {
+type ExampleScreenContentProps = {
   sharedConfig: Partial<CSSTransitionConfig>;
   cards: Array<ExampleCardsSection>;
   transitionStyles: Array<StyleProps>;
@@ -25,20 +25,20 @@ type ExampleScreenProps = {
   ) => JSX.Element;
 };
 
-export default function ExampleScreen({
+function ExampleScreenContent({
   cards,
   displayStyleChanges = false,
   renderExample,
   sharedConfig,
   transitionStyles,
-}: ExampleScreenProps) {
+}: ExampleScreenContentProps) {
   const configOverrides = useMemo(
     () => cards.flatMap((card) => card.items),
     [cards]
   );
 
   return (
-    <ScrollScreen>
+    <Scroll withBottomBarSpacing>
       <Stagger>
         {cards.map((card, index) => (
           <Section
@@ -65,6 +65,38 @@ export default function ExampleScreen({
           />
         </Section>
       </Stagger>
-    </ScrollScreen>
+    </Scroll>
+  );
+}
+
+type ExampleScreenProps =
+  | {
+      tabs: Array<
+        {
+          name: string;
+        } & ExampleScreenContentProps
+      >;
+    }
+  | ExampleScreenContentProps;
+
+export default function ExampleScreen(props: ExampleScreenProps) {
+  if ('tabs' in props) {
+    return (
+      <Screen>
+        <TabView>
+          {props.tabs.map((tab) => (
+            <TabView.Tab key={tab.name} name={tab.name}>
+              <ExampleScreenContent {...tab} />
+            </TabView.Tab>
+          ))}
+        </TabView>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen>
+      <ExampleScreenContent {...props} />
+    </Screen>
   );
 }

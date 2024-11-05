@@ -46,9 +46,8 @@ jsi::Value Color::toJSIValue(jsi::Runtime &rt) const {
     double color = (channels[3] << 24) | (channels[0] << 16) |
         (channels[1] << 8) | channels[2];
     return {color};
-  } else {
-    return jsi::String::createFromAscii(rt, "transparent");
   }
+  return jsi::Value::undefined();
 }
 
 Color Color::interpolate(const Color &to, const double progress) const {

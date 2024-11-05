@@ -1,3 +1,4 @@
+'use strict';
 import type { TextStyle, ViewStyle } from 'react-native';
 import type { CSSTimeUnit } from './common';
 import type { CSSTimingFunction, NormalizedCSSTimingFunction } from '../easing';

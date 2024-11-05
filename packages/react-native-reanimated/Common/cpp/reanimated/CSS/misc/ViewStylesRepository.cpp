@@ -80,7 +80,7 @@ jsi::Value ViewStylesRepository::getViewStyle(jsi::Runtime &rt, const Tag tag) {
     return valueFromDynamic(rt, animatedStyle);
   }
 
-  const auto mergedStyle = folly::dynamic::merge(animatedStyle, staticStyle);
+  const auto mergedStyle = folly::dynamic::merge(staticStyle, animatedStyle);
   return valueFromDynamic(rt, mergedStyle);
 }
 

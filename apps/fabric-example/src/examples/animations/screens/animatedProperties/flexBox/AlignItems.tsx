@@ -4,39 +4,42 @@ import Animated from 'react-native-reanimated';
 import { ExamplesScreen, VerticalExampleCard } from '@/components';
 import { colors, radius, sizes } from '@/theme';
 
-const BOX_COLORS = [colors.primaryLight, colors.primary, colors.primaryDark];
-
-export default function FlexDirection() {
+export default function AlignItems() {
   return (
     <ExamplesScreen
       CardComponent={VerticalExampleCard}
       buildConfig={() => ({
-        animationDuration: '4s',
+        animationDuration: '5s',
         animationIterationCount: 'infinite',
         animationName: {
           '0%': {
-            flexDirection: 'column',
+            alignItems: 'stretch',
           },
-          '25%': {
-            flexDirection: 'row',
+          '20%': {
+            alignItems: 'flex-start',
           },
-          '50%': {
-            flexDirection: 'column-reverse',
+          '40%': {
+            alignItems: 'flex-end',
           },
-          '75%': {
-            flexDirection: 'row-reverse',
+          '60%': {
+            alignItems: 'center',
+          },
+          '80%': {
+            alignItems: 'baseline',
+          },
+          '100%': {
+            alignItems: 'stretch',
           },
         },
         animationTimingFunction: 'linear',
       })}
       renderExample={({ config }) => (
         <Animated.View style={[StyleSheet.absoluteFill, config]}>
-          {BOX_COLORS.map((color, index) => (
-            <View
-              key={index}
-              style={[styles.box, { backgroundColor: color }]}
-            />
-          ))}
+          <View
+            style={[styles.box, { backgroundColor: colors.primaryLight }]}
+          />
+          <View style={[styles.box, { backgroundColor: colors.primary }]} />
+          <View style={[styles.box, { backgroundColor: colors.primaryDark }]} />
         </Animated.View>
       )}
       sections={[
@@ -44,12 +47,11 @@ export default function FlexDirection() {
           examples: [
             {
               description:
-                "`flexDirection` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
-              minExampleHeight: sizes.xxxl,
-              title: 'Changing Flex Direction',
+                "`alignItems` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
+              title: 'Changing Align Items',
             },
           ],
-          title: 'Flex Direction',
+          title: 'Align Items',
         },
       ]}
     />

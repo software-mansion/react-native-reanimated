@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   resetButton: {
-    width: 75,
+    width: 80,
   },
   resetButtonRow: {
     alignItems: 'center',

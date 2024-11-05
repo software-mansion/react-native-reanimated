@@ -19,7 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { TabSelector } from '@/components/inputs';
-import { colors, flex, spacing } from '@/theme';
+import { colors, flex, sizes, spacing } from '@/theme';
 
 const WINDOW_WIDTH = Dimensions.get('window').width;
 
@@ -54,7 +54,7 @@ const Tab = memo(function Tab({
         ),
       },
       {
-        translateY: withTiming(`${+(index !== selectedTabIndex.value) * 5}%`),
+        translateY: withTiming(-sizes.md * +(index !== selectedTabIndex.value)),
       },
       {
         scale: withTiming(index === selectedTabIndex.value ? 1 : 0.9),

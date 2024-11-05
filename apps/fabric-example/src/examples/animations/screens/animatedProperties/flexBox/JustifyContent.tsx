@@ -6,25 +6,34 @@ import { colors, radius, sizes } from '@/theme';
 
 const BOX_COLORS = [colors.primaryLight, colors.primary, colors.primaryDark];
 
-export default function FlexDirection() {
+export default function JustifyContent() {
   return (
     <ExamplesScreen
       CardComponent={VerticalExampleCard}
       buildConfig={() => ({
-        animationDuration: '4s',
+        animationDuration: '7s',
         animationIterationCount: 'infinite',
         animationName: {
           '0%': {
-            flexDirection: 'column',
+            justifyContent: 'flex-start',
           },
-          '25%': {
-            flexDirection: 'row',
+          '16.67%': {
+            justifyContent: 'flex-end',
+          },
+          '33.33%': {
+            justifyContent: 'center',
           },
           '50%': {
-            flexDirection: 'column-reverse',
+            justifyContent: 'space-between',
           },
-          '75%': {
-            flexDirection: 'row-reverse',
+          '66.67%': {
+            justifyContent: 'space-around',
+          },
+          '83.33%': {
+            justifyContent: 'space-evenly',
+          },
+          '100%': {
+            justifyContent: 'flex-start',
           },
         },
         animationTimingFunction: 'linear',
@@ -44,12 +53,12 @@ export default function FlexDirection() {
           examples: [
             {
               description:
-                "`flexDirection` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
+                "`justifyContent` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
               minExampleHeight: sizes.xxxl,
-              title: 'Changing Flex Direction',
+              title: 'Changing Justify Content',
             },
           ],
-          title: 'Flex Direction',
+          title: 'Justify Content',
         },
       ]}
     />

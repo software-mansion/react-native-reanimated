@@ -53,7 +53,7 @@ class ViewStylesRepository {
   std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
 
-  std::map<int, CachedShadowNode> shadowNodeCache_;
+  std::unordered_map<int, CachedShadowNode> shadowNodeCache_;
 
   void updateCacheIfNeeded(
       CachedShadowNode &cachedNode,

@@ -19,19 +19,17 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
        * Layout and Positioning
        */
       // FLEXBOX
-      // TODO
-      {"flex", numeric()},
+      {"flex", numeric(0)},
       {"flexDirection", discrete()},
-      {"flexGrow", numeric()},
+      {"direction", discrete()},
+      {"justifyContent", discrete()},
+      {"alignItems", discrete()},
+      {"alignSelf", discrete()},
+      {"alignContent", discrete()},
+      {"flexGrow", numeric(0)},
       {"flexShrink", numeric(0)},
       {"flexBasis", relOrNum(RelativeTo::PARENT, "width")},
       {"flexWrap", discrete()},
-      {"justifyContent", discrete()},
-      {"alignContent", discrete()},
-      {"alignItems", discrete()},
-      {"alignSelf", discrete()},
-      // TODO: Somehow handle case when the value is 'auto' string
-      // check if we should animate in such a case
       {"start", relOrNum(RelativeTo::PARENT, "width")},
       {"end", relOrNum(RelativeTo::PARENT, "width")},
       {"rowGap", relOrNum(RelativeTo::SELF, "height", 0)},
@@ -79,7 +77,6 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       // OTHERS
       {"position", discrete()},
       {"display", discrete()},
-      {"direction", discrete()},
       {"overflow", discrete()},
       {"zIndex", steps(0)},
 
@@ -112,15 +109,15 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       // SHADOWS
       // View
       // iOS only
-      {"shadowOpacity", numeric()},
-      {"shadowRadius", numeric()},
-      {"shadowOffset", object({{"width", numeric()}, {"height", numeric()}})},
+      {"shadowOpacity", numeric(1)},
+      {"shadowRadius", numeric(0)},
+      {"shadowOffset", object({{"width", numeric(0)}, {"height", numeric(0)}})},
       // Android only
-      {"elevation", numeric()},
+      {"elevation", numeric(0)},
       // Text
-      {"textShadowRadius", numeric()},
+      {"textShadowRadius", numeric(0)},
       {"textShadowOffset",
-       object({{"width", numeric()}, {"height", numeric()}})},
+       object({{"width", numeric(0)}, {"height", numeric(0)}})},
 
       // BORDERS
       // TODO: Check which these props should be relative to with the
@@ -153,17 +150,17 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       {"transform",
        transforms(
            {{"perspective", perspective(0)}, // 0 means no perspective
-            {"rotate", rotate("0rad")},
-            {"rotateX", rotateX("0rad")},
-            {"rotateY", rotateY("0rad")},
-            {"rotateZ", rotateZ("0rad")},
+            {"rotate", rotate("0deg")},
+            {"rotateX", rotateX("0deg")},
+            {"rotateY", rotateY("0deg")},
+            {"rotateZ", rotateZ("0deg")},
             {"scale", scale(1)},
             {"scaleX", scaleX(1)},
             {"scaleY", scaleY(1)},
             {"translateX", translateX(RelativeTo::SELF, "width", 0)},
             {"translateY", translateY(RelativeTo::SELF, "height", 0)},
-            {"skewX", skewX("0rad")},
-            {"skewY", skewY("0rad")},
+            {"skewX", skewX("0deg")},
+            {"skewY", skewY("0deg")},
             {"matrix", matrix(TransformMatrix::Identity())}})},
 
       // OTHERS
@@ -174,9 +171,10 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
        * Typography
        */
       // FONT
-      {"fontSize", numeric()},
-      {"lineHeight", numeric()},
-      {"letterSpacing", numeric()},
+      {"fontSize", numeric()}, // TODO - should determine the default value
+      {"lineHeight", numeric()}, // TODO - should inherit from font size
+      {"letterSpacing", numeric(0)},
+      {"fontFamily", discrete()},
       {"fontStyle", discrete()},
       {"fontVariant", discrete()},
       {"fontWeight", discrete()},
