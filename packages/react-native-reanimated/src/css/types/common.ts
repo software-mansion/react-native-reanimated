@@ -1,3 +1,4 @@
+'use strict';
 import type { TransformsStyle } from 'react-native';
 
 export type CSSTimeUnit = `${number}s` | `${number}ms` | number;

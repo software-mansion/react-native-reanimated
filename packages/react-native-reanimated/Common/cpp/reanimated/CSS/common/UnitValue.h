@@ -8,6 +8,7 @@ namespace reanimated {
 enum class RelativeTo {
   PARENT,
   SELF,
+  SELF_STYLE, // reads value from the view style instead of the shadow node
 };
 
 struct UnitValueInterpolationContext {

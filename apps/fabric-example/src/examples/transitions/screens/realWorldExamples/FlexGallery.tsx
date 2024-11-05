@@ -45,17 +45,19 @@ export default function FlexGallery() {
   const [expandedIdx, setExpandedIdx] = useState(0);
 
   return (
-    <Screen style={styles.container}>
-      {CARDS.map(({ description, image, title }, idx) => (
-        <GalleryCard
-          description={description}
-          expanded={idx === expandedIdx}
-          image={image}
-          key={idx}
-          title={title}
-          onPress={() => setExpandedIdx(idx)}
-        />
-      ))}
+    <Screen>
+      <View style={styles.container}>
+        {CARDS.map(({ description, image, title }, idx) => (
+          <GalleryCard
+            description={description}
+            expanded={idx === expandedIdx}
+            image={image}
+            key={idx}
+            title={title}
+            onPress={() => setExpandedIdx(idx)}
+          />
+        ))}
+      </View>
     </Screen>
   );
 }

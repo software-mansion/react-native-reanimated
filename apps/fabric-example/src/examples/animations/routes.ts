@@ -21,10 +21,44 @@ const routes = {
         routes: {
           FlexBox: {
             name: 'FlexBox',
+            flatten: true,
             routes: {
-              FlexDirection: {
-                name: 'Flex Direction',
-                Component: animatedProperties.flexBox.FlexDirection,
+              DiscreteProperties: {
+                name: 'Discrete Properties',
+                routes: {
+                  FlexDirection: {
+                    name: 'Flex Direction',
+                    Component: animatedProperties.flexBox.FlexDirection,
+                  },
+                  LayoutDirection: {
+                    name: 'Layout Direction',
+                    Component: animatedProperties.flexBox.LayoutDirection,
+                  },
+                  JustifyContent: {
+                    name: 'Justify Content',
+                    Component: animatedProperties.flexBox.JustifyContent,
+                  },
+                  AlignItems: {
+                    name: 'Align Items',
+                    Component: animatedProperties.flexBox.AlignItems,
+                  },
+                  AlignSelf: {
+                    name: 'Align Self',
+                    Component: animatedProperties.flexBox.AlignSelf,
+                  },
+                  AlignContent: {
+                    name: 'Align Content',
+                    Component: animatedProperties.flexBox.AlignContent,
+                  },
+                  FlexWrap: {
+                    name: 'Flex Wrap',
+                    Component: animatedProperties.flexBox.FlexWrap,
+                  },
+                },
+              },
+              NumericProperties: {
+                name: 'Numeric Properties',
+                routes: {},
               },
             },
           },

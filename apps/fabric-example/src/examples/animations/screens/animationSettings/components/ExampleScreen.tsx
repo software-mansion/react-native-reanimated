@@ -22,15 +22,11 @@ type ExampleCardSection = {
   onTogglePause?: (paused: boolean) => void;
 };
 
-type ExampleScreenProps =
-  | {
-      tabs: Array<
-        {
-          name: string;
-        } & ExampleScreenContentProps
-      >;
-    }
-  | ExampleScreenContentProps;
+type ExampleScreenContentProps = {
+  config: CSSAnimationConfig;
+  cards: Array<ExampleCardSection>;
+  renderExample: (config: CSSAnimationConfig) => JSX.Element;
+};
 
 function ExampleScreenContent({
   cards,
@@ -73,11 +69,15 @@ function ExampleScreenContent({
   );
 }
 
-type ExampleScreenContentProps = {
-  config: CSSAnimationConfig;
-  cards: Array<ExampleCardSection>;
-  renderExample: (config: CSSAnimationConfig) => JSX.Element;
-};
+type ExampleScreenProps =
+  | {
+      tabs: Array<
+        {
+          name: string;
+        } & ExampleScreenContentProps
+      >;
+    }
+  | ExampleScreenContentProps;
 
 export default function ExampleScreen(props: ExampleScreenProps) {
   if ('tabs' in props) {
