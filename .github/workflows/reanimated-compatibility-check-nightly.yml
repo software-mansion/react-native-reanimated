@@ -64,8 +64,8 @@ jobs:
         run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
       - name: Build app (iOS)
         if: ${{ matrix.platform == 'iOS' }}
-        working-directory: ${{ env.APP_NAME }}
-        run: yarn react-native run-ios --simulator='iPhone 14' --terminal='Terminal' --mode=${{ matrix.mode }}
+        working-directory: ${{ env.APP_NAME }}/ios
+        run: xcodebuild -workspace ${{env.APP_NAME}}.xcworkspace -configuration ${{matrix.mode}} -scheme ${{env.APP_NAME}} -destination "generic/platform=iOS Simulator" -quiet
       - name: Build app (Android)
         if: ${{ matrix.platform == 'Android' }}
         working-directory: ${{ env.APP_NAME }}/android
