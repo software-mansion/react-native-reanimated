@@ -44,5 +44,6 @@ public class AndroidUIScheduler {
 
   public void deactivate() {
     mActive.set(false);
+    mHybridData.resetNative();
   }
 }
