@@ -346,37 +346,17 @@ android {
                 srcDirs += "src/paper/java"
             }
 
-            // messageQueueThread
-            if (REANIMATED_MAJOR_VERSION > 2) {
-                if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/72"
-                } else {
-                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
-                }
-            }
-
             // ReanimatedUIManager & ReanimatedUIImplementation
-            if (REACT_NATIVE_MINOR_VERSION <= 73) {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
-            } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/74"
+            if (REACT_NATIVE_MINOR_VERSION <= 74 ) {
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
             }
 
-            // ReactHost
-            if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                srcDirs += "src/reactNativeVersionPatch/ReactHost/72"
-            } else {
-                srcDirs += "src/reactNativeVersionPatch/ReactHost/latest"
-            }
-
             // ReactFeatureFlags
             if (IS_NEW_ARCHITECTURE_ENABLED) {
-                if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/72"
-                } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/74"
+                if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/latest"
                 }
@@ -384,17 +364,15 @@ android {
 
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 // RuntimeExecutor and CallInvokerHolder
-                if (REACT_NATIVE_MINOR_VERSION <= 73) {
-                    srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/73"
-                } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/74"
+                if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                    srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/latest"
                 }
             } else {
                 // CallInvokerHolder
                 if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/NativeProxyPaper/74"
+                    srcDirs += "src/reactNativeVersionPatch/NativeProxyPaper/"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/NativeProxyPaper/latest"
                 }
@@ -402,7 +380,7 @@ android {
 
             // BorderRadiiDrawableUtils
             if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/74"
+                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/"
             } else if (REACT_NATIVE_MINOR_VERSION <= 75) {
                 srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/75"
             } else {

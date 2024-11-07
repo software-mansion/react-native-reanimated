@@ -22,9 +22,7 @@
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
-#if REACT_NATIVE_MINOR_VERSION >= 73
 #include <react/utils/CoreFeatures.h>
-#endif // REACT_NATIVE_MINOR_VERSION
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <functional>
@@ -48,10 +46,10 @@
 
 using namespace facebook;
 
-#if REACT_NATIVE_MINOR_VERSION == 73 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
 // Android can't find the definition of this static field
 bool CoreFeatures::useNativeState;
-#endif
+#endif // RCT_NEW_ARCH_ENABLED
 
 namespace reanimated {
 
@@ -617,13 +615,8 @@ bool NativeReanimatedModule::handleRawEvent(
     eventType = "on" + eventType.substr(3);
   }
   jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
-#if REACT_NATIVE_MINOR_VERSION >= 73
   const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(rt);
-#else
-  const auto &payloadFactory = rawEvent.payloadFactory;
-  jsi::Value payload = payloadFactory(rt);
-#endif
 
   auto res = handleEvent(eventType, tag, std::move(payload), currentTime);
   // TODO: we should call performOperations conditionally if event is handled

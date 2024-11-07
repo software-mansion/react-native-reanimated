@@ -138,7 +138,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
     Curve parameters come from estimation: https://www.desmos.com/calculator/vhrhdaopyq
     Animation takes 31 frames, which is 0.496 seconds at 60 fps.
   */
-  float progress = [self estimateProgressForDuration:0.496 a1:1 a2:5.65 b1:2.74 b2:8.38 c1:0.93 c2:3.29];
+  float progress = [self estimateProgressForDuration:0.496 a1:1 a2:5.65 b1:2. b2:8.38 c1:0.93 c2:3.29];
   float currentKeyboardHeight = _initialKeyboardHeight * (1 - progress);
   return currentKeyboardHeight;
 }
