@@ -5,8 +5,10 @@
 #include <react/renderer/core/ShadowNode.h>
 
 #include <jsi/jsi.h>
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace reanimated {

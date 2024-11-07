@@ -40,7 +40,7 @@ OperationType TranslateTransformInterpolator<OperationType>::resolveOperation(
       .relativeProperty = relativeProperty_,
       .relativeTo = relativeTo_,
   });
-  return OperationType(resolvedValue.value_or(0.));
+  return OperationType(UnitValue(resolvedValue.value_or(0)));
 }
 
 // Declare types for translate transform interpolators

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <utility>
+#include <vector>
 
 namespace reanimated {
 

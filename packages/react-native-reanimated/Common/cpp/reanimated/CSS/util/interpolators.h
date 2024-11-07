@@ -2,6 +2,10 @@
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
+#include <memory>
+#include <string>
+#include <vector>
+
 namespace reanimated {
 
 std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(

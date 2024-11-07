@@ -10,6 +10,6 @@ PropsMap UpdatesRegistryManager::collectProps() {
   }
 
   return propsMap;
-};
+}
 
 } // namespace reanimated

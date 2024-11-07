@@ -21,8 +21,8 @@ double interpolateValue(
 namespace reanimated {
 
 EasingFunction createLinearEasingFunction(
-    const std::vector<double>& arrX,
-    const std::vector<double>& arrY) {
+    const std::vector<double> &arrX,
+    const std::vector<double> &arrY) {
   return [=](double x) {
     size_t leftIdx = firstSmallerThanOrEqualBinsearch(x, arrX);
     return interpolateValue(x, leftIdx, arrX, arrY);

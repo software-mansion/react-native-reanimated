@@ -2,8 +2,9 @@
 
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
+#include <memory>
 #include <utility>
-
+#include <vector>
 namespace reanimated {
 
 class UpdatesRegistryManager {

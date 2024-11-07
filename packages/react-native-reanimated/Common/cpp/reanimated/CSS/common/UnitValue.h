@@ -3,12 +3,14 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
+#include <memory>
+#include <string>
+
 namespace reanimated {
 
 enum class RelativeTo {
   PARENT,
   SELF,
-  SELF_STYLE, // reads value from the view style instead of the shadow node
 };
 
 struct UnitValueInterpolationContext {
@@ -23,10 +25,10 @@ struct UnitValue {
   bool isRelative;
 
   UnitValue();
-  UnitValue(double value);
-  UnitValue(double value, bool isRelative);
-  UnitValue(const std::string &value);
-  UnitValue(jsi::Runtime &rt, const jsi::Value &value);
+  explicit UnitValue(double value);
+  explicit UnitValue(double value, bool isRelative);
+  explicit UnitValue(const std::string &value);
+  explicit UnitValue(jsi::Runtime &rt, const jsi::Value &value);
 
   jsi::Value toJSIValue(jsi::Runtime &rt) const;
   UnitValue interpolate(

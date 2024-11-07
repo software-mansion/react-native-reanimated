@@ -4,6 +4,8 @@
 
 #include <react/renderer/uimanager/UIManager.h>
 
+#include <memory>
+
 namespace reanimated {
 
 class AnimatedPropsRegistry : public UpdatesRegistry {

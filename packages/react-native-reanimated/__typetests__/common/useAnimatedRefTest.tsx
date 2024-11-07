@@ -6,7 +6,7 @@ import type { Ref } from 'react';
 import React, { forwardRef, useRef } from 'react';
 import type { ViewProps, ImageProps } from 'react-native';
 import { View, Text, Image, ScrollView, FlatList } from 'react-native';
-import Animated, { useAnimatedRef } from '../..';
+import Animated, { useAnimatedRef } from '../../src';
 
 function UseAnimatedRefTest() {
   function UseAnimatedRefTestClassComponent() {

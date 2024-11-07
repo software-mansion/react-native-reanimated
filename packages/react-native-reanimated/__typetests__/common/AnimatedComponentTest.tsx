@@ -5,7 +5,7 @@
 import React from 'react';
 import type { ViewStyle } from 'react-native';
 import { View, ScrollView, FlatList } from 'react-native';
-import Animated from '../..';
+import Animated from '../../src';
 
 function AnimatedComponentPropsTest() {
   const RNStyle: ViewStyle = {};

@@ -2,6 +2,8 @@
 
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
+#include <string>
+
 namespace reanimated {
 
 class DiscreteStringInterpolator final : public ValueInterpolator<std::string> {

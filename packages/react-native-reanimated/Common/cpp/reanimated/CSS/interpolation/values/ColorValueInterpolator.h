@@ -9,13 +9,13 @@ class ColorValueInterpolator final : public ValueInterpolator<Color> {
   using ValueInterpolator<Color>::ValueInterpolator;
 
  protected:
-    Color prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
+  Color prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const override;
 
   jsi::Value convertResultToJSI(jsi::Runtime &rt, const Color &value)
       const override;
 
-    Color interpolate(
+  Color interpolate(
       double localProgress,
       const Color &fromValue,
       const Color &toValue,

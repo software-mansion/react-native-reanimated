@@ -2,7 +2,10 @@
 
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
+#include <memory>
 #include <optional>
+#include <string>
+#include <unordered_map>
 
 namespace reanimated {
 

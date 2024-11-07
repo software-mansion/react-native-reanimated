@@ -1,6 +1,10 @@
 import { ReanimatedError } from '../../../errors';
 import type { StyleProps } from '../../../commonTypes';
-import { ERROR_MESSAGES, normalizeStyle } from './style';
+import {
+  ERROR_MESSAGES,
+  extractCSSConfigsAndFlattenedStyles,
+  normalizeStyle,
+} from './style';
 
 describe(normalizeStyle, () => {
   it('converts all "auto" values to undefined', () => {
@@ -150,6 +154,183 @@ describe(normalizeStyle, () => {
         borderRadius: 10,
         flexDirection: 'row',
       });
+    });
+  });
+});
+
+describe(extractCSSConfigsAndFlattenedStyles, () => {
+  describe('animation config', () => {
+    it('returns null if there is no animationName', () => {
+      const styles: StyleProps[] = [
+        { transitionProperty: 'opacity', animationDuration: 100 },
+      ];
+      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+        null,
+        expect.any(Object),
+        expect.any(Object),
+      ]);
+    });
+
+    it('returns null if the animationName is an empty object', () => {
+      const styles: StyleProps[] = [
+        { animationName: {}, animationDuration: 100 },
+      ];
+      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+        null,
+        expect.any(Object),
+        expect.any(Object),
+      ]);
+    });
+
+    it('returns animation config if animationName is present', () => {
+      const styles: StyleProps[] = [
+        {
+          animationName: {
+            from: { opacity: 0 },
+            to: { opacity: 1 },
+          },
+          animationDuration: 100,
+        },
+      ];
+      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+        styles[0],
+        expect.any(Object),
+        expect.any(Object),
+      ]);
+    });
+
+    describe('animation settings', () => {
+      it.each([
+        ['animationDuration', '2s'],
+        ['animationTimingFunction', 'easeInOut'],
+        ['animationDelay', '1s'],
+        ['animationIterationCount', 5],
+        ['animationDirection', 'reverse'],
+        ['animationFillMode', 'both'],
+        ['animationPlayState', 'paused'],
+      ])(`returns %p setting`, (key, value) => {
+        const styles: StyleProps[] = [
+          {
+            animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
+            [key]: value,
+          },
+        ];
+        expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+          expect.objectContaining({ [key]: value }),
+          null,
+          {},
+        ]);
+      });
+    });
+  });
+
+  describe('transition config', () => {
+    it('returns null if there is no transitionProperty', () => {
+      const styles: StyleProps[] = [
+        {
+          animationName: {
+            from: { opacity: 0 },
+            to: { opacity: 1 },
+          },
+          transitionDuration: 100,
+        },
+      ];
+      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+        expect.any(Object),
+        null,
+        expect.any(Object),
+      ]);
+    });
+
+    it('returns null if the transitionProperty is an empty array', () => {
+      const styles: StyleProps[] = [
+        { transitionProperty: [], transitionDuration: 100 },
+      ];
+      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+        expect.any(Object),
+        null,
+        expect.any(Object),
+      ]);
+    });
+
+    it('returns transition config if transitionProperty is present', () => {
+      const styles: StyleProps[] = [
+        { transitionProperty: 'opacity', transitionDuration: 100 },
+      ];
+      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+        expect.any(Object),
+        styles[0],
+        expect.any(Object),
+      ]);
+    });
+
+    describe('transition settings', () => {
+      it.each([
+        ['transitionProperty', 'opacity'],
+        ['transitionDuration', '2s'],
+        ['transitionTimingFunction', 'easeInOut'],
+        ['transitionDelay', '1s'],
+      ])(`returns %p setting`, (key, value) => {
+        const styles: StyleProps[] = [
+          { transitionProperty: value, [key]: value },
+        ];
+        expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+          null,
+          expect.objectContaining({ [key]: value }),
+          {},
+        ]);
+      });
+    });
+  });
+
+  describe('flattened style', () => {
+    it('flattens all style objects into a single object', () => {
+      const styles: StyleProps[] = [
+        { width: 100, height: 100 },
+        { margin: 10, padding: 5 },
+        { backgroundColor: 'red', color: 'blue', width: 200 },
+      ];
+      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+        expect.any(Object),
+        expect.any(Object),
+        {
+          width: 200,
+          height: 100,
+          margin: 10,
+          padding: 5,
+          backgroundColor: 0xffff0000,
+          color: 0xff0000ff,
+        },
+      ]);
+    });
+  });
+
+  describe('all together', () => {
+    it('returns all configs and flattened style', () => {
+      const styles: StyleProps[] = [
+        {
+          width: 100,
+          transitionDuration: 100,
+          height: 100,
+          animationDuration: 100,
+          transitionProperty: 'opacity',
+          animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
+        },
+      ];
+      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+        expect.objectContaining({
+          animationName: styles[0].animationName,
+          animationDuration: styles[0].animationDuration,
+        }),
+        expect.objectContaining({
+          transitionProperty: styles[0].transitionProperty,
+          transitionDuration: styles[0].transitionDuration,
+        }),
+        {
+          width: 100,
+          height: 100,
+        },
+      ]);
     });
   });
 });

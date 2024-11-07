@@ -5,6 +5,11 @@
 #include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+
 namespace reanimated {
 
 class TransitionStyleInterpolator {

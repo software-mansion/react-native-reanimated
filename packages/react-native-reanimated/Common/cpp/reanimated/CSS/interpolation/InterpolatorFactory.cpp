@@ -1,12 +1,11 @@
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 
-#include <utility>
-
 namespace reanimated::Interpolators {
 
 class ObjectInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
-  ObjectInterpolatorFactory(const PropertiesInterpolatorFactories &factories)
+  explicit ObjectInterpolatorFactory(
+      const PropertiesInterpolatorFactories &factories)
       : factories_(std::move(factories)) {}
   virtual ~ObjectInterpolatorFactory() = default;
 
@@ -42,7 +41,7 @@ class ValueInterpolatorFactory : public PropertyInterpolatorFactory {
 class RelativeOrNumericInterpolatorFactory final
     : public PropertyInterpolatorFactory {
  public:
-  RelativeOrNumericInterpolatorFactory(
+  explicit RelativeOrNumericInterpolatorFactory(
       const RelativeTo relativeTo,
       const std::string &relativeProperty,
       const std::optional<UnitValue> &defaultValue)

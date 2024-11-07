@@ -72,10 +72,9 @@ void ValueInterpolator<T>::updateKeyframesFromStyleChange(
     // value as the first keyframe value if it was provided
     if (!oldStyleValue.isUndefined()) {
       firstKeyframe = {0, prepareKeyframeValue(rt, oldStyleValue)};
-    }
-    // Otherwise, fallback to the default style value is no style value was
-    // provided for the view property
-    else {
+    } else {
+      // Otherwise, fallback to the default style value is no style value was
+      // provided for the view property
       firstKeyframe = {0, defaultStyleValue_};
     }
   }

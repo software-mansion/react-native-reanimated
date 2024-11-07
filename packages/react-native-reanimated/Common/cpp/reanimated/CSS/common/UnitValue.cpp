@@ -52,9 +52,8 @@ UnitValue UnitValue::interpolate(
   // (also, when one of the values is 0, and the other is relative)
   if ((isRelative == to.isRelative) || (isRelative && to.value == 0) ||
       (to.isRelative && value == 0)) {
-    return {
-        value + (to.value - value) * progress,
-        isRelative || to.isRelative};
+    return UnitValue(
+        value + (to.value - value) * progress, isRelative || to.isRelative);
   }
   // Otherwise, we need to read the relative value from the shadow node and
   // interpolate values as numbers
@@ -64,9 +63,9 @@ UnitValue UnitValue::interpolate(
   if (!resolvedFrom.has_value() || !resolvedTo.has_value()) {
     return progress < 0.5 ? *this : to;
   }
-  return {
+  return UnitValue(
       resolvedFrom.value() +
-      (resolvedTo.value() - resolvedFrom.value()) * progress};
+      (resolvedTo.value() - resolvedFrom.value()) * progress);
 }
 
 std::optional<double> UnitValue::resolve(

@@ -4,8 +4,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import type { NativeSyntheticEvent } from 'react-native';
-import Animated, { useEvent } from '../..';
-import type { ReanimatedEvent } from '../..';
+import Animated, { useEvent } from '../../src';
+import type { ReanimatedEvent } from '../../src';
 
 function UseEventTest() {
   function UseEventTestNativeSyntheticEvent() {

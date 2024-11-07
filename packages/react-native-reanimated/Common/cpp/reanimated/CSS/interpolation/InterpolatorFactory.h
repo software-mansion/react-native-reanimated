@@ -16,6 +16,10 @@
 #include <reanimated/CSS/interpolation/transforms/ScaleTransformInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TranslateTransformInterpolator.h>
 
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace reanimated::Interpolators {
 
 /**

@@ -3,9 +3,13 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
+#include <functional>
 #include <memory>
 #include <queue>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
+#include <vector>
 
 namespace reanimated {
 

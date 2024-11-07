@@ -3,6 +3,8 @@
 #include <reanimated/CSS/config/StyleInterpolatorsConfig.h>
 #include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
 
+#include <memory>
+
 namespace reanimated {
 
 // We can just re-use the logic from the ObjectPropertiesInterpolator class as

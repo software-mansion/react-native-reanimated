@@ -4,9 +4,9 @@
 
 #include <cmath>
 #include <functional>
+#include <vector>
 
 namespace reanimated {
-
 double sampleCurveX(double t, double x1, double x2);
 double sampleCurveY(double t, double y1, double y2);
 double sampleCurveDerivativeX(double t, double x1, double x2);

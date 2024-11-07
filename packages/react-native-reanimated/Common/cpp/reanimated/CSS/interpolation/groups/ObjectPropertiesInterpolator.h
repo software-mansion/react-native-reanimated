@@ -3,6 +3,9 @@
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/util/interpolators.h>
 
+#include <memory>
+#include <string>
+
 namespace reanimated {
 
 class ObjectPropertiesInterpolator : public PropertyInterpolator {

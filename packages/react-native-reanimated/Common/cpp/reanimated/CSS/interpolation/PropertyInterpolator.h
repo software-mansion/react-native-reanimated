@@ -3,6 +3,10 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
+#include <memory>
+#include <string>
+#include <unordered_map>
+
 namespace reanimated {
 
 struct PropertyInterpolationUpdateContext {
@@ -15,7 +19,7 @@ struct PropertyInterpolationUpdateContext {
 
 class PropertyInterpolator {
  public:
-  PropertyInterpolator(const PropertyPath &propertyPath)
+  explicit PropertyInterpolator(const PropertyPath &propertyPath)
       : propertyPath_(propertyPath) {}
 
   virtual jsi::Value getStyleValue(
