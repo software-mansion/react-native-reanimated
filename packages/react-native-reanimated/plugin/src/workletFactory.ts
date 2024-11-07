@@ -78,7 +78,7 @@ export function makeWorkletFactory(
     '(' + (fun.isObjectMethod() ? 'function ' : '') + codeObject.code + '\n)';
 
   const transformed = workletTransformSync(codeObject.code, {
-    extraPlugins: plugins,
+    extraPlugins,
     filename: state.file.opts.filename,
     ast: true,
     babelrc: false,
@@ -455,7 +455,7 @@ function makeArrayFromCapturedBindings(
   return Array.from(closure.values());
 }
 
-const plugins = [
+const extraPlugins = [
   require.resolve('@babel/plugin-transform-shorthand-properties'),
   require.resolve('@babel/plugin-transform-arrow-functions'),
   require.resolve('@babel/plugin-transform-optional-chaining'),

@@ -9,14 +9,16 @@ export function workletTransformSync(
 
   return transformSync(code, {
     ...rest,
-    plugins: [...plugins, ...extraPlugins],
-    presets: [...presets, ...extraPresets],
+    plugins: [...defaultPlugins, ...extraPlugins],
+    presets: [...defaultPresets, ...extraPresets],
   });
 }
 
-const presets: PluginItem[] = [require.resolve('@babel/preset-typescript')];
+const defaultPresets: PluginItem[] = [
+  require.resolve('@babel/preset-typescript'),
+];
 
-const plugins: PluginItem[] = [];
+const defaultPlugins: PluginItem[] = [];
 
 interface WorkletTransformOptions
   extends Omit<TransformOptions, 'plugins' | 'presets'> {
