@@ -2,9 +2,12 @@
 
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
+#include <memory>
+
 namespace reanimated {
 
-class TransformOriginInterpolator final : public ValueInterpolator<TransformOrigin> {
+class TransformOriginInterpolator final
+    : public ValueInterpolator<TransformOrigin> {
  public:
   TransformOriginInterpolator(
       const std::optional<TransformOrigin> &defaultValue,

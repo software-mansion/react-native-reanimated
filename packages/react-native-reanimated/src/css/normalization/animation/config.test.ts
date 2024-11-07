@@ -1,8 +1,7 @@
 import { ReanimatedError } from '../../../errors';
 import { cubicBezier } from '../../easing';
 import type { CSSAnimationConfig, CSSAnimationKeyframes } from '../../types';
-import { normalizeCSSAnimationConfig } from './config';
-import { ERROR_MESSAGES } from './config';
+import { normalizeCSSAnimationConfig, ERROR_MESSAGES } from './config';
 
 describe(normalizeCSSAnimationConfig, () => {
   it('normalizes animation config', () => {

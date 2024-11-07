@@ -3,7 +3,6 @@ export * from './native';
 export * from './normalization';
 export * from './easing';
 export * from './manager';
-export * from './utils/style';
 export * from './utils/comparison';
 export type {
   CSSAnimationKeyframeOffset,

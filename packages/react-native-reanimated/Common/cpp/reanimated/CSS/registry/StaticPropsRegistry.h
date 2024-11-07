@@ -2,6 +2,8 @@
 
 #include <react/renderer/core/ShadowNode.h>
 
+#include <unordered_map>
+
 namespace reanimated {
 
 using namespace facebook;

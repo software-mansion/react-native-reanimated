@@ -2,6 +2,8 @@
 
 #include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
 
+#include <memory>
+
 namespace reanimated {
 
 template <typename OperationType>

@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { withDecay } from '../..';
+import { withDecay } from '../../src';
 
 function WithDecayTest() {
   // @ts-expect-error `rubberBandEffect=true` makes `clamp` required.

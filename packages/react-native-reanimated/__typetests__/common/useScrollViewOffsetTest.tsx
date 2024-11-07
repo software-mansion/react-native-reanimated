@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useRef } from 'react';
 import { ScrollView, Button } from 'react-native';
-import Animated, { useAnimatedRef, useScrollViewOffset } from '../..';
+import Animated, { useAnimatedRef, useScrollViewOffset } from '../../src';
 
 function UseScrollViewOffsetTest() {
   function UseScrollViewOffsetTest1() {

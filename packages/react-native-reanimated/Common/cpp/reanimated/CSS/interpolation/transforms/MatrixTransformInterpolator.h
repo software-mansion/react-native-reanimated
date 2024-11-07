@@ -3,6 +3,8 @@
 #include <reanimated/CSS/common/TransformMatrix.h>
 #include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
 
+#include <memory>
+
 namespace reanimated {
 
 class MatrixTransformInterpolator final

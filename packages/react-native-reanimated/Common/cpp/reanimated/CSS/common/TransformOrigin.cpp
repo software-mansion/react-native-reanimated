@@ -22,7 +22,7 @@ TransformOrigin::TransformOrigin(jsi::Runtime &rt, const jsi::Value &value) {
     if (array.size(rt) == 3) {
       x = UnitValue(rt, array.getValueAtIndex(rt, 0));
       y = UnitValue(rt, array.getValueAtIndex(rt, 1));
-      z = array.getValueAtIndex(rt, 2).asNumber();
+      z = UnitValue(array.getValueAtIndex(rt, 2).asNumber());
       return;
     }
   }

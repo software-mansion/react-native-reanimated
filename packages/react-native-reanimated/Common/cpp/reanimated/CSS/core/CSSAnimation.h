@@ -5,6 +5,10 @@
 #include <reanimated/CSS/interpolation/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
+#include <memory>
+#include <string>
+#include <unordered_set>
+
 namespace reanimated {
 
 class CSSAnimation {

@@ -4,6 +4,8 @@
 
 #include <worklets/Tools/JSISerializer.h>
 
+#include <string>
+
 namespace reanimated {
 
 using namespace facebook;
@@ -17,9 +19,9 @@ enum class ColorType {
 class Color {
  public:
   Color();
-  Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-  Color(uint8_t r, uint8_t g, uint8_t b);
-  Color(jsi::Runtime &rt, const jsi::Value &value);
+  explicit Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+  explicit Color(uint8_t r, uint8_t g, uint8_t b);
+  explicit Color(jsi::Runtime &rt, const jsi::Value &value);
 
   static const Color Transparent;
 

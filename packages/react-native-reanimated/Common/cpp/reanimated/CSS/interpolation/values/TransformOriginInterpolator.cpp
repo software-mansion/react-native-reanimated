@@ -14,7 +14,7 @@ TransformOriginInterpolator::TransformOriginInterpolator(
 TransformOrigin TransformOriginInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
-  return {rt, value};
+  return TransformOrigin(rt, value);
 }
 
 jsi::Value TransformOriginInterpolator::convertResultToJSI(
@@ -51,8 +51,9 @@ TransformOrigin TransformOriginInterpolator::interpolate(
               .relativeProperty = "height",
               .relativeTo = RelativeTo::SELF,
           }),
-      fromValue.z.value +
-          (toValue.z.value - fromValue.z.value) * localProgress);
+      UnitValue(
+          fromValue.z.value +
+          (toValue.z.value - fromValue.z.value) * localProgress));
 }
 
 } // namespace reanimated

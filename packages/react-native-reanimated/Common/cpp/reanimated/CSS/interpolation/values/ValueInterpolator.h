@@ -6,6 +6,10 @@
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/util/keyframes.h>
 
+#include <memory>
+#include <string>
+#include <vector>
+
 namespace reanimated {
 
 template <typename T>
@@ -31,9 +35,8 @@ class ValueInterpolator : public PropertyInterpolator {
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
 
-  virtual void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes)
-      override;
-  virtual void updateKeyframesFromStyleChange(
+  void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
+  void updateKeyframesFromStyleChange(
       jsi::Runtime &rt,
       const jsi::Value &oldStyleValue,
       const jsi::Value &newStyleValue) override;

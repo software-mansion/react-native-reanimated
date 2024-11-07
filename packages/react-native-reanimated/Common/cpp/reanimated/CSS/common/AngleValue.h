@@ -7,6 +7,7 @@
 #include <regex>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 
 namespace reanimated {
 
@@ -16,10 +17,10 @@ using namespace worklets;
 struct AngleValue {
   double value;
 
-  AngleValue() = default;
+  AngleValue();
   explicit AngleValue(double value);
   explicit AngleValue(const std::string &rotationString);
-  AngleValue(jsi::Runtime &rt, const jsi::Value &value);
+  explicit AngleValue(jsi::Runtime &rt, const jsi::Value &value);
 
   std::string toString() const;
   jsi::Value toJSIValue(jsi::Runtime &rt) const;

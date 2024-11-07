@@ -13,12 +13,12 @@ RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
           viewStylesRepository,
           propertyPath),
       relativeTo_(relativeTo),
-      relativeProperty_(relativeProperty) {};
+      relativeProperty_(relativeProperty) {}
 
 UnitValue RelativeOrNumericValueInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &value) const {
-  return {rt, value};
+  return UnitValue(rt, value);
 }
 
 jsi::Value RelativeOrNumericValueInterpolator::convertResultToJSI(

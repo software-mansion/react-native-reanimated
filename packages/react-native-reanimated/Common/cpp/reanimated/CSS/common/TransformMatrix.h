@@ -4,6 +4,9 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/vectors.h>
 
+#include <string>
+#include <utility>
+
 namespace reanimated {
 
 struct DecomposedTransformMatrix {
@@ -26,7 +29,7 @@ class TransformMatrix {
  public:
   explicit TransformMatrix(const Vec16Array &matrix);
   explicit TransformMatrix(const Matrix4x4 &matrix);
-  TransformMatrix(jsi::Runtime &rt, const jsi::Value &value);
+  explicit TransformMatrix(jsi::Runtime &rt, const jsi::Value &value);
 
   static TransformMatrix Identity();
   static TransformMatrix Perspective(double value);
@@ -69,9 +72,10 @@ class TransformMatrix {
   Matrix4x4 matrix_;
 
   std::optional<Vector4D> computePerspective() const;
+
   Vector3D getTranslation() const;
   static std::pair<Vector3D, Vector3D> computeScaleAndSkew(
-      std::array<Vector3D, 3> &rows) ;
+      std::array<Vector3D, 3> &rows);
   static Quaternion computeQuaternion(std::array<Vector3D, 3> &columns);
 
   inline static double determinant3x3(

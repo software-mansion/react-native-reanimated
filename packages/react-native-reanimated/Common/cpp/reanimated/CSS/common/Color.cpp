@@ -64,7 +64,7 @@ Color Color::interpolate(const Color &to, const double progress) const {
     toChannels = {fromChannels[0], fromChannels[1], fromChannels[2], 0};
   }
 
-  return {
+  return Color(
       static_cast<uint8_t>(
           (toChannels[0] - fromChannels[0]) * progress + fromChannels[0]),
       static_cast<uint8_t>(
@@ -72,7 +72,7 @@ Color Color::interpolate(const Color &to, const double progress) const {
       static_cast<uint8_t>(
           (toChannels[2] - fromChannels[2]) * progress + fromChannels[2]),
       static_cast<uint8_t>(
-          (toChannels[3] - fromChannels[3]) * progress + fromChannels[3])};
+          (toChannels[3] - fromChannels[3]) * progress + fromChannels[3]));
 }
 
 } // namespace reanimated

@@ -227,9 +227,8 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
       toOperationsResult.emplace_back(toOperation);
       i++;
       j++;
-    }
-    // Case 2: Operations can be converted to each other's type
-    else if (fromOperation->canConvertTo(toOperation->type)) {
+    } else if (fromOperation->canConvertTo(toOperation->type)) {
+      // Case 2: Operations can be converted to each other's type
       addConvertedOperations(
           fromOperation, toOperation, fromOperationsResult, toOperationsResult);
       i++;
@@ -239,9 +238,8 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
           toOperation, fromOperation, toOperationsResult, fromOperationsResult);
       i++;
       j++;
-    }
-    // Case 3: Use default values if no conversion possible
-    else {
+    } else {
+      // Case 3: Use default values if no conversion possible
       bool toExistsLaterInFrom = lastIndexInFrom.count(toOperation->type) &&
           lastIndexInFrom[toOperation->type] > i;
       bool fromExistsLaterInTo = lastIndexInTo.count(fromOperation->type) &&

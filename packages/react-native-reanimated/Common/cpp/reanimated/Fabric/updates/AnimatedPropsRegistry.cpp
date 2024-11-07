@@ -17,10 +17,10 @@ SurfaceId AnimatedPropsRegistry::update(
     updatesBatch_.emplace_back(
         shadowNode, std::make_unique<jsi::Value>(rt, updates));
     surfaceId = shadowNode->getSurfaceId();
-  };
+  }
 
   return surfaceId;
-};
+}
 
 void AnimatedPropsRegistry::remove(
     jsi::Runtime &rt,
@@ -30,6 +30,6 @@ void AnimatedPropsRegistry::remove(
   for (size_t i = 0, length = viewTagsArray.size(rt); i < length; ++i) {
     tagsToRemove_.insert(viewTagsArray.getValueAtIndex(rt, i).asNumber());
   }
-};
+}
 
 } // namespace reanimated

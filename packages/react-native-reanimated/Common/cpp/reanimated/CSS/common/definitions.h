@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <memory>
 #include <string>
 #include <vector>
 

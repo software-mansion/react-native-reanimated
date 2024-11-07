@@ -5,6 +5,11 @@
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 #include <reanimated/CSS/util/keyframes.h>
 
+#include <memory>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 namespace reanimated {
 
 struct TransformKeyframe {

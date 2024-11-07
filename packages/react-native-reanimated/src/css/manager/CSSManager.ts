@@ -8,7 +8,7 @@ import type {
 } from '../../createAnimatedComponent/commonTypes';
 import CSSTransitionManager from './CSSTransitionManager';
 import CSSAnimationManager from './CSSAnimationManager';
-import { extractCSSConfigsAndFlattenedStyles } from '../utils';
+import { extractCSSConfigsAndFlattenedStyles } from '../normalization';
 
 export default class CSSManager implements ICSSManager {
   private readonly cssAnimationManager: CSSAnimationManager;

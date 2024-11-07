@@ -4,6 +4,7 @@
 
 #include <worklets/Tools/JSISerializer.h>
 
+#include <string>
 #include <variant>
 
 namespace reanimated {
@@ -16,12 +17,15 @@ struct TransformOrigin {
   UnitValue z;
 
   TransformOrigin();
-  TransformOrigin(
+  explicit TransformOrigin(
       const std::variant<double, std::string> &x,
       const std::variant<double, std::string> &y,
       double z);
-  TransformOrigin(const UnitValue &x, const UnitValue &y, const UnitValue &z);
-  TransformOrigin(jsi::Runtime &rt, const jsi::Value &value);
+  explicit TransformOrigin(
+      const UnitValue &x,
+      const UnitValue &y,
+      const UnitValue &z);
+  explicit TransformOrigin(jsi::Runtime &rt, const jsi::Value &value);
 
   jsi::Value toJSIValue(jsi::Runtime &rt) const;
 

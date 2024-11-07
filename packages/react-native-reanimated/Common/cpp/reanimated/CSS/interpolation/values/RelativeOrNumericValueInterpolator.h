@@ -2,9 +2,13 @@
 
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
+#include <memory>
+#include <string>
+
 namespace reanimated {
 
-class RelativeOrNumericValueInterpolator final : public ValueInterpolator<UnitValue> {
+class RelativeOrNumericValueInterpolator final
+    : public ValueInterpolator<UnitValue> {
  public:
   RelativeOrNumericValueInterpolator(
       const RelativeTo relativeTo,

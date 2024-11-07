@@ -3,6 +3,10 @@
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
+#include <memory>
+#include <string>
+#include <unordered_map>
+
 namespace reanimated {
 
 class TransformInterpolator {

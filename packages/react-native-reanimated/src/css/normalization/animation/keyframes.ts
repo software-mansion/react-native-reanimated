@@ -5,11 +5,11 @@ import type {
   CSSAnimationKeyframes,
   CSSKeyframeStyleProps,
   NormalizedCSSAnimationKeyframe,
+  AnyRecord,
 } from '../../types';
 import { isNumber } from '../../utils';
 import { OFFSET_REGEX } from './constants';
 import { normalizeStyle } from '../common';
-import type { AnyRecord } from '../../types';
 
 export const ERROR_MESSAGES = {
   invalidOffsetType: (key: CSSAnimationKeyframeOffset) =>

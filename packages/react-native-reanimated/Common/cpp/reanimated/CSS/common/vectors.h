@@ -3,6 +3,8 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <string>
+#include <unordered_map>
 
 namespace reanimated {
 
@@ -10,7 +12,7 @@ struct Vector3D {
   std::array<double, 3> vec;
 
   Vector3D() : vec({0, 0, 0}) {}
-  Vector3D(double x, double y, double z) : vec({x, y, z}) {}
+  explicit Vector3D(double x, double y, double z) : vec({x, y, z}) {}
   explicit Vector3D(std::array<double, 3> vec) : vec(vec) {}
 
   double &operator[](size_t idx);
@@ -31,8 +33,9 @@ struct Vector4D {
   std::array<double, 4> vec;
 
   Vector4D() : vec({0, 0, 0, 0}) {}
-  Vector4D(double x, double y, double z, double w) : vec({x, y, z, w}) {}
-  Vector4D(std::array<double, 4> vec) : vec(vec) {}
+  explicit Vector4D(double x, double y, double z, double w)
+      : vec({x, y, z, w}) {}
+  explicit Vector4D(std::array<double, 4> vec) : vec(vec) {}
 
   double &operator[](size_t idx);
   const double &operator[](size_t idx) const;

@@ -7,9 +7,9 @@ import Animated, {
   useAnimatedScrollHandler,
   useComposedEventHandler,
   useEvent,
-} from '../..';
+} from '../../src';
 import { Text } from 'react-native';
-import type { ReanimatedEvent } from '../..';
+import type { ReanimatedEvent } from '../../src';
 
 function useComposedEventHandlerTest() {
   function useComposedEventHandlerTestDifferentHandlers() {

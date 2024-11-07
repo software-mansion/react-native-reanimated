@@ -7,7 +7,11 @@
 
 #include <react/renderer/core/ShadowNode.h>
 
+#include <memory>
+#include <string>
+#include <unordered_map>
 #include <variant>
+#include <vector>
 
 namespace reanimated {
 
