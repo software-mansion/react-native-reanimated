@@ -42,12 +42,13 @@ std::string Color::toString() const {
 }
 
 jsi::Value Color::toJSIValue(jsi::Runtime &rt) const {
-  if (type == ColorType::RGBA) {
-    double color = (channels[3] << 24) | (channels[0] << 16) |
-        (channels[1] << 8) | channels[2];
-    return {color};
+  if (type == ColorType::TRANSPARENT) {
+    return 0x00000000;
   }
-  return jsi::Value::undefined();
+
+  return {
+      (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) |
+      channels[2]};
 }
 
 Color Color::interpolate(const Color &to, const double progress) const {

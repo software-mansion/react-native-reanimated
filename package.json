@@ -11,6 +11,7 @@
       "apps/common-app",
       "apps/paper-example",
       "apps/fabric-example",
+      "apps/css-example",
       "apps/macos-example",
       "apps/tvos-example",
       "apps/web-example",

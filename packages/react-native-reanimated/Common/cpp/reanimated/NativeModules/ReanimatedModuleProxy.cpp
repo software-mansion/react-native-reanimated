@@ -671,6 +671,7 @@ bool ReanimatedModuleProxy::handleRawEvent(
   // (res == true), but for now handleEvent always returns false. Thankfully,
   // performOperations does not trigger a lot of code if there is nothing to
   // be done so this is fine for now.
+  LOG(INFO) << "Handle raw event: " << eventType << " on tag: " << tag;
   performOperations();
   return res;
 }
@@ -688,6 +689,7 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
 
     *cssLoop = [this, cssLoop](const double timestampMs) {
       performOperations();
+      LOG(INFO) << "Requesting render from CSS loop";
       if (cssAnimationsRegistry_->hasUpdates() ||
           cssTransitionsRegistry_->hasUpdates()) {
         jsi::Runtime &rt =
@@ -707,6 +709,7 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
 void ReanimatedModuleProxy::performOperations() {
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+  LOG(INFO) << "Performing operations";
 
   UpdatesBatch updatesBatch;
 
