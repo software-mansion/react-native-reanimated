@@ -1,6 +1,7 @@
 'use strict';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+// TODO: Clean this up since 0.74 is the minimum supported version now.
 // This is a makeshift solution to handle both 0.73 and 0.74 versions of React Native.
 
 export let getViewInfo = (element: any) => {

@@ -20,7 +20,7 @@ std::shared_ptr<reanimated::NativeReanimatedModule> createReanimatedModule(
     const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
     WorkletsModule *workletsModule);
 
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
 std::shared_ptr<reanimated::NativeReanimatedModule>
 createReanimatedModuleBridgeless(
     REAModule *reaModule,
@@ -28,7 +28,7 @@ createReanimatedModuleBridgeless(
     jsi::Runtime &runtime,
     WorkletsModule *workletsModule,
     RuntimeExecutor runtimeExecutor);
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#endif // RCT_NEW_ARCH_ENABLED
 
 void commonInit(
     REAModule *reaModule,

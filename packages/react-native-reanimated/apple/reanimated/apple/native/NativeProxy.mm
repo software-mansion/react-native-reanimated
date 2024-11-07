@@ -100,7 +100,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
   return nativeReanimatedModule;
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
 std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
     REAModule *reaModule,
     RCTModuleRegistry *moduleRegistry,
@@ -136,7 +136,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
 
   return nativeReanimatedModule;
 }
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#endif // RCT_NEW_ARCH_ENABLED
 
 void commonInit(REAModule *reaModule, std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule)
 {
