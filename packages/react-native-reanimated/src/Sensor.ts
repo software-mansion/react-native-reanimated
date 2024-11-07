@@ -1,5 +1,5 @@
 'use strict';
-import NativeReanimatedModule from './NativeReanimated';
+import { ReanimatedModule } from './ReanimatedModule';
 import type {
   SensorConfig,
   SharedValue,
@@ -52,7 +52,7 @@ export default class Sensor {
   ) {
     const config = this.config;
     const sensorType = this.sensorType;
-    this.sensorId = NativeReanimatedModule.registerSensor(
+    this.sensorId = ReanimatedModule.registerSensor(
       sensorType,
       config.interval === 'auto' ? -1 : config.interval,
       config.iosReferenceFrame,
@@ -75,7 +75,7 @@ export default class Sensor {
 
   unregister() {
     if (this.sensorId !== null && this.sensorId !== -1) {
-      NativeReanimatedModule.unregisterSensor(this.sensorId);
+      ReanimatedModule.unregisterSensor(this.sensorId);
     }
     this.sensorId = null;
   }
