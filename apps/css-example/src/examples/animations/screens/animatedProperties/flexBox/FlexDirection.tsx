@@ -26,6 +26,9 @@ export default function FlexDirection() {
           '75%': {
             flexDirection: 'row-reverse',
           },
+          '100%': {
+            flexDirection: 'column',
+          },
         },
         animationTimingFunction: 'linear',
       })}

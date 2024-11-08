@@ -54,6 +54,7 @@
 		<string>Poppins-Regular.ttf</string>
 		<string>Poppins-SemiBold.ttf</string>
 		<string>Poppins-Thin.ttf</string>
+		<string>UbuntuMono-Regular.ttf</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
