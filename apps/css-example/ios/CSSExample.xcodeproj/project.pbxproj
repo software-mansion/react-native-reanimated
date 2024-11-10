@@ -8,8 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* CSSExampleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* CSSExampleTests.m */; };
-		03F6D8812CDD825900175E21 /* UbuntuMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 03F6D8802CDD825900175E21 /* UbuntuMono-Regular.ttf */; };
-		03F6D8822CDD825900175E21 /* UbuntuMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 03F6D8802CDD825900175E21 /* UbuntuMono-Regular.ttf */; };
+		03F6D8822CDD825900175E21 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		03F6D8852CE115AE00175E21 /* UbuntuMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 64893EC85B054C119CBBA1A3 /* UbuntuMono-Regular.ttf */; };
+		03F6D8862CE115B200175E21 /* UFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 3C9B5467356F4985A171426F /* UFL.txt */; };
 		0C80B921A6F3F58F76C31292 /* libPods-CSSExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-CSSExample.a */; };
 		136F4EE5EA83B4F2C121F61B /* libPods-CSSExample-CSSExampleTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C1C740B2966936269E09DE98 /* libPods-CSSExample-CSSExampleTests.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
@@ -42,17 +43,18 @@
 		00E356EE1AD99517003FC87E /* CSSExampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CSSExampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* CSSExampleTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CSSExampleTests.m; sourceTree = "<group>"; };
-		03F6D8802CDD825900175E21 /* UbuntuMono-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "UbuntuMono-Regular.ttf"; path = "../assets/fonts/UbuntuMono/UbuntuMono-Regular.ttf"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* CSSExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CSSExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = CSSExample/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = CSSExample/Info.plist; sourceTree = "<group>"; };
 		192DDE7394C0421AABAD1E39 /* Poppins-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraBold.ttf"; path = "../assets/fonts/Poppins/Poppins-ExtraBold.ttf"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-CSSExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CSSExample.debug.xcconfig"; path = "Target Support Files/Pods-CSSExample/Pods-CSSExample.debug.xcconfig"; sourceTree = "<group>"; };
+		3C9B5467356F4985A171426F /* UFL.txt */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = UFL.txt; path = ../assets/fonts/UbuntuMono/UFL.txt; sourceTree = "<group>"; };
 		40201E86F4154AF6BA7D9D68 /* Poppins-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraLight.ttf"; path = "../assets/fonts/Poppins/Poppins-ExtraLight.ttf"; sourceTree = "<group>"; };
 		4CBE969747CCCDC96236A065 /* Pods-CSSExample-CSSExampleTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CSSExample-CSSExampleTests.debug.xcconfig"; path = "Target Support Files/Pods-CSSExample-CSSExampleTests/Pods-CSSExample-CSSExampleTests.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-CSSExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CSSExample.release.xcconfig"; path = "Target Support Files/Pods-CSSExample/Pods-CSSExample.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-CSSExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CSSExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5EE828465DFA40CCAD4C2BBB /* Poppins-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Light.ttf"; path = "../assets/fonts/Poppins/Poppins-Light.ttf"; sourceTree = "<group>"; };
+		64893EC85B054C119CBBA1A3 /* UbuntuMono-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "UbuntuMono-Regular.ttf"; path = "../assets/fonts/UbuntuMono/UbuntuMono-Regular.ttf"; sourceTree = "<group>"; };
 		7DCAC1E7776A4A36A864F95E /* Poppins-SemiBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-SemiBold.ttf"; path = "../assets/fonts/Poppins/Poppins-SemiBold.ttf"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = CSSExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		849F4FC4D7AC4BA291D6C4B4 /* Poppins-Thin.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Thin.ttf"; path = "../assets/fonts/Poppins/Poppins-Thin.ttf"; sourceTree = "<group>"; };
@@ -130,7 +132,6 @@
 		638C7A7A418D4675B9E22136 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				03F6D8802CDD825900175E21 /* UbuntuMono-Regular.ttf */,
 				F48B9C5F2C7F46D4AF205A72 /* Poppins-Black.ttf */,
 				973BD397ECB7436F828E47A9 /* Poppins-Bold.ttf */,
 				192DDE7394C0421AABAD1E39 /* Poppins-ExtraBold.ttf */,
@@ -141,6 +142,8 @@
 				7DCAC1E7776A4A36A864F95E /* Poppins-SemiBold.ttf */,
 				849F4FC4D7AC4BA291D6C4B4 /* Poppins-Thin.ttf */,
 				C06453E54CB742B58CB6EFDC /* OFL.txt */,
+				64893EC85B054C119CBBA1A3 /* UbuntuMono-Regular.ttf */,
+				3C9B5467356F4985A171426F /* UFL.txt */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -275,7 +278,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				03F6D8822CDD825900175E21 /* UbuntuMono-Regular.ttf in Resources */,
+				03F6D8822CDD825900175E21 /* (null) in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -283,8 +286,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				03F6D8862CE115B200175E21 /* UFL.txt in Resources */,
+				03F6D8852CE115AE00175E21 /* UbuntuMono-Regular.ttf in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
-				03F6D8812CDD825900175E21 /* UbuntuMono-Regular.ttf in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				7E23737D7AB942FC9F2DB5BC /* Poppins-Black.ttf in Resources */,
 				F4C3F7622BCFD500008A4CDE /* PrivacyInfo.xcprivacy in Resources */,

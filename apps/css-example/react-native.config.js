@@ -1,6 +1,8 @@
 /** @type {import('@react-native-community/cli-types').Config} */
 module.exports = {
-  assets: ['./assets/fonts/'],
+  assets: [
+    './assets/fonts',
+  ],
   project: {
     android: {},
     ios: {},
