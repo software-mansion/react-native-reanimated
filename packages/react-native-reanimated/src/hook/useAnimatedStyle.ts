@@ -2,7 +2,7 @@
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
 
-import { makeShareable, startMapper, stopMapper } from '../core';
+import { makeShareable, runOnUI, startMapper, stopMapper } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
 import { useSharedValue } from './useSharedValue';
@@ -549,6 +549,9 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     const mapperId = startMapper(fun, inputs);
     return () => {
       stopMapper(mapperId);
+      if (Platform.OS === 'android' && !globalThis._IS_FABRIC) {
+        runOnUI(() => (remoteState.isFirstRun = true))();
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
