@@ -17,6 +17,7 @@ export let getViewInfo = (element: any) => {
   return getViewInfo73(element);
 };
 
+// This gets invoked on Paper on 0.76
 function getViewInfo73(element: any) {
   return {
     // we can access view tag in the same way it's accessed here https://github.com/facebook/react/blob/e3f4eb7272d4ca0ee49f27577156b57eeb07cf73/packages/react-native-renderer/src/ReactFabric.js#L146
