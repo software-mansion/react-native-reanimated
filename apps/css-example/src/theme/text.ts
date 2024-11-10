@@ -1,19 +1,19 @@
 import type { FontStyle, FontVariant } from '@/types';
 
 const BASE_FONT = 'Poppins';
-const MONOSPACE_FONT = 'UbuntuMono';
+const MONOSPACE_FONT = 'UbuntuMono-Regular';
 
 export const text: Record<FontVariant, FontStyle> = {
   body1: {
-    fontFamily: `${BASE_FONT}-Regular`,
-    fontSize: 14,
+    fontFamily: BASE_FONT,
+    fontSize: 13,
     fontStyle: 'normal',
     fontWeight: '400',
     letterSpacing: 0,
     lineHeight: 18,
   },
   body2: {
-    fontFamily: `${BASE_FONT}-Light`,
+    fontFamily: BASE_FONT,
     fontSize: 12,
     fontStyle: 'normal',
     fontWeight: '300',
@@ -21,7 +21,7 @@ export const text: Record<FontVariant, FontStyle> = {
     lineHeight: 16,
   },
   body3: {
-    fontFamily: `${BASE_FONT}-Thin`,
+    fontFamily: BASE_FONT,
     fontSize: 10,
     fontStyle: 'normal',
     fontWeight: '100',
@@ -29,7 +29,7 @@ export const text: Record<FontVariant, FontStyle> = {
     lineHeight: 14,
   },
   code: {
-    fontFamily: `${MONOSPACE_FONT}-Regular`,
+    fontFamily: MONOSPACE_FONT,
     fontSize: 13,
     fontStyle: 'normal',
     fontWeight: '400',
@@ -37,7 +37,7 @@ export const text: Record<FontVariant, FontStyle> = {
     lineHeight: 16,
   },
   heading1: {
-    fontFamily: `${BASE_FONT}-Bold`,
+    fontFamily: BASE_FONT,
     fontSize: 28,
     fontStyle: 'normal',
     fontWeight: '700',
@@ -45,7 +45,7 @@ export const text: Record<FontVariant, FontStyle> = {
     lineHeight: 40,
   },
   heading2: {
-    fontFamily: `${BASE_FONT}-Bold`,
+    fontFamily: BASE_FONT,
     fontSize: 22,
     fontStyle: 'normal',
     fontWeight: '700',
@@ -53,7 +53,7 @@ export const text: Record<FontVariant, FontStyle> = {
     lineHeight: 30,
   },
   heading3: {
-    fontFamily: `${BASE_FONT}-SemiBold`,
+    fontFamily: BASE_FONT,
     fontSize: 18,
     fontStyle: 'normal',
     fontWeight: '600',
@@ -61,7 +61,7 @@ export const text: Record<FontVariant, FontStyle> = {
     lineHeight: 26,
   },
   heading4: {
-    fontFamily: `${BASE_FONT}-SemiBold`,
+    fontFamily: BASE_FONT,
     fontSize: 16,
     fontStyle: 'normal',
     fontWeight: '600',
@@ -69,15 +69,15 @@ export const text: Record<FontVariant, FontStyle> = {
     lineHeight: 24,
   },
   inlineCode: {
-    fontFamily: `${MONOSPACE_FONT}-Regular`,
-    fontSize: 14,
+    fontFamily: MONOSPACE_FONT,
+    fontSize: 13,
     fontStyle: 'normal',
     fontWeight: '400',
     letterSpacing: 0.4,
-    lineHeight: 20,
+    lineHeight: 18,
   },
   label1: {
-    fontFamily: `${BASE_FONT}-SemiBold`,
+    fontFamily: BASE_FONT,
     fontSize: 15,
     fontStyle: 'normal',
     fontWeight: '600',
@@ -85,7 +85,7 @@ export const text: Record<FontVariant, FontStyle> = {
     lineHeight: 24,
   },
   label2: {
-    fontFamily: `${BASE_FONT}-SemiBold`,
+    fontFamily: BASE_FONT,
     fontSize: 13,
     fontStyle: 'normal',
     fontWeight: '600',
@@ -93,7 +93,7 @@ export const text: Record<FontVariant, FontStyle> = {
     lineHeight: 20,
   },
   label3: {
-    fontFamily: `${BASE_FONT}-SemiBold`,
+    fontFamily: BASE_FONT,
     fontSize: 11,
     fontStyle: 'normal',
     fontWeight: '600',
@@ -101,7 +101,7 @@ export const text: Record<FontVariant, FontStyle> = {
     lineHeight: 16,
   },
   subHeading1: {
-    fontFamily: `${BASE_FONT}-Medium`,
+    fontFamily: BASE_FONT,
     fontSize: 18,
     fontStyle: 'normal',
     fontWeight: '500',
@@ -109,7 +109,7 @@ export const text: Record<FontVariant, FontStyle> = {
     lineHeight: 24,
   },
   subHeading2: {
-    fontFamily: `${BASE_FONT}-Medium`,
+    fontFamily: BASE_FONT,
     fontSize: 16,
     fontStyle: 'normal',
     fontWeight: '500',
@@ -117,7 +117,7 @@ export const text: Record<FontVariant, FontStyle> = {
     lineHeight: 22,
   },
   subHeading3: {
-    fontFamily: `${BASE_FONT}-Medium`,
+    fontFamily: BASE_FONT,
     fontSize: 14,
     fontStyle: 'normal',
     fontWeight: '500',
