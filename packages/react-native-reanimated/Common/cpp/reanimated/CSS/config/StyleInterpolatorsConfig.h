@@ -196,8 +196,7 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
        */
       // Image
       {"resizeMode", discrete()},
-      // TODO: Change to the proper interpolator
-      {"aspectRatio", relOrNum(RelativeTo::SELF, "width")},
+      {"aspectRatio", numeric()},
       {"objectFit", discrete()},
 
       // Cursor

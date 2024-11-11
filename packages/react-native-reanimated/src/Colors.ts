@@ -727,15 +727,3 @@ export function toGammaSpace(
   res.push(RGBA[3]);
   return res as ParsedColorArray;
 }
-
-export function normalizeCSSAnimationColor(value: string | number) {
-  if (typeof value === 'string') {
-    if (value === 'transparent') {
-      return value;
-    }
-    return processColor(value, false);
-  } else {
-    // case of number format 0xRRGGBBAA format needs to be re-formatted
-    return processColor(`#${value.toString(16).padStart(8, '0')}`, false);
-  }
-}

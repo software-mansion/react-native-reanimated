@@ -19,7 +19,7 @@ export type ExampleCardProps = PropsWithChildren<{
   title?: string;
   code: string;
   collapsedCode?: string;
-  description?: string;
+  description?: Array<string> | string;
   collapsedExampleHeight?: number;
   minExampleHeight?: number;
 }>;
@@ -63,7 +63,16 @@ export default function ExampleCard({
             {title}
           </Text>
         )}
-        {description && <Text style={styles.description}>{description}</Text>}
+        {description &&
+          (Array.isArray(description) ? (
+            <View style={styles.description}>
+              {description.map((paragraph, index) => (
+                <Text key={index}>{paragraph}</Text>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.description}>{description}</Text>
+          ))}
         <View
           style={[
             styles.itemsContainer,
@@ -137,6 +146,7 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
   },
   description: {
+    gap: spacing.xs,
     marginBottom: spacing.sm,
   },
   exampleOuterContainer: {

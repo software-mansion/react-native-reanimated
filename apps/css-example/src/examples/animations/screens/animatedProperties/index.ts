@@ -1,21 +1,9 @@
-import Borders from './Borders';
-import colors from './colors';
-import Dimensions from './Dimensions';
-import flexBox from './flexBox';
-import Insets from './Insets';
-import Margins from './Margins';
-import Paddings from './Paddings';
-import Shadows from './Shadows';
-import transforms from './transforms';
+import appearance from './appearance';
+import layoutAndPositioning from './layoutAndPositioning';
+import others from './others';
 
 export default {
-  Borders,
-  Dimensions,
-  Insets,
-  Margins,
-  Paddings,
-  Shadows,
-  colors,
-  flexBox,
-  transforms,
+  appearance,
+  layoutAndPositioning,
+  others,
 };

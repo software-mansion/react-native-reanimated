@@ -10,6 +10,192 @@ import {
   testExamples,
 } from './screens';
 
+/** Animated Properties routes */
+
+const layoutAndPositioningRoutes = {
+  FlexBox: {
+    name: 'FlexBox',
+    flatten: true,
+    routes: {
+      DiscreteProperties: {
+        name: 'Discrete Properties',
+        routes: {
+          FlexDirection: {
+            name: 'Flex Direction',
+            Component:
+              animatedProperties.layoutAndPositioning.flexBox.FlexDirection,
+          },
+          LayoutDirection: {
+            name: 'Layout Direction',
+            Component:
+              animatedProperties.layoutAndPositioning.flexBox.LayoutDirection,
+          },
+          JustifyContent: {
+            name: 'Justify Content',
+            Component:
+              animatedProperties.layoutAndPositioning.flexBox.JustifyContent,
+          },
+          AlignItems: {
+            name: 'Align Items',
+            Component:
+              animatedProperties.layoutAndPositioning.flexBox.AlignItems,
+          },
+          AlignSelf: {
+            name: 'Align Self',
+            Component:
+              animatedProperties.layoutAndPositioning.flexBox.AlignSelf,
+          },
+          AlignContent: {
+            name: 'Align Content',
+            Component:
+              animatedProperties.layoutAndPositioning.flexBox.AlignContent,
+          },
+          FlexWrap: {
+            name: 'Flex Wrap',
+            Component: animatedProperties.layoutAndPositioning.flexBox.FlexWrap,
+          },
+        },
+      },
+      NumericProperties: {
+        name: 'Numeric Properties',
+        routes: {},
+      },
+    },
+  },
+  Dimensions: {
+    name: 'Dimensions',
+    Component: animatedProperties.layoutAndPositioning.Dimensions,
+  },
+  Margins: {
+    name: 'Margins',
+    Component: animatedProperties.layoutAndPositioning.Margins,
+  },
+  Paddings: {
+    name: 'Paddings',
+    Component: animatedProperties.layoutAndPositioning.Paddings,
+  },
+  Insets: {
+    name: 'Insets',
+    Component: animatedProperties.layoutAndPositioning.Insets,
+  },
+  Others: {
+    name: 'Others',
+    routes: {
+      AspectRatio: {
+        name: 'Aspect Ratio',
+        Component: animatedProperties.layoutAndPositioning.others.AspectRatio,
+      },
+    },
+  },
+} satisfies Routes;
+
+const appearanceRoutes = {
+  Colors: {
+    name: 'Colors',
+    routes: {
+      ColorFormats: {
+        name: 'Color Formats',
+        Component: animatedProperties.appearance.colors.ColorFormats,
+      },
+      ColorFunctions: {
+        name: 'Color Properties',
+        Component: animatedProperties.appearance.colors.ColorProperties,
+      },
+    },
+  },
+  Shadows: {
+    name: 'Shadows',
+    routes: {},
+  },
+  Borders: {
+    name: 'Borders',
+    Component: animatedProperties.appearance.Borders,
+  },
+  Transforms: {
+    name: 'Transforms',
+    flatten: true,
+    routes: {
+      TransformProperties: {
+        name: 'Transform Properties',
+        routes: {
+          Perspective: {
+            name: 'Perspective',
+            Component:
+              animatedProperties.appearance.transforms.transformProperties
+                .Perspective,
+          },
+          Rotate: {
+            name: 'Rotate',
+            Component:
+              animatedProperties.appearance.transforms.transformProperties
+                .Rotate,
+          },
+          Scale: {
+            name: 'Scale',
+            Component:
+              animatedProperties.appearance.transforms.transformProperties
+                .Scale,
+          },
+          Translate: {
+            name: 'Translate',
+            Component:
+              animatedProperties.appearance.transforms.transformProperties
+                .Translate,
+          },
+          Skew: {
+            name: 'Skew',
+            Component:
+              animatedProperties.appearance.transforms.transformProperties.Skew,
+          },
+          Matrix: {
+            name: 'Matrix',
+            Component:
+              animatedProperties.appearance.transforms.transformProperties
+                .Matrix,
+          },
+        },
+      },
+      RelatedProperties: {
+        name: 'Related Properties',
+        routes: {
+          TransformOrigin: {
+            name: 'Transform Origin',
+            Component:
+              animatedProperties.appearance.transforms.relatedProperties
+                .TransformOrigin,
+          },
+        },
+      },
+    },
+  },
+  Others: {
+    name: 'Others',
+    routes: {},
+  },
+} satisfies Routes;
+
+const othersRoutes = {
+  Image: {
+    name: 'Image',
+    routes: {
+      ResizeMode: {
+        name: 'Resize Mode',
+        Component: animatedProperties.others.image.ResizeMode,
+      },
+      ObjectFit: {
+        name: 'Object Fit',
+        Component: animatedProperties.others.image.ObjectFit,
+      },
+    },
+  },
+  Cursor: {
+    name: 'Cursor',
+    routes: {},
+  },
+} satisfies Routes;
+
+/** Animations routes */
+
 const routes = {
   AnimatedProperties: {
     name: 'Animated Properties',
@@ -18,155 +204,11 @@ const routes = {
     routes: {
       LayoutAndPositioning: {
         name: 'Layout and Positioning',
-        routes: {
-          FlexBox: {
-            name: 'FlexBox',
-            flatten: true,
-            routes: {
-              DiscreteProperties: {
-                name: 'Discrete Properties',
-                routes: {
-                  FlexDirection: {
-                    name: 'Flex Direction',
-                    Component: animatedProperties.flexBox.FlexDirection,
-                  },
-                  LayoutDirection: {
-                    name: 'Layout Direction',
-                    Component: animatedProperties.flexBox.LayoutDirection,
-                  },
-                  JustifyContent: {
-                    name: 'Justify Content',
-                    Component: animatedProperties.flexBox.JustifyContent,
-                  },
-                  AlignItems: {
-                    name: 'Align Items',
-                    Component: animatedProperties.flexBox.AlignItems,
-                  },
-                  AlignSelf: {
-                    name: 'Align Self',
-                    Component: animatedProperties.flexBox.AlignSelf,
-                  },
-                  AlignContent: {
-                    name: 'Align Content',
-                    Component: animatedProperties.flexBox.AlignContent,
-                  },
-                  FlexWrap: {
-                    name: 'Flex Wrap',
-                    Component: animatedProperties.flexBox.FlexWrap,
-                  },
-                },
-              },
-              NumericProperties: {
-                name: 'Numeric Properties',
-                routes: {},
-              },
-            },
-          },
-          Dimensions: {
-            name: 'Dimensions',
-            Component: animatedProperties.Dimensions,
-          },
-          Margins: {
-            name: 'Margins',
-            Component: animatedProperties.Margins,
-          },
-          Paddings: {
-            name: 'Paddings',
-            Component: animatedProperties.Paddings,
-          },
-          Insets: {
-            name: 'Insets',
-            Component: animatedProperties.Insets,
-          },
-          Others: {
-            name: 'Others',
-            routes: {},
-          },
-        },
+        routes: layoutAndPositioningRoutes,
       },
       Appearance: {
         name: 'Appearance',
-        routes: {
-          Colors: {
-            name: 'Colors',
-            routes: {
-              ColorFormats: {
-                name: 'Color Formats',
-                Component: animatedProperties.colors.ColorFormats,
-              },
-              ColorFunctions: {
-                name: 'Color Properties',
-                Component: animatedProperties.colors.ColorProperties,
-              },
-            },
-          },
-          Shadows: {
-            name: 'Shadows',
-            routes: {},
-          },
-          Borders: {
-            name: 'Borders',
-            Component: animatedProperties.Borders,
-          },
-          Transforms: {
-            name: 'Transforms',
-            flatten: true,
-            routes: {
-              TransformProperties: {
-                name: 'Transform Properties',
-                routes: {
-                  Perspective: {
-                    name: 'Perspective',
-                    Component:
-                      animatedProperties.transforms.transformProperties
-                        .Perspective,
-                  },
-                  Rotate: {
-                    name: 'Rotate',
-                    Component:
-                      animatedProperties.transforms.transformProperties.Rotate,
-                  },
-                  Scale: {
-                    name: 'Scale',
-                    Component:
-                      animatedProperties.transforms.transformProperties.Scale,
-                  },
-                  Translate: {
-                    name: 'Translate',
-                    Component:
-                      animatedProperties.transforms.transformProperties
-                        .Translate,
-                  },
-                  Skew: {
-                    name: 'Skew',
-                    Component:
-                      animatedProperties.transforms.transformProperties.Skew,
-                  },
-                  Matrix: {
-                    name: 'Matrix',
-                    Component:
-                      animatedProperties.transforms.transformProperties.Matrix,
-                  },
-                },
-              },
-              RelatedProperties: {
-                name: 'Related Properties',
-                routes: {
-                  TransformOrigin: {
-                    name: 'Transform Origin',
-                    Component:
-                      animatedProperties.transforms.relatedProperties
-                        .TransformOrigin,
-                  },
-                },
-              },
-            },
-          },
-          Others: {
-            name: 'Others',
-            routes: {},
-          },
-        },
+        routes: appearanceRoutes,
       },
       Typography: {
         name: 'Typography',
@@ -179,16 +221,7 @@ const routes = {
       },
       Others: {
         name: 'Others',
-        routes: {
-          Image: {
-            name: 'Image',
-            routes: {},
-          },
-          Cursor: {
-            name: 'Cursor',
-            routes: {},
-          },
-        },
+        routes: othersRoutes,
       },
     },
   },
