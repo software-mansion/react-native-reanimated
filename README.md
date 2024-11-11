@@ -5,9 +5,9 @@
 > Reanimated 3 is here! Check out our [documentation page](https://docs.swmansion.com/react-native-reanimated/) for more information
 
 React Native Reanimated provides a more comprehensive,
-low level abstraction for the Animated library API to be built
-on top of and hence allow for much greater flexibility especially when it
-comes to gesture based interactions.
+low-level abstraction for the Animated library API on which to build,
+allowing for much greater flexibility, especially when it comes to 
+gesture-based interactions.
 
 ### Nightly CI state
 
