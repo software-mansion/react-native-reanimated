@@ -119,7 +119,8 @@ export function getTestComponent(name: string): TestComponent {
 }
 
 export async function runTests() {
-  await testRunner.runTests();
+  const testOutput = await testRunner.runTests();
+  return testOutput;
 }
 
 export async function wait(delay: number) {

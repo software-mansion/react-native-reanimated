@@ -137,6 +137,7 @@ function Item({
         isDisabled && styles.disabledButton,
         wasClicked && styles.visitedItem,
       ]}
+      testID={title}
       onPress={onPress}
       enabled={!isDisabled}>
       {icon && <Text style={styles.title}>{icon + '  '}</Text>}

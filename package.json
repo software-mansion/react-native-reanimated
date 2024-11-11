@@ -20,9 +20,12 @@
   "scripts": {
     "build": "husky && yarn workspaces foreach -A -p run build",
     "lint": "yarn workspaces foreach -A -p run lint",
-    "format": "yarn workspaces foreach -A -p run format"
+    "format": "yarn workspaces foreach -A -p run format",
+    "detox-debug-paper-build": "cd apps/paper-example/ios; pod install; cd ../../..; detox build --configuration ios.sim.debug",
+    "detox-debug-paper-test": "detox test --configuration ios.sim.debug"
   },
   "devDependencies": {
+    "detox": "^20.25.2",
     "eslint": "^8.57.0",
     "eslint-plugin-jsdoc": "^50.2.2",
     "husky": "^9.0.11",
