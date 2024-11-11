@@ -18,13 +18,12 @@ import com.swmansion.worklets.WorkletsModule;
 import java.util.HashMap;
 import java.util.Objects;
 
-@OptIn(markerClass = FrameworkAPI.class)
 public class NativeProxy extends NativeProxyCommon {
   @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
 
-  public NativeProxy(ReactApplicationContext context, WorkletsModule workletsModule) {
+  public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(ReactApplicationContext context, WorkletsModule workletsModule) {
     super(context);
     ReactFeatureFlagsWrapper.enableMountHooks();
 
@@ -66,9 +65,6 @@ public class NativeProxy extends NativeProxyCommon {
     }
   }
 
-  /**
-   * @noinspection JavaJniMissingFunction
-   */
   private native HybridData initHybrid(
       WorkletsModule workletsModule,
       long jsContext,
@@ -78,9 +74,6 @@ public class NativeProxy extends NativeProxyCommon {
       MessageQueueThread messageQueueThread,
       FabricUIManager fabricUIManager);
 
-  /**
-   * @noinspection JavaJniMissingFunction
-   */
   private native HybridData initHybridBridgeless(
       WorkletsModule workletsModule,
       long jsContext,
@@ -90,14 +83,8 @@ public class NativeProxy extends NativeProxyCommon {
       MessageQueueThread messageQueueThread,
       FabricUIManager fabricUIManager);
 
-  /**
-   * @noinspection JavaJniMissingFunction
-   */
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
-  /**
-   * @noinspection JavaJniMissingFunction
-   */
   public native void performOperations();
 
   @Override
@@ -105,8 +92,7 @@ public class NativeProxy extends NativeProxyCommon {
     return mHybridData;
   }
 
-  public static NativeMethodsHolder createNativeMethodsHolder(
-      LayoutAnimations ignoredLayoutAnimations) {
+  public static NativeMethodsHolder createNativeMethodsHolder(LayoutAnimations layoutAnimations) {
     return new NativeMethodsHolder() {
       @Override
       public void startAnimation(int tag, int type, HashMap<String, Object> values) {

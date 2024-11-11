@@ -80,7 +80,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
       UIManager uiManager = reactCtx.getFabricUIManager();
       if (uiManager instanceof FabricUIManager) {
-        uiManager.addUIManagerEventListener(this);
+        ((FabricUIManager) uiManager).addUIManagerEventListener(this);
       } else {
         throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
       }
