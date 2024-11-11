@@ -101,10 +101,10 @@
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
     "@babel/types": "^7.20.0",
-    "@react-native/babel-preset": "0.76.0-rc.3",
-    "@react-native/eslint-config": "0.76.0-rc.3",
-    "@react-native/metro-config": "0.76.0-rc.3",
-    "@react-native/typescript-config": "0.76.0-rc.3",
+    "@react-native/babel-preset": "0.76.1",
+    "@react-native/eslint-config": "0.76.1",
+    "@react-native/metro-config": "0.76.1",
+    "@react-native/typescript-config": "0.76.1",
     "@testing-library/jest-native": "^4.0.4",
     "@testing-library/react-hooks": "^8.0.0",
     "@testing-library/react-native": "^12.5.2",
@@ -144,9 +144,9 @@
     "madge": "^5.0.1",
     "prettier": "^3.3.3",
     "react": "18.3.1",
-    "react-native": "0.76.0-rc.3",
+    "react-native": "^0.76.1",
     "react-native-builder-bob": "0.30.2",
-    "react-native-gesture-handler": "2.20.0",
+    "react-native-gesture-handler": "2.20.2",
     "react-native-web": "0.19.11",
     "react-test-renderer": "18.2.0",
     "shelljs": "^0.8.5",
@@ -175,8 +175,9 @@
     }
   },
   "sideEffects": [
-    "./lib/module/reanimated2/layoutReanimation/animationsManager.js",
-    "./lib/module/reanimated2/core.js",
+    "./lib/module/layoutReanimation/animationsManager.js",
+    "./lib/module/core.js",
+    "./lib/module/initializers.js",
     "./lib/module/index.js"
   ],
   "packageManager": "yarn@4.1.1"
