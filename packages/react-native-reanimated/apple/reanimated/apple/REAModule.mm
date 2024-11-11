@@ -295,7 +295,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
         self, _moduleRegistry, rnRuntime, workletsModule, executorFunction);
     [self attachReactEventListener];
     [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
-#else // RCT_NEW_ARCH_ENABLED
+#else
     [NSException raise:@"Missing bridge" format:@"[Reanimated] Failed to obtain the bridge."];
 #endif // RCT_NEW_ARCH_ENABLED
   } else {
