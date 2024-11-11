@@ -107,20 +107,10 @@ jsi::Value ObjectPropertiesInterpolator::mapInterpolators(
     jsi::Runtime &rt,
     const std::function<jsi::Value(PropertyInterpolator &)> &callback) const {
   jsi::Object result(rt);
-  bool allUndefined = true;
 
   for (const auto &[propName, interpolator] : interpolators_) {
     jsi::Value value = callback(*interpolator);
-
-    if (!value.isUndefined()) {
-      allUndefined = false;
-    }
-
     result.setProperty(rt, propName.c_str(), value);
-  }
-
-  if (allUndefined) {
-    return jsi::Value::undefined();
   }
 
   return result;

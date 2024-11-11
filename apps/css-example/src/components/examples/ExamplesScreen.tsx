@@ -18,14 +18,17 @@ type DifferentTypeTabsScreenProps<P extends AnyRecord> = {
   tabs: Array<{ name: string } & ExamplesListProps<P>>;
 };
 
-type SameTypeTabsScreenProps<P extends AnyRecord> = {
-  tabs: Array<
-    { name: string } & PartialBy<
-      ExamplesListProps<P>,
-      'buildConfig' | 'renderExample'
-    >
-  >;
-} & Pick<ExamplesListProps<P>, 'buildConfig' | 'renderExample'>;
+type PartialExamplesListProps<
+  P extends AnyRecord,
+  K extends keyof ExamplesListProps<P>,
+> = {
+  tabs: Array<{ name: string } & PartialBy<ExamplesListProps<P>, K>>;
+} & Pick<ExamplesListProps<P>, K>;
+
+type SameTypeTabsScreenProps<P extends AnyRecord> =
+  | PartialExamplesListProps<P, 'buildConfig' | 'renderExample'>
+  | PartialExamplesListProps<P, 'buildConfig'>
+  | PartialExamplesListProps<P, 'renderExample'>;
 
 export default function ExamplesScreen<P extends AnyRecord | Array<AnyRecord>>(
   props: ExamplesScreenProps<P>

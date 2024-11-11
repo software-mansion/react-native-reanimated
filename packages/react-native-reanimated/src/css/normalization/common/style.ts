@@ -8,20 +8,62 @@ import {
   isTransitionSetting,
 } from '../../utils';
 import { normalizeTransformString } from './transformString';
-import { normalizeCSSAnimationColor } from '../../../Colors';
+import { processColor } from '../../../Colors';
 import { normalizeTransformOrigin } from './transformOrigin';
 import type {
   CSSAnimationConfig,
   CSSTransitionConfig,
   CSSAnimationKeyframes,
   CSSTransitionProperty,
+  Maybe,
 } from '../../types';
 
 export const ERROR_MESSAGES = {
-  invalidColor: (color: string) => `Invalid color value: ${color}`,
+  invalidColor: (color: Maybe<number | string>) =>
+    `Invalid color value: ${color}`,
+  unsupportedAspectRatio: (ratio: string | number) =>
+    `Unsupported aspect ratio: ${ratio}. Expected a number or a string in "a/b" format.`,
 };
-
 type PropertyName = keyof StyleProps;
+
+function normalizeColor(value: string | number) {
+  let normalizedColor: Maybe<number | string> = null;
+
+  if (typeof value === 'string') {
+    if (value !== 'transparent') {
+      normalizedColor = processColor(value, false);
+    }
+  } else {
+    // case of number format 0xRRGGBBAA format needs to be re-formatted
+    normalizedColor = processColor(
+      `#${value.toString(16).padStart(8, '0')}`,
+      false
+    );
+  }
+
+  if (!normalizedColor && normalizedColor !== 0) {
+    throw new ReanimatedError(ERROR_MESSAGES.invalidColor(value));
+  }
+
+  return normalizedColor;
+}
+
+function normalizeAspectRatio(value: string | number): number {
+  if (typeof value === 'number' || !isNaN(+value)) {
+    return +value;
+  } else if (typeof value === 'string') {
+    const parts = value.split('/');
+    if (parts.length === 2) {
+      const numerator = parseFloat(parts[0]);
+      const denominator = parseFloat(parts[1]);
+      if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+        return numerator / denominator;
+      }
+    }
+  }
+
+  throw new ReanimatedError(ERROR_MESSAGES.unsupportedAspectRatio(value));
+}
 
 export function normalizeStyle(style: StyleProps): StyleProps {
   const entries: [PropertyName, StyleProps[PropertyName]][] = [];
@@ -31,31 +73,24 @@ export function normalizeStyle(style: StyleProps): StyleProps {
 
     if (value === 'auto') {
       propValue = undefined;
-    }
-
-    if (isColorProp(key, propValue)) {
-      const normalizedColor = normalizeCSSAnimationColor(propValue);
-      if (!normalizedColor && normalizedColor !== 0) {
-        throw new ReanimatedError(ERROR_MESSAGES.invalidColor(propValue));
-      }
-      entries.push([key, normalizedColor]);
-      continue;
-    }
-
-    if (isTransformString(key, propValue)) {
+    } else if (isColorProp(key, propValue)) {
+      entries.push([key, normalizeColor(propValue)]);
+    } else if (isTransformString(key, propValue)) {
       entries.push([key, normalizeTransformString(propValue)]);
-      continue;
-    }
-
-    switch (key) {
-      case 'transformOrigin':
-        entries.push([key, normalizeTransformOrigin(propValue)]);
-        break;
-      case 'gap':
-        entries.push(['rowGap', propValue], ['columnGap', propValue]);
-        break;
-      default:
-        entries.push([key, propValue]);
+    } else {
+      switch (key) {
+        case 'transformOrigin':
+          entries.push([key, normalizeTransformOrigin(propValue)]);
+          break;
+        case 'gap':
+          entries.push(['rowGap', propValue], ['columnGap', propValue]);
+          break;
+        case 'aspectRatio':
+          entries.push([key, normalizeAspectRatio(propValue)]);
+          break;
+        default:
+          entries.push([key, propValue]);
+      }
     }
   }
 

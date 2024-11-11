@@ -29,7 +29,16 @@ export function Section({
       style={[styles.sectionContainer, style, fill && flex.fill]}>
       <View style={styles.textWrapper}>
         <Text variant="heading3">{title}</Text>
-        {description && <Text>{description}</Text>}
+        {description &&
+          (Array.isArray(description) ? (
+            <View style={styles.description}>
+              {description.map((paragraph, index) => (
+                <Text key={index}>{paragraph}</Text>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.description}>{description}</Text>
+          ))}
       </View>
       <Group style={[styles.sectionContent, fill && flex.fill]}>
         {children}
@@ -39,6 +48,9 @@ export function Section({
 }
 
 const styles = StyleSheet.create({
+  description: {
+    gap: spacing.xs,
+  },
   sectionContainer: {
     gap: spacing.xxs,
     marginTop: spacing.md,

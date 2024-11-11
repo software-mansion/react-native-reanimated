@@ -112,6 +112,38 @@ describe(normalizeStyle, () => {
     });
   });
 
+  describe('aspect ratio', () => {
+    it('returns number as is', () => {
+      const style: StyleProps = {
+        aspectRatio: 1.5,
+      };
+
+      expect(normalizeStyle(style)).toEqual({
+        aspectRatio: 1.5,
+      });
+    });
+
+    it('normalizes aspect ratio', () => {
+      const style: StyleProps = {
+        aspectRatio: '16/9',
+      };
+
+      expect(normalizeStyle(style)).toEqual({
+        aspectRatio: 16 / 9,
+      });
+    });
+
+    it('throws an error for invalid aspect ratio', () => {
+      const style: StyleProps = {
+        aspectRatio: 'invalid',
+      };
+
+      expect(() => normalizeStyle(style)).toThrow(
+        new ReanimatedError(ERROR_MESSAGES.unsupportedAspectRatio('invalid'))
+      );
+    });
+  });
+
   describe('other props', () => {
     it('passes other props without modification', () => {
       const style: StyleProps = {

@@ -14,7 +14,7 @@ export type ExamplesListProps<P extends AnyRecord> = {
   CardComponent?: ComponentType<ExampleCardProps>;
   sections: Array<{
     title: string;
-    description?: string;
+    description?: Array<string> | string;
     CardComponent?: ComponentType<ExampleCardProps>;
     examples: Array<
       Omit<ExampleCardProps, 'children' | 'code' | 'collapsedCode'> & P
@@ -31,18 +31,17 @@ export default function ExamplesList<P extends AnyRecord>({
   return (
     <Scroll withBottomBarSpacing>
       {sections.map(
-        ({
-          CardComponent: SectionCardComponent,
-          examples,
-          ...sectionProps
-        }) => (
-          <Section {...sectionProps} key={sectionProps.title}>
-            {examples.map((exampleProps) => (
+        (
+          { CardComponent: SectionCardComponent, examples, ...sectionProps },
+          index
+        ) => (
+          <Section {...sectionProps} key={index}>
+            {examples.map((exampleProps, exampleIndex) => (
               <Example
                 {...exampleProps}
                 buildConfig={buildConfig}
                 CardComponent={SectionCardComponent ?? CardComponent}
-                key={exampleProps.title}
+                key={exampleIndex}
                 renderExample={renderExample}
               />
             ))}

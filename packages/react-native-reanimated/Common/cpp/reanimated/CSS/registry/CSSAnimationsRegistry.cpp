@@ -67,13 +67,8 @@ void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
     }
 
     const auto updates = animation->update(rt, timestamp);
-    if (updates.isUndefined()) {
-      updatesRegistry_.erase(animation->getShadowNode()->getTag());
-    } else {
-      updatesBatch_.emplace_back(
-          animation->getShadowNode(),
-          std::make_unique<jsi::Value>(rt, updates));
-    }
+    updatesBatch_.emplace_back(
+        animation->getShadowNode(), std::make_unique<jsi::Value>(rt, updates));
 
     const auto newState = animation->getState(timestamp);
     if (newState == AnimationProgressState::FINISHED) {
