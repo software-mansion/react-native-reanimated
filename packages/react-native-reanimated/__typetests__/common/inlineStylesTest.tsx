@@ -44,7 +44,7 @@ function InlineStylesTest() {
   }
 
   function InlineStylesTest4() {
-    const sv = useSharedValue(true);
+    const sv = useSharedValue('0');
     // @ts-expect-error properly detects illegal type
     return <Animated.View style={{ width: sv }} />;
   }
@@ -55,7 +55,7 @@ function InlineStylesTest() {
   }
 
   function InlineStylesTest6() {
-    const sv = useSharedValue({ width: true });
+    const sv = useSharedValue({ width: '0' });
     // @ts-expect-error properly detects illegal type
     return <Animated.View style={sv} />;
   }
