@@ -117,13 +117,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
   PlatformDepMethodsHolder platformDepMethodsHolder =
       makePlatformDepMethodsHolderBridgeless(moduleRegistry, nodesManager, reaModule);
 
-  const auto NativeWorkletsModule = [workletsModule getNativeWorkletsModule];
+  const auto nativeWorkletsModule = [workletsModule getNativeWorkletsModule];
   auto uiScheduler = std::make_shared<REAIOSUIScheduler>();
   auto jsScheduler = std::make_shared<JSScheduler>(runtime, runtimeExecutor);
   constexpr auto isBridgeless = true;
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      NativeWorkletsModule,
+      nativeWorkletsModule,
       runtime,
       jsScheduler,
       jsQueue,

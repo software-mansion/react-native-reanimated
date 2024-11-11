@@ -2,10 +2,8 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/fabric/JFabricUIManager.h>
-#include <react/renderer/scheduler/Scheduler.h>
-#if REACT_NATIVE_MINOR_VERSION >= 74
 #include <react/jni/JRuntimeExecutor.h>
-#endif // REACT_NATIVE_MINOR_VERSION >= 74
+#include <react/renderer/scheduler/Scheduler.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <ReactCommon/CallInvokerHolder.h>

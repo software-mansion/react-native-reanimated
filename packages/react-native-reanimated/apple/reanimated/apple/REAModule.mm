@@ -320,12 +320,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   return std::make_shared<facebook::react::NativeReanimatedModuleSpecJSI>(params);
 }
-
-- (void)initialize
-{
-  // Do nothing.
-  // For `RCTInitializing` interface.
-}
 #endif // RCT_NEW_ARCH_ENABLED
 
 - (void)commonInit:(std::shared_ptr<NativeReanimatedModule>)nativeReanimatedModule

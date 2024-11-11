@@ -1,6 +1,5 @@
 package com.swmansion.reanimated;
 
-import android.annotation.SuppressLint;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import com.facebook.react.bridge.LifecycleEventListener;
@@ -17,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
-@SuppressLint("UnsafeOptInUsageError") // TODO: Fix this
 @ReactModule(name = ReanimatedModule.NAME)
 public class ReanimatedModule extends NativeReanimatedModuleSpec
     implements LifecycleEventListener, UIManagerModuleListener, UIManagerListener {
@@ -63,9 +61,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   }
 
   private ArrayList<UIThreadOperation> mOperations = new ArrayList<>();
-
   private @Nullable NodesManager mNodesManager;
-
   private final WorkletsModule mWorkletsModule;
 
   public ReanimatedModule(ReactApplicationContext reactContext) {

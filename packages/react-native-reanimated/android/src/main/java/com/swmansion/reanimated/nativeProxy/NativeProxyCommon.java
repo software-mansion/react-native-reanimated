@@ -34,9 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * @noinspection JavaJniMissingFunction
- */
 public abstract class NativeProxyCommon {
   static {
     SoLoader.loadLibrary("reanimated");
@@ -225,9 +222,6 @@ public abstract class NativeProxyCommon {
     keyboardAnimationManager.unsubscribeFromKeyboardUpdates(listenerId);
   }
 
-  /**
-   * @noinspection unused
-   */
   protected abstract HybridData getHybridData();
 
   public void invalidate() {
@@ -236,7 +230,7 @@ public abstract class NativeProxyCommon {
 
   public void prepareLayoutAnimations(LayoutAnimations layoutAnimations) {
     if (Utils.isChromeDebugger) {
-      Log.w("[REANIMATED]", "You can't use LayoutAnimation with Chrome Debugger enabled");
+      Log.w("[REANIMATED]", "You can not use LayoutAnimation with enabled Chrome Debugger");
       return;
     }
     mNodesManager =

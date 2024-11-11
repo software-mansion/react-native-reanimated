@@ -29,7 +29,7 @@ using namespace react;
 
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
-    const std::shared_ptr<NativeWorkletsModule> &NativeWorkletsModule,
+    const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
@@ -44,7 +44,7 @@ NativeProxy::NativeProxy(
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
-          NativeWorkletsModule,
+          nativeWorkletsModule,
           *rnRuntime,
           std::make_shared<JSScheduler>(*rnRuntime, jsCallInvoker),
           std::make_shared<JMessageQueueThread>(messageQueueThread),
@@ -61,7 +61,7 @@ NativeProxy::NativeProxy(
 #ifdef RCT_NEW_ARCH_ENABLED
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
-    const std::shared_ptr<NativeWorkletsModule> &NativeWorkletsModule,
+    const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
     jsi::Runtime *rnRuntime,
     RuntimeExecutor runtimeExecutor,
     const std::shared_ptr<UIScheduler> &uiScheduler,
@@ -72,7 +72,7 @@ NativeProxy::NativeProxy(
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
-          NativeWorkletsModule,
+          nativeWorkletsModule,
           *rnRuntime,
           std::make_shared<JSScheduler>(*rnRuntime, runtimeExecutor),
           std::make_shared<JMessageQueueThread>(messageQueueThread),

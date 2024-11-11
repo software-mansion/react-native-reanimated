@@ -24,12 +24,9 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
-#ifdef RCT_NEW_ARCH_ENABLED
-// Nothing.
-#else
 #include <vector>
-#endif // RCT_NEW_ARCH_ENABLED
 
 namespace reanimated {
 
@@ -297,7 +294,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 #ifdef RCT_NEW_ARCH_ENABLED
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      const std::shared_ptr<NativeWorkletsModule> &NativeWorkletsModule,
+      const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
       jsi::Runtime *rnRuntime,
       RuntimeExecutor runtimeExecutor,
       const std::shared_ptr<UIScheduler> &uiScheduler,
