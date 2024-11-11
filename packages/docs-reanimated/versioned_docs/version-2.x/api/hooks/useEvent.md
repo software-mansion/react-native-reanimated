@@ -4,13 +4,13 @@ title: useEvent
 sidebar_label: useEvent
 ---
 
-This is low-level hook returning event handler that will be invoked with native events, which should be used in order to create custom event handler hook like `useAnimatedGestureHandler` or `useAnimatedScrollHandler`.
+This is a low-level hook returning an event handler that will be invoked with native events, which should be used in order to create custom event handler hooks, like `useAnimatedGestureHandler` or `useAnimatedScrollHandler`.
 
 ### Arguments
 
 #### `handler` [function]
 
-Handler will receive event object with native payload, that can be passed to custom handler hook's worklets.
+Handler that will receive an event object with a native payload, which can be passed to the custom handler hook's worklets.
 
 - `event` [object] - event object.
   The payload can differ depending on the type of the event.
@@ -21,11 +21,11 @@ Array of event names that will be handled by handler.
 
 #### `rebuilt` [boolean]
 
-Value indicating whether handler should be rebuilt.
+Value indicating whether the handler should be rebuilt.
 
 ### Returns
 
-The hook returns event handler that will be invoked when native event is dispatched.
+The hook returns an event handler that will be invoked when a native event is dispatched.
 
 ## Example
 
