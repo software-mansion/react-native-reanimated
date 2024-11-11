@@ -46,11 +46,6 @@
 
 using namespace facebook;
 
-#ifdef RCT_NEW_ARCH_ENABLED
-// Android can't find the definition of this static field
-bool CoreFeatures::useNativeState;
-#endif // RCT_NEW_ARCH_ENABLED
-
 namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(

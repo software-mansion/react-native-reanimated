@@ -20,6 +20,8 @@
                        <NativeReanimatedModuleSpec,
                         RCTInitializing,
                         RCTRuntimeExecutorModule,
+#else
+                       <RCTBridgeModule,
 #endif // RCT_NEW_ARCH_ENABLED
                         RCTEventDispatcherObserver,
                         RCTUIManagerObserver>

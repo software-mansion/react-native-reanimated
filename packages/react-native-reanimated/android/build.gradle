@@ -348,7 +348,7 @@ android {
 
             // ReanimatedUIManager & ReanimatedUIImplementation
             if (REACT_NATIVE_MINOR_VERSION <= 74 ) {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/"
+                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/74"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
             }
@@ -356,7 +356,7 @@ android {
             // ReactFeatureFlags
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/"
+                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/74"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/latest"
                 }
@@ -365,14 +365,14 @@ android {
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 // RuntimeExecutor and CallInvokerHolder
                 if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/"
+                    srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/74"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/latest"
                 }
             } else {
                 // CallInvokerHolder
                 if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/NativeProxyPaper/"
+                    srcDirs += "src/reactNativeVersionPatch/NativeProxyPaper/74"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/NativeProxyPaper/latest"
                 }
@@ -380,7 +380,7 @@ android {
 
             // BorderRadiiDrawableUtils
             if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/"
+                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/74"
             } else if (REACT_NATIVE_MINOR_VERSION <= 75) {
                 srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/75"
             } else {
