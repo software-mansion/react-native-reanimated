@@ -62,7 +62,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
 
   private ArrayList<UIThreadOperation> mOperations = new ArrayList<>();
   private @Nullable NodesManager mNodesManager;
-    private final WorkletsModule mWorkletsModule;
+  private final WorkletsModule mWorkletsModule;
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);

@@ -23,7 +23,7 @@ public class NativeProxy extends NativeProxyCommon {
   private final HybridData mHybridData;
 
   @OptIn(markerClass = FrameworkAPI.class)
-    public NativeProxy(ReactApplicationContext context, WorkletsModule workletsModule) {
+  public NativeProxy(ReactApplicationContext context, WorkletsModule workletsModule) {
     super(context);
     CallInvokerHolderImpl holder =
         (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
@@ -31,7 +31,7 @@ public class NativeProxy extends NativeProxyCommon {
     ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
     mHybridData =
         initHybrid(
-          workletsModule,
+            workletsModule,
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             holder,
             mAndroidUIScheduler,
@@ -51,8 +51,7 @@ public class NativeProxy extends NativeProxyCommon {
       CallInvokerHolderImpl jsCallInvokerHolder,
       AndroidUIScheduler androidUIScheduler,
       LayoutAnimations LayoutAnimations,
-      MessageQueueThread messageQueueThread
-);
+      MessageQueueThread messageQueueThread);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
