@@ -32,6 +32,8 @@ public class AndroidUIScheduler {
 
   public native void triggerUI();
 
+  public native void invalidateCpp();
+
   @DoNotStrip
   private void scheduleTriggerOnUI() {
     UiThreadUtil.runOnUiThread(
@@ -44,5 +46,6 @@ public class AndroidUIScheduler {
 
   public void deactivate() {
     mActive.set(false);
+    invalidateCpp();
   }
 }

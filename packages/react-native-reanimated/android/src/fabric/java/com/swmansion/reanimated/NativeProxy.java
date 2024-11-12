@@ -65,6 +65,8 @@ public class NativeProxy extends NativeProxyCommon {
 
   public native void performOperations();
 
+  public native void invalidateCpp();
+
   @Override
   protected HybridData getHybridData() {
     return mHybridData;
