@@ -109,6 +109,7 @@ public class NodesManager implements EventDispatcherListener {
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
   private ReaCompatibility compatibility;
+  private @Nullable Runnable unsubscribe = null;
 
   public NativeProxy getNativeProxy() {
     return mNativeProxy;
@@ -128,6 +129,15 @@ public class NodesManager implements EventDispatcherListener {
     if (mNativeProxy != null) {
       mNativeProxy.invalidate();
       mNativeProxy = null;
+    }
+    
+    if (compatibility != null) {
+      compatibility.unregisterFabricEventListener(this);
+    }
+
+    if (unsubscribe != null) {
+      unsubscribe.run();
+      unsubscribe = null;
     }
   }
 
@@ -182,8 +192,11 @@ public class NodesManager implements EventDispatcherListener {
     // Events are handled in the native modules thread in the `onEventDispatch()` method.
     // This method indirectly uses `mChoreographerCallback` which was created after event
     // registration, creating race condition
-    Objects.requireNonNull(UIManagerHelper.getEventDispatcher(context, uiManagerType))
-        .addListener(this);
+    EventDispatcher eventDispatcher = Objects.requireNonNull(
+      UIManagerHelper.getEventDispatcher(context, uiManagerType)
+    );
+    eventDispatcher.addListener(this);
+    unsubscribe = () -> eventDispatcher.removeListener(this);
 
     mAnimationManager = new AnimationsManager(mContext, mUIManager);
   }
