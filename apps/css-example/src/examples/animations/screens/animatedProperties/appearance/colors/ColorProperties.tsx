@@ -8,7 +8,8 @@ import Animated from 'react-native-reanimated';
 
 import type { ExampleCardProps } from '@/components';
 import {
-  ScrollScreen,
+  Screen,
+  Scroll,
   Section,
   TabView,
   VerticalExampleCard,
@@ -27,26 +28,28 @@ const sharedConfig: CSSAnimationSettings = {
 
 export default function ColorProperties() {
   return (
-    <TabView>
-      <TabView.Tab name="Background">
-        <BackgroundColors />
-      </TabView.Tab>
-      <TabView.Tab name="Text">
-        <TextColors />
-      </TabView.Tab>
-      <TabView.Tab name="Border">
-        <BorderColors />
-      </TabView.Tab>
-      <TabView.Tab name="Other">
-        <OtherColors />
-      </TabView.Tab>
-    </TabView>
+    <Screen>
+      <TabView>
+        <TabView.Tab name="Background">
+          <BackgroundColors />
+        </TabView.Tab>
+        <TabView.Tab name="Text">
+          <TextColors />
+        </TabView.Tab>
+        <TabView.Tab name="Border">
+          <BorderColors />
+        </TabView.Tab>
+        <TabView.Tab name="Other">
+          <OtherColors />
+        </TabView.Tab>
+      </TabView>
+    </Screen>
   );
 }
 
 function BackgroundColors() {
   return (
-    <ScrollScreen>
+    <Scroll withBottomBarSpacing>
       <Section title="Background Colors">
         <ViewExample
           title="View backgroundColor"
@@ -77,13 +80,13 @@ function BackgroundColors() {
           }}
         />
       </Section>
-    </ScrollScreen>
+    </Scroll>
   );
 }
 
 function TextColors() {
   return (
-    <ScrollScreen>
+    <Scroll withBottomBarSpacing>
       <Section title="Text Colors">
         <TextExample
           title="color"
@@ -124,13 +127,13 @@ function TextColors() {
           title="textShadowColor"
         /> */}
       </Section>
-    </ScrollScreen>
+    </Scroll>
   );
 }
 
 function BorderColors() {
   return (
-    <ScrollScreen>
+    <Scroll withBottomBarSpacing>
       <Section title="Border Colors">
         <ViewExample
           style={{ borderWidth: spacing.md }}
@@ -227,13 +230,13 @@ function BorderColors() {
           }}
         />
       </Section>
-    </ScrollScreen>
+    </Scroll>
   );
 }
 
 function OtherColors() {
   return (
-    <ScrollScreen>
+    <Scroll withBottomBarSpacing>
       <Section title="Other Colors">
         <ViewExample
           title="shadowColor"
@@ -272,7 +275,7 @@ function OtherColors() {
           }}
         />
       </Section>
-    </ScrollScreen>
+    </Scroll>
   );
 }
 

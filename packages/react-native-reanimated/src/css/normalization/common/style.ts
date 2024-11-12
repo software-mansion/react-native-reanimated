@@ -30,7 +30,9 @@ function normalizeColor(value: string | number) {
   let normalizedColor: Maybe<number | string> = null;
 
   if (typeof value === 'string') {
-    if (value !== 'transparent') {
+    if (value === 'transparent') {
+      normalizedColor = 'transparent';
+    } else {
       normalizedColor = processColor(value, false);
     }
   } else {
@@ -71,7 +73,7 @@ export function normalizeStyle(style: StyleProps): StyleProps {
   for (const [key, value] of Object.entries(style)) {
     let propValue = value;
 
-    if (value === 'auto') {
+    if (value === 'auto' || value === undefined) {
       propValue = undefined;
     } else if (isColorProp(key, propValue)) {
       entries.push([key, normalizeColor(propValue)]);

@@ -1,11 +1,13 @@
-import Borders from './Borders';
+import borders from './borders';
 import colors from './colors';
-import Shadows from './Shadows';
+import others from './others';
+import shadows from './shadows';
 import transforms from './transforms';
 
 export default {
-  Borders,
-  Shadows,
+  borders,
   colors,
+  others,
+  shadows,
   transforms,
 };
