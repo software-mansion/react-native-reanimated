@@ -19,11 +19,7 @@ import type { HeaderBackButtonProps } from '@react-navigation/elements';
 import { HeaderBackButton } from '@react-navigation/elements';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type {
-  NavigationProp,
-  NavigationState,
-  PathConfigMap,
-} from '@react-navigation/native';
+import type { NavigationState, PathConfigMap } from '@react-navigation/native';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -168,10 +164,13 @@ const linking = {
 };
 
 function BackButton(props: HeaderBackButtonProps) {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<
+    | StackNavigationProp<RootStackParamList>
+    | NativeStackNavigationProp<RootStackParamList>
+  >();
 
   return (
-    <HeaderBackButton {...props} onPress={() => navigation.goBack()} />
+    <HeaderBackButton {...props} onPress={() => navigation.popTo('Home')} />
   );
 }
 
