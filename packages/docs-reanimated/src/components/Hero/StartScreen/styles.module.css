@@ -36,6 +36,7 @@
   font-weight: 600;
   line-height: 1.15;
   letter-spacing: var(--swm-heading-letter-spacing-bigger);
+  text-wrap: balance;
 
   margin-top: 32px;
   margin-bottom: 56px;
