@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import type { CSSAnimationConfig } from 'react-native-reanimated';
 
 import { Scroll, Section } from '@/components/layout';
+import type { LabelType } from '@/components/misc';
 import type { AnyRecord } from '@/types';
 import { formatAnimationCode } from '@/utils';
 
@@ -15,6 +16,7 @@ export type ExamplesListProps<P extends AnyRecord> = {
   sections: Array<{
     title: string;
     description?: Array<string> | string;
+    labelTypes?: Array<LabelType>;
     CardComponent?: ComponentType<ExampleCardProps>;
     examples: Array<
       Omit<ExampleCardProps, 'children' | 'code' | 'collapsedCode'> & P
