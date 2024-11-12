@@ -3,11 +3,20 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
   withTiming,
+  createAnimatedPropAdapter,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, TextInput, View } from 'react-native';
+import { Button, Platform, StyleSheet, TextInput, View } from 'react-native';
 import React, { useCallback } from 'react';
 
 Animated.addWhitelistedNativeProps({ text: true });
+
+const textAdapter = createAnimatedPropAdapter(
+  (props: Record<string, unknown>) => {
+    props._setAttributeDirectly = true;
+    props.value = props.text;
+  },
+  ['value']
+);
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -22,9 +31,13 @@ export default function AmountExample() {
     return `$${sv.value.toFixed(2)}`;
   });
 
-  const animatedProps = useAnimatedProps(() => {
-    return { text: text.value, defaultValue: text.value };
-  });
+  const animatedProps = useAnimatedProps(
+    () => {
+      return { text: text.value, defaultValue: text.value };
+    },
+    [],
+    Platform.OS === 'web' ? [textAdapter] : undefined
+  );
 
   const setValue = useCallback(
     (delta: number) => {

@@ -64,6 +64,8 @@ export const _updatePropsJS = (
     const component = viewRef.getAnimatableRef
       ? viewRef.getAnimatableRef()
       : viewRef;
+    const setPropDirectly = updates._setAttributeDirectly;
+    delete updates._setAttributeDirectly;
     const [rawStyles] = Object.keys(updates).reduce(
       (acc: [StyleProps, AnimatedStyle<any>], key) => {
         const value = updates[key];
@@ -85,7 +87,7 @@ export const _updatePropsJS = (
     ) {
       // React Native Web 0.19+ no longer provides setNativeProps function,
       // so we need to update DOM nodes directly.
-      updatePropsDOM(component, rawStyles, isAnimatedProps);
+      updatePropsDOM(component, rawStyles, isAnimatedProps, setPropDirectly);
     } else if (Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
         if (!rawStyles[key]) {
@@ -131,7 +133,8 @@ const setNativeProps = (
 const updatePropsDOM = (
   component: JSReanimatedComponent | HTMLElement,
   style: StyleProps,
-  isAnimatedProps?: boolean
+  isAnimatedProps?: boolean,
+  setPropDirectly?: boolean
 ): void => {
   const previousStyle = (component as JSReanimatedComponent).previousStyle
     ? (component as JSReanimatedComponent).previousStyle
@@ -159,7 +162,12 @@ const updatePropsDOM = (
 
   for (const key in domStyle) {
     if (isAnimatedProps) {
-      (component as HTMLElement).setAttribute(key, domStyle[key]);
+      if (setPropDirectly) {
+        // @ts-ignore We want to set a prop directly on a component without using setAttribute - to overcome React behaviour
+        (component as HTMLElement)[key] = domStyle[key];
+      } else {
+        (component as HTMLElement).setAttribute(key, domStyle[key]);
+      }
     } else {
       (component.style as StyleProps)[key] = domStyle[key];
     }

@@ -8,6 +8,7 @@ import Animated, {
   useDerivedValue,
   useAnimatedProps,
   interpolate,
+  createAnimatedPropAdapter,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
@@ -46,6 +47,14 @@ function angleToValue(angle: number, min: number, max: number) {
   'worklet';
   return interpolate(angle, [0, 360], [min, max]);
 }
+
+const textAdapter = createAnimatedPropAdapter(
+  (props: Record<string, unknown>) => {
+    props._setAttributeDirectly = true;
+    props.value = props.text;
+  },
+  ['value']
+);
 
 type CircularSliderProps = {
   size: number;
@@ -109,10 +118,14 @@ function CircularSlider(props: CircularSliderProps) {
     };
   });
 
-  const animatedInputProps = useAnimatedProps(() => {
-    const text = String(currentValue.value);
-    return { text, defaultValue: text };
-  });
+  const animatedInputProps = useAnimatedProps(
+    () => {
+      const text = String(currentValue.value);
+      return { text, defaultValue: text };
+    },
+    undefined,
+    [textAdapter]
+  );
 
   const gesture = Gesture.Pan()
     .minDistance(0)
