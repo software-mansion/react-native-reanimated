@@ -687,7 +687,7 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
         std::make_shared<std::function<void(const double)>>();
 
     *cssLoop = [this, cssLoop](const double timestampMs) {
-      performOperations();
+        shouldUpdateCssAnimations_ = true;
       if (cssAnimationsRegistry_->hasUpdates() ||
           cssTransitionsRegistry_->hasUpdates()) {
         jsi::Runtime &rt =
@@ -714,16 +714,22 @@ void ReanimatedModuleProxy::performOperations() {
     auto lock = updatesRegistryManager_->createLock();
     const auto timestamp = getAnimationTimestamp_();
 
-    // Update CSS transitions and flush updates
-    cssTransitionsRegistry_->update(rt, timestamp);
-    cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, false);
+    if (shouldUpdateCssAnimations_) {
+        // Update CSS transitions and flush updates
+        cssTransitionsRegistry_->update(rt, timestamp);
+        cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, false);
+    }
 
     // Flush all animated props updates
     animatedPropsRegistry_->flushUpdates(rt, updatesBatch, true);
 
-    // Update CSS animations and flush updates
-    cssAnimationsRegistry_->update(rt, timestamp);
-    cssAnimationsRegistry_->flushUpdates(rt, updatesBatch, false);
+    if (shouldUpdateCssAnimations_) {
+        // Update CSS animations and flush updates
+        cssAnimationsRegistry_->update(rt, timestamp);
+        cssAnimationsRegistry_->flushUpdates(rt, updatesBatch, false);
+    }
+
+    shouldUpdateCssAnimations_ = false;
   }
 
   ReanimatedSystraceSection s("performOperations");
