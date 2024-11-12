@@ -226,6 +226,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   bool cssLoopRunning_{false};
+  bool shouldUpdateCssAnimations_{true};
 
 #ifdef RCT_NEW_ARCH_ENABLED
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
