@@ -128,8 +128,6 @@ const layoutAndPositioningRoutes = {
   },
   Insets: {
     name: 'Insets',
-    disabled: true,
-    labelTypes: ['unimplemented'],
     Component: animatedProperties.layoutAndPositioning.Insets,
   },
   Others: {
