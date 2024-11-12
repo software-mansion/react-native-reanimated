@@ -4,12 +4,14 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import { Text } from '@/components/core';
+import { Label, type LabelType } from '@/components/misc';
 import { flex, spacing } from '@/theme';
 
 import Group from './Group';
 
 type SectionProps = PropsWithChildren<{
   title: string;
+  labelTypes?: Array<LabelType>;
   description?: ReactNode;
   fill?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -20,6 +22,7 @@ export function Section({
   children,
   description,
   fill,
+  labelTypes,
   style,
   title,
 }: SectionProps) {
@@ -28,7 +31,12 @@ export function Section({
       layout={LinearTransition}
       style={[styles.sectionContainer, style, fill && flex.fill]}>
       <View style={styles.textWrapper}>
-        <Text variant="heading3">{title}</Text>
+        <View style={styles.titleWrapper}>
+          <Text variant="heading3">{title}</Text>
+          {labelTypes?.map((labelType, index) => (
+            <Label key={index} type={labelType} />
+          ))}
+        </View>
         {description &&
           (Array.isArray(description) ? (
             <View style={styles.description}>
@@ -63,5 +71,10 @@ const styles = StyleSheet.create({
   textWrapper: {
     gap: spacing.xs,
     marginHorizontal: spacing.sm,
+  },
+  titleWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
   },
 });

@@ -182,8 +182,6 @@ const appearanceRoutes = {
   Shadows: {
     name: 'Shadows',
     flatten: true,
-    disabled: true,
-    labelTypes: ['unimplemented'],
     routes: {
       ViewShadow: {
         name: 'View Shadow',
