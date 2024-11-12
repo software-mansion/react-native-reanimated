@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* CSSExampleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* CSSExampleTests.m */; };
-		03F6D8822CDD825900175E21 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		03F6D8822CDD825900175E21 /* BuildFile in Resources */ = {isa = PBXBuildFile; };
 		03F6D8852CE115AE00175E21 /* UbuntuMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 64893EC85B054C119CBBA1A3 /* UbuntuMono-Regular.ttf */; };
 		03F6D8862CE115B200175E21 /* UFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 3C9B5467356F4985A171426F /* UFL.txt */; };
 		0C80B921A6F3F58F76C31292 /* libPods-CSSExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-CSSExample.a */; };
@@ -278,7 +278,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				03F6D8822CDD825900175E21 /* (null) in Resources */,
+				03F6D8822CDD825900175E21 /* BuildFile in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -342,7 +342,7 @@
 		};
 		1232BDDFC9DE5BCE2776187D /* [CP-User] Generate metadata for clangd */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
+			alwaysOutOfDate = true;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -652,7 +652,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -725,7 +728,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

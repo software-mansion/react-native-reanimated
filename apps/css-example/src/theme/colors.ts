@@ -9,6 +9,14 @@ const accentColors = {
   primaryLight: '#C1E0F1',
 };
 
+export const labelColors = {
+  Android: '#2A9D57',
+  iOS: '#005BBB',
+  needsFix: '#FF4D4D',
+  unimplemented: '#6E7191',
+  unsupported: '#FF8C00',
+} as const;
+
 export const colors = {
   background1: baseColors.white,
   background2: '#F4F5F7',
@@ -20,4 +28,5 @@ export const colors = {
 
   ...baseColors,
   ...accentColors,
+  label: labelColors,
 } as const;

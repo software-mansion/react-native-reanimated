@@ -6,11 +6,14 @@ import { StyleSheet, View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 
 import { Text } from '@/components/core';
+import { Label, type LabelType } from '@/components/misc';
 import { colors, radius, sizes, spacing } from '@/theme';
 
 type RouteCardProps = PropsWithChildren<{
   title: string;
   route: string;
+  disabled?: boolean;
+  labelTypes?: Array<LabelType>;
   description?: string;
   showcaseScale?: number;
 }>;
@@ -22,23 +25,32 @@ export type RouteCardComponent = (
 export default function RouteCard({
   children,
   description,
+  disabled = false,
+  labelTypes,
   route,
   showcaseScale = 1,
   title,
 }: RouteCardProps) {
   const navigation = useNavigation();
+
   return (
     <TouchableOpacity
       activeOpacity={0.5}
+      disabled={disabled}
       style={styles.card}
       onPress={() => {
         navigation.navigate(route as never);
       }}>
-      <View style={styles.content}>
+      <View style={[styles.content, { opacity: disabled ? 0.6 : 1 }]}>
         <View style={styles.textColumn}>
-          <Text style={styles.title} variant="label1">
-            {title}
-          </Text>
+          <View style={styles.titleWrapper}>
+            <Text style={styles.title} variant="label1">
+              {title}
+            </Text>
+            {labelTypes?.map((type) => (
+              <Label key={type} size="small" type={type} />
+            ))}
+          </View>
           {description && <Text variant="body1">{description}</Text>}
         </View>
         <View style={styles.showcaseWrapper}>
@@ -91,5 +103,11 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.foreground1,
+    flexShrink: 1,
+  },
+  titleWrapper: {
+    alignItems: 'center',
+    columnGap: spacing.xs,
+    flexDirection: 'row',
   },
 });

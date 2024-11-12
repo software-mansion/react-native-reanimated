@@ -1,11 +1,13 @@
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 
-import type { RouteCardComponent } from '@/components';
+import type { LabelType, RouteCardComponent } from '@/components';
 
 export type Route = RouteWithComponent | RouteWithRoutes;
 
 type SharedRouteProps = {
   name: string;
+  disabled?: boolean;
+  labelTypes?: Array<LabelType>;
   CardComponent?: RouteCardComponent;
 };
 

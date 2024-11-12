@@ -58,7 +58,59 @@ const layoutAndPositioningRoutes = {
       },
       NumericProperties: {
         name: 'Numeric Properties',
-        routes: {},
+        routes: {
+          Flex: {
+            disabled: true,
+            name: 'Flex',
+            labelTypes: ['unimplemented'],
+            Component: animatedProperties.layoutAndPositioning.flexBox.Flex,
+          },
+          FlexBasis: {
+            name: 'Flex Basis',
+            disabled: true,
+            labelTypes: ['unsupported'],
+            Component:
+              animatedProperties.layoutAndPositioning.flexBox.FlexBasis,
+          },
+          FlexGrow: {
+            name: 'Flex Grow',
+            disabled: true,
+            labelTypes: ['unimplemented'],
+            Component: animatedProperties.layoutAndPositioning.flexBox.FlexGrow,
+          },
+          FlexShrink: {
+            name: 'Flex Shrink',
+            disabled: true,
+            labelTypes: ['unimplemented'],
+            Component:
+              animatedProperties.layoutAndPositioning.flexBox.FlexShrink,
+          },
+          RowGap: {
+            name: 'Row Gap',
+            disabled: true,
+            labelTypes: ['unimplemented'],
+            Component: animatedProperties.layoutAndPositioning.flexBox.RowGap,
+          },
+          ColumnGap: {
+            name: 'Column Gap',
+            disabled: true,
+            labelTypes: ['unimplemented'],
+            Component:
+              animatedProperties.layoutAndPositioning.flexBox.ColumnGap,
+          },
+          Start: {
+            name: 'Start',
+            disabled: true,
+            labelTypes: ['unimplemented'],
+            Component: animatedProperties.layoutAndPositioning.flexBox.Start,
+          },
+          End: {
+            name: 'End',
+            disabled: true,
+            labelTypes: ['unimplemented'],
+            Component: animatedProperties.layoutAndPositioning.flexBox.End,
+          },
+        },
       },
     },
   },
@@ -76,11 +128,37 @@ const layoutAndPositioningRoutes = {
   },
   Insets: {
     name: 'Insets',
+    disabled: true,
+    labelTypes: ['unimplemented'],
     Component: animatedProperties.layoutAndPositioning.Insets,
   },
   Others: {
     name: 'Others',
     routes: {
+      Position: {
+        name: 'Position',
+        disabled: true,
+        labelTypes: ['unimplemented'],
+        Component: animatedProperties.layoutAndPositioning.others.Position,
+      },
+      Display: {
+        name: 'Display',
+        disabled: true,
+        labelTypes: ['unimplemented'],
+        Component: animatedProperties.layoutAndPositioning.others.Display,
+      },
+      Overflow: {
+        name: 'Overflow',
+        disabled: true,
+        labelTypes: ['unimplemented'],
+        Component: animatedProperties.layoutAndPositioning.others.Overflow,
+      },
+      ZIndex: {
+        name: 'Z Index',
+        disabled: true,
+        labelTypes: ['unimplemented'],
+        Component: animatedProperties.layoutAndPositioning.others.ZIndex,
+      },
       AspectRatio: {
         name: 'Aspect Ratio',
         Component: animatedProperties.layoutAndPositioning.others.AspectRatio,
@@ -105,11 +183,55 @@ const appearanceRoutes = {
   },
   Shadows: {
     name: 'Shadows',
-    routes: {},
+    flatten: true,
+    disabled: true,
+    labelTypes: ['unimplemented'],
+    routes: {
+      ViewShadow: {
+        name: 'View Shadow',
+        routes: {
+          ShadowOffset: {
+            name: 'Shadow Offset',
+            labelTypes: ['iOS'],
+            Component: animatedProperties.appearance.shadows.ShadowOffset,
+          },
+          ShadowRadius: {
+            name: 'Shadow Radius',
+            labelTypes: ['iOS'],
+            Component: animatedProperties.appearance.shadows.ShadowRadius,
+          },
+          ShadowOpacity: {
+            name: 'Shadow Opacity',
+            labelTypes: ['iOS'],
+            Component: animatedProperties.appearance.shadows.ShadowOpacity,
+          },
+          Elevation: {
+            name: 'Elevation',
+            labelTypes: ['Android'],
+            Component: animatedProperties.appearance.shadows.Elevation,
+          },
+        },
+      },
+      TextShadow: {
+        name: 'Text Shadow',
+        routes: {
+          TextShadowOffset: {
+            name: 'Text Shadow Offset',
+            Component: animatedProperties.appearance.shadows.TextShadowOffset,
+          },
+          TextShadowRadius: {
+            name: 'Text Shadow Radius',
+            Component: animatedProperties.appearance.shadows.TextShadowRadius,
+          },
+        },
+      },
+    },
   },
   Borders: {
     name: 'Borders',
-    Component: animatedProperties.appearance.Borders,
+    disabled: true,
+    labelTypes: ['unimplemented'],
+    routes: {},
   },
   Transforms: {
     name: 'Transforms',
@@ -170,13 +292,124 @@ const appearanceRoutes = {
   },
   Others: {
     name: 'Others',
-    routes: {},
+    disabled: true,
+    labelTypes: ['unimplemented'],
+    routes: {
+      Opacity: {
+        name: 'Opacity',
+        Component: animatedProperties.appearance.others.Opacity,
+      },
+      BackfaceVisibility: {
+        name: 'Backface Visibility',
+        Component: animatedProperties.appearance.others.BackfaceVisibility,
+      },
+    },
+  },
+} satisfies Routes;
+
+const typographyRoutes = {
+  Font: {
+    name: 'Font',
+    disabled: true,
+    labelTypes: ['unimplemented'],
+    routes: {
+      FontFamily: {
+        name: 'Font Family',
+        Component: animatedProperties.typography.font.FontFamily,
+      },
+      FontSize: {
+        name: 'Font Size',
+        Component: animatedProperties.typography.font.FontSize,
+      },
+      FontStyle: {
+        name: 'Font Style',
+        Component: animatedProperties.typography.font.FontStyle,
+      },
+      FontVariant: {
+        name: 'Font Variant',
+        Component: animatedProperties.typography.font.FontVariant,
+      },
+      FontWeight: {
+        name: 'Font Weight',
+        Component: animatedProperties.typography.font.FontWeight,
+      },
+    },
+  },
+  TextAlignment: {
+    name: 'Text Alignment',
+    disabled: true,
+    labelTypes: ['unimplemented'],
+    routes: {
+      TextAlign: {
+        name: 'Text Align',
+        Component: animatedProperties.typography.alignment.TextAlign,
+      },
+      VerticalAlign: {
+        name: 'Vertical Align',
+        labelTypes: ['Android'],
+        Component: animatedProperties.typography.alignment.VerticalAlign,
+      },
+      TextAlignVertical: {
+        name: 'Text Align Vertical',
+        labelTypes: ['Android'],
+        Component: animatedProperties.typography.alignment.TextAlignVertical,
+      },
+    },
+  },
+  TextDecoration: {
+    name: 'Text Decoration',
+    disabled: true,
+    labelTypes: ['unimplemented'],
+    routes: {
+      LetterSpacing: {
+        name: 'Letter Spacing',
+        Component: animatedProperties.typography.decoration.LetterSpacing,
+      },
+      LineHeight: {
+        name: 'Line Height',
+        Component: animatedProperties.typography.decoration.LineHeight,
+      },
+      TextTransform: {
+        name: 'Text Transform',
+        Component: animatedProperties.typography.decoration.TextTransform,
+      },
+      TextDecorationLine: {
+        name: 'Text Decoration Line',
+        Component: animatedProperties.typography.decoration.TextDecorationLine,
+      },
+      TextDecorationStyle: {
+        name: 'Text Decoration Style',
+        Component: animatedProperties.typography.decoration.TextDecorationStyle,
+      },
+    },
+  },
+  Others: {
+    name: 'Others',
+    disabled: true,
+    labelTypes: ['unimplemented'],
+    routes: {
+      UserSelect: {
+        name: 'User Select',
+        Component: animatedProperties.typography.others.UserSelect,
+      },
+      WritingDirection: {
+        name: 'Writing Direction',
+        Component: animatedProperties.typography.others.WritingDirection,
+      },
+      IncludeFontPadding: {
+        name: 'Include Font Padding',
+        labelTypes: ['Android'],
+        Component: animatedProperties.typography.others.IncludeFontPadding,
+      },
+    },
   },
 } satisfies Routes;
 
 const othersRoutes = {
   Image: {
     name: 'Image',
+    disabled: true,
+    labelTypes: ['unimplemented'],
     routes: {
       ResizeMode: {
         name: 'Resize Mode',
@@ -190,7 +423,18 @@ const othersRoutes = {
   },
   Cursor: {
     name: 'Cursor',
-    routes: {},
+    disabled: true,
+    labelTypes: ['unimplemented'],
+    routes: {
+      Cursor: {
+        name: 'Cursor',
+        Component: animatedProperties.others.cursor.Cursor,
+      },
+      PointerEvents: {
+        name: 'Pointer Events',
+        Component: animatedProperties.others.cursor.PointerEvents,
+      },
+    },
   },
 } satisfies Routes;
 
@@ -212,12 +456,7 @@ const routes = {
       },
       Typography: {
         name: 'Typography',
-        routes: {
-          Font: {
-            name: 'Font',
-            routes: {},
-          },
-        },
+        routes: typographyRoutes,
       },
       Others: {
         name: 'Others',
@@ -309,6 +548,7 @@ const routes = {
       },
       IterationCountAndFillMode: {
         name: 'Iteration Count and Fill Mode',
+        labelTypes: ['needsFix'],
         Component: testExamples.IterationCountAndFillMode,
       },
     },

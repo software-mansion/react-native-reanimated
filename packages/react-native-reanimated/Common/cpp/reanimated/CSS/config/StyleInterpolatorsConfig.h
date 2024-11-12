@@ -30,10 +30,10 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       {"flexShrink", numeric(0)},
       {"flexBasis", relOrNum(RelativeTo::PARENT, "width")},
       {"flexWrap", discrete()},
-      {"start", relOrNum(RelativeTo::PARENT, "width")},
-      {"end", relOrNum(RelativeTo::PARENT, "width")},
       {"rowGap", relOrNum(RelativeTo::SELF, "height", 0)},
       {"columnGap", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"start", relOrNum(RelativeTo::PARENT, "width")},
+      {"end", relOrNum(RelativeTo::PARENT, "width")},
 
       // DIMENSIONS
       {"height", relOrNum(RelativeTo::PARENT, "height")},
@@ -79,6 +79,7 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       {"display", discrete()},
       {"overflow", discrete()},
       {"zIndex", steps(0)},
+      {"aspectRatio", numeric()},
 
       /**
        * Appearance
@@ -109,15 +110,15 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       // SHADOWS
       // View
       // iOS only
-      {"shadowOpacity", numeric(1)},
-      {"shadowRadius", numeric(0)},
       {"shadowOffset", object({{"width", numeric(0)}, {"height", numeric(0)}})},
+      {"shadowRadius", numeric(0)},
+      {"shadowOpacity", numeric(1)},
       // Android only
       {"elevation", numeric(0)},
       // Text
-      {"textShadowRadius", numeric(0)},
       {"textShadowOffset",
        object({{"width", numeric(0)}, {"height", numeric(0)}})},
+      {"textShadowRadius", numeric(0)},
 
       // BORDERS
       // TODO: Check which these props should be relative to with the
@@ -170,11 +171,9 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       /**
        * Typography
        */
-      // FONT
-      {"fontSize", numeric()}, // TODO - should determine the default value
-      {"lineHeight", numeric()}, // TODO - should inherit from font size
-      {"letterSpacing", numeric(0)},
+      // Font
       {"fontFamily", discrete()},
+      {"fontSize", numeric()}, // TODO - should determine the default value
       {"fontStyle", discrete()},
       {"fontVariant", discrete()},
       {"fontWeight", discrete()},
@@ -183,9 +182,11 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       {"textAlignVertical", discrete()},
       {"verticalAlign", discrete()},
       // Decoration
+      {"letterSpacing", numeric(0)},
+      {"lineHeight", numeric()}, // TODO - should inherit from font size
+      {"textTransform", discrete()},
       {"textDecorationLine", discrete()},
       {"textDecorationStyle", discrete()},
-      {"textTransform", discrete()},
       // Others
       {"userSelect", discrete()},
       {"writingDirection", discrete()},
@@ -196,7 +197,6 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
        */
       // Image
       {"resizeMode", discrete()},
-      {"aspectRatio", numeric()},
       {"objectFit", discrete()},
 
       // Cursor

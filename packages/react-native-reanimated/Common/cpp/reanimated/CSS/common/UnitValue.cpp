@@ -17,8 +17,7 @@ UnitValue::UnitValue(const std::string &value) {
     this->isRelative = true;
   } else {
     throw std::runtime_error(
-        "[Reanimated] RelativeOrNumericValueInterpolator: unsupported value: " +
-        str);
+        "[Reanimated] UnitValue: unsupported value: " + str);
   }
 }
 
@@ -30,8 +29,7 @@ UnitValue::UnitValue(jsi::Runtime &rt, const jsi::Value &value) {
     std::string strValue = value.asString(rt).utf8(rt);
     *this = UnitValue(strValue); // Delegate to the string constructor
   } else {
-    throw std::runtime_error(
-        "[Reanimated] RelativeOrNumericValueInterpolator: unsupported value type");
+    throw std::runtime_error("[Reanimated] UnitValue: unsupported value type");
   }
 }
 
