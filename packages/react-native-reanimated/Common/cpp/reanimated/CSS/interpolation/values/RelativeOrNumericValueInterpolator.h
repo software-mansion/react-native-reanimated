@@ -30,6 +30,10 @@ class RelativeOrNumericValueInterpolator final
       const UnitValue &toValue,
       const PropertyInterpolationUpdateContext &context) const override;
 
+  bool isResolvable() const override {
+    return true;
+  }
+
  private:
   const RelativeTo relativeTo_;
   const std::string relativeProperty_;

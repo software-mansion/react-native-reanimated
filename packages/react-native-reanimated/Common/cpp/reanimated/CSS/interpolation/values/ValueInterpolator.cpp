@@ -170,9 +170,9 @@ ValueKeyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
     bool shouldResolve,
     const PropertyInterpolationUpdateContext &context) const {
   const auto &keyframe = keyframes_.at(index);
-  const double offset = keyframe.offset;
 
   if (shouldResolve) {
+    const double offset = keyframe.offset;
     T unresolvedValue;
 
     if (keyframe.value.has_value()) {
@@ -215,11 +215,15 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
     if (keyframeAfterIndex_ != prevAfterIndex) {
       keyframeBefore_ = getKeyframeAtIndex(
           keyframeAfterIndex_ - 1,
-          keyframeAfterIndex_ > prevAfterIndex,
+          isResolvable() && keyframeAfterIndex_ > prevAfterIndex,
           context);
       keyframeAfter_ = getKeyframeAtIndex(
-          keyframeAfterIndex_, keyframeAfterIndex_ < prevAfterIndex, context);
-    } else if (context.directionChanged && previousValue_.has_value()) {
+          keyframeAfterIndex_,
+          isResolvable() && keyframeAfterIndex_ < prevAfterIndex,
+          context);
+    } else if (
+        isResolvable() && context.directionChanged &&
+        previousValue_.has_value()) {
       const ValueKeyframe<T> keyframe = {
           context.previousProgress.value(), previousValue_.value()};
       if (context.progress < context.previousProgress.value()) {
@@ -234,9 +238,13 @@ void ValueInterpolator<T>::updateCurrentKeyframes(
     }
   } else {
     keyframeBefore_ = getKeyframeAtIndex(
-        keyframeAfterIndex_ - 1, isProgressLessThanHalf, context);
+        keyframeAfterIndex_ - 1,
+        isResolvable() && isProgressLessThanHalf,
+        context);
     keyframeAfter_ = getKeyframeAtIndex(
-        keyframeAfterIndex_, !isProgressLessThanHalf, context);
+        keyframeAfterIndex_,
+        isResolvable() && !isProgressLessThanHalf,
+        context);
   }
 }
 
