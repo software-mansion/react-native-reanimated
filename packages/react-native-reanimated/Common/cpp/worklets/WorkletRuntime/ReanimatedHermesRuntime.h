@@ -28,12 +28,7 @@
 #endif
 
 #if HERMES_ENABLE_DEBUGGER
-#if REACT_NATIVE_MINOR_VERSION >= 73
 #include <hermes/inspector-modern/chrome/Registration.h>
-#else
-#include <hermes/inspector/RuntimeAdapter.h>
-#include <hermes/inspector/chrome/Registration.h>
-#endif
 #endif // HERMES_ENABLE_DEBUGGER
 
 namespace worklets {
@@ -41,11 +36,7 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 #if HERMES_ENABLE_DEBUGGER
-#if REACT_NATIVE_MINOR_VERSION >= 73
 using namespace facebook::hermes::inspector_modern;
-#else
-using namespace facebook::hermes::inspector;
-#endif
 #endif // HERMES_ENABLE_DEBUGGER
 
 // ReentrancyCheck is copied from React Native

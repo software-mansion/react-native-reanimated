@@ -16,16 +16,14 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(
     REANodesManager *nodesManager,
     REAModule *reaModule);
 
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
 PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
     RCTModuleRegistry *moduleRegistry,
     REANodesManager *nodesManager,
     REAModule *reaModule);
 SetGestureStateFunction makeSetGestureStateFunctionBridgeless(
     RCTModuleRegistry *moduleRegistry);
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 
-#ifdef RCT_NEW_ARCH_ENABLED
 SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(
     REANodesManager *nodesManager);
 #else // RCT_NEW_ARCH_ENABLED
