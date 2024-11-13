@@ -118,38 +118,45 @@ function DimensionsExample() {
 
 function InsetsExample() {
   return (
-    <Animated.View
-      style={[
-        styles.box,
-        exampleAnimationSettings,
-        {
-          animationName: {
-            '0%': {
-              left: 0,
-              top: -sizes.xxs,
+    <View style={StyleSheet.absoluteFill}>
+      <Animated.View
+        style={[
+          styles.box,
+          exampleAnimationSettings,
+          {
+            animationName: {
+              '0%': {
+                left: '50%',
+                top: 0,
+                transform: [{ translateX: '-50%' }],
+              },
+              '25%': {
+                left: '100%',
+                top: '50%',
+                transform: [{ translateX: '-100%' }, { translateY: '-50%' }],
+              },
+              '50%': {
+                left: '50%',
+                top: '100%',
+                transform: [{ translateX: '-50%' }, { translateY: '-100%' }],
+              },
+              '75%': {
+                left: 0,
+                top: '50%',
+                transform: [{ translateY: '-50%' }],
+              },
+              '100%': {
+                left: '50%',
+                top: 0,
+                transform: [{ translateX: '-50%' }],
+              },
             },
-            '25%': {
-              left: sizes.xxs,
-              top: 0,
-            },
-            '50%': {
-              left: 0,
-              top: sizes.xxs,
-            },
-            '75%': {
-              left: -sizes.xxs,
-              top: 0,
-            },
-            '100%': {
-              left: 0,
-              top: -sizes.xxs,
-            },
+            animationPlayState: useFocusPlayState(),
+            animationTimingFunction: 'linear',
           },
-          animationPlayState: useFocusPlayState(),
-          animationTimingFunction: 'linear',
-        },
-      ]}
-    />
+        ]}
+      />
+    </View>
   );
 }
 

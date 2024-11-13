@@ -1,5 +1,6 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, TouchableOpacity } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { Text } from '@/components/core';
 import { colors, radius, spacing } from '@/theme';
@@ -60,15 +61,21 @@ export default function Button({
   const { buttonStyle, fontVariant } = BUTTON_VARIANTS[size];
 
   return (
-    <TouchableOpacity
-      activeOpacity={activeOpacity}
-      disabled={disabled}
-      style={[styles.button, style, buttonStyle, disabled && styles.disabled]}
-      onPress={onPress}>
-      <Text style={styles.text} variant={fontVariant}>
-        {title}
-      </Text>
-    </TouchableOpacity>
+    <GestureDetector gesture={Gesture.Tap().onEnd(onPress).runOnJS(true)}>
+      <TouchableOpacity
+        activeOpacity={activeOpacity}
+        disabled={disabled}
+        style={[
+          styles.button,
+          style,
+          buttonStyle,
+          disabled && styles.disabled,
+        ]}>
+        <Text style={styles.text} variant={fontVariant}>
+          {title}
+        </Text>
+      </TouchableOpacity>
+    </GestureDetector>
   );
 }
 

@@ -6,8 +6,8 @@ class ObjectInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   explicit ObjectInterpolatorFactory(
       const PropertiesInterpolatorFactories &factories)
-      : factories_(std::move(factories)) {}
-  virtual ~ObjectInterpolatorFactory() = default;
+      : factories_(factories) {}
+  ~ObjectInterpolatorFactory() override = default;
 
   std::shared_ptr<PropertyInterpolator> create(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
@@ -43,10 +43,10 @@ class RelativeOrNumericInterpolatorFactory final
  public:
   explicit RelativeOrNumericInterpolatorFactory(
       const RelativeTo relativeTo,
-      const std::string &relativeProperty,
+      std::string relativeProperty,
       const std::optional<UnitValue> &defaultValue)
       : relativeTo_(relativeTo),
-        relativeProperty_(relativeProperty),
+        relativeProperty_(std::move(relativeProperty)),
         defaultValue_(defaultValue) {}
 
   std::shared_ptr<PropertyInterpolator> create(

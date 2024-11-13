@@ -3,12 +3,13 @@
 namespace reanimated {
 
 AnimationProgressProvider::AnimationProgressProvider(
+    const double timestamp,
     const double duration,
     const double delay,
     const double iterationCount,
     const AnimationDirection direction,
     const EasingFunction &easingFunction)
-    : ProgressProvider(duration, delay, easingFunction),
+    : ProgressProvider(timestamp, duration, delay, easingFunction),
       iterationCount_(iterationCount),
       direction_(direction) {}
 
@@ -30,13 +31,33 @@ AnimationProgressState AnimationProgressProvider::getState(
   return AnimationProgressState::RUNNING;
 }
 
+double AnimationProgressProvider::getTotalPausedTime(
+    const double timestamp) const {
+  return pauseTimestamp_ > 0
+      ? (totalPausedTime_ + (timestamp - pauseTimestamp_))
+      : totalPausedTime_;
+}
+
+double AnimationProgressProvider::getStartTimestamp(
+    const double timestamp) const {
+  // Start timestamp is the timestamp when the first animation keyframe
+  // should be applied (it depends on the animation delay and the total
+  // time when the animation was paused)
+  return creationTimestamp_ + delay_ + getTotalPausedTime(timestamp);
+}
+
+double AnimationProgressProvider::decorateProgress(
+    const double progress) const {
+  return easingFunction_(applyAnimationDirection(progress));
+}
+
 void AnimationProgressProvider::pause(const double timestamp) {
   pauseTimestamp_ = timestamp;
 }
 
 void AnimationProgressProvider::play(const double timestamp) {
   if (pauseTimestamp_ > 0) {
-    pausedTimeBefore_ += timestamp - pauseTimestamp_;
+    totalPausedTime_ += timestamp - pauseTimestamp_;
   }
   pauseTimestamp_ = 0;
 }
@@ -47,27 +68,21 @@ void AnimationProgressProvider::resetProgress() {
   previousIterationsDuration_ = 0;
 }
 
-inline time_t AnimationProgressProvider::getTotalPausedTime(
-    const double timestamp) const {
-  return pauseTimestamp_ > 0 ? timestamp - pauseTimestamp_ + pausedTimeBefore_
-                             : pausedTimeBefore_;
-}
-
 bool AnimationProgressProvider::shouldFinish(const double timestamp) const {
   if (iterationCount_ == 0) {
     return true;
   }
-  // Check if the animation has finished (duration can be a floating point
-  // number so we can't just check if the progress is 1.0)
-  return iterationCount_ != -1 &&
-      (timestamp - (delay_ + startTime_ + getTotalPausedTime(timestamp))) >=
-      duration_ * iterationCount_;
+  if (iterationCount_ == -1) {
+    return false;
+  }
+  const auto elapsedDuration = timestamp - getStartTimestamp(timestamp);
+  return elapsedDuration >= duration_ * iterationCount_;
 }
 
 std::optional<double> AnimationProgressProvider::calculateRawProgress(
     const double timestamp) {
   const double currentIterationElapsedTime = timestamp -
-      (startTime_ + delay_ + previousIterationsDuration_ +
+      (creationTimestamp_ + delay_ + previousIterationsDuration_ +
        getTotalPausedTime(timestamp));
 
   if (currentIterationElapsedTime < 0) {
@@ -95,7 +110,7 @@ double AnimationProgressProvider::updateIterationProgress(
   // (deltaIterations can be greater than for the first update of the
   // animation with the negative delay)
   const double progress = currentIterationElapsedTime / duration_;
-  const unsigned deltaIterations = static_cast<unsigned>(progress);
+  const auto deltaIterations = static_cast<unsigned>(progress);
 
   if (deltaIterations > 0) {
     // Return 1 if the current iteration is the last one

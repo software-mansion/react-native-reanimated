@@ -1,8 +1,8 @@
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useState } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
+import { StyleSheet } from 'react-native';
+import { Pressable, TouchableOpacity } from 'react-native-gesture-handler';
 import Animated, {
   FadeInDown,
   FadeInUp,

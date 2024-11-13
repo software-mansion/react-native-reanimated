@@ -17,7 +17,7 @@ TransitionProgressState TransitionPropertyProgressProvider::getState() const {
 
 double TransitionPropertyProgressProvider::getRemainingDelay(
     const double timestamp) const {
-  return delay_ - (timestamp - startTime_);
+  return delay_ - (timestamp - creationTimestamp_);
 }
 
 std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(
@@ -25,9 +25,14 @@ std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(
   return getElapsedTime(timestamp) / duration_;
 }
 
+double TransitionPropertyProgressProvider::decorateProgress(
+    const double progress) const {
+  return easingFunction_(progress);
+}
+
 double TransitionPropertyProgressProvider::getElapsedTime(
     const double timestamp) const {
-  return timestamp - (startTime_ + delay_);
+  return timestamp - (creationTimestamp_ + delay_);
 }
 
 // TransitionProgressProvider
@@ -80,12 +85,10 @@ void TransitionProgressProvider::runProgressProviders(
     const PropertyNames &changedPropertyNames) {
   for (const auto &propertyName : changedPropertyNames) {
     // Always create the new progress provider with the new settings
-    propertyProgressProviders_
-        .insert_or_assign(
-            propertyName,
-            TransitionPropertyProgressProvider(
-                duration_, delay_, easingFunction_))
-        .first->second.start(timestamp);
+    propertyProgressProviders_.insert_or_assign(
+        propertyName,
+        TransitionPropertyProgressProvider(
+            timestamp, duration_, delay_, easingFunction_));
   }
 }
 

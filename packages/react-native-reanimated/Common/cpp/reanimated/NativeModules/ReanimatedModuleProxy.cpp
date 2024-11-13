@@ -51,6 +51,8 @@ using namespace facebook;
 
 namespace reanimated {
 
+using namespace worklets;
+
 ReanimatedModuleProxy::ReanimatedModuleProxy(
     const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
     jsi::Runtime &rnRuntime,
@@ -527,7 +529,7 @@ void ReanimatedModuleProxy::registerCSSAnimation(
   auto animation = std::make_shared<CSSAnimation>(
       rt,
       animationId.asNumber(),
-      shadowNode,
+      std::move(shadowNode),
       parseCSSAnimationConfig(rt, animationConfig),
       viewStylesRepository_,
       timestamp);
@@ -541,6 +543,7 @@ void ReanimatedModuleProxy::updateCSSAnimation(
     const jsi::Value &animationId,
     const jsi::Value &settingsUpdates) {
   cssAnimationsRegistry_->updateSettings(
+      rt,
       animationId.asNumber(),
       parsePartialCSSAnimationSettings(rt, settingsUpdates),
       getAnimationTimestamp_());
@@ -559,7 +562,7 @@ void ReanimatedModuleProxy::registerCSSTransition(
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
   auto transition = std::make_shared<CSSTransition>(
-      shadowNode,
+      std::move(shadowNode),
       parseCSSTransitionConfig(rt, transitionConfig),
       viewStylesRepository_);
 
@@ -687,7 +690,7 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
         std::make_shared<std::function<void(const double)>>();
 
     *cssLoop = [this, cssLoop](const double timestampMs) {
-        shouldUpdateCssAnimations_ = true;
+      shouldUpdateCssAnimations_ = true;
       if (cssAnimationsRegistry_->hasUpdates() ||
           cssTransitionsRegistry_->hasUpdates()) {
         jsi::Runtime &rt =
@@ -715,18 +718,18 @@ void ReanimatedModuleProxy::performOperations() {
     const auto timestamp = getAnimationTimestamp_();
 
     if (shouldUpdateCssAnimations_) {
-        // Update CSS transitions and flush updates
-        cssTransitionsRegistry_->update(rt, timestamp);
-        cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, false);
+      // Update CSS transitions and flush updates
+      cssTransitionsRegistry_->update(rt, timestamp);
+      cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, false);
     }
 
     // Flush all animated props updates
     animatedPropsRegistry_->flushUpdates(rt, updatesBatch, true);
 
     if (shouldUpdateCssAnimations_) {
-        // Update CSS animations and flush updates
-        cssAnimationsRegistry_->update(rt, timestamp);
-        cssAnimationsRegistry_->flushUpdates(rt, updatesBatch, false);
+      // Update CSS animations and flush updates
+      cssAnimationsRegistry_->update(rt, timestamp);
+      cssAnimationsRegistry_->flushUpdates(rt, updatesBatch, false);
     }
 
     shouldUpdateCssAnimations_ = false;

@@ -29,8 +29,6 @@ Color::Color(jsi::Runtime &rt, const jsi::Value &value)
   }
 }
 
-const Color Color::Transparent = Color(ColorType::TRANSPARENT);
-
 std::string Color::toString() const {
   if (type == ColorType::RGBA) {
     return "rgba(" + std::to_string(channels[0]) + "," +

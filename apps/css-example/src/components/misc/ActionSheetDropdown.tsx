@@ -4,13 +4,19 @@ import { useMemo, useRef, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import {
   Dimensions,
-  Pressable,
+  Platform,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
+import {
+  Gesture,
+  GestureDetector,
+  Pressable,
+} from 'react-native-gesture-handler';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { spacing } from '@/theme';
 
@@ -59,6 +65,7 @@ export default function ActionSheetDropdown({
   ...contentProps
 }: ActionSheetDropdownProps): JSX.Element {
   const containerRef = useRef<View>(null);
+  const insets = useSafeAreaInsets();
   const [{ isOpen, toggleMeasurements }, setState] = useState<DropdownState>({
     isOpen: false,
     toggleMeasurements: null,
@@ -78,7 +85,7 @@ export default function ActionSheetDropdown({
             sticky: styleOptions?.sticky,
             width,
             x,
-            y,
+            y: y - (Platform.OS === 'android' ? insets.top : 0),
           },
         });
       });
@@ -102,19 +109,24 @@ export default function ActionSheetDropdown({
 
       <Portal>
         {isOpen && toggleMeasurements && (
-          <>
-            <Backdrop handleClose={closeDropdown} />
-            <DropdownContent
-              {...contentProps}
-              alignment={styleOptions?.alignment}
-              dropdownMaxHeight={styleOptions?.dropdownMaxHeight}
-              handleClose={closeDropdown}
-              offsetX={styleOptions?.offsetX}
-              offsetY={styleOptions?.offsetY}
-              style={styleOptions?.dropdownStyle}
-              toggleMeasurements={toggleMeasurements}
-            />
-          </>
+          // This gesture detector blocks scrolling when the dropdown is open
+          // (this is needed for Android)
+          <GestureDetector
+            gesture={Gesture.Pan().onStart(closeDropdown).runOnJS(true)}>
+            <View style={StyleSheet.absoluteFill}>
+              <Backdrop handleClose={closeDropdown} />
+              <DropdownContent
+                {...contentProps}
+                alignment={styleOptions?.alignment}
+                dropdownMaxHeight={styleOptions?.dropdownMaxHeight}
+                handleClose={closeDropdown}
+                offsetX={styleOptions?.offsetX}
+                offsetY={styleOptions?.offsetY}
+                style={styleOptions?.dropdownStyle}
+                toggleMeasurements={toggleMeasurements}
+              />
+            </View>
+          </GestureDetector>
         )}
       </Portal>
     </>

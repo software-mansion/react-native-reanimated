@@ -3,14 +3,14 @@
 namespace reanimated {
 
 ProgressProvider::ProgressProvider(
+    const double timestamp,
     const double duration,
     const double delay,
-    const EasingFunction &easingFunction)
-    : duration_(duration), delay_(delay), easingFunction_(easingFunction) {}
-
-void ProgressProvider::start(const double timestamp) {
-  startTime_ = timestamp;
-}
+    EasingFunction easingFunction)
+    : duration_(duration),
+      delay_(delay),
+      easingFunction_(std::move(easingFunction)),
+      creationTimestamp_(timestamp) {}
 
 void ProgressProvider::resetProgress() {
   rawProgress_.reset();
@@ -31,7 +31,7 @@ std::optional<double> ProgressProvider::calculateProgress(
     rawProgress_ = 1;
     return 1;
   }
-  if (timestamp - startTime_ < delay_) {
+  if (timestamp - creationTimestamp_ < delay_) {
     rawProgress_.reset();
     return std::nullopt;
   }
@@ -50,7 +50,7 @@ std::optional<double> ProgressProvider::calculateProgress(
     return decorateProgress(1);
   }
 
-  return easingFunction_(decorateProgress(rawProgress_.value()));
+  return decorateProgress(rawProgress_.value());
 }
 
 bool ProgressProvider::hasDirectionChanged() const {

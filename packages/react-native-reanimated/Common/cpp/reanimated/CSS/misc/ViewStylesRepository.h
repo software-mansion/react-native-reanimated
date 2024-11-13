@@ -4,7 +4,6 @@
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
-// #include <react/nativemodule/dom/NativeDOM.h>
 #include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/core/LayoutableShadowNode.h>
 #include <react/renderer/dom/DOM.h>
@@ -33,21 +32,19 @@ class ViewStylesRepository {
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
       const std::shared_ptr<AnimatedPropsRegistry> &animatedPropsRegistry);
 
-  void setUIManager(std::shared_ptr<UIManager> uiManager) {
+  void setUIManager(const std::shared_ptr<UIManager> &uiManager) {
     uiManager_ = uiManager;
   }
 
   jsi::Value getNodeProp(
       const ShadowNode::Shared &shadowNode,
-      const std::string propName);
+      const std::string &propName);
   jsi::Value getParentNodeProp(
       const ShadowNode::Shared &shadowNode,
-      const std::string propName);
-  jsi::Value getViewStyle(jsi::Runtime &rt, const Tag tag);
-  jsi::Value getStyleProp(
-      jsi::Runtime &rt,
-      const Tag tag,
-      const PropertyPath &propertyPath);
+      const std::string &propName);
+  jsi::Value getViewStyle(jsi::Runtime &rt, Tag tag);
+  jsi::Value
+  getStyleProp(jsi::Runtime &rt, Tag tag, const PropertyPath &propertyPath);
 
   void clearNodesCache();
 
@@ -62,7 +59,7 @@ class ViewStylesRepository {
       CachedShadowNode &cachedNode,
       const ShadowNode::Shared &shadowNode);
 
-  jsi::Value getPropertyValue(
+  static jsi::Value getPropertyValue(
       jsi::Runtime &rt,
       const folly::dynamic &value,
       const PropertyPath &propertyPath);

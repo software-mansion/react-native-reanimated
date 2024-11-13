@@ -3,13 +3,15 @@
 namespace reanimated {
 
 void CSSAnimationsRegistry::updateSettings(
+    jsi::Runtime &rt,
     const unsigned id,
     const PartialCSSAnimationSettings &updatedSettings,
     const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
 
-  registry_.at(id)->updateSettings(updatedSettings, timestamp);
-  runningAnimationIds_.insert(id);
+  const auto &animation = registry_.at(id);
+  animation->updateSettings(updatedSettings, timestamp);
+  scheduleOrActivateAnimation(rt, animation, timestamp);
 }
 
 void CSSAnimationsRegistry::add(
@@ -18,31 +20,15 @@ void CSSAnimationsRegistry::add(
     const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
 
-  const auto id = animation->getId();
-  registry_.insert({id, animation});
-
-  // Apply animation backwards fill style if it was set
-  const auto &fillStyle = animation->getBackwardsFillStyle(rt);
-  if (!fillStyle.isUndefined()) {
-    const auto shadowNode = animation->getShadowNode();
-    updatesRegistry_[shadowNode->getTag()] =
-        std::make_pair(shadowNode, dynamicFromValue(rt, fillStyle));
-  }
-
-  const auto startTimestamp = animation->getDelay() + animation->getStartTime();
-  if (startTimestamp > timestamp) {
-    // Add animation to the delayed animations queue
-    delayedAnimationIds_.insert(id);
-    delayedAnimationsQueue_.emplace(startTimestamp, id);
-  } else if (animation->getState(timestamp) != AnimationProgressState::PAUSED) {
-    runningAnimationIds_.insert(id);
-  }
+  registry_.insert({animation->getId(), animation});
+  scheduleOrActivateAnimation(rt, animation, timestamp);
 }
 
 void CSSAnimationsRegistry::remove(const unsigned id) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   runningAnimationIds_.erase(id);
+  delayedAnimationsMap_.erase(id);
   // We currently support only one animation per shadow node, so we can safely
   // remove the tag from the updates registry once the associated animation is
   // removed
@@ -61,28 +47,28 @@ void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
        it != runningAnimationIds_.end();) {
     const auto &id = *it;
     const auto &animation = registry_.at(id);
+    const auto &shadowNode = animation->getShadowNode();
 
     if (animation->getState(timestamp) == AnimationProgressState::PENDING) {
       animation->run(timestamp);
     }
 
+    bool updatesAddedToBatch = false;
     const auto updates = animation->update(rt, timestamp);
-    updatesBatch_.emplace_back(
-        animation->getShadowNode(), std::make_unique<jsi::Value>(rt, updates));
-
     const auto newState = animation->getState(timestamp);
+
     if (newState == AnimationProgressState::FINISHED) {
       // Revert changes applied during animation if there is no forwards fill
       // mode
       if (!animation->hasForwardsFillMode()) {
-        const auto &viewStyle = animation->resetStyle(rt);
-        if (!viewStyle.isUndefined()) {
-          updatesBatch_.emplace_back(
-              animation->getShadowNode(),
-              std::make_unique<jsi::Value>(rt, viewStyle));
-        }
+        maybeAddUpdates(rt, shadowNode, animation->resetStyle(rt));
         tagsToRemove_.insert(animation->getShadowNode()->getTag());
+        updatesAddedToBatch = true;
       }
+    }
+
+    if (!updatesAddedToBatch) {
+      maybeAddUpdates(rt, shadowNode, updates);
     }
 
     if (newState != AnimationProgressState::RUNNING) {
@@ -93,15 +79,77 @@ void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
   }
 }
 
+void CSSAnimationsRegistry::maybeAddUpdates(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode,
+    const jsi::Value &updatedStyle) {
+  if (!updatedStyle.isUndefined()) {
+    updatesBatch_.emplace_back(
+        shadowNode, std::make_unique<jsi::Value>(rt, updatedStyle));
+  }
+}
+
+void CSSAnimationsRegistry::applyStyleBeforeStart(
+    jsi::Runtime &rt,
+    const std::shared_ptr<CSSAnimation> &animation) {
+  const auto &fillStyle = animation->getBackwardsFillStyle(rt);
+  if (!fillStyle.isUndefined()) {
+    // Apply animation backwards fill style if animation has backwards fill mode
+    const auto shadowNode = animation->getShadowNode();
+    updatesRegistry_[shadowNode->getTag()] =
+        std::make_pair(shadowNode, dynamicFromValue(rt, fillStyle));
+  } else {
+    // Otherwise, remove style overrides from the registry
+    updatesRegistry_.erase(animation->getShadowNode()->getTag());
+  }
+}
+
 void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
   while (!delayedAnimationsQueue_.empty() &&
-         delayedAnimationsQueue_.top().first <= timestamp) {
-    const auto [_, id] = delayedAnimationsQueue_.top();
+         delayedAnimationsQueue_.top()->startTimestamp <= timestamp) {
+    const auto &delayedAnimation = delayedAnimationsQueue_.top();
+    const auto animationId = delayedAnimation->id;
     delayedAnimationsQueue_.pop();
-    delayedAnimationIds_.erase(id);
-    if (registry_.find(id) != registry_.end()) {
-      runningAnimationIds_.insert(id);
+
+    // Add only these animations which weren't marked for removal
+    // and weren't removed in the meantime
+    if (delayedAnimation->startTimestamp != 0 &&
+        registry_.find(animationId) != registry_.end()) {
+      delayedAnimationsMap_.erase(animationId);
+      runningAnimationIds_.insert(animationId);
     }
+  }
+}
+
+void CSSAnimationsRegistry::scheduleOrActivateAnimation(
+    jsi::Runtime &rt,
+    const std::shared_ptr<CSSAnimation> &animation,
+    const double timestamp) {
+  const auto id = animation->getId();
+  const auto startTimestamp = animation->getStartTimestamp(timestamp);
+
+  // Mark the already delayed animation for removal
+  const auto delayedAnimationIt = delayedAnimationsMap_.find(id);
+  if (delayedAnimationIt != delayedAnimationsMap_.end()) {
+    delayedAnimationIt->second->startTimestamp = 0;
+  }
+
+  if (startTimestamp > timestamp) {
+    // Apply the backwards fill style if the animation has a backwards fill mode
+    // or remove the style overrides from the updates registry (e.g. if the
+    // delay of the animation was increased)
+    applyStyleBeforeStart(rt, animation);
+
+    // If the animation is delayed, schedule it for activation
+    // (Only if it isn't paused)
+    if (animation->getState(timestamp) != AnimationProgressState::PAUSED) {
+      const auto delayedAnimation =
+          std::make_shared<DelayedAnimation>(id, startTimestamp);
+      delayedAnimationsMap_[id] = delayedAnimation;
+      delayedAnimationsQueue_.push(delayedAnimation);
+    }
+  } else {
+    runningAnimationIds_.insert(id);
   }
 }
 

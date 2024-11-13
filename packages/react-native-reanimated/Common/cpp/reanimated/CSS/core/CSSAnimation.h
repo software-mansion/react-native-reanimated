@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <utility>
 
 namespace reanimated {
 
@@ -16,10 +17,10 @@ class CSSAnimation {
   CSSAnimation(
       jsi::Runtime &rt,
       unsigned id,
-      const ShadowNode::Shared &shadowNode,
+      ShadowNode::Shared shadowNode,
       const CSSAnimationConfig &config,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      time_t startTime);
+      double timestamp);
 
   unsigned getId() const {
     return id_;
@@ -38,11 +39,8 @@ class CSSAnimation {
   AnimationProgressState getState(double timestamp) const {
     return progressProvider_.getState(timestamp);
   }
-  double getDelay() const {
-    return progressProvider_.getDelay();
-  }
-  double getStartTime() const {
-    return progressProvider_.getStartTime();
+  double getStartTimestamp(double timestamp) const {
+    return progressProvider_.getStartTimestamp(timestamp);
   }
   jsi::Value getViewStyle(jsi::Runtime &rt) const {
     return styleInterpolator_.getStyleValue(rt, shadowNode_);

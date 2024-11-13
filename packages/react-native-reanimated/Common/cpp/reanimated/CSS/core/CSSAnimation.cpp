@@ -5,14 +5,15 @@ namespace reanimated {
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
     const unsigned id,
-    const ShadowNode::Shared &shadowNode,
+    ShadowNode::Shared shadowNode,
     const CSSAnimationConfig &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    time_t startTime)
+    const double timestamp)
     : id_(id),
-      shadowNode_(shadowNode),
+      shadowNode_(std::move(shadowNode)),
       styleInterpolator_(AnimationStyleInterpolator(viewStylesRepository)),
       progressProvider_(AnimationProgressProvider(
+          timestamp,
           config.duration,
           config.delay,
           config.iterationCount,
@@ -20,18 +21,18 @@ CSSAnimation::CSSAnimation(
           config.easingFunction)),
       fillMode_(config.fillMode) {
   styleInterpolator_.updateKeyframes(rt, config.keyframeStyle);
-  // Register the current timestamp in the progress provider as the start
-  // timestamp
-  progressProvider_.start(startTime);
-  // If the animation is paused, pause it immediately
+
   if (config.playState == AnimationPlayState::PAUSED) {
-    progressProvider_.pause(startTime);
+    // If the animation is created as paused, pause its progress provider
+    // immediately
+    progressProvider_.pause(timestamp);
   }
 }
 
 jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) {
   return hasBackwardsFillMode()
-      ? styleInterpolator_.update(createUpdateContext(rt, 0, false))
+      ? styleInterpolator_.update(createUpdateContext(
+            rt, progressProvider_.decorateProgress(0), false))
       : jsi::Value::undefined();
 }
 

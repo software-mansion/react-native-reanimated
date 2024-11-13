@@ -1,10 +1,12 @@
 #include <reanimated/CSS/interpolation/values/RelativeOrNumericValueInterpolator.h>
 
+#include <utility>
+
 namespace reanimated {
 
 RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
     RelativeTo relativeTo,
-    const std::string &relativeProperty,
+    std::string relativeProperty,
     const std::optional<UnitValue> &defaultValue,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const PropertyPath &propertyPath)
@@ -13,7 +15,7 @@ RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
           viewStylesRepository,
           propertyPath),
       relativeTo_(relativeTo),
-      relativeProperty_(relativeProperty) {}
+      relativeProperty_(std::move(relativeProperty)) {}
 
 UnitValue RelativeOrNumericValueInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
