@@ -36,4 +36,6 @@ class Color {
   explicit Color(ColorType colorType) : channels{0, 0, 0, 0}, type(colorType) {}
 };
 
+inline const Color Color::Transparent(ColorType::TRANSPARENT);
+
 } // namespace reanimated

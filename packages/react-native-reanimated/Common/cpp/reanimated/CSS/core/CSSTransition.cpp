@@ -3,10 +3,10 @@
 namespace reanimated {
 
 CSSTransition::CSSTransition(
-    const ShadowNode::Shared &shadowNode,
+    ShadowNode::Shared shadowNode,
     const CSSTransitionConfig &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : shadowNode_(shadowNode),
+    : shadowNode_(std::move(shadowNode)),
       viewStylesRepository_(viewStylesRepository),
       styleInterpolator_(TransitionStyleInterpolator(viewStylesRepository)),
       progressProvider_(TransitionProgressProvider(

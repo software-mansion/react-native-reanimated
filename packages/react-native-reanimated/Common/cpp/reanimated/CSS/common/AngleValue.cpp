@@ -2,6 +2,8 @@
 
 namespace reanimated {
 
+AngleValue::AngleValue() : value(0) {}
+
 AngleValue::AngleValue(const double value) : value(value) {}
 
 AngleValue::AngleValue(const std::string &rotationString) {

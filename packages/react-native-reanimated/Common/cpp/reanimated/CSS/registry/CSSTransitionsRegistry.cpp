@@ -35,7 +35,7 @@ void CSSTransitionsRegistry::add(
 
   registry_.insert({viewTag, transition});
   PropsObserver observer = createPropsObserver(viewTag);
-  staticPropsRegistry_->setObserver(viewTag, observer);
+  staticPropsRegistry_->setObserver(viewTag, std::move(observer));
 }
 
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
@@ -80,20 +80,20 @@ void CSSTransitionsRegistry::activateDelayedTransitions(
   while (!delayedTransitionsQueue_.empty() &&
          delayedTransitionsQueue_.top()->startTimestamp <= timestamp) {
     const auto &delayedTransition = delayedTransitionsQueue_.top();
-    const auto startTimestamp = delayedTransition->startTimestamp;
     const auto viewTag = delayedTransition->viewTag;
     delayedTransitionsQueue_.pop();
 
     // Add only these transitions which weren't marked for removal
     // and weren't removed in the meantime
-    if (startTimestamp != 0 && registry_.find(viewTag) != registry_.end()) {
+    if (delayedTransition->startTimestamp != 0 &&
+        registry_.find(viewTag) != registry_.end()) {
       delayedTransitionsMap_.erase(viewTag);
       runningTransitionTags_.insert(viewTag);
     }
   }
 }
 
-void CSSTransitionsRegistry::activateTransition(
+void CSSTransitionsRegistry::scheduleOrActivateTransition(
     const std::shared_ptr<CSSTransition> &transition) {
   const auto viewTag = transition->getViewTag();
   const auto currentTimestamp = getCurrentTimestamp_();
@@ -110,9 +110,6 @@ void CSSTransitionsRegistry::activateTransition(
         viewTag, currentTimestamp + minDelay);
     delayedTransitionsMap_[viewTag] = delayedTransition;
     delayedTransitionsQueue_.push(delayedTransition);
-    if (runningTransitionTags_.find(viewTag) != runningTransitionTags_.end()) {
-      runningTransitionTags_.erase(viewTag);
-    }
   } else {
     runningTransitionTags_.insert(viewTag);
   }
@@ -140,7 +137,7 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
           transition->run(rt, changedProps, getCurrentTimestamp_());
       updatesRegistry_[viewTag] =
           std::make_pair(shadowNode, dynamicFromValue(rt, initialProps));
-      activateTransition(transition);
+      scheduleOrActivateTransition(transition);
     }
   };
 }

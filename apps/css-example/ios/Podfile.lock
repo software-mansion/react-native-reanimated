@@ -1649,7 +1649,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNGestureHandler (2.20.0):
+  - RNGestureHandler (2.22.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1943,7 +1943,7 @@ DEPENDENCIES:
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCMaskedView (from `../../../node_modules/@react-native-masked-view/masked-view`)"
   - "RNFlashList (from `../node_modules/@shopify/flash-list`)"
-  - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - RNGestureHandler (from `../../../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../../../node_modules/react-native-reanimated`)
   - RNScreens (from `../../../node_modules/react-native-screens`)
   - RNSVG (from `../../../node_modules/react-native-svg`)
@@ -2096,7 +2096,7 @@ EXTERNAL SOURCES:
   RNFlashList:
     :path: "../node_modules/@shopify/flash-list"
   RNGestureHandler:
-    :path: "../node_modules/react-native-gesture-handler"
+    :path: "../../../node_modules/react-native-gesture-handler"
   RNReanimated:
     :path: "../../../node_modules/react-native-reanimated"
   RNScreens:
@@ -2177,7 +2177,7 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: 36aec380620fbc4ce7b8a048071cdb12e13723f3
   RNCMaskedView: 18c76ebdf9752bb75652829f99f6c3d1318cc864
   RNFlashList: ee2388e0d3ffde77431ba5d09b8f59a0c65a8e05
-  RNGestureHandler: d4e387771ff545c4eae2780bbdfe29ef4035dfc6
+  RNGestureHandler: 4e7defe5095e936424173fc75f0bf2af5bba8e23
   RNReanimated: fad8bf501ad210124744b387afe1e4712f8f3ac0
   RNScreens: d0854539b51a53e38b61bcc9fb402439a9c73b26
   RNSVG: 7e38044415125a1d108294377de261d2fe2c54c9

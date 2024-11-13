@@ -8,13 +8,14 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <utility>
 
 namespace reanimated {
 
 class CSSTransition {
  public:
   CSSTransition(
-      const ShadowNode::Shared &shadowNode,
+      ShadowNode::Shared shadowNode,
       const CSSTransitionConfig &config,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 

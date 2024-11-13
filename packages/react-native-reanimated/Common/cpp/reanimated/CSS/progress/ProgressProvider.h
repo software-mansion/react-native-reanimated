@@ -4,27 +4,23 @@
 
 #include <chrono>
 #include <optional>
+#include <utility>
 
 namespace reanimated {
 
 class ProgressProvider {
  public:
   ProgressProvider(
+      double timestamp,
       double duration,
       double delay,
-      const EasingFunction &easingFunction);
+      EasingFunction easingFunction);
 
   double getCurrent() const {
     return currentProgress_.value_or(0);
   }
   std::optional<double> getPrevious() const {
     return previousProgress_;
-  }
-  time_t getStartTime() const {
-    return startTime_;
-  }
-  double getDelay() const {
-    return delay_;
   }
 
   void setDuration(double duration) {
@@ -42,7 +38,6 @@ class ProgressProvider {
 
   bool hasDirectionChanged() const;
 
-  void start(double timestamp);
   virtual void resetProgress();
   void update(double timestamp);
 
@@ -50,8 +45,7 @@ class ProgressProvider {
   double duration_;
   double delay_;
   EasingFunction easingFunction_;
-
-  double startTime_ = 0;
+  double creationTimestamp_;
 
   std::optional<double> rawProgress_;
   // These progress values are resulting progress returned by the `get` method
@@ -65,14 +59,7 @@ class ProgressProvider {
    * applying any decorations (e.g. animation direction, easing)
    */
   virtual std::optional<double> calculateRawProgress(double timestamp) = 0;
-
-  /**
-   * Decorates the calculated progress with additional information when
-   * necessary (e.g. animation direction). Easing will be applied automatically.
-   */
-  virtual double decorateProgress(double progress) const {
-    return progress;
-  }
+  virtual double decorateProgress(double progress) const = 0;
 
  private:
   std::optional<double> calculateProgress(double timestamp);

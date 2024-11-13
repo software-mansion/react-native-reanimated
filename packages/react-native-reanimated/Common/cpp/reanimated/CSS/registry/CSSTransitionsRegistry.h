@@ -23,7 +23,7 @@ struct DelayedTransition {
       : viewTag(viewTag), startTimestamp(startTimestamp) {}
 };
 
-struct CompareDelayedTransition {
+struct DelayedTransitionsComparator {
   bool operator()(
       const std::shared_ptr<DelayedTransition> &lhs,
       const std::shared_ptr<DelayedTransition> &rhs) {
@@ -55,7 +55,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   using DelayedQueue = std::priority_queue<
       std::shared_ptr<DelayedTransition>,
       std::vector<std::shared_ptr<DelayedTransition>>,
-      CompareDelayedTransition>;
+      DelayedTransitionsComparator>;
 
   const GetAnimationTimestampFunction &getCurrentTimestamp_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
@@ -68,7 +68,8 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   DelayedQueue delayedTransitionsQueue_;
 
   void activateDelayedTransitions(double timestamp);
-  void activateTransition(const std::shared_ptr<CSSTransition> &transition);
+  void scheduleOrActivateTransition(
+      const std::shared_ptr<CSSTransition> &transition);
   PropsObserver createPropsObserver(Tag viewTag);
 };
 

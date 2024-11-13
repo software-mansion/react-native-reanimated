@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   buttons: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.xs,
+    gap: spacing.xxs,
     justifyContent: 'space-between',
   },
   codeWrapper: {

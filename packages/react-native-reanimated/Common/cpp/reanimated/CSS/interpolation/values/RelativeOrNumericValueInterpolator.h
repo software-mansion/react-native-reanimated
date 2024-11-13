@@ -11,8 +11,8 @@ class RelativeOrNumericValueInterpolator final
     : public ValueInterpolator<UnitValue> {
  public:
   RelativeOrNumericValueInterpolator(
-      const RelativeTo relativeTo,
-      const std::string &relativeProperty,
+      RelativeTo relativeTo,
+      std::string relativeProperty,
       const std::optional<UnitValue> &defaultValue,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       const PropertyPath &propertyPath);
@@ -25,7 +25,7 @@ class RelativeOrNumericValueInterpolator final
       const override;
 
   UnitValue interpolate(
-      const double localProgress,
+      double localProgress,
       const UnitValue &fromValue,
       const UnitValue &toValue,
       const PropertyInterpolationUpdateContext &context) const override;

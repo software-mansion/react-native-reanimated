@@ -22,6 +22,7 @@ class TransitionPropertyProgressProvider final : public ProgressProvider {
 
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
+  double decorateProgress(double progress) const override;
 
  private:
   double getElapsedTime(double timestamp) const;

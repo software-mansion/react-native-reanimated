@@ -10,7 +10,7 @@ ViewStylesRepository::ViewStylesRepository(
 
 jsi::Value ViewStylesRepository::getNodeProp(
     const ShadowNode::Shared &shadowNode,
-    const std::string propName) {
+    const std::string &propName) {
   int tag = shadowNode->getTag();
 
   auto &cachedNode = shadowNodeCache_[tag];
@@ -21,24 +21,24 @@ jsi::Value ViewStylesRepository::getNodeProp(
     const auto &layoutMetrics = cachedNode.layoutMetrics;
 
     if (propName == "width") {
-      return jsi::Value(layoutMetrics.frame.size.width);
+      return {layoutMetrics.frame.size.width};
     } else if (propName == "height") {
-      return jsi::Value(layoutMetrics.frame.size.height);
+      return {layoutMetrics.frame.size.height};
     } else if (propName == "top") {
-      return jsi::Value(layoutMetrics.frame.origin.y);
+      return {layoutMetrics.frame.origin.y};
     } else if (propName == "left") {
-      return jsi::Value(layoutMetrics.frame.origin.x);
+      return {layoutMetrics.frame.origin.x};
     }
   } else {
     const auto &viewProps = cachedNode.viewProps;
 
     if (propName == "opacity") {
-      return jsi::Value(viewProps->opacity);
+      return {viewProps->opacity};
     } else if (propName == "zIndex") {
       return viewProps->zIndex.has_value() ? jsi::Value(*viewProps->zIndex)
                                            : jsi::Value(0);
     } else if (propName == "backgroundColor") {
-      return jsi::Value(static_cast<int32_t>(*viewProps->backgroundColor));
+      return {static_cast<int32_t>(*viewProps->backgroundColor)};
     }
   }
 
@@ -47,7 +47,7 @@ jsi::Value ViewStylesRepository::getNodeProp(
 
 jsi::Value ViewStylesRepository::getParentNodeProp(
     const ShadowNode::Shared &shadowNode,
-    const std::string propName) {
+    const std::string &propName) {
   const auto surfaceId = shadowNode->getSurfaceId();
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 

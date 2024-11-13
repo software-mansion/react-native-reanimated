@@ -7,7 +7,7 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 
 import { Text } from '@/components/core';
 import { Label, type LabelType } from '@/components/misc';
-import { colors, radius, sizes, spacing } from '@/theme';
+import { colors, radius, spacing } from '@/theme';
 
 type RouteCardProps = PropsWithChildren<{
   title: string;
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   showcase: {
     alignItems: 'center',
     alignSelf: 'stretch',
-    flexBasis: sizes.xl,
+    flexBasis: 85,
     justifyContent: 'center',
     minHeight: 110,
   },

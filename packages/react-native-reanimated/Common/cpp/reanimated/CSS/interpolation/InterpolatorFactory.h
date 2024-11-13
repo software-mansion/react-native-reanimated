@@ -52,7 +52,7 @@ std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
 std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
-    const double defaultValue);
+    double defaultValue);
 std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
@@ -75,7 +75,7 @@ std::shared_ptr<PropertyInterpolatorFactory> transforms(
  * Transform interpolators
  */
 
-std::shared_ptr<TransformInterpolator> perspective(const double defaultValue);
+std::shared_ptr<TransformInterpolator> perspective(double defaultValue);
 
 std::shared_ptr<TransformInterpolator> rotate(const AngleValue &defaultValue);
 std::shared_ptr<TransformInterpolator> rotate(const std::string &defaultValue);
@@ -86,9 +86,9 @@ std::shared_ptr<TransformInterpolator> rotateY(const std::string &defaultValue);
 std::shared_ptr<TransformInterpolator> rotateZ(const AngleValue &defaultValue);
 std::shared_ptr<TransformInterpolator> rotateZ(const std::string &defaultValue);
 
-std::shared_ptr<TransformInterpolator> scale(const double defaultValue);
-std::shared_ptr<TransformInterpolator> scaleX(const double defaultValue);
-std::shared_ptr<TransformInterpolator> scaleY(const double defaultValue);
+std::shared_ptr<TransformInterpolator> scale(double defaultValue);
+std::shared_ptr<TransformInterpolator> scaleX(double defaultValue);
+std::shared_ptr<TransformInterpolator> scaleY(double defaultValue);
 
 std::shared_ptr<TransformInterpolator> translateX(
     RelativeTo relativeTo,
@@ -97,7 +97,7 @@ std::shared_ptr<TransformInterpolator> translateX(
 std::shared_ptr<TransformInterpolator> translateX(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
-    const double defaultValue);
+    double defaultValue);
 std::shared_ptr<TransformInterpolator> translateY(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
@@ -105,7 +105,7 @@ std::shared_ptr<TransformInterpolator> translateY(
 std::shared_ptr<TransformInterpolator> translateY(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
-    const double defaultValue);
+    double defaultValue);
 
 std::shared_ptr<TransformInterpolator> skewX(const AngleValue &defaultValue);
 std::shared_ptr<TransformInterpolator> skewX(const std::string &defaultValue);

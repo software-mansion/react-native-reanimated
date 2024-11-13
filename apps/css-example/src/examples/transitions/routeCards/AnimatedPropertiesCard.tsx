@@ -198,7 +198,7 @@ function MarginsExample() {
   useFocusEffect(
     useCallback(() => {
       const interval = setInterval(() => {
-        setMargin((prev) => (prev === 0 ? spacing.xxs : 0));
+        setMargin((prev) => (prev === 0 ? spacing.xxxs : 0));
       }, 1500);
 
       return () => {
@@ -239,7 +239,6 @@ const marginStyles = StyleSheet.create({
   container: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 1,
   },
 });
 
