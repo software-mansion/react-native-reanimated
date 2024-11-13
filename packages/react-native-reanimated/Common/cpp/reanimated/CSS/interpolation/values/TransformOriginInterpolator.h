@@ -27,6 +27,10 @@ class TransformOriginInterpolator final
       const TransformOrigin &fromValue,
       const TransformOrigin &toValue,
       const PropertyInterpolationUpdateContext &context) const override;
+
+  bool isResolvable() const override {
+    return true;
+  }
 };
 
 } // namespace reanimated

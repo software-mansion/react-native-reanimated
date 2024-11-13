@@ -61,6 +61,10 @@ class ValueInterpolator : public PropertyInterpolator {
       const T &toValue,
       const PropertyInterpolationUpdateContext &context) const = 0;
 
+  virtual bool isResolvable() const {
+    return false;
+  }
+
  private:
   std::vector<ValueKeyframe<T>> keyframes_;
 
