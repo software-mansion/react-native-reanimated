@@ -4,6 +4,10 @@ namespace reanimated {
 
 Color::Color() : channels{0, 0, 0, 0}, type(ColorType::TRANSPARENT) {}
 
+Color::Color(const ColorArray &colorArray)
+    : channels{colorArray[0], colorArray[1], colorArray[2], colorArray[3]},
+      type(ColorType::RGBA) {}
+
 Color::Color(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
     : channels{r, g, b, a}, type(ColorType::RGBA) {}
 
@@ -62,15 +66,23 @@ Color Color::interpolate(const Color &to, const double progress) const {
     toChannels = {fromChannels[0], fromChannels[1], fromChannels[2], 0};
   }
 
-  return Color(
-      static_cast<uint8_t>(
-          (toChannels[0] - fromChannels[0]) * progress + fromChannels[0]),
-      static_cast<uint8_t>(
-          (toChannels[1] - fromChannels[1]) * progress + fromChannels[1]),
-      static_cast<uint8_t>(
-          (toChannels[2] - fromChannels[2]) * progress + fromChannels[2]),
-      static_cast<uint8_t>(
-          (toChannels[3] - fromChannels[3]) * progress + fromChannels[3]));
+  ColorArray resultChannels;
+  for (size_t i = 0; i < 4; ++i) {
+    resultChannels[i] =
+        interpolateChannel(fromChannels[i], toChannels[i], progress);
+  }
+
+  return Color(resultChannels);
+}
+
+uint8_t Color::interpolateChannel(
+    const uint8_t from,
+    const uint8_t to,
+    const double progress) {
+  // Cast one of operands to double to avoid unsigned int subtraction overflow
+  // (when from > to)
+  double interpolated = (static_cast<double>(to) - from) * progress + from;
+  return static_cast<uint8_t>(std::round(std::clamp(interpolated, 0.0, 255.0)));
 }
 
 } // namespace reanimated

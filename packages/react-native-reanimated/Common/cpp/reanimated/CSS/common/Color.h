@@ -21,6 +21,7 @@ class Color {
   Color();
   explicit Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
   explicit Color(uint8_t r, uint8_t g, uint8_t b);
+  explicit Color(const ColorArray &colorArray);
   explicit Color(jsi::Runtime &rt, const jsi::Value &value);
 
   static const Color Transparent;
@@ -34,6 +35,8 @@ class Color {
   ColorType type;
 
   explicit Color(ColorType colorType) : channels{0, 0, 0, 0}, type(colorType) {}
+
+  static uint8_t interpolateChannel(uint8_t from, uint8_t to, double progress);
 };
 
 inline const Color Color::Transparent(ColorType::TRANSPARENT);
