@@ -1,59 +1,112 @@
-<img src="https://user-images.githubusercontent.com/16062886/117443145-ff868480-af37-11eb-8680-648bccf0d0ce.png" alt="React Native Reanimated by Software Mansion" width="100%">
+<img src="https://github.com/user-attachments/assets/66a344b1-7110-4733-b44c-ada204e99dee" alt="Reanimated by Software Mansion" width="100%">
 
-### React Native's Animated library reimplemented
+# Reanimated v4 - CSS Animations & Transitions
 
-> Reanimated 3 is here! Check out our [documentation page](https://docs.swmansion.com/react-native-reanimated/) for more information
+## Welcome to Reanimated v4 Private Beta ✨
 
-React Native Reanimated provides a more comprehensive,
-low-level abstraction for the Animated library API on which to build,
-allowing for much greater flexibility, especially when it comes to 
-gesture-based interactions.
+Thank you for your interest in the Reanimated v4 Library! Reanimated v4 adds support for well-known CSS animations and transitions. We aim to provide an easy-to-use and intuitive API that enables developers to effortlessly implement animations and transitions.
+_Please note that this library supports only the New Architecture (Fabric) and is incompatible with the Old Architecture (Paper)._
 
-### Nightly CI state
+> [!IMPORTANT]  
+> The library is currently in beta and is under active development. This early access allows you to try out new features and share feedback to help shape the final product. Your feedback is greatly appreciated as we continue to improve the library.
 
-[![NPM Reanimated publish nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml)
-[![Reanimated compatibility check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml)
-[![Static framework Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/static-framework-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/static-framework-reanimated-build-check-nightly.yml)
-[![React Native nightly Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/react-native-nightly-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/react-native-nightly-reanimated-build-check-nightly.yml)
-[![Expo DevClient build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml)
-[![Reanimated TypeScript compatibility test](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-typescript-compatibility-test-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-typescript-compatibility-test-nightly.yml)
-[![V8 Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/V8-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/V8-reanimated-build-check-nightly.yml)
-[![Windows hosted app Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/windows-hosted-app-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/windows-hosted-app-reanimated-build-check-nightly.yml)
-[![URL validation](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml)
+### 🚀 Functionalities
 
-## Installation
+The library provides:
 
-Check out the [installation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) section of our docs for the detailed installation instructions.
+- **CSS animations**: Support for declaring animations based on the specified steps and their offsets. Available animation properties include:
+  - duration
+  - delay
+  - timing function
+  - direction
+  - fill mode
+  - iteration count
+- **CSS transitions**: Smooth animations when style properties change between re-renders, with support for properties such as:
+  - duration
+  - delay
+  - timing function
 
-## Fabric
+### 📍 Installation Guide
 
-'react-native-reanimated' works with Fabric (the New Architecture). Instructions on how to run Fabric Example within this repo can be found in the [FabricExample README](apps/fabric-example/README.md).
+#### Running the Example App
 
-## Documentation
+To familiarize yourself with the capabilities of Reanimated v4, we recommend starting with the provided example app. It features various examples to help you get started quickly.
 
-Check out our dedicated documentation page for info about this library, API reference and more: [https://docs.swmansion.com/react-native-reanimated/](https://docs.swmansion.com/react-native-reanimated/)
+1. **Install Node Modules**:
 
-## Examples
+   ```bash
+   yarn
+   ```
 
-The source code for the example (showcase) app is under the [`apps/common-app`](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/) directory.
-If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Check [Example README](apps/paper-example/README.md) for installation instructions.
+2. **Install iOS Pods** (iOS only):
+   Navigate to `apps/css-example/ios` and run:
 
-## License
+   ```bash
+   bundle install && bundle exec pod install
+   ```
 
-Reanimated library is licensed under [The MIT License](LICENSE).
+3. **Start the Metro bundler and build the example app**:  
+   Navigate to `apps/css-example` and run:
 
-## Credits
+   ```bash
+   yarn start
+   ```
 
-This project has been built and is maintained thanks to the support from [Shopify](https://shopify.com), [Expo.io](https://expo.io) and [Software Mansion](https://swmansion.com)
+- Build the app:
+  - **Android**: You can use `yarn android` or open the project in Android Studio and build from there.
+  - **iOS**: You can use `yarn ios` or open the project in Xcode and build from there.
 
-[![shopify](https://avatars1.githubusercontent.com/u/8085?v=3&s=100 'Shopify.com')](https://shopify.com)
-[![expo](https://avatars2.githubusercontent.com/u/12504344?v=3&s=100 'Expo.io')](https://expo.io)
-[![swm](https://logo.swmansion.com/logo?color=white&variant=desktop&width=150&tag=react-native-reanimated-github 'Software Mansion')](https://swmansion.com)
+#### Installing the Library in Your Project
 
-## Community Discord
+To integrate the library into your own project, follow these steps:
 
-[Join the Software Mansion Community Discord](https://discord.swmansion.com) to chat about Reanimated or other Software Mansion libraries.
+1. **Download the package**:
+
+   - Download the provided archive with bundled library files (the `.tgz` file), You can find it in [Releases](.).
+
+2. **Install the package:**
+
+   - Navigate to the root directory of your project and install the package.
+
+     - Using **npm**:
+
+     ```bash
+     npm i /path/to/react-native-reanimated-4.0.0-beta.1.tgz
+     ```
+
+     - Using **yarn**:
+
+     ```bash
+     yarn add /path/to/react-native-reanimated-4.0.0-beta.1.tgz
+     ```
+
+> [!NOTE]  
+> Make sure to replace `/path/to/react-native-reanimated-4.0.0-beta.1.tgz` with the actual path to the library archive on your computer.
+
+3. **Additional setup** (Optional):
+   - If you want to use other Reanimated features, such as worklets, continue following steps for `react-native-reanimated` installation as described in [this quick start guide](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#step-2-add-reanimateds-babel-plugin).
+
+### 💻 Usage
+
+For a detailed guide on the library usage, see the [USAGE](./USAGE.md) documentation.
+
+### 🛠️ Reporting Issues
+
+If you encounter any issues, you can:
+
+- Open an issue on our GitHub repository
+- Reach out to us on our dedicated Discord channel [ADD LINK HERE](.)
+
+### 📝 Limitations and Known Issues
+
+For a list of current limitations and known issues, please refer to [LIMITATIONS](./LIMITATIONS.md).
+
+### 👨‍💻 Discord
+
+Make sure to join [Software Mansion](https://swmansion.com) Discord channel using the invite link: [ADD LINK HERE](.) and contact us to get added to `<channel-name>` channel where we discuss issues and communicate our plans and updates.
 
 ## Reanimated is created by Software Mansion
 
 Since 2012 [Software Mansion](https://swmansion.com) is a software agency with experience in building web and mobile apps. We are Core React Native Contributors and experts in dealing with all kinds of React Native issues. We can help you build your next dream product – [Hire us](https://swmansion.com/contact/projects?utm_source=reanimated&utm_medium=readme).
+
+[![swm](https://logo.swmansion.com/logo?color=white&variant=desktop&width=150&tag=reanimated-github 'Software Mansion')](https://swmansion.com)
