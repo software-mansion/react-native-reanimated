@@ -29,8 +29,8 @@
     "build:plugin": "cd plugin && yarn build",
     "circular-dependency-check": "yarn madge --extensions js,ts,tsx --circular src lib",
     "use-strict-check": "node ./scripts/validate-use-strict.js",
-    "prepack": "cp ../../README.md ./README.md",
-    "postpack": "rm ./README.md"
+    "prepack": "cp ../../*.md .",
+    "postpack": "rm *.md"
   },
   "main": "lib/module/index",
   "module": "lib/module/index",
@@ -51,6 +51,8 @@
     "mock.js",
     "plugin/index.js",
     "metro-config",
+    "LIMITATIONS.md",
+    "USAGE.md",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__",
