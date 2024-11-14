@@ -10,7 +10,7 @@ import {
   testExamples,
 } from './screens';
 
-/** Animated Properties routes */
+/* Animated Properties routes */
 
 const layoutAndPositioningRoutes = {
   FlexBox: {
@@ -225,9 +225,26 @@ const appearanceRoutes = {
   },
   Borders: {
     name: 'Borders',
-    disabled: true,
-    labelTypes: ['unimplemented'],
-    routes: {},
+    routes: {
+      BorderRadius: {
+        name: 'Border Radius',
+        Component: animatedProperties.appearance.borders.BorderRadius,
+      },
+      BorderWidth: {
+        name: 'Border Width',
+        Component: animatedProperties.appearance.borders.BorderWidth,
+      },
+      BorderStyle: {
+        name: 'Border Style',
+        Component: animatedProperties.appearance.borders.BorderStyle,
+      },
+      // TODO - check if this is needed (it seems that this prop has no effect in React Native)
+      // BorderCurve: {
+      //   name: 'Border Curve',
+      //   labelTypes: ['iOS'],
+      //   Component: animatedProperties.appearance.borders.BorderCurve,
+      // },
+    },
   },
   Transforms: {
     name: 'Transforms',
@@ -434,7 +451,7 @@ const othersRoutes = {
   },
 } satisfies Routes;
 
-/** Animations routes */
+/* Animations routes */
 
 const routes = {
   AnimatedProperties: {

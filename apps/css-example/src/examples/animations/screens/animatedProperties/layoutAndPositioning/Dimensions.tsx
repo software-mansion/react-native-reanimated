@@ -1,9 +1,6 @@
 import type { DimensionValue } from 'react-native';
 import { StyleSheet } from 'react-native';
-import type {
-  CSSAnimationConfig,
-  CSSAnimationSettings,
-} from 'react-native-reanimated';
+import type { CSSAnimationSettings } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { ExamplesScreen, VerticalExampleCard } from '@/components';
@@ -60,18 +57,6 @@ const SECTIONS = [
   },
 ];
 
-function renderExample({
-  config,
-  height = sizes.md,
-  width = sizes.md,
-}: {
-  config: CSSAnimationConfig;
-  height?: DimensionValue;
-  width?: DimensionValue;
-}) {
-  return <Animated.View style={[styles.box, config, { height, width }]} />;
-}
-
 export default function Dimensions() {
   return (
     <ExamplesScreen<{
@@ -79,6 +64,9 @@ export default function Dimensions() {
       width?: DimensionValue;
       height?: DimensionValue;
     }>
+      renderExample={({ config, height = sizes.md, width = sizes.md }) => (
+        <Animated.View style={[styles.box, config, { height, width }]} />
+      )}
       tabs={[
         {
           buildConfig: ({ property }) => ({
@@ -93,7 +81,6 @@ export default function Dimensions() {
             },
           }),
           name: 'Absolute',
-          renderExample,
           sections: SECTIONS,
         },
         {
@@ -109,7 +96,6 @@ export default function Dimensions() {
             },
           }),
           name: 'Relative',
-          renderExample,
           sections: SECTIONS,
         },
         {
@@ -135,7 +121,6 @@ export default function Dimensions() {
             },
           }),
           name: 'Mixed',
-          renderExample,
           sections: [
             {
               CardComponent: VerticalExampleCard,

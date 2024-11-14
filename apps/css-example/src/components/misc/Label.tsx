@@ -51,6 +51,10 @@ export default function Label({ size = 'small', type }: LabelProps) {
   const variant = variants[size];
   const color = colors.label[type];
 
+  if (!color || !variant) {
+    return null;
+  }
+
   return (
     <View style={[styles.label, variant.labelStyle, { borderColor: color }]}>
       <View style={[styles.background, { backgroundColor: color }]} />
