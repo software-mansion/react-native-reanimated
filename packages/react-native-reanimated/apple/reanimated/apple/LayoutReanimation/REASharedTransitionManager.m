@@ -583,15 +583,15 @@ static BOOL _isConfigured = NO;
 
   REAUIView *navTabScreen = _disappearingScreens[0];
   REAUIView *sourceScreen = _disappearingScreens[[_disappearingScreens count] - 1];
-  
+
   // Add null checks
   if (!navTabScreen || !navTabScreen.reactSuperview) {
     return;
   }
-  
+
   REAUIView *targetTabScreen = [REAScreensHelper getActiveTabForTabNavigator:navTabScreen.reactSuperview];
   REAUIView *targetScreen = [REAScreensHelper findTopScreenInChildren:targetTabScreen];
-  
+
   if (!targetScreen) {
     return;
   }
