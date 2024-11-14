@@ -157,10 +157,6 @@ std::pair<PropertyValues, PropertyValues> getChangedPropsRecursive(
     }
   }
 
-  if (!oldHasChanges && !newHasChanges) {
-    return std::make_pair(nullptr, nullptr);
-  }
-
   return std::make_pair(
       oldHasChanges ? std::make_unique<jsi::Value>(std::move(*oldResult))
                     : nullptr,
@@ -250,13 +246,6 @@ ChangedProps processPropertyChanges(
     if (oldChangedProp || newChangedProp) {
       changedPropertyNames.push_back(propName);
     }
-  }
-
-  if (!oldHasChanges && !newHasChanges) {
-    return {
-        std::make_unique<jsi::Value>(jsi::Value::undefined()),
-        std::make_unique<jsi::Value>(jsi::Value::undefined()),
-        {}};
   }
 
   return {

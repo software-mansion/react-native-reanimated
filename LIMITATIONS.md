@@ -2,10 +2,6 @@
 
 ## Android-specific issues
 
-### Performance
-
-We are aware of some performance issues, especially on Android. We are currently working on performance improvements to address these issues.
-
 ### Animation removal
 
 After removing the animation from view style props on Android, changes applied during the animation sometimes aren't reverted. Removal of styles applied during animation works properly on iOS, though.
@@ -19,6 +15,10 @@ Style inheritance is not supported. Properties that would normally inherit value
 ### Relative Margins
 
 Relative margins (e.g. `10%`) are not calculated properly. This limitation stems from React Native, because the yoga layout engine does not handle these calculations correctly.
+
+### Mixed-Unit Border Radius
+
+Yoga calculates borders in a different ways for numeric valued and relative (%) values. For the first one, it applies the same radius on both edges of the container which are near the rounded corner. For the second one, it applies different radius to the shorter edge and different to the longer one, depending on the length of the container edge. Currently, there is no possibility to properly interpolate between absolute (numeric) and relative (%) values.
 
 ### FlexBasis
 

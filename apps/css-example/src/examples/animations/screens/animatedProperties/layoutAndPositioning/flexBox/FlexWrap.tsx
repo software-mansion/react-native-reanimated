@@ -11,7 +11,7 @@ export default function FlexWrap() {
     <ExamplesScreen
       CardComponent={VerticalExampleCard}
       buildConfig={() => ({
-        animationDuration: '5s',
+        animationDuration: '2s',
         animationIterationCount: 'infinite',
         animationName: {
           '0%': {

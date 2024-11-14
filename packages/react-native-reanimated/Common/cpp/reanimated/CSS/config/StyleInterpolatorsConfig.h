@@ -121,28 +121,41 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       {"textShadowRadius", numeric(0)},
 
       // BORDERS
-      // TODO: Check which these props should be relative to with the
-      // specification
-      {"borderBottomEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderBottomLeftRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderBottomRightRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderBottomStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderEndEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderEndStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      // Radius
+      // TODO - fix interpolation between absolute and relative values
+      // when yoga supports it (relativeProperty "width" is just a placeholder)
       {"borderRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderStartEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderStartStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderTopEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      // top-left
       {"borderTopLeftRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderTopRightRadius", relOrNum(RelativeTo::SELF, "width", 0)},
       {"borderTopStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderStartStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      // top-right
+      {"borderTopRightRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderTopEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderStartEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      // bottom-left
+      {"borderBottomLeftRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderBottomStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderEndStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      // bottom-right
+      {"borderBottomRightRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderBottomEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderEndEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+
+      // Width
+      {"borderWidth", numeric(0)},
+      // top
+      {"borderTopWidth", numeric(0)},
+      {"borderStartWidth", numeric(0)},
+      // bottom
       {"borderBottomWidth", numeric(0)},
       {"borderEndWidth", numeric(0)},
+      // left
       {"borderLeftWidth", numeric(0)},
+      // right
       {"borderRightWidth", numeric(0)},
-      {"borderStartWidth", numeric(0)},
-      {"borderTopWidth", numeric(0)},
-      {"borderWidth", numeric(0)},
+
+      // Decoration
       {"borderCurve", discrete()},
       {"borderStyle", discrete()},
 
