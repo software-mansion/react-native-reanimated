@@ -85,6 +85,7 @@ void TransitionProgressProvider::runProgressProviders(
     const PropertyNames &changedPropertyNames) {
   for (const auto &propertyName : changedPropertyNames) {
     // Always create the new progress provider with the new settings
+    propertiesToRemove_.erase(propertyName);
     propertyProgressProviders_.insert_or_assign(
         propertyName,
         TransitionPropertyProgressProvider(
@@ -103,7 +104,7 @@ void TransitionProgressProvider::update(const double timestamp) {
     propertyProgressProvider.update(timestamp);
     if (propertyProgressProvider.getState() ==
         TransitionProgressState::FINISHED) {
-      propertiesToRemove_.emplace_back(propertyName);
+      propertiesToRemove_.insert(propertyName);
     }
   }
 }

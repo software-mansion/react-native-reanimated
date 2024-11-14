@@ -242,11 +242,12 @@ ChangedProps processPropertyChanges(
     if (oldChangedProp) {
       oldResult->setProperty(rt, propName.c_str(), *oldChangedProp);
       oldHasChanges = true;
-      changedPropertyNames.push_back(propName);
     }
     if (newChangedProp) {
       newResult->setProperty(rt, propName.c_str(), *newChangedProp);
       newHasChanges = true;
+    }
+    if (oldChangedProp || newChangedProp) {
       changedPropertyNames.push_back(propName);
     }
   }
