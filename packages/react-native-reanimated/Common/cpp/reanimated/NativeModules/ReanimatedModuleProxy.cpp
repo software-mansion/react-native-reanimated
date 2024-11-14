@@ -13,7 +13,6 @@
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/AsyncQueue.h>
-#include <worklets/Tools/JSISerializer.h>
 #include <worklets/Tools/WorkletEventHandler.h>
 
 #ifdef __ANDROID__
@@ -50,8 +49,6 @@
 using namespace facebook;
 
 namespace reanimated {
-
-using namespace worklets;
 
 ReanimatedModuleProxy::ReanimatedModuleProxy(
     const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,

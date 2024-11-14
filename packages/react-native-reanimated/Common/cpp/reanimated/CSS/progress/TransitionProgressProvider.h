@@ -65,7 +65,7 @@ class TransitionProgressProvider {
   double delay_;
   EasingFunction easingFunction_;
 
-  std::vector<std::string> propertiesToRemove_;
+  std::unordered_set<std::string> propertiesToRemove_;
   std::unordered_map<std::string, TransitionPropertyProgressProvider>
       propertyProgressProviders_;
 };
