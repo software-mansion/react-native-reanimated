@@ -196,9 +196,9 @@ buildscript {
         }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:7.3.1"
-        classpath "de.undercouch:gradle-download-task:5.0.1"
-        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.11.0"
+        classpath "com.android.tools.build:gradle:8.2.1"
+        classpath "de.undercouch:gradle-download-task:5.6.0"
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.25.0"
     }
 }
 
@@ -211,7 +211,7 @@ apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
 
 android {
-    compileSdkVersion safeExtGet("compileSdkVersion", 30)
+    compileSdkVersion safeExtGet("compileSdkVersion", 34)
 
     def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
     if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
@@ -241,8 +241,8 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion safeExtGet("minSdkVersion", 16)
-        targetSdkVersion safeExtGet("targetSdkVersion", 30)
+        minSdkVersion safeExtGet("minSdkVersion", 23)
+        targetSdkVersion safeExtGet("targetSdkVersion", 34)
         versionCode 1
         versionName "1.0"
         buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
@@ -346,36 +346,16 @@ android {
                 srcDirs += "src/paper/java"
             }
 
-            // messageQueueThread
-            if (REANIMATED_MAJOR_VERSION > 2) {
-                if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/72"
-                } else {
-                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
-                }
-            }
-
             // ReanimatedUIManager & ReanimatedUIImplementation
-            if (REACT_NATIVE_MINOR_VERSION <= 73) {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
-            } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
+            if (REACT_NATIVE_MINOR_VERSION <= 74 ) {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/74"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
             }
 
-            // ReactHost
-            if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                srcDirs += "src/reactNativeVersionPatch/ReactHost/72"
-            } else {
-                srcDirs += "src/reactNativeVersionPatch/ReactHost/latest"
-            }
-
             // ReactFeatureFlags
             if (IS_NEW_ARCHITECTURE_ENABLED) {
-                if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/72"
-                } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                if (REACT_NATIVE_MINOR_VERSION <= 74) {
                     srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/74"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/latest"
@@ -384,9 +364,7 @@ android {
 
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 // RuntimeExecutor and CallInvokerHolder
-                if (REACT_NATIVE_MINOR_VERSION <= 73) {
-                    srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/73"
-                } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                if (REACT_NATIVE_MINOR_VERSION <= 74) {
                     srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/74"
                 } else {
                     srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/latest"
@@ -435,21 +413,12 @@ android {
     }
 }
 
-def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWithNewArchitectureTask {
-    onlyIf { IS_NEW_ARCHITECTURE_ENABLED && REANIMATED_MAJOR_VERSION == 3 && REACT_NATIVE_MINOR_VERSION < 74 }
-    doFirst {
-        // If you change the minimal React Native version remember to update Compatibility Table in docs
-        throw new GradleException(
-            "[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + REANIMATED_VERSION + " supports the New Architecture on React Native 0.74.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
-        )
-    }
-}
-
 def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
-    onlyIf { REACT_NATIVE_MINOR_VERSION < 71 }
+    // If you change the minimal React Native version remember to update Compatibility Table in docs
+    def minimalReactNativeVersion = 74
+    onlyIf { REACT_NATIVE_MINOR_VERSION < minimalReactNativeVersion }
     doFirst {
-        // If you change the minimal React Native version remember to update Compatibility Table in docs
-        throw new GradleException("[Reanimated] Unsupported React Native version. Please use 0.71 or newer.")
+        throw new GradleException("[Reanimated] Unsupported React Native version. Please use $minimalReactNativeVersion. or newer.")
     }
 }
 
@@ -468,7 +437,7 @@ task prepareReanimatedHeadersForPrefabs(type: Copy) {
 }
 
 tasks.preBuild {
-    dependsOn assertLatestReactNativeWithNewArchitecture, assertMinimalReactNativeVersion
+    dependsOn assertMinimalReactNativeVersion
 }
 
 task cleanCmakeCache() {

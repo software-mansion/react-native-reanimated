@@ -56,7 +56,7 @@ NativeProxy::NativeProxy(
 #endif // RCT_NEW_ARCH_ENABLED
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
     jsi::Runtime *rnRuntime,
@@ -81,9 +81,7 @@ NativeProxy::NativeProxy(
       layoutAnimations_(std::move(layoutAnimations)) {
   commonInit(fabricUIManager);
 }
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
 
-#ifdef RCT_NEW_ARCH_ENABLED
 void NativeProxy::commonInit(
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         &fabricUIManager) {
@@ -140,7 +138,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       valueUnpackerCode);
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybridBridgeless(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
@@ -163,7 +161,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybridBridgeless(
       fabricUIManager,
       valueUnpackerCode);
 }
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
+#endif // RCT_NEW_ARCH_ENABLED
 
 #ifndef NDEBUG
 void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
@@ -236,18 +234,17 @@ bool NativeProxy::getIsReducedMotion() {
 }
 
 void NativeProxy::registerNatives() {
-  registerHybrid({
-    makeNativeMethod("initHybrid", NativeProxy::initHybrid),
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-        makeNativeMethod(
-            "initHybridBridgeless", NativeProxy::initHybridBridgeless),
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
-        makeNativeMethod(
-            "isAnyHandlerWaitingForEvent",
-            NativeProxy::isAnyHandlerWaitingForEvent),
-        makeNativeMethod("performOperations", NativeProxy::performOperations)
-  });
+  registerHybrid(
+      {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
+#ifdef RCT_NEW_ARCH_ENABLED
+       makeNativeMethod(
+           "initHybridBridgeless", NativeProxy::initHybridBridgeless),
+#endif // RCT_NEW_ARCH_ENABLED
+       makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
+       makeNativeMethod(
+           "isAnyHandlerWaitingForEvent",
+           NativeProxy::isAnyHandlerWaitingForEvent),
+       makeNativeMethod("performOperations", NativeProxy::performOperations)});
 }
 
 void NativeProxy::requestRender(
@@ -459,12 +456,7 @@ void NativeProxy::handleEvent(
     // for details.
     return;
   }
-#if REACT_NATIVE_MINOR_VERSION >= 72
   std::string eventJSON = eventAsString;
-#else
-  // remove "{ NativeMap: " and " }"
-  std::string eventJSON = eventAsString.substr(13, eventAsString.length() - 15);
-#endif
   if (eventJSON == "null") {
     return;
   }
