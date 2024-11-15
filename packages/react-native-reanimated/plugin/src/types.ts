@@ -32,6 +32,7 @@ export interface ReanimatedPluginPass {
   cwd: string;
   filename: string | undefined;
   workletNumber: number;
+  classesToWorkletize: { node: BabelNode; name: string | undefined | null }[];
 }
 
 export type WorkletizableFunction =
