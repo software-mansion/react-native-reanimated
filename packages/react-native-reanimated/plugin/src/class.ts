@@ -356,7 +356,7 @@ function isWorkletizableClass(
 
   // Secondary method of determining if a class is workletizable. We look for the
   // reference we memoized earlier. However, some plugin could've changed the reference.
-  const isMemoizedNode = !!state.classesToWorkletize?.some(
+  const isMemoizedNode = state.classesToWorkletize.some(
     (record) => record.node === classNode
   );
 
@@ -364,7 +364,7 @@ function isWorkletizableClass(
   // We bail on non-top-level declarations.
   const isTopLevelMemoizedName =
     classPath.parentPath.isProgram() &&
-    state.classesToWorkletize?.some((record) => record.name === className);
+    state.classesToWorkletize.some((record) => record.name === className);
 
   // Remove the class from the list of classes to workletize. There are some edge
   // cases when leaving it as is would lead to multiple workletizations.
