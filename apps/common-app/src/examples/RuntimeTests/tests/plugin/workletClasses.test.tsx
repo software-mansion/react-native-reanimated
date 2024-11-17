@@ -6,8 +6,8 @@ import { render, wait, describe, getRegisteredValue, registerValue, test, expect
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
 class WorkletClass {
-  __workletClass: boolean = true;
-  value: number = 0;
+  __workletClass = true;
+  value = 0;
   getOne() {
     return 1;
   }
@@ -17,6 +17,28 @@ class WorkletClass {
   }
 
   getIncremented() {
+    return ++this.value;
+  }
+}
+
+interface ITypeScriptClass {
+  getOne(): number;
+  getTwo(): number;
+  getIncremented(): number;
+}
+
+class TypeScriptClass implements ITypeScriptClass {
+  __workletClass: boolean = true;
+  value: number = 0;
+  getOne(): number {
+    return 1;
+  }
+
+  getTwo(): number {
+    return this.getOne() + 1;
+  }
+
+  getIncremented(): number {
     return ++this.value;
   }
 }
@@ -134,5 +156,26 @@ describe('Test worklet classes', () => {
     expect(sharedValue.onUI).toBe(true);
   });
 
+  test('TypeScript classes work on Worklet runtime', async () => {
+    const ExampleComponent = () => {
+      const output = useSharedValue<number | null>(null);
+      registerValue(SHARED_VALUE_REF, output);
+
+      useEffect(() => {
+        runOnUI(() => {
+          const clazz = new TypeScriptClass();
+          output.value = clazz.getOne();
+        })();
+      });
+
+      return <View />;
+    };
+    await render(<ExampleComponent />);
+    await wait(100);
+    const sharedValue = await getRegisteredValue(SHARED_VALUE_REF);
+    expect(sharedValue.onUI).toBe(1);
+  });
+
   // TODO: Add a test that throws when class is sent from React to Worklet runtime.
+  // TODO: Add a test that throws when trying to use Worklet Class with inheritance.
 });
