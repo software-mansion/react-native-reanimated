@@ -51,10 +51,7 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
         quis ipsum. Nunc tincidunt risus quam, et sagittis neque hendrerit et.
       </Animated.Text>
       <Animated.View entering={SlideInLeft.delay(1000)} exiting={SlideOutLeft}>
-        <Button
-          title="go back"
-          onPress={() => navigation.navigate('Screen1')}
-        />
+        <Button title="go back" onPress={() => navigation.popTo('Screen1')} />
       </Animated.View>
     </View>
   );
