@@ -18,7 +18,7 @@ Relative margins (e.g. `10%`) are not calculated properly. This limitation stems
 
 ### Mixed-Unit Border Radius
 
-Yoga calculates borders in a different ways for numeric valued and relative (%) values. For the first one, it applies the same radius on both edges of the container which are near the rounded corner. For the second one, it applies different radius to the shorter edge and different to the longer one, depending on the length of the container edge. Currently, there is no possibility to properly interpolate between absolute (numeric) and relative (%) values.
+Yoga calculates borders in different ways for numeric values and relative (%) values. For the first one, it applies the same radius on both edges of the container which are near the rounded corner. For the second one, it applies different radius to the shorter edge and different to the longer one, depending on the length of the container edge. Currently, there is no possibility to properly interpolate between absolute (numeric) and relative (%) values.
 
 ### FlexBasis
 

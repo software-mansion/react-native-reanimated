@@ -13,7 +13,7 @@ import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
 import com.facebook.react.internal.featureflags.ReactNativeFeatureFlags
 import com.facebook.react.internal.featureflags.ReactNativeNewArchitectureFeatureFlagsDefaults
-import com.facebook.react.common.assets.ReactFontManager;
+import com.facebook.react.common.assets.ReactFontManager
 
 class MainApplication : Application(), ReactApplication {
 

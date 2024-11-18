@@ -23,6 +23,8 @@ export const ERROR_MESSAGES = {
     `Invalid color value: ${color}`,
   unsupportedAspectRatio: (ratio: string | number) =>
     `Unsupported aspect ratio: ${ratio}. Expected a number or a string in "a/b" format.`,
+  invalidFontWeight: (weight: string | number) =>
+    `Invalid font weight value: ${weight}`,
 };
 type PropertyName = keyof StyleProps;
 
@@ -67,6 +69,33 @@ function normalizeAspectRatio(value: string | number): number {
   throw new ReanimatedError(ERROR_MESSAGES.unsupportedAspectRatio(value));
 }
 
+const FONT_WEIGHT_MAPPINGS = {
+  ultralight: '100',
+  thin: '200',
+  light: '300',
+  normal: '400',
+  medium: '400',
+  regular: '400',
+  condensed: '500',
+  semibold: '600',
+  bold: '700',
+  condensedBold: '700',
+  heavy: '800',
+  black: '900',
+} as const;
+
+function normalizeFontWeight(value: string | number): string {
+  if (typeof value === 'number' || !isNaN(+value)) {
+    return value.toString();
+  }
+
+  if (value in FONT_WEIGHT_MAPPINGS) {
+    return FONT_WEIGHT_MAPPINGS[value as keyof typeof FONT_WEIGHT_MAPPINGS];
+  }
+
+  throw new ReanimatedError(ERROR_MESSAGES.invalidFontWeight(value));
+}
+
 export function normalizeStyle(style: StyleProps): StyleProps {
   const entries: [PropertyName, StyleProps[PropertyName]][] = [];
 
@@ -89,6 +118,9 @@ export function normalizeStyle(style: StyleProps): StyleProps {
           break;
         case 'aspectRatio':
           entries.push([key, normalizeAspectRatio(propValue)]);
+          break;
+        case 'fontWeight':
+          entries.push([key, normalizeFontWeight(propValue)]);
           break;
         default:
           entries.push([key, propValue]);
