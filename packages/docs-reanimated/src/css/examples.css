@@ -1,0 +1,13 @@
+time {
+  display: none;
+}
+
+[aria-label='Blog post page navigation'].pagination-nav {
+  display: none;
+}
+
+.navbar-sidebar__rightItems {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}

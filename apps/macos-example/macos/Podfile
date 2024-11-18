@@ -1,0 +1,27 @@
+require_relative '../node_modules/react-native-macos/scripts/react_native_pods'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
+ENV['REANIMATED_EXAMPLE_APP_NAME'] = 'MacOSExample-macos'
+
+require_relative '../../../packages/react-native-reanimated/scripts/clangd-add-xcode-step.rb'
+
+prepare_react_native_project!
+
+target 'MacOSExample-macOS' do
+  platform :macos, '11.0'
+  use_native_modules!
+
+  use_react_native!(
+    :path => '../node_modules/react-native-macos',
+    :hermes_enabled => false,
+    :fabric_enabled => ENV['RCT_NEW_ARCH_ENABLED'] == '1',
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  post_install do |installer|
+    react_native_post_install(installer)
+  end
+
+  add_clangd_generation_step()
+end

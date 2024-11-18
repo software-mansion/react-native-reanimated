@@ -1,0 +1,47 @@
+name: Windows hosted app Reanimated build check [Nightly]
+env:
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
+on:
+  pull_request:
+    paths:
+      - .github/workflows/windows-hosted-app-reanimated-build-check-nightly.yml
+  schedule:
+    - cron: '37 19 * * *'
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: windows-latest
+    concurrency:
+      group: build-on-windows-${{ github.ref }}
+      cancel-in-progress: true
+    env:
+      APP_NAME: app
+    steps:
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - name: Setup Yarn
+        # Sometimes `npx react-native init` fails due to dependency mismatches or other
+        # rather vague errors. This is a workaround for that.
+        run: corepack enable && yarn init --yes
+      - name: Install React Native
+        run: yarn add @react-native-community/cli
+      - name: Create app
+        run: yarn rnc-cli init ${{ env.APP_NAME }} --pm yarn --skip-install --install-pods false --skip-git-init
+      - name: Setup Yarn Modern
+        working-directory: ${{ env.APP_NAME }}
+        run: touch yarn.lock && yarn set version berry
+      - name: Install dependencies
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn
+      - name: Install Reanimated
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
+      - name: Build Android App
+        working-directory: ${{ env.APP_NAME }}/android
+        run: ./gradlew assembleDebug --console=plain

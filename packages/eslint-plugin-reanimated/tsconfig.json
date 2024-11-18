@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "preserveSymlinks": true,
+    "jsx": "react-native",
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "outDir": "public",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationDir": "types"
+  },
+  "include": ["src"]
+}

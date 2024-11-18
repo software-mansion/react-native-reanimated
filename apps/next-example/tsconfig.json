@@ -1,0 +1,11 @@
+{
+  "extends": ["../../tsconfig.json", "expo/tsconfig.base"],
+  "compilerOptions": {
+    "module": "esnext",
+    "incremental": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "noImplicitAny": false
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.js"]
+}

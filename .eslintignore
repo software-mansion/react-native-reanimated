@@ -1,8 +1,0 @@
-.eslintrc.js
-scripts/*.js
-docs/*
-plugin/*
-eslintrc.js
-jest.config.js
-eslintPlugin/*
-mock.js
