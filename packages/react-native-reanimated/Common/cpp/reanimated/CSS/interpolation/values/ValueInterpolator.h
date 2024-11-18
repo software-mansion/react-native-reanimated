@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/Color.h>
 #include <reanimated/CSS/common/TransformOrigin.h>
@@ -101,3 +102,5 @@ class ValueInterpolator : public PropertyInterpolator {
 };
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

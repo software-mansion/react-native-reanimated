@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
 
 namespace reanimated {
@@ -154,3 +155,5 @@ void CSSAnimationsRegistry::scheduleOrActivateAnimation(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/groups/TransformsStyleInterpolator.h>
 
 namespace reanimated {
@@ -459,3 +460,5 @@ TransformsStyleInterpolator::createUpdateContext(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

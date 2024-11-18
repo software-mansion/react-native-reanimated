@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/values/ColorValueInterpolator.h>
 
 namespace reanimated {
@@ -23,3 +24,5 @@ Color ColorValueInterpolator::interpolate(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

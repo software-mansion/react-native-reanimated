@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 namespace reanimated {
@@ -78,3 +79,5 @@ void UpdatesRegistry::runMarkedRemovals() {
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

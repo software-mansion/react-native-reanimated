@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
 #include <reanimated/CSS/interpolation/groups/TransformsStyleInterpolator.h>
@@ -116,3 +117,5 @@ std::shared_ptr<TransformInterpolator> matrix(
     const TransformMatrix &defaultValue);
 
 } // namespace reanimated::Interpolators
+
+#endif // RCT_NEW_ARCH_ENABLED

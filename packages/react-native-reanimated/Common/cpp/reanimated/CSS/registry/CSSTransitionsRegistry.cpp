@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 
 namespace reanimated {
@@ -143,3 +144,5 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/transforms/PerspectiveTransformInterpolator.h>
 
 namespace reanimated {
@@ -23,3 +24,5 @@ PerspectiveOperation PerspectiveTransformInterpolator::interpolate(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <jsi/jsi.h>
 #include <memory>
@@ -25,3 +26,5 @@ using Vec16Array = std::array<double, 16>;
 using Matrix4x4 = std::array<std::array<double, 4>, 4>;
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

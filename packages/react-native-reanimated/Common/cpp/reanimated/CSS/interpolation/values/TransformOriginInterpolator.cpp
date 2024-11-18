@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/values/TransformOriginInterpolator.h>
 
 namespace reanimated {
@@ -57,3 +58,5 @@ TransformOrigin TransformOriginInterpolator::interpolate(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

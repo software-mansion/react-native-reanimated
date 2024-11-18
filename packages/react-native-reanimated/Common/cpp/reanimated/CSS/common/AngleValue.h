@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <worklets/Tools/JSISerializer.h>
 
@@ -27,3 +28,5 @@ struct AngleValue {
 };
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

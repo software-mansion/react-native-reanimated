@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 
 namespace reanimated::Interpolators {
@@ -280,3 +281,5 @@ std::shared_ptr<TransformInterpolator> matrix(
 }
 
 } // namespace reanimated::Interpolators
+
+#endif // RCT_NEW_ARCH_ENABLED

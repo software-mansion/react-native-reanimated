@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/util/keyframes.h>
 
 namespace reanimated {
@@ -50,3 +51,5 @@ std::vector<std::pair<double, jsi::Value>> parseJSIKeyframes(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

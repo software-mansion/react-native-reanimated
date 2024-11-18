@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
 namespace reanimated {
@@ -285,3 +286,5 @@ template class ValueInterpolator<UnitValue>;
 template class ValueInterpolator<TransformOrigin>;
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

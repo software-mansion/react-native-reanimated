@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/core/CSSTransition.h>
 
 namespace reanimated {
@@ -68,3 +69,5 @@ void CSSTransition::updateTransitionProperties(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

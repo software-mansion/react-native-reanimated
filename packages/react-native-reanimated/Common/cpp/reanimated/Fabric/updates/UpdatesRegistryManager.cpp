@@ -1,3 +1,5 @@
+#ifdef RCT_NEW_ARCH_ENABLED
+
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
 namespace reanimated {
@@ -13,3 +15,5 @@ PropsMap UpdatesRegistryManager::collectProps() {
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

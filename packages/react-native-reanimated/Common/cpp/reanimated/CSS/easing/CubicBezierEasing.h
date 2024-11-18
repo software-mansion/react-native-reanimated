@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/definitions.h>
 
@@ -14,3 +15,5 @@ double solveCurveX(double x, double x1, double x2, double epsilon = 1e-6);
 EasingFunction createBezierFunction(double x1, double y1, double x2, double y2);
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

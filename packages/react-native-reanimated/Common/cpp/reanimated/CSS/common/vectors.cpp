@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/common/vectors.h>
 
 namespace reanimated {
@@ -91,3 +92,5 @@ std::ostream &operator<<(std::ostream &os, const Vector4D &vector) {
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

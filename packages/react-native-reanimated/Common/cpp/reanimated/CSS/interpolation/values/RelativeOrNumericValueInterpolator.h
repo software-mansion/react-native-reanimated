@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
@@ -40,3 +41,5 @@ class RelativeOrNumericValueInterpolator final
 };
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/config/CSSTransitionConfig.h>
 
 namespace reanimated {
@@ -76,3 +77,5 @@ PartialCSSTransitionSettings parsePartialCSSTransitionSettings(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

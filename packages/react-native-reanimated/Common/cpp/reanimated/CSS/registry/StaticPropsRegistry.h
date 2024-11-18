@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <react/renderer/core/ShadowNode.h>
 
@@ -44,3 +45,5 @@ class StaticPropsRegistry {
 };
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

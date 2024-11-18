@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <vector>
 
@@ -9,3 +10,5 @@ size_t firstSmallerThanOrEqualBinsearch(
     const std::vector<double> &arr);
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

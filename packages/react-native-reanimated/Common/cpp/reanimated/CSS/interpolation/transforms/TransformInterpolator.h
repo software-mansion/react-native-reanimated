@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
@@ -94,3 +95,5 @@ using TransformInterpolatorsMap =
     std::unordered_map<std::string, std::shared_ptr<TransformInterpolator>>;
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
@@ -66,3 +67,5 @@ class ViewStylesRepository {
 };
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

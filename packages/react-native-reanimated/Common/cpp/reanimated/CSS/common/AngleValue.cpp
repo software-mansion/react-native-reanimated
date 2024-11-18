@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/common/AngleValue.h>
 
 namespace reanimated {
@@ -60,3 +61,5 @@ jsi::Value AngleValue::toJSIValue(jsi::Runtime &rt) const {
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

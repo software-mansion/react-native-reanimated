@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/values/RelativeOrNumericValueInterpolator.h>
 
 #include <utility>
@@ -46,3 +47,5 @@ UnitValue RelativeOrNumericValueInterpolator::interpolate(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

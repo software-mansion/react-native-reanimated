@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #pragma once
 
 #include <reanimated/CSS/easing/CubicBezierEasing.h>
@@ -27,3 +28,5 @@ EasingFunction getParametrizedEasingFunction(
     const jsi::Value &easingConfig);
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

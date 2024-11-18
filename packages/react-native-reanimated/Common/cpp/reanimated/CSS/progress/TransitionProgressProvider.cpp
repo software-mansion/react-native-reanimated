@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
 namespace reanimated {
@@ -110,3 +111,5 @@ void TransitionProgressProvider::update(const double timestamp) {
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

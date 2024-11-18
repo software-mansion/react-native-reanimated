@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 
@@ -219,3 +220,5 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
 }();
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED
