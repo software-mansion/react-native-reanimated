@@ -10,7 +10,7 @@ After removing the animation from view style props on Android, changes applied d
 
 ### Style Inheritance
 
-Style inheritance is not supported. Properties that would normally inherit values (e.g., `textDecorationColor` inheriting from `color`) must be provided separately, as inheritance is not yet supported.
+Style inheritance is not supported. Properties that would normally inherit values (e.g., `textDecorationColor` inheriting from `color`) must be provided separately, as inheritance is not yet implemented.
 
 ### Relative Margins
 
@@ -22,7 +22,7 @@ Yoga calculates borders in different ways for numeric values and relative (%) va
 
 ### FlexBasis
 
-Even though changes of this property are calculated properly during the animation, they aren't applied to the view. Other flex properties, such as `flexBasis` and `flexShrink` work fine, so they should be used for animations if possible.
+Even though changes of this property are calculated properly during the animation, they aren't applied to the view. Other flex properties, such as `flexGrow` and `flexShrink` work fine, so they should be used for animations if possible.
 
 ### Fill mode with Fractional Iteration Count
 
