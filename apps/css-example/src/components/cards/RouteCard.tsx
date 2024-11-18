@@ -109,5 +109,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     columnGap: spacing.xs,
     flexDirection: 'row',
+    flexWrap: 'wrap',
   },
 });

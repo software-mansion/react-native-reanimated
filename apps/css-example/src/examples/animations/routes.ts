@@ -323,11 +323,11 @@ const appearanceRoutes = {
 const typographyRoutes = {
   Font: {
     name: 'Font',
-    disabled: true,
-    labelTypes: ['unimplemented'],
     routes: {
       FontFamily: {
         name: 'Font Family',
+        labelTypes: ['unimplemented'],
+        disabled: true,
         Component: animatedProperties.typography.font.FontFamily,
       },
       FontSize: {
@@ -336,10 +336,14 @@ const typographyRoutes = {
       },
       FontStyle: {
         name: 'Font Style',
+        labelTypes: ['unimplemented'],
+        disabled: true,
         Component: animatedProperties.typography.font.FontStyle,
       },
       FontVariant: {
         name: 'Font Variant',
+        labelTypes: ['unimplemented'],
+        disabled: true,
         Component: animatedProperties.typography.font.FontVariant,
       },
       FontWeight: {
@@ -350,8 +354,6 @@ const typographyRoutes = {
   },
   TextAlignment: {
     name: 'Text Alignment',
-    disabled: true,
-    labelTypes: ['unimplemented'],
     routes: {
       TextAlign: {
         name: 'Text Align',
@@ -359,7 +361,8 @@ const typographyRoutes = {
       },
       VerticalAlign: {
         name: 'Vertical Align',
-        labelTypes: ['Android'],
+        labelTypes: ['unsupported' /* 'Android' */],
+        disabled: true,
         Component: animatedProperties.typography.alignment.VerticalAlign,
       },
       TextAlignVertical: {
