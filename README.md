@@ -1,11 +1,13 @@
 <img src="https://github.com/user-attachments/assets/66a344b1-7110-4733-b44c-ada204e99dee" alt="Reanimated by Software Mansion" width="100%">
 
-# Reanimated v4 - CSS Animations & Transitions
+# Reanimated 4 – CSS Animations & Transitions
 
-## Welcome to Reanimated v4 Private Beta ✨
+## Welcome to Reanimated 4 Private Beta ✨
 
-Thank you for your interest in the Reanimated v4 Library! Reanimated v4 adds support for well-known CSS animations and transitions. We aim to provide an easy-to-use and intuitive API that enables developers to effortlessly implement animations and transitions.
-_Please note that this library supports only the New Architecture (Fabric) and is incompatible with the Old Architecture (Paper)._
+Thank you for your interest in the Reanimated library! We aim to provide an easy-to-use and intuitive API that enables developers to effortlessly implement animations and transitions. Reanimated 4 adds support for well-known [CSS animations](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_animations/Using_CSS_animations) and [CSS transitions](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_transitions/Using_CSS_transitions). 
+
+> [!NOTE]
+> This library supports only the [New Architecture](https://reactnative.dev/architecture/landing-page).
 
 > [!IMPORTANT]  
 > The library is currently in beta and is under active development. This early access allows you to try out new features and share feedback to help shape the final product. Your feedback is greatly appreciated as we continue to improve the library.
@@ -30,7 +32,7 @@ The library provides:
 
 #### Running the Example App
 
-To familiarize yourself with the capabilities of Reanimated v4, we recommend starting with the provided example app. It features various examples to help you get started quickly.
+To familiarize yourself with the capabilities of Reanimated 4, we recommend starting with the provided example app. It features various examples to help you get started quickly.
 
 1. **Install Node Modules**:
 
@@ -62,7 +64,7 @@ To integrate the library into your own project, follow these steps:
 
 1. **Download the package**:
 
-   - Download the provided archive with bundled library files (the `.tgz` file), You can find it in [Releases](.).
+   - Download the provided archive with bundled library files (the `.tgz` file), You can find it in [Releases](https://github.com/software-mansion-labs/reanimated-4/releases).
 
 2. **Install the package:**
 
@@ -95,7 +97,7 @@ For a detailed guide on the library usage, see the [USAGE](./USAGE.md) documenta
 If you encounter any issues, you can:
 
 - Open an issue on our GitHub repository
-- Reach out to us on our dedicated Discord channel [ADD LINK HERE](.)
+- Reach out to us on our dedicated Discord channel [#reanimated-4-private-beta](https://discord.com/channels/464786597288738816/1308044483283390494) on Software Mansion Discord.
 
 ### 📝 Limitations and Known Issues
 
@@ -103,7 +105,7 @@ For a list of current limitations and known issues, please refer to [LIMITATIONS
 
 ### 👨‍💻 Discord
 
-Make sure to join [Software Mansion](https://swmansion.com) Discord channel using the invite link: [ADD LINK HERE](.) and contact us to get added to `<channel-name>` channel where we discuss issues and communicate our plans and updates.
+Make sure to join [Software Mansion](https://swmansion.com) Discord channel using the invite link [here](https://discord.gg/VemJ4df8Yr) and contact us to get added to [#reanimated-4-private-beta](https://discord.com/channels/464786597288738816/1308044483283390494) channel where we discuss issues and communicate our plans and updates.
 
 ## Reanimated is created by Software Mansion
 
