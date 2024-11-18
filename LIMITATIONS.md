@@ -34,4 +34,4 @@ In such cases, the view remains static instead of adapting to the updated size a
 
 ## Need Help?
 
-If you encounter other issues that aren't listed above, please let us know on our dedicated Discord channel [ADD LINK HERE](.).
+If you encounter other issues that aren't listed above, please let us know on [#reanimated-4-private-beta](https://discord.com/channels/464786597288738816/1308044483283390494) channel on Software Mansion Discord server.
