@@ -7,7 +7,7 @@ import type {
 
 const ERROR_MESSAGES = {
   invalidCoordinate: (coordinate: string, value: number) =>
-    `[Reanimated] Invalid ${coordinate} coordinate for cubic bezier easing point, it should be a number between 0 and 1, received ${value}`,
+    `Invalid ${coordinate} coordinate for cubic bezier easing point, it should be a number between 0 and 1, received ${value}`,
 };
 
 export class CubicBezierEasing implements ParametrizedTimingFunction {

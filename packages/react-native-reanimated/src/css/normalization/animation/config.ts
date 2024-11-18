@@ -19,7 +19,7 @@ import { createKeyframeStyle } from './keyframes';
 
 export const ERROR_MESSAGES = {
   invalidAnimationName: () =>
-    `[Reanimated] Invalid animation name. Expected a keyframes object.`,
+    `Invalid animation name. Expected a keyframes object.`,
 };
 
 export function normalizeCSSAnimationConfig({

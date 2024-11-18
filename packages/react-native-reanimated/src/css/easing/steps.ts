@@ -8,7 +8,7 @@ import type {
 
 const ERROR_MESSAGES = {
   invalidStepsNumber: (stepsNumber: number) =>
-    `[Reanimated] Steps easing function accepts only positive integers as numbers of steps, ${stepsNumber} isn't a one`,
+    `Steps easing function accepts only positive integers as numbers of steps, ${stepsNumber} isn't a one`,
 };
 
 export class StepsEasing implements ParametrizedTimingFunction {

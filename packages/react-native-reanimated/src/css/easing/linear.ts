@@ -10,17 +10,17 @@ import type {
 
 const ERROR_MESSAGES = {
   invalidLinearEasingPoints: () =>
-    `[Reanimated] Invalid linear easing points. There should be at least two points with 0% and 100% x percentages`,
+    `Invalid linear easing points. There should be at least two points with 0% and 100% x percentages`,
   invalidLinearEasingPointX: (pointX: string) =>
-    `[Reanimated] Invalid linear easing point x value: ${pointX}, it should be a string between '0%' and '100%'`,
+    `Invalid linear easing point x value: ${pointX}, it should be a string between '0%' and '100%'`,
   invalidLinearEasingPointXPercentage: (pointX: string) =>
-    `[Reanimated] Invalid linear easing point x percentage ${pointX}, it should be between 0% and 100%`,
+    `Invalid linear easing point x percentage ${pointX}, it should be between 0% and 100%`,
   linearEasingStartingPoint: () =>
-    `[Reanimated] Linear easing starting point should have 0% percentage or no percentage.`,
+    `Linear easing starting point should have 0% percentage or no percentage.`,
   linearEasingEndingPoint: () =>
-    `[Reanimated] Linear easing ending point should have 100% percentage or no percentage.`,
+    `Linear easing ending point should have 100% percentage or no percentage.`,
   linearEasingPointsSequence: () =>
-    `[Reanimated] Linear easing points x percentages should be an increasing sequence`,
+    `Linear easing points x percentages should be an increasing sequence`,
 };
 
 export class LinearEasing implements ParametrizedTimingFunction {
@@ -183,7 +183,7 @@ export class LinearEasing implements ParametrizedTimingFunction {
       if (typeof point === 'object') {
         if (point.x <= lastKnownX) {
           throw new ReanimatedError(
-            `[Reanimated] Linear easing points x percentages should be an increasing sequence`
+            ERROR_MESSAGES.linearEasingPointsSequence()
           );
         }
         lastKnownX = point.x;
