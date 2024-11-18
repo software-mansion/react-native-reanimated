@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
@@ -15,3 +16,5 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
 };
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

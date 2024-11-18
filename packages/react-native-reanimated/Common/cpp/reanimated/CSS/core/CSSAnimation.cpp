@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/core/CSSAnimation.h>
 
 namespace reanimated {
@@ -112,3 +113,5 @@ PropertyInterpolationUpdateContext CSSAnimation::createUpdateContext(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

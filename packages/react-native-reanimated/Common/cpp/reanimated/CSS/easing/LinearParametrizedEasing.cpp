@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/easing/LinearParametrizedEasing.h>
 
 double interpolateValue(
@@ -30,3 +31,5 @@ EasingFunction createLinearEasingFunction(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

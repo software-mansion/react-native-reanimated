@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/transforms/ScaleTransformInterpolator.h>
 
 namespace reanimated {
@@ -25,3 +26,5 @@ template class ScaleTransformInterpolator<ScaleXOperation>;
 template class ScaleTransformInterpolator<ScaleYOperation>;
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

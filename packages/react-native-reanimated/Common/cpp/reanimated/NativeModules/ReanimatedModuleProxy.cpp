@@ -74,9 +74,9 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       layoutAnimationsManager_(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
+#ifdef RCT_NEW_ARCH_ENABLED
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
-#ifdef RCT_NEW_ARCH_ENABLED
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
@@ -99,20 +99,18 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   commonInit(platformDepMethodsHolder);
 
+#ifdef RCT_NEW_ARCH_ENABLED
   {
     auto lock = updatesRegistryManager_->createLock();
     // Add registries in order of their priority (from the lowest to the
     // highest)
     // CSS transitions should be overriden by animated style animations;
     // animated style animations should be overriden by CSS animations
-#ifdef RCT_NEW_ARCH_ENABLED
     updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
-#endif
     updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
-#ifdef RCT_NEW_ARCH_ENABLED
     updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
-#endif
   }
+#endif
 }
 
 void ReanimatedModuleProxy::commonInit(
@@ -498,6 +496,7 @@ void ReanimatedModuleProxy::cleanupSensors() {
   animatedSensorModule_.unregisterAllSensors();
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
 void ReanimatedModuleProxy::setViewStyle(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
@@ -584,7 +583,6 @@ void ReanimatedModuleProxy::unregisterCSSTransition(
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
 bool ReanimatedModuleProxy::isThereAnyLayoutProp(
     jsi::Runtime &rt,
     const jsi::Object &props) {

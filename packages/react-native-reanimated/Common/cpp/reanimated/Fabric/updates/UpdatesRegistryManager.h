@@ -1,10 +1,13 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
+#include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <memory>
 #include <utility>
 #include <vector>
+
 namespace reanimated {
 
 class UpdatesRegistryManager {
@@ -51,3 +54,5 @@ class UpdatesRegistryManager {
 };
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

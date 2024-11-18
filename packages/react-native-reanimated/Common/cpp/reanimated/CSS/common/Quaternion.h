@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <cmath>
 #include <iostream>
@@ -17,3 +18,5 @@ struct Quaternion {
 };
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

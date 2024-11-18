@@ -121,6 +121,8 @@ static jsi::Value REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)(
   return jsi::Value::undefined();
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+
 static jsi::Value REANIMATED_SPEC_PREFIX(setViewStyle)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -201,6 +203,8 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSTransition)(
       ->unregisterCSSTransition(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
+
+#endif // RCT_NEW_ARCH_ENABLED
 
 ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
     const std::shared_ptr<CallInvoker> &jsInvoker)

@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
@@ -77,3 +78,5 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
 };
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

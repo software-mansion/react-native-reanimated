@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/common/Quaternion.h>
 
 namespace reanimated {
@@ -49,3 +50,5 @@ Quaternion Quaternion::interpolate(const double t, const Quaternion &other)
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

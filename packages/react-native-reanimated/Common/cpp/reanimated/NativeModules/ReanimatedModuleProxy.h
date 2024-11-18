@@ -1,21 +1,21 @@
 #pragma once
 
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
+#include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
+#include <reanimated/Tools/PlatformDepMethodsHolder.h>
+
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
-#include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
-#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
-#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
-#include <reanimated/Tools/PlatformDepMethodsHolder.h>
-
-#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
@@ -223,12 +223,12 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   GetAnimationTimestampFunction getAnimationTimestamp_;
 
-  const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
-  const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
+#ifdef RCT_NEW_ARCH_ENABLED
   bool cssLoopRunning_{false};
   bool shouldUpdateCssAnimations_{true};
 
-#ifdef RCT_NEW_ARCH_ENABLED
+  const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
+  const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;

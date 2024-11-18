@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/config/StyleInterpolatorsConfig.h>
 #include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
@@ -21,3 +22,5 @@ class AnimationStyleInterpolator : public ObjectPropertiesInterpolator {
 };
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

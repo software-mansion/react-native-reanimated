@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/easing/CubicBezierEasing.h>
 
 namespace reanimated {
@@ -64,3 +65,5 @@ EasingFunction createBezierFunction(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

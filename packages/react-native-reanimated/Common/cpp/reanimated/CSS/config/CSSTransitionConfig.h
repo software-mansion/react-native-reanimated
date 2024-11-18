@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
@@ -42,3 +43,5 @@ PartialCSSTransitionSettings parsePartialCSSTransitionSettings(
     const jsi::Value &config);
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

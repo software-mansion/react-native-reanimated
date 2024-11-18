@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
@@ -73,3 +74,5 @@ class CSSAnimation {
 };
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

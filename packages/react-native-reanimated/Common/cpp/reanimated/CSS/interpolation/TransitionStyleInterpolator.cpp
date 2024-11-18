@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/TransitionStyleInterpolator.h>
 
 namespace reanimated {
@@ -96,3 +97,5 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
 namespace reanimated {
@@ -33,3 +34,5 @@ void AnimatedPropsRegistry::remove(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

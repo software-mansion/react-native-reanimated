@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
 
@@ -20,3 +21,5 @@ class PerspectiveTransformInterpolator final
 };
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

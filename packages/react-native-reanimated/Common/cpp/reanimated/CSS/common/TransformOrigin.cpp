@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/common/TransformOrigin.h>
 
 namespace reanimated {
@@ -47,3 +48,5 @@ UnitValue TransformOrigin::valueFromVariant(
 }
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/transforms/TranslateTransformInterpolator.h>
 
 namespace reanimated {
@@ -48,3 +49,5 @@ template class TranslateTransformInterpolator<TranslateXOperation>;
 template class TranslateTransformInterpolator<TranslateYOperation>;
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

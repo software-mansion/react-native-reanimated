@@ -1,3 +1,4 @@
+#ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/transforms/AngleTransformInterpolator.h>
 
 namespace reanimated {
@@ -31,3 +32,5 @@ template class AngleTransformInterpolator<SkewXOperation>;
 template class AngleTransformInterpolator<SkewYOperation>;
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED

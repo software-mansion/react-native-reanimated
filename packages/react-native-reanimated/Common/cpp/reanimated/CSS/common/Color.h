@@ -1,4 +1,5 @@
 #pragma once
+#ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/definitions.h>
 
@@ -42,3 +43,5 @@ class Color {
 inline const Color Color::Transparent(ColorType::TRANSPARENT);
 
 } // namespace reanimated
+
+#endif // RCT_NEW_ARCH_ENABLED
