@@ -1,38 +1,9 @@
-import { Button, StyleSheet, View, TurboModuleRegistry } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 
 import React from 'react';
-import {
-  makeShareableCloneRecursive,
-  runOnJS,
-  runOnUI,
-} from 'react-native-reanimated';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import {
-  NativeStackNavigationProp,
-  createNativeStackNavigator,
-} from '@react-navigation/native-stack';
-
-type StackParams = {
-  Creating: undefined;
-  Freezing: undefined;
-};
-
-const Stack = createNativeStackNavigator<StackParams>();
+import { runOnJS, runOnUI } from 'react-native-reanimated';
 
 export default function ShareablesExample() {
-  return (
-    <NavigationContainer independent={true}>
-      <Stack.Navigator>
-        <Stack.Screen name="Creating" component={CreatingShareables} />
-        <Stack.Screen name="Freezing" component={FreezingShareables} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
-
-function CreatingShareables() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<StackParams, 'Creating'>>();
   return (
     <View style={styles.container}>
       <CyclicObjectDemo />
@@ -239,10 +210,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  bar: {
-    width: '50%',
-    height: 2,
-    backgroundColor: 'black',
   },
 });
