@@ -12,7 +12,7 @@ const root = path.resolve(__dirname, '../..');
 
 const modules = ['react-native'];
 
-/** @type {import('metro-config').MetroConfig} */
+/** @type {import('@react-native/metro-config').MetroConfig} */
 const config = {
   projectRoot: __dirname,
   watchFolders: [root],
