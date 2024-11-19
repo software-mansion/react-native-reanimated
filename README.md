@@ -40,14 +40,20 @@ To familiarize yourself with the capabilities of Reanimated 4, we recommend star
    yarn
    ```
 
-2. **Install iOS Pods** (iOS only):
+2. **Run build**:
+
+   ```bash
+   yarn build
+   ```
+
+3. **Install iOS Pods** (iOS only):
    Navigate to `apps/css-example/ios` and run:
 
    ```bash
    bundle install && bundle exec pod install
    ```
 
-3. **Start the Metro bundler and build the example app**:  
+4. **Start the Metro bundler and build the example app**:  
    Navigate to `apps/css-example` and run:
 
    ```bash
