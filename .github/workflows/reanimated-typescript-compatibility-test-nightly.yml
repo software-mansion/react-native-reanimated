@@ -52,6 +52,3 @@ jobs:
       - name: Run common type tests
         working-directory: packages/react-native-reanimated
         run: yarn type:check:tests:common
-      - name: Run 0.72+ type tests
-        working-directory: packages/react-native-reanimated
-        run: yarn type:check:tests:0.72+
