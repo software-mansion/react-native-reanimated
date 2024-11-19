@@ -37,6 +37,15 @@ function isPlainJSObject(object: object): object is Record<string, unknown> {
   return Object.getPrototypeOf(object) === Object.prototype;
 }
 
+function getFromCache(value: object) {
+  const cached = shareableMappingCache.get(value);
+  if (cached === shareableMappingFlag) {
+    // This means that `value` was already a clone and we can return it as is.
+    return value;
+  }
+  return cached;
+}
+
 // The below object is used as a replacement for objects that cannot be transferred
 // as shareable values. In makeShareableCloneRecursive we detect if an object is of
 // a plain Object.prototype and only allow such objects to be transferred. This lets
@@ -101,8 +110,8 @@ const DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD = 30;
 // We use it to check if later on the function reenters with the same object
 let processedObjectAtThresholdDepth: unknown;
 
-function makeShareableCloneRecursiveWeb(value: unknown) {
-  return value;
+function makeShareableCloneRecursiveWeb<T>(value: T): ShareableRef<T> {
+  return value as ShareableRef<T>;
 }
 
 function makeShareableCloneRecursiveNative<T>(
@@ -119,10 +128,7 @@ function makeShareableCloneRecursiveNative<T>(
     return clonePrimitive(value, shouldPersistRemote);
   }
 
-  const cached = shareableMappingCache.get(value);
-  if (cached === shareableMappingFlag) {
-    return value as unknown as ShareableRef<T>;
-  }
+  const cached = getFromCache(value);
   if (cached !== undefined) {
     return cached as ShareableRef<T>;
   }
@@ -131,7 +137,6 @@ function makeShareableCloneRecursiveNative<T>(
     return cloneArray(value, shouldPersistRemote, depth);
   }
   if (isFunction && !isWorkletFunction(value)) {
-    // this is a remote function
     return cloneRemoteFunction(value, shouldPersistRemote);
   }
   if (isHostObject(value)) {
@@ -159,14 +164,18 @@ function makeShareableCloneRecursiveNative<T>(
     ) as ShareableRef<T>;
   }
   if (ArrayBuffer.isView(value)) {
-    return cloneArrayBufferView(value);
     // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
+    return cloneArrayBufferView(value);
   }
   return inaccessibleObject(value);
 }
 
-export const makeShareableCloneRecursive = SHOULD_BE_USE_WEB
-  ? (makeShareableCloneRecursiveWeb as typeof makeShareableCloneRecursiveNative)
+interface MakeShareableClone {
+  <T>(value: T, shouldPersistRemote?: boolean, depth?: number): ShareableRef<T>;
+}
+
+export const makeShareableCloneRecursive: MakeShareableClone = SHOULD_BE_USE_WEB
+  ? makeShareableCloneRecursiveWeb
   : makeShareableCloneRecursiveNative;
 
 function detectCyclicObject(value: unknown, depth: number) {

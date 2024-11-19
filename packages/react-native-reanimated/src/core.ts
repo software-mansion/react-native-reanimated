@@ -110,7 +110,8 @@ export function subscribeForKeyboardEvents(
     global.__frameTimestamp = undefined;
   }
   return ReanimatedModule.subscribeForKeyboardEvents(
-    makeShareableCloneRecursive(handleAndFlushAnimationFrame) as any,
+    // @ts-expect-error TODO: Fix `subscribeForKeyboardEvents` types
+    makeShareableCloneRecursive(handleAndFlushAnimationFrame),
     options.isStatusBarTranslucentAndroid ?? false,
     options.isNavigationBarTranslucentAndroid ?? false
   );
@@ -132,7 +133,8 @@ export function registerSensor(
   return sensorContainer.registerSensor(
     sensorType,
     config,
-    makeShareableCloneRecursive(eventHandler) as any
+    // @ts-expect-error TODO: Fix `registerSensor` types
+    makeShareableCloneRecursive(eventHandler)
   );
 }
 
