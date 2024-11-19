@@ -6,4 +6,5 @@ export {
   type ExamplesListProps,
 } from './ExamplesList';
 export { default as ExamplesScreen } from './ExamplesScreen';
+export { default as TestExampleScreen } from './TestExampleScreen';
 export { default as VerticalExampleCard } from './VerticalExampleCard';

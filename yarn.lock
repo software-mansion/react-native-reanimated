@@ -4798,6 +4798,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native-clipboard/clipboard@npm:^1.15.0":
+  version: 1.15.0
+  resolution: "@react-native-clipboard/clipboard@npm:1.15.0"
+  peerDependencies:
+    react: ">= 16.9.0"
+    react-native: ">= 0.61.5"
+    react-native-macos: ">= 0.61.0"
+    react-native-windows: ">= 0.61.0"
+  peerDependenciesMeta:
+    react-native-macos:
+      optional: true
+    react-native-windows:
+      optional: true
+  checksum: 10/bc33f39ac5c53de6af4a855d95b1791d387c83ef858ecb86decec5b4c92412a2b4f3b776384c1be15451959103703bcb1029601b31d21c820b6291b23ca32982
+  languageName: node
+  linkType: hard
+
 "@react-native-community/cli-clean@npm:14.1.0":
   version: 14.1.0
   resolution: "@react-native-community/cli-clean@npm:14.1.0"
@@ -9817,6 +9834,7 @@ __metadata:
     "@fortawesome/react-native-fontawesome": "npm:^0.3.2"
     "@gorhom/portal": "npm:^1.0.14"
     "@react-native-async-storage/async-storage": "npm:^1.24.0"
+    "@react-native-clipboard/clipboard": "npm:^1.15.0"
     "@react-native-community/cli": "npm:15.0.1"
     "@react-native-community/cli-platform-android": "npm:15.0.1"
     "@react-native-community/cli-platform-ios": "npm:15.0.1"

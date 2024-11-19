@@ -567,6 +567,11 @@ const routes = {
         labelTypes: ['needsFix'],
         Component: testExamples.IterationCountAndFillMode,
       },
+      RelativeMargins: {
+        name: 'Relative Margins',
+        labelTypes: ['needsFix'],
+        Component: testExamples.RelativeMargins,
+      },
     },
   },
 } satisfies Routes;

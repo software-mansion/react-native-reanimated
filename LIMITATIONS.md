@@ -12,9 +12,19 @@ After removing the animation from view style props on Android, changes applied d
 
 Style inheritance is not supported. Properties that would normally inherit values (e.g., `textDecorationColor` inheriting from `color`) must be provided separately, as inheritance is not yet implemented.
 
-### Relative Margins
+### Relative Mixed-Unit Margins
 
-Relative margins (e.g. `10%`) are not calculated properly. This limitation stems from React Native, because the yoga layout engine does not handle these calculations correctly.
+[CodePen](https://codepen.io/Mateusz-opaciski/pen/NWQVMMp?editors=1100)
+
+#### Relative Margins
+
+Yoga applies relative (%) margins in a different way than the web browser does. In React Native, the margin is added as a space between items without changing dimensions of the se items. As a result, the size of the parent container can change if the total size of its children with added margins exceeds the parent container size.
+
+On the other hand, the web browser shrinks items in such a way that the specified relative margin is occupies the correct amount of space in the parent container. See the CodePen example lined above.
+
+#### Mixed-Unit Margins
+
+Interpolation between absolute (numeric) and relative (%) margins may not work properly if dimensions of the parent component are affected by applied margins. This is a problem with our implementation and it can be seen as incorrect animation pacing (the animation can speed up/slow down when the parent size changes).
 
 ### Mixed-Unit Border Radius
 
@@ -25,6 +35,8 @@ Yoga calculates borders in different ways for numeric values and relative (%) va
 Even though changes of this property are calculated properly during the animation, they aren't applied to the view. Other flex properties, such as `flexGrow` and `flexShrink` work fine, so they should be used for animations if possible.
 
 ### Fill mode with Fractional Iteration Count
+
+[CodePen](https://codepen.io/Mateusz-opaciski/pen/YzmbwXM?editors=1100)
 
 The `forwards` and `both` fillMode options may not work correctly when combined with fractional `animationIterationCount`, particularly when relative units are used, and those relative values change after the animation ends.
 
