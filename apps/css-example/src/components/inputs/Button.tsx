@@ -1,10 +1,23 @@
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  FadeInRight,
+  FadeOutLeft,
+  LayoutAnimationConfig,
+  LinearTransition,
+  ZoomIn,
+  ZoomOut,
+} from 'react-native-reanimated';
 
 import { Text } from '@/components/core';
-import { colors, radius, spacing } from '@/theme';
+import { colors, flex, iconSizes, radius, spacing } from '@/theme';
 import type { FontVariant } from '@/types';
+
+const AnimatedTouchableOpacity =
+  Animated.createAnimatedComponent(TouchableOpacity);
 
 type ButtonSize = 'large' | 'medium' | 'small';
 
@@ -13,6 +26,7 @@ const BUTTON_VARIANTS: Record<
   {
     fontVariant: FontVariant;
     buttonStyle: ViewStyle;
+    iconSize: number;
   }
 > = {
   large: {
@@ -22,6 +36,7 @@ const BUTTON_VARIANTS: Record<
       paddingVertical: spacing.sm,
     },
     fontVariant: 'label1',
+    iconSize: iconSizes.md,
   },
   medium: {
     buttonStyle: {
@@ -30,6 +45,7 @@ const BUTTON_VARIANTS: Record<
       paddingVertical: spacing.xs,
     },
     fontVariant: 'label2',
+    iconSize: iconSizes.sm,
   },
   small: {
     buttonStyle: {
@@ -38,11 +54,13 @@ const BUTTON_VARIANTS: Record<
       paddingVertical: spacing.xs,
     },
     fontVariant: 'label3',
+    iconSize: iconSizes.xs,
   },
 };
 
-type ButtonProps = {
+export type ButtonProps = {
   title: string;
+  icon?: IconDefinition;
   size?: ButtonSize;
   activeOpacity?: number;
   disabled?: boolean;
@@ -53,37 +71,56 @@ type ButtonProps = {
 export default function Button({
   activeOpacity = 0.6,
   disabled = false,
+  icon,
   onPress,
   size = 'medium',
   style,
   title,
 }: ButtonProps) {
-  const { buttonStyle, fontVariant } = BUTTON_VARIANTS[size];
+  const { buttonStyle, fontVariant, iconSize } = BUTTON_VARIANTS[size];
 
   return (
-    <GestureDetector gesture={Gesture.Tap().onEnd(onPress).runOnJS(true)}>
-      <TouchableOpacity
-        activeOpacity={activeOpacity}
-        disabled={disabled}
-        style={[
-          styles.button,
-          style,
-          buttonStyle,
-          disabled && styles.disabled,
-        ]}>
-        <Text style={styles.text} variant={fontVariant}>
-          {title}
-        </Text>
-      </TouchableOpacity>
-    </GestureDetector>
+    <LayoutAnimationConfig skipEntering skipExiting>
+      <GestureDetector gesture={Gesture.Tap().onEnd(onPress).runOnJS(true)}>
+        <AnimatedTouchableOpacity
+          activeOpacity={activeOpacity}
+          disabled={disabled}
+          layout={LinearTransition}
+          style={[
+            styles.button,
+            style,
+            buttonStyle,
+            disabled && styles.disabled,
+          ]}>
+          {icon && (
+            <Animated.View entering={ZoomIn} exiting={ZoomOut}>
+              <FontAwesomeIcon
+                color={colors.white}
+                icon={icon}
+                size={iconSize}
+              />
+            </Animated.View>
+          )}
+          <Animated.View
+            entering={FadeInRight}
+            exiting={FadeOutLeft}
+            key={title}>
+            <Text style={styles.text} variant={fontVariant}>
+              {title}
+            </Text>
+          </Animated.View>
+        </AnimatedTouchableOpacity>
+      </GestureDetector>
+    </LayoutAnimationConfig>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    alignItems: 'center',
     backgroundColor: colors.primary,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs,
+    ...flex.center,
   },
   disabled: {
     opacity: 0.6,

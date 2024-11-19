@@ -19,6 +19,7 @@
     "@fortawesome/react-native-fontawesome": "^0.3.2",
     "@gorhom/portal": "^1.0.14",
     "@react-native-async-storage/async-storage": "^1.24.0",
+    "@react-native-clipboard/clipboard": "^1.15.0",
     "@react-native-masked-view/masked-view": "^0.3.1",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",

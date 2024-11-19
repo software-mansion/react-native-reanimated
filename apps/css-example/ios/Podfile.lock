@@ -1607,6 +1607,27 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNCClipboard (1.15.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - RNCMaskedView (0.3.2):
     - DoubleConversion
     - glog
@@ -1941,6 +1962,7 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../../../node_modules/react-native/ReactCommon`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCClipboard (from `../../../node_modules/@react-native-clipboard/clipboard`)"
   - "RNCMaskedView (from `../../../node_modules/@react-native-masked-view/masked-view`)"
   - "RNFlashList (from `../node_modules/@shopify/flash-list`)"
   - RNGestureHandler (from `../../../node_modules/react-native-gesture-handler`)
@@ -2091,6 +2113,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native/ReactCommon"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
+  RNCClipboard:
+    :path: "../../../node_modules/@react-native-clipboard/clipboard"
   RNCMaskedView:
     :path: "../../../node_modules/@react-native-masked-view/masked-view"
   RNFlashList:
@@ -2175,6 +2199,7 @@ SPEC CHECKSUMS:
   ReactCodegen: ef05d5dd3c7327234365df4c9c18a99a73496a87
   ReactCommon: f579a0130fb73a351de4723fb33d277c5bf3283d
   RNCAsyncStorage: 36aec380620fbc4ce7b8a048071cdb12e13723f3
+  RNCClipboard: 97d92b55b35f73533df13f1291532afaa278063e
   RNCMaskedView: 18c76ebdf9752bb75652829f99f6c3d1318cc864
   RNFlashList: ee2388e0d3ffde77431ba5d09b8f59a0c65a8e05
   RNGestureHandler: 4e7defe5095e936424173fc75f0bf2af5bba8e23

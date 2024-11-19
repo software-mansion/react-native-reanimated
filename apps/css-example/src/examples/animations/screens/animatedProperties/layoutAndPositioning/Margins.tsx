@@ -1,12 +1,14 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSAnimationConfig,
+  CSSAnimationKeyframes,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
-import { ExamplesScreen } from '@/components';
-import { colors, radius, sizes, spacing } from '@/theme';
+import { ExamplesScreen, VerticalExampleCard } from '@/components';
+import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const SHARED_SETTINGS: CSSAnimationSettings = {
   animationDirection: 'alternate',
@@ -16,68 +18,120 @@ const SHARED_SETTINGS: CSSAnimationSettings = {
 
 const EXAMPLES = [
   {
+    containerStyle: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    description:
+      'Parent container with `alignItems: center` and `justifyContent: center`',
     property: 'margin',
     title: 'Margin',
   },
   {
+    containerStyle: {
+      justifyContent: 'center',
+    },
+    description: 'Parent container with `justifyContent: center`',
     property: 'marginTop',
     title: 'Top Margin',
   },
   {
-    description: '(or marginEnd)',
+    containerStyle: {
+      justifyContent: 'center',
+    },
+    description: [
+      '(or marginEnd)',
+      'Parent container with `justifyContent: center`',
+    ],
     property: 'marginRight',
     title: 'Right Margin',
   },
   {
+    containerStyle: {
+      justifyContent: 'center',
+    },
+    description: 'Parent container with `justifyContent: center`',
     property: 'marginBottom',
     title: 'Bottom Margin',
   },
   {
-    description: '(or marginStart)',
+    containerStyle: {
+      justifyContent: 'center',
+    },
+    description: [
+      '(or marginStart)',
+      'Parent container with `justifyContent: center`',
+    ],
     property: 'marginLeft',
     title: 'Left Margin',
   },
   {
+    containerStyle: {
+      justifyContent: 'center',
+    },
+    description: ['Parent container with `justifyContent: center`'],
     property: 'marginHorizontal',
     title: 'Horizontal Margin',
   },
   {
+    containerStyle: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    description:
+      'Parent container with `alignItems: center` and `justifyContent: center`',
     property: 'marginVertical',
     title: 'Vertical Margin',
   },
-];
+] satisfies Array<{
+  property?: string;
+  containerStyle?: ViewStyle;
+  description: Array<string> | string;
+  title: string;
+}>;
 
-function renderExample({ config }: { config: CSSAnimationConfig }) {
-  return (
-    <>
-      <View style={styles.box} />
-      <View style={styles.boxesRow}>
-        <View style={styles.box} />
-        <View style={styles.boxWrapper}>
-          <Animated.View style={[styles.box, styles.animatedBox, config]} />
-        </View>
-        <View style={styles.box} />
-      </View>
-      <View style={styles.box} />
-    </>
-  );
-}
+const renderExample = ({
+  config,
+  containerStyle,
+}: {
+  config: CSSAnimationConfig;
+  containerStyle?: ViewStyle;
+}) => (
+  <View style={[styles.container, containerStyle]}>
+    {Array.from({ length: 9 }).map((_, index) => {
+      if (index === 4) {
+        return (
+          <Animated.View
+            key={index}
+            style={[styles.box, config, styles.animatedBox]}
+          />
+        );
+      }
+      return <View key={index} style={styles.box} />;
+    })}
+  </View>
+);
 
 export default function Margins() {
   return (
-    <ExamplesScreen<{ property: string }>
+    // TODO - improve the typing of the tabs prop
+    <ExamplesScreen<{
+      property?: string;
+      keyframes?: CSSAnimationKeyframes;
+      containerStyle?: ViewStyle;
+    }>
+      renderExample={renderExample}
       tabs={[
         {
           buildConfig: ({ property }) => ({
             ...SHARED_SETTINGS,
             animationName: {
               to: {
-                [property]: spacing.md,
+                [property!]: spacing.sm,
               },
             },
           }),
           name: 'Absolute',
-          renderExample,
           sections: [
             {
               examples: EXAMPLES,
@@ -90,21 +144,70 @@ export default function Margins() {
             ...SHARED_SETTINGS,
             animationName: {
               from: {
-                [property]: '10%',
+                [property!]: '0%',
               },
               to: {
-                [property]: '40%',
+                [property!]: '10%',
               },
             },
           }),
           name: 'Relative',
-          renderExample,
           sections: [
             {
-              description:
-                "Relative margins are a bit weird. Yoga doesn't apply them properly, thus they don't work the same as in CSS.",
               examples: EXAMPLES,
               title: 'Relative Margins',
+            },
+          ],
+        },
+        {
+          CardComponent: VerticalExampleCard,
+          buildConfig: ({ keyframes }) => ({
+            ...SHARED_SETTINGS,
+            animationName: keyframes!,
+          }),
+          name: 'Mixed',
+          sections: [
+            {
+              examples: [
+                {
+                  containerStyle: flex.center,
+                  description:
+                    'Parent container with `alignItems: center` and `justifyContent: center`',
+                  keyframes: {
+                    from: {
+                      margin: spacing.xxs,
+                    },
+                    to: {
+                      margin: '10%',
+                    },
+                  },
+                  title: 'Margin',
+                },
+                {
+                  containerStyle: flex.center,
+                  description:
+                    'Parent container with `alignItems: center` and `justifyContent: center`',
+                  keyframes: {
+                    '0%': {
+                      marginRight: 0,
+                    },
+                    '25%': {
+                      marginRight: '22.5%',
+                    },
+                    '50%': {
+                      marginRight: spacing.md,
+                    },
+                    '75%': {
+                      marginRight: '10%',
+                    },
+                    '100%': {
+                      marginRight: 0,
+                    },
+                  },
+                  title: 'Right Margin',
+                },
+              ],
+              title: 'Mixed Margins',
             },
           ],
         },
@@ -112,54 +215,6 @@ export default function Margins() {
     />
   );
 }
-
-// TODO - Implement MixedMargins example once relative margins are supported
-// function MixedMargins() {
-//   return (
-//     <ScrollScreen>
-//       <Section title="Mixed Margins">
-//         <Example
-//           config={{
-//             animationName: {
-//               from: {
-//                 margin: spacing.md,
-//               },
-//               to: {
-//                 margin: '40%',
-//               },
-//             },
-//             ...SHARED_SETTINGS,
-//           }}
-//           title="Mixed Margins"
-//         />
-
-//         <Example
-//           config={{
-//             animationName: {
-//               from: {
-//                 marginRight: 0,
-//               },
-//               '25%': {
-//                 marginRight: '50%',
-//               },
-//               '50%': {
-//                 marginRight: spacing.md,
-//               },
-//               '75%': {
-//                 marginRight: '25%',
-//               },
-//               to: {
-//                 marginRight: 0,
-//               },
-//             },
-//             ...SHARED_SETTINGS,
-//           }}
-//           title="Horizontal Margin"
-//         />
-//       </Section>
-//     </ScrollScreen>
-//   );
-// }
 
 const styles = StyleSheet.create({
   animatedBox: {
@@ -171,13 +226,9 @@ const styles = StyleSheet.create({
     height: sizes.sm,
     width: sizes.sm,
   },
-  boxWrapper: {
-    backgroundColor: colors.primaryLight,
-    borderRadius: radius.sm,
-  },
-  boxesRow: {
-    backgroundColor: colors.background3,
-    borderRadius: radius.sm,
+  container: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    width: 3.99 * sizes.sm,
   },
 });
