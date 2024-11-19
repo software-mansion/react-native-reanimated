@@ -27,7 +27,15 @@ const WIDTH_COMPONENT_PASSIVE_REF = 'WidthComponentPassive';
 type Width = number | `${number}%` | 'auto';
 
 describe('withTiming animation of WIDTH', () => {
-  const WidthComponent = ({ startWidth, finalWidth }: { startWidth: Width; finalWidth: Width }) => {
+  const WidthComponent = ({
+    startWidth,
+    finalWidth,
+    compilerApi,
+  }: {
+    startWidth: Width;
+    finalWidth: Width;
+    compilerApi: boolean;
+  }) => {
     const widthActiveSV = useSharedValue(startWidth);
     const widthPassiveSV = useSharedValue(startWidth);
 
@@ -36,22 +44,30 @@ describe('withTiming animation of WIDTH', () => {
 
     const styleActive = useAnimatedStyle(() => {
       return {
-        width: withTiming(widthActiveSV.value, { duration: 500 }),
+        width: withTiming(compilerApi ? widthActiveSV.get() : widthActiveSV.value, { duration: 500 }),
       };
     });
     const stylePassive = useAnimatedStyle(() => {
       return {
-        width: widthPassiveSV.value,
+        width: compilerApi ? widthPassiveSV.get() : widthPassiveSV.value,
       };
     });
 
     useEffect(() => {
-      widthActiveSV.value = finalWidth;
-    }, [widthActiveSV, finalWidth]);
+      if (compilerApi) {
+        widthActiveSV.set(finalWidth);
+      } else {
+        widthActiveSV.value = finalWidth;
+      }
+    }, [widthActiveSV, finalWidth, compilerApi]);
 
     useEffect(() => {
-      widthPassiveSV.value = withTiming(finalWidth, { duration: 500 });
-    }, [widthPassiveSV, finalWidth]);
+      if (compilerApi) {
+        widthPassiveSV.set(withTiming(finalWidth, { duration: 500 }));
+      } else {
+        widthPassiveSV.value = withTiming(finalWidth, { duration: 500 });
+      }
+    }, [widthPassiveSV, finalWidth, compilerApi]);
 
     return (
       <View style={styles.container}>
@@ -69,31 +85,41 @@ describe('withTiming animation of WIDTH', () => {
     finalWidth: Width;
     finalWidthInPixels: number;
     description: string;
+    compilerApi: boolean;
   }
-  test.each([
-    { startWidth: 0, finalWidth: 100, finalWidthInPixels: 100, description: 'width in pixels' },
-    {
-      startWidth: '0%',
-      finalWidth: '100%',
-      finalWidthInPixels: Dimensions.get('window').width,
-      description: 'width in percents',
-    },
-    {
-      startWidth: '0%',
-      finalWidth: '75%',
-      finalWidthInPixels: Dimensions.get('window').width * 0.75,
-      description: 'width in percents',
-    },
-    {
-      startWidth: 20,
-      finalWidth: '40%',
-      finalWidthInPixels: Dimensions.get('window').width * 0.4,
-      description: 'width from pixels to percents (not supported)',
-    },
-  ] as Array<TestCase>)(
+  test.each(
+    [
+      { startWidth: 0, finalWidth: 100, finalWidthInPixels: 100, description: 'width in pixels' },
+      {
+        startWidth: '0%',
+        finalWidth: '100%',
+        finalWidthInPixels: Dimensions.get('window').width,
+        description: 'width in percents',
+      },
+      {
+        startWidth: '0%',
+        finalWidth: '75%',
+        finalWidthInPixels: Dimensions.get('window').width * 0.75,
+        description: 'width in percents',
+      },
+      {
+        startWidth: 20,
+        finalWidth: '40%',
+        finalWidthInPixels: Dimensions.get('window').width * 0.4,
+        description: 'width from pixels to percents (not supported)',
+      },
+    ].reduce(
+      (acc, element) => [
+        ...acc,
+        { ...element, compilerApi: false },
+        { ...element, compilerApi: true, description: `${element.description} (compiler API)` },
+      ],
+      [] as Record<string, unknown>[],
+    ) as unknown as Array<TestCase>,
+  )(
     '${description}, from ${startWidth} to ${finalWidth}',
-    async ({ startWidth, finalWidth, finalWidthInPixels }: TestCase) => {
-      await render(<WidthComponent startWidth={startWidth} finalWidth={finalWidth} />);
+    async ({ startWidth, finalWidth, finalWidthInPixels, compilerApi }: TestCase) => {
+      await render(<WidthComponent startWidth={startWidth} finalWidth={finalWidth} compilerApi={compilerApi} />);
       const componentActive = getTestComponent(WIDTH_COMPONENT_ACTIVE_REF);
       const WidthComponentPassive = getTestComponent(WIDTH_COMPONENT_PASSIVE_REF);
       await wait(1000);
@@ -103,7 +129,7 @@ describe('withTiming animation of WIDTH', () => {
   );
 
   test('Width from percent to pixels is NOT handled correctly', async () => {
-    await render(<WidthComponent startWidth={'20%'} finalWidth={100} />);
+    await render(<WidthComponent startWidth={'20%'} finalWidth={100} compilerApi={false} />);
     const componentActive = getTestComponent(WIDTH_COMPONENT_ACTIVE_REF);
     const WidthComponentPassive = getTestComponent(WIDTH_COMPONENT_PASSIVE_REF);
     await wait(1000);
