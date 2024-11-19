@@ -29,25 +29,27 @@ using namespace react;
 
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
+    const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
+    ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager,
+        fabricUIManager
 #endif
-    const std::string &valueUnpackerCode)
+    )
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
+          nativeWorkletsModule,
           *rnRuntime,
           std::make_shared<JSScheduler>(*rnRuntime, jsCallInvoker),
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           uiScheduler,
           getPlatformDependentMethods(),
-          valueUnpackerCode,
           /* isBridgeless */ false,
           getIsReducedMotion())),
       layoutAnimations_(std::move(layoutAnimations)) {
@@ -59,23 +61,23 @@ NativeProxy::NativeProxy(
 #ifdef RCT_NEW_ARCH_ENABLED
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
+    const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
     jsi::Runtime *rnRuntime,
     RuntimeExecutor runtimeExecutor,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager,
-    const std::string &valueUnpackerCode)
+        fabricUIManager)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
+          nativeWorkletsModule,
           *rnRuntime,
           std::make_shared<JSScheduler>(*rnRuntime, runtimeExecutor),
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           uiScheduler,
           getPlatformDependentMethods(),
-          valueUnpackerCode,
           /* isBridgeless */ true,
           getIsReducedMotion())),
       layoutAnimations_(std::move(layoutAnimations)) {
@@ -112,54 +114,62 @@ NativeProxy::~NativeProxy() {
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
+    jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
     jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
+    ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager,
+        fabricUIManager
 #endif
-    const std::string &valueUnpackerCode) {
+) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
+  auto nativeWorkletsModule =
+      jWorkletsModule->cthis()->getNativeWorkletsModule();
   return makeCxxInstance(
       jThis,
+      nativeWorkletsModule,
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
       uiScheduler,
       make_global(layoutAnimations),
-      messageQueueThread,
+      messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
-      fabricUIManager,
+      ,
+      fabricUIManager
 #endif
-      valueUnpackerCode);
+  );
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybridBridgeless(
     jni::alias_ref<jhybridobject> jThis,
+    jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
     jlong jsContext,
     jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder,
     jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-        fabricUIManager,
-    const std::string &valueUnpackerCode) {
+        fabricUIManager) {
   auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
   auto runtimeExecutor = runtimeExecutorHolder->cthis()->get();
+  auto nativeWorkletsModule =
+      jWorkletsModule->cthis()->getNativeWorkletsModule();
   return makeCxxInstance(
       jThis,
+      nativeWorkletsModule,
       (jsi::Runtime *)jsContext,
       runtimeExecutor,
       uiScheduler,
       make_global(layoutAnimations),
       messageQueueThread,
-      fabricUIManager,
-      valueUnpackerCode);
+      fabricUIManager);
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
