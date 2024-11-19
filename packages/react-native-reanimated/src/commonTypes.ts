@@ -409,7 +409,7 @@ export type WorkletFunction<
  * ### Maintainer note
  *
  * This function is supposed to be used only in the React Runtime. It always
- * returns `true` in Worklet Runtimes.
+ * returns `false` in Worklet Runtimes.
  */
 export function isWorkletFunction<
   Args extends unknown[] = unknown[],
