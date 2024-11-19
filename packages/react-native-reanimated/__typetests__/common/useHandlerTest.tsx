@@ -4,8 +4,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import Animated, { useEvent, useHandler } from '../../src';
-import type { ReanimatedEvent } from '../../src';
+import Animated, { useEvent, useHandler } from '../..';
+import type { ReanimatedEvent } from '../..';
 
 function UseHandlerTest() {
   function UseHandlerTest1() {

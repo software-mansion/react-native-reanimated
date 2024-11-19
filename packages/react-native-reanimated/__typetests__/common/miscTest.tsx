@@ -11,7 +11,7 @@ import {
   useAnimatedProps,
   isSharedValue,
   makeShareableCloneRecursive,
-} from '../../src';
+} from '../..';
 
 function MakeMutableTest() {
   const mut1 = makeMutable(0);

@@ -9,7 +9,7 @@ import Animated, {
   useAnimatedStyle,
   Easing,
   withTiming,
-} from '../../src';
+} from '../..';
 
 function WithTimingTest() {
   function WithTimingTest1() {
