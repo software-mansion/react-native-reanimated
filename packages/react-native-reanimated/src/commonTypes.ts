@@ -376,7 +376,7 @@ interface WorkletBaseRelease extends WorkletBaseCommon {
   __initData: WorkletInitDataRelease;
 }
 
-export interface WorkletBaseDev extends WorkletBaseCommon {
+interface WorkletBaseDev extends WorkletBaseCommon {
   __initData: WorkletInitDataDev;
   /** `__stackDetails` is removed after parsing. */
   __stackDetails?: WorkletStackDetails;
@@ -387,7 +387,7 @@ export type WorkletFunctionDev<
   ReturnValue = unknown,
 > = ((...args: Args) => ReturnValue) & WorkletBaseDev;
 
-export type WorkletFunctionRelease<
+type WorkletFunctionRelease<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
 > = ((...args: Args) => ReturnValue) & WorkletBaseRelease;

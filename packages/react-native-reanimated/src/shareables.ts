@@ -137,17 +137,20 @@ function makeShareableCloneRecursiveNative<T>(
   if (isHostObject(value)) {
     return cloneHostObject(value, shouldPersistRemote);
   }
-  if ((isPlainJSObject(value) || isFunction) && isWorkletFunction(value)) {
-    return cloneWorklet(value, shouldPersistRemote, depth);
-  }
   if (isPlainJSObject(value) && value.__workletContextObjectFactory) {
     return cloneContextObject(value);
+  }
+  if ((isPlainJSObject(value) || isFunction) && isWorkletFunction(value)) {
+    return cloneWorklet(value, shouldPersistRemote, depth);
   }
   if (isPlainJSObject(value) || isFunction) {
     return clonePlainJSObject(value, shouldPersistRemote, depth);
   }
   if ((value as object) instanceof RegExp) {
     return cloneRegExp(value as unknown as RegExp) as ShareableRef<T>;
+  }
+  if ((value as object) instanceof Error) {
+    return cloneError(value as unknown as Error) as ShareableRef<T>;
   }
   if ((value as object) instanceof ArrayBuffer) {
     return cloneArrayBuffer(
@@ -197,11 +200,11 @@ function cloneArray<T extends unknown[]>(
   shouldPersistRemote: boolean,
   depth: number
 ): ShareableRef<T> {
-  const NAME_ME = value.map((element) =>
+  const clonedElements = value.map((element) =>
     makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
   );
   const clone = ReanimatedModule.makeShareableClone(
-    NAME_ME,
+    clonedElements,
     shouldPersistRemote
   ) as ShareableRef<T>;
   shareableMappingCache.set(value, clone);
@@ -232,6 +235,7 @@ function cloneHostObject<T extends object>(
   // there is no point of iterating over keys as we do for regular objects.
   const clone = ReanimatedModule.makeShareableClone(value, shouldPersistRemote);
   shareableMappingCache.set(value, clone);
+  shareableMappingCache.set(clone);
 
   return clone;
 }
@@ -333,7 +337,7 @@ function clonePlainJSObject<T extends object>(
   return clone;
 }
 
-function cloneRegExp<T extends RegExp>(value: T) {
+function cloneRegExp<T extends RegExp>(value: T): ShareableRef<T> {
   const pattern = value.source;
   const flags = value.flags;
   const handle = makeShareableCloneRecursive({
@@ -345,6 +349,23 @@ function cloneRegExp<T extends RegExp>(value: T) {
   shareableMappingCache.set(value, handle);
 
   return handle;
+}
+
+function cloneError<T extends Error>(value: T): ShareableRef<T> {
+  const { name, message, stack } = value;
+  const handle = makeShareableCloneRecursive({
+    __init: () => {
+      'worklet';
+      // eslint-disable-next-line reanimated/use-reanimated-error
+      const error = new Error();
+      error.name = name;
+      error.message = message;
+      error.stack = stack;
+      return error;
+    },
+  });
+  shareableMappingCache.set(value, handle);
+  return handle as unknown as ShareableRef<T>;
 }
 
 function cloneArrayBuffer<T extends ArrayBuffer>(
