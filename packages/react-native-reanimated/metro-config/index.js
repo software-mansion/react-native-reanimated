@@ -11,8 +11,8 @@ const COLLAPSED_STACK_REGEX = new RegExp(
 );
 
 /**
- * @param {import('metro-config').MetroConfig} config
- * @returns {import('metro-config').MetroConfig}
+ * @param {import('@react-native/metro-config').MetroConfig} config
+ * @returns {import('@react-native/metro-config').MetroConfig}
  */
 function wrapWithReanimatedMetroConfig(config) {
   return {
