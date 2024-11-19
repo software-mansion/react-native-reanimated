@@ -1,5 +1,4 @@
 import type { NodePath } from '@babel/core';
-import { transformSync } from '@babel/core';
 import generate from '@babel/generator';
 import traverse from '@babel/traverse';
 import type {
@@ -36,6 +35,7 @@ import { strict as assert } from 'assert';
 import type { ReanimatedPluginPass } from './types';
 import { workletClassFactorySuffix } from './types';
 import { replaceWithFactoryCall } from './utils';
+import { workletTransformSync } from './transform';
 
 const classWorkletMarker = '__workletClass';
 
@@ -91,8 +91,8 @@ function getPolyfilledAst(
 ) {
   const classCode = generate(classNode).code;
 
-  const classWithPolyfills = transformSync(classCode, {
-    plugins: [
+  const classWithPolyfills = workletTransformSync(classCode, {
+    extraPlugins: [
       '@babel/plugin-transform-class-properties',
       '@babel/plugin-transform-classes',
       '@babel/plugin-transform-unicode-regex',
