@@ -38,4 +38,5 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
 void WorkletsModule::registerNatives() {
   registerHybrid({makeNativeMethod("initHybrid", WorkletsModule::initHybrid)});
 }
+
 } // namespace worklets

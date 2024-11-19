@@ -42,10 +42,9 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean installTurboModule(String valueUnpackerCode) {
     var context = getReactApplicationContext();
+    var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
 
-    mHybridData =
-        initHybrid(
-            Objects.requireNonNull(context.getJavaScriptContextHolder()).get(), valueUnpackerCode);
+    mHybridData = initHybrid(jsContext, valueUnpackerCode);
 
     return true;
   }
