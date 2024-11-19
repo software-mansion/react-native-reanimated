@@ -4,10 +4,10 @@ import static com.facebook.react.bridge.ReactMarkerConstants.CREATE_UI_MANAGER_M
 import static com.facebook.react.bridge.ReactMarkerConstants.CREATE_UI_MANAGER_MODULE_START;
 
 import androidx.annotation.NonNull;
+import com.facebook.react.BaseReactPackage;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactPackage;
-import com.facebook.react.TurboReactPackage;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMarker;
@@ -29,7 +29,7 @@ import java.util.Objects;
       ReanimatedModule.class,
       ReanimatedUIManager.class,
     })
-public class ReanimatedPackage extends TurboReactPackage implements ReactPackage {
+public class ReanimatedPackage extends BaseReactPackage implements ReactPackage {
   @Override
   public NativeModule getModule(String name, @NonNull ReactApplicationContext reactContext) {
     if (name.equals(ReanimatedModule.NAME)) {
