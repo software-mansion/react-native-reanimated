@@ -31,10 +31,7 @@ export interface ReanimatedPluginPass {
   opts: ReanimatedPluginOptions;
   cwd: string;
   filename: string | undefined;
-  get(key: unknown): unknown;
-  set(key: unknown, value: unknown): void;
   workletNumber: number;
-  [key: string]: unknown;
 }
 
 export type WorkletizableFunction =

@@ -13,13 +13,13 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
-    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/native": "^7.0.0",
     "@shopify/flash-list": "^1.7.1",
     "common-app": "workspace:*",
-    "expo": "~51.0.2",
+    "expo": "^52.0.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-native": "0.74.0",
+    "react-native": "0.76.0",
     "react-native-reanimated": "workspace:*",
     "react-native-web": "0.19.11"
   },
