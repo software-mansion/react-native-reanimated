@@ -1,5 +1,4 @@
 import type { NodePath } from '@babel/core';
-import { transformSync } from '@babel/core';
 import generate from '@babel/generator';
 import traverse from '@babel/traverse';
 import type {
@@ -36,6 +35,7 @@ import { strict as assert } from 'assert';
 import type { ReanimatedPluginPass } from './types';
 import { workletClassFactorySuffix } from './types';
 import { replaceWithFactoryCall } from './utils';
+import { workletTransformSync } from './transform';
 
 const classWorkletMarker = '__workletClass';
 
@@ -43,12 +43,7 @@ export function processIfWorkletClass(
   classPath: NodePath<ClassDeclaration>,
   state: ReanimatedPluginPass
 ): boolean {
-  if (!classPath.node.id) {
-    // We don't support unnamed classes yet.
-    return false;
-  }
-
-  if (!hasWorkletClassMarker(classPath.node.body)) {
+  if (!isWorkletizableClass(classPath, state)) {
     return false;
   }
 
@@ -96,8 +91,8 @@ function getPolyfilledAst(
 ) {
   const classCode = generate(classNode).code;
 
-  const classWithPolyfills = transformSync(classCode, {
-    plugins: [
+  const classWithPolyfills = workletTransformSync(classCode, {
+    extraPlugins: [
       '@babel/plugin-transform-class-properties',
       '@babel/plugin-transform-classes',
       '@babel/plugin-transform-unicode-regex',
@@ -342,3 +337,42 @@ type Polyfill = {
   index: number;
   dependencies: Set<string>;
 };
+
+function isWorkletizableClass(
+  classPath: NodePath<ClassDeclaration>,
+  state: ReanimatedPluginPass
+): boolean {
+  const className = classPath.node.id?.name;
+  const classNode = classPath.node;
+
+  // We don't support unnamed classes yet.
+  if (!className) {
+    return false;
+  }
+
+  // Primary method of determining if a class is workletizable. However, some
+  // Babel plugins might remove Class Properties.
+  const isMarked = hasWorkletClassMarker(classNode.body);
+
+  // Secondary method of determining if a class is workletizable. We look for the
+  // reference we memoized earlier. However, some plugin could've changed the reference.
+  const isMemoizedNode = state.classesToWorkletize.some(
+    (record) => record.node === classNode
+  );
+
+  // Fallback for the name of the class.
+  // We bail on non-top-level declarations.
+  const isTopLevelMemoizedName =
+    classPath.parentPath.isProgram() &&
+    state.classesToWorkletize.some((record) => record.name === className);
+
+  // Remove the class from the list of classes to workletize. There are some edge
+  // cases when leaving it as is would lead to multiple workletizations.
+  state.classesToWorkletize = state.classesToWorkletize.filter(
+    (record) => record.node !== classNode && record.name !== className
+  );
+
+  const result = isMarked || isMemoizedNode || isTopLevelMemoizedName;
+
+  return result;
+}

@@ -408,10 +408,8 @@ export type WorkletFunction<
  *
  * ### Maintainer note
  *
- * This function works well on the JS thread performance-wise, since the JIT can
- * inline it. However, on other threads it will not get optimized and we will
- * get a function call overhead. We want to change it in the future, but it's
- * not feasible at the moment.
+ * This function is supposed to be used only in the React Runtime. It always
+ * returns `false` in Worklet Runtimes.
  */
 export function isWorkletFunction<
   Args extends unknown[] = unknown[],
@@ -421,7 +419,9 @@ export function isWorkletFunction<
   'worklet';
   // Since host objects always return true for `in` operator, we have to use dot notation to check if the property exists.
   // See https://github.com/facebook/hermes/blob/340726ef8cf666a7cce75bc60b02fa56b3e54560/lib/VM/JSObject.cpp#L1276.
+
   return (
+    // `__workletHash` isn't extracted in Worklet Runtimes.
     typeof value === 'function' &&
     !!(value as unknown as Record<string, unknown>).__workletHash
   );
