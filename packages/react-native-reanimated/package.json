@@ -89,7 +89,8 @@
     "@babel/plugin-transform-unicode-regex": "^7.0.0-0",
     "@babel/preset-typescript": "^7.16.7",
     "convert-source-map": "^2.0.0",
-    "invariant": "^2.2.4"
+    "invariant": "^2.2.4",
+    "react-native-is-edge-to-edge": "^1.1.6"
   },
   "peerDependencies": {
     "@babel/core": "^7.0.0-0",
