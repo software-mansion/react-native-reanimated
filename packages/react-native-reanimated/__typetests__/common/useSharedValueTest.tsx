@@ -9,7 +9,7 @@ import Animated, {
   useDerivedValue,
   withTiming,
   useAnimatedStyle,
-} from '../../src';
+} from '../..';
 
 function UseSharedValueTestRead() {
   const sv = useSharedValue(0);

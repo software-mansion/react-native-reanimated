@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 import type { FlatListProps } from 'react-native';
 import { View, FlatList } from 'react-native';
-import Animated from '../../src';
+import Animated from '../..';
 
 function AnimatedFlatListTest() {
   function AnimatedFlatListTest1() {

@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { View } from 'react-native';
-import Animated, { useAnimatedStyle, withSpring } from '../../src';
+import Animated, { useAnimatedStyle, withSpring } from '../..';
 
 function WithSpringTest() {
   function WithSpringTestToValueAsColor() {
