@@ -156,6 +156,7 @@ const notCapturedIdentifiers_DEPRECATED = [
 
 export function initializeState(state: ReanimatedPluginPass) {
   state.workletNumber = 1;
+  state.classesToWorkletize = [];
   initializeGlobals();
   addCustomGlobals(state);
 }
