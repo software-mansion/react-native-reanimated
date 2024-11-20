@@ -9845,7 +9845,6 @@ __metadata:
     "@react-native/typescript-config": "npm:0.77.0-rc.6"
     "@react-navigation/native": "npm:^6.1.18"
     "@react-navigation/native-stack": "npm:^6.11.0"
-    "@shopify/flash-list": "npm:^1.7.1"
     "@types/jest": "npm:^29.5.13"
     "@types/react": "npm:^18.2.6"
     "@types/react-test-renderer": "npm:^18.0.0"

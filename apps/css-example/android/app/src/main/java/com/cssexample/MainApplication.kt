@@ -56,9 +56,6 @@ class MainApplication : Application(), ReactApplication {
 
         override fun enableEventEmitterRetentionDuringGesturesOnAndroid(): Boolean =
           true
-
-        override fun allowRecursiveCommitsWithSynchronousMountOnAndroid(): Boolean =
-          true
       })
   }
 }

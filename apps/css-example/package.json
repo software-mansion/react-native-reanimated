@@ -23,7 +23,6 @@
     "@react-native-masked-view/masked-view": "^0.3.1",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
-    "@shopify/flash-list": "^1.7.1",
     "common-app": "workspace:*",
     "react": "18.3.1",
     "react-native": "0.77.0-rc.6",
