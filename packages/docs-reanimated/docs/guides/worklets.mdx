@@ -158,3 +158,5 @@ function App() {
 Worklets can run in other runtimes than the one provided by Reanimated. For example [VisionCamera](https://github.com/mrousavy/react-native-vision-camera) and [LiveMarkdown](https://github.com/Expensify/react-native-live-markdown) create their own worklet runtimes.
 
 You can create your own worklet runtimes with [`createWorkletRuntime`](/docs/threading/createWorkletRuntime) function.
+
+There's no UI thread available on the Web platform. Because of that, when Reanimated runs in the browser, worklets are resolved to plain JavaScript functions and the `'worklet';` directive has no effect.

@@ -71,6 +71,8 @@ import RunOnUISrc from '!!raw-loader!@site/src/examples/RunOnUI';
 
 - Make sure not to execute `runOnUI` on the UI thread as this will result in an error.
 
+- On the Web, `runOnUI` immediately calls the function given as the argument. In browsers there's no UI thread available.
+
 ## Platform compatibility
 
 <PlatformCompatibility android ios web />
