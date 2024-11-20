@@ -35,14 +35,11 @@ const turbulenceAnimation: CSSAnimationConfig = {
   animationDuration: '0.2s',
   animationIterationCount: 'infinite',
   animationName: {
-    '0%': {
-      transform: 'scale(1) translate(0, 0) rotate(45deg)',
+    '0%, 100%': {
+      transform: 'rotate(45deg)',
     },
     '50%': {
-      transform: 'scale(1) translate(1px, -1px) rotate(45deg)',
-    },
-    '100%': {
-      transform: 'scale(1) translate(0, 0) rotate(45deg)',
+      transform: 'translate(1px, -1px) rotate(45deg)',
     },
   },
 };

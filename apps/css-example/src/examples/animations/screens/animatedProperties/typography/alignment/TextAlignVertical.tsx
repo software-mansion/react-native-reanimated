@@ -27,7 +27,7 @@ export default function TextAlignVertical() {
               description:
                 "`textAlignVertical` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
               keyframes: {
-                '0%': {
+                '0%, 100%': {
                   textAlignVertical: 'top',
                 },
                 '33.3%': {
@@ -35,9 +35,6 @@ export default function TextAlignVertical() {
                 },
                 '66.6%': {
                   textAlignVertical: 'center',
-                },
-                '100%': {
-                  textAlignVertical: 'top',
                 },
               },
               title: 'Changing Vertical Text Alignment',

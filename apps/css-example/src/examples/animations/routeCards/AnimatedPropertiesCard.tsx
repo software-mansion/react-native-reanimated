@@ -125,7 +125,7 @@ function InsetsExample() {
           exampleAnimationSettings,
           {
             animationName: {
-              '0%': {
+              '0%, 100%': {
                 left: '50%',
                 top: 0,
                 transform: [{ translateX: '-50%' }],
@@ -144,11 +144,6 @@ function InsetsExample() {
                 left: 0,
                 top: '50%',
                 transform: [{ translateY: '-50%' }],
-              },
-              '100%': {
-                left: '50%',
-                top: 0,
-                transform: [{ translateX: '-50%' }],
               },
             },
             animationPlayState: useFocusPlayState(),
@@ -215,7 +210,7 @@ function ColorsExample() {
         exampleAnimationSettings,
         {
           animationName: {
-            '0%': {
+            '0%, 100%': {
               backgroundColor: colors.primary,
             },
             '25%': {
@@ -223,9 +218,6 @@ function ColorsExample() {
             },
             '75%': {
               backgroundColor: colors.primaryDark,
-            },
-            '100%': {
-              backgroundColor: colors.primary,
             },
           },
           animationPlayState: useFocusPlayState(),
@@ -244,7 +236,7 @@ function BorderRadiusExample() {
         exampleAnimationSettings,
         {
           animationName: {
-            '0%': {
+            '0%, 100%': {
               borderBottomLeftRadius: radius.md,
               borderBottomRightRadius: radius.xs,
               borderTopLeftRadius: radius.xs,
@@ -267,12 +259,6 @@ function BorderRadiusExample() {
               borderBottomRightRadius: radius.xs,
               borderTopLeftRadius: radius.xs,
               borderTopRightRadius: radius.md,
-            },
-            '100%': {
-              borderBottomLeftRadius: radius.md,
-              borderBottomRightRadius: radius.xs,
-              borderTopLeftRadius: radius.xs,
-              borderTopRightRadius: radius.lg,
             },
           },
           animationPlayState: useFocusPlayState(),

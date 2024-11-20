@@ -91,15 +91,12 @@ const sharedStyles = StyleSheet.create({
 function LikeEmoji() {
   const like: CSSAnimationKeyframes = {
     '25%': {
-      transform: [{ rotate: '15deg' }, { translateY: 0 }],
+      transform: [{ rotate: '15deg' }],
     },
     '50%': {
       transform: [{ rotate: '-15deg' }, { translateY: -10 }],
     },
-    '75%': {
-      transform: [{ rotate: '0deg' }, { translateY: 0 }],
-    },
-    '100%': {
+    '75%, 100%': {
       transform: [{ rotate: '0deg' }],
     },
   };
@@ -175,59 +172,32 @@ const heartStyles = StyleSheet.create({
 
 function HaHaEmoji() {
   const hahaFace: CSSAnimationKeyframes = {
-    '10%': {
+    '10%, 30%, 50%': {
       transform: [{ translateY: '25%' }],
     },
-    '20%': {
+    '20%, 40%': {
       transform: [{ translateY: '15%' }],
     },
-    '30%': {
-      transform: [{ translateY: '25%' }],
-    },
-    '40%': {
-      transform: [{ translateY: '15%' }],
-    },
-    '50%': {
-      transform: [{ translateY: '25%' }],
-    },
-    '60%': {
+    '60%, 80%': {
       transform: [{ translateY: 0 }],
     },
-    '70%': {
-      transform: [{ translateY: '-10%' }],
-    },
-    '80%': {
-      transform: [{ translateY: 0 }],
-    },
-    '90%': {
+    '70%, 90%': {
       transform: [{ translateY: '-10%' }],
     },
   };
 
   const hahaMouth: CSSAnimationKeyframes = {
-    '10%': {
+    '10%, 30%, 50%': {
       transform: [{ scale: 0.6 }],
     },
-    '20%': {
+    '20%, 40%': {
       transform: [{ scale: 0.8 }],
     },
-    '30%': {
-      transform: [{ scale: 0.6 }],
-    },
-    '40%': {
-      transform: [{ scale: 0.8 }],
-    },
-    '50%': {
-      transform: [{ scale: 0.6 }],
-    },
-    '60%': {
+    '60%, 80%': {
       transform: [{ scale: 1 }],
     },
     '70%': {
       transform: [{ scale: 1.2 }],
-    },
-    '80%': {
-      transform: [{ scale: 1 }],
     },
     '90%': {
       transform: [{ scale: 1.1 }],
@@ -416,73 +386,39 @@ const yayStyles = StyleSheet.create({
 });
 
 function WowEmoji() {
-  // TODO - add keyframe merging - too many repeated values
   const wowFace: CSSAnimationKeyframes = {
-    '15%': {
+    '15%, 25%': {
       transform: [{ rotate: '20deg' }, { translateX: -0.25 * EMOJI_SIZE }],
     },
-    '25%': {
-      transform: [{ rotate: '20deg' }, { translateX: -0.25 * EMOJI_SIZE }],
-    },
-    '45%': {
+    '45%, 65%': {
       transform: [{ rotate: '-20deg' }, { translateX: 0.25 * EMOJI_SIZE }],
     },
-    '65%': {
-      transform: [{ rotate: '-20deg' }, { translateX: 0.25 * EMOJI_SIZE }],
-    },
-    '75%': {
-      transform: [{ rotate: '0deg' }, { translateX: 0 }],
-    },
-    '100%': {
+    '75%, 100%': {
       transform: [{ rotate: '0deg' }, { translateX: 0 }],
     },
   };
 
   const wowBrows: CSSAnimationKeyframes = {
-    '0%': {
+    '0%, 75%, 100%': {
       top: -0.075 * EMOJI_SIZE,
     },
-    '15%': {
+    '15%, 65%': {
       top: 0.025 * EMOJI_SIZE,
-    },
-    '65%': {
-      top: 0.025 * EMOJI_SIZE,
-    },
-    '75%': {
-      top: -0.075 * EMOJI_SIZE,
-    },
-    '100%': {
-      top: -0.075 * EMOJI_SIZE,
     },
   };
 
   const wowMouth: CSSAnimationKeyframes = {
-    '10%': {
+    '10%, 30%': {
       top: -0.1 * EMOJI_SIZE,
       transform: [{ scaleY: 1 }],
       width: 0.15 * EMOJI_SIZE,
     },
-    '30%': {
-      top: -0.1 * EMOJI_SIZE,
-      transform: [{ scaleY: 1 }],
-      width: 0.15 * EMOJI_SIZE,
-    },
-    '50%': {
+    '50%, 70%': {
       top: -0.075 * EMOJI_SIZE,
       transform: [{ scaleY: 1.25 }],
       width: 0.25 * EMOJI_SIZE,
     },
-    '70%': {
-      top: -0.075 * EMOJI_SIZE,
-      transform: [{ scaleY: 1.25 }],
-      width: 0.25 * EMOJI_SIZE,
-    },
-    '75%': {
-      top: 0,
-      transform: [{ scaleY: 1.5 }],
-      width: 0.25 * EMOJI_SIZE,
-    },
-    '100%': {
+    '75%, 100%': {
       top: 0,
       transform: [{ scaleY: 1.5 }],
       width: 0.25 * EMOJI_SIZE,
@@ -582,46 +518,28 @@ const wowStyles = StyleSheet.create({
 
 function SadEmoji() {
   const sadFace: CSSAnimationKeyframes = {
-    '0%': {
+    '0%, 100%': {
       top: 0.15 * EMOJI_SIZE,
     },
-    '25%': {
+    '25%, 35%': {
       top: 0,
     },
-    '35%': {
-      top: 0,
-    },
-    '55%': {
+    '55%, 95%': {
       top: 0.25 * EMOJI_SIZE,
-    },
-    '95%': {
-      top: 0.25 * EMOJI_SIZE,
-    },
-    '100%': {
-      top: 0.15 * EMOJI_SIZE,
     },
   };
 
   const sadMouth: CSSAnimationKeyframes = {
-    '0%': {
+    '0%, 55%, 100%': {
       transform: [{ scaleY: 1.5 }, { scaleX: 1.15 }],
     },
-    '25%': {
+    '25%, 35%': {
       transform: [{ scaleY: 1.15 }],
-    },
-    '35%': {
-      transform: [{ scaleY: 1.15 }],
-    },
-    '55%': {
-      transform: [{ scaleY: 1.5 }, { scaleX: 1.15 }],
-    },
-    '100%': {
-      transform: [{ scaleY: 1.5 }, { scaleX: 1.15 }],
     },
   };
 
   const tearDrop: CSSAnimationKeyframes = {
-    '0%': {
+    '0%, 100%': {
       left: 0.45 * EMOJI_SIZE,
       top: 0,
       transform: [{ scale: 0 }],
@@ -647,11 +565,6 @@ function SadEmoji() {
     '99.9%': {
       left: -0.15 * EMOJI_SIZE,
       top: 0.5 * EMOJI_SIZE,
-      transform: [{ scale: 0 }],
-    },
-    '100%': {
-      left: 0.45 * EMOJI_SIZE,
-      top: 0,
       transform: [{ scale: 0 }],
     },
   };
@@ -763,44 +676,23 @@ const sadStyles = StyleSheet.create({
 
 function AngryEmoji() {
   const angryFace: CSSAnimationKeyframes = {
-    '35%': {
+    '35%, 60%': {
       transform: [
         { translateX: 0 },
         { translateY: 0.1 * EMOJI_SIZE },
         { scale: 0.9 },
       ],
     },
-    '40%': {
+    '40%, 50%': {
       transform: [
         { translateX: -5 },
         { translateY: 0.1 * EMOJI_SIZE },
         { scale: 0.9 },
       ],
     },
-    '45%': {
+    '45%, 55%': {
       transform: [
         { translateX: 5 },
-        { translateY: 0.1 * EMOJI_SIZE },
-        { scale: 0.9 },
-      ],
-    },
-    '50%': {
-      transform: [
-        { translateX: -5 },
-        { translateY: 0.1 * EMOJI_SIZE },
-        { scale: 0.9 },
-      ],
-    },
-    '55%': {
-      transform: [
-        { translateX: 5 },
-        { translateY: 0.1 * EMOJI_SIZE },
-        { scale: 0.9 },
-      ],
-    },
-    '60%': {
-      transform: [
-        { translateX: 0 },
         { translateY: 0.1 * EMOJI_SIZE },
         { scale: 0.9 },
       ],
@@ -808,10 +700,7 @@ function AngryEmoji() {
   };
 
   const angryMouth: CSSAnimationKeyframes = {
-    '25%': {
-      transform: [{ scaleY: 0.2 }],
-    },
-    '50%': {
+    '25%, 50%': {
       transform: [{ scaleY: 0.2 }],
     },
   };

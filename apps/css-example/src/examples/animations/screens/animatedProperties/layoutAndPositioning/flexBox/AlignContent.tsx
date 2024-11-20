@@ -14,7 +14,7 @@ export default function AlignContent() {
         animationDuration: '5s',
         animationIterationCount: 'infinite',
         animationName: {
-          '0%': {
+          '0%, 100%': {
             alignContent: 'flex-start',
           },
           '16.67%': {
@@ -31,9 +31,6 @@ export default function AlignContent() {
           },
           '83.33%': {
             alignContent: 'space-around',
-          },
-          '100%': {
-            alignContent: 'flex-start',
           },
         },
         animationTimingFunction: 'linear',

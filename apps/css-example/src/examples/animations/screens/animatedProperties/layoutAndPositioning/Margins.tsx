@@ -188,7 +188,7 @@ export default function Margins() {
                   description:
                     'Parent container with `alignItems: center` and `justifyContent: center`',
                   keyframes: {
-                    '0%': {
+                    '0%, 100%': {
                       marginRight: 0,
                     },
                     '25%': {
@@ -199,9 +199,6 @@ export default function Margins() {
                     },
                     '75%': {
                       marginRight: '10%',
-                    },
-                    '100%': {
-                      marginRight: 0,
                     },
                   },
                   title: 'Right Margin',

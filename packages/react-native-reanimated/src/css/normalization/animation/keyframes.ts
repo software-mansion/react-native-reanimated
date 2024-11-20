@@ -13,44 +13,53 @@ import { normalizeStyle } from '../common';
 
 export const ERROR_MESSAGES = {
   invalidOffsetType: (key: CSSAnimationKeyframeOffset) =>
-    `Invalid keyframe offset type "${key}". Only numbers, "from", and "to" are supported.`,
+    `Invalid keyframe offset type "${key}". Only numbers, percentages, "from", and "to" are supported.`,
   invalidOffsetRange: (key: CSSAnimationKeyframeOffset) =>
-    `Invalid keyframe offset range "${key}". Expected a number between 0 and 1.`,
+    `Invalid keyframe offset range "${key}". Expected a number between 0 and 1 or a percentage between 0% and 100%.`,
 };
 
-function normalizeOffset(key: CSSAnimationKeyframeOffset): number {
-  if (key === 'from') {
-    return 0;
-  }
-  if (key === 'to') {
-    return 1;
-  }
+function normalizeOffset(key: CSSAnimationKeyframeOffset): number[] {
+  const keys =
+    typeof key === 'string' ? key.split(',').map((k) => k.trim()) : [key];
 
-  let offset: number | undefined;
-  if (typeof key === 'number' || !isNaN(+key)) {
-    offset = +key;
-  } else if (OFFSET_REGEX.test(key)) {
-    offset = parseFloat(key) / 100;
-  }
+  const offsets = keys.map((singleKey) => {
+    if (singleKey === 'from') {
+      return 0;
+    }
+    if (singleKey === 'to') {
+      return 1;
+    }
 
-  if (!isNumber(offset)) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(key));
-  }
-  if (offset < 0 || offset > 1) {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(key));
-  }
+    let offset: number | undefined;
 
-  return offset;
+    if (typeof singleKey === 'number' || !isNaN(+singleKey)) {
+      offset = +singleKey;
+    } else if (OFFSET_REGEX.test(singleKey)) {
+      offset = parseFloat(singleKey) / 100;
+    }
+
+    if (!isNumber(offset)) {
+      throw new ReanimatedError(ERROR_MESSAGES.invalidOffsetType(singleKey));
+    }
+    if (offset < 0 || offset > 1) {
+      throw new ReanimatedError(ERROR_MESSAGES.invalidOffsetRange(singleKey));
+    }
+
+    return offset;
+  });
+
+  return offsets;
 }
-
 function normalizeKeyframes(
   keyframes: CSSAnimationKeyframes
 ): Array<NormalizedCSSAnimationKeyframe> {
   return Object.entries(keyframes)
-    .map(([key, style = {}]) => ({
-      offset: normalizeOffset(key as CSSAnimationKeyframeOffset),
-      style: normalizeStyle(style),
-    }))
+    .flatMap(([key, style = {}]) =>
+      normalizeOffset(key).map((offset) => ({
+        offset,
+        style: normalizeStyle(style),
+      }))
+    )
     .sort((a, b) => a.offset - b.offset)
     .reduce((acc, keyframe) => {
       const lastKeyframe = acc[acc.length - 1];

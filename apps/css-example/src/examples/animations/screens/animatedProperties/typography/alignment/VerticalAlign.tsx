@@ -27,7 +27,7 @@ export default function VerticalAlign() {
               description:
                 "`verticalAlign` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
               keyframes: {
-                '0%': {
+                '0%, 100%': {
                   verticalAlign: 'top',
                 },
                 '33.3%': {
@@ -35,9 +35,6 @@ export default function VerticalAlign() {
                 },
                 '66.6%': {
                   verticalAlign: 'middle',
-                },
-                '100%': {
-                  verticalAlign: 'top',
                 },
               },
               title: 'Changing Vertical Alignment',

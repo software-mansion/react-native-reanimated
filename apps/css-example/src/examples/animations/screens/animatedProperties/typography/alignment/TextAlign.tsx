@@ -33,7 +33,7 @@ export default function TextAlign() {
               description:
                 "`textAlign` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
               keyframes: {
-                '0%': {
+                '0%, 100%': {
                   textAlign: 'left',
                 },
                 '25%': {
@@ -44,9 +44,6 @@ export default function TextAlign() {
                 },
                 '75%': {
                   textAlign: 'justify',
-                },
-                '100%': {
-                  textAlign: 'left',
                 },
               },
               title: 'Changing Text Alignment',
