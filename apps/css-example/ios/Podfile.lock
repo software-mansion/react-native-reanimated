@@ -1649,27 +1649,6 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNFlashList (1.7.2):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.11.18.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
   - RNGestureHandler (2.22.0):
     - DoubleConversion
     - glog
@@ -1964,7 +1943,6 @@ DEPENDENCIES:
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCClipboard (from `../../../node_modules/@react-native-clipboard/clipboard`)"
   - "RNCMaskedView (from `../../../node_modules/@react-native-masked-view/masked-view`)"
-  - "RNFlashList (from `../node_modules/@shopify/flash-list`)"
   - RNGestureHandler (from `../../../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../../../node_modules/react-native-reanimated`)
   - RNScreens (from `../../../node_modules/react-native-screens`)
@@ -2117,8 +2095,6 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/@react-native-clipboard/clipboard"
   RNCMaskedView:
     :path: "../../../node_modules/@react-native-masked-view/masked-view"
-  RNFlashList:
-    :path: "../node_modules/@shopify/flash-list"
   RNGestureHandler:
     :path: "../../../node_modules/react-native-gesture-handler"
   RNReanimated:
@@ -2201,7 +2177,6 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: 36aec380620fbc4ce7b8a048071cdb12e13723f3
   RNCClipboard: 97d92b55b35f73533df13f1291532afaa278063e
   RNCMaskedView: 18c76ebdf9752bb75652829f99f6c3d1318cc864
-  RNFlashList: ee2388e0d3ffde77431ba5d09b8f59a0c65a8e05
   RNGestureHandler: 4e7defe5095e936424173fc75f0bf2af5bba8e23
   RNReanimated: 4ed0a35da49cbc246b2b7b6b739ae71a12e6200e
   RNScreens: d0854539b51a53e38b61bcc9fb402439a9c73b26
