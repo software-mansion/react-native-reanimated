@@ -9,7 +9,8 @@ let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
 };
 
 export function getShadowNodeWrapperFromRef(
-  ref: React.Component
+  ref: React.Component,
+  hostInstance?: unknown
 ): ShadowNodeWrapper {
   // load findHostInstance_DEPRECATED lazily because it may not be available before render
   if (findHostInstance_DEPRECATED === undefined) {
@@ -50,9 +51,9 @@ export function getShadowNodeWrapperFromRef(
   } else if (textInputRef) {
     resolvedRef = textInputRef;
   } else {
-    resolvedRef = getInternalInstanceHandleFromPublicInstance(
-      findHostInstance_DEPRECATED(ref)
-    ).stateNode.node;
+    const instance = hostInstance ?? findHostInstance_DEPRECATED(ref);
+    resolvedRef =
+      getInternalInstanceHandleFromPublicInstance(instance).stateNode.node;
   }
 
   return resolvedRef;

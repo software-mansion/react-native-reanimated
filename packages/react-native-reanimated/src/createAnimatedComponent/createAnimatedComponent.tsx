@@ -290,7 +290,9 @@ export function createAnimatedComponent(
       const componentRef = this._componentRef as AnimatedComponentRef;
       const component = componentRef?.getAnimatableRef
         ? componentRef.getAnimatableRef()
-        : componentRef;
+        : isFabric()
+          ? this
+          : componentRef;
 
       if (SHOULD_BE_USE_WEB) {
         // At this point I assume that `_setComponentRef` was already called and `_component` is set.
@@ -313,7 +315,7 @@ export function createAnimatedComponent(
         viewName = viewInfo.viewName;
         viewConfig = viewInfo.viewConfig;
         shadowNodeWrapper = isFabric()
-          ? getShadowNodeWrapperFromRef(this)
+          ? getShadowNodeWrapperFromRef(this, hostInstance)
           : null;
       }
       this._viewInfo = { viewTag, viewName, shadowNodeWrapper, viewConfig };
