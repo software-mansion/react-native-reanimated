@@ -80,7 +80,7 @@ export class NativeEventsManager implements INativeEventsManager {
   private getEventViewTag() {
     // Get the tag for registering events - since the event emitting view can be nested inside the main component
     const componentAnimatedRef = this.#managedComponent
-      ._component as AnimatedComponentRef;
+      ._componentRef as AnimatedComponentRef;
     let newTag: number;
     if (componentAnimatedRef.getScrollableNode) {
       const scrollableNode = componentAnimatedRef.getScrollableNode();
