@@ -527,7 +527,9 @@ export function defineAnimation<
   if (_WORKLET || SHOULD_BE_USE_WEB) {
     return create();
   }
-  // @ts-ignore: eslint-disable-line
+  create.__isAnimationDefinition = true;
+
+  // @ts-expect-error it's fine
   return create;
 }
 

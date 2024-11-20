@@ -32,6 +32,8 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <iomanip>
+#include <sstream>
+#include <string>
 #endif // RCT_NEW_ARCH_ENABLED
 
 // Standard `__cplusplus` macro reference:
