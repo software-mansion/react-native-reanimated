@@ -14,7 +14,7 @@ export default function JustifyContent() {
         animationDuration: '7s',
         animationIterationCount: 'infinite',
         animationName: {
-          '0%': {
+          '0%, 100%': {
             justifyContent: 'flex-start',
           },
           '16.67%': {
@@ -31,9 +31,6 @@ export default function JustifyContent() {
           },
           '83.33%': {
             justifyContent: 'space-evenly',
-          },
-          '100%': {
-            justifyContent: 'flex-start',
           },
         },
         animationTimingFunction: 'linear',

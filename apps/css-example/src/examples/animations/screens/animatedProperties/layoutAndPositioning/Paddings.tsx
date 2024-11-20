@@ -102,7 +102,7 @@ export default function Paddings() {
             animationDuration: '3s',
             animationIterationCount: 'infinite',
             animationName: {
-              '0%': {
+              '0%, 100%': {
                 [property]: 0,
               },
               '25%': {
@@ -113,9 +113,6 @@ export default function Paddings() {
               },
               '75%': {
                 [property]: '20%',
-              },
-              '100%': {
-                [property]: 0,
               },
             },
           }),

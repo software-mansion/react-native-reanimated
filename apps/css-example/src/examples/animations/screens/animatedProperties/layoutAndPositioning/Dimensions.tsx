@@ -103,7 +103,7 @@ export default function Dimensions() {
             animationDuration: '3s',
             animationIterationCount: 'infinite',
             animationName: {
-              '0%': {
+              '0%, 100%': {
                 [property]: 25,
               },
               '25%': {
@@ -114,9 +114,6 @@ export default function Dimensions() {
               },
               '75%': {
                 [property]: '25%',
-              },
-              '100%': {
-                [property]: 25,
               },
             },
           }),

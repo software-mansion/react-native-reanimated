@@ -14,7 +14,7 @@ export default function FlexDirection() {
         animationDuration: '4s',
         animationIterationCount: 'infinite',
         animationName: {
-          '0%': {
+          '0%, 100%': {
             flexDirection: 'column',
           },
           '25%': {
@@ -25,9 +25,6 @@ export default function FlexDirection() {
           },
           '75%': {
             flexDirection: 'row-reverse',
-          },
-          '100%': {
-            flexDirection: 'column',
           },
         },
         animationTimingFunction: 'linear',

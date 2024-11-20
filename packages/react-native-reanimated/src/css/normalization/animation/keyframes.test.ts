@@ -45,6 +45,38 @@ describe(createKeyframeStyle, () => {
     });
   });
 
+  describe('multi-offset normalization', () => {
+    describe('when valid offsets are provided', () => {
+      it.each([
+        ['from, 50%, to', [0, 0.5, 1]],
+        ['0%, 25%, 50%, 75%, 100%', [0, 0.25, 0.5, 0.75, 1]],
+        ['10%, 30%, 20%', [0.1, 0.2, 0.3]],
+        ['to, 0%, 1, 20%', [0, 0.2, 1]],
+        ['0, 0.5, 1', [0, 0.5, 1]],
+      ])('normalizes %p to %p', (offset, expected) => {
+        expect(createKeyframeStyle({ [offset]: { opacity: 1 } })).toEqual({
+          opacity: expected.map((normalizedOffset) => ({
+            offset: normalizedOffset,
+            value: 1,
+          })),
+        });
+      });
+    });
+
+    describe('when invalid offsets are provided', () => {
+      it.each([
+        ['from, invalid, to', ERROR_MESSAGES.invalidOffsetType('invalid')],
+        ['0%, 25%, 101%, 75%, 100%', ERROR_MESSAGES.invalidOffsetRange('101%')],
+        ['0, NaN, 1', ERROR_MESSAGES.invalidOffsetType(NaN)],
+      ])('throws an error for %p', (offset, errorMsg) => {
+        const value = offset as CSSAnimationKeyframeOffset;
+        expect(() => createKeyframeStyle({ [value]: { opacity: 1 } })).toThrow(
+          new ReanimatedError(errorMsg)
+        );
+      });
+    });
+  });
+
   describe('keyframe style creation', () => {
     it('converts keyframes to style with properties with offset', () => {
       expect(

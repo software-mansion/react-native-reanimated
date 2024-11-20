@@ -14,14 +14,11 @@ export default function FlexWrap() {
         animationDuration: '2s',
         animationIterationCount: 'infinite',
         animationName: {
-          '0%': {
+          '0%, 100%': {
             flexWrap: 'nowrap',
           },
           '50%': {
             flexWrap: 'wrap',
-          },
-          '100%': {
-            flexWrap: 'nowrap',
           },
         },
         animationTimingFunction: 'linear',

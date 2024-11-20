@@ -27,14 +27,11 @@ export default function BorderCurve() {
               description:
                 "`borderCurve` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
               keyframes: {
-                '0%': {
+                '0%, 100%': {
                   borderCurve: 'circular',
                 },
                 '50%': {
                   borderCurve: 'continuous',
-                },
-                '100%': {
-                  borderCurve: 'circular',
                 },
               },
               title: 'Changing Border Curve',

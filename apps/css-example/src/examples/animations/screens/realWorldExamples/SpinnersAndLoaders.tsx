@@ -245,20 +245,11 @@ function Default() {
                 animationDuration: '1.2s',
                 animationIterationCount: 'infinite',
                 animationName: {
-                  '0%': {
-                    transform: [{ scale: 1 }],
-                  },
-                  '20%': {
+                  '0%, 20%, 80%, 100%': {
                     transform: [{ scale: 1 }],
                   },
                   '50%': {
                     transform: [{ scale: 1.5 }],
-                  },
-                  '80%': {
-                    transform: [{ scale: 1 }],
-                  },
-                  '100%': {
-                    transform: [{ scale: 1 }],
                   },
                 },
                 animationTimingFunction: 'linear',
@@ -519,17 +510,11 @@ function RectangleBounce() {
               animationDuration: '1.5s',
               animationIterationCount: 'infinite',
               animationName: {
-                '0%': {
+                '0%, 40%, 100%': {
                   transform: [{ scaleY: 0.4 }],
                 },
                 '20%': {
                   transform: [{ scaleY: 1 }],
-                },
-                '40%': {
-                  transform: [{ scaleY: 0.4 }],
-                },
-                '100%': {
-                  transform: [{ scaleY: 0.4 }],
                 },
               },
               animationTimingFunction: 'easeInOut',
@@ -639,16 +624,16 @@ function Rectangle() {
             animationDuration: '1.2s',
             animationIterationCount: 'infinite',
             animationName: {
+              '0%': {
+                transform: [{ perspective: 2 * SPINNER_SIZE }],
+              },
               '50%': {
                 transform: [
                   { perspective: 2 * SPINNER_SIZE },
                   { rotateX: '-180deg' },
                 ],
               },
-              from: {
-                transform: [{ perspective: 2 * SPINNER_SIZE }],
-              },
-              to: {
+              '100%': {
                 transform: [
                   { perspective: 2 * SPINNER_SIZE },
                   { rotateX: '-180deg' },
@@ -690,17 +675,11 @@ function ThreeDots() {
               animationDuration: '1.5s',
               animationIterationCount: 'infinite',
               animationName: {
-                '0%': {
+                '0%, 80%, 100%': {
                   transform: [{ scale: 0 }],
                 },
                 '40%': {
                   transform: [{ scale: 1 }],
-                },
-                '80%': {
-                  transform: [{ scale: 0 }],
-                },
-                '100%': {
-                  transform: [{ scale: 0 }],
                 },
               },
               animationTimingFunction: 'easeInOut',
@@ -747,17 +726,11 @@ function Cubes() {
                 animationDuration: '1.5s',
                 animationIterationCount: 'infinite',
                 animationName: {
-                  '0%': {
+                  '0%, 70%, 100%': {
                     transform: [{ scale: 1 }],
                   },
                   '35%': {
                     transform: [{ scale: 0 }],
-                  },
-                  '70%': {
-                    transform: [{ scale: 1 }],
-                  },
-                  '100%': {
-                    transform: [{ scale: 1 }],
                   },
                 },
                 animationTimingFunction: 'easeInOut',
@@ -801,42 +774,21 @@ function Diamond() {
             animationDuration: '2.4s',
             animationIterationCount: 'infinite',
             animationName: {
-              '0%': {
+              '0%, 10%': {
                 opacity: 0,
                 transform: [
                   { perspective: 2 * SPINNER_SIZE },
                   { rotateX: '-180deg' },
                 ],
               },
-              '10%': {
-                opacity: 0,
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateX: '-180deg' },
-                ],
-              },
-              '25%': {
+              '25%, 75%': {
                 opacity: 1,
                 transform: [
                   { perspective: 2 * SPINNER_SIZE },
                   { rotateX: '0deg' },
                 ],
               },
-              '75%': {
-                opacity: 1,
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateX: '0deg' },
-                ],
-              },
-              '90%': {
-                opacity: 0,
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateY: '180deg' },
-                ],
-              },
-              '100%': {
+              '90%, 100%': {
                 opacity: 0,
                 transform: [
                   { perspective: 2 * SPINNER_SIZE },

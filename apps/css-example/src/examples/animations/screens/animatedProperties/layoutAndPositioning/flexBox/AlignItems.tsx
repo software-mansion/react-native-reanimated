@@ -12,7 +12,7 @@ export default function AlignItems() {
         animationDuration: '5s',
         animationIterationCount: 'infinite',
         animationName: {
-          '0%': {
+          '0%, 100%': {
             alignItems: 'stretch',
           },
           '20%': {
@@ -26,9 +26,6 @@ export default function AlignItems() {
           },
           '80%': {
             alignItems: 'baseline',
-          },
-          '100%': {
-            alignItems: 'stretch',
           },
         },
         animationTimingFunction: 'linear',

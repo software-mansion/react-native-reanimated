@@ -23,14 +23,11 @@ const turbulenceAnimation: CSSAnimationConfig = {
   animationDuration: `${TIME_MULTIPLIER * 0.4}s`,
   animationIterationCount: 'infinite',
   animationName: {
-    '0%': {
+    '0%, 100%': {
       transform: 'scale(1) translate(0, 0)',
     },
     '50%': {
       transform: 'scale(1) translate(1px, -1px)',
-    },
-    '100%': {
-      transform: 'scale(1) translate(0, 0)',
     },
   },
 };

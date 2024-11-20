@@ -28,14 +28,11 @@ export default function FontSize() {
               description:
                 '`fontSize` is a **continuous** property. That means, it **can be smoothly animated** between values.',
               keyframes: {
-                '0%': {
+                '0%, 100%': {
                   fontSize: 0,
                 },
                 '50%': {
                   fontSize: 24,
-                },
-                '100%': {
-                  fontSize: 12,
                 },
               },
               title: 'Changing Font Size',

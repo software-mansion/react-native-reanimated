@@ -12,7 +12,7 @@ export default function AlignSelf() {
         animationDuration: '5s',
         animationIterationCount: 'infinite',
         animationName: {
-          '0%': {
+          '0%, 100%': {
             alignSelf: 'stretch',
           },
           '20%': {
@@ -26,9 +26,6 @@ export default function AlignSelf() {
           },
           '80%': {
             alignSelf: 'baseline',
-          },
-          '100%': {
-            alignSelf: 'stretch',
           },
         },
         animationTimingFunction: 'linear',

@@ -27,7 +27,8 @@ export type CSSKeyframeStyleProps = CreateKeyframeStyle<
 
 // BEFORE NORMALIZATION
 
-export type CSSAnimationKeyframeOffset = `${number}%` | 'from' | 'to' | number;
+export type CSSAnimationKeyframeOffset = string | number;
+
 export type CSSAnimationKeyframes = Partial<
   Record<CSSAnimationKeyframeOffset, ViewStyle & TextStyle & ImageStyle>
 >;
