@@ -18,7 +18,7 @@ using worklets::RNRuntimeWorkletDecorator;
 @implementation WorkletsModule {
   std::shared_ptr<NativeWorkletsModule> nativeWorkletsModule_;
 #ifndef NDEBUG
-  SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
+  worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
 }
 
