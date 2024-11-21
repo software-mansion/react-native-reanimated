@@ -33,17 +33,19 @@ jobs:
           java-version: '17'
       - name:
           Setup Yarn
-          # Sometimes `npx react-native init` fails due to dependency mismatches or other
-          # rather vague errors. This is a workaround for that.
+          # Sometimes `npx @react-native-community/cli init` fails at random.
+          # Pre-installing it with Yarn seems to improve stability.
         run: corepack enable && yarn init
-      - name: Install React Native
+      - name: Install React Native CLI
         run: yarn add @react-native-community/cli
       - name: Create app
-        run: |
-          yarn rnc-cli init ${{ env.APP_NAME }} --version ${{env.LATEST_SUPPORTED_RN_VERSION_IN_V8}} --skip-install --pm yarn --skip-install --install-pods false --skip-git-init
-      - name: Setup Yarn Modern
+        run: yarn rnc-cli init ${{ env.APP_NAME }} --version ${{env.LATEST_SUPPORTED_RN_VERSION_IN_V8}} --skip-install --pm yarn --install-pods false --skip-git-init
+      - name: Setup Yarn Modern in app
         working-directory: ${{ env.APP_NAME }}
-        run: touch yarn.lock && yarn set version berry && yarn config set nodeLinker node-modules
+        run: |
+          touch yarn.lock
+          yarn set version berry
+          yarn config set nodeLinker node-modules
       - name: Install dependencies
         working-directory: ${{ env.APP_NAME }}
         run: yarn install

@@ -66,7 +66,7 @@ jobs:
       - name: Build app (iOS)
         working-directory: ${{ env.APP_NAME }}
         if: ${{ matrix.platform == 'iOS' }}
-        run: npx react-native run-ios --simulator='iPhone 14' --terminal='Terminal'
+        run: yarn react-native run-ios
       - name: Build app (Android)
         working-directory: ${{ env.APP_NAME }}/android
         if: ${{ matrix.platform == 'Android' }}

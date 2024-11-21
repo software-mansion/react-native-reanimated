@@ -36,14 +36,14 @@ jobs:
         run: echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp", "AppA", "AppB"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
       - name: Install dependencies
         run: yarn install
+      - name: Install React Native CLI
+        run: yarn add @react-native-community/cli
       - name: Create RootApp
         working-directory: monorepo
-        # TODO: Revise if we want to hardcode 0.73 here.
-        run: npx react-native@0.73 init RootApp --skip-install --version 0.73
+        run: yarn rnc-cli init RootApp --skip-install --pm yarn --install-pods false --skip-git-init
       - name: Create PackageApp
         working-directory: monorepo/packages
-        # TODO: Revise if we want to hardcode 0.73 here.
-        run: npx react-native@0.73 init PackageApp --skip-install --version 0.73
+        run: yarn rnc-cli init PackageApp --skip-install --pm yarn --install-pods false --skip-git-init
 
       - name: Install dependencies for RootApp
         working-directory: monorepo/RootApp
