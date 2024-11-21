@@ -66,10 +66,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
 
-  // auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
-  //   throw error;
-  // });
-
   PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(bridge, nodesManager, reaModule);
 
   std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
@@ -110,10 +106,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
 {
   auto nodesManager = reaModule.nodesManager;
 
-  //  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
-  //    throw error;
-  //  });
-
   PlatformDepMethodsHolder platformDepMethodsHolder =
       makePlatformDepMethodsHolderBridgeless(moduleRegistry, nodesManager, reaModule);
 
@@ -126,7 +118,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
       nativeWorkletsModule,
       runtime,
       jsScheduler,
-      //      jsQueue,
       uiScheduler,
       platformDepMethodsHolder,
       isBridgeless,

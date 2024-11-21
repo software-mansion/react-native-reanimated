@@ -55,7 +55,6 @@ NativeReanimatedModule::NativeReanimatedModule(
     const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<JSScheduler> &jsScheduler,
-    // const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
     const bool isBridgeless,
@@ -64,14 +63,12 @@ NativeReanimatedModule::NativeReanimatedModule(
           isBridgeless ? nullptr : jsScheduler->getJSCallInvoker()),
       isBridgeless_(isBridgeless),
       isReducedMotion_(isReducedMotion),
-      // jsQueue_(jsQueue),
       nativeWorkletsModule_(nativeWorkletsModule),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
       valueUnpackerCode_(nativeWorkletsModule->getValueUnpackerCode()),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
-          // jsQueue,
           nativeWorkletsModule->getJSQueue(),
           jsScheduler_,
           "Reanimated UI runtime",
@@ -234,7 +231,6 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
     const jsi::Value &initializer) {
   auto workletRuntime = std::make_shared<WorkletRuntime>(
       rt,
-      // jsQueue_,
       nativeWorkletsModule_->getJSQueue(),
       jsScheduler_,
       name.asString(rt).utf8(rt),
