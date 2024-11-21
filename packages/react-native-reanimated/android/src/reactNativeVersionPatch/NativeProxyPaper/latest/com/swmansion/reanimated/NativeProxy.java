@@ -6,7 +6,6 @@ import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
@@ -27,15 +26,17 @@ public class NativeProxy extends NativeProxyCommon {
     super(context);
     CallInvokerHolderImpl holder = (CallInvokerHolderImpl) context.getJSCallInvokerHolder();
     LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
-    ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
+    //    ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
     mHybridData =
         initHybrid(
             workletsModule,
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             holder,
             mAndroidUIScheduler,
-            LayoutAnimations,
-            messageQueueThread);
+            LayoutAnimations
+            //          ,
+            //            messageQueueThread
+            );
     prepareLayoutAnimations(LayoutAnimations);
     installJSIBindings();
     if (BuildConfig.DEBUG) {
@@ -49,8 +50,10 @@ public class NativeProxy extends NativeProxyCommon {
       long jsContext,
       CallInvokerHolderImpl jsCallInvokerHolder,
       AndroidUIScheduler androidUIScheduler,
-      LayoutAnimations LayoutAnimations,
-      MessageQueueThread messageQueueThread);
+      LayoutAnimations LayoutAnimations
+      //    ,
+      //      MessageQueueThread messageQueueThread
+      );
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 

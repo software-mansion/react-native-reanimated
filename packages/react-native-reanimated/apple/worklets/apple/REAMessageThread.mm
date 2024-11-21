@@ -1,4 +1,4 @@
-#import <reanimated/apple/native/REAMessageThread.h>
+#import <worklets/apple/REAMessageThread.h>
 
 #import <condition_variable>
 #import <mutex>
@@ -12,9 +12,9 @@ namespace react {
 
 // Essentially the same as RCTMessageThread, but with public fields.
 struct REAMessageThreadPublic {
-  // I don't know why we need three vtables (if you know then feel free to
-  // explain it instead of this message), but this is what makes the casts in
-  // quitSynchronous() work correctly.
+  // I don't know why we need three vtables (if you know then feel free to#import
+  // <reanimated/apple/native/REAMessageThread.h> explain it instead of this message), but this is what makes the casts
+  // in quitSynchronous() work correctly.
   void *vtable1;
   void *vtable2;
   void *vtable3;

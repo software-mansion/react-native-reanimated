@@ -14,7 +14,7 @@
 #include <fbjni/fbjni.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
-#include <react/jni/JMessageQueueThread.h>
+// #include <react/jni/JMessageQueueThread.h>
 #include <react/jni/ReadableNativeArray.h>
 #include <react/jni/ReadableNativeMap.h>
 
@@ -33,8 +33,9 @@ NativeProxy::NativeProxy(
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
-    jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
+    jni::global_ref<LayoutAnimations::javaobject> layoutAnimations
+// ,
+// jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
@@ -47,7 +48,7 @@ NativeProxy::NativeProxy(
           nativeWorkletsModule,
           *rnRuntime,
           std::make_shared<JSScheduler>(*rnRuntime, jsCallInvoker),
-          std::make_shared<JMessageQueueThread>(messageQueueThread),
+          // std::make_shared<JMessageQueueThread>(messageQueueThread),
           uiScheduler,
           getPlatformDependentMethods(),
           /* isBridgeless */ false,
@@ -66,7 +67,7 @@ NativeProxy::NativeProxy(
     RuntimeExecutor runtimeExecutor,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    // jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager)
     : javaPart_(jni::make_global(jThis)),
@@ -75,7 +76,7 @@ NativeProxy::NativeProxy(
           nativeWorkletsModule,
           *rnRuntime,
           std::make_shared<JSScheduler>(*rnRuntime, runtimeExecutor),
-          std::make_shared<JMessageQueueThread>(messageQueueThread),
+          // std::make_shared<JMessageQueueThread>(messageQueueThread),
           uiScheduler,
           getPlatformDependentMethods(),
           /* isBridgeless */ true,
@@ -119,8 +120,9 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
     jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
-    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
+    jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
+// ,
+// jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
     ,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
@@ -137,10 +139,11 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
       uiScheduler,
-      make_global(layoutAnimations),
-      messageQueueThread
+      make_global(layoutAnimations)
+  // ,
+  // messageQueueThread
 #ifdef RCT_NEW_ARCH_ENABLED
-      ,
+          ,
       fabricUIManager
 #endif
   );
@@ -154,7 +157,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybridBridgeless(
     jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder,
     jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    // jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
         fabricUIManager) {
   auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
@@ -168,7 +171,7 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybridBridgeless(
       runtimeExecutor,
       uiScheduler,
       make_global(layoutAnimations),
-      messageQueueThread,
+      // messageQueueThread,
       fabricUIManager);
 }
 #endif // RCT_NEW_ARCH_ENABLED

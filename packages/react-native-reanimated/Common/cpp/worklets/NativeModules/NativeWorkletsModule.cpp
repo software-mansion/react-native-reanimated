@@ -6,6 +6,7 @@
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <worklets/NativeModules/NativeWorkletsModule.h>
+#include <worklets/SharedItems/Shareables.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -17,9 +18,13 @@ using namespace facebook;
 
 namespace worklets {
 
-NativeWorkletsModule::NativeWorkletsModule(const std::string &valueUnpackerCode)
+NativeWorkletsModule::NativeWorkletsModule(
+    const std::string &valueUnpackerCode,
+    const std::shared_ptr<MessageQueueThread> &jsQueue)
     : NativeWorkletsModuleSpec(nullptr),
-      valueUnpackerCode_(valueUnpackerCode) {}
+      valueUnpackerCode_(valueUnpackerCode),
+      jsQueue_(jsQueue) {}
 
 NativeWorkletsModule::~NativeWorkletsModule() {}
+
 } // namespace worklets

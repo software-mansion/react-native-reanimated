@@ -36,7 +36,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<JSScheduler> &jsScheduler,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
+      // const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
       const bool isBridgeless,
@@ -200,7 +200,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   const bool isBridgeless_;
   const bool isReducedMotion_;
-  const std::shared_ptr<MessageQueueThread> jsQueue_;
+
+  // const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<NativeWorkletsModule> nativeWorkletsModule_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
