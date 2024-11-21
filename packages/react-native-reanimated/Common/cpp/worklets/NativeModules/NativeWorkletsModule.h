@@ -2,6 +2,7 @@
 
 #include <cxxreact/MessageQueueThread.h>
 #include <worklets/NativeModules/NativeWorkletsModuleSpec.h>
+#include <worklets/Tools/SingleInstanceChecker.h>
 #include <string>
 
 namespace worklets {
@@ -18,6 +19,9 @@ class NativeWorkletsModule : public NativeWorkletsModuleSpec {
 
  private:
   const std::string valueUnpackerCode_;
+#ifndef NDEBUG
+  SingleInstanceChecker<NativeWorkletsModule> singleInstanceChecker_;
+#endif // NDEBUG
 };
 
 } // namespace worklets
