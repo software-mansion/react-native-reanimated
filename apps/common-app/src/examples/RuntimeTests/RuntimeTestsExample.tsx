@@ -49,6 +49,8 @@ export default function RuntimeTestsExample() {
             require('./tests/core/useAnimatedStyle/reuseAnimatedStyle.test');
             require('./tests/core/useDerivedValue/basic.test');
             require('./tests/core/useDerivedValue/chain.test');
+
+            require('./tests/core/useSharedValue/animationsCompilerApi.test');
           },
         },
         {

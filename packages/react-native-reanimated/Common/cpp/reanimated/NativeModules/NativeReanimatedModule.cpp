@@ -52,12 +52,12 @@ using namespace facebook;
 namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(
+    const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
-    const std::string &valueUnpackerCode,
     const bool isBridgeless,
     const bool isReducedMotion)
     : NativeReanimatedModuleSpec(
@@ -65,16 +65,17 @@ NativeReanimatedModule::NativeReanimatedModule(
       isBridgeless_(isBridgeless),
       isReducedMotion_(isReducedMotion),
       jsQueue_(jsQueue),
+      nativeWorkletsModule_(nativeWorkletsModule),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
+      valueUnpackerCode_(nativeWorkletsModule->getValueUnpackerCode()),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
           jsQueue,
           jsScheduler_,
           "Reanimated UI runtime",
           true /* supportsLocking */,
-          valueUnpackerCode)),
-      valueUnpackerCode_(valueUnpackerCode),
+          valueUnpackerCode_)),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       onRenderCallback_([this](const double timestampMs) {
