@@ -7,9 +7,6 @@
 #import <React/RCTSurfacePresenter.h>
 #import <React/RCTSurfacePresenterBridgeAdapter.h>
 #import <React/RCTSurfaceView.h>
-#if REACT_NATIVE_MINOR_VERSION < 73
-#import <React/RCTRuntimeExecutorFromBridge.h>
-#endif // REACT_NATIVE_MINOR_VERSION < 73
 #endif // RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -26,6 +23,7 @@
 #import <worklets/Tools/ReanimatedJSIUtils.h>
 #import <worklets/WorkletRuntime/WorkletRuntime.h>
 #import <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
+#import <worklets/apple/WorkletsModule.h>
 
 #if __has_include(<UIKit/UIAccessibility.h>)
 #import <UIKit/UIAccessibility.h>
@@ -64,9 +62,9 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
 @synthesize runtimeExecutor = _runtimeExecutor;
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#endif // RCT_NEW_ARCH_ENABLED
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
@@ -278,10 +276,11 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   }
 }
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
+  WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
   if (_isBridgeless) {
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
     RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
     auto &rnRuntime = *(jsi::Runtime *)cxxBridge.runtime;
     auto executorFunction = ([executor = _runtimeExecutor](std::function<void(jsi::Runtime & runtime)> &&callback) {
@@ -293,20 +292,20 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
       }];
     });
     auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
-        _moduleRegistry, rnRuntime, std::string([valueUnpackerCode UTF8String]), executorFunction);
+        self, _moduleRegistry, rnRuntime, workletsModule, executorFunction);
     [self attachReactEventListener];
     [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
-#else // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#else
     [NSException raise:@"Missing bridge" format:@"[Reanimated] Failed to obtain the bridge."];
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#endif // RCT_NEW_ARCH_ENABLED
   } else {
     facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
         ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
         : nullptr;
 
     if (jsiRuntime) {
-      auto nativeReanimatedModule = reanimated::createReanimatedModule(
-          self, self.bridge, self.bridge.jsCallInvoker, std::string([valueUnpackerCode UTF8String]));
+      auto nativeReanimatedModule =
+          reanimated::createReanimatedModule(self, self.bridge, self.bridge.jsCallInvoker, workletsModule);
       jsi::Runtime &rnRuntime = *jsiRuntime;
 
       [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];

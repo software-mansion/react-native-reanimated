@@ -18,6 +18,9 @@ jobs:
     concurrency:
       group: build-v8-${{ github.ref }}
       cancel-in-progress: true
+    env:
+      APP_NAME: app
+      LATEST_SUPPORTED_RN_VERSION_IN_V8: 0.75
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -28,19 +31,30 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
-      - name: Create React Native app
-        run: npx @react-native-community/cli init app
+      - name:
+          Setup Yarn
+          # Sometimes `npx react-native init` fails due to dependency mismatches or other
+          # rather vague errors. This is a workaround for that.
+        run: corepack enable && yarn init
+      - name: Install React Native
+        run: yarn add @react-native-community/cli
+      - name: Create app
+        run: |
+          yarn rnc-cli init ${{ env.APP_NAME }} --version ${{env.LATEST_SUPPORTED_RN_VERSION_IN_V8}} --skip-install --pm yarn --skip-install --install-pods false --skip-git-init
+      - name: Setup Yarn Modern
+        working-directory: ${{ env.APP_NAME }}
+        run: touch yarn.lock && yarn set version berry && yarn config set nodeLinker node-modules
       - name: Install dependencies
-        working-directory: app
+        working-directory: ${{ env.APP_NAME }}
         run: yarn install
       - name: Install Reanimated
-        working-directory: app
-        run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#${{ github.sha }}
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
       - name: Install test dependencies
-        working-directory: app
+        working-directory: ${{ env.APP_NAME }}
         run: yarn add react-native-v8 v8-android-jit
       - name: Configure V8
         run: node reanimated_repo/.github/workflows/helper/configureV8.js
-      - name: Build Android app
-        working-directory: app/android
+      - name: Build Android
+        working-directory: ${{ env.APP_NAME }}/android
         run: ./gradlew assembleDebug --console=plain

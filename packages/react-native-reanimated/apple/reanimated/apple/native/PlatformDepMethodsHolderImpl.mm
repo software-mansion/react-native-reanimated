@@ -70,7 +70,7 @@ SetGestureStateFunction makeSetGestureStateFunction(RCTBridge *bridge)
   return setGestureStateFunction;
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
 SetGestureStateFunction makeSetGestureStateFunctionBridgeless(RCTModuleRegistry *moduleRegistry)
 {
   id<RNGestureHandlerStateManager> gestureHandlerStateManager = nil;
@@ -82,7 +82,7 @@ SetGestureStateFunction makeSetGestureStateFunctionBridgeless(RCTModuleRegistry 
   };
   return setGestureStateFunction;
 }
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#endif // RCT_NEW_ARCH_ENABLED
 
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 {
@@ -379,7 +379,7 @@ makePlatformDepMethodsHolder(RCTBridge *bridge, REANodesManager *nodesManager, R
   return platformDepMethodsHolder;
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
 PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
     RCTModuleRegistry *moduleRegistry,
     REANodesManager *nodesManager,
@@ -426,6 +426,6 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
   };
   return platformDepMethodsHolder;
 }
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#endif // RCT_NEW_ARCH_ENABLED
 
 } // namespace reanimated

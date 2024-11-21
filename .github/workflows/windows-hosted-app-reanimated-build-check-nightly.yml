@@ -17,20 +17,31 @@ jobs:
     concurrency:
       group: build-on-windows-${{ github.ref }}
       cancel-in-progress: true
+    env:
+      APP_NAME: app
     steps:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-      - name: Create React Native App
-        run: npx @react-native-community/cli init app
+      - name: Setup Yarn
+        # Sometimes `npx react-native init` fails due to dependency mismatches or other
+        # rather vague errors. This is a workaround for that.
+        run: corepack enable && yarn init --yes
+      - name: Install React Native
+        run: yarn add @react-native-community/cli
+      - name: Create app
+        run: yarn rnc-cli init ${{ env.APP_NAME }} --pm yarn --skip-install --install-pods false --skip-git-init
+      - name: Setup Yarn Modern
+        working-directory: ${{ env.APP_NAME }}
+        run: touch yarn.lock && yarn set version berry
       - name: Install dependencies
-        working-directory: app
+        working-directory: ${{ env.APP_NAME }}
         run: yarn
       - name: Install Reanimated
-        working-directory: app
-        run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
+        working-directory: ${{ env.APP_NAME }}
+        run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
       - name: Build Android App
-        working-directory: app/android
+        working-directory: ${{ env.APP_NAME }}/android
         run: ./gradlew assembleDebug --console=plain

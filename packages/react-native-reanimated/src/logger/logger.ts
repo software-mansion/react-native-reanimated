@@ -110,8 +110,8 @@ export function updateLoggerConfig(options?: Partial<LoggerConfig>) {
   registerLoggerConfig({
     ...__reanimatedLoggerConfig,
     // Don't reuse previous level and strict values from the global config
-    level: options?.level ?? LogLevel.warn,
-    strict: options?.strict ?? false,
+    level: options?.level ?? DEFAULT_LOGGER_CONFIG.level,
+    strict: options?.strict ?? DEFAULT_LOGGER_CONFIG.strict,
   });
 }
 

@@ -51,20 +51,10 @@ def find_config()
   return result
 end
 
-def assert_latest_react_native_with_new_architecture(config, reanimated_package_json)
-  reanimated_version = reanimated_package_json['version']
-  reanimated_major_version = reanimated_version.split('.')[0].to_i
-  react_native_minor_version = config[:react_native_minor_version]
-  fabric_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
-  if fabric_enabled && reanimated_major_version == 3 && react_native_minor_version < 74
-      # If you change the minimal React Native version remember to update Compatibility Table in docs
-    raise "[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + reanimated_version + " supports the New Architecture on React Native 0.74.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
-  end
-end
-
 def assert_minimal_react_native_version(config)
-  if config[:react_native_minor_version] < 71
-    # If you change the minimal React Native version remember to update Compatibility Table in docs
-    raise "[Reanimated] Unsupported React Native version. Please use 0.71 or newer."
+      # If you change the minimal React Native version remember to update Compatibility Table in docs
+  minimalReactNativeVersion = 74
+  if config[:react_native_minor_version] < minimalReactNativeVersion
+    raise "[Reanimated] Unsupported React Native version. Please use #{minimalReactNativeVersion} or newer."
   end
 end

@@ -12,7 +12,7 @@ const root = path.resolve(__dirname, '../..');
 
 const modules = ['react-native'];
 
-/** @type {import('metro-config').MetroConfig} */
+/** @type {import('@react-native/metro-config').MetroConfig} */
 const config = {
   projectRoot: __dirname,
   watchFolders: [root],
@@ -36,6 +36,5 @@ const config = {
 };
 
 module.exports = wrapWithReanimatedMetroConfig(
-  // @ts-expect-error Should be fixed with https://github.com/facebook/react-native/pull/46602
   mergeConfig(getDefaultConfig(__dirname), config)
 );

@@ -3,7 +3,6 @@ require_relative './scripts/reanimated_utils'
 
 reanimated_package_json = JSON.parse(File.read(File.join(__dir__, "package.json")))
 $config = find_config()
-assert_latest_react_native_with_new_architecture($config, reanimated_package_json)
 assert_minimal_react_native_version($config)
 
 $new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
@@ -16,7 +15,7 @@ fabric_flags = $new_arch_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 example_flag = $config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
 version_flag = "-DREANIMATED_VERSION=#{reanimated_package_json['version']}"
 debug_flag = is_release ? '-DNDEBUG' : ''
-ios_min_version = $config[:react_native_minor_version] >= 73 ? '13.4' : '9.0'
+ios_min_version = '13.4'
 
 # Directory in which data for further processing for clangd will be stored.
 compilation_metadata_dir = "CompilationDatabase"
@@ -34,9 +33,6 @@ def self.install_modules_dependencies_legacy(s)
   s.dependency "RCTRequired"
   s.dependency "RCTTypeSafety"
   s.dependency 'FBLazyVector'
-  if $config[:react_native_minor_version] <= 71
-    s.dependency 'FBReactNativeSpec'
-  end
   s.dependency 'React-Core'
   s.dependency 'React-CoreModules'
   s.dependency 'React-Core/DevSupport'
@@ -58,12 +54,12 @@ def self.install_modules_dependencies_legacy(s)
   s.dependency 'Yoga'
   s.dependency 'DoubleConversion'
   s.dependency 'glog'
-  if using_hermes && !$config[:is_tvos_target] && $config[:react_native_minor_version] >= 70
+  if using_hermes && !$config[:is_tvos_target]
     s.dependency 'React-hermes'
     s.dependency 'hermes-engine'
   end
   s.dependency 'React-callinvoker'
-  if $config[:react_native_minor_version] >= 72 && !$new_arch_enabled
+  if !$new_arch_enabled
     s.dependency 'React-RCTAppDelegate'
   end
 end
@@ -82,6 +78,21 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
+  s.subspec "worklets" do |ss|
+    ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
+    ss.header_dir = "worklets"
+    ss.header_mappings_dir = "Common/cpp/worklets"
+
+    ss.subspec "apple" do |sss|
+      # Please be careful with the snakes.
+      # 🐍🐍🐍
+      # Thank you for your understanding.
+      sss.source_files = "apple/worklets/**/*.{mm,h,m}"
+      sss.header_dir = "worklets"
+      sss.header_mappings_dir = "apple/worklets"
+    end
+  end
+
   s.subspec "reanimated" do |ss|
     ss.source_files = "Common/cpp/reanimated/**/*.{cpp,h}"
     ss.header_dir = "reanimated"
@@ -94,14 +105,8 @@ Pod::Spec.new do |s|
     end
   end
 
-  s.subspec "worklets" do |ss|
-    ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
-    ss.header_dir = "worklets"
-    ss.header_mappings_dir = "Common/cpp/worklets"
-  end
-
   gcc_debug_definitions = "$(inherited)"
-  if $config[:react_native_minor_version] >= 73 || !is_release
+  if !is_release
     gcc_debug_definitions << " HERMES_ENABLE_DEBUGGER=1"
   end
 
