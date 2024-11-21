@@ -23,12 +23,17 @@ export const implicitContextObject = {
   },
 };
 
-export class ImplicitWorkletClass {
-  getSix() {
+interface IWorkletClass {
+  getSix(): number;
+  getSeven(): number;
+}
+
+export class ImplicitWorkletClass implements IWorkletClass {
+  getSix(): number {
     return 6;
   }
 
-  getSeven() {
+  getSeven(): number {
     return this.getSix() + 1;
   }
 }

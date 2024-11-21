@@ -13,6 +13,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
+#include <worklets/NativeModules/NativeWorkletsModule.h>
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/UIScheduler.h>
@@ -32,12 +33,12 @@ namespace reanimated {
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
+      const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
-      const std::string &valueUnpackerCode,
       const bool isBridgeless,
       const bool isReducedMotion);
 
@@ -168,16 +169,21 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     return *layoutAnimationsManager_;
   }
 
-  inline jsi::Runtime &getUIRuntime() const {
+  [[nodiscard]] inline jsi::Runtime &getUIRuntime() const {
     return uiWorkletRuntime_->getJSIRuntime();
   }
 
-  inline bool isBridgeless() const {
+  [[nodiscard]] inline bool isBridgeless() const {
     return isBridgeless_;
   }
 
-  inline bool isReducedMotion() const {
+  [[nodiscard]] inline bool isReducedMotion() const {
     return isReducedMotion_;
+  }
+
+  [[nodiscard]] inline std::shared_ptr<NativeWorkletsModule>
+  getNativeWorkletsModule() const {
+    return nativeWorkletsModule_;
   }
 
  private:
@@ -195,10 +201,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const bool isBridgeless_;
   const bool isReducedMotion_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
+  const std::shared_ptr<NativeWorkletsModule> nativeWorkletsModule_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
+  const std::string valueUnpackerCode_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
-  std::string valueUnpackerCode_;
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;
