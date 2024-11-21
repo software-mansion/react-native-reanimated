@@ -13,7 +13,7 @@ import {
   shareableMappingFlag,
 } from './shareableMappingCache';
 import { logger } from './logger';
-import { ReanimatedModule } from './ReanimatedModule';
+import { WorkletsModule } from './worklets';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -273,7 +273,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
         shareableMappingCache.set(value, inaccessibleObject);
         return inaccessibleObject;
       }
-      const adapted = ReanimatedModule.makeShareableClone(
+      const adapted = WorkletsModule.makeShareableClone(
         toAdapt,
         shouldPersistRemote,
         value
@@ -283,7 +283,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
       return adapted;
     }
   }
-  return ReanimatedModule.makeShareableClone(
+  return WorkletsModule.makeShareableClone(
     value,
     shouldPersistRemote,
     undefined

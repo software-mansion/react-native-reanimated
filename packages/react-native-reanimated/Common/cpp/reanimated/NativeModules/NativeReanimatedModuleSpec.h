@@ -18,13 +18,6 @@ class JSI_EXPORT NativeReanimatedModuleSpec : public TurboModule {
       const std::shared_ptr<CallInvoker> &jsInvoker);
 
  public:
-  // SharedValue
-  virtual jsi::Value makeShareableClone(
-      jsi::Runtime &rt,
-      const jsi::Value &value,
-      const jsi::Value &shouldRetainRemote,
-      const jsi::Value &nativeStateSource) = 0;
-
   // Scheduling
   virtual void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) = 0;
   virtual jsi::Value executeOnUIRuntimeSync(

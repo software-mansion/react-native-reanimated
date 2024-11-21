@@ -7,7 +7,13 @@ import type {
 } from 'react-native';
 import type { WorkletRuntime } from './runtimes';
 
-export interface IWorkletsModule {}
+export interface IWorkletsModule {
+  makeShareableClone<TValue>(
+    value: TValue,
+    shouldPersistRemote: boolean,
+    nativeStateSource?: object
+  ): ShareableRef<TValue>;
+}
 
 export interface IReanimatedModule {
   registerSensor(
@@ -51,12 +57,6 @@ export interface IReanimatedModule {
   ): number;
 
   unsubscribeFromKeyboardEvents(listenerId: number): void;
-
-  makeShareableClone<TValue>(
-    value: TValue,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ): ShareableRef<TValue>;
 
   scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
 
