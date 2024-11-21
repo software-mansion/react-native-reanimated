@@ -91,11 +91,9 @@ To learn more about the plugin head onto to [Reanimated babel plugin](/docs/fund
 
 </details>
 
-### Step 3: Wrap Metro config with Reanimated wrapper (optional)
+### Step 3: Wrap Metro config with Reanimated wrapper (recommended)
 
-If you are using a Bare React Native workflow, wrap your existing Metro configuration in the `metro.config.js` file with the `wrapWithReanimatedMetroConfig` function.
-
-This step can be skipped if you are using Expo as it already includes the necessary configuration.
+Wrap your existing Metro configuration in the `metro.config.js` file with the `wrapWithReanimatedMetroConfig` function.
 
 ```js
 // metro.config.js
@@ -108,9 +106,10 @@ module.exports = wrapWithReanimatedMetroConfig(
 );
 ```
 
-:::note Version Compatibility
+:::note Important
 
-This configuration was added in **Reanimated 3.16.0** and is not available in older versions. Skip this step if you are using an older version of Reanimated.
+- `wrapWithReanimatedMetroConfig` was introduced in **Reanimated 3.16.0**. If you are using an older version of Reanimated, please skip this step.
+- If your project extends the default config from `expo/metro-config`, the necessary adjustments are **already included** and you **don't** need to apply this step.
 
 :::
 
