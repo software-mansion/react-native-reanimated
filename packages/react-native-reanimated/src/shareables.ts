@@ -40,7 +40,7 @@ function isPlainJSObject(object: object): object is Record<string, unknown> {
 function getFromCache(value: object) {
   const cached = shareableMappingCache.get(value);
   if (cached === shareableMappingFlag) {
-    // This means that `value` was already a clone and we can return it as is.
+    // This means that `value` was already a clone and we should return it as is.
     return value;
   }
   return cached;
@@ -151,17 +151,14 @@ function makeShareableCloneRecursiveNative<T>(
   if (isPlainJSObject(value) || isFunction) {
     return clonePlainJSObject(value, shouldPersistRemote, depth);
   }
-  if ((value as object) instanceof RegExp) {
-    return cloneRegExp(value as unknown as RegExp) as ShareableRef<T>;
+  if (value instanceof RegExp) {
+    return cloneRegExp(value);
   }
-  if ((value as object) instanceof Error) {
-    return cloneError(value as unknown as Error) as ShareableRef<T>;
+  if (value instanceof Error) {
+    return cloneError(value);
   }
-  if ((value as object) instanceof ArrayBuffer) {
-    return cloneArrayBuffer(
-      value as unknown as ArrayBuffer,
-      shouldPersistRemote
-    ) as ShareableRef<T>;
+  if (value instanceof ArrayBuffer) {
+    return cloneArrayBuffer(value, shouldPersistRemote);
   }
   if (ArrayBuffer.isView(value)) {
     // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView

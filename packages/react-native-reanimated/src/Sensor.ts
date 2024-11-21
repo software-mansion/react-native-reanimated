@@ -6,6 +6,7 @@ import type {
   Value3D,
   ValueRotation,
   ShareableRef,
+  WorkletFunction,
 } from './commonTypes';
 import { SensorType } from './commonTypes';
 import { makeMutable } from './mutables';
@@ -56,7 +57,7 @@ export default class Sensor {
       sensorType,
       config.interval === 'auto' ? -1 : config.interval,
       config.iosReferenceFrame,
-      eventHandler
+      eventHandler as ShareableRef<WorkletFunction>
     );
     return this.sensorId !== -1;
   }

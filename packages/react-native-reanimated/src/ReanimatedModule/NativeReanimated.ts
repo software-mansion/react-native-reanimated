@@ -6,6 +6,7 @@ import type {
   LayoutAnimationBatchItem,
   IReanimatedModule,
   IWorkletsModule,
+  WorkletFunction,
 } from '../commonTypes';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
@@ -177,7 +178,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   }
 
   subscribeForKeyboardEvents(
-    handler: ShareableRef<number>,
+    handler: ShareableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,
     isNavigationBarTranslucent: boolean
   ) {

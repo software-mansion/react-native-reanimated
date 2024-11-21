@@ -14,13 +14,13 @@ export interface IReanimatedModule {
     sensorType: number,
     interval: number,
     iosReferenceFrame: number,
-    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
+    handler: ShareableRef<WorkletFunction<[Value3D | ValueRotation], void>>
   ): number;
 
   unregisterSensor(sensorId: number): void;
 
-  registerEventHandler<TValue>(
-    eventHandler: ShareableRef<TValue>,
+  registerEventHandler(
+    eventHandler: ShareableRef<WorkletFunction>,
     eventName: string,
     emitterReactTag: number
   ): number;
@@ -45,7 +45,7 @@ export interface IReanimatedModule {
   configureProps(uiProps: string[], nativeProps: string[]): void;
 
   subscribeForKeyboardEvents(
-    handler: ShareableRef<number>,
+    handler: ShareableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,
     isNavigationBarTranslucent: boolean
   ): number;
