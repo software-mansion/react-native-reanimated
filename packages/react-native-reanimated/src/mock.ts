@@ -50,7 +50,16 @@ const hook = {
   ): EventHandlerProcessed<Event, Context> => NOOP,
   // useHandler: ADD ME IF NEEDED
   useWorkletCallback: ID,
-  useSharedValue: <Value>(init: Value) => ({ value: init }),
+  useSharedValue: <Value>(init: Value) => {
+    let value = init;
+
+    return {
+      set: (newValue: Value) => {
+        value = newValue;
+      },
+      get: () => value
+    };
+  },
   // useReducedMotion: ADD ME IF NEEDED
   useAnimatedStyle: IMMEDIATE_CALLBACK_INVOCATION,
   useAnimatedGestureHandler: NOOP_FACTORY,
