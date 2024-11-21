@@ -35,8 +35,10 @@ jobs:
         # TODO: Put Monorepo template into a separate repo/package
         run: echo '{"name":"rnos-monorepo-tester","version":"1.0.0","license":"MIT","private":true,"workspaces":{"packages":["RootApp","packages/PackageApp", "AppA", "AppB"],"nohoist":["**/react","**/react-dom","**/react-native","**/react-native/**","**/react-native-codegen","**/react-native-dev-menu"]}}' > package.json
       - name: Install dependencies
+        working-directory: monorepo
         run: yarn install
       - name: Install React Native CLI
+        working-directory: monorepo
         run: yarn add @react-native-community/cli
       - name: Create RootApp
         working-directory: monorepo
