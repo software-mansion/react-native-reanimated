@@ -9086,15 +9086,15 @@ __metadata:
   linkType: hard
 
 "cross-spawn@npm:^6.0.0, cross-spawn@npm:^6.0.5":
-  version: 6.0.5
-  resolution: "cross-spawn@npm:6.0.5"
+  version: 6.0.6
+  resolution: "cross-spawn@npm:6.0.6"
   dependencies:
     nice-try: "npm:^1.0.4"
     path-key: "npm:^2.0.1"
     semver: "npm:^5.5.0"
     shebang-command: "npm:^1.2.0"
     which: "npm:^1.2.9"
-  checksum: 10/f07e643b4875f26adffcd7f13bc68d9dff20cf395f8ed6f43a23f3ee24fc3a80a870a32b246fd074e514c8fd7da5f978ac6a7668346eec57aa87bac89c1ed3a1
+  checksum: 10/7abf6137b23293103a22bfeaf320f2d63faae70d97ddb4b58597237501d2efdd84cdc69a30246977e0c5f68216593894d41a7f122915dd4edf448db14c74171b
   languageName: node
   linkType: hard
 
