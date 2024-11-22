@@ -51,14 +51,31 @@ const hook = {
   // useHandler: ADD ME IF NEEDED
   useWorkletCallback: ID,
   useSharedValue: <Value>(init: Value) => {
-    let value = init;
-
-    return {
-      set: (newValue: Value) => {
-        value = newValue;
+    let value = { value: init }
+    const handler = {
+      get(target: any, prop: string) {
+        if (prop === 'value') {
+          return target.value;
+        }
+        if (prop === 'get') {
+          return () => target.value;
+        }
+        if (prop === 'set') {
+          return (newValue: Value) => {
+            target.value = newValue;
+          };
+        }
+        return undefined;
       },
-      get: () => value
+      set(target: any, prop: string, newValue: any) {
+        if (prop === 'value') {
+          target.value = newValue;
+          return true;
+        }
+        return false;
+      }
     };
+    return new Proxy(value, handler);
   },
   // useReducedMotion: ADD ME IF NEEDED
   useAnimatedStyle: IMMEDIATE_CALLBACK_INVOCATION,
