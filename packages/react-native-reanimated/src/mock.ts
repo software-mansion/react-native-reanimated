@@ -51,9 +51,9 @@ const hook = {
   // useHandler: ADD ME IF NEEDED
   useWorkletCallback: ID,
   useSharedValue: <Value>(init: Value) => {
-    let value = { value: init };
-    const handler = {
-      get(target: any, prop: string) {
+    const value = { value: init };
+    return new Proxy(value, {
+      get(target, prop) {
         if (prop === 'value') {
           return target.value;
         }
@@ -63,23 +63,23 @@ const hook = {
         if (prop === 'set') {
           return (newValue: Value | ((currentValue: Value) => Value)) => {
             if (typeof newValue === 'function') {
-              target.value = (newValue as (currentValue: Value) => Value)(target.value);
+              target.value = (newValue as (currentValue: Value) => Value)(
+                target.value
+              );
             } else {
               target.value = newValue;
             }
           };
         }
-        return undefined;
       },
-      set(target: any, prop: string, newValue: any) {
+      set(target, prop: string, newValue) {
         if (prop === 'value') {
           target.value = newValue;
           return true;
         }
         return false;
-      }
-    };
-    return new Proxy(value, handler);
+      },
+    });
   },
   // useReducedMotion: ADD ME IF NEEDED
   useAnimatedStyle: IMMEDIATE_CALLBACK_INVOCATION,
