@@ -14,7 +14,7 @@ import {
   shareableMappingFlag,
 } from './shareableMappingCache';
 import { logger } from './logger';
-import { ReanimatedModule } from './ReanimatedModule';
+import { WorkletsModule } from './worklets';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -198,7 +198,7 @@ function clonePrimitive<T>(
   value: T,
   shouldPersistRemote: boolean
 ): ShareableRef<T> {
-  return ReanimatedModule.makeShareableClone(value, shouldPersistRemote);
+  return WorkletsModule.makeShareableClone(value, shouldPersistRemote);
 }
 
 function cloneArray<T extends unknown[]>(
@@ -209,7 +209,7 @@ function cloneArray<T extends unknown[]>(
   const clonedElements = value.map((element) =>
     makeShareableCloneRecursive(element, shouldPersistRemote, depth + 1)
   );
-  const clone = ReanimatedModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableClone(
     clonedElements,
     shouldPersistRemote
   ) as ShareableRef<T>;
@@ -224,7 +224,7 @@ function cloneRemoteFunction<T extends object>(
   value: T,
   shouldPersistRemote: boolean
 ): ShareableRef<T> {
-  const clone = ReanimatedModule.makeShareableClone(value, shouldPersistRemote);
+  const clone = WorkletsModule.makeShareableClone(value, shouldPersistRemote);
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
@@ -239,7 +239,7 @@ function cloneHostObject<T extends object>(
   // for host objects we pass the reference to the object as shareable and
   // then recreate new host object wrapping the same instance on the UI thread.
   // there is no point of iterating over keys as we do for regular objects.
-  const clone = ReanimatedModule.makeShareableClone(value, shouldPersistRemote);
+  const clone = WorkletsModule.makeShareableClone(value, shouldPersistRemote);
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
@@ -292,7 +292,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
       depth + 1
     );
   }
-  const clone = ReanimatedModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableClone(
     clonedProps,
     shouldPersistRemote
   ) as ShareableRef<T>;
@@ -332,7 +332,7 @@ function clonePlainJSObject<T extends object>(
       depth + 1
     );
   }
-  const clone = ReanimatedModule.makeShareableClone(
+  const clone = WorkletsModule.makeShareableClone(
     clonedProps,
     shouldPersistRemote
   ) as ShareableRef<T>;
@@ -378,7 +378,7 @@ function cloneArrayBuffer<T extends ArrayBuffer>(
   value: T,
   shouldPersistRemote: boolean
 ): ShareableRef<T> {
-  const clone = ReanimatedModule.makeShareableClone(value, shouldPersistRemote);
+  const clone = WorkletsModule.makeShareableClone(value, shouldPersistRemote);
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 

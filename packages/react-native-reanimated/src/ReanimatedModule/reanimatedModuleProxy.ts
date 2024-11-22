@@ -12,12 +12,6 @@ import type { WorkletRuntime } from '../runtimes';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
-  makeShareableClone<T>(
-    value: T,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ): ShareableRef<T>;
-
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
 
   executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R;

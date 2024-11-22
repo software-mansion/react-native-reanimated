@@ -65,18 +65,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
   }
 
-  makeShareableClone<T>(
-    value: T,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ) {
-    return this.#reanimatedModuleProxy.makeShareableClone(
-      value,
-      shouldPersistRemote,
-      nativeStateSource
-    );
-  }
-
   scheduleOnUI<T>(shareable: ShareableRef<T>) {
     return this.#reanimatedModuleProxy.scheduleOnUI(shareable);
   }

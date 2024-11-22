@@ -43,12 +43,6 @@ class JSReanimated implements IReanimatedModule {
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
 
-  makeShareableClone<T>(): ShareableRef<T> {
-    throw new ReanimatedError(
-      'makeShareableClone should never be called in JSReanimated.'
-    );
-  }
-
   scheduleOnUI<T>(worklet: ShareableRef<T>) {
     // @ts-ignore web implementation has still not been updated after the rewrite, this will be addressed once the web implementation updates are ready
     requestAnimationFrameImpl(worklet);
