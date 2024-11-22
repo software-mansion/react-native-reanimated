@@ -51,7 +51,7 @@ const hook = {
   // useHandler: ADD ME IF NEEDED
   useWorkletCallback: ID,
   useSharedValue: <Value>(init: Value) => {
-    let value = { value: init }
+    let value = { value: init };
     const handler = {
       get(target: any, prop: string) {
         if (prop === 'value') {
@@ -61,8 +61,12 @@ const hook = {
           return () => target.value;
         }
         if (prop === 'set') {
-          return (newValue: Value) => {
-            target.value = newValue;
+          return (newValue: Value | ((currentValue: Value) => Value)) => {
+            if (typeof newValue === 'function') {
+              target.value = (newValue as (currentValue: Value) => Value)(target.value);
+            } else {
+              target.value = newValue;
+            }
           };
         }
         return undefined;
