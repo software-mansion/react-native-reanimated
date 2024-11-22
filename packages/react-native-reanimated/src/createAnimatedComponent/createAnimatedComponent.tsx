@@ -251,7 +251,7 @@ export function createAnimatedComponent(
     }
 
     _detachStyles() {
-      const { viewTag } = this._getViewInfo() as { viewTag: number };
+      const viewTag = this.getComponentViewTag();
       if (viewTag !== -1 && this._styles !== null) {
         for (const style of this._styles) {
           style.viewDescriptors.remove(viewTag);
@@ -496,14 +496,14 @@ export function createAnimatedComponent(
           Component<Record<string, unknown>, Record<string, unknown>, unknown>
         >,
       setLocalRef: (ref) => {
+        if (!ref) {
+          // component is unmounted
+          return;
+        }
         if (ref !== this._componentRef) {
           this._componentRef = this._resolveComponentRef(ref);
           // if ref is changed, reset viewInfo
           this._viewInfo = undefined;
-        }
-        if (!ref) {
-          // component is unmounted
-          return;
         }
         const tag = this.getComponentViewTag();
 
