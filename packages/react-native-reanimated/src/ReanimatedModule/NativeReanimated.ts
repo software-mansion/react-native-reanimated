@@ -10,7 +10,6 @@ import type {
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import type { WorkletRuntime } from '../runtimes';
-import { getValueUnpackerCode } from '../valueUnpacker';
 import { isFabric } from '../PlatformChecker';
 import type React from 'react';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
@@ -51,7 +50,7 @@ class NativeReanimatedModule implements IReanimatedModule {
     }
     global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined) {
-      ReanimatedTurboModule?.installTurboModule(getValueUnpackerCode());
+      ReanimatedTurboModule?.installTurboModule();
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(
