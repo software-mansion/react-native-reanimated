@@ -13,6 +13,12 @@ class NativeWorkletsModule : public NativeWorkletsModuleSpec {
 
   ~NativeWorkletsModule();
 
+  jsi::Value makeShareableClone(
+      jsi::Runtime &rt,
+      const jsi::Value &value,
+      const jsi::Value &shouldRetainRemote,
+      const jsi::Value &nativeStateSource) override;
+
   [[nodiscard]] inline std::string getValueUnpackerCode() const {
     return valueUnpackerCode_;
   }
