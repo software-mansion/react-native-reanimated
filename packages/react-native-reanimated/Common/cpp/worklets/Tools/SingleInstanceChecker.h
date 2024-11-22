@@ -5,14 +5,15 @@
 #include <cxxabi.h>
 
 #include <atomic>
+#include <cassert>
 #include <iostream>
 #include <string>
 
 #ifdef ANDROID
 #include <android/log.h>
-#endif
+#endif // ANDROID
 
-namespace reanimated {
+namespace worklets {
 
 // This is a class that counts how many instances of a different class there
 // are. It is meant only to be used with classes that should only have one
@@ -66,6 +67,6 @@ SingleInstanceChecker<T>::~SingleInstanceChecker() {
   instanceCount_--;
 }
 
-} // namespace reanimated
+} // namespace worklets
 
 #endif // NDEBUG

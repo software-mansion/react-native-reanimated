@@ -10,16 +10,15 @@ import {
   processCalleesAutoworkletizableCallbacks,
   processIfAutoworkletizableCallback,
 } from './autoworkletization';
+import { processIfWorkletClass } from './class';
 import { processIfWorkletContextObject } from './contextObject';
 import { processIfWorkletFile } from './file';
-import { initializeGlobals } from './globals';
+import { initializeState } from './globals';
 import { processInlineStylesWarning } from './inlineStylesWarning';
 import type { ReanimatedPluginPass } from './types';
 import { WorkletizableFunction } from './types';
-import { addCustomGlobals } from './utils';
 import { substituteWebCallExpression } from './webOptimization';
 import { processIfWithWorkletDirective } from './workletSubstitution';
-import { processIfWorkletClass } from './class';
 
 module.exports = function (): PluginItem {
   function runWithTaggedExceptions(fun: () => void) {
@@ -31,12 +30,11 @@ module.exports = function (): PluginItem {
   }
 
   return {
-    pre(state: ReanimatedPluginPass) {
+    name: 'reanimated',
+
+    pre(this: ReanimatedPluginPass) {
       runWithTaggedExceptions(() => {
-        // Initialize worklet number.
-        state.workletNumber = 1;
-        initializeGlobals();
-        addCustomGlobals.call(this);
+        initializeState(this);
       });
     },
     visitor: {
@@ -78,8 +76,6 @@ module.exports = function (): PluginItem {
       Program: {
         enter(path: NodePath<Program>, state: ReanimatedPluginPass) {
           runWithTaggedExceptions(() => {
-            // Reset worklet number.
-            state.workletNumber = 1;
             processIfWorkletFile(path, state);
           });
         },

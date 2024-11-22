@@ -58,10 +58,14 @@ function addCompilerSafeGetAndSet<Value>(mutable: PartialMutable<Value>): void {
     },
     set: {
       value(newValue: Value | ((value: Value) => Value)) {
-        if (typeof newValue === 'function') {
+        if (
+          typeof newValue === 'function' &&
+          // If we have an animation definition, we don't want to call it here.
+          !(newValue as Record<string, unknown>).__isAnimationDefinition
+        ) {
           mutable.value = (newValue as (value: Value) => Value)(mutable.value);
         } else {
-          mutable.value = newValue;
+          mutable.value = newValue as Value;
         }
       },
       configurable: false,

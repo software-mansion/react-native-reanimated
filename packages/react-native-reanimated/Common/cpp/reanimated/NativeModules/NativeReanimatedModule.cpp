@@ -3,6 +3,7 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/CollectionUtils.h>
 #include <reanimated/Tools/FeaturesConfig.h>
+#include <unordered_map>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
@@ -30,6 +31,8 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <iomanip>
+#include <sstream>
+#include <string>
 #endif // RCT_NEW_ARCH_ENABLED
 
 // Standard `__cplusplus` macro reference:
@@ -49,12 +52,12 @@ using namespace facebook;
 namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(
+    const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
-    const std::string &valueUnpackerCode,
     const bool isBridgeless,
     const bool isReducedMotion)
     : NativeReanimatedModuleSpec(
@@ -62,16 +65,17 @@ NativeReanimatedModule::NativeReanimatedModule(
       isBridgeless_(isBridgeless),
       isReducedMotion_(isReducedMotion),
       jsQueue_(jsQueue),
+      nativeWorkletsModule_(nativeWorkletsModule),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
+      valueUnpackerCode_(nativeWorkletsModule->getValueUnpackerCode()),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
           jsQueue,
           jsScheduler_,
           "Reanimated UI runtime",
           true /* supportsLocking */,
-          valueUnpackerCode)),
-      valueUnpackerCode_(valueUnpackerCode),
+          valueUnpackerCode_)),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       onRenderCallback_([this](const double timestampMs) {
@@ -634,9 +638,6 @@ void NativeReanimatedModule::updateProps(
     const jsi::Value &updates = item.getProperty(rt, "updates");
     operationsInBatch_.emplace_back(
         shadowNode, std::make_unique<jsi::Value>(rt, updates));
-
-    // TODO: support multiple surfaces
-    surfaceId_ = shadowNode->getSurfaceId();
   }
 }
 
@@ -694,6 +695,7 @@ void NativeReanimatedModule::performOperations() {
   }
 
   bool hasLayoutUpdates = false;
+
   for (const auto &[shadowNode, props] : copiedOperationsQueue) {
     if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
       hasLayoutUpdates = true;
@@ -723,41 +725,45 @@ void NativeReanimatedModule::performOperations() {
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
-  shadowTreeRegistry.visit(surfaceId_, [&](ShadowTree const &shadowTree) {
-    shadowTree.commit(
-        [&](RootShadowNode const &oldRootShadowNode)
-            -> RootShadowNode::Unshared {
-          PropsMap propsMap;
-          for (auto &[shadowNode, props] : copiedOperationsQueue) {
-            auto family = &shadowNode->getFamily();
-            react_native_assert(family->getSurfaceId() == surfaceId_);
-            propsMap[family].emplace_back(rt, std::move(*props));
+  std::unordered_map<SurfaceId, PropsMap> propsMapBySurface;
 
+  for (auto const &[shadowNode, props] : copiedOperationsQueue) {
+    SurfaceId surfaceId = shadowNode->getSurfaceId();
+    auto family = &shadowNode->getFamily();
+    react_native_assert(family->getSurfaceId() == surfaceId);
+    propsMapBySurface[surfaceId][family].emplace_back(rt, std::move(*props));
+  }
+
+  for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
+    shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
+      shadowTree.commit(
+          [&](RootShadowNode const &oldRootShadowNode)
+              -> RootShadowNode::Unshared {
             if (propsRegistry_->shouldReanimatedSkipCommit()) {
               return nullptr;
             }
-          }
 
-          auto rootNode =
-              cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+            auto rootNode =
+                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
 
-          // Mark the commit as Reanimated commit so that we can distinguish it
-          // in ReanimatedCommitHook.
+            // Mark the commit as Reanimated commit so that we can distinguish
+            // it in ReanimatedCommitHook.
 
-          auto reaShadowNode =
-              std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
-                  rootNode);
-          reaShadowNode->setReanimatedCommitTrait();
+            auto reaShadowNode =
+                std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
+                    rootNode);
+            reaShadowNode->setReanimatedCommitTrait();
 
-          return rootNode;
-        },
-        {/* .enableStateReconciliation = */
-         false,
-         /* .mountSynchronously = */ true,
-         /* .shouldYield = */ [this]() {
-           return propsRegistry_->shouldReanimatedSkipCommit();
-         }});
-  });
+            return rootNode;
+          },
+          {/* .enableStateReconciliation = */
+           false,
+           /* .mountSynchronously = */ true,
+           /* .shouldYield = */ [this]() {
+             return propsRegistry_->shouldReanimatedSkipCommit();
+           }});
+    });
+  }
 }
 
 void NativeReanimatedModule::removeFromPropsRegistry(

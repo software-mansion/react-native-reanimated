@@ -33,10 +33,6 @@ function isFabric(): boolean {
   return !!(global as Record<string, unknown>)._IS_FABRIC;
 }
 
-function noop() {
-  // do nothing
-}
-
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;
 };
@@ -61,27 +57,24 @@ function findExamples(search: string) {
 }
 
 function HomeScreen({ navigation }: HomeScreenProps) {
-  // TODO: Currently it breaks on @react-navigation
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [search, setSearch] = React.useState('');
   const [wasClicked, setWasClicked] = React.useState<string[]>([]);
 
   React.useLayoutEffect(() => {
-    // TODO: Currently it breaks on @react-navigation
-    // navigation.setOptions({
-    //   headerSearchBarOptions: {
-    //     onChangeText: (event) => {
-    //       setSearch(event.nativeEvent.text);
-    //     },
-    //     onSearchButtonPress: (event) => {
-    //       const results = findExamples(event.nativeEvent.text);
-    //       if (results.length >= 1) {
-    //         navigation.navigate(results[0]);
-    //       }
-    //     },
-    //   },
-    //   headerTransparent: false,
-    // });
+    navigation.setOptions({
+      headerSearchBarOptions: {
+        onChangeText: (event) => {
+          setSearch(event.nativeEvent.text);
+        },
+        onSearchButtonPress: (event) => {
+          const results = findExamples(event.nativeEvent.text);
+          if (results.length >= 1) {
+            navigation.navigate(results[0]);
+          }
+        },
+      },
+      headerTransparent: false,
+    });
   }, [navigation]);
 
   return (
@@ -174,46 +167,9 @@ function BackButton(props: HeaderBackButtonProps) {
   );
 }
 
-// copied from https://reactnavigation.org/docs/state-persistence/
-const PERSISTENCE_KEY = 'NAVIGATION_STATE_V1';
-
 export default function App() {
-  const [isReady, setIsReady] = React.useState(!__DEV__);
-  const [initialState, setInitialState] = React.useState();
-
-  React.useEffect(() => {
-    const restoreState = async () => {
-      try {
-        const initialUrl = await Linking.getInitialURL();
-
-        if (
-          Platform.OS !== 'web' &&
-          Platform.OS !== 'macos' &&
-          initialUrl == null
-        ) {
-          // Only restore state if there's no deep link and we're not on web
-          const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
-          const state = savedStateString
-            ? JSON.parse(savedStateString)
-            : undefined;
-
-          if (state !== undefined) {
-            setInitialState(state);
-          }
-        }
-      } finally {
-        setIsReady(true);
-      }
-    };
-
-    if (!isReady) {
-      restoreState().catch(noop);
-    }
-  }, [isReady]);
-
-  const persistNavigationState = useCallback((state?: NavigationState) => {
-    AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state)).catch(noop);
-  }, []);
+  const { isReady, navigationState, updateNavigationState } =
+    useNavigationState();
 
   const shouldReduceMotion = useReducedMotion();
 
@@ -229,8 +185,8 @@ export default function App() {
     <GestureHandlerRootView style={styles.container}>
       <NavigationContainer
         linking={linking}
-        initialState={initialState}
-        onStateChange={persistNavigationState}>
+        initialState={navigationState}
+        onStateChange={updateNavigationState}>
         <Stack.Navigator>
           <Stack.Screen
             name="Home"
@@ -258,6 +214,60 @@ export default function App() {
       </NavigationContainer>
     </GestureHandlerRootView>
   );
+}
+
+// copied from https://reactnavigation.org/docs/state-persistence/
+const PERSISTENCE_KEY = 'NAVIGATION_STATE_V1';
+
+function noop() {
+  // do nothing
+}
+
+function useNavigationState() {
+  const [isReady, setIsReady] = React.useState(!__DEV__);
+
+  const [navigationState, setNavigationState] = React.useState<
+    undefined | NavigationState
+  >();
+
+  const updateNavigationState = useCallback((state?: NavigationState) => {
+    AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state)).catch(noop);
+  }, []);
+
+  React.useEffect(() => {
+    const restoreState = async () => {
+      try {
+        const initialUrl = await Linking.getInitialURL();
+
+        if (
+          Platform.OS !== 'web' &&
+          Platform.OS !== 'macos' &&
+          initialUrl == null
+        ) {
+          // Only restore state if there's no deep link and we're not on web
+          const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
+          // Erase the state immediately after fetching it.
+          // This prevents the app to boot on the screen that previously crashed.
+          updateNavigationState();
+          const state = savedStateString
+            ? JSON.parse(savedStateString)
+            : undefined;
+
+          if (state !== undefined) {
+            setNavigationState(state);
+          }
+        }
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    if (!isReady) {
+      restoreState().catch(noop);
+    }
+  }, [isReady, updateNavigationState]);
+
+  return { isReady, navigationState, updateNavigationState };
 }
 
 const styles = StyleSheet.create({
