@@ -11,7 +11,7 @@ import { Platform } from 'react-native';
 import '../layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from '../ConfigHelper';
-import { RNRenderer } from '../platform-specific/RNRenderer';
+import { findHostInstance } from '../platform-specific/RNRenderer';
 import { enableLayoutAnimations } from '../core';
 import { SharedTransition } from '../layoutReanimation';
 import { LayoutAnimationType } from '../commonTypes';
@@ -285,15 +285,7 @@ export function createAnimatedComponent(
       let viewName: string | null;
       let shadowNodeWrapper: ShadowNodeWrapper | null = null;
       let viewConfig;
-      // Component can specify ref which should be animated when animated version of the component is created.
-      // Otherwise, we animate the component itself.
-      const componentRef = this._componentRef as AnimatedComponentRef;
-      const component = componentRef?.getAnimatableRef
-        ? componentRef.getAnimatableRef()
-        : isFabric()
-          ? this
-          : componentRef;
-
+      
       if (SHOULD_BE_USE_WEB) {
         // At this point I assume that `_setComponentRef` was already called and `_component` is set.
         // `this._component` on web represents HTMLElement of our component, that's why we use casting
@@ -302,9 +294,13 @@ export function createAnimatedComponent(
         shadowNodeWrapper = null;
         viewConfig = null;
       } else {
-        // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
-        const hostInstance = RNRenderer.findHostInstance_DEPRECATED(component);
+        const hostInstance = findHostInstance(this);
         if (!hostInstance) {
+          /* 
+            findHostInstance can return null for a component that doesn't render anything 
+            (render function returns null). Example: 
+            svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
+          */
           throw new ReanimatedError(
             'Cannot find host instance for this component. Maybe it renders nothing?'
           );
@@ -484,6 +480,16 @@ export function createAnimatedComponent(
       this._sharedElementTransition = sharedElementTransition;
     }
 
+    _resolveComponentRef = (ref: Component | HTMLElement | null) => {
+      const componentRef = ref as AnimatedComponentRef;
+      // Component can specify ref which should be animated when animated version of the component is created.
+      // Otherwise, we animate the component itself.
+      if (componentRef && componentRef.getAnimatableRef) {
+        return componentRef.getAnimatableRef();
+      }
+      return componentRef;
+    }
+
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
       getForwardedRef: () =>
         this.props.forwardedRef as MutableRefObject<
@@ -491,7 +497,7 @@ export function createAnimatedComponent(
         >,
       setLocalRef: (ref) => {
         if (ref !== this._componentRef) {
-          this._componentRef = ref;
+          this._componentRef = this._resolveComponentRef(ref);
           // if ref is changed, reset viewInfo
           this._viewInfo = undefined;
         }
