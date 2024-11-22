@@ -91,10 +91,6 @@ export class NativeEventsManager implements INativeEventsManager {
       const scrollableNode = componentAnimatedRef.getScrollableNode();
       return findNodeHandle(scrollableNode) ?? -1;
     }
-    if (componentAnimatedRef.__nativeTag) {
-      // Fast path for native refs
-      return componentAnimatedRef?.__nativeTag;
-    }
     if (this.#componentOptions?.setNativeProps) {
       // This case ensures backward compatibility with components that
       // have their own setNativeProps method passed as an option.
@@ -103,6 +99,10 @@ export class NativeEventsManager implements INativeEventsManager {
     if (!isComponentUpdated) {
       // On the first render of a component, we may already receive a resolved view tag.
       return this.#managedComponent.getComponentViewTag();
+    }
+    if (componentAnimatedRef.__nativeTag) {
+      // Fast path for native refs
+      return componentAnimatedRef?.__nativeTag;
     }
     /*
       When a component is updated, a child could potentially change and have a different 
