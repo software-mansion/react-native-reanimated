@@ -24,7 +24,7 @@ function resolveFindHostInstance_DEPRECATED() {
       findHostInstance_DEPRECATED = (_ref: unknown) => null;
     }
   } else {
-    findHostInstance_DEPRECATED = 
+    findHostInstance_DEPRECATED =
       require('react-native/Libraries/Renderer/shims/ReactNative').findHostInstance_DEPRECATED;
   }
 }
@@ -38,5 +38,7 @@ export function findHostInstance(component: React.Component): unknown {
   }
 
   resolveFindHostInstance_DEPRECATED();
-  return findHostInstance_DEPRECATED(isFabric() ? component : component._componentRef);
+  return findHostInstance_DEPRECATED(
+    isFabric() ? component : component._componentRef
+  );
 }

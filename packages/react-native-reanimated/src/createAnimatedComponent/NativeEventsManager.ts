@@ -79,7 +79,8 @@ export class NativeEventsManager implements INativeEventsManager {
 
   private getEventViewTag(isComponentUpdated: boolean = false) {
     // Get the tag for registering events - since the event emitting view can be nested inside the main component
-    const componentAnimatedRef = this.#managedComponent._componentRef as AnimatedComponentRef & {__nativeTag?: number};
+    const componentAnimatedRef = this.#managedComponent
+      ._componentRef as AnimatedComponentRef & { __nativeTag?: number };
     if (componentAnimatedRef.getScrollableNode) {
       /*
         In most cases, getScrollableNode() returns a view tag, and findNodeHandle is not required. 
@@ -95,7 +96,7 @@ export class NativeEventsManager implements INativeEventsManager {
       return componentAnimatedRef?.__nativeTag;
     }
     if (this.#componentOptions?.setNativeProps) {
-      // This case ensures backward compatibility with components that 
+      // This case ensures backward compatibility with components that
       // have their own setNativeProps method passed as an option.
       return findNodeHandle(this.#managedComponent) ?? -1;
     }

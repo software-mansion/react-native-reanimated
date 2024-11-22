@@ -285,7 +285,7 @@ export function createAnimatedComponent(
       let viewName: string | null;
       let shadowNodeWrapper: ShadowNodeWrapper | null = null;
       let viewConfig;
-      
+
       if (SHOULD_BE_USE_WEB) {
         // At this point I assume that `_setComponentRef` was already called and `_component` is set.
         // `this._component` on web represents HTMLElement of our component, that's why we use casting
@@ -488,7 +488,7 @@ export function createAnimatedComponent(
         return componentRef.getAnimatableRef();
       }
       return componentRef;
-    }
+    };
 
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
       getForwardedRef: () =>
