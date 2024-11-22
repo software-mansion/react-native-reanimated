@@ -34,7 +34,7 @@ import type {
   AnimatedStyle,
 } from '../commonTypes';
 import { isWorkletFunction } from '../commonTypes';
-import processBoxShadow from '../processBoxShadow';
+import { processBoxShadow } from '../processBoxShadow';
 import { ReanimatedError } from '../errors';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
