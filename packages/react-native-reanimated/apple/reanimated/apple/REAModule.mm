@@ -14,13 +14,13 @@
 #endif // RCT_NEW_ARCH_ENABLED
 
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
-#import <reanimated/Tools/SingleInstanceChecker.h>
 #import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REAUIKit.h>
 #import <reanimated/apple/native/NativeProxy.h>
 
 #import <worklets/Tools/ReanimatedJSIUtils.h>
+#import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/WorkletRuntime/WorkletRuntime.h>
 #import <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
 #import <worklets/apple/WorkletsModule.h>
