@@ -34,6 +34,7 @@ import type {
   AnimatedStyle,
 } from '../commonTypes';
 import { isWorkletFunction } from '../commonTypes';
+import processBoxShadow from '../processBoxShadow';
 import { ReanimatedError } from '../errors';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -191,6 +192,9 @@ function styleUpdater(
   let hasAnimations = false;
   let frameTimestamp: number | undefined;
   let hasNonAnimatedValues = false;
+  if (typeof newValues.boxShadow === 'string') {
+    processBoxShadow(newValues);
+  }
   for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
