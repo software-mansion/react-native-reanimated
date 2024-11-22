@@ -11,7 +11,7 @@ namespace facebook {
 namespace react {
 
 // Essentially the same as RCTMessageThread, but with public fields.
-struct REAMessageThreadPublic {
+struct WorkletsMessageThreadPublic {
   // I don't know why we need three vtables (if you know then feel free to#import
   // <reanimated/apple/native/REAMessageThread.h> explain it instead of this message), but this is what makes the casts
   // in quitSynchronous() work correctly.
@@ -27,10 +27,10 @@ struct REAMessageThreadPublic {
 // is an assertion for that in the destructor of RCTMessageThread, but we have
 // to override quitSynchronous() as it would quit the main looper and freeze
 // the app.
-void REAMessageThread::quitSynchronous()
+void WorkletsMessageThread::quitSynchronous()
 {
   RCTMessageThread *rctThread = static_cast<RCTMessageThread *>(this);
-  REAMessageThreadPublic *rctThreadPublic = reinterpret_cast<REAMessageThreadPublic *>(rctThread);
+  WorkletsMessageThreadPublic *rctThreadPublic = reinterpret_cast<WorkletsMessageThreadPublic *>(rctThread);
   rctThreadPublic->m_shutdown = true;
 }
 

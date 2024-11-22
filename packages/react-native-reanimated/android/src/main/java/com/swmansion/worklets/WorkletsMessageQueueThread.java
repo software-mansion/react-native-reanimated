@@ -1,9 +1,9 @@
-package com.swmansion.reanimated;
+package com.swmansion.worklets;
 
 import com.facebook.proguard.annotations.DoNotStrip;
 
 @DoNotStrip
-public class ReanimatedMessageQueueThread extends ReanimatedMessageQueueThreadBase {
+public class WorkletsMessageQueueThread extends WorkletsMessageQueueThreadBase {
   @Override
   public boolean runOnQueue(Runnable runnable) {
     return messageQueueThread.runOnQueue(runnable);

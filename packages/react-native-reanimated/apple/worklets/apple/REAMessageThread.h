@@ -10,7 +10,7 @@
 namespace facebook {
 namespace react {
 
-class REAMessageThread : public RCTMessageThread {
+class WorkletsMessageThread : public RCTMessageThread {
  public:
   using RCTMessageThread::RCTMessageThread;
   virtual void quitSynchronous() override;
