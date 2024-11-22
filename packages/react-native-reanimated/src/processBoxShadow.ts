@@ -1,4 +1,6 @@
-// based on react-native/Libraries/StyleSheet/processBoxShadow
+`use strict`;
+// based on:
+// https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/StyleSheet/processBoxShadow.js
 
 import type { BoxShadowValue, OpaqueColorValue } from 'react-native';
 import type { StyleProps } from '.';
@@ -111,7 +113,7 @@ export type ParsedBoxShadow = {
   color?: string;
 };
 
-export default function processBoxShadow(props: StyleProps) {
+export function processBoxShadow(props: StyleProps) {
   'worklet';
   const result: Array<ParsedBoxShadow> = [];
 
