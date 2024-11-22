@@ -77,7 +77,7 @@ export class NativeEventsManager implements INativeEventsManager {
     });
   }
 
-  private getEventViewTag(isComponentUpdated: boolean = false) {
+  private getEventViewTag(componentUpdate: boolean = false) {
     // Get the tag for registering events - since the event emitting view can be nested inside the main component
     const componentAnimatedRef = this.#managedComponent
       ._componentRef as AnimatedComponentRef & { __nativeTag?: number };
@@ -89,6 +89,9 @@ export class NativeEventsManager implements INativeEventsManager {
         as documented here: https://github.com/facebook/react/blob/91061073d57783c061889ac6720ef1ab7f0c2149/packages/react-native-renderer/src/ReactNativePublicCompat.js#L113
       */
       const scrollableNode = componentAnimatedRef.getScrollableNode();
+      if (typeof scrollableNode === 'number') {
+        return scrollableNode;
+      }
       return findNodeHandle(scrollableNode) ?? -1;
     }
     if (this.#componentOptions?.setNativeProps) {
@@ -96,13 +99,13 @@ export class NativeEventsManager implements INativeEventsManager {
       // have their own setNativeProps method passed as an option.
       return findNodeHandle(this.#managedComponent) ?? -1;
     }
-    if (!isComponentUpdated) {
+    if (!componentUpdate) {
       // On the first render of a component, we may already receive a resolved view tag.
       return this.#managedComponent.getComponentViewTag();
     }
     if (componentAnimatedRef.__nativeTag) {
       // Fast path for native refs
-      return componentAnimatedRef?.__nativeTag;
+      return componentAnimatedRef.__nativeTag;
     }
     /*
       When a component is updated, a child could potentially change and have a different 

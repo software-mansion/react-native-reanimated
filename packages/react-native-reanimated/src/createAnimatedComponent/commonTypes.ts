@@ -112,6 +112,10 @@ export interface IAnimatedComponentInternal {
   _NativeEventsManager?: INativeEventsManager;
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
+  /**
+   * Used for Shared Element Transitions, Layout Animations and Animated Styles.
+   * It is not related to event handling.
+   */
   getComponentViewTag: () => number;
 }
 
