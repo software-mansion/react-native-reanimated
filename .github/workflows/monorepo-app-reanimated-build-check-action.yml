@@ -39,7 +39,7 @@ jobs:
         run: yarn install
       - name: Install React Native CLI
         working-directory: monorepo
-        run: yarn add @react-native-community/cli
+        run: yarn add -W @react-native-community/cli
       - name: Create RootApp
         working-directory: monorepo
         run: yarn rnc-cli init RootApp --skip-install --pm yarn --install-pods false --skip-git-init
