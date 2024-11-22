@@ -6,7 +6,13 @@
 import { isFabric } from '../PlatformChecker';
 
 function findHostInstanceFastPath(ref: React.Component) {
+  console.log('findHostInstanceFastPath', ref);
   if (ref.__internalInstanceHandle && ref.__nativeTag && ref._viewConfig) {
+    // This is a native ref to a Fabric component
+    return ref;
+  }
+  if (ref._nativeTag && ref.viewConfig) {
+    // This is a native ref to a Paper component
     return ref;
   }
   return undefined;
