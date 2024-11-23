@@ -9,13 +9,13 @@ interface TestResult {
   animatedHandlerCalled: boolean;
 }
 
-const TestComponent = ({ result, notifyId }: { result: TestResult; notifyId: number }) => {
+const TestComponent = ({ result }: { result: TestResult }) => {
   const height = useSharedValue(styles.smallBox.height);
 
   const onLayout = (event: LayoutChangeEvent) => {
     result.height = event.nativeEvent.layout.height;
     if (result.height === 200) {
-      notify(`onLayout${notifyId}`);
+      notify('onLayout');
     }
   };
 
@@ -31,7 +31,7 @@ const TestComponent = ({ result, notifyId }: { result: TestResult; notifyId: num
 
   const setAnimatedHandlerCalled = () => {
     result.animatedHandlerCalled = true;
-    notify(`animatedOnLayout${notifyId}`);
+    notify('animatedOnLayout');
   };
 
   const animatedOnLayout = useEvent(() => {
@@ -49,15 +49,15 @@ const TestComponent = ({ result, notifyId }: { result: TestResult; notifyId: num
 describe('onLayout', () => {
   test('is not intercepted when there are no registered event handlers', async () => {
     const result = {} as TestResult;
-    await render(<TestComponent result={result} notifyId={1} />);
-    await Promise.race([waitForNotify('onLayout1'), wait(1000)]);
+    await render(<TestComponent result={result} />);
+    await Promise.race([waitForNotify('onLayout'), wait(1000)]);
     expect(result.height).toBe(200);
   });
 
   test('is dispatched to the registered event handler', async () => {
     const result = {} as TestResult;
-    await render(<TestComponent result={result} notifyId={2} />);
-    await Promise.race([waitForNotify('animatedOnLayout2'), wait(1000)]);
+    await render(<TestComponent result={result} />);
+    await Promise.race([waitForNotify('animatedOnLayout'), wait(1000)]);
     expect(result.animatedHandlerCalled).toBe(true);
   });
 });
