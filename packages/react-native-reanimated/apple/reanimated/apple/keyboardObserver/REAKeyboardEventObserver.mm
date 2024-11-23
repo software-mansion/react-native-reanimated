@@ -169,13 +169,6 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   return keyboardHeight;
 }
 
-- (float)getStaticKeyboardHeight
-{
-  CGRect measuringFrame = _measuringView.frame;
-  CGFloat keyboardHeight = measuringFrame.size.height;
-  return keyboardHeight;
-}
-
 - (void)updateKeyboardFrame
 {
   CGFloat keyboardHeight = 0;
@@ -188,7 +181,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
       _state = _state == OPENING ? OPEN : CLOSED;
     }
     if (_state == OPEN || _state == CLOSED) {
-      keyboardHeight = [self getStaticKeyboardHeight];
+      keyboardHeight = _targetKeyboardHeight;
     }
     // stop display link updates if no animation is running
     [[self getDisplayLink] setPaused:YES];
