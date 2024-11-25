@@ -2,7 +2,10 @@
 /* eslint-disable */
 
 import type { ShadowNodeWrapper } from './commonTypes';
-import { findHostInstance } from './platform-specific/RNRenderer';
+import {
+  findHostInstance,
+  HostInstance,
+} from './platform-specific/findHostInstance';
 
 let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
   stateNode: { node: unknown };
@@ -10,7 +13,7 @@ let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
 
 export function getShadowNodeWrapperFromRef(
   ref: React.Component,
-  hostInstance?: unknown
+  hostInstance?: HostInstance
 ): ShadowNodeWrapper {
   if (getInternalInstanceHandleFromPublicInstance === undefined) {
     try {

@@ -11,7 +11,7 @@ import { Platform } from 'react-native';
 import '../layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from '../ConfigHelper';
-import { findHostInstance } from '../platform-specific/RNRenderer';
+import { findHostInstance } from '../platform-specific/findHostInstance';
 import { enableLayoutAnimations } from '../core';
 import { SharedTransition } from '../layoutReanimation';
 import { LayoutAnimationType } from '../commonTypes';
@@ -497,7 +497,7 @@ export function createAnimatedComponent(
         >,
       setLocalRef: (ref) => {
         if (!ref) {
-          // component is unmounted
+          // component has been unmounted
           return;
         }
         if (ref !== this._componentRef) {
