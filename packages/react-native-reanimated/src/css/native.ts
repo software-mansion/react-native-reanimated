@@ -34,8 +34,8 @@ export function updateCSSAnimation(
   ReanimatedModule.updateCSSAnimation(animationId, settingsUpdates);
 }
 
-export function unregisterCSSAnimation(animationId: number) {
-  ReanimatedModule.unregisterCSSAnimation(animationId);
+export function unregisterCSSAnimations(animationIds: number[]) {
+  ReanimatedModule.unregisterCSSAnimations(animationIds);
 }
 
 export function registerCSSTransition(

@@ -29,6 +29,9 @@ class CSSAnimation {
   ShadowNode::Shared getShadowNode() const {
     return shadowNode_;
   }
+  jsi::Value getCurrentInterpolationStyle(jsi::Runtime &rt) const {
+    return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
+  }
   bool hasForwardsFillMode() const {
     return fillMode_ == AnimationFillMode::FORWARDS ||
         fillMode_ == AnimationFillMode::BOTH;

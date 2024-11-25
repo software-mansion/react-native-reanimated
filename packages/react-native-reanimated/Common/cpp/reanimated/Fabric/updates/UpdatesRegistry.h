@@ -17,6 +17,17 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
+enum class FlushUpdatesMode {
+  // Default merging: batch changes are merged into the registry
+  // without removing existing entries.
+  MergeAll,
+  // Batch merging/replacing: batch changes are merged
+  // first, then replace corresponding registry entries.
+  ReplaceByMergedBatch,
+  // Default replacing: the latest value from the batch completely
+  // replaces any existing registry entries.
+  ReplaceByLatest
+};
 using UpdatesBatch =
     std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>;
 
@@ -25,7 +36,10 @@ using RegistryMap =
 
 class UpdatesRegistry {
  public:
-  void flushUpdates(jsi::Runtime &rt, UpdatesBatch &updatesBatch, bool merge);
+  void flushUpdates(
+      jsi::Runtime &rt,
+      UpdatesBatch &updatesBatch,
+      FlushUpdatesMode mode);
   void collectProps(PropsMap &propsMap);
   folly::dynamic get(Tag tag) const;
 
@@ -39,7 +53,7 @@ class UpdatesRegistry {
   void flushUpdatesToRegistry(
       jsi::Runtime &rt,
       const UpdatesBatch &updatesBatch,
-      bool merge);
+      FlushUpdatesMode mode);
 
  private:
   void runMarkedRemovals();
