@@ -145,7 +145,7 @@
     "prettier": "^3.3.3",
     "react": "18.3.1",
     "react-native": "0.76.0-rc.3",
-    "react-native-builder-bob": "0.30.2",
+    "react-native-builder-bob": "0.33.1",
     "react-native-gesture-handler": "2.20.0",
     "react-native-web": "0.19.11",
     "react-test-renderer": "18.2.0",
@@ -160,7 +160,8 @@
       [
         "module",
         {
-          "esm": true
+          "esm": true,
+          "jsxRuntime": "classic"
         }
       ],
       "typescript"
