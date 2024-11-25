@@ -7,15 +7,15 @@ import type {
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
 import CSSTransitionManager from './CSSTransitionManager';
-import CSSAnimationManager from './CSSAnimationManager';
+import CSSAnimationsManager from './CSSAnimationsManager';
 import { extractCSSConfigsAndFlattenedStyles } from '../normalization';
 
 export default class CSSManager implements ICSSManager {
-  private readonly cssAnimationManager: CSSAnimationManager;
+  private readonly CSSAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionManager: CSSTransitionManager;
 
   constructor() {
-    this.cssAnimationManager = new CSSAnimationManager();
+    this.CSSAnimationsManager = new CSSAnimationsManager();
     this.cssTransitionManager = new CSSTransitionManager();
   }
 
@@ -44,7 +44,7 @@ export default class CSSManager implements ICSSManager {
     }
 
     this.cssTransitionManager.update(wrapper, tag, transitionConfig);
-    this.cssAnimationManager.update(wrapper, animationConfig);
+    this.CSSAnimationsManager.update(wrapper, animationConfig);
 
     // If the update is called during component mount, we want to first - update
     // the transition or animation config, and then - set the style (which may
@@ -55,7 +55,7 @@ export default class CSSManager implements ICSSManager {
   }
 
   detach(viewTag: number): void {
-    this.cssAnimationManager.detach();
+    this.CSSAnimationsManager.detach();
     this.cssTransitionManager.detach();
     removeViewStyle(viewTag);
   }

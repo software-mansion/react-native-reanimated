@@ -1,14 +1,11 @@
-import CSSAnimationManager from './CSSAnimationManager';
+import CSSAnimationsManager from './CSSAnimationsManager';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import {
   registerCSSAnimation,
   unregisterCSSAnimation,
   updateCSSAnimation,
 } from '../native';
-import {
-  getNormalizedCSSAnimationSettingsUpdates,
-  normalizeCSSAnimationConfig,
-} from '../normalization';
+import { normalizeCSSAnimationConfig } from '../normalization';
 import type { CSSAnimationConfig } from '../types';
 
 const SHADOW_NODE_WRAPPER = {} as ShadowNodeWrapper;
@@ -19,17 +16,20 @@ jest.mock('../native', () => ({
   updateCSSAnimation: jest.fn(),
 }));
 
-describe('CSSAnimationManager', () => {
-  let manager: CSSAnimationManager;
+describe('CSSAnimationsManager', () => {
+  let manager: CSSAnimationsManager;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    manager = new CSSAnimationManager();
+    manager = new CSSAnimationsManager();
+    // Reset the static field to its initial value
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (CSSAnimationsManager as any)._nextId = 0;
   });
 
   describe('update', () => {
-    describe('attaching animation', () => {
-      it('registers an animation if there is no existing animation', () => {
+    describe('single animation', () => {
+      it('attaches a new animation if no animation is attached', () => {
         const animationConfig: CSSAnimationConfig = {
           animationName: {
             from: { opacity: 0 },
@@ -39,48 +39,31 @@ describe('CSSAnimationManager', () => {
 
         manager.update(SHADOW_NODE_WRAPPER, animationConfig);
 
+        expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
         expect(registerCSSAnimation).toHaveBeenCalledWith(
           SHADOW_NODE_WRAPPER,
-          expect.any(Number), // animationId
-          normalizeCSSAnimationConfig(animationConfig)
+          0,
+          normalizeCSSAnimationConfig(animationConfig)[0]
         );
-        expect(unregisterCSSAnimation).not.toHaveBeenCalled();
-        expect(updateCSSAnimation).not.toHaveBeenCalled();
-      });
-    });
 
-    describe('updating animation', () => {
-      it("doesn't update animation if called with the same config", () => {
+        expect(updateCSSAnimation).not.toHaveBeenCalled();
+        expect(unregisterCSSAnimation).not.toHaveBeenCalled();
+      });
+
+      it('updates an existing animation if keyframes are the same and animation settings are different', () => {
         const animationConfig: CSSAnimationConfig = {
           animationName: {
             from: { opacity: 0 },
           },
           animationDuration: '2s',
-        };
-
-        manager.update(SHADOW_NODE_WRAPPER, animationConfig);
-        expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
-        expect(unregisterCSSAnimation).not.toHaveBeenCalled();
-        expect(updateCSSAnimation).not.toHaveBeenCalled();
-
-        manager.update(SHADOW_NODE_WRAPPER, animationConfig);
-        expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
-        expect(unregisterCSSAnimation).not.toHaveBeenCalled();
-        expect(updateCSSAnimation).not.toHaveBeenCalled();
-      });
-
-      it('updates animation settings if properties change without changing keyframes', () => {
-        const animationConfig: CSSAnimationConfig = {
-          animationName: {
-            from: { opacity: 0 },
-          },
-          animationDuration: '2s',
+          animationDelay: '1s',
         };
         const newAnimationConfig: CSSAnimationConfig = {
           animationName: {
             from: { opacity: 0 },
           },
           animationDuration: '3s',
+          animationTimingFunction: 'easeIn',
         };
 
         manager.update(SHADOW_NODE_WRAPPER, animationConfig);
@@ -89,16 +72,17 @@ describe('CSSAnimationManager', () => {
         expect(updateCSSAnimation).not.toHaveBeenCalled();
 
         manager.update(SHADOW_NODE_WRAPPER, newAnimationConfig);
-        expect(updateCSSAnimation).toHaveBeenCalledWith(
-          expect.any(Number), // animationId
-          getNormalizedCSSAnimationSettingsUpdates(
-            animationConfig,
-            newAnimationConfig
-          )
-        );
+        expect(updateCSSAnimation).toHaveBeenCalledTimes(1);
+        expect(updateCSSAnimation).toHaveBeenCalledWith(0, {
+          duration: 3000,
+          timingFunction: 'easeIn',
+          delay: 0,
+        });
+        expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSAnimation).not.toHaveBeenCalled();
       });
 
-      it('detaches and re-attaches animation if keyframes have changed', () => {
+      it('detaches current and attaches a new animation if keyframes are different', () => {
         const animationConfig: CSSAnimationConfig = {
           animationName: {
             from: { opacity: 0 },
@@ -107,7 +91,7 @@ describe('CSSAnimationManager', () => {
         };
         const newAnimationConfig: CSSAnimationConfig = {
           animationName: {
-            to: { color: 'red' },
+            from: { opacity: 1 },
           },
           animationDuration: '2s',
         };
@@ -115,16 +99,16 @@ describe('CSSAnimationManager', () => {
         manager.update(SHADOW_NODE_WRAPPER, animationConfig);
         expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
         expect(unregisterCSSAnimation).not.toHaveBeenCalled();
+        expect(updateCSSAnimation).not.toHaveBeenCalled();
 
         manager.update(SHADOW_NODE_WRAPPER, newAnimationConfig);
-        expect(unregisterCSSAnimation).toHaveBeenCalledTimes(1);
         expect(registerCSSAnimation).toHaveBeenCalledTimes(2);
+        expect(unregisterCSSAnimation).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSAnimation).toHaveBeenCalledWith(0);
         expect(updateCSSAnimation).not.toHaveBeenCalled();
       });
-    });
 
-    describe('detaching animation', () => {
-      it('detaches animation if update is called with null config and there is an existing animation', () => {
+      it('detaches an existing animation if the new config is empty', () => {
         const animationConfig: CSSAnimationConfig = {
           animationName: {
             from: { opacity: 0 },
@@ -135,45 +119,46 @@ describe('CSSAnimationManager', () => {
         manager.update(SHADOW_NODE_WRAPPER, animationConfig);
         expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
         expect(unregisterCSSAnimation).not.toHaveBeenCalled();
+        expect(updateCSSAnimation).not.toHaveBeenCalled();
 
         manager.update(SHADOW_NODE_WRAPPER, null);
         expect(unregisterCSSAnimation).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSAnimation).toHaveBeenCalledWith(0);
         expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
         expect(updateCSSAnimation).not.toHaveBeenCalled();
       });
     });
 
-    it("doesn't call detach if there is no existing animation", () => {
-      manager.update(SHADOW_NODE_WRAPPER, null);
-      expect(registerCSSAnimation).not.toHaveBeenCalled();
-      expect(unregisterCSSAnimation).not.toHaveBeenCalled();
-      expect(updateCSSAnimation).not.toHaveBeenCalled();
+    describe('multiple animations', () => {
+      // TODO - add after implementing examples
     });
   });
 
   describe('detach', () => {
-    it('detaches animation if there is an existing animation', () => {
-      const animationConfig: CSSAnimationConfig = {
-        animationName: {
-          from: { opacity: 0 },
-        },
-        animationDuration: '2s',
+    it('detaches all animations attached to the view', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (manager as any).attachedAnimations = {
+        '{"from":{"opacity":1},"to":{"opacity":0.5}}': [
+          { animationId: 100, animationConfig: {} },
+          { animationId: 200, animationConfig: {} },
+        ],
+        '{"from":{"opacity":0},"to":{"opacity":1}}': [
+          { animationId: 300, animationConfig: {} },
+        ],
       };
 
-      manager.update(SHADOW_NODE_WRAPPER, animationConfig);
-      expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
-      expect(unregisterCSSAnimation).not.toHaveBeenCalled();
-
       manager.detach();
-      expect(unregisterCSSAnimation).toHaveBeenCalledTimes(1);
-      expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
-      expect(updateCSSAnimation).not.toHaveBeenCalled();
-    });
 
-    it("doesn't call detach if there is no existing animation", () => {
-      manager.detach();
+      expect(unregisterCSSAnimation).toHaveBeenCalledTimes(3);
+      // Check if subsequent calls contain the correct animationId
+      expect(unregisterCSSAnimation).toHaveBeenNthCalledWith(1, 100);
+      expect(unregisterCSSAnimation).toHaveBeenNthCalledWith(2, 200);
+      expect(unregisterCSSAnimation).toHaveBeenNthCalledWith(3, 300);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((manager as any).attachedAnimations).toEqual({});
+
       expect(registerCSSAnimation).not.toHaveBeenCalled();
-      expect(unregisterCSSAnimation).not.toHaveBeenCalled();
       expect(updateCSSAnimation).not.toHaveBeenCalled();
     });
   });

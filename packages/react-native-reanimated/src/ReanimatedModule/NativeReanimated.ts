@@ -20,9 +20,9 @@ import { ReanimatedError } from '../errors';
 import { WorkletsModule } from '../worklets';
 import type { ReanimatedModuleProxy } from './reanimatedModuleProxy';
 import type {
-  NormalizedCSSAnimationConfig,
-  NormalizedCSSAnimationSettings,
   NormalizedCSSTransitionConfig,
+  NormalizedSingleCSSAnimationConfig,
+  NormalizedSingleCSSAnimationSettings,
 } from '../css';
 
 export function createNativeReanimatedModule(): IReanimatedModule {
@@ -176,7 +176,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   registerCSSAnimation(
     shadowNodeWrapper: ShadowNodeWrapper,
     animationId: number,
-    animationConfig: NormalizedCSSAnimationConfig
+    animationConfig: NormalizedSingleCSSAnimationConfig
   ) {
     this.#reanimatedModuleProxy.registerCSSAnimation(
       shadowNodeWrapper,
@@ -187,11 +187,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   updateCSSAnimation(
     animationId: number,
-    updatedSettings: Partial<NormalizedCSSAnimationSettings>
+    settingsUpdates: Partial<NormalizedSingleCSSAnimationSettings>
   ) {
     this.#reanimatedModuleProxy.updateCSSAnimation(
       animationId,
-      updatedSettings
+      settingsUpdates
     );
   }
 

@@ -18,17 +18,30 @@ export default function Playground() {
         style={{
           animationDuration: '10s',
           animationIterationCount: 'infinite',
-          animationName: {
-            0: {
-              width: 200,
+          animationName: [
+            {
+              0: {
+                width: 200,
+              },
+              0.5: {
+                width: 350,
+              },
+              1: {
+                width: 200,
+              },
             },
-            0.5: {
-              width: 350,
+            {
+              '50%': { height: 200 },
             },
-            1: {
-              width: 200,
+            {
+              from: {
+                transform: [{ rotate: '0deg' }],
+              },
+              to: {
+                transform: [{ rotate: '360deg' }],
+              },
             },
-          },
+          ],
           animationTimingFunction: 'linear',
           backgroundColor: 'gray',
           height: 65,
@@ -43,40 +56,48 @@ export default function Playground() {
 
         <Animated.View
           style={{
+            animationDirection: ['normal', 'alternate'],
             animationDuration: '10s',
             animationIterationCount: 'infinite',
-            animationName: {
-              0.1: {
-                width: '75%',
+            animationName: [
+              {
+                0.1: {
+                  width: '75%',
+                },
+                0.2: {
+                  width: 20,
+                },
+                0.3: {
+                  width: '50%',
+                },
+                0.4: {
+                  width: 20,
+                },
+                0.5: {
+                  width: '75%',
+                },
+                0.6: {
+                  width: 0,
+                },
+                0.7: {
+                  width: '100%',
+                },
+                0.8: {
+                  width: '25%',
+                },
+                0.9: {
+                  width: '75%',
+                },
+                from: {
+                  width: 20,
+                },
               },
-              0.2: {
-                width: 20,
+              {
+                to: {
+                  backgroundColor: 'red',
+                },
               },
-              0.3: {
-                width: '50%',
-              },
-              0.4: {
-                width: 20,
-              },
-              0.5: {
-                width: '75%',
-              },
-              0.6: {
-                width: 0,
-              },
-              0.7: {
-                width: '100%',
-              },
-              0.8: {
-                width: '25%',
-              },
-              0.9: {
-                width: '75%',
-              },
-              from: {
-                width: 20,
-              },
-            },
+            ],
             animationTimingFunction: 'linear',
             backgroundColor: 'gold',
             height: '100%',
