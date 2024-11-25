@@ -5,7 +5,6 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.RuntimeExecutor;
-import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
@@ -33,8 +32,6 @@ public class NativeProxy extends NativeProxyCommon {
 
     LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
 
-    ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
-
     if (context.isBridgeless()) {
       RuntimeExecutor runtimeExecutor = context.getRuntimeExecutor();
       mHybridData =
@@ -44,7 +41,6 @@ public class NativeProxy extends NativeProxyCommon {
               runtimeExecutor,
               mAndroidUIScheduler,
               LayoutAnimations,
-              messageQueueThread,
               fabricUIManager);
     } else {
       CallInvokerHolderImpl callInvokerHolder =
@@ -56,7 +52,6 @@ public class NativeProxy extends NativeProxyCommon {
               callInvokerHolder,
               mAndroidUIScheduler,
               LayoutAnimations,
-              messageQueueThread,
               fabricUIManager);
     }
     prepareLayoutAnimations(LayoutAnimations);
@@ -72,7 +67,6 @@ public class NativeProxy extends NativeProxyCommon {
       CallInvokerHolderImpl jsCallInvokerHolder,
       AndroidUIScheduler androidUIScheduler,
       LayoutAnimations LayoutAnimations,
-      MessageQueueThread messageQueueThread,
       FabricUIManager fabricUIManager);
 
   private native HybridData initHybridBridgeless(
@@ -81,7 +75,6 @@ public class NativeProxy extends NativeProxyCommon {
       RuntimeExecutor runtimeExecutor,
       AndroidUIScheduler androidUIScheduler,
       LayoutAnimations LayoutAnimations,
-      MessageQueueThread messageQueueThread,
       FabricUIManager fabricUIManager);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);

@@ -1,5 +1,6 @@
 #import <React/RCTBridge+Private.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
+#import <worklets/apple/REAMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
 #import <worklets/tools/SingleInstanceChecker.h>
 
@@ -35,7 +36,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 {
   auto *bridge = self.bridge;
   auto &rnRuntime = *(jsi::Runtime *)bridge.runtime;
-  nativeWorkletsModule_ = std::make_shared<NativeWorkletsModule>(std::string([valueUnpackerCode UTF8String]));
+  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
+    throw error;
+  });
+  nativeWorkletsModule_ = std::make_shared<NativeWorkletsModule>(std::string([valueUnpackerCode UTF8String]), jsQueue);
   RNRuntimeWorkletDecorator::decorate(rnRuntime, nativeWorkletsModule_);
 
   return @YES;

@@ -14,7 +14,7 @@
 #import <reanimated/apple/native/PlatformDepMethodsHolderImpl.h>
 #import <reanimated/apple/native/REAIOSUIScheduler.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
-#import <reanimated/apple/native/REAMessageThread.h>
+
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
 #ifndef NDEBUG
@@ -22,6 +22,7 @@
 #endif
 
 #import <worklets/WorkletRuntime/ReanimatedRuntime.h>
+#import <worklets/apple/REAMessageThread.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTBridge+Private.h>
@@ -65,10 +66,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(reaModule.bridge.runtime);
 
-  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
-    throw error;
-  });
-
   PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(bridge, nodesManager, reaModule);
 
   std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
@@ -81,7 +78,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       nativeWorkletsModule,
       rnRuntime,
       jsScheduler,
-      jsQueue,
       uiScheduler,
       platformDepMethodsHolder,
       isBridgeless,
@@ -110,10 +106,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
 {
   auto nodesManager = reaModule.nodesManager;
 
-  auto jsQueue = std::make_shared<REAMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
-    throw error;
-  });
-
   PlatformDepMethodsHolder platformDepMethodsHolder =
       makePlatformDepMethodsHolderBridgeless(moduleRegistry, nodesManager, reaModule);
 
@@ -126,7 +118,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
       nativeWorkletsModule,
       runtime,
       jsScheduler,
-      jsQueue,
       uiScheduler,
       platformDepMethodsHolder,
       isBridgeless,
