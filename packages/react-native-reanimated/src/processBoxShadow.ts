@@ -105,7 +105,7 @@ function parseLength(length: string): number | null {
   return Number(match[1]);
 }
 
-export type ParsedBoxShadow = {
+type ParsedBoxShadow = {
   offsetX: number;
   offsetY: number;
   blurRadius?: number | OpaqueColorValue;

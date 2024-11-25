@@ -349,7 +349,7 @@ export const ColorProperties = makeShareable([
   'stroke',
 ]);
 
-export const NestedColorProperties = makeShareable({
+const NestedColorProperties = makeShareable({
   boxShadow: ['color'],
 });
 
