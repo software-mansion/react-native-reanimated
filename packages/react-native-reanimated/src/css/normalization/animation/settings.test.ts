@@ -153,15 +153,15 @@ describe(getNormalizedCSSAnimationSettingsUpdates, () => {
     };
 
     it.each([
-      [{ animationDuration: 2000 }, { animationDuration: 2000 }],
+      [{ animationDuration: 2000 }, { duration: 2000 }],
       [
         { animationTimingFunction: cubicBezier(0.4, 0, 0.2, 1) },
-        { animationTimingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize() },
+        { timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize() },
       ],
-      [{ animationDirection: 'reverse' }, { animationDirection: 'reverse' }],
-      [{ animationIterationCount: 2 }, { animationIterationCount: 2 }],
-      [{ animationFillMode: 'forwards' }, { animationFillMode: 'forwards' }],
-      [{ animationPlayState: 'paused' }, { animationPlayState: 'paused' }],
+      [{ animationDirection: 'reverse' }, { direction: 'reverse' }],
+      [{ animationIterationCount: 2 }, { iterationCount: 2 }],
+      [{ animationFillMode: 'forwards' }, { fillMode: 'forwards' }],
+      [{ animationPlayState: 'paused' }, { playState: 'paused' }],
       [
         {
           animationDuration: 2000,
@@ -172,12 +172,12 @@ describe(getNormalizedCSSAnimationSettingsUpdates, () => {
           animationPlayState: 'paused',
         },
         {
-          animationDuration: 2000,
-          animationTimingFunction: 'easeIn',
-          animationDirection: 'reverse',
-          animationIterationCount: 2,
-          animationFillMode: 'forwards',
-          animationPlayState: 'paused',
+          duration: 2000,
+          timingFunction: 'easeIn',
+          direction: 'reverse',
+          iterationCount: 2,
+          fillMode: 'forwards',
+          playState: 'paused',
         },
       ],
     ] satisfies [

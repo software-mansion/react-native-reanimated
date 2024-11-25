@@ -15,7 +15,7 @@ import {
   normalizeFillMode,
   normalizePlayState,
 } from './settings';
-import { createKeyframeStyle } from './keyframes';
+import { normalizeAnimationName } from './animationName';
 
 export const ERROR_MESSAGES = {
   invalidAnimationName: () =>
@@ -37,13 +37,13 @@ export function normalizeCSSAnimationConfig({
   }
 
   return {
-    animationName: createKeyframeStyle(animationName),
-    animationDuration: normalizeDuration(animationDuration),
-    animationTimingFunction: normalizeTimingFunction(animationTimingFunction),
-    animationDelay: normalizeDelay(animationDelay),
-    animationIterationCount: normalizeIterationCount(animationIterationCount),
-    animationDirection: normalizeDirection(animationDirection),
-    animationFillMode: normalizeFillMode(animationFillMode),
-    animationPlayState: normalizePlayState(animationPlayState),
+    ...normalizeAnimationName(animationName),
+    duration: normalizeDuration(animationDuration),
+    timingFunction: normalizeTimingFunction(animationTimingFunction),
+    delay: normalizeDelay(animationDelay),
+    iterationCount: normalizeIterationCount(animationIterationCount),
+    direction: normalizeDirection(animationDirection),
+    fillMode: normalizeFillMode(animationFillMode),
+    playState: normalizePlayState(animationPlayState),
   };
 }

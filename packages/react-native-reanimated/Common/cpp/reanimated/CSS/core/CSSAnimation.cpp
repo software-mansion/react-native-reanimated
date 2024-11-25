@@ -21,7 +21,7 @@ CSSAnimation::CSSAnimation(
           config.direction,
           config.easingFunction)),
       fillMode_(config.fillMode) {
-  styleInterpolator_.updateKeyframes(rt, config.keyframeStyle);
+  styleInterpolator_.updateKeyframes(rt, config.keyframesStyle);
 
   if (config.playState == AnimationPlayState::PAUSED) {
     // If the animation is created as paused, pause its progress provider

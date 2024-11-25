@@ -3,38 +3,37 @@
 
 namespace reanimated {
 
-inline jsi::Value getAnimationKeyframeStyle(
-    jsi::Runtime &rt,
-    const jsi::Object &config) {
-  return config.getProperty(rt, "animationName");
+jsi::Value getKeyframesStyle(jsi::Runtime &rt, const jsi::Object &config) {
+  return config.getProperty(rt, "keyframesStyle");
 }
 
-inline double getAnimationDuration(
+KeyframeEasingFunctions getKeyframeTimingFunctions(
     jsi::Runtime &rt,
     const jsi::Object &config) {
-  return config.getProperty(rt, "animationDuration").asNumber();
+  KeyframeEasingFunctions result;
+  const auto &keyframeTimingFunctions =
+      config.getProperty(rt, "keyframeTimingFunctions").asObject(rt);
+  const auto timingFunctionOffsets =
+      keyframeTimingFunctions.getPropertyNames(rt);
+  const auto timingFunctionsCount = timingFunctionOffsets.size(rt);
+
+  for (size_t i = 0; i < timingFunctionsCount; ++i) {
+    const std::string key =
+        timingFunctionOffsets.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const auto offset = timingFunctionOffsets.getValueAtIndex(rt, i).asNumber();
+    const auto easingFunction = getEasingFunction(
+        rt, keyframeTimingFunctions.getProperty(rt, key.c_str()));
+    result[offset] = easingFunction;
+  }
+
+  return result;
 }
 
-inline EasingFunction getAnimationTimingFunction(
-    jsi::Runtime &rt,
-    const jsi::Object &config) {
-  const auto str = config.getProperty(rt, "animationTimingFunction");
-  return getEasingFunction(rt, str);
+double getIterationCount(jsi::Runtime &rt, const jsi::Object &config) {
+  return config.getProperty(rt, "iterationCount").asNumber();
 }
 
-inline double getAnimationDelay(jsi::Runtime &rt, const jsi::Object &config) {
-  return config.getProperty(rt, "animationDelay").asNumber();
-}
-
-inline double getAnimationIterationCount(
-    jsi::Runtime &rt,
-    const jsi::Object &config) {
-  return config.getProperty(rt, "animationIterationCount").asNumber();
-}
-
-inline AnimationDirection getAnimationDirection(
-    jsi::Runtime &rt,
-    const jsi::Object &config) {
+AnimationDirection getDirection(jsi::Runtime &rt, const jsi::Object &config) {
   static const std::unordered_map<std::string, AnimationDirection>
       strToEnumMap = {
           {"normal", AnimationDirection::NORMAL},
@@ -42,49 +41,42 @@ inline AnimationDirection getAnimationDirection(
           {"alternate", AnimationDirection::ALTERNATE},
           {"alternateReverse", AnimationDirection::ALTERNATE_REVERSE}};
 
-  const auto str =
-      config.getProperty(rt, "animationDirection").asString(rt).utf8(rt);
+  const auto str = config.getProperty(rt, "direction").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
     throw std::invalid_argument(
-        "[Reanimated] Invalid string for CSSAnimationDirection enum: " + str);
+        "[Reanimated] Invalid animationDirection: " + str);
   }
   return it->second;
 }
 
-inline AnimationFillMode getAnimationFillMode(
-    jsi::Runtime &rt,
-    const jsi::Object &config) {
+AnimationFillMode getFillMode(jsi::Runtime &rt, const jsi::Object &config) {
   static const std::unordered_map<std::string, AnimationFillMode> strToEnumMap =
       {{"none", AnimationFillMode::NONE},
        {"forwards", AnimationFillMode::FORWARDS},
        {"backwards", AnimationFillMode::BACKWARDS},
        {"both", AnimationFillMode::BOTH}};
 
-  const auto str =
-      config.getProperty(rt, "animationFillMode").asString(rt).utf8(rt);
+  const auto str = config.getProperty(rt, "fillMode").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
     throw std::invalid_argument(
-        "[Reanimated] Invalid string for CSSAnimationFillMode enum: " + str);
+        "[Reanimated] Invalid animationFillMode: " + str);
   }
   return it->second;
 }
 
-inline AnimationPlayState getAnimationPlayState(
-    jsi::Runtime &rt,
-    const jsi::Object &config) {
+AnimationPlayState getPlayState(jsi::Runtime &rt, const jsi::Object &config) {
   static const std::unordered_map<std::string, AnimationPlayState>
       strToEnumMap = {
           {"running", AnimationPlayState::RUNNING},
           {"paused", AnimationPlayState::PAUSED}};
 
-  const auto str =
-      config.getProperty(rt, "animationPlayState").asString(rt).utf8(rt);
+  const auto str = config.getProperty(rt, "playState").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
   if (it == strToEnumMap.cend()) {
     throw std::invalid_argument(
-        "[Reanimated] Invalid string for CSSAnimationPlayState enum: " + str);
+        "[Reanimated] Invalid animationPlayState: " + str);
   }
   return it->second;
 }
@@ -95,14 +87,15 @@ CSSAnimationConfig parseCSSAnimationConfig(
   const auto &configObj = config.asObject(rt);
 
   return {
-      getAnimationKeyframeStyle(rt, configObj),
-      getAnimationDuration(rt, configObj),
-      getAnimationTimingFunction(rt, configObj),
-      getAnimationDelay(rt, configObj),
-      getAnimationIterationCount(rt, configObj),
-      getAnimationDirection(rt, configObj),
-      getAnimationFillMode(rt, configObj),
-      getAnimationPlayState(rt, configObj)};
+      getKeyframesStyle(rt, configObj),
+      getKeyframeTimingFunctions(rt, configObj),
+      getDuration(rt, configObj),
+      getTimingFunction(rt, configObj),
+      getDelay(rt, configObj),
+      getIterationCount(rt, configObj),
+      getDirection(rt, configObj),
+      getFillMode(rt, configObj),
+      getPlayState(rt, configObj)};
 }
 
 PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
@@ -112,26 +105,26 @@ PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
 
   PartialCSSAnimationSettings result;
 
-  if (partialObj.hasProperty(rt, "animationDuration")) {
-    result.duration = getAnimationDuration(rt, partialObj);
+  if (partialObj.hasProperty(rt, "duration")) {
+    result.duration = getDuration(rt, partialObj);
   }
-  if (partialObj.hasProperty(rt, "animationTimingFunction")) {
-    result.easingFunction = getAnimationTimingFunction(rt, partialObj);
+  if (partialObj.hasProperty(rt, "timingFunction")) {
+    result.easingFunction = getTimingFunction(rt, partialObj);
   }
-  if (partialObj.hasProperty(rt, "animationDelay")) {
-    result.delay = getAnimationDelay(rt, partialObj);
+  if (partialObj.hasProperty(rt, "delay")) {
+    result.delay = getDelay(rt, partialObj);
   }
-  if (partialObj.hasProperty(rt, "animationIterationCount")) {
-    result.iterationCount = getAnimationIterationCount(rt, partialObj);
+  if (partialObj.hasProperty(rt, "iterationCount")) {
+    result.iterationCount = getIterationCount(rt, partialObj);
   }
-  if (partialObj.hasProperty(rt, "animationDirection")) {
-    result.direction = getAnimationDirection(rt, partialObj);
+  if (partialObj.hasProperty(rt, "direction")) {
+    result.direction = getDirection(rt, partialObj);
   }
-  if (partialObj.hasProperty(rt, "animationFillMode")) {
-    result.fillMode = getAnimationFillMode(rt, partialObj);
+  if (partialObj.hasProperty(rt, "fillMode")) {
+    result.fillMode = getFillMode(rt, partialObj);
   }
-  if (partialObj.hasProperty(rt, "animationPlayState")) {
-    result.playState = getAnimationPlayState(rt, partialObj);
+  if (partialObj.hasProperty(rt, "playState")) {
+    result.playState = getPlayState(rt, partialObj);
   }
 
   return result;

@@ -7,7 +7,10 @@ describe(normalizeCSSAnimationConfig, () => {
   it('normalizes animation config', () => {
     const animationTimingFunction = cubicBezier(0.4, 0, 0.2, 1);
     const config: CSSAnimationConfig = {
-      animationName: { from: { opacity: 1 }, to: { opacity: 0.5 } },
+      animationName: {
+        from: { opacity: 1, animationTimingFunction: 'linear' },
+        to: { opacity: 0.5 },
+      },
       animationDuration: '1.5s',
       animationTimingFunction,
       animationDelay: '300ms',
@@ -18,19 +21,20 @@ describe(normalizeCSSAnimationConfig, () => {
     };
 
     expect(normalizeCSSAnimationConfig(config)).toEqual({
-      animationName: {
+      keyframesStyle: {
         opacity: [
           { offset: 0, value: 1 },
           { offset: 1, value: 0.5 },
         ],
       },
-      animationDuration: 1500,
-      animationTimingFunction: animationTimingFunction.normalize(),
-      animationDelay: 300,
-      animationIterationCount: 3,
-      animationDirection: 'reverse',
-      animationFillMode: 'both',
-      animationPlayState: 'paused',
+      keyframeTimingFunctions: { 0: 'linear' },
+      duration: 1500,
+      timingFunction: animationTimingFunction.normalize(),
+      delay: 300,
+      iterationCount: 3,
+      direction: 'reverse',
+      fillMode: 'both',
+      playState: 'paused',
     });
   });
 
@@ -40,19 +44,20 @@ describe(normalizeCSSAnimationConfig, () => {
     };
 
     expect(normalizeCSSAnimationConfig(config)).toEqual({
-      animationName: {
+      keyframesStyle: {
         opacity: [
           { offset: 0, value: 1 },
           { offset: 1, value: 0.5 },
         ],
       },
-      animationDuration: 0,
-      animationTimingFunction: 'ease',
-      animationDelay: 0,
-      animationIterationCount: 1,
-      animationDirection: 'normal',
-      animationFillMode: 'none',
-      animationPlayState: 'running',
+      keyframeTimingFunctions: {},
+      duration: 0,
+      timingFunction: 'ease',
+      delay: 0,
+      iterationCount: 1,
+      direction: 'normal',
+      fillMode: 'none',
+      playState: 'running',
     });
   });
 

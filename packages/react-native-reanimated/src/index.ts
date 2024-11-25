@@ -294,7 +294,7 @@ export type {
   ScreenTransitionConfig,
 } from './screenTransition';
 export type {
-  CSSAnimationKeyframeOffset,
+  CSSAnimationKeyframeSelector,
   CSSAnimationKeyframes,
   CSSAnimationDuration,
   CSSAnimationTimingFunction,

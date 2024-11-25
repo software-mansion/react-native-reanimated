@@ -19,10 +19,10 @@ export function normalizeCSSTransitionConfig({
   transitionDelay,
 }: CSSTransitionConfig): NormalizedCSSTransitionConfig {
   return {
-    transitionProperty: normalizeTransitionProperty(transitionProperty),
-    transitionDuration: normalizeDuration(transitionDuration),
-    transitionTimingFunction: normalizeTimingFunction(transitionTimingFunction),
-    transitionDelay: normalizeDelay(transitionDelay),
+    properties: normalizeTransitionProperty(transitionProperty),
+    duration: normalizeDuration(transitionDuration),
+    timingFunction: normalizeTimingFunction(transitionTimingFunction),
+    delay: normalizeDelay(transitionDelay),
   };
 }
 
@@ -49,13 +49,11 @@ export function getNormalizedCSSTransitionConfigUpdates(
           newNormalizedTransitionProperties
         )))
   ) {
-    configUpdates.transitionProperty = newNormalizedTransitionProperties;
+    configUpdates.properties = newNormalizedTransitionProperties;
   }
 
   if (newConfig.transitionDuration !== oldConfig.transitionDuration) {
-    configUpdates.transitionDuration = normalizeDuration(
-      newConfig.transitionDuration
-    );
+    configUpdates.duration = normalizeDuration(newConfig.transitionDuration);
   }
 
   if (
@@ -66,13 +64,13 @@ export function getNormalizedCSSTransitionConfigUpdates(
       : oldConfig.transitionTimingFunction !==
         newConfig.transitionTimingFunction
   ) {
-    configUpdates.transitionTimingFunction = normalizeTimingFunction(
+    configUpdates.timingFunction = normalizeTimingFunction(
       newConfig.transitionTimingFunction
     );
   }
 
   if (newConfig.transitionDelay !== oldConfig.transitionDelay) {
-    configUpdates.transitionDelay = normalizeDelay(newConfig.transitionDelay);
+    configUpdates.delay = normalizeDelay(newConfig.transitionDelay);
   }
 
   return configUpdates;

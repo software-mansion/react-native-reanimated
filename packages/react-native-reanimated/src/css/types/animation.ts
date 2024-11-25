@@ -1,36 +1,17 @@
 'use strict';
-import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
-import type { CSSTimeUnit } from './common';
+import type { CSSStyleProps, CSSTimeUnit } from './common';
 import type { CSSTimingFunction, NormalizedCSSTimingFunction } from '../easing';
-
-export type CSSKeyframeValue<V> = {
-  offset: number;
-  value: V;
-}[];
-
-type CreateKeyframeStyle<S> = {
-  [P in keyof S]: S[P] extends infer U | undefined
-    ? U extends object
-      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        U extends Array<any>
-        ? CSSKeyframeValue<U> // If the value is an array, don't iterate over its values and treat it as the end value
-        : { [K in keyof U]: CSSKeyframeValue<U[K]> }
-      : P extends 'transform' // Don't allow transform to be passed as a string in keyframes
-        ? never
-        : CSSKeyframeValue<U>
-    : never;
-};
-
-export type CSSKeyframeStyleProps = CreateKeyframeStyle<
-  ViewStyle & TextStyle & ImageStyle
->;
 
 // BEFORE NORMALIZATION
 
-export type CSSAnimationKeyframeOffset = string | number;
+export type CSSAnimationKeyframeSelector = string | number;
+export type CSSAnimationKeyframeBlock = CSSStyleProps & {
+  animationTimingFunction?: CSSAnimationTimingFunction;
+};
 
-export type CSSAnimationKeyframes = Partial<
-  Record<CSSAnimationKeyframeOffset, ViewStyle & TextStyle & ImageStyle>
+export type CSSAnimationKeyframes = Record<
+  CSSAnimationKeyframeSelector,
+  CSSAnimationKeyframeBlock
 >;
 export type CSSAnimationDuration = CSSTimeUnit;
 export type CSSAnimationTimingFunction = CSSTimingFunction;
@@ -63,21 +44,44 @@ export type AnimationSettingProp = keyof CSSAnimationSettings;
 
 // AFTER NORMALIZATION
 
-export type NormalizedCSSAnimationKeyframe = {
+type CSSKeyframesStyleValue<V> = {
   offset: number;
-  style: ViewStyle;
+  value: V;
+}[];
+
+type CreateKeyframesStyle<S> = {
+  [P in keyof S]: S[P] extends infer U | undefined
+    ? U extends object
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        U extends Array<any>
+        ? CSSKeyframesStyleValue<U> // If the value is an array, don't iterate over its values and treat it as the end value
+        : { [K in keyof U]: CSSKeyframesStyleValue<U[K]> }
+      : P extends 'transform' // Don't allow transform to be passed as a string in keyframes
+        ? never
+        : CSSKeyframesStyleValue<U>
+    : never;
+};
+
+export type CSSKeyframesStyle = CreateKeyframesStyle<CSSStyleProps>;
+export type CSSKeyframeTimingFunctions = Record<
+  number,
+  CSSAnimationTimingFunction
+>;
+
+export type NormalizedCSSAnimationName = {
+  keyframesStyle: CSSKeyframesStyle;
+  keyframeTimingFunctions: CSSKeyframeTimingFunctions;
 };
 
 export type NormalizedCSSAnimationSettings = {
-  animationDuration: number;
-  animationTimingFunction: NormalizedCSSTimingFunction;
-  animationDelay: number;
-  animationIterationCount: number;
-  animationDirection: CSSAnimationDirection;
-  animationFillMode: CSSAnimationFillMode;
-  animationPlayState: CSSAnimationPlayState;
+  duration: number;
+  timingFunction: NormalizedCSSTimingFunction;
+  delay: number;
+  iterationCount: number;
+  direction: CSSAnimationDirection;
+  fillMode: CSSAnimationFillMode;
+  playState: CSSAnimationPlayState;
 };
 
-export type NormalizedCSSAnimationConfig = NormalizedCSSAnimationSettings & {
-  animationName: CSSKeyframeStyleProps;
-};
+export type NormalizedCSSAnimationConfig = NormalizedCSSAnimationName &
+  NormalizedCSSAnimationSettings;

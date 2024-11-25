@@ -81,8 +81,8 @@ describe('CSSTransitionManager', () => {
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
         expect(updateCSSTransition).toHaveBeenCalledTimes(1);
         expect(updateCSSTransition).toHaveBeenCalledWith(viewTag, {
-          transitionProperty: ['transform'],
-          transitionDuration: 1500,
+          properties: ['transform'],
+          duration: 1500,
         });
       });
     });

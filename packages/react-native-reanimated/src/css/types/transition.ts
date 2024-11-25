@@ -1,6 +1,5 @@
 'use strict';
-import type { TextStyle, ViewStyle } from 'react-native';
-import type { CSSTimeUnit } from './common';
+import type { CSSStyleProps, CSSTimeUnit } from './common';
 import type { CSSTimingFunction, NormalizedCSSTimingFunction } from '../easing';
 
 // BEFORE NORMALIZATION
@@ -8,9 +7,8 @@ import type { CSSTimingFunction, NormalizedCSSTimingFunction } from '../easing';
 export type CSSTransitionProperty =
   | 'all'
   | 'none'
-  | keyof ViewStyle
-  | keyof TextStyle
-  | (keyof ViewStyle | keyof TextStyle)[];
+  | keyof CSSStyleProps
+  | (keyof CSSStyleProps)[];
 export type CSSTransitionDuration = CSSTimeUnit;
 export type CSSTransitionTimingFunction = CSSTimingFunction;
 export type CSSTransitionDelay = CSSTimeUnit;
@@ -33,11 +31,11 @@ export type TransitionSettingProp = keyof CSSTransitionConfig;
 export type NormalizedTransitionProperty = string[] | 'all';
 
 export type NormalizedCSSTransitionSettings = {
-  transitionDuration: number;
-  transitionTimingFunction: NormalizedCSSTimingFunction;
-  transitionDelay: number;
+  duration: number;
+  timingFunction: NormalizedCSSTimingFunction;
+  delay: number;
 };
 
 export type NormalizedCSSTransitionConfig = NormalizedCSSTransitionSettings & {
-  transitionProperty: NormalizedTransitionProperty;
+  properties: NormalizedTransitionProperty;
 };
