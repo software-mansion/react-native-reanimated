@@ -530,6 +530,10 @@ const routes = {
         name: 'Keyframe Timing Functions',
         Component: miscellaneous.KeyframeTimingFunctions,
       },
+      MultipleAnimations: {
+        name: 'Multiple Animations',
+        Component: miscellaneous.MultipleAnimations,
+      },
     },
   },
   RealWorldExamples: {

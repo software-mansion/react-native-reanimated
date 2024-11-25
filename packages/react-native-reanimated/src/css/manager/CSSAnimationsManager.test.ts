@@ -2,7 +2,7 @@ import CSSAnimationsManager from './CSSAnimationsManager';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import {
   registerCSSAnimation,
-  unregisterCSSAnimation,
+  unregisterCSSAnimations,
   updateCSSAnimation,
 } from '../native';
 import { normalizeCSSAnimationConfig } from '../normalization';
@@ -12,7 +12,7 @@ const SHADOW_NODE_WRAPPER = {} as ShadowNodeWrapper;
 
 jest.mock('../native', () => ({
   registerCSSAnimation: jest.fn(),
-  unregisterCSSAnimation: jest.fn(),
+  unregisterCSSAnimations: jest.fn(),
   updateCSSAnimation: jest.fn(),
 }));
 
@@ -47,7 +47,7 @@ describe('CSSAnimationsManager', () => {
         );
 
         expect(updateCSSAnimation).not.toHaveBeenCalled();
-        expect(unregisterCSSAnimation).not.toHaveBeenCalled();
+        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
       });
 
       it('updates an existing animation if keyframes are the same and animation settings are different', () => {
@@ -68,7 +68,7 @@ describe('CSSAnimationsManager', () => {
 
         manager.update(SHADOW_NODE_WRAPPER, animationConfig);
         expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
-        expect(unregisterCSSAnimation).not.toHaveBeenCalled();
+        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
         expect(updateCSSAnimation).not.toHaveBeenCalled();
 
         manager.update(SHADOW_NODE_WRAPPER, newAnimationConfig);
@@ -79,7 +79,7 @@ describe('CSSAnimationsManager', () => {
           delay: 0,
         });
         expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
-        expect(unregisterCSSAnimation).not.toHaveBeenCalled();
+        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
       });
 
       it('detaches current and attaches a new animation if keyframes are different', () => {
@@ -98,13 +98,13 @@ describe('CSSAnimationsManager', () => {
 
         manager.update(SHADOW_NODE_WRAPPER, animationConfig);
         expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
-        expect(unregisterCSSAnimation).not.toHaveBeenCalled();
+        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
         expect(updateCSSAnimation).not.toHaveBeenCalled();
 
         manager.update(SHADOW_NODE_WRAPPER, newAnimationConfig);
         expect(registerCSSAnimation).toHaveBeenCalledTimes(2);
-        expect(unregisterCSSAnimation).toHaveBeenCalledTimes(1);
-        expect(unregisterCSSAnimation).toHaveBeenCalledWith(0);
+        expect(unregisterCSSAnimations).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSAnimations).toHaveBeenCalledWith([0]);
         expect(updateCSSAnimation).not.toHaveBeenCalled();
       });
 
@@ -118,12 +118,12 @@ describe('CSSAnimationsManager', () => {
 
         manager.update(SHADOW_NODE_WRAPPER, animationConfig);
         expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
-        expect(unregisterCSSAnimation).not.toHaveBeenCalled();
+        expect(unregisterCSSAnimations).not.toHaveBeenCalled();
         expect(updateCSSAnimation).not.toHaveBeenCalled();
 
         manager.update(SHADOW_NODE_WRAPPER, null);
-        expect(unregisterCSSAnimation).toHaveBeenCalledTimes(1);
-        expect(unregisterCSSAnimation).toHaveBeenCalledWith(0);
+        expect(unregisterCSSAnimations).toHaveBeenCalledTimes(1);
+        expect(unregisterCSSAnimations).toHaveBeenCalledWith([0]);
         expect(registerCSSAnimation).toHaveBeenCalledTimes(1);
         expect(updateCSSAnimation).not.toHaveBeenCalled();
       });
@@ -149,11 +149,8 @@ describe('CSSAnimationsManager', () => {
 
       manager.detach();
 
-      expect(unregisterCSSAnimation).toHaveBeenCalledTimes(3);
-      // Check if subsequent calls contain the correct animationId
-      expect(unregisterCSSAnimation).toHaveBeenNthCalledWith(1, 100);
-      expect(unregisterCSSAnimation).toHaveBeenNthCalledWith(2, 200);
-      expect(unregisterCSSAnimation).toHaveBeenNthCalledWith(3, 300);
+      expect(unregisterCSSAnimations).toHaveBeenCalledTimes(1);
+      expect(unregisterCSSAnimations).toHaveBeenCalledWith([100, 200, 300]);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((manager as any).attachedAnimations).toEqual({});

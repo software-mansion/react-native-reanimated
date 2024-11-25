@@ -11,8 +11,14 @@ void CSSAnimationsRegistry::updateSettings(
   std::lock_guard<std::mutex> lock{mutex_};
 
   const auto &animation = registry_.at(id);
+  const auto viewTag = animation->getShadowNode()->getTag();
+  animationsToRemove_.erase(id);
+  affectedViewTags_.insert(viewTag);
+
   animation->updateSettings(updatedSettings, timestamp);
+
   scheduleOrActivateAnimation(rt, animation, timestamp);
+  runAffectedViewUpdates(rt, timestamp);
 }
 
 void CSSAnimationsRegistry::add(
@@ -21,20 +27,31 @@ void CSSAnimationsRegistry::add(
     const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
 
-  registry_.insert({animation->getId(), animation});
+  const auto id = animation->getId();
+  const auto viewTag = animation->getShadowNode()->getTag();
+  animationsToRemove_.erase(id);
+  affectedViewTags_.insert(viewTag);
+
+  registry_.insert({id, animation});
+  viewAnimationIds_[animation->getShadowNode()->getTag()].insert(id);
+
   scheduleOrActivateAnimation(rt, animation, timestamp);
+  runAffectedViewUpdates(rt, timestamp);
 }
 
-void CSSAnimationsRegistry::remove(const unsigned id) {
+void CSSAnimationsRegistry::remove(
+    jsi::Runtime &rt,
+    const jsi::Array &animationIds,
+    const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
 
-  runningAnimationIds_.erase(id);
-  delayedAnimationsMap_.erase(id);
-  // We currently support only one animation per shadow node, so we can safely
-  // remove the tag from the updates registry once the associated animation is
-  // removed
-  updatesRegistry_.erase(registry_.at(id)->getShadowNode()->getTag());
-  registry_.erase(id);
+  const auto size = animationIds.size(rt);
+  for (size_t i = 0; i < size; ++i) {
+    const auto id = animationIds.getValueAtIndex(rt, i).asNumber();
+    handleAnimationRemoval(id);
+  }
+
+  runAffectedViewUpdates(rt, timestamp);
 }
 
 void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
@@ -42,6 +59,10 @@ void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
 
   // Activate all delayed animations that should start now
   activateDelayedAnimations(timestamp);
+  // Remove animations that are marked for removal
+  runMarkedRemovals(rt, timestamp);
+  // Update affected views after animation removals (if any were removed)
+  runAffectedViewUpdates(rt, timestamp);
 
   // Iterate over active animations and update them
   for (auto it = runningAnimationIds_.begin();
@@ -63,7 +84,6 @@ void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
       // mode
       if (!animation->hasForwardsFillMode()) {
         maybeAddUpdates(rt, shadowNode, animation->resetStyle(rt));
-        tagsToRemove_.insert(animation->getShadowNode()->getTag());
         updatesAddedToBatch = true;
       }
     }
@@ -87,21 +107,6 @@ void CSSAnimationsRegistry::maybeAddUpdates(
   if (!updatedStyle.isUndefined()) {
     updatesBatch_.emplace_back(
         shadowNode, std::make_unique<jsi::Value>(rt, updatedStyle));
-  }
-}
-
-void CSSAnimationsRegistry::applyStyleBeforeStart(
-    jsi::Runtime &rt,
-    const std::shared_ptr<CSSAnimation> &animation) {
-  const auto &fillStyle = animation->getBackwardsFillStyle(rt);
-  if (!fillStyle.isUndefined()) {
-    // Apply animation backwards fill style if animation has backwards fill mode
-    const auto shadowNode = animation->getShadowNode();
-    updatesRegistry_[shadowNode->getTag()] =
-        std::make_pair(shadowNode, dynamicFromValue(rt, fillStyle));
-  } else {
-    // Otherwise, remove style overrides from the registry
-    updatesRegistry_.erase(animation->getShadowNode()->getTag());
   }
 }
 
@@ -136,11 +141,6 @@ void CSSAnimationsRegistry::scheduleOrActivateAnimation(
   }
 
   if (startTimestamp > timestamp) {
-    // Apply the backwards fill style if the animation has a backwards fill mode
-    // or remove the style overrides from the updates registry (e.g. if the
-    // delay of the animation was increased)
-    applyStyleBeforeStart(rt, animation);
-
     // If the animation is delayed, schedule it for activation
     // (Only if it isn't paused)
     if (animation->getState(timestamp) != AnimationProgressState::PAUSED) {
@@ -152,6 +152,81 @@ void CSSAnimationsRegistry::scheduleOrActivateAnimation(
   } else {
     runningAnimationIds_.insert(id);
   }
+}
+
+void CSSAnimationsRegistry::handleAnimationRemoval(const unsigned id) {
+  const auto &animation = registry_.at(id);
+  const auto viewTag = animation->getShadowNode()->getTag();
+
+  affectedViewTags_.emplace(viewTag);
+  runningAnimationIds_.erase(id);
+  delayedAnimationsMap_.erase(id);
+  registry_.erase(id);
+
+  viewAnimationIds_[viewTag].erase(id);
+  if (viewAnimationIds_[viewTag].empty()) {
+    viewAnimationIds_.erase(viewTag);
+  }
+}
+
+void CSSAnimationsRegistry::runMarkedRemovals(
+    jsi::Runtime &rt,
+    const double timestamp) {
+  for (const auto id : animationsToRemove_) {
+    handleAnimationRemoval(id);
+  }
+  animationsToRemove_.clear();
+}
+
+void CSSAnimationsRegistry::runAffectedViewUpdates(
+    jsi::Runtime &rt,
+    const double timestamp) {
+  // Update styles stored in the updates registry for all affected nodes
+  // (replace with the current style from all active animations on the node)
+  for (const auto viewTag : affectedViewTags_) {
+    const auto it = viewAnimationIds_.find(viewTag);
+
+    // If the view has not even a single animation registered, remove style
+    // overrides from the registry
+    if (it == viewAnimationIds_.end()) {
+      updatesRegistry_.erase(viewTag);
+      continue;
+    }
+
+    // Otherwise, collect all styles from active animations and update the
+    // registry
+    folly::dynamic updatedStyle = folly::dynamic::object();
+    ShadowNode::Shared shadowNode = nullptr;
+
+    for (const auto id : it->second) {
+      const auto &animation = registry_.at(id);
+      if (!shadowNode) {
+        shadowNode = animation->getShadowNode();
+      }
+
+      jsi::Value style;
+      if (animation->getStartTimestamp(timestamp) > timestamp &&
+          animation->hasBackwardsFillMode()) {
+        style = animation->getBackwardsFillStyle(rt);
+      } else if (
+          animation->getState(timestamp) != AnimationProgressState::FINISHED ||
+          animation->hasForwardsFillMode()) {
+        style = animation->getCurrentInterpolationStyle(rt);
+      }
+
+      if (!style.isUndefined()) {
+        updatedStyle.update(dynamicFromValue(rt, style));
+      }
+    }
+
+    if (updatedStyle.empty()) {
+      updatesRegistry_.erase(viewTag);
+    } else {
+      updatesRegistry_[viewTag] = std::make_pair(shadowNode, updatedStyle);
+    }
+  }
+
+  affectedViewTags_.clear();
 }
 
 } // namespace reanimated

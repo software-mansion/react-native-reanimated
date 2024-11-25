@@ -73,7 +73,7 @@ export interface ReanimatedModuleProxy {
     updatedSettings: Partial<NormalizedSingleCSSAnimationSettings>
   ): void;
 
-  unregisterCSSAnimation(animationId: number): void;
+  unregisterCSSAnimations(animationIds: number[]): void;
 
   registerCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,

@@ -124,7 +124,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
       jsi::Runtime &rt,
       const jsi::Value &animationId,
       const jsi::Value &settingsUpdates) override;
-  void unregisterCSSAnimation(const jsi::Value &animationId) override;
+  void unregisterCSSAnimations(jsi::Runtime &rt, const jsi::Value &animationIds)
+      override;
 
   void registerCSSTransition(
       jsi::Runtime &rt,

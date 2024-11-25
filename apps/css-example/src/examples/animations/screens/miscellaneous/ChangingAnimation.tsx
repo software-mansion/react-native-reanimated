@@ -95,7 +95,7 @@ export default function ChangingAnimation() {
     <ScrollScreen>
       <Stagger>
         <Section
-          description="Select one of the predefined animations and see that the box animation changes to the selected one."
+          description="Select **one of** the predefined **animations** and see that the box **animation changes** to the selected one."
           title="Changing Animation">
           <View style={styles.content}>
             <View style={styles.buttonRow}>
@@ -168,10 +168,9 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   preview: {
-    alignItems: 'center',
+    ...flex.center,
     backgroundColor: colors.background2,
     borderRadius: radius.md,
     height: sizes.xxl,
-    justifyContent: 'center',
   },
 });

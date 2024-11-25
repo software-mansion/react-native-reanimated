@@ -2,7 +2,7 @@
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import {
   registerCSSAnimation,
-  unregisterCSSAnimation,
+  unregisterCSSAnimations,
   updateCSSAnimation,
 } from '../native';
 import {
@@ -58,11 +58,10 @@ export default class CSSAnimationsManager {
   }
 
   detach() {
-    for (const serializedKeyframes in this.attachedAnimations) {
-      for (const animation of this.attachedAnimations[serializedKeyframes]) {
-        unregisterCSSAnimation(animation.animationId);
-      }
-    }
+    const animationsToRemove = Object.values(this.attachedAnimations).flatMap(
+      (animations) => animations.map((animation) => animation.animationId)
+    );
+    unregisterCSSAnimations(animationsToRemove);
     this.attachedAnimations = {};
   }
 
@@ -100,17 +99,17 @@ export default class CSSAnimationsManager {
     }
 
     // Detach removed animations
+    const animationsToRemove: number[] = [];
     for (const serializedKeyframes in this.attachedAnimations) {
-      const existingAnimations = this.attachedAnimations[serializedKeyframes];
       const visitedAnimationsCount =
         visitedAnimationCounts[serializedKeyframes] ?? 0;
 
-      for (let i = visitedAnimationsCount; i < existingAnimations.length; i++) {
-        unregisterCSSAnimation(existingAnimations[i].animationId);
-      }
-      this.attachedAnimations[serializedKeyframes].splice(
-        visitedAnimationsCount
+      animationsToRemove.push(
+        ...this.attachedAnimations[serializedKeyframes]
+          .splice(visitedAnimationsCount)
+          .map((animation) => animation.animationId)
       );
     }
+    unregisterCSSAnimations(animationsToRemove);
   }
 }

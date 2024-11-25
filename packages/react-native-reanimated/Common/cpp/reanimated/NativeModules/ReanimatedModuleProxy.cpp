@@ -546,9 +546,11 @@ void ReanimatedModuleProxy::updateCSSAnimation(
   maybeRunCSSLoop();
 }
 
-void ReanimatedModuleProxy::unregisterCSSAnimation(
-    const jsi::Value &animationId) {
-  cssAnimationsRegistry_->remove(animationId.asNumber());
+void ReanimatedModuleProxy::unregisterCSSAnimations(
+    jsi::Runtime &rt,
+    const jsi::Value &animationIds) {
+  cssAnimationsRegistry_->remove(
+      rt, animationIds.asObject(rt).asArray(rt), getAnimationTimestamp_());
 }
 
 void ReanimatedModuleProxy::registerCSSTransition(
@@ -715,16 +717,19 @@ void ReanimatedModuleProxy::performOperations() {
     if (shouldUpdateCssAnimations_) {
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->update(rt, timestamp);
-      cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, false);
+      cssTransitionsRegistry_->flushUpdates(
+          rt, updatesBatch, FlushUpdatesMode::ReplaceByLatest);
     }
 
     // Flush all animated props updates
-    animatedPropsRegistry_->flushUpdates(rt, updatesBatch, true);
+    animatedPropsRegistry_->flushUpdates(
+        rt, updatesBatch, FlushUpdatesMode::MergeAll);
 
     if (shouldUpdateCssAnimations_) {
       // Update CSS animations and flush updates
       cssAnimationsRegistry_->update(rt, timestamp);
-      cssAnimationsRegistry_->flushUpdates(rt, updatesBatch, false);
+      cssAnimationsRegistry_->flushUpdates(
+          rt, updatesBatch, FlushUpdatesMode::ReplaceByMergedBatch);
     }
 
     shouldUpdateCssAnimations_ = false;
