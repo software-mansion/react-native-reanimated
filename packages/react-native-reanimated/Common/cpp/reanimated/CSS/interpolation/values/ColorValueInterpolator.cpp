@@ -16,11 +16,11 @@ jsi::Value ColorValueInterpolator::convertResultToJSI(
 }
 
 Color ColorValueInterpolator::interpolate(
-    const double localProgress,
+    const double progress,
     const Color &fromValue,
     const Color &toValue,
-    const PropertyInterpolationUpdateContext &context) const {
-  return fromValue.interpolate(toValue, localProgress);
+    const ValueInterpolatorUpdateContext &context) const {
+  return fromValue.interpolate(toValue, progress);
 }
 
 } // namespace reanimated

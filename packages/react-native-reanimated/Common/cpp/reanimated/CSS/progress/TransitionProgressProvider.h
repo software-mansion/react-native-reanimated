@@ -1,7 +1,8 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/progress/ProgressProvider.h>
+#include <reanimated/CSS/progress/KeyframeProgressProvider.h>
+#include <reanimated/CSS/progress/RawProgressProvider.h>
 #include <reanimated/CSS/util/props.h>
 
 #include <queue>
@@ -14,20 +15,38 @@ namespace reanimated {
 
 enum class TransitionProgressState { PENDING, RUNNING, FINISHED };
 
-class TransitionPropertyProgressProvider final : public ProgressProvider {
+class TransitionPropertyProgressProvider final
+    : public KeyframeProgressProvider,
+      public RawProgressProvider {
  public:
-  using ProgressProvider::ProgressProvider;
+  TransitionPropertyProgressProvider(
+      double timestamp,
+      double duration,
+      double delay,
+      const EasingFunction &easingFunction);
 
+  double getGlobalProgress() const override {
+    return rawProgress_.value_or(0);
+  }
+  bool isFirstUpdate() const override {
+    return !previousRawProgress_.has_value();
+  }
+  double getKeyframeProgress(double fromOffset, double toOffset) const override;
   TransitionProgressState getState() const;
   double getRemainingDelay(double timestamp) const;
 
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
-  double decorateProgress(double progress) const override;
 
  private:
+  EasingFunction easingFunction_;
+
   double getElapsedTime(double timestamp) const;
 };
+
+using TransitionPropertyProgressProviders = std::unordered_map<
+    std::string,
+    std::shared_ptr<TransitionPropertyProgressProvider>>;
 
 class TransitionProgressProvider {
  public:
@@ -35,13 +54,6 @@ class TransitionProgressProvider {
       double duration,
       double delay,
       const EasingFunction &easingFunction);
-
-  TransitionProgressState getState() const;
-  double getMinDelay(double timestamp) const;
-  std::unordered_map<std::string, TransitionPropertyProgressProvider>
-  getPropertyProgressProviders() const {
-    return propertyProgressProviders_;
-  }
 
   void setDuration(double duration) {
     duration_ = duration;
@@ -51,6 +63,15 @@ class TransitionProgressProvider {
   }
   void setEasingFunction(const EasingFunction &easingFunction) {
     easingFunction_ = easingFunction;
+  }
+
+  TransitionProgressState getState() const;
+  double getMinDelay(double timestamp) const;
+  TransitionPropertyProgressProviders getPropertyProgressProviders() const {
+    return propertyProgressProviders_;
+  }
+  std::unordered_set<std::string> getPropertiesToRemove() const {
+    return propertiesToRemove_;
   }
 
   void discardIrrelevantProgressProviders(
@@ -67,8 +88,8 @@ class TransitionProgressProvider {
   EasingFunction easingFunction_;
 
   std::unordered_set<std::string> propertiesToRemove_;
-  std::unordered_map<std::string, TransitionPropertyProgressProvider>
-      propertyProgressProviders_;
+
+  TransitionPropertyProgressProviders propertyProgressProviders_;
 };
 
 } // namespace reanimated

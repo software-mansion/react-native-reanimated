@@ -20,13 +20,18 @@ struct ValueKeyframe {
   std::optional<T> value;
 };
 
+struct ValueInterpolatorUpdateContext {
+  const ShadowNode::Shared &node;
+};
+
 template <typename T>
 class ValueInterpolator : public PropertyInterpolator {
  public:
   explicit ValueInterpolator(
+      const PropertyPath &propertyPath,
       const std::optional<T> &defaultStyleValue,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const PropertyPath &propertyPath);
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~ValueInterpolator() = default;
 
   jsi::Value getStyleValue(
@@ -35,6 +40,8 @@ class ValueInterpolator : public PropertyInterpolator {
   jsi::Value getCurrentValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
+  jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const override;
+  jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
@@ -42,13 +49,13 @@ class ValueInterpolator : public PropertyInterpolator {
       const jsi::Value &oldStyleValue,
       const jsi::Value &newStyleValue) override;
 
-  jsi::Value update(const PropertyInterpolationUpdateContext &context) override;
+  jsi::Value update(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
+      override;
   jsi::Value reset(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
       override;
 
  protected:
   std::optional<T> defaultStyleValue_; // Default style value
-  std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   virtual T prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const = 0;
@@ -57,10 +64,10 @@ class ValueInterpolator : public PropertyInterpolator {
       const = 0;
 
   virtual T interpolate(
-      double localProgress,
+      double progress,
       const T &fromValue,
       const T &toValue,
-      const PropertyInterpolationUpdateContext &context) const = 0;
+      const ValueInterpolatorUpdateContext &context) const = 0;
 
   virtual bool isResolvable() const {
     return false;
@@ -75,30 +82,29 @@ class ValueInterpolator : public PropertyInterpolator {
   std::optional<T> previousValue_; // Previous interpolation result
 
   std::optional<T> getFallbackValue(
-      const PropertyInterpolationUpdateContext &context) const;
-
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode) const;
   std::optional<T> resolveKeyframeValue(
       const std::optional<T> &unresolvedValue,
-      const PropertyInterpolationUpdateContext &context) const;
+      const ShadowNode::Shared &shadowNode) const;
 
   ValueKeyframe<T> getKeyframeAtIndex(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
       size_t index,
-      bool shouldResolve,
-      const PropertyInterpolationUpdateContext &context) const;
-
+      bool shouldResolve) const;
   void updateCurrentKeyframes(
-      const PropertyInterpolationUpdateContext &context);
-
-  double calculateLocalProgress(
-      const ValueKeyframe<T> &keyframeBefore,
-      const ValueKeyframe<T> &keyframeAfter,
-      const PropertyInterpolationUpdateContext &context) const;
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode);
 
   jsi::Value interpolateMissingValue(
-      double localProgress,
+      jsi::Runtime &rt,
+      double progress,
       const std::optional<T> &fromValue,
-      const std::optional<T> &toValue,
-      const PropertyInterpolationUpdateContext &context) const;
+      const std::optional<T> &toValue) const;
+  jsi::Value convertOptionalToJSI(
+      jsi::Runtime &rt,
+      const std::optional<T> &value) const;
 };
 
 } // namespace reanimated

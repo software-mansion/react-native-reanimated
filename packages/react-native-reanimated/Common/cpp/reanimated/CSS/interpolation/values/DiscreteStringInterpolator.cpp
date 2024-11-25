@@ -16,11 +16,11 @@ jsi::Value DiscreteStringInterpolator::convertResultToJSI(
 }
 
 std::string DiscreteStringInterpolator::interpolate(
-    const double localProgress,
+    const double progress,
     const std::string &fromValue,
     const std::string &toValue,
-    const PropertyInterpolationUpdateContext &context) const {
-  return localProgress < 0.5 ? fromValue : toValue;
+    const ValueInterpolatorUpdateContext &context) const {
+  return progress < 0.5 ? fromValue : toValue;
 }
 
 } // namespace reanimated

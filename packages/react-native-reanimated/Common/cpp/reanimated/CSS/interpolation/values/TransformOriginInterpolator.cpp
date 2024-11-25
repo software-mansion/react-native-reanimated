@@ -4,13 +4,15 @@
 namespace reanimated {
 
 TransformOriginInterpolator::TransformOriginInterpolator(
+    const PropertyPath &propertyPath,
     const std::optional<TransformOrigin> &defaultValue,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const PropertyPath &propertyPath)
+    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : ValueInterpolator<TransformOrigin>(
+          propertyPath,
           defaultValue,
-          viewStylesRepository,
-          propertyPath) {}
+          progressProvider,
+          viewStylesRepository) {}
 
 TransformOrigin TransformOriginInterpolator::prepareKeyframeValue(
     jsi::Runtime &rt,
@@ -29,13 +31,13 @@ jsi::Value TransformOriginInterpolator::convertResultToJSI(
 }
 
 TransformOrigin TransformOriginInterpolator::interpolate(
-    const double localProgress,
+    const double progress,
     const TransformOrigin &fromValue,
     const TransformOrigin &toValue,
-    const PropertyInterpolationUpdateContext &context) const {
+    const ValueInterpolatorUpdateContext &context) const {
   return TransformOrigin(
       fromValue.x.interpolate(
-          localProgress,
+          progress,
           toValue.x,
           {
               .node = context.node,
@@ -44,7 +46,7 @@ TransformOrigin TransformOriginInterpolator::interpolate(
               .relativeTo = RelativeTo::SELF,
           }),
       fromValue.y.interpolate(
-          localProgress,
+          progress,
           toValue.y,
           {
               .node = context.node,
@@ -54,7 +56,7 @@ TransformOrigin TransformOriginInterpolator::interpolate(
           }),
       UnitValue(
           fromValue.z.value +
-          (toValue.z.value - fromValue.z.value) * localProgress));
+          (toValue.z.value - fromValue.z.value) * progress));
 }
 
 } // namespace reanimated

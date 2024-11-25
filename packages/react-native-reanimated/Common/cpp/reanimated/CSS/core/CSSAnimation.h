@@ -38,10 +38,10 @@ class CSSAnimation {
         fillMode_ == AnimationFillMode::BOTH;
   }
   AnimationProgressState getState(double timestamp) const {
-    return progressProvider_.getState(timestamp);
+    return progressProvider_->getState(timestamp);
   }
   double getStartTimestamp(double timestamp) const {
-    return progressProvider_.getStartTimestamp(timestamp);
+    return progressProvider_->getStartTimestamp(timestamp);
   }
   jsi::Value getViewStyle(jsi::Runtime &rt) const {
     return styleInterpolator_.getStyleValue(rt, shadowNode_);
@@ -61,16 +61,10 @@ class CSSAnimation {
  private:
   const unsigned id_;
   const ShadowNode::Shared shadowNode_;
-
-  AnimationStyleInterpolator styleInterpolator_;
-  AnimationProgressProvider progressProvider_;
-
   AnimationFillMode fillMode_;
 
-  PropertyInterpolationUpdateContext createUpdateContext(
-      jsi::Runtime &rt,
-      double progress,
-      bool directionChanged) const;
+  std::shared_ptr<AnimationProgressProvider> progressProvider_;
+  AnimationStyleInterpolator styleInterpolator_;
 };
 
 } // namespace reanimated

@@ -19,10 +19,10 @@ class NumericValueInterpolator : public ValueInterpolator<double> {
   }
 
   double interpolate(
-      double localProgress,
+      double progress,
       const double &fromValue,
       const double &toValue,
-      const PropertyInterpolationUpdateContext &context) const override;
+      const ValueInterpolatorUpdateContext &context) const override;
 };
 
 } // namespace reanimated

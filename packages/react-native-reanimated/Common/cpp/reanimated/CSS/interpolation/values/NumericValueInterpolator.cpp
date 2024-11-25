@@ -10,11 +10,11 @@ double NumericValueInterpolator::prepareKeyframeValue(
 }
 
 double NumericValueInterpolator::interpolate(
-    const double localProgress,
+    const double progress,
     const double &fromValue,
     const double &toValue,
-    const PropertyInterpolationUpdateContext &context) const {
-  return fromValue + localProgress * (toValue - fromValue);
+    const ValueInterpolatorUpdateContext &context) const {
+  return fromValue + progress * (toValue - fromValue);
 }
 
 } // namespace reanimated

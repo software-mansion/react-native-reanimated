@@ -11,9 +11,10 @@ class TransformOriginInterpolator final
     : public ValueInterpolator<TransformOrigin> {
  public:
   TransformOriginInterpolator(
+      const PropertyPath &propertyPath,
       const std::optional<TransformOrigin> &defaultValue,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const PropertyPath &propertyPath);
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
  protected:
   TransformOrigin prepareKeyframeValue(
@@ -24,10 +25,10 @@ class TransformOriginInterpolator final
       const override;
 
   TransformOrigin interpolate(
-      double localProgress,
+      double progress,
       const TransformOrigin &fromValue,
       const TransformOrigin &toValue,
-      const PropertyInterpolationUpdateContext &context) const override;
+      const ValueInterpolatorUpdateContext &context) const override;
 
   bool isResolvable() const override {
     return true;

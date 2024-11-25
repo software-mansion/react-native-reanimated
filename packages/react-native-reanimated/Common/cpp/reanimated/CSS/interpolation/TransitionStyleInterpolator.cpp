@@ -12,9 +12,9 @@ jsi::Value TransitionStyleInterpolator::getCurrentInterpolationStyle(
     const ShadowNode::Shared &shadowNode) const {
   jsi::Object result(rt);
 
-  for (const auto &[propName, interpolator] : interpolators_) {
+  for (const auto &[propertyName, interpolator] : interpolators_) {
     jsi::Value value = interpolator->getCurrentValue(rt, shadowNode);
-    result.setProperty(rt, propName.c_str(), value);
+    result.setProperty(rt, propertyName.c_str(), value);
   }
 
   return result;
@@ -23,26 +23,23 @@ jsi::Value TransitionStyleInterpolator::getCurrentInterpolationStyle(
 jsi::Value TransitionStyleInterpolator::update(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode,
-    const std::unordered_map<std::string, TransitionPropertyProgressProvider>
-        &progressProviders) {
-  if (progressProviders.empty()) {
-    interpolators_.clear();
+    const std::unordered_set<std::string> &propertiesToRemove) {
+  if (interpolators_.empty()) {
     return jsi::Value::undefined();
   }
 
   jsi::Object result(rt);
 
-  for (const auto &[propName, progressProvider] : progressProviders) {
-    jsi::Value value = interpolators_.at(propName)->update(
-        {.rt = rt,
-         .node = shadowNode,
-         .progress = progressProvider.getCurrent(),
-         .previousProgress = progressProvider.getPrevious(),
-         .directionChanged = progressProvider.hasDirectionChanged()});
-    result.setProperty(rt, propName.c_str(), value);
+  for (auto it = interpolators_.begin(); it != interpolators_.end();) {
+    const auto &[propertyName, interpolator] = *it;
 
-    if (progressProvider.getState() == TransitionProgressState::FINISHED) {
-      interpolators_.erase(propName);
+    jsi::Value value = interpolator->update(rt, shadowNode);
+    result.setProperty(rt, propertyName.c_str(), value);
+
+    if (propertiesToRemove.find(propertyName) != propertiesToRemove.cend()) {
+      it = interpolators_.erase(it);
+    } else {
+      ++it;
     }
   }
 
@@ -65,7 +62,8 @@ void TransitionStyleInterpolator::discardIrrelevantInterpolators(
 
 void TransitionStyleInterpolator::updateInterpolatedProperties(
     jsi::Runtime &rt,
-    const ChangedProps &changedProps) {
+    const ChangedProps &changedProps,
+    const TransitionPropertyProgressProviders &progressProviders) {
   const bool hasOldProps = changedProps.oldProps->isObject();
   const bool hasNewProps = changedProps.newProps->isObject();
 
@@ -86,9 +84,16 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
 
     if (interpolatorIt == interpolators_.end()) {
       const auto newInterpolator = createPropertyInterpolator(
-          propertyName, {}, styleInterpolatorFactories, viewStylesRepository_);
+          propertyName,
+          {},
+          styleInterpolatorFactories,
+          progressProviders.at(propertyName),
+          viewStylesRepository_);
       interpolatorIt =
           interpolators_.emplace(propertyName, newInterpolator).first;
+    } else {
+      interpolatorIt->second->setProgressProvider(
+          progressProviders.at(propertyName));
     }
 
     interpolatorIt->second->updateKeyframesFromStyleChange(

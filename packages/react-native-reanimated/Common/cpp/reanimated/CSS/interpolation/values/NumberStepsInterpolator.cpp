@@ -16,13 +16,13 @@ jsi::Value NumberStepsInterpolator::convertResultToJSI(
 }
 
 int NumberStepsInterpolator::interpolate(
-    const double localProgress,
+    const double progress,
     const int &fromValue,
     const int &toValue,
-    const PropertyInterpolationUpdateContext &context) const {
+    const ValueInterpolatorUpdateContext &context) const {
   // TODO: Make sure it should work in this way for NumberStepsInterpolator
   int diff = toValue - fromValue;
-  return fromValue + static_cast<int>(diff * localProgress);
+  return fromValue + static_cast<int>(diff * progress);
 }
 
 } // namespace reanimated

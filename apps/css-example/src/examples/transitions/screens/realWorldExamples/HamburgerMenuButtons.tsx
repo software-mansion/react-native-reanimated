@@ -29,6 +29,7 @@ export default function HamburgerMenuButtons() {
     <ScrollScreen contentContainerStyle={{ paddingVertical: spacing.lg }}>
       <View style={styles.buttons}>
         <Button
+          activeOpacity={1}
           title={`${autoAnimate ? 'Stop' : 'Start'} Auto Animate`}
           onPress={() => setAutoAnimate(!autoAnimate)}
         />

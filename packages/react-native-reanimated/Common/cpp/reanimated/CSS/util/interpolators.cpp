@@ -7,6 +7,7 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     const std::string &propertyName,
     const std::vector<std::string> &propertyPath,
     const PropertiesInterpolatorFactories &factories,
+    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
   auto factoryIt = factories.find(propertyName);
 
@@ -19,7 +20,8 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
   PropertyPath newPath = propertyPath;
   newPath.emplace_back(propertyName);
 
-  return factoryIt->second->create(viewStylesRepository, newPath);
+  return factoryIt->second->create(
+      newPath, progressProvider, viewStylesRepository);
 }
 
 } // namespace reanimated

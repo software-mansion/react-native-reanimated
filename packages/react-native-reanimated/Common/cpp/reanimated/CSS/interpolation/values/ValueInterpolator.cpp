@@ -5,12 +5,15 @@ namespace reanimated {
 
 template <typename T>
 ValueInterpolator<T>::ValueInterpolator(
+    const PropertyPath &propertyPath,
     const std::optional<T> &defaultStyleValue,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const PropertyPath &propertyPath)
-    : PropertyInterpolator(propertyPath),
-      defaultStyleValue_(defaultStyleValue),
-      viewStylesRepository_(viewStylesRepository) {}
+    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+    : PropertyInterpolator(
+          propertyPath,
+          progressProvider,
+          viewStylesRepository),
+      defaultStyleValue_(defaultStyleValue) {}
 
 template <typename T>
 jsi::Value ValueInterpolator<T>::getStyleValue(
@@ -35,6 +38,16 @@ jsi::Value ValueInterpolator<T>::getCurrentValue(
     return convertResultToJSI(rt, defaultStyleValue_.value());
   }
   return jsi::Value::undefined();
+}
+
+template <typename T>
+jsi::Value ValueInterpolator<T>::getFirstKeyframeValue(jsi::Runtime &rt) const {
+  return convertOptionalToJSI(rt, keyframes_.front().value);
+}
+
+template <typename T>
+jsi::Value ValueInterpolator<T>::getLastKeyframeValue(jsi::Runtime &rt) const {
+  return convertOptionalToJSI(rt, keyframes_.back().value);
 }
 
 template <typename T>
@@ -92,40 +105,44 @@ void ValueInterpolator<T>::updateKeyframesFromStyleChange(
 
 template <typename T>
 jsi::Value ValueInterpolator<T>::update(
-    const PropertyInterpolationUpdateContext &context) {
-  updateCurrentKeyframes(context);
-
-  const auto localProgress =
-      calculateLocalProgress(keyframeBefore_, keyframeAfter_, context);
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) {
+  updateCurrentKeyframes(rt, shadowNode);
 
   std::optional<T> fromValue = keyframeBefore_.value;
   std::optional<T> toValue = keyframeAfter_.value;
 
   if (!fromValue.has_value()) {
-    fromValue = getFallbackValue(context);
+    fromValue = getFallbackValue(rt, shadowNode);
   }
   if (!toValue.has_value()) {
-    toValue = getFallbackValue(context);
+    toValue = getFallbackValue(rt, shadowNode);
   }
+
+  const auto keyframeProgress = progressProvider_->getKeyframeProgress(
+      keyframeBefore_.offset, keyframeAfter_.offset);
 
   // If at least one of keyframes has no value set and there is no fallback
   // value, interpolate as if values were discrete
   if (!fromValue.has_value() || !toValue.has_value()) {
-    return interpolateMissingValue(localProgress, fromValue, toValue, context);
+    return interpolateMissingValue(rt, keyframeProgress, fromValue, toValue);
   }
 
   T value;
-  if (localProgress == 1.0) {
+  if (keyframeProgress == 1.0) {
     value = toValue.value();
-  } else if (localProgress == 0.0) {
+  } else if (keyframeProgress == 0.0) {
     value = fromValue.value();
   } else {
-    value =
-        interpolate(localProgress, fromValue.value(), toValue.value(), context);
+    value = interpolate(
+        keyframeProgress,
+        fromValue.value(),
+        toValue.value(),
+        {.node = shadowNode});
   }
   previousValue_ = value;
 
-  return convertResultToJSI(context.rt, value);
+  return convertResultToJSI(rt, value);
 }
 
 template <typename T>
@@ -147,29 +164,30 @@ jsi::Value ValueInterpolator<T>::reset(
 
 template <typename T>
 std::optional<T> ValueInterpolator<T>::getFallbackValue(
-    const PropertyInterpolationUpdateContext &context) const {
-  const jsi::Value &styleValue = getStyleValue(context.rt, context.node);
-  return styleValue.isUndefined()
-      ? defaultStyleValue_
-      : prepareKeyframeValue(context.rt, styleValue);
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) const {
+  const jsi::Value &styleValue = getStyleValue(rt, shadowNode);
+  return styleValue.isUndefined() ? defaultStyleValue_
+                                  : prepareKeyframeValue(rt, styleValue);
 }
 
 template <typename T>
 std::optional<T> ValueInterpolator<T>::resolveKeyframeValue(
     const std::optional<T> &unresolvedValue,
-    const PropertyInterpolationUpdateContext &context) const {
+    const ShadowNode::Shared &shadowNode) const {
   if (!unresolvedValue.has_value()) {
     return std::nullopt;
   }
   const auto &value = unresolvedValue.value();
-  return interpolate(0, value, value, context);
+  return interpolate(0, value, value, {.node = shadowNode});
 }
 
 template <typename T>
 ValueKeyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode,
     size_t index,
-    bool shouldResolve,
-    const PropertyInterpolationUpdateContext &context) const {
+    bool shouldResolve) const {
   const auto &keyframe = keyframes_.at(index);
 
   if (shouldResolve) {
@@ -179,7 +197,7 @@ ValueKeyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
     if (keyframe.value.has_value()) {
       unresolvedValue = keyframe.value.value();
     } else {
-      const auto fallbackValue = getFallbackValue(context);
+      const auto fallbackValue = getFallbackValue(rt, shadowNode);
       if (fallbackValue.has_value()) {
         unresolvedValue = fallbackValue.value();
       } else {
@@ -188,7 +206,7 @@ ValueKeyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
     }
 
     return ValueKeyframe<T>{
-        offset, resolveKeyframeValue(unresolvedValue, context)};
+        offset, resolveKeyframeValue(unresolvedValue, shadowNode)};
   }
 
   return keyframe;
@@ -196,85 +214,66 @@ ValueKeyframe<T> ValueInterpolator<T>::getKeyframeAtIndex(
 
 template <typename T>
 void ValueInterpolator<T>::updateCurrentKeyframes(
-    const PropertyInterpolationUpdateContext &context) {
-  const bool isProgressLessThanHalf = context.progress < 0.5;
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) {
+  const auto progress = progressProvider_->getGlobalProgress();
+  const bool isProgressLessThanHalf = progress < 0.5;
   const auto prevAfterIndex = keyframeAfterIndex_;
 
-  if (!context.previousProgress.has_value()) {
+  if (progressProvider_->isFirstUpdate()) {
     keyframeAfterIndex_ = isProgressLessThanHalf ? 1 : keyframes_.size() - 1;
   }
 
   while (keyframeAfterIndex_ < keyframes_.size() - 1 &&
-         keyframes_[keyframeAfterIndex_].offset < context.progress)
+         keyframes_[keyframeAfterIndex_].offset < progress)
     ++keyframeAfterIndex_;
 
   while (keyframeAfterIndex_ > 1 &&
-         keyframes_[keyframeAfterIndex_ - 1].offset >= context.progress)
+         keyframes_[keyframeAfterIndex_ - 1].offset >= progress)
     --keyframeAfterIndex_;
 
-  if (context.previousProgress.has_value()) {
-    if (keyframeAfterIndex_ != prevAfterIndex) {
-      keyframeBefore_ = getKeyframeAtIndex(
-          keyframeAfterIndex_ - 1,
-          isResolvable() && keyframeAfterIndex_ > prevAfterIndex,
-          context);
-      keyframeAfter_ = getKeyframeAtIndex(
-          keyframeAfterIndex_,
-          isResolvable() && keyframeAfterIndex_ < prevAfterIndex,
-          context);
-    } else if (
-        isResolvable() && context.directionChanged &&
-        previousValue_.has_value()) {
-      const ValueKeyframe<T> keyframe = {
-          context.previousProgress.value(), previousValue_.value()};
-      if (context.progress < context.previousProgress.value()) {
-        keyframeBefore_ =
-            getKeyframeAtIndex(keyframeAfterIndex_ - 1, false, context);
-        keyframeAfter_ = keyframe;
-      } else {
-        keyframeBefore_ = keyframe;
-        keyframeAfter_ =
-            getKeyframeAtIndex(keyframeAfterIndex_, false, context);
-      }
-    }
-  } else {
+  if (progressProvider_->isFirstUpdate()) {
+    // Set initial keyframes if it's the first update
     keyframeBefore_ = getKeyframeAtIndex(
+        rt,
+        shadowNode,
         keyframeAfterIndex_ - 1,
-        isResolvable() && isProgressLessThanHalf,
-        context);
+        isResolvable() && isProgressLessThanHalf);
     keyframeAfter_ = getKeyframeAtIndex(
+        rt,
+        shadowNode,
         keyframeAfterIndex_,
-        isResolvable() && !isProgressLessThanHalf,
-        context);
+        isResolvable() && !isProgressLessThanHalf);
+  } else if (keyframeAfterIndex_ != prevAfterIndex) {
+    // Update keyframes if the current keyframe index has changed
+    keyframeBefore_ = getKeyframeAtIndex(
+        rt,
+        shadowNode,
+        keyframeAfterIndex_ - 1,
+        isResolvable() && keyframeAfterIndex_ > prevAfterIndex);
+    keyframeAfter_ = getKeyframeAtIndex(
+        rt,
+        shadowNode,
+        keyframeAfterIndex_,
+        isResolvable() && keyframeAfterIndex_ < prevAfterIndex);
   }
-}
-
-template <typename T>
-double ValueInterpolator<T>::calculateLocalProgress(
-    const ValueKeyframe<T> &keyframeBefore,
-    const ValueKeyframe<T> &keyframeAfter,
-    const PropertyInterpolationUpdateContext &context) const {
-  const double beforeOffset = keyframeBefore.offset;
-  const double afterOffset = keyframeAfter.offset;
-
-  if (afterOffset == beforeOffset) {
-    return 1;
-  }
-
-  return (context.progress - beforeOffset) / (afterOffset - beforeOffset);
 }
 
 template <typename T>
 jsi::Value ValueInterpolator<T>::interpolateMissingValue(
-    double localProgress,
+    jsi::Runtime &rt,
+    double progress,
     const std::optional<T> &fromValue,
-    const std::optional<T> &toValue,
-    const PropertyInterpolationUpdateContext &context) const {
-  return jsi::Value::undefined();
-  const auto selectedValue = localProgress < 0.5 ? fromValue : toValue;
-  return selectedValue.has_value()
-      ? convertResultToJSI(context.rt, selectedValue.value())
-      : jsi::Value::undefined();
+    const std::optional<T> &toValue) const {
+  return convertOptionalToJSI(rt, progress < 0.5 ? fromValue : toValue);
+}
+
+template <typename T>
+jsi::Value ValueInterpolator<T>::convertOptionalToJSI(
+    jsi::Runtime &rt,
+    const std::optional<T> &value) const {
+  return value.has_value() ? convertResultToJSI(rt, value.value())
+                           : jsi::Value::undefined();
 }
 
 // Declare the types that will be used in the ValueInterpolator class

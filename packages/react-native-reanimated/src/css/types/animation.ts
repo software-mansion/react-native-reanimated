@@ -63,14 +63,14 @@ type CreateKeyframesStyle<S> = {
 };
 
 export type CSSKeyframesStyle = CreateKeyframesStyle<CSSStyleProps>;
-export type CSSKeyframeTimingFunctions = Record<
+export type NormalizedCSSKeyframeTimingFunctions = Record<
   number,
-  CSSAnimationTimingFunction
+  NormalizedCSSTimingFunction
 >;
 
 export type NormalizedCSSAnimationName = {
   keyframesStyle: CSSKeyframesStyle;
-  keyframeTimingFunctions: CSSKeyframeTimingFunctions;
+  keyframeTimingFunctions: NormalizedCSSKeyframeTimingFunctions;
 };
 
 export type NormalizedCSSAnimationSettings = {

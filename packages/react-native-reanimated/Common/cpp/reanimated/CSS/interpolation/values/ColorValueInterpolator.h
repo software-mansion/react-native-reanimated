@@ -17,10 +17,10 @@ class ColorValueInterpolator final : public ValueInterpolator<Color> {
       const override;
 
   Color interpolate(
-      double localProgress,
+      double progress,
       const Color &fromValue,
       const Color &toValue,
-      const PropertyInterpolationUpdateContext &context) const override;
+      const ValueInterpolatorUpdateContext &context) const override;
 };
 
 } // namespace reanimated

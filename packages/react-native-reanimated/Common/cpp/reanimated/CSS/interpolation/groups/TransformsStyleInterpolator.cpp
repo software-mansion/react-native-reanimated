@@ -5,11 +5,14 @@ namespace reanimated {
 
 TransformsStyleInterpolator::TransformsStyleInterpolator(
     const std::shared_ptr<TransformInterpolators> &interpolators,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const PropertyPath &propertyPath)
-    : PropertyInterpolator(propertyPath),
-      interpolators_(interpolators),
-      viewStylesRepository_(viewStylesRepository) {}
+    const PropertyPath &propertyPath,
+    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+    : PropertyInterpolator(
+          propertyPath,
+          progressProvider,
+          viewStylesRepository),
+      interpolators_(interpolators) {}
 
 jsi::Value TransformsStyleInterpolator::getStyleValue(
     jsi::Runtime &rt,
@@ -27,9 +30,25 @@ jsi::Value TransformsStyleInterpolator::getCurrentValue(
   return getStyleValue(rt, shadowNode);
 }
 
+jsi::Value TransformsStyleInterpolator::getFirstKeyframeValue(
+    jsi::Runtime &rt) const {
+  const auto fromOperations = keyframes_.front()->fromOperations;
+  return fromOperations.has_value()
+      ? convertResultToJSI(rt, fromOperations.value())
+      : jsi::Value::undefined();
+}
+
+jsi::Value TransformsStyleInterpolator::getLastKeyframeValue(
+    jsi::Runtime &rt) const {
+  const auto toOperations = keyframes_.back()->toOperations;
+  return toOperations.has_value() ? convertResultToJSI(rt, toOperations.value())
+                                  : jsi::Value::undefined();
+}
+
 jsi::Value TransformsStyleInterpolator::update(
-    const PropertyInterpolationUpdateContext &context) {
-  updateCurrentKeyframe(context);
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) {
+  updateCurrentKeyframe(rt, shadowNode);
 
   // Get or create the current keyframe
   auto &keyframe = currentKeyframe_;
@@ -37,7 +56,7 @@ jsi::Value TransformsStyleInterpolator::update(
       !keyframe->toOperations.has_value()) {
     // If the value is nullopt, we would have to read it from the view style
     // and build the keyframe again
-    const auto fallbackValue = getFallbackValue(context);
+    const auto fallbackValue = getFallbackValue(rt, shadowNode);
     const auto &fromOperations = keyframe->fromOperations.has_value()
         ? keyframe->fromOperations.value()
         : fallbackValue;
@@ -47,18 +66,19 @@ jsi::Value TransformsStyleInterpolator::update(
     keyframe = createTransformKeyframe(
         keyframe->fromOffset, keyframe->toOffset, fromOperations, toOperations);
   }
-  // Calculate the local progress for the current keyframe
-  const auto progress = calculateLocalProgress(context.progress);
+
   // Interpolate the current keyframe
   TransformOperations result = interpolateOperations(
-      progress,
+      shadowNode,
+      progressProvider_->getKeyframeProgress(
+          keyframe->fromOffset, keyframe->toOffset),
       keyframe->fromOperations.value(),
-      keyframe->toOperations.value(),
-      context);
+      keyframe->toOperations.value());
 
   // Convert the result to JSI value
-  auto updates = convertResultToJSI(context.rt, result);
+  auto updates = convertResultToJSI(rt, result);
   previousResult_ = std::move(result);
+
   return updates;
 }
 
@@ -295,9 +315,10 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
 }
 
 TransformOperations TransformsStyleInterpolator::getFallbackValue(
-    const PropertyInterpolationUpdateContext &context) const {
-  const jsi::Value &styleValue = getStyleValue(context.rt, context.node);
-  return parseTransformOperations(context.rt, styleValue)
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) const {
+  const jsi::Value &styleValue = getStyleValue(rt, shadowNode);
+  return parseTransformOperations(rt, styleValue)
       .value_or(TransformOperations{});
 }
 
@@ -308,17 +329,18 @@ TransformsStyleInterpolator::getDefaultOperationOfType(
 }
 
 TransformOperations TransformsStyleInterpolator::resolveTransformOperations(
-    const TransformOperations &unresolvedOperations,
-    const PropertyInterpolationUpdateContext &context) const {
+    const ShadowNode::Shared &shadowNode,
+    const TransformOperations &unresolvedOperations) const {
   return interpolateOperations(
-      0, unresolvedOperations, unresolvedOperations, context);
+      shadowNode, 0, unresolvedOperations, unresolvedOperations);
 }
 
 std::shared_ptr<TransformKeyframe>
 TransformsStyleInterpolator::getKeyframeAtIndex(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode,
     const size_t index,
-    const int resolveDirection,
-    const PropertyInterpolationUpdateContext &context) const {
+    const int resolveDirection) const {
   const auto &keyframe = keyframes_.at(index);
 
   if (resolveDirection == 0) {
@@ -335,96 +357,71 @@ TransformsStyleInterpolator::getKeyframeAtIndex(
       return std::make_shared<TransformKeyframe>(TransformKeyframe{
           keyframe->fromOffset,
           keyframe->toOffset,
-          resolveTransformOperations(unresolvedOperations.value(), context),
+          resolveTransformOperations(shadowNode, unresolvedOperations.value()),
           keyframe->toOperations});
     } else {
       return std::make_shared<TransformKeyframe>(TransformKeyframe{
           keyframe->fromOffset,
           keyframe->toOffset,
           keyframe->fromOperations,
-          resolveTransformOperations(unresolvedOperations.value(), context)});
+          resolveTransformOperations(
+              shadowNode, unresolvedOperations.value())});
     }
   }
 
   // If the operations are not specified, we would have to read the transform
   // value from the view style and create the new keyframe then
-  const auto fallbackValue = getFallbackValue(context);
+  const auto fallbackValue = getFallbackValue(rt, shadowNode);
   if (resolveDirection < 0) {
     return createTransformKeyframe(
         keyframe->fromOffset,
         keyframe->toOffset,
-        resolveTransformOperations(fallbackValue, context),
+        resolveTransformOperations(shadowNode, fallbackValue),
         keyframe->toOperations);
   } else {
     return createTransformKeyframe(
         keyframe->fromOffset,
         keyframe->toOffset,
         keyframe->fromOperations,
-        resolveTransformOperations(fallbackValue, context));
+        resolveTransformOperations(shadowNode, fallbackValue));
   }
 }
 
 void TransformsStyleInterpolator::updateCurrentKeyframe(
-    const PropertyInterpolationUpdateContext &context) {
-  const bool isProgressLessThanHalf = context.progress < 0.5;
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) {
+  const auto progress = progressProvider_->getGlobalProgress();
+  const bool isProgressLessThanHalf = progress < 0.5;
   const auto prevIndex = keyframeIndex_;
-
-  if (!context.previousProgress.has_value()) {
+  if (progressProvider_->isFirstUpdate()) {
     keyframeIndex_ = isProgressLessThanHalf ? 0 : keyframes_.size() - 1;
   }
 
   while (keyframeIndex_ < keyframes_.size() - 1 &&
-         keyframes_[keyframeIndex_ + 1]->fromOffset < context.progress)
+         keyframes_[keyframeIndex_ + 1]->fromOffset < progress)
     ++keyframeIndex_;
 
   while (keyframeIndex_ > 0 &&
-         keyframes_[keyframeIndex_]->fromOffset >= context.progress)
+         keyframes_[keyframeIndex_]->fromOffset >= progress)
     --keyframeIndex_;
 
-  if (context.previousProgress.has_value()) {
-    if (keyframeIndex_ != prevIndex) {
-      currentKeyframe_ = getKeyframeAtIndex(
-          keyframeIndex_, prevIndex - keyframeIndex_, context);
-    } else if (context.directionChanged && previousResult_.has_value()) {
-      currentKeyframe_ = getKeyframeAtIndex(keyframeIndex_, 0, context);
-      if (context.progress < context.previousProgress.value()) {
-        currentKeyframe_ = createTransformKeyframe(
-            currentKeyframe_->fromOffset,
-            context.previousProgress.value(),
-            currentKeyframe_->fromOperations,
-            previousResult_);
-      } else {
-        currentKeyframe_ = createTransformKeyframe(
-            context.previousProgress.value(),
-            currentKeyframe_->toOffset,
-            previousResult_,
-            currentKeyframe_->toOperations);
-      }
-    }
-  } else {
+  if (progressProvider_->isFirstUpdate()) {
     currentKeyframe_ = getKeyframeAtIndex(
-        keyframeIndex_, isProgressLessThanHalf ? -1 : 1, context);
+        rt, shadowNode, keyframeIndex_, isProgressLessThanHalf ? -1 : 1);
+  } else if (keyframeIndex_ != prevIndex) {
+    currentKeyframe_ = getKeyframeAtIndex(
+        rt, shadowNode, keyframeIndex_, prevIndex - keyframeIndex_);
   }
-}
-
-double TransformsStyleInterpolator::calculateLocalProgress(
-    const double progress) const {
-  const auto fromOffset = currentKeyframe_->fromOffset;
-  const auto toOffset = currentKeyframe_->toOffset;
-  if (toOffset == fromOffset) {
-    return 1;
-  }
-  return (progress - fromOffset) / (toOffset - fromOffset);
 }
 
 TransformOperations TransformsStyleInterpolator::interpolateOperations(
-    const double localProgress,
+    const ShadowNode::Shared &shadowNode,
+    const double keyframeProgress,
     const TransformOperations &fromOperations,
-    const TransformOperations &toOperations,
-    const PropertyInterpolationUpdateContext &context) const {
+    const TransformOperations &toOperations) const {
   TransformOperations result;
   result.reserve(fromOperations.size());
-  const auto transformUpdateContext = createUpdateContext(context);
+  const auto transformUpdateContext = createUpdateContext(shadowNode);
 
   for (size_t i = 0; i < fromOperations.size(); ++i) {
     const auto &fromOperation = fromOperations[i];
@@ -433,7 +430,10 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
     // fromOperation and toOperation have the same type
     const auto &interpolator = interpolators_->at(fromOperation->type);
     result.emplace_back(interpolator->interpolate(
-        localProgress, *fromOperation, *toOperation, transformUpdateContext));
+        keyframeProgress,
+        *fromOperation,
+        *toOperation,
+        transformUpdateContext));
   }
 
   return result;
@@ -454,9 +454,9 @@ jsi::Value TransformsStyleInterpolator::convertResultToJSI(
 
 TransformInterpolatorUpdateContext
 TransformsStyleInterpolator::createUpdateContext(
-    const PropertyInterpolationUpdateContext &context) const {
+    const ShadowNode::Shared &shadowNode) const {
   return TransformInterpolatorUpdateContext{
-      context.node, viewStylesRepository_, interpolators_};
+      shadowNode, viewStylesRepository_, interpolators_};
 }
 
 } // namespace reanimated
