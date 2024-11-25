@@ -166,3 +166,4 @@ export function withSequence(
     }
   );
 }
+withSequence.cacheable = true;

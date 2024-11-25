@@ -71,7 +71,7 @@ type withTimingType = <T extends AnimatableValue>(
  *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming
  */
-export const withTiming = <CacheableWorklet & withTimingType>function (
+export const withTiming = <withTimingType & CacheableWorklet>function (
   toValue: AnimatableValue,
   userConfig?: TimingConfig,
   callback?: AnimationCallback

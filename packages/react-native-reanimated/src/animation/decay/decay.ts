@@ -15,6 +15,7 @@ import type {
 } from './utils';
 import { rigidDecay } from './rigidDecay';
 import { ReanimatedError } from '../../errors';
+import type { CacheableWorklet } from '../commonTypes';
 
 export type WithDecayConfig = DecayConfig;
 
@@ -121,4 +122,5 @@ export const withDecay = function (
       reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as DecayAnimation;
   });
-} as unknown as withDecayType;
+} as unknown as withDecayType & CacheableWorklet;
+withDecay.cacheable = true;
