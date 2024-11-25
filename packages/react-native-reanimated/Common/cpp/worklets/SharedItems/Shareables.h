@@ -143,8 +143,7 @@ jsi::Value makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource,
-    const jsi::Value &staticFunction);
+    const jsi::Value &nativeStateSource);
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
     jsi::Runtime &rt,
@@ -245,17 +244,6 @@ class ShareableWorklet : public ShareableObject {
   }
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
-};
-
-class ShareableStaticWorklet : public ShareableObject {
- public:
-  ShareableStaticWorklet(jsi::Runtime &rt, const jsi::Object &worklet)
-      : ShareableObject(rt, worklet) {
-    valueType_ = WorkletType;
-  }
-
-  jsi::Value toJSValue(jsi::Runtime &rt) override;
-  std::shared_ptr<jsi::Value> jsValue_;
 };
 
 class ShareableRemoteFunction

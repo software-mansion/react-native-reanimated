@@ -7,6 +7,7 @@ import type {
 } from 'react-native';
 import type { WorkletsModuleProxy } from './worklets';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
+import type { CacheableWorklet } from './animation/commonTypes';
 
 export interface IWorkletsModule extends WorkletsModuleProxy {}
 
@@ -360,7 +361,9 @@ export function isWorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
   BuildType extends WorkletBaseDev | WorkletBaseRelease = WorkletBaseDev,
->(value: unknown): value is WorkletFunction<Args, ReturnValue> & BuildType {
+>(
+  value: unknown
+): value is WorkletFunction<Args, ReturnValue> & BuildType & CacheableWorklet {
   'worklet';
   // Since host objects always return true for `in` operator, we have to use dot notation to check if the property exists.
   // See https://github.com/facebook/hermes/blob/340726ef8cf666a7cce75bc60b02fa56b3e54560/lib/VM/JSObject.cpp#L1276.

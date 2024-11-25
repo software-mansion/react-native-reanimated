@@ -17,8 +17,7 @@ class NativeWorkletsModule : public NativeWorkletsModuleSpec {
       jsi::Runtime &rt,
       const jsi::Value &value,
       const jsi::Value &shouldRetainRemote,
-      const jsi::Value &nativeStateSource,
-      const jsi::Value &staticFunction) override;
+      const jsi::Value &nativeStateSource) override;
 
   [[nodiscard]] inline std::string getValueUnpackerCode() const {
     return valueUnpackerCode_;

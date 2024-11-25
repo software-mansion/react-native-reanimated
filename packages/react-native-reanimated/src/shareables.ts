@@ -128,7 +128,7 @@ export function makeShareableCloneRecursive<T>(
   const type = typeof value;
   const isTypeObject = type === 'object';
   const isTypeFunction = type === 'function';
-  let isStaticFunction = false;
+  let isCacheableWorklet = false;
   if ((isTypeObject || isTypeFunction) && value !== null) {
     const cached = shareableMappingCache.get(value);
     if (cached === shareableMappingFlag) {
@@ -167,11 +167,9 @@ export function makeShareableCloneRecursive<T>(
       } else if (isPlainJSObject(value) || isTypeFunction) {
         toAdapt = {};
         if (isWorkletFunction(value)) {
-          if (value.staticFn) {
-            console.log('value', value);
-            isStaticFunction = true;
+          if (value.cacheable) {
+            isCacheableWorklet = true;
           }
-          // console.log('value', value);
           if (__DEV__) {
             const babelVersion = value.__initData.version;
             if (babelVersion !== undefined && babelVersion !== jsVersion) {
@@ -281,9 +279,8 @@ Offending code was: \`${getWorkletCode(value)}\``);
       }
       const adapted = WorkletsModule.makeShareableClone(
         toAdapt,
-        shouldPersistRemote,
-        value,
-        isStaticFunction
+        shouldPersistRemote || isCacheableWorklet,
+        value
       );
       shareableMappingCache.set(value, adapted);
       shareableMappingCache.set(adapted);
@@ -293,8 +290,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
   return WorkletsModule.makeShareableClone(
     value,
     shouldPersistRemote,
-    undefined,
-    false
+    undefined
   );
 }
 

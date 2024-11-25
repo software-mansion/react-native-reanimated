@@ -14,7 +14,7 @@ static jsi::Value WORKLETS_SPEC_PREFIX(makeShareableClone)(
     size_t) {
   return static_cast<NativeWorkletsModuleSpec *>(&turboModule)
       ->makeShareableClone(
-          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]), std::move(args[3]));
+          rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
 }
 
 NativeWorkletsModuleSpec::NativeWorkletsModuleSpec(

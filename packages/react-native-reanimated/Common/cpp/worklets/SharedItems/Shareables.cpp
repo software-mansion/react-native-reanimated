@@ -42,14 +42,13 @@ jsi::Value makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource,
-    const jsi::Value &staticFunction) {
+    const jsi::Value &nativeStateSource) {
   std::shared_ptr<Shareable> shareable;
   if (value.isObject()) {
     auto object = value.asObject(rt);
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
-      if (staticFunction.getBool()) {
-        shareable = std::make_shared<ShareableStaticWorklet>(rt, object);
+      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+          shareable = std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
       } else {
         shareable = std::make_shared<ShareableWorklet>(rt, object);
       }
@@ -253,23 +252,6 @@ jsi::Value ShareableWorklet::toJSValue(jsi::Runtime &rt) {
   jsi::Value obj = ShareableObject::toJSValue(rt);
   return getValueUnpacker(rt).call(
       rt, obj, jsi::String::createFromAscii(rt, "Worklet"));
-}
-
-jsi::Value ShareableStaticWorklet::toJSValue(jsi::Runtime &rt) {
-  assert(
-      std::any_of(
-          data_.cbegin(),
-          data_.cend(),
-          [](const auto &item) { return item.first == "__workletHash"; }) &&
-      "ShareableWorklet doesn't have `__workletHash` property");
-  if (jsValue_.get()) {
-    return jsValue_.get();
-  }
-  jsi::Value obj = ShareableObject::toJSValue(rt);
-  auto jsValue = getValueUnpacker(rt).call(
-      rt, obj, jsi::String::createFromAscii(rt, "Worklet"));
-  jsValue_ = std::make_shared<jsi::Value>(std::move(jsValue));
-  return jsValue;
 }
 
 jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
