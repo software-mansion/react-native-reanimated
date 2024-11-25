@@ -1,6 +1,7 @@
-`use strict`;
-// based on:
-// https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/StyleSheet/processBoxShadow.js
+/* based on:
+ * https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/StyleSheet/processBoxShadow.js
+ */
+'use strict';
 
 import type { BoxShadowValue, OpaqueColorValue } from 'react-native';
 import type { StyleProps } from '.';
