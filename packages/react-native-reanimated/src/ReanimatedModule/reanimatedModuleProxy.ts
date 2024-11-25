@@ -10,9 +10,9 @@ import type {
   StyleProps,
 } from '../commonTypes';
 import type {
-  NormalizedCSSAnimationConfig,
-  NormalizedCSSAnimationSettings,
   NormalizedCSSTransitionConfig,
+  NormalizedSingleCSSAnimationConfig,
+  NormalizedSingleCSSAnimationSettings,
 } from '../css';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
@@ -65,12 +65,12 @@ export interface ReanimatedModuleProxy {
   registerCSSAnimation(
     shadowNodeWrapper: ShadowNodeWrapper,
     animationId: number,
-    animationConfig: NormalizedCSSAnimationConfig
+    animationConfig: NormalizedSingleCSSAnimationConfig
   ): void;
 
   updateCSSAnimation(
     animationId: number,
-    settingsUpdates: Partial<NormalizedCSSAnimationSettings>
+    updatedSettings: Partial<NormalizedSingleCSSAnimationSettings>
   ): void;
 
   unregisterCSSAnimation(animationId: number): void;
@@ -82,7 +82,7 @@ export interface ReanimatedModuleProxy {
 
   updateCSSTransition(
     viewTag: number,
-    configUpdates: Partial<NormalizedCSSTransitionConfig>
+    settingsUpdates: Partial<NormalizedCSSTransitionConfig>
   ): void;
 
   unregisterCSSTransition(viewTag: number): void;

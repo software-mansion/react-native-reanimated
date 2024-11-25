@@ -21,10 +21,13 @@ import { logger } from '../../logger';
 import { ReanimatedError } from '../../errors';
 import { WorkletsModule } from '../../worklets';
 import type {
-  NormalizedCSSAnimationConfig,
-  NormalizedCSSAnimationSettings,
+  NormalizedSingleCSSAnimationConfig,
+  NormalizedSingleCSSAnimationSettings,
 } from '../../css';
-import type { NormalizedCSSTransitionConfig } from '../../css/types';
+import type {
+  NormalizedCSSTransitionConfig,
+  NormalizedSingleCSSTransitionSettings,
+} from '../../css/types';
 
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();
@@ -284,7 +287,7 @@ class JSReanimated implements IReanimatedModule {
   registerCSSAnimation(
     _shadowNodeWrapper: ShadowNodeWrapper,
     _animationId: number,
-    _animationConfig: NormalizedCSSAnimationConfig
+    _animationConfig: NormalizedSingleCSSAnimationConfig
   ): void {
     throw new ReanimatedError(
       '`registerCSSAnimation` is not available in JSReanimated.'
@@ -293,7 +296,7 @@ class JSReanimated implements IReanimatedModule {
 
   updateCSSAnimation(
     _animationId: number,
-    _settingsUpdates: Partial<NormalizedCSSAnimationSettings>
+    _settingsUpdates: Partial<NormalizedSingleCSSAnimationSettings>
   ): void {
     throw new ReanimatedError(
       '`updateCSSAnimation` is not available in JSReanimated.'
@@ -317,7 +320,7 @@ class JSReanimated implements IReanimatedModule {
 
   updateCSSTransition(
     _viewTag: number,
-    _configUpdates: Partial<NormalizedCSSTransitionConfig>
+    _settingsUpdates: Partial<NormalizedCSSTransitionConfig>
   ): void {
     throw new ReanimatedError(
       '`updateCSSTransition` is not available in JSReanimated.'

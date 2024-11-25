@@ -1,8 +1,10 @@
 'use strict';
 import { ReanimatedError } from '../../../errors';
 import type {
+  ConvertValuesToArrays,
   CSSAnimationConfig,
-  NormalizedCSSAnimationConfig,
+  NormalizedSingleCSSAnimationConfig,
+  SingleCSSAnimationConfig,
 } from '../../types';
 import {
   normalizeDuration,
@@ -22,28 +24,54 @@ export const ERROR_MESSAGES = {
     `Invalid animation name. Expected a keyframes object.`,
 };
 
-export function normalizeCSSAnimationConfig({
-  animationName,
-  animationDuration,
-  animationDelay,
-  animationTimingFunction,
-  animationIterationCount,
-  animationDirection,
-  animationFillMode,
-  animationPlayState,
-}: CSSAnimationConfig): NormalizedCSSAnimationConfig {
-  if (!animationName || typeof animationName !== 'object') {
-    throw new ReanimatedError(ERROR_MESSAGES.invalidAnimationName());
-  }
+function convertConfigPropertiesToArrays(config: CSSAnimationConfig) {
+  return Object.fromEntries(
+    Object.entries(config).map(([key, value]) => {
+      return [key, Array.isArray(value) ? value : [value]];
+    })
+  ) as ConvertValuesToArrays<SingleCSSAnimationConfig>;
+}
 
-  return {
-    ...normalizeAnimationName(animationName),
-    duration: normalizeDuration(animationDuration),
-    timingFunction: normalizeTimingFunction(animationTimingFunction),
-    delay: normalizeDelay(animationDelay),
-    iterationCount: normalizeIterationCount(animationIterationCount),
-    direction: normalizeDirection(animationDirection),
-    fillMode: normalizeFillMode(animationFillMode),
-    playState: normalizePlayState(animationPlayState),
-  };
+export function normalizeCSSAnimationConfig(
+  config: CSSAnimationConfig
+): NormalizedSingleCSSAnimationConfig[] {
+  const {
+    animationName,
+    animationDuration,
+    animationTimingFunction,
+    animationDelay,
+    animationIterationCount,
+    animationDirection,
+    animationFillMode,
+    animationPlayState,
+  } = convertConfigPropertiesToArrays(config);
+
+  return animationName.map((keyframes, index) => {
+    if (!keyframes || typeof keyframes !== 'object') {
+      throw new ReanimatedError(ERROR_MESSAGES.invalidAnimationName());
+    }
+
+    return {
+      ...normalizeAnimationName(keyframes),
+      duration: normalizeDuration(
+        animationDuration?.[index % animationDuration.length]
+      ),
+      timingFunction: normalizeTimingFunction(
+        animationTimingFunction?.[index % animationTimingFunction.length]
+      ),
+      delay: normalizeDelay(animationDelay?.[index % animationDelay.length]),
+      iterationCount: normalizeIterationCount(
+        animationIterationCount?.[index % animationIterationCount.length]
+      ),
+      direction: normalizeDirection(
+        animationDirection?.[index % animationDirection.length]
+      ),
+      fillMode: normalizeFillMode(
+        animationFillMode?.[index % animationFillMode.length]
+      ),
+      playState: normalizePlayState(
+        animationPlayState?.[index % animationPlayState.length]
+      ),
+    };
+  });
 }

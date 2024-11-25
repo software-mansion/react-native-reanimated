@@ -2,8 +2,8 @@
 import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
 import { ReanimatedModule } from '../ReanimatedModule';
 import type {
-  NormalizedCSSAnimationConfig,
-  NormalizedCSSAnimationSettings,
+  NormalizedSingleCSSAnimationConfig,
+  NormalizedSingleCSSAnimationSettings,
   NormalizedCSSTransitionConfig,
 } from './types';
 
@@ -18,7 +18,7 @@ export function removeViewStyle(viewTag: number) {
 export function registerCSSAnimation(
   shadowNodeWrapper: ShadowNodeWrapper,
   animationId: number,
-  animationConfig: NormalizedCSSAnimationConfig
+  animationConfig: NormalizedSingleCSSAnimationConfig
 ) {
   ReanimatedModule.registerCSSAnimation(
     shadowNodeWrapper,
@@ -29,7 +29,7 @@ export function registerCSSAnimation(
 
 export function updateCSSAnimation(
   animationId: number,
-  settingsUpdates: Partial<NormalizedCSSAnimationSettings>
+  settingsUpdates: Partial<NormalizedSingleCSSAnimationSettings>
 ) {
   ReanimatedModule.updateCSSAnimation(animationId, settingsUpdates);
 }
@@ -47,9 +47,9 @@ export function registerCSSTransition(
 
 export function updateCSSTransition(
   viewTag: number,
-  configUpdates: Partial<NormalizedCSSTransitionConfig>
+  settingsUpdates: Partial<NormalizedCSSTransitionConfig>
 ) {
-  ReanimatedModule.updateCSSTransition(viewTag, configUpdates);
+  ReanimatedModule.updateCSSTransition(viewTag, settingsUpdates);
 }
 
 export function unregisterCSSTransition(viewTag: number) {

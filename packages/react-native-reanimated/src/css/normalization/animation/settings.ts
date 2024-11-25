@@ -5,16 +5,9 @@ import type {
   CSSAnimationFillMode,
   CSSAnimationIterationCount,
   CSSAnimationPlayState,
-  CSSAnimationSettings,
-  NormalizedCSSAnimationSettings,
+  NormalizedSingleCSSAnimationSettings,
 } from '../../types';
-import { deepEqual } from '../../utils';
-import { isNumber } from '../../utils/typeGuards';
-import {
-  normalizeDelay,
-  normalizeDuration,
-  normalizeTimingFunction,
-} from '../common';
+import { deepEqual, isNumber } from '../../utils';
 import {
   VALID_ANIMATION_DIRECTIONS,
   VALID_FILL_MODES,
@@ -80,53 +73,37 @@ export function normalizePlayState(
   return playState;
 }
 
-export function getNormalizedCSSAnimationSettingsUpdates(
-  oldSettings: CSSAnimationSettings,
-  newSettings: Partial<CSSAnimationSettings>
-): Partial<NormalizedCSSAnimationSettings> {
-  const settingsUpdates: Partial<NormalizedCSSAnimationSettings> = {};
+export function getAnimationSettingsUpdates(
+  oldConfig: NormalizedSingleCSSAnimationSettings,
+  newConfig: NormalizedSingleCSSAnimationSettings
+): Partial<NormalizedSingleCSSAnimationSettings> {
+  const updatedSettings: Partial<NormalizedSingleCSSAnimationSettings> = {};
 
-  if (newSettings.animationDuration !== oldSettings.animationDuration) {
-    settingsUpdates.duration = normalizeDuration(newSettings.animationDuration);
-  }
-  // TODO- improve this check after implementing multiple animations support
-  if (
-    oldSettings.animationTimingFunction !==
-      newSettings.animationTimingFunction &&
-    (typeof oldSettings.animationTimingFunction !== 'object' ||
-      typeof newSettings.animationTimingFunction !== 'object' ||
-      !deepEqual(
-        oldSettings.animationTimingFunction.normalize(),
-        newSettings.animationTimingFunction.normalize()
-      ))
-  ) {
-    settingsUpdates.timingFunction = normalizeTimingFunction(
-      newSettings.animationTimingFunction
-    );
-  }
-  if (newSettings.animationDelay !== oldSettings.animationDelay) {
-    settingsUpdates.delay = normalizeDelay(newSettings.animationDelay);
+  if (oldConfig.duration !== newConfig.duration) {
+    updatedSettings.duration = newConfig.duration;
   }
   if (
-    newSettings.animationIterationCount !== oldSettings.animationIterationCount
+    (oldConfig.timingFunction !== newConfig.timingFunction &&
+      typeof oldConfig.timingFunction !== 'object') ||
+    !deepEqual(oldConfig.timingFunction, newConfig.timingFunction)
   ) {
-    settingsUpdates.iterationCount = normalizeIterationCount(
-      newSettings.animationIterationCount
-    );
+    updatedSettings.timingFunction = newConfig.timingFunction;
   }
-  if (newSettings.animationDirection !== oldSettings.animationDirection) {
-    settingsUpdates.direction = normalizeDirection(
-      newSettings.animationDirection
-    );
+  if (oldConfig.delay !== newConfig.delay) {
+    updatedSettings.delay = newConfig.delay;
   }
-  if (newSettings.animationFillMode !== oldSettings.animationFillMode) {
-    settingsUpdates.fillMode = normalizeFillMode(newSettings.animationFillMode);
+  if (oldConfig.iterationCount !== newConfig.iterationCount) {
+    updatedSettings.iterationCount = newConfig.iterationCount;
   }
-  if (newSettings.animationPlayState !== oldSettings.animationPlayState) {
-    settingsUpdates.playState = normalizePlayState(
-      newSettings.animationPlayState
-    );
+  if (oldConfig.direction !== newConfig.direction) {
+    updatedSettings.direction = newConfig.direction;
+  }
+  if (oldConfig.fillMode !== newConfig.fillMode) {
+    updatedSettings.fillMode = newConfig.fillMode;
+  }
+  if (oldConfig.playState !== newConfig.playState) {
+    updatedSettings.playState = newConfig.playState;
   }
 
-  return settingsUpdates;
+  return updatedSettings;
 }

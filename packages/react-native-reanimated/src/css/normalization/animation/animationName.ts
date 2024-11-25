@@ -5,7 +5,7 @@ import type {
   CSSAnimationKeyframes,
   AnyRecord,
   CSSAnimationTimingFunction,
-  CSSKeyframesStyle,
+  NormalizedCSSKeyframesStyle,
   NormalizedCSSAnimationName,
   NormalizedCSSKeyframeTimingFunctions,
 } from '../../types';
@@ -115,7 +115,7 @@ function processStyleProperties<S extends AnyRecord>(
 export function normalizeAnimationName(
   keyframes: CSSAnimationKeyframes
 ): NormalizedCSSAnimationName {
-  const keyframesStyle: CSSKeyframesStyle = {};
+  const keyframesStyle: NormalizedCSSKeyframesStyle = {};
   const timingFunctions: NormalizedCSSKeyframeTimingFunctions = {};
 
   normalizeKeyframes(keyframes).forEach(({ offset, style, timingFunction }) => {

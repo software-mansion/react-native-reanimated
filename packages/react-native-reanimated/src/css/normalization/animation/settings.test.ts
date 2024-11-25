@@ -5,8 +5,7 @@ import type {
   CSSAnimationFillMode,
   CSSAnimationIterationCount,
   CSSAnimationPlayState,
-  CSSAnimationSettings,
-  NormalizedCSSAnimationSettings,
+  NormalizedSingleCSSAnimationSettings,
 } from '../../types';
 import {
   VALID_ANIMATION_DIRECTIONS,
@@ -15,7 +14,7 @@ import {
 } from './constants';
 import {
   ERROR_MESSAGES,
-  getNormalizedCSSAnimationSettingsUpdates,
+  getAnimationSettingsUpdates,
   normalizeDirection,
   normalizeFillMode,
   normalizeIterationCount,
@@ -54,6 +53,10 @@ describe(normalizeIterationCount, () => {
   describe('when number is passed', () => {
     it.each([0, 1, 2.5, 5])('returns %p', (iterationCount) => {
       expect(normalizeIterationCount(iterationCount)).toBe(iterationCount);
+    });
+
+    it('returns "-1" for Infinity', () => {
+      expect(normalizeIterationCount(Infinity)).toBe(-1);
     });
   });
 
@@ -126,70 +129,57 @@ describe(normalizePlayState, () => {
   });
 });
 
-describe(getNormalizedCSSAnimationSettingsUpdates, () => {
-  it('returns empty object when settings do not change', () => {
-    const settings: CSSAnimationSettings = {
-      animationDuration: 1000,
-      animationTimingFunction: 'ease',
-      animationDirection: 'normal',
-      animationIterationCount: 1,
-      animationFillMode: 'none',
-      animationPlayState: 'running',
+describe(getAnimationSettingsUpdates, () => {
+  it('returns an empty object if no settings are changed', () => {
+    const settings: NormalizedSingleCSSAnimationSettings = {
+      duration: 1000,
+      timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize(),
+      delay: 0,
+      direction: 'normal',
+      iterationCount: 1,
+      fillMode: 'none',
+      playState: 'running',
     };
 
-    expect(
-      getNormalizedCSSAnimationSettingsUpdates(settings, { ...settings })
-    ).toEqual({});
+    expect(getAnimationSettingsUpdates(settings, { ...settings })).toEqual({});
   });
 
   describe('when settings change', () => {
-    const oldSettings: CSSAnimationSettings = {
-      animationDuration: 1000,
-      animationTimingFunction: 'ease',
-      animationDirection: 'normal',
-      animationIterationCount: 1,
-      animationFillMode: 'none',
-      animationPlayState: 'running',
+    const oldSettings: NormalizedSingleCSSAnimationSettings = {
+      duration: 1000,
+      timingFunction: 'ease',
+      delay: 0,
+      direction: 'normal',
+      iterationCount: 1,
+      fillMode: 'none',
+      playState: 'running',
     };
 
     it.each([
-      [{ animationDuration: 2000 }, { duration: 2000 }],
-      [
-        { animationTimingFunction: cubicBezier(0.4, 0, 0.2, 1) },
-        { timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize() },
-      ],
-      [{ animationDirection: 'reverse' }, { direction: 'reverse' }],
-      [{ animationIterationCount: 2 }, { iterationCount: 2 }],
-      [{ animationFillMode: 'forwards' }, { fillMode: 'forwards' }],
-      [{ animationPlayState: 'paused' }, { playState: 'paused' }],
-      [
-        {
-          animationDuration: 2000,
-          animationTimingFunction: 'easeIn',
-          animationDirection: 'reverse',
-          animationIterationCount: 2,
-          animationFillMode: 'forwards',
-          animationPlayState: 'paused',
-        },
-        {
-          duration: 2000,
-          timingFunction: 'easeIn',
-          direction: 'reverse',
-          iterationCount: 2,
-          fillMode: 'forwards',
-          playState: 'paused',
-        },
-      ],
-    ] satisfies [
-      Partial<CSSAnimationSettings>,
-      Partial<NormalizedCSSAnimationSettings>,
-    ][])('returns updates for change %p', (updates, expected) => {
-      expect(
-        getNormalizedCSSAnimationSettingsUpdates(oldSettings, {
-          ...oldSettings,
-          ...updates,
-        })
-      ).toEqual(expected);
-    });
+      { duration: 2000 },
+      { timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize() },
+      { direction: 'reverse' },
+      { iterationCount: 2 },
+      { fillMode: 'forwards' },
+      { playState: 'paused' },
+      {
+        duration: 2000,
+        timingFunction: 'easeIn',
+        direction: 'reverse',
+        iterationCount: 2,
+        fillMode: 'forwards',
+        playState: 'paused',
+      },
+    ] satisfies Partial<NormalizedSingleCSSAnimationSettings>[])(
+      'returns updates for change %p',
+      (updates) => {
+        expect(
+          getAnimationSettingsUpdates(oldSettings, {
+            ...oldSettings,
+            ...updates,
+          })
+        ).toEqual(updates);
+      }
+    );
   });
 });

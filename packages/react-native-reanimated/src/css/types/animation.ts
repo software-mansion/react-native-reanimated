@@ -1,6 +1,7 @@
 'use strict';
 import type { CSSStyleProps, CSSTimeUnit } from './common';
 import type { CSSTimingFunction, NormalizedCSSTimingFunction } from '../easing';
+import type { AddArrayPropertyTypes } from './helpers';
 
 // BEFORE NORMALIZATION
 
@@ -25,7 +26,7 @@ export type CSSAnimationDirection =
 export type CSSAnimationFillMode = 'none' | 'forwards' | 'backwards' | 'both';
 export type CSSAnimationPlayState = 'running' | 'paused';
 
-export type CSSAnimationSettings = {
+export type SingleCSSAnimationSettings = {
   animationDuration?: CSSAnimationDuration;
   animationTimingFunction?: CSSAnimationTimingFunction;
   animationDelay?: CSSAnimationDelay;
@@ -36,11 +37,17 @@ export type CSSAnimationSettings = {
   // animationTimeline?: // TODO - This is still experimental in browsers and we might not want to support it when CSS animations in reanimated are released
 };
 
-export type CSSAnimationConfig = CSSAnimationSettings & {
+export type SingleCSSAnimationConfig = SingleCSSAnimationSettings & {
   animationName: CSSAnimationKeyframes;
 };
 
-export type AnimationSettingProp = keyof CSSAnimationSettings;
+export type AnimationSettingProp = keyof SingleCSSAnimationSettings;
+
+export type CSSAnimationSettings =
+  AddArrayPropertyTypes<SingleCSSAnimationSettings>;
+
+export type CSSAnimationConfig =
+  AddArrayPropertyTypes<SingleCSSAnimationConfig>;
 
 // AFTER NORMALIZATION
 
@@ -62,18 +69,18 @@ type CreateKeyframesStyle<S> = {
     : never;
 };
 
-export type CSSKeyframesStyle = CreateKeyframesStyle<CSSStyleProps>;
+export type NormalizedCSSKeyframesStyle = CreateKeyframesStyle<CSSStyleProps>;
 export type NormalizedCSSKeyframeTimingFunctions = Record<
   number,
   NormalizedCSSTimingFunction
 >;
 
 export type NormalizedCSSAnimationName = {
-  keyframesStyle: CSSKeyframesStyle;
+  keyframesStyle: NormalizedCSSKeyframesStyle;
   keyframeTimingFunctions: NormalizedCSSKeyframeTimingFunctions;
 };
 
-export type NormalizedCSSAnimationSettings = {
+export type NormalizedSingleCSSAnimationSettings = {
   duration: number;
   timingFunction: NormalizedCSSTimingFunction;
   delay: number;
@@ -83,5 +90,5 @@ export type NormalizedCSSAnimationSettings = {
   playState: CSSAnimationPlayState;
 };
 
-export type NormalizedCSSAnimationConfig = NormalizedCSSAnimationName &
-  NormalizedCSSAnimationSettings;
+export type NormalizedSingleCSSAnimationConfig =
+  NormalizedSingleCSSAnimationSettings & NormalizedCSSAnimationName;
