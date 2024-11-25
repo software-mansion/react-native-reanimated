@@ -217,9 +217,8 @@ ShareableObject::ShareableObject(
     nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
   }
 }
-static int counter = 0;
+
 jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
-  counter++;
   auto obj = jsi::Object(rt);
   for (size_t i = 0, size = data_.size(); i < size; i++) {
     obj.setProperty(
