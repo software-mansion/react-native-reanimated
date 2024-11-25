@@ -5,7 +5,7 @@ export * from './easing';
 export * from './manager';
 export * from './utils/comparison';
 export type {
-  CSSAnimationKeyframeOffset,
+  CSSAnimationKeyframeSelector,
   CSSAnimationKeyframes,
   CSSAnimationDuration,
   CSSAnimationTimingFunction,

@@ -2,6 +2,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/definitions.h>
+#include <reanimated/CSS/config/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
 namespace reanimated {
@@ -20,19 +21,7 @@ struct PartialCSSTransitionSettings {
   std::optional<double> delay;
 };
 
-inline TransitionProperties getTransitionProperty(
-    jsi::Runtime &rt,
-    const jsi::Object &config);
-
-inline double getTransitionDuration(
-    jsi::Runtime &rt,
-    const jsi::Object &config);
-
-inline EasingFunction getTransitionTimingFunction(
-    jsi::Runtime &rt,
-    const jsi::Object &config);
-
-inline double getTransitionDelay(jsi::Runtime &rt, const jsi::Object &config);
+TransitionProperties getProperties(jsi::Runtime &rt, const jsi::Object &config);
 
 CSSTransitionConfig parseCSSTransitionConfig(
     jsi::Runtime &rt,

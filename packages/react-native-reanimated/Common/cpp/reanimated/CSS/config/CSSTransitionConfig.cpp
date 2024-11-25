@@ -3,10 +3,10 @@
 
 namespace reanimated {
 
-inline TransitionProperties getTransitionProperty(
+TransitionProperties getProperties(
     jsi::Runtime &rt,
     const jsi::Object &config) {
-  const auto &transitionProperty = config.getProperty(rt, "transitionProperty");
+  const auto &transitionProperty = config.getProperty(rt, "properties");
 
   if (transitionProperty.isObject()) {
     PropertyNames properties;
@@ -24,33 +24,16 @@ inline TransitionProperties getTransitionProperty(
   return std::nullopt;
 }
 
-inline double getTransitionDuration(
-    jsi::Runtime &rt,
-    const jsi::Object &config) {
-  return config.getProperty(rt, "transitionDuration").asNumber();
-}
-
-inline EasingFunction getTransitionTimingFunction(
-    jsi::Runtime &rt,
-    const jsi::Object &config) {
-  const auto str = config.getProperty(rt, "transitionTimingFunction");
-  return getEasingFunction(rt, str);
-}
-
-inline double getTransitionDelay(jsi::Runtime &rt, const jsi::Object &config) {
-  return config.getProperty(rt, "transitionDelay").asNumber();
-}
-
 CSSTransitionConfig parseCSSTransitionConfig(
     jsi::Runtime &rt,
     const jsi::Value &config) {
   const auto &configObj = config.asObject(rt);
 
   return CSSTransitionConfig{
-      getTransitionProperty(rt, configObj),
-      getTransitionDuration(rt, configObj),
-      getTransitionTimingFunction(rt, configObj),
-      getTransitionDelay(rt, configObj)};
+      getProperties(rt, configObj),
+      getDuration(rt, configObj),
+      getTimingFunction(rt, configObj),
+      getDelay(rt, configObj)};
 }
 
 PartialCSSTransitionSettings parsePartialCSSTransitionSettings(
@@ -60,17 +43,17 @@ PartialCSSTransitionSettings parsePartialCSSTransitionSettings(
 
   PartialCSSTransitionSettings result;
 
-  if (partialObj.hasProperty(rt, "transitionProperty")) {
-    result.properties = getTransitionProperty(rt, partialObj);
+  if (partialObj.hasProperty(rt, "properties")) {
+    result.properties = getProperties(rt, partialObj);
   }
-  if (partialObj.hasProperty(rt, "transitionDuration")) {
-    result.duration = getTransitionDuration(rt, partialObj);
+  if (partialObj.hasProperty(rt, "duration")) {
+    result.duration = getDuration(rt, partialObj);
   }
-  if (partialObj.hasProperty(rt, "transitionTimingFunction")) {
-    result.easingFunction = getTransitionTimingFunction(rt, partialObj);
+  if (partialObj.hasProperty(rt, "timingFunction")) {
+    result.easingFunction = getTimingFunction(rt, partialObj);
   }
-  if (partialObj.hasProperty(rt, "transitionDelay")) {
-    result.delay = getTransitionDelay(rt, partialObj);
+  if (partialObj.hasProperty(rt, "delay")) {
+    result.delay = getDelay(rt, partialObj);
   }
 
   return result;

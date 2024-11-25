@@ -28,7 +28,7 @@ export default class CSSTransitionManager {
 
     this.viewTag = viewTag;
     this.transitionConfig = transitionConfig;
-    this.normalizedTransitionProperties = normalizedConfig.transitionProperty;
+    this.normalizedTransitionProperties = normalizedConfig.properties;
 
     registerCSSTransition(shadowNodeWrapper, normalizedConfig);
   }
@@ -61,9 +61,8 @@ export default class CSSTransitionManager {
 
         if (Object.keys(configUpdates).length > 0) {
           this.transitionConfig = transitionConfig;
-          if (configUpdates.transitionProperty) {
-            this.normalizedTransitionProperties =
-              configUpdates.transitionProperty;
+          if (configUpdates.properties) {
+            this.normalizedTransitionProperties = configUpdates.properties;
           }
           updateCSSTransition(viewTag, configUpdates);
         }

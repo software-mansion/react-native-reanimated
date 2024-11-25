@@ -1,5 +1,12 @@
 'use strict';
-import type { TransformsStyle } from 'react-native';
+import type {
+  ImageStyle,
+  TextStyle,
+  TransformsStyle,
+  ViewStyle,
+} from 'react-native';
+
+export type CSSStyleProps = ViewStyle & TextStyle & ImageStyle;
 
 export type CSSTimeUnit = `${number}s` | `${number}ms` | number;
 

@@ -47,7 +47,7 @@ export function normalizeDirection(
 export function normalizeIterationCount(
   iterationCount: CSSAnimationIterationCount = 1
 ): number {
-  if (iterationCount === 'infinite') {
+  if (iterationCount === 'infinite' || iterationCount === Infinity) {
     return -1;
   } else if (!isNumber(iterationCount)) {
     throw new ReanimatedError(
@@ -86,9 +86,7 @@ export function getNormalizedCSSAnimationSettingsUpdates(
   const settingsUpdates: Partial<NormalizedCSSAnimationSettings> = {};
 
   if (newSettings.animationDuration !== oldSettings.animationDuration) {
-    settingsUpdates.animationDuration = normalizeDuration(
-      newSettings.animationDuration
-    );
+    settingsUpdates.duration = normalizeDuration(newSettings.animationDuration);
   }
   if (
     oldSettings.animationTimingFunction !==
@@ -98,32 +96,30 @@ export function getNormalizedCSSAnimationSettingsUpdates(
         newSettings.animationTimingFunction
       ))
   ) {
-    settingsUpdates.animationTimingFunction = normalizeTimingFunction(
+    settingsUpdates.timingFunction = normalizeTimingFunction(
       newSettings.animationTimingFunction
     );
   }
   if (newSettings.animationDelay !== oldSettings.animationDelay) {
-    settingsUpdates.animationDelay = normalizeDelay(newSettings.animationDelay);
+    settingsUpdates.delay = normalizeDelay(newSettings.animationDelay);
   }
   if (
     newSettings.animationIterationCount !== oldSettings.animationIterationCount
   ) {
-    settingsUpdates.animationIterationCount = normalizeIterationCount(
+    settingsUpdates.iterationCount = normalizeIterationCount(
       newSettings.animationIterationCount
     );
   }
   if (newSettings.animationDirection !== oldSettings.animationDirection) {
-    settingsUpdates.animationDirection = normalizeDirection(
+    settingsUpdates.direction = normalizeDirection(
       newSettings.animationDirection
     );
   }
   if (newSettings.animationFillMode !== oldSettings.animationFillMode) {
-    settingsUpdates.animationFillMode = normalizeFillMode(
-      newSettings.animationFillMode
-    );
+    settingsUpdates.fillMode = normalizeFillMode(newSettings.animationFillMode);
   }
   if (newSettings.animationPlayState !== oldSettings.animationPlayState) {
-    settingsUpdates.animationPlayState = normalizePlayState(
+    settingsUpdates.playState = normalizePlayState(
       newSettings.animationPlayState
     );
   }

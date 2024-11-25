@@ -19,10 +19,10 @@ describe(normalizeCSSTransitionConfig, () => {
     };
 
     expect(normalizeCSSTransitionConfig(config)).toEqual({
-      transitionProperty: 'all',
-      transitionDuration: 1500,
-      transitionTimingFunction: transitionTimingFunction.normalize(),
-      transitionDelay: 300,
+      properties: 'all',
+      duration: 1500,
+      timingFunction: transitionTimingFunction.normalize(),
+      delay: 300,
     });
   });
 
@@ -32,10 +32,10 @@ describe(normalizeCSSTransitionConfig, () => {
     };
 
     expect(normalizeCSSTransitionConfig(config)).toEqual({
-      transitionProperty: ['opacity'],
-      transitionDuration: 0,
-      transitionTimingFunction: 'ease',
-      transitionDelay: 0,
+      properties: ['opacity'],
+      duration: 0,
+      timingFunction: 'ease',
+      delay: 0,
     });
   });
 });
@@ -69,20 +69,20 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
     };
 
     it.each([
-      [{ transitionProperty: 'none' }, { transitionProperty: [] }],
+      [{ transitionProperty: 'none' }, { properties: [] }],
       [
         { transitionProperty: ['opacity', 'transform'] },
-        { transitionProperty: ['opacity', 'transform'] },
+        { properties: ['opacity', 'transform'] },
       ],
-      [{ transitionDuration: '2s' }, { transitionDuration: 2000 }],
+      [{ transitionDuration: '2s' }, { duration: 2000 }],
       [
         { transitionTimingFunction: cubicBezier(0.4, 0, 0.2, 1) },
-        { transitionTimingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize() },
+        { timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize() },
       ],
-      [{ transitionDelay: '500ms' }, { transitionDelay: 500 }],
+      [{ transitionDelay: '500ms' }, { delay: 500 }],
       [
         { transitionProperty: 'none', transitionDuration: '2s' },
-        { transitionProperty: [], transitionDuration: 2000 },
+        { properties: [], duration: 2000 },
       ],
       [
         {
@@ -92,10 +92,10 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
           transitionTimingFunction: cubicBezier(0.4, 0, 0.2, 1),
         },
         {
-          transitionProperty: ['opacity'],
-          transitionDuration: 3000,
-          transitionDelay: 500,
-          transitionTimingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize(),
+          properties: ['opacity'],
+          duration: 3000,
+          delay: 500,
+          timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize(),
         },
       ],
     ] satisfies [
