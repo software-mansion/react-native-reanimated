@@ -10,25 +10,15 @@ CSSTransition::CSSTransition(
     : shadowNode_(std::move(shadowNode)),
       properties_(config.properties),
       viewStylesRepository_(viewStylesRepository),
-      progressProvider_(TransitionProgressProvider(
-          config.duration,
-          config.delay,
-          config.easingFunction)),
+      progressProvider_(TransitionProgressProvider(config.settings)),
       styleInterpolator_(TransitionStyleInterpolator(viewStylesRepository)) {}
 
-void CSSTransition::updateSettings(
-    const PartialCSSTransitionSettings &settings) {
-  if (settings.properties.has_value()) {
-    updateTransitionProperties(settings.properties.value());
+void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
+  if (config.properties.has_value()) {
+    updateTransitionProperties(config.properties.value());
   }
-  if (settings.duration.has_value()) {
-    progressProvider_.setDuration(settings.duration.value());
-  }
-  if (settings.delay.has_value()) {
-    progressProvider_.setDelay(settings.delay.value());
-  }
-  if (settings.easingFunction.has_value()) {
-    progressProvider_.setEasingFunction(settings.easingFunction.value());
+  if (config.settings.has_value()) {
+    progressProvider_.setSettings(config.settings.value());
   }
 }
 

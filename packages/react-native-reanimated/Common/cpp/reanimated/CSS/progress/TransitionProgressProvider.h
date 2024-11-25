@@ -1,14 +1,18 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#include <reanimated/CSS/config/CSSTransitionConfig.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 #include <reanimated/CSS/util/props.h>
 
+#include <limits>
+#include <memory>
 #include <queue>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace reanimated {
@@ -48,21 +52,13 @@ using TransitionPropertyProgressProviders = std::unordered_map<
     std::string,
     std::shared_ptr<TransitionPropertyProgressProvider>>;
 
-class TransitionProgressProvider {
+class TransitionProgressProvider final {
  public:
-  TransitionProgressProvider(
-      double duration,
-      double delay,
-      const EasingFunction &easingFunction);
+  explicit TransitionProgressProvider(
+      const CSSTransitionPropertiesSettings &settings);
 
-  void setDuration(double duration) {
-    duration_ = duration;
-  }
-  void setDelay(double delay) {
-    delay_ = delay;
-  }
-  void setEasingFunction(const EasingFunction &easingFunction) {
-    easingFunction_ = easingFunction;
+  void setSettings(const CSSTransitionPropertiesSettings &settings) {
+    settings_ = settings;
   }
 
   TransitionProgressState getState() const;
@@ -83,9 +79,7 @@ class TransitionProgressProvider {
   void update(double timestamp);
 
  private:
-  double duration_;
-  double delay_;
-  EasingFunction easingFunction_;
+  CSSTransitionPropertiesSettings settings_;
 
   std::unordered_set<std::string> propertiesToRemove_;
 

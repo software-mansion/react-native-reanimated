@@ -82,7 +82,13 @@ describe('CSSTransitionManager', () => {
         expect(updateCSSTransition).toHaveBeenCalledTimes(1);
         expect(updateCSSTransition).toHaveBeenCalledWith(viewTag, {
           properties: ['transform'],
-          duration: 1500,
+          settings: {
+            transform: {
+              duration: 1500,
+              delay: 0,
+              timingFunction: 'ease',
+            },
+          },
         });
       });
     });

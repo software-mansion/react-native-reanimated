@@ -34,17 +34,6 @@ export class CubicBezierEasing implements ParametrizedTimingFunction {
     return `${CubicBezierEasing.easingName}(${this.x1}, ${this.y1}, ${this.x2}, ${this.y2})`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  equals(other: any): other is this {
-    return (
-      other instanceof CubicBezierEasing &&
-      this.x1 === other.x1 &&
-      this.y1 === other.y1 &&
-      this.x2 === other.x2 &&
-      this.y2 === other.y2
-    );
-  }
-
   normalize(): NormalizedCubicBezierEasing {
     return {
       name: CubicBezierEasing.easingName,

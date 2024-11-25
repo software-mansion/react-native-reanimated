@@ -1,3 +1,4 @@
 'use strict';
 export * from './typeGuards';
-export * from './comparison';
+export * from './equality';
+export * from './conversions';
