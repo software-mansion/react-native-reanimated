@@ -12,6 +12,7 @@ import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.nativeProxy.NativeProxyCommon;
+import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Objects;
@@ -22,19 +23,19 @@ public class NativeProxy extends NativeProxyCommon {
   private final HybridData mHybridData;
 
   @OptIn(markerClass = FrameworkAPI.class)
-  public NativeProxy(ReactApplicationContext context, String valueUnpackerCode) {
+  public NativeProxy(ReactApplicationContext context, WorkletsModule workletsModule) {
     super(context);
     CallInvokerHolderImpl holder = (CallInvokerHolderImpl) context.getJSCallInvokerHolder();
     LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
     ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
     mHybridData =
         initHybrid(
+            workletsModule,
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             holder,
             mAndroidUIScheduler,
             LayoutAnimations,
-            messageQueueThread,
-            valueUnpackerCode);
+            messageQueueThread);
     prepareLayoutAnimations(LayoutAnimations);
     installJSIBindings();
     if (BuildConfig.DEBUG) {
@@ -44,12 +45,12 @@ public class NativeProxy extends NativeProxyCommon {
 
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
+      WorkletsModule workletsModule,
       long jsContext,
       CallInvokerHolderImpl jsCallInvokerHolder,
       AndroidUIScheduler androidUIScheduler,
       LayoutAnimations LayoutAnimations,
-      MessageQueueThread messageQueueThread,
-      String valueUnpackerCode);
+      MessageQueueThread messageQueueThread);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 

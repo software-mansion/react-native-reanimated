@@ -10,7 +10,6 @@ import type {
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import type { WorkletRuntime } from '../runtimes';
-import { getValueUnpackerCode } from '../valueUnpacker';
 import { isFabric } from '../PlatformChecker';
 import type React from 'react';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
@@ -51,7 +50,7 @@ class NativeReanimatedModule implements IReanimatedModule {
     }
     global._REANIMATED_VERSION_JS = jsVersion;
     if (global.__reanimatedModuleProxy === undefined) {
-      ReanimatedTurboModule?.installTurboModule(getValueUnpackerCode());
+      ReanimatedTurboModule?.installTurboModule();
     }
     if (global.__reanimatedModuleProxy === undefined) {
       throw new ReanimatedError(
@@ -63,18 +62,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
-  }
-
-  makeShareableClone<T>(
-    value: T,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ) {
-    return this.#reanimatedModuleProxy.makeShareableClone(
-      value,
-      shouldPersistRemote,
-      nativeStateSource
-    );
   }
 
   scheduleOnUI<T>(shareable: ShareableRef<T>) {

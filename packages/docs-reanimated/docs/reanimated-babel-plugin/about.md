@@ -146,6 +146,7 @@ runOnUI(() => new Clazz().foo())(); // Logs 'Hello from WorkletClass'
 
 **Pitfalls:**
 
+- Worklet Classes don't support inheritance.
 - Worklet Classes don't support static methods and properties.
 - Class instances cannot be shared between JS and UI threads.
 
