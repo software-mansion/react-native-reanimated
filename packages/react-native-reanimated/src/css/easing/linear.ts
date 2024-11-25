@@ -46,22 +46,6 @@ export class LinearEasing implements ParametrizedTimingFunction {
       .join(', ')})`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  equals(other: any): other is this {
-    return (
-      other instanceof LinearEasing &&
-      this.points.length === other.points.length &&
-      this.points.every((point, idx) => {
-        const otherPoint = other.points[idx];
-        if (typeof point === 'object' && typeof otherPoint === 'object') {
-          return point.x === otherPoint.x && point.y === otherPoint.y;
-        } else {
-          return point === otherPoint;
-        }
-      })
-    );
-  }
-
   // TODO - maybe refactor this normalization later on as it it seems too complex
   normalize(): NormalizedLinearEasing {
     const normalizedPoints = this.points.map(this.normalizePoint.bind(this));

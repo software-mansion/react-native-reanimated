@@ -54,10 +54,8 @@ double TransitionPropertyProgressProvider::getElapsedTime(
 // TransitionProgressProvider
 
 TransitionProgressProvider::TransitionProgressProvider(
-    const double duration,
-    const double delay,
-    const EasingFunction &easingFunction)
-    : duration_(duration), delay_(delay), easingFunction_(easingFunction) {}
+    const CSSTransitionPropertiesSettings &settings)
+    : settings_(std::move(settings)) {}
 
 TransitionProgressState TransitionProgressProvider::getState() const {
   if (!propertyProgressProviders_.empty()) {
@@ -67,7 +65,10 @@ TransitionProgressState TransitionProgressProvider::getState() const {
 }
 
 double TransitionProgressProvider::getMinDelay(const double timestamp) const {
-  double minDelay = delay_;
+  if (propertyProgressProviders_.empty()) {
+    return 0;
+  }
+  auto minDelay = std::numeric_limits<double>::max();
 
   for (const auto &[_, propertyProgressProvider] : propertyProgressProviders_) {
     const auto remainingDelay =
@@ -100,12 +101,25 @@ void TransitionProgressProvider::runProgressProviders(
     const double timestamp,
     const PropertyNames &changedPropertyNames) {
   for (const auto &propertyName : changedPropertyNames) {
-    // Always create the new progress provider with the new settings
+    // Find property settings or fallback to "all" settings if no property
+    // specific settings are available
+    const auto propertySettingsIt = settings_.find(propertyName);
+    const auto &propertySettings = (propertySettingsIt != settings_.end())
+        ? propertySettingsIt->second
+        : settings_.at("all");
+
+    // Create progress provider with the new settings
+    auto progressProvider =
+        std::make_shared<TransitionPropertyProgressProvider>(
+            timestamp,
+            propertySettings.duration,
+            propertySettings.delay,
+            propertySettings.easingFunction);
+
+    // Remove the property from the removal set and update the provider
     propertiesToRemove_.erase(propertyName);
     propertyProgressProviders_.insert_or_assign(
-        propertyName,
-        std::make_shared<TransitionPropertyProgressProvider>(
-            timestamp, duration_, delay_, easingFunction_));
+        propertyName, std::move(progressProvider));
   }
 }
 

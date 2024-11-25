@@ -573,7 +573,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
   cssTransitionsRegistry_->updateSettings(
       rt,
       viewTag.asNumber(),
-      parsePartialCSSTransitionSettings(rt, configUpdates));
+      parsePartialCSSTransitionConfig(rt, configUpdates));
   maybeRunCSSLoop();
 }
 

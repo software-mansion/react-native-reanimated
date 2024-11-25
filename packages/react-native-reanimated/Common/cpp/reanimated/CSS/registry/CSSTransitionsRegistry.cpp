@@ -12,15 +12,15 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
 void CSSTransitionsRegistry::updateSettings(
     jsi::Runtime &rt,
     const Tag viewTag,
-    const PartialCSSTransitionSettings &updatedSettings) {
+    const PartialCSSTransitionConfig &config) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   const auto &transition = registry_.at(viewTag);
-  transition->updateSettings(updatedSettings);
+  transition->updateSettings(config);
 
   // Replace style overrides with the new ones if transition properties were
   // updated (we want to keep overrides only for transitioned properties)
-  if (updatedSettings.properties.has_value()) {
+  if (config.properties.has_value()) {
     const auto &currentStyle = transition->getCurrentInterpolationStyle(rt);
     updatesRegistry_[viewTag] = std::make_pair(
         transition->getShadowNode(), dynamicFromValue(rt, currentStyle));

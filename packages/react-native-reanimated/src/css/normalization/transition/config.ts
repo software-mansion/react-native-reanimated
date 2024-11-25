@@ -1,76 +1,127 @@
 'use strict';
+import { ReanimatedError } from '../../../errors';
 import type {
+  CSSStyleProps,
   CSSTransitionConfig,
+  CSSTransitionProperty,
   NormalizedCSSTransitionConfig,
-  NormalizedTransitionProperty,
+  NormalizedCSSTransitionConfigUpdates,
+  NormalizedSingleCSSTransitionSettings,
 } from '../../types';
-import { haveDifferentValues } from '../../utils/comparison';
+import {
+  areArraysEqual,
+  convertConfigPropertiesToArrays,
+  deepEqual,
+} from '../../utils';
 import {
   normalizeDuration,
   normalizeTimingFunction,
   normalizeDelay,
 } from '../common';
-import { normalizeTransitionProperty } from './base';
 
-export function normalizeCSSTransitionConfig({
-  transitionProperty,
-  transitionDuration,
-  transitionTimingFunction,
-  transitionDelay,
-}: CSSTransitionConfig): NormalizedCSSTransitionConfig {
+export const ERROR_MESSAGES = {
+  invalidTransitionProperty: (transitionProperty: CSSTransitionProperty) =>
+    `Invalid transition property "${JSON.stringify(transitionProperty)}"`,
+};
+
+export function normalizeCSSTransitionConfig(
+  config: CSSTransitionConfig
+): NormalizedCSSTransitionConfig | null {
+  const {
+    transitionProperty,
+    transitionDuration,
+    transitionTimingFunction,
+    transitionDelay,
+  } = convertConfigPropertiesToArrays(config);
+
+  if (
+    transitionProperty.length === 0 ||
+    (transitionProperty.length === 1 && transitionProperty[0] === 'none')
+  ) {
+    return null;
+  }
+
+  const specificProperties: (keyof CSSStyleProps)[] = [];
+  let allPropertiesTransition = false;
+  const settings: Record<string, NormalizedSingleCSSTransitionSettings> = {};
+
+  // Go from the last to the first property to ensure that the last
+  // one overrides previous ones in case of duplicate properties
+  for (let i = transitionProperty.length - 1; i >= 0; i--) {
+    const property = transitionProperty[i];
+
+    if (property === 'none') {
+      throw new ReanimatedError(
+        ERROR_MESSAGES.invalidTransitionProperty(config.transitionProperty)
+      );
+    }
+    if (settings?.[property]) {
+      continue;
+    }
+
+    if (property === 'all') {
+      allPropertiesTransition = true;
+    } else {
+      specificProperties.push(property);
+    }
+
+    settings[property] = {
+      duration: normalizeDuration(
+        transitionDuration?.[i % transitionDuration.length]
+      ),
+      timingFunction: normalizeTimingFunction(
+        transitionTimingFunction?.[i % transitionTimingFunction.length]
+      ),
+      delay: normalizeDelay(transitionDelay?.[i % transitionDelay.length]),
+    };
+
+    // 'all' transition property overrides all properties before it,
+    // so we don't need to process them
+    if (allPropertiesTransition) {
+      break;
+    }
+  }
+
   return {
-    properties: normalizeTransitionProperty(transitionProperty),
-    duration: normalizeDuration(transitionDuration),
-    timingFunction: normalizeTimingFunction(transitionTimingFunction),
-    delay: normalizeDelay(transitionDelay),
+    properties: allPropertiesTransition ? 'all' : specificProperties.reverse(),
+    settings,
   };
 }
 
 export function getNormalizedCSSTransitionConfigUpdates(
-  oldNormalizedTransitionProperties: NormalizedTransitionProperty,
-  oldConfig: CSSTransitionConfig,
-  newConfig: Partial<CSSTransitionConfig>
-): Partial<NormalizedCSSTransitionConfig> {
-  const configUpdates: Partial<NormalizedCSSTransitionConfig> = {};
-
-  const newNormalizedTransitionProperties = normalizeTransitionProperty(
-    newConfig.transitionProperty ?? 'none'
-  );
+  oldConfig: NormalizedCSSTransitionConfig,
+  newConfig: NormalizedCSSTransitionConfig
+): NormalizedCSSTransitionConfigUpdates {
+  const configUpdates: NormalizedCSSTransitionConfigUpdates = {};
 
   if (
-    typeof oldNormalizedTransitionProperties !==
-      typeof newNormalizedTransitionProperties ||
-    (Array.isArray(oldNormalizedTransitionProperties) &&
-      Array.isArray(newNormalizedTransitionProperties) &&
-      (oldNormalizedTransitionProperties.length !==
-        newNormalizedTransitionProperties.length ||
-        haveDifferentValues(
-          oldNormalizedTransitionProperties,
-          newNormalizedTransitionProperties
-        )))
+    oldConfig.properties !== newConfig.properties &&
+    (!Array.isArray(oldConfig.properties) ||
+      !Array.isArray(newConfig.properties) ||
+      !areArraysEqual(oldConfig.properties, newConfig.properties))
   ) {
-    configUpdates.properties = newNormalizedTransitionProperties;
+    configUpdates.properties = newConfig.properties;
   }
 
-  if (newConfig.transitionDuration !== oldConfig.transitionDuration) {
-    configUpdates.duration = normalizeDuration(newConfig.transitionDuration);
-  }
+  const newSettingsKeys = Object.keys(newConfig.settings);
+  const oldSettingsKeys = Object.keys(oldConfig.settings);
 
-  if (
-    typeof oldConfig.transitionTimingFunction === 'object'
-      ? !oldConfig.transitionTimingFunction.equals(
-          newConfig.transitionTimingFunction
-        )
-      : oldConfig.transitionTimingFunction !==
-        newConfig.transitionTimingFunction
-  ) {
-    configUpdates.timingFunction = normalizeTimingFunction(
-      newConfig.transitionTimingFunction
-    );
-  }
-
-  if (newConfig.transitionDelay !== oldConfig.transitionDelay) {
-    configUpdates.delay = normalizeDelay(newConfig.transitionDelay);
+  if (newSettingsKeys.length !== oldSettingsKeys.length) {
+    configUpdates.settings = newConfig.settings;
+  } else {
+    for (const key of newSettingsKeys) {
+      if (
+        !oldConfig.settings[key] ||
+        // TODO - think of a better way to compare settings (necessary for
+        // timing functions comparison). Maybe add some custom way instead
+        // of deepEqual (we used .equal method before from the easing clas
+        // but it can no longer be used if we are getting normalized values)
+        !deepEqual(oldConfig.settings[key], newConfig.settings[key])
+      ) {
+        configUpdates.settings = newConfig.settings;
+        break;
+      }
+    }
   }
 
   return configUpdates;

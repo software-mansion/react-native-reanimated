@@ -50,6 +50,10 @@ const routes = {
         name: 'Updating Transition Settings',
         Component: miscellaneous.UpdatingTransitionSettings,
       },
+      MultipleTransitionSettings: {
+        name: 'Multiple Transition Settings',
+        Component: miscellaneous.MultipleTransitionSettings,
+      },
     },
   },
   RealWorldExamples: {

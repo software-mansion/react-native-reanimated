@@ -6,7 +6,7 @@ namespace reanimated {
 TransitionProperties getProperties(
     jsi::Runtime &rt,
     const jsi::Object &config) {
-  const auto &transitionProperty = config.getProperty(rt, "properties");
+  const auto transitionProperty = config.getProperty(rt, "properties");
 
   if (transitionProperty.isObject()) {
     PropertyNames properties;
@@ -24,36 +24,55 @@ TransitionProperties getProperties(
   return std::nullopt;
 }
 
+CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(
+    jsi::Runtime &rt,
+    const jsi::Object &settings) {
+  CSSTransitionPropertiesSettings result;
+
+  const auto propertyNames = settings.getPropertyNames(rt);
+  const auto propertiesCount = propertyNames.size(rt);
+
+  for (size_t i = 0; i < propertiesCount; ++i) {
+    const auto propertyName =
+        propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const auto propertySettings =
+        settings.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName))
+            .asObject(rt);
+
+    result.emplace(
+        propertyName,
+        CSSTransitionPropertySettings{
+            getDuration(rt, propertySettings),
+            getTimingFunction(rt, propertySettings),
+            getDelay(rt, propertySettings)});
+  }
+
+  return result;
+}
+
 CSSTransitionConfig parseCSSTransitionConfig(
     jsi::Runtime &rt,
     const jsi::Value &config) {
-  const auto &configObj = config.asObject(rt);
-
+  const auto configObj = config.asObject(rt);
   return CSSTransitionConfig{
       getProperties(rt, configObj),
-      getDuration(rt, configObj),
-      getTimingFunction(rt, configObj),
-      getDelay(rt, configObj)};
+      parseCSSTransitionPropertiesSettings(
+          rt, configObj.getProperty(rt, "settings").asObject(rt))};
 }
 
-PartialCSSTransitionSettings parsePartialCSSTransitionSettings(
+PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
     jsi::Runtime &rt,
-    const jsi::Value &partialSettings) {
-  const auto &partialObj = partialSettings.asObject(rt);
+    const jsi::Value &partialConfig) {
+  const auto partialObj = partialConfig.asObject(rt);
 
-  PartialCSSTransitionSettings result;
+  PartialCSSTransitionConfig result;
 
   if (partialObj.hasProperty(rt, "properties")) {
     result.properties = getProperties(rt, partialObj);
   }
-  if (partialObj.hasProperty(rt, "duration")) {
-    result.duration = getDuration(rt, partialObj);
-  }
-  if (partialObj.hasProperty(rt, "timingFunction")) {
-    result.easingFunction = getTimingFunction(rt, partialObj);
-  }
-  if (partialObj.hasProperty(rt, "delay")) {
-    result.delay = getDelay(rt, partialObj);
+  if (partialObj.hasProperty(rt, "settings")) {
+    result.settings = parseCSSTransitionPropertiesSettings(
+        rt, partialObj.getProperty(rt, "settings").asObject(rt));
   }
 
   return result;

@@ -5,31 +5,43 @@
 #include <reanimated/CSS/config/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
+#include <string>
+#include <unordered_map>
+
 namespace reanimated {
 
-struct CSSTransitionConfig {
-  TransitionProperties properties;
+struct CSSTransitionPropertySettings {
   double duration;
   EasingFunction easingFunction;
   double delay;
 };
 
-struct PartialCSSTransitionSettings {
+using CSSTransitionPropertiesSettings =
+    std::unordered_map<std::string, CSSTransitionPropertySettings>;
+
+struct CSSTransitionConfig {
+  TransitionProperties properties;
+  CSSTransitionPropertiesSettings settings;
+};
+
+struct PartialCSSTransitionConfig {
   std::optional<TransitionProperties> properties;
-  std::optional<double> duration;
-  std::optional<EasingFunction> easingFunction;
-  std::optional<double> delay;
+  std::optional<CSSTransitionPropertiesSettings> settings;
 };
 
 TransitionProperties getProperties(jsi::Runtime &rt, const jsi::Object &config);
+
+CSSTransitionPropertiesSettings parseCSSTransitionPropertiesSettings(
+    jsi::Runtime &rt,
+    const jsi::Object &settings);
 
 CSSTransitionConfig parseCSSTransitionConfig(
     jsi::Runtime &rt,
     const jsi::Value &config);
 
-PartialCSSTransitionSettings parsePartialCSSTransitionSettings(
+PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
     jsi::Runtime &rt,
-    const jsi::Value &config);
+    const jsi::Value &partialConfig);
 
 } // namespace reanimated
 

@@ -1,8 +1,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
-#include <glog/logging.h>
-
 namespace reanimated {
 
 AnimationProgressProvider::AnimationProgressProvider(

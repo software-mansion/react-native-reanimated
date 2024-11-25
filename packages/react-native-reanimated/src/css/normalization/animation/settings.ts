@@ -8,6 +8,7 @@ import type {
   CSSAnimationSettings,
   NormalizedCSSAnimationSettings,
 } from '../../types';
+import { deepEqual } from '../../utils';
 import { isNumber } from '../../utils/typeGuards';
 import {
   normalizeDelay,
@@ -88,12 +89,15 @@ export function getNormalizedCSSAnimationSettingsUpdates(
   if (newSettings.animationDuration !== oldSettings.animationDuration) {
     settingsUpdates.duration = normalizeDuration(newSettings.animationDuration);
   }
+  // TODO- improve this check after implementing multiple animations support
   if (
     oldSettings.animationTimingFunction !==
       newSettings.animationTimingFunction &&
     (typeof oldSettings.animationTimingFunction !== 'object' ||
-      !oldSettings.animationTimingFunction?.equals(
-        newSettings.animationTimingFunction
+      typeof newSettings.animationTimingFunction !== 'object' ||
+      !deepEqual(
+        oldSettings.animationTimingFunction.normalize(),
+        newSettings.animationTimingFunction.normalize()
       ))
   ) {
     settingsUpdates.timingFunction = normalizeTimingFunction(

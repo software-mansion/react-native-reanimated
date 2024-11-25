@@ -56,8 +56,11 @@ function CircularMenu() {
               backgroundColor: open ? colors.primaryDark : colors.primary,
               transform: [{ scale: open ? 0.75 : 1 }],
               transitionDuration: 400,
-              transitionProperty: 'all',
-              transitionTimingFunction: cubicBezier(0.175, 0.885, 0.32, 1.275),
+              transitionProperty: ['all', 'backgroundColor'],
+              transitionTimingFunction: [
+                cubicBezier(0.175, 0.885, 0.32, 1.275),
+                'easeOut',
+              ],
             },
           ]}>
           <MenuButton open={open} />

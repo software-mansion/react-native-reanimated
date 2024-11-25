@@ -41,7 +41,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
   void updateSettings(
       jsi::Runtime &rt,
       Tag viewTag,
-      const PartialCSSTransitionSettings &updatedSettings);
+      const PartialCSSTransitionConfig &config);
 
   bool hasUpdates() const {
     return !runningTransitionTags_.empty() || !delayedTransitionsMap_.empty();

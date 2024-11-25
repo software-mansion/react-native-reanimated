@@ -55,7 +55,5 @@ export type NormalizedCSSTimingFunction =
 
 export interface ParametrizedTimingFunction {
   toString(): string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  equals(other: any): other is this;
   normalize(): NormalizedCSSTimingFunction;
 }

@@ -28,15 +28,6 @@ export class StepsEasing implements ParametrizedTimingFunction {
     return `${StepsEasing.easingName}(${this.stepsNumber}, ${this.modifier})`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  equals(other: any): other is this {
-    return (
-      other instanceof StepsEasing &&
-      this.stepsNumber === other.stepsNumber &&
-      this.modifier === other.modifier
-    );
-  }
-
   normalize(): NormalizedStepsEasing | 'linear' {
     const stepsX: number[] = [];
     const stepsY: number[] = [];

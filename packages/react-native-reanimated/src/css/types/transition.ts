@@ -1,6 +1,7 @@
 'use strict';
 import type { CSSStyleProps, CSSTimeUnit } from './common';
 import type { CSSTimingFunction, NormalizedCSSTimingFunction } from '../easing';
+import type { AddArrayPropertyTypes } from './helpers';
 
 // BEFORE NORMALIZATION
 
@@ -8,34 +9,46 @@ export type CSSTransitionProperty =
   | 'all'
   | 'none'
   | keyof CSSStyleProps
-  | (keyof CSSStyleProps)[];
+  | ('all' | keyof CSSStyleProps)[];
 export type CSSTransitionDuration = CSSTimeUnit;
 export type CSSTransitionTimingFunction = CSSTimingFunction;
 export type CSSTransitionDelay = CSSTimeUnit;
 
-export type CSSTransitionSettings = {
+export type SingleCSSTransitionSettings = {
   transitionDuration?: CSSTransitionDuration;
   transitionTimingFunction?: CSSTransitionTimingFunction;
   transitionDelay?: CSSTransitionDelay;
   // transitionBehavior?: // TODO not sure if we want to include it as we can already work with discrete values
 };
 
-export type CSSTransitionConfig = CSSTransitionSettings & {
+export type SingleCSSTransitionConfig = SingleCSSTransitionSettings & {
   transitionProperty: CSSTransitionProperty;
 };
 
-export type TransitionSettingProp = keyof CSSTransitionConfig;
+export type TransitionSettingProp = keyof SingleCSSTransitionConfig;
+
+export type CSSTransitionSettings =
+  AddArrayPropertyTypes<SingleCSSTransitionSettings>;
+
+export type CSSTransitionConfig =
+  AddArrayPropertyTypes<SingleCSSTransitionSettings> & {
+    transitionProperty: CSSTransitionProperty;
+  };
 
 // AFTER NORMALIZATION
 
-export type NormalizedTransitionProperty = string[] | 'all';
-
-export type NormalizedCSSTransitionSettings = {
+export type NormalizedSingleCSSTransitionSettings = {
   duration: number;
   timingFunction: NormalizedCSSTimingFunction;
   delay: number;
 };
 
-export type NormalizedCSSTransitionConfig = NormalizedCSSTransitionSettings & {
-  properties: NormalizedTransitionProperty;
+export type NormalizedCSSTransitionProperties = 'all' | (keyof CSSStyleProps)[];
+
+export type NormalizedCSSTransitionConfig = {
+  properties: NormalizedCSSTransitionProperties;
+  settings: Record<string, NormalizedSingleCSSTransitionSettings>;
 };
+
+export type NormalizedCSSTransitionConfigUpdates =
+  Partial<NormalizedCSSTransitionConfig>;

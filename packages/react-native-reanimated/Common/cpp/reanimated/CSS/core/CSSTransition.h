@@ -39,7 +39,7 @@ class CSSTransition {
     return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
   }
 
-  void updateSettings(const PartialCSSTransitionSettings &settings);
+  void updateSettings(const PartialCSSTransitionConfig &config);
 
   jsi::Value
   run(jsi::Runtime &rt, const ChangedProps &changedProps, double timestamp);
