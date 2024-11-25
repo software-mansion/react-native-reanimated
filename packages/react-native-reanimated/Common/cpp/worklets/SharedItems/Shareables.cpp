@@ -48,7 +48,8 @@ jsi::Value makeShareableClone(
     auto object = value.asObject(rt);
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
-          shareable = std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
+        shareable =
+            std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
       } else {
         shareable = std::make_shared<ShareableWorklet>(rt, object);
       }
