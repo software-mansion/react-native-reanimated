@@ -31,7 +31,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
       jlong jsContext,
-      const std::string &valueUnpackerCode);
+      const std::string &valueUnpackerCode,
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
 
   static void registerNatives();
 
@@ -48,7 +49,8 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   explicit WorkletsModule(
       jni::alias_ref<WorkletsModule::jhybridobject> jThis,
       jsi::Runtime *rnRuntime,
-      const std::string &valueUnpackerCode);
+      const std::string &valueUnpackerCode,
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
 };
 
 } // namespace worklets
