@@ -3,6 +3,7 @@
 
 #include <reanimated/CSS/config/StyleInterpolatorsConfig.h>
 #include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
+#include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
 #include <memory>
 
@@ -14,11 +15,13 @@ namespace reanimated {
 class AnimationStyleInterpolator : public ObjectPropertiesInterpolator {
  public:
   explicit AnimationStyleInterpolator(
+      const std::shared_ptr<AnimationProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       : ObjectPropertiesInterpolator(
             styleInterpolatorFactories,
-            viewStylesRepository,
-            {}) {}
+            {},
+            progressProvider,
+            viewStylesRepository) {}
 };
 
 } // namespace reanimated

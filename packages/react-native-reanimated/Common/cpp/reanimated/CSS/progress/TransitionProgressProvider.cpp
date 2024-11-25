@@ -5,6 +5,14 @@ namespace reanimated {
 
 // TransitionPropertyProgressProvider
 
+TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
+    const double timestamp,
+    const double duration,
+    const double delay,
+    const EasingFunction &easingFunction)
+    : RawProgressProvider(timestamp, duration, delay),
+      easingFunction_(easingFunction) {}
+
 TransitionProgressState TransitionPropertyProgressProvider::getState() const {
   if (!rawProgress_.has_value()) {
     return TransitionProgressState::PENDING;
@@ -21,14 +29,21 @@ double TransitionPropertyProgressProvider::getRemainingDelay(
   return delay_ - (timestamp - creationTimestamp_);
 }
 
+double TransitionPropertyProgressProvider::getKeyframeProgress(
+    const double fromOffset,
+    const double toOffset) const {
+  // Transition should be always between 0-1 offsets but, to make things
+  // consistent, we calculate the progress without this assumption
+  if (fromOffset == toOffset) {
+    return 1;
+  }
+  return easingFunction_(
+      (getGlobalProgress() - fromOffset) / (toOffset - fromOffset));
+}
+
 std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(
     const double timestamp) {
   return getElapsedTime(timestamp) / duration_;
-}
-
-double TransitionPropertyProgressProvider::decorateProgress(
-    const double progress) const {
-  return easingFunction_(progress);
 }
 
 double TransitionPropertyProgressProvider::getElapsedTime(
@@ -56,7 +71,7 @@ double TransitionProgressProvider::getMinDelay(const double timestamp) const {
 
   for (const auto &[_, propertyProgressProvider] : propertyProgressProviders_) {
     const auto remainingDelay =
-        propertyProgressProvider.getRemainingDelay(timestamp);
+        propertyProgressProvider->getRemainingDelay(timestamp);
     if (remainingDelay < minDelay) {
       minDelay = remainingDelay;
     }
@@ -89,7 +104,7 @@ void TransitionProgressProvider::runProgressProviders(
     propertiesToRemove_.erase(propertyName);
     propertyProgressProviders_.insert_or_assign(
         propertyName,
-        TransitionPropertyProgressProvider(
+        std::make_shared<TransitionPropertyProgressProvider>(
             timestamp, duration_, delay_, easingFunction_));
   }
 }
@@ -102,8 +117,8 @@ void TransitionProgressProvider::update(const double timestamp) {
 
   for (auto &[propertyName, propertyProgressProvider] :
        propertyProgressProviders_) {
-    propertyProgressProvider.update(timestamp);
-    if (propertyProgressProvider.getState() ==
+    propertyProgressProvider->update(timestamp);
+    if (propertyProgressProvider->getState() ==
         TransitionProgressState::FINISHED) {
       propertiesToRemove_.insert(propertyName);
     }

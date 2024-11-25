@@ -1,6 +1,8 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
+#include <glog/logging.h>
+
 namespace reanimated {
 
 AnimationProgressProvider::AnimationProgressProvider(
@@ -9,10 +11,13 @@ AnimationProgressProvider::AnimationProgressProvider(
     const double delay,
     const double iterationCount,
     const AnimationDirection direction,
-    const EasingFunction &easingFunction)
-    : ProgressProvider(timestamp, duration, delay, easingFunction),
+    const EasingFunction &easingFunction,
+    const KeyframeEasingFunctions &keyframeEasingFunctions)
+    : RawProgressProvider(timestamp, duration, delay),
       iterationCount_(iterationCount),
-      direction_(direction) {}
+      direction_(direction),
+      easingFunction_(easingFunction),
+      keyframeEasingFunctions_(keyframeEasingFunctions) {}
 
 AnimationProgressState AnimationProgressProvider::getState(
     const double timestamp) const {
@@ -47,9 +52,24 @@ double AnimationProgressProvider::getStartTimestamp(
   return creationTimestamp_ + delay_ + getTotalPausedTime(timestamp);
 }
 
-double AnimationProgressProvider::decorateProgress(
-    const double progress) const {
-  return easingFunction_(applyAnimationDirection(progress));
+double AnimationProgressProvider::getKeyframeProgress(
+    const double fromOffset,
+    const double toOffset) const {
+  if (fromOffset == toOffset) {
+    return 1;
+  }
+
+  const auto keyframeProgress =
+      (getGlobalProgress() - fromOffset) / (toOffset - fromOffset);
+
+  // Use the overridden easing function if it was overridden for the
+  // current keyframe
+  const auto easingFunctionIt = keyframeEasingFunctions_.find(fromOffset);
+  if (easingFunctionIt != keyframeEasingFunctions_.end()) {
+    return easingFunctionIt->second(keyframeProgress);
+  }
+
+  return easingFunction_(keyframeProgress);
 }
 
 void AnimationProgressProvider::pause(const double timestamp) {
@@ -64,7 +84,7 @@ void AnimationProgressProvider::play(const double timestamp) {
 }
 
 void AnimationProgressProvider::resetProgress() {
-  ProgressProvider::resetProgress();
+  RawProgressProvider::resetProgress();
   currentIteration_ = 1;
   previousIterationsDuration_ = 0;
 }
@@ -121,12 +141,6 @@ double AnimationProgressProvider::updateIterationProgress(
 
     currentIteration_ += deltaIterations;
     previousIterationsDuration_ = (currentIteration_ - 1) * duration_;
-
-    if (direction_ == AnimationDirection::NORMAL ||
-        direction_ == AnimationDirection::REVERSE) {
-      previousProgress_.reset();
-      previousToPreviousProgress_.reset();
-    }
   }
 
   // If the current iteration changes, the progress must be updated

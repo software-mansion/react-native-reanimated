@@ -2,7 +2,9 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
-#include <reanimated/CSS/progress/ProgressProvider.h>
+#include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/progress/KeyframeProgressProvider.h>
+#include <reanimated/CSS/progress/RawProgressProvider.h>
 
 namespace reanimated {
 
@@ -13,7 +15,8 @@ enum class AnimationProgressState {
   FINISHED
 };
 
-class AnimationProgressProvider : public ProgressProvider {
+class AnimationProgressProvider final : public KeyframeProgressProvider,
+                                        public RawProgressProvider {
  public:
   AnimationProgressProvider(
       double timestamp,
@@ -21,7 +24,8 @@ class AnimationProgressProvider : public ProgressProvider {
       double delay,
       double iterationCount,
       AnimationDirection direction,
-      const EasingFunction &easingFunction);
+      const EasingFunction &easingFunction,
+      const KeyframeEasingFunctions &keyframeEasingFunctions);
 
   void setIterationCount(double iterationCount) {
     resetProgress();
@@ -31,15 +35,27 @@ class AnimationProgressProvider : public ProgressProvider {
     resetProgress();
     direction_ = direction;
   }
+  void setEasingFunction(const EasingFunction &easingFunction) {
+    resetProgress();
+    easingFunction_ = easingFunction;
+  }
 
+  AnimationDirection getDirection() const {
+    return direction_;
+  }
+  double getGlobalProgress() const override {
+    return applyAnimationDirection(rawProgress_.value_or(0));
+  }
+  bool isFirstUpdate() const override {
+    return !previousRawProgress_.has_value();
+  }
+  double getKeyframeProgress(double fromOffset, double toOffset) const override;
   AnimationProgressState getState(double timestamp) const;
   double getPauseTimestamp() const {
     return pauseTimestamp_;
   }
   double getTotalPausedTime(double timestamp) const;
   double getStartTimestamp(double timestamp) const;
-
-  double decorateProgress(double progress) const override;
 
   void pause(double timestamp);
   void play(double timestamp);
@@ -51,6 +67,8 @@ class AnimationProgressProvider : public ProgressProvider {
  private:
   double iterationCount_;
   AnimationDirection direction_;
+  EasingFunction easingFunction_;
+  const KeyframeEasingFunctions keyframeEasingFunctions_;
 
   unsigned currentIteration_ = 1;
   double previousIterationsDuration_ = 0;

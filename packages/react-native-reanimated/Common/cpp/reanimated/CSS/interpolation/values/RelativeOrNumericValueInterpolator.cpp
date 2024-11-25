@@ -8,13 +8,15 @@ namespace reanimated {
 RelativeOrNumericValueInterpolator::RelativeOrNumericValueInterpolator(
     RelativeTo relativeTo,
     std::string relativeProperty,
+    const PropertyPath &propertyPath,
     const std::optional<UnitValue> &defaultValue,
-    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const PropertyPath &propertyPath)
+    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : ValueInterpolator<UnitValue>(
+          propertyPath,
           defaultValue,
-          viewStylesRepository,
-          propertyPath),
+          progressProvider,
+          viewStylesRepository),
       relativeTo_(relativeTo),
       relativeProperty_(std::move(relativeProperty)) {}
 
@@ -31,12 +33,12 @@ jsi::Value RelativeOrNumericValueInterpolator::convertResultToJSI(
 }
 
 UnitValue RelativeOrNumericValueInterpolator::interpolate(
-    const double localProgress,
+    const double progress,
     const UnitValue &fromValue,
     const UnitValue &toValue,
-    const PropertyInterpolationUpdateContext &context) const {
+    const ValueInterpolatorUpdateContext &context) const {
   return fromValue.interpolate(
-      localProgress,
+      progress,
       toValue,
       {
           .node = context.node,

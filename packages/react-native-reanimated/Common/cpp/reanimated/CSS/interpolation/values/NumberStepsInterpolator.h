@@ -17,10 +17,10 @@ class NumberStepsInterpolator final : public ValueInterpolator<int> {
       const override;
 
   int interpolate(
-      double localProgress,
+      double progress,
       const int &fromValue,
       const int &toValue,
-      const PropertyInterpolationUpdateContext &context) const override;
+      const ValueInterpolatorUpdateContext &context) const override;
 };
 
 } // namespace reanimated

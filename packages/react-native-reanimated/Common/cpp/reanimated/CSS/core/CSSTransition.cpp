@@ -8,13 +8,13 @@ CSSTransition::CSSTransition(
     const CSSTransitionConfig &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : shadowNode_(std::move(shadowNode)),
+      properties_(config.properties),
       viewStylesRepository_(viewStylesRepository),
-      styleInterpolator_(TransitionStyleInterpolator(viewStylesRepository)),
       progressProvider_(TransitionProgressProvider(
           config.duration,
           config.delay,
           config.easingFunction)),
-      properties_(config.properties) {}
+      styleInterpolator_(TransitionStyleInterpolator(viewStylesRepository)) {}
 
 void CSSTransition::updateSettings(
     const PartialCSSTransitionSettings &settings) {
@@ -36,9 +36,10 @@ jsi::Value CSSTransition::run(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
     const double timestamp) {
-  styleInterpolator_.updateInterpolatedProperties(rt, changedProps);
   progressProvider_.runProgressProviders(
       rt, timestamp, changedProps.changedPropertyNames);
+  styleInterpolator_.updateInterpolatedProperties(
+      rt, changedProps, progressProvider_.getPropertyProgressProviders());
   // Call update to calculate current interpolation values
   // (e.g. to immediately apply final values for the 0 duration)
   return update(rt, timestamp);
@@ -46,19 +47,16 @@ jsi::Value CSSTransition::run(
 
 jsi::Value CSSTransition::update(jsi::Runtime &rt, const double timestamp) {
   progressProvider_.update(timestamp);
-
-  auto updates = styleInterpolator_.update(
-      rt, shadowNode_, progressProvider_.getPropertyProgressProviders());
-
-  return updates;
+  return styleInterpolator_.update(
+      rt, shadowNode_, progressProvider_.getPropertiesToRemove());
 }
 
 void CSSTransition::updateTransitionProperties(
     const TransitionProperties &properties) {
   properties_ = properties;
 
-  const auto isAllProperties = !properties_.has_value();
-  if (isAllProperties) {
+  const auto isAllPropertiesTransition = !properties_.has_value();
+  if (isAllPropertiesTransition) {
     return;
   }
 

@@ -25,14 +25,14 @@ class TransitionStyleInterpolator {
   jsi::Value update(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
-      const std::unordered_map<std::string, TransitionPropertyProgressProvider>
-          &progressProviders);
+      const std::unordered_set<std::string> &propertiesToRemove);
 
   void discardIrrelevantInterpolators(
       const std::unordered_set<std::string> &transitionPropertyNames);
   void updateInterpolatedProperties(
       jsi::Runtime &rt,
-      const ChangedProps &changedProps);
+      const ChangedProps &changedProps,
+      const TransitionPropertyProgressProviders &propertyProgressProviders);
 
  private:
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;

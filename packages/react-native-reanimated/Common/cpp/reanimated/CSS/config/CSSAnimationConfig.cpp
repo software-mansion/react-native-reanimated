@@ -18,12 +18,12 @@ KeyframeEasingFunctions getKeyframeTimingFunctions(
   const auto timingFunctionsCount = timingFunctionOffsets.size(rt);
 
   for (size_t i = 0; i < timingFunctionsCount; ++i) {
-    const std::string key =
+    const auto offset =
         timingFunctionOffsets.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto offset = timingFunctionOffsets.getValueAtIndex(rt, i).asNumber();
     const auto easingFunction = getEasingFunction(
-        rt, keyframeTimingFunctions.getProperty(rt, key.c_str()));
-    result[offset] = easingFunction;
+        rt, keyframeTimingFunctions.getProperty(rt, offset.c_str()));
+
+    result[std::stod(offset)] = easingFunction;
   }
 
   return result;

@@ -47,12 +47,11 @@ class CSSTransition {
 
  private:
   const ShadowNode::Shared shadowNode_;
-  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-
-  TransitionStyleInterpolator styleInterpolator_;
-  TransitionProgressProvider progressProvider_;
-
   TransitionProperties properties_;
+
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+  TransitionProgressProvider progressProvider_;
+  TransitionStyleInterpolator styleInterpolator_;
 
   void updateTransitionProperties(const TransitionProperties &properties);
 };

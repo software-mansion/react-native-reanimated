@@ -14,9 +14,10 @@ class RelativeOrNumericValueInterpolator final
   RelativeOrNumericValueInterpolator(
       RelativeTo relativeTo,
       std::string relativeProperty,
+      const PropertyPath &propertyPath,
       const std::optional<UnitValue> &defaultValue,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const PropertyPath &propertyPath);
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
  protected:
   UnitValue prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
@@ -26,10 +27,10 @@ class RelativeOrNumericValueInterpolator final
       const override;
 
   UnitValue interpolate(
-      double localProgress,
+      double progress,
       const UnitValue &fromValue,
       const UnitValue &toValue,
-      const PropertyInterpolationUpdateContext &context) const override;
+      const ValueInterpolatorUpdateContext &context) const override;
 
   bool isResolvable() const override {
     return true;

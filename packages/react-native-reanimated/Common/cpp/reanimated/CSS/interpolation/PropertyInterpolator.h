@@ -3,6 +3,7 @@
 
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
+#include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 
 #include <memory>
 #include <string>
@@ -10,18 +11,20 @@
 
 namespace reanimated {
 
-struct PropertyInterpolationUpdateContext {
-  jsi::Runtime &rt;
-  const ShadowNode::Shared &node;
-  const double progress;
-  const std::optional<double> previousProgress;
-  const bool directionChanged;
-};
-
 class PropertyInterpolator {
  public:
-  explicit PropertyInterpolator(const PropertyPath &propertyPath)
-      : propertyPath_(propertyPath) {}
+  explicit PropertyInterpolator(
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+      : propertyPath_(propertyPath),
+        progressProvider_(progressProvider),
+        viewStylesRepository_(viewStylesRepository) {}
+
+  void setProgressProvider(
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
+    progressProvider_ = progressProvider;
+  }
 
   virtual jsi::Value getStyleValue(
       jsi::Runtime &rt,
@@ -29,6 +32,8 @@ class PropertyInterpolator {
   virtual jsi::Value getCurrentValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const = 0;
+  virtual jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const = 0;
+  virtual jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const = 0;
 
   virtual void updateKeyframes(
       jsi::Runtime &rt,
@@ -39,20 +44,25 @@ class PropertyInterpolator {
       const jsi::Value &newStyleValue) = 0;
 
   virtual jsi::Value update(
-      const PropertyInterpolationUpdateContext &context) = 0;
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode) = 0;
   virtual jsi::Value reset(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) = 0;
 
  protected:
   const PropertyPath propertyPath_;
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+  std::shared_ptr<KeyframeProgressProvider> progressProvider_;
 };
 
 class PropertyInterpolatorFactory {
  public:
   virtual std::shared_ptr<PropertyInterpolator> create(
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const PropertyPath &propertyPath) const = 0;
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+      const = 0;
   virtual ~PropertyInterpolatorFactory() = default;
 };
 

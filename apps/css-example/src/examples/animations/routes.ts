@@ -526,6 +526,10 @@ const routes = {
         name: 'Updating Animation Settings',
         Component: miscellaneous.UpdatingAnimationSettings,
       },
+      KeyframeTimingFunctions: {
+        name: 'Keyframe Timing Functions',
+        Component: miscellaneous.KeyframeTimingFunctions,
+      },
     },
   },
   RealWorldExamples: {

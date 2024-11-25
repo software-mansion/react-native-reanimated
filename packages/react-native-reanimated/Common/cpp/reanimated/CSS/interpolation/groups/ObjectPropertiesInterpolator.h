@@ -2,6 +2,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
+#include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/util/interpolators.h>
 
 #include <memory>
@@ -13,8 +14,9 @@ class ObjectPropertiesInterpolator : public PropertyInterpolator {
  public:
   ObjectPropertiesInterpolator(
       const PropertiesInterpolatorFactories &factories,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const PropertyPath &propertyPath);
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~ObjectPropertiesInterpolator() = default;
 
   jsi::Value getStyleValue(
@@ -23,8 +25,11 @@ class ObjectPropertiesInterpolator : public PropertyInterpolator {
   jsi::Value getCurrentValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
+  jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const override;
+  jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const override;
 
-  jsi::Value update(const PropertyInterpolationUpdateContext &context) override;
+  jsi::Value update(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
+      override;
   jsi::Value reset(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
       override;
 
@@ -36,7 +41,6 @@ class ObjectPropertiesInterpolator : public PropertyInterpolator {
 
  private:
   const PropertiesInterpolatorFactories &factories_;
-  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   PropertiesInterpolators interpolators_;
 

@@ -7,11 +7,11 @@ import type {
   CSSAnimationTimingFunction,
   CSSKeyframesStyle,
   NormalizedCSSAnimationName,
-  CSSKeyframeTimingFunctions,
+  NormalizedCSSKeyframeTimingFunctions,
 } from '../../types';
 import { isNumber } from '../../utils';
 import { OFFSET_REGEX } from './constants';
-import { normalizeStyle } from '../common';
+import { normalizeStyle, normalizeTimingFunction } from '../common';
 import type { StyleProps } from '../../../commonTypes';
 
 export const ERROR_MESSAGES = {
@@ -116,12 +116,12 @@ export function normalizeAnimationName(
   keyframes: CSSAnimationKeyframes
 ): NormalizedCSSAnimationName {
   const keyframesStyle: CSSKeyframesStyle = {};
-  const timingFunctions: CSSKeyframeTimingFunctions = {};
+  const timingFunctions: NormalizedCSSKeyframeTimingFunctions = {};
 
   normalizeKeyframes(keyframes).forEach(({ offset, style, timingFunction }) => {
     processStyleProperties(offset, style, keyframesStyle);
     if (timingFunction && offset < 1) {
-      timingFunctions[offset] = timingFunction;
+      timingFunctions[offset] = normalizeTimingFunction(timingFunction);
     }
   });
 

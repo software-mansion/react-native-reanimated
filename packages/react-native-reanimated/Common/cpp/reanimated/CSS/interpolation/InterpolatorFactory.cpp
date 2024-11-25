@@ -11,10 +11,12 @@ class ObjectInterpolatorFactory : public PropertyInterpolatorFactory {
   ~ObjectInterpolatorFactory() override = default;
 
   std::shared_ptr<PropertyInterpolator> create(
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const PropertyPath &propertyPath) const override {
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+      const override {
     return std::make_shared<ObjectPropertiesInterpolator>(
-        factories_, viewStylesRepository, propertyPath);
+        factories_, propertyPath, progressProvider, viewStylesRepository);
   }
 
  protected:
@@ -29,10 +31,12 @@ class ValueInterpolatorFactory : public PropertyInterpolatorFactory {
       : defaultValue_(defaultValue) {}
 
   std::shared_ptr<PropertyInterpolator> create(
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const PropertyPath &propertyPath) const override {
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+      const override {
     return std::make_shared<InterpolatorType>(
-        defaultValue_, viewStylesRepository, propertyPath);
+        propertyPath, defaultValue_, progressProvider, viewStylesRepository);
   }
 
  private:
@@ -51,14 +55,17 @@ class RelativeOrNumericInterpolatorFactory final
         defaultValue_(defaultValue) {}
 
   std::shared_ptr<PropertyInterpolator> create(
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const PropertyPath &propertyPath) const override {
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+      const override {
     return std::make_shared<RelativeOrNumericValueInterpolator>(
         relativeTo_,
         relativeProperty_,
+        propertyPath,
         defaultValue_,
-        viewStylesRepository,
-        propertyPath);
+        progressProvider,
+        viewStylesRepository);
   }
 
  private:
@@ -75,10 +82,12 @@ class TransformsStyleInterpolatorFactory final
       : interpolators_(interpolators) {}
 
   std::shared_ptr<PropertyInterpolator> create(
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-      const PropertyPath &propertyPath) const override {
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+      const override {
     return std::make_shared<TransformsStyleInterpolator>(
-        interpolators_, viewStylesRepository, propertyPath);
+        interpolators_, propertyPath, progressProvider, viewStylesRepository);
   }
 
  protected:
