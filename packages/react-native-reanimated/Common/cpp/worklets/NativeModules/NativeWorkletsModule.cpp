@@ -28,11 +28,12 @@ jsi::Value NativeWorkletsModule::makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote,
-    const jsi::Value &nativeStateSource) {
+    const jsi::Value &nativeStateSource,
+    const jsi::Value &staticFunction) {
   // TODO: It might be a good idea to rename one of these methods to avoid
   // confusion.
   return worklets::makeShareableClone(
-      rt, value, shouldRetainRemote, nativeStateSource);
+      rt, value, shouldRetainRemote, nativeStateSource, staticFunction);
 }
 
 } // namespace worklets

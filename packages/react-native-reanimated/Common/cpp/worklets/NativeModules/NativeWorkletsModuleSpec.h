@@ -19,7 +19,8 @@ class JSI_EXPORT NativeWorkletsModuleSpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &value,
       const jsi::Value &shouldRetainRemote,
-      const jsi::Value &nativeStateSource) = 0;
+      const jsi::Value &nativeStateSource,
+      const jsi::Value &staticFunction) = 0;
 };
 
 } // namespace worklets

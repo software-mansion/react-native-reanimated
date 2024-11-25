@@ -157,3 +157,4 @@ export const withTiming = function (
     } as TimingAnimation;
   });
 } as withTimingType;
+// withTiming.staticFn = true;

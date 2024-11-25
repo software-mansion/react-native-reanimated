@@ -29,12 +29,14 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   makeShareableClone<T>(
     value: T,
     shouldPersistRemote: boolean,
-    nativeStateSource?: object
+    nativeStateSource?: object,
+    staticFunction: boolean = false
   ) {
     return this.#workletsModuleProxy.makeShareableClone(
       value,
       shouldPersistRemote,
-      nativeStateSource
+      nativeStateSource,
+      staticFunction
     );
   }
 }
