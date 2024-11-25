@@ -2,6 +2,7 @@
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
 #import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
+#import <worklets/tools/SingleInstanceChecker.h>
 
 using worklets::NativeWorkletsModule;
 using worklets::RNRuntimeWorkletDecorator;
@@ -17,6 +18,9 @@ using worklets::RNRuntimeWorkletDecorator;
 
 @implementation WorkletsModule {
   std::shared_ptr<NativeWorkletsModule> nativeWorkletsModule_;
+#ifndef NDEBUG
+  worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
+#endif // NDEBUG
 }
 
 - (std::shared_ptr<NativeWorkletsModule>)getNativeWorkletsModule

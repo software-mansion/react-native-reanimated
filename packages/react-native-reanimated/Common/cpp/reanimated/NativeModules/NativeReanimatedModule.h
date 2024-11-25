@@ -4,7 +4,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/NativeModules/NativeReanimatedModuleSpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
-#include <reanimated/Tools/SingleInstanceChecker.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/PropsRegistry.h>
@@ -16,6 +15,7 @@
 #include <worklets/NativeModules/NativeWorkletsModule.h>
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -42,12 +42,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const bool isReducedMotion);
 
   ~NativeReanimatedModule();
-
-  jsi::Value makeShareableClone(
-      jsi::Runtime &rt,
-      const jsi::Value &value,
-      const jsi::Value &shouldRetainRemote,
-      const jsi::Value &nativeStateSource) override;
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
@@ -241,8 +235,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
 
 #ifndef NDEBUG
-  SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
-#endif
+  worklets::SingleInstanceChecker<NativeReanimatedModule>
+      singleInstanceChecker_;
+#endif // NDEBUG
 };
 
 } // namespace reanimated
