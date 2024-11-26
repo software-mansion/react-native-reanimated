@@ -211,7 +211,8 @@ function cloneArray<T extends unknown[]>(
   );
   const clone = WorkletsModule.makeShareableClone(
     clonedElements,
-    shouldPersistRemote
+    shouldPersistRemote,
+    value
   ) as ShareableRef<T>;
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
@@ -224,7 +225,11 @@ function cloneRemoteFunction<T extends object>(
   value: T,
   shouldPersistRemote: boolean
 ): ShareableRef<T> {
-  const clone = WorkletsModule.makeShareableClone(value, shouldPersistRemote);
+  const clone = WorkletsModule.makeShareableClone(
+    value,
+    shouldPersistRemote,
+    value
+  );
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
@@ -239,7 +244,11 @@ function cloneHostObject<T extends object>(
   // for host objects we pass the reference to the object as shareable and
   // then recreate new host object wrapping the same instance on the UI thread.
   // there is no point of iterating over keys as we do for regular objects.
-  const clone = WorkletsModule.makeShareableClone(value, shouldPersistRemote);
+  const clone = WorkletsModule.makeShareableClone(
+    value,
+    shouldPersistRemote,
+    value
+  );
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
@@ -294,7 +303,8 @@ Offending code was: \`${getWorkletCode(value)}\``);
   }
   const clone = WorkletsModule.makeShareableClone(
     clonedProps,
-    shouldPersistRemote
+    shouldPersistRemote,
+    value
   ) as ShareableRef<T>;
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
@@ -334,7 +344,8 @@ function clonePlainJSObject<T extends object>(
   }
   const clone = WorkletsModule.makeShareableClone(
     clonedProps,
-    shouldPersistRemote
+    shouldPersistRemote,
+    value
   ) as ShareableRef<T>;
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
@@ -378,7 +389,11 @@ function cloneArrayBuffer<T extends ArrayBuffer>(
   value: T,
   shouldPersistRemote: boolean
 ): ShareableRef<T> {
-  const clone = WorkletsModule.makeShareableClone(value, shouldPersistRemote);
+  const clone = WorkletsModule.makeShareableClone(
+    value,
+    shouldPersistRemote,
+    value
+  );
   shareableMappingCache.set(value, clone);
   shareableMappingCache.set(clone);
 
