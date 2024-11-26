@@ -280,10 +280,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto jsCallInvoker = self.bridge.jsCallInvoker;
   auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
-  if (jsiRuntime) {
-    auto reanimatedModuleProxy =
-        reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, _isBridgeless);
-    jsi::Runtime &rnRuntime = *jsiRuntime;
+    if (jsiRuntime) {
+      auto reanimatedModuleProxy =
+          reanimated::createReanimatedModule(self, self.bridge, workletsModule);
+      jsi::Runtime &rnRuntime = *jsiRuntime;
 
     [self commonInit:reanimatedModuleProxy withRnRuntime:rnRuntime];
   }

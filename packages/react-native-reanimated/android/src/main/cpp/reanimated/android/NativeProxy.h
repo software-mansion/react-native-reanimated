@@ -151,8 +151,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<jhybridobject> jThis,
       jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
       jlong jsContext,
-      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
-          jsCallInvokerHolder,
       jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
       jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
       const bool isBridgeless
@@ -267,7 +265,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime *rnRuntime,
-      const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
       const bool isBridgeless

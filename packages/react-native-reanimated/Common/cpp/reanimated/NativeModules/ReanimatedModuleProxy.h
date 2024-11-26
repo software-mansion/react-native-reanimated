@@ -35,7 +35,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   ReanimatedModuleProxy(
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime &rnRuntime,
-      const std::shared_ptr<JSScheduler> &jsScheduler,
+      const std::shared_ptr<CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
       const bool isBridgeless,
@@ -194,7 +194,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   const bool isBridgeless_;
   const bool isReducedMotion_;
   const std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
-  const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::string valueUnpackerCode_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
