@@ -173,30 +173,31 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.removeViewStyle(viewTag);
   }
 
-  registerCSSAnimation(
+  registerCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
-    animationId: number,
-    animationConfig: NormalizedSingleCSSAnimationConfig
+    animationConfigs: NormalizedSingleCSSAnimationConfig[]
   ) {
-    this.#reanimatedModuleProxy.registerCSSAnimation(
+    this.#reanimatedModuleProxy.registerCSSAnimations(
       shadowNodeWrapper,
-      animationId,
-      animationConfig
+      animationConfigs
     );
   }
 
-  updateCSSAnimation(
+  updateCSSAnimations(
     animationId: number,
-    settingsUpdates: Partial<NormalizedSingleCSSAnimationSettings>
+    settingsUpdates: {
+      index: number;
+      settings: Partial<NormalizedSingleCSSAnimationSettings>;
+    }[]
   ) {
-    this.#reanimatedModuleProxy.updateCSSAnimation(
+    this.#reanimatedModuleProxy.updateCSSAnimations(
       animationId,
       settingsUpdates
     );
   }
 
-  unregisterCSSAnimations(animationIds: number[]) {
-    this.#reanimatedModuleProxy.unregisterCSSAnimations(animationIds);
+  unregisterCSSAnimations(viewTag: number) {
+    this.#reanimatedModuleProxy.unregisterCSSAnimations(viewTag);
   }
 
   registerCSSTransition(

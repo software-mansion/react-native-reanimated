@@ -9,24 +9,6 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
     : getCurrentTimestamp_(getCurrentTimestamp),
       staticPropsRegistry_(staticPropsRegistry) {}
 
-void CSSTransitionsRegistry::updateSettings(
-    jsi::Runtime &rt,
-    const Tag viewTag,
-    const PartialCSSTransitionConfig &config) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  const auto &transition = registry_.at(viewTag);
-  transition->updateSettings(config);
-
-  // Replace style overrides with the new ones if transition properties were
-  // updated (we want to keep overrides only for transitioned properties)
-  if (config.properties.has_value()) {
-    const auto &currentStyle = transition->getCurrentInterpolationStyle(rt);
-    updatesRegistry_[viewTag] = std::make_pair(
-        transition->getShadowNode(), dynamicFromValue(rt, currentStyle));
-  }
-}
-
 void CSSTransitionsRegistry::add(
     const std::shared_ptr<CSSTransition> &transition) {
   std::lock_guard<std::mutex> lock{mutex_};
@@ -43,10 +25,28 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   staticPropsRegistry_->removeObserver(viewTag);
-  delayedTransitionsMap_.erase(viewTag);
+  delayedTransitionsManager_.remove(viewTag);
   runningTransitionTags_.erase(viewTag);
   updatesRegistry_.erase(viewTag);
   registry_.erase(viewTag);
+}
+
+void CSSTransitionsRegistry::updateSettings(
+    jsi::Runtime &rt,
+    const Tag viewTag,
+    const PartialCSSTransitionConfig &config) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  const auto &transition = registry_.at(viewTag);
+  transition->updateSettings(config);
+
+  // Replace style overrides with the new ones if transition properties were
+  // updated (we want to keep overrides only for transitioned properties)
+  if (config.properties.has_value()) {
+    const auto &currentStyle = transition->getCurrentInterpolationStyle(rt);
+    updatesRegistry_[viewTag] = std::make_pair(
+        transition->getShadowNode(), dynamicFromValue(rt, currentStyle));
+  }
 }
 
 void CSSTransitionsRegistry::update(jsi::Runtime &rt, const double timestamp) {
@@ -78,17 +78,13 @@ void CSSTransitionsRegistry::update(jsi::Runtime &rt, const double timestamp) {
 
 void CSSTransitionsRegistry::activateDelayedTransitions(
     const double timestamp) {
-  while (!delayedTransitionsQueue_.empty() &&
-         delayedTransitionsQueue_.top()->startTimestamp <= timestamp) {
-    const auto &delayedTransition = delayedTransitionsQueue_.top();
-    const auto viewTag = delayedTransition->viewTag;
-    delayedTransitionsQueue_.pop();
+  while (!delayedTransitionsManager_.empty() &&
+         delayedTransitionsManager_.top().timestamp <= timestamp) {
+    const auto &delayedTransition = delayedTransitionsManager_.pop();
+    const auto viewTag = delayedTransition.id;
 
-    // Add only these transitions which weren't marked for removal
-    // and weren't removed in the meantime
-    if (delayedTransition->startTimestamp != 0 &&
-        registry_.find(viewTag) != registry_.end()) {
-      delayedTransitionsMap_.erase(viewTag);
+    // Add only these transitions which weren't removed in the meantime
+    if (registry_.find(viewTag) != registry_.end()) {
       runningTransitionTags_.insert(viewTag);
     }
   }
@@ -100,17 +96,12 @@ void CSSTransitionsRegistry::scheduleOrActivateTransition(
   const auto currentTimestamp = getCurrentTimestamp_();
   const auto minDelay = transition->getMinDelay(currentTimestamp);
 
-  // Mark the already delayed transition for removal
-  const auto delayedTransitionIt = delayedTransitionsMap_.find(viewTag);
-  if (delayedTransitionIt != delayedTransitionsMap_.end()) {
-    delayedTransitionIt->second->startTimestamp = 0;
-  }
+  // Remove transition from delayed (if it is already added to delayed
+  // transitions)
+  delayedTransitionsManager_.remove(viewTag);
 
   if (minDelay > 0) {
-    const auto delayedTransition = std::make_shared<DelayedTransition>(
-        viewTag, currentTimestamp + minDelay);
-    delayedTransitionsMap_[viewTag] = delayedTransition;
-    delayedTransitionsQueue_.push(delayedTransition);
+    delayedTransitionsManager_.add(currentTimestamp + minDelay, viewTag);
   } else {
     runningTransitionTags_.insert(viewTag);
   }

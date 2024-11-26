@@ -89,18 +89,17 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
   virtual void removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag) = 0;
 
   // CSS animations
-  virtual void registerCSSAnimation(
+  virtual void registerCSSAnimations(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &animationId,
-      const jsi::Value &animationConfig) = 0;
-  virtual void updateCSSAnimation(
+      const jsi::Value &animationConfigs) = 0;
+  virtual void updateCSSAnimations(
       jsi::Runtime &rt,
-      const jsi::Value &animationId,
+      const jsi::Value &viewTag,
       const jsi::Value &settingsUpdates) = 0;
   virtual void unregisterCSSAnimations(
       jsi::Runtime &rt,
-      const jsi::Value &animationIds) = 0;
+      const jsi::Value &viewTag) = 0;
 
   // CSS transitions
   virtual void registerCSSTransition(

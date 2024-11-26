@@ -35,14 +35,14 @@ jsi::Value TransformsStyleInterpolator::getFirstKeyframeValue(
   const auto fromOperations = keyframes_.front()->fromOperations;
   return fromOperations.has_value()
       ? convertResultToJSI(rt, fromOperations.value())
-      : jsi::Value::undefined();
+      : getDefaultValue(rt);
 }
 
 jsi::Value TransformsStyleInterpolator::getLastKeyframeValue(
     jsi::Runtime &rt) const {
   const auto toOperations = keyframes_.back()->toOperations;
   return toOperations.has_value() ? convertResultToJSI(rt, toOperations.value())
-                                  : jsi::Value::undefined();
+                                  : getDefaultValue(rt);
 }
 
 jsi::Value TransformsStyleInterpolator::update(
@@ -89,10 +89,7 @@ jsi::Value TransformsStyleInterpolator::reset(
   auto resetStyle = getStyleValue(rt, shadowNode);
 
   if (resetStyle.isUndefined()) {
-    jsi::Array transformsArray(rt, 1);
-    transformsArray.setValueAtIndex(
-        rt, 0, MatrixOperation(TransformMatrix::Identity()).toJSIValue(rt));
-    return transformsArray;
+    return getDefaultValue(rt);
   }
 
   return resetStyle;
@@ -312,6 +309,14 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
   }
 
   return std::make_pair(fromOperationsResult, toOperationsResult);
+}
+
+jsi::Value TransformsStyleInterpolator::getDefaultValue(
+    jsi::Runtime &rt) const {
+  jsi::Array transformsArray(rt, 1);
+  transformsArray.setValueAtIndex(
+      rt, 0, MatrixOperation(TransformMatrix::Identity()).toJSIValue(rt));
+  return transformsArray;
 }
 
 TransformOperations TransformsStyleInterpolator::getFallbackValue(

@@ -514,43 +514,64 @@ void ReanimatedModuleProxy::removeViewStyle(
   staticPropsRegistry_->remove(viewTag.asNumber());
 }
 
-void ReanimatedModuleProxy::registerCSSAnimation(
+void ReanimatedModuleProxy::registerCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
-    const jsi::Value &animationId,
-    const jsi::Value &animationConfig) {
+    const jsi::Value &animationConfigs) {
   auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
-  const auto timestamp = getAnimationTimestamp_();
-  auto animation = std::make_shared<CSSAnimation>(
-      rt,
-      animationId.asNumber(),
-      std::move(shadowNode),
-      parseCSSAnimationConfig(rt, animationConfig),
-      viewStylesRepository_,
-      timestamp);
+  const auto animationConfigsArray = animationConfigs.asObject(rt).asArray(rt);
+  const auto animationsCount = animationConfigsArray.size(rt);
 
-  cssAnimationsRegistry_->add(rt, animation, timestamp);
+  std::vector<std::shared_ptr<CSSAnimation>> animations;
+  animations.reserve(animationsCount);
+  const auto timestamp = getAnimationTimestamp_();
+
+  for (size_t i = 0; i < animationsCount; ++i) {
+    auto animationConfig = animationConfigsArray.getValueAtIndex(rt, i);
+    animations.emplace_back(std::make_shared<CSSAnimation>(
+        rt,
+        shadowNode,
+        i,
+        parseCSSAnimationConfig(rt, animationConfig),
+        viewStylesRepository_,
+        timestamp));
+  }
+
+  cssAnimationsRegistry_->set(rt, shadowNode, animations, timestamp);
   maybeRunCSSLoop();
 }
 
-void ReanimatedModuleProxy::updateCSSAnimation(
+void ReanimatedModuleProxy::updateCSSAnimations(
     jsi::Runtime &rt,
-    const jsi::Value &animationId,
+    const jsi::Value &viewTag,
     const jsi::Value &settingsUpdates) {
+  const auto settingsUpdatesArray = settingsUpdates.asObject(rt).asArray(rt);
+  const auto settingsUpdatesCount = settingsUpdatesArray.size(rt);
+
+  std::vector<std::pair<unsigned, PartialCSSAnimationSettings>> updates;
+  updates.reserve(settingsUpdatesCount);
+
+  for (size_t i = 0; i < settingsUpdatesCount; ++i) {
+    auto settingsUpdate =
+        settingsUpdatesArray.getValueAtIndex(rt, i).asObject(rt);
+    const auto animationIndex = settingsUpdate.getProperty(rt, "index");
+    const auto settings = settingsUpdate.getProperty(rt, "settings");
+    updates.emplace_back(
+        animationIndex.asNumber(),
+        parsePartialCSSAnimationSettings(rt, settings));
+  }
+
   cssAnimationsRegistry_->updateSettings(
-      rt,
-      animationId.asNumber(),
-      parsePartialCSSAnimationSettings(rt, settingsUpdates),
-      getAnimationTimestamp_());
+      rt, viewTag.asNumber(), updates, getAnimationTimestamp_());
   maybeRunCSSLoop();
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(
     jsi::Runtime &rt,
-    const jsi::Value &animationIds) {
+    const jsi::Value &viewTag) {
   cssAnimationsRegistry_->remove(
-      rt, animationIds.asObject(rt).asArray(rt), getAnimationTimestamp_());
+      rt, viewTag.asNumber(), getAnimationTimestamp_());
 }
 
 void ReanimatedModuleProxy::registerCSSTransition(
@@ -717,19 +738,16 @@ void ReanimatedModuleProxy::performOperations() {
     if (shouldUpdateCssAnimations_) {
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->update(rt, timestamp);
-      cssTransitionsRegistry_->flushUpdates(
-          rt, updatesBatch, FlushUpdatesMode::ReplaceByLatest);
+      cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, false);
     }
 
     // Flush all animated props updates
-    animatedPropsRegistry_->flushUpdates(
-        rt, updatesBatch, FlushUpdatesMode::MergeAll);
+    animatedPropsRegistry_->flushUpdates(rt, updatesBatch, true);
 
     if (shouldUpdateCssAnimations_) {
       // Update CSS animations and flush updates
       cssAnimationsRegistry_->update(rt, timestamp);
-      cssAnimationsRegistry_->flushUpdates(
-          rt, updatesBatch, FlushUpdatesMode::ReplaceByMergedBatch);
+      cssAnimationsRegistry_->flushUpdates(rt, updatesBatch, true);
     }
 
     shouldUpdateCssAnimations_ = false;

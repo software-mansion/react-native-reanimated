@@ -80,6 +80,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   std::shared_ptr<TransformOperation> getDefaultOperationOfType(
       TransformOperationType type) const;
 
+  jsi::Value getDefaultValue(jsi::Runtime &rt) const;
   TransformOperations getFallbackValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const;

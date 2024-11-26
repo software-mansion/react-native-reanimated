@@ -5,12 +5,12 @@ namespace reanimated {
 
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
-    const unsigned id,
-    ShadowNode::Shared shadowNode,
+    const ShadowNode::Shared &shadowNode,
+    const unsigned index,
     const CSSAnimationConfig &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const double timestamp)
-    : id_(id),
+    : index_(index),
       shadowNode_(std::move(shadowNode)),
       fillMode_(config.fillMode),
       progressProvider_(std::make_shared<AnimationProgressProvider>(
@@ -32,17 +32,20 @@ CSSAnimation::CSSAnimation(
   }
 }
 
-jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) {
-  if (!hasBackwardsFillMode()) {
-    return jsi::Value::undefined();
-  }
-
+bool CSSAnimation::isReversed() const {
   const auto direction = progressProvider_->getDirection();
-  if (direction == AnimationDirection::REVERSE ||
-      direction == AnimationDirection::ALTERNATE_REVERSE) {
-    return styleInterpolator_.getLastKeyframeValue(rt);
-  }
-  return styleInterpolator_.getFirstKeyframeValue(rt);
+  return direction == AnimationDirection::REVERSE ||
+      direction == AnimationDirection::ALTERNATE_REVERSE;
+}
+
+jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) {
+  return isReversed() ? styleInterpolator_.getLastKeyframeValue(rt)
+                      : styleInterpolator_.getFirstKeyframeValue(rt);
+}
+
+jsi::Value CSSAnimation::getForwardFillStyle(jsi::Runtime &rt) {
+  return isReversed() ? styleInterpolator_.getFirstKeyframeValue(rt)
+                      : styleInterpolator_.getLastKeyframeValue(rt);
 }
 
 void CSSAnimation::run(const double timestamp) {
