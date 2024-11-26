@@ -19,7 +19,7 @@
 #endif
 
 #import <worklets/WorkletRuntime/ReanimatedRuntime.h>
-#import <worklets/apple/REAMessageThread.h>
+#import <worklets/apple/WorkletsMessageThread.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTBridge+Private.h>

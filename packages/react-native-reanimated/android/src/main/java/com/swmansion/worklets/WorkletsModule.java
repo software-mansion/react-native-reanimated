@@ -10,7 +10,6 @@ import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.reanimated.NativeWorkletsModuleSpec;
-import com.swmansion.reanimated.ReanimatedMessageQueueThread;
 import java.util.Objects;
 
 @ReactModule(name = WorkletsModule.NAME)
@@ -30,8 +29,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
     return mHybridData;
   }
 
-  private final ReanimatedMessageQueueThread mMessageQueueThread =
-      new ReanimatedMessageQueueThread();
+  private final WorkletsMessageQueueThread mMessageQueueThread = new WorkletsMessageQueueThread();
 
   /**
    * @noinspection JavaJniMissingFunction
