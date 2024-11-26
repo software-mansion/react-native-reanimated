@@ -1,4 +1,4 @@
-package com.swmansion.reanimated;
+package com.swmansion.worklets;
 
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.queue.MessageQueueThread;
@@ -14,10 +14,10 @@ import java.util.concurrent.Future;
 // The only method that has changed is `quitSynchronous()` (see comment above
 // function implementation for details).
 @DoNotStrip
-public abstract class ReanimatedMessageQueueThreadBase implements MessageQueueThread {
+public abstract class WorkletsMessageQueueThreadBase implements MessageQueueThread {
   protected final MessageQueueThreadImpl messageQueueThread;
 
-  public ReanimatedMessageQueueThreadBase() {
+  public WorkletsMessageQueueThreadBase() {
     messageQueueThread =
         MessageQueueThreadImpl.create(
             MessageQueueThreadSpec.mainThreadSpec(),
