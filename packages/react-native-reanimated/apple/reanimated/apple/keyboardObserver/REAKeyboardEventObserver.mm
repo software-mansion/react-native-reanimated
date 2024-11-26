@@ -198,6 +198,14 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   auto window = [[[UIApplication sharedApplication] delegate] window];
 
   /*
+   The keyboard frame is in the screen's coordinate space and must first be converted
+   to the window coordinate space in order to support Slide Over and Stage Manager on
+   iPadOS.
+   */
+  beginFrame = [window convertRect:beginFrame fromCoordinateSpace:window.screen.coordinateSpace];
+  endFrame = [window convertRect:endFrame fromCoordinateSpace:window.screen.coordinateSpace];
+
+  /*
    In some cases, such as when the user has enabled "prefer cross-fade transitions" or
    when the keyboard is floating, the begin or end frame is an empty rectangle. In
    such cases we should treat the keyboard as closed, rather than at (0, 0).
