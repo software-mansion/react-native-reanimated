@@ -327,10 +327,22 @@ interface WorkletBaseDev extends WorkletBaseCommon {
   __stackDetails?: WorkletStackDetails;
 }
 
+export type WorkletFunctionDev<
+  Args extends unknown[] = unknown[],
+  ReturnValue = unknown,
+> = ((...args: Args) => ReturnValue) & WorkletBaseDev;
+
+type WorkletFunctionRelease<
+  Args extends unknown[] = unknown[],
+  ReturnValue = unknown,
+> = ((...args: Args) => ReturnValue) & WorkletBaseRelease;
+
 export type WorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
-> = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
+> =
+  | WorkletFunctionDev<Args, ReturnValue>
+  | WorkletFunctionRelease<Args, ReturnValue>;
 
 /**
  * This function allows you to determine if a given function is a worklet. It

@@ -9,6 +9,7 @@ import type {
   SharedValue,
   Value3D,
   ValueRotation,
+  WorkletFunction,
 } from './commonTypes';
 import { makeShareableCloneRecursive } from './shareables';
 import { initializeUIRuntime } from './initializers';
@@ -85,7 +86,9 @@ export function registerEventHandler<T>(
     global.__frameTimestamp = undefined;
   }
   return ReanimatedModule.registerEventHandler(
-    makeShareableCloneRecursive(handleAndFlushAnimationFrame),
+    makeShareableCloneRecursive(
+      handleAndFlushAnimationFrame as WorkletFunction
+    ),
     eventName,
     emitterReactTag
   );
@@ -110,7 +113,9 @@ export function subscribeForKeyboardEvents(
     global.__frameTimestamp = undefined;
   }
   return ReanimatedModule.subscribeForKeyboardEvents(
-    makeShareableCloneRecursive(handleAndFlushAnimationFrame),
+    makeShareableCloneRecursive(
+      handleAndFlushAnimationFrame as WorkletFunction
+    ),
     options.isStatusBarTranslucentAndroid ?? false,
     options.isNavigationBarTranslucentAndroid ?? false
   );
@@ -132,7 +137,7 @@ export function registerSensor(
   return sensorContainer.registerSensor(
     sensorType,
     config,
-    makeShareableCloneRecursive(eventHandler)
+    makeShareableCloneRecursive(eventHandler as WorkletFunction)
   );
 }
 
