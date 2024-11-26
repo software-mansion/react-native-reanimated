@@ -10,7 +10,6 @@ import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.reanimated.NativeWorkletsModuleSpec;
-import com.swmansion.worklets.WorkletsMessageQueueThread;
 import java.util.Objects;
 
 @ReactModule(name = WorkletsModule.NAME)
