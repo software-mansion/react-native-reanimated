@@ -7,6 +7,8 @@ import type {
   NormalizedCSSTransitionConfig,
 } from './types';
 
+// COMMON
+
 export function setViewStyle(viewTag: number, style: StyleProps) {
   ReanimatedModule.setViewStyle(viewTag, style);
 }
@@ -15,28 +17,30 @@ export function removeViewStyle(viewTag: number) {
   ReanimatedModule.removeViewStyle(viewTag);
 }
 
-export function registerCSSAnimation(
+// ANIMATIONS
+
+export function registerCSSAnimations(
   shadowNodeWrapper: ShadowNodeWrapper,
-  animationId: number,
-  animationConfig: NormalizedSingleCSSAnimationConfig
+  animationConfigs: NormalizedSingleCSSAnimationConfig[]
 ) {
-  ReanimatedModule.registerCSSAnimation(
-    shadowNodeWrapper,
-    animationId,
-    animationConfig
-  );
+  ReanimatedModule.registerCSSAnimations(shadowNodeWrapper, animationConfigs);
 }
 
-export function updateCSSAnimation(
-  animationId: number,
-  settingsUpdates: Partial<NormalizedSingleCSSAnimationSettings>
+export function updateCSSAnimations(
+  viewTag: number,
+  settingsUpdates: {
+    index: number;
+    settings: Partial<NormalizedSingleCSSAnimationSettings>;
+  }[]
 ) {
-  ReanimatedModule.updateCSSAnimation(animationId, settingsUpdates);
+  ReanimatedModule.updateCSSAnimations(viewTag, settingsUpdates);
 }
 
-export function unregisterCSSAnimations(animationIds: number[]) {
-  ReanimatedModule.unregisterCSSAnimations(animationIds);
+export function unregisterCSSAnimations(viewTag: number) {
+  ReanimatedModule.unregisterCSSAnimations(viewTag);
 }
+
+// TRANSITIONS
 
 export function registerCSSTransition(
   shadowNodeWrapper: ShadowNodeWrapper,

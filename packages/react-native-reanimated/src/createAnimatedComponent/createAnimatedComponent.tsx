@@ -173,14 +173,15 @@ export function createAnimatedComponent(
         // It exists only on native platforms. We initialize it here because the ref to the animated component is available only post-mount
         this._NativeEventsManager = new NativeEventsManager(this, options);
       }
+      const viewInfo = this._getViewInfo();
       if (IS_FABRIC) {
-        this._CSSManager = new CSSManager();
+        this._CSSManager = new CSSManager(viewInfo);
       }
       this._NativeEventsManager?.attachEvents();
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
       this._attachAnimatedStyles(animatedStyles);
-      this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
-      this._CSSManager?.attach(plainStyles, this._getViewInfo());
+      this._InlinePropManager.attachInlineProps(this, viewInfo);
+      this._CSSManager?.attach(plainStyles);
 
       const layout = this.props.layout;
       if (layout) {
@@ -467,7 +468,7 @@ export function createAnimatedComponent(
           flattenArray<StyleProps>(nextProps.style ?? []),
           { plain: true }
         );
-        this._CSSManager.update(plainStyles, this._getViewInfo());
+        this._CSSManager.update(plainStyles);
       }
       return true;
     }

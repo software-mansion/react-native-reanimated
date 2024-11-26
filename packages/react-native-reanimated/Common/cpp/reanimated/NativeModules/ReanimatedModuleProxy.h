@@ -115,16 +115,15 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
       const jsi::Value &viewStyle) override;
   void removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag) override;
 
-  void registerCSSAnimation(
+  void registerCSSAnimations(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &animationId,
-      const jsi::Value &animationConfig) override;
-  void updateCSSAnimation(
+      const jsi::Value &animationConfigs) override;
+  void updateCSSAnimations(
       jsi::Runtime &rt,
-      const jsi::Value &animationId,
+      const jsi::Value &viewTag,
       const jsi::Value &settingsUpdates) override;
-  void unregisterCSSAnimations(jsi::Runtime &rt, const jsi::Value &animationIds)
+  void unregisterCSSAnimations(jsi::Runtime &rt, const jsi::Value &viewTag)
       override;
 
   void registerCSSTransition(

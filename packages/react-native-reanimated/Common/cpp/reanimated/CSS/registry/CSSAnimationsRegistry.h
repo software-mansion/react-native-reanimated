@@ -2,11 +2,11 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/core/CSSAnimation.h>
+#include <reanimated/CSS/util/DelayedItemsManager.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
-#include <functional>
 #include <memory>
-#include <queue>
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -14,73 +14,62 @@
 
 namespace reanimated {
 
-struct DelayedAnimation {
-  const unsigned id;
-  double startTimestamp;
-
-  DelayedAnimation(unsigned id, double startTimestamp)
-      : id(id), startTimestamp(startTimestamp) {}
-};
-
-struct DelayedAnimationsComparator {
-  bool operator()(
-      const std::shared_ptr<DelayedAnimation> &lhs,
-      const std::shared_ptr<DelayedAnimation> &rhs) {
-    return lhs->startTimestamp > rhs->startTimestamp;
-  }
-};
-
 class CSSAnimationsRegistry : public UpdatesRegistry {
  public:
+  using SettingsUpdates =
+      std::vector<std::pair<unsigned, PartialCSSAnimationSettings>>;
+
   bool hasUpdates() const {
-    return !runningAnimationIds_.empty() || !delayedAnimationsMap_.empty();
+    return !runningAnimationsMap_.empty() || !delayedAnimationsManager_.empty();
   }
 
+  void set(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const std::vector<std::shared_ptr<CSSAnimation>> &animations,
+      double timestamp);
+  void remove(jsi::Runtime &rt, Tag viewTag, double timestamp);
   void updateSettings(
       jsi::Runtime &rt,
-      unsigned id,
-      const PartialCSSAnimationSettings &updatedSettings,
+      Tag viewTag,
+      const SettingsUpdates &settingsUpdates,
       double timestamp);
 
-  void add(
-      jsi::Runtime &rt,
-      const std::shared_ptr<CSSAnimation> &animation,
-      double timestamp);
-  void
-  remove(jsi::Runtime &rt, const jsi::Array &animationIds, double timestamp);
   void update(jsi::Runtime &rt, double timestamp);
 
  private:
-  using Registry = std::unordered_map<unsigned, std::shared_ptr<CSSAnimation>>;
-  using ViewAnimationIds =
+  using Registry =
+      std::unordered_map<Tag, std::vector<std::shared_ptr<CSSAnimation>>>;
+  using RunningAnimationsMap = std::unordered_map<Tag, std::set<unsigned>>;
+  using AnimationsToRevertMap =
       std::unordered_map<Tag, std::unordered_set<unsigned>>;
-  using DelayedQueue = std::priority_queue<
-      std::shared_ptr<DelayedAnimation>,
-      std::vector<std::shared_ptr<DelayedAnimation>>,
-      DelayedAnimationsComparator>;
 
   Registry registry_;
-  ViewAnimationIds viewAnimationIds_;
 
-  std::unordered_set<unsigned> runningAnimationIds_;
-  std::unordered_map<unsigned, std::shared_ptr<DelayedAnimation>>
-      delayedAnimationsMap_;
-  DelayedQueue delayedAnimationsQueue_;
-  std::unordered_set<unsigned> animationsToRemove_;
-  std::unordered_set<Tag> affectedViewTags_;
+  RunningAnimationsMap runningAnimationsMap_;
+  AnimationsToRevertMap animationsToRevertMap_;
+  DelayedItemsManager<CSSAnimationId> delayedAnimationsManager_;
 
-  void maybeAddUpdates(
+  void updateViewAnimations(
       jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      const jsi::Value &updatedStyle);
-  void activateDelayedAnimations(double timestamp);
+      const Tag viewTag,
+      const std::vector<unsigned> &animationIndices,
+      double timestamp,
+      bool addToBatch);
+  bool addStyleUpdates(
+      jsi::Runtime &rt,
+      jsi::Object &target,
+      const jsi::Value &updates,
+      bool override);
   void scheduleOrActivateAnimation(
       jsi::Runtime &rt,
       const std::shared_ptr<CSSAnimation> &animation,
       double timestamp);
-  void handleAnimationRemoval(unsigned id);
-  void runMarkedRemovals(jsi::Runtime &rt, double timestamp);
-  void runAffectedViewUpdates(jsi::Runtime &rt, double timestamp);
+  void clearViewAnimations(Tag viewTag);
+  void
+  applyViewAnimationsStyle(jsi::Runtime &rt, Tag viewTag, double timestamp);
+  void activateDelayedAnimations(double timestamp);
+  void handleAnimationsToRevert(jsi::Runtime &rt, double timestamp);
 };
 
 } // namespace reanimated

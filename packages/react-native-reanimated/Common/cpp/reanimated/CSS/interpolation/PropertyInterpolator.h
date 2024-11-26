@@ -18,8 +18,8 @@ class PropertyInterpolator {
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       : propertyPath_(propertyPath),
-        progressProvider_(progressProvider),
-        viewStylesRepository_(viewStylesRepository) {}
+        viewStylesRepository_(viewStylesRepository),
+        progressProvider_(progressProvider) {}
 
   void setProgressProvider(
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {

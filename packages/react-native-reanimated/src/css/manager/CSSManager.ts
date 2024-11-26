@@ -11,46 +11,46 @@ import CSSAnimationsManager from './CSSAnimationsManager';
 import { extractCSSConfigsAndFlattenedStyles } from '../normalization';
 
 export default class CSSManager implements ICSSManager {
+  private readonly viewTag: number;
   private readonly CSSAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionManager: CSSTransitionManager;
 
-  constructor() {
-    this.CSSAnimationsManager = new CSSAnimationsManager();
-    this.cssTransitionManager = new CSSTransitionManager();
-  }
-
-  attach(styles: StyleProps[], viewInfo: ViewInfo): void {
-    this.update(styles, viewInfo, true);
-  }
-
-  update(
-    styles: StyleProps[],
-    { shadowNodeWrapper, viewConfig, viewTag }: ViewInfo,
-    isMount = false
-  ): void {
+  constructor({ shadowNodeWrapper, viewConfig, viewTag }: ViewInfo) {
     const tag = viewTag as number;
+    const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
+
+    this.viewTag = tag;
+    this.CSSAnimationsManager = new CSSAnimationsManager(wrapper, tag);
+    this.cssTransitionManager = new CSSTransitionManager(wrapper, tag);
+
+    if (viewConfig) {
+      adaptViewConfig(viewConfig);
+    }
+  }
+
+  attach(styles: StyleProps[]): void {
+    this.update(styles, true);
+  }
+
+  update(styles: StyleProps[], isMount = false): void {
     const [animationConfig, transitionConfig, style] =
       extractCSSConfigsAndFlattenedStyles(styles);
-    const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
 
     // If the update is called during component mount, we won't recognize style
     // changes and treat styles as initial, thus we need to set them before
     // attaching transition and animation
     if (isMount) {
-      if (viewConfig) {
-        adaptViewConfig(viewConfig);
-      }
-      setViewStyle(tag, style);
+      setViewStyle(this.viewTag, style);
     }
 
-    this.cssTransitionManager.update(wrapper, tag, transitionConfig);
-    this.CSSAnimationsManager.update(wrapper, animationConfig);
+    this.cssTransitionManager.update(transitionConfig);
+    this.CSSAnimationsManager.update(animationConfig);
 
     // If the update is called during component mount, we want to first - update
     // the transition or animation config, and then - set the style (which may
     // trigger the transition)
     if (!isMount) {
-      setViewStyle(tag, style);
+      setViewStyle(this.viewTag, style);
     }
   }
 

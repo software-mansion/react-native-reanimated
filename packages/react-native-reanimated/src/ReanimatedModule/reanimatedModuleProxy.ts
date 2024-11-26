@@ -62,18 +62,20 @@ export interface ReanimatedModuleProxy {
 
   removeViewStyle(viewTag: number): void;
 
-  registerCSSAnimation(
+  registerCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
-    animationId: number,
-    animationConfig: NormalizedSingleCSSAnimationConfig
+    animationConfigs: NormalizedSingleCSSAnimationConfig[]
   ): void;
 
-  updateCSSAnimation(
-    animationId: number,
-    updatedSettings: Partial<NormalizedSingleCSSAnimationSettings>
+  updateCSSAnimations(
+    _viewTag: number,
+    updatedSettings: {
+      index: number;
+      settings: Partial<NormalizedSingleCSSAnimationSettings>;
+    }[]
   ): void;
 
-  unregisterCSSAnimations(animationIds: number[]): void;
+  unregisterCSSAnimations(viewTag: number): void;
 
   registerCSSTransition(
     shadowNodeWrapper: ShadowNodeWrapper,

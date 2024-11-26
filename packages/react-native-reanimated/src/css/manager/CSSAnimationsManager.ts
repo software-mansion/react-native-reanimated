@@ -1,9 +1,9 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import {
-  registerCSSAnimation,
+  registerCSSAnimations,
   unregisterCSSAnimations,
-  updateCSSAnimation,
+  updateCSSAnimations,
 } from '../native';
 import {
   getAnimationSettingsUpdates,
@@ -12,104 +12,92 @@ import {
 import type {
   CSSAnimationConfig,
   NormalizedSingleCSSAnimationConfig,
+  NormalizedSingleCSSAnimationSettings,
 } from '../types';
 
 type AttachedAnimation = {
-  animationId: number;
   animationConfig: NormalizedSingleCSSAnimationConfig;
+  serializedKeyframes: string;
 };
 
 export default class CSSAnimationsManager {
-  private attachedAnimations: Record<string, AttachedAnimation[]> = {};
+  private readonly viewTag: number;
+  private readonly shadowNodeWrapper: ShadowNodeWrapper;
 
-  static _nextId = 0;
+  private attachedAnimations: AttachedAnimation[] = [];
 
-  private attachAnimation(
-    normalizedConfig: NormalizedSingleCSSAnimationConfig,
-    wrapper: ShadowNodeWrapper,
-    serializedKeyframes: string
-  ) {
-    const animationId = CSSAnimationsManager._nextId++;
-    registerCSSAnimation(wrapper, animationId, normalizedConfig);
-
-    if (!this.attachedAnimations[serializedKeyframes]) {
-      this.attachedAnimations[serializedKeyframes] = [];
-    }
-
-    this.attachedAnimations[serializedKeyframes].push({
-      animationId,
-      animationConfig: normalizedConfig,
-    });
-  }
-
-  private maybeUpdateAnimation(
-    animationToUpdate: AttachedAnimation,
-    normalizedConfig: NormalizedSingleCSSAnimationConfig
-  ) {
-    const settingsUpdates = getAnimationSettingsUpdates(
-      animationToUpdate.animationConfig,
-      normalizedConfig
-    );
-
-    if (Object.keys(settingsUpdates).length > 0) {
-      animationToUpdate.animationConfig = normalizedConfig;
-      updateCSSAnimation(animationToUpdate.animationId, settingsUpdates);
-    }
+  constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
+    this.viewTag = viewTag;
+    this.shadowNodeWrapper = shadowNodeWrapper;
   }
 
   detach() {
-    const animationsToRemove = Object.values(this.attachedAnimations).flatMap(
-      (animations) => animations.map((animation) => animation.animationId)
-    );
-    unregisterCSSAnimations(animationsToRemove);
-    this.attachedAnimations = {};
+    if (this.attachedAnimations.length > 0) {
+      this.attachedAnimations = [];
+      unregisterCSSAnimations(this.viewTag);
+    }
   }
 
-  update(
-    wrapper: ShadowNodeWrapper,
-    animationConfig: CSSAnimationConfig | null
-  ): void {
-    const visitedAnimationCounts: Record<string, number> = {};
+  private attachAnimations(
+    normalizedConfigs: NormalizedSingleCSSAnimationConfig[],
+    serializedAnimationsKeyframes: string[]
+  ) {
+    if (normalizedConfigs.length === 0) {
+      this.detach();
+      return;
+    }
 
-    if (animationConfig) {
-      const normalizedConfigs = normalizeCSSAnimationConfig(animationConfig);
+    this.attachedAnimations = normalizedConfigs.map((normalizedConfig, i) => ({
+      animationConfig: normalizedConfig,
+      serializedKeyframes: serializedAnimationsKeyframes[i],
+    }));
+    registerCSSAnimations(this.shadowNodeWrapper, normalizedConfigs);
+  }
 
-      // Update existing animations or attach new ones
-      for (const normalizedConfig of normalizedConfigs) {
-        const serializedKeyframes = JSON.stringify(
-          normalizedConfig.keyframesStyle
-        );
+  update(animationConfig: CSSAnimationConfig | null): void {
+    if (!animationConfig) {
+      this.detach();
+      return;
+    }
 
-        // The same animation can be used multiple times with different animation
-        // settings. In such a case, we would update animations with the same
-        // keyframes in order, based on order in the new animation config
-        const existingAnimations = this.attachedAnimations[serializedKeyframes];
-        const animationIndex = visitedAnimationCounts[serializedKeyframes] ?? 0;
-        const animationToUpdate = existingAnimations?.[animationIndex];
+    const { animationName: keyframes } = animationConfig;
+    const serializedKeyframes = (
+      Array.isArray(keyframes) ? keyframes : [keyframes]
+    ).map((singleKeyframes) => JSON.stringify(singleKeyframes));
+    const normalizedConfigs = normalizeCSSAnimationConfig(animationConfig);
 
-        if (animationToUpdate) {
-          // If the animation already exists, update its settings if they have changed
-          this.maybeUpdateAnimation(animationToUpdate, normalizedConfig);
-        } else {
-          // Otherwise, attach a new animation
-          this.attachAnimation(normalizedConfig, wrapper, serializedKeyframes);
-        }
-        visitedAnimationCounts[serializedKeyframes] = animationIndex + 1;
+    // Attach new animations if there are no attached animations or if
+    // the array of animations is different (e.g. length or order)
+    if (
+      this.attachedAnimations.length !== normalizedConfigs.length ||
+      serializedKeyframes.some(
+        (sk, i) => this.attachedAnimations[i].serializedKeyframes !== sk
+      )
+    ) {
+      // We don't need to detach the old animations because CPP will
+      // override them with new ones
+      this.attachAnimations(normalizedConfigs, serializedKeyframes);
+      return;
+    }
+
+    // Update existing animations if all animations are the same but some
+    // of the animation settings are different
+    const configUpdates: {
+      index: number;
+      settings: Partial<NormalizedSingleCSSAnimationSettings>;
+    }[] = [];
+    for (let i = 0; i < normalizedConfigs.length; i++) {
+      const updates = getAnimationSettingsUpdates(
+        this.attachedAnimations[i].animationConfig,
+        normalizedConfigs[i]
+      );
+      if (Object.keys(updates).length > 0) {
+        this.attachedAnimations[i].animationConfig = normalizedConfigs[i];
+        configUpdates.push({ index: i, settings: updates });
       }
     }
-
-    // Detach removed animations
-    const animationsToRemove: number[] = [];
-    for (const serializedKeyframes in this.attachedAnimations) {
-      const visitedAnimationsCount =
-        visitedAnimationCounts[serializedKeyframes] ?? 0;
-
-      animationsToRemove.push(
-        ...this.attachedAnimations[serializedKeyframes]
-          .splice(visitedAnimationsCount)
-          .map((animation) => animation.animationId)
-      );
+    if (configUpdates.length > 0) {
+      updateCSSAnimations(this.viewTag, configUpdates);
     }
-    unregisterCSSAnimations(animationsToRemove);
   }
 }

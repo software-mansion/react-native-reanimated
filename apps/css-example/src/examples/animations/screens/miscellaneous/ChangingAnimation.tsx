@@ -4,10 +4,7 @@ import type {
   CSSAnimationConfig,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import Animated, {
-  cubicBezier,
-  LinearTransition,
-} from 'react-native-reanimated';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import {
   Button,
@@ -28,16 +25,15 @@ const sharedConfig: CSSAnimationSettings = {
 
 const wiggleAnimation: CSSAnimationConfig = {
   animationName: {
-    '25%': {
+    '0, 100%': {
       transform: [{ rotate: '-15deg' }],
     },
-    '75%': {
+    '50%': {
       transform: [{ rotate: '15deg' }],
     },
   },
   ...sharedConfig,
   animationDuration: '0.5s',
-  animationTimingFunction: cubicBezier(0.5, -0.6, 0.6, 1.5),
 };
 
 const fadeAnimation: CSSAnimationConfig = {
