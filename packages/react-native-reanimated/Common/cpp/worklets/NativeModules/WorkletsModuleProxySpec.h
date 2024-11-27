@@ -9,9 +9,9 @@ using namespace react;
 
 namespace worklets {
 
-class JSI_EXPORT NativeWorkletsModuleSpec : public TurboModule {
+class JSI_EXPORT WorkletsModuleProxySpec : public TurboModule {
  protected:
-  explicit NativeWorkletsModuleSpec(
+  explicit WorkletsModuleProxySpec(
       const std::shared_ptr<CallInvoker> jsInvoker);
 
  public:

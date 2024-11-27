@@ -28,7 +28,7 @@ using namespace react;
 
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
-    const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
+    const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
@@ -42,7 +42,7 @@ NativeProxy::NativeProxy(
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
-          nativeWorkletsModule,
+          workletsModuleProxy,
           *rnRuntime,
           std::make_shared<JSScheduler>(*rnRuntime, jsCallInvoker),
           uiScheduler,
@@ -58,7 +58,7 @@ NativeProxy::NativeProxy(
 #ifdef RCT_NEW_ARCH_ENABLED
 NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
-    const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
+    const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
     jsi::Runtime *rnRuntime,
     RuntimeExecutor runtimeExecutor,
     const std::shared_ptr<UIScheduler> &uiScheduler,
@@ -68,7 +68,7 @@ NativeProxy::NativeProxy(
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       nativeReanimatedModule_(std::make_shared<NativeReanimatedModule>(
-          nativeWorkletsModule,
+          workletsModuleProxy,
           *rnRuntime,
           std::make_shared<JSScheduler>(*rnRuntime, runtimeExecutor),
           uiScheduler,
@@ -123,11 +123,10 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
-  auto nativeWorkletsModule =
-      jWorkletsModule->cthis()->getNativeWorkletsModule();
+  auto workletsModuleProxy = jWorkletsModule->cthis()->getWorkletsModuleProxy();
   return makeCxxInstance(
       jThis,
-      nativeWorkletsModule,
+      workletsModuleProxy,
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
       uiScheduler,
@@ -151,11 +150,10 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybridBridgeless(
         fabricUIManager) {
   auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
   auto runtimeExecutor = runtimeExecutorHolder->cthis()->get();
-  auto nativeWorkletsModule =
-      jWorkletsModule->cthis()->getNativeWorkletsModule();
+  auto workletsModuleProxy = jWorkletsModule->cthis()->getWorkletsModuleProxy();
   return makeCxxInstance(
       jThis,
-      nativeWorkletsModule,
+      workletsModuleProxy,
       (jsi::Runtime *)jsContext,
       runtimeExecutor,
       uiScheduler,

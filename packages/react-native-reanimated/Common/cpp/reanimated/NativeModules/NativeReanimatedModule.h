@@ -12,7 +12,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
-#include <worklets/NativeModules/NativeWorkletsModule.h>
+#include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
@@ -33,7 +33,7 @@ namespace reanimated {
 class NativeReanimatedModule : public NativeReanimatedModuleSpec {
  public:
   NativeReanimatedModule(
-      const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
+      const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler,
@@ -174,9 +174,9 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     return isReducedMotion_;
   }
 
-  [[nodiscard]] inline std::shared_ptr<NativeWorkletsModule>
-  getNativeWorkletsModule() const {
-    return nativeWorkletsModule_;
+  [[nodiscard]] inline std::shared_ptr<WorkletsModuleProxy>
+  getWorkletsModuleProxy() const {
+    return workletsModuleProxy_;
   }
 
  private:
@@ -193,7 +193,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   const bool isBridgeless_;
   const bool isReducedMotion_;
-  const std::shared_ptr<NativeWorkletsModule> nativeWorkletsModule_;
+  const std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
   const std::string valueUnpackerCode_;

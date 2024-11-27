@@ -52,7 +52,7 @@ using namespace facebook;
 namespace reanimated {
 
 NativeReanimatedModule::NativeReanimatedModule(
-    const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
+    const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler,
@@ -63,13 +63,13 @@ NativeReanimatedModule::NativeReanimatedModule(
           isBridgeless ? nullptr : jsScheduler->getJSCallInvoker()),
       isBridgeless_(isBridgeless),
       isReducedMotion_(isReducedMotion),
-      nativeWorkletsModule_(nativeWorkletsModule),
+      workletsModuleProxy_(workletsModuleProxy),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
-      valueUnpackerCode_(nativeWorkletsModule->getValueUnpackerCode()),
+      valueUnpackerCode_(workletsModuleProxy->getValueUnpackerCode()),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
-          nativeWorkletsModule->getJSQueue(),
+          workletsModuleProxy->getJSQueue(),
           jsScheduler_,
           "Reanimated UI runtime",
           true /* supportsLocking */,
@@ -231,7 +231,7 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
     const jsi::Value &initializer) {
   auto workletRuntime = std::make_shared<WorkletRuntime>(
       rt,
-      nativeWorkletsModule_->getJSQueue(),
+      workletsModuleProxy_->getJSQueue(),
       jsScheduler_,
       name.asString(rt).utf8(rt),
       false /* supportsLocking */,
