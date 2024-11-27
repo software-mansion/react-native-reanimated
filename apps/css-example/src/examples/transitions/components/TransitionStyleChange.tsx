@@ -14,6 +14,7 @@ import Animated, {
 
 import { CodeBlock, Text } from '@/components';
 import { colors, flex, iconSizes, radius, spacing } from '@/theme';
+import { stringifyConfig } from '@/utils';
 
 const CARDS_ORDER_CHANGE_DELAY = 300;
 
@@ -61,7 +62,7 @@ export default function TransitionStyleChange({
         layout={layoutTransition}
         horizontal>
         <CodeCard
-          code={JSON.stringify(activeStyle, null, 2)}
+          code={stringifyConfig(activeStyle)}
           key={activeStyleIndex}
           label="Current"
           active
@@ -76,7 +77,7 @@ export default function TransitionStyleChange({
         </Animated.View>
 
         <CodeCard
-          code={JSON.stringify(nextStyle, null, 2)}
+          code={stringifyConfig(nextStyle)}
           key={nextStyleIndex}
           label="Next"
         />

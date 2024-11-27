@@ -76,5 +76,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,
+    marginBottom: spacing.xxs,
   },
 });

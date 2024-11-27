@@ -7,6 +7,7 @@ export type LabelType =
   | 'Android'
   | 'iOS'
   | 'needsFix'
+  | 'new'
   | 'unimplemented'
   | 'unsupported';
 
@@ -14,6 +15,7 @@ const labelTexts = {
   Android: 'Android',
   iOS: 'iOS',
   needsFix: 'Needs Fix',
+  new: 'New',
   unimplemented: 'Unimplemented',
   unsupported: 'Unsupported',
 };

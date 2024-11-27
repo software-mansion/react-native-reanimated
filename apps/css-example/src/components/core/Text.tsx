@@ -12,6 +12,20 @@ import type {
 import { colors, text } from '@/theme';
 import type { FontVariant } from '@/types';
 
+function parseTextVariant(textToParse: string): [FontVariant, string] {
+  const match = textToParse.match(/^(#+)\s+/);
+  if (match) {
+    const hashes = match[1].length;
+    const cleanedText = textToParse.slice(match[0].length);
+    if (hashes < 4) {
+      return [`heading${hashes}` as FontVariant, cleanedText];
+    } else if (hashes < 7) {
+      return [`subHeading${hashes - 3}` as FontVariant, cleanedText];
+    }
+  }
+  return ['body1', textToParse];
+}
+
 const REGEX = /`([^`]+)`|\*\*([^*]+)\*\*/g; // Updated regex to capture both `code` and **bold** syntax
 
 const VARIANT_COLORS: Record<FontVariant, string> = {
@@ -44,7 +58,7 @@ export default function Text({
   navLink,
   onPress,
   style,
-  variant = 'body1',
+  variant,
   ...rest
 }: TextProps) {
   const navigation = useNavigation();
@@ -80,8 +94,15 @@ export default function Text({
     );
   }
 
-  const renderTextWithCode = (textToParse: string) =>
-    textToParse.split(REGEX).map((part, index) => {
+  const renderTextWithCode = (textToParse: string) => {
+    let resultingVariant = variant as FontVariant;
+    let resultingText = textToParse;
+
+    if (!variant) {
+      [resultingVariant, resultingText] = parseTextVariant(textToParse);
+    }
+
+    return resultingText.split(REGEX).map((part, index) => {
       if (index % 3 === 1) {
         // Apply inline code style
         return (
@@ -94,23 +115,26 @@ export default function Text({
         return (
           <RNText
             key={index}
-            {...getVariantProps(variant, { fontWeight: 'bold' })}>
+            {...getVariantProps(resultingVariant, { fontWeight: 'bold' })}>
             {part}
           </RNText>
         );
       }
       // Default: regular text
       return (
-        <RNText key={index} {...getVariantProps(variant)}>
+        <RNText key={index} {...getVariantProps(resultingVariant)}>
           {part}
         </RNText>
       );
     });
+  };
+
+  const isString = typeof children === 'string';
 
   return (
-    <RNText {...getVariantProps(variant)}>
+    <RNText {...getVariantProps(variant ?? 'body1')}>
       {
-        typeof children === 'string'
+        isString
           ? renderTextWithCode(children)
           : children /* if children is not a string, render as-is */
       }

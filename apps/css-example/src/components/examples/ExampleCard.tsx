@@ -58,21 +58,19 @@ export default function ExampleCard({
         expanded={isExpanded}
         showExpandOverlay
         onChange={setIsExpanded}>
-        {title && (
-          <Text style={styles.title} variant="subHeading2">
-            {title}
-          </Text>
-        )}
-        {description &&
-          (Array.isArray(description) ? (
-            <View style={styles.description}>
-              {description.map((paragraph, index) => (
-                <Text key={index}>{paragraph}</Text>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.description}>{description}</Text>
-          ))}
+        <View style={styles.textWrapper}>
+          {title && <Text variant="subHeading2">{title}</Text>}
+          {description &&
+            (Array.isArray(description) ? (
+              <View style={styles.description}>
+                {description.map((paragraph, index) => (
+                  <Text key={index}>{paragraph}</Text>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.description}>{description}</Text>
+            ))}
+        </View>
         <View
           style={[
             styles.itemsContainer,
@@ -171,7 +169,7 @@ const styles = StyleSheet.create({
   itemsContainerExpanded: {
     flexDirection: 'column',
   },
-  title: {
-    marginBottom: spacing.xs,
+  textWrapper: {
+    paddingBottom: spacing.xs,
   },
 });

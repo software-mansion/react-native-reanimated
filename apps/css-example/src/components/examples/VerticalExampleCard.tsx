@@ -1,7 +1,7 @@
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Pressable, TouchableOpacity } from 'react-native-gesture-handler';
 import Animated, {
   FadeInDown,
@@ -29,12 +29,10 @@ export default function VerticalExampleCard({
   return (
     <LayoutAnimationConfig skipEntering skipExiting>
       <ExpandableCard expanded={true}>
-        {title && (
-          <Text style={styles.title} variant="subHeading2">
-            {title}
-          </Text>
-        )}
-        {description && <Text style={styles.description}>{description}</Text>}
+        <View style={styles.textWrapper}>
+          {title && <Text variant="subHeading2">{title}</Text>}
+          {description && <Text style={styles.description}>{description}</Text>}
+        </View>
         <Animated.View style={styles.itemsContainer}>
           {/* Code block */}
           <Animated.View layout={LinearTransition} style={styles.itemWrapper}>
@@ -124,7 +122,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     height: 'auto',
   },
-  title: {
-    marginBottom: spacing.xs,
+  textWrapper: {
+    paddingBottom: spacing.xs,
   },
 });

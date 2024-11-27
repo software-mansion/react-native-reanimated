@@ -4,7 +4,7 @@ import type { CSSAnimationConfig } from 'react-native-reanimated';
 import { Scroll, Section } from '@/components/layout';
 import type { LabelType } from '@/components/misc';
 import type { AnyRecord } from '@/types';
-import { formatAnimationCode } from '@/utils';
+import { stringifyConfig } from '@/utils';
 
 import type { ExampleCardProps } from './ExampleCard';
 import ExampleCard from './ExampleCard';
@@ -56,6 +56,7 @@ export default function ExamplesList<P extends AnyRecord>({
 
 type ExampleProps<P> = {
   CardComponent: ComponentType<ExampleCardProps>;
+  denseCode?: boolean;
   buildConfig: (props: P) => CSSAnimationConfig;
   renderExample: (props: { config: CSSAnimationConfig } & P) => JSX.Element;
 } & Omit<ExampleCardProps, 'code'> &
@@ -65,6 +66,7 @@ function Example<P extends AnyRecord>({
   CardComponent,
   buildConfig,
   collapsedExampleHeight,
+  denseCode = true,
   description,
   minExampleHeight,
   renderExample,
@@ -76,8 +78,8 @@ function Example<P extends AnyRecord>({
 
   return (
     <CardComponent
-      code={formatAnimationCode(config)}
-      collapsedCode={JSON.stringify(config.animationName, null, 2)}
+      code={stringifyConfig(config)}
+      collapsedCode={stringifyConfig(config.animationName, denseCode)}
       collapsedExampleHeight={collapsedExampleHeight}
       description={description}
       minExampleHeight={minExampleHeight}
