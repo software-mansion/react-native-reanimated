@@ -1,5 +1,5 @@
 #import <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#import <reanimated/NativeModules/NativeReanimatedModule.h>
+#import <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/LayoutReanimation/REAAnimationsManager.h>
 #import <reanimated/apple/LayoutReanimation/REASwizzledUIManager.h>
@@ -56,7 +56,7 @@ static inline bool getIsReducedMotion()
 #endif // __has_include(<UIKit/UIAccessibility.h>)
 }
 
-std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
+std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,
     RCTBridge *bridge,
     const std::shared_ptr<CallInvoker> &jsInvoker,
@@ -74,7 +74,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   const auto nativeWorkletsModule = [workletsModule getNativeWorkletsModule];
 
-  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+  auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
       nativeWorkletsModule,
       rnRuntime,
       jsScheduler,
@@ -83,21 +83,21 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
       isBridgeless,
       getIsReducedMotion());
 
-  commonInit(reaModule, nativeReanimatedModule);
+  commonInit(reaModule, reanimatedModuleProxy);
   // Layout Animation callbacks setup
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
   REAAnimationsManager *animationsManager = reaModule.animationsManager;
-  setupLayoutAnimationCallbacks(nativeReanimatedModule, animationsManager);
+  setupLayoutAnimationCallbacks(reanimatedModuleProxy, animationsManager);
 
 #endif // RCT_NEW_ARCH_ENABLED
 
-  return nativeReanimatedModule;
+  return reanimatedModuleProxy;
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
-std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
+std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleBridgeless(
     REAModule *reaModule,
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
@@ -114,7 +114,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
   auto jsScheduler = std::make_shared<JSScheduler>(runtime, runtimeExecutor);
   constexpr auto isBridgeless = true;
 
-  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
+  auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
       nativeWorkletsModule,
       runtime,
       jsScheduler,
@@ -123,30 +123,30 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
       isBridgeless,
       getIsReducedMotion());
 
-  commonInit(reaModule, nativeReanimatedModule);
+  commonInit(reaModule, reanimatedModuleProxy);
 
-  return nativeReanimatedModule;
+  return reanimatedModuleProxy;
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
-void commonInit(REAModule *reaModule, std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule)
+void commonInit(REAModule *reaModule, std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy)
 {
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
     std::string eventName = [event.eventName UTF8String];
     int emitterReactTag = [event.viewTag intValue];
     id eventData = [event arguments][2];
-    jsi::Runtime &uiRuntime = nativeReanimatedModule->getUIRuntime();
+    jsi::Runtime &uiRuntime = reanimatedModuleProxy->getUIRuntime();
     jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
     double currentTime = CACurrentMediaTime() * 1000;
-    nativeReanimatedModule->handleEvent(eventName, emitterReactTag, payload, currentTime);
+    reanimatedModuleProxy->handleEvent(eventName, emitterReactTag, payload, currentTime);
   }];
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule = nativeReanimatedModule; // to avoid retain cycle
+  std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy; // to avoid retain cycle
   [reaModule.nodesManager registerPerformOperations:^() {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      nativeReanimatedModule->performOperations();
+    if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
+      reanimatedModuleProxy->performOperations();
     }
   }];
 #endif // RCT_NEW_ARCH_ENABLED
@@ -156,14 +156,14 @@ void commonInit(REAModule *reaModule, std::shared_ptr<NativeReanimatedModule> na
 // nothing
 #else // RCT_NEW_ARCH_ENABLED
 void setupLayoutAnimationCallbacks(
-    std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule,
+    std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy,
     REAAnimationsManager *animationsManager)
 {
-  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule = nativeReanimatedModule; // to avoid retain cycle
+  std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy; // to avoid retain cycle
   [animationsManager
       setAnimationStartingBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values) {
-        if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-          jsi::Runtime &rt = nativeReanimatedModule->getUIRuntime();
+        if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
+          jsi::Runtime &rt = reanimatedModuleProxy->getUIRuntime();
           jsi::Object yogaValues(rt);
           for (NSString *key in values.allKeys) {
             NSObject *value = values[key];
@@ -178,59 +178,59 @@ void setupLayoutAnimationCallbacks(
               yogaValues.setProperty(rt, [key UTF8String], [(NSNumber *)value doubleValue]);
             }
           }
-          nativeReanimatedModule->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
+          reanimatedModuleProxy->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
         }
       }];
 
   [animationsManager setHasAnimationBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+    if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
       bool hasLayoutAnimation =
-          nativeReanimatedModule->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
+          reanimatedModuleProxy->layoutAnimationsManager().hasLayoutAnimation([tag intValue], type);
       return hasLayoutAnimation ? YES : NO;
     }
     return NO;
   }];
 
   [animationsManager setShouldAnimateExitingBlock:^(NSNumber *_Nonnull tag, BOOL shouldAnimate) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+    if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
       bool shouldAnimateExiting =
-          nativeReanimatedModule->layoutAnimationsManager().shouldAnimateExiting([tag intValue], shouldAnimate);
+          reanimatedModuleProxy->layoutAnimationsManager().shouldAnimateExiting([tag intValue], shouldAnimate);
       return shouldAnimateExiting ? YES : NO;
     }
     return NO;
   }];
 
   [animationsManager setAnimationRemovingBlock:^(NSNumber *_Nonnull tag) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      nativeReanimatedModule->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
+    if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
+      reanimatedModuleProxy->layoutAnimationsManager().clearLayoutAnimationConfig([tag intValue]);
     }
   }];
 
   [animationsManager setSharedTransitionRemovingBlock:^(NSNumber *_Nonnull tag) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      nativeReanimatedModule->layoutAnimationsManager().clearSharedTransitionConfig([tag intValue]);
+    if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
+      reanimatedModuleProxy->layoutAnimationsManager().clearSharedTransitionConfig([tag intValue]);
     }
   }];
 
   [animationsManager setCancelAnimationBlock:^(NSNumber *_Nonnull tag) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      jsi::Runtime &rt = nativeReanimatedModule->getUIRuntime();
-      nativeReanimatedModule->layoutAnimationsManager().cancelLayoutAnimation(rt, [tag intValue]);
+    if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
+      jsi::Runtime &rt = reanimatedModuleProxy->getUIRuntime();
+      reanimatedModuleProxy->layoutAnimationsManager().cancelLayoutAnimation(rt, [tag intValue]);
     }
   }];
 
   [animationsManager setFindPrecedingViewTagForTransitionBlock:^NSNumber *_Nullable(NSNumber *_Nonnull tag) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+    if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
       int resultTag =
-          nativeReanimatedModule->layoutAnimationsManager().findPrecedingViewTagForTransition([tag intValue]);
+          reanimatedModuleProxy->layoutAnimationsManager().findPrecedingViewTagForTransition([tag intValue]);
       return resultTag == -1 ? nil : @(resultTag);
     }
     return nil;
   }];
 
   [animationsManager setGetSharedGroupBlock:^NSArray<NSNumber *> *_Nullable(NSNumber *_Nonnull tag) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
-      const auto &results = nativeReanimatedModule->layoutAnimationsManager().getSharedGroup([tag intValue]);
+    if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
+      const auto &results = reanimatedModuleProxy->layoutAnimationsManager().getSharedGroup([tag intValue]);
       NSMutableArray<NSNumber *> *convertedResult = [NSMutableArray new];
       for (const int tag : results) {
         [convertedResult addObject:@(tag)];
@@ -241,11 +241,11 @@ void setupLayoutAnimationCallbacks(
   }];
 #ifndef NDEBUG
   [animationsManager setCheckDuplicateSharedTagBlock:^(REAUIView *view, NSNumber *_Nonnull viewTag) {
-    if (auto nativeReanimatedModule = weakNativeReanimatedModule.lock()) {
+    if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
       REAUIView *screen = [REAScreensHelper getScreenForView:(REAUIView *)view];
       auto screenTag = [screen.reactTag intValue];
       // Here we check if there are duplicate tags (we don't use return bool value currently)
-      nativeReanimatedModule->layoutAnimationsManager().checkDuplicateSharedTag([viewTag intValue], screenTag);
+      reanimatedModuleProxy->layoutAnimationsManager().checkDuplicateSharedTag([viewTag intValue], screenTag);
     }
   }];
 #endif // NDEBUG
