@@ -5,7 +5,7 @@
 #include <react/renderer/uimanager/primitives.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
-#include <worklets/NativeModules/NativeWorkletsModule.h>
+#include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 
 #ifdef __ANDROID__
@@ -18,16 +18,16 @@ using namespace facebook;
 
 namespace worklets {
 
-NativeWorkletsModule::NativeWorkletsModule(
+WorkletsModuleProxy::WorkletsModuleProxy(
     const std::string &valueUnpackerCode,
     const std::shared_ptr<MessageQueueThread> &jsQueue)
-    : NativeWorkletsModuleSpec(nullptr),
+    : WorkletsModuleProxySpec(nullptr),
       valueUnpackerCode_(valueUnpackerCode),
       jsQueue_(jsQueue) {}
 
-NativeWorkletsModule::~NativeWorkletsModule() {}
+WorkletsModuleProxy::~WorkletsModuleProxy() {}
 
-jsi::Value NativeWorkletsModule::makeShareableClone(
+jsi::Value WorkletsModuleProxy::makeShareableClone(
     jsi::Runtime &rt,
     const jsi::Value &value,
     const jsi::Value &shouldRetainRemote,

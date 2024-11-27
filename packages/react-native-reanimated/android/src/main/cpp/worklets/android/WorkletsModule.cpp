@@ -24,10 +24,10 @@ WorkletsModule::WorkletsModule(
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
-      nativeWorkletsModule_(std::make_shared<NativeWorkletsModule>(
+      workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
           valueUnpackerCode,
           std::make_shared<JMessageQueueThread>(messageQueueThread))) {
-  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, nativeWorkletsModule_);
+  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
