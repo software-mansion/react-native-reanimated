@@ -1,9 +1,9 @@
-#include <reanimated/NativeModules/NativeReanimatedModuleSpec.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 
 #include <utility>
 
 #define REANIMATED_SPEC_PREFIX(FN_NAME) \
-  __hostFunction_NativeReanimatedModuleSpec_##FN_NAME
+  __hostFunction_ReanimatedModuleProxySpec_##FN_NAME
 
 namespace reanimated {
 
@@ -14,7 +14,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(scheduleOnUI)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->scheduleOnUI(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
@@ -24,7 +24,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(executeOnUIRuntimeSync)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->executeOnUIRuntimeSync(rt, std::move(args[0]));
 }
 
@@ -33,7 +33,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(createWorkletRuntime)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->createWorkletRuntime(rt, std::move(args[0]), std::move(args[1]));
 }
 
@@ -42,7 +42,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(scheduleOnRuntime)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->scheduleOnRuntime(rt, std::move(args[0]), std::move(args[1]));
 }
 
@@ -51,7 +51,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(registerEventHandler)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->registerEventHandler(
           rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
 }
@@ -61,7 +61,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unregisterEventHandler)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->unregisterEventHandler(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
@@ -71,7 +71,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(getViewProp)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->getViewProp(
           rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
   return jsi::Value::undefined();
@@ -82,7 +82,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(enableLayoutAnimations)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->enableLayoutAnimations(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
@@ -92,7 +92,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(registerSensor)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->registerSensor(
           rt,
           std::move(args[0]),
@@ -106,7 +106,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unregisterSensor)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->unregisterSensor(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
@@ -116,7 +116,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(configureProps)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->configureProps(rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
@@ -126,7 +126,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(subscribeForKeyboardEvents)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->subscribeForKeyboardEvents(
           rt, std::move(args[0]), std::move(args[1]), std::move(args[2]));
 }
@@ -136,7 +136,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unsubscribeFromKeyboardEvents)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->unsubscribeFromKeyboardEvents(rt, std::move(args[0]));
   return jsi::Value::undefined();
 }
@@ -146,7 +146,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(configureLayoutAnimationBatch)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  return static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->configureLayoutAnimationBatch(rt, std::move(args[0]));
 }
 
@@ -155,12 +155,12 @@ static jsi::Value REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  static_cast<NativeReanimatedModuleSpec *>(&turboModule)
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->setShouldAnimateExiting(rt, std::move(args[0]), std::move(args[1]));
   return jsi::Value::undefined();
 }
 
-NativeReanimatedModuleSpec::NativeReanimatedModuleSpec(
+ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
     const std::shared_ptr<CallInvoker> &jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
   methodMap_["scheduleOnUI"] =
