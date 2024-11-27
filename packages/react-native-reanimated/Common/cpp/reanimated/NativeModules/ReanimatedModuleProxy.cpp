@@ -219,11 +219,52 @@ void ReanimatedModuleProxy::scheduleOnUI(
   });
 }
 
-jsi::Value ReanimatedModuleProxy::executeOnUIRuntimeSync(
-    jsi::Runtime &rt,
-    const jsi::Value &worklet) {
-  return uiWorkletRuntime_->executeSync(rt, worklet);
-}
+jsi::Value NativeReanimatedModule::executeOnUIRuntimeSync(
+            jsi::Runtime &rt,
+            const jsi::Value &worklet) {
+
+        // Ensure that locking is supported
+        assert(
+                supportsLocking_ &&
+                ("[Reanimated] Runtime \"" + name_ + "\" doesn't support locking.")
+                        .c_str());
+
+        // Extract the shareable worklet, throwing an error if invalid
+        auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
+                rt,
+                worklet,
+                "[Reanimated] Only worklets can be executed synchronously on the UI runtime.");
+
+        // Synchronization primitives
+        std::mutex mutex;
+        std::condition_variable cv;
+        bool taskCompleted = false;
+        jsi::Value result;
+
+        // Schedule the worklet on the UI thread
+        uiScheduler_->scheduleOnUI([&] {
+
+            // Execute the worklet within the UI runtime
+            jsi::Value workletResult = uiWorkletRuntime_->executeSync(rt, worklet);
+
+            // Lock the mutex, store the result, and notify the waiting thread
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                result = std::move(workletResult);
+                taskCompleted = true;
+            }
+            cv.notify_one();
+        });
+
+        // Wait for the UI thread to complete the task
+        {
+            std::unique_lock<std::mutex> lock(mutex);
+            cv.wait(lock, [&]() { return taskCompleted; });
+        }
+
+        // Return the result to the calling thread
+        return result;
+    }
 
 jsi::Value ReanimatedModuleProxy::createWorkletRuntime(
     jsi::Runtime &rt,
