@@ -151,7 +151,6 @@ export default function ChangingTransitionProperty() {
                 />
               )}
             </Animated.View>
-
             <Checkbox
               label="Display style changes"
               selected={displayStyleChanges}

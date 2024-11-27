@@ -4,6 +4,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import type { AnyRecord } from '@/types';
 
+import { formatLeafValue, isLeafValue, MAX_NOT_WRAPPED_LENGTH } from './code';
+
 export const noop = () => {
   // Do nothing
 };
@@ -56,12 +58,14 @@ export const getCodeWithOverrides = <C extends AnyRecord, O extends AnyRecord>(
         const value = sharedConfig[key] ?? propertyOverrides[key]?.[0] ?? '';
 
         let parsedValue;
-        if (typeof value === 'object' && value.toString) {
-          const stringified = JSON.stringify(value, null, 2);
+        if (isLeafValue(value)) {
+          const formatLine = (makeDense: boolean) =>
+            `${key}: ${formatLeafValue(value, '  ', makeDense)}`;
+          const denseFormat = formatLine(true);
           parsedValue =
-            JSON.parse(stringified) === stringified
-              ? value.toString()
-              : stringified;
+            denseFormat.length < MAX_NOT_WRAPPED_LENGTH
+              ? formatLeafValue(value, '  ', true)
+              : formatLeafValue(value, '  ', false);
         } else if (isQuoted(value)) {
           parsedValue = value;
         } else {

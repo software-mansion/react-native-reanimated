@@ -1,5 +1,6 @@
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { LayoutAnimation, StyleProps } from 'react-native-reanimated';
 import Animated, {
@@ -45,7 +46,7 @@ type TransitionStyleChangeProps = {
   activeStyleIndex: number;
 };
 
-export default function TransitionStyleChange({
+function TransitionStyleChange({
   activeStyleIndex,
   transitionStyles,
 }: TransitionStyleChangeProps) {
@@ -114,16 +115,20 @@ function CodeCard({ active, code, label }: CodeCardProps) {
             style={styles.activeCardBackground}
           />
         )}
-        <Animated.View
-          entering={FadeIn.delay(CARDS_ORDER_CHANGE_DELAY)}
-          exiting={ScaleDown}
-          style={styles.codeBlock}>
-          <CodeBlock code={code} scrollable={false} />
-        </Animated.View>
+        <LayoutAnimationConfig skipEntering={active}>
+          <Animated.View
+            entering={FadeIn.delay(CARDS_ORDER_CHANGE_DELAY)}
+            exiting={ScaleDown}
+            style={styles.codeBlock}>
+            <CodeBlock code={code} scrollable={false} />
+          </Animated.View>
+        </LayoutAnimationConfig>
       </View>
     </Animated.View>
   );
 }
+
+export default memo(TransitionStyleChange);
 
 const styles = StyleSheet.create({
   activeCardBackground: {
