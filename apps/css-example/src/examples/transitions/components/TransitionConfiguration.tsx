@@ -9,6 +9,7 @@ import { CodeBlock, ConfigWithOverridesBlock, Text } from '@/components';
 import type { ExampleItemProps } from '@/examples/transitions/screens/transitionSettings/components/ExamplesListCard';
 import { colors, flex, radius, spacing } from '@/theme';
 import { iconSizes } from '@/theme/icons';
+import { stringifyConfig } from '@/utils';
 
 type TransitionConfigurationProps = {
   sharedConfig: Partial<CSSTransitionConfig>;
@@ -24,7 +25,7 @@ export default function TransitionConfiguration({
   const renderItem = useCallback<ListRenderItem<StyleProps>>(
     ({ item }) => (
       <View style={styles.codeBlock}>
-        <CodeBlock code={JSON.stringify(item, null, 2)} />
+        <CodeBlock code={stringifyConfig(item)} />
       </View>
     ),
     []

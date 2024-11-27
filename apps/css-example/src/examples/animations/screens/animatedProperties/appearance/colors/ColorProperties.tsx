@@ -15,7 +15,7 @@ import {
   VerticalExampleCard,
 } from '@/components';
 import { colors, radius, sizes, spacing } from '@/theme';
-import { formatAnimationCode } from '@/utils';
+import { stringifyConfig } from '@/utils';
 
 import splashImage from './images/splash.png';
 
@@ -293,8 +293,8 @@ function Example<S>({
 }: ExampleProps<S>) {
   return (
     <VerticalExampleCard
-      code={formatAnimationCode(config)}
-      collapsedCode={JSON.stringify(config.animationName, null, 2)}
+      code={stringifyConfig(config)}
+      collapsedCode={stringifyConfig(config.animationName, true)}
       {...cardProps}>
       {renderExample(config, style)}
     </VerticalExampleCard>

@@ -15,7 +15,7 @@ import {
   Text,
 } from '@/components';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
-import { formatAnimationCode } from '@/utils';
+import { stringifyConfig } from '@/utils';
 
 const sharedConfig: CSSAnimationSettings = {
   animationDuration: '1s',
@@ -126,7 +126,7 @@ export default function ChangingAnimation() {
           title="Animation Configuration">
           <Animated.View layout={LinearTransition} style={styles.codeWrapper}>
             {animation ? (
-              <CodeBlock code={formatAnimationCode(animation)} />
+              <CodeBlock code={stringifyConfig(animation)} />
             ) : (
               <Text variant="subHeading2">No animation selected</Text>
             )}

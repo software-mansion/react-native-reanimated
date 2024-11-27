@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   FadeInDown,
   FadeInUp,
@@ -19,10 +19,11 @@ import { colors, radius, spacing } from '@/theme';
 
 type CodeBlockProps = {
   code: string;
+  style?: StyleProp<ViewStyle>;
   scrollable?: boolean;
 };
 
-export function CodeBlock({ code, scrollable = true }: CodeBlockProps) {
+export function CodeBlock({ code, scrollable = true, style }: CodeBlockProps) {
   const formattedCode = useMemo(() => {
     // Remove empty lines at the beginning and end
     const result = code.replace(/^\s*\n/, '').replace(/\n\s*$/, '');
@@ -43,11 +44,11 @@ export function CodeBlock({ code, scrollable = true }: CodeBlockProps) {
   );
 
   return scrollable ? (
-    <Scroll contentContainerStyle={styles.codeContainer} horizontal>
+    <Scroll contentContainerStyle={[styles.codeContainer, style]} horizontal>
       {content}
     </Scroll>
   ) : (
-    content
+    <View style={[styles.codeContainer, style]}>{content}</View>
   );
 }
 

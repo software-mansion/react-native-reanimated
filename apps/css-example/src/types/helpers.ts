@@ -8,3 +8,5 @@ export type AnyFunction = (...args: Array<any>) => any;
 export type Transforms = ViewStyle['transform'];
 
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+export type NoUndef<T> = T extends undefined ? never : T;

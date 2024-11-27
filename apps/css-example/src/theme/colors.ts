@@ -10,11 +10,12 @@ const accentColors = {
 };
 
 export const labelColors = {
-  Android: '#2A9D57',
-  iOS: '#005BBB',
-  needsFix: '#FF4D4D',
-  unimplemented: '#6E7191',
-  unsupported: '#FF8C00',
+  Android: '#1B7A41',
+  iOS: '#003F8A',
+  needsFix: '#D32F2F',
+  new: '#008080',
+  unimplemented: '#4A4E6A',
+  unsupported: '#E65100',
 } as const;
 
 export const colors = {

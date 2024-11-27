@@ -20,7 +20,7 @@ import {
   Text,
 } from '@/components';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
-import { formatAnimationCode, typedMemo } from '@/utils';
+import { stringifyConfig, typedMemo } from '@/utils';
 
 const keyframes: CSSAnimationKeyframes = {
   to: {
@@ -151,7 +151,7 @@ export default function UpdatingAnimationSettings() {
           description="Selected animation configuration"
           title="Animation Configuration">
           <Animated.View layout={LinearTransition} style={styles.codeWrapper}>
-            <CodeBlock code={formatAnimationCode(animationConfig)} />
+            <CodeBlock code={stringifyConfig(animationConfig)} />
           </Animated.View>
         </Section>
       </Stagger>

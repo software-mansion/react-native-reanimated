@@ -45,7 +45,7 @@ export default function CheckBox({ label, onChange, selected }: CheckboxProps) {
             />
           </Animated.View>
         </Animated.View>
-        <Text variant="label3">{label}</Text>
+        {label && <Text variant="label3">{label}</Text>}
       </Pressable>
     </Animated.View>
   );
