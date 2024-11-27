@@ -7,7 +7,6 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.common.annotations.FrameworkAPI;
-import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.nativeProxy.NativeProxyCommon;
@@ -17,7 +16,9 @@ import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Objects;
 
-/** @noinspection JavaJniMissingFunction*/
+/**
+ * @noinspection JavaJniMissingFunction
+ */
 public class NativeProxy extends NativeProxyCommon {
   @DoNotStrip
   @SuppressWarnings("unused")

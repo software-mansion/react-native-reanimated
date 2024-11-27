@@ -57,7 +57,6 @@ public class NativeProxy extends NativeProxyCommon {
   private native HybridData initHybrid(
       WorkletsModule workletsModule,
       long jsContext,
-      CallInvokerHolderImpl jsCallInvokerHolder,
       AndroidUIScheduler androidUIScheduler,
       LayoutAnimations LayoutAnimations,
       boolean isBridgeless,

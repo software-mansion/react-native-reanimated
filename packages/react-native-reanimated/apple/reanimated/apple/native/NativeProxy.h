@@ -17,7 +17,6 @@ static inline bool getIsReducedMotion();
 std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,
     RCTBridge *bridge,
-    const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
     WorkletsModule *workletsModule);
 
 #ifdef RCT_NEW_ARCH_ENABLED

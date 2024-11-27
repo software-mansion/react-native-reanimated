@@ -351,16 +351,17 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   const auto funPtr = std::make_shared<jsi::Function>(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
   const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
-  uiScheduler_->scheduleOnUI([=]() {
+  uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     const auto resultStr =
         obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
 
-    jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
-      const auto resultValue =
-          jsi::String::createFromUtf8(rnRuntime, resultStr);
-      funPtr->call(rnRuntime, resultValue);
-    });
+    nativeWorkletsModule_->getJSScheduler()->scheduleOnJS(
+        [=](jsi::Runtime &rnRuntime) {
+          const auto resultValue =
+              jsi::String::createFromUtf8(rnRuntime, resultStr);
+          funPtr->call(rnRuntime, resultValue);
+        });
   });
   return jsi::Value::undefined();
 }

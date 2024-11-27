@@ -36,11 +36,6 @@ using namespace reanimated;
 - (void *)runtime;
 @end
 
-@interface RCTBridge (RCTTurboModule)
-- (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
-- (void)_tryAndHandleError:(dispatch_block_t)block;
-@end
-
 #ifdef RCT_NEW_ARCH_ENABLED
 static __strong REAInitializerRCTFabricSurface *reaSurface;
 #else
@@ -282,7 +277,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
     if (jsiRuntime) {
       auto reanimatedModuleProxy =
-          reanimated::createReanimatedModule(self, self.bridge, workletsModule);
+          reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule);
       jsi::Runtime &rnRuntime = *jsiRuntime;
 
     [self commonInit:reanimatedModuleProxy withRnRuntime:rnRuntime];

@@ -56,11 +56,8 @@ static inline bool getIsReducedMotion()
 #endif // __has_include(<UIKit/UIAccessibility.h>)
 }
 
-std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
-    REAModule *reaModule,
-    RCTBridge *bridge,
-    const std::shared_ptr<CallInvoker> &jsCallInvoker,
-    WorkletsModule *workletsModule)
+std::shared_ptr<ReanimatedModuleProxy>
+createReanimatedModule(REAModule *reaModule, RCTBridge *bridge,     const std::shared_ptr<CallInvoker> &jsCallInvoker, WorkletsModule *workletsModule)
 {
   auto nodesManager = reaModule.nodesManager;
 
@@ -74,12 +71,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
   const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
 
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
-      workletsModuleProxy,
-      rnRuntime,
-      uiScheduler,
-      platformDepMethodsHolder,
-      isBridgeless,
-      getIsReducedMotion());
+      workletsModuleProxy, rnRuntime, jsCallInvoker, uiScheduler, platformDepMethodsHolder, isBridgeless, getIsReducedMotion());
 
   commonInit(reaModule, reanimatedModuleProxy);
   // Layout Animation callbacks setup
