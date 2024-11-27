@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cxxreact/MessageQueueThread.h>
-#include <worklets/NativeModules/NativeWorkletsModuleSpec.h>
+#include <worklets/NativeModules/WorkletsModuleProxySpec.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <memory>
@@ -9,13 +9,13 @@
 
 namespace worklets {
 
-class NativeWorkletsModule : public NativeWorkletsModuleSpec {
+class WorkletsModuleProxy : public WorkletsModuleProxySpec {
  public:
-  explicit NativeWorkletsModule(
+  explicit WorkletsModuleProxy(
       const std::string &valueUnpackerCode,
       const std::shared_ptr<MessageQueueThread> &jsQueue);
 
-  ~NativeWorkletsModule();
+  ~WorkletsModuleProxy();
 
   jsi::Value makeShareableClone(
       jsi::Runtime &rt,
@@ -35,7 +35,7 @@ class NativeWorkletsModule : public NativeWorkletsModuleSpec {
   const std::string valueUnpackerCode_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
 #ifndef NDEBUG
-  SingleInstanceChecker<NativeWorkletsModule> singleInstanceChecker_;
+  SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG
 };
 
