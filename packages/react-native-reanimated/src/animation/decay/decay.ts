@@ -113,6 +113,7 @@ export const withDecay = function (
       onFrame: decay,
       onStart,
       callback,
+      forceRunAnimation: true,
       velocity: config.velocity ?? 0,
       initialVelocity: 0,
       current: 0,
