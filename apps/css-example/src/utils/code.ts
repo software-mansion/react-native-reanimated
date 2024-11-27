@@ -20,6 +20,33 @@ export const isLeafValue = (value: unknown): boolean => {
   );
 };
 
+export const formatLeafValue = (
+  value: unknown,
+  nextTab = '',
+  dense = false
+): string => {
+  if (Array.isArray(value)) {
+    if (!dense) {
+      // multiline array
+      return `[\n${value
+        .map(
+          (item) =>
+            `${nextTab}  ${isEasingFunction(item) ? item.toString() : JSON.stringify(item)}`
+        )
+        .join(',\n')}\n${nextTab}]`;
+    }
+    return `[${value
+      .map((item) =>
+        isEasingFunction(item) ? item.toString() : JSON.stringify(item)
+      )
+      .join(', ')}]`;
+  }
+
+  return isEasingFunction(value) ? value.toString() : JSON.stringify(value);
+};
+
+export const MAX_NOT_WRAPPED_LENGTH = 48;
+
 export const stringifyConfig = <T extends AnyRecord>(
   object: T,
   dense = false,
@@ -39,23 +66,18 @@ export const stringifyConfig = <T extends AnyRecord>(
       const value = object[key];
       const formattedKey = isValidPropertyName(key) ? key : `"${key}"`;
 
-      if (isLeafValue(value)) {
-        if (!dense && Array.isArray(value)) {
-          // multiline array
-          return `${nextTab}${formattedKey}: [\n${value
-            .map(
-              (item) =>
-                `${nextTab}  ${isEasingFunction(item) ? item.toString() : JSON.stringify(item)}`
-            )
-            .join(',\n')}\n${nextTab}],`;
-        }
+      const formatLine = (makeDense: boolean) =>
+        `${nextTab}${formattedKey}: ${
+          isLeafValue(value)
+            ? formatLeafValue(value, nextTab, makeDense)
+            : stringifyConfig(value, makeDense, depth + 1)
+        }`;
 
-        return `${nextTab}${formattedKey}: ${
-          isEasingFunction(value) ? value.toString() : JSON.stringify(value)
-        },`;
+      const denseFormat = formatLine(true);
+      if (dense || denseFormat.length < MAX_NOT_WRAPPED_LENGTH) {
+        return denseFormat;
       }
-
-      return `${nextTab}${formattedKey}: ${stringifyConfig(value, dense, depth + 1)}`;
+      return formatLine(false);
     })
     .join('\n')}\n${currentTab}},`;
 };

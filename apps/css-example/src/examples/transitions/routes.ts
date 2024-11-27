@@ -51,6 +51,7 @@ const routes = {
         Component: miscellaneous.UpdatingTransitionSettings,
       },
       MultipleTransitionSettings: {
+        labelTypes: ['new'],
         name: 'Multiple Transition Settings',
         Component: miscellaneous.MultipleTransitionSettings,
       },

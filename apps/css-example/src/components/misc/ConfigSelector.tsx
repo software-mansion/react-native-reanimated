@@ -3,6 +3,7 @@
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import React, { useMemo, useState } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import { Pressable, TouchableOpacity } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
@@ -23,7 +24,13 @@ import { Checkbox } from '@/components/inputs';
 import { Scroll } from '@/components/layout';
 import { colors, flex, iconSizes, radius, sizes, spacing } from '@/theme';
 import type { AnyRecord } from '@/types';
-import { isEasingFunction, isLeafValue, isValidPropertyName } from '@/utils';
+import {
+  formatLeafValue,
+  isEasingFunction,
+  isLeafValue,
+  isValidPropertyName,
+  typedMemo,
+} from '@/utils';
 
 import ActionSheetDropdown from './ActionSheetDropdown';
 
@@ -74,44 +81,53 @@ export type SelectableConfig<C extends AnyRecord> = {
   [K in keyof C]: C[K] extends AnyRecord ? SelectableConfig<C[K]> : C[K];
 };
 
-type ConfigSelectorProps<T extends AnyRecord> = {
-  config: SelectableConfig<T>;
-  onChange: (config: SelectableConfig<T>) => void;
-};
+type ConfigSelectorProps<T extends AnyRecord> = BlockProps<T>;
 
-export default function ConfigSelector<T extends AnyRecord>({
-  config,
-  onChange,
-}: ConfigSelectorProps<T>) {
+function ConfigSelector<T extends AnyRecord>(props: ConfigSelectorProps<T>) {
+  const addAdditionalIndent = Object.entries(props.config).some(
+    ([key, value]) =>
+      key.startsWith('$') &&
+      (value as SelectableConfigPropertyOptions<T>).canDisable
+  );
+
   return (
-    <Scroll contentContainerStyle={styles.codeContainer} horizontal>
-      <View style={styles.block}>
-        <Animated.View layout={LinearTransition}>
-          <Text variant="code">{'{'}</Text>
-        </Animated.View>
-        <View style={{ paddingLeft: spacing.sm }}>
-          <Block config={config} onChange={onChange} />
+    <View style={styles.configSelectorWrapper}>
+      <Scroll contentContainerStyle={styles.codeContainer} horizontal>
+        <View style={styles.block}>
+          <Animated.View layout={LinearTransition}>
+            <Text variant="code">{'{'}</Text>
+          </Animated.View>
+          <View style={{ paddingLeft: addAdditionalIndent ? spacing.md : 0 }}>
+            <Block {...props} />
+          </View>
+          <Animated.View layout={LinearTransition}>
+            <Text variant="code">{'},'}</Text>
+          </Animated.View>
         </View>
-        <Animated.View layout={LinearTransition}>
-          <Text variant="code">{'},'}</Text>
-        </Animated.View>
-      </View>
-    </Scroll>
+      </Scroll>
+    </View>
   );
 }
 
 type BlockProps<T extends AnyRecord> = {
   config: SelectableConfig<T>;
+  dropdownStyle?: StyleProp<ViewStyle>;
+  blockStyle?: StyleProp<ViewStyle>;
   onChange: (config: SelectableConfig<T>) => void;
 };
 
-function Block<T extends AnyRecord>({ config, onChange }: BlockProps<T>) {
+function Block<T extends AnyRecord>({
+  blockStyle,
+  config,
+  dropdownStyle,
+  onChange,
+}: BlockProps<T>) {
   return (
     <Animated.View
       entering={FadeIn}
       // exiting={FadeOut} // TODO - uncomment when layout animations are fixed
       layout={LinearTransition}
-      style={[styles.block, { marginLeft: spacing.sm }]}>
+      style={[styles.block, { marginLeft: spacing.sm }, blockStyle]}>
       {Object.entries(config).map(([key, value]) => {
         const strippedKey = key.startsWith('$') ? key.slice(1) : key;
         const formattedKey = isValidPropertyName(strippedKey)
@@ -123,6 +139,7 @@ function Block<T extends AnyRecord>({ config, onChange }: BlockProps<T>) {
             <SelectableOptionRow
               key={key}
               {...{
+                dropdownStyle,
                 formattedKey,
                 onChange: (newValue) =>
                   onChange({ ...config, [key]: newValue }),
@@ -135,10 +152,7 @@ function Block<T extends AnyRecord>({ config, onChange }: BlockProps<T>) {
         if (isLeafValue(value)) {
           return (
             <Text key={key} variant="code">
-              {formattedKey}:{' '}
-              {isEasingFunction(value)
-                ? value.toString()
-                : JSON.stringify(value)}
+              {formattedKey}: {formatLeafValue(value, '  ', true)}
             </Text>
           );
         }
@@ -207,10 +221,12 @@ function CollapsibleBlock({
 type SelectableOptionRowProps<T> = {
   options: SelectableConfigPropertyOptions<T>;
   formattedKey: string;
+  dropdownStyle?: StyleProp<ViewStyle>;
   onChange: (newValue: SelectableConfigPropertyOptions<T>) => void;
 };
 
 function SelectableOptionRow<T>({
+  dropdownStyle,
   formattedKey,
   onChange,
   options,
@@ -243,6 +259,7 @@ function SelectableOptionRow<T>({
         </Pressable>
         <View pointerEvents={isDisabled ? 'none' : 'auto'}>
           <OptionSelector<T>
+            dropdownStyle={dropdownStyle}
             options={options.options ?? []}
             value={options.value}
             onSelect={(option) => onChange({ ...options, value: option })}
@@ -256,23 +273,22 @@ function SelectableOptionRow<T>({
 type OptionSelectorProps<T> = {
   options: Array<T>;
   value: T;
+  dropdownStyle?: StyleProp<ViewStyle>;
   onSelect: (option: T) => void;
 };
 
 function OptionSelector<T>({
+  dropdownStyle,
   onSelect,
   options,
   value,
 }: OptionSelectorProps<T>) {
   const isExpanded = useSharedValue(false);
 
-  const selectedValue = isEasingFunction(value)
-    ? value.toString()
-    : JSON.stringify(value);
+  const selectedValue = formatLeafValue(value, '', true);
 
   return (
     <ActionSheetDropdown
-      hitSlop={spacing.md}
       options={options.map((option) => ({
         key: isEasingFunction(option)
           ? option.toString()
@@ -281,15 +297,13 @@ function OptionSelector<T>({
         render: () => (
           <View style={styles.option}>
             <Text style={styles.optionText} variant="subHeading3">
-              {isEasingFunction(option)
-                ? option.toString()
-                : JSON.stringify(option)}
+              {formatLeafValue(option, '', true)}
             </Text>
           </View>
         ),
       }))}
       styleOptions={{
-        dropdownStyle: styles.dropdownStyle,
+        dropdownStyle: [styles.dropdownStyle, dropdownStyle],
         fitInScreen: true,
         offsetY: spacing.xs,
       }}
@@ -337,6 +351,8 @@ function RotatableChevron({
   );
 }
 
+export default typedMemo(ConfigSelector);
+
 const styles = StyleSheet.create({
   block: {
     gap: 1,
@@ -347,12 +363,10 @@ const styles = StyleSheet.create({
     top: '50%',
     transform: [{ translateY: '-50%' }, { translateX: '-100%' }],
   },
+
   codeContainer: {
     alignItems: 'center',
     paddingBottom: spacing.sm,
-    paddingHorizontal: 0,
-    paddingRight: spacing.sm,
-    paddingVertical: 0,
   },
   collapseButton: {
     paddingRight: spacing.xxxs,
@@ -365,11 +379,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
     borderRadius: radius.xs,
   },
+  configSelectorWrapper: {
+    backgroundColor: colors.background2,
+    borderRadius: radius.sm,
+  },
   dropdownStyle: {
     backgroundColor: colors.background2,
     borderRadius: radius.sm,
+    maxWidth: sizes.xxxl,
     paddingVertical: spacing.xs,
-    width: sizes.xxxl,
   },
   option: {
     paddingHorizontal: spacing.md,

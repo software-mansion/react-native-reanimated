@@ -30,18 +30,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { radius, spacing } from '@/theme';
 
 const filterPaddingAndMarginProps = (
-  style: StyleProp<ViewStyle>
+  style: ViewStyle
 ): [ViewStyle, ViewStyle] => {
   const paddingAndMargin: ViewStyle = {};
   const rest: ViewStyle = {};
 
-  const flattenedStyle = StyleSheet.flatten(style);
-  for (const key in flattenedStyle) {
+  for (const key in style) {
     const k = key as keyof ViewStyle;
     if (key.startsWith('padding') || key.startsWith('margin')) {
-      paddingAndMargin[k] = flattenedStyle[k] as undefined;
+      paddingAndMargin[k] = style[k] as undefined;
     } else {
-      rest[k] = flattenedStyle[k] as undefined;
+      rest[k] = style[k] as undefined;
     }
   }
 
@@ -188,6 +187,7 @@ function DropdownContent({
   style,
   toggleMeasurements,
 }: DropdownContentProps): JSX.Element {
+  const flattenedStyle = StyleSheet.flatten(style);
   const windowDimensions = Dimensions.get('window');
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
@@ -209,14 +209,18 @@ function DropdownContent({
 
     if (alignment === 'left') {
       const maxWidth =
+        flattenedStyle.maxWidth ??
         windowDimensions.width - toggleMeasurements.x - spacing.sm;
       const calculatedPosition = toggleMeasurements.x + offsetX;
 
       return {
         left: fitInScreen
-          ? Math.min(
-              calculatedPosition,
-              windowDimensions.width - contentWidth.value - spacing.md
+          ? Math.max(
+              spacing.md,
+              Math.min(
+                calculatedPosition,
+                windowDimensions.width - contentWidth.value - spacing.md
+              )
             )
           : calculatedPosition,
         maxWidth,
@@ -225,6 +229,7 @@ function DropdownContent({
     }
 
     const maxWidth =
+      flattenedStyle.maxWidth ??
       toggleMeasurements.x + toggleMeasurements.width - spacing.sm;
     const calculatedPosition =
       toggleMeasurements.x +
@@ -234,7 +239,10 @@ function DropdownContent({
 
     return {
       left: fitInScreen
-        ? Math.max(calculatedPosition, spacing.md)
+        ? Math.min(
+            Math.max(calculatedPosition, spacing.md),
+            windowDimensions.width - contentWidth.value - spacing.md
+          )
         : calculatedPosition,
       maxWidth,
       opacity: 1,
@@ -247,7 +255,7 @@ function DropdownContent({
     top: toggleMeasurements.y + toggleMeasurements.height + offsetY,
   };
 
-  const [paddingAndMargin, rest] = filterPaddingAndMarginProps(style);
+  const [paddingAndMargin, rest] = filterPaddingAndMarginProps(flattenedStyle);
 
   return (
     <Animated.View style={[dropdownStyle, animatedDropdownStyle]}>
