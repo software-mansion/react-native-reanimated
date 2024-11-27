@@ -337,12 +337,23 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
                                     newKeyboardFrame:(CGPoint)newKeyboardFrame
 {
   auto keyboardView = [self getKeyboardView];
-  bool hasKeyboardAnimation = [self hasAnyAnimation:keyboardView];
-  if (hasKeyboardAnimation) {
+  if (!keyboardView) {
     return;
   }
-  float windowHeight = keyboardView.window.bounds.size.height;
+
+  bool hasKeyboardAnimation = [self hasAnyAnimation:keyboardView];
   float keyboardHeight = keyboardView.frame.size.height;
+  /*
+   If the keyboard is animating, height will be updated by the notification observers.
+   If the keyboard state is CLOSED, height is 0, or the keyboard is floating (keyboard
+   width != window width), don't update to prevent jumping to intermediate state.
+   */
+  if (hasKeyboardAnimation || _state == CLOSED || keyboardHeight == 0 ||
+      CGRectGetWidth(keyboardView.frame) != CGRectGetWidth(keyboardView.window.bounds)) {
+    return;
+  }
+
+  float windowHeight = keyboardView.window.bounds.size.height;
   float visibleKeyboardHeight = windowHeight - (newKeyboardFrame.y - keyboardHeight / 2);
   if (oldKeyboardFrame.y > newKeyboardFrame.y) {
     _state = OPENING;
