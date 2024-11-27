@@ -2,7 +2,7 @@
 
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/NativeModules/NativeReanimatedModuleSpec.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -30,9 +30,9 @@
 
 namespace reanimated {
 
-class NativeReanimatedModule : public NativeReanimatedModuleSpec {
+class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
  public:
-  NativeReanimatedModule(
+  ReanimatedModuleProxy(
       const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<JSScheduler> &jsScheduler,
@@ -41,7 +41,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
       const bool isBridgeless,
       const bool isReducedMotion);
 
-  ~NativeReanimatedModule();
+  ~ReanimatedModuleProxy();
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
@@ -235,8 +235,7 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
 
 #ifndef NDEBUG
-  worklets::SingleInstanceChecker<NativeReanimatedModule>
-      singleInstanceChecker_;
+  worklets::SingleInstanceChecker<ReanimatedModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG
 };
 
