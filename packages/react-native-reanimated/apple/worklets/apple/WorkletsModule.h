@@ -1,9 +1,9 @@
 #import <React/RCTBridgeModule.h>
 #import <React/RCTEventEmitter.h>
-#import <worklets/NativeModules/NativeWorkletsModule.h>
+#import <worklets/NativeModules/WorkletsModuleProxy.h>
 
 @interface WorkletsModule : RCTEventEmitter <RCTBridgeModule>
 
-- (std::shared_ptr<worklets::NativeWorkletsModule>)getNativeWorkletsModule;
+- (std::shared_ptr<worklets::WorkletsModuleProxy>)getWorkletsModuleProxy;
 
 @end
