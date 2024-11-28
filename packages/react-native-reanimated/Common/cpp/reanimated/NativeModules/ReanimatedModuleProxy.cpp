@@ -221,7 +221,7 @@ void ReanimatedModuleProxy::scheduleOnUI(
   });
 }
 
-jsi::Value NativeReanimatedModule::executeOnUIRuntimeSync(
+jsi::Value ReanimatedModuleProxy::executeOnUIRuntimeSync(
             jsi::Runtime &rt,
             const jsi::Value &worklet) {
 
