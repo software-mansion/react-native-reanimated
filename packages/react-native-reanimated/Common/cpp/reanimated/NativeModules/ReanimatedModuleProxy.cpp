@@ -241,18 +241,20 @@ jsi::Value ReanimatedModuleProxy::executeOnUIRuntimeSync(
         std::mutex mutex;
         std::condition_variable cv;
         bool taskCompleted = false;
-        jsi::Value result;
+        std::shared_ptr<Shareable> shareableResult;
 
         // Schedule the worklet on the UI thread
         uiScheduler_->scheduleOnUI([&] {
 
             // Execute the worklet within the UI runtime
-            jsi::Value workletResult = uiWorkletRuntime_->executeSync(rt, worklet);
+
+            auto result = uiWorkletRuntime_->runGuarded(shareableWorklet);
+            shareableResult = extractShareableOrThrow(uiWorkletRuntime_->getJSIRuntime(), result);
+
 
             // Lock the mutex, store the result, and notify the waiting thread
             {
                 std::lock_guard<std::mutex> lock(mutex);
-                result = std::move(workletResult);
                 taskCompleted = true;
             }
             cv.notify_one();
@@ -264,8 +266,10 @@ jsi::Value ReanimatedModuleProxy::executeOnUIRuntimeSync(
             cv.wait(lock, [&]() { return taskCompleted; });
         }
 
+        jsi::Value workletResult = shareableResult->toJSValue(rt);
+
         // Return the result to the calling thread
-        return result;
+        return workletResult;
     }
 
 jsi::Value ReanimatedModuleProxy::createWorkletRuntime(
