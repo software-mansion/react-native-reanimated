@@ -4,6 +4,8 @@
 #include <reanimated/Tools/CollectionUtils.h>
 #include <reanimated/Tools/FeaturesConfig.h>
 #include <unordered_map>
+#include <mutex>
+#include <condition_variable>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
