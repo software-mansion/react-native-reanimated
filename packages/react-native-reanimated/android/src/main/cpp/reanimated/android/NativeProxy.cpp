@@ -448,7 +448,7 @@ void NativeProxy::handleEvent(
   std::string eventAsString;
   try {
     eventAsString = event->toString();
-  } catch (std::exception &) {
+  } catch (...) {
     // Events from other libraries may contain NaN or INF values which
     // cannot be represented in JSON. See
     // https://github.com/software-mansion/react-native-reanimated/issues/1776
