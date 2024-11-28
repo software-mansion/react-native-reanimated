@@ -102,7 +102,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
     WorkletsModule *workletsModule,
-    RuntimeExecutor runtimeExecutor)
+    const std::shared_ptr<facebook::react::CallInvoker> &callInvoker)
 {
   auto nodesManager = reaModule.nodesManager;
 
@@ -111,7 +111,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
 
   const auto nativeWorkletsModule = [workletsModule getNativeWorkletsModule];
   auto uiScheduler = std::make_shared<REAIOSUIScheduler>();
-  auto jsScheduler = std::make_shared<JSScheduler>(runtime, runtimeExecutor);
+  auto jsScheduler = std::make_shared<JSScheduler>(runtime, callInvoker);
   constexpr auto isBridgeless = true;
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(

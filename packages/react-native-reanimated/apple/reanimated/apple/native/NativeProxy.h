@@ -27,7 +27,7 @@ createReanimatedModuleBridgeless(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
     WorkletsModule *workletsModule,
-    RuntimeExecutor runtimeExecutor);
+    const std::shared_ptr<facebook::react::CallInvoker> &callInvoker);
 #endif // RCT_NEW_ARCH_ENABLED
 
 void commonInit(

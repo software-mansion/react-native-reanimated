@@ -1,6 +1,7 @@
 #import <React/RCTBridge+Private.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#import <React/RCTCallInvoker.h>
 #import <React/RCTFabricSurface.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurface.h>
@@ -63,7 +64,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 
 @synthesize moduleRegistry = _moduleRegistry;
 #ifdef RCT_NEW_ARCH_ENABLED
-@synthesize runtimeExecutor = _runtimeExecutor;
+@synthesize callInvoker = _callInvoker;
 #endif // RCT_NEW_ARCH_ENABLED
 
 RCT_EXPORT_MODULE(ReanimatedModule);
@@ -283,16 +284,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 #ifdef RCT_NEW_ARCH_ENABLED
     RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
     auto &rnRuntime = *(jsi::Runtime *)cxxBridge.runtime;
-    auto executorFunction = ([executor = _runtimeExecutor](std::function<void(jsi::Runtime & runtime)> &&callback) {
-      // Convert to Objective-C block so it can be captured properly.
-      __block auto callbackBlock = callback;
-
-      [executor execute:^(jsi::Runtime &runtime) {
-        callbackBlock(runtime);
-      }];
-    });
     auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
-        self, _moduleRegistry, rnRuntime, workletsModule, executorFunction);
+        self, _moduleRegistry, rnRuntime, workletsModule, _callInvoker.callInvoker);
     [self attachReactEventListener];
     [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
 #else
