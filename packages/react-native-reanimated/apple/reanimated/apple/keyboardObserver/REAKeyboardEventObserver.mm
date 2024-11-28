@@ -25,6 +25,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   float _targetKeyboardHeight;
   REAUIView *_keyboardView;
   bool _isKeyboardObserverAttached;
+  bool _isInteractiveDismissalCanceled;
 }
 
 - (instancetype)init
@@ -35,6 +36,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   _state = UNKNOWN;
   _animationStartTimestamp = 0;
   _isKeyboardObserverAttached = false;
+  _isInteractiveDismissalCanceled = false;
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
 
   [notificationCenter addObserver:self
@@ -218,24 +220,22 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   _targetKeyboardHeight =
       CGRectIsEmpty(endFrameIntersection) ? 0 : CGRectGetMaxY(window.bounds) - CGRectGetMinY(endFrameIntersection);
 
-  /*
-    This may seem a bit confusing, but usually, the state should be either OPENED or CLOSED.
-    However, if it shows as OPENING, it means that the interactive dismissal was canceled.
-  */
-  bool isInteractiveMode = _state == OPENING && _isKeyboardObserverAttached;
+  bool forceAnimation = false;
   auto keyboardView = [self getKeyboardView];
   if (_state == CLOSING) {
     _targetKeyboardHeight = 0;
-  } else if (isInteractiveMode) {
+  } else if (_isInteractiveDismissalCanceled && keyboardView) {
     // Prefer the keyboard view frame over notification frame which may not be current.
     beginFrameIntersection = CGRectIntersection(window.bounds, keyboardView.frame);
     _initialKeyboardHeight = CGRectIsEmpty(beginFrameIntersection)
         ? 0
         : CGRectGetMaxY(window.bounds) - CGRectGetMinY(beginFrameIntersection);
+    forceAnimation = true;
   }
+  _isInteractiveDismissalCanceled = false;
 
   bool hasKeyboardAnimation = [self hasAnyAnimation:keyboardView];
-  if (hasKeyboardAnimation || isInteractiveMode) {
+  if (hasKeyboardAnimation || forceAnimation) {
     _measuringView.frame = CGRectMake(0, -1, 0, _initialKeyboardHeight);
     [UIView animateWithDuration:animationDuration
                      animations:^{
@@ -357,8 +357,10 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   float visibleKeyboardHeight = windowHeight - (newKeyboardFrame.y - keyboardHeight / 2);
   if (oldKeyboardFrame.y > newKeyboardFrame.y) {
     _state = OPENING;
+    _isInteractiveDismissalCanceled = true;
   } else if (oldKeyboardFrame.y < newKeyboardFrame.y) {
     _state = CLOSING;
+    _isInteractiveDismissalCanceled = false;
   }
   [self runListeners:visibleKeyboardHeight];
 }
