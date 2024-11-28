@@ -98,6 +98,9 @@ export const withDecay = function (
       animation.lastTimestamp = now;
       animation.startTimestamp = now;
       animation.initialVelocity = config.velocity;
+      if (animation.finished) {
+        animation.velocity = animation.initialVelocity;
+      }
       validateConfig(config);
 
       if (animation.reduceMotion && config.clamp) {
