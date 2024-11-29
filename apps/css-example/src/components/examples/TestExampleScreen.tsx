@@ -53,7 +53,7 @@ export default function TestExampleScreen({
             {webExampleLink && (
               <View style={styles.linkRow}>
                 <Text variant="subHeading2">**Web example** link:</Text>
-                <CopyButton copyText={webExampleLink} title="CodePen" />
+                <CopyButton copyText={webExampleLink} />
               </View>
             )}
 

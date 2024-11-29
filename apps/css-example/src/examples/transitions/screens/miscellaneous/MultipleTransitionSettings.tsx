@@ -29,60 +29,34 @@ const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
   Partial<CSSTransitionConfig>
 > = {
   $transitionProperty: {
-    options: [
-      'width',
-      'height',
-      'transform',
-      ['width', 'height'],
-      ['width', 'transform'],
-      ['height', 'transform'],
-      ['width', 'height', 'transform'],
-    ],
-
+    maxNumberOfValues: 3,
+    options: ['width', 'height', 'transform'],
     value: ['width', 'height', 'transform'],
   },
   // eslint-disable-next-line perfectionist/sort-objects
   $transitionDuration: {
     canDisable: true,
-    options: [
-      '1s',
-      '2s',
-      '5s',
-      ['1s', '2s'],
-      ['1s', '5s'],
-      ['2s', '5s'],
-      ['1s', '2s', '5s'],
-    ],
+    maxNumberOfValues: 3,
+    options: ['1s', '2s', '5s'],
     value: ['1s', '2s'],
   },
   // eslint-disable-next-line perfectionist/sort-objects
   $transitionDelay: {
     canDisable: true,
-    options: [
-      '0s',
-      '1s',
-      '2s',
-      ['0s', '1s'],
-      ['0s', '2s'],
-      ['1s', '2s'],
-      ['0s', '1s', '2s'],
-    ],
+    maxNumberOfValues: 3,
+    options: ['0s', '1s', '2s'],
     value: ['0s', '1s'],
   },
   $transitionTimingFunction: {
     canDisable: true,
+    maxNumberOfValues: 3,
     options: [
       'ease',
       'easeInOut',
       cubicBezier(0.175, 0.885, 0.32, 1.275),
       steps(5),
-      ['ease', 'easeInOut'],
-      ['ease', steps(5)],
-      ['easeInOut', steps(5)],
-      ['ease', 'easeInOut', steps(5)],
-      [cubicBezier(0.175, 0.885, 0.32, 1.275), 'easeInOut'],
-      [steps(5), cubicBezier(0.175, 0.885, 0.32, 1.275)],
     ],
+
     value: [cubicBezier(0.175, 0.885, 0.32, 1.275), 'easeInOut'],
   },
 };

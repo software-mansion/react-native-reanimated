@@ -5,11 +5,23 @@ import { useRef, useState } from 'react';
 import type { ButtonProps } from './Button';
 import Button from './Button';
 
-type CopyButtonProps = {
-  copyText: string;
-} & Omit<ButtonProps, 'onPress'>;
+type CopyButtonProps = (
+  | {
+      onCopy: () => string;
+      copyText?: never;
+    }
+  | {
+      onCopy?: never;
+      copyText: string;
+    }
+) &
+  Omit<ButtonProps, 'onPress' | 'title'>;
 
-export default function CopyButton({ copyText, ...props }: CopyButtonProps) {
+export default function CopyButton({
+  copyText,
+  onCopy,
+  ...props
+}: CopyButtonProps) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showCopied, setShowCopied] = useState(false);
 
@@ -18,7 +30,7 @@ export default function CopyButton({ copyText, ...props }: CopyButtonProps) {
       clearTimeout(timeoutRef.current);
     }
 
-    Clipboard.setString(copyText);
+    Clipboard.setString(onCopy?.() ?? copyText ?? '');
     setShowCopied(true);
 
     timeoutRef.current = setTimeout(() => {

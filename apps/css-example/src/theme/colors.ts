@@ -4,6 +4,7 @@ const baseColors = {
 };
 
 const accentColors = {
+  danger: '#D32F2F',
   primary: '#5F9CC0',
   primaryDark: '#113E60',
   primaryLight: '#C1E0F1',

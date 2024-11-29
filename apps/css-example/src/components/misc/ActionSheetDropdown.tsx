@@ -50,7 +50,7 @@ const filterPaddingAndMarginProps = (
 export interface ActionSheetOption {
   key: string;
   onPress: () => void;
-  render: () => ReactNode;
+  render: (index: number) => ReactNode;
 }
 
 type LayoutMeasurements = {
@@ -275,16 +275,18 @@ function DropdownContent({
             onLayout={({ nativeEvent: { layout } }) => {
               containerHeight.value = layout.height;
             }}>
-            {options.map(({ key, onPress, render }: ActionSheetOption) => (
-              <TouchableOpacity
-                key={key}
-                onPress={() => {
-                  onPress();
-                  handleClose?.();
-                }}>
-                {render()}
-              </TouchableOpacity>
-            ))}
+            {options.map(
+              ({ key, onPress, render }: ActionSheetOption, index) => (
+                <TouchableOpacity
+                  key={key}
+                  onPress={() => {
+                    onPress();
+                    handleClose?.();
+                  }}>
+                  {render(index)}
+                </TouchableOpacity>
+              )
+            )}
           </Animated.ScrollView>
           <ScrollBar
             containerHeight={containerHeight}
