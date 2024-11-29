@@ -20,19 +20,23 @@ using namespace react;
 WorkletsModule::WorkletsModule(
     jni::alias_ref<WorkletsModule::javaobject> jThis,
     jsi::Runtime *rnRuntime,
-    const std::string &valueUnpackerCode)
+    const std::string &valueUnpackerCode,
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
-      nativeWorkletsModule_(
-          std::make_shared<NativeWorkletsModule>(valueUnpackerCode)) {
-  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, nativeWorkletsModule_);
+      workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
+          valueUnpackerCode,
+          std::make_shared<JMessageQueueThread>(messageQueueThread))) {
+  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
-    const std::string &valueUnpackerCode) {
-  return makeCxxInstance(jThis, (jsi::Runtime *)jsContext, valueUnpackerCode);
+    const std::string &valueUnpackerCode,
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread) {
+  return makeCxxInstance(
+      jThis, (jsi::Runtime *)jsContext, valueUnpackerCode, messageQueueThread);
 }
 
 void WorkletsModule::registerNatives() {

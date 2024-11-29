@@ -12,6 +12,7 @@ import type {
   ShareableRef,
   Value3D,
   ValueRotation,
+  WorkletFunction,
 } from '../../commonTypes';
 import type { WebSensor } from './WebSensor';
 import { mockedRequestAnimationFrame } from '../../mockedRequestAnimationFrame';
@@ -210,7 +211,7 @@ class JSReanimated implements IReanimatedModule {
     }
   }
 
-  subscribeForKeyboardEvents(_: ShareableRef<number>): number {
+  subscribeForKeyboardEvents(_: ShareableRef<WorkletFunction>): number {
     if (isWeb()) {
       logger.warn('useAnimatedKeyboard is not available on web yet.');
     } else if (isJest()) {

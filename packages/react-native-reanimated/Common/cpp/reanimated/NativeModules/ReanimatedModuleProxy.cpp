@@ -1,4 +1,4 @@
-#include <reanimated/NativeModules/NativeReanimatedModule.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/ReanimatedWorkletRuntimeDecorator.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/CollectionUtils.h>
@@ -51,27 +51,25 @@ using namespace facebook;
 
 namespace reanimated {
 
-NativeReanimatedModule::NativeReanimatedModule(
-    const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
+ReanimatedModuleProxy::ReanimatedModuleProxy(
+    const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<JSScheduler> &jsScheduler,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
     const bool isBridgeless,
     const bool isReducedMotion)
-    : NativeReanimatedModuleSpec(
+    : ReanimatedModuleProxySpec(
           isBridgeless ? nullptr : jsScheduler->getJSCallInvoker()),
       isBridgeless_(isBridgeless),
       isReducedMotion_(isReducedMotion),
-      jsQueue_(jsQueue),
-      nativeWorkletsModule_(nativeWorkletsModule),
+      workletsModuleProxy_(workletsModuleProxy),
       jsScheduler_(jsScheduler),
       uiScheduler_(uiScheduler),
-      valueUnpackerCode_(nativeWorkletsModule->getValueUnpackerCode()),
+      valueUnpackerCode_(workletsModuleProxy->getValueUnpackerCode()),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
-          jsQueue,
+          workletsModuleProxy->getJSQueue(),
           jsScheduler_,
           "Reanimated UI runtime",
           true /* supportsLocking */,
@@ -103,7 +101,7 @@ NativeReanimatedModule::NativeReanimatedModule(
   commonInit(platformDepMethodsHolder);
 }
 
-void NativeReanimatedModule::commonInit(
+void ReanimatedModuleProxy::commonInit(
     const PlatformDepMethodsHolder &platformDepMethodsHolder) {
   auto requestAnimationFrame =
       [this](jsi::Runtime &rt, const jsi::Value &callback) {
@@ -195,7 +193,7 @@ void NativeReanimatedModule::commonInit(
       platformDepMethodsHolder.maybeFlushUIUpdatesQueueFunction);
 }
 
-NativeReanimatedModule::~NativeReanimatedModule() {
+ReanimatedModuleProxy::~ReanimatedModuleProxy() {
   // event handler registry and frame callbacks store some JSI values from UI
   // runtime, so they have to go away before we tear down the runtime
   eventHandlerRegistry_.reset();
@@ -203,7 +201,7 @@ NativeReanimatedModule::~NativeReanimatedModule() {
   uiWorkletRuntime_.reset();
 }
 
-void NativeReanimatedModule::scheduleOnUI(
+void ReanimatedModuleProxy::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
@@ -221,19 +219,19 @@ void NativeReanimatedModule::scheduleOnUI(
   });
 }
 
-jsi::Value NativeReanimatedModule::executeOnUIRuntimeSync(
+jsi::Value ReanimatedModuleProxy::executeOnUIRuntimeSync(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
   return uiWorkletRuntime_->executeSync(rt, worklet);
 }
 
-jsi::Value NativeReanimatedModule::createWorkletRuntime(
+jsi::Value ReanimatedModuleProxy::createWorkletRuntime(
     jsi::Runtime &rt,
     const jsi::Value &name,
     const jsi::Value &initializer) {
   auto workletRuntime = std::make_shared<WorkletRuntime>(
       rt,
-      jsQueue_,
+      workletsModuleProxy_->getJSQueue(),
       jsScheduler_,
       name.asString(rt).utf8(rt),
       false /* supportsLocking */,
@@ -245,7 +243,7 @@ jsi::Value NativeReanimatedModule::createWorkletRuntime(
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
-jsi::Value NativeReanimatedModule::scheduleOnRuntime(
+jsi::Value ReanimatedModuleProxy::scheduleOnRuntime(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
     const jsi::Value &shareableWorkletValue) {
@@ -253,7 +251,7 @@ jsi::Value NativeReanimatedModule::scheduleOnRuntime(
   return jsi::Value::undefined();
 }
 
-jsi::Value NativeReanimatedModule::registerEventHandler(
+jsi::Value ReanimatedModuleProxy::registerEventHandler(
     jsi::Runtime &rt,
     const jsi::Value &worklet,
     const jsi::Value &eventName,
@@ -275,7 +273,7 @@ jsi::Value NativeReanimatedModule::registerEventHandler(
   return jsi::Value(static_cast<double>(newRegistrationId));
 }
 
-void NativeReanimatedModule::unregisterEventHandler(
+void ReanimatedModuleProxy::unregisterEventHandler(
     jsi::Runtime &,
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
@@ -299,7 +297,7 @@ static inline std::string intColorToHex(const int val) {
   return hexColor;
 }
 
-std::string NativeReanimatedModule::obtainPropFromShadowNode(
+std::string ReanimatedModuleProxy::obtainPropFromShadowNode(
     jsi::Runtime &rt,
     const std::string &propName,
     const ShadowNode::Shared &shadowNode) {
@@ -342,7 +340,7 @@ std::string NativeReanimatedModule::obtainPropFromShadowNode(
       "` with function `getViewProp` is not supported"));
 }
 
-jsi::Value NativeReanimatedModule::getViewProp(
+jsi::Value ReanimatedModuleProxy::getViewProp(
     jsi::Runtime &rnRuntime,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &propName,
@@ -367,7 +365,7 @@ jsi::Value NativeReanimatedModule::getViewProp(
 
 #else
 
-jsi::Value NativeReanimatedModule::getViewProp(
+jsi::Value ReanimatedModuleProxy::getViewProp(
     jsi::Runtime &rnRuntime,
     const jsi::Value &viewTag,
     const jsi::Value &propName,
@@ -400,14 +398,14 @@ jsi::Value NativeReanimatedModule::getViewProp(
 
 #endif
 
-jsi::Value NativeReanimatedModule::enableLayoutAnimations(
+jsi::Value ReanimatedModuleProxy::enableLayoutAnimations(
     jsi::Runtime &,
     const jsi::Value &config) {
   FeaturesConfig::setLayoutAnimationEnabled(config.getBool());
   return jsi::Value::undefined();
 }
 
-jsi::Value NativeReanimatedModule::configureProps(
+jsi::Value ReanimatedModuleProxy::configureProps(
     jsi::Runtime &rt,
     const jsi::Value &uiProps,
     const jsi::Value &nativeProps) {
@@ -430,7 +428,7 @@ jsi::Value NativeReanimatedModule::configureProps(
   return jsi::Value::undefined();
 }
 
-jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
+jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     jsi::Runtime &rt,
     const jsi::Value &layoutAnimationsBatch) {
   auto array = layoutAnimationsBatch.asObject(rt).asArray(rt);
@@ -466,7 +464,7 @@ jsi::Value NativeReanimatedModule::configureLayoutAnimationBatch(
   return jsi::Value::undefined();
 }
 
-void NativeReanimatedModule::setShouldAnimateExiting(
+void ReanimatedModuleProxy::setShouldAnimateExiting(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
     const jsi::Value &shouldAnimate) {
@@ -474,21 +472,21 @@ void NativeReanimatedModule::setShouldAnimateExiting(
       viewTag.asNumber(), shouldAnimate.getBool());
 }
 
-bool NativeReanimatedModule::isAnyHandlerWaitingForEvent(
+bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(
     const std::string &eventName,
     const int emitterReactTag) {
   return eventHandlerRegistry_->isAnyHandlerWaitingForEvent(
       eventName, emitterReactTag);
 }
 
-void NativeReanimatedModule::requestAnimationFrame(
+void ReanimatedModuleProxy::requestAnimationFrame(
     jsi::Runtime &rt,
     const jsi::Value &callback) {
   frameCallbacks_.push_back(std::make_shared<jsi::Value>(rt, callback));
   maybeRequestRender();
 }
 
-void NativeReanimatedModule::maybeRequestRender() {
+void ReanimatedModuleProxy::maybeRequestRender() {
   if (!renderRequested_) {
     renderRequested_ = true;
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
@@ -496,7 +494,7 @@ void NativeReanimatedModule::maybeRequestRender() {
   }
 }
 
-void NativeReanimatedModule::onRender(double timestampMs) {
+void ReanimatedModuleProxy::onRender(double timestampMs) {
   auto callbacks = std::move(frameCallbacks_);
   frameCallbacks_.clear();
   jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
@@ -506,7 +504,7 @@ void NativeReanimatedModule::onRender(double timestampMs) {
   }
 }
 
-jsi::Value NativeReanimatedModule::registerSensor(
+jsi::Value ReanimatedModuleProxy::registerSensor(
     jsi::Runtime &rt,
     const jsi::Value &sensorType,
     const jsi::Value &interval,
@@ -521,18 +519,18 @@ jsi::Value NativeReanimatedModule::registerSensor(
       sensorDataHandler);
 }
 
-void NativeReanimatedModule::unregisterSensor(
+void ReanimatedModuleProxy::unregisterSensor(
     jsi::Runtime &,
     const jsi::Value &sensorId) {
   animatedSensorModule_.unregisterSensor(sensorId);
 }
 
-void NativeReanimatedModule::cleanupSensors() {
+void ReanimatedModuleProxy::cleanupSensors() {
   animatedSensorModule_.unregisterAllSensors();
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
-bool NativeReanimatedModule::isThereAnyLayoutProp(
+bool ReanimatedModuleProxy::isThereAnyLayoutProp(
     jsi::Runtime &rt,
     const jsi::Object &props) {
   const jsi::Array propNames = props.getPropertyNames(rt);
@@ -548,7 +546,7 @@ bool NativeReanimatedModule::isThereAnyLayoutProp(
   return false;
 }
 
-jsi::Value NativeReanimatedModule::filterNonAnimatableProps(
+jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
     jsi::Runtime &rt,
     const jsi::Value &props) {
   jsi::Object nonAnimatableProps(rt);
@@ -572,7 +570,7 @@ jsi::Value NativeReanimatedModule::filterNonAnimatableProps(
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
-bool NativeReanimatedModule::handleEvent(
+bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
     const jsi::Value &payload,
@@ -586,7 +584,7 @@ bool NativeReanimatedModule::handleEvent(
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
-bool NativeReanimatedModule::handleRawEvent(
+bool ReanimatedModuleProxy::handleRawEvent(
     const RawEvent &rawEvent,
     double currentTime) {
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
@@ -617,7 +615,7 @@ bool NativeReanimatedModule::handleRawEvent(
   return res;
 }
 
-void NativeReanimatedModule::updateProps(
+void ReanimatedModuleProxy::updateProps(
     jsi::Runtime &rt,
     const jsi::Value &operations) {
   auto array = operations.asObject(rt).asArray(rt);
@@ -632,7 +630,7 @@ void NativeReanimatedModule::updateProps(
   }
 }
 
-void NativeReanimatedModule::performOperations() {
+void ReanimatedModuleProxy::performOperations() {
   if (operationsInBatch_.empty() && tagsToRemove_.empty()) {
     // nothing to do
     return;
@@ -757,7 +755,7 @@ void NativeReanimatedModule::performOperations() {
   }
 }
 
-void NativeReanimatedModule::removeFromPropsRegistry(
+void ReanimatedModuleProxy::removeFromPropsRegistry(
     jsi::Runtime &rt,
     const jsi::Value &viewTags) {
   auto array = viewTags.asObject(rt).asArray(rt);
@@ -766,7 +764,7 @@ void NativeReanimatedModule::removeFromPropsRegistry(
   }
 }
 
-void NativeReanimatedModule::dispatchCommand(
+void ReanimatedModuleProxy::dispatchCommand(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue,
     const jsi::Value &commandNameValue,
@@ -777,7 +775,7 @@ void NativeReanimatedModule::dispatchCommand(
   uiManager_->dispatchCommand(shadowNode, commandName, args);
 }
 
-jsi::String NativeReanimatedModule::obtainProp(
+jsi::String ReanimatedModuleProxy::obtainProp(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &propName) {
@@ -789,7 +787,7 @@ jsi::String NativeReanimatedModule::obtainProp(
   return jsi::String::createFromUtf8(rt, resultStr);
 }
 
-jsi::Value NativeReanimatedModule::measure(
+jsi::Value ReanimatedModuleProxy::measure(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeValue) {
   // based on implementation from UIManagerBinding.cpp
@@ -833,7 +831,7 @@ jsi::Value NativeReanimatedModule::measure(
   return result;
 }
 
-void NativeReanimatedModule::initializeFabric(
+void ReanimatedModuleProxy::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
 
@@ -845,7 +843,7 @@ void NativeReanimatedModule::initializeFabric(
       propsRegistry_, uiManager_, layoutAnimationsProxy_);
 }
 
-void NativeReanimatedModule::initializeLayoutAnimationsProxy() {
+void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
   uiManager_->setAnimationDelegate(nullptr);
   auto scheduler = reinterpret_cast<Scheduler *>(uiManager_->getDelegate());
   auto componentDescriptorRegistry =
@@ -866,7 +864,7 @@ void NativeReanimatedModule::initializeLayoutAnimationsProxy() {
 
 #endif // RCT_NEW_ARCH_ENABLED
 
-jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
+jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
     jsi::Runtime &rt,
     const jsi::Value &handlerWorklet,
     const jsi::Value &isStatusBarTranslucent,
@@ -886,7 +884,7 @@ jsi::Value NativeReanimatedModule::subscribeForKeyboardEvents(
       isNavigationBarTranslucent.getBool());
 }
 
-void NativeReanimatedModule::unsubscribeFromKeyboardEvents(
+void ReanimatedModuleProxy::unsubscribeFromKeyboardEvents(
     jsi::Runtime &,
     const jsi::Value &listenerId) {
   unsubscribeFromKeyboardEventsFunction_(listenerId.asNumber());
