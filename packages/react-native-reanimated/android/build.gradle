@@ -377,6 +377,13 @@ android {
             } else {
                 srcDirs += "src/reactNativeVersionPatch/ReanimatedNativeHierarchyManager/latest"
             }
+
+            // JSCallInvokerHolder
+            if (REACT_NATIVE_MINOR_VERSION <= 74) {
+                srcDirs += "src/reactNativeVersionPatch/JSCallInvokerHolder/74"
+            } else {
+                srcDirs += "src/reactNativeVersionPatch/JSCallInvokerHolder/latest"
+            }
         }
     }
     tasks.withType(ExternalNativeBuildJsonTask) {

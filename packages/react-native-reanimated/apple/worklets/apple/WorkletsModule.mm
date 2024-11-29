@@ -30,6 +30,9 @@ using worklets::WorkletsModuleProxy;
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
+#ifdef RCT_NEW_ARCH_ENABLED
+@synthesize runtimeExecutor = _runtimeExecutor;
+#endif // RCT_NEW_ARCH_ENABLED
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
