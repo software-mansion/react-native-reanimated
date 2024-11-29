@@ -1,17 +1,10 @@
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useDerivedValue,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import { useSharedValue } from 'react-native-reanimated';
 
 import { Text } from '@/components/core';
-import { ActionSheetDropdown } from '@/components/misc';
-import { colors, flex, iconSizes, radius, spacing } from '@/theme';
+import { ActionSheetDropdown, RotatableChevron } from '@/components/misc';
+import { colors, flex, radius, spacing } from '@/theme';
 
 export type SelectListOption<T> = {
   label: string;
@@ -37,11 +30,6 @@ export default function SelectListDropdown<T>({
   styleOptions,
 }: SelectListsDropdownProps<T>) {
   const isExpanded = useSharedValue(false);
-  const progress = useDerivedValue(() => withTiming(+isExpanded.value));
-
-  const animatedArrowStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${progress.value * 180}deg` }],
-  }));
 
   const selectedLabel =
     options.find((option) => option.value === selected)?.label ?? '-';
@@ -70,13 +58,7 @@ export default function SelectListDropdown<T>({
         <Text numberOfLines={1} style={flex.shrink} variant="subHeading3">
           {selectedLabel}
         </Text>
-        <Animated.View style={animatedArrowStyle}>
-          <FontAwesomeIcon
-            color={colors.foreground2}
-            icon={faChevronDown}
-            size={iconSizes.xs}
-          />
-        </Animated.View>
+        <RotatableChevron color={colors.foreground2} open={isExpanded} />
       </View>
     </ActionSheetDropdown>
   );

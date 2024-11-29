@@ -1,20 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import React, { useMemo, useState } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import { Pressable, TouchableOpacity } from 'react-native-gesture-handler';
-import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   FadeIn,
-  FadeOut,
-  isSharedValue,
   LayoutAnimationConfig,
   LinearTransition,
   useAnimatedStyle,
-  useDerivedValue,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
@@ -22,9 +15,11 @@ import Animated, {
 import { Text } from '@/components/core';
 import { Checkbox } from '@/components/inputs';
 import { Scroll } from '@/components/layout';
-import { colors, flex, iconSizes, radius, sizes, spacing } from '@/theme';
-import type { AnyRecord } from '@/types';
+import { useStableCallback } from '@/hooks';
+import { colors, flex, radius, sizes, spacing } from '@/theme';
+import type { AnyRecord, UnpackArray } from '@/types';
 import {
+  deepEqual,
   formatLeafValue,
   isEasingFunction,
   isLeafValue,
@@ -33,6 +28,7 @@ import {
 } from '@/utils';
 
 import ActionSheetDropdown from './ActionSheetDropdown';
+import RotatableChevron from './RotatableChevron';
 
 const convertSelectableConfigToConfig = <T extends AnyRecord>(
   config: SelectableConfig<T>
@@ -68,10 +64,15 @@ const AnimatedTouchableOpacity =
 
 export type SelectableConfigPropertyOptions<T> = {
   value: T;
-  options?: Array<T>;
   canDisable?: boolean;
   disabled?: boolean;
-};
+} & (
+  | {
+      maxNumberOfValues?: never;
+      options: Array<T>;
+    }
+  | { maxNumberOfValues: number; options: Array<UnpackArray<T>> }
+);
 
 export type SelectableConfig<C extends AnyRecord> = {
   [K in keyof C as `$${K & string}`]?: C[K] extends AnyRecord
@@ -81,9 +82,14 @@ export type SelectableConfig<C extends AnyRecord> = {
   [K in keyof C]: C[K] extends AnyRecord ? SelectableConfig<C[K]> : C[K];
 };
 
-type ConfigSelectorProps<T extends AnyRecord> = BlockProps<T>;
+type ConfigSelectorProps<T extends AnyRecord> = {
+  onChange: (config: T) => void;
+} & Omit<BlockProps<T>, 'objectKey' | 'onChange'>;
 
-function ConfigSelector<T extends AnyRecord>(props: ConfigSelectorProps<T>) {
+function ConfigSelector<T extends AnyRecord>({
+  onChange,
+  ...props
+}: ConfigSelectorProps<T>) {
   const addAdditionalIndent = Object.entries(props.config).some(
     ([key, value]) =>
       key.startsWith('$') &&
@@ -98,7 +104,11 @@ function ConfigSelector<T extends AnyRecord>(props: ConfigSelectorProps<T>) {
             <Text variant="code">{'{'}</Text>
           </Animated.View>
           <View style={{ paddingLeft: addAdditionalIndent ? spacing.md : 0 }}>
-            <Block {...props} />
+            <Block
+              {...props}
+              objectKey=""
+              onChange={(_, newConfig) => onChange(newConfig as T)}
+            />
           </View>
           <Animated.View layout={LinearTransition}>
             <Text variant="code">{'},'}</Text>
@@ -111,17 +121,25 @@ function ConfigSelector<T extends AnyRecord>(props: ConfigSelectorProps<T>) {
 
 type BlockProps<T extends AnyRecord> = {
   config: SelectableConfig<T>;
+  objectKey: string;
   dropdownStyle?: StyleProp<ViewStyle>;
   blockStyle?: StyleProp<ViewStyle>;
-  onChange: (config: SelectableConfig<T>) => void;
+  onChange: (key: string, config: AnyRecord) => void;
 };
 
-function Block<T extends AnyRecord>({
+const Block = typedMemo(function Block<T extends AnyRecord>({
   blockStyle,
   config,
   dropdownStyle,
+  objectKey,
   onChange,
 }: BlockProps<T>) {
+  const stableOnChange = useStableCallback(
+    (key: string, newValue: AnyRecord) => {
+      onChange(objectKey, { ...config, [key]: newValue });
+    }
+  );
+
   return (
     <Animated.View
       entering={FadeIn}
@@ -137,14 +155,12 @@ function Block<T extends AnyRecord>({
         if (key.startsWith('$')) {
           return (
             <SelectableOptionRow
+              dropdownStyle={dropdownStyle}
+              formattedKey={formattedKey}
               key={key}
-              {...{
-                dropdownStyle,
-                formattedKey,
-                onChange: (newValue) =>
-                  onChange({ ...config, [key]: newValue }),
-                options: value,
-              }}
+              objectKey={key}
+              options={value}
+              onChange={stableOnChange}
             />
           );
         }
@@ -159,28 +175,29 @@ function Block<T extends AnyRecord>({
 
         return (
           <CollapsibleBlock
+            config={value}
+            formattedKey={formattedKey}
             key={key}
-            {...{
-              config: value,
-              formattedKey,
-              onChange: (newValue) => onChange({ ...config, [key]: newValue }),
-            }}
+            objectKey={key}
+            onChange={stableOnChange}
           />
         );
       })}
     </Animated.View>
   );
-}
+});
 
 type CollapsibleBlockProps = {
   formattedKey: string;
   config: AnyRecord;
-  onChange: (config: AnyRecord) => void;
+  objectKey: string;
+  onChange: (key: string, config: AnyRecord) => void;
 };
 
-function CollapsibleBlock({
+const CollapsibleBlock = memo(function CollapsibleBlock({
   config,
   formattedKey,
+  objectKey,
   onChange,
 }: CollapsibleBlockProps) {
   const [collapsed, setCollapsed] = useState(false);
@@ -194,7 +211,7 @@ function CollapsibleBlock({
           <Pressable
             hitSlop={spacing.xxs}
             onPress={() => setCollapsed(!collapsed)}>
-            <RotatableChevron open={!collapsed} />
+            <RotatableChevron color={colors.foreground1} open={!collapsed} />
           </Pressable>
         </View>
         <Pressable onPress={() => setCollapsed(!collapsed)}>
@@ -209,25 +226,27 @@ function CollapsibleBlock({
           <Text variant="code">...</Text>
         </AnimatedTouchableOpacity>
       ) : (
-        <Block config={config} onChange={onChange} />
+        <Block config={config} objectKey={objectKey} onChange={onChange} />
       )}
       <Animated.View layout={LinearTransition}>
         <Text variant="code">{`},`}</Text>
       </Animated.View>
     </Animated.View>
   );
-}
+});
 
 type SelectableOptionRowProps<T> = {
   options: SelectableConfigPropertyOptions<T>;
   formattedKey: string;
+  objectKey: string;
   dropdownStyle?: StyleProp<ViewStyle>;
-  onChange: (newValue: SelectableConfigPropertyOptions<T>) => void;
+  onChange: (key: string, config: AnyRecord) => void;
 };
 
-function SelectableOptionRow<T>({
+const SelectableOptionRow = memo(function SelectableOptionRow<T>({
   dropdownStyle,
   formattedKey,
+  objectKey,
   onChange,
   options,
 }: SelectableOptionRowProps<T>) {
@@ -247,61 +266,181 @@ function SelectableOptionRow<T>({
             <Checkbox
               selected={!isDisabled}
               onChange={(selected) =>
-                onChange({ ...options, disabled: !selected })
+                onChange(objectKey, { ...options, disabled: !selected })
               }
             />
           </View>
         )}
+
         <Pressable
           disabled={!options.canDisable}
-          onPress={() => onChange({ ...options, disabled: !isDisabled })}>
+          onPress={() =>
+            onChange(objectKey, { ...options, disabled: !isDisabled })
+          }>
           <Text variant="code">{`${formattedKey}: `}</Text>
         </Pressable>
+
         <View pointerEvents={isDisabled ? 'none' : 'auto'}>
-          <OptionSelector<T>
-            dropdownStyle={dropdownStyle}
-            options={options.options ?? []}
-            value={options.value}
-            onSelect={(option) => onChange({ ...options, value: option })}
-          />
+          {options.maxNumberOfValues ? (
+            <View style={styles.multipleOptionsRow}>
+              <Text variant="code">[</Text>
+              {Array.from({ length: options.maxNumberOfValues }).map(
+                (_, index) =>
+                  (
+                    Array.isArray(options.value)
+                      ? index > 0 &&
+                        options.value[index] === undefined &&
+                        options.value[index - 1] === undefined
+                      : index > 1
+                  ) ? null : (
+                    <MultipleOptionsOptionSelector
+                      dropdownStyle={dropdownStyle}
+                      index={index}
+                      key={index}
+                      objectKey={objectKey}
+                      options={options}
+                      onChange={onChange}
+                    />
+                  )
+              )}
+              <Text variant="code">]</Text>
+            </View>
+          ) : (
+            <OptionSelector
+              dropdownStyle={dropdownStyle}
+              options={options.options as Array<T>}
+              value={options.value}
+              onSelect={(option) => {
+                onChange(objectKey, { ...options, value: option! });
+              }}
+            />
+          )}
         </View>
       </Animated.View>
     </LayoutAnimationConfig>
   );
-}
+});
+
+type MultipleOptionsOptionSelectorProps<T> = {
+  index: number;
+  dropdownStyle?: StyleProp<ViewStyle>;
+  options: SelectableConfigPropertyOptions<T>;
+  objectKey: string;
+  onChange: (key: string, config: AnyRecord) => void;
+};
+
+const MultipleOptionsOptionSelector = typedMemo(
+  function MultipleOptionsOptionSelector<T>({
+    dropdownStyle,
+    index,
+    objectKey,
+    onChange,
+    options,
+  }: MultipleOptionsOptionSelectorProps<T>) {
+    const selectedValue = Array.isArray(options.value)
+      ? options.value[index]
+      : index === 0
+        ? options.value
+        : undefined;
+
+    const stableOnSelect = useStableCallback((option: T | undefined) => {
+      if (Array.isArray(options.value)) {
+        if (option === undefined) {
+          const filtered = options.value.filter((v, i) => i !== index);
+          onChange(objectKey, {
+            ...options,
+            value: filtered.length === 1 ? filtered[0] : filtered,
+          });
+        } else {
+          const newValue = [...options.value];
+          newValue[index] = option;
+          onChange(objectKey, {
+            ...options,
+            value: newValue,
+          });
+        }
+      } else if (index === 0) {
+        onChange(objectKey, { ...options, value: option! });
+      } else {
+        onChange(objectKey, {
+          ...options,
+          value: [options.value, option!],
+        });
+      }
+    });
+
+    return (
+      <View style={styles.multipleOptionsEntry}>
+        {index > 0 && <Text variant="code">, </Text>}
+        <OptionSelector
+          dropdownStyle={dropdownStyle}
+          options={options.options as Array<T>}
+          value={selectedValue}
+          canBeRemoved={
+            Array.isArray(options.value) && options.value.length > 1
+          }
+          onSelect={stableOnSelect}
+        />
+      </View>
+    );
+  }
+);
 
 type OptionSelectorProps<T> = {
   options: Array<T>;
   value: T;
   dropdownStyle?: StyleProp<ViewStyle>;
-  onSelect: (option: T) => void;
+  canBeRemoved?: boolean;
+  onSelect: (option: T | undefined) => void;
 };
 
-function OptionSelector<T>({
+const OptionSelector = typedMemo(function OptionSelector<T>({
+  canBeRemoved,
   dropdownStyle,
   onSelect,
   options,
   value,
 }: OptionSelectorProps<T>) {
   const isExpanded = useSharedValue(false);
+  const isRemoved = value === undefined;
 
   const selectedValue = formatLeafValue(value, '', true);
+  const mappedOptions = options.map((option) => ({
+    key: isEasingFunction(option) ? option.toString() : JSON.stringify(option),
+    onPress: () => onSelect(option),
+    render: () => (
+      <View style={styles.option}>
+        <Text
+          variant="subHeading3"
+          style={[
+            styles.optionText,
+            deepEqual(value, option) ? styles.selectedOptionText : null,
+          ]}>
+          {formatLeafValue(option, '', true)}
+        </Text>
+      </View>
+    ),
+  }));
+
+  if (!isRemoved && canBeRemoved) {
+    mappedOptions.push({
+      key: '-',
+      onPress: () => onSelect(undefined),
+      render: () => (
+        <View style={styles.option}>
+          <Text
+            style={[styles.optionText, { color: colors.danger }]}
+            variant="subHeading3">
+            Remove
+          </Text>
+        </View>
+      ),
+    });
+  }
 
   return (
     <ActionSheetDropdown
-      options={options.map((option) => ({
-        key: isEasingFunction(option)
-          ? option.toString()
-          : JSON.stringify(option),
-        onPress: () => onSelect(option),
-        render: () => (
-          <View style={styles.option}>
-            <Text style={styles.optionText} variant="subHeading3">
-              {formatLeafValue(option, '', true)}
-            </Text>
-          </View>
-        ),
-      }))}
+      options={mappedOptions}
       styleOptions={{
         dropdownStyle: [styles.dropdownStyle, dropdownStyle],
         fitInScreen: true,
@@ -311,45 +450,20 @@ function OptionSelector<T>({
       onOpen={() => (isExpanded.value = true)}>
       <View style={styles.selectableOption}>
         <Animated.View
-          layout={LinearTransition}
-          style={styles.selectedValueBackground}
+          style={[
+            styles.selectedValueBackground,
+            isRemoved && styles.removedValueBackground,
+          ]}
         />
-        <RotatableChevron open={isExpanded} />
-        <Animated.View entering={FadeIn} exiting={FadeOut} key={selectedValue}>
-          <Text variant="code">{selectedValue}</Text>
-        </Animated.View>
+        <RotatableChevron
+          color={isRemoved ? colors.foreground3 : colors.foreground1}
+          open={isExpanded}
+        />
+        <Text variant="code">{selectedValue}</Text>
       </View>
     </ActionSheetDropdown>
   );
-}
-
-type RotatableChevronProps = {
-  open: SharedValue<boolean> | boolean;
-  openRotation?: number;
-};
-
-function RotatableChevron({
-  open,
-  openRotation = Math.PI,
-}: RotatableChevronProps) {
-  const progress = useDerivedValue(() =>
-    withTiming(isSharedValue<boolean>(open) ? +open.value : +open)
-  );
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${progress.value * openRotation}rad` }],
-  }));
-
-  return (
-    <Animated.View style={animatedStyle}>
-      <FontAwesomeIcon
-        color={colors.foreground2}
-        icon={faChevronDown}
-        size={iconSizes.xxs}
-      />
-    </Animated.View>
-  );
-}
+});
 
 export default typedMemo(ConfigSelector);
 
@@ -363,7 +477,6 @@ const styles = StyleSheet.create({
     top: '50%',
     transform: [{ translateY: '-50%' }, { translateX: '-100%' }],
   },
-
   codeContainer: {
     alignItems: 'center',
     paddingBottom: spacing.sm,
@@ -389,6 +502,14 @@ const styles = StyleSheet.create({
     maxWidth: sizes.xxxl,
     paddingVertical: spacing.xs,
   },
+  multipleOptionsEntry: {
+    flexDirection: 'row',
+    gap: spacing.xxxs,
+  },
+  multipleOptionsRow: {
+    flexDirection: 'row',
+    gap: spacing.xxs,
+  },
   option: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
@@ -396,10 +517,17 @@ const styles = StyleSheet.create({
   optionText: {
     color: colors.foreground2,
   },
+  removedValueBackground: {
+    backgroundColor: colors.background3,
+    borderColor: colors.background3,
+  },
   selectableOption: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.xxs,
+  },
+  selectedOptionText: {
+    color: colors.primary,
   },
   selectedValueBackground: {
     backgroundColor: colors.primaryLight,

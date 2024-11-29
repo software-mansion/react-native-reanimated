@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type {
   CSSAnimationConfig,
   CSSAnimationTimingFunction,
@@ -15,8 +15,10 @@ import type {
   SelectableConfigPropertyOptions,
 } from '@/components';
 import {
+  Button,
   CodeBlock,
   ConfigSelector,
+  CopyButton,
   ScrollScreen,
   Section,
   Stagger,
@@ -62,7 +64,7 @@ const DEFAULT_ANIMATION_CONFIG: SelectableConfig<CSSAnimationConfig> = {
       $animationTimingFunction: getOptions(steps(4)),
       transform: [{ translateY: sizes.md }],
     },
-    '60%': {
+    '66%': {
       $animationTimingFunction: getOptions('linear', true),
       backgroundColor: colors.primaryDark,
       transform: [{ translateY: -sizes.md }],
@@ -92,10 +94,21 @@ export default function KeyframeTimingFunctions() {
             '- press on the **checkbox** to add or remove the property',
             '- select a **timing function** from the property value dropdown',
           ]}>
+          <View style={styles.buttonRow}>
+            <Text variant="subHeading2">Select config:</Text>
+            <CopyButton onCopy={() => stringifyConfig(animation, false)} />
+          </View>
           <ConfigSelector
             config={selectableConfig}
             onChange={setSelectableConfig}
           />
+          <View style={styles.buttonRow}>
+            <Text variant="label1">Reset config</Text>
+            <Button
+              title="Reset"
+              onPress={() => setSelectableConfig(DEFAULT_ANIMATION_CONFIG)}
+            />
+          </View>
           <Animated.View layout={LinearTransition} style={styles.preview}>
             <Animated.View style={[styles.box, animation]} />
           </Animated.View>
@@ -136,6 +149,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     height: sizes.lg,
     width: sizes.lg,
+  },
+  buttonRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   codeWrapper: {
     backgroundColor: colors.background2,
