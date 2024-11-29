@@ -277,7 +277,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
     if (jsiRuntime) {
       auto reanimatedModuleProxy =
-          reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule);
+          reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, _isBridgeless);
+      #ifdef RCT_NEW_ARCH_ENABLED
+          [self attachReactEventListener];
+    [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
+    #endif // RCT_NEW_ARCH_ENABLED
       jsi::Runtime &rnRuntime = *jsiRuntime;
 
     [self commonInit:reanimatedModuleProxy withRnRuntime:rnRuntime];

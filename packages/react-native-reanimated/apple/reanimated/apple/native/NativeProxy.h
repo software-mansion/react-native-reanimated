@@ -1,3 +1,4 @@
+#include "ReactCommon/CallInvoker.h"
 #if __cplusplus
 
 #import <React/RCTEventDispatcher.h>
@@ -17,7 +18,9 @@ static inline bool getIsReducedMotion();
 std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,
     RCTBridge *bridge,
-    WorkletsModule *workletsModule);
+    const std::shared_ptr<CallInvoker> &jsCallInvoker,
+    WorkletsModule *workletsModule,
+    bool isBridgeless);
 
 #ifdef RCT_NEW_ARCH_ENABLED
 void commonInit(
