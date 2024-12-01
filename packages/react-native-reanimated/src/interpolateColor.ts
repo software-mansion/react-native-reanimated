@@ -1,4 +1,6 @@
 'use strict';
+import type { LabColor, RgbColor } from './culori/Colors';
+import culori from './culori';
 import {
   hsvToColor,
   RGBtoHSV,
@@ -29,6 +31,16 @@ export type InterpolationOptions = {
   gamma?: number;
   useCorrectedHSVInterpolation?: boolean;
 };
+
+function rgb2Oklab(rgbColor: RgbColor): LabColor {
+  'worklet';
+  return culori.oklab.convert.fromRgb(rgbColor);
+}
+
+function oklab2Rgb(labColor: LabColor): RgbColor {
+  'worklet';
+  return culori.oklab.convert.toRgb(labColor);
+}
 
 const interpolateColorsHSV = (
   value: number,
@@ -122,6 +134,26 @@ const interpolateColorsRGB = (
   );
 };
 
+const interpolateColorsLAB = (
+  value: number,
+  inputRange: readonly number[],
+  colors: InterpolateLAB,
+  _options: InterpolationOptions
+) => {
+  'worklet';
+  const l = interpolate(value, inputRange, colors.l, Extrapolation.CLAMP);
+  const a = interpolate(value, inputRange, colors.a, Extrapolation.CLAMP);
+  const b = interpolate(value, inputRange, colors.b, Extrapolation.CLAMP);
+  const alpha = interpolate(
+    value,
+    inputRange,
+    colors.alpha,
+    Extrapolation.CLAMP
+  );
+  const { r: _r, g: _g, b: _b, alpha: _alpha } = oklab2Rgb({ l, a, b, alpha });
+  return rgbaColor(_r, _g, _b, _alpha);
+};
+
 export interface InterpolateRGB {
   r: number[];
   g: number[];
@@ -186,6 +218,42 @@ const getInterpolateHSV = (
   return { h, s, v, a };
 };
 
+export interface InterpolateLAB {
+  l: number[];
+  a: number[];
+  b: number[];
+  alpha: number[];
+}
+
+const getInterpolateLAB = (
+  colors: readonly (string | number)[]
+): InterpolateLAB => {
+  'worklet';
+
+  const l: number[] = [];
+  const a: number[] = [];
+  const b: number[] = [];
+  const alpha: number[] = [];
+
+  for (let i = 0; i < colors.length; i++) {
+    const color = colors[i];
+    const processedColor = processColor(color) as any;
+    if (typeof processedColor === 'number') {
+      const processedLabColor = rgb2Oklab({
+        r: red(processedColor),
+        g: green(processedColor),
+        b: blue(processedColor),
+      });
+
+      l.push(processedLabColor.l);
+      a.push(processedLabColor.a);
+      b.push(processedLabColor.b);
+      alpha.push(opacity(processedColor));
+    }
+  }
+  return { l, a, b, alpha };
+};
+
 /**
  * Lets you map a value from a range of numbers to a range of colors using
  * linear interpolation.
@@ -208,7 +276,7 @@ export function interpolateColor(
   value: number,
   inputRange: readonly number[],
   outputRange: readonly string[],
-  colorSpace?: 'RGB' | 'HSV',
+  colorSpace?: 'RGB' | 'HSV' | 'LAB',
   options?: InterpolationOptions
 ): string;
 
@@ -216,7 +284,7 @@ export function interpolateColor(
   value: number,
   inputRange: readonly number[],
   outputRange: readonly number[],
-  colorSpace?: 'RGB' | 'HSV',
+  colorSpace?: 'RGB' | 'HSV' | 'LAB',
   options?: InterpolationOptions
 ): number;
 
@@ -224,7 +292,7 @@ export function interpolateColor(
   value: number,
   inputRange: readonly number[],
   outputRange: readonly (string | number)[],
-  colorSpace: 'RGB' | 'HSV' = 'RGB',
+  colorSpace: 'RGB' | 'HSV' | 'LAB' = 'RGB',
   options: InterpolationOptions = {}
 ): string | number {
   'worklet';
@@ -242,17 +310,26 @@ export function interpolateColor(
       getInterpolateRGB(outputRange),
       options
     );
+  } else if (colorSpace === 'LAB') {
+    return interpolateColorsLAB(
+      value,
+      inputRange,
+      getInterpolateLAB(outputRange),
+      options
+    );
   }
+
   throw new ReanimatedError(
     `Invalid color space provided: ${
       colorSpace as string
-    }. Supported values are: ['RGB', 'HSV'].`
+    }. Supported values are: ['RGB', 'HSV', 'LAB'].`
   );
 }
 
 export enum ColorSpace {
   RGB = 0,
   HSV = 1,
+  LAB = 2,
 }
 
 export interface InterpolateConfig {
