@@ -4,6 +4,28 @@
 namespace reanimated {
 
 template <typename Identifier>
+DelayedItem<Identifier>::DelayedItem(double timestamp, Identifier id)
+    : timestamp(timestamp), id(id) {}
+
+template <typename Identifier>
+std::ostream &operator<<(
+    std::ostream &os,
+    const DelayedItem<Identifier> &item) {
+  os << "DelayedItem(" << item.timestamp << ", " << item.id << ")";
+  return os;
+}
+
+template <typename Identifier>
+bool DelayedItemComparator<Identifier>::operator()(
+    const DelayedItem<Identifier> &lhs,
+    const DelayedItem<Identifier> &rhs) const {
+  if (lhs.timestamp != rhs.timestamp) {
+    return lhs.timestamp < rhs.timestamp;
+  }
+  return lhs.id < rhs.id;
+}
+
+template <typename Identifier>
 void DelayedItemsManager<Identifier>::add(
     const double timestamp,
     const Identifier id) {
@@ -59,6 +81,10 @@ size_t DelayedItemsManager<Identifier>::size() const {
 // Declare the types that will be used in the DelayedItemsManager class
 template class DelayedItemsManager<CSSAnimationId>;
 template class DelayedItemsManager<Tag>;
+template struct DelayedItem<CSSAnimationId>;
+template struct DelayedItem<Tag>;
+template struct DelayedItemComparator<CSSAnimationId>;
+template struct DelayedItemComparator<Tag>;
 
 } // namespace reanimated
 

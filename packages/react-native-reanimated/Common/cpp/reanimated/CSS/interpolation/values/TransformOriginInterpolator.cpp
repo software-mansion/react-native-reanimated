@@ -43,7 +43,7 @@ TransformOrigin TransformOriginInterpolator::interpolate(
               .node = context.node,
               .viewStylesRepository = viewStylesRepository_,
               .relativeProperty = "width",
-              .relativeTo = RelativeTo::SELF,
+              .relativeTo = RelativeTo::Self,
           }),
       fromValue.y.interpolate(
           progress,
@@ -52,7 +52,7 @@ TransformOrigin TransformOriginInterpolator::interpolate(
               .node = context.node,
               .viewStylesRepository = viewStylesRepository_,
               .relativeProperty = "height",
-              .relativeTo = RelativeTo::SELF,
+              .relativeTo = RelativeTo::Self,
           }),
       UnitValue(
           fromValue.z.value +

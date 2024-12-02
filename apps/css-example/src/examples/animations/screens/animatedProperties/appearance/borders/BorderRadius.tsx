@@ -54,7 +54,7 @@ export default function BorderRadius() {
       CardComponent={VerticalExampleCard}
       tabs={[
         {
-          buildConfig: ({ propertyName }) => ({
+          buildAnimation: ({ propertyName }) => ({
             ...SHARED_SETTINGS,
             animationName: {
               from: {
@@ -66,13 +66,13 @@ export default function BorderRadius() {
             },
           }),
           name: 'Absolute',
-          renderExample: ({ config }) => (
-            <Animated.View style={[styles.box, config]} />
+          renderExample: ({ animation }) => (
+            <Animated.View style={[styles.box, animation]} />
           ),
           sections: SECTIONS,
         },
         {
-          buildConfig: ({ propertyName }) => ({
+          buildAnimation: ({ propertyName }) => ({
             ...SHARED_SETTINGS,
             animationName: {
               from: {
@@ -84,13 +84,13 @@ export default function BorderRadius() {
             },
           }),
           name: 'Relative',
-          renderExample: ({ config }) => (
+          renderExample: ({ animation }) => (
             <View style={styles.boxesRow}>
               <Animated.View
-                style={[styles.box, { width: sizes.xl }, config]}
+                style={[styles.box, { width: sizes.xl }, animation]}
               />
               <Animated.View
-                style={[styles.box, { height: sizes.xl }, config]}
+                style={[styles.box, { height: sizes.xl }, animation]}
               />
             </View>
           ),

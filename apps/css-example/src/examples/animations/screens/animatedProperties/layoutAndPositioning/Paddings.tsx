@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSAnimationConfig,
+  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -47,9 +47,9 @@ const SHARED_EXAMPLES = [
   },
 ];
 
-function renderExample({ config }: { config: CSSAnimationConfig }) {
+function renderExample({ animation }: { animation: CSSAnimationProperties }) {
   return (
-    <Animated.View style={[styles.box, config]}>
+    <Animated.View style={[styles.box, animation]}>
       <View style={styles.boxInner} />
     </Animated.View>
   );
@@ -60,7 +60,7 @@ export default function Paddings() {
     <ExamplesScreen<{ property: string }>
       tabs={[
         {
-          buildConfig: ({ property }) => ({
+          buildAnimation: ({ property }) => ({
             animationName: {
               to: {
                 [property]: spacing.md,
@@ -78,7 +78,7 @@ export default function Paddings() {
           ],
         },
         {
-          buildConfig: ({ property }) => ({
+          buildAnimation: ({ property }) => ({
             animationName: {
               to: {
                 [property]: '25%',
@@ -98,7 +98,7 @@ export default function Paddings() {
           ],
         },
         {
-          buildConfig: ({ property }) => ({
+          buildAnimation: ({ property }) => ({
             animationDuration: '3s',
             animationIterationCount: 'infinite',
             animationName: {

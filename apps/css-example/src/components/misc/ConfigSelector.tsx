@@ -344,28 +344,24 @@ const MultipleOptionsOptionSelector = typedMemo(
         : undefined;
 
     const stableOnSelect = useStableCallback((option: T | undefined) => {
-      if (Array.isArray(options.value)) {
-        if (option === undefined) {
-          const filtered = options.value.filter((v, i) => i !== index);
-          onChange(objectKey, {
-            ...options,
-            value: filtered.length === 1 ? filtered[0] : filtered,
-          });
-        } else {
-          const newValue = [...options.value];
-          newValue[index] = option;
-          onChange(objectKey, {
-            ...options,
-            value: newValue,
-          });
-        }
-      } else if (index === 0) {
-        onChange(objectKey, { ...options, value: option! });
-      } else {
+      if (!Array.isArray(options.value)) {
         onChange(objectKey, {
           ...options,
-          value: [options.value, option!],
+          value: index === 0 ? option! : [options.value, option!],
         });
+        return;
+      }
+
+      const newValue = [...options.value];
+      if (option === undefined) {
+        const filtered = options.value.filter((_, i) => i !== index);
+        onChange(objectKey, {
+          ...options,
+          value: filtered.length === 1 ? filtered[0] : filtered,
+        });
+      } else {
+        newValue[index] = option;
+        onChange(objectKey, { ...options, value: newValue });
       }
     });
 

@@ -75,7 +75,7 @@ import Animated from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 import type {
   CSSAnimationKeyframes,
-  CSSAnimationConfig,
+  CSSAnimationProperties,
 } from 'react-native-reanimated';
 
 const rotate: CSSAnimationKeyframes = {
@@ -84,7 +84,7 @@ const rotate: CSSAnimationKeyframes = {
   },
 };
 
-const config: CSSAnimationConfig = {
+const config: CSSAnimationProperties = {
   animationName: rotate,
   animationDuration: 1500,
   animationIterationCount: 'infinite',
@@ -136,19 +136,19 @@ import Animated from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 import type {
   CSSTransitionProperty,
-  CSSTransitionConfig,
+  CSSTransitionProperties,
 } from 'react-native-reanimated';
 
 const transitionProps: CSSTransitionProperty = ['width', 'height'];
 
-const transitionConfig: CSSTransitionConfig = {
+const transitionProperties: CSSTransitionProperties = {
   transitionProperty: transitionProps,
   transitionDuration: '300ms',
   transitionDelay: '100ms',
   transitionTimingFunction: 'easeOut',
 };
 
-<Animated.View style={[transitionConfig, { width, height }]} />; // width and height change
+<Animated.View style={[transitionProperties, { width, height }]} />; // width and height change
 ```
 
 ## Easings

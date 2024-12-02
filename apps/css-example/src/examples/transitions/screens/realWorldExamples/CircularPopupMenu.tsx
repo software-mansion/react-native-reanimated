@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import type { CSSTransitionConfig } from 'react-native-reanimated';
+import type { CSSTransitionProperties } from 'react-native-reanimated';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 
 import { Screen, ScrollScreen } from '@/components';
@@ -77,11 +77,11 @@ type MenuButtonProps = {
 };
 
 function MenuButton({ open }: MenuButtonProps) {
-  const transitionConfig: CSSTransitionConfig = {
+  const transitionProperties: CSSTransitionProperties = {
     transitionDuration: 200,
     transitionProperty: 'all',
   };
-  const lineStyle = [transitionConfig, styles.menuButtonLine];
+  const lineStyle = [transitionProperties, styles.menuButtonLine];
 
   return (
     <View style={styles.menuButton}>

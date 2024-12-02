@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { CSSTransitionConfig } from 'react-native-reanimated';
+import type { CSSTransitionProperties } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import type { RouteCardComponent } from '@/components';
@@ -16,7 +16,7 @@ const TestExamplesCard: RouteCardComponent = (props) => (
   </RouteCard>
 );
 
-const TRANSITION_CONFIG: CSSTransitionConfig = {
+const TRANSITION_CONFIG: CSSTransitionProperties = {
   transitionDuration: 500,
   transitionProperty: 'transform',
   transitionTimingFunction: 'easeInOut',

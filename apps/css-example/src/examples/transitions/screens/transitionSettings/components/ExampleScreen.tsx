@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
-import type { CSSTransitionConfig, StyleProps } from 'react-native-reanimated';
+import type {
+  CSSTransitionProperties,
+  StyleProps,
+} from 'react-native-reanimated';
 
 import { Screen, Scroll, Section, Stagger, TabView } from '@/components';
 import { TransitionConfiguration } from '@/examples/transitions/components';
@@ -15,12 +18,12 @@ type ExampleCardsSection = {
 };
 
 type ExampleScreenContentProps = {
-  sharedConfig: Partial<CSSTransitionConfig>;
+  transitionProperties: Partial<CSSTransitionProperties>;
   cards: Array<ExampleCardsSection>;
   transitionStyles: Array<StyleProps>;
   displayStyleChanges?: boolean;
   renderExample: (
-    config: CSSTransitionConfig,
+    transition: CSSTransitionProperties,
     style: StyleProps
   ) => JSX.Element;
 };
@@ -29,7 +32,7 @@ function ExampleScreenContent({
   cards,
   displayStyleChanges = false,
   renderExample,
-  sharedConfig,
+  transitionProperties,
   transitionStyles,
 }: ExampleScreenContentProps) {
   const configOverrides = useMemo(
@@ -49,7 +52,7 @@ function ExampleScreenContent({
               displayStyleChanges={displayStyleChanges}
               items={card.items}
               renderExample={renderExample}
-              sharedConfig={sharedConfig}
+              transitionProperties={transitionProperties}
               transitionStyles={transitionStyles}
             />
           </Section>
@@ -60,7 +63,7 @@ function ExampleScreenContent({
           title="Transition configuration">
           <TransitionConfiguration
             overrides={configOverrides}
-            sharedConfig={sharedConfig}
+            transitionProperties={transitionProperties}
             transitionStyles={transitionStyles}
           />
         </Section>

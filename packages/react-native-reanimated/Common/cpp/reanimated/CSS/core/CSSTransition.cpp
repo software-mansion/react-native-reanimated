@@ -13,6 +13,30 @@ CSSTransition::CSSTransition(
       progressProvider_(TransitionProgressProvider(config.settings)),
       styleInterpolator_(TransitionStyleInterpolator(viewStylesRepository)) {}
 
+Tag CSSTransition::getViewTag() const {
+  return shadowNode_->getTag();
+}
+
+ShadowNode::Shared CSSTransition::getShadowNode() const {
+  return shadowNode_;
+}
+
+const TransitionProperties &CSSTransition::getProperties() const {
+  return properties_;
+}
+
+double CSSTransition::getMinDelay(double timestamp) const {
+  return progressProvider_.getMinDelay(timestamp);
+}
+
+TransitionProgressState CSSTransition::getState() const {
+  return progressProvider_.getState();
+}
+
+jsi::Value CSSTransition::getCurrentInterpolationStyle(jsi::Runtime &rt) const {
+  return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
+}
+
 void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
   if (config.properties.has_value()) {
     updateTransitionProperties(config.properties.value());
@@ -27,7 +51,7 @@ jsi::Value CSSTransition::run(
     const ChangedProps &changedProps,
     const double timestamp) {
   progressProvider_.runProgressProviders(
-      rt, timestamp, changedProps.changedPropertyNames);
+      timestamp, changedProps.changedPropertyNames);
   styleInterpolator_.updateInterpolatedProperties(
       rt, changedProps, progressProvider_.getPropertyProgressProviders());
   // Call update to calculate current interpolation values

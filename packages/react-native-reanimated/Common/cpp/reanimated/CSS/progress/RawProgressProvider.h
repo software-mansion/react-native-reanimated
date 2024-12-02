@@ -21,7 +21,6 @@ class RawProgressProvider {
   }
 
   virtual void resetProgress();
-  void reinitialize(double timestamp, double duration, double delay);
   void update(double timestamp);
 
  protected:

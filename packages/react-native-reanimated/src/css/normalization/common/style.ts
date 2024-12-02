@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
 import type { StyleProps } from '../../../commonTypes';
 import {
   isAnimationSetting,
@@ -11,12 +10,13 @@ import { normalizeTransformString } from './transformString';
 import { processColor } from '../../../Colors';
 import { normalizeTransformOrigin } from './transformOrigin';
 import type {
-  CSSAnimationConfig,
-  CSSTransitionConfig,
+  CSSAnimationProperties,
+  CSSTransitionProperties,
   CSSAnimationKeyframes,
   CSSTransitionProperty,
   Maybe,
 } from '../../types';
+import { ReanimatedError } from '../../errors';
 
 export const ERROR_MESSAGES = {
   invalidColor: (color: Maybe<number | string>) =>
@@ -131,13 +131,13 @@ export function normalizeStyle(style: StyleProps): StyleProps {
   return Object.fromEntries(entries);
 }
 
-export function extractCSSConfigsAndFlattenedStyles(
+export function extractCSSPropertiesAndFlattenedStyles(
   styles: StyleProps[]
-): [CSSAnimationConfig | null, CSSTransitionConfig | null, StyleProps] {
+): [CSSAnimationProperties | null, CSSTransitionProperties | null, StyleProps] {
   let animationName: CSSAnimationKeyframes | null = null;
   let transitionProperty: CSSTransitionProperty | null = null;
-  const animationConfig: Partial<CSSAnimationConfig> = {};
-  const transitionConfig: Partial<CSSTransitionConfig> = {};
+  const animationProperties: Partial<CSSAnimationProperties> = {};
+  const transitionProperties: Partial<CSSTransitionProperties> = {};
   const flattenedStyle: StyleProps = {};
 
   for (const style of styles) {
@@ -148,30 +148,33 @@ export function extractCSSConfigsAndFlattenedStyles(
       } else if (prop === 'transitionProperty') {
         transitionProperty = value as CSSTransitionProperty;
       } else if (isAnimationSetting(prop)) {
-        animationConfig[prop] = value;
+        animationProperties[prop] = value;
       } else if (isTransitionSetting(prop)) {
-        transitionConfig[prop] = value;
+        transitionProperties[prop] = value;
       } else {
         flattenedStyle[prop] = value;
       }
     }
   }
 
-  // Return animationConfig only if the animationName is present
+  // Return animationProperties only if the animationName is present
   const hasAnimationName =
     animationName &&
     typeof animationName === 'object' &&
     Object.keys(animationName).length > 0;
   const finalAnimationConfig = hasAnimationName
-    ? ({ ...animationConfig, animationName } as CSSAnimationConfig)
+    ? ({ ...animationProperties, animationName } as CSSAnimationProperties)
     : null;
 
-  // Return transitionConfig only if the transitionProperty is present
+  // Return transitionProperties only if the transitionProperty is present
   const hasTransitionConfig = Array.isArray(transitionProperty)
     ? transitionProperty.length > 0
     : !!transitionProperty;
   const finalTransitionConfig = hasTransitionConfig
-    ? ({ ...transitionConfig, transitionProperty } as CSSTransitionConfig)
+    ? ({
+        ...transitionProperties,
+        transitionProperty,
+      } as CSSTransitionProperties)
     : null;
 
   return [

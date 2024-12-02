@@ -9,14 +9,14 @@ export default function VerticalAlign() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
-      buildConfig={({ keyframes }) => ({
+      buildAnimation={({ keyframes }) => ({
         animationDuration: '3s',
         animationIterationCount: 'infinite',
         animationName: keyframes,
         animationTimingFunction: 'linear',
       })}
-      renderExample={({ config }) => (
-        <Animated.Text style={[styles.text, config]}>
+      renderExample={({ animation }) => (
+        <Animated.Text style={[styles.text, animation]}>
           Hello from Reanimated!
         </Animated.Text>
       )}

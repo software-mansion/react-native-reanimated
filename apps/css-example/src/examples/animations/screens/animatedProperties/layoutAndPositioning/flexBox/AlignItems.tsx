@@ -8,7 +8,7 @@ export default function AlignItems() {
   return (
     <ExamplesScreen
       CardComponent={VerticalExampleCard}
-      buildConfig={() => ({
+      buildAnimation={() => ({
         animationDuration: '5s',
         animationIterationCount: 'infinite',
         animationName: {
@@ -30,8 +30,8 @@ export default function AlignItems() {
         },
         animationTimingFunction: 'linear',
       })}
-      renderExample={({ config }) => (
-        <Animated.View style={[StyleSheet.absoluteFill, config]}>
+      renderExample={({ animation }) => (
+        <Animated.View style={[StyleSheet.absoluteFill, animation]}>
           <View
             style={[styles.box, { backgroundColor: colors.primaryLight }]}
           />

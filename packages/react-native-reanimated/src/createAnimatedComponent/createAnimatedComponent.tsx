@@ -58,7 +58,6 @@ import { CSSManager } from '../css';
 
 const IS_WEB = isWeb();
 const IS_JEST = isJest();
-const IS_FABRIC = isFabric();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 if (IS_WEB) {
@@ -121,7 +120,8 @@ export function createAnimatedComponent(
     extends React.Component<AnimatedComponentProps<InitialComponentProps>>
     implements IAnimatedComponentInternal
   {
-    _animatedStyles: StyleProps[] | null = null;
+    _animatedStyles: StyleProps[] = [];
+    _plainStyles: StyleProps[] = [];
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
     _componentViewTag = -1;
     _isFirstRender = true;
@@ -152,7 +152,7 @@ export function createAnimatedComponent(
         !entering ||
         getReducedMotionFromConfig(entering as CustomConfig) ||
         skipEntering ||
-        !IS_FABRIC
+        !isFabric()
       ) {
         return;
       }
@@ -165,23 +165,20 @@ export function createAnimatedComponent(
     }
 
     componentDidMount() {
-      const { plainStyles, animatedStyles } = filterStyles(
-        flattenArray<StyleProps>(this.props.style ?? [])
-      );
-
+      this._updateFilteredStyles(this.props.style);
       if (!IS_WEB) {
         // It exists only on native platforms. We initialize it here because the ref to the animated component is available only post-mount
         this._NativeEventsManager = new NativeEventsManager(this, options);
       }
       const viewInfo = this._getViewInfo();
-      if (IS_FABRIC) {
+      if (isFabric()) {
         this._CSSManager = new CSSManager(viewInfo);
       }
       this._NativeEventsManager?.attachEvents();
       this._jsPropsUpdater.addOnJSPropsChangeListener(this);
-      this._attachAnimatedStyles(animatedStyles);
+      this._attachAnimatedStyles(this._animatedStyles);
       this._InlinePropManager.attachInlineProps(this, viewInfo);
-      this._CSSManager?.attach(plainStyles);
+      this._CSSManager?.attach(this._plainStyles);
 
       const layout = this.props.layout;
       if (layout) {
@@ -246,7 +243,7 @@ export function createAnimatedComponent(
           this._componentRef as ReanimatedHTMLElement,
           LayoutAnimationType.EXITING
         );
-      } else if (exiting && !IS_WEB && !IS_FABRIC) {
+      } else if (exiting && !IS_WEB && !isFabric()) {
         const reduceMotionInExiting =
           'getReduceMotion' in exiting &&
           typeof exiting.getReduceMotion === 'function'
@@ -272,14 +269,14 @@ export function createAnimatedComponent(
 
     _detachStyles() {
       const viewTag = this.getComponentViewTag();
-      if (viewTag !== -1 && this._animatedStyles !== null) {
+      if (viewTag !== -1) {
         for (const style of this._animatedStyles) {
           style.viewDescriptors.remove(viewTag);
         }
         if (this.props.animatedProps?.viewDescriptors) {
           this.props.animatedProps.viewDescriptors.remove(viewTag);
         }
-        if (IS_FABRIC) {
+        if (isFabric()) {
           removeFromPropsRegistry(viewTag);
         }
       }
@@ -330,7 +327,7 @@ export function createAnimatedComponent(
         viewTag = viewInfo.viewTag;
         viewName = viewInfo.viewName;
         viewConfig = viewInfo.viewConfig;
-        shadowNodeWrapper = IS_FABRIC
+        shadowNodeWrapper = isFabric()
           ? getShadowNodeWrapperFromRef(this, hostInstance)
           : null;
       }
@@ -430,11 +427,7 @@ export function createAnimatedComponent(
         this._configureSharedTransition();
       }
       this._NativeEventsManager?.updateEvents(prevProps);
-      const { animatedStyles } = filterStyles(
-        flattenArray<StyleProps>(this.props.style ?? []),
-        { animated: true }
-      );
-      this._attachAnimatedStyles(animatedStyles);
+      this._attachAnimatedStyles(this._animatedStyles);
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
       if (IS_WEB && this.props.exiting) {
@@ -461,16 +454,19 @@ export function createAnimatedComponent(
       _nextState: Readonly<object>,
       _nextContext: unknown
     ): boolean {
-      // TODO - maybe skip component re-render if the only update is
-      // related to CSS animations/transitions
+      this._updateFilteredStyles(nextProps.style);
+
       if (this._CSSManager) {
-        const { plainStyles } = filterStyles(
-          flattenArray<StyleProps>(nextProps.style ?? []),
-          { plain: true }
-        );
-        this._CSSManager.update(plainStyles);
+        this._CSSManager.update(this._plainStyles);
       }
+
       return true;
+    }
+
+    _updateFilteredStyles(style?: NestedArray<StyleProps>): void {
+      const filtered = filterStyles(flattenArray<StyleProps>(style ?? []));
+      this._plainStyles = filtered.plainStyles;
+      this._animatedStyles = filtered.animatedStyles;
     }
 
     _configureLayoutTransition() {
@@ -555,7 +551,7 @@ export function createAnimatedComponent(
           if (sharedTransitionTag) {
             this._configureSharedTransition();
           }
-          if (exiting && IS_FABRIC) {
+          if (exiting && isFabric()) {
             const reduceMotionInExiting =
               'getReduceMotion' in exiting &&
               typeof exiting.getReduceMotion === 'function'

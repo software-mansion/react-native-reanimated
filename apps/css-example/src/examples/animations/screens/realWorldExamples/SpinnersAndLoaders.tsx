@@ -7,8 +7,8 @@ import type { ComponentType } from 'react';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSAnimationConfig,
   CSSAnimationKeyframes,
+  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated, { cubicBezier } from 'react-native-reanimated';
@@ -576,7 +576,7 @@ const pulseStyles = StyleSheet.create({
 });
 
 function DoublePulse() {
-  const pulse: CSSAnimationConfig = {
+  const pulse: CSSAnimationProperties = {
     animationDuration: '1.5s',
     animationIterationCount: 'infinite',
     animationName: {

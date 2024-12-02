@@ -1,14 +1,14 @@
-import CSSAnimationsManager from './CSSAnimationsManager';
-import type { ShadowNodeWrapper } from '../../commonTypes';
+import CSSAnimationsManager from '../CSSAnimationsManager';
+import type { ShadowNodeWrapper } from '../../../commonTypes';
 import {
   registerCSSAnimations,
   unregisterCSSAnimations,
   updateCSSAnimations,
-} from '../native';
-import { normalizeCSSAnimationConfig } from '../normalization';
-import type { CSSAnimationConfig } from '../types';
+} from '../../native';
+import { normalizeCSSAnimationProperties } from '../../normalization';
+import type { CSSAnimationProperties } from '../../types';
 
-jest.mock('../native', () => ({
+jest.mock('../../native', () => ({
   registerCSSAnimations: jest.fn(),
   unregisterCSSAnimations: jest.fn(),
   updateCSSAnimations: jest.fn(),
@@ -27,19 +27,19 @@ describe('CSSAnimationsManager', () => {
   describe('update', () => {
     describe('single animation', () => {
       it('attaches a new animation if no animation is attached', () => {
-        const animationConfig: CSSAnimationConfig = {
+        const animationProperties: CSSAnimationProperties = {
           animationName: {
             from: { opacity: 0 },
           },
           animationDuration: '2s',
         };
 
-        manager.update(animationConfig);
+        manager.update(animationProperties);
 
         expect(registerCSSAnimations).toHaveBeenCalledTimes(1);
         expect(registerCSSAnimations).toHaveBeenCalledWith(
           shadowNodeWrapper,
-          normalizeCSSAnimationConfig(animationConfig)
+          normalizeCSSAnimationProperties(animationProperties)
         );
 
         expect(updateCSSAnimations).not.toHaveBeenCalled();
@@ -47,14 +47,14 @@ describe('CSSAnimationsManager', () => {
       });
 
       it('updates an existing animation if keyframes are the same and animation settings are different', () => {
-        const animationConfig: CSSAnimationConfig = {
+        const animationProperties: CSSAnimationProperties = {
           animationName: {
             from: { opacity: 0 },
           },
           animationDuration: '2s',
           animationDelay: '1s',
         };
-        const newAnimationConfig: CSSAnimationConfig = {
+        const newAnimationConfig: CSSAnimationProperties = {
           animationName: {
             from: { opacity: 0 },
           },
@@ -62,7 +62,7 @@ describe('CSSAnimationsManager', () => {
           animationTimingFunction: 'easeIn',
         };
 
-        manager.update(animationConfig);
+        manager.update(animationProperties);
         expect(registerCSSAnimations).toHaveBeenCalledTimes(1);
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
         expect(updateCSSAnimations).not.toHaveBeenCalled();
@@ -80,20 +80,20 @@ describe('CSSAnimationsManager', () => {
       });
 
       it('attaches a new animation if keyframes are different', () => {
-        const animationConfig: CSSAnimationConfig = {
+        const animationProperties: CSSAnimationProperties = {
           animationName: {
             from: { opacity: 0 },
           },
           animationDuration: '2s',
         };
-        const newAnimationConfig: CSSAnimationConfig = {
+        const newAnimationConfig: CSSAnimationProperties = {
           animationName: {
             from: { opacity: 1 },
           },
           animationDuration: '2s',
         };
 
-        manager.update(animationConfig);
+        manager.update(animationProperties);
         expect(registerCSSAnimations).toHaveBeenCalledTimes(1);
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
         expect(updateCSSAnimations).not.toHaveBeenCalled();
@@ -105,14 +105,14 @@ describe('CSSAnimationsManager', () => {
       });
 
       it('detaches an existing animation if the new config is empty', () => {
-        const animationConfig: CSSAnimationConfig = {
+        const animationProperties: CSSAnimationProperties = {
           animationName: {
             from: { opacity: 0 },
           },
           animationDuration: '2s',
         };
 
-        manager.update(animationConfig);
+        manager.update(animationProperties);
         expect(registerCSSAnimations).toHaveBeenCalledTimes(1);
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();
         expect(updateCSSAnimations).not.toHaveBeenCalled();
@@ -136,11 +136,11 @@ describe('CSSAnimationsManager', () => {
       (manager as any).attachedAnimations = [
         {
           serializedKeyframes: '{"from":{"opacity":1},"to":{"opacity":0.5}}',
-          animationConfig: {},
+          animationProperties: {},
         },
         {
           serializedKeyframes: '{"from":{"opacity":0},"to":{"opacity":1}}',
-          animationConfig: {},
+          animationProperties: {},
         },
       ];
 

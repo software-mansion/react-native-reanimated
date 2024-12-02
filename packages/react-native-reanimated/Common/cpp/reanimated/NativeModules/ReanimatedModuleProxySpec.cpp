@@ -169,7 +169,7 @@ static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSAnimations)(
     const jsi::Value *args,
     size_t) {
   static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->unregisterCSSAnimations(rt, std::move(args[0]));
+      ->unregisterCSSAnimations(std::move(args[0]));
   return jsi::Value::undefined();
 }
 

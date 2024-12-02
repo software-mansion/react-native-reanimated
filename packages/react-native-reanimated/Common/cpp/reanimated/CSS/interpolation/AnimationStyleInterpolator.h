@@ -1,7 +1,7 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/config/StyleInterpolatorsConfig.h>
+#include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
 #include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
@@ -18,7 +18,7 @@ class AnimationStyleInterpolator : public ObjectPropertiesInterpolator {
       const std::shared_ptr<AnimationProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       : ObjectPropertiesInterpolator(
-            styleInterpolatorFactories,
+            PROPERTY_INTERPOLATOR_FACTORIES,
             {},
             progressProvider,
             viewStylesRepository) {}

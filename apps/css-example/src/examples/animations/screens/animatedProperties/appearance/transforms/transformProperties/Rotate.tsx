@@ -8,7 +8,7 @@ import type { Transforms } from '@/types';
 export default function Rotate() {
   return (
     <ExamplesScreen<{ from: Transforms; to: Transforms }>
-      buildConfig={({ from, to }) => ({
+      buildAnimation={({ from, to }) => ({
         animationDuration: '1s',
         animationIterationCount: 'infinite',
         animationName: {
@@ -20,8 +20,8 @@ export default function Rotate() {
           },
         },
       })}
-      renderExample={({ config }) => (
-        <Animated.View style={[styles.box, config]}>
+      renderExample={({ animation }) => (
+        <Animated.View style={[styles.box, animation]}>
           <View style={styles.dot} />
         </Animated.View>
       )}

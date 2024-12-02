@@ -86,7 +86,7 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
       const auto newInterpolator = createPropertyInterpolator(
           propertyName,
           {},
-          styleInterpolatorFactories,
+          PROPERTY_INTERPOLATOR_FACTORIES,
           progressProviders.at(propertyName),
           viewStylesRepository_);
       interpolatorIt =

@@ -35,58 +35,26 @@ export const has = <K extends string>(
   return false;
 };
 
-type FilterStylesOptions = {
-  animated?: boolean;
-  plain?: boolean;
-};
-
-export function filterStyles<O extends { plain: true; animated: true }>(
-  styles: StyleProps[],
-  options?: O
-): { plainStyles: StyleProps[]; animatedStyles: StyleProps[] };
-
-export function filterStyles<O extends { plain: true }>(
-  styles: StyleProps[],
-  options?: O
-): { plainStyles: StyleProps[] };
-
-export function filterStyles<O extends { animated: true }>(
-  styles: StyleProps[],
-  options?: O
-): { animatedStyles: StyleProps[] };
-
-export function filterStyles(
-  styles: StyleProps[] | undefined,
-  options: FilterStylesOptions = { animated: true, plain: true }
-): {
-  animatedStyles?: StyleProps[];
-  plainStyles?: StyleProps[];
+export function filterStyles(styles: StyleProps[] | undefined): {
+  plainStyles: StyleProps[];
+  animatedStyles: StyleProps[];
 } {
   if (!styles) {
     return { animatedStyles: [], plainStyles: [] };
   }
 
-  if (options.animated && options.plain) {
-    return styles.reduce(
-      ({ animatedStyles, plainStyles }, style) => {
-        if (style?.viewDescriptors) {
-          animatedStyles.push(style);
-        } else {
-          plainStyles.push(style);
-        }
-        return { animatedStyles, plainStyles };
-      },
-      { animatedStyles: [], plainStyles: [] }
-    ) as { animatedStyles: StyleProps[]; plainStyles: StyleProps[] };
-  }
-
-  if (options.animated) {
-    return {
-      animatedStyles: styles.filter((style) => style?.viewDescriptors),
-    };
-  }
-
-  return {
-    plainStyles: styles.filter((style) => !style?.viewDescriptors),
-  };
+  return styles.reduce<{
+    plainStyles: StyleProps[];
+    animatedStyles: StyleProps[];
+  }>(
+    ({ animatedStyles, plainStyles }, style) => {
+      if (style?.viewDescriptors) {
+        animatedStyles.push(style);
+      } else {
+        plainStyles.push(style);
+      }
+      return { animatedStyles, plainStyles };
+    },
+    { animatedStyles: [], plainStyles: [] }
+  );
 }

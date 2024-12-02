@@ -1,10 +1,10 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
 import type {
   CSSTimingFunction,
   NormalizedCSSTimingFunction,
   PredefinedTimingFunction,
 } from '../../easing';
+import { ReanimatedError } from '../../errors';
 import type { CSSTimeUnit } from '../../types';
 
 export const VALID_PREDEFINED_TIMING_FUNCTIONS =

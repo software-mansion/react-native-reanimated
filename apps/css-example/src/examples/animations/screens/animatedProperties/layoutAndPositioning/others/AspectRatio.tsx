@@ -15,7 +15,7 @@ export default function AspectRatio() {
       style?: StyleProps;
       flexDirection?: 'column' | 'row';
     }>
-      buildConfig={({ keyframes }) => ({
+      buildAnimation={({ keyframes }) => ({
         animationDuration: '2s',
         animationIterationCount: 'infinite',
         animationName: keyframes,
@@ -23,8 +23,8 @@ export default function AspectRatio() {
       tabs={[
         {
           name: 'width/height',
-          renderExample: ({ config, style }) => (
-            <Animated.View style={[styles.box, style, config]} />
+          renderExample: ({ animation, style }) => (
+            <Animated.View style={[styles.box, style, animation]} />
           ),
           sections: [
             {
@@ -111,7 +111,7 @@ export default function AspectRatio() {
         },
         {
           name: 'flexBasis',
-          renderExample: ({ config, flexDirection = 'row' }) => {
+          renderExample: ({ animation, flexDirection = 'row' }) => {
             const boxStyle = [
               styles.box,
               { flexBasis: sizes.md },
@@ -128,7 +128,7 @@ export default function AspectRatio() {
                 <Animated.View
                   style={[
                     boxStyle,
-                    config,
+                    animation,
                     { backgroundColor: colors.primaryDark },
                   ]}
                 />
@@ -166,7 +166,7 @@ export default function AspectRatio() {
         },
         {
           name: 'flexGrow',
-          renderExample: ({ config, flexDirection = 'row', style }) => {
+          renderExample: ({ animation, flexDirection = 'row', style }) => {
             const boxStyle = [
               styles.box,
               { flexGrow: 1 },
@@ -185,7 +185,7 @@ export default function AspectRatio() {
                     styles.box,
                     { backgroundColor: colors.primaryDark, flexGrow: 2 },
                     style,
-                    config,
+                    animation,
                   ]}
                 />
                 <View style={boxStyle} />

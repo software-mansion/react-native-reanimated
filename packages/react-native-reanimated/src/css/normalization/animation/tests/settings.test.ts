@@ -1,17 +1,17 @@
+import { cubicBezier } from '../../../easing';
 import { ReanimatedError } from '../../../errors';
-import { cubicBezier } from '../../easing';
 import type {
   CSSAnimationDirection,
   CSSAnimationFillMode,
   CSSAnimationIterationCount,
   CSSAnimationPlayState,
   NormalizedSingleCSSAnimationSettings,
-} from '../../types';
+} from '../../../types';
 import {
   VALID_ANIMATION_DIRECTIONS,
   VALID_FILL_MODES,
   VALID_PLAY_STATES,
-} from './constants';
+} from '../constants';
 import {
   ERROR_MESSAGES,
   getAnimationSettingsUpdates,
@@ -19,7 +19,7 @@ import {
   normalizeFillMode,
   normalizeIterationCount,
   normalizePlayState,
-} from './settings';
+} from '../settings';
 
 describe(normalizeDirection, () => {
   it('returns "normal" by default', () => {

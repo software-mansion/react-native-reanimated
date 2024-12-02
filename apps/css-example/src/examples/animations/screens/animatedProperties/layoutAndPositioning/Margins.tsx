@@ -1,8 +1,8 @@
 import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSAnimationConfig,
   CSSAnimationKeyframes,
+  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -91,10 +91,10 @@ const EXAMPLES = [
 }>;
 
 const renderExample = ({
-  config,
+  animation,
   containerStyle,
 }: {
-  config: CSSAnimationConfig;
+  animation: CSSAnimationProperties;
   containerStyle?: ViewStyle;
 }) => (
   <View style={[styles.container, containerStyle]}>
@@ -103,7 +103,7 @@ const renderExample = ({
         return (
           <Animated.View
             key={index}
-            style={[styles.box, config, styles.animatedBox]}
+            style={[styles.box, animation, styles.animatedBox]}
           />
         );
       }
@@ -123,7 +123,7 @@ export default function Margins() {
       renderExample={renderExample}
       tabs={[
         {
-          buildConfig: ({ property }) => ({
+          buildAnimation: ({ property }) => ({
             ...SHARED_SETTINGS,
             animationName: {
               to: {
@@ -140,7 +140,7 @@ export default function Margins() {
           ],
         },
         {
-          buildConfig: ({ property }) => ({
+          buildAnimation: ({ property }) => ({
             ...SHARED_SETTINGS,
             animationName: {
               from: {
@@ -161,7 +161,7 @@ export default function Margins() {
         },
         {
           CardComponent: VerticalExampleCard,
-          buildConfig: ({ keyframes }) => ({
+          buildAnimation: ({ keyframes }) => ({
             ...SHARED_SETTINGS,
             animationName: keyframes!,
           }),

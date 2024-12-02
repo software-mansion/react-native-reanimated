@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSAnimationConfig,
   CSSAnimationDelay,
+  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -18,7 +18,7 @@ const animationSettings: CSSAnimationSettings = {
   animationTimingFunction: 'easeInOut',
 };
 
-const thumbAnimation: CSSAnimationConfig = {
+const thumbAnimation: CSSAnimationProperties = {
   animationName: {
     to: {
       top: '100%',
@@ -27,7 +27,7 @@ const thumbAnimation: CSSAnimationConfig = {
   ...animationSettings,
 };
 
-const trackInnerAnimation: CSSAnimationConfig = {
+const trackInnerAnimation: CSSAnimationProperties = {
   animationName: {
     from: {
       height: 0,

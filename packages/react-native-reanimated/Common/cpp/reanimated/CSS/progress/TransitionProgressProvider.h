@@ -17,7 +17,7 @@
 
 namespace reanimated {
 
-enum class TransitionProgressState { PENDING, RUNNING, FINISHED };
+enum class TransitionProgressState { Pending, Running, Finished };
 
 class TransitionPropertyProgressProvider final
     : public KeyframeProgressProvider,
@@ -73,7 +73,6 @@ class TransitionProgressProvider final {
   void discardIrrelevantProgressProviders(
       const std::unordered_set<std::string> &transitionPropertyNames);
   void runProgressProviders(
-      jsi::Runtime &rt,
       double timestamp,
       const PropertyNames &changedPropertyNames);
   void update(double timestamp);

@@ -7,16 +7,16 @@ import {
 } from '../native';
 import {
   getAnimationSettingsUpdates,
-  normalizeCSSAnimationConfig,
+  normalizeCSSAnimationProperties,
 } from '../normalization';
 import type {
-  CSSAnimationConfig,
+  CSSAnimationProperties,
   NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../types';
 
 type AttachedAnimation = {
-  animationConfig: NormalizedSingleCSSAnimationConfig;
+  animationProperties: NormalizedSingleCSSAnimationConfig;
   serializedKeyframes: string;
 };
 
@@ -39,44 +39,47 @@ export default class CSSAnimationsManager {
   }
 
   private attachAnimations(
-    normalizedConfigs: NormalizedSingleCSSAnimationConfig[],
+    animationConfigs: NormalizedSingleCSSAnimationConfig[],
     serializedAnimationsKeyframes: string[]
   ) {
-    if (normalizedConfigs.length === 0) {
+    if (animationConfigs.length === 0) {
       this.detach();
       return;
     }
 
-    this.attachedAnimations = normalizedConfigs.map((normalizedConfig, i) => ({
-      animationConfig: normalizedConfig,
-      serializedKeyframes: serializedAnimationsKeyframes[i],
-    }));
-    registerCSSAnimations(this.shadowNodeWrapper, normalizedConfigs);
+    this.attachedAnimations = animationConfigs.map(
+      (animationProperties, i) => ({
+        animationProperties,
+        serializedKeyframes: serializedAnimationsKeyframes[i],
+      })
+    );
+    registerCSSAnimations(this.shadowNodeWrapper, animationConfigs);
   }
 
-  update(animationConfig: CSSAnimationConfig | null): void {
-    if (!animationConfig) {
+  update(animationProperties: CSSAnimationProperties | null): void {
+    if (!animationProperties) {
       this.detach();
       return;
     }
 
-    const { animationName: keyframes } = animationConfig;
+    const { animationName: keyframes } = animationProperties;
     const serializedKeyframes = (
       Array.isArray(keyframes) ? keyframes : [keyframes]
     ).map((singleKeyframes) => JSON.stringify(singleKeyframes));
-    const normalizedConfigs = normalizeCSSAnimationConfig(animationConfig);
+    const animationConfigs =
+      normalizeCSSAnimationProperties(animationProperties);
 
     // Attach new animations if there are no attached animations or if
     // the array of animations is different (e.g. length or order)
     if (
-      this.attachedAnimations.length !== normalizedConfigs.length ||
+      this.attachedAnimations.length !== animationConfigs.length ||
       serializedKeyframes.some(
         (sk, i) => this.attachedAnimations[i].serializedKeyframes !== sk
       )
     ) {
       // We don't need to detach the old animations because CPP will
       // override them with new ones
-      this.attachAnimations(normalizedConfigs, serializedKeyframes);
+      this.attachAnimations(animationConfigs, serializedKeyframes);
       return;
     }
 
@@ -86,13 +89,13 @@ export default class CSSAnimationsManager {
       index: number;
       settings: Partial<NormalizedSingleCSSAnimationSettings>;
     }[] = [];
-    for (let i = 0; i < normalizedConfigs.length; i++) {
+    for (let i = 0; i < animationConfigs.length; i++) {
       const updates = getAnimationSettingsUpdates(
-        this.attachedAnimations[i].animationConfig,
-        normalizedConfigs[i]
+        this.attachedAnimations[i].animationProperties,
+        animationConfigs[i]
       );
       if (Object.keys(updates).length > 0) {
-        this.attachedAnimations[i].animationConfig = normalizedConfigs[i];
+        this.attachedAnimations[i].animationProperties = animationConfigs[i];
         configUpdates.push({ index: i, settings: updates });
       }
     }

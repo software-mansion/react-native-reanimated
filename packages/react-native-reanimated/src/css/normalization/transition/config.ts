@@ -1,8 +1,8 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
+import { ReanimatedError } from '../../errors';
 import type {
   CSSStyleProps,
-  CSSTransitionConfig,
+  CSSTransitionProperties,
   CSSTransitionProperty,
   NormalizedCSSTransitionConfig,
   NormalizedCSSTransitionConfigUpdates,
@@ -24,8 +24,8 @@ export const ERROR_MESSAGES = {
     `Invalid transition property "${JSON.stringify(transitionProperty)}"`,
 };
 
-export function normalizeCSSTransitionConfig(
-  config: CSSTransitionConfig
+export function normalizeCSSTransitionProperties(
+  config: CSSTransitionProperties
 ): NormalizedCSSTransitionConfig | null {
   const {
     transitionProperty,

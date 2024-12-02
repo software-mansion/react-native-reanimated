@@ -2,7 +2,7 @@ import { useIsFocused } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSAnimationConfig,
+  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated, { FadeInLeft, FadeOutRight } from 'react-native-reanimated';
@@ -27,7 +27,7 @@ const sharedConfig: CSSAnimationSettings = {
   animationTimingFunction: 'easeInOut',
 };
 
-const rollAnimation: CSSAnimationConfig = {
+const rollAnimation: CSSAnimationProperties = {
   animationName: {
     to: {
       transform: [{ rotate: '360deg' }],
@@ -36,7 +36,7 @@ const rollAnimation: CSSAnimationConfig = {
   ...sharedConfig,
 };
 
-const colorAnimation: CSSAnimationConfig = {
+const colorAnimation: CSSAnimationProperties = {
   animationName: {
     '50%': {
       backgroundColor: colors.primaryDark,
@@ -45,7 +45,7 @@ const colorAnimation: CSSAnimationConfig = {
   ...sharedConfig,
 };
 
-const fadeAnimation: CSSAnimationConfig = {
+const fadeAnimation: CSSAnimationProperties = {
   animationName: {
     '50%': {
       opacity: 0,

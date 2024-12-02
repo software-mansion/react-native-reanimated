@@ -1,5 +1,8 @@
 import { StyleSheet, View } from 'react-native';
-import type { CSSTransitionConfig, StyleProps } from 'react-native-reanimated';
+import type {
+  CSSTransitionProperties,
+  StyleProps,
+} from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { colors, radius, sizes } from '@/theme';
@@ -7,25 +10,8 @@ import { colors, radius, sizes } from '@/theme';
 import { ExampleScreen } from './components';
 
 export default function TransitionDelay() {
-  const sharedConfig: CSSTransitionConfig = {
-    transitionDuration: '3s',
-    transitionProperty: 'width',
-    transitionTimingFunction: 'linear',
-  };
-
-  const renderExample = (
-    exampleConfig: CSSTransitionConfig,
-    style: StyleProps
-  ) => (
-    <View style={styles.wrapper}>
-      <Animated.View style={[styles.box, exampleConfig, style]} />
-    </View>
-  );
-
   return (
     <ExampleScreen
-      renderExample={renderExample}
-      sharedConfig={sharedConfig}
       transitionStyles={[{ width: 0 }, { width: '100%' }]}
       cards={[
         {
@@ -49,6 +35,19 @@ export default function TransitionDelay() {
           title: 'Negative Delay',
         },
       ]}
+      renderExample={(
+        exampleConfig: CSSTransitionProperties,
+        style: StyleProps
+      ) => (
+        <View style={styles.wrapper}>
+          <Animated.View style={[styles.box, exampleConfig, style]} />
+        </View>
+      )}
+      transitionProperties={{
+        transitionDuration: '3s',
+        transitionProperty: 'width',
+        transitionTimingFunction: 'linear',
+      }}
     />
   );
 }

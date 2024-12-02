@@ -1,6 +1,9 @@
 import { ReanimatedError } from '../../../errors';
-import type { NormalizedTransformOrigin, TransformOrigin } from '../../types';
-import { ERROR_MESSAGES, normalizeTransformOrigin } from './transformOrigin';
+import type {
+  NormalizedTransformOrigin,
+  TransformOrigin,
+} from '../../../types';
+import { ERROR_MESSAGES, normalizeTransformOrigin } from '../transformOrigin';
 
 describe(normalizeTransformOrigin, () => {
   describe('valid cases', () => {

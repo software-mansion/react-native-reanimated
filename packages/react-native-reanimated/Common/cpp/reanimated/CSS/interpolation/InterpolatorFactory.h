@@ -28,7 +28,7 @@ namespace reanimated::Interpolators {
  */
 
 std::shared_ptr<PropertyInterpolatorFactory> object(
-    const PropertiesInterpolatorFactories &factories);
+    const PropertyInterpolatorFactories &factories);
 
 std::shared_ptr<PropertyInterpolatorFactory> color(
     const std::optional<Color> &defaultValue);

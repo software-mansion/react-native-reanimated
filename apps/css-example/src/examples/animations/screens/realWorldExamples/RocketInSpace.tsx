@@ -4,7 +4,7 @@
  */
 
 import { Dimensions, StyleSheet, View } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type { CSSAnimationProperties } from 'react-native-reanimated';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 import {
   Circle,
@@ -31,7 +31,7 @@ const COLORS = {
   white: '#FFF',
 };
 
-const turbulenceAnimation: CSSAnimationConfig = {
+const turbulenceAnimation: CSSAnimationProperties = {
   animationDuration: '0.2s',
   animationIterationCount: 'infinite',
   animationName: {
@@ -44,7 +44,7 @@ const turbulenceAnimation: CSSAnimationConfig = {
   },
 };
 
-const hyperspaceAnimation: CSSAnimationConfig = {
+const hyperspaceAnimation: CSSAnimationProperties = {
   animationDuration: '0.4s',
   animationFillMode: 'both',
   animationIterationCount: 'infinite',
@@ -60,7 +60,7 @@ const hyperspaceAnimation: CSSAnimationConfig = {
   },
 };
 
-const mainFlameAnimation: CSSAnimationConfig = {
+const mainFlameAnimation: CSSAnimationProperties = {
   animationDuration: '0.1s',
   animationIterationCount: 'infinite',
   animationName: {
@@ -74,7 +74,7 @@ const mainFlameAnimation: CSSAnimationConfig = {
   animationTimingFunction: cubicBezier(0.175, 0.885, 0.42, 1.41),
 };
 
-const propulsedFlameAnimation: CSSAnimationConfig = {
+const propulsedFlameAnimation: CSSAnimationProperties = {
   animationDuration: '0.3s',
   animationIterationCount: 'infinite',
   animationName: {
@@ -89,7 +89,7 @@ const propulsedFlameAnimation: CSSAnimationConfig = {
   animationTimingFunction: 'easeIn',
 };
 
-const propulsedSparkAnimation: CSSAnimationConfig = {
+const propulsedSparkAnimation: CSSAnimationProperties = {
   animationDuration: '0.24s',
   animationIterationCount: 'infinite',
   animationName: {

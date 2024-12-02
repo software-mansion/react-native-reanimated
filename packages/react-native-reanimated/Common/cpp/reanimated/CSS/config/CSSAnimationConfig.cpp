@@ -36,10 +36,10 @@ double getIterationCount(jsi::Runtime &rt, const jsi::Object &config) {
 AnimationDirection getDirection(jsi::Runtime &rt, const jsi::Object &config) {
   static const std::unordered_map<std::string, AnimationDirection>
       strToEnumMap = {
-          {"normal", AnimationDirection::NORMAL},
-          {"reverse", AnimationDirection::REVERSE},
-          {"alternate", AnimationDirection::ALTERNATE},
-          {"alternateReverse", AnimationDirection::ALTERNATE_REVERSE}};
+          {"normal", AnimationDirection::Normal},
+          {"reverse", AnimationDirection::Reverse},
+          {"alternate", AnimationDirection::Alternate},
+          {"alternateReverse", AnimationDirection::AlternateReverse}};
 
   const auto str = config.getProperty(rt, "direction").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
@@ -52,10 +52,10 @@ AnimationDirection getDirection(jsi::Runtime &rt, const jsi::Object &config) {
 
 AnimationFillMode getFillMode(jsi::Runtime &rt, const jsi::Object &config) {
   static const std::unordered_map<std::string, AnimationFillMode> strToEnumMap =
-      {{"none", AnimationFillMode::NONE},
-       {"forwards", AnimationFillMode::FORWARDS},
-       {"backwards", AnimationFillMode::BACKWARDS},
-       {"both", AnimationFillMode::BOTH}};
+      {{"none", AnimationFillMode::None},
+       {"forwards", AnimationFillMode::Forwards},
+       {"backwards", AnimationFillMode::Backwards},
+       {"both", AnimationFillMode::Both}};
 
   const auto str = config.getProperty(rt, "fillMode").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);
@@ -69,8 +69,8 @@ AnimationFillMode getFillMode(jsi::Runtime &rt, const jsi::Object &config) {
 AnimationPlayState getPlayState(jsi::Runtime &rt, const jsi::Object &config) {
   static const std::unordered_map<std::string, AnimationPlayState>
       strToEnumMap = {
-          {"running", AnimationPlayState::RUNNING},
-          {"paused", AnimationPlayState::PAUSED}};
+          {"running", AnimationPlayState::Running},
+          {"paused", AnimationPlayState::Paused}};
 
   const auto str = config.getProperty(rt, "playState").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);

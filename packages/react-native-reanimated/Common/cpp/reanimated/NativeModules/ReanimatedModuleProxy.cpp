@@ -538,7 +538,7 @@ void ReanimatedModuleProxy::registerCSSAnimations(
         timestamp));
   }
 
-  cssAnimationsRegistry_->set(rt, shadowNode, animations, timestamp);
+  cssAnimationsRegistry_->set(rt, shadowNode, std::move(animations), timestamp);
   maybeRunCSSLoop();
 }
 
@@ -568,10 +568,8 @@ void ReanimatedModuleProxy::updateCSSAnimations(
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimations(
-    jsi::Runtime &rt,
     const jsi::Value &viewTag) {
-  cssAnimationsRegistry_->remove(
-      rt, viewTag.asNumber(), getAnimationTimestamp_());
+  cssAnimationsRegistry_->remove(viewTag.asNumber());
 }
 
 void ReanimatedModuleProxy::registerCSSTransition(

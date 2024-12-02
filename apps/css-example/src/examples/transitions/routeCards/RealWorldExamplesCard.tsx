@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { CSSTransitionConfig } from 'react-native-reanimated';
+import type { CSSTransitionProperties } from 'react-native-reanimated';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 
 import type { RouteCardComponent } from '@/components';
@@ -84,11 +84,11 @@ type MenuButtonProps = {
 };
 
 function MenuButton({ open }: MenuButtonProps) {
-  const transitionConfig: CSSTransitionConfig = {
+  const transitionProperties: CSSTransitionProperties = {
     transitionDuration: 200,
     transitionProperty: 'all',
   };
-  const lineStyle = [transitionConfig, styles.menuButtonLine];
+  const lineStyle = [transitionProperties, styles.menuButtonLine];
 
   return (
     <View style={styles.menuButton}>

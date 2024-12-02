@@ -15,7 +15,7 @@ namespace reanimated {
 using namespace facebook;
 
 extern const std::unordered_map<std::string, EasingFunction>
-    predefinedEasingMap;
+    PREDEFINED_EASING_MAP;
 
 EasingFunction getEasingFunction(
     jsi::Runtime &rt,

@@ -13,8 +13,8 @@ using namespace facebook;
 using namespace worklets;
 
 enum class ColorType {
-  RGBA,
-  TRANSPARENT,
+  Rgba,
+  Transparent,
 };
 
 class Color {
@@ -40,7 +40,7 @@ class Color {
   static uint8_t interpolateChannel(uint8_t from, uint8_t to, double progress);
 };
 
-inline const Color Color::Transparent(ColorType::TRANSPARENT);
+inline const Color Color::Transparent(ColorType::Transparent);
 
 } // namespace reanimated
 

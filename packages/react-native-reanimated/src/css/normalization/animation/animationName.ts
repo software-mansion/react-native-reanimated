@@ -1,5 +1,4 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
 import type {
   CSSAnimationKeyframeSelector,
   CSSAnimationKeyframes,
@@ -13,6 +12,7 @@ import { isNumber } from '../../utils';
 import { OFFSET_REGEX } from './constants';
 import { normalizeStyle, normalizeTimingFunction } from '../common';
 import type { StyleProps } from '../../../commonTypes';
+import { ReanimatedError } from '../../errors';
 
 export const ERROR_MESSAGES = {
   invalidOffsetType: (selector: CSSAnimationKeyframeSelector) =>

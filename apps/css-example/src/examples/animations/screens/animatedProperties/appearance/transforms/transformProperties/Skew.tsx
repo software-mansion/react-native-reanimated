@@ -9,7 +9,7 @@ import type { Transforms } from '@/types';
 export default function Skew() {
   return (
     <ExamplesScreen<{ from: Transforms; to: Transforms }>
-      buildConfig={({ from, to }) => ({
+      buildAnimation={({ from, to }) => ({
         animationDirection: 'alternate',
         animationDuration: '1s',
         animationIterationCount: 'infinite',
@@ -22,8 +22,8 @@ export default function Skew() {
           },
         },
       })}
-      renderExample={({ config }) => (
-        <Animated.View style={[styles.box, config]} />
+      renderExample={({ animation }) => (
+        <Animated.View style={[styles.box, animation]} />
       )}
       sections={[
         {

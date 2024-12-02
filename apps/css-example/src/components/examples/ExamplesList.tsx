@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type { CSSAnimationProperties } from 'react-native-reanimated';
 
 import { Scroll, Section } from '@/components/layout';
 import type { LabelType } from '@/components/misc';
@@ -10,8 +10,10 @@ import type { ExampleCardProps } from './ExampleCard';
 import ExampleCard from './ExampleCard';
 
 export type ExamplesListProps<P extends AnyRecord> = {
-  renderExample: (props: { config: CSSAnimationConfig } & P) => JSX.Element;
-  buildConfig: (props: P) => CSSAnimationConfig;
+  renderExample: (
+    props: { animation: CSSAnimationProperties } & P
+  ) => JSX.Element;
+  buildAnimation: (props: P) => CSSAnimationProperties;
   CardComponent?: ComponentType<ExampleCardProps>;
   sections: Array<{
     title: string;
@@ -26,7 +28,7 @@ export type ExamplesListProps<P extends AnyRecord> = {
 
 export default function ExamplesList<P extends AnyRecord>({
   CardComponent = ExampleCard,
-  buildConfig,
+  buildAnimation,
   renderExample,
   sections,
 }: ExamplesListProps<P>) {
@@ -41,7 +43,7 @@ export default function ExamplesList<P extends AnyRecord>({
             {examples.map((exampleProps, exampleIndex) => (
               <Example
                 {...exampleProps}
-                buildConfig={buildConfig}
+                buildAnimation={buildAnimation}
                 CardComponent={SectionCardComponent ?? CardComponent}
                 key={exampleIndex}
                 renderExample={renderExample}
@@ -57,14 +59,16 @@ export default function ExamplesList<P extends AnyRecord>({
 type ExampleProps<P> = {
   CardComponent: ComponentType<ExampleCardProps>;
   denseCode?: boolean;
-  buildConfig: (props: P) => CSSAnimationConfig;
-  renderExample: (props: { config: CSSAnimationConfig } & P) => JSX.Element;
+  buildAnimation: (props: P) => CSSAnimationProperties;
+  renderExample: (
+    props: { animation: CSSAnimationProperties } & P
+  ) => JSX.Element;
 } & Omit<ExampleCardProps, 'code'> &
   P;
 
 function Example<P extends AnyRecord>({
   CardComponent,
-  buildConfig,
+  buildAnimation,
   collapsedExampleHeight,
   denseCode = true,
   description,
@@ -74,17 +78,17 @@ function Example<P extends AnyRecord>({
   ...rest
 }: ExampleProps<P>) {
   const userProps = rest as P;
-  const config = buildConfig(userProps);
+  const animation = buildAnimation(userProps);
 
   return (
     <CardComponent
-      code={stringifyConfig(config)}
-      collapsedCode={stringifyConfig(config.animationName, denseCode)}
+      code={stringifyConfig(animation)}
+      collapsedCode={stringifyConfig(animation.animationName, denseCode)}
       collapsedExampleHeight={collapsedExampleHeight}
       description={description}
       minExampleHeight={minExampleHeight}
       title={title}>
-      {renderExample({ config, ...userProps })}
+      {renderExample({ animation, ...userProps })}
     </CardComponent>
   );
 }

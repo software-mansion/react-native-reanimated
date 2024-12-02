@@ -3,7 +3,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useCallback } from 'react';
 import type { ListRenderItem } from 'react-native';
 import { FlatList, StyleSheet, View } from 'react-native';
-import type { CSSTransitionConfig, StyleProps } from 'react-native-reanimated';
+import type {
+  CSSTransitionProperties,
+  StyleProps,
+} from 'react-native-reanimated';
 
 import { CodeBlock, ConfigWithOverridesBlock, Text } from '@/components';
 import type { ExampleItemProps } from '@/examples/transitions/screens/transitionSettings/components/ExamplesListCard';
@@ -12,14 +15,14 @@ import { iconSizes } from '@/theme/icons';
 import { stringifyConfig } from '@/utils';
 
 type TransitionConfigurationProps = {
-  sharedConfig: Partial<CSSTransitionConfig>;
+  transitionProperties: Partial<CSSTransitionProperties>;
   transitionStyles: Array<StyleProps>;
   overrides?: Array<ExampleItemProps>;
 };
 
 export default function TransitionConfiguration({
   overrides,
-  sharedConfig,
+  transitionProperties,
   transitionStyles,
 }: TransitionConfigurationProps) {
   const renderItem = useCallback<ListRenderItem<StyleProps>>(
@@ -65,7 +68,7 @@ export default function TransitionConfiguration({
         <Text variant="subHeading2">Transition settings</Text>
         <ConfigWithOverridesBlock
           overrides={overrides}
-          sharedConfig={sharedConfig}
+          sharedConfig={transitionProperties}
         />
       </View>
     </View>

@@ -15,7 +15,7 @@ using PropertyValues = std::unique_ptr<jsi::Value>;
 using PropertyPath = std::vector<std::string>;
 /**
  * If nullopt - all style properties can trigger transition
- * If empty vector - no style properties can trigger transition
+ * If empty vector - no style property can trigger transition
  * Otherwise - only specified style properties can trigger transition
  */
 using TransitionProperties = std::optional<PropertyNames>;

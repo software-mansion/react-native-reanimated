@@ -19,50 +19,30 @@ class CSSAnimation {
  public:
   CSSAnimation(
       jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
+      ShadowNode::Shared shadowNode,
       unsigned index,
       const CSSAnimationConfig &config,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       double timestamp);
 
-  CSSAnimationId getId() const {
-    return {shadowNode_->getTag(), index_};
-  }
-  ShadowNode::Shared getShadowNode() const {
-    return shadowNode_;
-  }
-  double getStartTimestamp(double timestamp) const {
-    return progressProvider_->getStartTimestamp(timestamp);
-  }
-  AnimationProgressState getState(double timestamp) const {
-    return progressProvider_->getState(timestamp);
-  }
+  CSSAnimationId getId() const;
+  ShadowNode::Shared getShadowNode() const;
 
+  double getStartTimestamp(double timestamp) const;
+  AnimationProgressState getState(double timestamp) const;
   bool isReversed() const;
-  bool hasForwardsFillMode() const {
-    return fillMode_ == AnimationFillMode::FORWARDS ||
-        fillMode_ == AnimationFillMode::BOTH;
-  }
-  bool hasBackwardsFillMode() const {
-    return fillMode_ == AnimationFillMode::BACKWARDS ||
-        fillMode_ == AnimationFillMode::BOTH;
-  }
 
-  jsi::Value getViewStyle(jsi::Runtime &rt) const {
-    return styleInterpolator_.getStyleValue(rt, shadowNode_);
-  }
-  jsi::Value getCurrentInterpolationStyle(jsi::Runtime &rt) const {
-    return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
-  }
+  bool hasForwardsFillMode() const;
+  bool hasBackwardsFillMode() const;
+
+  jsi::Value getViewStyle(jsi::Runtime &rt) const;
+  jsi::Value getCurrentInterpolationStyle(jsi::Runtime &rt) const;
   jsi::Value getBackwardsFillStyle(jsi::Runtime &rt);
   jsi::Value getForwardFillStyle(jsi::Runtime &rt);
-  jsi::Value resetStyle(jsi::Runtime &rt) {
-    return styleInterpolator_.reset(rt, shadowNode_);
-  }
+  jsi::Value resetStyle(jsi::Runtime &rt);
 
   void run(double timestamp);
   jsi::Value update(jsi::Runtime &rt, double timestamp);
-
   void updateSettings(
       const PartialCSSAnimationSettings &updatedSettings,
       double timestamp);

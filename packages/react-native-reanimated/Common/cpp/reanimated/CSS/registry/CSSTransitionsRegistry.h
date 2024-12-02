@@ -23,10 +23,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
       const GetAnimationTimestampFunction &getCurrentTimestamp);
 
-  bool hasUpdates() const {
-    return !runningTransitionTags_.empty() ||
-        !delayedTransitionsManager_.empty();
-  }
+  bool hasUpdates() const;
 
   void add(const std::shared_ptr<CSSTransition> &transition);
   void remove(Tag viewTag);

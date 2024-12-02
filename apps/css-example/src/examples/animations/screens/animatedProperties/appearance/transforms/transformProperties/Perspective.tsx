@@ -9,7 +9,7 @@ export default function Perspective() {
   return (
     <ExamplesScreen<{ from: Transforms; to: Transforms; num: number }>
       CardComponent={VerticalExampleCard}
-      buildConfig={({ from, to }) => ({
+      buildAnimation={({ from, to }) => ({
         animationDirection: 'alternate',
         animationDuration: '3s',
         animationIterationCount: 'infinite',
@@ -22,8 +22,8 @@ export default function Perspective() {
           },
         },
       })}
-      renderExample={({ config, num }) => (
-        <Animated.View style={[styles.box, config]}>
+      renderExample={({ animation, num }) => (
+        <Animated.View style={[styles.box, animation]}>
           <Text style={styles.number}>{num}</Text>
         </Animated.View>
       )}

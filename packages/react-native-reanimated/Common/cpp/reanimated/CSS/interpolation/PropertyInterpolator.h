@@ -69,7 +69,7 @@ class PropertyInterpolatorFactory {
 using PropertiesInterpolators =
     std::unordered_map<std::string, std::shared_ptr<PropertyInterpolator>>;
 
-using PropertiesInterpolatorFactories = std::
+using PropertyInterpolatorFactories = std::
     unordered_map<std::string, std::shared_ptr<PropertyInterpolatorFactory>>;
 
 } // namespace reanimated

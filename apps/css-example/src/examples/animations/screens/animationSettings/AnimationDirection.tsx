@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type { CSSAnimationProperties } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { colors, radius, sizes } from '@/theme';
@@ -7,29 +7,20 @@ import { colors, radius, sizes } from '@/theme';
 import { ExampleScreen } from './components';
 
 export default function AnimationDirection() {
-  const config: CSSAnimationConfig = {
-    animationDuration: '3s',
-    animationIterationCount: 'infinite',
-    animationName: {
-      from: {
-        width: 0,
-      },
-      to: {
-        width: '100%',
-      },
-    },
-  };
-
-  const renderExample = (exampleConfig: CSSAnimationConfig) => (
-    <View style={styles.wrapper}>
-      <Animated.View style={[styles.box, exampleConfig]} />
-    </View>
-  );
-
   return (
     <ExampleScreen
-      config={config}
-      renderExample={renderExample}
+      animation={{
+        animationDuration: '3s',
+        animationIterationCount: 'infinite',
+        animationName: {
+          from: {
+            width: 0,
+          },
+          to: {
+            width: '100%',
+          },
+        },
+      }}
       cards={[
         {
           description:
@@ -46,6 +37,11 @@ export default function AnimationDirection() {
           title: 'Animation Direction',
         },
       ]}
+      renderExample={(exampleConfig: CSSAnimationProperties) => (
+        <View style={styles.wrapper}>
+          <Animated.View style={[styles.box, exampleConfig]} />
+        </View>
+      )}
     />
   );
 }

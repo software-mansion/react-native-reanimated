@@ -1,5 +1,8 @@
 import { StyleSheet, View } from 'react-native';
-import type { CSSTransitionConfig, StyleProps } from 'react-native-reanimated';
+import type {
+  CSSTransitionProperties,
+  StyleProps,
+} from 'react-native-reanimated';
 import Animated, { cubicBezier, linear, steps } from 'react-native-reanimated';
 
 import { colors, radius, sizes } from '@/theme';
@@ -7,7 +10,7 @@ import { colors, radius, sizes } from '@/theme';
 import { ExampleScreen } from './components';
 
 export default function TransitionTimingFunction() {
-  const sharedConfig: CSSTransitionConfig = {
+  const transitionProperties: CSSTransitionProperties = {
     transitionDuration: '1.5s',
     transitionProperty: ['left', 'transform'],
   };
@@ -18,7 +21,7 @@ export default function TransitionTimingFunction() {
   ];
 
   const renderExample = (
-    exampleConfig: CSSTransitionConfig,
+    exampleConfig: CSSTransitionProperties,
     style: StyleProps
   ) => (
     <View style={styles.outerWrapper}>
@@ -30,7 +33,7 @@ export default function TransitionTimingFunction() {
 
   const sharedProps = {
     renderExample,
-    sharedConfig,
+    transitionProperties,
     transitionStyles,
   };
 

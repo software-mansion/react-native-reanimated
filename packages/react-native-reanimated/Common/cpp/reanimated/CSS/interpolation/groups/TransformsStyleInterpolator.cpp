@@ -311,14 +311,6 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
   return std::make_pair(fromOperationsResult, toOperationsResult);
 }
 
-jsi::Value TransformsStyleInterpolator::getDefaultValue(
-    jsi::Runtime &rt) const {
-  jsi::Array transformsArray(rt, 1);
-  transformsArray.setValueAtIndex(
-      rt, 0, MatrixOperation(TransformMatrix::Identity()).toJSIValue(rt));
-  return transformsArray;
-}
-
 TransformOperations TransformsStyleInterpolator::getFallbackValue(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode) const {
@@ -415,7 +407,10 @@ void TransformsStyleInterpolator::updateCurrentKeyframe(
         rt, shadowNode, keyframeIndex_, isProgressLessThanHalf ? -1 : 1);
   } else if (keyframeIndex_ != prevIndex) {
     currentKeyframe_ = getKeyframeAtIndex(
-        rt, shadowNode, keyframeIndex_, prevIndex - keyframeIndex_);
+        rt,
+        shadowNode,
+        keyframeIndex_,
+        static_cast<int>(prevIndex - keyframeIndex_));
   }
 }
 
@@ -455,6 +450,13 @@ jsi::Value TransformsStyleInterpolator::convertResultToJSI(
   }
 
   return result;
+}
+
+jsi::Value TransformsStyleInterpolator::getDefaultValue(jsi::Runtime &rt) {
+  jsi::Array transformsArray(rt, 1);
+  transformsArray.setValueAtIndex(
+      rt, 0, MatrixOperation(TransformMatrix::Identity()).toJSIValue(rt));
+  return transformsArray;
 }
 
 TransformInterpolatorUpdateContext

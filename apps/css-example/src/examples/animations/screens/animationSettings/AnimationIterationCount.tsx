@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type { CSSAnimationProperties } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { colors, radius, sizes } from '@/theme';
@@ -7,28 +7,19 @@ import { colors, radius, sizes } from '@/theme';
 import { ExampleScreen } from './components';
 
 export default function AnimationIterationCount() {
-  const config: CSSAnimationConfig = {
-    animationDuration: '2s',
-    animationFillMode: 'forwards',
-    animationName: {
-      '50%': {
-        left: '100%',
-        transform: [{ translateX: '-100%' }],
-      },
-    },
-    animationTimingFunction: 'linear',
-  };
-
-  const renderExample = (exampleConfig: CSSAnimationConfig) => (
-    <View style={styles.wrapper}>
-      <Animated.View style={[styles.box, exampleConfig]} />
-    </View>
-  );
-
   return (
     <ExampleScreen
-      config={config}
-      renderExample={renderExample}
+      animation={{
+        animationDuration: '2s',
+        animationFillMode: 'forwards',
+        animationName: {
+          '50%': {
+            left: '100%',
+            transform: [{ translateX: '-100%' }],
+          },
+        },
+        animationTimingFunction: 'linear',
+      }}
       cards={[
         {
           items: [
@@ -50,6 +41,11 @@ export default function AnimationIterationCount() {
           title: 'Infinite Iteration Count',
         },
       ]}
+      renderExample={(exampleConfig: CSSAnimationProperties) => (
+        <View style={styles.wrapper}>
+          <Animated.View style={[styles.box, exampleConfig]} />
+        </View>
+      )}
     />
   );
 }

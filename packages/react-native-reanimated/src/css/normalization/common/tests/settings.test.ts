@@ -1,17 +1,17 @@
-import { ReanimatedError } from '../../../errors';
 import type {
   ParametrizedTimingFunction,
   PredefinedTimingFunction,
-} from '../../easing';
-import { cubicBezier, linear, steps } from '../../easing';
-import type { CSSTimeUnit } from '../../types';
+} from '../../../easing';
+import { cubicBezier, linear, steps } from '../../../easing';
+import { ReanimatedError } from '../../../errors';
+import type { CSSTimeUnit } from '../../../types';
 import {
   ERROR_MESSAGES,
   normalizeDelay,
   normalizeDuration,
   normalizeTimingFunction,
   VALID_PREDEFINED_TIMING_FUNCTIONS,
-} from './settings';
+} from '../settings';
 
 type TestCases = [CSSTimeUnit, number][];
 

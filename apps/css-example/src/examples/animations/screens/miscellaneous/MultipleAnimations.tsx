@@ -173,7 +173,7 @@ export default function MultipleAnimations() {
 
           <View style={styles.buttonRows}>
             <View style={styles.buttonRow}>
-              <Text variant="label1">Reset config</Text>
+              <Text variant="label1">Reset settings</Text>
               <Button
                 style={styles.button}
                 title="Reset"
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     width: sizes.md,
   },
   button: {
-    width: 75,
+    width: 80,
   },
   buttonRow: {
     alignItems: 'center',

@@ -10,7 +10,7 @@ export default function JustifyContent() {
   return (
     <ExamplesScreen
       CardComponent={VerticalExampleCard}
-      buildConfig={() => ({
+      buildAnimation={() => ({
         animationDuration: '7s',
         animationIterationCount: 'infinite',
         animationName: {
@@ -35,8 +35,8 @@ export default function JustifyContent() {
         },
         animationTimingFunction: 'linear',
       })}
-      renderExample={({ config }) => (
-        <Animated.View style={[StyleSheet.absoluteFill, config]}>
+      renderExample={({ animation }) => (
+        <Animated.View style={[StyleSheet.absoluteFill, animation]}>
           {BOX_COLORS.map((color, index) => (
             <View
               key={index}

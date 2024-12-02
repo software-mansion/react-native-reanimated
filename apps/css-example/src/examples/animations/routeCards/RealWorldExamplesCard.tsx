@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type { CSSAnimationProperties } from 'react-native-reanimated';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 import {
   Circle,
@@ -19,7 +19,7 @@ import { colors, flex, sizes } from '@/theme';
 
 const TIME_MULTIPLIER = 1;
 
-const turbulenceAnimation: CSSAnimationConfig = {
+const turbulenceAnimation: CSSAnimationProperties = {
   animationDuration: `${TIME_MULTIPLIER * 0.4}s`,
   animationIterationCount: 'infinite',
   animationName: {
@@ -29,7 +29,7 @@ const turbulenceAnimation: CSSAnimationConfig = {
   },
 };
 
-const mainFlameAnimation: CSSAnimationConfig = {
+const mainFlameAnimation: CSSAnimationProperties = {
   animationDuration: `${TIME_MULTIPLIER * 0.2}s`,
   animationIterationCount: 'infinite',
   animationName: {
@@ -43,7 +43,7 @@ const mainFlameAnimation: CSSAnimationConfig = {
   animationTimingFunction: cubicBezier(0.175, 0.885, 0.42, 1.41),
 };
 
-const propulsedFlameAnimation: CSSAnimationConfig = {
+const propulsedFlameAnimation: CSSAnimationProperties = {
   animationDuration: `${TIME_MULTIPLIER * 0.6}s`,
   animationIterationCount: 'infinite',
   animationName: {
@@ -58,7 +58,7 @@ const propulsedFlameAnimation: CSSAnimationConfig = {
   animationTimingFunction: 'easeIn',
 };
 
-const propulsedSparkAnimation: CSSAnimationConfig = {
+const propulsedSparkAnimation: CSSAnimationProperties = {
   animationDuration: `${TIME_MULTIPLIER * 0.48}s`,
   animationIterationCount: 'infinite',
   animationName: {

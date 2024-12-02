@@ -28,6 +28,20 @@ void StaticPropsRegistry::remove(const Tag viewTag) {
   registry_.erase(viewTag);
 }
 
+bool StaticPropsRegistry::hasObservers(const Tag viewTag) const {
+  return observers_.find(viewTag) != observers_.end();
+}
+
+void StaticPropsRegistry::setObserver(
+    const Tag viewTag,
+    PropsObserver observer) {
+  observers_[viewTag] = std::move(observer);
+}
+
+void StaticPropsRegistry::removeObserver(const Tag viewTag) {
+  observers_.erase(viewTag);
+}
+
 void StaticPropsRegistry::notifyObservers(
     jsi::Runtime &rt,
     const Tag viewTag,

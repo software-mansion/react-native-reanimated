@@ -1,5 +1,5 @@
 'use strict';
-import { ReanimatedError } from '../../errors';
+import { ReanimatedError } from '../errors';
 import type {
   NormalizedCubicBezierEasing,
   ParametrizedTimingFunction,

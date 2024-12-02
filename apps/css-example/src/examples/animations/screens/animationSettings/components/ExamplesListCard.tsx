@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSAnimationConfig,
+  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 
@@ -13,16 +13,16 @@ export type ExampleItemProps = {
 } & CSSAnimationSettings;
 
 type ExamplesListCardProps = {
-  config: CSSAnimationConfig;
+  animation: CSSAnimationProperties;
   items: Array<ExampleItemProps>;
   allowPause?: boolean;
-  renderExample: (config: CSSAnimationConfig) => JSX.Element;
+  renderExample: (animation: CSSAnimationProperties) => JSX.Element;
   onTogglePause?: (paused: boolean) => void;
 };
 
 export default function ExamplesListCard({
   allowPause,
-  config,
+  animation,
   items,
   onTogglePause,
   renderExample,
@@ -62,7 +62,7 @@ export default function ExamplesListCard({
           {items.map((item, index) => (
             <View key={index}>
               {renderExample({
-                ...config,
+                ...animation,
                 ...item,
                 ...(allowPause ? { animationPlayState } : {}),
               })}

@@ -30,7 +30,7 @@ export type TransitionSettingProp = keyof SingleCSSTransitionConfig;
 export type CSSTransitionSettings =
   AddArrayPropertyTypes<SingleCSSTransitionSettings>;
 
-export type CSSTransitionConfig =
+export type CSSTransitionProperties =
   AddArrayPropertyTypes<SingleCSSTransitionSettings> & {
     transitionProperty: CSSTransitionProperty;
   };
@@ -43,10 +43,12 @@ export type NormalizedSingleCSSTransitionSettings = {
   delay: number;
 };
 
-export type NormalizedCSSTransitionProperties = 'all' | (keyof CSSStyleProps)[];
+export type NormalizedCSSTransitionPropertyNames =
+  | 'all'
+  | (keyof CSSStyleProps)[];
 
 export type NormalizedCSSTransitionConfig = {
-  properties: NormalizedCSSTransitionProperties;
+  properties: NormalizedCSSTransitionPropertyNames;
   settings: Record<string, NormalizedSingleCSSTransitionSettings>;
 };
 

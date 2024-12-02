@@ -37,9 +37,8 @@ UnitValue::UnitValue(jsi::Runtime &rt, const jsi::Value &value) {
 jsi::Value UnitValue::toJSIValue(jsi::Runtime &rt) const {
   if (isRelative) {
     return jsi::String::createFromUtf8(rt, std::to_string(value * 100) + "%");
-  } else {
-    return {value};
   }
+  return {value};
 }
 
 UnitValue UnitValue::interpolate(
@@ -74,7 +73,7 @@ std::optional<double> UnitValue::resolve(
   }
 
   jsi::Value relativeValue;
-  if (context.relativeTo == RelativeTo::SELF) {
+  if (context.relativeTo == RelativeTo::Self) {
     relativeValue = context.viewStylesRepository->getNodeProp(
         context.node, context.relativeProperty);
   } else {

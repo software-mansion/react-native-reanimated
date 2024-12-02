@@ -1,6 +1,6 @@
 import { ReanimatedError } from '../../../errors';
-import type { CSSAnimationKeyframeSelector } from '../../types';
-import { normalizeAnimationName, ERROR_MESSAGES } from './animationName';
+import type { CSSAnimationKeyframeSelector } from '../../../types';
+import { normalizeAnimationName, ERROR_MESSAGES } from '../animationName';
 
 describe(normalizeAnimationName, () => {
   describe('offset normalization', () => {

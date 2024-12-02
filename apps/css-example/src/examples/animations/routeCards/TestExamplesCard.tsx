@@ -2,7 +2,7 @@ import { faCog } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSAnimationConfig,
+  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -28,7 +28,7 @@ const sharedAnimationSettings: CSSAnimationSettings = {
   animationTimingFunction: 'linear',
 };
 
-const rotateRight: CSSAnimationConfig = {
+const rotateRight: CSSAnimationProperties = {
   animationName: {
     from: {
       transform: [{ rotate: '0deg' }],
@@ -40,7 +40,7 @@ const rotateRight: CSSAnimationConfig = {
   ...sharedAnimationSettings,
 };
 
-const rotateLeft: CSSAnimationConfig = {
+const rotateLeft: CSSAnimationProperties = {
   animationDelay: -0.1175 * ANIMATION_DURATION,
   animationName: {
     from: {

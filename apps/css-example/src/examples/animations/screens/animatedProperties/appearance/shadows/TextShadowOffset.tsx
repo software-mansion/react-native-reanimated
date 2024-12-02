@@ -9,17 +9,17 @@ export default function TextShadowOffset() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
-      buildConfig={({ keyframes }) => ({
+      buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
         animationDuration: '1s',
         animationIterationCount: 'infinite',
         animationName: keyframes,
       })}
-      renderExample={({ config }) => (
+      renderExample={({ animation }) => (
         <Animated.Text
           style={[
             styles.text,
-            config,
+            animation,
             Platform.select({
               android: {
                 ...StyleSheet.absoluteFillObject,

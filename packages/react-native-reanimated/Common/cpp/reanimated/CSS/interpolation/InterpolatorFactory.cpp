@@ -6,7 +6,7 @@ namespace reanimated::Interpolators {
 class ObjectInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   explicit ObjectInterpolatorFactory(
-      const PropertiesInterpolatorFactories &factories)
+      const PropertyInterpolatorFactories &factories)
       : factories_(factories) {}
   ~ObjectInterpolatorFactory() override = default;
 
@@ -20,7 +20,7 @@ class ObjectInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
  protected:
-  const PropertiesInterpolatorFactories factories_;
+  const PropertyInterpolatorFactories factories_;
 };
 
 template <typename InterpolatorType, typename ValueType>
@@ -99,7 +99,7 @@ class TransformsStyleInterpolatorFactory final
  */
 
 std::shared_ptr<PropertyInterpolatorFactory> object(
-    const PropertiesInterpolatorFactories &factories) {
+    const PropertyInterpolatorFactories &factories) {
   return std::make_shared<ObjectInterpolatorFactory>(factories);
 }
 

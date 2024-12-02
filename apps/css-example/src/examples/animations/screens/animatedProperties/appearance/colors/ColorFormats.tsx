@@ -8,7 +8,7 @@ export default function ColorsFormats() {
   return (
     <ExamplesScreen<{ from: string; to: string }>
       CardComponent={VerticalExampleCard}
-      buildConfig={({ from, to }) => ({
+      buildAnimation={({ from, to }) => ({
         animationDirection: 'alternate',
         animationDuration: '3s',
         animationIterationCount: 'infinite',
@@ -22,11 +22,21 @@ export default function ColorsFormats() {
         },
         animationTimingFunction: 'easeInOut',
       })}
-      renderExample={({ config }) => (
-        <Animated.View style={[styles.box, config]} />
+      renderExample={({ animation }) => (
+        <Animated.View style={[styles.box, animation]} />
       )}
       tabs={[
         {
+          buildAnimation: ({ from, to }) => ({
+            animationDirection: 'alternate',
+            animationDuration: '3s',
+            animationIterationCount: 'infinite',
+            animationName: {
+              from: { backgroundColor: from },
+              to: { backgroundColor: to },
+            },
+            animationTimingFunction: 'easeInOut',
+          }),
           name: 'Predefined',
           sections: [
             {

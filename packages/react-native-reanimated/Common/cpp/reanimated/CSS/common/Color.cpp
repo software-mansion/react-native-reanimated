@@ -3,31 +3,31 @@
 
 namespace reanimated {
 
-Color::Color() : channels{0, 0, 0, 0}, type(ColorType::TRANSPARENT) {}
+Color::Color() : channels{0, 0, 0, 0}, type(ColorType::Transparent) {}
 
 Color::Color(const ColorArray &colorArray)
     : channels{colorArray[0], colorArray[1], colorArray[2], colorArray[3]},
-      type(ColorType::RGBA) {}
+      type(ColorType::Rgba) {}
 
 Color::Color(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
-    : channels{r, g, b, a}, type(ColorType::RGBA) {}
+    : channels{r, g, b, a}, type(ColorType::Rgba) {}
 
 Color::Color(const uint8_t r, const uint8_t g, const uint8_t b)
-    : channels{r, g, b, 255}, type(ColorType::RGBA) {}
+    : channels{r, g, b, 255}, type(ColorType::Rgba) {}
 
 Color::Color(jsi::Runtime &rt, const jsi::Value &value)
-    : channels{0, 0, 0, 0}, type(ColorType::TRANSPARENT) {
+    : channels{0, 0, 0, 0}, type(ColorType::Transparent) {
   if (value.isNumber()) {
     const auto color = static_cast<unsigned>(value.asNumber());
     channels[0] = (color << 8) >> 24; // Red
     channels[1] = (color << 16) >> 24; // Green
     channels[2] = (color << 24) >> 24; // Blue
     channels[3] = color >> 24; // Alpha
-    type = ColorType::RGBA;
+    type = ColorType::Rgba;
   } else if (
       value.isUndefined() ||
       (value.isString() && value.getString(rt).utf8(rt) == "transparent")) {
-    type = ColorType::TRANSPARENT;
+    type = ColorType::Transparent;
   } else {
     throw std::invalid_argument(
         "[Reanimated] Invalid color value: " + stringifyJSIValue(rt, value));
@@ -35,7 +35,7 @@ Color::Color(jsi::Runtime &rt, const jsi::Value &value)
 }
 
 std::string Color::toString() const {
-  if (type == ColorType::RGBA) {
+  if (type == ColorType::Rgba) {
     return "rgba(" + std::to_string(channels[0]) + "," +
         std::to_string(channels[1]) + "," + std::to_string(channels[2]) + "," +
         std::to_string(channels[3]) + ")";
@@ -45,7 +45,7 @@ std::string Color::toString() const {
 }
 
 jsi::Value Color::toJSIValue(jsi::Runtime &rt) const {
-  if (type == ColorType::TRANSPARENT) {
+  if (type == ColorType::Transparent) {
     return 0x00000000;
   }
 
@@ -55,15 +55,15 @@ jsi::Value Color::toJSIValue(jsi::Runtime &rt) const {
 }
 
 Color Color::interpolate(const Color &to, const double progress) const {
-  if (to.type == ColorType::TRANSPARENT && type == ColorType::TRANSPARENT) {
+  if (to.type == ColorType::Transparent && type == ColorType::Transparent) {
     return *this;
   }
 
   ColorArray fromChannels = channels;
   ColorArray toChannels = to.channels;
-  if (type == ColorType::TRANSPARENT) {
+  if (type == ColorType::Transparent) {
     fromChannels = {toChannels[0], toChannels[1], toChannels[2], 0};
-  } else if (to.type == ColorType::TRANSPARENT) {
+  } else if (to.type == ColorType::Transparent) {
     toChannels = {fromChannels[0], fromChannels[1], fromChannels[2], 0};
   }
 

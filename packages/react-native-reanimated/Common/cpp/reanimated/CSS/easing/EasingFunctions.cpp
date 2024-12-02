@@ -4,7 +4,7 @@
 namespace reanimated {
 
 inline const std::unordered_map<std::string, EasingFunction>
-    predefinedEasingMap = {
+    PREDEFINED_EASING_MAP = {
         {"linear", [](double x) { return x; }},
         {"ease", createBezierFunction(0.25, 0.1, 0.25, 0.1)},
         {"easeIn", createBezierFunction(0.42, 0.0, 1.0, 1.0)},
@@ -33,8 +33,8 @@ EasingFunction getEasingFunction(
 }
 
 EasingFunction getPredefinedEasingFunction(const std::string &name) {
-  auto it = predefinedEasingMap.find(name);
-  if (it != predefinedEasingMap.end()) {
+  auto it = PREDEFINED_EASING_MAP.find(name);
+  if (it != PREDEFINED_EASING_MAP.end()) {
     return it->second;
   } else {
     throw std::runtime_error(std::string(

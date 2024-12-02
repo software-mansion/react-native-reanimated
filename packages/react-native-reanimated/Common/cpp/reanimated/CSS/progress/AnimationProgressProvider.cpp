@@ -1,6 +1,8 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
+#include <utility>
+
 namespace reanimated {
 
 AnimationProgressProvider::AnimationProgressProvider(
@@ -9,30 +11,30 @@ AnimationProgressProvider::AnimationProgressProvider(
     const double delay,
     const double iterationCount,
     const AnimationDirection direction,
-    const EasingFunction &easingFunction,
-    const KeyframeEasingFunctions &keyframeEasingFunctions)
+    EasingFunction easingFunction,
+    KeyframeEasingFunctions keyframeEasingFunctions)
     : RawProgressProvider(timestamp, duration, delay),
       iterationCount_(iterationCount),
       direction_(direction),
-      easingFunction_(easingFunction),
-      keyframeEasingFunctions_(keyframeEasingFunctions) {}
+      easingFunction_(std::move(easingFunction)),
+      keyframeEasingFunctions_(std::move(keyframeEasingFunctions)) {}
 
 AnimationProgressState AnimationProgressProvider::getState(
     const double timestamp) const {
   if (shouldFinish(timestamp)) {
-    return AnimationProgressState::FINISHED;
+    return AnimationProgressState::Finished;
   }
   if (pauseTimestamp_ > 0) {
-    return AnimationProgressState::PAUSED;
+    return AnimationProgressState::Paused;
   }
   if (!rawProgress_.has_value()) {
-    return AnimationProgressState::PENDING;
+    return AnimationProgressState::Pending;
   }
   const auto rawProgress = rawProgress_.value();
   if (rawProgress >= 1) {
-    return AnimationProgressState::FINISHED;
+    return AnimationProgressState::Finished;
   }
-  return AnimationProgressState::RUNNING;
+  return AnimationProgressState::Running;
 }
 
 double AnimationProgressProvider::getTotalPausedTime(
@@ -149,13 +151,13 @@ double AnimationProgressProvider::updateIterationProgress(
 double AnimationProgressProvider::applyAnimationDirection(
     const double progress) const {
   switch (direction_) {
-    case AnimationDirection::NORMAL:
+    case AnimationDirection::Normal:
       return progress;
-    case AnimationDirection::REVERSE:
+    case AnimationDirection::Reverse:
       return 1.0 - progress;
-    case AnimationDirection::ALTERNATE:
+    case AnimationDirection::Alternate:
       return currentIteration_ % 2 == 0 ? 1.0 - progress : progress;
-    case AnimationDirection::ALTERNATE_REVERSE:
+    case AnimationDirection::AlternateReverse:
       return currentIteration_ % 2 == 0 ? progress : 1.0 - progress;
   }
 }

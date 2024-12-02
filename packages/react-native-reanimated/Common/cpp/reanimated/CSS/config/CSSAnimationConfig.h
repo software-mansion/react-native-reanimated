@@ -11,9 +11,9 @@
 
 namespace reanimated {
 
-enum class AnimationDirection { NORMAL, REVERSE, ALTERNATE, ALTERNATE_REVERSE };
-enum class AnimationFillMode { NONE, FORWARDS, BACKWARDS, BOTH };
-enum class AnimationPlayState { RUNNING, PAUSED };
+enum class AnimationDirection { Normal, Reverse, Alternate, AlternateReverse };
+enum class AnimationFillMode { None, Forwards, Backwards, Both };
+enum class AnimationPlayState { Running, Paused };
 
 using KeyframeEasingFunctions = std::unordered_map<double, EasingFunction>;
 

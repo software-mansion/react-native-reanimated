@@ -9,18 +9,18 @@ export default function TextAlign() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
-      buildConfig={({ keyframes }) => ({
+      buildAnimation={({ keyframes }) => ({
         animationDuration: '4s',
         animationIterationCount: 'infinite',
         animationName: keyframes,
         animationTimingFunction: 'linear',
       })}
-      renderExample={({ config }) => (
+      renderExample={({ animation }) => (
         <>
-          <Animated.Text style={[styles.heading, config]}>
+          <Animated.Text style={[styles.heading, animation]}>
             Hello from Reanimated!
           </Animated.Text>
-          <Animated.Text style={[styles.body, config]}>
+          <Animated.Text style={[styles.body, animation]}>
             Ipsum fugiat culpa minim consequat eu exercitation est pariatur
             tempor magna. Ad ad fugiat eiusmod magna magna enim eu amet.
           </Animated.Text>
