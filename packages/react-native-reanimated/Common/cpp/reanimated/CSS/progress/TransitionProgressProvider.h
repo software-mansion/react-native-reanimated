@@ -29,15 +29,12 @@ class TransitionPropertyProgressProvider final
       double delay,
       const EasingFunction &easingFunction);
 
-  double getGlobalProgress() const override {
-    return rawProgress_.value_or(0);
-  }
-  bool isFirstUpdate() const override {
-    return !previousRawProgress_.has_value();
-  }
+  double getGlobalProgress() const override;
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
-  TransitionProgressState getState() const;
   double getRemainingDelay(double timestamp) const;
+  TransitionProgressState getState() const;
+
+  bool isFirstUpdate() const override;
 
  protected:
   std::optional<double> calculateRawProgress(double timestamp) override;
@@ -57,18 +54,12 @@ class TransitionProgressProvider final {
   explicit TransitionProgressProvider(
       const CSSTransitionPropertiesSettings &settings);
 
-  void setSettings(const CSSTransitionPropertiesSettings &settings) {
-    settings_ = settings;
-  }
+  void setSettings(const CSSTransitionPropertiesSettings &settings);
 
   TransitionProgressState getState() const;
   double getMinDelay(double timestamp) const;
-  TransitionPropertyProgressProviders getPropertyProgressProviders() const {
-    return propertyProgressProviders_;
-  }
-  std::unordered_set<std::string> getPropertiesToRemove() const {
-    return propertiesToRemove_;
-  }
+  TransitionPropertyProgressProviders getPropertyProgressProviders() const;
+  std::unordered_set<std::string> getRemovedProperties() const;
 
   void discardIrrelevantProgressProviders(
       const std::unordered_set<std::string> &transitionPropertyNames);
@@ -79,10 +70,9 @@ class TransitionProgressProvider final {
 
  private:
   CSSTransitionPropertiesSettings settings_;
-
-  std::unordered_set<std::string> propertiesToRemove_;
-
   TransitionPropertyProgressProviders propertyProgressProviders_;
+
+  std::unordered_set<std::string> removedProperties_;
 };
 
 } // namespace reanimated

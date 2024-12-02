@@ -13,20 +13,8 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
     : RawProgressProvider(timestamp, duration, delay),
       easingFunction_(easingFunction) {}
 
-TransitionProgressState TransitionPropertyProgressProvider::getState() const {
-  if (!rawProgress_.has_value()) {
-    return TransitionProgressState::Pending;
-  }
-  const auto rawProgress = rawProgress_.value();
-  if (rawProgress >= 1) {
-    return TransitionProgressState::Finished;
-  }
-  return TransitionProgressState::Running;
-}
-
-double TransitionPropertyProgressProvider::getRemainingDelay(
-    const double timestamp) const {
-  return delay_ - (timestamp - creationTimestamp_);
+double TransitionPropertyProgressProvider::getGlobalProgress() const {
+  return rawProgress_.value_or(0);
 }
 
 double TransitionPropertyProgressProvider::getKeyframeProgress(
@@ -39,6 +27,26 @@ double TransitionPropertyProgressProvider::getKeyframeProgress(
   }
   return easingFunction_(
       (getGlobalProgress() - fromOffset) / (toOffset - fromOffset));
+}
+
+double TransitionPropertyProgressProvider::getRemainingDelay(
+    const double timestamp) const {
+  return delay_ - (timestamp - creationTimestamp_);
+}
+
+TransitionProgressState TransitionPropertyProgressProvider::getState() const {
+  if (!rawProgress_.has_value()) {
+    return TransitionProgressState::Pending;
+  }
+  const auto rawProgress = rawProgress_.value();
+  if (rawProgress >= 1) {
+    return TransitionProgressState::Finished;
+  }
+  return TransitionProgressState::Running;
+}
+
+bool TransitionPropertyProgressProvider::isFirstUpdate() const {
+  return !previousRawProgress_.has_value();
 }
 
 std::optional<double> TransitionPropertyProgressProvider::calculateRawProgress(
@@ -57,9 +65,17 @@ TransitionProgressProvider::TransitionProgressProvider(
     const CSSTransitionPropertiesSettings &settings)
     : settings_(std::move(settings)) {}
 
+void TransitionProgressProvider::setSettings(
+    const CSSTransitionPropertiesSettings &settings) {
+  settings_ = settings;
+}
+
 TransitionProgressState TransitionProgressProvider::getState() const {
-  if (!propertyProgressProviders_.empty()) {
-    return TransitionProgressState::Running;
+  for (const auto &[_, propertyProgressProvider] : propertyProgressProviders_) {
+    if (propertyProgressProvider->getState() ==
+        TransitionProgressState::Running) {
+      return TransitionProgressState::Running;
+    }
   }
   return TransitionProgressState::Pending;
 }
@@ -79,6 +95,16 @@ double TransitionProgressProvider::getMinDelay(const double timestamp) const {
   }
 
   return minDelay;
+}
+
+TransitionPropertyProgressProviders
+TransitionProgressProvider::getPropertyProgressProviders() const {
+  return propertyProgressProviders_;
+}
+
+std::unordered_set<std::string>
+TransitionProgressProvider::getRemovedProperties() const {
+  return removedProperties_;
 }
 
 void TransitionProgressProvider::discardIrrelevantProgressProviders(
@@ -108,33 +134,30 @@ void TransitionProgressProvider::runProgressProviders(
         : settings_.at("all");
 
     // Create progress provider with the new settings
-    auto progressProvider =
+    propertyProgressProviders_.insert_or_assign(
+        propertyName,
         std::make_shared<TransitionPropertyProgressProvider>(
             timestamp,
             propertySettings.duration,
             propertySettings.delay,
-            propertySettings.easingFunction);
-
-    // Remove the property from the removal set and create the new progress
-    // provider
-    propertiesToRemove_.erase(propertyName);
-    propertyProgressProviders_.insert_or_assign(
-        propertyName, std::move(progressProvider));
+            propertySettings.easingFunction));
   }
 }
 
 void TransitionProgressProvider::update(const double timestamp) {
-  for (const auto &propertyName : propertiesToRemove_) {
-    propertyProgressProviders_.erase(propertyName);
-  }
-  propertiesToRemove_.clear();
+  auto it = propertyProgressProviders_.begin();
+  removedProperties_.clear();
 
-  for (auto &[propertyName, propertyProgressProvider] :
-       propertyProgressProviders_) {
+  while (it != propertyProgressProviders_.end()) {
+    const auto &propertyProgressProvider = it->second;
     propertyProgressProvider->update(timestamp);
+
     if (propertyProgressProvider->getState() ==
         TransitionProgressState::Finished) {
-      propertiesToRemove_.insert(propertyName);
+      removedProperties_.insert(it->first);
+      it = propertyProgressProviders_.erase(it);
+    } else {
+      ++it;
     }
   }
 }

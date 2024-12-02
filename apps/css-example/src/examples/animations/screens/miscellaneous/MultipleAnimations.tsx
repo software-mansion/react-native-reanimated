@@ -103,12 +103,16 @@ const DEFAULT_ANIMATION_SETTINGS: SelectableConfig<CSSAnimationSettings> = {
   },
 };
 
+const DEFAULT_SELECTED_INDEXES = [0, 2];
+
 export default function MultipleAnimations() {
   const [key, setKey] = useState(0);
   const [selectableSettings, setSelectableSettings] = useState(
     DEFAULT_ANIMATION_SETTINGS
   );
-  const [selectedIndexes, setSelectedIndexes] = useState<Array<number>>([0, 2]);
+  const [selectedIndexes, setSelectedIndexes] = useState<Array<number>>(
+    DEFAULT_SELECTED_INDEXES
+  );
 
   const animationSettings = useSelectableConfig(selectableSettings);
   const animation = {
@@ -179,7 +183,7 @@ export default function MultipleAnimations() {
                 title="Reset"
                 onPress={() => {
                   setSelectableSettings(DEFAULT_ANIMATION_SETTINGS);
-                  setSelectedIndexes([0, 1]);
+                  setSelectedIndexes([0, 2]);
                 }}
               />
             </View>

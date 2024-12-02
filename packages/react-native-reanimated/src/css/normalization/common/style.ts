@@ -12,7 +12,6 @@ import { normalizeTransformOrigin } from './transformOrigin';
 import type {
   CSSAnimationProperties,
   CSSTransitionProperties,
-  CSSAnimationKeyframes,
   CSSTransitionProperty,
   Maybe,
 } from '../../types';
@@ -70,12 +69,12 @@ function normalizeAspectRatio(value: string | number): number {
 }
 
 const FONT_WEIGHT_MAPPINGS = {
-  ultralight: '100',
-  thin: '200',
+  thin: '100',
+  ultralight: '200',
   light: '300',
   normal: '400',
-  medium: '400',
   regular: '400',
+  medium: '500',
   condensed: '500',
   semibold: '600',
   bold: '700',
@@ -134,7 +133,7 @@ export function normalizeStyle(style: StyleProps): StyleProps {
 export function extractCSSPropertiesAndFlattenedStyles(
   styles: StyleProps[]
 ): [CSSAnimationProperties | null, CSSTransitionProperties | null, StyleProps] {
-  let animationName: CSSAnimationKeyframes | null = null;
+  let animationName: CSSAnimationProperties['animationName'] | null = null;
   let transitionProperty: CSSTransitionProperty | null = null;
   const animationProperties: Partial<CSSAnimationProperties> = {};
   const transitionProperties: Partial<CSSTransitionProperties> = {};
@@ -144,7 +143,7 @@ export function extractCSSPropertiesAndFlattenedStyles(
     for (const prop in style) {
       const value = style[prop];
       if (prop === 'animationName') {
-        animationName = value as CSSAnimationKeyframes;
+        animationName = value as CSSAnimationProperties['animationName'];
       } else if (prop === 'transitionProperty') {
         transitionProperty = value as CSSTransitionProperty;
       } else if (isAnimationSetting(prop)) {
@@ -160,8 +159,9 @@ export function extractCSSPropertiesAndFlattenedStyles(
   // Return animationProperties only if the animationName is present
   const hasAnimationName =
     animationName &&
-    typeof animationName === 'object' &&
-    Object.keys(animationName).length > 0;
+    ((Array.isArray(animationName) && animationName.length > 0) ||
+      (typeof animationName === 'object' &&
+        Object.keys(animationName).length > 0));
   const finalAnimationConfig = hasAnimationName
     ? ({ ...animationProperties, animationName } as CSSAnimationProperties)
     : null;

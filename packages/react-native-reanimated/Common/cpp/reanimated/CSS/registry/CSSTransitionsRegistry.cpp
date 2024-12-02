@@ -72,6 +72,14 @@ void CSSTransitionsRegistry::update(jsi::Runtime &rt, const double timestamp) {
           std::make_unique<jsi::Value>(rt, updates));
     }
 
+    // We remove transition from running and schedule it when animation of one
+    // of properties has finished and the other one is still delayed
+    const auto &minDelay = transition->getMinDelay(timestamp);
+    if (minDelay > 0) {
+      delayedTransitionsManager_.add(
+          timestamp + transition->getMinDelay(timestamp), viewTag);
+    }
+
     if (transition->getState() != TransitionProgressState::Running) {
       it = runningTransitionTags_.erase(it);
     } else {

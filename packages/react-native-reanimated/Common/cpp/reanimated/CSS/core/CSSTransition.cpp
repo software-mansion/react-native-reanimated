@@ -54,15 +54,13 @@ jsi::Value CSSTransition::run(
       timestamp, changedProps.changedPropertyNames);
   styleInterpolator_.updateInterpolatedProperties(
       rt, changedProps, progressProvider_.getPropertyProgressProviders());
-  // Call update to calculate current interpolation values
-  // (e.g. to immediately apply final values for the 0 duration)
   return update(rt, timestamp);
 }
 
 jsi::Value CSSTransition::update(jsi::Runtime &rt, const double timestamp) {
   progressProvider_.update(timestamp);
   return styleInterpolator_.update(
-      rt, shadowNode_, progressProvider_.getPropertiesToRemove());
+      rt, shadowNode_, progressProvider_.getRemovedProperties());
 }
 
 void CSSTransition::updateTransitionProperties(
