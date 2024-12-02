@@ -1,14 +1,16 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/Fabric/ShadowTreeCloner.h>
 #include <react/renderer/core/DynamicPropsUtilities.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
 
 #include <ranges>
 #include <utility>
 
 namespace reanimated {
 
-ChildrenMap calculateChildrenMap(const RootShadowNode &oldRootNode, const PropsMap &propsMap){
+ChildrenMap calculateChildrenMap(
+    const RootShadowNode &oldRootNode,
+    const PropsMap &propsMap) {
   ChildrenMap childrenMap;
 
   for (auto &[family, _] : propsMap) {
@@ -69,12 +71,13 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsUnmountedRecursive(
     ShadowNode::Shared const &oldShadowNode,
     const ChildrenMap &childrenMap,
     const PropsMap &propsMap) {
-  if (oldShadowNode->getHasBeenPromoted()){
-    return cloneShadowTreeWithNewPropsRecursive(*oldShadowNode, childrenMap, propsMap);
+  if (oldShadowNode->getHasBeenPromoted()) {
+    return cloneShadowTreeWithNewPropsRecursive(
+        *oldShadowNode, childrenMap, propsMap);
   }
-  
+
   auto shadowNode = std::const_pointer_cast<ShadowNode>(oldShadowNode);
-  
+
   const auto family = &shadowNode->getFamily();
   const auto affectedChildrenIt = childrenMap.find(family);
   const auto propsIt = propsMap.find(family);
@@ -82,8 +85,9 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsUnmountedRecursive(
 
   if (affectedChildrenIt != childrenMap.end()) {
     for (const auto index : affectedChildrenIt->second) {
-      auto clone = cloneShadowTreeWithNewPropsUnmountedRecursive(children[index], childrenMap, propsMap);
-      if (clone != children[index]){
+      auto clone = cloneShadowTreeWithNewPropsUnmountedRecursive(
+          children[index], childrenMap, propsMap);
+      if (clone != children[index]) {
         shadowNode->replaceChild(*children[index], clone, index);
       }
     }
@@ -100,23 +104,24 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsUnmountedRecursive(
           propsParserContext, newProps, RawProps(props));
     }
   }
-  
+
   if (newProps) {
-    auto& props = shadowNode->getProps();
-    auto& mutableProps = const_cast<Props::Shared&>(props);
+    auto &props = shadowNode->getProps();
+    auto &mutableProps = const_cast<Props::Shared &>(props);
 
 #ifdef ANDROID
-    auto& newPropsRef = const_cast<Props&>(*newProps);
+    auto &newPropsRef = const_cast<Props &>(*newProps);
     newPropsRef.rawProps = mergeDynamicProps(
-            mutableProps->rawProps,
-            newProps->rawProps,
-            NullValueStrategy::Override);
+        mutableProps->rawProps,
+        newProps->rawProps,
+        NullValueStrategy::Override);
 #endif
     mutableProps = newProps;
-    auto layoutableShadowNode = static_pointer_cast<YogaLayoutableShadowNode>(shadowNode);
+    auto layoutableShadowNode =
+        static_pointer_cast<YogaLayoutableShadowNode>(shadowNode);
     layoutableShadowNode->updateYogaProps();
   }
-  
+
   return shadowNode;
 }
 
@@ -124,20 +129,23 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     const RootShadowNode &oldRootNode,
     const PropsMap &propsMap) {
   auto childrenMap = calculateChildrenMap(oldRootNode, propsMap);
-  
+
   // This cast is safe, because this function returns a clone
   // of the oldRootNode, which is an instance of RootShadowNode
-  return std::static_pointer_cast<RootShadowNode>(cloneShadowTreeWithNewPropsRecursive(oldRootNode, childrenMap, propsMap));
+  return std::static_pointer_cast<RootShadowNode>(
+      cloneShadowTreeWithNewPropsRecursive(oldRootNode, childrenMap, propsMap));
 }
 
 RootShadowNode::Unshared cloneShadowTreeWithNewPropsUnmounted(
     RootShadowNode::Unshared const &oldRootNode,
-    const PropsMap &propsMap){
+    const PropsMap &propsMap) {
   auto childrenMap = calculateChildrenMap(*oldRootNode, propsMap);
-  
+
   // This cast is safe, because this function returns a clone
   // of the oldRootNode, which is an instance of RootShadowNode
-  return std::static_pointer_cast<RootShadowNode>(cloneShadowTreeWithNewPropsUnmountedRecursive(oldRootNode, childrenMap, propsMap));
+  return std::static_pointer_cast<RootShadowNode>(
+      cloneShadowTreeWithNewPropsUnmountedRecursive(
+          oldRootNode, childrenMap, propsMap));
 }
 
 } // namespace reanimated
