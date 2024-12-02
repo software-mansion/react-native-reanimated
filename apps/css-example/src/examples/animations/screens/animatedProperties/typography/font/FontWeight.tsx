@@ -31,36 +31,30 @@ export default function FontWeight() {
                     "`fontWeight` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
                   keyframes: {
                     '0%, 100%': {
-                      fontWeight: 'normal',
-                    },
-                    '9%': {
-                      fontWeight: 'ultralight',
-                    },
-                    '18%': {
                       fontWeight: 'thin',
                     },
-                    '27%': {
+                    '11%': {
+                      fontWeight: 'ultralight',
+                    },
+                    '22%': {
                       fontWeight: 'light',
                     },
-                    '36%': {
-                      fontWeight: 'medium',
+                    '33%': {
+                      fontWeight: 'normal',
                     },
-                    '45%': {
-                      fontWeight: 'regular',
+                    '44%': {
+                      fontWeight: 'medium',
                     },
                     '55%': {
                       fontWeight: 'semibold',
                     },
-                    '64%': {
-                      fontWeight: 'condensedBold',
+                    '66%': {
+                      fontWeight: 'bold',
                     },
-                    '73%': {
-                      fontWeight: 'condensed',
-                    },
-                    '82%': {
+                    '77%': {
                       fontWeight: 'heavy',
                     },
-                    '91%': {
+                    '88%': {
                       fontWeight: 'black',
                     },
                   },
@@ -80,35 +74,32 @@ export default function FontWeight() {
                   description:
                     "`fontWeight` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
                   keyframes: {
-                    '0%': {
+                    '0%, 100%': {
                       fontWeight: '100',
                     },
-                    '9%': {
+                    '11%': {
                       fontWeight: '200',
                     },
-                    '18%': {
+                    '22%': {
                       fontWeight: '300',
                     },
-                    '27%': {
+                    '33%': {
                       fontWeight: '400',
                     },
-                    '36%': {
+                    '44%': {
                       fontWeight: '500',
                     },
-                    '45%': {
+                    '55%': {
                       fontWeight: '600',
                     },
-                    '55%': {
+                    '66%': {
                       fontWeight: '700',
                     },
-                    '64%': {
+                    '77%': {
                       fontWeight: '800',
                     },
-                    '73%': {
+                    '88%': {
                       fontWeight: '900',
-                    },
-                    '82%': {
-                      fontWeight: '100',
                     },
                   },
                   title: 'Changing Font Weight',

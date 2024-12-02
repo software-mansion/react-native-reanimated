@@ -37,14 +37,14 @@ const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
   $transitionDuration: {
     canDisable: true,
     maxNumberOfValues: 3,
-    options: ['1s', '2s', '5s'],
+    options: ['0s', '1s', '2s', '5s'],
     value: ['1s', '2s'],
   },
   // eslint-disable-next-line perfectionist/sort-objects
   $transitionDelay: {
     canDisable: true,
     maxNumberOfValues: 3,
-    options: ['0s', '1s', '2s'],
+    options: ['0s', '1s', '2s', '5s'],
     value: ['0s', '1s'],
   },
   $transitionTimingFunction: {
