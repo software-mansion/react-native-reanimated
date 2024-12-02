@@ -108,8 +108,6 @@ struct ReanimatedSystraceSection {
   }
 
   ~ReanimatedSystraceSection() {
-    // We don't need to gate on os_signpost_enabled here because it's already
-    // checked in os_signpost_interval_end.
     os_signpost_interval_end(
         reanimated::instrumentsLogHandle,
         signpostID_,
