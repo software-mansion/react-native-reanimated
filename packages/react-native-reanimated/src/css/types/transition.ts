@@ -13,27 +13,30 @@ export type CSSTransitionProperty =
 export type CSSTransitionDuration = CSSTimeUnit;
 export type CSSTransitionTimingFunction = CSSTimingFunction;
 export type CSSTransitionDelay = CSSTimeUnit;
+export type CSSTransitionBehavior = 'normal' | 'allowDiscrete';
 
 export type SingleCSSTransitionSettings = {
   transitionDuration?: CSSTransitionDuration;
   transitionTimingFunction?: CSSTransitionTimingFunction;
   transitionDelay?: CSSTransitionDelay;
-  // transitionBehavior?: // TODO not sure if we want to include it as we can already work with discrete values
 };
 
 export type SingleCSSTransitionConfig = SingleCSSTransitionSettings & {
   transitionProperty: CSSTransitionProperty;
 };
 
-export type TransitionSettingProp = keyof SingleCSSTransitionConfig;
-
 export type CSSTransitionSettings =
-  AddArrayPropertyTypes<SingleCSSTransitionSettings>;
+  AddArrayPropertyTypes<SingleCSSTransitionSettings> & {
+    transitionBehavior?: CSSTransitionBehavior;
+  };
 
 export type CSSTransitionProperties =
   AddArrayPropertyTypes<SingleCSSTransitionSettings> & {
     transitionProperty: CSSTransitionProperty;
+    transitionBehavior?: CSSTransitionBehavior;
   };
+
+export type TransitionSettingProp = keyof CSSTransitionSettings;
 
 // AFTER NORMALIZATION
 
@@ -50,6 +53,7 @@ export type NormalizedCSSTransitionPropertyNames =
 export type NormalizedCSSTransitionConfig = {
   properties: NormalizedCSSTransitionPropertyNames;
   settings: Record<string, NormalizedSingleCSSTransitionSettings>;
+  allowDiscrete: boolean;
 };
 
 export type NormalizedCSSTransitionConfigUpdates =

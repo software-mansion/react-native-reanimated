@@ -9,6 +9,7 @@ CSSTransition::CSSTransition(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : shadowNode_(std::move(shadowNode)),
       properties_(config.properties),
+      allowDiscrete_(config.allowDiscrete),
       viewStylesRepository_(viewStylesRepository),
       progressProvider_(TransitionProgressProvider(config.settings)),
       styleInterpolator_(TransitionStyleInterpolator(viewStylesRepository)) {}
@@ -23,6 +24,10 @@ ShadowNode::Shared CSSTransition::getShadowNode() const {
 
 const TransitionProperties &CSSTransition::getProperties() const {
   return properties_;
+}
+
+bool CSSTransition::getAllowDiscrete() const {
+  return allowDiscrete_;
 }
 
 double CSSTransition::getMinDelay(double timestamp) const {
@@ -40,6 +45,9 @@ jsi::Value CSSTransition::getCurrentInterpolationStyle(jsi::Runtime &rt) const {
 void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
   if (config.properties.has_value()) {
     updateTransitionProperties(config.properties.value());
+  }
+  if (config.allowDiscrete.has_value()) {
+    allowDiscrete_ = config.allowDiscrete.value();
   }
   if (config.settings.has_value()) {
     progressProvider_.setSettings(config.settings.value());

@@ -5,6 +5,7 @@ import type {
   StyleProps,
 } from 'react-native-reanimated';
 
+import type { LabelType } from '@/components';
 import { Screen, Scroll, Section, Stagger, TabView } from '@/components';
 import { TransitionConfiguration } from '@/examples/transitions/components';
 
@@ -15,6 +16,7 @@ type ExampleCardsSection = {
   title: string;
   items: Array<ExampleItemProps>;
   description?: ReactNode;
+  labelTypes?: Array<LabelType>;
 };
 
 type ExampleScreenContentProps = {
@@ -47,6 +49,7 @@ function ExampleScreenContent({
           <Section
             description={card.description}
             key={index}
+            labelTypes={card.labelTypes}
             title={card.title}>
             <ExamplesListCard
               displayStyleChanges={displayStyleChanges}

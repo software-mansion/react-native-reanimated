@@ -23,6 +23,7 @@ class CSSTransition {
   Tag getViewTag() const;
   ShadowNode::Shared getShadowNode() const;
   const TransitionProperties &getProperties() const;
+  bool getAllowDiscrete() const;
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
   jsi::Value getCurrentInterpolationStyle(jsi::Runtime &rt) const;
@@ -35,6 +36,7 @@ class CSSTransition {
  private:
   const ShadowNode::Shared shadowNode_;
   TransitionProperties properties_;
+  bool allowDiscrete_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
   TransitionProgressProvider progressProvider_;
   TransitionStyleInterpolator styleInterpolator_;

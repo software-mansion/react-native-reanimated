@@ -56,9 +56,9 @@ const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
       cubicBezier(0.175, 0.885, 0.32, 1.275),
       steps(5),
     ],
-
     value: [cubicBezier(0.175, 0.885, 0.32, 1.275), 'easeInOut'],
   },
+  transitionBehavior: 'normal',
 };
 
 const transitionStyles: Array<ViewStyle> = [

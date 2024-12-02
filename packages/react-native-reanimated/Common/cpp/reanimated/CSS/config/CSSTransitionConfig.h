@@ -22,11 +22,13 @@ using CSSTransitionPropertiesSettings =
 struct CSSTransitionConfig {
   TransitionProperties properties;
   CSSTransitionPropertiesSettings settings;
+  bool allowDiscrete;
 };
 
 struct PartialCSSTransitionConfig {
   std::optional<TransitionProperties> properties;
   std::optional<CSSTransitionPropertiesSettings> settings;
+  std::optional<bool> allowDiscrete;
 };
 
 TransitionProperties getProperties(jsi::Runtime &rt, const jsi::Object &config);

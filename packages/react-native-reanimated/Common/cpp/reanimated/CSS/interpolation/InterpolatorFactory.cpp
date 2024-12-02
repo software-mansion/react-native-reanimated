@@ -7,8 +7,8 @@ class ObjectInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   explicit ObjectInterpolatorFactory(
       const PropertyInterpolatorFactories &factories)
-      : factories_(factories) {}
-  ~ObjectInterpolatorFactory() override = default;
+      : PropertyInterpolatorFactory(PropertyType::Object),
+        factories_(factories) {}
 
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
@@ -27,8 +27,9 @@ template <typename InterpolatorType, typename ValueType>
 class ValueInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   explicit ValueInterpolatorFactory(
+      const PropertyType type,
       const std::optional<ValueType> &defaultValue)
-      : defaultValue_(defaultValue) {}
+      : PropertyInterpolatorFactory(type), defaultValue_(defaultValue) {}
 
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
@@ -48,10 +49,11 @@ class RelativeOrNumericInterpolatorFactory final
  public:
   explicit RelativeOrNumericInterpolatorFactory(
       const RelativeTo relativeTo,
-      std::string relativeProperty,
+      const std::string &relativeProperty,
       const std::optional<UnitValue> &defaultValue)
-      : relativeTo_(relativeTo),
-        relativeProperty_(std::move(relativeProperty)),
+      : PropertyInterpolatorFactory(PropertyType::RelativeNumeric),
+        relativeTo_(relativeTo),
+        relativeProperty_(relativeProperty),
         defaultValue_(defaultValue) {}
 
   std::shared_ptr<PropertyInterpolator> create(
@@ -79,7 +81,8 @@ class TransformsStyleInterpolatorFactory final
  public:
   explicit TransformsStyleInterpolatorFactory(
       const std::shared_ptr<TransformInterpolators> &interpolators)
-      : interpolators_(interpolators) {}
+      : PropertyInterpolatorFactory(PropertyType::Transforms),
+        interpolators_(interpolators) {}
 
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
@@ -106,7 +109,8 @@ std::shared_ptr<PropertyInterpolatorFactory> object(
 std::shared_ptr<PropertyInterpolatorFactory> color(
     const std::optional<Color> &defaultValue) {
   return std::make_shared<
-      ValueInterpolatorFactory<ColorValueInterpolator, Color>>(defaultValue);
+      ValueInterpolatorFactory<ColorValueInterpolator, Color>>(
+      PropertyType::Color, defaultValue);
 }
 std::shared_ptr<PropertyInterpolatorFactory> color() {
   return color(std::nullopt);
@@ -115,7 +119,8 @@ std::shared_ptr<PropertyInterpolatorFactory> color() {
 std::shared_ptr<PropertyInterpolatorFactory> numeric(
     const std::optional<double> &defaultValue) {
   return std::make_shared<
-      ValueInterpolatorFactory<NumericValueInterpolator, double>>(defaultValue);
+      ValueInterpolatorFactory<NumericValueInterpolator, double>>(
+      PropertyType::Numeric, defaultValue);
 }
 std::shared_ptr<PropertyInterpolatorFactory> numeric() {
   return numeric(std::nullopt);
@@ -124,7 +129,8 @@ std::shared_ptr<PropertyInterpolatorFactory> numeric() {
 std::shared_ptr<PropertyInterpolatorFactory> steps(
     const std::optional<int> &defaultValue) {
   return std::make_shared<
-      ValueInterpolatorFactory<NumberStepsInterpolator, int>>(defaultValue);
+      ValueInterpolatorFactory<NumberStepsInterpolator, int>>(
+      PropertyType::Steps, defaultValue);
 }
 std::shared_ptr<PropertyInterpolatorFactory> steps() {
   return steps(std::nullopt);
@@ -134,7 +140,7 @@ std::shared_ptr<PropertyInterpolatorFactory> discrete(
     const std::optional<std::string> &defaultValue) {
   return std::make_shared<
       ValueInterpolatorFactory<DiscreteStringInterpolator, std::string>>(
-      defaultValue);
+      PropertyType::Discrete, defaultValue);
 }
 std::shared_ptr<PropertyInterpolatorFactory> discrete() {
   return discrete(std::nullopt);
@@ -169,7 +175,7 @@ std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
     const TransformOrigin &defaultValue) {
   return std::make_shared<
       ValueInterpolatorFactory<TransformOriginInterpolator, TransformOrigin>>(
-      defaultValue);
+      PropertyType::TransformOrigin, defaultValue);
 }
 std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
     const std::variant<double, std::string> &x,

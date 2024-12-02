@@ -232,6 +232,8 @@ Transitions provide smooth animations between changes in style properties during
   - Same format as `animationDelay`.
 - **transitionTimingFunction**: Specifies the timing function for the transition.
   - Same format as `animationTimingFunction`.
+- **transitionBehavior**: Specifies whether transitions will be started for properties with discrete animation behavior.
+  - Accepts: `'allow-discrete'` (transitions will be started for discrete animated properties), `'normal'` (transitions will not be started for discrete animated properties).
 
 When using an array of property names in `transitionProperty`, you can specify different values for different transition properties to control each property separately:
 

@@ -36,6 +36,11 @@ const routes = {
         name: 'Transition Timing Function',
         Component: transitionSettings.TransitionTimingFunction,
       },
+      TransitionBehavior: {
+        labelTypes: ['new'],
+        name: 'Transition Behavior',
+        Component: transitionSettings.TransitionBehavior,
+      },
     },
   },
   Miscellaneous: {

@@ -49,10 +49,7 @@ const getTimeUnit = (
     : timeToNumber(timeUnit);
 };
 
-const getTimeout = (
-  sharedConfig: Partial<CSSTransitionProperties>,
-  settings: CSSTransitionSettings
-): number => {
+const getTimeout = (settings: CSSTransitionSettings): number => {
   const duration = getTimeUnit(settings.transitionDuration);
   const delay = getTimeUnit(settings.transitionDelay);
   return Math.max(duration + delay, MIN_STYLE_CHANGE_DURATION);
@@ -172,12 +169,9 @@ const Example = memo(
         if (displayStyleChanges) {
           setShowStyleChange(true);
           clearTimeout(styleChangeCloseTimeoutRef.current!);
-          styleChangeCloseTimeoutRef.current = setTimeout(
-            () => {
-              setShowStyleChange(false);
-            },
-            getTimeout(transitionProperties, item)
-          );
+          styleChangeCloseTimeoutRef.current = setTimeout(() => {
+            setShowStyleChange(false);
+          }, getTimeout(item));
         }
       }, 0);
     });
