@@ -198,7 +198,9 @@ ReanimatedModuleProxy::~ReanimatedModuleProxy() {
   // runtime, so they have to go away before we tear down the runtime
   eventHandlerRegistry_.reset();
   frameCallbacks_.clear();
+#ifdef RCT_NEW_ARCH_ENABLED
   operationsInBatch_.clear();
+#endif // RCT_NEW_ARCH_ENABLED
   uiWorkletRuntime_.reset();
 }
 
