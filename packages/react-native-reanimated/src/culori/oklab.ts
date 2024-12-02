@@ -34,7 +34,6 @@ function convertRgbToOklab(rgb: RgbColor) {
   if (rgb.r === rgb.b && rgb.b === rgb.g) {
     result.a = result.b = 0;
   }
-  console.log('RGB => Oklab', rgb, result);
   return result;
 }
 
@@ -45,8 +44,8 @@ function convertOklabToLrgb({
   alpha,
 }: LabColor): RgbColor {
   'worklet';
+  /* eslint-disable @typescript-eslint/no-loss-of-precision */
   const L = Math.pow(
-    // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
     l * 0.99999999845051981432 +
       0.39633779217376785678 * a +
       0.21580375806075880339 * b,
@@ -66,6 +65,7 @@ function convertOklabToLrgb({
       1.2914855378640917399 * b,
     3
   );
+  /* eslint-enable */
 
   return {
     r: +4.076741661347994 * L - 3.307711590408193 * M + 0.230969928729428 * S,
@@ -82,15 +82,13 @@ function convertOklabToLrgb({
 function convertOklabToRgb(labColor: LabColor): RgbColor {
   'worklet';
   const roundChannel = (channel: number) =>
-    Math.ceil(channel * 100000) / 100000;
+    Math.ceil(channel * 100_000) / 100_000;
 
   const lrgbColor = convertOklabToLrgb(labColor);
   const rgbColor = lrgb.convert.toRgb(lrgbColor);
   rgbColor.r = roundChannel(rgbColor.r);
   rgbColor.g = roundChannel(rgbColor.g);
   rgbColor.b = roundChannel(rgbColor.b);
-
-  console.log('Oklab => RGB', labColor, rgbColor);
   return rgbColor;
 }
 

@@ -139,9 +139,9 @@ function hsvStarInterpolation(
   return interpolateColor(progress, [0, 1], [color1, color2], 'HSV');
 }
 
-function labInterpolation(color1: string, color2: string, progress: number) {
+function oklabInterpolation(color1: string, color2: string, progress: number) {
   'worklet';
-  return interpolateColor(progress, [0, 1], [color1, color2], 'LAB');
+  return interpolateColor(progress, [0, 1], [color1, color2], 'OKLAB');
 }
 
 export default function ColorInterpolationExample() {
@@ -206,7 +206,7 @@ export default function ColorInterpolationExample() {
       <ColorInterpolation
         color1={color1}
         color2={color2}
-        interpolateFunction={labInterpolation}
+        interpolateFunction={oklabInterpolation}
         title="OK L*a*b*"
       />
     </ScrollView>
