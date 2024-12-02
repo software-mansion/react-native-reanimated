@@ -70,7 +70,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
           propsMap[&family].emplace_back(props);
         });
 
-    rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
+    rootNode = cloneShadowTreeWithNewPropsUnmounted(rootNode, propsMap);
 
     // If the commit comes from React Native then pause commits from
     // Reanimated since the ShadowTree to be committed by Reanimated may not
