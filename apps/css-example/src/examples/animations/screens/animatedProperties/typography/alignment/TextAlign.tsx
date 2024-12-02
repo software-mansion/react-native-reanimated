@@ -21,8 +21,9 @@ export default function TextAlign() {
             Hello from Reanimated!
           </Animated.Text>
           <Animated.Text style={[styles.body, animation]}>
-            Ipsum fugiat culpa minim consequat eu exercitation est pariatur
-            tempor magna. Ad ad fugiat eiusmod magna magna enim eu amet.
+            Lorem ipsum fugiat culpa minim consequat eu exercitation est
+            pariatur tempor magna. Ad ad fugiat eiusmod magna magna enim eu
+            amet.
           </Animated.Text>
         </>
       )}

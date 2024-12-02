@@ -24,7 +24,8 @@
 namespace reanimated::Interpolators {
 
 /**
- * Property interpolators
+ * Generic property interpolators
+ * - can be used for multiple properties with the same interpolation behavior
  */
 
 std::shared_ptr<PropertyInterpolatorFactory> object(
@@ -62,6 +63,14 @@ std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
     RelativeTo relativeTo,
     const std::string &relativeProperty);
 
+/**
+ * Specific property interpolators
+ * - can be used only for a single (specific) property
+ */
+
+std::shared_ptr<PropertyInterpolatorFactory> transforms(
+    const TransformInterpolatorsMap &interpolators);
+
 std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
     const TransformOrigin &defaultValue);
 std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
@@ -69,11 +78,12 @@ std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
     const std::variant<double, std::string> &y,
     double z);
 
-std::shared_ptr<PropertyInterpolatorFactory> transforms(
-    const TransformInterpolatorsMap &interpolators);
+std::shared_ptr<PropertyInterpolatorFactory> display(
+    const std::string &defaultValue);
 
 /**
  * Transform interpolators
+ * - can be used only within the transforms group interpolator
  */
 
 std::shared_ptr<TransformInterpolator> perspective(double defaultValue);

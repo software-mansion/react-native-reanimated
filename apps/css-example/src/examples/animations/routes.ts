@@ -141,8 +141,6 @@ const layoutAndPositioningRoutes = {
       },
       Display: {
         name: 'Display',
-        disabled: true,
-        labelTypes: ['unimplemented'],
         Component: animatedProperties.layoutAndPositioning.others.Display,
       },
       Overflow: {

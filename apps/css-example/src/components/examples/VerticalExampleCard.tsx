@@ -10,7 +10,7 @@ import Animated, {
   LinearTransition,
 } from 'react-native-reanimated';
 
-import { CodeBlock, ExpandableCard, Text } from '@/components';
+import { Button, CodeBlock, ExpandableCard, Text } from '@/components';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 import type { ExampleCardProps } from './ExampleCard';
@@ -22,17 +22,25 @@ export default function VerticalExampleCard({
   collapsedExampleHeight = 150,
   description,
   minExampleHeight,
+  showRestartButton,
   title,
 }: ExampleCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [key, setKey] = useState(0);
 
   return (
     <LayoutAnimationConfig skipEntering skipExiting>
       <ExpandableCard expanded={true}>
-        <View style={styles.textWrapper}>
+        <View style={styles.titleRow}>
           {title && <Text variant="subHeading2">{title}</Text>}
-          {description && <Text style={styles.description}>{description}</Text>}
+          {showRestartButton && (
+            <Button
+              title="Restart"
+              onPress={() => setKey((prev) => prev + 1)}
+            />
+          )}
         </View>
+        {description && <Text style={styles.description}>{description}</Text>}
         <Animated.View style={styles.itemsContainer}>
           {/* Code block */}
           <Animated.View layout={LinearTransition} style={styles.itemWrapper}>
@@ -67,6 +75,7 @@ export default function VerticalExampleCard({
           </Animated.View>
           {/* Example */}
           <Animated.View
+            key={key}
             layout={LinearTransition}
             style={[
               styles.itemWrapper,
@@ -122,7 +131,11 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     height: 'auto',
   },
-  textWrapper: {
-    paddingBottom: spacing.xs,
+  titleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs,
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
   },
 });

@@ -96,6 +96,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   textColumn: {
+    flexGrow: 1,
     flexShrink: 1,
     gap: spacing.xxs,
     justifyContent: 'space-evenly',

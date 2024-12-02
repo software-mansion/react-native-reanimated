@@ -23,6 +23,21 @@ std::string DiscreteStringInterpolator::interpolate(
   return progress < 0.5 ? fromValue : toValue;
 }
 
+std::string DisplayInterpolator::interpolate(
+    const double progress,
+    const std::string &fromValue,
+    const std::string &toValue,
+    const ValueInterpolatorUpdateContext &context) const {
+  if (progress == 0 || toValue == "none") {
+    return fromValue;
+  }
+  if (progress == 1 || fromValue == "none") {
+    return toValue;
+  }
+  return DiscreteStringInterpolator::interpolate(
+      progress, fromValue, toValue, context);
+}
+
 } // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED

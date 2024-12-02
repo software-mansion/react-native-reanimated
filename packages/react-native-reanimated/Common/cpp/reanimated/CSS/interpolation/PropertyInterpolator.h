@@ -12,14 +12,9 @@
 namespace reanimated {
 
 enum class PropertyType {
-  Numeric,
+  Continuous,
   Discrete,
-  Color,
-  RelativeNumeric,
-  Steps,
-  TransformOrigin,
   Object,
-  Transforms
 };
 
 class PropertyInterpolator {
