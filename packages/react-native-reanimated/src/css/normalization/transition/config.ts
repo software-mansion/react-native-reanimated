@@ -18,6 +18,7 @@ import {
   normalizeTimingFunction,
   normalizeDelay,
 } from '../common';
+import { normalizeTransitionBehavior } from './settings';
 
 export const ERROR_MESSAGES = {
   invalidTransitionProperty: (transitionProperty: CSSTransitionProperty) =>
@@ -85,6 +86,7 @@ export function normalizeCSSTransitionProperties(
   return {
     properties: allPropertiesTransition ? 'all' : specificProperties.reverse(),
     settings,
+    allowDiscrete: normalizeTransitionBehavior(config.transitionBehavior),
   };
 }
 
@@ -114,14 +116,17 @@ export function getNormalizedCSSTransitionConfigUpdates(
         !oldConfig.settings[key] ||
         // TODO - think of a better way to compare settings (necessary for
         // timing functions comparison). Maybe add some custom way instead
-        // of deepEqual (we used .equal method before from the easing clas
-        // but it can no longer be used if we are getting normalized values)
+        // of deepEqual
         !deepEqual(oldConfig.settings[key], newConfig.settings[key])
       ) {
         configUpdates.settings = newConfig.settings;
         break;
       }
     }
+  }
+
+  if (oldConfig.allowDiscrete !== newConfig.allowDiscrete) {
+    configUpdates.allowDiscrete = newConfig.allowDiscrete;
   }
 
   return configUpdates;

@@ -125,20 +125,23 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
              const jsi::Value &oldProps,
              const jsi::Value &newProps) {
     const auto &transition = registry_.at(viewTag);
-    const auto &transitionProperties = transition->getProperties();
-    const auto changedProps =
-        getChangedProps(rt, oldProps, newProps, transitionProperties);
+    const auto changedProps = getChangedProps(
+        rt,
+        oldProps,
+        newProps,
+        transition->getAllowDiscrete(),
+        transition->getProperties());
 
     if (changedProps.changedPropertyNames.empty()) {
       return;
     }
-    const auto &shadowNode = transition->getShadowNode();
 
     {
       std::lock_guard<std::mutex> lock{mutex_};
 
       const auto &initialProps =
           transition->run(rt, changedProps, getCurrentTimestamp_());
+      const auto &shadowNode = transition->getShadowNode();
       updatesRegistry_[viewTag] =
           std::make_pair(shadowNode, dynamicFromValue(rt, initialProps));
       scheduleOrActivateTransition(transition);

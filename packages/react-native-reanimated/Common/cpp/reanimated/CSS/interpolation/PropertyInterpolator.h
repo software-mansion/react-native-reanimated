@@ -11,20 +11,26 @@
 
 namespace reanimated {
 
+enum class PropertyType {
+  Numeric,
+  Discrete,
+  Color,
+  RelativeNumeric,
+  Steps,
+  TransformOrigin,
+  Object,
+  Transforms
+};
+
 class PropertyInterpolator {
  public:
   explicit PropertyInterpolator(
       const PropertyPath &propertyPath,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      : propertyPath_(propertyPath),
-        viewStylesRepository_(viewStylesRepository),
-        progressProvider_(progressProvider) {}
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   void setProgressProvider(
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
-    progressProvider_ = progressProvider;
-  }
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider);
 
   virtual jsi::Value getStyleValue(
       jsi::Runtime &rt,
@@ -58,12 +64,22 @@ class PropertyInterpolator {
 
 class PropertyInterpolatorFactory {
  public:
+  explicit PropertyInterpolatorFactory(PropertyType type);
+  virtual ~PropertyInterpolatorFactory() = default;
+
   virtual std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       const = 0;
-  virtual ~PropertyInterpolatorFactory() = default;
+
+  virtual PropertyType getType() const;
+
+  template <typename T>
+  static std::shared_ptr<PropertyInterpolatorFactory> create(PropertyType type);
+
+ private:
+  PropertyType type_;
 };
 
 using PropertiesInterpolators =

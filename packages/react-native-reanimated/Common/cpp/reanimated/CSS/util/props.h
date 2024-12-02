@@ -2,6 +2,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/definitions.h>
+#include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
 
 #include <memory>
 #include <string>
@@ -28,11 +29,13 @@ ChangedProps getChangedProps(
     jsi::Runtime &rt,
     const jsi::Value &oldProps,
     const jsi::Value &newProps,
+    bool allowDiscrete,
     const std::optional<PropertyNames> &propertyNames);
 ChangedProps getChangedProps(
     jsi::Runtime &rt,
     const jsi::Value &oldProps,
-    const jsi::Value &newProps);
+    const jsi::Value &newProps,
+    bool allowDiscrete);
 
 }; // namespace reanimated
 

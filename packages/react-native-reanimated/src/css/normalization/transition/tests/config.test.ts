@@ -21,10 +21,12 @@ describe(normalizeCSSTransitionProperties, () => {
         transitionDuration: '1.5s',
         transitionTimingFunction: cubicBezier(0.4, 0, 0.2, 1),
         transitionDelay: '300ms',
+        transitionBehavior: 'allowDiscrete',
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
         properties: 'all',
+        allowDiscrete: true,
         settings: {
           all: {
             duration: 1500,
@@ -42,6 +44,7 @@ describe(normalizeCSSTransitionProperties, () => {
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
         properties: ['opacity'],
+        allowDiscrete: false,
         settings: {
           opacity: {
             duration: 0,
@@ -78,6 +81,7 @@ describe(normalizeCSSTransitionProperties, () => {
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
         properties: 'all',
+        allowDiscrete: false,
         settings: {
           all: {
             duration: 1500,
@@ -100,6 +104,7 @@ describe(normalizeCSSTransitionProperties, () => {
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
         properties: ['opacity', 'transform'],
+        allowDiscrete: false,
         settings: {
           opacity: {
             duration: 1500,
@@ -125,6 +130,7 @@ describe(normalizeCSSTransitionProperties, () => {
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
         properties: ['opacity', 'width'],
+        allowDiscrete: false,
         settings: {
           opacity: {
             duration: 1500,
@@ -150,6 +156,7 @@ describe(normalizeCSSTransitionProperties, () => {
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
         properties: ['width', 'opacity', 'transform'],
+        allowDiscrete: false,
         settings: {
           width: {
             duration: 1500,
@@ -180,6 +187,7 @@ describe(normalizeCSSTransitionProperties, () => {
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
         properties: ['opacity'],
+        allowDiscrete: false,
         settings: {
           opacity: {
             duration: 2000,
@@ -200,6 +208,7 @@ describe(normalizeCSSTransitionProperties, () => {
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({
         properties: 'all',
+        allowDiscrete: false,
         settings: {
           all: {
             duration: 1500,
@@ -236,6 +245,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
   it('returns empty object if nothing changed', () => {
     const oldConfig: NormalizedCSSTransitionConfig = {
       properties: 'all',
+      allowDiscrete: false,
       settings: {
         all: {
           duration: 1500,
@@ -246,6 +256,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
     };
     const newConfig: NormalizedCSSTransitionConfig = {
       properties: 'all',
+      allowDiscrete: false,
       settings: {
         all: {
           duration: 1500,
@@ -274,10 +285,12 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
         const oldConfig: NormalizedCSSTransitionConfig = {
           properties: oldProperties,
           settings: {},
+          allowDiscrete: false,
         };
         const newConfig: NormalizedCSSTransitionConfig = {
           properties: newProperties,
           settings: {},
+          allowDiscrete: false,
         };
 
         expect(
@@ -296,10 +309,12 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
         const oldConfig: NormalizedCSSTransitionConfig = {
           properties,
           settings: {},
+          allowDiscrete: false,
         };
         const newConfig: NormalizedCSSTransitionConfig = {
           properties,
           settings: {},
+          allowDiscrete: false,
         };
 
         expect(
@@ -321,6 +336,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
               delay: 300,
             },
           },
+          allowDiscrete: false,
         };
         const newConfig: NormalizedCSSTransitionConfig = {
           properties: 'all',
@@ -331,6 +347,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
               delay: 300,
             },
           },
+          allowDiscrete: false,
         };
 
         expect(
@@ -356,6 +373,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
               delay: 300,
             },
           },
+          allowDiscrete: false,
         };
         const newConfig: NormalizedCSSTransitionConfig = {
           properties: 'all',
@@ -366,6 +384,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
               delay: 300,
             },
           },
+          allowDiscrete: false,
         };
 
         expect(
@@ -395,6 +414,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
               delay: 200,
             },
           },
+          allowDiscrete: false,
         };
         const newConfig: NormalizedCSSTransitionConfig = {
           properties: ['transform', 'width', 'opacity'],
@@ -415,12 +435,14 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
               delay: 200,
             },
           },
+          allowDiscrete: true,
         };
 
         expect(
           getNormalizedCSSTransitionConfigUpdates(oldConfig, newConfig)
         ).toEqual({
           properties: ['transform', 'width', 'opacity'],
+          allowDiscrete: true,
           settings: {
             opacity: {
               duration: 1500,

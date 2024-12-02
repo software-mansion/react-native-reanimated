@@ -41,13 +41,13 @@ export type SingleCSSAnimationProperties = SingleCSSAnimationSettings & {
   animationName: CSSAnimationKeyframes;
 };
 
-export type AnimationSettingProp = keyof SingleCSSAnimationSettings;
-
 export type CSSAnimationSettings =
   AddArrayPropertyTypes<SingleCSSAnimationSettings>;
 
 export type CSSAnimationProperties =
   AddArrayPropertyTypes<SingleCSSAnimationProperties>;
+
+export type AnimationSettingProp = keyof CSSAnimationSettings;
 
 // AFTER NORMALIZATION
 

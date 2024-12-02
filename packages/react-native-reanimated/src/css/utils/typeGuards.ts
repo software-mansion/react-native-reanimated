@@ -12,10 +12,10 @@ const ANIMATION_SETTINGS: AnimationSettingProp[] = [
 ];
 
 const TRANSITION_SETTINGS: TransitionSettingProp[] = [
-  'transitionProperty',
   'transitionDuration',
   'transitionTimingFunction',
   'transitionDelay',
+  'transitionBehavior',
 ];
 
 const ANIMATION_SETTINGS_SET = new Set<string>(ANIMATION_SETTINGS);

@@ -57,7 +57,8 @@ CSSTransitionConfig parseCSSTransitionConfig(
   return CSSTransitionConfig{
       getProperties(rt, configObj),
       parseCSSTransitionPropertiesSettings(
-          rt, configObj.getProperty(rt, "settings").asObject(rt))};
+          rt, configObj.getProperty(rt, "settings").asObject(rt)),
+      configObj.getProperty(rt, "allowDiscrete").asBool()};
 }
 
 PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
@@ -73,6 +74,9 @@ PartialCSSTransitionConfig parsePartialCSSTransitionConfig(
   if (partialObj.hasProperty(rt, "settings")) {
     result.settings = parseCSSTransitionPropertiesSettings(
         rt, partialObj.getProperty(rt, "settings").asObject(rt));
+  }
+  if (partialObj.hasProperty(rt, "allowDiscrete")) {
+    result.allowDiscrete = partialObj.getProperty(rt, "allowDiscrete").asBool();
   }
 
   return result;

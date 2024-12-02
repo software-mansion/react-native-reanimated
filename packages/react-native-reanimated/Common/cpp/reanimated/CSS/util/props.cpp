@@ -257,10 +257,17 @@ ChangedProps processPropertyChanges(
       std::move(changedPropertyNames)};
 }
 
+bool isDiscreteProperty(const std::string &propName) {
+  const auto &it = PROPERTY_INTERPOLATOR_FACTORIES.find(propName);
+  return it != PROPERTY_INTERPOLATOR_FACTORIES.end() &&
+      it->second->getType() == PropertyType::Discrete;
+}
+
 ChangedProps getChangedProps(
     jsi::Runtime &rt,
     const jsi::Value &oldProps,
-    const jsi::Value &newProps) {
+    const jsi::Value &newProps,
+    const bool allowDiscrete) {
   const auto oldObject = oldProps.asObject(rt);
   const auto newObject = newProps.asObject(rt);
 
@@ -272,12 +279,16 @@ ChangedProps getChangedProps(
   for (size_t i = 0; i < oldPropertyNames.size(rt); i++) {
     const auto propName =
         oldPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    allPropNames.insert(propName);
+    if (allowDiscrete || !isDiscreteProperty(propName)) {
+      allPropNames.insert(propName);
+    }
   }
   for (size_t i = 0; i < newPropertyNames.size(rt); i++) {
     const auto propName =
         newPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    allPropNames.insert(propName);
+    if (allowDiscrete || !isDiscreteProperty(propName)) {
+      allPropNames.insert(propName);
+    }
   }
 
   PropertyNames propNamesVec(allPropNames.begin(), allPropNames.end());
@@ -289,13 +300,26 @@ ChangedProps getChangedProps(
     jsi::Runtime &rt,
     const jsi::Value &oldProps,
     const jsi::Value &newProps,
+    const bool allowDiscrete,
     const std::optional<PropertyNames> &propertyNames) {
   if (!propertyNames.has_value()) {
-    return getChangedProps(rt, oldProps, newProps);
+    return getChangedProps(rt, oldProps, newProps, allowDiscrete);
+  }
+
+  const auto &transitionProperties = propertyNames.value();
+  PropertyNames propNamesVec;
+  propNamesVec.reserve(transitionProperties.size());
+  for (const auto &propName : transitionProperties) {
+    if (allowDiscrete || !isDiscreteProperty(propName)) {
+      propNamesVec.emplace_back(propName);
+    }
   }
 
   return processPropertyChanges(
-      rt, oldProps.asObject(rt), newProps.asObject(rt), propertyNames.value());
+      rt,
+      oldProps.asObject(rt),
+      newProps.asObject(rt),
+      std::move(propNamesVec));
 }
 
 } // namespace reanimated
