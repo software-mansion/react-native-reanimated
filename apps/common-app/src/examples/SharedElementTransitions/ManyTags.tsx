@@ -63,7 +63,7 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
         sharedTransitionTag="placeholder1"
         style={styles.greenBoxScreenTwo}
       />
-      <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
+      <Button title="go back" onPress={() => navigation.popTo('Screen1')} />
     </View>
   );
 }

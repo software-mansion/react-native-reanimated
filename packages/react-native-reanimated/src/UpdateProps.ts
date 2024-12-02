@@ -8,11 +8,11 @@ import type {
   AnimatedStyle,
 } from './commonTypes';
 import type { Descriptor } from './hook/commonTypes';
-import type { ReanimatedHTMLElement } from './js-reanimated';
-import { _updatePropsJS } from './js-reanimated';
 import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
 import { runOnUIImmediately } from './threads';
 import { ReanimatedError } from './errors';
+import { _updatePropsJS } from './ReanimatedModule/js-reanimated';
+import type { ReanimatedHTMLElement } from './ReanimatedModule/js-reanimated';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -32,6 +32,11 @@ if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
     processColorsInProps(updates);
+    if (updates.transformOrigin) {
+      if (!Array.isArray(updates.transformOrigin)) {
+        throw new ReanimatedError('Please use transformOrigin in array form');
+      }
+    }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
 }

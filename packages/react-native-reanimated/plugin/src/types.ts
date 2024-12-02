@@ -31,10 +31,8 @@ export interface ReanimatedPluginPass {
   opts: ReanimatedPluginOptions;
   cwd: string;
   filename: string | undefined;
-  get(key: unknown): unknown;
-  set(key: unknown, value: unknown): void;
   workletNumber: number;
-  [key: string]: unknown;
+  classesToWorkletize: { node: BabelNode; name: string }[];
 }
 
 export type WorkletizableFunction =

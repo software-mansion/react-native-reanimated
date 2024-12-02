@@ -1,6 +1,9 @@
 'use strict';
-import type { ReduceMotion, StyleProps } from '../../commonTypes';
-import type { LayoutAnimationType } from '../animationBuilder/commonTypes';
+import type {
+  LayoutAnimationType,
+  ReduceMotion,
+  StyleProps,
+} from '../../commonTypes';
 import {
   BounceIn,
   BounceInData,

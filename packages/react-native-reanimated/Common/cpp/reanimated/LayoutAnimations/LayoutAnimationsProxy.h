@@ -19,7 +19,7 @@
 
 namespace reanimated {
 
-class NativeReanimatedModule;
+class ReanimatedModuleProxy;
 
 using namespace facebook;
 

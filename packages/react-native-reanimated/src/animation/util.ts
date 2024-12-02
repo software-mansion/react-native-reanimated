@@ -38,6 +38,7 @@ import type { EasingFunctionFactory } from '../Easing';
 import { ReducedMotionManager } from '../ReducedMotion';
 import { logger } from '../logger';
 import { ReanimatedError } from '../errors';
+import { runOnUI } from '../threads';
 
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -527,12 +528,15 @@ export function defineAnimation<
   if (_WORKLET || SHOULD_BE_USE_WEB) {
     return create();
   }
-  // @ts-ignore: eslint-disable-line
+  create.__isAnimationDefinition = true;
+
+  // @ts-expect-error it's fine
   return create;
 }
 
 /**
- * Lets you cancel a running animation paired to a shared value.
+ * Lets you cancel a running animation paired to a shared value. The
+ * cancellation is asynchronous.
  *
  * @param sharedValue - The shared value of a running animation that you want to
  *   cancel.
@@ -541,5 +545,12 @@ export function defineAnimation<
 export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
-  sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+  if (_WORKLET) {
+    sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+  } else {
+    runOnUI(() => {
+      'worklet';
+      sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+    })();
+  }
 }

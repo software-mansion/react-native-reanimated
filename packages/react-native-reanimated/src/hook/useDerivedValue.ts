@@ -73,11 +73,5 @@ export function useDerivedValue<Value>(
     };
   }, dependencies);
 
-  useEffect(() => {
-    return () => {
-      initRef.current = null;
-    };
-  }, []);
-
   return sharedValue;
 }
