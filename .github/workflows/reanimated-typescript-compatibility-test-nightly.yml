@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         # TODO: Fetch versions from common source.
-        react-native-version: ['0.72', '0.73', '0.74', '0.75', nightly]
+        react-native-version: ['0.74', '0.75', '0.76', nightly]
       fail-fast: false
     concurrency:
       group: TS-react-native-nightly-${{ matrix.react-native-version }}-${{ github.ref }}
@@ -52,6 +52,3 @@ jobs:
       - name: Run common type tests
         working-directory: packages/react-native-reanimated
         run: yarn type:check:tests:common
-      - name: Run 0.72+ type tests
-        working-directory: packages/react-native-reanimated
-        run: yarn type:check:tests:0.72+

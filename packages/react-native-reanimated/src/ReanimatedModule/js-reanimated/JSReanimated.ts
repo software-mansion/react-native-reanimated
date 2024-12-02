@@ -12,6 +12,7 @@ import type {
   ShareableRef,
   Value3D,
   ValueRotation,
+  WorkletFunction,
 } from '../../commonTypes';
 import type { WebSensor } from './WebSensor';
 import { mockedRequestAnimationFrame } from '../../mockedRequestAnimationFrame';
@@ -41,12 +42,6 @@ class JSReanimated implements IReanimatedModule {
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
-
-  makeShareableClone<T>(): ShareableRef<T> {
-    throw new ReanimatedError(
-      'makeShareableClone should never be called in JSReanimated.'
-    );
-  }
 
   scheduleOnUI<T>(worklet: ShareableRef<T>) {
     // @ts-ignore web implementation has still not been updated after the rewrite, this will be addressed once the web implementation updates are ready
@@ -216,7 +211,7 @@ class JSReanimated implements IReanimatedModule {
     }
   }
 
-  subscribeForKeyboardEvents(_: ShareableRef<number>): number {
+  subscribeForKeyboardEvents(_: ShareableRef<WorkletFunction>): number {
     if (isWeb()) {
       logger.warn('useAnimatedKeyboard is not available on web yet.');
     } else if (isJest()) {

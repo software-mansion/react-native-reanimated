@@ -19,7 +19,10 @@ import Animated, {
   FlipOutYRight,
 } from 'react-native-reanimated';
 import { createStackNavigator } from '@react-navigation/stack';
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  NavigationIndependentTree,
+} from '@react-navigation/native';
 import type { StackScreenProps } from '@react-navigation/stack';
 
 interface Item {
@@ -92,12 +95,14 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 export default function Layout() {
   return (
-    <NavigationContainer independent={true}>
-      <Stack.Navigator screenOptions={{ title: 'Layout Transitions 🔥' }}>
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="TransitionScreen" component={Transition} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <NavigationIndependentTree>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ title: 'Layout Transitions 🔥' }}>
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="TransitionScreen" component={Transition} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </NavigationIndependentTree>
   );
 }
 

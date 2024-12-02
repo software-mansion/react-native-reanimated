@@ -11,6 +11,7 @@ import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
+import com.swmansion.worklets.WorkletsModule;
 import java.util.ArrayList;
 import javax.annotation.Nullable;
 
@@ -61,9 +62,15 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
 
   private ArrayList<UIThreadOperation> mOperations = new ArrayList<>();
   private @Nullable NodesManager mNodesManager;
+  private final WorkletsModule mWorkletsModule;
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
+    mWorkletsModule = reactContext.getNativeModule(WorkletsModule.class);
+  }
+
+  public WorkletsModule getWorkletsModule() {
+    return mWorkletsModule;
   }
 
   @Override
@@ -129,20 +136,20 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   /*package*/
   public NodesManager getNodesManager() {
     if (mNodesManager == null) {
-      mNodesManager = new NodesManager(getReactApplicationContext());
+      mNodesManager = new NodesManager(getReactApplicationContext(), mWorkletsModule);
     }
 
     return mNodesManager;
   }
 
   @ReactMethod(isBlockingSynchronousMethod = true)
-  public boolean installTurboModule(String valueUnpackerCode) {
+  public boolean installTurboModule() {
     // When debugging in chrome the JS context is not available.
     // https://github.com/facebook/react-native/blob/v0.67.0-rc.6/ReactAndroid/src/main/java/com/facebook/react/modules/blob/BlobCollector.java#L25
     Utils.isChromeDebugger = getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
 
     if (!Utils.isChromeDebugger) {
-      this.getNodesManager().initWithContext(getReactApplicationContext(), valueUnpackerCode);
+      this.getNodesManager().initWithContext(getReactApplicationContext());
       return true;
     } else {
       Log.w(

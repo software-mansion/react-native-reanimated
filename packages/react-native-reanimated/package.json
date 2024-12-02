@@ -18,13 +18,11 @@
     "format:android:cpp": "find android/src -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error",
-    "type:check": "yarn type:check:src && yarn type:check:plugin && ./scripts/test-ts.sh ../../apps/common-app/src/App.tsx __typetests__/common __typetests__/72plus __typetests__/legacy",
+    "type:check": "yarn type:check:src && yarn type:check:plugin && ./scripts/test-ts.sh ../../apps/common-app/src/App.tsx __typetests__/common",
     "type:check:src": "yarn tsc --noEmit",
     "type:check:plugin": "cd plugin && yarn type:check:src",
     "type:check:app": "./scripts/test-ts.sh ../../apps/common-app/src/App.tsx",
     "type:check:tests:common": "./scripts/test-ts.sh __typetests__/common",
-    "type:check:tests:0.72+": "./scripts/test-ts.sh __typetests__/72plus",
-    "type:check:tests:legacy": "./scripts/test-ts.sh __typetests__/legacy",
     "build": "yarn build:plugin && bob build",
     "build:plugin": "cd plugin && yarn build",
     "circular-dependency-check": "yarn madge --extensions js,ts,tsx --circular src lib",
@@ -145,7 +143,7 @@
     "prettier": "^3.3.3",
     "react": "18.3.1",
     "react-native": "^0.76.1",
-    "react-native-builder-bob": "0.30.2",
+    "react-native-builder-bob": "0.33.1",
     "react-native-gesture-handler": "2.20.2",
     "react-native-web": "0.19.11",
     "react-test-renderer": "18.2.0",
@@ -160,7 +158,8 @@
       [
         "module",
         {
-          "esm": true
+          "esm": true,
+          "jsxRuntime": "classic"
         }
       ],
       "typescript"

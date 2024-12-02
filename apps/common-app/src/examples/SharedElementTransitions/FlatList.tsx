@@ -109,7 +109,7 @@ function Screen2({
 }: NativeStackScreenProps<ParamList, 'Screen2'>) {
   return (
     <View style={styles.flexOne}>
-      <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
+      <Button title="go back" onPress={() => navigation.popTo('Screen1')} />
       <Animated.Image
         sharedTransitionTag={route.params.sharedTransitionTag + 'image'}
         source={photo}

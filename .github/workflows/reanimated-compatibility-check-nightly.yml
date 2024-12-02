@@ -19,12 +19,12 @@ jobs:
         # Update it when dropping support for RN versions.
         react-native:
           [
-            { version: '0.72', architecture: 'Paper' },
-            { version: '0.73', architecture: 'Paper' },
             { version: '0.74', architecture: 'Paper' },
             { version: '0.74', architecture: 'Fabric' },
             { version: '0.75', architecture: 'Paper' },
             { version: '0.75', architecture: 'Fabric' },
+            { version: '0.76', architecture: 'Paper' },
+            { version: '0.76', architecture: 'Fabric' },
           ]
       fail-fast: false
     env:
@@ -44,28 +44,37 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+      - name:
+          Setup Yarn
+          # Sometimes `npx @react-native-community/cli init` fails at random.
+          # Pre-installing it with Yarn seems to improve stability.
+        run: corepack enable && yarn init
+      - name: Install React Native CLI
+        run: yarn add @react-native-community/cli
       - name: Create app
-        run: |
-          npx react-native@latest init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --skip-install --install-pods 0 --skip-git-init
-      - name: Setup Yarn Modern
+        run: yarn rnc-cli init ${{env.APP_NAME}} --version ${{ matrix.react-native.version }} --skip-install --pm yarn --install-pods 0 --skip-git-init
+      - name: Setup Yarn Modern in app
         # For convenience, sometimes there are vague issues with RN CLI and Yarn Legacy on the runner.
         working-directory: ${{ env.APP_NAME }}
-        run: corepack enable && yarn set version berry
+        run: |
+          touch yarn.lock
+          yarn set version berry
+          yarn config set nodeLinker node-modules
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
       - name: Install Pods
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}/ios
-        run: bundle install && bundle exec pod install
+        run: bundle install && bundle exec pod update
       - name: Setup Fabric (Android)
         if: ${{ matrix.platform == 'Android' && matrix.react-native.architecture == 'Fabric' }}
         working-directory: ${{ env.APP_NAME }}/android
         run: sed -i 's/newArchEnabled=false/newArchEnabled=true/' gradle.properties
       - name: Build app (iOS)
         if: ${{ matrix.platform == 'iOS' }}
-        working-directory: ${{ env.APP_NAME }}
-        run: yarn react-native run-ios --simulator='iPhone 14' --terminal='Terminal'--mode=${{ matrix.mode }}
+        working-directory: ${{ env.APP_NAME }}/ios
+        run: xcodebuild -workspace ${{env.APP_NAME}}.xcworkspace -configuration ${{matrix.mode}} -scheme ${{env.APP_NAME}} -destination "generic/platform=iOS Simulator" -quiet
       - name: Build app (Android)
         if: ${{ matrix.platform == 'Android' }}
         working-directory: ${{ env.APP_NAME }}/android
