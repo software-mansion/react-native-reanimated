@@ -148,6 +148,37 @@ const interpolateColorsLAB = (
   return rgbaColor(_r, _g, _b, _alpha);
 };
 
+const _splitColorsIntoChannels = (
+  colors: readonly (string | number)[],
+  ch1: number[],
+  ch2: number[],
+  ch3: number[],
+  alpha: number[],
+  convFromRgb: (color: { r: number; g: number; b: number }) => {
+    ch1: number;
+    ch2: number;
+    ch3: number;
+  }
+) => {
+  'worklet';
+  for (let i = 0; i < colors.length; i++) {
+    const color = colors[i];
+    const processedColor = processColor(color);
+    if (typeof processedColor === 'number') {
+      const convertedColor = convFromRgb({
+        r: red(processedColor),
+        g: green(processedColor),
+        b: blue(processedColor),
+      });
+
+      ch1.push(convertedColor.ch1);
+      ch2.push(convertedColor.ch2);
+      ch3.push(convertedColor.ch3);
+      alpha.push(opacity(processedColor));
+    }
+  }
+};
+
 export interface InterpolateRGB {
   r: number[];
   g: number[];
@@ -160,21 +191,16 @@ const getInterpolateRGB = (
 ): InterpolateRGB => {
   'worklet';
 
-  const r = [];
-  const g = [];
-  const b = [];
-  const a = [];
-  for (let i = 0; i < colors.length; ++i) {
-    const color = colors[i];
-    const processedColor = processColor(color);
-    // explicit check in case if processedColor is 0
-    if (processedColor !== null && processedColor !== undefined) {
-      r.push(red(processedColor));
-      g.push(green(processedColor));
-      b.push(blue(processedColor));
-      a.push(opacity(processedColor));
-    }
-  }
+  const r: number[] = [];
+  const g: number[] = [];
+  const b: number[] = [];
+  const a: number[] = [];
+
+  _splitColorsIntoChannels(colors, r, g, b, a, (color) => ({
+    ch1: color.r,
+    ch2: color.g,
+    ch3: color.b,
+  }));
   return { r, g, b, a };
 };
 
@@ -189,26 +215,19 @@ const getInterpolateHSV = (
   colors: readonly (string | number)[]
 ): InterpolateHSV => {
   'worklet';
-  const h = [];
-  const s = [];
-  const v = [];
-  const a = [];
-  for (let i = 0; i < colors.length; ++i) {
-    const color = colors[i];
-    const processedColor = processColor(color) as any;
-    if (typeof processedColor === 'number') {
-      const processedHSVColor = RGBtoHSV(
-        red(processedColor),
-        green(processedColor),
-        blue(processedColor)
-      );
+  const h: number[] = [];
+  const s: number[] = [];
+  const v: number[] = [];
+  const a: number[] = [];
 
-      h.push(processedHSVColor.h);
-      s.push(processedHSVColor.s);
-      v.push(processedHSVColor.v);
-      a.push(opacity(processedColor));
-    }
-  }
+  _splitColorsIntoChannels(colors, h, s, v, a, (color) => {
+    const hsvColor = RGBtoHSV(color.r, color.g, color.b);
+    return {
+      ch1: hsvColor.h,
+      ch2: hsvColor.s,
+      ch3: hsvColor.v,
+    };
+  });
   return { h, s, v, a };
 };
 
@@ -229,22 +248,14 @@ const getInterpolateLAB = (
   const b: number[] = [];
   const alpha: number[] = [];
 
-  for (let i = 0; i < colors.length; i++) {
-    const color = colors[i];
-    const processedColor = processColor(color);
-    if (typeof processedColor === 'number') {
-      const processedLabColor = culori.oklab.convert.fromRgb({
-        r: red(processedColor),
-        g: green(processedColor),
-        b: blue(processedColor),
-      });
-
-      l.push(processedLabColor.l);
-      a.push(processedLabColor.a);
-      b.push(processedLabColor.b);
-      alpha.push(opacity(processedColor));
-    }
-  }
+  _splitColorsIntoChannels(colors, l, a, b, alpha, (color) => {
+    const labColor = culori.oklab.convert.fromRgb(color);
+    return {
+      ch1: labColor.l,
+      ch2: labColor.a,
+      ch3: labColor.b,
+    };
+  });
   return { l, a, b, alpha };
 };
 
