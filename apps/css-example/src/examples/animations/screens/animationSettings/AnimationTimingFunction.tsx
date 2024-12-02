@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type { CSSAnimationProperties } from 'react-native-reanimated';
 import Animated, { cubicBezier, linear, steps } from 'react-native-reanimated';
 
 import { colors, radius, sizes } from '@/theme';
@@ -7,7 +7,7 @@ import { colors, radius, sizes } from '@/theme';
 import { ExampleScreen } from './components';
 
 export default function AnimationTimingFunction() {
-  const config: CSSAnimationConfig = {
+  const animation: CSSAnimationProperties = {
     animationDuration: '2s',
     animationIterationCount: 'infinite',
     animationName: {
@@ -18,10 +18,10 @@ export default function AnimationTimingFunction() {
     },
   };
 
-  const renderExample = (exampleConfig: CSSAnimationConfig) => (
+  const renderExample = (exampleAnimation: CSSAnimationProperties) => (
     <View style={styles.outerWrapper}>
       <View style={styles.innerWrapper}>
-        <Animated.View style={[styles.box, exampleConfig]} />
+        <Animated.View style={[styles.box, exampleAnimation]} />
       </View>
     </View>
   );
@@ -30,6 +30,7 @@ export default function AnimationTimingFunction() {
     <ExampleScreen
       tabs={[
         {
+          animation,
           cards: [
             {
               items: [
@@ -49,11 +50,11 @@ export default function AnimationTimingFunction() {
               title: 'Predefined Easings',
             },
           ],
-          config,
           name: 'Predefined',
           renderExample,
         },
         {
+          animation,
           cards: [
             {
               description:
@@ -75,11 +76,11 @@ export default function AnimationTimingFunction() {
               title: 'Cubic Bezier Easing',
             },
           ],
-          config,
           name: 'CubicBezier',
           renderExample,
         },
         {
+          animation,
           cards: [
             {
               description:
@@ -106,11 +107,11 @@ export default function AnimationTimingFunction() {
               title: 'Linear Easing with points',
             },
           ],
-          config,
           name: 'Linear',
           renderExample,
         },
         {
+          animation,
           cards: [
             {
               description:
@@ -136,7 +137,6 @@ export default function AnimationTimingFunction() {
               title: 'Steps Easing',
             },
           ],
-          config,
           name: 'Steps',
           renderExample,
         },

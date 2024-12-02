@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Children } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSAnimationConfig,
+  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -12,7 +12,7 @@ import { RouteCard } from '@/components';
 import { useFocusPlayState } from '@/hooks';
 import { colors, radius, sizes, spacing } from '@/theme';
 
-const scrollAnimation: CSSAnimationConfig = {
+const scrollAnimation: CSSAnimationProperties = {
   animationIterationCount: 'infinite',
   animationName: {
     to: {

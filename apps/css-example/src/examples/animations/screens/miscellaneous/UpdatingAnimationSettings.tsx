@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSAnimationConfig,
   CSSAnimationKeyframes,
+  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated, {
@@ -64,13 +64,14 @@ const DEFAULT_SETTINGS: {
 
 export default function UpdatingAnimationSettings() {
   const [viewKey, setViewKey] = useState(0);
-  const [animationConfig, setAnimationConfig] = useState<CSSAnimationConfig>({
-    animationName: keyframes,
-    ...DEFAULT_SETTINGS,
-  });
+  const [animationProperties, setAnimationProperties] =
+    useState<CSSAnimationProperties>({
+      animationName: keyframes,
+      ...DEFAULT_SETTINGS,
+    });
 
   const handleResetSettings = useCallback(() => {
-    setAnimationConfig((prev) => ({
+    setAnimationProperties((prev) => ({
       ...prev,
       ...DEFAULT_SETTINGS,
     }));
@@ -85,7 +86,7 @@ export default function UpdatingAnimationSettings() {
       propertyName: T,
       value: CSSAnimationSettings[T]
     ) => {
-      setAnimationConfig((prev) => ({
+      setAnimationProperties((prev) => ({
         ...prev,
         [propertyName]: value,
       }));
@@ -109,7 +110,7 @@ export default function UpdatingAnimationSettings() {
                       key={propertyName}
                       options={options}
                       propertyName={key}
-                      selected={animationConfig[key]}
+                      selected={animationProperties[key]}
                       onSelect={handleOptionSelect}
                     />
                   );
@@ -141,7 +142,7 @@ export default function UpdatingAnimationSettings() {
             <Animated.View layout={LinearTransition} style={styles.preview}>
               <Animated.View
                 key={viewKey}
-                style={[styles.box, animationConfig]}
+                style={[styles.box, animationProperties]}
               />
             </Animated.View>
           </View>
@@ -151,7 +152,7 @@ export default function UpdatingAnimationSettings() {
           description="Selected animation configuration"
           title="Animation Configuration">
           <Animated.View layout={LinearTransition} style={styles.codeWrapper}>
-            <CodeBlock code={stringifyConfig(animationConfig)} />
+            <CodeBlock code={stringifyConfig(animationProperties)} />
           </Animated.View>
         </Section>
       </Stagger>

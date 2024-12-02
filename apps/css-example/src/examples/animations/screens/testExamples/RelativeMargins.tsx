@@ -1,11 +1,11 @@
 import { StyleSheet, View } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type { CSSAnimationProperties } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { TestExampleScreen } from '@/components';
 import { colors, radius, sizes } from '@/theme';
 
-const marginAnimation: CSSAnimationConfig = {
+const marginAnimation: CSSAnimationProperties = {
   animationDirection: 'alternate',
   animationDuration: '2s',
   animationIterationCount: 'infinite',

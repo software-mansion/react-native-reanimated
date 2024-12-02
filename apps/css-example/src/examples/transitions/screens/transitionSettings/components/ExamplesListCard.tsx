@@ -8,8 +8,9 @@ import React, {
 } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSTransitionConfig,
+  CSSTransitionDelay,
   CSSTransitionDuration,
+  CSSTransitionProperties,
   CSSTransitionSettings,
   StyleProps,
 } from 'react-native-reanimated';
@@ -35,30 +36,39 @@ const timeToNumber = (duration?: CSSTransitionDuration): number => {
   return parseFloat(duration) * 1000;
 };
 
+type CSSTimeUnit = CSSTransitionDelay;
+
+const getTimeUnit = (
+  timeUnit: Array<CSSTimeUnit> | CSSTimeUnit | undefined
+): number => {
+  if (!timeUnit) {
+    return 0;
+  }
+  return Array.isArray(timeUnit)
+    ? Math.max(...timeUnit.map(timeToNumber))
+    : timeToNumber(timeUnit);
+};
+
 const getTimeout = (
-  sharedConfig: Partial<CSSTransitionConfig>,
+  sharedConfig: Partial<CSSTransitionProperties>,
   settings: CSSTransitionSettings
 ): number => {
-  const duration = timeToNumber(
-    settings.transitionDuration ?? sharedConfig.transitionDuration ?? 0
-  );
-  const delay = timeToNumber(
-    settings.transitionDelay ?? sharedConfig.transitionDelay ?? 0
-  );
+  const duration = getTimeUnit(settings.transitionDuration);
+  const delay = getTimeUnit(settings.transitionDelay);
   return Math.max(duration + delay, MIN_STYLE_CHANGE_DURATION);
 };
 
 export type ExampleItemProps = {
   label: string;
-} & Partial<CSSTransitionConfig>;
+} & Partial<CSSTransitionProperties>;
 
 type ExamplesListCardProps = {
-  sharedConfig: Partial<CSSTransitionConfig>;
+  transitionProperties: Partial<CSSTransitionProperties>;
   transitionStyles: Array<StyleProps>;
   items: Array<ExampleItemProps>;
   displayStyleChanges: boolean;
   renderExample: (
-    config: CSSTransitionConfig,
+    transition: CSSTransitionProperties,
     style: StyleProps
   ) => JSX.Element;
 };
@@ -67,7 +77,7 @@ export default function ExamplesListCard({
   displayStyleChanges: inDisplayStyleChanges,
   items,
   renderExample,
-  sharedConfig,
+  transitionProperties,
   transitionStyles,
 }: ExamplesListCardProps) {
   const [displayStyleChanges, setDisplayStyleChanges] = useState(
@@ -101,7 +111,7 @@ export default function ExamplesListCard({
           item={item}
           key={index}
           renderExample={renderExample}
-          sharedConfig={sharedConfig}
+          transitionProperties={transitionProperties}
           transitionStyles={transitionStyles}
           ref={(ref) => {
             exampleRefsRef.current[item.label] = ref;
@@ -125,12 +135,12 @@ type ExampleRef = {
 };
 
 type ExampleProps = {
-  sharedConfig: Partial<CSSTransitionConfig>;
+  transitionProperties: Partial<CSSTransitionProperties>;
   transitionStyles: Array<StyleProps>;
   item: ExampleItemProps;
   displayStyleChanges: boolean;
   renderExample: (
-    config: CSSTransitionConfig,
+    config: CSSTransitionProperties,
     style: StyleProps
   ) => JSX.Element;
 };
@@ -141,7 +151,7 @@ const Example = memo(
       displayStyleChanges,
       item,
       renderExample,
-      sharedConfig,
+      transitionProperties,
       transitionStyles,
     }: ExampleProps,
     ref: React.Ref<ExampleRef>
@@ -166,7 +176,7 @@ const Example = memo(
             () => {
               setShowStyleChange(false);
             },
-            getTimeout(sharedConfig, item)
+            getTimeout(transitionProperties, item)
           );
         }
       }, 0);
@@ -197,7 +207,7 @@ const Example = memo(
             {renderExample(
               {
                 transitionProperty: 'all',
-                ...sharedConfig,
+                ...transitionProperties,
                 ...item,
               },
               currentTransitionStyle

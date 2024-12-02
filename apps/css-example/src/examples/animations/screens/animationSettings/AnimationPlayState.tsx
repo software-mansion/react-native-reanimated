@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type { CSSAnimationProperties } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { colors, radius, sizes } from '@/theme';
@@ -10,30 +10,21 @@ import { ExampleScreen } from './components';
 export default function AnimationPlayState() {
   const [isPaused, setIsPaused] = useState(false);
 
-  const config: CSSAnimationConfig = {
-    animationDelay: '-1s',
-    animationDirection: 'alternate',
-    animationDuration: '2s',
-    animationIterationCount: 'infinite',
-    animationName: {
-      to: {
-        left: '100%',
-        transform: [{ translateX: '-100%' }],
-      },
-    },
-    animationTimingFunction: 'easeInOut',
-  };
-
-  const renderExample = (exampleConfig: CSSAnimationConfig) => (
-    <View style={styles.wrapper}>
-      <Animated.View style={[styles.box, exampleConfig]} />
-    </View>
-  );
-
   return (
     <ExampleScreen
-      config={config}
-      renderExample={renderExample}
+      animation={{
+        animationDelay: '-1s',
+        animationDirection: 'alternate',
+        animationDuration: '2s',
+        animationIterationCount: 'infinite',
+        animationName: {
+          to: {
+            left: '100%',
+            transform: [{ translateX: '-100%' }],
+          },
+        },
+        animationTimingFunction: 'easeInOut',
+      }}
       cards={[
         {
           items: [
@@ -49,6 +40,11 @@ export default function AnimationPlayState() {
           title: 'Toggling Play State',
         },
       ]}
+      renderExample={(exampleConfig: CSSAnimationProperties) => (
+        <View style={styles.wrapper}>
+          <Animated.View style={[styles.box, exampleConfig]} />
+        </View>
+      )}
     />
   );
 }

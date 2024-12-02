@@ -104,7 +104,8 @@ export interface AnimatedComponentRef extends Component {
 }
 
 export interface IAnimatedComponentInternal {
-  _animatedStyles: StyleProps[] | null;
+  _animatedStyles: StyleProps[];
+  _plainStyles: StyleProps[];
   _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   _isFirstRender: boolean;
   jestInlineStyle: NestedArray<StyleProps> | undefined;

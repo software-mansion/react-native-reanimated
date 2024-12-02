@@ -9,10 +9,10 @@
 namespace reanimated {
 
 enum class AnimationProgressState {
-  PENDING, // When the animation is waiting for the delay to pass
-  RUNNING,
-  PAUSED,
-  FINISHED
+  Pending, // When the animation is waiting for the delay to pass
+  Running,
+  Paused,
+  Finished
 };
 
 class AnimationProgressProvider final : public KeyframeProgressProvider,
@@ -24,8 +24,8 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
       double delay,
       double iterationCount,
       AnimationDirection direction,
-      const EasingFunction &easingFunction,
-      const KeyframeEasingFunctions &keyframeEasingFunctions);
+      EasingFunction easingFunction,
+      KeyframeEasingFunctions keyframeEasingFunctions);
 
   void setIterationCount(double iterationCount) {
     resetProgress();

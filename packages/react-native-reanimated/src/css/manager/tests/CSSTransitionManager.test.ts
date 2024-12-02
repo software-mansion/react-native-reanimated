@@ -1,14 +1,14 @@
-import CSSTransitionManager from './CSSTransitionManager';
-import type { ShadowNodeWrapper } from '../../commonTypes';
+import CSSTransitionManager from '../CSSTransitionManager';
+import type { ShadowNodeWrapper } from '../../../commonTypes';
 import {
   registerCSSTransition,
   unregisterCSSTransition,
   updateCSSTransition,
-} from '../native';
-import { normalizeCSSTransitionConfig } from '../normalization';
-import type { CSSTransitionConfig } from '../types';
+} from '../../native';
+import { normalizeCSSTransitionProperties } from '../../normalization';
+import type { CSSTransitionProperties } from '../../types';
 
-jest.mock('../native', () => ({
+jest.mock('../../native', () => ({
   registerCSSTransition: jest.fn(),
   unregisterCSSTransition: jest.fn(),
   updateCSSTransition: jest.fn(),
@@ -27,15 +27,15 @@ describe('CSSTransitionManager', () => {
   describe('update', () => {
     describe('attaching transition', () => {
       it('registers a transition if there is no existing transition', () => {
-        const transitionConfig: CSSTransitionConfig = {
+        const transitionProperties: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
 
-        manager.update(transitionConfig);
+        manager.update(transitionProperties);
 
         expect(registerCSSTransition).toHaveBeenCalledWith(
           shadowNodeWrapper,
-          normalizeCSSTransitionConfig(transitionConfig)
+          normalizeCSSTransitionProperties(transitionProperties)
         );
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
         expect(updateCSSTransition).not.toHaveBeenCalled();
@@ -44,31 +44,31 @@ describe('CSSTransitionManager', () => {
 
     describe('updating transition', () => {
       it("doesn't update transition if method was called with the same config", () => {
-        const transitionConfig: CSSTransitionConfig = {
+        const transitionProperties: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
 
-        manager.update(transitionConfig);
+        manager.update(transitionProperties);
         expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
         expect(updateCSSTransition).not.toHaveBeenCalled();
 
-        manager.update(transitionConfig);
+        manager.update(transitionProperties);
         expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
         expect(updateCSSTransition).not.toHaveBeenCalled();
       });
 
       it('updates transition if method was called with different config', () => {
-        const transitionConfig: CSSTransitionConfig = {
+        const transitionProperties: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
-        const newTransitionConfig: CSSTransitionConfig = {
+        const newTransitionConfig: CSSTransitionProperties = {
           transitionProperty: 'transform',
           transitionDuration: '1.5s',
         };
 
-        manager.update(transitionConfig);
+        manager.update(transitionProperties);
         expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
         expect(updateCSSTransition).not.toHaveBeenCalled();
@@ -92,11 +92,11 @@ describe('CSSTransitionManager', () => {
 
     describe('detaching transition', () => {
       it('detaches transition if method was called with null config and there is existing transition', () => {
-        const transitionConfig: CSSTransitionConfig = {
+        const transitionProperties: CSSTransitionProperties = {
           transitionProperty: 'opacity',
         };
 
-        manager.update(transitionConfig);
+        manager.update(transitionProperties);
         expect(registerCSSTransition).toHaveBeenCalledTimes(1);
         expect(unregisterCSSTransition).not.toHaveBeenCalled();
         expect(updateCSSTransition).not.toHaveBeenCalled();
@@ -118,11 +118,11 @@ describe('CSSTransitionManager', () => {
 
   describe('detach', () => {
     it('detaches transition if there is existing transition', () => {
-      const transitionConfig: CSSTransitionConfig = {
+      const transitionProperties: CSSTransitionProperties = {
         transitionProperty: 'opacity',
       };
 
-      manager.update(transitionConfig);
+      manager.update(transitionProperties);
       expect(registerCSSTransition).toHaveBeenCalledTimes(1);
       expect(unregisterCSSTransition).not.toHaveBeenCalled();
       expect(updateCSSTransition).not.toHaveBeenCalled();

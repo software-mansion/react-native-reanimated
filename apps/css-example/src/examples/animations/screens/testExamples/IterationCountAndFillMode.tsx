@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type { CSSAnimationProperties } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { TestExampleScreen } from '@/components';
@@ -7,7 +7,7 @@ import { colors, flex } from '@/theme';
 
 const animationDuration = '2s';
 
-const parentAnimation: CSSAnimationConfig = {
+const parentAnimation: CSSAnimationProperties = {
   animationDuration,
   animationIterationCount: 'infinite',
   animationName: {
@@ -17,7 +17,7 @@ const parentAnimation: CSSAnimationConfig = {
   },
 };
 
-const childAnimation: CSSAnimationConfig = {
+const childAnimation: CSSAnimationProperties = {
   animationDuration,
   animationFillMode: 'forwards',
   animationIterationCount: 1.5,
@@ -28,7 +28,7 @@ const childAnimation: CSSAnimationConfig = {
   },
 };
 
-const innerChildAnimation: CSSAnimationConfig = {
+const innerChildAnimation: CSSAnimationProperties = {
   animationDuration,
   animationName: {
     from: {

@@ -7,7 +7,7 @@ import { colors, radius, sizes } from '@/theme';
 export default function BorderWidth() {
   return (
     <ExamplesScreen<{ propertyName: string }>
-      buildConfig={({ propertyName }) => ({
+      buildAnimation={({ propertyName }) => ({
         animationDirection: 'alternate',
         animationDuration: '1s',
         animationIterationCount: 'infinite',
@@ -20,8 +20,8 @@ export default function BorderWidth() {
           },
         },
       })}
-      renderExample={({ config }) => (
-        <Animated.View style={[styles.box, config]} />
+      renderExample={({ animation }) => (
+        <Animated.View style={[styles.box, animation]} />
       )}
       sections={[
         {

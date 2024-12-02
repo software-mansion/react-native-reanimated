@@ -11,14 +11,14 @@ export default function BorderCurve() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
-      buildConfig={({ keyframes }) => ({
+      buildAnimation={({ keyframes }) => ({
         animationDuration: '2s',
         animationIterationCount: 'infinite',
         animationName: keyframes,
         animationTimingFunction: 'linear',
       })}
-      renderExample={({ config }) => (
-        <Animated.View style={[styles.box, config]} />
+      renderExample={({ animation }) => (
+        <Animated.View style={[styles.box, animation]} />
       )}
       sections={[
         {

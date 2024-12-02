@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSAnimationConfig,
+  CSSAnimationProperties,
   CSSAnimationTimingFunction,
 } from 'react-native-reanimated';
 import Animated, {
@@ -49,7 +49,7 @@ const getOptions = (
   value,
 });
 
-const DEFAULT_ANIMATION_CONFIG: SelectableConfig<CSSAnimationConfig> = {
+const DEFAULT_ANIMATION_CONFIG: SelectableConfig<CSSAnimationProperties> = {
   $animationTimingFunction: getOptions(cubicBezier(0.175, 0.885, 0.32, 1.275)),
   animationDirection: 'alternate',
   animationDuration: '4s',
@@ -90,12 +90,12 @@ export default function KeyframeTimingFunctions() {
           labelTypes={['new']}
           title="Keyframe Timing Functions"
           description={[
-            '**Enable**, **disable** or **change** the animation timing function in the animation config below.',
+            '**Enable**, **disable** or **change** the animation timing function in the animation properties config below.',
             '- press on the **checkbox** to add or remove the property',
             '- select a **timing function** from the property value dropdown',
           ]}>
           <View style={styles.buttonRow}>
-            <Text variant="subHeading2">Select config:</Text>
+            <Text variant="subHeading2">Select properties:</Text>
             <CopyButton onCopy={() => stringifyConfig(animation, false)} />
           </View>
           <ConfigSelector

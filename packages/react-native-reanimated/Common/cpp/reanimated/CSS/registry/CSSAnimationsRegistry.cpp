@@ -3,27 +3,29 @@
 
 namespace reanimated {
 
+bool CSSAnimationsRegistry::hasUpdates() const {
+  return !runningAnimationsMap_.empty() || !delayedAnimationsManager_.empty();
+}
+
 void CSSAnimationsRegistry::set(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode,
-    const std::vector<std::shared_ptr<CSSAnimation>> &animations,
+    std::vector<std::shared_ptr<CSSAnimation>> &&animations,
     const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   const auto viewTag = shadowNode->getTag();
   clearViewAnimations(viewTag);
 
-  registry_[viewTag] = std::move(animations);
-  for (const auto &animation : animations) {
+  const auto &storedAnimations = registry_[viewTag] = std::move(animations);
+
+  for (const auto &animation : storedAnimations) {
     scheduleOrActivateAnimation(rt, animation, timestamp);
   }
   applyViewAnimationsStyle(rt, viewTag, timestamp);
 }
 
-void CSSAnimationsRegistry::remove(
-    jsi::Runtime &rt,
-    const Tag viewTag,
-    const double timestamp) {
+void CSSAnimationsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   clearViewAnimations(viewTag);
@@ -78,8 +80,7 @@ void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
         it->second.begin(), it->second.end()};
     updateViewAnimations(rt, viewTag, animationIndices, timestamp, true);
 
-    if (registry_.find(viewTag) == registry_.end() ||
-        registry_[viewTag].empty()) {
+    if (runningAnimationsMap_.at(viewTag).empty()) {
       it = runningAnimationsMap_.erase(it);
     } else {
       ++it;
@@ -102,7 +103,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     if (!shadowNode) {
       shadowNode = animation->getShadowNode();
     }
-    if (animation->getState(timestamp) == AnimationProgressState::PENDING) {
+    if (animation->getState(timestamp) == AnimationProgressState::Pending) {
       animation->run(timestamp);
     }
 
@@ -110,7 +111,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     const auto updates = animation->update(rt, timestamp);
     const auto newState = animation->getState(timestamp);
 
-    if (newState == AnimationProgressState::FINISHED) {
+    if (newState == AnimationProgressState::Finished) {
       // Revert changes applied during animation if there is no forwards fill
       // mode
       if (addToBatch && !animation->hasForwardsFillMode()) {
@@ -133,7 +134,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     if (addToBatch && !updatesAddedToBatch) {
       hasUpdates = addStyleUpdates(rt, result, updates, true) || hasUpdates;
     }
-    if (newState != AnimationProgressState::RUNNING) {
+    if (newState != AnimationProgressState::Running) {
       runningAnimationsMap_[viewTag].erase(animationIndex);
     }
   }
@@ -142,33 +143,6 @@ void CSSAnimationsRegistry::updateViewAnimations(
     updatesBatch_.emplace_back(
         shadowNode, std::make_unique<jsi::Value>(rt, result));
   }
-}
-
-bool CSSAnimationsRegistry::addStyleUpdates(
-    jsi::Runtime &rt,
-    jsi::Object &target,
-    const jsi::Value &updates,
-    bool override) {
-  if (!updates.isObject()) {
-    return false;
-  }
-
-  bool hasUpdates = false;
-  const auto updatesObject = updates.asObject(rt);
-  const auto propertyNames = updatesObject.getPropertyNames(rt);
-  const auto propertiesCount = propertyNames.size(rt);
-
-  for (size_t i = 0; i < propertiesCount; ++i) {
-    const auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt);
-    const auto propertyValue = updatesObject.getProperty(rt, propertyName);
-
-    if (override || target.getProperty(rt, propertyName).isUndefined()) {
-      target.setProperty(rt, propertyName, propertyValue);
-      hasUpdates = true;
-    }
-  }
-
-  return hasUpdates;
 }
 
 void CSSAnimationsRegistry::scheduleOrActivateAnimation(
@@ -185,7 +159,7 @@ void CSSAnimationsRegistry::scheduleOrActivateAnimation(
   if (startTimestamp > timestamp) {
     // If the animation is delayed, schedule it for activation
     // (Only if it isn't paused)
-    if (animation->getState(timestamp) != AnimationProgressState::PAUSED) {
+    if (animation->getState(timestamp) != AnimationProgressState::Paused) {
       delayedAnimationsManager_.add(startTimestamp, id);
     }
   } else {
@@ -230,11 +204,11 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
     if (startTimestamp == timestamp ||
         (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
       style = animation->getBackwardsFillStyle(rt);
-    } else if (currentState == AnimationProgressState::FINISHED) {
+    } else if (currentState == AnimationProgressState::Finished) {
       if (animation->hasForwardsFillMode()) {
         style = animation->getForwardFillStyle(rt);
       }
-    } else if (currentState != AnimationProgressState::PENDING) {
+    } else if (currentState != AnimationProgressState::Pending) {
       style = animation->getCurrentInterpolationStyle(rt);
     }
 
@@ -273,6 +247,33 @@ void CSSAnimationsRegistry::handleAnimationsToRevert(
     applyViewAnimationsStyle(rt, viewTag, timestamp);
   }
   animationsToRevertMap_.clear();
+}
+
+bool CSSAnimationsRegistry::addStyleUpdates(
+    jsi::Runtime &rt,
+    jsi::Object &target,
+    const jsi::Value &updates,
+    bool override) {
+  if (!updates.isObject()) {
+    return false;
+  }
+
+  bool hasUpdates = false;
+  const auto updatesObject = updates.asObject(rt);
+  const auto propertyNames = updatesObject.getPropertyNames(rt);
+  const auto propertiesCount = propertyNames.size(rt);
+
+  for (size_t i = 0; i < propertiesCount; ++i) {
+    const auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt);
+    const auto propertyValue = updatesObject.getProperty(rt, propertyName);
+
+    if (override || target.getProperty(rt, propertyName).isUndefined()) {
+      target.setProperty(rt, propertyName, propertyValue);
+      hasUpdates = true;
+    }
+  }
+
+  return hasUpdates;
 }
 
 } // namespace reanimated

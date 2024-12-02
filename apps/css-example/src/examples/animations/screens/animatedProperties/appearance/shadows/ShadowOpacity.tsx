@@ -9,14 +9,14 @@ export default function ShadowOpacity() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
-      buildConfig={({ keyframes }) => ({
+      buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
         animationDuration: '1s',
         animationIterationCount: 'infinite',
         animationName: keyframes,
       })}
-      renderExample={({ config }) => (
-        <Animated.View style={[styles.box, config]} />
+      renderExample={({ animation }) => (
+        <Animated.View style={[styles.box, animation]} />
       )}
       sections={[
         {

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type { CSSAnimationProperties } from 'react-native-reanimated';
 
 import {
   ConfigWithOverridesBlock,
@@ -23,14 +23,14 @@ type ExampleCardSection = {
 };
 
 type ExampleScreenContentProps = {
-  config: CSSAnimationConfig;
+  animation: CSSAnimationProperties;
   cards: Array<ExampleCardSection>;
-  renderExample: (config: CSSAnimationConfig) => JSX.Element;
+  renderExample: (animation: CSSAnimationProperties) => JSX.Element;
 };
 
 function ExampleScreenContent({
+  animation,
   cards,
-  config,
   renderExample,
 }: ExampleScreenContentProps) {
   const configOverrides = useMemo(
@@ -48,7 +48,7 @@ function ExampleScreenContent({
             title={card.title}>
             <ExamplesListCard
               allowPause={card.allowPause}
-              config={config}
+              animation={animation}
               items={card.items}
               renderExample={renderExample}
               onTogglePause={card.onTogglePause}
@@ -61,7 +61,7 @@ function ExampleScreenContent({
           title="Animation configuration">
           <ConfigWithOverridesBlock
             overrides={configOverrides}
-            sharedConfig={config}
+            sharedConfig={animation}
           />
         </Section>
       </Stagger>

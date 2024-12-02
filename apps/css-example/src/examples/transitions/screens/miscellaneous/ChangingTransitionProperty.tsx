@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSTransitionConfig,
+  CSSTransitionProperties,
   CSSTransitionProperty,
   CSSTransitionSettings,
   StyleProps,
@@ -106,7 +106,7 @@ export default function ChangingTransitionProperty() {
       ? transitionProperty.includes(propertyName)
       : transitionProperty === propertyName;
 
-  const transitionConfig: CSSTransitionConfig = {
+  const transitionProperties: CSSTransitionProperties = {
     transitionProperty: transitionProperty as CSSTransitionProperty,
     ...transitionSettings,
   };
@@ -137,7 +137,10 @@ export default function ChangingTransitionProperty() {
 
             <View style={styles.preview}>
               <Animated.View
-                style={[transitionConfig, transitionStyles[currentStyleIndex]]}
+                style={[
+                  transitionProperties,
+                  transitionStyles[currentStyleIndex],
+                ]}
               />
             </View>
 
@@ -163,7 +166,7 @@ export default function ChangingTransitionProperty() {
           description="Transition configuration consists of the style changes that will be animated and the transition settings."
           title="Transition configuration">
           <TransitionConfiguration
-            sharedConfig={transitionConfig}
+            transitionProperties={transitionProperties}
             transitionStyles={transitionStyles}
           />
         </Section>

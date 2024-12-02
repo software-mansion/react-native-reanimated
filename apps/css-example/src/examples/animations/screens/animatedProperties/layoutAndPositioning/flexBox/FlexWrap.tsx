@@ -10,7 +10,7 @@ export default function FlexWrap() {
   return (
     <ExamplesScreen
       CardComponent={VerticalExampleCard}
-      buildConfig={() => ({
+      buildAnimation={() => ({
         animationDuration: '2s',
         animationIterationCount: 'infinite',
         animationName: {
@@ -23,8 +23,8 @@ export default function FlexWrap() {
         },
         animationTimingFunction: 'linear',
       })}
-      renderExample={({ config }) => (
-        <Animated.View style={[StyleSheet.absoluteFill, config]}>
+      renderExample={({ animation }) => (
+        <Animated.View style={[StyleSheet.absoluteFill, animation]}>
           {Array.from({ length: 5 }).map((_, index) => (
             <View
               key={index}

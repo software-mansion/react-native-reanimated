@@ -9,6 +9,10 @@ CSSTransitionsRegistry::CSSTransitionsRegistry(
     : getCurrentTimestamp_(getCurrentTimestamp),
       staticPropsRegistry_(staticPropsRegistry) {}
 
+bool CSSTransitionsRegistry::hasUpdates() const {
+  return !runningTransitionTags_.empty() || !delayedTransitionsManager_.empty();
+}
+
 void CSSTransitionsRegistry::add(
     const std::shared_ptr<CSSTransition> &transition) {
   std::lock_guard<std::mutex> lock{mutex_};
@@ -68,7 +72,7 @@ void CSSTransitionsRegistry::update(jsi::Runtime &rt, const double timestamp) {
           std::make_unique<jsi::Value>(rt, updates));
     }
 
-    if (transition->getState() != TransitionProgressState::RUNNING) {
+    if (transition->getState() != TransitionProgressState::Running) {
       it = runningTransitionTags_.erase(it);
     } else {
       ++it;

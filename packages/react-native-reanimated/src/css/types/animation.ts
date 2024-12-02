@@ -37,7 +37,7 @@ export type SingleCSSAnimationSettings = {
   // animationTimeline?: // TODO - This is still experimental in browsers and we might not want to support it when CSS animations in reanimated are released
 };
 
-export type SingleCSSAnimationConfig = SingleCSSAnimationSettings & {
+export type SingleCSSAnimationProperties = SingleCSSAnimationSettings & {
   animationName: CSSAnimationKeyframes;
 };
 
@@ -46,8 +46,8 @@ export type AnimationSettingProp = keyof SingleCSSAnimationSettings;
 export type CSSAnimationSettings =
   AddArrayPropertyTypes<SingleCSSAnimationSettings>;
 
-export type CSSAnimationConfig =
-  AddArrayPropertyTypes<SingleCSSAnimationConfig>;
+export type CSSAnimationProperties =
+  AddArrayPropertyTypes<SingleCSSAnimationProperties>;
 
 // AFTER NORMALIZATION
 
@@ -62,7 +62,7 @@ type CreateKeyframesStyle<S> = {
       ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
         U extends Array<any>
         ? CSSKeyframesStyleValue<U> // If the value is an array, don't iterate over its values and treat it as the end value
-        : { [K in keyof U]: CSSKeyframesStyleValue<U[K]> }
+        : { [K in keyof U]: CreateKeyframesStyle<U[K]> }
       : P extends 'transform' // Don't allow transform to be passed as a string in keyframes
         ? never
         : CSSKeyframesStyleValue<U>

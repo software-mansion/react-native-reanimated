@@ -10,7 +10,7 @@ export default function LayoutDirection() {
   return (
     <ExamplesScreen
       CardComponent={VerticalExampleCard}
-      buildConfig={() => ({
+      buildAnimation={() => ({
         animationDirection: 'alternate',
         animationDuration: '1s',
         animationIterationCount: 'infinite',
@@ -24,8 +24,8 @@ export default function LayoutDirection() {
         },
         animationTimingFunction: 'linear',
       })}
-      renderExample={({ config }) => (
-        <Animated.View style={[StyleSheet.absoluteFill, config]}>
+      renderExample={({ animation }) => (
+        <Animated.View style={[StyleSheet.absoluteFill, animation]}>
           {Array.from({ length: BOX_COLORS.length }).map((_, columnIndex) => (
             <View key={columnIndex} style={flex.row}>
               {Array.from({ length: BOX_COLORS.length - columnIndex }).map(

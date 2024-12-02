@@ -9,14 +9,14 @@ export default function BorderStyle() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
-      buildConfig={({ keyframes }) => ({
+      buildAnimation={({ keyframes }) => ({
         animationDuration: '3s',
         animationIterationCount: 'infinite',
         animationName: keyframes,
         animationTimingFunction: 'linear',
       })}
-      renderExample={({ config }) => (
-        <Animated.View style={[styles.box, config]} />
+      renderExample={({ animation }) => (
+        <Animated.View style={[styles.box, animation]} />
       )}
       sections={[
         {

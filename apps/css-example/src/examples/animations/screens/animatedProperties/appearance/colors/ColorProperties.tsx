@@ -1,7 +1,7 @@
 import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native';
 import type {
-  CSSAnimationConfig,
+  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -53,7 +53,7 @@ function BackgroundColors() {
       <Section title="Background Colors">
         <ViewExample
           title="View backgroundColor"
-          config={{
+          animation={{
             animationName: {
               '50%': {
                 backgroundColor: 'cyan',
@@ -67,7 +67,7 @@ function BackgroundColors() {
         />
         <TextExample
           title="Text backgroundColor"
-          config={{
+          animation={{
             animationName: {
               '50%': {
                 backgroundColor: 'cyan',
@@ -90,7 +90,7 @@ function TextColors() {
       <Section title="Text Colors">
         <TextExample
           title="color"
-          config={{
+          animation={{
             animationName: {
               '50%': {
                 color: 'gold',
@@ -104,7 +104,7 @@ function TextColors() {
         />
         {/* TODO - uncomment when issue with RN warning is fixed */}
         {/* <TextExample
-          config={{
+          animation={{
             animationName: {
               to: {
                 textDecorationColor: 'cyan',
@@ -116,7 +116,7 @@ function TextColors() {
         /> */}
         {/* TODO - uncomment when issue with RN warning is fixed */}
         {/* <TextExample
-          config={{
+          animation={{
             animationName: {
               to: {
                 textShadowColor: 'cyan',
@@ -138,7 +138,7 @@ function BorderColors() {
         <ViewExample
           style={{ borderWidth: spacing.md }}
           title="borderColor"
-          config={{
+          animation={{
             animationName: {
               '50%': {
                 borderColor: 'teal',
@@ -154,7 +154,7 @@ function BorderColors() {
           description="(or borderBlockStartColor)"
           style={{ borderWidth: spacing.md }}
           title="borderTopColor"
-          config={{
+          animation={{
             animationName: {
               '50%': {
                 borderTopColor: 'teal',
@@ -170,7 +170,7 @@ function BorderColors() {
           description="(or borderEndColor)"
           style={{ borderWidth: spacing.md }}
           title="borderRightColor"
-          config={{
+          animation={{
             animationName: {
               '50%': {
                 borderRightColor: 'teal',
@@ -186,7 +186,7 @@ function BorderColors() {
           description="(or borderBlockEndColor)"
           style={{ borderWidth: spacing.md }}
           title="borderBottomColor"
-          config={{
+          animation={{
             animationName: {
               '50%': {
                 borderBottomColor: 'teal',
@@ -202,7 +202,7 @@ function BorderColors() {
           description="(or borderStartColor)"
           style={{ borderWidth: spacing.md }}
           title="borderLeftColor"
-          config={{
+          animation={{
             animationName: {
               '50%': {
                 borderLeftColor: 'teal',
@@ -217,7 +217,7 @@ function BorderColors() {
         <ViewExample
           style={{ borderWidth: spacing.md }}
           title="borderBlockColor"
-          config={{
+          animation={{
             animationName: {
               '50%': {
                 borderBlockColor: 'teal',
@@ -240,7 +240,7 @@ function OtherColors() {
       <Section title="Other Colors">
         <ViewExample
           title="shadowColor"
-          config={{
+          animation={{
             animationName: {
               '50%': {
                 shadowColor: 'indigo',
@@ -259,7 +259,7 @@ function OtherColors() {
         />
         <ImageExample
           title="overlayColor"
-          config={{
+          animation={{
             animationName: {
               from: {
                 tintColor: 'magenta',
@@ -281,22 +281,22 @@ function OtherColors() {
 
 type ExampleProps<S> = {
   style?: S;
-  config: CSSAnimationConfig;
-  renderExample: (config: CSSAnimationConfig, style?: S) => JSX.Element;
+  animation: CSSAnimationProperties;
+  renderExample: (animation: CSSAnimationProperties, style?: S) => JSX.Element;
 } & Omit<ExampleCardProps, 'code'>;
 
 function Example<S>({
-  config,
+  animation,
   renderExample,
   style,
   ...cardProps
 }: ExampleProps<S>) {
   return (
     <VerticalExampleCard
-      code={stringifyConfig(config)}
-      collapsedCode={stringifyConfig(config.animationName, true)}
+      code={stringifyConfig(animation)}
+      collapsedCode={stringifyConfig(animation.animationName, true)}
       {...cardProps}>
-      {renderExample(config, style)}
+      {renderExample(animation, style)}
     </VerticalExampleCard>
   );
 }

@@ -1,3 +1,3 @@
 'use strict';
-export { normalizeCSSAnimationConfig } from './config';
+export { normalizeCSSAnimationProperties } from './config';
 export { getAnimationSettingsUpdates } from './settings';

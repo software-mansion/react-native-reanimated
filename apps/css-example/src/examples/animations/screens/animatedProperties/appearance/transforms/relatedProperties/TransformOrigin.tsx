@@ -1,7 +1,7 @@
 import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSAnimationConfig,
+  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated, { normalizeTransformOrigin } from 'react-native-reanimated';
@@ -31,7 +31,7 @@ export default function TransformOrigin() {
     <ExamplesScreen<{
       transformOrigins: Array<TransformOriginProp>;
     }>
-      buildConfig={({ transformOrigins }) => ({
+      buildAnimation={({ transformOrigins }) => ({
         animationName: Object.fromEntries(
           transformOrigins.map((origin, index) => {
             return [
@@ -45,8 +45,8 @@ export default function TransformOrigin() {
         ),
         ...SHARED_SETTINGS,
       })}
-      renderExample={({ config, transformOrigins }) => {
-        const originDotAnimation: CSSAnimationConfig = {
+      renderExample={({ animation, transformOrigins }) => {
+        const originDotAnimation: CSSAnimationProperties = {
           animationName: Object.fromEntries(
             transformOrigins.map((origin, index) => {
               const [x, y] = normalizeTransformOrigin(origin!);
@@ -68,7 +68,7 @@ export default function TransformOrigin() {
 
         return (
           <View style={[styles.box, { backgroundColor: colors.primaryLight }]}>
-            <Animated.View style={[styles.box, config]}>
+            <Animated.View style={[styles.box, animation]}>
               <Animated.View style={[styles.originDot, originDotAnimation]} />
             </Animated.View>
           </View>

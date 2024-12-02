@@ -19,16 +19,14 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
   using SettingsUpdates =
       std::vector<std::pair<unsigned, PartialCSSAnimationSettings>>;
 
-  bool hasUpdates() const {
-    return !runningAnimationsMap_.empty() || !delayedAnimationsManager_.empty();
-  }
+  bool hasUpdates() const;
 
   void set(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
-      const std::vector<std::shared_ptr<CSSAnimation>> &animations,
+      std::vector<std::shared_ptr<CSSAnimation>> &&animations,
       double timestamp);
-  void remove(jsi::Runtime &rt, Tag viewTag, double timestamp);
+  void remove(Tag viewTag);
   void updateSettings(
       jsi::Runtime &rt,
       Tag viewTag,
@@ -52,15 +50,10 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
 
   void updateViewAnimations(
       jsi::Runtime &rt,
-      const Tag viewTag,
+      Tag viewTag,
       const std::vector<unsigned> &animationIndices,
       double timestamp,
       bool addToBatch);
-  bool addStyleUpdates(
-      jsi::Runtime &rt,
-      jsi::Object &target,
-      const jsi::Value &updates,
-      bool override);
   void scheduleOrActivateAnimation(
       jsi::Runtime &rt,
       const std::shared_ptr<CSSAnimation> &animation,
@@ -70,6 +63,12 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
   applyViewAnimationsStyle(jsi::Runtime &rt, Tag viewTag, double timestamp);
   void activateDelayedAnimations(double timestamp);
   void handleAnimationsToRevert(jsi::Runtime &rt, double timestamp);
+
+  static bool addStyleUpdates(
+      jsi::Runtime &rt,
+      jsi::Object &target,
+      const jsi::Value &updates,
+      bool override);
 };
 
 } // namespace reanimated

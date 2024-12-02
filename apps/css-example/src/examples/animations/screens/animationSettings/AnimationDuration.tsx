@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type { CSSAnimationProperties } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { Text } from '@/components';
@@ -8,25 +8,17 @@ import { colors, radius, sizes } from '@/theme';
 import { ExampleScreen } from './components';
 
 export default function AnimationDuration() {
-  const config: CSSAnimationConfig = {
-    animationName: {
-      from: {
-        width: 0,
-      },
-    },
-    animationTimingFunction: 'linear',
-  };
-
-  const renderExample = (exampleConfig: CSSAnimationConfig) => (
-    <View style={styles.wrapper}>
-      <Animated.View style={[styles.box, exampleConfig]} />
-    </View>
-  );
-
   return (
     <ExampleScreen
-      config={config}
-      renderExample={renderExample}
+      animation={{
+        animationDuration: '3s',
+        animationFillMode: 'backwards',
+        animationName: {
+          from: {
+            width: 0,
+          },
+        },
+      }}
       cards={[
         {
           items: [
@@ -59,6 +51,11 @@ export default function AnimationDuration() {
           title: 'Zero Duration',
         },
       ]}
+      renderExample={(animation: CSSAnimationProperties) => (
+        <View style={styles.wrapper}>
+          <Animated.View style={[styles.box, animation]} />
+        </View>
+      )}
     />
   );
 }

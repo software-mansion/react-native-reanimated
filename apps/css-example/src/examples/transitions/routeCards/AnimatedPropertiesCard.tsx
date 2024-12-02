@@ -2,14 +2,14 @@ import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import type { ReactNode } from 'react';
 import { Children, useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type { CSSAnimationProperties } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import type { RouteCardComponent } from '@/components';
 import { RouteCard } from '@/components';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
-const scrollAnimation: CSSAnimationConfig = {
+const scrollAnimation: CSSAnimationProperties = {
   animationIterationCount: 'infinite',
   animationName: {
     to: {

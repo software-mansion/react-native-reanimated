@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import type { CSSAnimationConfig } from 'react-native-reanimated';
+import type { CSSAnimationProperties } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { colors, radius, sizes } from '@/theme';
@@ -7,31 +7,22 @@ import { colors, radius, sizes } from '@/theme';
 import { ExampleScreen } from './components';
 
 export default function AnimationFillMode() {
-  const config: CSSAnimationConfig = {
-    animationDelay: '1s',
-    animationDuration: '2s',
-    animationName: {
-      from: {
-        backgroundColor: colors.primaryDark,
-      },
-      to: {
-        backgroundColor: colors.primaryDark,
-        left: '100%',
-        transform: [{ translateX: '-100%' }],
-      },
-    },
-  };
-
-  const renderExample = (exampleConfig: CSSAnimationConfig) => (
-    <View style={styles.wrapper}>
-      <Animated.View style={[styles.box, exampleConfig]} />
-    </View>
-  );
-
   return (
     <ExampleScreen
-      config={config}
-      renderExample={renderExample}
+      animation={{
+        animationDelay: '1s',
+        animationDuration: '2s',
+        animationName: {
+          from: {
+            backgroundColor: colors.primaryDark,
+          },
+          to: {
+            backgroundColor: colors.primaryDark,
+            left: '100%',
+            transform: [{ translateX: '-100%' }],
+          },
+        },
+      }}
       cards={[
         {
           items: [
@@ -43,6 +34,11 @@ export default function AnimationFillMode() {
           title: 'Fill Mode',
         },
       ]}
+      renderExample={(exampleConfig: CSSAnimationProperties) => (
+        <View style={styles.wrapper}>
+          <Animated.View style={[styles.box, exampleConfig]} />
+        </View>
+      )}
     />
   );
 }

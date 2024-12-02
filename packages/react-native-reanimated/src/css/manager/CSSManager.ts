@@ -8,7 +8,7 @@ import type {
 } from '../../createAnimatedComponent/commonTypes';
 import CSSTransitionManager from './CSSTransitionManager';
 import CSSAnimationsManager from './CSSAnimationsManager';
-import { extractCSSConfigsAndFlattenedStyles } from '../normalization';
+import { extractCSSPropertiesAndFlattenedStyles } from '../normalization';
 
 export default class CSSManager implements ICSSManager {
   private readonly viewTag: number;
@@ -33,8 +33,8 @@ export default class CSSManager implements ICSSManager {
   }
 
   update(styles: StyleProps[], isMount = false): void {
-    const [animationConfig, transitionConfig, style] =
-      extractCSSConfigsAndFlattenedStyles(styles);
+    const [animationProperties, transitionProperties, style] =
+      extractCSSPropertiesAndFlattenedStyles(styles);
 
     // If the update is called during component mount, we won't recognize style
     // changes and treat styles as initial, thus we need to set them before
@@ -43,8 +43,8 @@ export default class CSSManager implements ICSSManager {
       setViewStyle(this.viewTag, style);
     }
 
-    this.cssTransitionManager.update(transitionConfig);
-    this.CSSAnimationsManager.update(animationConfig);
+    this.cssTransitionManager.update(transitionProperties);
+    this.CSSAnimationsManager.update(animationProperties);
 
     // If the update is called during component mount, we want to first - update
     // the transition or animation config, and then - set the style (which may

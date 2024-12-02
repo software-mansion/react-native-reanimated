@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
-  type CSSTransitionConfig,
+  type CSSTransitionProperties,
   cubicBezier,
   LinearTransition,
   steps,
@@ -26,7 +26,7 @@ import {
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 
 const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
-  Partial<CSSTransitionConfig>
+  Partial<CSSTransitionProperties>
 > = {
   $transitionProperty: {
     maxNumberOfValues: 3,
@@ -91,7 +91,7 @@ export default function MultipleTransitionSettings() {
 
   const transition = useSelectableConfig(
     selectableConfig
-  ) as CSSTransitionConfig;
+  ) as CSSTransitionProperties;
 
   return (
     <ScrollScreen>
@@ -161,7 +161,7 @@ export default function MultipleTransitionSettings() {
           description="Transition configuration consists of the style changes that will be animated and the transition settings."
           title="Transition configuration">
           <TransitionConfiguration
-            sharedConfig={transition}
+            transitionProperties={transition}
             transitionStyles={transitionStyles}
           />
         </Section>

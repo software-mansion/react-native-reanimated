@@ -4,7 +4,7 @@
 namespace reanimated {
 
 ObjectPropertiesInterpolator::ObjectPropertiesInterpolator(
-    const PropertiesInterpolatorFactories &factories,
+    const PropertyInterpolatorFactories &factories,
     const PropertyPath &propertyPath,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)

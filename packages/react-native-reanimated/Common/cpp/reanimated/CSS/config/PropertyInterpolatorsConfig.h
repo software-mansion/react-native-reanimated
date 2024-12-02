@@ -7,7 +7,7 @@ namespace reanimated {
 
 using namespace Interpolators;
 
-const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
+const PropertyInterpolatorFactories PROPERTY_INTERPOLATOR_FACTORIES = []() {
   // Local constants
   const auto BLACK = Color(0, 0, 0, 255);
   const auto TRANSPARENT = Color::Transparent;
@@ -15,7 +15,7 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
   // Initialize the factories
   // TODO: Set proper default values for all the interpolators
   // TODO: Add value inheritance support
-  return PropertiesInterpolatorFactories{
+  return PropertyInterpolatorFactories{
       /**
        * Layout and Positioning
        */
@@ -29,51 +29,51 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       {"alignContent", discrete()},
       {"flexGrow", numeric(0)},
       {"flexShrink", numeric(0)},
-      {"flexBasis", relOrNum(RelativeTo::PARENT, "width")},
+      {"flexBasis", relOrNum(RelativeTo::Parent, "width")},
       {"flexWrap", discrete()},
-      {"rowGap", relOrNum(RelativeTo::SELF, "height", 0)},
-      {"columnGap", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"start", relOrNum(RelativeTo::PARENT, "width")},
-      {"end", relOrNum(RelativeTo::PARENT, "width")},
+      {"rowGap", relOrNum(RelativeTo::Self, "height", 0)},
+      {"columnGap", relOrNum(RelativeTo::Self, "width", 0)},
+      {"start", relOrNum(RelativeTo::Parent, "width")},
+      {"end", relOrNum(RelativeTo::Parent, "width")},
 
       // DIMENSIONS
-      {"height", relOrNum(RelativeTo::PARENT, "height")},
-      {"width", relOrNum(RelativeTo::PARENT, "width", "100%")},
-      {"maxHeight", relOrNum(RelativeTo::PARENT, "height")},
-      {"maxWidth", relOrNum(RelativeTo::PARENT, "width", "100%")},
-      {"minHeight", relOrNum(RelativeTo::PARENT, "height")},
-      {"minWidth", relOrNum(RelativeTo::PARENT, "width")},
+      {"height", relOrNum(RelativeTo::Parent, "height")},
+      {"width", relOrNum(RelativeTo::Parent, "width", "100%")},
+      {"maxHeight", relOrNum(RelativeTo::Parent, "height")},
+      {"maxWidth", relOrNum(RelativeTo::Parent, "width", "100%")},
+      {"minHeight", relOrNum(RelativeTo::Parent, "height")},
+      {"minWidth", relOrNum(RelativeTo::Parent, "width")},
 
       // MARGINS
       // (relative to parent width)
-      {"margin", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"marginTop", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"marginRight", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"marginBottom", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"marginLeft", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"marginStart", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"marginEnd", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"marginHorizontal", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"marginVertical", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"margin", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"marginTop", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"marginRight", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"marginBottom", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"marginLeft", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"marginStart", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"marginEnd", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"marginHorizontal", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"marginVertical", relOrNum(RelativeTo::Parent, "width", 0)},
 
       // PADDINGS
       // (relative to parent width)
-      {"padding", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"paddingTop", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"paddingRight", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"paddingBottom", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"paddingLeft", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"paddingStart", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"paddingEnd", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"paddingHorizontal", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"paddingVertical", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"padding", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"paddingTop", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"paddingRight", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"paddingBottom", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"paddingLeft", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"paddingStart", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"paddingEnd", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"paddingHorizontal", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"paddingVertical", relOrNum(RelativeTo::Parent, "width", 0)},
 
       // INSETS
       // TODO
-      {"top", relOrNum(RelativeTo::PARENT, "height", 0)},
-      {"bottom", relOrNum(RelativeTo::PARENT, "height", 0)},
-      {"left", relOrNum(RelativeTo::PARENT, "width", 0)},
-      {"right", relOrNum(RelativeTo::PARENT, "width", 0)},
+      {"top", relOrNum(RelativeTo::Parent, "height", 0)},
+      {"bottom", relOrNum(RelativeTo::Parent, "height", 0)},
+      {"left", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"right", relOrNum(RelativeTo::Parent, "width", 0)},
 
       // OTHERS
       {"position", discrete()},
@@ -125,23 +125,23 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
       // Radius
       // TODO - fix interpolation between absolute and relative values
       // when yoga supports it (relativeProperty "width" is just a placeholder)
-      {"borderRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderRadius", relOrNum(RelativeTo::Self, "width", 0)},
       // top-left
-      {"borderTopLeftRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderTopStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderStartStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderTopLeftRadius", relOrNum(RelativeTo::Self, "width", 0)},
+      {"borderTopStartRadius", relOrNum(RelativeTo::Self, "width", 0)},
+      {"borderStartStartRadius", relOrNum(RelativeTo::Self, "width", 0)},
       // top-right
-      {"borderTopRightRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderTopEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderStartEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderTopRightRadius", relOrNum(RelativeTo::Self, "width", 0)},
+      {"borderTopEndRadius", relOrNum(RelativeTo::Self, "width", 0)},
+      {"borderStartEndRadius", relOrNum(RelativeTo::Self, "width", 0)},
       // bottom-left
-      {"borderBottomLeftRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderBottomStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderEndStartRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderBottomLeftRadius", relOrNum(RelativeTo::Self, "width", 0)},
+      {"borderBottomStartRadius", relOrNum(RelativeTo::Self, "width", 0)},
+      {"borderEndStartRadius", relOrNum(RelativeTo::Self, "width", 0)},
       // bottom-right
-      {"borderBottomRightRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderBottomEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
-      {"borderEndEndRadius", relOrNum(RelativeTo::SELF, "width", 0)},
+      {"borderBottomRightRadius", relOrNum(RelativeTo::Self, "width", 0)},
+      {"borderBottomEndRadius", relOrNum(RelativeTo::Self, "width", 0)},
+      {"borderEndEndRadius", relOrNum(RelativeTo::Self, "width", 0)},
 
       // Width
       {"borderWidth", numeric(0)},
@@ -172,8 +172,8 @@ const PropertiesInterpolatorFactories styleInterpolatorFactories = []() {
             {"scale", scale(1)},
             {"scaleX", scaleX(1)},
             {"scaleY", scaleY(1)},
-            {"translateX", translateX(RelativeTo::SELF, "width", 0)},
-            {"translateY", translateY(RelativeTo::SELF, "height", 0)},
+            {"translateX", translateX(RelativeTo::Self, "width", 0)},
+            {"translateY", translateY(RelativeTo::Self, "height", 0)},
             {"skewX", skewX("0deg")},
             {"skewY", skewY("0deg")},
             {"matrix", matrix(TransformMatrix::Identity())}})},

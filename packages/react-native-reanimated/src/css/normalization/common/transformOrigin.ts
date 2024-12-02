@@ -1,5 +1,5 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
+import { ReanimatedError } from '../../errors';
 import type { NormalizedTransformOrigin, TransformOrigin } from '../../types';
 
 type KeywordConversions = Record<string, `${number}%` | number>;

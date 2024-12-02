@@ -22,16 +22,9 @@ class StaticPropsRegistry {
   folly::dynamic get(Tag viewTag) const;
   void remove(Tag viewTag);
 
-  bool hasObservers(const Tag viewTag) const {
-    return observers_.find(viewTag) != observers_.end();
-  }
-
-  void setObserver(const Tag viewTag, PropsObserver observer) {
-    observers_[viewTag] = std::move(observer);
-  }
-  void removeObserver(const Tag viewTag) {
-    observers_.erase(viewTag);
-  }
+  bool hasObservers(const Tag viewTag) const;
+  void setObserver(const Tag viewTag, PropsObserver observer);
+  void removeObserver(const Tag viewTag);
 
  private:
   std::unordered_map<Tag, folly::dynamic> registry_;

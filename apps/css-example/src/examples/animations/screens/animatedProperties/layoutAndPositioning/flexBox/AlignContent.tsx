@@ -10,7 +10,7 @@ export default function AlignContent() {
   return (
     <ExamplesScreen
       CardComponent={VerticalExampleCard}
-      buildConfig={() => ({
+      buildAnimation={() => ({
         animationDuration: '5s',
         animationIterationCount: 'infinite',
         animationName: {
@@ -35,8 +35,8 @@ export default function AlignContent() {
         },
         animationTimingFunction: 'linear',
       })}
-      renderExample={({ config }) => (
-        <Animated.View style={[StyleSheet.absoluteFill, flex.wrap, config]}>
+      renderExample={({ animation }) => (
+        <Animated.View style={[StyleSheet.absoluteFill, flex.wrap, animation]}>
           {Array.from({ length: 5 }).map((_, index) => (
             <View
               key={index}

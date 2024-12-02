@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSAnimationConfig,
+  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated, { LinearTransition } from 'react-native-reanimated';
@@ -23,7 +23,7 @@ const sharedConfig: CSSAnimationSettings = {
   animationTimingFunction: 'easeInOut',
 };
 
-const wiggleAnimation: CSSAnimationConfig = {
+const wiggleAnimation: CSSAnimationProperties = {
   animationName: {
     '0, 100%': {
       transform: [{ rotate: '-15deg' }],
@@ -36,7 +36,7 @@ const wiggleAnimation: CSSAnimationConfig = {
   animationDuration: '0.5s',
 };
 
-const fadeAnimation: CSSAnimationConfig = {
+const fadeAnimation: CSSAnimationProperties = {
   animationName: {
     to: {
       opacity: 0,
@@ -45,7 +45,7 @@ const fadeAnimation: CSSAnimationConfig = {
   ...sharedConfig,
 };
 
-const colorAnimation: CSSAnimationConfig = {
+const colorAnimation: CSSAnimationProperties = {
   animationName: {
     to: {
       backgroundColor: colors.primaryDark,
@@ -54,7 +54,7 @@ const colorAnimation: CSSAnimationConfig = {
   ...sharedConfig,
 };
 
-const jumpAnimation: CSSAnimationConfig = {
+const jumpAnimation: CSSAnimationProperties = {
   animationName: {
     '50%': {
       top: '-50%',
@@ -64,7 +64,7 @@ const jumpAnimation: CSSAnimationConfig = {
   ...sharedConfig,
 };
 
-const rollAnimation: CSSAnimationConfig = {
+const rollAnimation: CSSAnimationProperties = {
   animationName: {
     to: {
       transform: [{ rotate: '360deg' }],

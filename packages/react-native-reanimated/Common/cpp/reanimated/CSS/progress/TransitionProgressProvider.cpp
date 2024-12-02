@@ -15,13 +15,13 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
 
 TransitionProgressState TransitionPropertyProgressProvider::getState() const {
   if (!rawProgress_.has_value()) {
-    return TransitionProgressState::PENDING;
+    return TransitionProgressState::Pending;
   }
   const auto rawProgress = rawProgress_.value();
   if (rawProgress >= 1) {
-    return TransitionProgressState::FINISHED;
+    return TransitionProgressState::Finished;
   }
-  return TransitionProgressState::RUNNING;
+  return TransitionProgressState::Running;
 }
 
 double TransitionPropertyProgressProvider::getRemainingDelay(
@@ -59,9 +59,9 @@ TransitionProgressProvider::TransitionProgressProvider(
 
 TransitionProgressState TransitionProgressProvider::getState() const {
   if (!propertyProgressProviders_.empty()) {
-    return TransitionProgressState::RUNNING;
+    return TransitionProgressState::Running;
   }
-  return TransitionProgressState::PENDING;
+  return TransitionProgressState::Pending;
 }
 
 double TransitionProgressProvider::getMinDelay(const double timestamp) const {
@@ -97,7 +97,6 @@ void TransitionProgressProvider::discardIrrelevantProgressProviders(
 }
 
 void TransitionProgressProvider::runProgressProviders(
-    jsi::Runtime &rt,
     const double timestamp,
     const PropertyNames &changedPropertyNames) {
   for (const auto &propertyName : changedPropertyNames) {
@@ -116,7 +115,8 @@ void TransitionProgressProvider::runProgressProviders(
             propertySettings.delay,
             propertySettings.easingFunction);
 
-    // Remove the property from the removal set and update the provider
+    // Remove the property from the removal set and create the new progress
+    // provider
     propertiesToRemove_.erase(propertyName);
     propertyProgressProviders_.insert_or_assign(
         propertyName, std::move(progressProvider));
@@ -133,7 +133,7 @@ void TransitionProgressProvider::update(const double timestamp) {
        propertyProgressProviders_) {
     propertyProgressProvider->update(timestamp);
     if (propertyProgressProvider->getState() ==
-        TransitionProgressState::FINISHED) {
+        TransitionProgressState::Finished) {
       propertiesToRemove_.insert(propertyName);
     }
   }

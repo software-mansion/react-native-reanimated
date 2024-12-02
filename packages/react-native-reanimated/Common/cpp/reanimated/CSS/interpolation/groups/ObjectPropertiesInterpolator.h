@@ -13,7 +13,7 @@ namespace reanimated {
 class ObjectPropertiesInterpolator : public PropertyInterpolator {
  public:
   ObjectPropertiesInterpolator(
-      const PropertiesInterpolatorFactories &factories,
+      const PropertyInterpolatorFactories &factories,
       const PropertyPath &propertyPath,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
@@ -40,7 +40,7 @@ class ObjectPropertiesInterpolator : public PropertyInterpolator {
       const jsi::Value &newStyleValue) override;
 
  private:
-  const PropertiesInterpolatorFactories &factories_;
+  const PropertyInterpolatorFactories &factories_;
 
   PropertiesInterpolators interpolators_;
 

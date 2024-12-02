@@ -1,11 +1,13 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/core/CSSAnimation.h>
 
+#include <utility>
+
 namespace reanimated {
 
 CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
+    ShadowNode::Shared shadowNode,
     const unsigned index,
     const CSSAnimationConfig &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
@@ -25,17 +27,49 @@ CSSAnimation::CSSAnimation(
           AnimationStyleInterpolator(progressProvider_, viewStylesRepository)) {
   styleInterpolator_.updateKeyframes(rt, config.keyframesStyle);
 
-  if (config.playState == AnimationPlayState::PAUSED) {
-    // If the animation is created as paused, pause its progress provider
-    // immediately
+  if (config.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }
 }
 
+CSSAnimationId CSSAnimation::getId() const {
+  return {shadowNode_->getTag(), index_};
+}
+
+ShadowNode::Shared CSSAnimation::getShadowNode() const {
+  return shadowNode_;
+}
+
+double CSSAnimation::getStartTimestamp(const double timestamp) const {
+  return progressProvider_->getStartTimestamp(timestamp);
+}
+
+AnimationProgressState CSSAnimation::getState(double timestamp) const {
+  return progressProvider_->getState(timestamp);
+}
+
 bool CSSAnimation::isReversed() const {
   const auto direction = progressProvider_->getDirection();
-  return direction == AnimationDirection::REVERSE ||
-      direction == AnimationDirection::ALTERNATE_REVERSE;
+  return direction == AnimationDirection::Reverse ||
+      direction == AnimationDirection::AlternateReverse;
+}
+
+bool CSSAnimation::hasForwardsFillMode() const {
+  return fillMode_ == AnimationFillMode::Forwards ||
+      fillMode_ == AnimationFillMode::Both;
+}
+
+bool CSSAnimation::hasBackwardsFillMode() const {
+  return fillMode_ == AnimationFillMode::Backwards ||
+      fillMode_ == AnimationFillMode::Both;
+}
+
+jsi::Value CSSAnimation::getViewStyle(jsi::Runtime &rt) const {
+  return styleInterpolator_.getStyleValue(rt, shadowNode_);
+}
+
+jsi::Value CSSAnimation::getCurrentInterpolationStyle(jsi::Runtime &rt) const {
+  return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
 }
 
 jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) {
@@ -48,9 +82,13 @@ jsi::Value CSSAnimation::getForwardFillStyle(jsi::Runtime &rt) {
                       : styleInterpolator_.getLastKeyframeValue(rt);
 }
 
+jsi::Value CSSAnimation::resetStyle(jsi::Runtime &rt) {
+  return styleInterpolator_.reset(rt, shadowNode_);
+}
+
 void CSSAnimation::run(const double timestamp) {
   if (progressProvider_->getState(timestamp) ==
-      AnimationProgressState::FINISHED) {
+      AnimationProgressState::Finished) {
     return;
   }
   progressProvider_->play(timestamp);
@@ -64,8 +102,9 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, const double timestamp) {
   // add this check to make sure that animation doesn't start with the negative
   // progress)
   if (progressProvider_->getState(timestamp) ==
-      AnimationProgressState::PENDING) {
-    return getBackwardsFillStyle(rt);
+      AnimationProgressState::Pending) {
+    return hasBackwardsFillMode() ? getBackwardsFillStyle(rt)
+                                  : jsi::Value::undefined();
   }
 
   return styleInterpolator_.update(rt, shadowNode_);
@@ -95,7 +134,7 @@ void CSSAnimation::updateSettings(
     fillMode_ = updatedSettings.fillMode.value();
   }
   if (updatedSettings.playState.has_value()) {
-    if (updatedSettings.playState.value() == AnimationPlayState::PAUSED) {
+    if (updatedSettings.playState.value() == AnimationPlayState::Paused) {
       progressProvider_->pause(timestamp);
     } else {
       progressProvider_->play(timestamp);

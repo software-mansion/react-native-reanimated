@@ -1,13 +1,16 @@
+import { cubicBezier } from '../../../easing';
 import { ReanimatedError } from '../../../errors';
-import { cubicBezier } from '../../easing';
-import type { CSSAnimationConfig, CSSAnimationKeyframes } from '../../types';
-import { normalizeCSSAnimationConfig, ERROR_MESSAGES } from './config';
+import type {
+  CSSAnimationProperties,
+  CSSAnimationKeyframes,
+} from '../../../types';
+import { normalizeCSSAnimationProperties, ERROR_MESSAGES } from '../config';
 
-describe(normalizeCSSAnimationConfig, () => {
+describe(normalizeCSSAnimationProperties, () => {
   describe('when the config is a single animation', () => {
     it('normalizes animation config', () => {
       const animationTimingFunction = cubicBezier(0.4, 0, 0.2, 1);
-      const config: CSSAnimationConfig = {
+      const config: CSSAnimationProperties = {
         animationName: {
           from: { opacity: 1, animationTimingFunction: 'linear' },
           to: { opacity: 0.5 },
@@ -21,7 +24,7 @@ describe(normalizeCSSAnimationConfig, () => {
         animationPlayState: 'paused',
       };
 
-      expect(normalizeCSSAnimationConfig(config)).toEqual([
+      expect(normalizeCSSAnimationProperties(config)).toEqual([
         {
           keyframesStyle: {
             opacity: [
@@ -42,11 +45,11 @@ describe(normalizeCSSAnimationConfig, () => {
     });
 
     it('uses default values for unspecified properties', () => {
-      const config: CSSAnimationConfig = {
+      const config: CSSAnimationProperties = {
         animationName: { from: { opacity: 1 }, to: { opacity: 0.5 } },
       };
 
-      expect(normalizeCSSAnimationConfig(config)).toEqual([
+      expect(normalizeCSSAnimationProperties(config)).toEqual([
         {
           keyframesStyle: {
             opacity: [
@@ -67,11 +70,11 @@ describe(normalizeCSSAnimationConfig, () => {
     });
 
     it("throws an error if animationName isn't a keyframes object", () => {
-      const config: CSSAnimationConfig = {
+      const config: CSSAnimationProperties = {
         animationName: 'invalid' as unknown as CSSAnimationKeyframes,
       };
 
-      expect(() => normalizeCSSAnimationConfig(config)).toThrow(
+      expect(() => normalizeCSSAnimationProperties(config)).toThrow(
         new ReanimatedError(ERROR_MESSAGES.invalidAnimationName())
       );
     });
@@ -80,7 +83,7 @@ describe(normalizeCSSAnimationConfig, () => {
   describe('when the config is an array of animations', () => {
     it('uses provided properties if each animation is provided different values', () => {
       const bezier = cubicBezier(0.4, 0, 0.2, 1);
-      const config: CSSAnimationConfig = {
+      const config: CSSAnimationProperties = {
         animationName: [
           { from: { opacity: 1 }, to: { opacity: 0.5 } },
           { from: { opacity: 0.5 }, to: { opacity: 1 } },
@@ -94,7 +97,7 @@ describe(normalizeCSSAnimationConfig, () => {
         animationPlayState: ['paused', 'running'],
       };
 
-      expect(normalizeCSSAnimationConfig(config)).toEqual([
+      expect(normalizeCSSAnimationProperties(config)).toEqual([
         {
           keyframesStyle: {
             opacity: [
@@ -131,7 +134,7 @@ describe(normalizeCSSAnimationConfig, () => {
     });
 
     it('uses the same property value if only one value is provided', () => {
-      const config: CSSAnimationConfig = {
+      const config: CSSAnimationProperties = {
         animationName: [
           { from: { opacity: 1 }, to: { opacity: 0.5 } },
           { from: { opacity: 0.5 }, to: { opacity: 1 } },
@@ -142,7 +145,7 @@ describe(normalizeCSSAnimationConfig, () => {
         animationFillMode: 'both',
       };
 
-      expect(normalizeCSSAnimationConfig(config)).toEqual([
+      expect(normalizeCSSAnimationProperties(config)).toEqual([
         {
           keyframesStyle: {
             opacity: [
@@ -179,7 +182,7 @@ describe(normalizeCSSAnimationConfig, () => {
     });
 
     it('cycles through the provided values if there are more animations than values', () => {
-      const config: CSSAnimationConfig = {
+      const config: CSSAnimationProperties = {
         animationName: [
           { from: { opacity: 1 }, to: { opacity: 0.5 } },
           { from: { width: '100%' }, to: { width: '50%' } },
@@ -191,7 +194,7 @@ describe(normalizeCSSAnimationConfig, () => {
         animationFillMode: ['both'],
       };
 
-      expect(normalizeCSSAnimationConfig(config)).toEqual([
+      expect(normalizeCSSAnimationProperties(config)).toEqual([
         {
           keyframesStyle: {
             opacity: [
@@ -244,14 +247,14 @@ describe(normalizeCSSAnimationConfig, () => {
     });
 
     it('throws an error if animationName is not a keyframes object in at least one animation', () => {
-      const config: CSSAnimationConfig = {
+      const config: CSSAnimationProperties = {
         animationName: [
           { from: { opacity: 1 }, to: { opacity: 0.5 } },
           'invalid' as unknown as CSSAnimationKeyframes,
         ],
       };
 
-      expect(() => normalizeCSSAnimationConfig(config)).toThrow(
+      expect(() => normalizeCSSAnimationProperties(config)).toThrow(
         new ReanimatedError(ERROR_MESSAGES.invalidAnimationName())
       );
     });

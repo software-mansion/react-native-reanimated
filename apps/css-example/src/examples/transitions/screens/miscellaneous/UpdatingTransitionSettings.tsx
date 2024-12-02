@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSTransitionConfig,
+  CSSTransitionProperties,
   CSSTransitionSettings,
   StyleProps,
 } from 'react-native-reanimated';
@@ -54,17 +54,16 @@ const transitionStyles: Array<StyleProps> = [
 ];
 
 export default function UpdatingTransitionSettings() {
-  const [transitionConfig, setTransitionConfig] = useState<CSSTransitionConfig>(
-    {
+  const [transitionProperties, setTransitionProperties] =
+    useState<CSSTransitionProperties>({
       transitionProperty: 'all',
       ...DEFAULT_SETTINGS,
-    }
-  );
+    });
   const [currentStyleIndex, setCurrentStyleIndex] = useState(0);
   const [displayStyleChanges, setDisplayStyleChanges] = useState(true);
 
   const handleResetSettings = useCallback(() => {
-    setTransitionConfig((prev) => ({
+    setTransitionProperties((prev) => ({
       ...prev,
       ...DEFAULT_SETTINGS,
     }));
@@ -75,7 +74,7 @@ export default function UpdatingTransitionSettings() {
       propertyName: T,
       value: CSSTransitionSettings[T]
     ) => {
-      setTransitionConfig((prev) => ({
+      setTransitionProperties((prev) => ({
         ...prev,
         [propertyName]: value,
       }));
@@ -99,7 +98,7 @@ export default function UpdatingTransitionSettings() {
                       key={propertyName}
                       options={options}
                       propertyName={key}
-                      selected={transitionConfig[key]}
+                      selected={transitionProperties[key]}
                       onSelect={handleOptionSelect}
                     />
                   );
@@ -135,7 +134,7 @@ export default function UpdatingTransitionSettings() {
               <Animated.View
                 style={[
                   styles.box,
-                  transitionConfig,
+                  transitionProperties,
                   transitionStyles[currentStyleIndex],
                 ]}
               />
@@ -164,7 +163,7 @@ export default function UpdatingTransitionSettings() {
           description="Transition configuration consists of the style changes that will be animated and the transition settings."
           title="Transition configuration">
           <TransitionConfiguration
-            sharedConfig={transitionConfig}
+            transitionProperties={transitionProperties}
             transitionStyles={transitionStyles}
           />
         </Section>

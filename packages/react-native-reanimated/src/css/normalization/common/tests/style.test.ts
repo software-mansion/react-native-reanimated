@@ -1,10 +1,10 @@
+import type { StyleProps } from '../../../../commonTypes';
 import { ReanimatedError } from '../../../errors';
-import type { StyleProps } from '../../../commonTypes';
 import {
   ERROR_MESSAGES,
-  extractCSSConfigsAndFlattenedStyles,
+  extractCSSPropertiesAndFlattenedStyles,
   normalizeStyle,
-} from './style';
+} from '../style';
 
 describe(normalizeStyle, () => {
   it('converts all "auto" values to undefined', () => {
@@ -190,13 +190,13 @@ describe(normalizeStyle, () => {
   });
 });
 
-describe(extractCSSConfigsAndFlattenedStyles, () => {
+describe(extractCSSPropertiesAndFlattenedStyles, () => {
   describe('animation config', () => {
     it('returns null if there is no animationName', () => {
       const styles: StyleProps[] = [
         { transitionProperty: 'opacity', animationDuration: 100 },
       ];
-      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
         null,
         expect.any(Object),
         expect.any(Object),
@@ -207,7 +207,7 @@ describe(extractCSSConfigsAndFlattenedStyles, () => {
       const styles: StyleProps[] = [
         { animationName: {}, animationDuration: 100 },
       ];
-      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
         null,
         expect.any(Object),
         expect.any(Object),
@@ -224,7 +224,7 @@ describe(extractCSSConfigsAndFlattenedStyles, () => {
           animationDuration: 100,
         },
       ];
-      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
         styles[0],
         expect.any(Object),
         expect.any(Object),
@@ -247,7 +247,7 @@ describe(extractCSSConfigsAndFlattenedStyles, () => {
             [key]: value,
           },
         ];
-        expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+        expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
           expect.objectContaining({ [key]: value }),
           null,
           {},
@@ -267,7 +267,7 @@ describe(extractCSSConfigsAndFlattenedStyles, () => {
           transitionDuration: 100,
         },
       ];
-      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
         expect.any(Object),
         null,
         expect.any(Object),
@@ -278,7 +278,7 @@ describe(extractCSSConfigsAndFlattenedStyles, () => {
       const styles: StyleProps[] = [
         { transitionProperty: [], transitionDuration: 100 },
       ];
-      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
         expect.any(Object),
         null,
         expect.any(Object),
@@ -289,7 +289,7 @@ describe(extractCSSConfigsAndFlattenedStyles, () => {
       const styles: StyleProps[] = [
         { transitionProperty: 'opacity', transitionDuration: 100 },
       ];
-      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
         expect.any(Object),
         styles[0],
         expect.any(Object),
@@ -306,7 +306,7 @@ describe(extractCSSConfigsAndFlattenedStyles, () => {
         const styles: StyleProps[] = [
           { transitionProperty: value, [key]: value },
         ];
-        expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+        expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
           null,
           expect.objectContaining({ [key]: value }),
           {},
@@ -322,7 +322,7 @@ describe(extractCSSConfigsAndFlattenedStyles, () => {
         { margin: 10, padding: 5 },
         { backgroundColor: 'red', color: 'blue', width: 200 },
       ];
-      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
         expect.any(Object),
         expect.any(Object),
         {
@@ -349,7 +349,7 @@ describe(extractCSSConfigsAndFlattenedStyles, () => {
           animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
         },
       ];
-      expect(extractCSSConfigsAndFlattenedStyles(styles)).toEqual([
+      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
         expect.objectContaining({
           animationName: styles[0].animationName,
           animationDuration: styles[0].animationDuration,

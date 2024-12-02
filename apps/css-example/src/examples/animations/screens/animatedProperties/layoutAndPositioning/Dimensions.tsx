@@ -64,12 +64,12 @@ export default function Dimensions() {
       width?: DimensionValue;
       height?: DimensionValue;
     }>
-      renderExample={({ config, height = sizes.md, width = sizes.md }) => (
-        <Animated.View style={[styles.box, config, { height, width }]} />
+      renderExample={({ animation, height = sizes.md, width = sizes.md }) => (
+        <Animated.View style={[styles.box, animation, { height, width }]} />
       )}
       tabs={[
         {
-          buildConfig: ({ property }) => ({
+          buildAnimation: ({ property }) => ({
             ...SHARED_SETTINGS,
             animationName: {
               from: {
@@ -84,7 +84,7 @@ export default function Dimensions() {
           sections: SECTIONS,
         },
         {
-          buildConfig: ({ property }) => ({
+          buildAnimation: ({ property }) => ({
             ...SHARED_SETTINGS,
             animationName: {
               from: {
@@ -99,7 +99,7 @@ export default function Dimensions() {
           sections: SECTIONS,
         },
         {
-          buildConfig: ({ property }) => ({
+          buildAnimation: ({ property }) => ({
             animationDuration: '3s',
             animationIterationCount: 'infinite',
             animationName: {

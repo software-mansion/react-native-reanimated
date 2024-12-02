@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import type {
-  CSSAnimationConfig,
+  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -35,10 +35,10 @@ const EXAMPLES = [
 
 const DESCRIPTION = 'In all examples the box position is set to `absolute`.';
 
-function renderExample({ config }: { config: CSSAnimationConfig }) {
+function renderExample({ animation }: { animation: CSSAnimationProperties }) {
   return (
     <View style={StyleSheet.absoluteFill}>
-      <Animated.View style={[styles.box, config]} />
+      <Animated.View style={[styles.box, animation]} />
     </View>
   );
 }
@@ -48,7 +48,7 @@ export default function Insets() {
     <ExamplesScreen<{ property: string }>
       tabs={[
         {
-          buildConfig: ({ property }) => ({
+          buildAnimation: ({ property }) => ({
             ...SHARED_SETTINGS,
             animationName: {
               from: {
@@ -70,7 +70,7 @@ export default function Insets() {
           ],
         },
         {
-          buildConfig: ({ property }) => ({
+          buildAnimation: ({ property }) => ({
             ...SHARED_SETTINGS,
             animationName: {
               from: {
@@ -92,7 +92,7 @@ export default function Insets() {
           ],
         },
         {
-          buildConfig: ({ property }) => ({
+          buildAnimation: ({ property }) => ({
             ...SHARED_SETTINGS,
             animationName: {
               '0%, 100%': {

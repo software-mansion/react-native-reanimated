@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import type { CSSTransitionConfig } from 'react-native-reanimated';
+import type { CSSTransitionProperties } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { Button, Grid, ScrollScreen, Stagger, Text } from '@/components';
@@ -148,7 +148,7 @@ const sharedStyles = StyleSheet.create({
   },
 });
 
-const SHARED_CONFIG: CSSTransitionConfig = {
+const SHARED_CONFIG: CSSTransitionProperties = {
   transitionDuration: 300,
   transitionProperty: 'all',
   transitionTimingFunction: 'easeOut',

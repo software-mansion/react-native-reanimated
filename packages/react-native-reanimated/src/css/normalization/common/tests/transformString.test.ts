@@ -1,6 +1,6 @@
 import { ReanimatedError } from '../../../errors';
-import type { TransformsArray } from '../../types';
-import { ERROR_MESSAGES, normalizeTransformString } from './transformString';
+import type { TransformsArray } from '../../../types';
+import { ERROR_MESSAGES, normalizeTransformString } from '../transformString';
 
 describe(normalizeTransformString, () => {
   describe('converts transform string to transform objects', () => {
@@ -381,7 +381,7 @@ describe(normalizeTransformString, () => {
     it.each(cases)(
       'throws an error for invalid input: $input',
       ({ input, errorMessage }) => {
-        expect(() => normalizeTransformString(input)).toThrowError(
+        expect(() => normalizeTransformString(input)).toThrow(
           new ReanimatedError(errorMessage)
         );
       }

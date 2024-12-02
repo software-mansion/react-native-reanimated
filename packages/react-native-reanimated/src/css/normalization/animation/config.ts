@@ -1,10 +1,9 @@
 'use strict';
-import { ReanimatedError } from '../../../errors';
 import type {
   ConvertValuesToArrays,
-  CSSAnimationConfig,
+  CSSAnimationProperties,
   NormalizedSingleCSSAnimationConfig,
-  SingleCSSAnimationConfig,
+  SingleCSSAnimationProperties,
 } from '../../types';
 import {
   normalizeDuration,
@@ -18,22 +17,23 @@ import {
   normalizePlayState,
 } from './settings';
 import { normalizeAnimationName } from './animationName';
+import { ReanimatedError } from '../../errors';
 
 export const ERROR_MESSAGES = {
   invalidAnimationName: () =>
     `Invalid animation name. Expected a keyframes object.`,
 };
 
-function convertConfigPropertiesToArrays(config: CSSAnimationConfig) {
+function convertConfigPropertiesToArrays(config: CSSAnimationProperties) {
   return Object.fromEntries(
     Object.entries(config).map(([key, value]) => {
       return [key, Array.isArray(value) ? value : [value]];
     })
-  ) as ConvertValuesToArrays<SingleCSSAnimationConfig>;
+  ) as ConvertValuesToArrays<SingleCSSAnimationProperties>;
 }
 
-export function normalizeCSSAnimationConfig(
-  config: CSSAnimationConfig
+export function normalizeCSSAnimationProperties(
+  config: CSSAnimationProperties
 ): NormalizedSingleCSSAnimationConfig[] {
   const {
     animationName,

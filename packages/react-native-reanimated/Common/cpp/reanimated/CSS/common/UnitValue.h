@@ -10,8 +10,8 @@
 namespace reanimated {
 
 enum class RelativeTo {
-  PARENT,
-  SELF,
+  Parent,
+  Self,
 };
 
 struct UnitValueInterpolationContext {

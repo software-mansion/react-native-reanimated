@@ -16,24 +16,15 @@ struct DelayedItem {
   const double timestamp;
   const Identifier id;
 
-  DelayedItem(double timestamp, Identifier id) : timestamp(timestamp), id(id) {}
-
-  friend std::ostream &operator<<(std::ostream &os, const DelayedItem &item) {
-    os << "DelayedItem(" << item.timestamp << ", " << item.id << ")";
-    return os;
-  }
+  DelayedItem(double timestamp, Identifier id);
+  friend std::ostream &operator<<(std::ostream &os, const DelayedItem &item);
 };
 
 template <typename Identifier>
 struct DelayedItemComparator {
   bool operator()(
       const DelayedItem<Identifier> &lhs,
-      const DelayedItem<Identifier> &rhs) const {
-    if (lhs.timestamp != rhs.timestamp) {
-      return lhs.timestamp < rhs.timestamp;
-    }
-    return lhs.id < rhs.id;
-  }
+      const DelayedItem<Identifier> &rhs) const;
 };
 
 template <typename Identifier>

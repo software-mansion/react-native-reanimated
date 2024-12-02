@@ -6,11 +6,11 @@ import {
   updateCSSTransition,
 } from '../native';
 import {
-  normalizeCSSTransitionConfig,
+  normalizeCSSTransitionProperties,
   getNormalizedCSSTransitionConfigUpdates,
 } from '../normalization';
 import type {
-  CSSTransitionConfig,
+  CSSTransitionProperties,
   NormalizedCSSTransitionConfig,
 } from '../types';
 
@@ -18,51 +18,52 @@ export default class CSSTransitionManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
 
-  private normalizedConfig: NormalizedCSSTransitionConfig | null = null;
+  private transitionConfig: NormalizedCSSTransitionConfig | null = null;
 
   constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
     this.shadowNodeWrapper = shadowNodeWrapper;
   }
 
-  private attachTransition(normalizedConfig: NormalizedCSSTransitionConfig) {
-    if (!this.normalizedConfig) {
-      registerCSSTransition(this.shadowNodeWrapper, normalizedConfig);
-      this.normalizedConfig = normalizedConfig;
+  private attachTransition(transitionConfig: NormalizedCSSTransitionConfig) {
+    if (!this.transitionConfig) {
+      registerCSSTransition(this.shadowNodeWrapper, transitionConfig);
+      this.transitionConfig = transitionConfig;
     }
   }
 
   detach() {
-    if (this.normalizedConfig) {
+    if (this.transitionConfig) {
       unregisterCSSTransition(this.viewTag);
-      this.normalizedConfig = null;
+      this.transitionConfig = null;
     }
   }
 
-  update(transitionConfig: CSSTransitionConfig | null): void {
+  update(transitionProperties: CSSTransitionProperties | null): void {
+    if (!transitionProperties) {
+      this.detach();
+      return;
+    }
+
+    const transitionConfig =
+      normalizeCSSTransitionProperties(transitionProperties);
     if (!transitionConfig) {
       this.detach();
       return;
     }
 
-    const normalizedConfig = normalizeCSSTransitionConfig(transitionConfig);
-    if (!normalizedConfig) {
-      this.detach();
-      return;
-    }
-
-    if (this.normalizedConfig) {
+    if (this.transitionConfig) {
       const configUpdates = getNormalizedCSSTransitionConfigUpdates(
-        this.normalizedConfig,
-        normalizedConfig
+        this.transitionConfig,
+        transitionConfig
       );
 
       if (Object.keys(configUpdates).length > 0) {
-        this.normalizedConfig = normalizedConfig;
+        this.transitionConfig = transitionConfig;
         updateCSSTransition(this.viewTag, configUpdates);
       }
     } else {
-      this.attachTransition(normalizedConfig);
+      this.attachTransition(transitionConfig);
     }
   }
 }

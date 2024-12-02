@@ -9,7 +9,7 @@ import type { Transforms } from '@/types';
 export default function Scale() {
   return (
     <ExamplesScreen<{ from: Transforms; to: Transforms }>
-      buildConfig={({ from, to }) => ({
+      buildAnimation={({ from, to }) => ({
         animationDirection: 'alternate',
         animationDuration: '1s',
         animationIterationCount: 'infinite',
@@ -22,14 +22,14 @@ export default function Scale() {
           },
         },
       })}
-      renderExample={({ config }) => (
+      renderExample={({ animation }) => (
         <View style={flex.row}>
           <View style={styles.box} />
           <Animated.View
             style={[
               styles.box,
               { backgroundColor: colors.primaryDark },
-              config,
+              animation,
             ]}
           />
         </View>

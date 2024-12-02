@@ -10,7 +10,7 @@ export default function FlexDirection() {
   return (
     <ExamplesScreen
       CardComponent={VerticalExampleCard}
-      buildConfig={() => ({
+      buildAnimation={() => ({
         animationDuration: '4s',
         animationIterationCount: 'infinite',
         animationName: {
@@ -29,8 +29,8 @@ export default function FlexDirection() {
         },
         animationTimingFunction: 'linear',
       })}
-      renderExample={({ config }) => (
-        <Animated.View style={[StyleSheet.absoluteFill, config]}>
+      renderExample={({ animation }) => (
+        <Animated.View style={[StyleSheet.absoluteFill, animation]}>
           {BOX_COLORS.map((color, index) => (
             <View
               key={index}

@@ -26,8 +26,8 @@ type PartialExamplesListProps<
 } & Pick<ExamplesListProps<P>, K>;
 
 type SameTypeTabsScreenProps<P extends AnyRecord> =
-  | PartialExamplesListProps<P, 'buildConfig' | 'renderExample'>
-  | PartialExamplesListProps<P, 'buildConfig'>
+  | PartialExamplesListProps<P, 'buildAnimation' | 'renderExample'>
+  | PartialExamplesListProps<P, 'buildAnimation'>
   | PartialExamplesListProps<P, 'renderExample'>;
 
 export default function ExamplesScreen<P extends AnyRecord | Array<AnyRecord>>(
@@ -37,24 +37,28 @@ export default function ExamplesScreen<P extends AnyRecord | Array<AnyRecord>>(
     return (
       <Screen>
         <TabView>
-          {props.tabs.map(({ buildConfig, name, renderExample, ...rest }) => (
-            <TabView.Tab key={name} name={name}>
-              <ExamplesList
-                {...props}
-                {...rest}
-                buildConfig={
-                  buildConfig ??
-                  ('buildConfig' in props
-                    ? props.buildConfig
-                    : () => ({ animationName: {} }))
-                }
-                renderExample={
-                  renderExample ??
-                  ('renderExample' in props ? props.renderExample : () => <></>)
-                }
-              />
-            </TabView.Tab>
-          ))}
+          {props.tabs.map(
+            ({ buildAnimation, name, renderExample, ...rest }) => (
+              <TabView.Tab key={name} name={name}>
+                <ExamplesList
+                  {...props}
+                  {...rest}
+                  buildAnimation={
+                    buildAnimation ??
+                    ('buildAnimation' in props
+                      ? props.buildAnimation
+                      : () => ({ animationName: {} }))
+                  }
+                  renderExample={
+                    renderExample ??
+                    ('renderExample' in props
+                      ? props.renderExample
+                      : () => <></>)
+                  }
+                />
+              </TabView.Tab>
+            )
+          )}
         </TabView>
       </Screen>
     );
