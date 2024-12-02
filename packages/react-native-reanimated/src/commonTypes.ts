@@ -7,7 +7,6 @@ import type {
 } from 'react-native';
 import type { WorkletsModuleProxy } from './worklets';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
-import type { CacheableWorklet } from './animation/commonTypes';
 
 export interface IWorkletsModule extends WorkletsModuleProxy {}
 
@@ -331,12 +330,12 @@ interface WorkletBaseDev extends WorkletBaseCommon {
 export type WorkletFunctionDev<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
-> = ((...args: Args) => ReturnValue) & WorkletBaseDev & CacheableWorklet;
+> = ((...args: Args) => ReturnValue) & WorkletBaseDev;
 
 type WorkletFunctionRelease<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
-> = ((...args: Args) => ReturnValue) & WorkletBaseRelease & CacheableWorklet;
+> = ((...args: Args) => ReturnValue) & WorkletBaseRelease;
 
 export type WorkletFunction<
   Args extends unknown[] = unknown[],

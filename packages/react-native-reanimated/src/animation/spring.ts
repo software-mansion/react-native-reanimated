@@ -22,7 +22,6 @@ import {
   scaleZetaToMatchClamps,
   checkIfConfigIsValid,
 } from './springUtils';
-import type { CacheableWorklet } from './commonTypes';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withSpringType = <T extends AnimatableValue>(
@@ -44,11 +43,11 @@ type withSpringType = <T extends AnimatableValue>(
  *   which holds the current state of the animation
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring
  */
-export const withSpring = <withSpringType & CacheableWorklet>function (
+export const withSpring = ((
   toValue: AnimatableValue,
   userConfig?: SpringConfig,
   callback?: AnimationCallback
-): Animation<SpringAnimation> {
+): Animation<SpringAnimation> => {
   'worklet';
 
   return defineAnimation<SpringAnimation>(toValue, () => {
@@ -246,5 +245,4 @@ export const withSpring = <withSpringType & CacheableWorklet>function (
       reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
     } as SpringAnimation;
   });
-};
-withSpring.cacheable = true;
+}) as withSpringType;

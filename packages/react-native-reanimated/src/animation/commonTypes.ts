@@ -57,7 +57,3 @@ export interface StyleLayoutAnimation extends HigherOrderAnimation {
   ) => void;
   callback?: AnimationCallback;
 }
-
-export interface CacheableWorklet {
-  cacheable?: boolean;
-}

@@ -8,7 +8,7 @@ import type {
   AnimationObject,
   ReduceMotion,
 } from '../commonTypes';
-import type { CacheableWorklet, RepeatAnimation } from './commonTypes';
+import type { RepeatAnimation } from './commonTypes';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withRepeatType = <T extends AnimatableValue>(
@@ -36,7 +36,7 @@ type withRepeatType = <T extends AnimatableValue>(
  *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withRepeat
  */
-export const withRepeat = <withRepeatType & CacheableWorklet>function <T extends AnimationObject>(
+export const withRepeat = function <T extends AnimationObject>(
   _nextAnimation: T | (() => T),
   numberOfReps = 2,
   reverse = false,
@@ -141,5 +141,4 @@ export const withRepeat = <withRepeatType & CacheableWorklet>function <T extends
       };
     }
   );
-};
-withRepeat.cacheable = true;
+} as withRepeatType;

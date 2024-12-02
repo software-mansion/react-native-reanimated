@@ -7,7 +7,7 @@ import type {
   AnimationObject,
   ReduceMotion,
 } from '../commonTypes';
-import type { CacheableWorklet, DelayAnimation } from './commonTypes';
+import type { DelayAnimation } from './commonTypes';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withDelayType = <T extends AnimatableValue>(
@@ -29,7 +29,7 @@ type withDelayType = <T extends AnimatableValue>(
  *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withDelay
  */
-export const withDelay = <withDelayType & CacheableWorklet>function <T extends AnimationObject>(
+export const withDelay = function <T extends AnimationObject>(
   delayMs: number,
   _nextAnimation: T | (() => T),
   reduceMotion?: ReduceMotion
@@ -114,5 +114,4 @@ export const withDelay = <withDelayType & CacheableWorklet>function <T extends A
       };
     }
   );
-};
-withDelay.cacheable = true;
+} as withDelayType;

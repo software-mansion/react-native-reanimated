@@ -11,7 +11,7 @@ import type {
   AnimationObject,
   ReduceMotion,
 } from '../commonTypes';
-import type { CacheableWorklet, ClampAnimation } from './commonTypes';
+import type { ClampAnimation } from './commonTypes';
 import { logger } from '../logger';
 
 type withClampType = <T extends number | string>(
@@ -22,7 +22,7 @@ type withClampType = <T extends number | string>(
   clampedAnimation: T
 ) => T;
 
-export const withClamp = <withClampType & CacheableWorklet>function <T extends number | string>(
+export const withClamp = function <T extends number | string>(
   config: { min?: T; max?: T; reduceMotion?: ReduceMotion },
   _animationToClamp: AnimationObject<T> | (() => AnimationObject<T>)
 ): Animation<ClampAnimation> {
@@ -131,5 +131,4 @@ export const withClamp = <withClampType & CacheableWorklet>function <T extends n
       };
     }
   );
-};
-withClamp.cacheable = true;
+} as withClampType;

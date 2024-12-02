@@ -14,7 +14,6 @@ import type {
   ReduceMotion,
   EasingFunction,
 } from '../commonTypes';
-import type { CacheableWorklet } from './commonTypes';
 
 /**
  * The timing animation configuration.
@@ -71,7 +70,7 @@ type withTimingType = <T extends AnimatableValue>(
  *   which holds the current state of the animation.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming
  */
-export const withTiming = <withTimingType & CacheableWorklet>function (
+export const withTiming = function (
   toValue: AnimatableValue,
   userConfig?: TimingConfig,
   callback?: AnimationCallback
@@ -157,5 +156,4 @@ export const withTiming = <withTimingType & CacheableWorklet>function (
       reduceMotion: getReduceMotionForAnimation(userConfig?.reduceMotion),
     } as TimingAnimation;
   });
-};
-withTiming.cacheable = true;
+} as withTimingType;
