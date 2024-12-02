@@ -6,8 +6,10 @@ The usage of the React Native Reanimated CSS Animations Library resembles the im
 
 1. [Animations](#animations)
    - [Animation Properties](#animation-properties)
+   - [Simple Animation Examples](#simple-animation-examples)
+   - [Keyframe Timing Functions](#keyframe-timing-functions)
+   - [Multiple Animations](#multiple-animations)
    - [Updating Animation Properties](#updating-animation-properties)
-   - [Example](#animations-example)
 2. [Transitions](#transitions)
    - [Transition Properties](#transition-properties)
    - [Updating Transition Properties](#updating-transition-properties)
@@ -44,11 +46,7 @@ Animations in the React Native Reanimated CSS Animations Library require the `an
 - **animationPlayState**: Specifies whether the animation is running or paused.
   - Accepts: `'running'`, `'paused'`.
 
-### Updating Animation Properties
-
-All animation properties can be updated after the animation is attached to the view. Modifying the `animationName` keyframes object cancels the current animation and starts a new one. Updates to other animation properties modify the current animation without cancellation of the animation.
-
-### Animations Example
+### Simple Animation Examples
 
 **Example 1: Inline Animation Props**
 
@@ -84,15 +82,141 @@ const rotate: CSSAnimationKeyframes = {
   },
 };
 
-const config: CSSAnimationProperties = {
+const animation: CSSAnimationProperties = {
   animationName: rotate,
   animationDuration: 1500,
   animationIterationCount: 'infinite',
   animationTimingFunction: 'easeInOut',
 };
 
-<Animated.View style={config} />;
+<Animated.View style={animation} />;
 ```
+
+### Keyframe Timing Functions
+
+The `animationTimingFunction` can be specified at two levels:
+
+1. Animation level - applies as a default timing function for the entire animation
+2. Individual keyframe level - allows control over how properties animate from this keyframe to the next where they are specified
+
+When specified in keyframes, timing functions control the animation's progress between keyframes:
+
+- The timing function applies from the current keyframe until the next keyframe that specifies that property
+- If no subsequent keyframe specifies that property, the timing function applies until the end of the animation
+- A timing function specified in the last keyframe (`100%`, `to`, or `1`) is ignored since there is no subsequent keyframe
+
+**Example: Keyframe-specific Timing Functions**
+
+```tsx
+import Animated from 'react-native-reanimated';
+import type { CSSAnimationKeyframes } from 'react-native-reanimated';
+
+const bounceAndSpin: CSSAnimationKeyframes = {
+  '0%': {
+    transform: [{ scale: 1 }, { rotate: '0deg' }],
+    opacity: 1,
+    animationTimingFunction: 'ease-in',
+  },
+  '25%': {
+    opacity: 0.5,
+  },
+  '50%': {
+    transform: [{ scale: 1.5 }, { rotate: '180deg' }],
+    opacity: 1,
+    animationTimingFunction: 'ease-out',
+  },
+  '100%': {
+    transform: [{ scale: 1 }, { rotate: '360deg' }],
+    opacity: 1,
+    animationTimingFunction: 'linear', // This will be ignored
+  },
+};
+
+<Animated.View
+  style={{
+    animationName: bounceAndSpin,
+    animationDuration: 2000,
+    animationIterationCount: 'infinite',
+    animationTimingFunction: 'ease', // Default timing function
+  }}
+/>;
+```
+
+In this example:
+
+- `transform` property:
+  - 0% to 50%: Uses `ease-in` timing
+  - 50% to 100%: Uses `ease-out` timing
+- `opacity` property:
+  - 0% to 25%: Uses `ease-in` timing
+  - 25% to 50%: Uses animation-level `ease` timing
+  - 50% to 100%: Uses `ease-out` timing
+
+For more details about timing functions and their behavior in keyframes, see [MDN's animation-timing-function documentation](https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timing-function#description).
+
+### Multiple Animations
+
+You can apply multiple animations to a single view by passing an array of keyframe objects to the `animationName` property.
+
+Each animation property (like `animationDuration` or `animationDelay`) can also accept an array of values to control multiple animations separately.
+
+You can specify values for animation properties in different ways:
+
+- **Individual Values for Each Animation**: Provide a specific value for each animation in the array.
+
+  ```tsx
+  <Animated.View
+    style={{
+      animationName: [fadeInOut, moveLeft, bounce],
+      animationDuration: ['2.5s', '5s', '1s'],
+      animationIterationCount: [2, 1, 5],
+    }}
+  />
+  ```
+
+- **Single Value for All Animations**: Use the same value for all animations.
+
+  ```tsx
+  <Animated.View
+    style={{
+      animationName: [fadeInOut, moveLeft, bounce],
+      animationDuration: '3s', // all animations take 3s
+      animationIterationCount: 1, // all animations run once
+    }}
+  />
+  ```
+
+- **Cycling Values**: If there are fewer values than animations, the values cycle through the animations.
+
+  ```tsx
+  <Animated.View
+    style={{
+      animationName: [fadeInOut, moveLeft, bounce],
+      animationDuration: ['2.5s', '5s'], // fadeInOut: 2.5s, moveLeft: 5s, bounce: 2.5s
+      animationIterationCount: [2, 1], // fadeInOut: 2, moveLeft: 1, bounce: 2
+    }}
+  />
+  ```
+
+- **Ignored values**: If you provide more values than animations, any extra values will be ignored.
+  ```tsx
+  <Animated.View
+    style={{
+      animationName: [fadeInOut, moveLeft], // 2 animations
+      animationDuration: ['2s', '3s', '4s'], // third value (4s) is ignored
+      animationIterationCount: [1, 2, 3, 4], // values 3 and 4 are ignored
+    }}
+  />
+  ```
+
+> [!NOTE]
+> If multiple animations target the same property, the animation later in the array will override changes from the previous one.
+
+For more details about multiple animation property values, see [MDN's documentation on setting multiple animation property values](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_animations/Using_CSS_animations#setting_multiple_animation_property_values).
+
+### Updating Animation Properties
+
+All animation properties can be updated after the animation is attached to the view. Modifying the `animationName` keyframes object cancels the current animation and starts a new one. Updates to other animation properties modify the current animation without cancellation of the animation.
 
 ## Transitions
 
@@ -108,6 +232,22 @@ Transitions provide smooth animations between changes in style properties during
   - Same format as `animationDelay`.
 - **transitionTimingFunction**: Specifies the timing function for the transition.
   - Same format as `animationTimingFunction`.
+
+When using an array of property names in `transitionProperty`, you can specify different values for different transition properties to control each property separately:
+
+```tsx
+<Animated.View
+  style={{
+    transitionProperty: ['width', 'height', 'backgroundColor'],
+    transitionDuration: ['500ms', '1s', '300ms'],
+    transitionTimingFunction: ['ease', 'linear', 'ease-in'],
+    transitionDelay: ['0ms', '200ms', '100ms'],
+  }}
+/>
+```
+
+> [!NOTE]
+> The behavior of value assignment for transition properties follows the same rules as for animations (see [Multiple Animations](#multiple-animations) section above). If there are fewer values than properties, the values cycle through the properties. If you provide more values than properties, any extra values will be ignored. For more details, see [MDN's documentation on transition property value lists](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_transitions/Using_CSS_transitions#when_property_value_lists_are_of_different_lengths).
 
 ### Updating Transition Properties
 
