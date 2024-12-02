@@ -77,7 +77,7 @@ const PropertyInterpolatorFactories PROPERTY_INTERPOLATOR_FACTORIES = []() {
 
       // OTHERS
       {"position", discrete()},
-      {"display", discrete()},
+      {"display", display("flex")},
       {"overflow", discrete()},
       {"zIndex", steps(0)},
       {"aspectRatio", numeric()},

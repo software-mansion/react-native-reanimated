@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { CodeBlock, ExpandableCard, Text } from '@/components';
+import { Button, CodeBlock, ExpandableCard, Text } from '@/components';
 import { colors, flex, radius, spacing } from '@/theme';
 
 export type ExampleCardProps = PropsWithChildren<{
@@ -22,6 +22,7 @@ export type ExampleCardProps = PropsWithChildren<{
   description?: Array<string> | string;
   collapsedExampleHeight?: number;
   minExampleHeight?: number;
+  showRestartButton?: boolean;
 }>;
 
 export default function ExampleCard({
@@ -31,8 +32,10 @@ export default function ExampleCard({
   collapsedExampleHeight = 150,
   description,
   minExampleHeight,
+  showRestartButton,
   title,
 }: ExampleCardProps) {
+  const [key, setKey] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
   const exampleContainerDimensions = useSharedValue<{
     width: number;
@@ -58,19 +61,26 @@ export default function ExampleCard({
         expanded={isExpanded}
         showExpandOverlay
         onChange={setIsExpanded}>
-        <View style={styles.textWrapper}>
+        <View style={styles.titleRow}>
           {title && <Text variant="subHeading2">{title}</Text>}
-          {description &&
-            (Array.isArray(description) ? (
-              <View style={styles.description}>
-                {description.map((paragraph, index) => (
-                  <Text key={index}>{paragraph}</Text>
-                ))}
-              </View>
-            ) : (
-              <Text style={styles.description}>{description}</Text>
-            ))}
+          {showRestartButton && (
+            <Button
+              title="Restart"
+              onPress={() => setKey((prev) => prev + 1)}
+            />
+          )}
         </View>
+        {description &&
+          (Array.isArray(description) ? (
+            <View style={styles.description}>
+              {description.map((paragraph, index) => (
+                <Text key={index}>{paragraph}</Text>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.description}>{description}</Text>
+          ))}
+
         <View
           style={[
             styles.itemsContainer,
@@ -126,7 +136,9 @@ export default function ExampleCard({
             <Animated.View
               layout={LinearTransition}
               style={styles.exampleOuterContainer}>
-              <Animated.View style={[flex.center, animatedExampleStyle]}>
+              <Animated.View
+                key={key}
+                style={[flex.center, animatedExampleStyle]}>
                 {children}
               </Animated.View>
             </Animated.View>
@@ -169,7 +181,11 @@ const styles = StyleSheet.create({
   itemsContainerExpanded: {
     flexDirection: 'column',
   },
-  textWrapper: {
-    paddingBottom: spacing.xs,
+  titleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs,
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
   },
 });

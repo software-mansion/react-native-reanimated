@@ -7,7 +7,11 @@
 
 namespace reanimated {
 
-class DiscreteStringInterpolator final : public ValueInterpolator<std::string> {
+/**
+ * Generic discrete string interpolator
+ */
+
+class DiscreteStringInterpolator : public ValueInterpolator<std::string> {
  public:
   using ValueInterpolator<std::string>::ValueInterpolator;
 
@@ -18,6 +22,22 @@ class DiscreteStringInterpolator final : public ValueInterpolator<std::string> {
   jsi::Value convertResultToJSI(jsi::Runtime &rt, const std::string &value)
       const override;
 
+  std::string interpolate(
+      double progress,
+      const std::string &fromValue,
+      const std::string &toValue,
+      const ValueInterpolatorUpdateContext &context) const override;
+};
+
+/**
+ * Specific discrete string interpolators
+ */
+
+class DisplayInterpolator : public DiscreteStringInterpolator {
+ public:
+  using DiscreteStringInterpolator::DiscreteStringInterpolator;
+
+ protected:
   std::string interpolate(
       double progress,
       const std::string &fromValue,

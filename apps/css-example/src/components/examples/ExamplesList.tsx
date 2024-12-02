@@ -74,6 +74,7 @@ function Example<P extends AnyRecord>({
   description,
   minExampleHeight,
   renderExample,
+  showRestartButton,
   title,
   ...rest
 }: ExampleProps<P>) {
@@ -87,6 +88,7 @@ function Example<P extends AnyRecord>({
       collapsedExampleHeight={collapsedExampleHeight}
       description={description}
       minExampleHeight={minExampleHeight}
+      showRestartButton={showRestartButton}
       title={title}>
       {renderExample({ animation, ...userProps })}
     </CardComponent>
