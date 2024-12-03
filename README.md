@@ -4,7 +4,7 @@
 
 ## Welcome to Reanimated 4 Private Beta ✨
 
-Thank you for your interest in the Reanimated library! We aim to provide an easy-to-use and intuitive API that enables developers to effortlessly implement animations and transitions. Reanimated 4 adds support for well-known [CSS animations](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_animations/Using_CSS_animations) and [CSS transitions](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_transitions/Using_CSS_transitions). 
+Thank you for your interest in the Reanimated library! We aim to provide an easy-to-use and intuitive API that enables developers to effortlessly implement animations and transitions. Reanimated 4 adds support for well-known [CSS animations](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_animations/Using_CSS_animations) and [CSS transitions](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_transitions/Using_CSS_transitions).
 
 > [!NOTE]
 > This library supports only the [New Architecture](https://reactnative.dev/architecture/landing-page).
@@ -79,17 +79,17 @@ To integrate the library into your own project, follow these steps:
      - Using **npm**:
 
      ```bash
-     npm i /path/to/react-native-reanimated-4.0.0-beta.1.tgz
+     npm i /path/to/react-native-reanimated-4.0.0-beta.2.tgz
      ```
 
      - Using **yarn**:
 
      ```bash
-     yarn add /path/to/react-native-reanimated-4.0.0-beta.1.tgz
+     yarn add /path/to/react-native-reanimated-4.0.0-beta.2.tgz
      ```
 
 > [!NOTE]  
-> Make sure to replace `/path/to/react-native-reanimated-4.0.0-beta.1.tgz` with the actual path to the library archive on your computer.
+> Make sure to replace `/path/to/react-native-reanimated-4.0.0-beta.2.tgz` with the actual path to the library archive on your computer.
 
 3. **Additional setup** (Optional):
    - If you want to use other Reanimated features, such as worklets, continue following steps for `react-native-reanimated` installation as described in [this quick start guide](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#step-2-add-reanimateds-babel-plugin).

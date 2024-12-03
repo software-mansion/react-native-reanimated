@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useNavigation } from '@react-navigation/native';
 import { memo, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import { Pressable } from 'react-native-gesture-handler';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
 import { Text } from '@/components';
@@ -33,7 +33,7 @@ const BackButton = memo(function BackButton({ tabRoutes }: BackButtonProps) {
   }
 
   return (
-    <TouchableOpacity
+    <Pressable
       hitSlop={spacing.md}
       style={styles.backButton}
       onPress={() => {
@@ -49,7 +49,7 @@ const BackButton = memo(function BackButton({ tabRoutes }: BackButtonProps) {
           {getScreenTitle(prevRoute)}
         </Text>
       </Animated.View>
-    </TouchableOpacity>
+    </Pressable>
   );
 });
 
