@@ -37,6 +37,9 @@ Add the following line to your `jest-setup.js` file:
 
 ```js
 require('react-native-reanimated').setUpTests();
+global.navigator = {
+  userAgent: undefined,
+};
 ```
 
 - `setUpTests()` can take optional config argument. Default config is `{ fps: 60 }`.
