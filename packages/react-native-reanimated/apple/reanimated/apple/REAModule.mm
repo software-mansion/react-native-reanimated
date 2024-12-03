@@ -280,13 +280,14 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto jsCallInvoker = self.bridge.jsCallInvoker;
   auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
-  if (jsiRuntime) {
-    auto reanimatedModuleProxy =
-        reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, _isBridgeless);
-    jsi::Runtime &rnRuntime = *jsiRuntime;
+  assert(jsiRuntime != nullptr);
 
-    [self commonInit:reanimatedModuleProxy withRnRuntime:rnRuntime];
-  }
+  auto reanimatedModuleProxy =
+      reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, _isBridgeless);
+
+  jsi::Runtime &rnRuntime = *jsiRuntime;
+  [self commonInit:reanimatedModuleProxy withRnRuntime:rnRuntime];
+
   return @YES;
 }
 
@@ -303,6 +304,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   WorkletRuntimeCollector::install(rnRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, reanimatedModuleProxy);
 #ifdef RCT_NEW_ARCH_ENABLED
+  [self attachReactEventListener];
   weakReanimatedModuleProxy_ = reanimatedModuleProxy;
   if (self->_surfacePresenter != nil) {
     // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`

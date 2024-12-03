@@ -96,7 +96,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
   return reanimatedModuleProxy;
 }
 
-void commonInit(REAModule *reaModule, std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule)
+void commonInit(REAModule *reaModule, std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy)
 {
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler

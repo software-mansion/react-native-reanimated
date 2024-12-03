@@ -20,10 +20,12 @@ std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModule(
     const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
     WorkletsModule *workletsModule);
 
-#ifdef RCT_NEW_ARCH_ENABLED
 void commonInit(
     REAModule *reaModule,
     std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy);
+
+#ifdef RCT_NEW_ARCH_ENABLED
+// nothing
 #else // RCT_NEW_ARCH_ENABLED
 void setupLayoutAnimationCallbacks(
     std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy,
