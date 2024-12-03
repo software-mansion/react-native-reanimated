@@ -47,7 +47,7 @@ function formatMessage(message: string) {
   return `[Reanimated] ${message}`;
 }
 
-function createLog(level: LogBoxLogLevel, message: string): LogData {
+function createLog(level: LogBoxLogLevel, message: string, errorOpts?: ErrorOpts): LogData {
   'worklet';
   const formattedMessage = formatMessage(message);
 
@@ -61,7 +61,7 @@ function createLog(level: LogBoxLogLevel, message: string): LogData {
     componentStack: [],
     componentStackType: null,
     // eslint-disable-next-line reanimated/use-reanimated-error
-    stack: new Error().stack,
+    stack: errorOpts?.stack || new Error().stack,
   };
 }
 
@@ -119,10 +119,15 @@ type LogOptions = {
   strict?: boolean;
 };
 
+type ErrorOpts = {
+  stack?: string;
+}
+
 function handleLog(
   level: Exclude<LogBoxLogLevel, 'syntax' | 'fatal'>,
   message: string,
-  options: LogOptions
+  options: LogOptions,
+  errorOpts?: ErrorOpts,
 ) {
   'worklet';
   const config = __reanimatedLoggerConfig;
@@ -140,16 +145,16 @@ function handleLog(
     message += `\n\n${DOCS_REFERENCE}`;
   }
 
-  config.logFunction(createLog(level, message));
+  config.logFunction(createLog(level, message, errorOpts));
 }
 
 export const logger = {
-  warn(message: string, options: LogOptions = {}) {
+  warn(message: string, options: LogOptions = {}, errorOpts: ErrorOpts = {}) {
     'worklet';
-    handleLog('warn', message, options);
+    handleLog('warn', message, options, errorOpts);
   },
-  error(message: string, options: LogOptions = {}) {
+  error(message: string, options: LogOptions = {}, errorOpts: ErrorOpts = {}) {
     'worklet';
-    handleLog('error', message, options);
+    handleLog('error', message, options, errorOpts);
   },
 };

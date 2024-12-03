@@ -15,20 +15,22 @@ function shouldWarnAboutAccessDuringRender() {
   return __DEV__ && isReactRendering() && !isFirstReactRender();
 }
 
-function checkInvalidReadDuringRender() {
+function checkInvalidReadDuringRender(stack?: string) {
   if (shouldWarnAboutAccessDuringRender()) {
     logger.warn(
       "Reading from `value` during component render. Please ensure that you don't access the `value` property nor use `get` method of a shared value while React is rendering a component.",
-      { strict: true }
+      { strict: true },
+      { stack }
     );
   }
 }
 
-function checkInvalidWriteDuringRender() {
+function checkInvalidWriteDuringRender(stack?: string) {
   if (shouldWarnAboutAccessDuringRender()) {
     logger.warn(
-      "Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.",
-      { strict: true }
+      '!!Writing to `value` during component render. Please ensure that you do not access the `value` property or use `set` method of a shared value while React is rendering a component.',
+      { strict: true },
+      { stack }
     );
   }
 }
@@ -149,14 +151,14 @@ function makeMutableNative<Value>(initial: Value): Mutable<Value> {
 
   const mutable: PartialMutable<Value> = {
     get value(): Value {
-      checkInvalidReadDuringRender();
+      checkInvalidReadDuringRender(Error().stack);
       const uiValueGetter = executeOnUIRuntimeSync((sv: Mutable<Value>) => {
         return sv.value;
       });
       return uiValueGetter(mutable as Mutable<Value>);
     },
     set value(newValue) {
-      checkInvalidWriteDuringRender();
+      checkInvalidWriteDuringRender(Error().stack);
       runOnUI(() => {
         mutable.value = newValue;
       })();
@@ -205,11 +207,11 @@ function makeMutableWeb<Value>(initial: Value): Mutable<Value> {
 
   const mutable: PartialMutable<Value> = {
     get value(): Value {
-      checkInvalidReadDuringRender();
+      checkInvalidReadDuringRender(Error().stack);
       return value;
     },
     set value(newValue) {
-      checkInvalidWriteDuringRender();
+      checkInvalidWriteDuringRender(Error().stack);
       valueSetter(mutable as Mutable<Value>, newValue);
     },
 
