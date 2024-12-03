@@ -62,9 +62,6 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
-#ifdef RCT_NEW_ARCH_ENABLED
-@synthesize runtimeExecutor = _runtimeExecutor;
-#endif // RCT_NEW_ARCH_ENABLED
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
@@ -279,37 +276,16 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
-  if (_isBridgeless) {
-#ifdef RCT_NEW_ARCH_ENABLED
-    RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
-    auto &rnRuntime = *(jsi::Runtime *)cxxBridge.runtime;
-    auto executorFunction = ([executor = _runtimeExecutor](std::function<void(jsi::Runtime & runtime)> &&callback) {
-      // Convert to Objective-C block so it can be captured properly.
-      __block auto callbackBlock = callback;
 
-      [executor execute:^(jsi::Runtime &runtime) {
-        callbackBlock(runtime);
-      }];
-    });
-    auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
-        self, _moduleRegistry, rnRuntime, workletsModule, executorFunction);
-    [self attachReactEventListener];
+  auto jsCallInvoker = self.bridge.jsCallInvoker;
+  auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
+
+  if (jsiRuntime) {
+    auto nativeReanimatedModule =
+        reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, _isBridgeless);
+    jsi::Runtime &rnRuntime = *jsiRuntime;
+
     [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
-#else
-    [NSException raise:@"Missing bridge" format:@"[Reanimated] Failed to obtain the bridge."];
-#endif // RCT_NEW_ARCH_ENABLED
-  } else {
-    facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
-        ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
-        : nullptr;
-
-    if (jsiRuntime) {
-      auto nativeReanimatedModule =
-          reanimated::createReanimatedModule(self, self.bridge, self.bridge.jsCallInvoker, workletsModule);
-      jsi::Runtime &rnRuntime = *jsiRuntime;
-
-      [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
-    }
   }
   return @YES;
 }

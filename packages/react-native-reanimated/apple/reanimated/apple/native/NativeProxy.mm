@@ -60,7 +60,8 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
     REAModule *reaModule,
     RCTBridge *bridge,
     const std::shared_ptr<CallInvoker> &jsInvoker,
-    WorkletsModule *workletsModule)
+    WorkletsModule *workletsModule,
+    bool isBridgeless)
 {
   auto nodesManager = reaModule.nodesManager;
 
@@ -70,7 +71,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
   std::shared_ptr<JSScheduler> jsScheduler = std::make_shared<JSScheduler>(rnRuntime, jsInvoker);
-  constexpr auto isBridgeless = false;
 
   const auto nativeWorkletsModule = [workletsModule getNativeWorkletsModule];
 
@@ -95,39 +95,6 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModule(
 
   return nativeReanimatedModule;
 }
-
-#ifdef RCT_NEW_ARCH_ENABLED
-std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
-    REAModule *reaModule,
-    RCTModuleRegistry *moduleRegistry,
-    jsi::Runtime &runtime,
-    WorkletsModule *workletsModule,
-    RuntimeExecutor runtimeExecutor)
-{
-  auto nodesManager = reaModule.nodesManager;
-
-  PlatformDepMethodsHolder platformDepMethodsHolder =
-      makePlatformDepMethodsHolderBridgeless(moduleRegistry, nodesManager, reaModule);
-
-  const auto nativeWorkletsModule = [workletsModule getNativeWorkletsModule];
-  auto uiScheduler = std::make_shared<REAIOSUIScheduler>();
-  auto jsScheduler = std::make_shared<JSScheduler>(runtime, runtimeExecutor);
-  constexpr auto isBridgeless = true;
-
-  auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(
-      nativeWorkletsModule,
-      runtime,
-      jsScheduler,
-      uiScheduler,
-      platformDepMethodsHolder,
-      isBridgeless,
-      getIsReducedMotion());
-
-  commonInit(reaModule, nativeReanimatedModule);
-
-  return nativeReanimatedModule;
-}
-#endif // RCT_NEW_ARCH_ENABLED
 
 void commonInit(REAModule *reaModule, std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule)
 {

@@ -59,8 +59,7 @@ NativeReanimatedModule::NativeReanimatedModule(
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
     const bool isBridgeless,
     const bool isReducedMotion)
-    : NativeReanimatedModuleSpec(
-          isBridgeless ? nullptr : jsScheduler->getJSCallInvoker()),
+    : NativeReanimatedModuleSpec(jsScheduler->getJSCallInvoker()),
       isBridgeless_(isBridgeless),
       isReducedMotion_(isReducedMotion),
       nativeWorkletsModule_(nativeWorkletsModule),
