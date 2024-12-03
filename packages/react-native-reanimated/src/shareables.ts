@@ -303,6 +303,7 @@ Offending code was: \`${getWorkletCode(value)}\``);
   }
   const clone = WorkletsModule.makeShareableClone(
     clonedProps,
+    // retain all worklets
     true,
     value
   ) as ShareableRef<T>;
