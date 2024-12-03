@@ -39,7 +39,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   auto jsQueue = std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
     throw error;
   });
-  auto isBridgeless_ = ![bridge isKindOfClass:[RCTCxxBridge class]];
+
   std::string valueUnpackerCodeStr = [valueUnpackerCode UTF8String];
   auto jsCallInvoker = bridge.jsCallInvoker;
   auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
