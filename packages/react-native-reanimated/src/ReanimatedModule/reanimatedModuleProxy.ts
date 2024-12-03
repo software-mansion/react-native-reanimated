@@ -6,6 +6,7 @@ import type {
   Value3D,
   ValueRotation,
   LayoutAnimationBatchItem,
+  WorkletFunction,
 } from '../commonTypes';
 import type { WorkletRuntime } from '../runtimes';
 
@@ -53,7 +54,7 @@ export interface ReanimatedModuleProxy {
   configureProps(uiProps: string[], nativeProps: string[]): void;
 
   subscribeForKeyboardEvents(
-    handler: ShareableRef<number>,
+    handler: ShareableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,
     isNavigationBarTranslucent: boolean
   ): number;

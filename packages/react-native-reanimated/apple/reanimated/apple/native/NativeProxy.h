@@ -1,7 +1,7 @@
 #if __cplusplus
 
 #import <React/RCTEventDispatcher.h>
-#import <reanimated/NativeModules/NativeReanimatedModule.h>
+#import <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #import <reanimated/apple/LayoutReanimation/REAAnimationsManager.h>
 #import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
@@ -14,22 +14,19 @@ namespace reanimated {
 
 static inline bool getIsReducedMotion();
 
-std::shared_ptr<reanimated::NativeReanimatedModule> createReanimatedModule(
+std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,
     RCTBridge *bridge,
     const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
-    WorkletsModule *workletsModule,
-    bool isBridgeless);
-
-void commonInit(
-    REAModule *reaModule,
-    std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule);
+    WorkletsModule *workletsModule);
 
 #ifdef RCT_NEW_ARCH_ENABLED
-// nothing
+void commonInit(
+    REAModule *reaModule,
+    std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy);
 #else // RCT_NEW_ARCH_ENABLED
 void setupLayoutAnimationCallbacks(
-    std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule,
+    std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy,
     REAAnimationsManager *animationsManager);
 #endif // RCT_NEW_ARCH_ENABLED
 

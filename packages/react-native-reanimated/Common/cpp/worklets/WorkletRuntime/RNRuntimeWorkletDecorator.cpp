@@ -4,11 +4,11 @@ namespace worklets {
 
 void RNRuntimeWorkletDecorator::decorate(
     jsi::Runtime &rnRuntime,
-    const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule) {
+    const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy) {
   rnRuntime.global().setProperty(
       rnRuntime,
       "__workletsModuleProxy",
-      jsi::Object::createFromHostObject(rnRuntime, nativeWorkletsModule));
+      jsi::Object::createFromHostObject(rnRuntime, workletsModuleProxy));
 }
 
 } // namespace worklets

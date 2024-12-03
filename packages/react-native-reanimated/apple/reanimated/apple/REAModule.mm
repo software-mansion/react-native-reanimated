@@ -50,7 +50,7 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
-  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule_;
+  std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy_;
 #else
   NSMutableArray<AnimatedOperation> *_operations;
 #endif // RCT_NEW_ARCH_ENABLED
@@ -101,8 +101,8 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 {
   const auto &uiManager = [self getUIManager];
   react_native_assert(uiManager.get() != nil);
-  if (auto nativeReanimatedModule = weakNativeReanimatedModule_.lock()) {
-    nativeReanimatedModule->initializeFabric(uiManager);
+  if (auto reanimatedModuleProxy = weakReanimatedModuleProxy_.lock()) {
+    reanimatedModuleProxy->initializeFabric(uiManager);
   }
 }
 
@@ -139,16 +139,16 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     if (strongSelf == nil) {
       return;
     }
-    if (auto nativeReanimatedModule = strongSelf->weakNativeReanimatedModule_.lock()) {
+    if (auto reanimatedModuleProxy = strongSelf->weakReanimatedModuleProxy_.lock()) {
       auto eventListener =
-          std::make_shared<facebook::react::EventListener>([nativeReanimatedModule](const RawEvent &rawEvent) {
+          std::make_shared<facebook::react::EventListener>([reanimatedModuleProxy](const RawEvent &rawEvent) {
             if (!RCTIsMainQueue()) {
               // event listener called on the JS thread, let's ignore this event
               // as we cannot safely access worklet runtime here
               // and also we don't care about topLayout events
               return false;
             }
-            return nativeReanimatedModule->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
+            return reanimatedModuleProxy->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
           });
       [scheduler addEventListener:eventListener];
     }
@@ -281,11 +281,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
   if (jsiRuntime) {
-    auto nativeReanimatedModule =
+    auto reanimatedModuleProxy =
         reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, _isBridgeless);
     jsi::Runtime &rnRuntime = *jsiRuntime;
 
-    [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
+    [self commonInit:reanimatedModuleProxy withRnRuntime:rnRuntime];
   }
   return @YES;
 }
@@ -298,13 +298,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
-- (void)commonInit:(std::shared_ptr<NativeReanimatedModule>)nativeReanimatedModule
-     withRnRuntime:(jsi::Runtime &)rnRuntime
+- (void)commonInit:(std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy withRnRuntime:(jsi::Runtime &)rnRuntime
 {
   WorkletRuntimeCollector::install(rnRuntime);
-  RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule);
+  RNRuntimeDecorator::decorate(rnRuntime, reanimatedModuleProxy);
 #ifdef RCT_NEW_ARCH_ENABLED
-  weakNativeReanimatedModule_ = nativeReanimatedModule;
+  weakReanimatedModuleProxy_ = reanimatedModuleProxy;
   if (self->_surfacePresenter != nil) {
     // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
     [self injectDependencies:rnRuntime];

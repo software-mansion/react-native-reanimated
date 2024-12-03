@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/NativeModules/NativeReanimatedModule.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/android/AndroidUIScheduler.h>
 #include <reanimated/android/JNIHelper.h>
 #include <reanimated/android/LayoutAnimations.h>
@@ -171,7 +171,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
-  std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
+  std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
 #ifndef NDEBUG
   void checkJavaVersion(jsi::Runtime &);
@@ -265,7 +265,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule,
+      const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<UIScheduler> &uiScheduler,
