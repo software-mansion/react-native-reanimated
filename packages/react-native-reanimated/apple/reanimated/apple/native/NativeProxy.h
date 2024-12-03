@@ -1,4 +1,3 @@
-#include "ReactCommon/CallInvoker.h"
 #if __cplusplus
 
 #import <React/RCTEventDispatcher.h>
@@ -18,7 +17,7 @@ static inline bool getIsReducedMotion();
 std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,
     RCTBridge *bridge,
-    const std::shared_ptr<CallInvoker> &jsCallInvoker,
+    const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
     WorkletsModule *workletsModule,
     bool isBridgeless);
 

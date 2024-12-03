@@ -5,7 +5,6 @@ import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.RuntimeExecutor;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
@@ -14,9 +13,7 @@ import com.facebook.soloader.SoLoader;
 import com.swmansion.reanimated.NativeWorkletsModuleSpec;
 import java.util.Objects;
 
-/**
- * @noinspection JavaJniMissingFunction
- */
+/* * @noinspection JavaJniMissingFunction */
 @ReactModule(name = WorkletsModule.NAME)
 public class WorkletsModule extends NativeWorkletsModuleSpec {
   static {
@@ -41,12 +38,6 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
       MessageQueueThread messageQueueThread,
       CallInvokerHolderImpl jsCallInvokerHolder);
 
-  private native HybridData initHybridBridgeless(
-      long jsContext,
-      String valueUnpackerCode,
-      MessageQueueThread messageQueueThread,
-      RuntimeExecutor runtimeExecutor);
-
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
   }
@@ -56,16 +47,10 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   public boolean installTurboModule(String valueUnpackerCode) {
     var context = getReactApplicationContext();
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
+    var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
-    if (context.isBridgeless()) {
-      var runtimeExecutor = context.getCatalystInstance().getRuntimeExecutor();
-      mHybridData =
-          initHybridBridgeless(jsContext, valueUnpackerCode, mMessageQueueThread, runtimeExecutor);
-    } else {
-      var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
-      mHybridData =
-          initHybrid(jsContext, valueUnpackerCode, mMessageQueueThread, jsCallInvokerHolder);
-    }
+    mHybridData =
+        initHybrid(jsContext, valueUnpackerCode, mMessageQueueThread, jsCallInvokerHolder);
     return true;
   }
 }

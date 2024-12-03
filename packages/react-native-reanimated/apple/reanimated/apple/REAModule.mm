@@ -36,6 +36,11 @@ using namespace reanimated;
 - (void *)runtime;
 @end
 
+@interface RCTBridge (RCTTurboModule)
+- (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
+- (void)_tryAndHandleError:(dispatch_block_t)block;
+@end
+
 #ifdef RCT_NEW_ARCH_ENABLED
 static __strong REAInitializerRCTFabricSurface *reaSurface;
 #else

@@ -22,12 +22,14 @@ WorkletsModule::WorkletsModule(
     jsi::Runtime *rnRuntime,
     const std::string &valueUnpackerCode,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<worklets::JSScheduler> &jsScheduler)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
           valueUnpackerCode,
           std::make_shared<JMessageQueueThread>(messageQueueThread),
+          jsCallInvoker,
           jsScheduler)) {
   RNRuntimeWorkletDecorator::decorate(*rnRuntime_, nativeWorkletsModule_);
 }
@@ -44,35 +46,16 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
   auto jsScheduler =
       std::make_shared<worklets::JSScheduler>(*rnRuntime, jsCallInvoker);
   return makeCxxInstance(
-      jThis, rnRuntime, valueUnpackerCode, messageQueueThread, jsScheduler);
+      jThis,
+      rnRuntime,
+      valueUnpackerCode,
+      messageQueueThread,
+      jsCallInvoker,
+      jsScheduler);
 }
-
-#ifdef RCT_NEW_ARCH_ENABLED
-jni::local_ref<WorkletsModule::jhybriddata>
-WorkletsModule::initHybridBridgeless(
-    jni::alias_ref<jhybridobject> jThis,
-    jlong jsContext,
-    const std::string &valueUnpackerCode,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-    jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder) {
-  auto runtimeExecutor = runtimeExecutorHolder->cthis()->get();
-  auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext);
-  auto jsScheduler =
-      std::make_shared<worklets::JSScheduler>(*rnRuntime, runtimeExecutor);
-  return makeCxxInstance(
-      jThis, rnRuntime, valueUnpackerCode, messageQueueThread, jsScheduler);
-}
-#endif // RCT_NEW_ARCH_ENABLED
 
 void WorkletsModule::registerNatives() {
-  registerHybrid(
-      {makeNativeMethod("initHybrid", WorkletsModule::initHybrid)
-#ifdef RCT_NEW_ARCH_ENABLED
-           ,
-       makeNativeMethod(
-           "initHybridBridgeless", WorkletsModule::initHybridBridgeless)
-#endif // RCT_NEW_ARCH_ENABLED
-      });
+  registerHybrid({makeNativeMethod("initHybrid", WorkletsModule::initHybrid)});
 }
 
 } // namespace worklets

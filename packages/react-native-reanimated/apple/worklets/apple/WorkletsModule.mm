@@ -18,7 +18,6 @@ using worklets::WorkletsModuleProxy;
 
 @implementation WorkletsModule {
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
-  bool isBridgeless_;
 #ifndef NDEBUG
   worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -30,9 +29,6 @@ using worklets::WorkletsModuleProxy;
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
-#ifdef RCT_NEW_ARCH_ENABLED
-@synthesize runtimeExecutor = _runtimeExecutor;
-#endif // RCT_NEW_ARCH_ENABLED
 
 RCT_EXPORT_MODULE(WorkletsModule);
 
@@ -43,13 +39,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   auto jsQueue = std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
     throw error;
   });
-    isBridgeless_ = ![bridge isKindOfClass:[RCTCxxBridge class]];
+  auto isBridgeless_ = ![bridge isKindOfClass:[RCTCxxBridge class]];
   std::string valueUnpackerCodeStr = [valueUnpackerCode UTF8String];
-      auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, self.bridge.jsCallInvoker);
-      workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(valueUnpackerCodeStr, jsQueue, jsScheduler);
+  auto jsCallInvoker = bridge.jsCallInvoker;
+  auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
+  workletsModuleProxy_ =
+      std::make_shared<WorkletsModuleProxy>(valueUnpackerCodeStr, jsQueue, jsCallInvoker, jsScheduler);
   RNRuntimeWorkletDecorator::decorate(rnRuntime, workletsModuleProxy_);
-
-      
 
   return @YES;
 }

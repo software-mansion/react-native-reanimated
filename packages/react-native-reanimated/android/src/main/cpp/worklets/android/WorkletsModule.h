@@ -36,16 +36,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder);
 
-#ifdef RCT_NEW_ARCH_ENABLED
-  static jni::local_ref<jhybriddata> initHybridBridgeless(
-      jni::alias_ref<jhybridobject> jThis,
-      jlong jsContext,
-      const std::string &valueUnpackerCode,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      jni::alias_ref<facebook::react::JRuntimeExecutor::javaobject>
-          runtimeExecutorHolder);
-#endif // RCT_NEW_ARCH_ENABLED
-
   static void registerNatives();
 
   inline std::shared_ptr<WorkletsModuleProxy> getWorkletsModuleProxy() {
@@ -63,6 +53,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jsi::Runtime *rnRuntime,
       const std::string &valueUnpackerCode,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<worklets::JSScheduler> &jsScheduler);
 };
 

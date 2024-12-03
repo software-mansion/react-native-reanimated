@@ -30,6 +30,7 @@ NativeProxy::NativeProxy(
     jni::alias_ref<NativeProxy::javaobject> jThis,
     const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
     jsi::Runtime *rnRuntime,
+    const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<UIScheduler> &uiScheduler,
     jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
     const bool isBridgeless
@@ -44,6 +45,7 @@ NativeProxy::NativeProxy(
       reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
           workletsModuleProxy,
           *rnRuntime,
+          jsCallInvoker,
           uiScheduler,
           getPlatformDependentMethods(),
           isBridgeless,
@@ -87,6 +89,8 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
     jlong jsContext,
+    jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
+        jsCallInvokerHolder,
     jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
     bool isBridgeless
@@ -96,12 +100,14 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
         fabricUIManager
 #endif
 ) {
+  auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
   auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
   auto workletsModuleProxy = jWorkletsModule->cthis()->getWorkletsModuleProxy();
   return makeCxxInstance(
       jThis,
       workletsModuleProxy,
       (jsi::Runtime *)jsContext,
+      jsCallInvoker,
       uiScheduler,
       make_global(layoutAnimations),
       isBridgeless
