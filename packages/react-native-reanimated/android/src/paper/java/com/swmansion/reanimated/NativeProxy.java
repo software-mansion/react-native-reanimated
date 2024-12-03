@@ -34,7 +34,7 @@ public class NativeProxy extends NativeProxyCommon {
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             mAndroidUIScheduler,
             LayoutAnimations,
-            false);
+            /* isBridgeless */ false);
     prepareLayoutAnimations(LayoutAnimations);
     installJSIBindings();
     if (BuildConfig.DEBUG) {
