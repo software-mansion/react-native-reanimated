@@ -19,7 +19,7 @@ std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModule(
     RCTBridge *bridge,
     const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
     WorkletsModule *workletsModule,
-bool isBridgeless);
+    bool isBridgeless);
 
 void commonInit(
     REAModule *reaModule,
