@@ -2,8 +2,7 @@ import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useNavigation } from '@react-navigation/native';
 import type { PropsWithChildren } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/core';
 import { Label, type LabelType } from '@/components/misc';
@@ -34,8 +33,7 @@ export default function RouteCard({
   const navigation = useNavigation();
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.5}
+    <Pressable
       disabled={disabled}
       style={styles.card}
       onPress={() => {
@@ -66,7 +64,7 @@ export default function RouteCard({
           <FontAwesomeIcon color={colors.foreground3} icon={faChevronRight} />
         </View>
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 

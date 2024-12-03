@@ -1670,7 +1670,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (4.0.0-beta.1):
+  - RNReanimated (4.0.0-beta.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1690,10 +1690,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 4.0.0-beta.1)
-    - RNReanimated/worklets (= 4.0.0-beta.1)
+    - RNReanimated/reanimated (= 4.0.0-beta.2)
+    - RNReanimated/worklets (= 4.0.0-beta.2)
     - Yoga
-  - RNReanimated/reanimated (4.0.0-beta.1):
+  - RNReanimated/reanimated (4.0.0-beta.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1713,9 +1713,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 4.0.0-beta.1)
+    - RNReanimated/reanimated/apple (= 4.0.0-beta.2)
     - Yoga
-  - RNReanimated/reanimated/apple (4.0.0-beta.1):
+  - RNReanimated/reanimated/apple (4.0.0-beta.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1736,7 +1736,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated/worklets (4.0.0-beta.1):
+  - RNReanimated/worklets (4.0.0-beta.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1756,9 +1756,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/apple (= 4.0.0-beta.1)
+    - RNReanimated/worklets/apple (= 4.0.0-beta.2)
     - Yoga
-  - RNReanimated/worklets/apple (4.0.0-beta.1):
+  - RNReanimated/worklets/apple (4.0.0-beta.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2178,7 +2178,7 @@ SPEC CHECKSUMS:
   RNCMaskedView: 18c76ebdf9752bb75652829f99f6c3d1318cc864
   RNFlashList: ee2388e0d3ffde77431ba5d09b8f59a0c65a8e05
   RNGestureHandler: 4e7defe5095e936424173fc75f0bf2af5bba8e23
-  RNReanimated: 4ed0a35da49cbc246b2b7b6b739ae71a12e6200e
+  RNReanimated: 616c8f0455faf7e81b0365a760d4d974dd6fe9a2
   RNScreens: d0854539b51a53e38b61bcc9fb402439a9c73b26
   RNSVG: 7e38044415125a1d108294377de261d2fe2c54c9
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
