@@ -110,6 +110,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleBridgeless(
       makePlatformDepMethodsHolderBridgeless(moduleRegistry, nodesManager, reaModule);
 
   const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
+  assert(workletsModuleProxy != nullptr);
   auto uiScheduler = std::make_shared<REAIOSUIScheduler>();
   auto jsScheduler = std::make_shared<JSScheduler>(runtime, runtimeExecutor);
   constexpr auto isBridgeless = true;
