@@ -37,7 +37,7 @@ function oklabInterpolation(
   color2: string,
   progress: number
 ) {
-  return interpolateColor(progress, [0, 1], [color1, color2], 'OKLAB');
+  return interpolateColor(progress, [0, 1], [color1, color2], 'LAB');
 }
 
 const ProgressBarSection = ({ color1, color2 }) => {

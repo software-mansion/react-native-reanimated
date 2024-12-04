@@ -141,7 +141,7 @@ function hsvStarInterpolation(
 
 function oklabInterpolation(color1: string, color2: string, progress: number) {
   'worklet';
-  return interpolateColor(progress, [0, 1], [color1, color2], 'OKLAB');
+  return interpolateColor(progress, [0, 1], [color1, color2], 'LAB');
 }
 
 export default function ColorInterpolationExample() {

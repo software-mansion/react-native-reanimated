@@ -281,7 +281,7 @@ export function interpolateColor(
   value: number,
   inputRange: readonly number[],
   outputRange: readonly string[],
-  colorSpace?: 'RGB' | 'HSV' | 'OKLAB',
+  colorSpace?: 'RGB' | 'HSV' | 'LAB',
   options?: InterpolationOptions
 ): string;
 
@@ -289,7 +289,7 @@ export function interpolateColor(
   value: number,
   inputRange: readonly number[],
   outputRange: readonly number[],
-  colorSpace?: 'RGB' | 'HSV' | 'OKLAB',
+  colorSpace?: 'RGB' | 'HSV' | 'LAB',
   options?: InterpolationOptions
 ): number;
 
@@ -297,7 +297,7 @@ export function interpolateColor(
   value: number,
   inputRange: readonly number[],
   outputRange: readonly (string | number)[],
-  colorSpace: 'RGB' | 'HSV' | 'OKLAB' = 'RGB',
+  colorSpace: 'RGB' | 'HSV' | 'LAB' = 'RGB',
   options: InterpolationOptions = {}
 ): string | number {
   'worklet';
@@ -315,7 +315,7 @@ export function interpolateColor(
       getInterpolateRGB(outputRange),
       options
     );
-  } else if (colorSpace === 'OKLAB') {
+  } else if (colorSpace === 'LAB') {
     return interpolateColorsLAB(
       value,
       inputRange,
@@ -327,14 +327,14 @@ export function interpolateColor(
   throw new ReanimatedError(
     `Invalid color space provided: ${
       colorSpace as string
-    }. Supported values are: ['RGB', 'HSV', 'OKLAB'].`
+    }. Supported values are: ['RGB', 'HSV', 'LAB'].`
   );
 }
 
 export enum ColorSpace {
   RGB = 0,
   HSV = 1,
-  OKLAB = 2,
+  LAB = 2,
 }
 
 export interface InterpolateConfig {
