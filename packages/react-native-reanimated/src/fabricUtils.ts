@@ -2,25 +2,19 @@
 /* eslint-disable */
 
 import type { ShadowNodeWrapper } from './commonTypes';
+import {
+  findHostInstance,
+  HostInstance,
+} from './platform-specific/findHostInstance';
 
-let findHostInstance_DEPRECATED: (ref: unknown) => void;
 let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
   stateNode: { node: unknown };
 };
 
 export function getShadowNodeWrapperFromRef(
-  ref: React.Component
+  ref: React.Component,
+  hostInstance?: HostInstance
 ): ShadowNodeWrapper {
-  // load findHostInstance_DEPRECATED lazily because it may not be available before render
-  if (findHostInstance_DEPRECATED === undefined) {
-    try {
-      findHostInstance_DEPRECATED =
-        require('react-native/Libraries/Renderer/shims/ReactFabric').findHostInstance_DEPRECATED;
-    } catch (e) {
-      findHostInstance_DEPRECATED = (_ref: unknown) => null;
-    }
-  }
-
   if (getInternalInstanceHandleFromPublicInstance === undefined) {
     try {
       getInternalInstanceHandleFromPublicInstance =
@@ -49,9 +43,9 @@ export function getShadowNodeWrapperFromRef(
   } else if (textInputRef) {
     resolvedRef = textInputRef;
   } else {
-    resolvedRef = getInternalInstanceHandleFromPublicInstance(
-      findHostInstance_DEPRECATED(ref)
-    ).stateNode.node;
+    const instance = hostInstance ?? findHostInstance(ref);
+    resolvedRef =
+      getInternalInstanceHandleFromPublicInstance(instance).stateNode.node;
   }
 
   return resolvedRef;
