@@ -13,8 +13,8 @@ public class JSCallInvokerResolver {
       var method = context.getClass().getMethod("getJSCallInvokerHolder");
       return (CallInvokerHolderImpl) method.invoke(context);
     } catch (Exception ignored) {
+      // In newer implementations, the method is in CatalystInstance, continue.
     }
-    ;
     try {
       var catalystInstance = context.getClass().getMethod("getCatalystInstance").invoke(context);
       assert catalystInstance != null;
