@@ -1,13 +1,15 @@
 #import <React/RCTBridge+Private.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <React/RCTCallInvoker.h>
 #import <React/RCTFabricSurface.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurface.h>
 #import <React/RCTSurfacePresenter.h>
 #import <React/RCTSurfacePresenterBridgeAdapter.h>
 #import <React/RCTSurfaceView.h>
+#if REACT_NATIVE_MINOR_VERSION >= 75
+#import <React/RCTCallInvoker.h>
+#endif // REACT_NATIVE_MINOR_VERSION >= 75
 #endif // RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -58,9 +60,9 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
-#ifdef RCT_NEW_ARCH_ENABLED
+#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
 @synthesize callInvoker = _callInvoker;
-#endif // RCT_NEW_ARCH_ENABLED
+#endif // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
@@ -276,11 +278,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
 
-#ifdef RCT_NEW_ARCH_ENABLED
+#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
   auto jsCallInvoker = _callInvoker.callInvoker;
-#else // RCT_NEW_ARCH_ENABLED
+#else // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
   auto jsCallInvoker = self.bridge.jsCallInvoker;
-#endif // RCT_NEW_ARCH_ENABLED
+#endif // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
   auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
   assert(jsiRuntime != nullptr);
