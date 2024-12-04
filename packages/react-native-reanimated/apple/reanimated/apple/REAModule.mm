@@ -193,7 +193,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)setReaSurfacePresenter
 {
-  if(_surfacePresenter && ![_surfacePresenter surfaceForRootTag:reaSurface.rootTag]) {
+  if (_surfacePresenter && ![_surfacePresenter surfaceForRootTag:reaSurface.rootTag]) {
     if (!reaSurface) {
       reaSurface = [[REAInitializerRCTFabricSurface alloc] init];
     }
