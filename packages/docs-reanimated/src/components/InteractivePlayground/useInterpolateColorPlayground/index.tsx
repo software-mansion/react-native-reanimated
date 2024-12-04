@@ -12,6 +12,7 @@ import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
 export const ColorSpace = {
   RGB: 'RGB',
   HSV: 'HSV',
+  OKLAB: 'OKLAB',
 };
 
 const initialState = {
@@ -37,7 +38,7 @@ export default function useInterpolateColorPlayground() {
 
   const [colorBarsSectionCollapsed, setColorBarsSectionCollapsed] =
     useState(true);
-  const [colorSpace, setColorSpace] = useState<'RGB' | 'HSV'>(
+  const [colorSpace, setColorSpace] = useState<'RGB' | 'HSV' | 'OKLAB'>(
     ColorSpace[initialState.colorSpace]
   );
   const [gamma, setGamma] = useState(initialState.gamma);
@@ -59,19 +60,21 @@ export default function useInterpolateColorPlayground() {
     setCorrection(() => initialState.correction);
   };
 
+  const argsCode =
+    (colorSpace === ColorSpace.RGB
+      ? `gamma: ${gamma},`
+      : (colorSpace === ColorSpace.HSV
+        ? `useCorrectedHSVInterpolation: ${correction},`
+        : ''));
   const code = `
     interpolateColor(
         sv.value,
         [0, 1],
         ['${colorLeftBoundary.toUpperCase()}', '${colorRightBoundary.toUpperCase()}']
         '${colorSpace}',
-        {
-          ${
-            colorSpace === ColorSpace.RGB
-              ? `gamma: ${gamma},`
-              : `useCorrectedHSVInterpolation: ${correction},`
-          }
-        }
+        ${argsCode ? `{
+          ${argsCode}
+        }` :  ''}
       )
     `;
 
@@ -81,7 +84,7 @@ export default function useInterpolateColorPlayground() {
         label="Colorspace"
         value={colorSpace}
         onChange={(changedString) => setColorSpace(ColorSpace[changedString])}
-        options={['RGB', 'HSV']}
+        options={['RGB', 'HSV', 'OKLAB']}
       />
       {colorSpace === ColorSpace.RGB && (
         <Range
