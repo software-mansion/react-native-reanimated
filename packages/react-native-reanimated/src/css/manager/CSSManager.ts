@@ -54,9 +54,9 @@ export default class CSSManager implements ICSSManager {
     }
   }
 
-  detach(viewTag: number): void {
+  detach(): void {
     this.CSSAnimationsManager.detach();
     this.cssTransitionManager.detach();
-    removeViewStyle(viewTag);
+    removeViewStyle(this.viewTag);
   }
 }
