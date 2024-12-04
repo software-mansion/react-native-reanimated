@@ -461,8 +461,8 @@ task createNativeDepsDirectories() {
 
 task packageNdkLibs(type: Copy) {
     from("$buildDir/reanimated-ndk/all")
-    include("**/libreanimated.so")
     include("**/libworklets.so")
+    include("**/libreanimated.so")
     into("$projectDir/src/main/jniLibs")
 }
 

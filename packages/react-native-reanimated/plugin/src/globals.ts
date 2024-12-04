@@ -1,3 +1,5 @@
+import type { ReanimatedPluginPass } from './types';
+
 const notCapturedIdentifiers = [
   // Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
 
@@ -152,6 +154,13 @@ const notCapturedIdentifiers_DEPRECATED = [
   '_getAnimationTimestamp',
 ];
 
+export function initializeState(state: ReanimatedPluginPass) {
+  state.workletNumber = 1;
+  state.classesToWorkletize = [];
+  initializeGlobals();
+  addCustomGlobals(state);
+}
+
 export const defaultGlobals = new Set(
   notCapturedIdentifiers.concat(notCapturedIdentifiers_DEPRECATED)
 );
@@ -160,4 +169,24 @@ export let globals: Set<string>;
 
 export function initializeGlobals() {
   globals = new Set(defaultGlobals);
+}
+
+/**
+ * This function allows to add custom globals such as host-functions. Those
+ * globals have to be passed as an argument for the plugin in babel.config.js.
+ *
+ * For example:
+ *
+ * ```js
+ * plugins: [
+ *   ['react-native-reanimated/plugin', { globals: ['myHostFunction'] }],
+ * ];
+ * ```
+ */
+export function addCustomGlobals(state: ReanimatedPluginPass) {
+  if (state.opts && Array.isArray(state.opts.globals)) {
+    state.opts.globals.forEach((name: string) => {
+      globals.add(name);
+    });
+  }
 }

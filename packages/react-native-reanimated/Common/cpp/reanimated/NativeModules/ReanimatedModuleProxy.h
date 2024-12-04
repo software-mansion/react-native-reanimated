@@ -2,9 +2,8 @@
 
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
-#include <reanimated/NativeModules/NativeReanimatedModuleSpec.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
-#include <reanimated/Tools/SingleInstanceChecker.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/Fabric/PropsRegistry.h>
@@ -13,8 +12,10 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
+#include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/Tools/JSScheduler.h>
+#include <worklets/Tools/SingleInstanceChecker.h>
 #include <worklets/Tools/UIScheduler.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -29,25 +30,18 @@
 
 namespace reanimated {
 
-class NativeReanimatedModule : public NativeReanimatedModuleSpec {
+class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
  public:
-  NativeReanimatedModule(
+  ReanimatedModuleProxy(
+      const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<JSScheduler> &jsScheduler,
-      const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<UIScheduler> &uiScheduler,
       const PlatformDepMethodsHolder &platformDepMethodsHolder,
-      const std::string &valueUnpackerCode,
       const bool isBridgeless,
       const bool isReducedMotion);
 
-  ~NativeReanimatedModule();
-
-  jsi::Value makeShareableClone(
-      jsi::Runtime &rt,
-      const jsi::Value &value,
-      const jsi::Value &shouldRetainRemote,
-      const jsi::Value &nativeStateSource) override;
+  ~ReanimatedModuleProxy();
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
@@ -168,16 +162,21 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
     return *layoutAnimationsManager_;
   }
 
-  inline jsi::Runtime &getUIRuntime() const {
+  [[nodiscard]] inline jsi::Runtime &getUIRuntime() const {
     return uiWorkletRuntime_->getJSIRuntime();
   }
 
-  inline bool isBridgeless() const {
+  [[nodiscard]] inline bool isBridgeless() const {
     return isBridgeless_;
   }
 
-  inline bool isReducedMotion() const {
+  [[nodiscard]] inline bool isReducedMotion() const {
     return isReducedMotion_;
+  }
+
+  [[nodiscard]] inline std::shared_ptr<WorkletsModuleProxy>
+  getWorkletsModuleProxy() const {
+    return workletsModuleProxy_;
   }
 
  private:
@@ -194,11 +193,11 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
 
   const bool isBridgeless_;
   const bool isReducedMotion_;
-  const std::shared_ptr<MessageQueueThread> jsQueue_;
+  const std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
+  const std::string valueUnpackerCode_;
   std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
-  std::string valueUnpackerCode_;
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;
@@ -218,10 +217,6 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
 
-  // After app reload, surfaceId on iOS is still 1 but on Android it's 11.
-  // We can store surfaceId of the most recent ShadowNode as a workaround.
-  SurfaceId surfaceId_ = -1;
-
   std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
       operationsInBatch_; // TODO: refactor std::pair to custom struct
 
@@ -240,8 +235,8 @@ class NativeReanimatedModule : public NativeReanimatedModuleSpec {
   const KeyboardEventUnsubscribeFunction unsubscribeFromKeyboardEventsFunction_;
 
 #ifndef NDEBUG
-  SingleInstanceChecker<NativeReanimatedModule> singleInstanceChecker_;
-#endif
+  worklets::SingleInstanceChecker<ReanimatedModuleProxy> singleInstanceChecker_;
+#endif // NDEBUG
 };
 
 } // namespace reanimated
