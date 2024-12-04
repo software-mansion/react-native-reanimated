@@ -39,6 +39,15 @@ using namespace reanimated;
 - (void *)runtime;
 @end
 
+#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
+// nothing
+#else // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
+@interface RCTBridge (RCTTurboModule)
+- (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
+- (void)_tryAndHandleError:(dispatch_block_t)block;
+@end
+#endif // RCT_NEW_ARCH_ENABLED
+
 #ifdef RCT_NEW_ARCH_ENABLED
 static __strong REAInitializerRCTFabricSurface *reaSurface;
 #else
