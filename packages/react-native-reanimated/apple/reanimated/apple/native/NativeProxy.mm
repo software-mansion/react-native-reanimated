@@ -12,7 +12,6 @@
 #import <reanimated/apple/native/NativeMethods.h>
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/PlatformDepMethodsHolderImpl.h>
-#import <reanimated/apple/native/REAIOSUIScheduler.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
 
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
@@ -69,18 +68,10 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
 
   PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(bridge, nodesManager, reaModule);
 
-  std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
-
   const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
 
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
-      workletsModuleProxy,
-      rnRuntime,
-      jsInvoker,
-      uiScheduler,
-      platformDepMethodsHolder,
-      isBridgeless,
-      getIsReducedMotion());
+      workletsModuleProxy, rnRuntime, platformDepMethodsHolder, isBridgeless, getIsReducedMotion());
 
   commonInit(reaModule, reanimatedModuleProxy);
   // Layout Animation callbacks setup
