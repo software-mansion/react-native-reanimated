@@ -5,74 +5,19 @@ import type {
   TransformsStyle,
   ImageStyle,
 } from 'react-native';
-import type { WorkletRuntime } from './runtimes';
+import type { WorkletsModuleProxy } from './worklets';
+import type { ReanimatedModuleProxy } from './ReanimatedModule';
 
-export interface IWorkletsModule {}
+export interface IWorkletsModule extends WorkletsModuleProxy {}
 
-export interface IReanimatedModule {
-  registerSensor(
-    sensorType: number,
-    interval: number,
-    iosReferenceFrame: number,
-    handler: ShareableRef<(data: Value3D | ValueRotation) => void>
-  ): number;
-
-  unregisterSensor(sensorId: number): void;
-
-  registerEventHandler<TValue>(
-    eventHandler: ShareableRef<TValue>,
-    eventName: string,
-    emitterReactTag: number
-  ): number;
-
-  unregisterEventHandler(id: number): void;
-
+export interface IReanimatedModule
+  extends Omit<ReanimatedModuleProxy, 'getViewProp'> {
   getViewProp<TValue>(
     viewTag: number,
     propName: string,
     component: React.Component | undefined,
     callback?: (result: TValue) => void
   ): Promise<TValue>;
-
-  configureLayoutAnimationBatch(
-    layoutAnimationsBatch: LayoutAnimationBatchItem[]
-  ): void;
-
-  setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
-
-  enableLayoutAnimations(flag: boolean): void;
-
-  configureProps(uiProps: string[], nativeProps: string[]): void;
-
-  subscribeForKeyboardEvents(
-    handler: ShareableRef<number>,
-    isStatusBarTranslucent: boolean,
-    isNavigationBarTranslucent: boolean
-  ): number;
-
-  unsubscribeFromKeyboardEvents(listenerId: number): void;
-
-  makeShareableClone<TValue>(
-    value: TValue,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ): ShareableRef<TValue>;
-
-  scheduleOnUI<TValue>(shareable: ShareableRef<TValue>): void;
-
-  executeOnUIRuntimeSync<TValue, TResult>(
-    shareable: ShareableRef<TValue>
-  ): TResult;
-
-  createWorkletRuntime(
-    name: string,
-    initializer: ShareableRef<() => void>
-  ): WorkletRuntime;
-
-  scheduleOnRuntime<TValue>(
-    workletRuntime: WorkletRuntime,
-    shareableWorklet: ShareableRef<TValue>
-  ): void;
 }
 
 export type LayoutAnimationsOptions =
@@ -382,10 +327,22 @@ interface WorkletBaseDev extends WorkletBaseCommon {
   __stackDetails?: WorkletStackDetails;
 }
 
+export type WorkletFunctionDev<
+  Args extends unknown[] = unknown[],
+  ReturnValue = unknown,
+> = ((...args: Args) => ReturnValue) & WorkletBaseDev;
+
+type WorkletFunctionRelease<
+  Args extends unknown[] = unknown[],
+  ReturnValue = unknown,
+> = ((...args: Args) => ReturnValue) & WorkletBaseRelease;
+
 export type WorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
-> = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
+> =
+  | WorkletFunctionDev<Args, ReturnValue>
+  | WorkletFunctionRelease<Args, ReturnValue>;
 
 /**
  * This function allows you to determine if a given function is a worklet. It
@@ -408,10 +365,8 @@ export type WorkletFunction<
  *
  * ### Maintainer note
  *
- * This function works well on the JS thread performance-wise, since the JIT can
- * inline it. However, on other threads it will not get optimized and we will
- * get a function call overhead. We want to change it in the future, but it's
- * not feasible at the moment.
+ * This function is supposed to be used only in the React Runtime. It always
+ * returns `false` in Worklet Runtimes.
  */
 export function isWorkletFunction<
   Args extends unknown[] = unknown[],
@@ -421,7 +376,9 @@ export function isWorkletFunction<
   'worklet';
   // Since host objects always return true for `in` operator, we have to use dot notation to check if the property exists.
   // See https://github.com/facebook/hermes/blob/340726ef8cf666a7cce75bc60b02fa56b3e54560/lib/VM/JSObject.cpp#L1276.
+
   return (
+    // `__workletHash` isn't extracted in Worklet Runtimes.
     typeof value === 'function' &&
     !!(value as unknown as Record<string, unknown>).__workletHash
   );

@@ -6,17 +6,12 @@ import type {
   Value3D,
   ValueRotation,
   LayoutAnimationBatchItem,
+  WorkletFunction,
 } from '../commonTypes';
 import type { WorkletRuntime } from '../runtimes';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
-  makeShareableClone<T>(
-    value: T,
-    shouldPersistRemote: boolean,
-    nativeStateSource?: object
-  ): ShareableRef<T>;
-
   scheduleOnUI<T>(shareable: ShareableRef<T>): void;
 
   executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R;
@@ -59,7 +54,7 @@ export interface ReanimatedModuleProxy {
   configureProps(uiProps: string[], nativeProps: string[]): void;
 
   subscribeForKeyboardEvents(
-    handler: ShareableRef<number>,
+    handler: ShareableRef<WorkletFunction>,
     isStatusBarTranslucent: boolean,
     isNavigationBarTranslucent: boolean
   ): number;
