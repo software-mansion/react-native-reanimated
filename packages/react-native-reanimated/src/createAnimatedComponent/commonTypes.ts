@@ -100,15 +100,10 @@ export interface AnimatedComponentRef extends Component {
 export interface IAnimatedComponentInternal {
   _styles: StyleProps[] | null;
   _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-  /**
-   * Used for Shared Element Transitions, Layout Animations and Animated Styles.
-   * It is not related to event handling.
-   */
-  _componentViewTag: number;
   _isFirstRender: boolean;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
   jestAnimatedStyle: { value: StyleProps };
-  _component: AnimatedComponentRef | HTMLElement | null;
+  _componentRef: AnimatedComponentRef | HTMLElement | null;
   _sharedElementTransition: SharedTransition | null;
   _jsPropsUpdater: IJSPropsUpdater;
   _InlinePropManager: IInlinePropManager;
@@ -117,6 +112,11 @@ export interface IAnimatedComponentInternal {
   _NativeEventsManager?: INativeEventsManager;
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
+  /**
+   * Used for Shared Element Transitions, Layout Animations and Animated Styles.
+   * It is not related to event handling.
+   */
+  getComponentViewTag: () => number;
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];
