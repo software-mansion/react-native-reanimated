@@ -1,6 +1,7 @@
 #import <React/RCTBridge+Private.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#import <React/RCTCallInvoker.h>
 #import <React/RCTFabricSurface.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurface.h>
@@ -36,11 +37,6 @@ using namespace reanimated;
 - (void *)runtime;
 @end
 
-@interface RCTBridge (RCTTurboModule)
-- (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
-- (void)_tryAndHandleError:(dispatch_block_t)block;
-@end
-
 #ifdef RCT_NEW_ARCH_ENABLED
 static __strong REAInitializerRCTFabricSurface *reaSurface;
 #else
@@ -62,6 +58,9 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
+#ifdef RCT_NEW_ARCH_ENABLED
+@synthesize callInvoker = _callInvoker;
+#endif // RCT_NEW_ARCH_ENABLED
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
@@ -277,7 +276,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
 
+#ifdef RCT_NEW_ARCH_ENABLED
+  auto jsCallInvoker = _callInvoker.callInvoker;
+#else // RCT_NEW_ARCH_ENABLED
   auto jsCallInvoker = self.bridge.jsCallInvoker;
+#endif // RCT_NEW_ARCH_ENABLED
   auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
   assert(jsiRuntime != nullptr);

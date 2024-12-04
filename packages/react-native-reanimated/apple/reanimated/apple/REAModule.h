@@ -1,7 +1,5 @@
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <React/RCTInitializing.h>
-#import <React/RCTRuntimeExecutorModule.h>
-#import <ReactCommon/RCTRuntimeExecutor.h>
+#import <React/RCTCallInvokerModule.h>
 #import <rnreanimated/rnreanimated.h>
 #else // RCT_NEW_ARCH_ENABLED
 #import <React/RCTBridgeModule.h>
@@ -18,8 +16,7 @@
 @interface REAModule : RCTEventEmitter
 #ifdef RCT_NEW_ARCH_ENABLED
                        <NativeReanimatedModuleSpec,
-                        RCTInitializing,
-                        RCTRuntimeExecutorModule,
+                        RCTCallInvokerModule,
 #else
                        <RCTBridgeModule,
 #endif // RCT_NEW_ARCH_ENABLED
