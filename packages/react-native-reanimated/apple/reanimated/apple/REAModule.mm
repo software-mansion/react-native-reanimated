@@ -195,9 +195,10 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)setReaSurfacePresenter
 {
-  if (reaSurface == nil) {
-    // we need only one instance because SurfacePresenter is the same during the application lifetime
-    reaSurface = [[REAInitializerRCTFabricSurface alloc] init];
+  if (_surfacePresenter && ![_surfacePresenter surfaceForRootTag:reaSurface.rootTag]) {
+    if (!reaSurface) {
+      reaSurface = [[REAInitializerRCTFabricSurface alloc] init];
+    }
     [_surfacePresenter registerSurface:reaSurface];
   }
   reaSurface.reaModule = self;

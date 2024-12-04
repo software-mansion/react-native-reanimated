@@ -5,7 +5,7 @@
 
 @interface REAInitializerRCTFabricSurface : RCTFabricSurface
 
-@property REAModule *reaModule;
+@property __weak REAModule *reaModule;
 
 @end
 
