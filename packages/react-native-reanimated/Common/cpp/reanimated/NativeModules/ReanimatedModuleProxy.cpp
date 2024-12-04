@@ -356,7 +356,7 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
     const auto resultStr =
         obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
 
-    nativeWorkletsModule_->getJSScheduler()->scheduleOnJS(
+    workletsModuleProxy_->getJSScheduler()->scheduleOnJS(
         [=](jsi::Runtime &rnRuntime) {
           const auto resultValue =
               jsi::String::createFromUtf8(rnRuntime, resultStr);
@@ -389,7 +389,7 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
         const auto resultValue =
             obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
         const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
-        const auto jsScheduler = nativeWorkletsModule_->getJSScheduler();
+        const auto jsScheduler = workletsModuleProxy_->getJSScheduler();
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
           const auto resultValue =
               jsi::String::createFromUtf8(rnRuntime, resultStr);

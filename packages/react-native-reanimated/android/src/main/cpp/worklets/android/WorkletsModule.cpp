@@ -31,7 +31,7 @@ WorkletsModule::WorkletsModule(
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           jsCallInvoker,
           jsScheduler)) {
-  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, nativeWorkletsModule_);
+  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy);
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(

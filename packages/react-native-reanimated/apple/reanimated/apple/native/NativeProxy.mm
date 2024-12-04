@@ -76,7 +76,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
       workletsModuleProxy,
       rnRuntime,
-      jsCallInvoker,
+      jsInvoker,
       uiScheduler,
       platformDepMethodsHolder,
       isBridgeless,
