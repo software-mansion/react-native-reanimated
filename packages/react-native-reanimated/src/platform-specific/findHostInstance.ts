@@ -1,20 +1,22 @@
 /* eslint-disable camelcase */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 'use strict';
 
 import type { IAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
 import { ReanimatedError } from '../errors';
 import { isFabric } from '../PlatformChecker';
 
-export type HostInstance = {
-  // Fabric fields
+type HostInstanceFabric = {
   __internalInstanceHandle?: Record<string, unknown>;
   __nativeTag?: number;
   _viewConfig?: Record<string, unknown>;
-  // Paper fields
+};
+
+type HostInstancePaper = {
   _nativeTag?: number;
   viewConfig?: Record<string, unknown>;
 };
+
+export type HostInstance = HostInstanceFabric & HostInstancePaper;
 
 function findHostInstanceFastPath(maybeNativeRef: HostInstance) {
   if (
