@@ -111,7 +111,7 @@ function ConfigSelector<T extends AnyRecord>({
             />
           </View>
           <Animated.View layout={LinearTransition}>
-            <Text variant="code">{'},'}</Text>
+            <Text variant="code">{'}'}</Text>
           </Animated.View>
         </View>
       </Scroll>
@@ -168,7 +168,7 @@ const Block = typedMemo(function Block<T extends AnyRecord>({
         if (isLeafValue(value)) {
           return (
             <Text key={key} variant="code">
-              {formattedKey}: {formatLeafValue(value, '  ', true)}
+              {formattedKey}: {formatLeafValue(value, '  ', true)},
             </Text>
           );
         }
@@ -281,40 +281,45 @@ const SelectableOptionRow = memo(function SelectableOptionRow<T>({
         </Pressable>
 
         <View pointerEvents={isDisabled ? 'none' : 'auto'}>
-          {options.maxNumberOfValues ? (
-            <View style={styles.multipleOptionsRow}>
-              <Text variant="code">[</Text>
-              {Array.from({ length: options.maxNumberOfValues }).map(
-                (_, index) =>
-                  (
-                    Array.isArray(options.value)
-                      ? index > 0 &&
-                        options.value[index] === undefined &&
-                        options.value[index - 1] === undefined
-                      : index > 1
-                  ) ? null : (
-                    <MultipleOptionsOptionSelector
-                      dropdownStyle={dropdownStyle}
-                      index={index}
-                      key={index}
-                      objectKey={objectKey}
-                      options={options}
-                      onChange={onChange}
-                    />
-                  )
-              )}
-              <Text variant="code">]</Text>
-            </View>
-          ) : (
-            <OptionSelector
-              dropdownStyle={dropdownStyle}
-              options={options.options as Array<T>}
-              value={options.value}
-              onSelect={(option) => {
-                onChange(objectKey, { ...options, value: option! });
-              }}
-            />
-          )}
+          <View style={styles.multipleOptionsRow}>
+            {options.maxNumberOfValues ? (
+              <>
+                <Text variant="code">[</Text>
+                {Array.from({ length: options.maxNumberOfValues }).map(
+                  (_, index) =>
+                    (
+                      Array.isArray(options.value)
+                        ? index > 0 &&
+                          options.value[index] === undefined &&
+                          options.value[index - 1] === undefined
+                        : index > 1
+                    ) ? null : (
+                      <MultipleOptionsOptionSelector
+                        dropdownStyle={dropdownStyle}
+                        index={index}
+                        key={index}
+                        objectKey={objectKey}
+                        options={options}
+                        onChange={onChange}
+                      />
+                    )
+                )}
+                <Text variant="code">],</Text>
+              </>
+            ) : (
+              <>
+                <OptionSelector
+                  dropdownStyle={dropdownStyle}
+                  options={options.options as Array<T>}
+                  value={options.value}
+                  onSelect={(option) => {
+                    onChange(objectKey, { ...options, value: option! });
+                  }}
+                />
+                <Text variant="code">,</Text>
+              </>
+            )}
+          </View>
         </View>
       </Animated.View>
     </LayoutAnimationConfig>

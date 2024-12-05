@@ -44,6 +44,30 @@ jsi::Value ObjectPropertiesInterpolator::getLastKeyframeValue(
   });
 }
 
+bool ObjectPropertiesInterpolator::equalsReversingAdjustedStartValue(
+    jsi::Runtime &rt,
+    const jsi::Value &propertyValue) const {
+  const auto propertyValuesObject = propertyValue.asObject(rt);
+  const auto propertyNames = propertyValuesObject.getPropertyNames(rt);
+  const auto propertiesCount = propertyNames.size(rt);
+
+  for (size_t i = 0; i < propertiesCount; ++i) {
+    const auto propertyName =
+        propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const auto propertyValue = propertyValuesObject.getProperty(
+        rt, jsi::PropNameID::forUtf8(rt, propertyName));
+
+    const auto interpolatorIt = interpolators_.find(propertyName);
+    if (interpolatorIt == interpolators_.end() ||
+        !interpolatorIt->second->equalsReversingAdjustedStartValue(
+            rt, propertyValue)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 jsi::Value ObjectPropertiesInterpolator::update(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode) {

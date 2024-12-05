@@ -61,7 +61,7 @@ const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
   transitionBehavior: 'normal',
 };
 
-const transitionStyles: Array<ViewStyle> = [
+const TRANSITION_STYLES: Array<ViewStyle> = [
   {
     height: sizes.md,
     width: sizes.md,
@@ -112,7 +112,7 @@ export default function MultipleTransitionSettings() {
               style={[
                 styles.box,
                 transition,
-                transitionStyles[currentStyleIndex],
+                TRANSITION_STYLES[currentStyleIndex],
               ]}
             />
           </View>
@@ -133,7 +133,7 @@ export default function MultipleTransitionSettings() {
                 title="Run"
                 onPress={() =>
                   setCurrentStyleIndex(
-                    (prev) => (prev + 1) % transitionStyles.length
+                    (prev) => (prev + 1) % TRANSITION_STYLES.length
                   )
                 }
               />
@@ -146,7 +146,7 @@ export default function MultipleTransitionSettings() {
             {displayStyleChanges && (
               <TransitionStyleChange
                 activeStyleIndex={currentStyleIndex}
-                transitionStyles={transitionStyles}
+                transitionStyles={TRANSITION_STYLES}
               />
             )}
           </Animated.View>
@@ -162,7 +162,7 @@ export default function MultipleTransitionSettings() {
           title="Transition configuration">
           <TransitionConfiguration
             transitionProperties={transition}
-            transitionStyles={transitionStyles}
+            transitionStyles={TRANSITION_STYLES}
           />
         </Section>
 

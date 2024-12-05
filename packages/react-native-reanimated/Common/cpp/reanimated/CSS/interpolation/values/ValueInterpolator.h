@@ -43,6 +43,10 @@ class ValueInterpolator : public PropertyInterpolator {
   jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const override;
   jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const override;
 
+  bool equalsReversingAdjustedStartValue(
+      jsi::Runtime &rt,
+      const jsi::Value &propertyValue) const override;
+
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
       jsi::Runtime &rt,
@@ -59,7 +63,6 @@ class ValueInterpolator : public PropertyInterpolator {
 
   virtual T prepareKeyframeValue(jsi::Runtime &rt, const jsi::Value &value)
       const = 0;
-
   virtual jsi::Value convertResultToJSI(jsi::Runtime &rt, const T &value)
       const = 0;
 
@@ -80,6 +83,7 @@ class ValueInterpolator : public PropertyInterpolator {
   ValueKeyframe<T> keyframeBefore_;
   ValueKeyframe<T> keyframeAfter_;
   std::optional<T> previousValue_; // Previous interpolation result
+  std::optional<T> reversingAdjustedStartValue_; // For transition interrupting
 
   std::optional<T> getFallbackValue(
       jsi::Runtime &rt,

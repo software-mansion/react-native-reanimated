@@ -55,6 +55,10 @@ function TransitionStyleChange({
   const activeStyle = transitionStyles[activeStyleIndex];
   const nextStyle = transitionStyles[nextStyleIndex];
 
+  if (!activeStyle || !nextStyle) {
+    return null;
+  }
+
   return (
     <LayoutAnimationConfig skipEntering>
       <Animated.ScrollView
@@ -103,6 +107,7 @@ function CodeCard({ active, code, label }: CodeCardProps) {
         <Animated.View
           entering={FadeInRight.delay(CARDS_ORDER_CHANGE_DELAY)}
           exiting={FadeOut}
+          layout={layoutTransition}
           style={styles.labelWrapper}>
           <Text variant="label3">{label}</Text>
         </Animated.View>
@@ -112,6 +117,7 @@ function CodeCard({ active, code, label }: CodeCardProps) {
           <Animated.View
             entering={FadeIn}
             exiting={FadeOut}
+            layout={layoutTransition}
             style={styles.activeCardBackground}
           />
         )}
@@ -119,6 +125,7 @@ function CodeCard({ active, code, label }: CodeCardProps) {
           <Animated.View
             entering={FadeIn.delay(CARDS_ORDER_CHANGE_DELAY)}
             exiting={ScaleDown}
+            layout={layoutTransition}
             style={styles.codeBlock}>
             <CodeBlock code={code} scrollable={false} />
           </Animated.View>
@@ -140,6 +147,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background2,
     borderRadius: radius.sm,
     margin: spacing.xxs,
+    overflow: 'hidden',
     padding: spacing.xs,
   },
   codeCardWrapper: {

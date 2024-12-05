@@ -34,6 +34,12 @@ Color::Color(jsi::Runtime &rt, const jsi::Value &value)
   }
 }
 
+bool Color::operator==(const Color &other) const {
+  return type == other.type && channels[0] == other.channels[0] &&
+      channels[1] == other.channels[1] && channels[2] == other.channels[2] &&
+      channels[3] == other.channels[3];
+}
+
 std::string Color::toString() const {
   if (type == ColorType::Rgba) {
     return "rgba(" + std::to_string(channels[0]) + "," +

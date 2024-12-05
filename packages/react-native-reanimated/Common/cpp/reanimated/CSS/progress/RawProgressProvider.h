@@ -11,14 +11,8 @@ class RawProgressProvider {
  public:
   RawProgressProvider(double timestamp, double duration, double delay);
 
-  void setDuration(double duration) {
-    resetProgress();
-    duration_ = duration;
-  }
-  void setDelay(double delay) {
-    resetProgress();
-    delay_ = delay;
-  }
+  void setDuration(double duration);
+  void setDelay(double delay);
 
   virtual void resetProgress();
   void update(double timestamp);

@@ -31,6 +31,9 @@ struct UnitValue {
   explicit UnitValue(const std::string &value);
   explicit UnitValue(jsi::Runtime &rt, const jsi::Value &value);
 
+  bool operator==(const UnitValue &other) const;
+  friend std::ostream &operator<<(std::ostream &os, const UnitValue &unitValue);
+
   jsi::Value toJSIValue(jsi::Runtime &rt) const;
   UnitValue interpolate(
       double progress,

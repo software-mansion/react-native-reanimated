@@ -29,10 +29,9 @@ MatrixOperation MatrixTransformInterpolator::interpolate(
 TransformMatrix MatrixTransformInterpolator::matrixFromOperation(
     const MatrixOperation &matrixOperation,
     const TransformInterpolatorUpdateContext &context) {
-  if (std::holds_alternative<TransformOperations>(
-          matrixOperation.valueOrOperations)) {
-    const auto operations =
-        std::get<TransformOperations>(matrixOperation.valueOrOperations);
+  if (std::holds_alternative<TransformOperations>(matrixOperation.value)) {
+    const auto &operations =
+        std::get<TransformOperations>(matrixOperation.value);
 
     TransformMatrix matrix = TransformMatrix::Identity();
 
@@ -51,7 +50,7 @@ TransformMatrix MatrixTransformInterpolator::matrixFromOperation(
     return matrix;
   }
 
-  return std::get<TransformMatrix>(matrixOperation.valueOrOperations);
+  return std::get<TransformMatrix>(matrixOperation.value);
 }
 
 } // namespace reanimated

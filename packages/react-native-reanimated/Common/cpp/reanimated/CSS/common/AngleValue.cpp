@@ -50,6 +50,15 @@ AngleValue::AngleValue(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   *this = AngleValue(strValue);
 }
 
+bool AngleValue::operator==(const AngleValue &other) const {
+  return value == other.value;
+}
+
+std::ostream &operator<<(std::ostream &os, const AngleValue &angleValue) {
+  os << "AngleValue(" << angleValue.value << ")";
+  return os;
+}
+
 std::string AngleValue::toString() const {
   std::ostringstream stream;
   stream << std::fixed << std::setprecision(4) << value;

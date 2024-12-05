@@ -173,6 +173,17 @@ const std::array<double, 4> &TransformMatrix::operator[](
   return matrix_[rowIdx];
 }
 
+bool TransformMatrix::operator==(const TransformMatrix &other) const {
+  for (size_t i = 0; i < 4; ++i) {
+    for (size_t j = 0; j < 4; ++j) {
+      if (matrix_[i][j] != other.matrix_[i][j]) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 TransformMatrix TransformMatrix::operator*(const TransformMatrix &rhs) const {
   const auto &a = matrix_;
   const auto &b = rhs.matrix_;

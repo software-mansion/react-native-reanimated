@@ -45,6 +45,35 @@ jsi::Value TransformsStyleInterpolator::getLastKeyframeValue(
                                   : getDefaultValue(rt);
 }
 
+bool TransformsStyleInterpolator::equalsReversingAdjustedStartValue(
+    jsi::Runtime &rt,
+    const jsi::Value &propertyValue) const {
+  const auto &reversingAdjustedOperations = reversingAdjustedStartValue_;
+  const auto parsedOperations = parseTransformOperations(rt, propertyValue);
+
+  if (!reversingAdjustedOperations.has_value()) {
+    return !parsedOperations.has_value();
+  } else if (!parsedOperations.has_value()) {
+    return false;
+  }
+
+  const auto &reversingAdjustedOperationsValue =
+      reversingAdjustedOperations.value();
+  const auto &parsedOperationsValue = parsedOperations.value();
+
+  if (reversingAdjustedOperationsValue.size() != parsedOperationsValue.size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < reversingAdjustedOperationsValue.size(); ++i) {
+    if (*reversingAdjustedOperationsValue[i] != *parsedOperationsValue[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 jsi::Value TransformsStyleInterpolator::update(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode) {
@@ -135,9 +164,10 @@ void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
   keyframes_.clear();
   keyframes_.reserve(1);
 
-  const auto fromOperations =
-      previousResult_.value_or(parseTransformOperations(rt, oldStyleValue)
-                                   .value_or(TransformOperations{}));
+  reversingAdjustedStartValue_ = parseTransformOperations(rt, oldStyleValue);
+
+  const auto fromOperations = previousResult_.value_or(
+      reversingAdjustedStartValue_.value_or(TransformOperations{}));
   const auto toOperations = parseTransformOperations(rt, newStyleValue)
                                 .value_or(TransformOperations{});
   keyframes_.push_back(
