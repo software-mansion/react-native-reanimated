@@ -27,6 +27,7 @@ import { colors, flex, radius, sizes, spacing } from '@/theme';
 import { typedMemo } from '@/utils';
 
 const SETTINGS_OPTIONS = {
+  transitionBehavior: ['normal', 'allowDiscrete'],
   transitionDelay: ['-5s', '0s', '1s', '2s', '5s'],
   transitionDuration: [0, '250ms', '1s', '2s', '5s', '10s'],
   transitionTimingFunction: [
@@ -43,12 +44,13 @@ const SETTINGS_OPTIONS = {
 const DEFAULT_SETTINGS: {
   [K in keyof typeof SETTINGS_OPTIONS]: (typeof SETTINGS_OPTIONS)[K][number];
 } = {
+  transitionBehavior: 'normal',
   transitionDelay: '0s',
   transitionDuration: '1s',
   transitionTimingFunction: 'ease',
 };
 
-const transitionStyles: Array<StyleProps> = [
+const TRANSITION_STYLES: Array<StyleProps> = [
   { width: sizes.md },
   { width: sizes.xxxl },
 ];
@@ -123,7 +125,7 @@ export default function UpdatingTransitionSettings() {
                   title="Run"
                   onPress={() =>
                     setCurrentStyleIndex(
-                      (prev) => (prev + 1) % transitionStyles.length
+                      (prev) => (prev + 1) % TRANSITION_STYLES.length
                     )
                   }
                 />
@@ -135,7 +137,7 @@ export default function UpdatingTransitionSettings() {
                 style={[
                   styles.box,
                   transitionProperties,
-                  transitionStyles[currentStyleIndex],
+                  TRANSITION_STYLES[currentStyleIndex],
                 ]}
               />
             </Animated.View>
@@ -146,7 +148,7 @@ export default function UpdatingTransitionSettings() {
               {displayStyleChanges && (
                 <TransitionStyleChange
                   activeStyleIndex={currentStyleIndex}
-                  transitionStyles={transitionStyles}
+                  transitionStyles={TRANSITION_STYLES}
                 />
               )}
             </Animated.View>
@@ -164,7 +166,7 @@ export default function UpdatingTransitionSettings() {
           title="Transition configuration">
           <TransitionConfiguration
             transitionProperties={transitionProperties}
-            transitionStyles={transitionStyles}
+            transitionStyles={TRANSITION_STYLES}
           />
         </Section>
       </Stagger>
@@ -188,16 +190,22 @@ const ConfigOptionsRow = typedMemo(function ConfigOptionsRow<
         {propertyName}
       </Text>
 
-      <SelectListDropdown
-        alignment="right"
-        selected={selected}
-        styleOptions={{ inputStyle: styles.selectInput }}
-        options={options.map((option) => ({
-          label: option?.toString() ?? '',
-          value: option,
-        }))}
-        onSelect={(option) => onSelect(propertyName, option)}
-      />
+      {propertyName === 'transitionBehavior' ? (
+        <Text style={styles.selectInput} variant="label2">
+          {selected as string}
+        </Text>
+      ) : (
+        <SelectListDropdown
+          alignment="right"
+          selected={selected}
+          styleOptions={{ inputStyle: styles.selectInput }}
+          options={options.map((option) => ({
+            label: option?.toString() ?? '',
+            value: option,
+          }))}
+          onSelect={(option) => onSelect(propertyName, option)}
+        />
+      )}
     </View>
   );
 });

@@ -48,6 +48,10 @@ UnitValue RelativeOrNumericValueInterpolator::interpolate(
       });
 }
 
+bool RelativeOrNumericValueInterpolator::isResolvable() const {
+  return true;
+}
+
 } // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED

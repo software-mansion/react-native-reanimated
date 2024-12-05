@@ -9,6 +9,16 @@ RawProgressProvider::RawProgressProvider(
     const double delay)
     : duration_(duration), delay_(delay), creationTimestamp_(timestamp) {}
 
+void RawProgressProvider::setDuration(double duration) {
+  resetProgress();
+  duration_ = duration;
+}
+
+void RawProgressProvider::setDelay(double delay) {
+  resetProgress();
+  delay_ = delay;
+}
+
 void RawProgressProvider::resetProgress() {
   rawProgress_.reset();
   previousRawProgress_.reset();

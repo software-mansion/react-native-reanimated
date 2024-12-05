@@ -229,8 +229,6 @@ ChangedProps processPropertyChanges(
   auto oldResult = std::make_unique<jsi::Object>(rt);
   auto newResult = std::make_unique<jsi::Object>(rt);
   PropertyNames changedPropertyNames;
-  bool oldHasChanges = false;
-  bool newHasChanges = false;
 
   for (const auto &propName : propertyNames) {
     const auto [oldChangedProp, newChangedProp] =
@@ -238,11 +236,9 @@ ChangedProps processPropertyChanges(
 
     if (oldChangedProp) {
       oldResult->setProperty(rt, propName.c_str(), *oldChangedProp);
-      oldHasChanges = true;
     }
     if (newChangedProp) {
       newResult->setProperty(rt, propName.c_str(), *newChangedProp);
-      newHasChanges = true;
     }
     if (oldChangedProp || newChangedProp) {
       changedPropertyNames.push_back(propName);
@@ -250,10 +246,8 @@ ChangedProps processPropertyChanges(
   }
 
   return {
-      oldHasChanges ? std::make_unique<jsi::Value>(std::move(*oldResult))
-                    : std::make_unique<jsi::Value>(jsi::Value::undefined()),
-      newHasChanges ? std::make_unique<jsi::Value>(std::move(*newResult))
-                    : std::make_unique<jsi::Value>(jsi::Value::undefined()),
+      std::make_unique<jsi::Value>(std::move(*oldResult)),
+      std::make_unique<jsi::Value>(std::move(*newResult)),
       std::move(changedPropertyNames)};
 }
 

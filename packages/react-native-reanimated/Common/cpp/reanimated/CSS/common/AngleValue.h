@@ -23,6 +23,11 @@ struct AngleValue {
   explicit AngleValue(const std::string &rotationString);
   explicit AngleValue(jsi::Runtime &rt, const jsi::Value &value);
 
+  bool operator==(const AngleValue &other) const;
+  friend std::ostream &operator<<(
+      std::ostream &os,
+      const AngleValue &angleValue);
+
   std::string toString() const;
   jsi::Value toJSIValue(jsi::Runtime &rt) const;
 };

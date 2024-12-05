@@ -28,10 +28,17 @@ class TransitionPropertyProgressProvider final
       double duration,
       double delay,
       const EasingFunction &easingFunction);
+  TransitionPropertyProgressProvider(
+      double timestamp,
+      double duration,
+      double delay,
+      const EasingFunction &easingFunction,
+      double reversingShorteningFactor);
 
   double getGlobalProgress() const override;
   double getKeyframeProgress(double fromOffset, double toOffset) const override;
   double getRemainingDelay(double timestamp) const;
+  double getReversingShorteningFactor() const;
   TransitionProgressState getState() const;
 
   bool isFirstUpdate() const override;
@@ -41,6 +48,7 @@ class TransitionPropertyProgressProvider final
 
  private:
   EasingFunction easingFunction_;
+  double reversingShorteningFactor_ = 1;
 
   double getElapsedTime(double timestamp) const;
 };
@@ -65,7 +73,8 @@ class TransitionProgressProvider final {
       const std::unordered_set<std::string> &transitionPropertyNames);
   void runProgressProviders(
       double timestamp,
-      const PropertyNames &changedPropertyNames);
+      const PropertyNames &changedPropertyNames,
+      const std::unordered_set<std::string> &reversedPropertyNames);
   void update(double timestamp);
 
  private:
@@ -73,6 +82,14 @@ class TransitionProgressProvider final {
   TransitionPropertyProgressProviders propertyProgressProviders_;
 
   std::unordered_set<std::string> removedProperties_;
+
+  CSSTransitionPropertySettings getPropertySettings(
+      const std::string &propertyName) const;
+  std::shared_ptr<TransitionPropertyProgressProvider>
+  createReversingShorteningProgressProvider(
+      double timestamp,
+      const CSSTransitionPropertySettings &propertySettings,
+      const TransitionPropertyProgressProvider &existingProgressProvider);
 };
 
 } // namespace reanimated

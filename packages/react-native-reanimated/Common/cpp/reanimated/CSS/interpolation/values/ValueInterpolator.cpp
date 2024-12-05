@@ -51,6 +51,17 @@ jsi::Value ValueInterpolator<T>::getLastKeyframeValue(jsi::Runtime &rt) const {
 }
 
 template <typename T>
+bool ValueInterpolator<T>::equalsReversingAdjustedStartValue(
+    jsi::Runtime &rt,
+    const jsi::Value &propertyValue) const {
+  if (!reversingAdjustedStartValue_.has_value()) {
+    return propertyValue.isUndefined();
+  }
+  return reversingAdjustedStartValue_.value() ==
+      prepareKeyframeValue(rt, propertyValue);
+}
+
+template <typename T>
 void ValueInterpolator<T>::updateKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &keyframes) {
@@ -77,20 +88,22 @@ void ValueInterpolator<T>::updateKeyframesFromStyleChange(
   keyframeAfterIndex_ = 1;
   ValueKeyframe<T> firstKeyframe, lastKeyframe;
 
-  // If the transition was interrupted, use the previous interpolation
-  // result as the first keyframe value
+  if (!oldStyleValue.isUndefined()) {
+    reversingAdjustedStartValue_ = prepareKeyframeValue(rt, oldStyleValue);
+  } else {
+    // Otherwise, fallback to the default style value is no style value was
+    // provided for the view property
+    reversingAdjustedStartValue_ = defaultStyleValue_;
+  }
+
   if (previousValue_.has_value()) {
+    // If the transition was interrupted, use the previous interpolation
+    // result as the first keyframe value
     firstKeyframe = {0, previousValue_};
   } else {
     // If the new transition of the property was started, use the old style
     // value as the first keyframe value if it was provided
-    if (!oldStyleValue.isUndefined()) {
-      firstKeyframe = {0, prepareKeyframeValue(rt, oldStyleValue)};
-    } else {
-      // Otherwise, fallback to the default style value is no style value was
-      // provided for the view property
-      firstKeyframe = {0, defaultStyleValue_};
-    }
+    firstKeyframe = {0, reversingAdjustedStartValue_};
   }
 
   // Animate to the default style value if the target value is undefined

@@ -28,6 +28,8 @@ struct TransformOrigin {
       const UnitValue &z);
   explicit TransformOrigin(jsi::Runtime &rt, const jsi::Value &value);
 
+  bool operator==(const TransformOrigin &other) const;
+
   jsi::Value toJSIValue(jsi::Runtime &rt) const;
 
  private:

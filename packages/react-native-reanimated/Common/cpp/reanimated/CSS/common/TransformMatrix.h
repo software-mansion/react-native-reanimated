@@ -47,6 +47,7 @@ class TransformMatrix {
 
   std::array<double, 4> &operator[](size_t rowIdx);
   const std::array<double, 4> &operator[](size_t rowIdx) const;
+  bool operator==(const TransformMatrix &other) const;
   TransformMatrix operator*(const TransformMatrix &rhs) const;
   TransformMatrix operator*=(const TransformMatrix &rhs);
   friend std::ostream &operator<<(

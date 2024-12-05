@@ -21,6 +21,9 @@ class TransitionStyleInterpolator {
   jsi::Value getCurrentInterpolationStyle(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const;
+  std::unordered_set<std::string> getReversedPropertyNames(
+      jsi::Runtime &rt,
+      const jsi::Value &newPropertyValues) const;
 
   jsi::Value update(
       jsi::Runtime &rt,

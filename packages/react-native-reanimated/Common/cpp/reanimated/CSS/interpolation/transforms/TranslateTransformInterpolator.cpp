@@ -6,12 +6,12 @@ namespace reanimated {
 template <typename OperationType>
 TranslateTransformInterpolator<OperationType>::TranslateTransformInterpolator(
     const RelativeTo relativeTo,
-    const std::string &relativeProperty,
+    std::string relativeProperty,
     const UnitValue &defaultValue)
     : TransformInterpolatorBase<OperationType>(
           std::make_shared<OperationType>(defaultValue)),
       relativeTo_(relativeTo),
-      relativeProperty_(relativeProperty) {}
+      relativeProperty_(std::move(relativeProperty)) {}
 
 template <typename OperationType>
 OperationType TranslateTransformInterpolator<OperationType>::interpolate(

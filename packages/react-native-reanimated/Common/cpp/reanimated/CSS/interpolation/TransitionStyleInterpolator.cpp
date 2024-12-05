@@ -20,6 +20,32 @@ jsi::Value TransitionStyleInterpolator::getCurrentInterpolationStyle(
   return result;
 }
 
+std::unordered_set<std::string>
+TransitionStyleInterpolator::getReversedPropertyNames(
+    jsi::Runtime &rt,
+    const jsi::Value &newPropertyValues) const {
+  std::unordered_set<std::string> reversedProperties;
+
+  const auto propertyValuesObject = newPropertyValues.asObject(rt);
+  const auto propertyNames = propertyValuesObject.getPropertyNames(rt);
+  const auto propertiesCount = propertyNames.size(rt);
+
+  for (size_t i = 0; i < propertiesCount; ++i) {
+    const auto propertyName =
+        propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const auto propertyValue = propertyValuesObject.getProperty(
+        rt, jsi::PropNameID::forUtf8(rt, propertyName));
+
+    const auto it = interpolators_.find(propertyName);
+    if (it != interpolators_.end() &&
+        it->second->equalsReversingAdjustedStartValue(rt, propertyValue)) {
+      reversedProperties.insert(propertyName);
+    }
+  }
+
+  return reversedProperties;
+}
+
 jsi::Value TransitionStyleInterpolator::update(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode,
@@ -64,23 +90,14 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
     const TransitionPropertyProgressProviders &progressProviders) {
-  const bool hasOldProps = changedProps.oldProps->isObject();
-  const bool hasNewProps = changedProps.newProps->isObject();
-
-  const auto oldPropsObj =
-      hasOldProps ? changedProps.oldProps->asObject(rt) : jsi::Object(rt);
-  const auto newPropsObj =
-      hasNewProps ? changedProps.newProps->asObject(rt) : jsi::Object(rt);
+  const auto oldPropsObj = changedProps.oldProps->asObject(rt);
+  const auto newPropsObj = changedProps.newProps->asObject(rt);
 
   for (const auto &propertyName : changedProps.changedPropertyNames) {
     auto interpolatorIt = interpolators_.find(propertyName);
 
-    const auto oldValue = hasOldProps
-        ? oldPropsObj.getProperty(rt, propertyName.c_str())
-        : jsi::Value::undefined();
-    const auto newValue = hasNewProps
-        ? newPropsObj.getProperty(rt, propertyName.c_str())
-        : jsi::Value::undefined();
+    const auto oldValue = oldPropsObj.getProperty(rt, propertyName.c_str());
+    const auto newValue = newPropsObj.getProperty(rt, propertyName.c_str());
 
     if (interpolatorIt == interpolators_.end()) {
       const auto newInterpolator = createPropertyInterpolator(

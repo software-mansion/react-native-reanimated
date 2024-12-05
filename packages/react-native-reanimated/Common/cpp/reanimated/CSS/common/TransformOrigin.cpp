@@ -33,6 +33,10 @@ TransformOrigin::TransformOrigin(jsi::Runtime &rt, const jsi::Value &value) {
       stringifyJSIValue(rt, value));
 }
 
+bool TransformOrigin::operator==(const TransformOrigin &other) const {
+  return x == other.x && y == other.y && z == other.z;
+}
+
 jsi::Value TransformOrigin::toJSIValue(jsi::Runtime &rt) const {
   return jsi::Array::createWithElements(
       rt, {x.toJSIValue(rt), y.toJSIValue(rt), z.toJSIValue(rt)});

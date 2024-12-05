@@ -32,9 +32,7 @@ class RelativeOrNumericValueInterpolator final
       const UnitValue &toValue,
       const ValueInterpolatorUpdateContext &context) const override;
 
-  bool isResolvable() const override {
-    return true;
-  }
+  bool isResolvable() const override;
 
  private:
   const RelativeTo relativeTo_;

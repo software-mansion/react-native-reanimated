@@ -14,7 +14,7 @@ class TranslateTransformInterpolator final
  public:
   TranslateTransformInterpolator(
       RelativeTo relativeTo,
-      const std::string &relativeProperty,
+      std::string relativeProperty,
       const UnitValue &defaultValue);
 
  protected:

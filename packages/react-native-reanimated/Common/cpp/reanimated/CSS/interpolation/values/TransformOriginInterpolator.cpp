@@ -59,6 +59,10 @@ TransformOrigin TransformOriginInterpolator::interpolate(
           (toValue.z.value - fromValue.z.value) * progress));
 }
 
+bool TransformOriginInterpolator::isResolvable() const {
+  return true;
+}
+
 } // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED

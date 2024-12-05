@@ -125,6 +125,9 @@ std::optional<double> AnimationProgressProvider::calculateRawProgress(
 
 double AnimationProgressProvider::updateIterationProgress(
     const double currentIterationElapsedTime) {
+  if (duration_ == 0) {
+    return 1;
+  }
   // We can increase curentIteration by more than just one iteration if the
   // animation delay is negative, thus we are using this division to get the
   // number of iterations that have passed since the previous animation update

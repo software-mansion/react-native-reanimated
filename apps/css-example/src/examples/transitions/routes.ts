@@ -60,6 +60,11 @@ const routes = {
         name: 'Multiple Transition Settings',
         Component: miscellaneous.MultipleTransitionSettings,
       },
+      ReversingShortening: {
+        labelTypes: ['new'],
+        name: 'Reversing Shortening',
+        Component: miscellaneous.ReversingShortening,
+      },
     },
   },
   RealWorldExamples: {

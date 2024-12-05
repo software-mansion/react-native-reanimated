@@ -34,6 +34,15 @@ UnitValue::UnitValue(jsi::Runtime &rt, const jsi::Value &value) {
   }
 }
 
+bool UnitValue::operator==(const UnitValue &other) const {
+  return value == other.value && isRelative == other.isRelative;
+}
+
+std::ostream &operator<<(std::ostream &os, const UnitValue &unitValue) {
+  os << "UnitValue(" << unitValue.value << ", " << unitValue.isRelative << ")";
+  return os;
+}
+
 jsi::Value UnitValue::toJSIValue(jsi::Runtime &rt) const {
   if (isRelative) {
     return jsi::String::createFromUtf8(rt, std::to_string(value * 100) + "%");

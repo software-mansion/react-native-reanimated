@@ -36,6 +36,10 @@ class PropertyInterpolator {
   virtual jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const = 0;
   virtual jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const = 0;
 
+  virtual bool equalsReversingAdjustedStartValue(
+      jsi::Runtime &rt,
+      const jsi::Value &propertyValue) const = 0;
+
   virtual void updateKeyframes(
       jsi::Runtime &rt,
       const jsi::Value &keyframes) = 0;

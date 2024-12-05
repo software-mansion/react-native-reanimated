@@ -59,9 +59,12 @@ jsi::Value CSSTransition::run(
     const ChangedProps &changedProps,
     const double timestamp) {
   progressProvider_.runProgressProviders(
-      timestamp, changedProps.changedPropertyNames);
+      timestamp,
+      changedProps.changedPropertyNames,
+      styleInterpolator_.getReversedPropertyNames(rt, *changedProps.newProps));
   styleInterpolator_.updateInterpolatedProperties(
       rt, changedProps, progressProvider_.getPropertyProgressProviders());
+
   return update(rt, timestamp);
 }
 

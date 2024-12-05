@@ -9,7 +9,6 @@
 
 namespace reanimated {
 
-using namespace facebook;
 using namespace worklets;
 
 enum class ColorType {
@@ -24,6 +23,8 @@ class Color {
   explicit Color(uint8_t r, uint8_t g, uint8_t b);
   explicit Color(const ColorArray &colorArray);
   explicit Color(jsi::Runtime &rt, const jsi::Value &value);
+
+  bool operator==(const Color &other) const;
 
   static const Color Transparent;
 
