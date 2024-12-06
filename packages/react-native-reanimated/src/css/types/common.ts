@@ -1,4 +1,5 @@
 'use strict';
+import type { ComponentType } from 'react';
 import type {
   ImageStyle,
   TextStyle,
@@ -6,7 +7,10 @@ import type {
   ViewStyle,
 } from 'react-native';
 
-export type CSSStyleProps = ViewStyle & TextStyle & ImageStyle;
+export type PlainStyleProps = ViewStyle & TextStyle & ImageStyle;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyComponent = ComponentType<any>;
 
 export type CSSTimeUnit = `${number}s` | `${number}ms` | number;
 

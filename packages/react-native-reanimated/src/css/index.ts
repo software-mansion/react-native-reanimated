@@ -1,7 +1,23 @@
 'use strict';
-export * from './native';
-export * from './normalization';
-export * from './easing';
-export * from './manager';
-export * from './utils';
-export * from './types';
+export type {
+  CSSAnimationKeyframeSelector,
+  CSSAnimationKeyframes,
+  CSSAnimationDuration,
+  CSSAnimationTimingFunction,
+  CSSAnimationDelay,
+  CSSAnimationIterationCount,
+  CSSAnimationDirection,
+  CSSAnimationFillMode,
+  CSSAnimationPlayState,
+  CSSAnimationProperties,
+  CSSAnimationSettings,
+  CSSTransitionProperty,
+  CSSTransitionDuration,
+  CSSTransitionTimingFunction,
+  CSSTransitionDelay,
+  CSSTransitionProperties,
+  CSSTransitionSettings,
+} from './types';
+export { cubicBezier, linear, steps } from './easings';
+export { normalizeTransformOrigin } from './normalization';
+export { createAnimatedComponent } from './component';

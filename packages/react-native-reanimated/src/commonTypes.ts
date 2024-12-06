@@ -221,6 +221,8 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
+export type PlainStyleProps = ViewStyle & TextStyle & ImageStyle;
+
 /**
  * A value that can be used both on the [JavaScript
  * thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#javascript-thread)

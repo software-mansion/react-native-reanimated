@@ -1,60 +1,42 @@
 import { forwardRef } from 'react';
 import type {
-  ComponentType,
-  ComponentClass,
   FunctionComponent,
+  ComponentClass,
+  ComponentType,
   Component,
 } from 'react';
-import type { Options } from './AnimatedComponent';
-import AnimatedComponentImpl from './AnimatedComponent';
-import type {
-  AnimatedComponentProps,
-  InitialComponentProps,
-} from './commonTypes';
-import type { AnimateProps } from '../helperTypes';
 import type { FlatList, FlatListProps } from 'react-native';
 import invariant from 'invariant';
-
-/**
- * Lets you create an Animated version of any React Native component.
- *
- * @param component - The component you want to make animatable.
- * @returns A component that Reanimated is capable of animating.
- * @see https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent
- */
+import type { CSSProps } from '../types';
+import type { AnimatedComponentProps } from './AnimatedComponent';
+import AnimatedComponentImpl from './AnimatedComponent';
 
 // Don't change the order of overloads, since such a change breaks current behavior
-export function createAnimatedComponent<P extends object>(
-  component: FunctionComponent<P>,
-  options?: Options<P>
-): FunctionComponent<AnimateProps<P>>;
+export default function createAnimatedComponent<P extends object>(
+  Component: FunctionComponent<P>
+): FunctionComponent<CSSProps<P>>;
 
-export function createAnimatedComponent<P extends object>(
-  component: ComponentClass<P>,
-  options?: Options<P>
-): ComponentClass<AnimateProps<P>>;
+export default function createAnimatedComponent<P extends object>(
+  Component: ComponentClass<P>
+): ComponentClass<CSSProps<P>>;
 
-export function createAnimatedComponent<P extends object>(
+export default function createAnimatedComponent<P extends object>(
   // Actually ComponentType<P = {}> = ComponentClass<P> | FunctionComponent<P> but we need this overload too
   // since some external components (like FastImage) are typed just as ComponentType
-  component: ComponentType<P>,
-  options?: Options<P>
-): FunctionComponent<AnimateProps<P>> | ComponentClass<AnimateProps<P>>;
+  Component: ComponentType<P>
+): FunctionComponent<CSSProps<P>> | ComponentClass<CSSProps<P>>;
 
 /**
  * @deprecated Please use `Animated.FlatList` component instead of calling
  *   `Animated.createAnimatedComponent(FlatList)` manually.
  */
 // @ts-ignore This is required to create this overload, since type of createAnimatedComponent is incorrect and doesn't include typeof FlatList
-export function createAnimatedComponent(
-  component: typeof FlatList<unknown>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  options?: Options<any>
-): ComponentClass<AnimateProps<FlatListProps<unknown>>>;
+export default function createAnimatedComponent(
+  Component: typeof FlatList<unknown>
+): ComponentClass<CSSProps<FlatListProps<unknown>>>;
 
-export function createAnimatedComponent(
-  Component: ComponentType<InitialComponentProps>,
-  options?: Options<InitialComponentProps>
+export default function createAnimatedComponent<P extends object>(
+  Component: ComponentType<P>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
   invariant(
@@ -68,8 +50,8 @@ export function createAnimatedComponent(
       Component.displayName || Component.name || 'Component'
     })`;
 
-    constructor(props: AnimatedComponentProps<InitialComponentProps>) {
-      super(Component, props, AnimatedComponent.displayName, options);
+    constructor(props: AnimatedComponentProps) {
+      super(Component, props);
     }
   }
 

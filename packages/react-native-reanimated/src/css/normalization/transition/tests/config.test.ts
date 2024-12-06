@@ -3,7 +3,7 @@ import {
   getNormalizedCSSTransitionConfigUpdates,
   normalizeCSSTransitionProperties,
 } from '../config';
-import { cubicBezier } from '../../../easing';
+import { cubicBezier } from '../../../easings';
 import type {
   CSSTransitionProperties,
   CSSTransitionProperty,

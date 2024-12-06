@@ -21,12 +21,9 @@ import { logger } from '../../logger';
 import { ReanimatedError } from '../../errors';
 import { WorkletsModule } from '../../worklets';
 import type {
+  NormalizedCSSTransitionConfig,
   NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
-} from '../../css';
-import type {
-  NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSTransitionSettings,
 } from '../../css/types';
 
 export function createJSReanimatedModule(): IReanimatedModule {

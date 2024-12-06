@@ -3,7 +3,7 @@ import type {
   CSSTimingFunction,
   NormalizedCSSTimingFunction,
   PredefinedTimingFunction,
-} from '../../easing';
+} from '../../easings';
 import { ReanimatedError } from '../../errors';
 import type { CSSTimeUnit } from '../../types';
 

@@ -1,14 +1,18 @@
-import type { StyleProps } from '../../../../commonTypes';
 import { ReanimatedError } from '../../../errors';
+import type {
+  PlainStyleProps,
+  CSSStyle,
+  CSSTransitionProperty,
+} from '../../../types';
 import {
   ERROR_MESSAGES,
-  extractCSSPropertiesAndFlattenedStyles,
+  filterCSSPropertiesAndNormalizeStyle,
   normalizeStyle,
 } from '../style';
 
 describe(normalizeStyle, () => {
   it('converts all "auto" values to undefined', () => {
-    const style: StyleProps = {
+    const style: PlainStyleProps = {
       width: 'auto',
       margin: 'auto',
       borderRadius: 10,
@@ -45,7 +49,7 @@ describe(normalizeStyle, () => {
         ['tintColor', 'hsl(180, 100%, 25%)', 0x007f80ff],
       ])('converts %p with value %p to %p', (key, value, expected) => {
         const argb = ((expected << 24) | (expected >>> 8)) >>> 0;
-        const style: StyleProps = { [key]: value };
+        const style: PlainStyleProps = { [key]: value };
         expect(normalizeStyle(style)).toEqual({ [key]: argb });
       });
     });
@@ -60,7 +64,7 @@ describe(normalizeStyle, () => {
         'hsla(360, 100%, 50%)',
         'hwb(360, 100%, 50%, 0.5)',
       ])('throws an error for %p', (value) => {
-        const style: StyleProps = { color: value };
+        const style: PlainStyleProps = { color: value };
         expect(() => normalizeStyle(style)).toThrow(
           new ReanimatedError(ERROR_MESSAGES.invalidColor(value))
         );
@@ -70,7 +74,7 @@ describe(normalizeStyle, () => {
 
   describe('transform string', () => {
     it('normalizes transform string', () => {
-      const style: StyleProps = {
+      const style: PlainStyleProps = {
         transform: 'translate(100px, 20%) translateY(50%) scale(2) skew(0)',
       };
 
@@ -89,7 +93,7 @@ describe(normalizeStyle, () => {
 
   describe('transform origin', () => {
     it('normalizes transform origin', () => {
-      const style: StyleProps = {
+      const style: PlainStyleProps = {
         transformOrigin: 'top right',
       };
 
@@ -101,7 +105,7 @@ describe(normalizeStyle, () => {
 
   describe('gap', () => {
     it('replaces gap with rowGap and columnGap', () => {
-      const style: StyleProps = {
+      const style: PlainStyleProps = {
         gap: 10,
       };
 
@@ -114,7 +118,7 @@ describe(normalizeStyle, () => {
 
   describe('aspect ratio', () => {
     it('returns number as is', () => {
-      const style: StyleProps = {
+      const style: PlainStyleProps = {
         aspectRatio: 1.5,
       };
 
@@ -124,7 +128,7 @@ describe(normalizeStyle, () => {
     });
 
     it('normalizes aspect ratio', () => {
-      const style: StyleProps = {
+      const style: PlainStyleProps = {
         aspectRatio: '16/9',
       };
 
@@ -134,7 +138,7 @@ describe(normalizeStyle, () => {
     });
 
     it('throws an error for invalid aspect ratio', () => {
-      const style: StyleProps = {
+      const style: PlainStyleProps = {
         aspectRatio: 'invalid',
       };
 
@@ -146,7 +150,7 @@ describe(normalizeStyle, () => {
 
   describe('other props', () => {
     it('passes other props without modification', () => {
-      const style: StyleProps = {
+      const style: PlainStyleProps = {
         borderRadius: 10,
         flexDirection: 'row',
       };
@@ -157,7 +161,7 @@ describe(normalizeStyle, () => {
 
   describe('mixed props', () => {
     it('normalizes all props', () => {
-      const style: StyleProps = {
+      const style: PlainStyleProps = {
         width: 'auto',
         margin: 'auto',
         backgroundColor: 'red',
@@ -190,13 +194,15 @@ describe(normalizeStyle, () => {
   });
 });
 
-describe(extractCSSPropertiesAndFlattenedStyles, () => {
+describe(filterCSSPropertiesAndNormalizeStyle, () => {
   describe('animation config', () => {
     it('returns null if there is no animationName', () => {
-      const styles: StyleProps[] = [
-        { transitionProperty: 'opacity', animationDuration: 100 },
-      ];
-      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
+      const style: CSSStyle = {
+        transitionProperty: 'opacity',
+        animationDuration: 100,
+      };
+
+      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
         null,
         expect.any(Object),
         expect.any(Object),
@@ -204,10 +210,8 @@ describe(extractCSSPropertiesAndFlattenedStyles, () => {
     });
 
     it('returns null if the animationName is an empty object', () => {
-      const styles: StyleProps[] = [
-        { animationName: {}, animationDuration: 100 },
-      ];
-      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
+      const style: CSSStyle = { animationName: {}, animationDuration: 100 };
+      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
         null,
         expect.any(Object),
         expect.any(Object),
@@ -215,17 +219,15 @@ describe(extractCSSPropertiesAndFlattenedStyles, () => {
     });
 
     it('returns animation config if animationName is present', () => {
-      const styles: StyleProps[] = [
-        {
-          animationName: {
-            from: { opacity: 0 },
-            to: { opacity: 1 },
-          },
-          animationDuration: 100,
+      const style: CSSStyle = {
+        animationName: {
+          from: { opacity: 0 },
+          to: { opacity: 1 },
         },
-      ];
-      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
-        styles[0],
+        animationDuration: 100,
+      };
+      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
+        style,
         expect.any(Object),
         expect.any(Object),
       ]);
@@ -241,13 +243,11 @@ describe(extractCSSPropertiesAndFlattenedStyles, () => {
         ['animationFillMode', 'both'],
         ['animationPlayState', 'paused'],
       ])(`returns %p setting`, (key, value) => {
-        const styles: StyleProps[] = [
-          {
-            animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
-            [key]: value,
-          },
-        ];
-        expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
+        const style: CSSStyle = {
+          animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
+          [key]: value,
+        };
+        expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
           expect.objectContaining({ [key]: value }),
           null,
           {},
@@ -258,16 +258,14 @@ describe(extractCSSPropertiesAndFlattenedStyles, () => {
 
   describe('transition config', () => {
     it('returns null if there is no transitionProperty', () => {
-      const styles: StyleProps[] = [
-        {
-          animationName: {
-            from: { opacity: 0 },
-            to: { opacity: 1 },
-          },
-          transitionDuration: 100,
+      const style: CSSStyle = {
+        animationName: {
+          from: { opacity: 0 },
+          to: { opacity: 1 },
         },
-      ];
-      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
+        transitionDuration: 100,
+      };
+      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
         expect.any(Object),
         null,
         expect.any(Object),
@@ -275,10 +273,11 @@ describe(extractCSSPropertiesAndFlattenedStyles, () => {
     });
 
     it('returns null if the transitionProperty is an empty array', () => {
-      const styles: StyleProps[] = [
-        { transitionProperty: [], transitionDuration: 100 },
-      ];
-      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
+      const style: CSSStyle = {
+        transitionProperty: [],
+        transitionDuration: 100,
+      };
+      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
         expect.any(Object),
         null,
         expect.any(Object),
@@ -286,12 +285,13 @@ describe(extractCSSPropertiesAndFlattenedStyles, () => {
     });
 
     it('returns transition config if transitionProperty is present', () => {
-      const styles: StyleProps[] = [
-        { transitionProperty: 'opacity', transitionDuration: 100 },
-      ];
-      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
+      const style: CSSStyle = {
+        transitionProperty: 'opacity',
+        transitionDuration: 100,
+      };
+      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
         expect.any(Object),
-        styles[0],
+        style,
         expect.any(Object),
       ]);
     });
@@ -303,10 +303,11 @@ describe(extractCSSPropertiesAndFlattenedStyles, () => {
         ['transitionTimingFunction', 'easeInOut'],
         ['transitionDelay', '1s'],
       ])(`returns %p setting`, (key, value) => {
-        const styles: StyleProps[] = [
-          { transitionProperty: value, [key]: value },
-        ];
-        expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
+        const style: CSSStyle = {
+          transitionProperty: value as CSSTransitionProperty,
+          [key]: value,
+        };
+        expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
           null,
           expect.objectContaining({ [key]: value }),
           {},
@@ -315,48 +316,24 @@ describe(extractCSSPropertiesAndFlattenedStyles, () => {
     });
   });
 
-  describe('flattened style', () => {
-    it('flattens all style objects into a single object', () => {
-      const styles: StyleProps[] = [
-        { width: 100, height: 100 },
-        { margin: 10, padding: 5 },
-        { backgroundColor: 'red', color: 'blue', width: 200 },
-      ];
-      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
-        expect.any(Object),
-        expect.any(Object),
-        {
-          width: 200,
-          height: 100,
-          margin: 10,
-          padding: 5,
-          backgroundColor: 0xffff0000,
-          color: 0xff0000ff,
-        },
-      ]);
-    });
-  });
-
   describe('all together', () => {
-    it('returns all configs and flattened style', () => {
-      const styles: StyleProps[] = [
-        {
-          width: 100,
-          transitionDuration: 100,
-          height: 100,
-          animationDuration: 100,
-          transitionProperty: 'opacity',
-          animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
-        },
-      ];
-      expect(extractCSSPropertiesAndFlattenedStyles(styles)).toEqual([
+    it('returns all configs and style without css configs', () => {
+      const style: CSSStyle = {
+        width: 100,
+        transitionDuration: 100,
+        height: 100,
+        animationDuration: 100,
+        transitionProperty: 'opacity',
+        animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
+      };
+      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
         expect.objectContaining({
-          animationName: styles[0].animationName,
-          animationDuration: styles[0].animationDuration,
+          animationName: style.animationName,
+          animationDuration: style.animationDuration,
         }),
         expect.objectContaining({
-          transitionProperty: styles[0].transitionProperty,
-          transitionDuration: styles[0].transitionDuration,
+          transitionProperty: style.transitionProperty,
+          transitionDuration: style.transitionDuration,
         }),
         {
           width: 100,

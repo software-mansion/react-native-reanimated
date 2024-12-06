@@ -23,7 +23,7 @@ import type {
   NormalizedCSSTransitionConfig,
   NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
-} from '../css';
+} from '../css/types';
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
