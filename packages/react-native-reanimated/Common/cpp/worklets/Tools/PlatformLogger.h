@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace reanimated {
+namespace worklets {
 
 class PlatformLogger {
  public:
@@ -13,4 +13,4 @@ class PlatformLogger {
   static void log(const bool b);
 };
 
-} // namespace reanimated
+} // namespace worklets
