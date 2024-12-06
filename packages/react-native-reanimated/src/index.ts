@@ -77,7 +77,6 @@ export {
   withSpring,
   withTiming,
 } from './animation';
-export { cubicBezier, linear, steps, normalizeTransformOrigin } from './css';
 export type { ExtrapolationConfig, ExtrapolationType } from './interpolation';
 export { Extrapolation, interpolate, clamp } from './interpolation';
 export type {
@@ -293,22 +292,4 @@ export type {
   GoBackGesture,
   ScreenTransitionConfig,
 } from './screenTransition';
-export type {
-  CSSAnimationKeyframeSelector,
-  CSSAnimationKeyframes,
-  CSSAnimationDuration,
-  CSSAnimationTimingFunction,
-  CSSAnimationDelay,
-  CSSAnimationIterationCount,
-  CSSAnimationDirection,
-  CSSAnimationFillMode,
-  CSSAnimationPlayState,
-  CSSAnimationProperties,
-  CSSAnimationSettings,
-  CSSTransitionProperty,
-  CSSTransitionDuration,
-  CSSTransitionTimingFunction,
-  CSSTransitionDelay,
-  CSSTransitionProperties,
-  CSSTransitionSettings,
-} from './css';
+export * from './css';

@@ -1,16 +1,14 @@
 'use strict';
-import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
+import type { ShadowNodeWrapper } from '../../commonTypes';
 import { adaptViewConfig } from '../../ConfigHelper';
 import { removeViewStyle, setViewStyle } from '../native';
-import type {
-  ICSSManager,
-  ViewInfo,
-} from '../../createAnimatedComponent/commonTypes';
+import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import CSSTransitionManager from './CSSTransitionManager';
 import CSSAnimationsManager from './CSSAnimationsManager';
-import { extractCSSPropertiesAndFlattenedStyles } from '../normalization';
+import type { PlainStyleProps } from '../types';
+import { filterCSSPropertiesAndNormalizeStyle } from '../normalization';
 
-export default class CSSManager implements ICSSManager {
+export default class CSSManager {
   private readonly viewTag: number;
   private readonly CSSAnimationsManager: CSSAnimationsManager;
   private readonly cssTransitionManager: CSSTransitionManager;
@@ -28,19 +26,19 @@ export default class CSSManager implements ICSSManager {
     }
   }
 
-  attach(styles: StyleProps[]): void {
-    this.update(styles, true);
+  attach(style: PlainStyleProps): void {
+    this.update(style, true);
   }
 
-  update(styles: StyleProps[], isMount = false): void {
-    const [animationProperties, transitionProperties, style] =
-      extractCSSPropertiesAndFlattenedStyles(styles);
+  update(style: PlainStyleProps, isMount = false): void {
+    const [animationProperties, transitionProperties, normalizedStyle] =
+      filterCSSPropertiesAndNormalizeStyle(style);
 
     // If the update is called during component mount, we won't recognize style
     // changes and treat styles as initial, thus we need to set them before
     // attaching transition and animation
     if (isMount) {
-      setViewStyle(this.viewTag, style);
+      setViewStyle(this.viewTag, normalizedStyle);
     }
 
     this.cssTransitionManager.update(transitionProperties);
@@ -50,7 +48,7 @@ export default class CSSManager implements ICSSManager {
     // the transition or animation config, and then - set the style (which may
     // trigger the transition)
     if (!isMount) {
-      setViewStyle(this.viewTag, style);
+      setViewStyle(this.viewTag, normalizedStyle);
     }
   }
 

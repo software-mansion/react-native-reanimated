@@ -1,5 +1,4 @@
 'use strict';
-import type { StyleProps } from '../../../commonTypes';
 import {
   isAnimationSetting,
   isColorProp,
@@ -10,12 +9,16 @@ import { normalizeTransformString } from './transformString';
 import { processColor } from '../../../Colors';
 import { normalizeTransformOrigin } from './transformOrigin';
 import type {
+  AnyRecord,
+  PlainStyleProps,
   CSSAnimationProperties,
   CSSTransitionProperties,
   CSSTransitionProperty,
   Maybe,
 } from '../../types';
 import { ReanimatedError } from '../../errors';
+
+type PropertyName = keyof PlainStyleProps;
 
 export const ERROR_MESSAGES = {
   invalidColor: (color: Maybe<number | string>) =>
@@ -25,7 +28,6 @@ export const ERROR_MESSAGES = {
   invalidFontWeight: (weight: string | number) =>
     `Invalid font weight value: ${weight}`,
 };
-type PropertyName = keyof StyleProps;
 
 function normalizeColor(value: string | number) {
   let normalizedColor: Maybe<number | string> = null;
@@ -95,8 +97,8 @@ function normalizeFontWeight(value: string | number): string {
   throw new ReanimatedError(ERROR_MESSAGES.invalidFontWeight(value));
 }
 
-export function normalizeStyle(style: StyleProps): StyleProps {
-  const entries: [PropertyName, StyleProps[PropertyName]][] = [];
+export function normalizeStyle(style: PlainStyleProps): PlainStyleProps {
+  const entries: [string, PlainStyleProps[PropertyName]][] = [];
 
   for (const [key, value] of Object.entries(style)) {
     let propValue = value;
@@ -130,29 +132,30 @@ export function normalizeStyle(style: StyleProps): StyleProps {
   return Object.fromEntries(entries);
 }
 
-export function extractCSSPropertiesAndFlattenedStyles(
-  styles: StyleProps[]
-): [CSSAnimationProperties | null, CSSTransitionProperties | null, StyleProps] {
+export function filterCSSPropertiesAndNormalizeStyle(
+  style: PlainStyleProps
+): [
+  CSSAnimationProperties | null,
+  CSSTransitionProperties | null,
+  PlainStyleProps,
+] {
   let animationName: CSSAnimationProperties['animationName'] | null = null;
   let transitionProperty: CSSTransitionProperty | null = null;
   const animationProperties: Partial<CSSAnimationProperties> = {};
   const transitionProperties: Partial<CSSTransitionProperties> = {};
-  const flattenedStyle: StyleProps = {};
+  const filteredStyle: AnyRecord = {};
 
-  for (const style of styles) {
-    for (const prop in style) {
-      const value = style[prop];
-      if (prop === 'animationName') {
-        animationName = value as CSSAnimationProperties['animationName'];
-      } else if (prop === 'transitionProperty') {
-        transitionProperty = value as CSSTransitionProperty;
-      } else if (isAnimationSetting(prop)) {
-        animationProperties[prop] = value;
-      } else if (isTransitionSetting(prop)) {
-        transitionProperties[prop] = value;
-      } else {
-        flattenedStyle[prop] = value;
-      }
+  for (const [prop, value] of Object.entries(style)) {
+    if (prop === 'animationName') {
+      animationName = value as CSSAnimationProperties['animationName'];
+    } else if (prop === 'transitionProperty') {
+      transitionProperty = value as CSSTransitionProperty;
+    } else if (isAnimationSetting(prop)) {
+      animationProperties[prop] = value;
+    } else if (isTransitionSetting(prop)) {
+      transitionProperties[prop] = value;
+    } else {
+      filteredStyle[prop] = value;
     }
   }
 
@@ -180,6 +183,6 @@ export function extractCSSPropertiesAndFlattenedStyles(
   return [
     finalAnimationConfig,
     finalTransitionConfig,
-    normalizeStyle(flattenedStyle),
+    normalizeStyle(filteredStyle),
   ];
 }

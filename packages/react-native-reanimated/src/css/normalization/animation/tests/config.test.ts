@@ -1,4 +1,4 @@
-import { cubicBezier } from '../../../easing';
+import { cubicBezier } from '../../../easings';
 import { ReanimatedError } from '../../../errors';
 import type {
   CSSAnimationProperties,

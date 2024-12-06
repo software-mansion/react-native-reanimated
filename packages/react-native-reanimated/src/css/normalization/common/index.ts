@@ -6,7 +6,4 @@ export {
   normalizeTimingFunction,
 } from './settings';
 export { normalizeTransformOrigin } from './transformOrigin';
-export {
-  normalizeStyle,
-  extractCSSPropertiesAndFlattenedStyles,
-} from './style';
+export { normalizeStyle, filterCSSPropertiesAndNormalizeStyle } from './style';

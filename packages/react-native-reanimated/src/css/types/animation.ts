@@ -1,18 +1,21 @@
 'use strict';
-import type { CSSStyleProps, CSSTimeUnit } from './common';
-import type { CSSTimingFunction, NormalizedCSSTimingFunction } from '../easing';
+import type { PlainStyleProps, CSSTimeUnit } from './common';
+import type {
+  CSSTimingFunction,
+  NormalizedCSSTimingFunction,
+} from '../easings';
 import type { AddArrayPropertyTypes } from './helpers';
 
 // BEFORE NORMALIZATION
 
 export type CSSAnimationKeyframeSelector = string | number;
-export type CSSAnimationKeyframeBlock = CSSStyleProps & {
+export type CSSAnimationKeyframeBlock<S extends object> = S & {
   animationTimingFunction?: CSSAnimationTimingFunction;
 };
 
-export type CSSAnimationKeyframes = Record<
+export type CSSAnimationKeyframes<S extends object = PlainStyleProps> = Record<
   CSSAnimationKeyframeSelector,
-  CSSAnimationKeyframeBlock
+  CSSAnimationKeyframeBlock<S>
 >;
 export type CSSAnimationDuration = CSSTimeUnit;
 export type CSSAnimationTimingFunction = CSSTimingFunction;
@@ -37,15 +40,16 @@ export type SingleCSSAnimationSettings = {
   // animationTimeline?: // TODO - This is still experimental in browsers and we might not want to support it when CSS animations in reanimated are released
 };
 
-export type SingleCSSAnimationProperties = SingleCSSAnimationSettings & {
-  animationName: CSSAnimationKeyframes;
-};
+export type SingleCSSAnimationProperties<S extends object = PlainStyleProps> =
+  SingleCSSAnimationSettings & {
+    animationName: CSSAnimationKeyframes<S>;
+  };
 
 export type CSSAnimationSettings =
   AddArrayPropertyTypes<SingleCSSAnimationSettings>;
 
-export type CSSAnimationProperties =
-  AddArrayPropertyTypes<SingleCSSAnimationProperties>;
+export type CSSAnimationProperties<S extends object = PlainStyleProps> =
+  AddArrayPropertyTypes<SingleCSSAnimationProperties<S>>;
 
 export type AnimationSettingProp = keyof CSSAnimationSettings;
 
@@ -69,7 +73,7 @@ type CreateKeyframesStyle<S> = {
     : never;
 };
 
-export type NormalizedCSSKeyframesStyle = CreateKeyframesStyle<CSSStyleProps>;
+export type NormalizedCSSKeyframesStyle = CreateKeyframesStyle<PlainStyleProps>;
 export type NormalizedCSSKeyframeTimingFunctions = Record<
   number,
   NormalizedCSSTimingFunction

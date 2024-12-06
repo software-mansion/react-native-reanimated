@@ -1,7 +1,7 @@
 'use strict';
 import { ReanimatedError } from '../../errors';
 import type {
-  CSSStyleProps,
+  PlainStyleProps,
   CSSTransitionProperties,
   CSSTransitionProperty,
   NormalizedCSSTransitionConfig,
@@ -42,7 +42,7 @@ export function normalizeCSSTransitionProperties(
     return null;
   }
 
-  const specificProperties: (keyof CSSStyleProps)[] = [];
+  const specificProperties: (keyof PlainStyleProps)[] = [];
   let allPropertiesTransition = false;
   const settings: Record<string, NormalizedSingleCSSTransitionSettings> = {};
 

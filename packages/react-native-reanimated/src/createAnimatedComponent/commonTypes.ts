@@ -58,12 +58,6 @@ export interface INativeEventsManager {
   updateEvents(prevProps: AnimatedComponentProps<InitialComponentProps>): void;
 }
 
-export interface ICSSManager {
-  attach(styles: StyleProps[]): void;
-  update(styles: StyleProps[]): void;
-  detach(): void;
-}
-
 export type LayoutAnimationStaticContext = {
   presetName: string;
 };
@@ -104,8 +98,9 @@ export interface AnimatedComponentRef extends Component {
 }
 
 export interface IAnimatedComponentInternal {
+  ChildComponent: AnyComponent;
   _animatedStyles: StyleProps[];
-  _plainStyles: StyleProps[];
+  _prevAnimatedStyles: StyleProps[];
   _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   _isFirstRender: boolean;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
@@ -117,7 +112,6 @@ export interface IAnimatedComponentInternal {
   _PropsFilter: IPropsFilter;
   /** Doesn't exist on web. */
   _NativeEventsManager?: INativeEventsManager;
-  _CSSManager?: ICSSManager;
   _viewInfo?: ViewInfo;
   context: React.ContextType<typeof SkipEnteringContext>;
   /**
@@ -128,6 +122,9 @@ export interface IAnimatedComponentInternal {
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyComponent = React.ComponentType<any>;
 
 export interface InitialComponentProps extends Record<string, unknown> {
   ref?: Ref<Component>;

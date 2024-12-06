@@ -5,16 +5,18 @@
 
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { createAnimatedComponent } from 'react-native-reanimated';
 
 import { Screen } from '@/components';
 import { flex } from '@/theme';
+
+const AnimatedView = createAnimatedComponent(View);
 
 export default function Playground() {
   return (
     <Screen style={flex.center}>
       <Text>Hello world!</Text>
-      <Animated.View
+      <AnimatedView
         style={{
           animationDuration: '10s',
           animationIterationCount: 'infinite',
@@ -48,13 +50,13 @@ export default function Playground() {
           width: 200,
         }}>
         <View style={styles.row}>
-          <View style={[styles.grow, { backgroundColor: 'blue' }]} />
-          <View style={[styles.grow, { backgroundColor: 'lightblue' }]} />
-          <View style={[styles.grow, { backgroundColor: 'skyblue' }]} />
-          <View style={[styles.grow, { backgroundColor: 'powderblue' }]} />
+          <View style={[flex.grow, { backgroundColor: 'blue' }]} />
+          <View style={[flex.grow, { backgroundColor: 'lightblue' }]} />
+          <View style={[flex.grow, { backgroundColor: 'skyblue' }]} />
+          <View style={[flex.grow, { backgroundColor: 'powderblue' }]} />
         </View>
 
-        <Animated.View
+        <AnimatedView
           style={{
             animationDirection: ['normal', 'alternate'],
             animationDuration: '10s',
@@ -92,7 +94,6 @@ export default function Playground() {
                   width: 20,
                 },
               },
-
               {
                 to: {
                   backgroundColor: 'red',
@@ -106,15 +107,12 @@ export default function Playground() {
             width: 20,
           }}
         />
-      </Animated.View>
+      </AnimatedView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  grow: {
-    flexGrow: 1,
-  },
   row: {
     flexDirection: 'row',
     height: '50%',

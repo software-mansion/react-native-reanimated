@@ -1,8 +1,8 @@
 import type {
   ParametrizedTimingFunction,
   PredefinedTimingFunction,
-} from '../../../easing';
-import { cubicBezier, linear, steps } from '../../../easing';
+} from '../../../easings';
+import { cubicBezier, linear, steps } from '../../../easings';
 import { ReanimatedError } from '../../../errors';
 import type { CSSTimeUnit } from '../../../types';
 import {
