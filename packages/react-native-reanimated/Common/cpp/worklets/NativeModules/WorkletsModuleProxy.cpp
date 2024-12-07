@@ -25,7 +25,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       valueUnpackerCode_(valueUnpackerCode),
       jsQueue_(jsQueue) {}
 
-WorkletsModuleProxy::~WorkletsModuleProxy() {}
+WorkletsModuleProxy::~WorkletsModuleProxy() {
+  jsQueue_->quitSynchronous();
+}
 
 jsi::Value WorkletsModuleProxy::makeShareableClone(
     jsi::Runtime &rt,

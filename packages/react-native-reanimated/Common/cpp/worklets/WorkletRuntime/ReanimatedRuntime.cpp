@@ -25,26 +25,39 @@ std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
     const std::string &name) {
   (void)rnRuntime; // used only for V8
 #if JS_RUNTIME_HERMES
-  // We don't call `jsQueue->quitSynchronous()` here, since it will be done
-  // later in ReanimatedHermesRuntime
+  // Adapted from HermesExecutorFactory::createJSExecutor
+  std::unique_ptr<HermesRuntime> hermesRuntime;
+  {
+    SystraceSection s("makeHermesRuntime");
+    hermesRuntime = facebook::hermes::makeHermesRuntime();
+    // TODO: pass runtimeConfig_
+  }
 
-  auto runtime = facebook::hermes::makeHermesRuntime();
-  return std::make_shared<ReanimatedHermesRuntime>(
-      std::move(runtime), jsQueue, name);
+  HermesRuntime& hermesRuntimeRef = *hermesRuntime;
+  bool enableDebugger = true;
+  // TODO: rename to ReanimatedDecoratedRuntime
+  auto decoratedRuntime = std::make_shared<ReanimatedHermesRuntime>(
+      std::move(hermesRuntime),
+      hermesRuntimeRef,
+      jsQueue,
+      enableDebugger,
+      "reanimated-runtime-make-1");
+
+  auto errorPrototype =
+      decoratedRuntime->global()
+          .getPropertyAsObject(*decoratedRuntime, "Error")
+          .getPropertyAsObject(*decoratedRuntime, "prototype");
+  errorPrototype.setProperty(*decoratedRuntime, "jsEngine", "reanimated-runtime-make-2");
+
+  return decoratedRuntime;
 #elif JS_RUNTIME_V8
-  // This is required by iOS, because there is an assertion in the destructor
-  // that the thread was indeed `quit` before.
-  jsQueue->quitSynchronous();
-
+  (void)jsQueue;
   auto config = std::make_unique<rnv8::V8RuntimeConfig>();
   config->enableInspector = false;
   config->appName = name;
   return rnv8::createSharedV8Runtime(&rnRuntime, std::move(config));
 #else
-  // This is required by iOS, because there is an assertion in the destructor
-  // that the thread was indeed `quit` before
-  jsQueue->quitSynchronous();
-
+  (void)jsQueue;
   return facebook::jsc::makeJSCRuntime();
 #endif
 }

@@ -58,60 +58,62 @@ class HermesExecutorRuntimeAdapter : public RuntimeAdapter {
 
 #endif // HERMES_ENABLE_DEBUGGER
 
-ReanimatedHermesRuntime::ReanimatedHermesRuntime(
-    std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
-    const std::shared_ptr<MessageQueueThread> &jsQueue,
-    const std::string &name)
-    : jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck>(
-          *runtime,
-          reentrancyCheck_),
-      runtime_(std::move(runtime)) {
-#if HERMES_ENABLE_DEBUGGER
-  auto adapter =
-      std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
-  debugToken_ = chrome::enableDebugging(std::move(adapter), name);
-#else
-  // This is required by iOS, because there is an assertion in the destructor
-  // that the thread was indeed `quit` before
-  jsQueue->quitSynchronous();
-#endif // HERMES_ENABLE_DEBUGGER
+//ReanimatedHermesRuntime::ReanimatedHermesRuntime(
+//      std::unique_ptr<Runtime> runtime,
+//      HermesRuntime& hermesRuntime,
+//      const std::shared_ptr<MessageQueueThread> &jsQueue,
+//      bool enableDebugger,
+//      const std::string& debuggerName)
+//    : jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck>(
+//          *runtime,
+//          reentrancyCheck_),
+//      runtime_(std::move(runtime)) {
+//#if HERMES_ENABLE_DEBUGGER
+//  auto adapter =
+//      std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
+//  debugToken_ = chrome::enableDebugging(std::move(adapter), debuggerName);
+//#else
+//  // This is required by iOS, because there is an assertion in the destructor
+//  // that the thread was indeed `quit` before
+//  jsQueue->quitSynchronous();
+//#endif // HERMES_ENABLE_DEBUGGER
+//
+//#ifndef NDEBUG
+//  facebook::hermes::HermesRuntime *wrappedRuntime = &hermesRuntime;
+//  jsi::Value evalWithSourceMap = jsi::Function::createFromHostFunction(
+//      *runtime_,
+//      jsi::PropNameID::forAscii(*runtime_, "evalWithSourceMap"),
+//      3,
+//      [wrappedRuntime](
+//          jsi::Runtime &rt,
+//          const jsi::Value &thisValue,
+//          const jsi::Value *args,
+//          size_t count) -> jsi::Value {
+//        auto code = std::make_shared<const jsi::StringBuffer>(
+//            args[0].asString(rt).utf8(rt));
+//        std::string sourceURL;
+//        if (count > 1 && args[1].isString()) {
+//          sourceURL = args[1].asString(rt).utf8(rt);
+//        }
+//        std::shared_ptr<const jsi::Buffer> sourceMap;
+//        if (count > 2 && args[2].isString()) {
+//          sourceMap = std::make_shared<const jsi::StringBuffer>(
+//              args[2].asString(rt).utf8(rt));
+//        }
+//        return wrappedRuntime->evaluateJavaScriptWithSourceMap(
+//            code, sourceMap, sourceURL);
+//      });
+//  runtime_->global().setProperty(
+//      *runtime_, "evalWithSourceMap", evalWithSourceMap);
+//#endif // NDEBUG
+//}
 
-#ifndef NDEBUG
-  facebook::hermes::HermesRuntime *wrappedRuntime = runtime_.get();
-  jsi::Value evalWithSourceMap = jsi::Function::createFromHostFunction(
-      *runtime_,
-      jsi::PropNameID::forAscii(*runtime_, "evalWithSourceMap"),
-      3,
-      [wrappedRuntime](
-          jsi::Runtime &rt,
-          const jsi::Value &thisValue,
-          const jsi::Value *args,
-          size_t count) -> jsi::Value {
-        auto code = std::make_shared<const jsi::StringBuffer>(
-            args[0].asString(rt).utf8(rt));
-        std::string sourceURL;
-        if (count > 1 && args[1].isString()) {
-          sourceURL = args[1].asString(rt).utf8(rt);
-        }
-        std::shared_ptr<const jsi::Buffer> sourceMap;
-        if (count > 2 && args[2].isString()) {
-          sourceMap = std::make_shared<const jsi::StringBuffer>(
-              args[2].asString(rt).utf8(rt));
-        }
-        return wrappedRuntime->evaluateJavaScriptWithSourceMap(
-            code, sourceMap, sourceURL);
-      });
-  runtime_->global().setProperty(
-      *runtime_, "evalWithSourceMap", evalWithSourceMap);
-#endif // NDEBUG
-}
-
-ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
-#if HERMES_ENABLE_DEBUGGER
-  // We have to disable debugging before the runtime is destroyed.
-  chrome::disableDebugging(debugToken_);
-#endif // HERMES_ENABLE_DEBUGGER
-}
+//ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
+//#if HERMES_ENABLE_DEBUGGER
+//  // We have to disable debugging before the runtime is destroyed.
+//  chrome::disableDebugging(debugToken_);
+//#endif // HERMES_ENABLE_DEBUGGER
+//}
 
 } // namespace worklets
 

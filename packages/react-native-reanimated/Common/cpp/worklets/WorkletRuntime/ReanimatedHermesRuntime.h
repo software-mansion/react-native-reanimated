@@ -13,8 +13,9 @@
 #if JS_RUNTIME_HERMES
 
 #include <cxxreact/MessageQueueThread.h>
+#include <cxxreact/SystraceSection.h>
 #include <jsi/decorator.h>
-#include <jsi/jsi.h>
+#include <jsinspector-modern/InspectorFlags.h>
 
 #include <atomic>
 #include <memory>
@@ -29,6 +30,8 @@
 
 #if HERMES_ENABLE_DEBUGGER
 #include <hermes/inspector-modern/chrome/Registration.h>
+#include <hermes/inspector-modern/chrome/HermesRuntimeTargetDelegate.h>
+#include <hermes/inspector/RuntimeAdapter.h>
 #endif // HERMES_ENABLE_DEBUGGER
 
 namespace worklets {
@@ -37,6 +40,45 @@ using namespace facebook;
 using namespace react;
 #if HERMES_ENABLE_DEBUGGER
 using namespace facebook::hermes::inspector_modern;
+using namespace facebook::hermes;
+using namespace facebook::jsi;
+#endif // HERMES_ENABLE_DEBUGGER
+
+#ifdef HERMES_ENABLE_DEBUGGER
+
+class ReanimatedHermesExecutorRuntimeAdapter
+    : public facebook::hermes::inspector_modern::RuntimeAdapter {
+ public:
+  ReanimatedHermesExecutorRuntimeAdapter(
+      std::shared_ptr<HermesRuntime> runtime,
+      std::shared_ptr<MessageQueueThread> thread)
+      : runtime_(runtime), thread_(std::move(thread)) {}
+
+  virtual ~ReanimatedHermesExecutorRuntimeAdapter() = default;
+
+  HermesRuntime& getRuntime() override {
+    return *runtime_;
+  }
+
+  void tickleJs() override {
+    // thread_->runOnQueue(
+    //     [weakRuntime = std::weak_ptr<HermesRuntime>(runtime_)]() {
+    //       auto runtime = weakRuntime.lock();
+    //       if (!runtime) {
+    //         return;
+    //       }
+    //       jsi::Function func =
+    //           runtime->global().getPropertyAsFunction(*runtime, "__tickleJs");
+    //       func.call(*runtime);
+    //     });
+  }
+
+ private:
+  std::shared_ptr<HermesRuntime> runtime_;
+
+  std::shared_ptr<MessageQueueThread> thread_;
+};
+
 #endif // HERMES_ENABLE_DEBUGGER
 
 // ReentrancyCheck is copied from React Native
@@ -116,20 +158,87 @@ struct ReanimatedReentrancyCheck {
 // WithRuntimeDecorator -> DecoratedRuntime -> jsi::Runtime You can find out
 // more about this in ReactCommon/jsi/jsi/Decorator.h or by following this link:
 // https://github.com/facebook/react-native/blob/main/packages/react-native/ReactCommon/jsi/jsi/decorator.h
-class ReanimatedHermesRuntime
-    : public jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck> {
+
+// This adds ReentrancyCheck and debugger enable/teardown to the given
+// Runtime.
+class ReanimatedHermesRuntime : public jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck> {
  public:
+  // The first argument may be another decorater which itself
+  // decorates the real HermesRuntime, depending on the build config.
+  // The second argument is the real HermesRuntime as well to
+  // manage the debugger registration.
   ReanimatedHermesRuntime(
-      std::unique_ptr<facebook::hermes::HermesRuntime> runtime,
+      std::unique_ptr<Runtime> runtime,
+      HermesRuntime& hermesRuntime,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
-      const std::string &name);
-  ~ReanimatedHermesRuntime();
+      bool enableDebugger,
+      const std::string& debuggerName)
+      : jsi::WithRuntimeDecorator<ReanimatedReentrancyCheck>(*runtime, reentrancyCheck_),
+        runtime_(std::move(runtime)) {
+#ifdef HERMES_ENABLE_DEBUGGER
+    enableDebugger_ = enableDebugger;
+    if (enableDebugger_) {
+      std::shared_ptr<HermesRuntime> rt(runtime_, &hermesRuntime);
+      auto adapter =
+          std::make_unique<ReanimatedHermesExecutorRuntimeAdapter>(rt, jsQueue);
+      debugToken_ = facebook::hermes::inspector_modern::chrome::enableDebugging(
+          std::move(adapter), debuggerName);
+    }
+#else
+    (void)jsQueue;
+#endif // HERMES_ENABLE_DEBUGGER
+
+#ifndef NDEBUG
+  facebook::hermes::HermesRuntime *wrappedRuntime = &hermesRuntime;
+  jsi::Value evalWithSourceMap = jsi::Function::createFromHostFunction(
+      *runtime_,
+      jsi::PropNameID::forAscii(*runtime_, "evalWithSourceMap"),
+      3,
+      [wrappedRuntime](
+          jsi::Runtime &rt,
+          const jsi::Value &thisValue,
+          const jsi::Value *args,
+          size_t count) -> jsi::Value {
+        auto code = std::make_shared<const jsi::StringBuffer>(
+            args[0].asString(rt).utf8(rt));
+        std::string sourceURL;
+        if (count > 1 && args[1].isString()) {
+          sourceURL = args[1].asString(rt).utf8(rt);
+        }
+        std::shared_ptr<const jsi::Buffer> sourceMap;
+        if (count > 2 && args[2].isString()) {
+          sourceMap = std::make_shared<const jsi::StringBuffer>(
+              args[2].asString(rt).utf8(rt));
+        }
+        return wrappedRuntime->evaluateJavaScriptWithSourceMap(
+            code, sourceMap, sourceURL);
+      });
+  runtime_->global().setProperty(
+      *runtime_, "evalWithSourceMap", evalWithSourceMap);
+#endif // NDEBUG
+  }
+
+  ~ReanimatedHermesRuntime() {
+#ifdef HERMES_ENABLE_DEBUGGER
+    if (enableDebugger_) {
+      facebook::hermes::inspector_modern::chrome::disableDebugging(debugToken_);
+    }
+#endif // HERMES_ENABLE_DEBUGGER
+  }
 
  private:
-  std::unique_ptr<facebook::hermes::HermesRuntime> runtime_;
+  // runtime_ is a potentially decorated Runtime.
+  // hermesRuntime is a reference to a HermesRuntime managed by runtime_.
+  //
+  // HermesExecutorRuntimeAdapter requirements are kept, because the
+  // dtor will disable debugging on the HermesRuntime before the
+  // member managing it is destroyed.
+
+  std::shared_ptr<Runtime> runtime_;
   ReanimatedReentrancyCheck reentrancyCheck_;
-#if HERMES_ENABLE_DEBUGGER
-  chrome::DebugSessionToken debugToken_;
+#ifdef HERMES_ENABLE_DEBUGGER
+  bool enableDebugger_;
+  facebook::hermes::inspector_modern::chrome::DebugSessionToken debugToken_;
 #endif // HERMES_ENABLE_DEBUGGER
 };
 
