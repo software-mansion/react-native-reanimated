@@ -1,10 +1,10 @@
 #include <android/log.h>
 
-#include <reanimated/Tools/PlatformLogger.h>
+#include <worklets/Tools/PlatformLogger.h>
 
-constexpr const auto tag = "Reanimated";
+constexpr const auto tag = "Worklets";
 
-namespace reanimated {
+namespace worklets {
 
 void PlatformLogger::log(const char *str) {
   __android_log_print(ANDROID_LOG_VERBOSE, tag, "%s", str);
@@ -26,4 +26,4 @@ void PlatformLogger::log(const bool b) {
   log(b ? "true" : "false");
 }
 
-} // namespace reanimated
+} // namespace worklets
