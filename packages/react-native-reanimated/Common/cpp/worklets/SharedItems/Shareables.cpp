@@ -302,7 +302,12 @@ jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
       remoteRuntime_ = &rt;
     }
   }
-  return jsi::Value(rt, *remoteValue_);
+  if (&rt == remoteRuntime_) {
+    return jsi::Value(rt, *remoteValue_);
+  }
+  auto initObj = initializer_->toJSValue(rt);
+  return getValueUnpacker(rt).call(
+      rt, initObj, jsi::String::createFromAscii(rt, "Handle"));
 }
 
 jsi::Value ShareableString::toJSValue(jsi::Runtime &rt) {
