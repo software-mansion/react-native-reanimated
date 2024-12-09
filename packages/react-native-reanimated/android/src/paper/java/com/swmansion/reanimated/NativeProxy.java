@@ -17,9 +17,7 @@ import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Objects;
 
-/**
- * @noinspection JavaJniMissingFunction
- */
+/** @noinspection JavaJniMissingFunction */
 public class NativeProxy extends NativeProxyCommon {
   @DoNotStrip
   @SuppressWarnings("unused")

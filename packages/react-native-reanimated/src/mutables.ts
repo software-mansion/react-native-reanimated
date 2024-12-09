@@ -18,7 +18,7 @@ function shouldWarnAboutAccessDuringRender() {
 function checkInvalidReadDuringRender() {
   if (shouldWarnAboutAccessDuringRender()) {
     logger.warn(
-      'Reading from `value` during component render. Please ensure that you do not access the `value` property or use `get` method of a shared value while React is rendering a component.',
+      "Reading from `value` during component render. Please ensure that you don't access the `value` property nor use `get` method of a shared value while React is rendering a component.",
       { strict: true }
     );
   }
@@ -27,7 +27,7 @@ function checkInvalidReadDuringRender() {
 function checkInvalidWriteDuringRender() {
   if (shouldWarnAboutAccessDuringRender()) {
     logger.warn(
-      'Writing to `value` during component render. Please ensure that you do not access the `value` property or use `set` method of a shared value while React is rendering a component.',
+      "Writing to `value` during component render. Please ensure that you don't access the `value` property nor use `set` method of a shared value while React is rendering a component.",
       { strict: true }
     );
   }
