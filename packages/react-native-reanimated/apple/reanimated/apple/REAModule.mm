@@ -65,7 +65,6 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   SingleInstanceChecker<REAModule> singleInstanceChecker_;
 #endif // NDEBUG
   bool hasListeners;
-  bool _isBridgeless;
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
@@ -174,7 +173,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
 {
   _surfacePresenter = surfacePresenter;
-  _isBridgeless = true;
 }
 
 - (void)setBridge:(RCTBridge *)bridge
@@ -294,11 +292,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto jsCallInvoker = self.bridge.jsCallInvoker;
 #endif // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
   auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
+  auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
 
   assert(jsiRuntime != nullptr);
 
   auto reanimatedModuleProxy =
-      reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, _isBridgeless);
+      reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, isBridgeless);
 
   jsi::Runtime &rnRuntime = *jsiRuntime;
   [self commonInit:reanimatedModuleProxy withRnRuntime:rnRuntime];

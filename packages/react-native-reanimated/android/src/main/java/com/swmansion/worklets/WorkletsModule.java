@@ -8,10 +8,12 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.queue.MessageQueueThread;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
+import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.reanimated.NativeWorkletsModuleSpec;
 import java.util.Objects;
 
+/* * @noinspection JavaJniMissingFunction */
 @ReactModule(name = WorkletsModule.NAME)
 public class WorkletsModule extends NativeWorkletsModuleSpec {
   static {
@@ -22,21 +24,19 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   @SuppressWarnings("unused")
   private HybridData mHybridData;
 
-  /**
-   * @noinspection unused
-   */
+  @SuppressWarnings("unused")
   protected HybridData getHybridData() {
     return mHybridData;
   }
 
   private final WorkletsMessageQueueThread mMessageQueueThread = new WorkletsMessageQueueThread();
 
-  /**
-   * @noinspection JavaJniMissingFunction
-   */
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
-      long jsContext, String valueUnpackerCode, MessageQueueThread messageQueueThread);
+      long jsContext,
+      String valueUnpackerCode,
+      MessageQueueThread messageQueueThread,
+      CallInvokerHolderImpl jsCallInvokerHolder);
 
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -47,9 +47,10 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   public boolean installTurboModule(String valueUnpackerCode) {
     var context = getReactApplicationContext();
     var jsContext = Objects.requireNonNull(context.getJavaScriptContextHolder()).get();
+    var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
-    mHybridData = initHybrid(jsContext, valueUnpackerCode, mMessageQueueThread);
-
+    mHybridData =
+        initHybrid(jsContext, valueUnpackerCode, mMessageQueueThread, jsCallInvokerHolder);
     return true;
   }
 }

@@ -20,10 +20,13 @@ namespace worklets {
 
 WorkletsModuleProxy::WorkletsModuleProxy(
     const std::string &valueUnpackerCode,
-    const std::shared_ptr<MessageQueueThread> &jsQueue)
-    : WorkletsModuleProxySpec(nullptr),
+    const std::shared_ptr<MessageQueueThread> &jsQueue,
+    const std::shared_ptr<CallInvoker> &jsCallInvoker,
+    const std::shared_ptr<JSScheduler> &jsScheduler)
+    : WorkletsModuleProxySpec(jsCallInvoker),
       valueUnpackerCode_(valueUnpackerCode),
-      jsQueue_(jsQueue) {}
+      jsQueue_(jsQueue),
+      jsScheduler_(jsScheduler) {}
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {}
 

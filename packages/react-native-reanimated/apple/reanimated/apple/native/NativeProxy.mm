@@ -70,14 +70,13 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
   PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(bridge, nodesManager, reaModule);
 
   std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
-  std::shared_ptr<JSScheduler> jsScheduler = std::make_shared<JSScheduler>(rnRuntime, jsInvoker);
 
   const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
 
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
       workletsModuleProxy,
       rnRuntime,
-      jsScheduler,
+      jsInvoker,
       uiScheduler,
       platformDepMethodsHolder,
       isBridgeless,

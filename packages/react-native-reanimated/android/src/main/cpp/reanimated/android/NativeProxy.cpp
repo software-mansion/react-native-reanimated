@@ -45,7 +45,7 @@ NativeProxy::NativeProxy(
       reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
           workletsModuleProxy,
           *rnRuntime,
-          std::make_shared<JSScheduler>(*rnRuntime, jsCallInvoker),
+          jsCallInvoker,
           uiScheduler,
           getPlatformDependentMethods(),
           isBridgeless,
