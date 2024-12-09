@@ -13,7 +13,9 @@ import com.facebook.soloader.SoLoader;
 import com.swmansion.reanimated.NativeWorkletsModuleSpec;
 import java.util.Objects;
 
-/** @noinspection JavaJniMissingFunction */
+/**
+ * @noinspection JavaJniMissingFunction
+ */
 @ReactModule(name = WorkletsModule.NAME)
 public class WorkletsModule extends NativeWorkletsModuleSpec {
   static {
