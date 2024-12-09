@@ -60,7 +60,8 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,
     RCTBridge *bridge,
     const std::shared_ptr<CallInvoker> &jsInvoker,
-    WorkletsModule *workletsModule)
+    WorkletsModule *workletsModule,
+    bool isBridgeless)
 {
   auto nodesManager = reaModule.nodesManager;
 
@@ -70,7 +71,6 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
 
   std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
   std::shared_ptr<JSScheduler> jsScheduler = std::make_shared<JSScheduler>(rnRuntime, jsInvoker);
-  constexpr auto isBridgeless = false;
 
   const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
 
@@ -95,40 +95,6 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
 
   return reanimatedModuleProxy;
 }
-
-#ifdef RCT_NEW_ARCH_ENABLED
-std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleBridgeless(
-    REAModule *reaModule,
-    RCTModuleRegistry *moduleRegistry,
-    jsi::Runtime &runtime,
-    WorkletsModule *workletsModule,
-    RuntimeExecutor runtimeExecutor)
-{
-  auto nodesManager = reaModule.nodesManager;
-
-  PlatformDepMethodsHolder platformDepMethodsHolder =
-      makePlatformDepMethodsHolderBridgeless(moduleRegistry, nodesManager, reaModule);
-
-  const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
-  assert(workletsModuleProxy != nullptr);
-  auto uiScheduler = std::make_shared<REAIOSUIScheduler>();
-  auto jsScheduler = std::make_shared<JSScheduler>(runtime, runtimeExecutor);
-  constexpr auto isBridgeless = true;
-
-  auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
-      workletsModuleProxy,
-      runtime,
-      jsScheduler,
-      uiScheduler,
-      platformDepMethodsHolder,
-      isBridgeless,
-      getIsReducedMotion());
-
-  commonInit(reaModule, reanimatedModuleProxy);
-
-  return reanimatedModuleProxy;
-}
-#endif // RCT_NEW_ARCH_ENABLED
 
 void commonInit(REAModule *reaModule, std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy)
 {
