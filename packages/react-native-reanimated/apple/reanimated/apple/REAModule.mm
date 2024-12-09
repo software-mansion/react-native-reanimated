@@ -7,6 +7,9 @@
 #import <React/RCTSurfacePresenter.h>
 #import <React/RCTSurfacePresenterBridgeAdapter.h>
 #import <React/RCTSurfaceView.h>
+#if REACT_NATIVE_MINOR_VERSION >= 75
+#import <React/RCTCallInvoker.h>
+#endif // REACT_NATIVE_MINOR_VERSION >= 75
 #endif // RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -36,10 +39,14 @@ using namespace reanimated;
 - (void *)runtime;
 @end
 
+#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
+// nothing
+#else // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
 @interface RCTBridge (RCTTurboModule)
 - (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
 - (void)_tryAndHandleError:(dispatch_block_t)block;
 @end
+#endif // RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
 static __strong REAInitializerRCTFabricSurface *reaSurface;
@@ -62,9 +69,9 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
-#ifdef RCT_NEW_ARCH_ENABLED
-@synthesize runtimeExecutor = _runtimeExecutor;
-#endif // RCT_NEW_ARCH_ENABLED
+#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
+@synthesize callInvoker = _callInvoker;
+#endif // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
@@ -280,38 +287,22 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
-  if (_isBridgeless) {
-#ifdef RCT_NEW_ARCH_ENABLED
-    RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
-    auto &rnRuntime = *(jsi::Runtime *)cxxBridge.runtime;
-    auto executorFunction = ([executor = _runtimeExecutor](std::function<void(jsi::Runtime & runtime)> &&callback) {
-      // Convert to Objective-C block so it can be captured properly.
-      __block auto callbackBlock = callback;
 
-      [executor execute:^(jsi::Runtime &runtime) {
-        callbackBlock(runtime);
-      }];
-    });
-    auto reanimatedModuleProxy = reanimated::createReanimatedModuleBridgeless(
-        self, _moduleRegistry, rnRuntime, workletsModule, executorFunction);
-    [self attachReactEventListener];
-    [self commonInit:reanimatedModuleProxy withRnRuntime:rnRuntime];
-#else
-    [NSException raise:@"Missing bridge" format:@"[Reanimated] Failed to obtain the bridge."];
-#endif // RCT_NEW_ARCH_ENABLED
-  } else {
-    facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
-        ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
-        : nullptr;
+#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
+  auto jsCallInvoker = _callInvoker.callInvoker;
+#else // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
+  auto jsCallInvoker = self.bridge.jsCallInvoker;
+#endif // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
+  auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
 
-    if (jsiRuntime) {
-      auto reanimatedModuleProxy =
-          reanimated::createReanimatedModule(self, self.bridge, self.bridge.jsCallInvoker, workletsModule);
-      jsi::Runtime &rnRuntime = *jsiRuntime;
+  assert(jsiRuntime != nullptr);
 
-      [self commonInit:reanimatedModuleProxy withRnRuntime:rnRuntime];
-    }
-  }
+  auto reanimatedModuleProxy =
+      reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, _isBridgeless);
+
+  jsi::Runtime &rnRuntime = *jsiRuntime;
+  [self commonInit:reanimatedModuleProxy withRnRuntime:rnRuntime];
+
   return @YES;
 }
 
@@ -328,6 +319,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   WorkletRuntimeCollector::install(rnRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, reanimatedModuleProxy);
 #ifdef RCT_NEW_ARCH_ENABLED
+  [self attachReactEventListener];
   weakReanimatedModuleProxy_ = reanimatedModuleProxy;
   if (self->_surfacePresenter != nil) {
     // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
