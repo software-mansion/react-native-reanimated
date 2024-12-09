@@ -1,7 +1,7 @@
 #import <Foundation/Foundation.h>
-#import <reanimated/Tools/PlatformLogger.h>
+#import <worklets/Tools/PlatformLogger.h>
 
-namespace reanimated {
+namespace worklets {
 
 void PlatformLogger::log(const char *str)
 {
@@ -28,4 +28,4 @@ void PlatformLogger::log(const bool b)
   log(b ? "true" : "false");
 }
 
-} // namespace reanimated
+} // namespace worklets

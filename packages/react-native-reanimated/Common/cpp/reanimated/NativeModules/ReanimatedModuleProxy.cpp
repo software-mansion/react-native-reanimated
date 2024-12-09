@@ -1,5 +1,4 @@
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
-#include <reanimated/RuntimeDecorators/ReanimatedWorkletRuntimeDecorator.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/CollectionUtils.h>
 #include <reanimated/Tools/FeaturesConfig.h>
@@ -241,7 +240,6 @@ jsi::Value ReanimatedModuleProxy::createWorkletRuntime(
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Reanimated] Initializer must be a worklet.");
   workletRuntime->runGuarded(initializerShareable);
-  ReanimatedWorkletRuntimeDecorator::decorate(workletRuntime->getJSIRuntime());
   return jsi::Object::createFromHostObject(rt, workletRuntime);
 }
 
