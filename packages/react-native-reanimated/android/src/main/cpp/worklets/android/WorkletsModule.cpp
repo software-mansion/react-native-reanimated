@@ -21,12 +21,16 @@ WorkletsModule::WorkletsModule(
     jni::alias_ref<WorkletsModule::javaobject> jThis,
     jsi::Runtime *rnRuntime,
     const std::string &valueUnpackerCode,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread)
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
+    const std::shared_ptr<worklets::JSScheduler> &jsScheduler)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
           valueUnpackerCode,
-          std::make_shared<JMessageQueueThread>(messageQueueThread))) {
+          std::make_shared<JMessageQueueThread>(messageQueueThread),
+          jsCallInvoker,
+          jsScheduler)) {
   RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);
 }
 
@@ -34,9 +38,20 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
     const std::string &valueUnpackerCode,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread) {
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
+        jsCallInvokerHolder) {
+  auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
+  auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext);
+  auto jsScheduler =
+      std::make_shared<worklets::JSScheduler>(*rnRuntime, jsCallInvoker);
   return makeCxxInstance(
-      jThis, (jsi::Runtime *)jsContext, valueUnpackerCode, messageQueueThread);
+      jThis,
+      rnRuntime,
+      valueUnpackerCode,
+      messageQueueThread,
+      jsCallInvoker,
+      jsScheduler);
 }
 
 void WorkletsModule::registerNatives() {
