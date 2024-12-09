@@ -58,8 +58,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
     const bool isBridgeless,
     const bool isReducedMotion)
-    : ReanimatedModuleProxySpec(
-          isBridgeless ? nullptr : jsScheduler->getJSCallInvoker()),
+    : ReanimatedModuleProxySpec(jsScheduler->getJSCallInvoker()),
       isBridgeless_(isBridgeless),
       isReducedMotion_(isReducedMotion),
       workletsModuleProxy_(workletsModuleProxy),

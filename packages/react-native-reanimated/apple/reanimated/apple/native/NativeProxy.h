@@ -18,17 +18,8 @@ std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,
     RCTBridge *bridge,
     const std::shared_ptr<facebook::react::CallInvoker> &jsInvoker,
-    WorkletsModule *workletsModule);
-
-#ifdef RCT_NEW_ARCH_ENABLED
-std::shared_ptr<reanimated::ReanimatedModuleProxy>
-createReanimatedModuleBridgeless(
-    REAModule *reaModule,
-    RCTModuleRegistry *moduleRegistry,
-    jsi::Runtime &runtime,
     WorkletsModule *workletsModule,
-    RuntimeExecutor runtimeExecutor);
-#endif // RCT_NEW_ARCH_ENABLED
+    bool isBridgeless);
 
 void commonInit(
     REAModule *reaModule,

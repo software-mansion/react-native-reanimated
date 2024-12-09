@@ -1,7 +1,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <React/RCTInitializing.h>
-#import <React/RCTRuntimeExecutorModule.h>
-#import <ReactCommon/RCTRuntimeExecutor.h>
+#if REACT_NATIVE_MINOR_VERSION >= 75
+#import <React/RCTCallInvokerModule.h>
+#endif // REACT_NATIVE_MINOR_VERSION >= 75
 #import <rnreanimated/rnreanimated.h>
 #else // RCT_NEW_ARCH_ENABLED
 #import <React/RCTBridgeModule.h>
@@ -18,8 +18,9 @@
 @interface REAModule : RCTEventEmitter
 #ifdef RCT_NEW_ARCH_ENABLED
                        <NativeReanimatedModuleSpec,
-                        RCTInitializing,
-                        RCTRuntimeExecutorModule,
+#if REACT_NATIVE_MINOR_VERSION >= 75
+                        RCTCallInvokerModule,
+#endif // REACT_NATIVE_MINOR_VERSION >= 75
 #else
                        <RCTBridgeModule,
 #endif // RCT_NEW_ARCH_ENABLED
