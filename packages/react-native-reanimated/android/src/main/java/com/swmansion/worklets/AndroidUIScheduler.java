@@ -1,4 +1,4 @@
-package com.swmansion.reanimated;
+package com.swmansion.worklets;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;

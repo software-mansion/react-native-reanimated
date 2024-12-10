@@ -4,7 +4,6 @@ import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.RuntimeExecutor;
 import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
@@ -13,10 +12,14 @@ import com.facebook.react.uimanager.common.UIManagerType;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.nativeProxy.NativeProxyCommon;
+import com.swmansion.worklets.JSCallInvokerResolver;
 import com.swmansion.worklets.WorkletsModule;
 import java.util.HashMap;
 import java.util.Objects;
 
+/**
+ * @noinspection JavaJniMissingFunction
+ */
 public class NativeProxy extends NativeProxyCommon {
   @DoNotStrip
   @SuppressWarnings("unused")
@@ -32,28 +35,16 @@ public class NativeProxy extends NativeProxyCommon {
 
     LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
 
-    if (context.isBridgeless()) {
-      RuntimeExecutor runtimeExecutor = context.getCatalystInstance().getRuntimeExecutor();
-      mHybridData =
-          initHybridBridgeless(
-              workletsModule,
-              Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
-              runtimeExecutor,
-              mAndroidUIScheduler,
-              LayoutAnimations,
-              fabricUIManager);
-    } else {
-      CallInvokerHolderImpl callInvokerHolder =
-          (CallInvokerHolderImpl) context.getJSCallInvokerHolder();
-      mHybridData =
-          initHybrid(
-              workletsModule,
-              Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
-              callInvokerHolder,
-              mAndroidUIScheduler,
-              LayoutAnimations,
-              fabricUIManager);
-    }
+    CallInvokerHolderImpl callInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
+    mHybridData =
+        initHybrid(
+            workletsModule,
+            Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
+            callInvokerHolder,
+            LayoutAnimations,
+            context.isBridgeless(),
+            fabricUIManager);
+
     prepareLayoutAnimations(LayoutAnimations);
     installJSIBindings();
     if (BuildConfig.DEBUG) {
@@ -61,20 +52,13 @@ public class NativeProxy extends NativeProxyCommon {
     }
   }
 
+  @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
       WorkletsModule workletsModule,
       long jsContext,
       CallInvokerHolderImpl jsCallInvokerHolder,
-      AndroidUIScheduler androidUIScheduler,
       LayoutAnimations LayoutAnimations,
-      FabricUIManager fabricUIManager);
-
-  private native HybridData initHybridBridgeless(
-      WorkletsModule workletsModule,
-      long jsContext,
-      RuntimeExecutor runtimeExecutor,
-      AndroidUIScheduler androidUIScheduler,
-      LayoutAnimations LayoutAnimations,
+      boolean isBridgeless,
       FabricUIManager fabricUIManager);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
@@ -86,7 +70,8 @@ public class NativeProxy extends NativeProxyCommon {
     return mHybridData;
   }
 
-  public static NativeMethodsHolder createNativeMethodsHolder(LayoutAnimations layoutAnimations) {
+  public static NativeMethodsHolder createNativeMethodsHolder(
+      LayoutAnimations ignoredLayoutAnimations) {
     return new NativeMethodsHolder() {
       @Override
       public void startAnimation(int tag, int type, HashMap<String, Object> values) {

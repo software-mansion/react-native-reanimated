@@ -12,7 +12,6 @@
 #import <reanimated/apple/native/NativeMethods.h>
 #import <reanimated/apple/native/NativeProxy.h>
 #import <reanimated/apple/native/PlatformDepMethodsHolderImpl.h>
-#import <reanimated/apple/native/REAIOSUIScheduler.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
 
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
@@ -60,7 +59,8 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
     REAModule *reaModule,
     RCTBridge *bridge,
     const std::shared_ptr<CallInvoker> &jsInvoker,
-    WorkletsModule *workletsModule)
+    WorkletsModule *workletsModule,
+    bool isBridgeless)
 {
   auto nodesManager = reaModule.nodesManager;
 
@@ -68,20 +68,10 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
 
   PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(bridge, nodesManager, reaModule);
 
-  std::shared_ptr<UIScheduler> uiScheduler = std::make_shared<REAIOSUIScheduler>();
-  std::shared_ptr<JSScheduler> jsScheduler = std::make_shared<JSScheduler>(rnRuntime, jsInvoker);
-  constexpr auto isBridgeless = false;
-
   const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
 
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
-      workletsModuleProxy,
-      rnRuntime,
-      jsScheduler,
-      uiScheduler,
-      platformDepMethodsHolder,
-      isBridgeless,
-      getIsReducedMotion());
+      workletsModuleProxy, rnRuntime, jsInvoker, platformDepMethodsHolder, isBridgeless, getIsReducedMotion());
 
   commonInit(reaModule, reanimatedModuleProxy);
   // Layout Animation callbacks setup
@@ -95,40 +85,6 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
 
   return reanimatedModuleProxy;
 }
-
-#ifdef RCT_NEW_ARCH_ENABLED
-std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleBridgeless(
-    REAModule *reaModule,
-    RCTModuleRegistry *moduleRegistry,
-    jsi::Runtime &runtime,
-    WorkletsModule *workletsModule,
-    const std::shared_ptr<facebook::react::CallInvoker> &callInvoker)
-{
-  auto nodesManager = reaModule.nodesManager;
-
-  PlatformDepMethodsHolder platformDepMethodsHolder =
-      makePlatformDepMethodsHolderBridgeless(moduleRegistry, nodesManager, reaModule);
-
-  const auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
-  assert(workletsModuleProxy != nullptr);
-  auto uiScheduler = std::make_shared<REAIOSUIScheduler>();
-  auto jsScheduler = std::make_shared<JSScheduler>(runtime, callInvoker);
-  constexpr auto isBridgeless = true;
-
-  auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
-      workletsModuleProxy,
-      runtime,
-      jsScheduler,
-      uiScheduler,
-      platformDepMethodsHolder,
-      isBridgeless,
-      getIsReducedMotion());
-
-  commonInit(reaModule, reanimatedModuleProxy);
-
-  return reanimatedModuleProxy;
-}
-#endif // RCT_NEW_ARCH_ENABLED
 
 void commonInit(REAModule *reaModule, std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy)
 {

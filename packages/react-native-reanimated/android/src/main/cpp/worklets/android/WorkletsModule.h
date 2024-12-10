@@ -14,6 +14,7 @@
 #include <react/jni/WritableNativeMap.h>
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
+#include <worklets/android/AndroidUIScheduler.h>
 
 #include <memory>
 #include <string>
@@ -32,7 +33,11 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<jhybridobject> jThis,
       jlong jsContext,
       const std::string &valueUnpackerCode,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
+          jsCallInvokerHolder,
+      jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
+          androidUIScheduler);
 
   static void registerNatives();
 
@@ -50,7 +55,10 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       jni::alias_ref<WorkletsModule::jhybridobject> jThis,
       jsi::Runtime *rnRuntime,
       const std::string &valueUnpackerCode,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread);
+      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
+      const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
+      const std::shared_ptr<UIScheduler> &uiScheduler);
 };
 
 } // namespace worklets

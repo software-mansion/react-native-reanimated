@@ -52,23 +52,19 @@ namespace reanimated {
 ReanimatedModuleProxy::ReanimatedModuleProxy(
     const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
     jsi::Runtime &rnRuntime,
-    const std::shared_ptr<JSScheduler> &jsScheduler,
-    const std::shared_ptr<UIScheduler> &uiScheduler,
+    const std::shared_ptr<CallInvoker> &jsCallInvoker,
     const PlatformDepMethodsHolder &platformDepMethodsHolder,
     const bool isBridgeless,
     const bool isReducedMotion)
-    : ReanimatedModuleProxySpec(
-          isBridgeless ? nullptr : jsScheduler->getJSCallInvoker()),
+    : ReanimatedModuleProxySpec(jsCallInvoker),
       isBridgeless_(isBridgeless),
       isReducedMotion_(isReducedMotion),
       workletsModuleProxy_(workletsModuleProxy),
-      jsScheduler_(jsScheduler),
-      uiScheduler_(uiScheduler),
       valueUnpackerCode_(workletsModuleProxy->getValueUnpackerCode()),
       uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
           rnRuntime,
           workletsModuleProxy->getJSQueue(),
-          jsScheduler_,
+          workletsModuleProxy->getJSScheduler(),
           "Reanimated UI runtime",
           true /* supportsLocking */,
           valueUnpackerCode_)),
@@ -79,7 +75,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
         onRender(timestampMs);
       }),
       animatedSensorModule_(platformDepMethodsHolder),
-      jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
+      jsLogger_(
+          std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
       layoutAnimationsManager_(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -207,7 +204,7 @@ void ReanimatedModuleProxy::scheduleOnUI(
     const jsi::Value &worklet) {
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt, worklet, "[Reanimated] Only worklets can be scheduled to run on UI.");
-  uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
 #if JS_RUNTIME_HERMES
     // JSI's scope defined here allows for JSI-objects to be cleared up
     // after each runtime loop. Within these loops we typically create some
@@ -233,7 +230,7 @@ jsi::Value ReanimatedModuleProxy::createWorkletRuntime(
   auto workletRuntime = std::make_shared<WorkletRuntime>(
       rt,
       workletsModuleProxy_->getJSQueue(),
-      jsScheduler_,
+      workletsModuleProxy_->getJSScheduler(),
       name.asString(rt).utf8(rt),
       false /* supportsLocking */,
       valueUnpackerCode_);
@@ -264,7 +261,7 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
       rt, worklet, "[Reanimated] Event handler must be a worklet.");
   int emitterReactTagInt = emitterReactTag.asNumber();
 
-  uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
     auto handler = std::make_shared<WorkletEventHandler>(
         newRegistrationId, eventNameStr, emitterReactTagInt, handlerShareable);
     eventHandlerRegistry_->registerEventHandler(std::move(handler));
@@ -277,7 +274,7 @@ void ReanimatedModuleProxy::unregisterEventHandler(
     jsi::Runtime &,
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
-  uiScheduler_->scheduleOnUI(
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
       COPY_CAPTURE_WITH_THIS
 
       { eventHandlerRegistry_->unregisterEventHandler(id); });
@@ -349,16 +346,17 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   const auto funPtr = std::make_shared<jsi::Function>(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
   const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
-  uiScheduler_->scheduleOnUI([=, this]() {
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
     jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
     const auto resultStr =
         obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
 
-    jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
-      const auto resultValue =
-          jsi::String::createFromUtf8(rnRuntime, resultStr);
-      funPtr->call(rnRuntime, resultValue);
-    });
+    workletsModuleProxy_->getJSScheduler()->scheduleOnJS(
+        [=](jsi::Runtime &rnRuntime) {
+          const auto resultValue =
+              jsi::String::createFromUtf8(rnRuntime, resultStr);
+          funPtr->call(rnRuntime, resultValue);
+        });
   });
   return jsi::Value::undefined();
 }
@@ -376,7 +374,7 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
 
   const int viewTagInt = viewTag.asNumber();
 
-  uiScheduler_->scheduleOnUI(
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
       COPY_CAPTURE_WITH_THIS
 
       () {
@@ -386,8 +384,8 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
         const auto resultValue =
             obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
         const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
-
-        jsScheduler_->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
+        const auto jsScheduler = workletsModuleProxy_->getJSScheduler();
+        jsScheduler->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
           const auto resultValue =
               jsi::String::createFromUtf8(rnRuntime, resultStr);
           funPtr->call(rnRuntime, resultValue);
@@ -855,7 +853,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         componentDescriptorRegistry,
         scheduler->getContextContainer(),
         uiWorkletRuntime_->getJSIRuntime(),
-        uiScheduler_);
+        workletsModuleProxy_->getUIScheduler());
   }
 }
 
