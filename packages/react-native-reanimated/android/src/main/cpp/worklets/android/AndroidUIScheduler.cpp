@@ -1,10 +1,10 @@
-#include <reanimated/android/AndroidUIScheduler.h>
+#include <worklets/android/AndroidUIScheduler.h>
 
 #include <android/log.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 
-namespace reanimated {
+namespace worklets {
 
 using namespace facebook;
 using namespace react;
@@ -57,4 +57,4 @@ void AndroidUIScheduler::registerNatives() {
   });
 }
 
-} // namespace reanimated
+} // namespace worklets

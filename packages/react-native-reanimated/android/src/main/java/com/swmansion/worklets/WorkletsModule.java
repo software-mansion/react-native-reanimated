@@ -13,7 +13,9 @@ import com.facebook.soloader.SoLoader;
 import com.swmansion.reanimated.NativeWorkletsModuleSpec;
 import java.util.Objects;
 
-/* * @noinspection JavaJniMissingFunction */
+/**
+ * @noinspection JavaJniMissingFunction
+ */
 @ReactModule(name = WorkletsModule.NAME)
 public class WorkletsModule extends NativeWorkletsModuleSpec {
   static {
@@ -30,16 +32,23 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   }
 
   private final WorkletsMessageQueueThread mMessageQueueThread = new WorkletsMessageQueueThread();
+  private final AndroidUIScheduler mAndroidUIScheduler;
+
+  public AndroidUIScheduler getAndroidUIScheduler() {
+    return mAndroidUIScheduler;
+  }
 
   @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
       long jsContext,
       String valueUnpackerCode,
       MessageQueueThread messageQueueThread,
-      CallInvokerHolderImpl jsCallInvokerHolder);
+      CallInvokerHolderImpl jsCallInvokerHolder,
+      AndroidUIScheduler androidUIScheduler);
 
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
+    mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
   }
 
   @OptIn(markerClass = FrameworkAPI.class)
@@ -50,7 +59,16 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
     var jsCallInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
 
     mHybridData =
-        initHybrid(jsContext, valueUnpackerCode, mMessageQueueThread, jsCallInvokerHolder);
+        initHybrid(
+            jsContext,
+            valueUnpackerCode,
+            mMessageQueueThread,
+            jsCallInvokerHolder,
+            mAndroidUIScheduler);
     return true;
+  }
+
+  public void invalidate() {
+    mAndroidUIScheduler.deactivate();
   }
 }

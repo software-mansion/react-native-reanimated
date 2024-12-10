@@ -5,15 +5,15 @@
 
 #import <memory>
 
-namespace reanimated {
+namespace worklets {
 
 using namespace facebook;
 using namespace react;
 using namespace worklets;
 
-class REAIOSUIScheduler : public UIScheduler {
+class IOSUIScheduler : public UIScheduler {
  public:
   void scheduleOnUI(std::function<void()> job) override;
 };
 
-} // namespace reanimated
+} // namespace worklets
