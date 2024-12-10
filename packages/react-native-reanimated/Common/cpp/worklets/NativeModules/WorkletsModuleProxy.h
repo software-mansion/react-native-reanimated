@@ -4,6 +4,7 @@
 #include <worklets/NativeModules/WorkletsModuleProxySpec.h>
 #include <worklets/Tools/JSScheduler.h>
 #include <worklets/Tools/SingleInstanceChecker.h>
+#include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <memory>
 #include <string>
@@ -16,7 +17,8 @@ class WorkletsModuleProxy : public WorkletsModuleProxySpec {
       const std::string &valueUnpackerCode,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<JSScheduler> &jsScheduler);
+      const std::shared_ptr<JSScheduler> &jsScheduler,
+      const std::shared_ptr<UIScheduler> &uiScheduler);
 
   ~WorkletsModuleProxy();
 
@@ -38,10 +40,15 @@ class WorkletsModuleProxy : public WorkletsModuleProxySpec {
     return jsScheduler_;
   }
 
+  [[nodiscard]] inline std::shared_ptr<UIScheduler> getUIScheduler() const {
+    return uiScheduler_;
+  }
+
  private:
   const std::string valueUnpackerCode_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
+  const std::shared_ptr<UIScheduler> uiScheduler_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG
