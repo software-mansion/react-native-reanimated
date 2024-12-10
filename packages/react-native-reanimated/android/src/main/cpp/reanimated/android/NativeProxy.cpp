@@ -1,7 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
-#include <reanimated/android/AndroidUIScheduler.h>
 #include <reanimated/android/NativeProxy.h>
 
 #include <worklets/Tools/ReanimatedJSIUtils.h>
@@ -9,6 +8,7 @@
 #include <worklets/WorkletRuntime/ReanimatedRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
+#include <worklets/android/AndroidUIScheduler.h>
 
 #include <android/log.h>
 #include <fbjni/fbjni.h>
@@ -31,7 +31,6 @@ NativeProxy::NativeProxy(
     const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
     jsi::Runtime *rnRuntime,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-    const std::shared_ptr<UIScheduler> &uiScheduler,
     jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
     const bool isBridgeless
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -46,7 +45,6 @@ NativeProxy::NativeProxy(
           workletsModuleProxy,
           *rnRuntime,
           jsCallInvoker,
-          uiScheduler,
           getPlatformDependentMethods(),
           isBridgeless,
           getIsReducedMotion())),
@@ -91,7 +89,6 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
     jlong jsContext,
     jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
         jsCallInvokerHolder,
-    jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
     jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
     bool isBridgeless
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -101,14 +98,12 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
 #endif
 ) {
   auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
-  auto uiScheduler = androidUiScheduler->cthis()->getUIScheduler();
   auto workletsModuleProxy = jWorkletsModule->cthis()->getWorkletsModuleProxy();
   return makeCxxInstance(
       jThis,
       workletsModuleProxy,
       (jsi::Runtime *)jsContext,
       jsCallInvoker,
-      uiScheduler,
       make_global(layoutAnimations),
       isBridgeless
 #ifdef RCT_NEW_ARCH_ENABLED

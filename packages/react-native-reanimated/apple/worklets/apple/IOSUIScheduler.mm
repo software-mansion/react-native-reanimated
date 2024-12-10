@@ -1,11 +1,11 @@
-#import <reanimated/apple/native/REAIOSUIScheduler.h>
+#import <worklets/apple/IOSUIScheduler.h>
 
-namespace reanimated {
+namespace worklets {
 
 using namespace facebook;
 using namespace react;
 
-void REAIOSUIScheduler::scheduleOnUI(std::function<void()> job)
+void IOSUIScheduler::scheduleOnUI(std::function<void()> job)
 {
   if ([NSThread isMainThread]) {
     job();
@@ -21,4 +21,4 @@ void REAIOSUIScheduler::scheduleOnUI(std::function<void()> job)
   }
 }
 
-} // namespace reanimated
+} // namespace worklets
