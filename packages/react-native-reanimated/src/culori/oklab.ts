@@ -1,3 +1,4 @@
+'use strict';
 import type { LabColor, RgbColor } from './Colors';
 
 import lrgb from './lrgb';

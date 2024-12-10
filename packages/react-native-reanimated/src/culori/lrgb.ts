@@ -1,3 +1,4 @@
+'use strict';
 import type { RgbColor } from './Colors';
 
 const channelFromLrgb = (c = 0) => {

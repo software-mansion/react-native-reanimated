@@ -60,12 +60,14 @@ export default function useInterpolateColorPlayground() {
     setCorrection(() => initialState.correction);
   };
 
+  // prettier-ignore
   const argsCode =
     (colorSpace === ColorSpace.RGB
       ? `gamma: ${gamma},`
       : (colorSpace === ColorSpace.HSV
         ? `useCorrectedHSVInterpolation: ${correction},`
         : ''));
+  // prettier-ignore
   const code = `
     interpolateColor(
         sv.value,

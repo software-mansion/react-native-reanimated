@@ -32,11 +32,7 @@ function hsvStarInterpolation(
   return interpolateColor(progress, [0, 1], [color1, color2], 'HSV');
 }
 
-function oklabInterpolation(
-  color1: string,
-  color2: string,
-  progress: number
-) {
+function oklabInterpolation(color1: string, color2: string, progress: number) {
   return interpolateColor(progress, [0, 1], [color1, color2], 'LAB');
 }
 

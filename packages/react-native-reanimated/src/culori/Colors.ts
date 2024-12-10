@@ -1,3 +1,5 @@
+'use strict';
+
 export interface LabColor {
   l: number;
   a: number;
