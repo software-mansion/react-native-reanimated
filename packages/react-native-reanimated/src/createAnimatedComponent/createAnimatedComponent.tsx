@@ -8,11 +8,10 @@ import type {
 } from 'react';
 import React from 'react';
 import { Platform } from 'react-native';
-import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import '../layoutReanimation/animationsManager';
 import invariant from 'invariant';
 import { adaptViewConfig } from '../ConfigHelper';
-import { RNRenderer } from '../platform-specific/RNRenderer';
+import { findHostInstance } from '../platform-specific/findHostInstance';
 import { enableLayoutAnimations } from '../core';
 import { SharedTransition, LayoutAnimationType } from '../layoutReanimation';
 import type { StyleProps, ShadowNodeWrapper } from '../commonTypes';
@@ -124,11 +123,10 @@ export function createAnimatedComponent(
   {
     _styles: StyleProps[] | null = null;
     _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
-    _componentViewTag = -1;
     _isFirstRender = true;
     jestInlineStyle: NestedArray<StyleProps> | undefined;
     jestAnimatedStyle: { value: StyleProps } = { value: {} };
-    _component: AnimatedComponentRef | HTMLElement | null = null;
+    _componentRef: AnimatedComponentRef | HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
     _jsPropsUpdater = new JSPropsUpdater();
     _InlinePropManager = new InlinePropManager();
@@ -156,7 +154,6 @@ export function createAnimatedComponent(
     }
 
     componentDidMount() {
-      this._componentViewTag = this._getComponentViewTag();
       if (!IS_WEB) {
         // It exists only on native platforms. We initialize it here because the ref to the animated component is available only post-mount
         this._NativeEventsManager = new NativeEventsManager(this, options);
@@ -173,7 +170,7 @@ export function createAnimatedComponent(
 
       if (IS_WEB) {
         if (this.props.exiting) {
-          saveSnapshot(this._component as HTMLElement);
+          saveSnapshot(this._componentRef as HTMLElement);
         }
 
         if (
@@ -189,11 +186,11 @@ export function createAnimatedComponent(
         if (!skipEntering) {
           startWebLayoutAnimation(
             this.props,
-            this._component as ReanimatedHTMLElement,
+            this._componentRef as ReanimatedHTMLElement,
             LayoutAnimationType.ENTERING
           );
         } else {
-          (this._component as HTMLElement).style.visibility = 'initial';
+          (this._componentRef as HTMLElement).style.visibility = 'initial';
         }
       }
 
@@ -209,7 +206,7 @@ export function createAnimatedComponent(
         this._configureSharedTransition(true);
       }
       this._sharedElementTransition?.unregisterTransition(
-        this._componentViewTag,
+        this.getComponentViewTag(),
         true
       );
 
@@ -217,7 +214,7 @@ export function createAnimatedComponent(
 
       if (
         IS_WEB &&
-        this._component &&
+        this._componentRef &&
         exiting &&
         !getReducedMotionFromConfig(exiting as CustomConfig)
       ) {
@@ -225,7 +222,7 @@ export function createAnimatedComponent(
 
         startWebLayoutAnimation(
           this.props,
-          this._component as ReanimatedHTMLElement,
+          this._componentRef as ReanimatedHTMLElement,
           LayoutAnimationType.EXITING
         );
       } else if (exiting && !IS_WEB && !isFabric()) {
@@ -236,7 +233,7 @@ export function createAnimatedComponent(
             : getReduceMotionFromConfig();
         if (!reduceMotionInExiting) {
           updateLayoutAnimations(
-            this._componentViewTag,
+            this.getComponentViewTag(),
             LayoutAnimationType.EXITING,
             maybeBuild(
               exiting,
@@ -248,31 +245,33 @@ export function createAnimatedComponent(
       }
     }
 
-    _getComponentViewTag() {
+    getComponentViewTag() {
       return this._getViewInfo().viewTag as number;
     }
 
     _detachStyles() {
-      if (this._componentViewTag !== -1 && this._styles !== null) {
+      const viewTag = this.getComponentViewTag();
+      if (viewTag !== -1 && this._styles !== null) {
         for (const style of this._styles) {
-          style.viewDescriptors.remove(this._componentViewTag);
+          style.viewDescriptors.remove(viewTag);
         }
         if (this.props.animatedProps?.viewDescriptors) {
-          this.props.animatedProps.viewDescriptors.remove(
-            this._componentViewTag
-          );
+          this.props.animatedProps.viewDescriptors.remove(viewTag);
         }
         if (isFabric()) {
-          removeFromPropsRegistry(this._componentViewTag);
+          removeFromPropsRegistry(viewTag);
         }
       }
     }
 
     _updateFromNative(props: StyleProps) {
       if (options?.setNativeProps) {
-        options.setNativeProps(this._component as AnimatedComponentRef, props);
+        options.setNativeProps(
+          this._componentRef as AnimatedComponentRef,
+          props
+        );
       } else {
-        (this._component as AnimatedComponentRef)?.setNativeProps?.(props);
+        (this._componentRef as AnimatedComponentRef)?.setNativeProps?.(props);
       }
     }
 
@@ -285,24 +284,22 @@ export function createAnimatedComponent(
       let viewName: string | null;
       let shadowNodeWrapper: ShadowNodeWrapper | null = null;
       let viewConfig;
-      // Component can specify ref which should be animated when animated version of the component is created.
-      // Otherwise, we animate the component itself.
-      const component = (this._component as AnimatedComponentRef)
-        ?.getAnimatableRef
-        ? (this._component as AnimatedComponentRef).getAnimatableRef?.()
-        : this;
 
       if (SHOULD_BE_USE_WEB) {
         // At this point I assume that `_setComponentRef` was already called and `_component` is set.
         // `this._component` on web represents HTMLElement of our component, that's why we use casting
-        viewTag = this._component as HTMLElement;
+        viewTag = this._componentRef as HTMLElement;
         viewName = null;
         shadowNodeWrapper = null;
         viewConfig = null;
       } else {
-        // hostInstance can be null for a component that doesn't render anything (render function returns null). Example: svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
-        const hostInstance = RNRenderer.findHostInstance_DEPRECATED(component);
+        const hostInstance = findHostInstance(this);
         if (!hostInstance) {
+          /* 
+            findHostInstance can return null for a component that doesn't render anything 
+            (render function returns null). Example: 
+            svg Stop: https://github.com/react-native-svg/react-native-svg/blob/develop/src/elements/Stop.tsx
+          */
           throw new ReanimatedError(
             'Cannot find host instance for this component. Maybe it renders nothing?'
           );
@@ -313,7 +310,7 @@ export function createAnimatedComponent(
         viewName = viewInfo.viewName;
         viewConfig = viewInfo.viewConfig;
         shadowNodeWrapper = isFabric()
-          ? getShadowNodeWrapperFromRef(this)
+          ? getShadowNodeWrapperFromRef(this, hostInstance)
           : null;
       }
       this._viewInfo = { viewTag, viewName, shadowNodeWrapper, viewConfig };
@@ -339,8 +336,6 @@ export function createAnimatedComponent(
       if (hasReanimated2Props && viewConfig) {
         adaptViewConfig(viewConfig);
       }
-
-      this._componentViewTag = viewTag as number;
 
       // remove old styles
       if (prevStyles) {
@@ -421,7 +416,7 @@ export function createAnimatedComponent(
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
       if (IS_WEB && this.props.exiting) {
-        saveSnapshot(this._component as HTMLElement);
+        saveSnapshot(this._componentRef as HTMLElement);
       }
 
       // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
@@ -433,7 +428,7 @@ export function createAnimatedComponent(
       ) {
         tryActivateLayoutTransition(
           this.props,
-          this._component as ReanimatedHTMLElement,
+          this._componentRef as ReanimatedHTMLElement,
           snapshot
         );
       }
@@ -452,7 +447,7 @@ export function createAnimatedComponent(
           )
         : undefined;
       updateLayoutAnimations(
-        this._componentViewTag,
+        this.getComponentViewTag(),
         LayoutAnimationType.LAYOUT,
         layout
       );
@@ -466,7 +461,7 @@ export function createAnimatedComponent(
       const { sharedTransitionTag } = this.props;
       if (!sharedTransitionTag) {
         this._sharedElementTransition?.unregisterTransition(
-          this._componentViewTag,
+          this.getComponentViewTag(),
           isUnmounting
         );
         this._sharedElementTransition = null;
@@ -477,12 +472,22 @@ export function createAnimatedComponent(
         this._sharedElementTransition ??
         new SharedTransition();
       sharedElementTransition.registerTransition(
-        this._componentViewTag,
+        this.getComponentViewTag(),
         sharedTransitionTag,
         isUnmounting
       );
       this._sharedElementTransition = sharedElementTransition;
     }
+
+    _resolveComponentRef = (ref: Component | HTMLElement | null) => {
+      const componentRef = ref as AnimatedComponentRef;
+      // Component can specify ref which should be animated when animated version of the component is created.
+      // Otherwise, we animate the component itself.
+      if (componentRef && componentRef.getAnimatableRef) {
+        return componentRef.getAnimatableRef();
+      }
+      return componentRef;
+    };
 
     _setComponentRef = setAndForwardRef<Component | HTMLElement>({
       getForwardedRef: () =>
@@ -490,21 +495,19 @@ export function createAnimatedComponent(
           Component<Record<string, unknown>, Record<string, unknown>, unknown>
         >,
       setLocalRef: (ref) => {
-        // TODO update config
-
-        const tag = findNodeHandle(ref as Component);
-
-        // callback refs are executed twice - when the component mounts with ref,
-        // and with null when it unmounts
-        if (tag !== null) {
-          this._componentViewTag = tag;
+        if (!ref) {
+          // component has been unmounted
+          return;
         }
+        if (ref !== this._componentRef) {
+          this._componentRef = this._resolveComponentRef(ref);
+          // if ref is changed, reset viewInfo
+          this._viewInfo = undefined;
+        }
+        const tag = this.getComponentViewTag();
 
         const { layout, entering, exiting, sharedTransitionTag } = this.props;
-        if (
-          (layout || entering || exiting || sharedTransitionTag) &&
-          tag != null
-        ) {
+        if (layout || entering || exiting || sharedTransitionTag) {
           if (!SHOULD_BE_USE_WEB) {
             enableLayoutAnimations(true, false);
           }
@@ -544,10 +547,6 @@ export function createAnimatedComponent(
             );
           }
         }
-
-        if (ref !== this._component) {
-          this._component = ref;
-        }
       },
     });
 
@@ -557,9 +556,9 @@ export function createAnimatedComponent(
     getSnapshotBeforeUpdate() {
       if (
         IS_WEB &&
-        (this._component as HTMLElement)?.getBoundingClientRect !== undefined
+        (this._componentRef as HTMLElement)?.getBoundingClientRect !== undefined
       ) {
-        return (this._component as HTMLElement).getBoundingClientRect();
+        return (this._componentRef as HTMLElement).getBoundingClientRect();
       }
 
       return null;
