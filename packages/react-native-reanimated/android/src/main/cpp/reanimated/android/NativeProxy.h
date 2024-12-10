@@ -1,11 +1,9 @@
 #pragma once
 
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
-#include <reanimated/android/AndroidUIScheduler.h>
 #include <reanimated/android/JNIHelper.h>
 #include <reanimated/android/LayoutAnimations.h>
 
-#include <worklets/Tools/UIScheduler.h>
 #include <worklets/android/WorkletsModule.h>
 
 #include <ReactCommon/CallInvokerHolder.h>
@@ -153,7 +151,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jlong jsContext,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
-      jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
       jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
       const bool isBridgeless
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -268,7 +265,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<UIScheduler> &uiScheduler,
       jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
       const bool isBridgeless
 #ifdef RCT_NEW_ARCH_ENABLED

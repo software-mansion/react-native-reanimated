@@ -41,7 +41,6 @@ public class NativeProxy extends NativeProxyCommon {
             workletsModule,
             Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             callInvokerHolder,
-            mAndroidUIScheduler,
             LayoutAnimations,
             context.isBridgeless(),
             fabricUIManager);
@@ -58,7 +57,6 @@ public class NativeProxy extends NativeProxyCommon {
       WorkletsModule workletsModule,
       long jsContext,
       CallInvokerHolderImpl jsCallInvokerHolder,
-      AndroidUIScheduler androidUIScheduler,
       LayoutAnimations LayoutAnimations,
       boolean isBridgeless,
       FabricUIManager fabricUIManager);

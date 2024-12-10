@@ -10,7 +10,7 @@
 
 #include <memory>
 
-namespace reanimated {
+namespace worklets {
 
 using namespace facebook;
 using namespace worklets;
@@ -18,7 +18,7 @@ using namespace worklets;
 class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/swmansion/reanimated/AndroidUIScheduler;";
+      "Lcom/swmansion/worklets/AndroidUIScheduler;";
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis);
   static void registerNatives();
@@ -41,4 +41,4 @@ class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
       jni::alias_ref<AndroidUIScheduler::jhybridobject> jThis);
 };
 
-} // namespace reanimated
+} // namespace worklets
