@@ -146,6 +146,7 @@
     "react-native-builder-bob": "0.33.1",
     "react-native-gesture-handler": "2.20.2",
     "react-native-web": "0.19.11",
+    "react-native-worklets": "workspace:*",
     "react-test-renderer": "18.2.0",
     "shelljs": "^0.8.5",
     "ts-prune": "^0.10.3",
@@ -178,6 +179,5 @@
     "./lib/module/core.js",
     "./lib/module/initializers.js",
     "./lib/module/index.js"
-  ],
-  "packageManager": "yarn@4.1.1"
+  ]
 }
