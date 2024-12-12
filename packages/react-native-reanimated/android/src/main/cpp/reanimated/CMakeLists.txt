@@ -49,11 +49,22 @@ set_target_properties(
 
 target_link_libraries(
     reanimated
-    react-native-worklets::worklets
     log
     ReactAndroid::jsi
     fbjni::fbjni
 )
+
+if(${HAS_EXTERNAL_WORKLETS})
+  target_link_libraries(
+      reanimated
+      react-native-worklets::worklets
+  )
+else()
+  target_link_libraries(
+      reanimated
+      worklets
+  )
+endif()
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
     target_link_libraries(

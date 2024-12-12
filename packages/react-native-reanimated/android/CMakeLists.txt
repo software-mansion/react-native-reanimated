@@ -45,7 +45,7 @@ set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")
 set(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")
 
-if(!${HAS_EXTERNAL_WORKLETS})
+if(NOT ${HAS_EXTERNAL_WORKLETS})
   add_subdirectory("${ANDROID_CPP_DIR}/worklets")
 endif()
 add_subdirectory("${ANDROID_CPP_DIR}/reanimated")
