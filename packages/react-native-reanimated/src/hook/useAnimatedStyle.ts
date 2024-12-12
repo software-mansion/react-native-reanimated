@@ -235,7 +235,7 @@ function styleUpdater(
         );
         if (finished) {
           if (Array.isArray(updates[propName])) {
-            updates[propName].forEach((obj) => {
+            updates[propName].forEach((obj: StyleProps) => {
               for (const prop in obj) {
                 last[propName][prop] = obj[prop];
               }
