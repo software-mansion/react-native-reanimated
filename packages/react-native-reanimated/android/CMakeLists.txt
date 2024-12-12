@@ -4,11 +4,7 @@ cmake_minimum_required(VERSION 3.8)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
-if(${REACT_NATIVE_MINOR_VERSION} GREATER_EQUAL 73)
-    set(CMAKE_CXX_STANDARD 20)
-else()
-    set(CMAKE_CXX_STANDARD 17)
-endif()
+set(CMAKE_CXX_STANDARD 20)
 
 # default CMAKE_CXX_FLAGS: "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security -fstack-protector-all"
 include("${REACT_NATIVE_DIR}/ReactAndroid/cmake-utils/folly-flags.cmake")

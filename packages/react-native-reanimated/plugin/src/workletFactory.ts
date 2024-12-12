@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import type { NodePath } from '@babel/core';
-import { transformSync, traverse } from '@babel/core';
+import { traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   File as BabelFile,
@@ -44,24 +44,10 @@ import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 import { buildWorkletString } from './workletStringCode';
+import { workletTransformSync } from './transform';
 
 const REAL_VERSION = require('../../package.json').version;
 const MOCK_VERSION = 'x.y.z';
-
-const workletStringTransformPresets = [
-  require.resolve('@babel/preset-typescript'),
-];
-
-const workletStringTransformPlugins = [
-  require.resolve('@babel/plugin-transform-shorthand-properties'),
-  require.resolve('@babel/plugin-transform-arrow-functions'),
-  require.resolve('@babel/plugin-transform-optional-chaining'),
-  require.resolve('@babel/plugin-transform-nullish-coalescing-operator'),
-  [
-    require.resolve('@babel/plugin-transform-template-literals'),
-    { loose: true },
-  ],
-];
 
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
@@ -91,10 +77,9 @@ export function makeWorkletFactory(
   codeObject.code =
     '(' + (fun.isObjectMethod() ? 'function ' : '') + codeObject.code + '\n)';
 
-  const transformed = transformSync(codeObject.code, {
+  const transformed = workletTransformSync(codeObject.code, {
+    extraPlugins,
     filename: state.file.opts.filename,
-    presets: workletStringTransformPresets,
-    plugins: workletStringTransformPlugins,
     ast: true,
     babelrc: false,
     configFile: false,
@@ -469,3 +454,14 @@ function makeArrayFromCapturedBindings(
 
   return Array.from(closure.values());
 }
+
+const extraPlugins = [
+  require.resolve('@babel/plugin-transform-shorthand-properties'),
+  require.resolve('@babel/plugin-transform-arrow-functions'),
+  require.resolve('@babel/plugin-transform-optional-chaining'),
+  require.resolve('@babel/plugin-transform-nullish-coalescing-operator'),
+  [
+    require.resolve('@babel/plugin-transform-template-literals'),
+    { loose: true },
+  ],
+];

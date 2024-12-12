@@ -43,12 +43,14 @@ describe('Test useDerivedValue changing width', () => {
     animate,
     animationType,
     deriveFunction,
+    compilerApi,
   }: {
     startWidth: number;
     finalWidth: number;
     animate: AnimationLocation;
     animationType: AnimationType;
     deriveFunction: (a: number) => number;
+    compilerApi: boolean;
   }) => {
     const basicValue = useSharedValue(startWidth);
     const componentRef = useTestRef(WIDTH_COMPONENT);
@@ -60,20 +62,30 @@ describe('Test useDerivedValue changing width', () => {
       if (animate === AnimationLocation.ANIMATED_STYLE) {
         return {
           width:
-            animationType === AnimationType.TIMING ? withTiming(derivedValue.value) : withSpring(derivedValue.value),
+            animationType === AnimationType.TIMING
+              ? withTiming(compilerApi ? derivedValue.get() : derivedValue.value)
+              : withSpring(compilerApi ? derivedValue.get() : derivedValue.value),
         };
       } else {
-        return { width: derivedValue.value };
+        return { width: compilerApi ? derivedValue.get() : derivedValue.value };
       }
     });
 
     useEffect(() => {
       if (animate === AnimationLocation.USE_EFFECT) {
-        basicValue.value = animationType === AnimationType.TIMING ? withTiming(finalWidth) : withSpring(finalWidth);
+        if (compilerApi) {
+          basicValue.set(animationType === AnimationType.TIMING ? withTiming(finalWidth) : withSpring(finalWidth));
+        } else {
+          basicValue.value = animationType === AnimationType.TIMING ? withTiming(finalWidth) : withSpring(finalWidth);
+        }
       } else {
-        basicValue.value = finalWidth;
+        if (compilerApi) {
+          basicValue.set(finalWidth);
+        } else {
+          basicValue.value = finalWidth;
+        }
       }
-    }, [basicValue, finalWidth, animate, animationType]);
+    }, [basicValue, finalWidth, animate, animationType, compilerApi]);
 
     return (
       <View style={styles.container}>
@@ -108,6 +120,7 @@ describe('Test useDerivedValue changing width', () => {
         finalWidth: number,
         animate: AnimationLocation,
         animationType: AnimationType,
+        compilerApi: boolean,
       ) {
         await mockAnimationTimer();
         const updatesContainerActive = await recordAnimationUpdates();
@@ -118,6 +131,7 @@ describe('Test useDerivedValue changing width', () => {
             animate={animate}
             animationType={animationType}
             deriveFunction={derivedFun}
+            compilerApi={compilerApi}
           />,
         );
         const testComponent = getTestComponent(WIDTH_COMPONENT);
@@ -129,68 +143,81 @@ describe('Test useDerivedValue changing width', () => {
         return [updates, naiveUpdates];
       }
 
-      test.each([
-        {
-          startWidth: 0,
-          finalWidth: 100,
-          animate: AnimationLocation.USE_EFFECT,
-          animationType: AnimationType.TIMING,
-        },
-        {
-          startWidth: 0,
-          finalWidth: 100,
-          animate: AnimationLocation.ANIMATED_STYLE,
-          animationType: AnimationType.TIMING,
-        },
-        {
-          startWidth: 0,
-          finalWidth: 100,
-          animate: AnimationLocation.ANIMATED_STYLE,
-          animationType: AnimationType.SPRING,
-        },
-        {
-          startWidth: 0,
-          finalWidth: 100,
-          animate: AnimationLocation.USE_EFFECT,
-          animationType: AnimationType.SPRING,
-        },
-        {
-          startWidth: 0,
-          finalWidth: 100,
-          animate: AnimationLocation.NONE,
-          animationType: AnimationType.NONE,
-        },
-        {
-          startWidth: 100,
-          finalWidth: 20,
-          animate: AnimationLocation.USE_EFFECT,
-          animationType: AnimationType.TIMING,
-        },
-        {
-          startWidth: 400,
-          finalWidth: 300,
-          animate: AnimationLocation.ANIMATED_STYLE,
-          animationType: AnimationType.TIMING,
-        },
-        {
-          startWidth: 20,
-          finalWidth: 100,
-          animate: AnimationLocation.ANIMATED_STYLE,
-          animationType: AnimationType.SPRING,
-        },
-        {
-          startWidth: 55.5,
-          finalWidth: 155.5,
-          animate: AnimationLocation.USE_EFFECT,
-          animationType: AnimationType.SPRING,
-        },
-        {
-          startWidth: 300,
-          finalWidth: 33,
-          animate: AnimationLocation.NONE,
-          animationType: AnimationType.NONE,
-        },
-      ])(
+      test.each(
+        [
+          {
+            startWidth: 0,
+            finalWidth: 100,
+            animate: AnimationLocation.USE_EFFECT,
+            animationType: AnimationType.TIMING,
+          },
+          {
+            startWidth: 0,
+            finalWidth: 100,
+            animate: AnimationLocation.ANIMATED_STYLE,
+            animationType: AnimationType.TIMING,
+          },
+          {
+            startWidth: 0,
+            finalWidth: 100,
+            animate: AnimationLocation.ANIMATED_STYLE,
+            animationType: AnimationType.SPRING,
+          },
+          {
+            startWidth: 0,
+            finalWidth: 100,
+            animate: AnimationLocation.USE_EFFECT,
+            animationType: AnimationType.SPRING,
+          },
+          {
+            startWidth: 0,
+            finalWidth: 100,
+            animate: AnimationLocation.NONE,
+            animationType: AnimationType.NONE,
+          },
+          {
+            startWidth: 100,
+            finalWidth: 20,
+            animate: AnimationLocation.USE_EFFECT,
+            animationType: AnimationType.TIMING,
+          },
+          {
+            startWidth: 400,
+            finalWidth: 300,
+            animate: AnimationLocation.ANIMATED_STYLE,
+            animationType: AnimationType.TIMING,
+          },
+          {
+            startWidth: 20,
+            finalWidth: 100,
+            animate: AnimationLocation.ANIMATED_STYLE,
+            animationType: AnimationType.SPRING,
+          },
+          {
+            startWidth: 55.5,
+            finalWidth: 155.5,
+            animate: AnimationLocation.USE_EFFECT,
+            animationType: AnimationType.SPRING,
+          },
+          {
+            startWidth: 300,
+            finalWidth: 33,
+            animate: AnimationLocation.NONE,
+            animationType: AnimationType.NONE,
+          },
+        ].reduce(
+          (acc, element) => {
+            return [...acc, { ...element, compilerApi: false }, { ...element, compilerApi: true }];
+          },
+          [] as {
+            startWidth: number;
+            finalWidth: number;
+            animate: AnimationLocation;
+            animationType: AnimationType;
+            compilerApi: boolean;
+          }[],
+        ),
+      )(
         'Animate from ${startWidth} to ${finalWidth}, ${animationType} ${animate}',
         async ({ startWidth, finalWidth, animate, animationType }) => {
           const snapshotIdPerType = {
@@ -212,6 +239,7 @@ describe('Test useDerivedValue changing width', () => {
             finalWidth,
             animate,
             animationType,
+            false,
           );
 
           expect(updates).toMatchSnapshots(snapshot[snapshotName]);

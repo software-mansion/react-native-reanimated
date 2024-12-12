@@ -1,6 +1,6 @@
 name: React Native nightly Reanimated build check [Nightly]
 env:
-  YARN_ENABLE_HARDENED_MODE: 0
+  YARN_ENABLE_IMMUTABLE_INSTALLS: 0
 on:
   pull_request:
     paths:
@@ -27,8 +27,8 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Setup Yarn
-        # Sometimes `npx react-native init` fails due to dependency mismatches or other
-        # rather vague errors. This is a workaround for that.
+        # Sometimes `npx @react-native-community/cli init` fails at random.
+        # Pre-installing it with Yarn seems to improve stability.
         run: corepack enable && yarn init
       - name: Set up JDK 18
         if: ${{ matrix.platform == 'Android' }}
@@ -41,24 +41,26 @@ jobs:
           if npm view react-native dist-tags | grep -q 'next:' ; then
             echo "REACT_NATIVE_TAG=next" >> $GITHUB_ENV
           fi
-      - name: Install React Native
-        run: yarn add react-native@${{ env.REACT_NATIVE_TAG }}
+      - name: Install React Native CLI
+        run: yarn add @react-native-community/cli
       - name: Create app
-        run: |
-          yarn react-native init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }} --pm yarn --skip-install --install-pods false --skip-git-init
-      - name: Add yarn.lock in app
+        run: yarn rnc-cli init ${{ env.APP_NAME }} --version ${{ env.REACT_NATIVE_TAG }} --pm yarn --skip-install --install-pods false --skip-git-init
+      - name: Setup Yarn Modern in app
         working-directory: ${{ env.APP_NAME }}
-        run: touch yarn.lock
+        run: |
+          touch yarn.lock
+          yarn set version berry
+          yarn config set nodeLinker node-modules
       - name: Install Reanimated
         working-directory: ${{ env.APP_NAME }}
-        run: yarn add react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#commit=${{ github.sha }}
+        run: yarn add "react-native-reanimated@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-reanimated&commit=${{ github.sha }}"
       - name: Install Paper Pods (iOS)
         if: ${{ matrix.react-native-architecture == 'Paper' && matrix.platform == 'iOS' }}
-        working-directory: app/ios
+        working-directory: ${{ env.APP_NAME }}/ios
         run: bundle install && bundle exec pod install
       - name: Install Fabric Pods (iOS)
         if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'iOS' }}
-        working-directory: app/ios
+        working-directory: ${{ env.APP_NAME }}/ios
         run: RCT_NEW_ARCH_ENABLED=1 bundle install && bundle exec pod install
       - name: Setup Fabric (Android)
         if: ${{ matrix.react-native-architecture == 'Fabric' && matrix.platform == 'Android' }}
@@ -67,7 +69,7 @@ jobs:
       - name: Build app (iOS)
         if: ${{ matrix.platform == 'iOS' }}
         working-directory: ${{ env.APP_NAME }}
-        run: yarn react-native run-ios --simulator='iPhone 14'
+        run: yarn react-native run-ios --terminal='Terminal'
       - name: Build app (Android)
         if: ${{ matrix.platform == 'Android' }}
         working-directory: ${{ env.APP_NAME }}/android

@@ -5,6 +5,209 @@ import type {
   TransformsStyle,
   ImageStyle,
 } from 'react-native';
+import type { WorkletsModuleProxy } from './worklets';
+import type { ReanimatedModuleProxy } from './ReanimatedModule';
+
+export interface IWorkletsModule extends WorkletsModuleProxy {}
+
+export interface IReanimatedModule
+  extends Omit<ReanimatedModuleProxy, 'getViewProp'> {
+  getViewProp<TValue>(
+    viewTag: number,
+    propName: string,
+    component: React.Component | undefined,
+    callback?: (result: TValue) => void
+  ): Promise<TValue>;
+}
+
+export type LayoutAnimationsOptions =
+  | 'originX'
+  | 'originY'
+  | 'width'
+  | 'height'
+  | 'borderRadius'
+  | 'globalOriginX'
+  | 'globalOriginY';
+
+type CurrentLayoutAnimationsValues = {
+  [K in LayoutAnimationsOptions as `current${Capitalize<string & K>}`]: number;
+};
+
+type TargetLayoutAnimationsValues = {
+  [K in LayoutAnimationsOptions as `target${Capitalize<string & K>}`]: number;
+};
+
+interface WindowDimensions {
+  windowWidth: number;
+  windowHeight: number;
+}
+
+export interface KeyframeProps extends StyleProps {
+  easing?: EasingFunction;
+}
+
+type FirstFrame =
+  | {
+      0: KeyframeProps & { easing?: never };
+      from?: never;
+    }
+  | {
+      0?: never;
+      from: KeyframeProps & { easing?: never };
+    };
+
+type LastFrame =
+  | { 100?: KeyframeProps; to?: never }
+  | { 100?: never; to: KeyframeProps };
+
+export type ValidKeyframeProps = FirstFrame &
+  LastFrame &
+  Record<number, KeyframeProps>;
+
+export type MaybeInvalidKeyframeProps = Record<number, KeyframeProps> & {
+  to?: KeyframeProps;
+  from?: KeyframeProps;
+};
+
+export type LayoutAnimation = {
+  initialValues: StyleProps;
+  animations: StyleProps;
+  callback?: (finished: boolean) => void;
+};
+
+export type AnimationFunction = (a?: any, b?: any, c?: any) => any; // this is just a temporary mock
+
+export type EntryAnimationsValues = TargetLayoutAnimationsValues &
+  WindowDimensions;
+
+export type ExitAnimationsValues = CurrentLayoutAnimationsValues &
+  WindowDimensions;
+
+export type EntryExitAnimationFunction =
+  | ((targetValues: EntryAnimationsValues) => LayoutAnimation)
+  | ((targetValues: ExitAnimationsValues) => LayoutAnimation)
+  | (() => LayoutAnimation);
+
+export type AnimationConfigFunction<T> = (targetValues: T) => LayoutAnimation;
+
+export type LayoutAnimationsValues = CurrentLayoutAnimationsValues &
+  TargetLayoutAnimationsValues &
+  WindowDimensions;
+
+export interface SharedTransitionAnimationsValues
+  extends LayoutAnimationsValues {
+  currentTransformMatrix: number[];
+  targetTransformMatrix: number[];
+}
+
+export type SharedTransitionAnimationsFunction = (
+  values: SharedTransitionAnimationsValues
+) => LayoutAnimation;
+
+export enum LayoutAnimationType {
+  ENTERING = 1,
+  EXITING = 2,
+  LAYOUT = 3,
+  SHARED_ELEMENT_TRANSITION = 4,
+  SHARED_ELEMENT_TRANSITION_PROGRESS = 5,
+}
+
+export type LayoutAnimationFunction = (
+  targetValues: LayoutAnimationsValues
+) => LayoutAnimation;
+
+export type LayoutAnimationStartFunction = (
+  tag: number,
+  type: LayoutAnimationType,
+  yogaValues: Partial<SharedTransitionAnimationsValues>,
+  config: (arg: Partial<SharedTransitionAnimationsValues>) => LayoutAnimation
+) => void;
+
+export interface ILayoutAnimationBuilder {
+  build: () => LayoutAnimationFunction;
+}
+
+export interface BaseLayoutAnimationConfig {
+  duration?: number;
+  easing?: EasingFunction;
+  type?: AnimationFunction;
+  damping?: number;
+  dampingRatio?: number;
+  mass?: number;
+  stiffness?: number;
+  overshootClamping?: number;
+  restDisplacementThreshold?: number;
+  restSpeedThreshold?: number;
+}
+
+export interface BaseBuilderAnimationConfig extends BaseLayoutAnimationConfig {
+  rotate?: number | string;
+}
+
+export type LayoutAnimationAndConfig = [
+  AnimationFunction,
+  BaseBuilderAnimationConfig,
+];
+
+export interface IEntryExitAnimationBuilder {
+  build: () => EntryExitAnimationFunction;
+}
+
+export interface IEntryAnimationBuilder {
+  build: () => AnimationConfigFunction<EntryAnimationsValues>;
+}
+
+export interface IExitAnimationBuilder {
+  build: () => AnimationConfigFunction<ExitAnimationsValues>;
+}
+
+export type ProgressAnimationCallback = (
+  viewTag: number,
+  progress: number
+) => void;
+
+export type ProgressAnimation = (
+  viewTag: number,
+  values: SharedTransitionAnimationsValues,
+  progress: number
+) => void;
+
+export type CustomProgressAnimation = (
+  values: SharedTransitionAnimationsValues,
+  progress: number
+) => StyleProps;
+
+/**
+ * Used to configure the `.defaultTransitionType()` shared transition modifier.
+ *
+ * @experimental
+ */
+export enum SharedTransitionType {
+  ANIMATION = 'animation',
+  PROGRESS_ANIMATION = 'progressAnimation',
+}
+
+export type EntryExitAnimationsValues =
+  | EntryAnimationsValues
+  | ExitAnimationsValues;
+
+export type StylePropsWithArrayTransform = StyleProps & {
+  transform?: TransformArrayItem[];
+};
+
+export interface LayoutAnimationBatchItem {
+  viewTag: number;
+  type: LayoutAnimationType;
+  config:
+    | ShareableRef<
+        | Keyframe
+        | LayoutAnimationFunction
+        | SharedTransitionAnimationsFunction
+        | ProgressAnimationCallback
+      >
+    | undefined;
+  sharedTransitionTag?: string;
+}
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
 export interface StyleProps extends ViewStyle, TextStyle {
@@ -124,10 +327,22 @@ interface WorkletBaseDev extends WorkletBaseCommon {
   __stackDetails?: WorkletStackDetails;
 }
 
+export type WorkletFunctionDev<
+  Args extends unknown[] = unknown[],
+  ReturnValue = unknown,
+> = ((...args: Args) => ReturnValue) & WorkletBaseDev;
+
+type WorkletFunctionRelease<
+  Args extends unknown[] = unknown[],
+  ReturnValue = unknown,
+> = ((...args: Args) => ReturnValue) & WorkletBaseRelease;
+
 export type WorkletFunction<
   Args extends unknown[] = unknown[],
   ReturnValue = unknown,
-> = ((...args: Args) => ReturnValue) & (WorkletBaseRelease | WorkletBaseDev);
+> =
+  | WorkletFunctionDev<Args, ReturnValue>
+  | WorkletFunctionRelease<Args, ReturnValue>;
 
 /**
  * This function allows you to determine if a given function is a worklet. It
@@ -150,10 +365,8 @@ export type WorkletFunction<
  *
  * ### Maintainer note
  *
- * This function works well on the JS thread performance-wise, since the JIT can
- * inline it. However, on other threads it will not get optimized and we will
- * get a function call overhead. We want to change it in the future, but it's
- * not feasible at the moment.
+ * This function is supposed to be used only in the React Runtime. It always
+ * returns `false` in Worklet Runtimes.
  */
 export function isWorkletFunction<
   Args extends unknown[] = unknown[],
@@ -163,7 +376,9 @@ export function isWorkletFunction<
   'worklet';
   // Since host objects always return true for `in` operator, we have to use dot notation to check if the property exists.
   // See https://github.com/facebook/hermes/blob/340726ef8cf666a7cce75bc60b02fa56b3e54560/lib/VM/JSObject.cpp#L1276.
+
   return (
+    // `__workletHash` isn't extracted in Worklet Runtimes.
     typeof value === 'function' &&
     !!(value as unknown as Record<string, unknown>).__workletHash
   );
