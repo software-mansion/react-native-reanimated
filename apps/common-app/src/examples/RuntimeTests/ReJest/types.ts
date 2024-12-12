@@ -59,11 +59,19 @@ export type TestSuite = {
   decorator?: DescribeDecorator | null;
 };
 
-export type ValidPropNames = 'zIndex' | 'opacity' | 'width' | 'height' | 'top' | 'left' | 'backgroundColor';
+export type ValidPropNames =
+  | 'zIndex'
+  | 'opacity'
+  | 'width'
+  | 'height'
+  | 'top'
+  | 'left'
+  | 'backgroundColor'
+  | 'boxShadow';
 
 export function isValidPropName(propName: string): propName is ValidPropNames {
   'worklet';
-  return ['zIndex', 'opacity', 'width', 'height', 'top', 'left', 'backgroundColor'].includes(propName);
+  return ['zIndex', 'opacity', 'width', 'height', 'top', 'left', 'backgroundColor', 'boxShadow'].includes(propName);
 }
 
 export enum ComparisonMode {
