@@ -4,7 +4,7 @@
 'use strict';
 
 import type { BoxShadowValue, OpaqueColorValue } from 'react-native';
-import { StyleProps } from '.';
+import type { StyleProps } from '.';
 
 function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
   'worklet';
@@ -76,7 +76,7 @@ function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
       }
     }
 
-    if (offsetX == null || offsetY == null) {
+    if (offsetX === null || offsetY === null) {
       return [];
     }
 
@@ -120,7 +120,7 @@ export function processBoxShadow(props: StyleProps) {
 
   const rawBoxShadows = props.boxShadow;
 
-  if (rawBoxShadows == '') {
+  if (rawBoxShadows === '') {
     return result;
   }
 
@@ -142,7 +142,7 @@ export function processBoxShadow(props: StyleProps) {
             typeof rawBoxShadow.offsetX === 'string'
               ? parseLength(rawBoxShadow.offsetX)
               : rawBoxShadow.offsetX;
-          if (value == null) {
+          if (value === null) {
             return [];
           }
 
@@ -153,7 +153,7 @@ export function processBoxShadow(props: StyleProps) {
             typeof rawBoxShadow.offsetY === 'string'
               ? parseLength(rawBoxShadow.offsetY)
               : rawBoxShadow.offsetY;
-          if (value == null) {
+          if (value === null) {
             return [];
           }
 
@@ -164,7 +164,7 @@ export function processBoxShadow(props: StyleProps) {
             typeof rawBoxShadow.spreadDistance === 'string'
               ? parseLength(rawBoxShadow.spreadDistance)
               : rawBoxShadow.spreadDistance;
-          if (value == null) {
+          if (value === null) {
             return [];
           }
 
@@ -175,7 +175,7 @@ export function processBoxShadow(props: StyleProps) {
             typeof rawBoxShadow.blurRadius === 'string'
               ? parseLength(rawBoxShadow.blurRadius)
               : (rawBoxShadow.blurRadius as number);
-          if (value == null || value < 0) {
+          if (value === null || value < 0) {
             return [];
           }
 
