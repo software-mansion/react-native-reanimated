@@ -8,8 +8,6 @@ void RNRuntimeDecorator::decorate(
     jsi::Runtime &rnRuntime,
     jsi::Runtime &uiRuntime,
     const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy) {
-  rnRuntime.global().setProperty(rnRuntime, "_WORKLET", false);
-
   auto workletRuntimeValue =
       rnRuntime.global()
           .getPropertyAsObject(rnRuntime, "ArrayBuffer")
