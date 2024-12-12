@@ -151,7 +151,11 @@ function runAnimations(
         animation.callback && animation.callback(true /* finished */);
       }
     }
-    result[key] = animation.current;
+    if (typeof animation.current === 'object') {
+      result[key] = { ...animation.current };
+    } else {
+      result[key] = animation.current;
+    }
     return finished;
   } else if (typeof animation === 'object') {
     result[key] = {};
@@ -193,7 +197,7 @@ function styleUpdater(
   let frameTimestamp: number | undefined;
   let hasNonAnimatedValues = false;
   if (typeof newValues.boxShadow === 'string') {
-    processBoxShadow(newValues);
+    newValues.boxShadow = processBoxShadow(newValues.boxShadow);
   }
   for (const key in newValues) {
     const value = newValues[key];
@@ -230,7 +234,15 @@ function styleUpdater(
           animationsActive
         );
         if (finished) {
-          last[propName] = updates[propName];
+          if (Array.isArray(updates[propName])) {
+            updates[propName].forEach((obj) => {
+              for (const prop in obj) {
+                last[propName][prop] = obj[prop];
+              }
+            });
+          } else {
+            last[propName] = updates[propName];
+          }
           delete animations[propName];
         } else {
           allFinished = false;
