@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Pressable, type ViewStyle, Text } from 'react-native';
+import { View, Pressable, Text } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
 import Animated, {
   interpolate,
@@ -13,7 +13,7 @@ import { processBoxShadow } from '../src/processBoxShadow';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const AnimatedComponent = () => {
-  const pressed = useSharedValue<number>(0);
+  const pressed = useSharedValue(0);
 
   const animatedBoxShadow = useAnimatedStyle(() => {
     const blurRadius = interpolate(pressed.value, [0, 1], [10, 0]);
