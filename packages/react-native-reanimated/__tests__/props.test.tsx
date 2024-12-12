@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Pressable, ViewStyle, Text } from 'react-native';
+import { View, Pressable, type ViewStyle, Text } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
 import Animated, {
   interpolate,
