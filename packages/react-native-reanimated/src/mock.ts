@@ -87,7 +87,11 @@ const hook = {
   useAnimatedReaction: NOOP,
   useAnimatedRef: () => ({ current: null }),
   useAnimatedScrollHandler: NOOP_FACTORY,
-  useDerivedValue: <Value>(processor: () => Value) => ({ value: processor() }),
+  useDerivedValue: <Value>(processor: () => Value) => {
+    const result = processor();
+
+    return { value: result, get: () => result };
+  },
   useAnimatedSensor: () => ({
     sensor: {
       value: {
