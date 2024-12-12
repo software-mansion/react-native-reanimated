@@ -4,7 +4,7 @@
 'use strict';
 
 import type { BoxShadowValue, OpaqueColorValue } from 'react-native';
-import type { StyleProps } from '.';
+import { StyleProps } from '.';
 
 function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {
   'worklet';
@@ -118,7 +118,15 @@ export function processBoxShadow(props: StyleProps) {
   'worklet';
   const result: Array<ParsedBoxShadow> = [];
 
-  const boxShadowList = parseBoxShadowString(props.boxShadow as string);
+  const rawBoxShadows = props.boxShadow;
+
+  if (rawBoxShadows == '') {
+    return result;
+  }
+
+  const boxShadowList = parseBoxShadowString(
+    (rawBoxShadows as string).replace(/\n/g, ' ')
+  );
 
   for (const rawBoxShadow of boxShadowList) {
     const parsedBoxShadow: ParsedBoxShadow = {
