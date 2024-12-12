@@ -197,7 +197,7 @@ function styleUpdater(
   let frameTimestamp: number | undefined;
   let hasNonAnimatedValues = false;
   if (typeof newValues.boxShadow === 'string') {
-    newValues.boxShadow = processBoxShadow(newValues.boxShadow);
+    processBoxShadow(newValues);
   }
   for (const key in newValues) {
     const value = newValues[key];
