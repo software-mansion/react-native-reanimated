@@ -1480,7 +1480,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (3.17.0-rc.0):
+  - RNReanimated (3.17.0-rc.1):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1500,10 +1500,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 3.17.0-rc.0)
-    - RNReanimated/worklets (= 3.17.0-rc.0)
+    - RNReanimated/reanimated (= 3.17.0-rc.1)
+    - RNReanimated/worklets (= 3.17.0-rc.1)
     - Yoga
-  - RNReanimated/reanimated (3.17.0-rc.0):
+  - RNReanimated/reanimated (3.17.0-rc.1):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1523,9 +1523,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 3.17.0-rc.0)
+    - RNReanimated/reanimated/apple (= 3.17.0-rc.1)
     - Yoga
-  - RNReanimated/reanimated/apple (3.17.0-rc.0):
+  - RNReanimated/reanimated/apple (3.17.0-rc.1):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1546,7 +1546,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated/worklets (3.17.0-rc.0):
+  - RNReanimated/worklets (3.17.0-rc.1):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1566,9 +1566,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/apple (= 3.17.0-rc.0)
+    - RNReanimated/worklets/apple (= 3.17.0-rc.1)
     - Yoga
-  - RNReanimated/worklets/apple (3.17.0-rc.0):
+  - RNReanimated/worklets/apple (3.17.0-rc.1):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1865,7 +1865,7 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: ec53e44dc3e75b44aa2a9f37618a49c3bc080a7a
   RNCPicker: d162737e03e48797110dbb60e5ddc03012e87e0b
   RNGestureHandler: 82f59e40580e0c2f8262552c149716511131b412
-  RNReanimated: 4c39889e5eb0676e194de5c2ff91b1d0e692c2e1
+  RNReanimated: 64d50a254825191a2773d2092b90ec38275ce678
   RNSVG: 8b1a777d54096b8c2a0fd38fc9d5a454332bbb4d
   SocketRocket: 9ee265c4b5ae2382d18e4ee1d2dd2d7af0ff1ab5
   Yoga: 446e6f351a519539ff00a1159fe41e589aab1b94
