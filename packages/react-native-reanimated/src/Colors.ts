@@ -690,7 +690,6 @@ export function processColorsInProps(props: StyleProps) {
       NestedColorProperties[key as keyof typeof NestedColorProperties]
     ) {
       const nestedPropGroup = props[key] as StyleProps;
-      // most of the time there is only one nested prop in boxShadow array
       for (const groupKey in nestedPropGroup) {
         const nestedProp = nestedPropGroup[groupKey] as StyleProps;
 
