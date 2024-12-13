@@ -21,22 +21,43 @@ WorkletsModule::WorkletsModule(
     jni::alias_ref<WorkletsModule::javaobject> jThis,
     jsi::Runtime *rnRuntime,
     const std::string &valueUnpackerCode,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread)
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
+    const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
+    const std::shared_ptr<UIScheduler> &uiScheduler)
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
-      nativeWorkletsModule_(std::make_shared<NativeWorkletsModule>(
+      workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
           valueUnpackerCode,
-          std::make_shared<JMessageQueueThread>(messageQueueThread))) {
-  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, nativeWorkletsModule_);
+          std::make_shared<JMessageQueueThread>(messageQueueThread),
+          jsCallInvoker,
+          jsScheduler,
+          uiScheduler)) {
+  RNRuntimeWorkletDecorator::decorate(*rnRuntime_, workletsModuleProxy_);
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
     jni::alias_ref<jhybridobject> jThis,
     jlong jsContext,
     const std::string &valueUnpackerCode,
-    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread) {
+    jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+    jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
+        jsCallInvokerHolder,
+    jni::alias_ref<worklets::AndroidUIScheduler::javaobject>
+        androidUIScheduler) {
+  auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
+  auto rnRuntime = reinterpret_cast<jsi::Runtime *>(jsContext);
+  auto jsScheduler =
+      std::make_shared<worklets::JSScheduler>(*rnRuntime, jsCallInvoker);
+  auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
   return makeCxxInstance(
-      jThis, (jsi::Runtime *)jsContext, valueUnpackerCode, messageQueueThread);
+      jThis,
+      rnRuntime,
+      valueUnpackerCode,
+      messageQueueThread,
+      jsCallInvoker,
+      jsScheduler,
+      uiScheduler);
 }
 
 void WorkletsModule::registerNatives() {

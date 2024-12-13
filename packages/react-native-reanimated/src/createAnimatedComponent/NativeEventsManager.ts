@@ -39,7 +39,7 @@ export class NativeEventsManager implements INativeEventsManager {
   public updateEvents(
     prevProps: AnimatedComponentProps<InitialComponentProps>
   ) {
-    const computedEventTag = this.getEventViewTag();
+    const computedEventTag = this.getEventViewTag(true);
     // If the event view tag changes, we need to completely re-mount all events
     if (this.#eventViewTag !== computedEventTag) {
       // Remove all bindings from previous props that ran on the old viewTag
@@ -77,23 +77,54 @@ export class NativeEventsManager implements INativeEventsManager {
     });
   }
 
-  private getEventViewTag() {
+  private getEventViewTag(componentUpdate: boolean = false) {
     // Get the tag for registering events - since the event emitting view can be nested inside the main component
     const componentAnimatedRef = this.#managedComponent
-      ._component as AnimatedComponentRef;
-    let newTag: number;
+      ._componentRef as AnimatedComponentRef & {
+      // Fabric
+      __nativeTag?: number;
+      // Paper
+      _nativeTag?: number;
+    };
     if (componentAnimatedRef.getScrollableNode) {
+      /*
+        In most cases, getScrollableNode() returns a view tag, and findNodeHandle is not required. 
+        However, to cover more exotic list cases, we will continue to use findNodeHandle 
+        for consistency. For numerical values, findNodeHandle should return the value immediately, 
+        as documented here: https://github.com/facebook/react/blob/91061073d57783c061889ac6720ef1ab7f0c2149/packages/react-native-renderer/src/ReactNativePublicCompat.js#L113
+      */
       const scrollableNode = componentAnimatedRef.getScrollableNode();
-      newTag = findNodeHandle(scrollableNode) ?? -1;
-    } else {
-      newTag =
-        findNodeHandle(
-          this.#componentOptions?.setNativeProps
-            ? this.#managedComponent
-            : componentAnimatedRef
-        ) ?? -1;
+      if (typeof scrollableNode === 'number') {
+        return scrollableNode;
+      }
+      return findNodeHandle(scrollableNode) ?? -1;
     }
-    return newTag;
+    if (this.#componentOptions?.setNativeProps) {
+      // This case ensures backward compatibility with components that
+      // have their own setNativeProps method passed as an option.
+      return findNodeHandle(this.#managedComponent) ?? -1;
+    }
+    if (!componentUpdate) {
+      // On the first render of a component, we may already receive a resolved view tag.
+      return this.#managedComponent.getComponentViewTag();
+    }
+    if (componentAnimatedRef.__nativeTag || componentAnimatedRef._nativeTag) {
+      /*
+        Fast path for native refs,
+        _nativeTag is used by Paper components,
+        __nativeTag is used by Fabric components.
+      */
+      return (
+        componentAnimatedRef.__nativeTag ??
+        componentAnimatedRef._nativeTag ??
+        -1
+      );
+    }
+    /*
+      When a component is updated, a child could potentially change and have a different 
+      view tag. This can occur with a GestureDetector component.
+    */
+    return findNodeHandle(componentAnimatedRef) ?? -1;
   }
 }
 
