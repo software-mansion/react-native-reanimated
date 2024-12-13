@@ -77,6 +77,10 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsUnmountedRecursive(
   }
 
   auto shadowNode = std::const_pointer_cast<ShadowNode>(oldShadowNode);
+  auto layoutableShadowNode = std::dynamic_pointer_cast<LayoutableShadowNode>(shadowNode);
+  if (layoutableShadowNode){
+    layoutableShadowNode->dirtyLayout();
+  }
 
   const auto family = &shadowNode->getFamily();
   const auto affectedChildrenIt = childrenMap.find(family);
