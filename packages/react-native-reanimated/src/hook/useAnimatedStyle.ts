@@ -151,6 +151,11 @@ function runAnimations(
         animation.callback && animation.callback(true /* finished */);
       }
     }
+    /*
+     * If `animation.current` is an object, spread its properties into a new object
+     * to avoid modifying the original reference. This ensures when `newValues` has a nested color prop, it stays unparsed
+     * in rgba format, allowing the animation to run correctly.
+     */
     if (typeof animation.current === 'object') {
       result[key] = { ...animation.current };
     } else {
