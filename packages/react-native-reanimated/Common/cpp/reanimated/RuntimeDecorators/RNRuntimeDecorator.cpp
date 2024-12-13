@@ -1,4 +1,3 @@
-#include <jsi/jsi.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <worklets/Tools/ReanimatedVersion.h>
 
