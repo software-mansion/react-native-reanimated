@@ -180,6 +180,5 @@
     "./lib/module/core.js",
     "./lib/module/initializers.js",
     "./lib/module/index.js"
-  ],
-  "packageManager": "yarn@4.1.1"
+  ]
 }
