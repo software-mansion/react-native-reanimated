@@ -1,5 +1,6 @@
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/JSISerializer.h>
+#include <worklets/Tools/PlatformLogger.h>
 #include <worklets/Tools/ReanimatedJSIUtils.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeDecorator.h>
@@ -75,6 +76,11 @@ void WorkletRuntimeDecorator::decorate(
           1,
           evalWithSourceUrl));
 #endif // NDEBUG
+
+  jsi_utils::installJsiFunction(
+      rt, "_log", [](jsi::Runtime &rt, const jsi::Value &value) {
+        PlatformLogger::log(stringifyJSIValue(rt, value));
+      });
 
   jsi_utils::installJsiFunction(
       rt, "_toString", [](jsi::Runtime &rt, const jsi::Value &value) {

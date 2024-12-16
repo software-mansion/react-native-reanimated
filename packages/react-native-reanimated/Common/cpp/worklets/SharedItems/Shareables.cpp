@@ -47,7 +47,12 @@ jsi::Value makeShareableClone(
   if (value.isObject()) {
     auto object = value.asObject(rt);
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
-      shareable = std::make_shared<ShareableWorklet>(rt, object);
+      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+        shareable =
+            std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
+      } else {
+        shareable = std::make_shared<ShareableWorklet>(rt, object);
+      }
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       shareable = std::make_shared<ShareableHandle>(rt, object);
     } else if (object.isFunction(rt)) {
@@ -284,7 +289,12 @@ jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
       remoteRuntime_ = &rt;
     }
   }
-  return jsi::Value(rt, *remoteValue_);
+  if (&rt == remoteRuntime_) {
+    return jsi::Value(rt, *remoteValue_);
+  }
+  auto initObj = initializer_->toJSValue(rt);
+  return getValueUnpacker(rt).call(
+      rt, initObj, jsi::String::createFromAscii(rt, "Handle"));
 }
 
 jsi::Value ShareableString::toJSValue(jsi::Runtime &rt) {
