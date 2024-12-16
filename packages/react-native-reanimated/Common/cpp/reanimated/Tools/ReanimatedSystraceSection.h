@@ -11,7 +11,7 @@
 #include <os/log.h>
 #include <os/signpost.h>
 #include <sstream>
-#endif
+#endif // OS_LOG_TARGET_HAS_10_15_FEATURES
 
 #elif defined(ANDROID)
 
