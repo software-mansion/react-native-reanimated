@@ -38,7 +38,6 @@ struct ReanimatedSystraceSection {
     ATrace_endSection();
   }
 
- private:
 };
 
 // The apple part is copied from React Native
