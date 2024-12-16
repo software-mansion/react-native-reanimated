@@ -131,6 +131,6 @@ struct ReanimatedSystraceSection {
       ConvertsToStringPiece &&...args) {}
 };
 
-#endif
+#endif // defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES && defined(REANIMATED_PROFILING)
 
 } // namespace reanimated
