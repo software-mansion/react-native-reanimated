@@ -19,7 +19,7 @@
 
 #endif // defined(ANDROID)
 
-#endif
+#endif // REANIMATED_PROFILING
 
 namespace reanimated {
 
