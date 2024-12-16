@@ -17,7 +17,7 @@
 
 #include <android/trace.h>
 
-#endif
+#endif // defined(ANDROID)
 
 #endif
 
