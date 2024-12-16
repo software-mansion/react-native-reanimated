@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <worklets/NativeModules/NativeWorkletsModule.h>
+#include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <memory>
 
 using namespace facebook;
@@ -13,7 +13,7 @@ class RNRuntimeWorkletDecorator {
  public:
   static void decorate(
       jsi::Runtime &rnRuntime,
-      const std::shared_ptr<NativeWorkletsModule> &nativeWorkletsModule);
+      const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy);
 };
 
 } // namespace worklets

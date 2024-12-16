@@ -13,7 +13,6 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
-import com.swmansion.reanimated.AndroidUIScheduler;
 import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.reanimated.DevMenuUtils;
 import com.swmansion.reanimated.NativeProxy;
@@ -34,6 +33,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * @noinspection JavaJniMissingFunction
+ */
 public abstract class NativeProxyCommon {
   static {
     SoLoader.loadLibrary("reanimated");
@@ -42,7 +44,6 @@ public abstract class NativeProxyCommon {
   protected final WorkletsModule mWorkletsModule;
   protected NodesManager mNodesManager;
   protected final WeakReference<ReactApplicationContext> mContext;
-  protected final AndroidUIScheduler mAndroidUIScheduler;
   private final ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
   private final KeyboardAnimationManager keyboardAnimationManager;
@@ -54,7 +55,6 @@ public abstract class NativeProxyCommon {
   protected NativeProxyCommon(ReactApplicationContext context) {
     mWorkletsModule =
         Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class)).getWorkletsModule();
-    mAndroidUIScheduler = new AndroidUIScheduler(context);
     mContext = new WeakReference<>(context);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
     keyboardAnimationManager = new KeyboardAnimationManager(mContext);
@@ -74,10 +74,6 @@ public abstract class NativeProxyCommon {
   }
 
   protected native void installJSIBindings();
-
-  public AndroidUIScheduler getAndroidUIScheduler() {
-    return mAndroidUIScheduler;
-  }
 
   private void toggleSlowAnimations() {
     slowAnimationsEnabled = !slowAnimationsEnabled;
@@ -223,10 +219,6 @@ public abstract class NativeProxyCommon {
   }
 
   protected abstract HybridData getHybridData();
-
-  public void invalidate() {
-    mAndroidUIScheduler.deactivate();
-  }
 
   public void prepareLayoutAnimations(LayoutAnimations layoutAnimations) {
     if (Utils.isChromeDebugger) {
