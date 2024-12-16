@@ -5,7 +5,7 @@
 #import <REAModule.h>
 #import <REANodesManager.h>
 #import <React/RCTEventDispatcher.h>
-#import <reanimated/NativeModules/NativeReanimatedModule.h>
+#import <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 #import <memory>
 

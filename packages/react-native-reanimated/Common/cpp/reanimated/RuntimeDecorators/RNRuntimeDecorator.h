@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/NativeModules/NativeReanimatedModule.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 
 #include <jsi/jsi.h>
 
@@ -14,7 +14,7 @@ class RNRuntimeDecorator {
  public:
   static void decorate(
       jsi::Runtime &rnRuntime,
-      const std::shared_ptr<NativeReanimatedModule> &nativeReanimatedModule);
+      const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy);
 };
 
 } // namespace reanimated

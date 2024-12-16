@@ -10,9 +10,7 @@
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/NativeMethods.h>
 #import <reanimated/apple/native/NativeProxy.h>
-#import <reanimated/apple/native/REAIOSUIScheduler.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
-#import <reanimated/apple/native/REAMessageThread.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
 #ifndef NDEBUG
@@ -20,6 +18,7 @@
 #endif
 
 #import <worklets/WorkletRuntime/ReanimatedRuntime.h>
+#import <worklets/apple/WorkletsMessageThread.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTBridge+Private.h>

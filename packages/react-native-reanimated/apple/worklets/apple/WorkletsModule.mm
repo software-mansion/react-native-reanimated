@@ -1,10 +1,12 @@
 #import <React/RCTBridge+Private.h>
+#import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/WorkletRuntime/RNRuntimeWorkletDecorator.h>
+#import <worklets/apple/IOSUIScheduler.h>
+#import <worklets/apple/WorkletsMessageThread.h>
 #import <worklets/apple/WorkletsModule.h>
-#import <worklets/tools/SingleInstanceChecker.h>
 
-using worklets::NativeWorkletsModule;
 using worklets::RNRuntimeWorkletDecorator;
+using worklets::WorkletsModuleProxy;
 
 @interface RCTBridge (JSIRuntime)
 - (void *)runtime;
@@ -16,15 +18,15 @@ using worklets::RNRuntimeWorkletDecorator;
 @end
 
 @implementation WorkletsModule {
-  std::shared_ptr<NativeWorkletsModule> nativeWorkletsModule_;
+  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 #ifndef NDEBUG
   worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
 }
 
-- (std::shared_ptr<NativeWorkletsModule>)getNativeWorkletsModule
+- (std::shared_ptr<WorkletsModuleProxy>)getWorkletsModuleProxy
 {
-  return nativeWorkletsModule_;
+  return workletsModuleProxy_;
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
@@ -35,8 +37,17 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 {
   auto *bridge = self.bridge;
   auto &rnRuntime = *(jsi::Runtime *)bridge.runtime;
-  nativeWorkletsModule_ = std::make_shared<NativeWorkletsModule>(std::string([valueUnpackerCode UTF8String]));
-  RNRuntimeWorkletDecorator::decorate(rnRuntime, nativeWorkletsModule_);
+  auto jsQueue = std::make_shared<WorkletsMessageThread>([NSRunLoop currentRunLoop], ^(NSError *error) {
+    throw error;
+  });
+
+  std::string valueUnpackerCodeStr = [valueUnpackerCode UTF8String];
+  auto jsCallInvoker = bridge.jsCallInvoker;
+  auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
+  auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
+  workletsModuleProxy_ =
+      std::make_shared<WorkletsModuleProxy>(valueUnpackerCodeStr, jsQueue, jsCallInvoker, jsScheduler, uiScheduler);
+  RNRuntimeWorkletDecorator::decorate(rnRuntime, workletsModuleProxy_);
 
   return @YES;
 }
