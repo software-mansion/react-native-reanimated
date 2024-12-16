@@ -13,23 +13,16 @@ const IS_WEB = isWeb();
 export const VELOCITY_EPS = IS_WEB ? 1 / 20 : 1;
 export const SLOPE_FACTOR = 0.1;
 
-/*
- * The `forceRunAnimation` prop is necessary to run withDecay animation when
- * related sharedValue stays as `0`. It allows to skip animation check and start
- * animation immediately
- */
-
 export interface DecayAnimation extends Animation<DecayAnimation> {
   lastTimestamp: Timestamp;
   startTimestamp: Timestamp;
   initialVelocity: number;
   velocity: number;
   current: AnimatableValue;
-  forceRunAnimation: boolean;
 }
 
 export interface InnerDecayAnimation
-  extends Omit<DecayAnimation, 'current' | 'forceRunAnimation'>,
+  extends Omit<DecayAnimation, 'current'>,
     AnimationObject {
   current: number;
   springActive?: boolean;

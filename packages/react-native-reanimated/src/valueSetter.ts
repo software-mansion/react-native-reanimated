@@ -31,7 +31,6 @@ export function valueSetter<Value>(
     // built in animations that are not higher order(withTiming, withSpring) hold target value in .current
     if (
       mutable._value === animation.current &&
-      !animation.forceRunAnimation &&
       !animation.isHigherOrder &&
       !forceUpdate
     ) {
