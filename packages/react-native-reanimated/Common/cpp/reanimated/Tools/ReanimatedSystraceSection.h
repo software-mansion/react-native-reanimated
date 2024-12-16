@@ -37,7 +37,6 @@ struct ReanimatedSystraceSection {
   ~ReanimatedSystraceSection() {
     ATrace_endSection();
   }
-
 };
 
 // The apple part is copied from React Native
@@ -130,6 +129,7 @@ struct ReanimatedSystraceSection {
       ConvertsToStringPiece &&...args) {}
 };
 
-#endif // defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES && defined(REANIMATED_PROFILING)
+#endif // defined(__APPLE__) && OS_LOG_TARGET_HAS_10_15_FEATURES &&
+       // defined(REANIMATED_PROFILING)
 
 } // namespace reanimated
