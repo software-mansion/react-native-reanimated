@@ -164,13 +164,6 @@ function parsePercentage(str: string): number {
   return int / 100;
 }
 
-function clampRGBA(RGBA: ParsedColorArray): void {
-  'worklet';
-  for (let i = 0; i < 4; i++) {
-    RGBA[i] = Math.max(0, Math.min(RGBA[i], 1));
-  }
-}
-
 const names: Record<string, number> = makeShareable({
   transparent: 0x00000000,
 
@@ -721,7 +714,6 @@ export function convertToRGBA(color: unknown): ParsedColorArray {
 
 export function rgbaArrayToRGBAColor(RGBA: ParsedColorArray): string {
   'worklet';
-  clampRGBA(RGBA);
   const alpha = RGBA[3] < 0.001 ? 0 : RGBA[3];
   return `rgba(${Math.round(RGBA[0] * 255)}, ${Math.round(
     RGBA[1] * 255
@@ -747,7 +739,6 @@ export function toGammaSpace(
 ): ParsedColorArray {
   'worklet';
   const res = [];
-  clampRGBA(RGBA);
   for (let i = 0; i < 3; ++i) {
     res.push(Math.pow(RGBA[i], 1 / gamma));
   }
