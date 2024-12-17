@@ -38,7 +38,12 @@ jobs:
     runs-on: macos-14
     strategy:
       matrix:
-        working-directory: [apps/paper-example, apps/fabric-example]
+        working-directory:
+          [
+            apps/paper-example,
+            apps/fabric-example,
+            apps/external-worklets-example,
+          ]
       fail-fast: false
     concurrency:
       group: ios-${{ matrix.working-directory }}-${{ github.ref }}
