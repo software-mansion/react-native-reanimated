@@ -14,6 +14,7 @@ namespace worklets {
 class WorkletsModuleProxy : public WorkletsModuleProxySpec {
  public:
   explicit WorkletsModuleProxy(
+      jsi::Runtime &rnRuntime,
       const std::string &valueUnpackerCode,
       const std::shared_ptr<MessageQueueThread> &jsQueue,
       const std::shared_ptr<CallInvoker> &jsCallInvoker,
@@ -44,11 +45,17 @@ class WorkletsModuleProxy : public WorkletsModuleProxySpec {
     return uiScheduler_;
   }
 
+  [[nodiscard]] inline std::shared_ptr<WorkletRuntime> getUIWorkletRuntime()
+      const {
+    return uiWorkletRuntime_;
+  }
+
  private:
   const std::string valueUnpackerCode_;
   const std::shared_ptr<MessageQueueThread> jsQueue_;
   const std::shared_ptr<JSScheduler> jsScheduler_;
   const std::shared_ptr<UIScheduler> uiScheduler_;
+  std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG

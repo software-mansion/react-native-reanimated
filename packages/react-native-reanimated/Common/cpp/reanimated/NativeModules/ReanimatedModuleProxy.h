@@ -161,10 +161,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
     return *layoutAnimationsManager_;
   }
 
-  [[nodiscard]] inline jsi::Runtime &getUIRuntime() const {
-    return uiWorkletRuntime_->getJSIRuntime();
-  }
-
   [[nodiscard]] inline bool isBridgeless() const {
     return isBridgeless_;
   }
@@ -194,7 +190,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   const bool isReducedMotion_;
   const std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   const std::string valueUnpackerCode_;
-  std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;

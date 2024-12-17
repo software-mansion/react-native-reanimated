@@ -5,8 +5,8 @@ namespace reanimated {
 
 void RNRuntimeDecorator::decorate(
     jsi::Runtime &rnRuntime,
+    jsi::Runtime &uiRuntime,
     const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy) {
-  jsi::Runtime &uiRuntime = reanimatedModuleProxy->getUIRuntime();
   auto workletRuntimeValue =
       rnRuntime.global()
           .getPropertyAsObject(rnRuntime, "ArrayBuffer")

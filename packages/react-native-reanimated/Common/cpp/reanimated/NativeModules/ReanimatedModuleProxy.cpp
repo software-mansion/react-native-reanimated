@@ -62,13 +62,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       isReducedMotion_(isReducedMotion),
       workletsModuleProxy_(workletsModuleProxy),
       valueUnpackerCode_(workletsModuleProxy->getValueUnpackerCode()),
-      uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
-          rnRuntime,
-          workletsModuleProxy->getJSQueue(),
-          workletsModuleProxy->getJSScheduler(),
-          "Reanimated UI runtime",
-          true /* supportsLocking */,
-          valueUnpackerCode_)),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
       onRenderCallback_([this](const double timestampMs) {
@@ -160,7 +153,8 @@ void ReanimatedModuleProxy::commonInit(
   };
 #endif
 
-  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+  jsi::Runtime &uiRuntime =
+      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   UIRuntimeDecorator::decorate(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -197,7 +191,6 @@ ReanimatedModuleProxy::~ReanimatedModuleProxy() {
 #ifdef RCT_NEW_ARCH_ENABLED
   operationsInBatch_.clear();
 #endif // RCT_NEW_ARCH_ENABLED
-  uiWorkletRuntime_.reset();
 }
 
 void ReanimatedModuleProxy::scheduleOnUI(
@@ -212,16 +205,17 @@ void ReanimatedModuleProxy::scheduleOnUI(
     // temporary JSI objects and hence it allows for such objects to be
     // garbage collected much sooner. Apparently the scope API is only
     // supported on Hermes at the moment.
-    const auto scope = jsi::Scope(uiWorkletRuntime_->getJSIRuntime());
+    const auto scope = jsi::Scope(
+        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime());
 #endif
-    uiWorkletRuntime_->runGuarded(shareableWorklet);
+    workletsModuleProxy_->getUIWorkletRuntime()->runGuarded(shareableWorklet);
   });
 }
 
 jsi::Value ReanimatedModuleProxy::executeOnUIRuntimeSync(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
-  return uiWorkletRuntime_->executeSync(rt, worklet);
+  return workletsModuleProxy_->getUIWorkletRuntime()->executeSync(rt, worklet);
 }
 
 jsi::Value ReanimatedModuleProxy::createWorkletRuntime(
@@ -348,7 +342,8 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
   const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
   workletsModuleProxy_->getUIScheduler()->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
-    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+    jsi::Runtime &uiRuntime =
+        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
     const auto resultStr =
         obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
 
@@ -379,7 +374,8 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
       COPY_CAPTURE_WITH_THIS
 
       () {
-        jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+        jsi::Runtime &uiRuntime =
+            workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
         const jsi::Value propNameValue =
             jsi::String::createFromUtf8(uiRuntime, propNameStr);
         const auto resultValue =
@@ -488,7 +484,8 @@ void ReanimatedModuleProxy::requestAnimationFrame(
 void ReanimatedModuleProxy::maybeRequestRender() {
   if (!renderRequested_) {
     renderRequested_ = true;
-    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+    jsi::Runtime &uiRuntime =
+        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
     requestRender_(onRenderCallback_, uiRuntime);
   }
 }
@@ -496,7 +493,8 @@ void ReanimatedModuleProxy::maybeRequestRender() {
 void ReanimatedModuleProxy::onRender(double timestampMs) {
   auto callbacks = std::move(frameCallbacks_);
   frameCallbacks_.clear();
-  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+  jsi::Runtime &uiRuntime =
+      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   jsi::Value timestamp{timestampMs};
   for (const auto &callback : callbacks) {
     runOnRuntimeGuarded(uiRuntime, *callback, timestamp);
@@ -511,7 +509,7 @@ jsi::Value ReanimatedModuleProxy::registerSensor(
     const jsi::Value &sensorDataHandler) {
   return animatedSensorModule_.registerSensor(
       rt,
-      uiWorkletRuntime_,
+      workletsModuleProxy_->getUIWorkletRuntime(),
       sensorType,
       interval,
       iosReferenceFrame,
@@ -575,7 +573,11 @@ bool ReanimatedModuleProxy::handleEvent(
     const jsi::Value &payload,
     double currentTime) {
   eventHandlerRegistry_->processEvent(
-      uiWorkletRuntime_, currentTime, eventName, emitterReactTag, payload);
+      workletsModuleProxy_->getUIWorkletRuntime(),
+      currentTime,
+      eventName,
+      emitterReactTag,
+      payload);
 
   // TODO: return true if Reanimated successfully handled the event
   // to avoid sending it to JavaScript
@@ -601,7 +603,8 @@ bool ReanimatedModuleProxy::handleRawEvent(
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
-  jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
+  jsi::Runtime &rt =
+      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(rt);
 
@@ -638,7 +641,8 @@ void ReanimatedModuleProxy::performOperations() {
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_.clear();
 
-  jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
+  jsi::Runtime &rt =
+      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
 
   {
     auto lock = propsRegistry_->createLock();
@@ -778,7 +782,8 @@ jsi::String ReanimatedModuleProxy::obtainProp(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &propName) {
-  jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
+  jsi::Runtime &uiRuntime =
+      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   const auto propNameStr = propName.asString(rt).utf8(rt);
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto resultStr =
@@ -856,7 +861,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         layoutAnimationsManager_,
         componentDescriptorRegistry,
         scheduler->getContextContainer(),
-        uiWorkletRuntime_->getJSIRuntime(),
+        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
         workletsModuleProxy_->getUIScheduler());
   }
 }
@@ -876,7 +881,7 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
       COPY_CAPTURE_WITH_THIS
 
       (int keyboardState, int height) {
-        uiWorkletRuntime_->runGuarded(
+        workletsModuleProxy_->getUIWorkletRuntime()->runGuarded(
             shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool(),
