@@ -18305,6 +18305,7 @@ __metadata:
     "@react-native/eslint-config": "npm:^0.73.1"
     "@types/jest": "npm:^29.5.5"
     "@types/react": "npm:^18.2.44"
+    "@typescript-eslint/eslint-plugin": "npm:^6.19.0"
     eslint: "npm:^8.57.0"
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
