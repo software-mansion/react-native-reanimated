@@ -38,7 +38,7 @@ jobs:
           [
             apps/paper-example,
             apps/fabric-example,
-            apps/external-worklets/example,
+            apps/external-worklets-example,
           ]
       fail-fast: false
     concurrency:
