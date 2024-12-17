@@ -34,7 +34,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory: [apps/paper-example, apps/fabric-example]
+        working-directory:
+          [
+            apps/paper-example,
+            apps/fabric-example,
+            apps/external-worklets/example,
+          ]
       fail-fast: false
     concurrency:
       group: android-${{ matrix.working-directory }}-${{ github.ref }}
