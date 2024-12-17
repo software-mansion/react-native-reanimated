@@ -1,11 +1,11 @@
-# React Native Reanimated example app with Fabric
+# React Native Reanimated external worklets example app with Fabric
 
 ## Installing & running application
 
 Before running application you need to install all dependencies. To do that:
 
 - In project's root directory run `yarn install`
-- In ExternalWorkletsExample directory run `yarn install`
+- In external-worklets-example directory run `yarn install`
 
 ### Android
 
@@ -15,6 +15,6 @@ Then you can run this application by `yarn android` or from Android Studio.
 
 ### iOS
 
-To run on iOS first go to `ExternalWorkletsExample/ios` and run `pod install`. This will install pods for Fabric architecture.
+To run on iOS first go to `external-worklets-example/ios` and run `pod install`. This will install pods for Fabric architecture.
 
-Then in `ExternalWorkletsExample` run `yarn ios` or run application from Xcode.
+Then in `external-worklets-example` run `yarn ios` or run application from Xcode.
