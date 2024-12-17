@@ -5,6 +5,8 @@ namespace worklets {
 void RNRuntimeWorkletDecorator::decorate(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy) {
+  rnRuntime.global().setProperty(rnRuntime, "_WORKLET", false);
+
   rnRuntime.global().setProperty(
       rnRuntime,
       "__workletsModuleProxy",

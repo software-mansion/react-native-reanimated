@@ -2,10 +2,10 @@ name: Reanimated release checks
 on:
   pull_request:
     branches:
-      - "[0-9]+.[0-9]+-stable"
+      - '[0-9]+.[0-9]+-stable'
   push:
     branches:
-      - "[0-9]+.[0-9]+-stable"
+      - '[0-9]+.[0-9]+-stable'
   workflow_call:
   workflow_dispatch:
 
@@ -50,11 +50,6 @@ jobs:
     name: Example Typescript check and lint
     uses: ./.github/workflows/example-typescript-check-and-lint.yml
 
-  monorepo_app_reanimated_build_check_nightly:
-    if: github.repository == 'software-mansion/react-native-reanimated'
-    name: Monorepo app Reanimated build check [Nightly]
-    uses: ./.github/workflows/monorepo-app-reanimated-build-check-nightly.yml
-    
   reanimated_android_validation:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: Reanimated Android validation
@@ -104,4 +99,3 @@ jobs:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: Yarn validation
     uses: ./.github/workflows/yarn-validation.yml
-  

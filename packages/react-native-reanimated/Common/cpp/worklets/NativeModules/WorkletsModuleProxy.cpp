@@ -19,6 +19,7 @@ using namespace facebook;
 namespace worklets {
 
 WorkletsModuleProxy::WorkletsModuleProxy(
+    jsi::Runtime &rnRuntime,
     const std::string &valueUnpackerCode,
     const std::shared_ptr<MessageQueueThread> &jsQueue,
     const std::shared_ptr<CallInvoker> &jsCallInvoker,
@@ -28,9 +29,18 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       valueUnpackerCode_(valueUnpackerCode),
       jsQueue_(jsQueue),
       jsScheduler_(jsScheduler),
-      uiScheduler_(uiScheduler) {}
+      uiScheduler_(uiScheduler),
+      uiWorkletRuntime_(std::make_shared<WorkletRuntime>(
+          rnRuntime,
+          jsQueue,
+          jsScheduler,
+          "Reanimated UI runtime",
+          true /* supportsLocking */,
+          valueUnpackerCode_)) {}
 
-WorkletsModuleProxy::~WorkletsModuleProxy() {}
+WorkletsModuleProxy::~WorkletsModuleProxy() {
+  uiWorkletRuntime_.reset();
+}
 
 jsi::Value WorkletsModuleProxy::makeShareableClone(
     jsi::Runtime &rt,
