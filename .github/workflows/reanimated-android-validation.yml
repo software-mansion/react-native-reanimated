@@ -56,17 +56,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install cpplint==1.6.1
           pip install cmakelang==0.6.13
+
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
-
-      - name: Which cmake-format
-        run: which cmake-format
-
-      - name: Which cmake-lint
-        run: which cmake-lint
 
       - name: Lint Android
         working-directory: packages/react-native-reanimated
