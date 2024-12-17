@@ -2,8 +2,15 @@ cmake_minimum_required(VERSION 3.8)
 
 file(GLOB_RECURSE WORKLETS_COMMON_CPP_SOURCES CONFIGURE_DEPENDS
      "${COMMON_CPP_DIR}/worklets/*.cpp")
+
+file(GLOB_RECURSE DUPLICATED_WORKLETS_COMMON_CPP_SOURCES CONFIGURE_DEPENDS
+     "${DUPLICATED_COMMON_CPP_DIR}/worklets/*.cpp")
+
 file(GLOB_RECURSE WORKLETS_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
      "${ANDROID_CPP_DIR}/worklets/*.cpp")
+
+file(GLOB_RECURSE DUPLICATED_WORKLETS_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
+     "${DUPLICATED_ANDROID_CPP_DIR}/worklets/*.cpp")
 
 # Consume shared libraries and headers from prefabs
 find_package(fbjni REQUIRED CONFIG)
@@ -13,12 +20,17 @@ if(${JS_RUNTIME} STREQUAL "hermes")
   find_package(hermes-engine REQUIRED CONFIG)
 endif()
 
-add_library(worklets SHARED ${WORKLETS_COMMON_CPP_SOURCES}
-                            ${WORKLETS_ANDROID_CPP_SOURCES})
+add_library(
+  worklets SHARED
+  ${WORKLETS_COMMON_CPP_SOURCES} ${WORKLETS_ANDROID_CPP_SOURCES}
+  ${DUPLICATED_WORKLETS_COMMON_CPP_SOURCES}
+  ${DUPLICATED_WORKLETS_ANDROID_CPP_SOURCES})
 
 # includes
-target_include_directories(worklets PUBLIC "${COMMON_CPP_DIR}"
-                                           "${ANDROID_CPP_DIR}")
+target_include_directories(
+  worklets
+  PUBLIC "${COMMON_CPP_DIR}" "${ANDROID_CPP_DIR}"
+         "${DUPLICATED_COMMON_CPP_DIR}" "${DUPLICATED_ANDROID_CPP_DIR}")
 
 target_include_directories(
   worklets

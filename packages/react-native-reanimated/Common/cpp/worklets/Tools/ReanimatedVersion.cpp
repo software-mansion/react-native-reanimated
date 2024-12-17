@@ -16,7 +16,7 @@ using namespace facebook;
 namespace worklets {
 
 std::string getReanimatedCppVersion() {
-  return std::string(REANIMATED_VERSION_STRING);
+  return std::string("3.17.0");
 }
 
 void injectReanimatedCppVersion(jsi::Runtime &rnRuntime) {

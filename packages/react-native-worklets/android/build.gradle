@@ -330,6 +330,17 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    sourceSets {
+        main {
+            java {
+                srcDirs += "src/duplicated/worklets/main"
+
+                if (!IS_NEW_ARCHITECTURE_ENABLED) {
+                    srcDirs += "src/duplicated/paper"
+                }
+            }
+        }
+    }
 }
 
 def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
@@ -344,6 +355,8 @@ def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
 task prepareWorkletsHeadersForPrefabs(type: Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
+    from("$projectDir/src/duplicated/main/cpp")
+    from("$projectDir/../Common/duplicated/cpp")
     include("worklets/**/*.h")
     into(workletsPrefabHeadersDir)
 }

@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "🚀",
   "scripts": {
-    "build": "bob build",
+    "build": "./scripts/replicate-worklets-code.sh && bob build",
     "format": "yarn format:js",
     "format:js": "prettier --write --list-different src",
     "lint": "yarn lint:js",
