@@ -8,24 +8,9 @@ import type {
   LayoutAnimationBatchItem,
   WorkletFunction,
 } from '../commonTypes';
-import type { WorkletRuntime } from '../runtimes';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
-  scheduleOnUI<T>(shareable: ShareableRef<T>): void;
-
-  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R;
-
-  createWorkletRuntime(
-    name: string,
-    initializer: ShareableRef<() => void>
-  ): WorkletRuntime;
-
-  scheduleOnRuntime<T>(
-    workletRuntime: WorkletRuntime,
-    worklet: ShareableRef<T>
-  ): void;
-
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,

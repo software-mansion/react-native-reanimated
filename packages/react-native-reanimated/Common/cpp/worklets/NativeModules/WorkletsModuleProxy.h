@@ -29,6 +29,21 @@ class WorkletsModuleProxy : public WorkletsModuleProxySpec {
       const jsi::Value &shouldRetainRemote,
       const jsi::Value &nativeStateSource) override;
 
+  void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
+
+  jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
+      override;
+
+  jsi::Value createWorkletRuntime(
+      jsi::Runtime &rt,
+      const jsi::Value &name,
+      const jsi::Value &initializer) override;
+
+  jsi::Value scheduleOnRuntime(
+      jsi::Runtime &rt,
+      const jsi::Value &workletRuntimeValue,
+      const jsi::Value &shareableWorkletValue) override;
+
   [[nodiscard]] inline std::string getValueUnpackerCode() const {
     return valueUnpackerCode_;
   }

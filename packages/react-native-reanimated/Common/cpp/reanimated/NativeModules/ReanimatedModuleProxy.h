@@ -42,19 +42,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 
   ~ReanimatedModuleProxy();
 
-  void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
-  jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
-      override;
-
-  jsi::Value createWorkletRuntime(
-      jsi::Runtime &rt,
-      const jsi::Value &name,
-      const jsi::Value &initializer) override;
-  jsi::Value scheduleOnRuntime(
-      jsi::Runtime &rt,
-      const jsi::Value &workletRuntimeValue,
-      const jsi::Value &shareableWorkletValue) override;
-
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
       const jsi::Value &worklet,

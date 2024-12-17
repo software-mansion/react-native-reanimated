@@ -193,56 +193,6 @@ ReanimatedModuleProxy::~ReanimatedModuleProxy() {
 #endif // RCT_NEW_ARCH_ENABLED
 }
 
-void ReanimatedModuleProxy::scheduleOnUI(
-    jsi::Runtime &rt,
-    const jsi::Value &worklet) {
-  auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
-      rt, worklet, "[Reanimated] Only worklets can be scheduled to run on UI.");
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
-#if JS_RUNTIME_HERMES
-    // JSI's scope defined here allows for JSI-objects to be cleared up
-    // after each runtime loop. Within these loops we typically create some
-    // temporary JSI objects and hence it allows for such objects to be
-    // garbage collected much sooner. Apparently the scope API is only
-    // supported on Hermes at the moment.
-    const auto scope = jsi::Scope(
-        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime());
-#endif
-    workletsModuleProxy_->getUIWorkletRuntime()->runGuarded(shareableWorklet);
-  });
-}
-
-jsi::Value ReanimatedModuleProxy::executeOnUIRuntimeSync(
-    jsi::Runtime &rt,
-    const jsi::Value &worklet) {
-  return workletsModuleProxy_->getUIWorkletRuntime()->executeSync(rt, worklet);
-}
-
-jsi::Value ReanimatedModuleProxy::createWorkletRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &name,
-    const jsi::Value &initializer) {
-  auto workletRuntime = std::make_shared<WorkletRuntime>(
-      rt,
-      workletsModuleProxy_->getJSQueue(),
-      workletsModuleProxy_->getJSScheduler(),
-      name.asString(rt).utf8(rt),
-      false /* supportsLocking */,
-      valueUnpackerCode_);
-  auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
-      rt, initializer, "[Reanimated] Initializer must be a worklet.");
-  workletRuntime->runGuarded(initializerShareable);
-  return jsi::Object::createFromHostObject(rt, workletRuntime);
-}
-
-jsi::Value ReanimatedModuleProxy::scheduleOnRuntime(
-    jsi::Runtime &rt,
-    const jsi::Value &workletRuntimeValue,
-    const jsi::Value &shareableWorkletValue) {
-  reanimated::scheduleOnRuntime(rt, workletRuntimeValue, shareableWorkletValue);
-  return jsi::Value::undefined();
-}
-
 jsi::Value ReanimatedModuleProxy::registerEventHandler(
     jsi::Runtime &rt,
     const jsi::Value &worklet,
