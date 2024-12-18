@@ -168,6 +168,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
+  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
 #ifndef NDEBUG

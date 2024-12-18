@@ -45,8 +45,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   auto jsCallInvoker = bridge.jsCallInvoker;
   auto jsScheduler = std::make_shared<worklets::JSScheduler>(rnRuntime, jsCallInvoker);
   auto uiScheduler = std::make_shared<worklets::IOSUIScheduler>();
-  workletsModuleProxy_ =
-      std::make_shared<WorkletsModuleProxy>(valueUnpackerCodeStr, jsQueue, jsCallInvoker, jsScheduler, uiScheduler);
+  workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
+      rnRuntime, valueUnpackerCodeStr, jsQueue, jsCallInvoker, jsScheduler, uiScheduler);
   RNRuntimeWorkletDecorator::decorate(rnRuntime, workletsModuleProxy_);
 
   return @YES;
