@@ -5,8 +5,9 @@ import {
   unregisterCSSAnimations,
   updateCSSAnimations,
 } from '../../native';
-import { normalizeCSSAnimationProperties } from '../../normalization';
 import type { CSSAnimationProperties } from '../../types';
+import { CSSKeyframesRuleImpl } from '../../models';
+import { normalizeSingleCSSAnimationSettings } from '../../normalization';
 
 jest.mock('../../native', () => ({
   registerCSSAnimations: jest.fn(),
@@ -27,20 +28,23 @@ describe('CSSAnimationsManager', () => {
   describe('update', () => {
     describe('single animation', () => {
       it('attaches a new animation if no animation is attached', () => {
-        const animationProperties: CSSAnimationProperties = {
+        const animationProperties = {
           animationName: {
             from: { opacity: 0 },
           },
           animationDuration: '2s',
-        };
+        } satisfies CSSAnimationProperties;
 
         manager.update(animationProperties);
 
         expect(registerCSSAnimations).toHaveBeenCalledTimes(1);
-        expect(registerCSSAnimations).toHaveBeenCalledWith(
-          shadowNodeWrapper,
-          normalizeCSSAnimationProperties(animationProperties)
-        );
+        expect(registerCSSAnimations).toHaveBeenCalledWith(shadowNodeWrapper, [
+          {
+            ...new CSSKeyframesRuleImpl(animationProperties.animationName)
+              .normalizedKeyframes,
+            ...normalizeSingleCSSAnimationSettings(animationProperties),
+          },
+        ]);
 
         expect(updateCSSAnimations).not.toHaveBeenCalled();
         expect(unregisterCSSAnimations).not.toHaveBeenCalled();

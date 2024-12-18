@@ -1,11 +1,11 @@
 import { useIsFocused } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import type {
-  CSSAnimationProperties,
-  CSSAnimationSettings,
+import { View } from 'react-native';
+import Animated, {
+  css,
+  FadeInLeft,
+  FadeOutRight,
 } from 'react-native-reanimated';
-import Animated, { FadeInLeft, FadeOutRight } from 'react-native-reanimated';
 
 import type { RouteCardComponent } from '@/components';
 import { RouteCard, Text } from '@/components';
@@ -21,43 +21,28 @@ const MiscellaneousCard: RouteCardComponent = (props) => (
 
 const ANIMATION_DURATION = 1500;
 
-const sharedConfig: CSSAnimationSettings = {
-  animationDuration: ANIMATION_DURATION,
-  animationIterationCount: 'infinite',
-  animationTimingFunction: 'easeInOut',
-};
-
-const rollAnimation: CSSAnimationProperties = {
-  animationName: {
-    to: {
-      transform: [{ rotate: '360deg' }],
-    },
+const roll = css.keyframes({
+  to: {
+    transform: [{ rotate: '360deg' }],
   },
-  ...sharedConfig,
-};
+});
 
-const colorAnimation: CSSAnimationProperties = {
-  animationName: {
-    '50%': {
-      backgroundColor: colors.primaryDark,
-    },
+const color = css.keyframes({
+  '50%': {
+    backgroundColor: colors.primaryDark,
   },
-  ...sharedConfig,
-};
+});
 
-const fadeAnimation: CSSAnimationProperties = {
-  animationName: {
-    '50%': {
-      opacity: 0,
-    },
+const fade = css.keyframes({
+  '50%': {
+    opacity: 0,
   },
-  ...sharedConfig,
-};
+});
 
 const animations = [
-  { animation: rollAnimation, name: 'Roll' },
-  { animation: colorAnimation, name: 'Color' },
-  { animation: fadeAnimation, name: 'Fade' },
+  { animation: roll, name: 'Roll' },
+  { animation: color, name: 'Color' },
+  { animation: fade, name: 'Fade' },
 ];
 
 function Showcase() {
@@ -111,8 +96,10 @@ function Showcase() {
       <Animated.View
         style={[
           styles.box,
-          animation,
-          { animationPlayState: isFocused ? 'running' : 'paused' },
+          {
+            animationName: animation,
+            animationPlayState: isFocused ? 'running' : 'paused',
+          },
         ]}
       />
       <Animated.View
@@ -125,8 +112,11 @@ function Showcase() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = css.create({
   box: {
+    animationDuration: ANIMATION_DURATION,
+    animationIterationCount: 'infinite',
+    animationTimingFunction: 'easeInOut',
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
     height: sizes.md,

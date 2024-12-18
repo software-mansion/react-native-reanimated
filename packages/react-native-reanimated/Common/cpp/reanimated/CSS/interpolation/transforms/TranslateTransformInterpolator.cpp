@@ -1,6 +1,8 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/transforms/TranslateTransformInterpolator.h>
 
+#include <utility>
+
 namespace reanimated {
 
 template <typename OperationType>

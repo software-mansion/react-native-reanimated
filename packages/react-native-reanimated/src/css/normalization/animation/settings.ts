@@ -6,8 +6,14 @@ import type {
   CSSAnimationIterationCount,
   CSSAnimationPlayState,
   NormalizedSingleCSSAnimationSettings,
+  SingleCSSAnimationSettings,
 } from '../../types';
 import { deepEqual, isNumber } from '../../utils';
+import {
+  normalizeDelay,
+  normalizeDuration,
+  normalizeTimingFunction,
+} from '../common';
 import {
   VALID_ANIMATION_DIRECTIONS,
   VALID_FILL_MODES,
@@ -73,6 +79,26 @@ export function normalizePlayState(
   return playState;
 }
 
+export function normalizeSingleCSSAnimationSettings({
+  animationDuration,
+  animationTimingFunction,
+  animationDelay,
+  animationIterationCount,
+  animationDirection,
+  animationFillMode,
+  animationPlayState,
+}: SingleCSSAnimationSettings): NormalizedSingleCSSAnimationSettings {
+  return {
+    duration: normalizeDuration(animationDuration),
+    timingFunction: normalizeTimingFunction(animationTimingFunction),
+    delay: normalizeDelay(animationDelay),
+    iterationCount: normalizeIterationCount(animationIterationCount),
+    direction: normalizeDirection(animationDirection),
+    fillMode: normalizeFillMode(animationFillMode),
+    playState: normalizePlayState(animationPlayState),
+  };
+}
+
 export function getAnimationSettingsUpdates(
   oldConfig: NormalizedSingleCSSAnimationSettings,
   newConfig: NormalizedSingleCSSAnimationSettings
@@ -83,9 +109,10 @@ export function getAnimationSettingsUpdates(
     updatedSettings.duration = newConfig.duration;
   }
   if (
-    (oldConfig.timingFunction !== newConfig.timingFunction &&
-      typeof oldConfig.timingFunction !== 'object') ||
-    !deepEqual(oldConfig.timingFunction, newConfig.timingFunction)
+    oldConfig.timingFunction !== newConfig.timingFunction &&
+    (typeof oldConfig.timingFunction !== 'object' ||
+      // TODO - maybe replace by some better solution than deepEqual
+      !deepEqual(oldConfig.timingFunction, newConfig.timingFunction))
   ) {
     updatedSettings.timingFunction = newConfig.timingFunction;
   }

@@ -1,7 +1,8 @@
+import { css } from '../../../stylesheet';
 import { ReanimatedError } from '../../../errors';
 import type {
   PlainStyle,
-  CSSStyle,
+  CSSStyleDeclaration,
   CSSTransitionProperty,
 } from '../../../types';
 import {
@@ -197,7 +198,7 @@ describe(normalizeStyle, () => {
 describe(filterCSSPropertiesAndNormalizeStyle, () => {
   describe('animation config', () => {
     it('returns null if there is no animationName', () => {
-      const style: CSSStyle = {
+      const style: CSSStyleDeclaration = {
         transitionProperty: 'opacity',
         animationDuration: 100,
       };
@@ -210,7 +211,10 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
     });
 
     it('returns null if the animationName is an empty object', () => {
-      const style: CSSStyle = { animationName: {}, animationDuration: 100 };
+      const style: CSSStyleDeclaration = {
+        animationName: {},
+        animationDuration: 100,
+      };
       expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
         null,
         expect.any(Object),
@@ -218,12 +222,24 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
       ]);
     });
 
+    it('returns null if animationName is an empty keyframes object created with css.keyframes', () => {
+      const style: CSSStyleDeclaration = {
+        animationName: css.keyframes({}),
+        animationDuration: 100,
+      };
+      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
+        style,
+        expect.any(Object),
+        expect.any(Object),
+      ]);
+    });
+
     it('returns animation config if animationName is present', () => {
-      const style: CSSStyle = {
-        animationName: {
+      const style: CSSStyleDeclaration = {
+        animationName: css.keyframes({
           from: { opacity: 0 },
           to: { opacity: 1 },
-        },
+        }),
         animationDuration: 100,
       };
       expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
@@ -243,8 +259,11 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
         ['animationFillMode', 'both'],
         ['animationPlayState', 'paused'],
       ])(`returns %p setting`, (key, value) => {
-        const style: CSSStyle = {
-          animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
+        const style: CSSStyleDeclaration = {
+          animationName: css.keyframes({
+            from: { opacity: 0 },
+            to: { opacity: 1 },
+          }),
           [key]: value,
         };
         expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
@@ -258,11 +277,11 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
 
   describe('transition config', () => {
     it('returns null if there is no transitionProperty', () => {
-      const style: CSSStyle = {
-        animationName: {
+      const style: CSSStyleDeclaration = {
+        animationName: css.keyframes({
           from: { opacity: 0 },
           to: { opacity: 1 },
-        },
+        }),
         transitionDuration: 100,
       };
       expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
@@ -273,7 +292,7 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
     });
 
     it('returns null if the transitionProperty is an empty array', () => {
-      const style: CSSStyle = {
+      const style: CSSStyleDeclaration = {
         transitionProperty: [],
         transitionDuration: 100,
       };
@@ -285,7 +304,7 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
     });
 
     it('returns transition config if transitionProperty is present', () => {
-      const style: CSSStyle = {
+      const style: CSSStyleDeclaration = {
         transitionProperty: 'opacity',
         transitionDuration: 100,
       };
@@ -303,7 +322,7 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
         ['transitionTimingFunction', 'easeInOut'],
         ['transitionDelay', '1s'],
       ])(`returns %p setting`, (key, value) => {
-        const style: CSSStyle = {
+        const style: CSSStyleDeclaration = {
           transitionProperty: value as CSSTransitionProperty,
           [key]: value,
         };
@@ -318,13 +337,16 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
 
   describe('all together', () => {
     it('returns all configs and style without css configs', () => {
-      const style: CSSStyle = {
+      const style: CSSStyleDeclaration = {
         width: 100,
         transitionDuration: 100,
         height: 100,
         animationDuration: 100,
         transitionProperty: 'opacity',
-        animationName: { from: { opacity: 0 }, to: { opacity: 1 } },
+        animationName: css.keyframes({
+          from: { opacity: 0 },
+          to: { opacity: 1 },
+        }),
       };
       expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
         expect.objectContaining({

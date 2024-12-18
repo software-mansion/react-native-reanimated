@@ -23,57 +23,57 @@ export default function Playground() {
           <View style={[flex.grow, { backgroundColor: 'skyblue' }]} />
           <View style={[flex.grow, { backgroundColor: 'powderblue' }]} />
         </View>
+
         <AnimatedView style={styles.child} />
       </AnimatedView>
     </Screen>
   );
 }
 
-const childSizeAnimation = css.keyframes({
-  0.1: {
-    width: '75%',
-  },
-  0.2: {
-    width: 20,
-  },
-  0.3: {
-    width: '50%',
-  },
-  0.4: {
-    width: 20,
-  },
-  0.5: {
-    width: '75%',
-  },
-  0.6: {
-    width: 0,
-  },
-  0.7: {
-    width: '100%',
-  },
-  0.8: {
-    width: '25%',
-  },
-  0.9: {
-    width: '75%',
-  },
-  from: {
-    width: 20,
-  },
-});
-
-const childColorAnimation = css.keyframes({
-  to: {
-    backgroundColor: 'red',
-  },
-});
-
 const styles = css.create({
   child: {
     animationDirection: ['normal', 'alternate'],
     animationDuration: '10s',
     animationIterationCount: 'infinite',
-    animationName: [childSizeAnimation, childColorAnimation],
+    animationName: [
+      css.keyframes({
+        0.1: {
+          width: '75%',
+        },
+        0.2: {
+          width: 20,
+        },
+        0.3: {
+          width: '50%',
+        },
+        0.4: {
+          width: 20,
+        },
+        0.5: {
+          width: '75%',
+        },
+        0.6: {
+          width: 0,
+        },
+        0.7: {
+          width: '100%',
+        },
+        0.8: {
+          width: '25%',
+        },
+        0.9: {
+          width: '75%',
+        },
+        from: {
+          width: 20,
+        },
+      }),
+      css.keyframes({
+        to: {
+          backgroundColor: 'red',
+        },
+      }),
+    ],
     animationTimingFunction: 'linear',
     backgroundColor: 'gold',
     height: '100%',

@@ -3,9 +3,8 @@
  * https://codepen.io/z-/pen/JXVpgp
  */
 
-import { StyleSheet, View } from 'react-native';
-import type { CSSAnimationKeyframes } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
+import { View } from 'react-native';
+import Animated, { css } from 'react-native-reanimated';
 
 import { Screen } from '@/components';
 import { radius } from '@/theme';
@@ -23,64 +22,6 @@ const COLORS = {
 };
 
 export default function Campfire() {
-  const flameOdd: CSSAnimationKeyframes = {
-    '0%': {
-      backgroundColor: COLORS.yellow,
-      bottom: '0%',
-      height: '0%',
-      right: '0%',
-      width: '0%',
-      zIndex: 1000000,
-    },
-    '25%': {
-      bottom: '2%',
-      height: '100%',
-      right: '1%',
-      width: '100%',
-    },
-    '40%': {
-      backgroundColor: COLORS.orange,
-      zIndex: 1000000,
-    },
-    '100%': {
-      backgroundColor: COLORS.red,
-      bottom: '170%',
-      height: '0%',
-      right: '150%',
-      width: '0%',
-      zIndex: -10,
-    },
-  };
-
-  const flameEven: CSSAnimationKeyframes = {
-    '0%': {
-      backgroundColor: COLORS.yellow,
-      bottom: '0%',
-      height: '0%',
-      right: '0%',
-      width: '0%',
-      zIndex: 1000000,
-    },
-    '25%': {
-      bottom: '1%',
-      height: '100%',
-      right: '2%',
-      width: '100%',
-    },
-    '40%': {
-      backgroundColor: COLORS.orange,
-      zIndex: 1000000,
-    },
-    '100%': {
-      backgroundColor: COLORS.red,
-      bottom: '150%',
-      height: '0%',
-      right: '170%',
-      width: '0%',
-      zIndex: -10,
-    },
-  };
-
   return (
     <Screen style={styles.container}>
       <View style={styles.campfire}>
@@ -92,10 +33,7 @@ export default function Campfire() {
                 styles.flame,
                 {
                   animationDelay: (ANIMATION_DURATION / 4) * index,
-                  animationDuration: ANIMATION_DURATION,
-                  animationIterationCount: 'infinite',
                   animationName: index % 2 === 0 ? flameEven : flameOdd,
-                  animationTimingFunction: 'easeIn',
                 },
               ]}
             />
@@ -110,7 +48,65 @@ export default function Campfire() {
   );
 }
 
-const styles = StyleSheet.create({
+const flameEven = css.keyframes({
+  '0%': {
+    backgroundColor: COLORS.yellow,
+    bottom: '0%',
+    height: '0%',
+    right: '0%',
+    width: '0%',
+    zIndex: 1000000,
+  },
+  '25%': {
+    bottom: '1%',
+    height: '100%',
+    right: '2%',
+    width: '100%',
+  },
+  '40%': {
+    backgroundColor: COLORS.orange,
+    zIndex: 1000000,
+  },
+  '100%': {
+    backgroundColor: COLORS.red,
+    bottom: '150%',
+    height: '0%',
+    right: '170%',
+    width: '0%',
+    zIndex: -10,
+  },
+});
+
+const flameOdd = css.keyframes({
+  '0%': {
+    backgroundColor: COLORS.yellow,
+    bottom: '0%',
+    height: '0%',
+    right: '0%',
+    width: '0%',
+    zIndex: 1000000,
+  },
+  '25%': {
+    bottom: '2%',
+    height: '100%',
+    right: '1%',
+    width: '100%',
+  },
+  '40%': {
+    backgroundColor: COLORS.orange,
+    zIndex: 1000000,
+  },
+  '100%': {
+    backgroundColor: COLORS.red,
+    bottom: '170%',
+    height: '0%',
+    right: '150%',
+    width: '0%',
+    zIndex: -10,
+  },
+});
+
+const styles = css.create({
   campfire: {
     alignItems: 'center',
     width: '40%',
@@ -122,6 +118,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   flame: {
+    animationDuration: ANIMATION_DURATION,
+    animationIterationCount: 'infinite',
+    animationTimingFunction: 'easeIn',
     backgroundColor: COLORS.yellow,
     borderRadius: radius.md,
     position: 'absolute',

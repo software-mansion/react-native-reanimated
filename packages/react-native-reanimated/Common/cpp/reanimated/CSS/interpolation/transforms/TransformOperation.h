@@ -99,8 +99,8 @@ class PerspectiveOperation final : public TransformOperationBase<double> {
 class RotateOperation : public TransformOperationBase<AngleValue> {
  public:
   explicit RotateOperation(const AngleValue &value);
-    virtual ~RotateOperation() = default;
-    RotateOperation(TransformOperationType type, const AngleValue &value);
+  virtual ~RotateOperation() = default;
+  RotateOperation(TransformOperationType type, const AngleValue &value);
   jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
   TransformMatrix toMatrix() const override;
 };
@@ -129,9 +129,9 @@ class RotateZOperation final : public RotateOperation {
 class ScaleOperation : public TransformOperationBase<double> {
  public:
   explicit ScaleOperation(double value);
-    virtual ~ScaleOperation() = default;
+  virtual ~ScaleOperation() = default;
 
-    ScaleOperation(TransformOperationType type, double value);
+  ScaleOperation(TransformOperationType type, double value);
   jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
   bool canConvertTo(TransformOperationType type) const final;
   TransformOperations convertTo(TransformOperationType type) const final;

@@ -17,8 +17,9 @@ export type {
   CSSTransitionDelay,
   CSSTransitionProperties,
   CSSTransitionSettings,
+  CSSKeyframesRule,
 } from './types';
 export { cubicBezier, linear, steps } from './easings';
 export { normalizeTransformOrigin } from './normalization';
 export { createAnimatedComponent } from './component';
-export { css } from './normalization';
+export { css } from './stylesheet';

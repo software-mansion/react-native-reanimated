@@ -1,5 +1,11 @@
 'use strict';
-import type { AnimationSettingProp, TransitionSettingProp } from '../types';
+import { CSSKeyframesRuleImpl } from '../models';
+import type {
+  AnimationSettingProp,
+  CSSAnimationKeyframes,
+  CSSKeyframesRule,
+  TransitionSettingProp,
+} from '../types';
 
 const ANIMATION_SETTINGS: AnimationSettingProp[] = [
   'animationDuration',
@@ -52,3 +58,11 @@ export const isAngleValue = (
 
 export const isNumberArray = (value: unknown): value is number[] =>
   Array.isArray(value) && value.every(isNumber);
+
+export const isCSSKeyframesRule = (value: object): value is CSSKeyframesRule =>
+  value instanceof CSSKeyframesRuleImpl;
+
+export const isCSSKeyframesObject = (
+  value: object
+): value is CSSAnimationKeyframes =>
+  typeof value === 'object' && Object.keys(value).length > 0;

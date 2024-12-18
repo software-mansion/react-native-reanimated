@@ -5,6 +5,7 @@ import type {
   NormalizedCSSTimingFunction,
 } from '../easings';
 import type { AddArrayPropertyTypes } from './helpers';
+import type { CSSKeyframesRule } from './models';
 
 // BEFORE NORMALIZATION
 
@@ -40,9 +41,13 @@ export type SingleCSSAnimationSettings = {
   // animationTimeline?: // TODO - This is still experimental in browsers and we might not want to support it when CSS animations in reanimated are released
 };
 
+export type SingleCSSAnimationName<S extends object = PlainStyle> =
+  | CSSKeyframesRule
+  | CSSAnimationKeyframes<S>;
+
 export type SingleCSSAnimationProperties<S extends object = PlainStyle> =
   SingleCSSAnimationSettings & {
-    animationName: CSSAnimationKeyframes<S>;
+    animationName: SingleCSSAnimationName<S>;
   };
 
 export type CSSAnimationSettings =

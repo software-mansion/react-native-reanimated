@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import type {
-  CSSAnimationKeyframes,
-  CSSAnimationSettings,
-} from 'react-native-reanimated';
+import type { CSSAnimationSettings } from 'react-native-reanimated';
 import Animated, {
+  css,
   cubicBezier,
   LinearTransition,
   steps,
@@ -25,32 +23,32 @@ import {
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 import { stringifyConfig } from '@/utils';
 
-const wiggleAnimation: CSSAnimationKeyframes = {
+const wiggle = css.keyframes({
   '0, 100%': {
     transform: [{ rotate: '-15deg' }],
   },
   '50%': {
     transform: [{ rotate: '15deg' }],
   },
-};
+});
 
-const opacityAnimation: CSSAnimationKeyframes = {
+const opacity = css.keyframes({
   to: {
     opacity: 0,
   },
-};
+});
 
-const sizeAnimation: CSSAnimationKeyframes = {
+const size = css.keyframes({
   from: {
     height: sizes.xl,
     width: sizes.xl,
   },
-};
+});
 
 const ANIMATIONS = [
-  { animation: wiggleAnimation, name: 'Wiggle' },
-  { animation: opacityAnimation, name: 'Opacity' },
-  { animation: sizeAnimation, name: 'Size' },
+  { animationName: wiggle, name: 'Wiggle' },
+  { animationName: opacity, name: 'Opacity' },
+  { animationName: size, name: 'Size' },
 ];
 
 const DEFAULT_ANIMATION_SETTINGS: SelectableConfig<CSSAnimationSettings> = {
@@ -116,7 +114,9 @@ export default function MultipleAnimations() {
 
   const animationSettings = useSelectableConfig(selectableSettings);
   const animation = {
-    animationName: selectedIndexes.map((index) => ANIMATIONS[index].animation),
+    animationName: selectedIndexes.map(
+      (index) => ANIMATIONS[index].animationName
+    ),
     ...animationSettings,
   };
 

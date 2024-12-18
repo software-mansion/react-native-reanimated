@@ -7,8 +7,7 @@ import { faHeart, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import type { ComponentType } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import type { CSSAnimationKeyframes } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
+import Animated, { css } from 'react-native-reanimated';
 import {
   Circle,
   Defs,
@@ -89,30 +88,9 @@ const sharedStyles = StyleSheet.create({
 });
 
 function LikeEmoji() {
-  const like: CSSAnimationKeyframes = {
-    '25%': {
-      transform: [{ rotate: '15deg' }],
-    },
-    '50%': {
-      transform: [{ rotate: '-15deg' }, { translateY: -10 }],
-    },
-    '75%, 100%': {
-      transform: [{ rotate: '0deg' }],
-    },
-  };
-
   return (
     <View style={likeStyles.emoji}>
-      <Animated.View
-        style={[
-          likeStyles.icon,
-          {
-            animationDuration: '2s',
-            animationIterationCount: 'infinite',
-            animationName: like,
-            animationTimingFunction: 'linear',
-          },
-        ]}>
+      <Animated.View style={likeStyles.icon}>
         <FontAwesomeIcon
           color={COLORS.white}
           icon={faThumbsUp}
@@ -123,36 +101,36 @@ function LikeEmoji() {
   );
 }
 
-const likeStyles = StyleSheet.create({
+const like = css.keyframes({
+  '25%': {
+    transform: [{ rotate: '15deg' }],
+  },
+  '50%': {
+    transform: [{ rotate: '-15deg' }, { translateY: -10 }],
+  },
+  '75%, 100%': {
+    transform: [{ rotate: '0deg' }],
+  },
+});
+
+const likeStyles = css.create({
   emoji: {
     ...sharedStyles.emoji,
     backgroundColor: COLORS.blue,
   },
   icon: {
+    animationDuration: '2s',
+    animationIterationCount: 'infinite',
+    animationName: like,
+    animationTimingFunction: 'linear',
     transformOrigin: '0% 50%',
   },
 });
 
 function HeartEmoji() {
-  const heart: CSSAnimationKeyframes = {
-    '25%': {
-      transform: [{ scale: 1.1 }],
-    },
-    '75%': {
-      transform: [{ scale: 0.6 }],
-    },
-  };
-
   return (
     <View style={heartStyles.emoji}>
-      <Animated.View
-        style={{
-          animationDirection: 'alternate',
-          animationDuration: '1s',
-          animationIterationCount: 'infinite',
-          animationName: heart,
-          animationTimingFunction: 'linear',
-        }}>
+      <Animated.View style={heartStyles.icon}>
         <FontAwesomeIcon
           color={COLORS.white}
           icon={faHeart}
@@ -163,59 +141,33 @@ function HeartEmoji() {
   );
 }
 
-const heartStyles = StyleSheet.create({
+const heart = css.keyframes({
+  '25%': {
+    transform: [{ scale: 1.1 }],
+  },
+  '75%': {
+    transform: [{ scale: 0.6 }],
+  },
+});
+
+const heartStyles = css.create({
   emoji: {
     ...sharedStyles.emoji,
     backgroundColor: COLORS.red,
   },
+  icon: {
+    animationDirection: 'alternate',
+    animationDuration: '1s',
+    animationIterationCount: 'infinite',
+    animationName: heart,
+    animationTimingFunction: 'linear',
+  },
 });
 
 function HaHaEmoji() {
-  const hahaFace: CSSAnimationKeyframes = {
-    '10%, 30%, 50%': {
-      transform: [{ translateY: '25%' }],
-    },
-    '20%, 40%': {
-      transform: [{ translateY: '15%' }],
-    },
-    '60%, 80%': {
-      transform: [{ translateY: 0 }],
-    },
-    '70%, 90%': {
-      transform: [{ translateY: '-10%' }],
-    },
-  };
-
-  const hahaMouth: CSSAnimationKeyframes = {
-    '10%, 30%, 50%': {
-      transform: [{ scale: 0.6 }],
-    },
-    '20%, 40%': {
-      transform: [{ scale: 0.8 }],
-    },
-    '60%, 80%': {
-      transform: [{ scale: 1 }],
-    },
-    '70%': {
-      transform: [{ scale: 1.2 }],
-    },
-    '90%': {
-      transform: [{ scale: 1.1 }],
-    },
-  };
-
   return (
     <View style={hahaStyles.emoji}>
-      <Animated.View
-        style={[
-          hahaStyles.face,
-          {
-            animationDuration: '2s',
-            animationIterationCount: 'infinite',
-            animationName: hahaFace,
-            animationTimingFunction: 'linear',
-          },
-        ]}>
+      <Animated.View style={hahaStyles.face}>
         <View style={hahaStyles.eyes}>
           <View>
             <View
@@ -236,16 +188,7 @@ function HaHaEmoji() {
           </View>
         </View>
 
-        <Animated.View
-          style={[
-            hahaStyles.mouth,
-            {
-              animationDuration: '2s',
-              animationIterationCount: 'infinite',
-              animationName: hahaMouth,
-              animationTimingFunction: 'linear',
-            },
-          ]}>
+        <Animated.View style={hahaStyles.mouth}>
           <View style={hahaStyles.tongue} />
         </Animated.View>
       </Animated.View>
@@ -253,7 +196,40 @@ function HaHaEmoji() {
   );
 }
 
-const hahaStyles = StyleSheet.create({
+const hahaFace = css.keyframes({
+  '10%, 30%, 50%': {
+    transform: [{ translateY: '25%' }],
+  },
+  '20%, 40%': {
+    transform: [{ translateY: '15%' }],
+  },
+  '60%, 80%': {
+    transform: [{ translateY: 0 }],
+  },
+  '70%, 90%': {
+    transform: [{ translateY: '-10%' }],
+  },
+});
+
+const hahaMouth = css.keyframes({
+  '10%, 30%, 50%': {
+    transform: [{ scale: 0.6 }],
+  },
+  '20%, 40%': {
+    transform: [{ scale: 0.8 }],
+  },
+  '60%, 80%': {
+    transform: [{ scale: 1 }],
+  },
+  '70%': {
+    transform: [{ scale: 1.2 }],
+  },
+  '90%': {
+    transform: [{ scale: 1.1 }],
+  },
+});
+
+const hahaStyles = css.create({
   emoji: {
     ...sharedStyles.emoji,
     backgroundColor: COLORS.base,
@@ -270,9 +246,17 @@ const hahaStyles = StyleSheet.create({
   },
   face: {
     alignItems: 'center',
+    animationDuration: '2s',
+    animationIterationCount: 'infinite',
+    animationName: hahaFace,
+    animationTimingFunction: 'linear',
     gap: 0.15 * EMOJI_SIZE,
   },
   mouth: {
+    animationDuration: '2s',
+    animationIterationCount: 'infinite',
+    animationName: hahaMouth,
+    animationTimingFunction: 'linear',
     backgroundColor: COLORS.black,
     borderBottomLeftRadius: radius.full,
     borderBottomRightRadius: radius.full,
@@ -292,27 +276,8 @@ const hahaStyles = StyleSheet.create({
 });
 
 function YayEmoji() {
-  const yay: CSSAnimationKeyframes = {
-    '25%': {
-      transform: [{ rotate: '-15deg' }],
-    },
-    '75%': {
-      transform: [{ rotate: '15deg' }],
-    },
-  };
-
   return (
-    <Animated.View
-      style={[
-        yayStyles.emoji,
-        {
-          animationDirection: 'alternate',
-          animationDuration: '1s',
-          animationIterationCount: 'infinite',
-          animationName: yay,
-          animationTimingFunction: 'linear',
-        },
-      ]}>
+    <Animated.View style={yayStyles.emoji}>
       <View style={yayStyles.eyeBrows}>
         <View style={yayStyles.eyeBrow} />
         <View style={yayStyles.eyeBrow} />
@@ -348,12 +313,26 @@ function YayEmoji() {
   );
 }
 
-const yayStyles = StyleSheet.create({
+const yay = css.keyframes({
+  '25%': {
+    transform: [{ rotate: '-15deg' }],
+  },
+  '75%': {
+    transform: [{ rotate: '15deg' }],
+  },
+});
+
+const yayStyles = css.create({
   cheeks: {
     position: 'absolute',
   },
   emoji: {
     ...sharedStyles.emoji,
+    animationDirection: 'alternate',
+    animationDuration: '1s',
+    animationIterationCount: 'infinite',
+    animationName: yay,
+    animationTimingFunction: 'linear',
     backgroundColor: COLORS.base,
     overflow: 'hidden',
   },
@@ -386,67 +365,10 @@ const yayStyles = StyleSheet.create({
 });
 
 function WowEmoji() {
-  const wowFace: CSSAnimationKeyframes = {
-    '15%, 25%': {
-      transform: [{ rotate: '20deg' }, { translateX: -0.25 * EMOJI_SIZE }],
-    },
-    '45%, 65%': {
-      transform: [{ rotate: '-20deg' }, { translateX: 0.25 * EMOJI_SIZE }],
-    },
-    '75%, 100%': {
-      transform: [{ rotate: '0deg' }, { translateX: 0 }],
-    },
-  };
-
-  const wowBrows: CSSAnimationKeyframes = {
-    '0%, 75%, 100%': {
-      top: -0.075 * EMOJI_SIZE,
-    },
-    '15%, 65%': {
-      top: 0.025 * EMOJI_SIZE,
-    },
-  };
-
-  const wowMouth: CSSAnimationKeyframes = {
-    '10%, 30%': {
-      top: -0.1 * EMOJI_SIZE,
-      transform: [{ scaleY: 1 }],
-      width: 0.15 * EMOJI_SIZE,
-    },
-    '50%, 70%': {
-      top: -0.075 * EMOJI_SIZE,
-      transform: [{ scaleY: 1.25 }],
-      width: 0.25 * EMOJI_SIZE,
-    },
-    '75%, 100%': {
-      top: 0,
-      transform: [{ scaleY: 1.5 }],
-      width: 0.25 * EMOJI_SIZE,
-    },
-  };
-
   return (
     <View style={wowStyles.emoji}>
-      <Animated.View
-        style={[
-          wowStyles.face,
-          {
-            animationDuration: '3s',
-            animationIterationCount: 'infinite',
-            animationName: wowFace,
-            animationTimingFunction: 'linear',
-          },
-        ]}>
-        <Animated.View
-          style={[
-            wowStyles.eyeBrows,
-            {
-              animationDuration: '3s',
-              animationIterationCount: 'infinite',
-              animationName: wowBrows,
-              animationTimingFunction: 'linear',
-            },
-          ]}>
+      <Animated.View style={wowStyles.face}>
+        <Animated.View style={wowStyles.eyeBrows}>
           <View style={wowStyles.eyeBrow} />
           <View style={wowStyles.eyeBrow} />
         </Animated.View>
@@ -456,23 +378,52 @@ function WowEmoji() {
           <View style={wowStyles.eye} />
         </View>
 
-        <Animated.View
-          style={[
-            wowStyles.mouth,
-            {
-              animationDuration: '3s',
-              animationIterationCount: 'infinite',
-              animationName: wowMouth,
-              animationTimingFunction: 'linear',
-            },
-          ]}
-        />
+        <Animated.View style={wowStyles.mouth} />
       </Animated.View>
     </View>
   );
 }
 
-const wowStyles = StyleSheet.create({
+const wowFace = css.keyframes({
+  '15%, 25%': {
+    transform: [{ rotate: '20deg' }, { translateX: -0.25 * EMOJI_SIZE }],
+  },
+  '45%, 65%': {
+    transform: [{ rotate: '-20deg' }, { translateX: 0.25 * EMOJI_SIZE }],
+  },
+  '75%, 100%': {
+    transform: [{ rotate: '0deg' }, { translateX: 0 }],
+  },
+});
+
+const wowBrows = css.keyframes({
+  '0%, 75%, 100%': {
+    top: -0.075 * EMOJI_SIZE,
+  },
+  '15%, 65%': {
+    top: 0.025 * EMOJI_SIZE,
+  },
+});
+
+const wowMouth = css.keyframes({
+  '10%, 30%': {
+    top: -0.1 * EMOJI_SIZE,
+    transform: [{ scaleY: 1 }],
+    width: 0.15 * EMOJI_SIZE,
+  },
+  '50%, 70%': {
+    top: -0.075 * EMOJI_SIZE,
+    transform: [{ scaleY: 1.25 }],
+    width: 0.25 * EMOJI_SIZE,
+  },
+  '75%, 100%': {
+    top: 0,
+    transform: [{ scaleY: 1.5 }],
+    width: 0.25 * EMOJI_SIZE,
+  },
+});
+
+const wowStyles = css.create({
   emoji: {
     ...sharedStyles.emoji,
     backgroundColor: COLORS.base,
@@ -496,6 +447,10 @@ const wowStyles = StyleSheet.create({
     width: 0.3 * EMOJI_SIZE,
   },
   eyeBrows: {
+    animationDuration: '3s',
+    animationIterationCount: 'infinite',
+    animationName: wowBrows,
+    animationTimingFunction: 'linear',
     flexDirection: 'row',
     gap: 0.075 * EMOJI_SIZE,
   },
@@ -506,8 +461,16 @@ const wowStyles = StyleSheet.create({
   },
   face: {
     alignItems: 'center',
+    animationDuration: '3s',
+    animationIterationCount: 'infinite',
+    animationName: wowFace,
+    animationTimingFunction: 'linear',
   },
   mouth: {
+    animationDuration: '3s',
+    animationIterationCount: 'infinite',
+    animationName: wowMouth,
+    animationTimingFunction: 'linear',
     aspectRatio: 1,
     backgroundColor: COLORS.black,
     borderRadius: '50%',
@@ -517,70 +480,9 @@ const wowStyles = StyleSheet.create({
 });
 
 function SadEmoji() {
-  const sadFace: CSSAnimationKeyframes = {
-    '0%, 100%': {
-      top: 0.15 * EMOJI_SIZE,
-    },
-    '25%, 35%': {
-      top: 0,
-    },
-    '55%, 95%': {
-      top: 0.25 * EMOJI_SIZE,
-    },
-  };
-
-  const sadMouth: CSSAnimationKeyframes = {
-    '0%, 55%, 100%': {
-      transform: [{ scaleY: 1.5 }, { scaleX: 1.15 }],
-    },
-    '25%, 35%': {
-      transform: [{ scaleY: 1.15 }],
-    },
-  };
-
-  const tearDrop: CSSAnimationKeyframes = {
-    '0%, 100%': {
-      left: 0.45 * EMOJI_SIZE,
-      top: 0,
-      transform: [{ scale: 0 }],
-    },
-    '25%': {
-      left: 0.45 * EMOJI_SIZE,
-      transform: [{ scale: 1 }],
-    },
-    '49.9%': {
-      left: 0.45 * EMOJI_SIZE,
-      top: 0.5 * EMOJI_SIZE,
-      transform: [{ scale: 0 }],
-    },
-    '50%': {
-      left: -0.15 * EMOJI_SIZE,
-      top: 0,
-      transform: [{ scale: 0 }],
-    },
-    '75%': {
-      left: -0.15 * EMOJI_SIZE,
-      transform: [{ scale: 1 }],
-    },
-    '99.9%': {
-      left: -0.15 * EMOJI_SIZE,
-      top: 0.5 * EMOJI_SIZE,
-      transform: [{ scale: 0 }],
-    },
-  };
-
   return (
     <View style={sadStyles.emoji}>
-      <Animated.View
-        style={[
-          sadStyles.face,
-          {
-            animationDuration: '2s',
-            animationIterationCount: 'infinite',
-            animationName: sadFace,
-            animationTimingFunction: 'linear',
-          },
-        ]}>
+      <Animated.View style={sadStyles.face}>
         <View style={sadStyles.eyeBrows}>
           <View
             style={[sadStyles.eyeBrow, { transform: [{ rotate: '-30deg' }] }]}
@@ -592,36 +494,69 @@ function SadEmoji() {
         <View style={sadStyles.eyes}>
           <View style={sadStyles.eye} />
           <View style={sadStyles.eye} />
-          <Animated.View
-            style={[
-              sadStyles.tearWrapper,
-              {
-                animationDuration: '2s',
-                animationIterationCount: 'infinite',
-                animationName: tearDrop,
-                animationTimingFunction: 'linear',
-              },
-            ]}>
+          <Animated.View style={sadStyles.tearWrapper}>
             <View style={sadStyles.tear} />
           </Animated.View>
         </View>
-        <Animated.View
-          style={[
-            sadStyles.mouth,
-            {
-              animationDuration: '2s',
-              animationIterationCount: 'infinite',
-              animationName: sadMouth,
-              animationTimingFunction: 'linear',
-            },
-          ]}
-        />
+        <Animated.View style={sadStyles.mouth} />
       </Animated.View>
     </View>
   );
 }
 
-const sadStyles = StyleSheet.create({
+const sadFace = css.keyframes({
+  '0%, 100%': {
+    top: 0.15 * EMOJI_SIZE,
+  },
+  '25%, 35%': {
+    top: 0,
+  },
+  '55%, 95%': {
+    top: 0.25 * EMOJI_SIZE,
+  },
+});
+
+const sadMouth = css.keyframes({
+  '0%, 55%, 100%': {
+    transform: [{ scaleY: 1.5 }, { scaleX: 1.15 }],
+  },
+  '25%, 35%': {
+    transform: [{ scaleY: 1.15 }],
+  },
+});
+
+const tearDrop = css.keyframes({
+  '0%, 100%': {
+    left: 0.45 * EMOJI_SIZE,
+    top: 0,
+    transform: [{ scale: 0 }],
+  },
+  '25%': {
+    left: 0.45 * EMOJI_SIZE,
+    transform: [{ scale: 1 }],
+  },
+  '49.9%': {
+    left: 0.45 * EMOJI_SIZE,
+    top: 0.5 * EMOJI_SIZE,
+    transform: [{ scale: 0 }],
+  },
+  '50%': {
+    left: -0.15 * EMOJI_SIZE,
+    top: 0,
+    transform: [{ scale: 0 }],
+  },
+  '75%': {
+    left: -0.15 * EMOJI_SIZE,
+    transform: [{ scale: 1 }],
+  },
+  '99.9%': {
+    left: -0.15 * EMOJI_SIZE,
+    top: 0.5 * EMOJI_SIZE,
+    transform: [{ scale: 0 }],
+  },
+});
+
+const sadStyles = css.create({
   emoji: {
     ...sharedStyles.emoji,
     backgroundColor: COLORS.base,
@@ -651,8 +586,16 @@ const sadStyles = StyleSheet.create({
   },
   face: {
     alignItems: 'center',
+    animationDuration: '2s',
+    animationIterationCount: 'infinite',
+    animationName: sadFace,
+    animationTimingFunction: 'linear',
   },
   mouth: {
+    animationDuration: '2s',
+    animationIterationCount: 'infinite',
+    animationName: sadMouth,
+    animationTimingFunction: 'linear',
     borderBlockStartColor: COLORS.black,
     borderColor: COLORS.baseTransparent,
     borderRadius: '50%',
@@ -670,41 +613,15 @@ const sadStyles = StyleSheet.create({
     width: 0.25 * EMOJI_SIZE,
   },
   tearWrapper: {
+    animationDuration: '2s',
+    animationIterationCount: 'infinite',
+    animationName: tearDrop,
+    animationTimingFunction: 'linear',
     position: 'absolute',
   },
 });
 
 function AngryEmoji() {
-  const angryFace: CSSAnimationKeyframes = {
-    '35%, 60%': {
-      transform: [
-        { translateX: 0 },
-        { translateY: 0.1 * EMOJI_SIZE },
-        { scale: 0.9 },
-      ],
-    },
-    '40%, 50%': {
-      transform: [
-        { translateX: -5 },
-        { translateY: 0.1 * EMOJI_SIZE },
-        { scale: 0.9 },
-      ],
-    },
-    '45%, 55%': {
-      transform: [
-        { translateX: 5 },
-        { translateY: 0.1 * EMOJI_SIZE },
-        { scale: 0.9 },
-      ],
-    },
-  };
-
-  const angryMouth: CSSAnimationKeyframes = {
-    '25%, 50%': {
-      transform: [{ scaleY: 0.2 }],
-    },
-  };
-
   return (
     <View style={angryStyles.emoji}>
       <Svg
@@ -724,16 +641,7 @@ function AngryEmoji() {
           r={0.5 * EMOJI_SIZE}
         />
       </Svg>
-      <Animated.View
-        style={[
-          angryStyles.face,
-          {
-            animationDuration: '2s',
-            animationIterationCount: 'infinite',
-            animationName: angryFace,
-            animationTimingFunction: 'linear',
-          },
-        ]}>
+      <Animated.View style={angryStyles.face}>
         <View style={angryStyles.eyeBrows}>
           <View
             style={[
@@ -754,23 +662,43 @@ function AngryEmoji() {
           <View style={angryStyles.eye} />
           <View style={angryStyles.eye} />
         </View>
-        <Animated.View
-          style={[
-            angryStyles.mouth,
-            {
-              animationDuration: '2s',
-              animationIterationCount: 'infinite',
-              animationName: angryMouth,
-              animationTimingFunction: 'linear',
-            },
-          ]}
-        />
+        <Animated.View style={angryStyles.mouth} />
       </Animated.View>
     </View>
   );
 }
 
-const angryStyles = StyleSheet.create({
+const angryFace = css.keyframes({
+  '35%, 60%': {
+    transform: [
+      { translateX: 0 },
+      { translateY: 0.1 * EMOJI_SIZE },
+      { scale: 0.9 },
+    ],
+  },
+  '40%, 50%': {
+    transform: [
+      { translateX: -5 },
+      { translateY: 0.1 * EMOJI_SIZE },
+      { scale: 0.9 },
+    ],
+  },
+  '45%, 55%': {
+    transform: [
+      { translateX: 5 },
+      { translateY: 0.1 * EMOJI_SIZE },
+      { scale: 0.9 },
+    ],
+  },
+});
+
+const angryMouth = css.keyframes({
+  '25%, 50%': {
+    transform: [{ scaleY: 0.2 }],
+  },
+});
+
+const angryStyles = css.create({
   emoji: {
     ...sharedStyles.emoji,
     backgroundColor: COLORS.base,
@@ -801,8 +729,16 @@ const angryStyles = StyleSheet.create({
   },
   face: {
     alignItems: 'center',
+    animationDuration: '2s',
+    animationIterationCount: 'infinite',
+    animationName: angryFace,
+    animationTimingFunction: 'linear',
   },
   mouth: {
+    animationDuration: '2s',
+    animationIterationCount: 'infinite',
+    animationName: angryMouth,
+    animationTimingFunction: 'linear',
     backgroundColor: COLORS.black,
     borderRadius: '50%',
     height: 0.3 * EMOJI_SIZE,
