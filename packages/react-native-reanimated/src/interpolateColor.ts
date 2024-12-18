@@ -150,17 +150,23 @@ const interpolateColorsLAB = (
 
 const _splitColorsIntoChannels = (
   colors: readonly (string | number)[],
-  ch1: number[],
-  ch2: number[],
-  ch3: number[],
-  alpha: number[],
   convFromRgb: (color: { r: number; g: number; b: number }) => {
     ch1: number;
     ch2: number;
     ch3: number;
   }
-) => {
+): {
+  ch1: number[];
+  ch2: number[];
+  ch3: number[];
+  alpha: number[];
+} => {
   'worklet';
+  const ch1: number[] = [];
+  const ch2: number[] = [];
+  const ch3: number[] = [];
+  const alpha: number[] = [];
+
   for (let i = 0; i < colors.length; i++) {
     const color = colors[i];
     const processedColor = processColor(color);
@@ -177,6 +183,13 @@ const _splitColorsIntoChannels = (
       alpha.push(opacity(processedColor));
     }
   }
+
+  return {
+    ch1,
+    ch2,
+    ch3,
+    alpha,
+  };
 };
 
 export interface InterpolateRGB {
@@ -190,18 +203,21 @@ const getInterpolateRGB = (
   colors: readonly (string | number)[]
 ): InterpolateRGB => {
   'worklet';
+  const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(
+    colors,
+    (color) => ({
+      ch1: color.r,
+      ch2: color.g,
+      ch3: color.b,
+    })
+  );
 
-  const r: number[] = [];
-  const g: number[] = [];
-  const b: number[] = [];
-  const a: number[] = [];
-
-  _splitColorsIntoChannels(colors, r, g, b, a, (color) => ({
-    ch1: color.r,
-    ch2: color.g,
-    ch3: color.b,
-  }));
-  return { r, g, b, a };
+  return {
+    r: ch1,
+    g: ch2,
+    b: ch3,
+    a: alpha,
+  };
 };
 
 export interface InterpolateHSV {
@@ -215,12 +231,7 @@ const getInterpolateHSV = (
   colors: readonly (string | number)[]
 ): InterpolateHSV => {
   'worklet';
-  const h: number[] = [];
-  const s: number[] = [];
-  const v: number[] = [];
-  const a: number[] = [];
-
-  _splitColorsIntoChannels(colors, h, s, v, a, (color) => {
+  const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(colors, (color) => {
     const hsvColor = RGBtoHSV(color.r, color.g, color.b);
     return {
       ch1: hsvColor.h,
@@ -228,7 +239,13 @@ const getInterpolateHSV = (
       ch3: hsvColor.v,
     };
   });
-  return { h, s, v, a };
+
+  return {
+    h: ch1,
+    s: ch2,
+    v: ch3,
+    a: alpha,
+  };
 };
 
 export interface InterpolateLAB {
@@ -243,12 +260,7 @@ const getInterpolateLAB = (
 ): InterpolateLAB => {
   'worklet';
 
-  const l: number[] = [];
-  const a: number[] = [];
-  const b: number[] = [];
-  const alpha: number[] = [];
-
-  _splitColorsIntoChannels(colors, l, a, b, alpha, (color) => {
+  const { ch1, ch2, ch3, alpha } = _splitColorsIntoChannels(colors, (color) => {
     const labColor = culori.oklab.convert.fromRgb(color);
     return {
       ch1: labColor.l,
@@ -256,7 +268,13 @@ const getInterpolateLAB = (
       ch3: labColor.b,
     };
   });
-  return { l, a, b, alpha };
+
+  return {
+    l: ch1,
+    a: ch2,
+    b: ch3,
+    alpha,
+  };
 };
 
 /**
