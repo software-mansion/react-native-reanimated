@@ -61,21 +61,21 @@ export default function useInterpolateColorPlayground() {
   };
 
   // prettier-ignore
-  const argsCode =
+  const optionsCode =
     (colorSpace === ColorSpace.RGB
       ? `gamma: ${gamma},`
       : (colorSpace === ColorSpace.HSV
         ? `useCorrectedHSVInterpolation: ${correction},`
-        : ''));
+          : ''));
   // prettier-ignore
   const code = `
     interpolateColor(
         sv.value,
         [0, 1],
         ['${colorLeftBoundary.toUpperCase()}', '${colorRightBoundary.toUpperCase()}']
-        '${colorSpace}',
-        ${argsCode ? `{
-          ${argsCode}
+        '${colorSpace}'${optionsCode ? `,
+        {
+          ${optionsCode}
         }` :  ''}
       )
     `;
