@@ -1,5 +1,5 @@
 'use strict';
-import type { PlainStyleProps, CSSTimeUnit } from './common';
+import type { PlainStyle, CSSTimeUnit } from './common';
 import type {
   CSSTimingFunction,
   NormalizedCSSTimingFunction,
@@ -13,7 +13,7 @@ export type CSSAnimationKeyframeBlock<S extends object> = S & {
   animationTimingFunction?: CSSAnimationTimingFunction;
 };
 
-export type CSSAnimationKeyframes<S extends object = PlainStyleProps> = Record<
+export type CSSAnimationKeyframes<S extends object = PlainStyle> = Record<
   CSSAnimationKeyframeSelector,
   CSSAnimationKeyframeBlock<S>
 >;
@@ -40,7 +40,7 @@ export type SingleCSSAnimationSettings = {
   // animationTimeline?: // TODO - This is still experimental in browsers and we might not want to support it when CSS animations in reanimated are released
 };
 
-export type SingleCSSAnimationProperties<S extends object = PlainStyleProps> =
+export type SingleCSSAnimationProperties<S extends object = PlainStyle> =
   SingleCSSAnimationSettings & {
     animationName: CSSAnimationKeyframes<S>;
   };
@@ -48,7 +48,7 @@ export type SingleCSSAnimationProperties<S extends object = PlainStyleProps> =
 export type CSSAnimationSettings =
   AddArrayPropertyTypes<SingleCSSAnimationSettings>;
 
-export type CSSAnimationProperties<S extends object = PlainStyleProps> =
+export type CSSAnimationProperties<S extends object = PlainStyle> =
   AddArrayPropertyTypes<SingleCSSAnimationProperties<S>>;
 
 export type AnimationSettingProp = keyof CSSAnimationSettings;
@@ -73,13 +73,13 @@ type CreateKeyframesStyle<S> = {
     : never;
 };
 
-export type NormalizedCSSKeyframesStyle = CreateKeyframesStyle<PlainStyleProps>;
+export type NormalizedCSSKeyframesStyle = CreateKeyframesStyle<PlainStyle>;
 export type NormalizedCSSKeyframeTimingFunctions = Record<
   number,
   NormalizedCSSTimingFunction
 >;
 
-export type NormalizedCSSAnimationName = {
+export type NormalizedCSSAnimationKeyframes = {
   keyframesStyle: NormalizedCSSKeyframesStyle;
   keyframeTimingFunctions: NormalizedCSSKeyframeTimingFunctions;
 };
@@ -95,4 +95,4 @@ export type NormalizedSingleCSSAnimationSettings = {
 };
 
 export type NormalizedSingleCSSAnimationConfig =
-  NormalizedSingleCSSAnimationSettings & NormalizedCSSAnimationName;
+  NormalizedSingleCSSAnimationSettings & NormalizedCSSAnimationKeyframes;

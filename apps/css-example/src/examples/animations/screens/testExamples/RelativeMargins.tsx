@@ -1,24 +1,8 @@
-import { StyleSheet, View } from 'react-native';
-import type { CSSAnimationProperties } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
+import { View } from 'react-native';
+import Animated, { css } from 'react-native-reanimated';
 
 import { TestExampleScreen } from '@/components';
 import { colors, radius, sizes } from '@/theme';
-
-const marginAnimation: CSSAnimationProperties = {
-  animationDirection: 'alternate',
-  animationDuration: '2s',
-  animationIterationCount: 'infinite',
-  animationName: {
-    from: {
-      marginHorizontal: 10,
-    },
-    to: {
-      marginHorizontal: '35%',
-    },
-  },
-  animationTimingFunction: 'linear',
-};
 
 export default function RelativeMargins() {
   return (
@@ -65,8 +49,22 @@ function Example() {
   );
 }
 
-const styles = StyleSheet.create({
+const marginAnimation = css.keyframes({
+  from: {
+    marginHorizontal: 10,
+  },
+  to: {
+    marginHorizontal: '35%',
+  },
+});
+
+const styles = css.create({
   animatedBox: {
+    animationDirection: 'alternate',
+    animationDuration: '2s',
+    animationIterationCount: 'infinite',
+    animationName: marginAnimation,
+    animationTimingFunction: 'linear',
     backgroundColor: colors.primaryDark,
   },
   box: {

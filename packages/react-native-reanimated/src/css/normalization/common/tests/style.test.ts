@@ -1,6 +1,6 @@
 import { ReanimatedError } from '../../../errors';
 import type {
-  PlainStyleProps,
+  PlainStyle,
   CSSStyle,
   CSSTransitionProperty,
 } from '../../../types';
@@ -12,7 +12,7 @@ import {
 
 describe(normalizeStyle, () => {
   it('converts all "auto" values to undefined', () => {
-    const style: PlainStyleProps = {
+    const style: PlainStyle = {
       width: 'auto',
       margin: 'auto',
       borderRadius: 10,
@@ -49,7 +49,7 @@ describe(normalizeStyle, () => {
         ['tintColor', 'hsl(180, 100%, 25%)', 0x007f80ff],
       ])('converts %p with value %p to %p', (key, value, expected) => {
         const argb = ((expected << 24) | (expected >>> 8)) >>> 0;
-        const style: PlainStyleProps = { [key]: value };
+        const style: PlainStyle = { [key]: value };
         expect(normalizeStyle(style)).toEqual({ [key]: argb });
       });
     });
@@ -64,7 +64,7 @@ describe(normalizeStyle, () => {
         'hsla(360, 100%, 50%)',
         'hwb(360, 100%, 50%, 0.5)',
       ])('throws an error for %p', (value) => {
-        const style: PlainStyleProps = { color: value };
+        const style: PlainStyle = { color: value };
         expect(() => normalizeStyle(style)).toThrow(
           new ReanimatedError(ERROR_MESSAGES.invalidColor(value))
         );
@@ -74,7 +74,7 @@ describe(normalizeStyle, () => {
 
   describe('transform string', () => {
     it('normalizes transform string', () => {
-      const style: PlainStyleProps = {
+      const style: PlainStyle = {
         transform: 'translate(100px, 20%) translateY(50%) scale(2) skew(0)',
       };
 
@@ -93,7 +93,7 @@ describe(normalizeStyle, () => {
 
   describe('transform origin', () => {
     it('normalizes transform origin', () => {
-      const style: PlainStyleProps = {
+      const style: PlainStyle = {
         transformOrigin: 'top right',
       };
 
@@ -105,7 +105,7 @@ describe(normalizeStyle, () => {
 
   describe('gap', () => {
     it('replaces gap with rowGap and columnGap', () => {
-      const style: PlainStyleProps = {
+      const style: PlainStyle = {
         gap: 10,
       };
 
@@ -118,7 +118,7 @@ describe(normalizeStyle, () => {
 
   describe('aspect ratio', () => {
     it('returns number as is', () => {
-      const style: PlainStyleProps = {
+      const style: PlainStyle = {
         aspectRatio: 1.5,
       };
 
@@ -128,7 +128,7 @@ describe(normalizeStyle, () => {
     });
 
     it('normalizes aspect ratio', () => {
-      const style: PlainStyleProps = {
+      const style: PlainStyle = {
         aspectRatio: '16/9',
       };
 
@@ -138,7 +138,7 @@ describe(normalizeStyle, () => {
     });
 
     it('throws an error for invalid aspect ratio', () => {
-      const style: PlainStyleProps = {
+      const style: PlainStyle = {
         aspectRatio: 'invalid',
       };
 
@@ -150,7 +150,7 @@ describe(normalizeStyle, () => {
 
   describe('other props', () => {
     it('passes other props without modification', () => {
-      const style: PlainStyleProps = {
+      const style: PlainStyle = {
         borderRadius: 10,
         flexDirection: 'row',
       };
@@ -161,7 +161,7 @@ describe(normalizeStyle, () => {
 
   describe('mixed props', () => {
     it('normalizes all props', () => {
-      const style: PlainStyleProps = {
+      const style: PlainStyle = {
         width: 'auto',
         margin: 'auto',
         backgroundColor: 'red',

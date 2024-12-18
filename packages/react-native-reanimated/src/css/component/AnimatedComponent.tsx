@@ -7,7 +7,7 @@ import type {
 } from '../../createAnimatedComponent/commonTypes';
 import { isFabric, shouldBeUseWeb } from '../../PlatformChecker';
 import { CSSManager } from '../managers';
-import type { AnyComponent, AnyRecord, PlainStyleProps } from '../types';
+import type { AnyComponent, AnyRecord, PlainStyle } from '../types';
 import { Platform, StyleSheet } from 'react-native';
 import type { StyleProp } from 'react-native';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
@@ -21,7 +21,7 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
-  style?: StyleProp<PlainStyleProps>;
+  style?: StyleProp<PlainStyle>;
 };
 
 // TODO - change these ugly underscore prefixed methods and properties to real
@@ -35,7 +35,7 @@ export default class AnimatedComponent<
   _CSSManager?: CSSManager;
 
   _viewInfo?: ViewInfo;
-  _planStyle: PlainStyleProps = {};
+  _planStyle: PlainStyle = {};
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
 
   constructor(ChildComponent: AnyComponent, props: P) {

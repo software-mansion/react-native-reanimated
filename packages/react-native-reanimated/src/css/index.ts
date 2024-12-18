@@ -21,3 +21,4 @@ export type {
 export { cubicBezier, linear, steps } from './easings';
 export { normalizeTransformOrigin } from './normalization';
 export { createAnimatedComponent } from './component';
+export { css } from './normalization';
