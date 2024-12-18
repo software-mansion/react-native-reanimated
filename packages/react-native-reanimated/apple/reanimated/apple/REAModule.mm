@@ -12,10 +12,6 @@
 #endif // REACT_NATIVE_MINOR_VERSION >= 75
 #endif // RCT_NEW_ARCH_ENABLED
 
-#ifdef RCT_NEW_ARCH_ENABLED
-#import <reanimated/apple/Fabric/REAInitializerRCTFabricSurface.h>
-#endif // RCT_NEW_ARCH_ENABLED
-
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
@@ -49,7 +45,7 @@ using namespace reanimated;
 #endif // RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
-static __strong REAInitializerRCTFabricSurface *reaSurface;
+// nothing
 #else
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 #endif // RCT_NEW_ARCH_ENABLED
@@ -117,12 +113,12 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 #pragma mark-- Initialize
 
+// TODO: usunąć
 - (void)installReanimatedAfterReload
 {
   // called from REAInitializerRCTFabricSurface::start
   __weak __typeof__(self) weakSelf = self;
   _surfacePresenter = self.bridge.surfacePresenter;
-  [_nodesManager setSurfacePresenter:_surfacePresenter];
 
   // to avoid deadlock we can't use Executor from React Native
   // but we can create own and use it because initialization is already synchronized
@@ -178,14 +174,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)setBridge:(RCTBridge *)bridge
 {
   [super setBridge:bridge];
-  // only within the first loading `self.bridge.surfacePresenter` exists
-  // during the reload `self.bridge.surfacePresenter` is null
-  if (self.bridge.surfacePresenter) {
-    _surfacePresenter = self.bridge.surfacePresenter;
-  }
-
-  [self setReaSurfacePresenter];
-
+  
   _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:bridge surfacePresenter:_surfacePresenter];
 
   [[NSNotificationCenter defaultCenter] addObserver:self
@@ -194,17 +183,6 @@ RCT_EXPORT_MODULE(ReanimatedModule);
                                              object:nil];
 
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
-}
-
-- (void)setReaSurfacePresenter
-{
-  if (_surfacePresenter && ![_surfacePresenter surfaceForRootTag:reaSurface.rootTag]) {
-    if (!reaSurface) {
-      reaSurface = [[REAInitializerRCTFabricSurface alloc] init];
-    }
-    [_surfacePresenter registerSurface:reaSurface];
-  }
-  reaSurface.reaModule = self;
 }
 
 #else // RCT_NEW_ARCH_ENABLED

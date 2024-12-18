@@ -243,10 +243,7 @@ using namespace facebook::react;
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
-- (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
-{
-  _surfacePresenter = surfacePresenter;
-}
+// nothing
 #endif // RCT_NEW_ARCH_ENABLED
 
 - (void)operationsBatchDidComplete
