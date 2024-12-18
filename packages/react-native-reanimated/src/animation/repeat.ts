@@ -57,7 +57,6 @@ export const withRepeat = function <T extends AnimationObject>(
 
       function repeat(animation: RepeatAnimation, now: Timestamp): boolean {
         const finished = nextAnimation.onFrame(nextAnimation, now);
-        nextAnimation.finished = finished;
         animation.current = nextAnimation.current;
         if (finished) {
           animation.reps += 1;
