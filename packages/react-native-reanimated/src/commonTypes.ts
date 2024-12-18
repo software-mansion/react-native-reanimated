@@ -221,7 +221,7 @@ export interface StyleProps extends ViewStyle, TextStyle {
   [key: string]: any;
 }
 
-export type PlainStyleProps = ViewStyle & TextStyle & ImageStyle;
+export type PlainStyle = ViewStyle & TextStyle & ImageStyle;
 
 /**
  * A value that can be used both on the [JavaScript

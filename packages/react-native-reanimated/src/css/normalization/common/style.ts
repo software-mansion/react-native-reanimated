@@ -10,7 +10,7 @@ import { processColor } from '../../../Colors';
 import { normalizeTransformOrigin } from './transformOrigin';
 import type {
   AnyRecord,
-  PlainStyleProps,
+  PlainStyle,
   CSSAnimationProperties,
   CSSTransitionProperties,
   CSSTransitionProperty,
@@ -18,7 +18,7 @@ import type {
 } from '../../types';
 import { ReanimatedError } from '../../errors';
 
-type PropertyName = keyof PlainStyleProps;
+type PropertyName = keyof PlainStyle;
 
 export const ERROR_MESSAGES = {
   invalidColor: (color: Maybe<number | string>) =>
@@ -97,8 +97,8 @@ function normalizeFontWeight(value: string | number): string {
   throw new ReanimatedError(ERROR_MESSAGES.invalidFontWeight(value));
 }
 
-export function normalizeStyle(style: PlainStyleProps): PlainStyleProps {
-  const entries: [string, PlainStyleProps[PropertyName]][] = [];
+export function normalizeStyle(style: PlainStyle): PlainStyle {
+  const entries: [string, PlainStyle[PropertyName]][] = [];
 
   for (const [key, value] of Object.entries(style)) {
     let propValue = value;
@@ -133,12 +133,8 @@ export function normalizeStyle(style: PlainStyleProps): PlainStyleProps {
 }
 
 export function filterCSSPropertiesAndNormalizeStyle(
-  style: PlainStyleProps
-): [
-  CSSAnimationProperties | null,
-  CSSTransitionProperties | null,
-  PlainStyleProps,
-] {
+  style: PlainStyle
+): [CSSAnimationProperties | null, CSSTransitionProperties | null, PlainStyle] {
   let animationName: CSSAnimationProperties['animationName'] | null = null;
   let transitionProperty: CSSTransitionProperty | null = null;
   const animationProperties: Partial<CSSAnimationProperties> = {};

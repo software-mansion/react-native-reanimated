@@ -5,7 +5,7 @@ import type {
   AnyRecord,
   CSSAnimationTimingFunction,
   NormalizedCSSKeyframesStyle,
-  NormalizedCSSAnimationName,
+  NormalizedCSSAnimationKeyframes,
   NormalizedCSSKeyframeTimingFunctions,
 } from '../../types';
 import { isNumber } from '../../utils';
@@ -58,7 +58,15 @@ function normalizeKeyframeSelector(
   return offsets;
 }
 
-function normalizeKeyframes(keyframes: CSSAnimationKeyframes) {
+type ProcessedKeyframes = Array<{
+  offset: number;
+  style: StyleProps;
+  timingFunction?: CSSAnimationTimingFunction;
+}>;
+
+function processKeyframes(
+  keyframes: CSSAnimationKeyframes
+): ProcessedKeyframes {
   return Object.entries(keyframes)
     .flatMap(
       ([selector, { animationTimingFunction = undefined, ...style } = {}]) =>
@@ -69,23 +77,16 @@ function normalizeKeyframes(keyframes: CSSAnimationKeyframes) {
         }))
     )
     .sort((a, b) => a.offset - b.offset)
-    .reduce(
-      (acc, keyframe) => {
-        const lastKeyframe = acc[acc.length - 1];
-        if (lastKeyframe && lastKeyframe.offset === keyframe.offset) {
-          lastKeyframe.style = { ...lastKeyframe.style, ...keyframe.style };
-          lastKeyframe.timingFunction = keyframe.timingFunction;
-        } else {
-          acc.push(keyframe);
-        }
-        return acc;
-      },
-      [] as Array<{
-        offset: number;
-        style: StyleProps;
-        timingFunction?: CSSAnimationTimingFunction;
-      }>
-    );
+    .reduce<ProcessedKeyframes>((acc, keyframe) => {
+      const lastKeyframe = acc[acc.length - 1];
+      if (lastKeyframe && lastKeyframe.offset === keyframe.offset) {
+        lastKeyframe.style = { ...lastKeyframe.style, ...keyframe.style };
+        lastKeyframe.timingFunction = keyframe.timingFunction;
+      } else {
+        acc.push(keyframe);
+      }
+      return acc;
+    }, []);
 }
 
 function processStyleProperties<S extends AnyRecord>(
@@ -112,13 +113,13 @@ function processStyleProperties<S extends AnyRecord>(
   });
 }
 
-export function normalizeAnimationName(
+export function normalizeAnimationKeyframes(
   keyframes: CSSAnimationKeyframes
-): NormalizedCSSAnimationName {
+): NormalizedCSSAnimationKeyframes {
   const keyframesStyle: NormalizedCSSKeyframesStyle = {};
   const timingFunctions: NormalizedCSSKeyframeTimingFunctions = {};
 
-  normalizeKeyframes(keyframes).forEach(({ offset, style, timingFunction }) => {
+  processKeyframes(keyframes).forEach(({ offset, style, timingFunction }) => {
     processStyleProperties(offset, style, keyframesStyle);
     if (timingFunction && offset < 1) {
       timingFunctions[offset] = normalizeTimingFunction(timingFunction);

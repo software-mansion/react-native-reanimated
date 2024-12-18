@@ -16,7 +16,7 @@ import {
   normalizeFillMode,
   normalizePlayState,
 } from './settings';
-import { normalizeAnimationName } from './animationName';
+import { normalizeAnimationKeyframes } from './keyframes';
 import { ReanimatedError } from '../../errors';
 
 export const ERROR_MESSAGES = {
@@ -52,7 +52,7 @@ export function normalizeCSSAnimationProperties(
     }
 
     return {
-      ...normalizeAnimationName(keyframes),
+      ...normalizeAnimationKeyframes(keyframes),
       duration: normalizeDuration(
         animationDuration?.[index % animationDuration.length]
       ),

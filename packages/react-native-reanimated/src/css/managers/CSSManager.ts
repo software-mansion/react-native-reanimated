@@ -5,7 +5,7 @@ import { removeViewStyle, setViewStyle } from '../native';
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import CSSTransitionManager from './CSSTransitionManager';
 import CSSAnimationsManager from './CSSAnimationsManager';
-import type { PlainStyleProps } from '../types';
+import type { PlainStyle } from '../types';
 import { filterCSSPropertiesAndNormalizeStyle } from '../normalization';
 
 export default class CSSManager {
@@ -26,11 +26,11 @@ export default class CSSManager {
     }
   }
 
-  attach(style: PlainStyleProps): void {
+  attach(style: PlainStyle): void {
     this.update(style, true);
   }
 
-  update(style: PlainStyleProps, isMount = false): void {
+  update(style: PlainStyle, isMount = false): void {
     const [animationProperties, transitionProperties, normalizedStyle] =
       filterCSSPropertiesAndNormalizeStyle(style);
 
