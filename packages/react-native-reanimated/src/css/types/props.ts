@@ -16,14 +16,14 @@ type PickStyleProps<P> = Pick<
   }[keyof P]
 >;
 
-export type CSSStyle<S extends object = PlainStyle> = S &
+export type CSSStyleDeclaration<S extends PlainStyle = PlainStyle> = S &
   Partial<CSSAnimationProperties<S>> &
   Partial<CSSTransitionProperties<S>>;
 
 type CSSStyleProps<P extends object> = {
   [K in keyof PickStyleProps<P>]: P[K] extends StyleProp<infer U>
     ? U extends object
-      ? CSSStyle<U>
+      ? CSSStyleDeclaration<U>
       : never
     : never;
 };

@@ -14,14 +14,12 @@ export const isEasingFunction = (
   return typeof value === 'object' && value !== null && 'normalize' in value;
 };
 
-export const isLeafValue = (value: unknown): boolean => {
-  return (
-    typeof value !== 'object' ||
-    value === null ||
-    Array.isArray(value) ||
-    'normalize' in value
-  );
-};
+export const isLeafValue = (value: unknown): boolean =>
+  typeof value !== 'object' ||
+  value === null ||
+  Array.isArray(value) ||
+  'normalize' in value ||
+  'normalizedKeyframes' in value;
 
 export const formatLeafValue = (
   value: unknown,
@@ -55,8 +53,45 @@ export const stringifyConfig = <T extends AnyRecord>(
     throw new Error('Object nesting is too deep');
   }
 
+  const formatValue = (
+    key: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    value: any,
+    currentDepth: number,
+    makeDense: boolean
+  ) => {
+    const nextTab = '  '.repeat(currentDepth);
+
+    if (key === 'animationName') {
+      return Array.isArray(value) && value.length > 0
+        ? `[\n${nextTab}  ${value.map((item) => stringifyConfig(item, makeDense, depth + 2)).join(`,\n${nextTab}  `)}\n${nextTab}]`
+        : stringifyConfig(
+            'keyframes_' in value
+              ? // eslint-disable-next-line no-underscore-dangle
+                (value as { keyframes_: object }).keyframes_
+              : value,
+            makeDense,
+            currentDepth
+          );
+    }
+
+    return isLeafValue(value)
+      ? formatLeafValue(value, nextTab, makeDense)
+      : stringifyConfig(value, makeDense, currentDepth);
+  };
+
+  const formatLine = (
+    key: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    value: any,
+    depth_: number,
+    makeDense: boolean
+  ) => {
+    const nextTab = '  '.repeat(depth_);
+    return `${nextTab}${key}: ${formatValue(key, value, depth_, makeDense)}`;
+  };
+
   const currentTab = '  '.repeat(depth);
-  const nextTab = '  '.repeat(depth + 1);
   const keys = Object.keys(object);
 
   return `{\n${keys
@@ -65,20 +100,11 @@ export const stringifyConfig = <T extends AnyRecord>(
       const value = object[key];
       const formattedKey = isValidPropertyName(key) ? key : `"${key}"`;
 
-      const formatLine = (makeDense: boolean) =>
-        `${nextTab}${formattedKey}: ${
-          key === 'animationName' && Array.isArray(value) && value.length > 0
-            ? `[\n${nextTab}  ${value.map((item) => stringifyConfig(item, makeDense, depth + 2)).join(`,\n${nextTab}  `)}\n${nextTab}]`
-            : isLeafValue(value)
-              ? formatLeafValue(value, nextTab, makeDense)
-              : stringifyConfig(value, makeDense, depth + 1)
-        }`;
-
-      const denseFormat = formatLine(true);
+      const denseFormat = formatLine(formattedKey, value, depth + 1, true);
       if (dense || denseFormat.length < MAX_NOT_WRAPPED_LENGTH) {
         return denseFormat;
       }
-      return formatLine(false);
+      return formatLine(formattedKey, value, depth + 1, false);
     })
     .join(',\n')}\n${currentTab}}`;
 };

@@ -2,6 +2,8 @@
 import {
   isAnimationSetting,
   isColorProp,
+  isCSSKeyframesObject,
+  isCSSKeyframesRule,
   isTransformString,
   isTransitionSetting,
 } from '../../utils';
@@ -155,12 +157,15 @@ export function filterCSSPropertiesAndNormalizeStyle(
     }
   }
 
-  // Return animationProperties only if the animationName is present
+  // Return animationProperties only if at least one animationName contains
+  // valid keyframes
   const hasAnimationName =
     animationName &&
-    ((Array.isArray(animationName) && animationName.length > 0) ||
-      (typeof animationName === 'object' &&
-        Object.keys(animationName).length > 0));
+    (Array.isArray(animationName) ? animationName : [animationName]).every(
+      (keyframes) =>
+        (isCSSKeyframesRule(keyframes) && keyframes.length > 0) ||
+        isCSSKeyframesObject(keyframes)
+    );
   const finalAnimationConfig = hasAnimationName
     ? ({ ...animationProperties, animationName } as CSSAnimationProperties)
     : null;

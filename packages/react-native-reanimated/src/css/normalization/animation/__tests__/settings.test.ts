@@ -19,6 +19,7 @@ import {
   normalizeFillMode,
   normalizeIterationCount,
   normalizePlayState,
+  normalizeSingleCSSAnimationSettings,
 } from '../settings';
 
 describe(normalizeDirection, () => {
@@ -125,6 +126,42 @@ describe(normalizePlayState, () => {
       expect(() => normalizePlayState(value)).toThrow(
         new ReanimatedError(ERROR_MESSAGES.invalidPlayState(value))
       );
+    });
+  });
+});
+
+describe(normalizeSingleCSSAnimationSettings, () => {
+  it('fills missing values with defaults', () => {
+    expect(normalizeSingleCSSAnimationSettings({})).toEqual({
+      duration: 0,
+      timingFunction: 'ease',
+      delay: 0,
+      iterationCount: 1,
+      direction: 'normal',
+      fillMode: 'none',
+      playState: 'running',
+    });
+  });
+
+  it('returns normalized settings', () => {
+    expect(
+      normalizeSingleCSSAnimationSettings({
+        animationDuration: '3.5s',
+        animationTimingFunction: cubicBezier(0.4, 0, 0.2, 1),
+        animationDelay: '100ms',
+        animationDirection: 'reverse',
+        animationFillMode: 'forwards',
+        animationPlayState: 'paused',
+        animationIterationCount: Infinity,
+      })
+    ).toEqual({
+      duration: 3500,
+      timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize(),
+      delay: 100,
+      iterationCount: -1, // -1 is used for infinite
+      direction: 'reverse',
+      fillMode: 'forwards',
+      playState: 'paused',
     });
   });
 });

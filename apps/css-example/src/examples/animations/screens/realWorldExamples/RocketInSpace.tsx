@@ -3,9 +3,8 @@
  * https://codepen.io/anasalaoui/pen/zrVGoL?editors=1100
  */
 
-import { Dimensions, StyleSheet, View } from 'react-native';
-import type { CSSAnimationProperties } from 'react-native-reanimated';
-import Animated, { cubicBezier } from 'react-native-reanimated';
+import { Dimensions, View } from 'react-native';
+import Animated, { css, cubicBezier } from 'react-native-reanimated';
 import {
   Circle,
   Defs,
@@ -29,79 +28,6 @@ const COLORS = {
   purple: '#743388',
   red: '#E82134',
   white: '#FFF',
-};
-
-const turbulenceAnimation: CSSAnimationProperties = {
-  animationDuration: '0.2s',
-  animationIterationCount: 'infinite',
-  animationName: {
-    '0%, 100%': {
-      transform: 'rotate(45deg)',
-    },
-    '50%': {
-      transform: 'translate(1px, -1px) rotate(45deg)',
-    },
-  },
-};
-
-const hyperspaceAnimation: CSSAnimationProperties = {
-  animationDuration: '0.4s',
-  animationFillMode: 'both',
-  animationIterationCount: 'infinite',
-  animationName: {
-    from: {
-      opacity: 1,
-      transform: [{ scaleY: 0 }, { translateY: -200 }],
-    },
-    to: {
-      opacity: 0,
-      transform: [{ scaleY: 1 }, { translateY: 600 }],
-    },
-  },
-};
-
-const mainFlameAnimation: CSSAnimationProperties = {
-  animationDuration: '0.1s',
-  animationIterationCount: 'infinite',
-  animationName: {
-    from: {
-      transform: [{ translateY: 5 }],
-    },
-    to: {
-      transform: [{ translateY: 0 }],
-    },
-  },
-  animationTimingFunction: cubicBezier(0.175, 0.885, 0.42, 1.41),
-};
-
-const propulsedFlameAnimation: CSSAnimationProperties = {
-  animationDuration: '0.3s',
-  animationIterationCount: 'infinite',
-  animationName: {
-    from: {
-      transform: [{ translateY: -10 }],
-    },
-    to: {
-      opacity: 0,
-      transform: [{ translateY: 50 }, { scale: 0.7 }],
-    },
-  },
-  animationTimingFunction: 'easeIn',
-};
-
-const propulsedSparkAnimation: CSSAnimationProperties = {
-  animationDuration: '0.24s',
-  animationIterationCount: 'infinite',
-  animationName: {
-    from: {
-      transform: [{ translateY: 0 }],
-    },
-    to: {
-      opacity: 0,
-      transform: [{ translateY: 100 }],
-    },
-  },
-  animationTimingFunction: 'easeIn',
 };
 
 const STAR_POSITIONS = [
@@ -140,7 +66,7 @@ export default function RocketInSpace() {
   return (
     <Screen style={styles.container}>
       <View style={styles.scene}>
-        <Animated.View style={turbulenceAnimation}>
+        <Animated.View style={styles.turbulence}>
           <Svg style={styles.rocket}>
             <Defs>
               <LinearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
@@ -199,7 +125,6 @@ function Star({ delay, x, y }: StarProps) {
     <Animated.View
       style={[
         styles.star,
-        hyperspaceAnimation,
         {
           animationDelay: `${delay}s`,
           left: x,
@@ -229,7 +154,7 @@ function ExhaustFlame({ x, y }: ExhaustFlameProps) {
       ))}
 
       {/* Main flame */}
-      <Animated.View style={mainFlameAnimation}>
+      <Animated.View style={styles.mainFlame}>
         <Flame height={200} width={80} />
       </Animated.View>
 
@@ -238,11 +163,10 @@ function ExhaustFlame({ x, y }: ExhaustFlameProps) {
         <Animated.View
           key={index}
           style={[
-            propulsedFlameAnimation,
+            styles.propulsedFlame,
             {
               animationDelay: `${-index * 0.2}s`,
               left: flame.x,
-              position: 'absolute',
               top: flame.y,
               zIndex: index === 0 ? -1 : 1,
             },
@@ -292,7 +216,6 @@ function Spark({ color, delay, x, y }: SparkProps) {
     <Animated.View
       style={[
         styles.spark,
-        propulsedSparkAnimation,
         {
           animationDelay: `${delay}s`,
           backgroundColor: color,
@@ -304,8 +227,56 @@ function Spark({ color, delay, x, y }: SparkProps) {
   );
 }
 
-// TODO - maybe export StyleSheet from reanimated that accepts animations
-const styles = StyleSheet.create({
+const turbulence = css.keyframes({
+  '0%, 100%': {
+    transform: 'rotate(45deg)',
+  },
+  '50%': {
+    transform: 'translate(1px, -1px) rotate(45deg)',
+  },
+});
+
+const hyperspace = css.keyframes({
+  from: {
+    opacity: 1,
+    transform: [{ scaleY: 0 }, { translateY: -200 }],
+  },
+  to: {
+    opacity: 0,
+    transform: [{ scaleY: 1 }, { translateY: 600 }],
+  },
+});
+
+const mainFlame = css.keyframes({
+  from: {
+    transform: [{ translateY: 5 }],
+  },
+  to: {
+    transform: [{ translateY: 0 }],
+  },
+});
+
+const propulsedFlame = css.keyframes({
+  from: {
+    transform: [{ translateY: -10 }],
+  },
+  to: {
+    opacity: 0,
+    transform: [{ translateY: 50 }, { scale: 0.7 }],
+  },
+});
+
+const propulsedSpark = css.keyframes({
+  from: {
+    transform: [{ translateY: 0 }],
+  },
+  to: {
+    opacity: 0,
+    transform: [{ translateY: 100 }],
+  },
+});
+
+const styles = css.create({
   container: {
     alignItems: 'center',
     backgroundColor: COLORS.bg,
@@ -315,6 +286,19 @@ const styles = StyleSheet.create({
   exhaustFlame: {
     position: 'absolute',
     zIndex: -1,
+  },
+  mainFlame: {
+    animationDuration: '0.1s',
+    animationIterationCount: 'infinite',
+    animationName: mainFlame,
+    animationTimingFunction: cubicBezier(0.175, 0.885, 0.42, 1.41),
+  },
+  propulsedFlame: {
+    animationDuration: '0.3s',
+    animationIterationCount: 'infinite',
+    animationName: propulsedFlame,
+    animationTimingFunction: 'easeIn',
+    position: 'absolute',
   },
   rocket: {
     height: 179,
@@ -327,14 +311,27 @@ const styles = StyleSheet.create({
     transform: [{ scale: Dimensions.get('window').width / 375 }],
   },
   spark: {
+    animationDuration: '0.24s',
+    animationIterationCount: 'infinite',
+    animationName: propulsedSpark,
+    animationTimingFunction: 'easeIn',
     height: 10,
     position: 'absolute',
     width: 10,
   },
   star: {
+    animationDuration: '0.4s',
+    animationFillMode: 'both',
+    animationIterationCount: 'infinite',
+    animationName: hyperspace,
     backgroundColor: COLORS.white,
     height: 20,
     position: 'absolute',
     width: 4,
+  },
+  turbulence: {
+    animationDuration: '0.2s',
+    animationIterationCount: 'infinite',
+    animationName: turbulence,
   },
 });

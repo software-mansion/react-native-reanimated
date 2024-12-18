@@ -41,15 +41,13 @@ function Example() {
   return (
     <View style={styles.container}>
       <View style={styles.box} />
-      <Animated.View
-        style={[styles.box, marginAnimation, styles.animatedBox]}
-      />
+      <Animated.View style={[styles.box, styles.animatedBox]} />
       <View style={styles.box} />
     </View>
   );
 }
 
-const marginAnimation = css.keyframes({
+const margin = css.keyframes({
   from: {
     marginHorizontal: 10,
   },
@@ -63,7 +61,7 @@ const styles = css.create({
     animationDirection: 'alternate',
     animationDuration: '2s',
     animationIterationCount: 'infinite',
-    animationName: marginAnimation,
+    animationName: margin,
     animationTimingFunction: 'linear',
     backgroundColor: colors.primaryDark,
   },

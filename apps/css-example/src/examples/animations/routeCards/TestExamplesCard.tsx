@@ -1,11 +1,7 @@
 import { faCog } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { StyleSheet, View } from 'react-native';
-import type {
-  CSSAnimationProperties,
-  CSSAnimationSettings,
-} from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
+import { View } from 'react-native';
+import Animated, { css } from 'react-native-reanimated';
 
 import type { RouteCardComponent } from '@/components';
 import { RouteCard } from '@/components';
@@ -22,37 +18,6 @@ const TestExamplesCard: RouteCardComponent = (props) => (
 
 const ANIMATION_DURATION = 6000;
 
-const sharedAnimationSettings: CSSAnimationSettings = {
-  animationDuration: ANIMATION_DURATION,
-  animationIterationCount: 'infinite',
-  animationTimingFunction: 'linear',
-};
-
-const rotateRight: CSSAnimationProperties = {
-  animationName: {
-    from: {
-      transform: [{ rotate: '0deg' }],
-    },
-    to: {
-      transform: [{ rotate: '360deg' }],
-    },
-  },
-  ...sharedAnimationSettings,
-};
-
-const rotateLeft: CSSAnimationProperties = {
-  animationDelay: -0.1175 * ANIMATION_DURATION,
-  animationName: {
-    from: {
-      transform: [{ rotate: '0deg' }],
-    },
-    to: {
-      transform: [{ rotate: '-360deg' }],
-    },
-  },
-  ...sharedAnimationSettings,
-};
-
 function Showcase() {
   return (
     <View>
@@ -60,7 +25,6 @@ function Showcase() {
         style={[
           styles.cog,
           styles.cog1,
-          rotateRight,
           { animationPlayState: useFocusPlayState() },
         ]}>
         <FontAwesomeIcon
@@ -73,7 +37,6 @@ function Showcase() {
         style={[
           styles.cog,
           styles.cog2,
-          rotateLeft,
           { animationPlayState: useFocusPlayState() },
         ]}>
         <FontAwesomeIcon color={colors.primary} icon={faCog} size={sizes.md} />
@@ -82,15 +45,39 @@ function Showcase() {
   );
 }
 
-const styles = StyleSheet.create({
+const rootateRight = css.keyframes({
+  from: {
+    transform: [{ rotate: '0deg' }],
+  },
+  to: {
+    transform: [{ rotate: '360deg' }],
+  },
+});
+
+const rootateLeft = css.keyframes({
+  from: {
+    transform: [{ rotate: '0deg' }],
+  },
+  to: {
+    transform: [{ rotate: '-360deg' }],
+  },
+});
+
+const styles = css.create({
   cog: {
+    animationDuration: ANIMATION_DURATION,
+    animationIterationCount: 'infinite',
+    animationTimingFunction: 'linear',
     position: 'absolute',
   },
   cog1: {
+    animationName: rootateRight,
     left: -spacing.xl,
     top: -spacing.xxl + 1,
   },
   cog2: {
+    animationDelay: -0.1175 * ANIMATION_DURATION,
+    animationName: rootateLeft,
     left: spacing.xxs,
   },
 });

@@ -1,7 +1,6 @@
 import type { PropsWithChildren } from 'react';
-import { StyleSheet, View } from 'react-native';
-import type { CSSAnimationProperties } from 'react-native-reanimated';
-import Animated, { cubicBezier } from 'react-native-reanimated';
+import { View } from 'react-native';
+import Animated, { css, cubicBezier } from 'react-native-reanimated';
 import {
   Circle,
   Defs,
@@ -18,60 +17,6 @@ import { useFocusPlayState } from '@/hooks';
 import { colors, flex, sizes } from '@/theme';
 
 const TIME_MULTIPLIER = 1;
-
-const turbulenceAnimation: CSSAnimationProperties = {
-  animationDuration: `${TIME_MULTIPLIER * 0.4}s`,
-  animationIterationCount: 'infinite',
-  animationName: {
-    '50%': {
-      transform: 'scale(1) translate(1px, -1px)',
-    },
-  },
-};
-
-const mainFlameAnimation: CSSAnimationProperties = {
-  animationDuration: `${TIME_MULTIPLIER * 0.2}s`,
-  animationIterationCount: 'infinite',
-  animationName: {
-    from: {
-      transform: [{ translateY: '5%' }],
-    },
-    to: {
-      transform: [{ translateY: 0 }],
-    },
-  },
-  animationTimingFunction: cubicBezier(0.175, 0.885, 0.42, 1.41),
-};
-
-const propulsedFlameAnimation: CSSAnimationProperties = {
-  animationDuration: `${TIME_MULTIPLIER * 0.6}s`,
-  animationIterationCount: 'infinite',
-  animationName: {
-    from: {
-      transform: [{ translateY: '-25%' }],
-    },
-    to: {
-      opacity: 0,
-      transform: [{ translateY: '150%' }, { scale: 0.7 }],
-    },
-  },
-  animationTimingFunction: 'easeIn',
-};
-
-const propulsedSparkAnimation: CSSAnimationProperties = {
-  animationDuration: `${TIME_MULTIPLIER * 0.48}s`,
-  animationIterationCount: 'infinite',
-  animationName: {
-    from: {
-      transform: [{ translateY: 0 }],
-    },
-    to: {
-      opacity: 0,
-      transform: [{ translateY: '500%' }],
-    },
-  },
-  animationTimingFunction: 'easeIn',
-};
 
 const SMALL_FLAME_TRANSLATIONS = [
   { x: -0.35, y: 0.5 },
@@ -100,7 +45,7 @@ function Showcase() {
     <View style={flex.row}>
       <Animated.View
         style={[
-          turbulenceAnimation,
+          styles.turbulence,
           { animationPlayState: useFocusPlayState() },
         ]}>
         <View style={styles.scene}>
@@ -111,7 +56,7 @@ function Showcase() {
             {/* Main flame */}
             <Animated.View
               style={[
-                mainFlameAnimation,
+                styles.mainFlame,
                 { animationPlayState: useFocusPlayState() },
               ]}>
               <Flame height={sizes.md} width={sizes.xs} />
@@ -216,7 +161,7 @@ function SmallFlame({ index, x, y, zIndex }: SmallFlameProps) {
     <RelativeTransform x={x} y={y} zIndex={zIndex}>
       <Animated.View
         style={[
-          propulsedFlameAnimation,
+          styles.propulsedFlame,
           {
             animationDelay: `${-index * 0.24 * TIME_MULTIPLIER}s`,
             animationPlayState: useFocusPlayState(),
@@ -239,7 +184,6 @@ function Spark({ index, x, y }: SparkProps) {
     <RelativeTransform x={x} y={y} zIndex={-1}>
       <Animated.View
         style={[
-          propulsedSparkAnimation,
           styles.spark,
           {
             animationDelay: `${-index * 0.4 * TIME_MULTIPLIER}s`,
@@ -276,13 +220,60 @@ function RelativeTransform({ children, x, y, zIndex }: RelativeTransformProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const turbulence = css.keyframes({
+  '50%': {
+    transform: 'scale(1) translate(1px, -1px)',
+  },
+});
+
+const mainFlame = css.keyframes({
+  from: {
+    transform: [{ translateY: '5%' }],
+  },
+  to: {
+    transform: [{ translateY: 0 }],
+  },
+});
+
+const propulsedFlame = css.keyframes({
+  from: {
+    transform: [{ translateY: '-25%' }],
+  },
+  to: {
+    opacity: 0,
+    transform: [{ translateY: '150%' }, { scale: 0.7 }],
+  },
+});
+
+const propulsedSpark = css.keyframes({
+  from: {
+    transform: [{ translateY: 0 }],
+  },
+  to: {
+    opacity: 0,
+    transform: [{ translateY: '500%' }],
+  },
+});
+
+const styles = css.create({
   exhaustFlames: {
     left: '50%',
     position: 'absolute',
     top: '90%',
     transform: [{ translateX: '-50%' }, { translateY: '-25%' }],
     zIndex: -1,
+  },
+  mainFlame: {
+    animationDuration: `${TIME_MULTIPLIER * 0.2}s`,
+    animationIterationCount: 'infinite',
+    animationName: mainFlame,
+    animationTimingFunction: cubicBezier(0.175, 0.885, 0.42, 1.41),
+  },
+  propulsedFlame: {
+    animationDuration: `${TIME_MULTIPLIER * 0.6}s`,
+    animationIterationCount: 'infinite',
+    animationName: propulsedFlame,
+    animationTimingFunction: 'easeIn',
   },
   scene: {
     transform: [
@@ -291,7 +282,19 @@ const styles = StyleSheet.create({
       { rotate: '25deg' },
     ],
   },
-  spark: { height: 0.5 * sizes.xxxs, width: 0.5 * sizes.xxxs },
+  spark: {
+    animationDuration: `${TIME_MULTIPLIER * 0.48}s`,
+    animationIterationCount: 'infinite',
+    animationName: propulsedSpark,
+    animationTimingFunction: 'easeIn',
+    height: 0.5 * sizes.xxxs,
+    width: 0.5 * sizes.xxxs,
+  },
+  turbulence: {
+    animationDuration: `${TIME_MULTIPLIER * 0.4}s`,
+    animationIterationCount: 'infinite',
+    animationName: turbulence,
+  },
 });
 
 export default RealWorldExamplesCard;

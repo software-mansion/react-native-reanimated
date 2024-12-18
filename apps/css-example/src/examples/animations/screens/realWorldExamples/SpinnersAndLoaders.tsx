@@ -6,12 +6,7 @@
 import type { ComponentType } from 'react';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import type {
-  CSSAnimationKeyframes,
-  CSSAnimationProperties,
-  CSSAnimationSettings,
-} from 'react-native-reanimated';
-import Animated, { cubicBezier } from 'react-native-reanimated';
+import Animated, { css, cubicBezier } from 'react-native-reanimated';
 
 import { Grid as GridLayout, ScrollScreen, Stagger, Text } from '@/components';
 import { colors, radius, spacing } from '@/theme';
@@ -100,17 +95,7 @@ function Spinner() {
           <Animated.View
             style={[
               spinnerStyles.bar,
-              {
-                animationDelay: `${-(11 - index) / 10}s`,
-                animationDuration: '1.2s',
-                animationIterationCount: 'infinite',
-                animationName: {
-                  to: {
-                    opacity: 0,
-                  },
-                },
-                animationTimingFunction: 'linear',
-              },
+              { animationDelay: `${-(11 - index) / 10}s` },
             ]}
           />
         </View>
@@ -119,8 +104,18 @@ function Spinner() {
   );
 }
 
-const spinnerStyles = StyleSheet.create({
+const spinnerBar = css.keyframes({
+  to: {
+    opacity: 0,
+  },
+});
+
+const spinnerStyles = css.create({
   bar: {
+    animationDuration: '1.2s',
+    animationIterationCount: 'infinite',
+    animationName: spinnerBar,
+    animationTimingFunction: 'linear',
     backgroundColor: colors.primary,
     borderRadius: SPINNER_SIZE,
     height: (1 / 6) * SPINNER_SIZE,
@@ -143,17 +138,7 @@ function Ring() {
           key={index}
           style={[
             ringStyles.part,
-            {
-              animationDelay: `${-0.15 * (index + 1)}s`,
-              animationDuration: '1.2s',
-              animationIterationCount: 'infinite',
-              animationName: {
-                to: {
-                  transform: [{ rotate: '360deg' }],
-                },
-              },
-              animationTimingFunction: cubicBezier(0.5, 0, 0.5, 1),
-            },
+            { animationDelay: `${-0.15 * (index + 1)}s` },
           ]}
         />
       ))}
@@ -161,9 +146,19 @@ function Ring() {
   );
 }
 
-const ringStyles = StyleSheet.create({
+const ringPart = css.keyframes({
+  to: {
+    transform: [{ rotate: '360deg' }],
+  },
+});
+
+const ringStyles = css.create({
   part: {
     ...StyleSheet.absoluteFillObject,
+    animationDuration: '1.2s',
+    animationIterationCount: 'infinite',
+    animationName: ringPart,
+    animationTimingFunction: cubicBezier(0.5, 0, 0.5, 1),
     borderBlockStartColor: colors.primary,
     borderColor: 'rgba(0, 0, 0, 0.01)',
     borderRadius: SPINNER_SIZE / 2,
@@ -186,14 +181,11 @@ function Roller() {
               rollerStyles.dotWrapper,
               {
                 animationDelay: `${-0.036 * (index + 1)}s`,
-                animationDuration: '1.2s',
-                animationIterationCount: 'infinite',
-                animationName: {
+                animationName: css.keyframes({
                   to: {
                     transform: [{ rotate: `${360 + startOffset}deg` }],
                   },
-                },
-                animationTimingFunction: cubicBezier(0.5, 0, 0.5, 1),
+                }),
                 transform: [{ rotate: `${startOffset}deg` }],
               },
             ]}>
@@ -205,7 +197,7 @@ function Roller() {
   );
 }
 
-const rollerStyles = StyleSheet.create({
+const rollerStyles = css.create({
   dot: {
     backgroundColor: colors.primary,
     borderRadius: '50%',
@@ -214,6 +206,9 @@ const rollerStyles = StyleSheet.create({
     width: 0.1 * SPINNER_SIZE,
   },
   dotWrapper: {
+    animationDuration: '1.2s',
+    animationIterationCount: 'infinite',
+    animationTimingFunction: cubicBezier(0.5, 0, 0.5, 1),
     left: '50%',
     position: 'absolute',
     top: '50%',
@@ -240,20 +235,7 @@ function Default() {
           <Animated.View
             style={[
               defaultStyles.dot,
-              {
-                animationDelay: `${-(11 - index) / 10}s`,
-                animationDuration: '1.2s',
-                animationIterationCount: 'infinite',
-                animationName: {
-                  '0%, 20%, 80%, 100%': {
-                    transform: [{ scale: 1 }],
-                  },
-                  '50%': {
-                    transform: [{ scale: 1.5 }],
-                  },
-                },
-                animationTimingFunction: 'linear',
-              },
+              { animationDelay: `${-(11 - index) / 10}s` },
             ]}
           />
         </View>
@@ -262,8 +244,21 @@ function Default() {
   );
 }
 
-const defaultStyles = StyleSheet.create({
+const defaultDot = css.keyframes({
+  '0%, 20%, 80%, 100%': {
+    transform: [{ scale: 1 }],
+  },
+  '50%': {
+    transform: [{ scale: 1.5 }],
+  },
+});
+
+const defaultStyles = css.create({
   dot: {
+    animationDuration: '1.2s',
+    animationIterationCount: 'infinite',
+    animationName: defaultDot,
+    animationTimingFunction: 'linear',
     backgroundColor: colors.primary,
     borderRadius: '50%',
     height: 0.1 * SPINNER_SIZE,
@@ -279,30 +274,6 @@ const defaultStyles = StyleSheet.create({
 });
 
 function Ellipsis() {
-  const ellipsis1: CSSAnimationKeyframes = {
-    from: {
-      transform: [{ scale: 0 }],
-    },
-  };
-
-  const ellipsis2: CSSAnimationKeyframes = {
-    to: {
-      transform: [{ translateX: 0.3 * SPINNER_SIZE }],
-    },
-  };
-
-  const ellipsis3: CSSAnimationKeyframes = {
-    to: {
-      transform: [{ scale: 0 }],
-    },
-  };
-
-  const animationSettings: CSSAnimationSettings = {
-    animationDuration: '0.6s',
-    animationIterationCount: 'infinite',
-    animationTimingFunction: cubicBezier(0.5, 0, 0.5, 1),
-  };
-
   return (
     <View style={sharedStyles.loader}>
       <Animated.View
@@ -311,7 +282,6 @@ function Ellipsis() {
           {
             animationName: ellipsis1,
             left: 0.1 * SPINNER_SIZE,
-            ...animationSettings,
           },
         ]}
       />
@@ -321,7 +291,6 @@ function Ellipsis() {
           {
             animationName: ellipsis2,
             left: 0.1 * SPINNER_SIZE,
-            ...animationSettings,
           },
         ]}
       />
@@ -331,7 +300,6 @@ function Ellipsis() {
           {
             animationName: ellipsis2,
             left: 0.4 * SPINNER_SIZE,
-            ...animationSettings,
           },
         ]}
       />
@@ -341,7 +309,6 @@ function Ellipsis() {
           {
             animationName: ellipsis3,
             left: 0.7 * SPINNER_SIZE,
-            ...animationSettings,
           },
         ]}
       />
@@ -349,8 +316,29 @@ function Ellipsis() {
   );
 }
 
-const ellipsisStyles = StyleSheet.create({
+const ellipsis1 = css.keyframes({
+  from: {
+    transform: [{ scale: 0 }],
+  },
+});
+
+const ellipsis2 = css.keyframes({
+  to: {
+    transform: [{ translateX: 0.3 * SPINNER_SIZE }],
+  },
+});
+
+const ellipsis3 = css.keyframes({
+  to: {
+    transform: [{ scale: 0 }],
+  },
+});
+
+const ellipsisStyles = css.create({
   dot: {
+    animationDuration: '0.6s',
+    animationIterationCount: 'infinite',
+    animationTimingFunction: cubicBezier(0.5, 0, 0.5, 1),
     backgroundColor: colors.primary,
     borderRadius: '50%',
     height: 0.2 * SPINNER_SIZE,
@@ -371,20 +359,7 @@ function Grid() {
         return (
           <Animated.View
             key={index}
-            style={[
-              gridStyles.dot,
-              {
-                animationDelay: `${delay}s`,
-                animationDuration: '1.2s',
-                animationIterationCount: 'infinite',
-                animationName: {
-                  '50%': {
-                    opacity: 0.5,
-                  },
-                },
-                animationTimingFunction: 'linear',
-              },
-            ]}
+            style={[gridStyles.dot, { animationDelay: `${delay}s` }]}
           />
         );
       })}
@@ -392,8 +367,18 @@ function Grid() {
   );
 }
 
-const gridStyles = StyleSheet.create({
+const gridDot = css.keyframes({
+  '50%': {
+    opacity: 0.5,
+  },
+});
+
+const gridStyles = css.create({
   dot: {
+    animationDuration: '1.2s',
+    animationIterationCount: 'infinite',
+    animationName: gridDot,
+    animationTimingFunction: 'linear',
     backgroundColor: colors.primary,
     borderRadius: '50%',
     height: 0.275 * SPINNER_SIZE,
@@ -408,52 +393,35 @@ const gridStyles = StyleSheet.create({
 });
 
 function Ripple() {
-  const ripple: CSSAnimationKeyframes = {
-    from: {
-      height: 0,
-      opacity: 1,
-      width: 0,
-    },
-    to: {
-      height: SPINNER_SIZE,
-      opacity: 0,
-      width: SPINNER_SIZE,
-    },
-  };
-
-  const animationSettings: CSSAnimationSettings = {
-    animationDuration: '1s',
-    animationIterationCount: 'infinite',
-    animationTimingFunction: cubicBezier(0, 0.2, 0.8, 1),
-  };
-
   return (
     <View style={sharedStyles.loader}>
+      <Animated.View style={[rippleStyles.ripple]} />
       <Animated.View
-        style={[
-          rippleStyles.ripple,
-          {
-            animationName: ripple,
-            ...animationSettings,
-          },
-        ]}
-      />
-      <Animated.View
-        style={[
-          rippleStyles.ripple,
-          {
-            animationName: ripple,
-            ...animationSettings,
-            animationDelay: '-0.5s',
-          },
-        ]}
+        style={[rippleStyles.ripple, { animationDelay: '-0.5s' }]}
       />
     </View>
   );
 }
 
-const rippleStyles = StyleSheet.create({
+const ripple = css.keyframes({
+  from: {
+    height: 0,
+    opacity: 1,
+    width: 0,
+  },
+  to: {
+    height: SPINNER_SIZE,
+    opacity: 0,
+    width: SPINNER_SIZE,
+  },
+});
+
+const rippleStyles = css.create({
   ripple: {
+    animationDuration: '1s',
+    animationIterationCount: 'infinite',
+    animationName: ripple,
+    animationTimingFunction: cubicBezier(0, 0.2, 0.8, 1),
     borderColor: colors.primary,
     borderRadius: '50%',
     borderWidth: 0.05 * SPINNER_SIZE,
@@ -467,28 +435,24 @@ const rippleStyles = StyleSheet.create({
 function DualRing() {
   return (
     <View style={sharedStyles.loader}>
-      <Animated.View
-        style={[
-          dualRingStyles.part,
-          {
-            animationDuration: '0.6s',
-            animationIterationCount: 'infinite',
-            animationName: {
-              to: {
-                transform: [{ rotate: '180deg' }],
-              },
-            },
-            animationTimingFunction: 'linear',
-          },
-        ]}
-      />
+      <Animated.View style={dualRingStyles.ring} />
     </View>
   );
 }
 
-const dualRingStyles = StyleSheet.create({
-  part: {
+const dualRing = css.keyframes({
+  to: {
+    transform: [{ rotate: '180deg' }],
+  },
+});
+
+const dualRingStyles = css.create({
+  ring: {
     ...StyleSheet.absoluteFillObject,
+    animationDuration: '0.6s',
+    animationIterationCount: 'infinite',
+    animationName: dualRing,
+    animationTimingFunction: 'linear',
     borderBlockEndColor: colors.primary,
     borderBlockStartColor: colors.primary,
     borderColor: 'rgba(0, 0, 0, 0.01)',
@@ -505,20 +469,7 @@ function RectangleBounce() {
           key={index}
           style={[
             RectangleBounceStyles.bar,
-            {
-              animationDelay: `${-1.5 + 0.1 * index}s`,
-              animationDuration: '1.5s',
-              animationIterationCount: 'infinite',
-              animationName: {
-                '0%, 40%, 100%': {
-                  transform: [{ scaleY: 0.4 }],
-                },
-                '20%': {
-                  transform: [{ scaleY: 1 }],
-                },
-              },
-              animationTimingFunction: 'easeInOut',
-            },
+            { animationDelay: `${-1.5 + 0.1 * index}s` },
           ]}
         />
       ))}
@@ -526,8 +477,21 @@ function RectangleBounce() {
   );
 }
 
-const RectangleBounceStyles = StyleSheet.create({
+const rectangleBounce = css.keyframes({
+  '0%, 40%, 100%': {
+    transform: [{ scaleY: 0.4 }],
+  },
+  '20%': {
+    transform: [{ scaleY: 1 }],
+  },
+});
+
+const RectangleBounceStyles = css.create({
   bar: {
+    animationDuration: '1.5s',
+    animationIterationCount: 'infinite',
+    animationName: rectangleBounce,
+    animationTimingFunction: 'easeInOut',
     backgroundColor: colors.primary,
     height: '75%',
     width: '15%',
@@ -543,31 +507,27 @@ const RectangleBounceStyles = StyleSheet.create({
 function Pulse() {
   return (
     <View style={sharedStyles.loader}>
-      <Animated.View
-        style={[
-          pulseStyles.pulse,
-          {
-            animationDuration: '1.5s',
-            animationIterationCount: 'infinite',
-            animationName: {
-              from: {
-                opacity: 0.8,
-                transform: [{ scale: 0 }],
-              },
-              to: {
-                opacity: 0,
-              },
-            },
-            animationTimingFunction: 'easeOut',
-          },
-        ]}
-      />
+      <Animated.View style={pulseStyles.pulse} />
     </View>
   );
 }
 
-const pulseStyles = StyleSheet.create({
+const pulse = css.keyframes({
+  from: {
+    opacity: 0.8,
+    transform: [{ scale: 0 }],
+  },
+  to: {
+    opacity: 0,
+  },
+});
+
+const pulseStyles = css.create({
   pulse: {
+    animationDuration: '1.5s',
+    animationIterationCount: 'infinite',
+    animationName: pulse,
+    animationTimingFunction: 'easeOut',
     backgroundColor: colors.primary,
     borderRadius: '50%',
     height: '100%',
@@ -576,27 +536,12 @@ const pulseStyles = StyleSheet.create({
 });
 
 function DoublePulse() {
-  const pulse: CSSAnimationProperties = {
-    animationDuration: '1.5s',
-    animationIterationCount: 'infinite',
-    animationName: {
-      from: {
-        transform: [{ scale: 0 }],
-      },
-      to: {
-        opacity: 0,
-      },
-    },
-    animationTimingFunction: 'easeOut',
-  };
-
   return (
     <View style={sharedStyles.loader}>
-      <Animated.View style={[doublePulseStyles.pulse, pulse]} />
+      <Animated.View style={doublePulseStyles.pulse} />
       <Animated.View
         style={[
           doublePulseStyles.pulse,
-          pulse,
           {
             animationDelay: '-350ms',
           },
@@ -606,9 +551,23 @@ function DoublePulse() {
   );
 }
 
-const doublePulseStyles = StyleSheet.create({
+const doublePulse = css.keyframes({
+  from: {
+    opacity: 0.8,
+    transform: [{ scale: 0 }],
+  },
+  to: {
+    opacity: 0,
+  },
+});
+
+const doublePulseStyles = css.create({
   pulse: {
     ...StyleSheet.absoluteFillObject,
+    animationDuration: '1.5s',
+    animationIterationCount: 'infinite',
+    animationName: doublePulse,
+    animationTimingFunction: 'easeOut',
     backgroundColor: colors.primary,
     borderRadius: '50%',
   },
@@ -617,45 +576,38 @@ const doublePulseStyles = StyleSheet.create({
 function Rectangle() {
   return (
     <View style={rectangleStyles.loader}>
-      <Animated.View
-        style={[
-          rectangleStyles.rectangle,
-          {
-            animationDuration: '1.2s',
-            animationIterationCount: 'infinite',
-            animationName: {
-              '0%': {
-                transform: [{ perspective: 2 * SPINNER_SIZE }],
-              },
-              '50%': {
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateX: '-180deg' },
-                ],
-              },
-              '100%': {
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateX: '-180deg' },
-                  { rotateY: '-180deg' },
-                ],
-              },
-            },
-            animationTimingFunction: 'easeInOut',
-          },
-        ]}
-      />
+      <Animated.View style={rectangleStyles.rectangle} />
     </View>
   );
 }
 
-const rectangleStyles = StyleSheet.create({
+const rectangle = css.keyframes({
+  '0%': {
+    transform: [{ perspective: 2 * SPINNER_SIZE }],
+  },
+  '50%': {
+    transform: [{ perspective: 2 * SPINNER_SIZE }, { rotateX: '-180deg' }],
+  },
+  '100%': {
+    transform: [
+      { perspective: 2 * SPINNER_SIZE },
+      { rotateX: '-180deg' },
+      { rotateY: '-180deg' },
+    ],
+  },
+});
+
+const rectangleStyles = css.create({
   loader: {
     ...sharedStyles.loader,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rectangle: {
+    animationDuration: '1.2s',
+    animationIterationCount: 'infinite',
+    animationName: rectangle,
+    animationTimingFunction: 'easeInOut',
     backgroundColor: colors.primary,
     height: '75%',
     width: '75%',
@@ -670,20 +622,7 @@ function ThreeDots() {
           key={index}
           style={[
             threeDotsStyles.dot,
-            {
-              animationDelay: `${-0.16 * (2 - index)}s`,
-              animationDuration: '1.5s',
-              animationIterationCount: 'infinite',
-              animationName: {
-                '0%, 80%, 100%': {
-                  transform: [{ scale: 0 }],
-                },
-                '40%': {
-                  transform: [{ scale: 1 }],
-                },
-              },
-              animationTimingFunction: 'easeInOut',
-            },
+            { animationDelay: `${-0.16 * (2 - index)}s` },
           ]}
         />
       ))}
@@ -691,8 +630,21 @@ function ThreeDots() {
   );
 }
 
-const threeDotsStyles = StyleSheet.create({
+const threeDots = css.keyframes({
+  '0%, 80%, 100%': {
+    transform: [{ scale: 0 }],
+  },
+  '30%, 50%': {
+    transform: [{ scale: 1 }],
+  },
+});
+
+const threeDotsStyles = css.create({
   dot: {
+    animationDuration: '1.5s',
+    animationIterationCount: 'infinite',
+    animationName: threeDots,
+    animationTimingFunction: 'easeInOut',
     backgroundColor: colors.primary,
     borderRadius: '50%',
     height: 0.25 * SPINNER_SIZE,
@@ -719,23 +671,7 @@ function Cubes() {
         return (
           <Animated.View
             key={index}
-            style={[
-              cubesStyles.cube,
-              {
-                animationDelay: `${delay}s`,
-                animationDuration: '1.5s',
-                animationIterationCount: 'infinite',
-                animationName: {
-                  '0%, 70%, 100%': {
-                    transform: [{ scale: 1 }],
-                  },
-                  '35%': {
-                    transform: [{ scale: 0 }],
-                  },
-                },
-                animationTimingFunction: 'easeInOut',
-              },
-            ]}
+            style={[cubesStyles.cube, { animationDelay: `${delay}s` }]}
           />
         );
       })}
@@ -743,8 +679,21 @@ function Cubes() {
   );
 }
 
-const cubesStyles = StyleSheet.create({
+const cube = css.keyframes({
+  '0%, 70%, 100%': {
+    transform: [{ scale: 1 }],
+  },
+  '35%': {
+    transform: [{ scale: 0 }],
+  },
+});
+
+const cubesStyles = css.create({
   cube: {
+    animationDuration: '1.5s',
+    animationIterationCount: 'infinite',
+    animationName: cube,
+    animationTimingFunction: 'easeInOut',
     backgroundColor: colors.primary,
     height: (1 / 3) * SPINNER_SIZE,
     width: (1 / 3) * SPINNER_SIZE,
@@ -769,35 +718,7 @@ function Diamond() {
       <Animated.View
         style={[
           diamondStyles.part,
-          {
-            animationDelay: `${-0.3 * (4 - order)}s`,
-            animationDuration: '2.4s',
-            animationIterationCount: 'infinite',
-            animationName: {
-              '0%, 10%': {
-                opacity: 0,
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateX: '-180deg' },
-                ],
-              },
-              '25%, 75%': {
-                opacity: 1,
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateX: '0deg' },
-                ],
-              },
-              '90%, 100%': {
-                opacity: 0,
-                transform: [
-                  { perspective: 2 * SPINNER_SIZE },
-                  { rotateY: '180deg' },
-                ],
-              },
-            },
-            animationTimingFunction: 'linear',
-          },
+          { animationDelay: `${-0.3 * (4 - order)}s` },
         ]}
       />
     </View>
@@ -815,9 +736,24 @@ function Diamond() {
   );
 }
 
+const diamond = css.keyframes({
+  '0%, 10%': {
+    opacity: 0,
+    transform: [{ perspective: 2 * SPINNER_SIZE }, { rotateX: '-180deg' }],
+  },
+  '25%, 75%': {
+    opacity: 1,
+    transform: [{ perspective: 2 * SPINNER_SIZE }, { rotateX: '0deg' }],
+  },
+  '90%, 100%': {
+    opacity: 0,
+    transform: [{ perspective: 2 * SPINNER_SIZE }, { rotateY: '180deg' }],
+  },
+});
+
 const DIAMOND_SIZE = (SPINNER_SIZE * Math.sqrt(2)) / 2;
 
-const diamondStyles = StyleSheet.create({
+const diamondStyles = css.create({
   diamond: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -832,6 +768,10 @@ const diamondStyles = StyleSheet.create({
   },
   part: {
     ...StyleSheet.absoluteFillObject,
+    animationDuration: '2.4s',
+    animationIterationCount: 'infinite',
+    animationName: diamond,
+    animationTimingFunction: 'linear',
     backgroundColor: colors.primary,
     transformOrigin: '100% 100%',
   },

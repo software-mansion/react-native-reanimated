@@ -4,7 +4,7 @@ import type {
   CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import Animated, { css, LinearTransition } from 'react-native-reanimated';
 
 import {
   Button,
@@ -17,75 +17,59 @@ import {
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 import { stringifyConfig } from '@/utils';
 
-const sharedConfig: CSSAnimationSettings = {
+const animationSettings: CSSAnimationSettings = {
   animationDuration: '1s',
   animationIterationCount: 'infinite',
   animationTimingFunction: 'easeInOut',
 };
 
-const wiggleAnimation: CSSAnimationProperties = {
-  animationName: {
-    '0, 100%': {
-      transform: [{ rotate: '-15deg' }],
-    },
-    '50%': {
-      transform: [{ rotate: '15deg' }],
-    },
+const wiggle = css.keyframes({
+  '0%, 100%': {
+    transform: [{ rotate: '-15deg' }],
   },
-  ...sharedConfig,
-  animationDuration: '0.5s',
-};
-
-const fadeAnimation: CSSAnimationProperties = {
-  animationName: {
-    to: {
-      opacity: 0,
-    },
+  '50%': {
+    transform: [{ rotate: '15deg' }],
   },
-  ...sharedConfig,
-};
+});
 
-const colorAnimation: CSSAnimationProperties = {
-  animationName: {
-    to: {
-      backgroundColor: colors.primaryDark,
-    },
+const fade = css.keyframes({
+  to: {
+    opacity: 0,
   },
-  ...sharedConfig,
-};
+});
 
-const jumpAnimation: CSSAnimationProperties = {
-  animationName: {
-    '50%': {
-      top: '-50%',
-      transform: [{ translateY: '50%' }],
-    },
+const color = css.keyframes({
+  to: {
+    backgroundColor: colors.primaryDark,
   },
-  ...sharedConfig,
-};
+});
 
-const rollAnimation: CSSAnimationProperties = {
-  animationName: {
-    to: {
-      transform: [{ rotate: '360deg' }],
-    },
+const jump = css.keyframes({
+  '50%': {
+    top: '-50%',
+    transform: [{ translateY: '50%' }],
   },
-  ...sharedConfig,
-};
+});
 
-const ANIMATIONS = [
-  { animation: wiggleAnimation, name: 'Wiggle' },
-  { animation: fadeAnimation, name: 'Fade' },
-  { animation: colorAnimation, name: 'Color' },
-  { animation: jumpAnimation, name: 'Jump' },
-  { animation: rollAnimation, name: 'Roll' },
+const roll = css.keyframes({
+  to: {
+    transform: [{ rotate: '360deg' }],
+  },
+});
+
+const ANIMATIONS: Array<{ name: string } & CSSAnimationProperties> = [
+  { animationDuration: '0.5s', animationName: wiggle, name: 'Wiggle' },
+  { animationName: fade, name: 'Fade' },
+  { animationName: color, name: 'Color' },
+  { animationName: jump, name: 'Jump' },
+  { animationName: roll, name: 'Roll' },
 ];
 
 export default function ChangingAnimation() {
   const [selectedIndex, setSelectedIndex] = useState<null | number>(0);
 
-  const animation =
-    selectedIndex !== null ? ANIMATIONS[selectedIndex].animation : null;
+  const { name, ...animationProps } =
+    selectedIndex !== null ? ANIMATIONS[selectedIndex] : { name: undefined };
 
   return (
     <ScrollScreen>
@@ -97,7 +81,7 @@ export default function ChangingAnimation() {
             <View style={styles.buttonRow}>
               <Text variant="label1">Remove animation</Text>
               <Button
-                disabled={!animation}
+                disabled={!name}
                 title="Remove"
                 onPress={() => setSelectedIndex(null)}
               />
@@ -116,7 +100,9 @@ export default function ChangingAnimation() {
             </View>
 
             <View style={styles.preview}>
-              <Animated.View style={[styles.box, animation]} />
+              <Animated.View
+                style={[styles.box, animationSettings, animationProps]}
+              />
             </View>
           </View>
         </Section>
@@ -125,8 +111,13 @@ export default function ChangingAnimation() {
           description="Selected animation configuration"
           title="Animation Configuration">
           <Animated.View layout={LinearTransition} style={styles.codeWrapper}>
-            {animation ? (
-              <CodeBlock code={stringifyConfig(animation)} />
+            {name ? (
+              <CodeBlock
+                code={stringifyConfig({
+                  ...animationSettings,
+                  ...animationProps,
+                })}
+              />
             ) : (
               <Text variant="subHeading2">No animation selected</Text>
             )}

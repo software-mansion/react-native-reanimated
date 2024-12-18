@@ -1,26 +1,13 @@
 import type { ReactNode } from 'react';
-import { Children } from 'react';
+import { Children, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type {
-  CSSAnimationProperties,
-  CSSAnimationSettings,
-} from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
+import type { CSSAnimationSettings } from 'react-native-reanimated';
+import Animated, { css } from 'react-native-reanimated';
 
 import type { RouteCardComponent } from '@/components';
 import { RouteCard } from '@/components';
 import { useFocusPlayState } from '@/hooks';
 import { colors, radius, sizes, spacing } from '@/theme';
-
-const scrollAnimation: CSSAnimationProperties = {
-  animationIterationCount: 'infinite',
-  animationName: {
-    to: {
-      transform: [{ translateY: '-50%' }],
-    },
-  },
-  animationTimingFunction: 'linear',
-};
 
 const exampleAnimationSettings: CSSAnimationSettings = {
   animationDuration: '3s',
@@ -58,7 +45,6 @@ function Examples({ children }: { children: ReactNode }) {
     <Animated.View
       style={[
         styles.examples,
-        scrollAnimation,
         {
           animationDuration: `${5 * childrenArray.length}s`,
           animationPlayState: useFocusPlayState(),
@@ -80,6 +66,33 @@ function Examples({ children }: { children: ReactNode }) {
 }
 
 function DimensionsExample() {
+  const dimensionsAnimation = useMemo(
+    () =>
+      css.keyframes({
+        '0%': {
+          height: sizes.xxs,
+          width: sizes.xxs,
+        },
+        '12.5%': {
+          height: sizes.xxs,
+          width: 2 * sizes.xxs,
+        },
+        '37.5%': {
+          height: 2 * sizes.xxs,
+          width: 2 * sizes.xxs,
+        },
+        '62.5%': {
+          height: 2 * sizes.xxs,
+          width: sizes.xxs,
+        },
+        '87.5%': {
+          height: sizes.xxs,
+          width: sizes.xxs,
+        },
+      }),
+    []
+  );
+
   return (
     <Animated.View
       style={[
@@ -87,28 +100,7 @@ function DimensionsExample() {
         exampleAnimationSettings,
         {
           animationDirection: 'alternate',
-          animationName: {
-            '0%': {
-              height: sizes.xxs,
-              width: sizes.xxs,
-            },
-            '12.5%': {
-              height: sizes.xxs,
-              width: 2 * sizes.xxs,
-            },
-            '37.5%': {
-              height: 2 * sizes.xxs,
-              width: 2 * sizes.xxs,
-            },
-            '62.5%': {
-              height: 2 * sizes.xxs,
-              width: sizes.xxs,
-            },
-            '87.5%': {
-              height: sizes.xxs,
-              width: sizes.xxs,
-            },
-          },
+          animationName: dimensionsAnimation,
           animationPlayState: useFocusPlayState(),
         },
       ]}
@@ -117,6 +109,33 @@ function DimensionsExample() {
 }
 
 function InsetsExample() {
+  const insetsAnimation = useMemo(
+    () =>
+      css.keyframes({
+        '0%, 100%': {
+          left: '50%',
+          top: 0,
+          transform: [{ translateX: '-50%' }],
+        },
+        '25%': {
+          left: '100%',
+          top: '50%',
+          transform: [{ translateX: '-100%' }, { translateY: '-50%' }],
+        },
+        '50%': {
+          left: '50%',
+          top: '100%',
+          transform: [{ translateX: '-50%' }, { translateY: '-100%' }],
+        },
+        '75%': {
+          left: 0,
+          top: '50%',
+          transform: [{ translateY: '-50%' }],
+        },
+      }),
+    []
+  );
+
   return (
     <View style={StyleSheet.absoluteFill}>
       <Animated.View
@@ -124,28 +143,7 @@ function InsetsExample() {
           styles.box,
           exampleAnimationSettings,
           {
-            animationName: {
-              '0%, 100%': {
-                left: '50%',
-                top: 0,
-                transform: [{ translateX: '-50%' }],
-              },
-              '25%': {
-                left: '100%',
-                top: '50%',
-                transform: [{ translateX: '-100%' }, { translateY: '-50%' }],
-              },
-              '50%': {
-                left: '50%',
-                top: '100%',
-                transform: [{ translateX: '-50%' }, { translateY: '-100%' }],
-              },
-              '75%': {
-                left: 0,
-                top: '50%',
-                transform: [{ translateY: '-50%' }],
-              },
-            },
+            animationName: insetsAnimation,
             animationPlayState: useFocusPlayState(),
             animationTimingFunction: 'linear',
           },
@@ -156,45 +154,39 @@ function InsetsExample() {
 }
 
 function TransformsExample() {
+  const transformsAnimation = useMemo(
+    () =>
+      css.keyframes({
+        '0%': {
+          transform: [{ rotate: '0deg' }, { scaleX: 1 }, { skewX: '0deg' }],
+        },
+        '25%': {
+          transform: [{ rotate: '90deg' }, { scaleX: 1.2 }, { skewX: '10deg' }],
+        },
+        '50%': {
+          transform: [{ rotate: '180deg' }, { scaleX: 2 }, { skewX: '0deg' }],
+        },
+        '75%': {
+          transform: [
+            { rotate: '270deg' },
+            { scaleX: 1.2 },
+            { skewX: '-10deg' },
+          ],
+        },
+        '100%': {
+          transform: [{ rotate: '360deg' }, { scaleX: 1 }, { skewX: '0deg' }],
+        },
+      }),
+    []
+  );
+
   return (
     <Animated.View
       style={[
         styles.box,
         exampleAnimationSettings,
         {
-          animationName: {
-            '0%': {
-              transform: [{ rotate: '0deg' }, { scaleX: 1 }, { skewX: '0deg' }],
-            },
-            '25%': {
-              transform: [
-                { rotate: '90deg' },
-                { scaleX: 1.2 },
-                { skewX: '10deg' },
-              ],
-            },
-            '50%': {
-              transform: [
-                { rotate: '180deg' },
-                { scaleX: 2 },
-                { skewX: '0deg' },
-              ],
-            },
-            '75%': {
-              transform: [
-                { rotate: '270deg' },
-                { scaleX: 1.2 },
-                { skewX: '-10deg' },
-              ],
-            },
-            '100%': {
-              transform: [
-                { rotate: '360deg' },
-                { scaleX: 1 },
-                { skewX: '0deg' },
-              ],
-            },
-          },
+          animationName: transformsAnimation,
           animationPlayState: useFocusPlayState(),
         },
       ]}
@@ -203,23 +195,29 @@ function TransformsExample() {
 }
 
 function ColorsExample() {
+  const colorsAnimation = useMemo(
+    () =>
+      css.keyframes({
+        '0%, 100%': {
+          backgroundColor: colors.primary,
+        },
+        '25%': {
+          backgroundColor: colors.primaryLight,
+        },
+        '75%': {
+          backgroundColor: colors.primaryDark,
+        },
+      }),
+    []
+  );
+
   return (
     <Animated.View
       style={[
         styles.box,
         exampleAnimationSettings,
         {
-          animationName: {
-            '0%, 100%': {
-              backgroundColor: colors.primary,
-            },
-            '25%': {
-              backgroundColor: colors.primaryLight,
-            },
-            '75%': {
-              backgroundColor: colors.primaryDark,
-            },
-          },
+          animationName: colorsAnimation,
           animationPlayState: useFocusPlayState(),
         },
       ]}
@@ -228,6 +226,37 @@ function ColorsExample() {
 }
 
 function BorderRadiusExample() {
+  const borderRadiusAnimation = useMemo(
+    () =>
+      css.keyframes({
+        '0%, 100%': {
+          borderBottomLeftRadius: radius.md,
+          borderBottomRightRadius: radius.xs,
+          borderTopLeftRadius: radius.xs,
+          borderTopRightRadius: radius.lg,
+        },
+        '25%': {
+          borderBottomLeftRadius: radius.lg,
+          borderBottomRightRadius: radius.md,
+          borderTopLeftRadius: radius.md,
+          borderTopRightRadius: radius.xs,
+        },
+        '50%': {
+          borderBottomLeftRadius: radius.xs,
+          borderBottomRightRadius: radius.lg,
+          borderTopLeftRadius: radius.lg,
+          borderTopRightRadius: radius.md,
+        },
+        '75%': {
+          borderBottomLeftRadius: radius.md,
+          borderBottomRightRadius: radius.xs,
+          borderTopLeftRadius: radius.xs,
+          borderTopRightRadius: radius.md,
+        },
+      }),
+    []
+  );
+
   return (
     <Animated.View
       style={[
@@ -235,32 +264,7 @@ function BorderRadiusExample() {
         styles.boxLarge,
         exampleAnimationSettings,
         {
-          animationName: {
-            '0%, 100%': {
-              borderBottomLeftRadius: radius.md,
-              borderBottomRightRadius: radius.xs,
-              borderTopLeftRadius: radius.xs,
-              borderTopRightRadius: radius.lg,
-            },
-            '25%': {
-              borderBottomLeftRadius: radius.lg,
-              borderBottomRightRadius: radius.md,
-              borderTopLeftRadius: radius.md,
-              borderTopRightRadius: radius.xs,
-            },
-            '50%': {
-              borderBottomLeftRadius: radius.xs,
-              borderBottomRightRadius: radius.lg,
-              borderTopLeftRadius: radius.lg,
-              borderTopRightRadius: radius.md,
-            },
-            '75%': {
-              borderBottomLeftRadius: radius.md,
-              borderBottomRightRadius: radius.xs,
-              borderTopLeftRadius: radius.xs,
-              borderTopRightRadius: radius.md,
-            },
-          },
+          animationName: borderRadiusAnimation,
           animationPlayState: useFocusPlayState(),
         },
       ]}
@@ -268,7 +272,13 @@ function BorderRadiusExample() {
   );
 }
 
-const styles = StyleSheet.create({
+const scroll = css.keyframes({
+  to: {
+    transform: [{ translateY: '-50%' }],
+  },
+});
+
+const styles = css.create({
   box: {
     backgroundColor: colors.primary,
     borderRadius: radius.xs,
@@ -304,6 +314,9 @@ const styles = StyleSheet.create({
     width: '75%',
   },
   examples: {
+    animationIterationCount: 'infinite',
+    animationName: scroll,
+    animationTimingFunction: 'linear',
     backgroundColor: colors.primaryLight,
     gap: spacing.sm,
     paddingHorizontal: spacing.sm,

@@ -1,10 +1,9 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import type {
   CSSAnimationDelay,
-  CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
+import Animated, { css } from 'react-native-reanimated';
 
 import type { RouteCardComponent } from '@/components';
 import { RouteCard } from '@/components';
@@ -16,27 +15,6 @@ const animationSettings: CSSAnimationSettings = {
   animationDuration: '2s',
   animationIterationCount: 'infinite',
   animationTimingFunction: 'easeInOut',
-};
-
-const thumbAnimation: CSSAnimationProperties = {
-  animationName: {
-    to: {
-      top: '100%',
-    },
-  },
-  ...animationSettings,
-};
-
-const trackInnerAnimation: CSSAnimationProperties = {
-  animationName: {
-    from: {
-      height: 0,
-    },
-    to: {
-      height: '100%',
-    },
-  },
-  ...animationSettings,
 };
 
 const AnimationSettingsCard: RouteCardComponent = (props) => (
@@ -61,17 +39,12 @@ function Showcase() {
               <Animated.View
                 style={[
                   styles.barTrackInner,
-                  trackInnerAnimation,
                   { animationDelay, animationPlayState },
                 ]}
               />
             </View>
             <Animated.View
-              style={[
-                styles.barThumb,
-                thumbAnimation,
-                { animationDelay, animationPlayState },
-              ]}
+              style={[styles.barThumb, { animationDelay, animationPlayState }]}
             />
           </View>
         );
@@ -80,19 +53,36 @@ function Showcase() {
   );
 }
 
-const styles = StyleSheet.create({
+const barTrackInner = css.keyframes({
+  from: {
+    height: 0,
+  },
+  to: {
+    height: '100%',
+  },
+});
+
+const thumb = css.keyframes({
+  to: {
+    top: '100%',
+  },
+});
+
+const styles = css.create({
   bar: {
     alignItems: 'center',
     height: sizes.lg,
     width: sizes.xxxs,
   },
   barThumb: {
+    animationName: thumb,
     backgroundColor: colors.primaryDark,
     borderRadius: radius.full,
     height: sizes.xxxs,
     position: 'absolute',
     transform: [{ translateY: '-50%' }],
     width: sizes.xxxs,
+    ...animationSettings,
   },
   barTrack: {
     backgroundColor: colors.primaryLight,
@@ -101,9 +91,11 @@ const styles = StyleSheet.create({
     width: '50%',
   },
   barTrackInner: {
+    animationName: barTrackInner,
     backgroundColor: colors.primary,
     borderRadius: radius.full,
     width: '100%',
+    ...animationSettings,
   },
   container: {
     flexDirection: 'row',

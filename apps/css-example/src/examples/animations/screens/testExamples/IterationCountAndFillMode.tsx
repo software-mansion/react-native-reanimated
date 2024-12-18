@@ -1,41 +1,7 @@
-import { StyleSheet } from 'react-native';
-import type { CSSAnimationProperties } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
+import Animated, { css } from 'react-native-reanimated';
 
 import { TestExampleScreen } from '@/components';
 import { colors, flex } from '@/theme';
-
-const animationDuration = '2s';
-
-const parentAnimation: CSSAnimationProperties = {
-  animationDuration,
-  animationIterationCount: 'infinite',
-  animationName: {
-    to: {
-      width: 300,
-    },
-  },
-};
-
-const childAnimation: CSSAnimationProperties = {
-  animationDuration,
-  animationFillMode: 'forwards',
-  animationIterationCount: 1.5,
-  animationName: {
-    to: {
-      width: 150,
-    },
-  },
-};
-
-const innerChildAnimation: CSSAnimationProperties = {
-  animationDuration,
-  animationName: {
-    from: {
-      opacity: 0,
-    },
-  },
-};
 
 export default function IterationCountAndFillMode() {
   return (
@@ -69,31 +35,57 @@ export default function IterationCountAndFillMode() {
 
 function Example() {
   return (
-    <Animated.View style={[exampleStyles.parent, parentAnimation]}>
-      <Animated.View style={[exampleStyles.child, childAnimation]}>
-        <Animated.View
-          style={[exampleStyles.innerChild, innerChildAnimation]}
-        />
+    <Animated.View style={exampleStyles.parent}>
+      <Animated.View style={exampleStyles.child}>
+        <Animated.View style={exampleStyles.innerChild} />
       </Animated.View>
     </Animated.View>
   );
 }
 
-const exampleStyles = StyleSheet.create({
+const animationDuration = '2s';
+
+const parent = css.keyframes({
+  to: {
+    width: 300,
+  },
+});
+
+const child = css.keyframes({
+  to: {
+    width: 150,
+  },
+});
+
+const innerChild = css.keyframes({
+  from: {
+    opacity: 0,
+  },
+});
+
+const exampleStyles = css.create({
   child: {
     ...flex.center,
+    animationDuration,
+    animationFillMode: 'forwards',
+    animationIterationCount: 1.5,
+    animationName: child,
     backgroundColor: colors.primaryDark,
     height: 75,
     width: '100%',
   },
-
   innerChild: {
+    animationDuration,
+    animationName: innerChild,
     backgroundColor: colors.primaryLight,
     height: 30,
     width: 75,
   },
   parent: {
     ...flex.center,
+    animationDuration,
+    animationIterationCount: 'infinite',
+    animationName: parent,
     backgroundColor: colors.primary,
     height: 75,
     width: 0,
