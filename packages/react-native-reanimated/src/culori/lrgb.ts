@@ -1,4 +1,8 @@
 'use strict';
+
+// TODO Remove once we have the option to get a workletized version of the culori package
+//   https://github.com/software-mansion/react-native-reanimated/pull/6782#pullrequestreview-2488830278
+
 import type { RgbColor } from './Colors';
 
 const channelFromLrgb = (c = 0) => {

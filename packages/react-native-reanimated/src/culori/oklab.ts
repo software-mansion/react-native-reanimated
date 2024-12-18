@@ -1,6 +1,25 @@
 'use strict';
 import type { LabColor, RgbColor } from './Colors';
 
+// TODO Once we have the option to workletize external depedencies, we can replace everything below
+//  with a workletized version of the culori package, as follows (see
+//  https://github.com/software-mansion/react-native-reanimated/pull/6782#pullrequestreview-2488830278):
+//
+// import { converter } from 'culori';
+//
+// export default {
+//   convert: {
+//     fromRgb: (rgbColor: RgbColor) => converter('oklab')({
+//       mode: 'rgb',
+//       ...rgbColor,
+//     }),
+//     toRgb: (labColor: LabColor) => converter('rgb')({
+//       mode: 'oklab',
+//       ...labColor,
+//     }),
+//   },
+// };
+
 import lrgb from './lrgb';
 
 function convertLrgbToOklab({
