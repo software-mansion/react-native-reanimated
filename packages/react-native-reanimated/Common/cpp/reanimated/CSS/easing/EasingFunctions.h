@@ -1,9 +1,9 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #pragma once
 
-#include <reanimated/CSS/easing/CubicBezierEasing.h>
-#include <reanimated/CSS/easing/LinearParametrizedEasing.h>
-#include <reanimated/CSS/easing/StepsEasing.h>
+#include <reanimated/CSS/easing/cubicBezier.h>
+#include <reanimated/CSS/easing/linear.h>
+#include <reanimated/CSS/easing/steps.h>
 
 #include <jsi/jsi.h>
 #include <string>
@@ -17,13 +17,12 @@ using namespace facebook;
 extern const std::unordered_map<std::string, EasingFunction>
     PREDEFINED_EASING_MAP;
 
-EasingFunction getEasingFunction(
-    jsi::Runtime &rt,
-    const jsi::Value &easingConfig);
-
 EasingFunction getPredefinedEasingFunction(const std::string &name);
+EasingFunction createParametrizedEasingFunction(
+    jsi::Runtime &rt,
+    const jsi::Object &easingConfig);
 
-EasingFunction getParametrizedEasingFunction(
+EasingFunction createEasingFunction(
     jsi::Runtime &rt,
     const jsi::Value &easingConfig);
 

@@ -8,7 +8,7 @@ double getDuration(jsi::Runtime &rt, const jsi::Object &config) {
 }
 
 EasingFunction getTimingFunction(jsi::Runtime &rt, const jsi::Object &config) {
-  return getEasingFunction(rt, config.getProperty(rt, "timingFunction"));
+  return createEasingFunction(rt, config.getProperty(rt, "timingFunction"));
 }
 
 double getDelay(jsi::Runtime &rt, const jsi::Object &config) {

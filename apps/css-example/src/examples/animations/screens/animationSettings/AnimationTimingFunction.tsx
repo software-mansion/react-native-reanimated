@@ -87,21 +87,21 @@ export default function AnimationTimingFunction() {
                 "Specify a simple polygonal chain that always starts at an x-value of 0 and ends at an x-value of 1. You can either specify the points' y and x coordinates or leave the x coordinates to be inferred.",
               items: [
                 {
-                  animationTimingFunction: linear([
-                    0,
-                    { x: '75%', y: 0.25 },
-                    1,
-                  ]),
-                  label: "linear([\n 0,\n {y: 0.25, x: '75%'},\n 1\n])",
+                  animationTimingFunction: linear(0, [0.25, '75%'], 1),
+                  label: 'linear(\n 0, [0.25, "75%"], 1\n)',
                 },
                 {
-                  animationTimingFunction: linear([
-                    { x: '0%', y: 0.6 },
-                    { x: '50%', y: 0.1 },
-                    { x: '100%', y: 1 },
-                  ]),
+                  animationTimingFunction: linear(0, [0.25, '25%', '75%'], 1),
+                  label: 'linear(\n 0, [0.25, "25%", "75%"], 1\n)',
+                },
+                {
+                  animationTimingFunction: linear(
+                    [0.6, '0%'],
+                    [0.1, '50%'],
+                    [1, '100%']
+                  ),
                   label:
-                    "linear([\n {y: 0.6, x: '0%'},\n {y: 0.1, x: '50%'},\n {y: 1, x: '100%'}\n])",
+                    'linear(\n [0.6, "0%"],\n [0.1, "50%"],\n [1, "100%"]\n)',
                 },
               ],
               title: 'Linear Easing with points',
@@ -119,19 +119,19 @@ export default function AnimationTimingFunction() {
               items: [
                 {
                   animationTimingFunction: steps(2, 'jumpStart'),
-                  label: "steps(2, 'jumpStart') or\nsteps(2, 'start')",
+                  label: steps(2, 'jumpStart').toString(),
                 },
                 {
                   animationTimingFunction: steps(4, 'jumpEnd'),
-                  label: "steps(4, 'jumpEnd') or\nsteps(4, 'end')",
+                  label: steps(4, 'jumpEnd').toString(),
                 },
                 {
                   animationTimingFunction: steps(5, 'jumpNone'),
-                  label: "steps(5, 'jumpNone')",
+                  label: steps(5, 'jumpNone').toString(),
                 },
                 {
                   animationTimingFunction: steps(3, 'jumpBoth'),
-                  label: "steps(3, 'jumpBoth')",
+                  label: steps(3, 'jumpBoth').toString(),
                 },
               ],
               title: 'Steps Easing',

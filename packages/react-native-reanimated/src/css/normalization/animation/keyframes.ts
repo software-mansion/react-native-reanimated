@@ -9,8 +9,11 @@ import type {
   NormalizedCSSKeyframeTimingFunctions,
 } from '../../types';
 import { isNumber } from '../../utils';
-import { OFFSET_REGEX } from './constants';
-import { normalizeStyle, normalizeTimingFunction } from '../common';
+import {
+  normalizeStyle,
+  normalizeTimingFunction,
+  PERCENTAGE_REGEX,
+} from '../common';
 import type { StyleProps } from '../../../commonTypes';
 import { ReanimatedError } from '../../errors';
 
@@ -41,7 +44,7 @@ function normalizeKeyframeSelector(
 
     if (typeof selector === 'number' || !isNaN(+selector)) {
       offset = +selector;
-    } else if (OFFSET_REGEX.test(selector)) {
+    } else if (PERCENTAGE_REGEX.test(selector)) {
       offset = parseFloat(selector) / 100;
     }
 

@@ -1,177 +1,151 @@
 'use strict';
+import { logger } from '../../logger';
 import { ReanimatedError } from '../errors';
+import { PERCENTAGE_REGEX } from '../normalization';
+import type { Point } from '../types';
 import type {
-  LinearEasingInputPoint,
-  LinearEasingNormalizedPoint,
-  LinearEasingProcessedPoint,
   ParametrizedTimingFunction,
   NormalizedLinearEasing,
+  ControlPoint,
 } from './types';
 
-const ERROR_MESSAGES = {
-  invalidLinearEasingPoints: () =>
-    `Invalid linear easing points. There should be at least two points with 0% and 100% x percentages`,
-  invalidLinearEasingPointX: (pointX: string) =>
-    `Invalid linear easing point x value: ${pointX}, it should be a string between '0%' and '100%'`,
-  invalidLinearEasingPointXPercentage: (pointX: string) =>
-    `Invalid linear easing point x percentage ${pointX}, it should be between 0% and 100%`,
-  linearEasingStartingPoint: () =>
-    `Linear easing starting point should have 0% percentage or no percentage.`,
-  linearEasingEndingPoint: () =>
-    `Linear easing ending point should have 100% percentage or no percentage.`,
-  linearEasingPointsSequence: () =>
-    `Linear easing points x percentages should be an increasing sequence`,
+export const ERROR_MESSAGES = {
+  invalidPointsCount: () =>
+    `Invalid linear easing points count. There should be at least two points`,
+  invalidInputProgressValue: (inputProgress: string | number) =>
+    `Invalid input progress ${inputProgress} value, it should be a percentage between 0% and 100%`,
+};
+
+export const WARN_MESSAGES = {
+  inputProgressLessThanPrecedingPoint: (x: number, precedingX: number) =>
+    `Linear easing point x value ${x} is less than value of the preceding control point ${precedingX}. Value will be overridden by ${precedingX}`,
+};
+
+const parsePercentage = (percentage: string | number): number => {
+  let result: number | undefined;
+  if (typeof percentage === 'number') {
+    result = percentage;
+  } else if (PERCENTAGE_REGEX.test(percentage)) {
+    result = parseFloat(percentage) / 100;
+  }
+
+  if (result === undefined || result < 0 || result > 1) {
+    throw new ReanimatedError(
+      ERROR_MESSAGES.invalidInputProgressValue(percentage)
+    );
+  }
+
+  return result;
+};
+
+const extrapolate = (x: number, point1: Point, point2: Point) => {
+  const slope = (point2.y - point1.y) / (point2.x - point1.x);
+  return point1.y + slope * (x - point1.x);
 };
 
 export class LinearEasing implements ParametrizedTimingFunction {
   static readonly easingName = 'linear';
-  readonly points: LinearEasingInputPoint[];
+  readonly points: ControlPoint[];
 
-  constructor(points: LinearEasingInputPoint[]) {
+  constructor(points: ControlPoint[]) {
     if (points.length < 2) {
-      throw new ReanimatedError(ERROR_MESSAGES.invalidLinearEasingPoints());
+      throw new ReanimatedError(ERROR_MESSAGES.invalidPointsCount());
     }
     this.points = points;
   }
 
   toString(): string {
     return `${LinearEasing.easingName}(${this.points
-      .map((point) => {
-        if (typeof point === 'object') {
-          return `{x: ${point.x} y: ${point.y}}`;
-        } else {
-          return point;
-        }
-      })
+      .map((point) =>
+        Array.isArray(point)
+          ? `[${point.map((p) => (typeof p === 'string' ? `"${p}"` : p)).join(', ')}]`
+          : point
+      )
       .join(', ')})`;
   }
 
-  // TODO - maybe refactor this normalization later on as it it seems too complex
   normalize(): NormalizedLinearEasing {
-    const normalizedPoints = this.points.map(this.normalizePoint.bind(this));
-    normalizedPoints[0] = this.normalizeFirstPoint(normalizedPoints[0]);
-    normalizedPoints[normalizedPoints.length - 1] = this.normalizeLastPoint(
-      normalizedPoints[normalizedPoints.length - 1]
+    const points = this.canonicalize();
+
+    // Extrapolate points if the input progress of the first one is greater than 0
+    // or the input progress of the last one is less than 1
+    if (points[0].x > 0) {
+      points.unshift({ x: 0, y: extrapolate(0, points[0], points[1]) });
+    }
+    if (points[points.length - 1].x < 1) {
+      points.push({
+        x: 1,
+        y: extrapolate(1, points[points.length - 2], points[points.length - 1]),
+      });
+    }
+
+    return { name: LinearEasing.easingName, points };
+  }
+
+  private canonicalize() {
+    const result = this.points.flatMap<{ x?: number; y: number }>((point) =>
+      Array.isArray(point)
+        ? point.slice(1).map((x) => ({ x: parsePercentage(x), y: point[0] }))
+        : [{ y: point }]
     );
-    this.validatePointsSequence(normalizedPoints);
 
-    // Infer x values for only y value points
-    let leftKnownIdx = 0;
-    let rightKnownIdx = -1;
-    while (leftKnownIdx < normalizedPoints.length - 1) {
-      // Search for the closest (to the leftKnownIdx) point that has an x value
-      rightKnownIdx = leftKnownIdx + 1;
-      while (typeof normalizedPoints[rightKnownIdx] === 'number') {
-        rightKnownIdx++;
-      }
-
-      // Get x values of left and right known points
-      let leftValue = 0;
-      const leftPoint = normalizedPoints[leftKnownIdx];
-      if (typeof leftPoint === 'object') {
-        leftValue = leftPoint.x;
-      }
-      let rightValue = 0;
-      const rightPoint = normalizedPoints[rightKnownIdx];
-      if (typeof rightPoint === 'object') {
-        rightValue = rightPoint.x;
-      }
-
-      // Calculate the increase of x for the points in the middle
-      const xIncrease =
-        (1 / (rightKnownIdx - leftKnownIdx)) * (rightValue - leftValue);
-      // Set x values for interpolated points
-      for (let i = leftKnownIdx + 1; i < rightKnownIdx; i++) {
-        const currentPoint = normalizedPoints[i];
-        const previousPoint = normalizedPoints[i - 1];
-        if (
-          typeof currentPoint === 'number' &&
-          typeof previousPoint === 'object'
-        ) {
-          normalizedPoints[i] = {
-            y: currentPoint,
-            x: previousPoint.x + xIncrease,
-          };
-        }
-      }
-
-      leftKnownIdx = rightKnownIdx;
+    // 1. If the first control point lacks an input progress value,
+    // set its input progress value to 0.
+    if (result[0].x === undefined) {
+      result[0].x = 0;
     }
 
-    // Force cast because know we are sure all the points are processed to objects
-    const processedPoints =
-      normalizedPoints as unknown as LinearEasingProcessedPoint[];
-
-    return {
-      name: LinearEasing.easingName,
-      pointsX: processedPoints.map((point) => point.x),
-      pointsY: processedPoints.map((point) => point.y),
-    };
-  }
-
-  private normalizePoint(
-    point: LinearEasingInputPoint
-  ): LinearEasingNormalizedPoint {
-    if (typeof point !== 'object') {
-      return point;
+    // 2.If the last control point lacks an input progress value,
+    // set its input progress value to 1.
+    if (result[result.length - 1].x === undefined) {
+      result[result.length - 1].x = 1;
     }
 
-    // Parse percentage to float
-    const newValue = parseFloat(point.x) / 100;
-    if (Number.isNaN(newValue)) {
-      throw new ReanimatedError(
-        ERROR_MESSAGES.invalidLinearEasingPointX(point.x)
-      );
-    }
-    if (newValue < 0 || newValue > 1) {
-      throw new ReanimatedError(
-        ERROR_MESSAGES.invalidLinearEasingPointXPercentage(point.x)
-      );
-    }
-    return { y: point.y, x: newValue };
-  }
-
-  private normalizeFirstPoint(
-    point: LinearEasingNormalizedPoint
-  ): LinearEasingNormalizedPoint {
-    if (typeof point === 'object') {
-      if (point.x > 0) {
-        throw new ReanimatedError(ERROR_MESSAGES.linearEasingStartingPoint());
-      }
-    } else if (typeof point === 'number') {
-      return { y: point, x: 0 };
-    }
-    return point;
-  }
-
-  private normalizeLastPoint(
-    point: LinearEasingNormalizedPoint
-  ): LinearEasingNormalizedPoint {
-    if (typeof point === 'object') {
-      if (point.x < 1) {
-        throw new ReanimatedError(ERROR_MESSAGES.linearEasingEndingPoint());
-      }
-    } else if (typeof point === 'number') {
-      return { y: point, x: 1 };
-    }
-    return point;
-  }
-
-  private validatePointsSequence(
-    normalizedPoints: LinearEasingNormalizedPoint[]
-  ) {
-    // Check if points defined x values create an increasing sequence
-    let lastKnownX = 0;
-    for (let i = 1; i < normalizedPoints.length; i++) {
-      const point = normalizedPoints[i];
-      if (typeof point === 'object') {
-        if (point.x <= lastKnownX) {
-          throw new ReanimatedError(
-            ERROR_MESSAGES.linearEasingPointsSequence()
+    // 3. If any control point has an input progress value that is less
+    // than the input progress value of any preceding control point, set
+    // its input progress value to the largest input progress value of
+    // any preceding control point.
+    let maxPrecedingX = 0;
+    for (let i = 1; i < result.length - 1; i++) {
+      const x = result[i].x;
+      if (x !== undefined) {
+        if (x < maxPrecedingX) {
+          logger.warn(
+            WARN_MESSAGES.inputProgressLessThanPrecedingPoint(x, maxPrecedingX)
           );
+          result[i].x = maxPrecedingX;
+        } else {
+          maxPrecedingX = x;
         }
-        lastKnownX = point.x;
       }
     }
+
+    // 4. If any control point still lacks an input progress value, then
+    // for each contiguous run of such control points, set their input
+    // progress values so that they are evenly spaced between the preceding
+    // and following control points with input progress values.
+    let precedingX = result[0].x;
+    let missingCount = 0;
+    for (let i = 1; i < result.length; i++) {
+      const x = result[i].x;
+
+      if (x === undefined) {
+        missingCount++;
+        continue;
+      }
+
+      if (missingCount > 0) {
+        const range = x - precedingX;
+
+        for (let j = missingCount; j > 0; j--) {
+          result[i - j].x = precedingX + (range * j) / (missingCount + 1);
+        }
+      }
+
+      precedingX = x;
+      missingCount = 0;
+    }
+
+    return result as Point[];
   }
 }

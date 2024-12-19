@@ -4,8 +4,9 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/util/algorithms.h>
 
-#include <functional>
 #include <vector>
+
+namespace reanimated {
 
 double interpolateValue(
     double x,
@@ -13,11 +14,9 @@ double interpolateValue(
     const std::vector<double> &arrX,
     const std::vector<double> &arrY);
 
-namespace reanimated {
-
-EasingFunction createLinearEasingFunction(
-    const std::vector<double> &arrX,
-    const std::vector<double> &arrY);
+EasingFunction linear(
+    const std::vector<double> &pointsX,
+    const std::vector<double> &pointsY);
 
 } // namespace reanimated
 

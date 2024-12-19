@@ -4,7 +4,7 @@ import type {
 } from '../../../easings';
 import { cubicBezier, linear, steps } from '../../../easings';
 import { ReanimatedError } from '../../../errors';
-import type { CSSTimeUnit } from '../../../types';
+import type { TimeUnit } from '../../../types';
 import {
   ERROR_MESSAGES,
   normalizeDelay,
@@ -13,7 +13,7 @@ import {
   VALID_PREDEFINED_TIMING_FUNCTIONS,
 } from '../settings';
 
-type TestCases = [CSSTimeUnit, number][];
+type TestCases = [TimeUnit, number][];
 
 describe(normalizeDelay, () => {
   it('returns 0 by default', () => {
@@ -50,7 +50,7 @@ describe(normalizeDelay, () => {
     it.each(['invalid', 'mss', '100mms', '1', '1.1', ''])(
       'throws an error for %p',
       (delay) => {
-        const value = delay as CSSTimeUnit;
+        const value = delay as TimeUnit;
         expect(() => normalizeDelay(value)).toThrow(
           new ReanimatedError(ERROR_MESSAGES.invalidDelay(value))
         );
@@ -92,7 +92,7 @@ describe(normalizeDuration, () => {
     it.each(['invalid', 'mss', '100mms', '1', '1.1', ''])(
       'throws an error for %p',
       (duration) => {
-        const value = duration as CSSTimeUnit;
+        const value = duration as TimeUnit;
         expect(() => normalizeDuration(value)).toThrow(
           new ReanimatedError(ERROR_MESSAGES.invalidDuration(value))
         );
@@ -102,7 +102,7 @@ describe(normalizeDuration, () => {
 
   describe('when negative duration is passed', () => {
     it.each(['-100ms', '-1s', -100])('throws an error for %p', (duration) => {
-      const value = duration as CSSTimeUnit;
+      const value = duration as TimeUnit;
       expect(() => normalizeDuration(value)).toThrow(
         new ReanimatedError(ERROR_MESSAGES.negativeDuration(value))
       );
@@ -145,12 +145,8 @@ describe(normalizeTimingFunction, () => {
       it.each([
         cubicBezier(0.25, 0.1, 0.25, 1),
         cubicBezier(0.42, 0, 1, 1),
-        linear([0, { x: '75%', y: 0.25 }, 1]),
-        linear([
-          { x: '0%', y: 0.6 },
-          { x: '50%', y: 0.1 },
-          { x: '100%', y: 1 },
-        ]),
+        linear(0, [0.25, '75%'], 1),
+        linear([0.6, '0%'], [0.1, '50%'], [1, '100%']),
         steps(4, 'start'),
         steps(2, 'end'),
         steps(5, 'jumpNone'),

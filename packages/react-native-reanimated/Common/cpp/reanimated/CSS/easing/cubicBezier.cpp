@@ -1,5 +1,5 @@
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <reanimated/CSS/easing/CubicBezierEasing.h>
+#include <reanimated/CSS/easing/cubicBezier.h>
 
 namespace reanimated {
 
@@ -24,6 +24,7 @@ double solveCurveX(
     const double epsilon) {
   double t0 = 0.0, t1 = 1.0, t2 = x, xValue, dX;
   int iterations = 0;
+
   while (iterations < 8) {
     xValue = sampleCurveX(t2, x1, x2) - x;
     if (std::abs(xValue) < epsilon) {
@@ -50,10 +51,11 @@ double solveCurveX(
       t1 = t2;
     }
   }
+
   return t2;
 }
 
-EasingFunction createBezierFunction(
+EasingFunction cubicBezier(
     const double x1,
     const double y1,
     const double x2,
@@ -62,6 +64,14 @@ EasingFunction createBezierFunction(
     double t = solveCurveX(x, x1, x2);
     return sampleCurveY(t, y1, y2);
   };
+}
+
+EasingFunction cubicBezier(jsi::Runtime &rt, const jsi::Object &easingConfig) {
+  const auto x1 = easingConfig.getProperty(rt, "x1").asNumber();
+  const auto y1 = easingConfig.getProperty(rt, "y1").asNumber();
+  const auto x2 = easingConfig.getProperty(rt, "x2").asNumber();
+  const auto y2 = easingConfig.getProperty(rt, "y2").asNumber();
+  return cubicBezier(x1, y1, x2, y2);
 }
 
 } // namespace reanimated

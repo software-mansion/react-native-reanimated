@@ -1,5 +1,5 @@
 'use strict';
-import type { PlainStyle, CSSTimeUnit } from './common';
+import type { PlainStyle, TimeUnit } from './common';
 import type {
   CSSTimingFunction,
   NormalizedCSSTimingFunction,
@@ -13,9 +13,9 @@ export type CSSTransitionProperty<S extends object = PlainStyle> =
   | 'none'
   | keyof S
   | ('all' | keyof S)[];
-export type CSSTransitionDuration = CSSTimeUnit;
+export type CSSTransitionDuration = TimeUnit;
 export type CSSTransitionTimingFunction = CSSTimingFunction;
-export type CSSTransitionDelay = CSSTimeUnit;
+export type CSSTransitionDelay = TimeUnit;
 export type CSSTransitionBehavior = 'normal' | 'allowDiscrete';
 
 export type SingleCSSTransitionSettings = {

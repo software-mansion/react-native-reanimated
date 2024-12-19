@@ -36,10 +36,10 @@ const timeToNumber = (duration?: CSSTransitionDuration): number => {
   return parseFloat(duration) * 1000;
 };
 
-type CSSTimeUnit = CSSTransitionDelay;
+type TimeUnit = CSSTransitionDelay;
 
 const getTimeUnit = (
-  timeUnit: Array<CSSTimeUnit> | CSSTimeUnit | undefined
+  timeUnit: Array<TimeUnit> | TimeUnit | undefined
 ): number => {
   if (!timeUnit) {
     return 0;
