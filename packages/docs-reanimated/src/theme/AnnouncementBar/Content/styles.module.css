@@ -5,7 +5,14 @@
   margin: 0 auto;
   max-width: 1440px;
 
-  padding: 1rem 1.5rem;
+  padding: 8px 16px;
+}
+
+.logo {
+  height: 36px;
+  width: 36px;
+  margin: auto;
+  grid-area: logo;
 }
 
 .content a {
@@ -15,18 +22,22 @@
 .wrapper {
   display: flex;
   flex-direction: row;
-  gap: 1rem;
+  gap: 8px;
   align-items: center;
   justify-content: center;
 }
 
 .headline {
   font-size: 16px;
+  grid-area: headline;
+  text-wrap: nowrap;
 }
 
 p.subText {
   font-size: 14px;
+  text-wrap: balance;
   margin: 0;
+  grid-area: subText;
 }
 
 a.link {
@@ -38,29 +49,36 @@ a.link {
   flex-direction: row;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 14px;
   padding: 4px 12px;
-  border: 1px solid var(--swm-off-white);
-  border-radius: 6px;
-  background-color: var(--swm-off-white);
-  transition: 0.2s ease-in-out;
+  border: 1px solid var(--swm-navy-light-100);
+  background-color: var(--swm-navy-light-100);
+  transition: all 0.2s ease-in-out;
 }
 
 .linkTitle {
-  color: #03c;
+  color: var(--swm-white);
   font-weight: 500;
+  text-wrap: nowrap;
+  transition: all 0.2s ease-in-out;
 }
 
 .link:hover {
-  background-color: var(--swm-navy-light-20);
-  border-color: var(--swm-navy-light-20);
+  background-color: var(--swm-white);
+  border-color: var(--swm-navy-light-100);
   text-decoration: none;
+}
+
+.link:hover .linkTitle,
+.link:hover .linkArrow {
+  color: var(--swm-navy-light-100);
 }
 
 .linkArrow {
   width: 16px;
   height: 16px;
-  color: #03c;
+  color: var(--swm-white);
+  transition: all 0.2s ease-in-out;
 }
 
 .linkArrowContainer {
@@ -73,8 +91,13 @@ a.link {
     gap: 12px;
   }
   .wrapper {
-    flex-direction: column;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 50px 1fr;
+    grid-template-areas:
+      'logo headline'
+      'logo subText';
+    gap: 0;
+    align-items: center;
   }
 }
 
@@ -82,6 +105,13 @@ a.link {
   .content {
     flex-direction: column;
     align-items: flex-start;
-    padding: 1rem 1.5rem;
+    padding: 8px 16px;
+  }
+}
+
+@media screen and (max-width: 450px) {
+  .link {
+    width: 100%;
+    justify-content: center;
   }
 }
