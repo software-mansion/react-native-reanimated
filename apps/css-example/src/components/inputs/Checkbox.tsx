@@ -34,7 +34,6 @@ export default function CheckBox({ label, onChange, selected }: CheckboxProps) {
                 opacity: selected ? 1 : 0,
                 transform: [{ scale: selected ? 1 : 0 }],
                 transitionDuration: '200ms',
-                transitionProperty: 'all',
                 transitionTimingFunction: cubicBezier(0.52, 1.78, 0.99, 1.45),
               },
             ]}>

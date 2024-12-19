@@ -7,7 +7,7 @@ import type {
   ViewStyle,
 } from 'react-native';
 
-export type PlainStyle = ViewStyle | TextStyle | ImageStyle;
+export type PlainStyle = ViewStyle & TextStyle & ImageStyle;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyComponent = ComponentType<any>;

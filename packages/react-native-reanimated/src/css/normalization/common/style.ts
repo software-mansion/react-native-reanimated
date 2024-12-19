@@ -5,7 +5,7 @@ import {
   isCSSKeyframesObject,
   isCSSKeyframesRule,
   isTransformString,
-  isTransitionSetting,
+  isTransitionProp,
 } from '../../utils';
 import { normalizeTransformString } from './transformString';
 import { processColor } from '../../../Colors';
@@ -15,7 +15,6 @@ import type {
   PlainStyle,
   CSSAnimationProperties,
   CSSTransitionProperties,
-  CSSTransitionProperty,
   Maybe,
 } from '../../types';
 import { ReanimatedError } from '../../errors';
@@ -138,7 +137,6 @@ export function filterCSSPropertiesAndNormalizeStyle(
   style: PlainStyle
 ): [CSSAnimationProperties | null, CSSTransitionProperties | null, PlainStyle] {
   let animationName: CSSAnimationProperties['animationName'] | null = null;
-  let transitionProperty: CSSTransitionProperty | null = null;
   const animationProperties: Partial<CSSAnimationProperties> = {};
   const transitionProperties: Partial<CSSTransitionProperties> = {};
   const filteredStyle: AnyRecord = {};
@@ -146,11 +144,9 @@ export function filterCSSPropertiesAndNormalizeStyle(
   for (const [prop, value] of Object.entries(style)) {
     if (prop === 'animationName') {
       animationName = value as CSSAnimationProperties['animationName'];
-    } else if (prop === 'transitionProperty') {
-      transitionProperty = value as CSSTransitionProperty;
     } else if (isAnimationSetting(prop)) {
       animationProperties[prop] = value;
-    } else if (isTransitionSetting(prop)) {
+    } else if (isTransitionProp(prop)) {
       transitionProperties[prop] = value;
     } else {
       filteredStyle[prop] = value;
@@ -171,14 +167,9 @@ export function filterCSSPropertiesAndNormalizeStyle(
     : null;
 
   // Return transitionProperties only if the transitionProperty is present
-  const hasTransitionConfig = Array.isArray(transitionProperty)
-    ? transitionProperty.length > 0
-    : !!transitionProperty;
+  const hasTransitionConfig = Object.keys(transitionProperties).length > 0;
   const finalTransitionConfig = hasTransitionConfig
-    ? ({
-        ...transitionProperties,
-        transitionProperty,
-      } as CSSTransitionProperties)
+    ? transitionProperties
     : null;
 
   return [

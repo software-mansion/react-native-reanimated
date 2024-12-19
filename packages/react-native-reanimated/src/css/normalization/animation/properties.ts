@@ -7,9 +7,10 @@ import type {
 
 function convertConfigPropertiesToArrays(config: CSSAnimationProperties) {
   return Object.fromEntries(
-    Object.entries(config).map(([key, value]) => {
-      return [key, Array.isArray(value) ? value : [value]];
-    })
+    Object.entries(config).map(([key, value]) => [
+      key,
+      value !== undefined ? (Array.isArray(value) ? value : [value]) : [],
+    ])
   ) as ConvertValuesToArrays<SingleCSSAnimationProperties>;
 }
 

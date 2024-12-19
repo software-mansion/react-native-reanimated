@@ -21,24 +21,25 @@ import {
 import { normalizeTransitionBehavior } from './settings';
 
 export const ERROR_MESSAGES = {
-  invalidTransitionProperty: (transitionProperty: CSSTransitionProperty) =>
-    `Invalid transition property "${JSON.stringify(transitionProperty)}"`,
+  invalidTransitionProperty: (
+    transitionProperty: CSSTransitionProperty | undefined
+  ) => `Invalid transition property "${JSON.stringify(transitionProperty)}"`,
 };
+
+const hasNoTransitionProperties = (properties: string[]) =>
+  properties.length === 0 || properties.every((prop) => prop === 'none');
 
 export function normalizeCSSTransitionProperties(
   config: CSSTransitionProperties
 ): NormalizedCSSTransitionConfig | null {
   const {
-    transitionProperty,
+    transitionProperty = ['all'],
     transitionDuration,
     transitionTimingFunction,
     transitionDelay,
   } = convertConfigPropertiesToArrays(config);
 
-  if (
-    transitionProperty.length === 0 ||
-    (transitionProperty.length === 1 && transitionProperty[0] === 'none')
-  ) {
+  if (hasNoTransitionProperties(transitionProperty)) {
     return null;
   }
 
