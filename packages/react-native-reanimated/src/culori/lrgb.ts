@@ -1,5 +1,10 @@
 'use strict';
 
+/*
+ * The vast majority of the code exported by this module is a direct copy of the code from
+ * the culori package (see https://culorijs.org/), which deserves full credit for it.
+ */
+
 // TODO Remove once we have the option to get a workletized version of the culori package
 //   https://github.com/software-mansion/react-native-reanimated/pull/6782#pullrequestreview-2488830278
 
