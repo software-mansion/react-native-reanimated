@@ -33,10 +33,10 @@ function AnnouncementBar() {
     return null;
   }
 
-  // hide announcement bar after app.js
+  // hide announcement bar at the end of the State of React Native survey
   const today = new Date();
-  const endOfAppJS = new Date('2024-05-25T00:00:00.000Z');
-  if (today > endOfAppJS) {
+  const endOfStateOfReactNative = new Date('2025-01-08T00:00:00.000Z');
+  if (today > endOfStateOfReactNative) {
     return null;
   }
 
