@@ -1,4 +1,5 @@
 #include <worklets/WorkletRuntime/ReanimatedHermesRuntime.h>
+#include <worklets/Tools/defs.h>
 
 // Only include this file in Hermes-enabled builds as some platforms (like tvOS)
 // don't support hermes and it causes the compilation to fail.
@@ -12,11 +13,7 @@
 #include <string>
 #include <utility>
 
-#if __has_include(<reacthermes/HermesExecutorFactory.h>)
-#include <reacthermes/HermesExecutorFactory.h>
-#else // __has_include(<hermes/hermes.h>) || ANDROID
 #include <hermes/hermes.h>
-#endif
 
 namespace worklets {
 

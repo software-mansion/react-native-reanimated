@@ -1,4 +1,5 @@
 #include <worklets/WorkletRuntime/ReanimatedRuntime.h>
+#include <worklets/Tools/defs.h>
 
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/jsi.h>

@@ -1,12 +1,6 @@
 #pragma once
 
-// JS_RUNTIME_HERMES is only set on Android so we have to check __has_include
-// on iOS.
-#if __APPLE__ &&    \
-    (__has_include( \
-        <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>))
-#define JS_RUNTIME_HERMES 1
-#endif
+#include <worklets/Tools/defs.h>
 
 // Only include this file in Hermes-enabled builds as some platforms (like tvOS)
 // don't support hermes and it causes the compilation to fail.
