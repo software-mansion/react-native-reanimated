@@ -350,7 +350,7 @@ export const ColorProperties = makeShareable([
 ]);
 
 const NestedColorProperties = makeShareable({
-  boxShadow: ['color'],
+  boxShadow: 'color',
 });
 
 // // ts-prune-ignore-next Exported for the purpose of tests only
@@ -688,9 +688,8 @@ export function processColorsInProps(props: StyleProps) {
 
         for (const propName in nestedProp) {
           if (
-            NestedColorProperties[
-              key as keyof typeof NestedColorProperties
-            ].includes(propName)
+            NestedColorProperties[key as keyof typeof NestedColorProperties] ===
+            propName
           ) {
             nestedProp[propName] = processColor(nestedProp[propName]);
           }
