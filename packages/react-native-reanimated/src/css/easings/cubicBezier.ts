@@ -5,7 +5,7 @@ import type {
   ParametrizedTimingFunction,
 } from './types';
 
-const ERROR_MESSAGES = {
+export const ERROR_MESSAGES = {
   invalidCoordinate: (coordinate: string, value: number) =>
     `Invalid ${coordinate} coordinate for cubic bezier easing point, it should be a number between 0 and 1, received ${value}`,
 };

@@ -20,7 +20,7 @@ KeyframeEasingFunctions getKeyframeTimingFunctions(
   for (size_t i = 0; i < timingFunctionsCount; ++i) {
     const auto offset =
         timingFunctionOffsets.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto easingFunction = getEasingFunction(
+    const auto easingFunction = createEasingFunction(
         rt, keyframeTimingFunctions.getProperty(rt, offset.c_str()));
 
     result[std::stod(offset)] = easingFunction;

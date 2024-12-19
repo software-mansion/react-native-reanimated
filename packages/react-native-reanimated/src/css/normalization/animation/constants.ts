@@ -23,5 +23,3 @@ export const VALID_PLAY_STATES = new Set<CSSAnimationPlayState>([
   'running',
   'paused',
 ]);
-
-export const OFFSET_REGEX = /^-?\d+(\.\d+)?%$/;

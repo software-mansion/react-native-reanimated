@@ -7,3 +7,4 @@ export {
 } from './settings';
 export { normalizeTransformOrigin } from './transformOrigin';
 export { normalizeStyle, filterCSSPropertiesAndNormalizeStyle } from './style';
+export * from './constants';

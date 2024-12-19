@@ -1,5 +1,5 @@
 'use strict';
-import type { PlainStyle, CSSTimeUnit } from './common';
+import type { PlainStyle, TimeUnit } from './common';
 import type {
   CSSTimingFunction,
   NormalizedCSSTimingFunction,
@@ -18,9 +18,9 @@ export type CSSAnimationKeyframes<S extends object = PlainStyle> = Record<
   CSSAnimationKeyframeSelector,
   CSSAnimationKeyframeBlock<S>
 >;
-export type CSSAnimationDuration = CSSTimeUnit;
+export type CSSAnimationDuration = TimeUnit;
 export type CSSAnimationTimingFunction = CSSTimingFunction;
-export type CSSAnimationDelay = CSSTimeUnit;
+export type CSSAnimationDelay = TimeUnit;
 export type CSSAnimationIterationCount = 'infinite' | number;
 export type CSSAnimationDirection =
   | 'normal'

@@ -5,7 +5,7 @@ import type {
   PredefinedTimingFunction,
 } from '../../easings';
 import { ReanimatedError } from '../../errors';
-import type { CSSTimeUnit } from '../../types';
+import type { TimeUnit } from '../../types';
 
 export const VALID_PREDEFINED_TIMING_FUNCTIONS =
   new Set<PredefinedTimingFunction>([
@@ -19,11 +19,11 @@ export const VALID_PREDEFINED_TIMING_FUNCTIONS =
   ]);
 
 export const ERROR_MESSAGES = {
-  invalidDelay: (timeUnit: CSSTimeUnit) =>
+  invalidDelay: (timeUnit: TimeUnit) =>
     `Invalid delay "${timeUnit}". Expected a number, "ms", or "s".`,
-  invalidDuration: (duration: CSSTimeUnit) =>
+  invalidDuration: (duration: TimeUnit) =>
     `Invalid duration "${duration}". Expected a number, "ms", or "s".`,
-  negativeDuration: (duration: CSSTimeUnit) =>
+  negativeDuration: (duration: TimeUnit) =>
     `Duration cannot be negative, received "${duration}".`,
   invalidPredefinedTimingFunction: (timingFunction: PredefinedTimingFunction) =>
     `Invalid predefined timing function "${timingFunction}". Supported values are: ${Array.from(
@@ -33,7 +33,7 @@ export const ERROR_MESSAGES = {
     `Invalid parametrized timing function "${timingFunction?.toString()}".`,
 };
 
-function normalizeTimeUnit(timeUnit: CSSTimeUnit): number | null {
+function normalizeTimeUnit(timeUnit: TimeUnit): number | null {
   if (typeof timeUnit === 'number') {
     return timeUnit;
   } else if (/^-?\d+ms$/.test(timeUnit)) {
@@ -44,7 +44,7 @@ function normalizeTimeUnit(timeUnit: CSSTimeUnit): number | null {
   return null;
 }
 
-export function normalizeDelay(delay: CSSTimeUnit = 0): number {
+export function normalizeDelay(delay: TimeUnit = 0): number {
   const delayMs = normalizeTimeUnit(delay);
   if (delayMs === null) {
     throw new ReanimatedError(ERROR_MESSAGES.invalidDelay(delay));
@@ -52,7 +52,7 @@ export function normalizeDelay(delay: CSSTimeUnit = 0): number {
   return delayMs;
 }
 
-export function normalizeDuration(duration: CSSTimeUnit = 0): number {
+export function normalizeDuration(duration: TimeUnit = 0): number {
   const durationMs = normalizeTimeUnit(duration);
   if (durationMs === null) {
     throw new ReanimatedError(ERROR_MESSAGES.invalidDuration(duration));

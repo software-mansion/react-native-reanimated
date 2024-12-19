@@ -1,12 +1,13 @@
 'use strict';
 import { ReanimatedError } from '../errors';
+import type { Point } from '../types';
 import type {
   NormalizedStepsEasing,
   ParametrizedTimingFunction,
   StepsModifier,
 } from './types';
 
-const ERROR_MESSAGES = {
+export const ERROR_MESSAGES = {
   invalidStepsNumber: (stepsNumber: number) =>
     `Steps easing function accepts only positive integers as numbers of steps, ${stepsNumber} isn't a one`,
 };
@@ -29,79 +30,75 @@ export class StepsEasing implements ParametrizedTimingFunction {
   }
 
   normalize(): NormalizedStepsEasing | 'linear' {
-    const stepsX: number[] = [];
-    const stepsY: number[] = [];
-
     switch (this.modifier) {
       case 'jumpStart':
       case 'start':
-        this.jumpStart(stepsX, stepsY);
-        break;
+        return this.jumpStart();
       case 'jumpEnd':
       case 'end':
-        this.jumpEnd(stepsX, stepsY);
-        break;
+        return this.jumpEnd();
       case 'jumpBoth':
-        this.jumpBoth(stepsX, stepsY);
-        break;
+        return this.jumpBoth();
       case 'jumpNone':
       default:
         if (this.stepsNumber === 1) {
           // CSS animations standard returns here linear easing
           return 'linear';
         }
-        this.jumpNone(stepsX, stepsY);
-        break;
+        return this.jumpNone();
+    }
+  }
+
+  private jumpNone() {
+    const points: Point[] = [];
+    const div = this.stepsNumber - 1;
+
+    for (let i = 0; i < this.stepsNumber; i++) {
+      points.push({ x: i / this.stepsNumber, y: i / div });
     }
 
+    return this.withName(points);
+  }
+
+  private jumpStart() {
+    const points: Point[] = [];
+
+    for (let i = 0; i < this.stepsNumber; i++) {
+      points.push({ x: i / this.stepsNumber, y: (i + 1) / this.stepsNumber });
+    }
+
+    return this.withName(points);
+  }
+
+  private jumpEnd() {
+    const points: Point[] = [];
+
+    for (let i = 0; i < this.stepsNumber; i++) {
+      points.push({ x: i / this.stepsNumber, y: i / this.stepsNumber });
+    }
+    // Final jump
+    points.push({ x: 1, y: 1 });
+
+    return this.withName(points);
+  }
+
+  private jumpBoth() {
+    const points: Point[] = [];
+    const div = this.stepsNumber + 1;
+
+    for (let i = 0; i < this.stepsNumber; i++) {
+      points.push({ x: i / this.stepsNumber, y: (i + 1) / div });
+    }
+    // Final jump
+    points.push({ x: 1, y: 1 });
+
+    return this.withName(points);
+  }
+
+  private withName(points: Point[]) {
     return {
       name: StepsEasing.easingName,
-      stepsX,
-      stepsY,
+      points,
     };
-  }
-
-  private jumpNone(stepsX: number[], stepsY: number[]) {
-    const stepLength = 1 / this.stepsNumber;
-    const stepsDistance = 1 / (this.stepsNumber - 1);
-    for (let i = 0; i < this.stepsNumber; i++) {
-      stepsX.push(i * stepLength);
-      stepsY.push(i * stepsDistance);
-    }
-  }
-
-  private jumpStart(stepsX: number[], stepsY: number[]) {
-    const stepLength = 1 / this.stepsNumber;
-    const stepDistance = 1 / this.stepsNumber;
-    const initialJump = 1 / this.stepsNumber;
-    for (let i = 0; i < this.stepsNumber; i++) {
-      stepsX.push(i * stepLength);
-      stepsY.push(initialJump + i * stepDistance);
-    }
-  }
-
-  private jumpEnd(stepsX: number[], stepsY: number[]) {
-    const stepLength = 1 / this.stepsNumber;
-    const stepDistance = 1 / this.stepsNumber;
-    for (let i = 0; i < this.stepsNumber; i++) {
-      stepsX.push(i * stepLength);
-      stepsY.push(i * stepDistance);
-    }
-    // Final jump
-    stepsX.push(1);
-    stepsY.push(1);
-  }
-
-  private jumpBoth(stepsX: number[], stepsY: number[]) {
-    const stepLength = 1 / this.stepsNumber;
-    const stepDistance = 1 / (this.stepsNumber + 1);
-    const initialJump = 1 / (this.stepsNumber + 1);
-    for (let i = 0; i < this.stepsNumber; i++) {
-      stepsX.push(i * stepLength);
-      stepsY.push(initialJump + i * stepDistance);
-    }
-    // Final jump
-    stepsX.push(1);
-    stepsY.push(1);
   }
 }

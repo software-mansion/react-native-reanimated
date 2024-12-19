@@ -1,4 +1,5 @@
 'use strict';
+import type { Percentage, Point } from '../types';
 
 export type NormalizedCubicBezierEasing = {
   name: string;
@@ -10,21 +11,15 @@ export type NormalizedCubicBezierEasing = {
 
 export type NormalizedLinearEasing = {
   name: string;
-  pointsX: number[];
-  pointsY: number[];
+  points: Point[];
 };
 
 export type NormalizedStepsEasing = {
   name: string;
-  stepsX: number[];
-  stepsY: number[];
+  points: Point[];
 };
 
-export type LinearEasingInputPoint = number | { y: number; x: `${number}%` };
-
-export type LinearEasingNormalizedPoint = number | { y: number; x: number };
-
-export type LinearEasingProcessedPoint = { y: number; x: number };
+export type ControlPoint = number | [number, ...Percentage[]];
 
 export type StepsModifier =
   | 'jumpStart'
