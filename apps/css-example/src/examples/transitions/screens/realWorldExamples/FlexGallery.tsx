@@ -148,7 +148,6 @@ function GalleryCard({
                 maxHeight: expanded ? sizes.lg : 0,
                 opacity: expanded ? 1 : 0,
                 transitionDuration: 300,
-                transitionProperty: 'all',
               },
             ]}>
             {description}

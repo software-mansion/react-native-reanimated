@@ -18,7 +18,7 @@ export type CSSTransitionTimingFunction = CSSTimingFunction;
 export type CSSTransitionDelay = TimeUnit;
 export type CSSTransitionBehavior = 'normal' | 'allowDiscrete';
 
-export type SingleCSSTransitionSettings = {
+type SingleCSSTransitionSettings = {
   transitionDuration?: CSSTransitionDuration;
   transitionTimingFunction?: CSSTransitionTimingFunction;
   transitionDelay?: CSSTransitionDelay;
@@ -26,7 +26,7 @@ export type SingleCSSTransitionSettings = {
 
 export type SingleCSSTransitionConfig<S extends object = PlainStyle> =
   SingleCSSTransitionSettings & {
-    transitionProperty: CSSTransitionProperty<S>;
+    transitionProperty?: CSSTransitionProperty<S>;
   };
 
 export type CSSTransitionSettings =
@@ -36,11 +36,11 @@ export type CSSTransitionSettings =
 
 export type CSSTransitionProperties<S extends object = PlainStyle> =
   AddArrayPropertyTypes<SingleCSSTransitionSettings> & {
-    transitionProperty: CSSTransitionProperty<S>;
+    transitionProperty?: CSSTransitionProperty<S>;
     transitionBehavior?: CSSTransitionBehavior;
   };
 
-export type TransitionSettingProp = keyof CSSTransitionSettings;
+export type CSSTransitionProp = keyof CSSTransitionProperties;
 
 // AFTER NORMALIZATION
 

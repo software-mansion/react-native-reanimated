@@ -11,7 +11,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { CSSTransitionProperties } from 'react-native-reanimated';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 
 import type { RouteCardComponent } from '@/components';
@@ -67,7 +66,6 @@ function Showcase() {
             backgroundColor: open ? colors.primaryDark : colors.primary,
             transform: [{ scale: open ? 0.75 : 1 }],
             transitionDuration: 400,
-            transitionProperty: 'all',
             transitionTimingFunction: cubicBezier(0.175, 0.885, 0.32, 1.275),
           },
         ]}>
@@ -84,11 +82,12 @@ type MenuButtonProps = {
 };
 
 function MenuButton({ open }: MenuButtonProps) {
-  const transitionProperties: CSSTransitionProperties = {
-    transitionDuration: 200,
-    transitionProperty: 'all',
-  };
-  const lineStyle = [transitionProperties, styles.menuButtonLine];
+  const lineStyle = [
+    {
+      transitionDuration: 200,
+    },
+    styles.menuButtonLine,
+  ];
 
   return (
     <View style={styles.menuButton}>

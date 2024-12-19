@@ -6,6 +6,7 @@ import type {
 } from '../../easings';
 import { ReanimatedError } from '../../errors';
 import type { TimeUnit } from '../../types';
+import { MILLISECONDS_REGEX, SECONDS_REGEX } from './constants';
 
 export const VALID_PREDEFINED_TIMING_FUNCTIONS =
   new Set<PredefinedTimingFunction>([
@@ -36,9 +37,9 @@ export const ERROR_MESSAGES = {
 function normalizeTimeUnit(timeUnit: TimeUnit): number | null {
   if (typeof timeUnit === 'number') {
     return timeUnit;
-  } else if (/^-?\d+ms$/.test(timeUnit)) {
+  } else if (MILLISECONDS_REGEX.test(timeUnit)) {
     return parseInt(timeUnit, 10);
-  } else if (/^-?\d+(\.\d+)?s$/.test(timeUnit)) {
+  } else if (SECONDS_REGEX.test(timeUnit)) {
     return parseFloat(timeUnit) * 1000;
   }
   return null;

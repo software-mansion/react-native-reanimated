@@ -151,7 +151,7 @@ function Label({ children, color, fontSize }: LabelProps) {
     <Animated.Text
       style={[
         styles.label,
-        { color, fontSize, transitionDuration: 200, transitionProperty: 'all' },
+        { color, fontSize, transitionDuration: 200 },
       ]}>
       {children}
     </Animated.Text>
@@ -182,7 +182,6 @@ function Switch({
               : inactiveBackgroundColor,
             opacity: active ? 1 : 0.5,
             transitionDuration: 300,
-            transitionProperty: 'all',
           },
         ]}
       />
@@ -194,7 +193,6 @@ function Switch({
             left: active ? '100%' : 0,
             transform: [{ translateX: active ? '-100%' : 0 }],
             transitionDuration: 500,
-            transitionProperty: 'all',
             transitionTimingFunction: cubicBezier(0.2, 0.9, 0.5, 1),
           },
         ]}>

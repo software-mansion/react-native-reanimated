@@ -56,7 +56,7 @@ export type CSSAnimationSettings =
 export type CSSAnimationProperties<S extends object = PlainStyle> =
   AddArrayPropertyTypes<SingleCSSAnimationProperties<S>>;
 
-export type AnimationSettingProp = keyof CSSAnimationSettings;
+export type CSSAnimationSettingProp = keyof CSSAnimationSettings;
 
 // AFTER NORMALIZATION
 

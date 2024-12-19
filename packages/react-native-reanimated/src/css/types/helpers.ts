@@ -14,7 +14,13 @@ export type Repeat<
 > = R['length'] extends N ? R : Repeat<T, N, [...R, T]>;
 
 export type ConvertValuesToArrays<T> = {
-  [K in keyof T]: T[K] extends infer U ? (U extends any[] ? U : U[]) : never;
+  [K in keyof T]: T[K] extends infer U
+    ? U extends undefined
+      ? never
+      : U extends any[]
+        ? U
+        : U[]
+    : never;
 };
 
 export type AddArrayPropertyTypes<T> = {

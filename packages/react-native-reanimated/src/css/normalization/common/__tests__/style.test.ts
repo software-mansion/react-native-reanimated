@@ -276,14 +276,8 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
   });
 
   describe('transition config', () => {
-    it('returns null if there is no transitionProperty', () => {
-      const style: CSSStyleDeclaration = {
-        animationName: css.keyframes({
-          from: { opacity: 0 },
-          to: { opacity: 1 },
-        }),
-        transitionDuration: 100,
-      };
+    it('returns null if there are no transition properties', () => {
+      const style: CSSStyleDeclaration = {};
       expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
         expect.any(Object),
         null,
@@ -291,26 +285,22 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
       ]);
     });
 
-    it('returns null if the transitionProperty is an empty array', () => {
-      const style: CSSStyleDeclaration = {
-        transitionProperty: [],
-        transitionDuration: 100,
-      };
-      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
-        expect.any(Object),
-        null,
-        expect.any(Object),
-      ]);
-    });
-
-    it('returns transition config if transitionProperty is present', () => {
-      const style: CSSStyleDeclaration = {
+    it('returns transition config if at least one transition property is present', () => {
+      const style1: CSSStyleDeclaration = {
         transitionProperty: 'opacity',
         transitionDuration: 100,
       };
-      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
+      const style2: CSSStyleDeclaration = {
+        transitionDuration: 100,
+      };
+      expect(filterCSSPropertiesAndNormalizeStyle(style1)).toEqual([
         expect.any(Object),
-        style,
+        style1,
+        expect.any(Object),
+      ]);
+      expect(filterCSSPropertiesAndNormalizeStyle(style2)).toEqual([
+        expect.any(Object),
+        style2,
         expect.any(Object),
       ]);
     });

@@ -1,13 +1,13 @@
 'use strict';
 import { CSSKeyframesRuleImpl } from '../models';
 import type {
-  AnimationSettingProp,
+  CSSAnimationSettingProp,
   CSSAnimationKeyframes,
   CSSKeyframesRule,
-  TransitionSettingProp,
+  CSSTransitionProp,
 } from '../types';
 
-const ANIMATION_SETTINGS: AnimationSettingProp[] = [
+const ANIMATION_SETTINGS: CSSAnimationSettingProp[] = [
   'animationDuration',
   'animationTimingFunction',
   'animationDelay',
@@ -17,7 +17,8 @@ const ANIMATION_SETTINGS: AnimationSettingProp[] = [
   'animationPlayState',
 ];
 
-const TRANSITION_SETTINGS: TransitionSettingProp[] = [
+const TRANSITION_PROPS: CSSTransitionProp[] = [
+  'transitionProperty',
   'transitionDuration',
   'transitionTimingFunction',
   'transitionDelay',
@@ -25,14 +26,14 @@ const TRANSITION_SETTINGS: TransitionSettingProp[] = [
 ];
 
 const ANIMATION_SETTINGS_SET = new Set<string>(ANIMATION_SETTINGS);
-const TRANSITION_SETTINGS_SET = new Set<string>(TRANSITION_SETTINGS);
+const TRANSITION_PROPS_SET = new Set<string>(TRANSITION_PROPS);
 
-export const isAnimationSetting = (key: string): key is AnimationSettingProp =>
-  ANIMATION_SETTINGS_SET.has(key);
-
-export const isTransitionSetting = (
+export const isAnimationSetting = (
   key: string
-): key is TransitionSettingProp => TRANSITION_SETTINGS_SET.has(key);
+): key is CSSAnimationSettingProp => ANIMATION_SETTINGS_SET.has(key);
+
+export const isTransitionProp = (key: string): key is CSSTransitionProp =>
+  TRANSITION_PROPS_SET.has(key);
 
 export const isTransformString = (
   prop: string,
