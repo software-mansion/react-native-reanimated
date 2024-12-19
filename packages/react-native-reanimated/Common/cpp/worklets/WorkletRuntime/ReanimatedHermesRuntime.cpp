@@ -1,5 +1,4 @@
 #include <worklets/WorkletRuntime/ReanimatedHermesRuntime.h>
-#include <worklets/Tools/defs.h>
 
 // Only include this file in Hermes-enabled builds as some platforms (like tvOS)
 // don't support hermes and it causes the compilation to fail.
