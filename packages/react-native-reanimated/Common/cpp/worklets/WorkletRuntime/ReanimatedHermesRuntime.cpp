@@ -7,12 +7,11 @@
 #include <cxxreact/MessageQueueThread.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
+#include <hermes/hermes.h>
 
 #include <memory>
 #include <string>
 #include <utility>
-
-#include <hermes/hermes.h>
 
 namespace worklets {
 
