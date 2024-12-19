@@ -78,6 +78,8 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
       const jsi::Value &shouldAnimate) = 0;
+
+  virtual jsi::Value isFabric() = 0;
 };
 
 } // namespace reanimated

@@ -157,4 +157,8 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
   unsubscribeFromKeyboardEvents(listenerId: number) {
     this.#reanimatedModuleProxy.unsubscribeFromKeyboardEvents(listenerId);
   }
+
+  isFabric() {
+    return this.#reanimatedModuleProxy.isFabric();
+  }
 }

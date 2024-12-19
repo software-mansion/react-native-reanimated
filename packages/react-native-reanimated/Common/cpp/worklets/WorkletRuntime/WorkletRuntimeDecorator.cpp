@@ -47,13 +47,6 @@ void WorkletRuntimeDecorator::decorate(
 
   rt.global().setProperty(rt, "_LABEL", jsi::String::createFromAscii(rt, name));
 
-#ifdef RCT_NEW_ARCH_ENABLED
-  constexpr auto isFabric = true;
-#else
-  constexpr auto isFabric = false;
-#endif // RCT_NEW_ARCH_ENABLED
-  rt.global().setProperty(rt, "_IS_FABRIC", isFabric);
-
 #ifndef NDEBUG
   auto evalWithSourceUrl = [](jsi::Runtime &rt,
                               const jsi::Value &thisValue,

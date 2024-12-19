@@ -161,6 +161,14 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
     return workletsModuleProxy_;
   }
 
+  [[nodiscard]] inline jsi::Value isFabric() override {
+#ifdef RCT_NEW_ARCH_ENABLED
+    return jsi::Value(true);
+#else
+    return jsi::Value(false);
+#endif // RCT_NEW_ARCH_ENABLED
+  }
+
  private:
   void commonInit(const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
