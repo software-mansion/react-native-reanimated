@@ -10,7 +10,16 @@ import { hasSuffix, kebabize } from './utils';
 
 let currentAnimationID = 0;
 
-const propertiesWithoutPx = new Set(['font-weight', 'opacity', 'z-index']);
+const propertiesWithoutPx = new Set([
+  'font-weight',
+  'opacity',
+  'z-index',
+
+  // Transform
+  'scale',
+  'scaleY',
+  'scaleX',
+]);
 
 const generateNextKeyframeName = () => `REACSS${currentAnimationID++}`;
 const shouldHaveSuffix = (property: string, value: number | string) =>
