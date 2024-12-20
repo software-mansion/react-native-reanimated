@@ -19,9 +19,13 @@ const shouldHaveSuffix = (property: string, value: number | string) =>
 
 function processKeyframeDefinitions(definitions: CSSAnimationKeyframes) {
   return Object.entries(definitions)
-    .map(
-      ([timestamp, rules]) => `${timestamp} { ${processKeyframeBlock(rules)} }`
-    )
+    .map(([timestamp, rules]) => {
+      const step = hasSuffix(timestamp)
+        ? timestamp
+        : `${parseFloat(timestamp) * 100}%`;
+
+      return `${step} { ${processKeyframeBlock(rules)} }`;
+    })
     .join(' ');
 }
 
