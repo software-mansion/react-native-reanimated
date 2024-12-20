@@ -1,7 +1,7 @@
 import type { ReanimatedHTMLElement } from '../../js-reanimated';
 import type { CSSTransitionProperties } from '../types';
 import { convertConfigPropertiesToArrays } from '../utils';
-import { kebabize, maybeAddSuffix, validateStringEasing } from '../web/utils';
+import { kebabize, maybeAddSuffix, parseTimingFunction } from '../web/utils';
 
 export default class CSSTransitionManager {
   private readonly element: ReanimatedHTMLElement;
@@ -61,14 +61,10 @@ export default class CSSTransitionManager {
         propertiesAsArray.transitionProperty.map(kebabize).join(',');
     }
 
-    if (
-      propertiesAsArray.transitionTimingFunction &&
-      // @ts-ignore This will be removed in upcoming PR
-      validateStringEasing(propertiesAsArray.transitionTimingFunction)
-    ) {
-      this.element.style.animationTimingFunction =
-        // @ts-ignore This will be removed in changed PR
-        propertiesAsArray.transitionTimingFunction.map(kebabize).join(',');
+    if (propertiesAsArray.transitionTimingFunction) {
+      this.element.style.animationTimingFunction = parseTimingFunction(
+        propertiesAsArray.transitionTimingFunction
+      );
     }
   }
 }
