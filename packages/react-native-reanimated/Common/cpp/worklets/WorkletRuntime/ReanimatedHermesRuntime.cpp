@@ -5,7 +5,6 @@
 #if JS_RUNTIME_HERMES
 
 #include <cxxreact/MessageQueueThread.h>
-#include <hermes/hermes.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
 

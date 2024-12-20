@@ -7,6 +7,7 @@
 #if JS_RUNTIME_HERMES
 
 #include <cxxreact/MessageQueueThread.h>
+#include <hermes/hermes.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
 
@@ -14,12 +15,6 @@
 #include <memory>
 #include <string>
 #include <thread>
-
-#if __has_include(<reacthermes/HermesExecutorFactory.h>)
-#include <reacthermes/HermesExecutorFactory.h>
-#else // __has_include(<hermes/hermes.h>) || ANDROID
-#include <hermes/hermes.h>
-#endif
 
 #if HERMES_ENABLE_DEBUGGER
 #include <hermes/inspector-modern/chrome/Registration.h>
