@@ -2,9 +2,6 @@ project(Worklets)
 cmake_minimum_required(VERSION 3.8)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS
-    ON
-    CACHE INTERNAL "")
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -17,14 +14,13 @@ add_compile_options(${folly_FLAGS})
 string(
   APPEND
   CMAKE_CXX_FLAGS
-  " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION} -DREANIMATED_VERSION=${REANIMATED_VERSION} -DHERMES_ENABLE_DEBUGGER=${HERMES_ENABLE_DEBUGGER}"
-)
+  " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION} \
+  -DREANIMATED_VERSION=${REANIMATED_VERSION} \
+  -DHERMES_ENABLE_DEBUGGER=${HERMES_ENABLE_DEBUGGER}")
 
-string(
-  APPEND
-  CMAKE_CXX_FLAGS
-  " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror"
-)
+string(APPEND CMAKE_CXX_FLAGS
+       " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all \
+  -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
   string(APPEND CMAKE_CXX_FLAGS " -DRCT_NEW_ARCH_ENABLED")
@@ -51,7 +47,7 @@ endif()
 # Resolves "CMake Warning: Manually-specified variables were not used by the
 # project" when any of the following variables is not used in some build
 # configuration.
-set(ignoreMe "${JS_RUNTIME_DIR}")
+set(IGNORE_ME "${JS_RUNTIME_DIR}")
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")

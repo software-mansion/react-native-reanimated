@@ -15,6 +15,7 @@ import {
   registerLoggerConfig,
   replaceLoggerImplementation,
 } from './logger';
+import type { IReanimatedModule } from './commonTypes';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -178,7 +179,13 @@ function setupRequestAnimationFrame() {
   };
 }
 
-export function initializeUIRuntime() {
+export function initializeUIRuntime(ReanimatedModule: IReanimatedModule) {
+  if (!ReanimatedModule) {
+    // eslint-disable-next-line reanimated/use-reanimated-error
+    throw new Error(
+      '[Reanimated] Reanimated is trying to initialize the UI runtime without a valid ReanimatedModule'
+    );
+  }
   if (IS_JEST) {
     // requestAnimationFrame react-native jest's setup is incorrect as it polyfills
     // the method directly using setTimeout, therefore the callback doesn't get the
