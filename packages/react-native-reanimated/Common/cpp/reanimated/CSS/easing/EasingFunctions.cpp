@@ -1,5 +1,5 @@
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <reanimated/CSS/easing/easingFunctions.h>
+#include <reanimated/CSS/easing/EasingFunctions.h>
 
 namespace reanimated {
 
