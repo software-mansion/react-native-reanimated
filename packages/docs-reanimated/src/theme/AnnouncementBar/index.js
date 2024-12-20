@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useThemeConfig } from '@docusaurus/theme-common';
 import { useAnnouncementBar } from '@docusaurus/theme-common/internal';
-import AnnouncementBarCloseButton from '@theme/AnnouncementBar/CloseButton';
 import AnnouncementBarContent from '@theme/AnnouncementBar/Content';
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import styles from './styles.module.css';
@@ -48,16 +47,11 @@ function AnnouncementBar() {
           className={styles.announcementBar}
           style={{ backgroundColor, color: textColor }}
           role="banner">
-          {isCloseable && <div className={styles.announcementBarPlaceholder} />}
-          <AnnouncementBarContent className={styles.announcementBarContent} />
-          {isCloseable && (
-            <div className={styles.buttonContainer}>
-              <AnnouncementBarCloseButton
-                onClick={close}
-                className={styles.announcementBarClose}
-              />
-            </div>
-          )}
+          <AnnouncementBarContent
+            className={styles.announcementBarContent}
+            isCloseable={isCloseable}
+            close={close}
+          />
         </div>
       )}
     </BrowserOnly>
