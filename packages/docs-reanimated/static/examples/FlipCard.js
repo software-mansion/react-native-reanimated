@@ -109,7 +109,6 @@ const flipCardStyles = StyleSheet.create({
     zIndex: 1,
   },
   flippedCard: {
-    backfaceVisibility: 'hidden',
     zIndex: 2,
   },
 });
@@ -162,5 +161,6 @@ const styles = StyleSheet.create({
   flipCard: {
     width: 170,
     height: 200,
+    backfaceVisibility: 'hidden',
   },
 });

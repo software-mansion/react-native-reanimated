@@ -12,11 +12,11 @@ import FlipCardSrc from '!!raw-loader!@site/static/examples/FlipCard';
 
 For storing information about whether the card is flipped or not we use [shared value](/docs/fundamentals/glossary#shared-value) with the `useSharedValue` hook. Using shared values helps to prevent unnecessary re-renders.
 
-<CollapsibleCode src={FlipCardSrc} showLines={[117,117]} />
+<CollapsibleCode src={FlipCardSrc} showLines={[116,116]} />
 
 This allows us to [interpolate](/docs/utilities/interpolate) values between 0-180 and 180-360 degrees, depending on whether the card is flipped or not. In addition, we use [withTiming](/docs/animations/withTiming) util which makes our animation smooth.
 
-<CollapsibleCode src={FlipCardSrc} showLines={[62,64]} />
+<CollapsibleCode src={FlipCardSrc} showLines={[61,63]} />
 
 <ExampleVideo
 sources={{
@@ -29,4 +29,4 @@ The **FlipCard** component accepts several props: `duration` allows you to chang
 
 <samp id="FlipCard">Flip Card</samp>
 
-<CollapsibleCode src={FlipCardSrc} showLines={[51,103]} />
+<CollapsibleCode src={FlipCardSrc} showLines={[50,102]} />
