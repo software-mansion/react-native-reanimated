@@ -1,6 +1,6 @@
 'use strict';
 
-import type { TransformsStyle } from 'react-native';
+import type { BoxShadowValue, TransformsStyle } from 'react-native';
 import type {
   CSSAnimationKeyframeBlock,
   CSSAnimationKeyframes,
@@ -50,6 +50,42 @@ function processTransformProperty(
     .join(' ');
 }
 
+function processBoxShadowProperty(
+  boxShadow: string | ReadonlyArray<BoxShadowValue>
+) {
+  if (typeof boxShadow === 'string') {
+    return boxShadow;
+  }
+
+  return boxShadow
+    .map((boxShadowObject) => {
+      const { offsetX, offsetY, blurRadius, spreadDistance, color, inset } =
+        boxShadowObject;
+
+      const maybeSuffixedOffsetX = hasSuffix(offsetX)
+        ? offsetX
+        : `${offsetX}px`;
+      const maybeSuffixedOffsetY = hasSuffix(offsetY)
+        ? offsetY
+        : `${offsetY}px`;
+      const maybeSuffixedBlurRadius = blurRadius
+        ? hasSuffix(blurRadius)
+          ? blurRadius
+          : `${String(blurRadius)}px`
+        : '';
+      const maybeSuffixedSpreadDistance = spreadDistance
+        ? hasSuffix(spreadDistance)
+          ? spreadDistance
+          : `${spreadDistance}px`
+        : '';
+
+      const position = inset === undefined ? '' : inset ? 'inset' : 'outset';
+
+      return `${maybeSuffixedOffsetX} ${maybeSuffixedOffsetY} ${maybeSuffixedBlurRadius} ${maybeSuffixedSpreadDistance} ${color ?? ''} ${position}`;
+    })
+    .join(', ');
+}
+
 function processKeyframeBlock(rules: CSSAnimationKeyframeBlock<PlainStyle>) {
   return Object.entries(rules)
     .map(([property, values]) => {
@@ -59,6 +95,10 @@ function processKeyframeBlock(rules: CSSAnimationKeyframeBlock<PlainStyle>) {
 
       if (property === 'originY') {
         return `top: ${values}px;`;
+      }
+
+      if (property === 'boxShadow') {
+        return `box-shadow: ${processBoxShadowProperty(values)};`;
       }
 
       if (property !== 'transform') {
