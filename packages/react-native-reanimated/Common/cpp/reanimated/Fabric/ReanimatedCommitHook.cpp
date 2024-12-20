@@ -38,6 +38,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     if (surfaceId > currentMaxSurfaceId_) {
       uiManager_->getShadowTreeRegistry().enumerate(
           [this](const ShadowTree &shadowTree, bool &stop) {
+            if (shadowTree.getSurfaceId() <= currentMaxSurfaceId_){
+              return;
+            }
             shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
                 layoutAnimationsProxy_);
           });
