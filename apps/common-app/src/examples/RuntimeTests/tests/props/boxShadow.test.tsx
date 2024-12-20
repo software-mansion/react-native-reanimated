@@ -1,19 +1,26 @@
 // TODO: Enable this test after RuntimeTests are implemented on Fabric
 
 import { useEffect } from 'react';
-import { View, StyleSheet, BoxShadowValue } from 'react-native';
-import Animated, { useSharedValue, withDelay, withSpring, useAnimatedStyle } from 'react-native-reanimated';
+import type { BoxShadowValue } from 'react-native';
+import type { AnimatableValue } from 'react-native-reanimated';
+import type { DefaultStyle } from 'react-native-reanimated/lib/typescript/hook/commonTypes';
 import { ComparisonMode } from '../../ReJest/types';
+import { View, StyleSheet } from 'react-native';
+import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
 import { describe, test, expect, render, useTestRef, getTestComponent, wait } from '../../ReJest/RuntimeTestsApi';
-
-type BoxShadow = string | BoxShadowValue[];
 
 describe.skip('animation of BoxShadow', () => {
   enum Component {
     ACTIVE = 'ACTIVE',
     PASSIVE = 'PASSIVE',
   }
-  function BoxShadowComponent({ startBoxShadow, finalBoxShadow }: { startBoxShadow: string; finalBoxShadow: string }) {
+  function BoxShadowComponent({
+    startBoxShadow,
+    finalBoxShadow,
+  }: {
+    startBoxShadow: BoxShadowValue;
+    finalBoxShadow: BoxShadowValue;
+  }) {
     const boxShadowActiveSV = useSharedValue(startBoxShadow);
     const boxShadowPassiveSV = useSharedValue(startBoxShadow);
 
@@ -22,14 +29,14 @@ describe.skip('animation of BoxShadow', () => {
 
     const styleActive = useAnimatedStyle(() => {
       return {
-        boxShadow: [withSpring(boxShadowActiveSV.value, { duration: 700 })],
-      };
+        boxShadow: [withSpring(boxShadowActiveSV.value as unknown as AnimatableValue, { duration: 700 })],
+      } as DefaultStyle;
     });
 
     const stylePassive = useAnimatedStyle(() => {
       return {
         boxShadow: [boxShadowPassiveSV.value],
-      };
+      } as DefaultStyle;
     });
 
     useEffect(() => {
@@ -39,7 +46,7 @@ describe.skip('animation of BoxShadow', () => {
       }, 1000);
 
       return () => clearTimeout(timeout);
-    }, [finalBoxShadow]);
+    }, [finalBoxShadow, boxShadowActiveSV, boxShadowPassiveSV]);
 
     return (
       <View style={styles.container}>
@@ -71,7 +78,7 @@ describe.skip('animation of BoxShadow', () => {
     },
   ])(
     '${description}, from ${startBoxShadow} to ${finalBoxShadow}',
-    async ({ startBoxShadow, finalBoxShadow }: { startBoxShadow: BoxShadow; finalBoxShadow: BoxShadow }) => {
+    async ({ startBoxShadow, finalBoxShadow }: { startBoxShadow: BoxShadowValue; finalBoxShadow: BoxShadowValue }) => {
       await render(<BoxShadowComponent startBoxShadow={startBoxShadow} finalBoxShadow={finalBoxShadow} />);
 
       const activeComponent = getTestComponent(Component.ACTIVE);
