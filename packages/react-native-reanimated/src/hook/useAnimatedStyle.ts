@@ -239,6 +239,12 @@ function styleUpdater(
           animationsActive
         );
         if (finished) {
+          /**
+           * If the animated prop is an array, we need to directly set each
+           * property (manually spread it). This prevents issues where the color
+           * prop might be incorrectly linked with its `toValue` and `current`
+           * states, causing abrupt transitions or 'jumps' in animation states.
+           */
           if (Array.isArray(updates[propName])) {
             updates[propName].forEach((obj: StyleProps) => {
               for (const prop in obj) {
