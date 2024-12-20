@@ -25,6 +25,8 @@ class ReanimatedCommitHook : public UIManagerCommitHook {
 
   void commitHookWasUnregistered(UIManager const &) noexcept override {}
 
+  void maybeInitializeLayoutAnimations(SurfaceId surfaceId);
+
   RootShadowNode::Unshared shadowTreeWillCommit(
       ShadowTree const &shadowTree,
       RootShadowNode::Shared const &oldRootShadowNode,
