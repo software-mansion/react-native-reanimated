@@ -3,7 +3,7 @@
 
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/config/common.h>
-#include <reanimated/CSS/easing/easingFunctions.h>
+#include <reanimated/CSS/easing/EasingFunctions.h>
 
 #include <string>
 #include <unordered_map>
