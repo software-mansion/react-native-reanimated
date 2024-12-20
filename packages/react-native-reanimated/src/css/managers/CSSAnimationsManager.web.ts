@@ -7,7 +7,7 @@ import {
   insertCSSAnimation,
   removeCSSAnimation,
 } from '../web/domUtils';
-import { kebabize, maybeAddSuffix, validateStringEasing } from '../web/utils';
+import { kebabize, maybeAddSuffix, parseTimingFunction } from '../web/utils';
 
 export default class CSSAnimationsManager {
   private readonly element: ReanimatedHTMLElement;
@@ -107,14 +107,10 @@ export default class CSSAnimationsManager {
         propertiesAsArray.animationPlayState.join(',');
     }
 
-    if (
-      propertiesAsArray.animationTimingFunction &&
-      // @ts-ignore This will be removed in upcoming PR
-      validateStringEasing(propertiesAsArray.animationTimingFunction)
-    ) {
-      this.element.style.animationTimingFunction =
-        // @ts-ignore This will be changed in upcoming PR
-        propertiesAsArray.animationTimingFunction.map(kebabize).join(',');
+    if (propertiesAsArray.animationTimingFunction) {
+      this.element.style.animationTimingFunction = parseTimingFunction(
+        propertiesAsArray.animationTimingFunction
+      );
     }
 
     this.element.style.animationName = this.animations.join(',');

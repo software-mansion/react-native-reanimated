@@ -1,5 +1,5 @@
 import type {
-  ParametrizedTimingFunction,
+  CSSTimingFunction,
   PredefinedTimingFunction,
 } from '../../../easings';
 import { cubicBezier, linear, steps } from '../../../easings';
@@ -161,7 +161,7 @@ describe(normalizeTimingFunction, () => {
       it.each([() => 'invalid', () => 0, {}, []])(
         'throws an error for %p',
         (timingFunction) => {
-          const value = timingFunction as ParametrizedTimingFunction;
+          const value = timingFunction as CSSTimingFunction;
           expect(() => normalizeTimingFunction(value)).toThrow(
             new ReanimatedError(
               ERROR_MESSAGES.invalidParametrizedTimingFunction(value)

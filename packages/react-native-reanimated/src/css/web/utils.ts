@@ -1,4 +1,5 @@
 import type { CSSTimingFunction } from '../easings';
+import { CubicBezierEasing, LinearEasing, StepsEasing } from '../easings';
 import type { ConvertValuesToArrays } from '../types';
 
 export const hasSuffix = (value: unknown): value is string =>
@@ -29,12 +30,26 @@ export function maybeAddSuffix<T, K extends keyof T>(
   );
 }
 
-export function validateStringEasing(
-  easing: CSSTimingFunction | CSSTimingFunction[]
-) {
-  return (
-    typeof easing === 'string' ||
-    (Array.isArray(easing) &&
-      easing.every((value) => typeof value === 'string'))
-  );
+function easingMapper(easing: CSSTimingFunction) {
+  if (easing instanceof StepsEasing) {
+    return `steps(${easing.stepsNumber}, ${kebabize(easing.modifier)})`;
+  }
+
+  if (easing instanceof CubicBezierEasing) {
+    return `cubic-bezier(${easing.x1}, ${easing.y1}, ${easing.x2}, ${easing.y2})`;
+  }
+
+  if (easing instanceof LinearEasing) {
+    const values = easing.points
+      .map((point) => (Array.isArray(point) ? point.join(' ') : point))
+      .join(', ');
+
+    return `linear(${values})`;
+  }
+
+  return kebabize(easing);
+}
+
+export function parseTimingFunction(timingFunction: CSSTimingFunction[]) {
+  return timingFunction.map(easingMapper).join(', ');
 }
