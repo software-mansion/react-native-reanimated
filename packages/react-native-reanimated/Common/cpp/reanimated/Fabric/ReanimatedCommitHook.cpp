@@ -27,26 +27,31 @@ ReanimatedCommitHook::~ReanimatedCommitHook() noexcept {
   uiManager_->unregisterCommitHook(*this);
 }
 
+void ReanimatedCommitHook::maybeInitializeLayoutAnimations(
+    SurfaceId surfaceId) {
+  auto lock = std::unique_lock<std::mutex>(mutex_);
+  if (surfaceId > currentMaxSurfaceId_) {
+    // when a new surfaceId is observed we call setMountingOverrideDelegate
+    // for all yet unseen surfaces
+    uiManager_->getShadowTreeRegistry().enumerate(
+        [this](const ShadowTree &shadowTree, bool &stop) {
+          if (shadowTree.getSurfaceId() <= currentMaxSurfaceId_) {
+            // the set function actually adds our delegate to a list, so we
+            // shouldn't invoke it twice for the same surface
+            return;
+          }
+          shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
+              layoutAnimationsProxy_);
+        });
+    currentMaxSurfaceId_ = surfaceId;
+  }
+}
+
 RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode) noexcept {
-  auto surfaceId = newRootShadowNode->getSurfaceId();
-
-  {
-    auto lock = std::unique_lock<std::mutex>(mutex_);
-    if (surfaceId > currentMaxSurfaceId_) {
-      uiManager_->getShadowTreeRegistry().enumerate(
-          [this](const ShadowTree &shadowTree, bool &stop) {
-            if (shadowTree.getSurfaceId() <= currentMaxSurfaceId_) {
-              return;
-            }
-            shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
-                layoutAnimationsProxy_);
-          });
-      currentMaxSurfaceId_ = surfaceId;
-    }
-  }
+  maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());
 
   auto reaShadowNode =
       std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
