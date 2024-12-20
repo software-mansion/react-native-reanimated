@@ -5,7 +5,7 @@ import type {
   AnimatedComponentRef,
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
-import { isFabric, shouldBeUseWeb } from '../../PlatformChecker';
+import { isFabric, isWeb, shouldBeUseWeb } from '../../PlatformChecker';
 import { CSSManager } from '../managers';
 import type {
   AnyComponent,
@@ -23,6 +23,7 @@ import type { ShadowNodeWrapper } from '../../commonTypes';
 import setAndForwardRef from '../../createAnimatedComponent/setAndForwardRef';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+const IS_WEB = isWeb();
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
@@ -134,7 +135,7 @@ export default class AnimatedComponent<
   componentDidMount() {
     this._updateStyles(this.props);
 
-    if (isFabric()) {
+    if (isFabric() || IS_WEB) {
       this._CSSManager = new CSSManager(this._getViewInfo());
       this._CSSManager?.attach(this._planStyle);
     }
