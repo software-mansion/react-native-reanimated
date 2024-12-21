@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-On Android JS_RUNTIME_HERMES is set in CMakeList.txt, 
+On Android JS_RUNTIME_HERMES is set in CMakeList.txt,
 but on iOS there is no simple way to defect if Hermes exists
 so we have to check if headers are available.
 */
