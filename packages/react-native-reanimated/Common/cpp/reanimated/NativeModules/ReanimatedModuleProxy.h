@@ -42,6 +42,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 
   ~ReanimatedModuleProxy();
 
+  void invalidate();
+
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
       const jsi::Value &worklet,
@@ -175,7 +177,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 
   const bool isBridgeless_;
   const bool isReducedMotion_;
-  const std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   const std::string valueUnpackerCode_;
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;

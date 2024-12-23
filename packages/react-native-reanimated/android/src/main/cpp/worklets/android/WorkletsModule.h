@@ -46,11 +46,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   }
 
  private:
-  friend HybridBase;
-  jni::global_ref<WorkletsModule::javaobject> javaPart_;
-  jsi::Runtime *rnRuntime_;
-  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
-
   explicit WorkletsModule(
       jni::alias_ref<WorkletsModule::jhybridobject> jThis,
       jsi::Runtime *rnRuntime,
@@ -59,6 +54,13 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
       const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
       const std::shared_ptr<UIScheduler> &uiScheduler);
+
+  void invalidateCpp();
+
+  friend HybridBase;
+  jni::global_ref<WorkletsModule::javaobject> javaPart_;
+  jsi::Runtime *rnRuntime_;
+  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 };
 
 } // namespace worklets

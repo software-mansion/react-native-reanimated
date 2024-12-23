@@ -61,8 +61,14 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       uiScheduler);
 }
 
+void WorkletsModule::invalidateCpp() {
+  workletsModuleProxy_.reset();
+}
+
 void WorkletsModule::registerNatives() {
-  registerHybrid({makeNativeMethod("initHybrid", WorkletsModule::initHybrid)});
+  registerHybrid(
+      {makeNativeMethod("initHybrid", WorkletsModule::initHybrid),
+       makeNativeMethod("invalidateCpp", WorkletsModule::invalidateCpp)});
 }
 
 } // namespace worklets
