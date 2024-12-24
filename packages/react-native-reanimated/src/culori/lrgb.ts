@@ -1,8 +1,9 @@
 'use strict';
 
 /*
- * The vast majority of the code exported by this module is a direct copy of the code from
- * the culori package (see https://culorijs.org/), which deserves full credit for it.
+ * The vast majority of the code exported by this module is a direct copy of the code from the culori package (see
+ * https://culorijs.org/), which deserves full credit for it. In particular, code from the following path has been used:
+ * - https://github.com/Evercoder/culori/tree/v4.0.1/src/lrgb
  */
 
 // TODO Remove once we have the option to get a workletized version of the culori package

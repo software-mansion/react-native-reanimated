@@ -2,11 +2,12 @@
 import type { LabColor, RgbColor } from './Colors';
 
 /*
- * The vast majority of the code exported by this module is a direct copy of the code from
- * the culori package (see https://culorijs.org/), which deserves full credit for it.
+ * The vast majority of the code exported by this module is a direct copy of the code from the culori package (see
+ * https://culorijs.org/), which deserves full credit for it. In particular, code from the following path has been used:
+ * - https://github.com/Evercoder/culori/tree/v4.0.1/src/oklab
  */
 
-// TODO Once we have the option to workletize external depedencies, we can replace everything below
+// TODO Once we have the option to workletize external dependencies, we can replace everything below
 //  with a workletized version of the culori package, as follows (see
 //  https://github.com/software-mansion/react-native-reanimated/pull/6782#pullrequestreview-2488830278):
 //
