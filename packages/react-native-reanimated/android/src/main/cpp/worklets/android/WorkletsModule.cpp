@@ -18,15 +18,13 @@ using namespace facebook;
 using namespace react;
 
 WorkletsModule::WorkletsModule(
-    jni::alias_ref<WorkletsModule::javaobject> jThis,
     jsi::Runtime *rnRuntime,
     const std::string &valueUnpackerCode,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
     const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
     const std::shared_ptr<worklets::JSScheduler> &jsScheduler,
     const std::shared_ptr<UIScheduler> &uiScheduler)
-    : javaPart_(jni::make_global(jThis)),
-      rnRuntime_(rnRuntime),
+    : rnRuntime_(rnRuntime),
       workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
           *rnRuntime,
           valueUnpackerCode,
@@ -38,7 +36,7 @@ WorkletsModule::WorkletsModule(
 }
 
 jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
-    jni::alias_ref<jhybridobject> jThis,
+    jni::alias_ref<jhybridobject> /*jThis*/,
     jlong jsContext,
     const std::string &valueUnpackerCode,
     jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
@@ -52,7 +50,6 @@ jni::local_ref<WorkletsModule::jhybriddata> WorkletsModule::initHybrid(
       std::make_shared<worklets::JSScheduler>(*rnRuntime, jsCallInvoker);
   auto uiScheduler = androidUIScheduler->cthis()->getUIScheduler();
   return makeCxxInstance(
-      jThis,
       rnRuntime,
       valueUnpackerCode,
       messageQueueThread,

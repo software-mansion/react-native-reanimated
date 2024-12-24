@@ -71,7 +71,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   public void invalidate() {
     // We have to destroy extra runtimes when invalidate is called. If we clean
     // it up later instead there's a chance the runtime will retain references
-    // to invalidated memory and will crash on destruction.
+    // to invalidated memory and will crash on its destruction.
     invalidateCpp();
     mAndroidUIScheduler.deactivate();
   }

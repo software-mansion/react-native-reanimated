@@ -30,7 +30,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
       "Lcom/swmansion/worklets/WorkletsModule;";
 
   static jni::local_ref<jhybriddata> initHybrid(
-      jni::alias_ref<jhybridobject> jThis,
+      jni::alias_ref<jhybridobject> /*jThis*/,
       jlong jsContext,
       const std::string &valueUnpackerCode,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
@@ -47,7 +47,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
 
  private:
   explicit WorkletsModule(
-      jni::alias_ref<WorkletsModule::jhybridobject> jThis,
       jsi::Runtime *rnRuntime,
       const std::string &valueUnpackerCode,
       jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
@@ -58,7 +57,6 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   void invalidateCpp();
 
   friend HybridBase;
-  jni::global_ref<WorkletsModule::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
 };
