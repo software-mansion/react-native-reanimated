@@ -4,9 +4,9 @@ title: useDerivedValue
 sidebar_label: useDerivedValue
 ---
 
-This hook allows for creating shared value reference that can change in response to updating of one or more other shared values.
+This hook creates a shared value reference that can change in response to updates to other shared values.
 
-The hook returns the same type of a shared value reference instance as [`useSharedValue`](/docs/2.x/api/hooks/useSharedValue) hook.
+The hook returns the same type of shared value reference instance as the [`useSharedValue`](/docs/2.x/api/hooks/useSharedValue) hook.
 
 ### Arguments
 
@@ -18,7 +18,7 @@ The `updaterWorklet` will be triggered immediately upon use of this hook in orde
 
 #### `dependencies` [Array]
 
-Optional array of values which changes cause this hook to receive updated values during rerender of the wrapping component. This matters when, for instance, worklet uses values dependent on the component's state.
+Optional array of values, changes to which cause this hook to receive updated values during the rerender of the wrapping component. This matters when, for instance, the worklet uses values dependent on the component's state.
 
 Example:
 
@@ -37,21 +37,21 @@ const App = () => {
 
 `dependencies` here may be:
 
-- `undefined`(argument skipped) - worklet will be rebuilt if there is any change in it's body or any values from it's closure(variables from outer scope used in worklet),
-- empty array(`[]`) - worklet will be rebuilt only if it's body changes,
-- array of values(`[val1, val2, ..., valN]`) - worklet will be rebuilt if there is any change in it's body or any values from the given array.
+- `undefined` (argument skipped) - the worklet will be rebuilt if there is any change in its body or any values from its closure (variables from the outer scope used in the worklet),
+- empty array (`[]`) - the worklet will be rebuilt only if its body changes,
+- array of values (`[val1, val2, ..., valN]`) - the worklet will be rebuilt if there is any change in its body or any values from the given array.
 
 ### Returns
 
 The hook returns a reference to a shared value initialized with the provided data.
-The reference is an object with `.value` property, that can be accessed and modified from worklets, but also updated directly from the main JS thread.
+The reference is an object with a `.value` property, which can be accessed and modified from worklets, but also updated directly from the main JS thread.
 
 ## Example
 
-In the below example we define a shared value named `progress` that can go from 0 to 1.
-Then defined a derived shared value `width` that will respond to progress changes.
+In the example below, we define a shared value named `progress` that can go from 0 to 1.
+Then we define a derived shared value `width` that will respond to progress changes.
 We calculate `width`'s value in the `useDerivedValue` worklet as a product of `progress`'s value times 250.
-As a result `width`'s value will always stay in sync with changes made to `progress` shared value and will be equal to the `progress`s value times 250.
+As a result, `width`'s value will always stay in sync with changes made to the `progress` shared value and will be equal to the `progress`'s value times 250.
 
 ```js {6}
 import { Button } from 'react-native';
