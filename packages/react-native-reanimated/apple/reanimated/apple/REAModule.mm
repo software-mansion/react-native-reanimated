@@ -102,8 +102,9 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   return scheduler.uiManager;
 }
 
-- (void)attachReactEventListener:(std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy
+- (void)attachReactEventListener:(const std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy
 {
+  std::weak_ptr<ReanimatedModuleProxy> reanimatedModuleProxyWeak = reanimatedModuleProxy;
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
   __weak __typeof__(self) weakSelf = self;
   _surfacePresenter.runtimeExecutor(^(jsi::Runtime &runtime) {
@@ -112,14 +113,17 @@ RCT_EXPORT_MODULE(ReanimatedModule);
       return;
     }
     auto eventListener =
-        std::make_shared<facebook::react::EventListener>([reanimatedModuleProxy](const RawEvent &rawEvent) {
+        std::make_shared<facebook::react::EventListener>([reanimatedModuleProxyWeak](const RawEvent &rawEvent) {
           if (!RCTIsMainQueue()) {
             // event listener called on the JS thread, let's ignore this event
             // as we cannot safely access worklet runtime here
             // and also we don't care about topLayout events
             return false;
           }
-          return reanimatedModuleProxy->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
+          if (const auto reanimatedModuleProxy = reanimatedModuleProxyWeak.lock()) {
+            return reanimatedModuleProxy->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
+          }
+          return false;
         });
     [scheduler addEventListener:eventListener];
   });
