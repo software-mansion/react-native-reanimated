@@ -1,6 +1,6 @@
 #pragma once
 
-#include <worklets/Tools/defs.h>
+#include <worklets/Tools/Defs.h>
 
 // Only include this file in Hermes-enabled builds as some platforms (like tvOS)
 // don't support hermes and it causes the compilation to fail.

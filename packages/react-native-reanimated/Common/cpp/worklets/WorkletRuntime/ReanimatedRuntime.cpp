@@ -1,4 +1,4 @@
-#include <worklets/Tools/defs.h>
+#include <worklets/Tools/Defs.h>
 #include <worklets/WorkletRuntime/ReanimatedRuntime.h>
 
 #include <cxxreact/MessageQueueThread.h>

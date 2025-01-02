@@ -7,7 +7,7 @@
 
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
-#include <worklets/Tools/defs.h>
+#include <worklets/Tools/Defs.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
