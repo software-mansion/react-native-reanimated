@@ -144,14 +144,23 @@ export function createAnimatedComponent(
       if (IS_JEST) {
         this.jestAnimatedStyle = { value: {} };
       }
+
       const entering = this.props.entering;
-      if (entering && isFabric()) {
-        updateLayoutAnimations(
-          this.reanimatedID,
-          LayoutAnimationType.ENTERING,
-          maybeBuild(entering, this.props?.style, AnimatedComponent.displayName)
-        );
+      const skipEntering = this.context?.current;
+      if (
+        !entering ||
+        getReducedMotionFromConfig(entering as CustomConfig) ||
+        skipEntering ||
+        !isFabric()
+      ) {
+        return;
       }
+      // This call is responsible for configuring entering animations on Fabric.
+      updateLayoutAnimations(
+        this.reanimatedID,
+        LayoutAnimationType.ENTERING,
+        maybeBuild(entering, this.props?.style, AnimatedComponent.displayName)
+      );
     }
 
     componentDidMount() {
@@ -440,17 +449,21 @@ export function createAnimatedComponent(
         return;
       }
 
-      const layout = this.props.layout
-        ? maybeBuild(
-            this.props.layout,
-            undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
-            AnimatedComponent.displayName
-          )
-        : undefined;
+      const layout = this.props.layout;
+      if (
+        !layout ||
+        getReducedMotionFromConfig(this.props.layout as CustomConfig)
+      ) {
+        return;
+      }
       updateLayoutAnimations(
         this.getComponentViewTag(),
         LayoutAnimationType.LAYOUT,
-        layout
+        maybeBuild(
+          this.props.layout,
+          undefined /* We don't have to warn user if style has common properties with animation for LAYOUT */,
+          AnimatedComponent.displayName
+        )
       );
     }
 
@@ -536,7 +549,7 @@ export function createAnimatedComponent(
           }
 
           const skipEntering = this.context?.current;
-          if (entering && !skipEntering && !IS_WEB) {
+          if (entering && !isFabric() && !skipEntering && !IS_WEB) {
             updateLayoutAnimations(
               tag,
               LayoutAnimationType.ENTERING,
