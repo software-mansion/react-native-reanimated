@@ -5,7 +5,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Pressable, TouchableOpacity } from 'react-native-gesture-handler';
+import { Pressable } from 'react-native-gesture-handler';
 import Animated, {
   runOnUI,
   scrollTo,
@@ -71,12 +71,20 @@ function TabSelector<T extends string>({
     opacity: withTiming(+(containerWidth.value > 0)),
   }));
 
+  const paddingBeforeAnimatedStyle = useAnimatedStyle(() => ({
+    width: paddingBefore.value,
+  }));
+
+  const paddingAfterAnimatedStyle = useAnimatedStyle(() => ({
+    width: paddingAfter.value,
+  }));
+
   const gradient = useMemo(
     () => (
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <Svg>
           <Defs>
-            <LinearGradient id="gradient" x1="0" x2="1" y1="0" y2="0">
+            <LinearGradient id="tab-selector" x1="0" x2="1" y1="0" y2="0">
               <Stop
                 offset="0.05"
                 stopColor={colors.background1}
@@ -99,7 +107,13 @@ function TabSelector<T extends string>({
               />
             </LinearGradient>
           </Defs>
-          <Rect fill="url(#gradient)" height="100%" width="100%" x="0" y="0" />
+          <Rect
+            fill="url(#tab-selector)"
+            height="100%"
+            width="100%"
+            x="0"
+            y="0"
+          />
         </Svg>
       </View>
     ),
@@ -122,7 +136,7 @@ function TabSelector<T extends string>({
         }) => {
           containerWidth.value = width;
         }}>
-        <Animated.View style={{ width: paddingBefore }} />
+        <Animated.View style={paddingBeforeAnimatedStyle} />
         <View style={styles.tabs}>
           {tabs.map((tab, index) => (
             <Tab
@@ -137,18 +151,18 @@ function TabSelector<T extends string>({
             />
           ))}
         </View>
-        <Animated.View style={{ width: paddingAfter }} />
+        <Animated.View style={paddingAfterAnimatedStyle} />
       </Animated.ScrollView>
       {gradient}
       <View style={styles.buttons}>
-        <TouchableOpacity
+        <Pressable
           disabled={prevDisabled}
           hitSlop={spacing.md}
           style={prevDisabled && styles.disabledButton}
           onPress={() => onSelectTab(tabs[Math.max(activeTabIndex - 1, 0)])}>
           <FontAwesomeIcon color={colors.foreground3} icon={faChevronLeft} />
-        </TouchableOpacity>
-        <TouchableOpacity
+        </Pressable>
+        <Pressable
           disabled={nextDisabled}
           hitSlop={spacing.md}
           style={nextDisabled && styles.disabledButton}
@@ -156,7 +170,7 @@ function TabSelector<T extends string>({
             onSelectTab(tabs[Math.min(activeTabIndex + 1, tabs.length - 1)])
           }>
           <FontAwesomeIcon color={colors.foreground3} icon={faChevronRight} />
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </Animated.View>
   );
@@ -198,6 +212,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
+    pointerEvents: 'box-none',
   },
   disabledButton: {
     opacity: 0.5,

@@ -2,7 +2,13 @@ import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useMemo, useState } from 'react';
 import type { ImageSourcePropType } from 'react-native';
-import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { cubicBezier } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -47,12 +53,17 @@ export default function FlexGallery() {
   const insets = useSafeAreaInsets();
   const [expandedIdx, setExpandedIdx] = useState(0);
 
+  const inset = Platform.select({
+    default: insets.bottom,
+    web: spacing.md,
+  });
+
   return (
     <Screen>
       <View
         style={[
           styles.container,
-          { paddingBottom: BOTTOM_BAR_HEIGHT + insets.bottom + spacing.sm },
+          { paddingBottom: BOTTOM_BAR_HEIGHT + inset + spacing.sm },
         ]}>
         {CARDS.map(({ description, image, title }, idx) => (
           <GestureDetector
@@ -89,14 +100,14 @@ function GalleryCard({
 }: GalleryCardProps) {
   const gradient = useMemo(
     () => (
-      <Svg>
+      <Svg height="100%" width="100%">
         <Defs>
-          <LinearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
+          <LinearGradient id="gallery" x1="0" x2="0" y1="0" y2="1">
             <Stop offset="0" stopColor={colors.black} stopOpacity="0" />
             <Stop offset="1" stopColor={colors.black} stopOpacity="0.75" />
           </LinearGradient>
         </Defs>
-        <Rect fill="url(#gradient)" height="100%" width="100%" x="0" y="0" />
+        <Rect fill="url(#gallery)" height="100%" width="100%" x="0" y="0" />
       </Svg>
     ),
     []
@@ -211,6 +222,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     gap: spacing.sm,
+    marginHorizontal: 'auto',
+    maxWidth: '100%',
     padding: spacing.md,
+    width: 600,
   },
 });

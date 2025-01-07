@@ -2,8 +2,7 @@ import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import type { PropsWithChildren } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import { Pressable, StyleSheet } from 'react-native';
 import Animated, {
   LinearTransition,
   useAnimatedStyle,
@@ -76,7 +75,7 @@ export default function ExpandableCard({
           </Animated.View>
 
           {/* Expand/Collapse button */}
-          <TouchableOpacity
+          <Pressable
             style={styles.expandButton}
             onPress={() => onChange?.(!expanded)}>
             <FontAwesomeIcon
@@ -87,7 +86,7 @@ export default function ExpandableCard({
             <Text style={styles.expandButtonText} variant="label2">
               {expanded ? 'Collapse' : 'Expand'}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </Animated.View>
       )}
     </Animated.View>

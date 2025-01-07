@@ -19,10 +19,11 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { colors, flex, sizes, spacing } from '@/theme';
+import { IS_WEB } from '@/utils';
 
 import TabSelector from '../inputs/TabSelector';
 
-const WINDOW_WIDTH = Dimensions.get('window').width;
+const WINDOW_WIDTH = Dimensions.get('screen').width;
 
 type TabProps = PropsWithChildren<{
   name: string;
@@ -95,7 +96,7 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
   // This is used to delay rendering of other tabs until the screen transition is finished
   // (thanks to this, the screen which uses a tab view will render quicker)
   const [screenTransitionFinished, setScreenTransitionFinished] =
-    useState(false);
+    useState(IS_WEB);
 
   const previousSelectedTabIndex = useSharedValue(0);
   const selectedTabIndex = useSharedValue(0);
@@ -110,6 +111,9 @@ const TabView: TabViewComponent = ({ children }: TabViewProps) => {
   );
 
   useEffect(() => {
+    if (IS_WEB) {
+      return;
+    }
     return navigation.addListener('transitionEnd', () => {
       setScreenTransitionFinished(true);
     });

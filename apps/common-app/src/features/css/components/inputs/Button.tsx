@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     flexDirection: 'row',
     gap: spacing.xs,
+    overflow: 'hidden',
     ...flex.center,
   },
   disabled: {

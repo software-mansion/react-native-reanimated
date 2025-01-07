@@ -11,9 +11,9 @@ import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import { colors, flex, radius, spacing } from '@/theme';
 import { iconSizes } from '@/theme/icons';
-import { stringifyConfig } from '@/utils';
 import { CodeBlock, ConfigWithOverridesBlock, Text } from '~/css/components';
 import type { ExampleItemProps } from '~/css/examples/transitions/screens/transitionSettings/components/ExamplesListCard';
+import { stringifyConfig } from '~/css/utils';
 
 type TransitionConfigurationProps = {
   transitionProperties: Partial<CSSTransitionProperties>;

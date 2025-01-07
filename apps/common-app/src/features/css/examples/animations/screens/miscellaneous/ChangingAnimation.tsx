@@ -7,7 +7,6 @@ import type {
 import Animated, { css, LinearTransition } from 'react-native-reanimated';
 
 import { colors, flex, radius, sizes, spacing } from '@/theme';
-import { stringifyConfig } from '@/utils';
 import {
   Button,
   CodeBlock,
@@ -16,6 +15,7 @@ import {
   Stagger,
   Text,
 } from '~/css/components';
+import { stringifyConfig } from '~/css/utils';
 
 const animationSettings: CSSAnimationSettings = {
   animationDuration: '1s',

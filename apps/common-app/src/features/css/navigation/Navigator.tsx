@@ -65,11 +65,21 @@ function createRouteCards(
       ];
     }
 
-    const { CardComponent = RouteCard, name, ...rest } = value;
+    const {
+      CardComponent = RouteCard,
+      displayed = true,
+      name,
+      ...rest
+    } = value;
+
     return (
-      <View key={key} style={{ paddingLeft: (nestingDepth - 1) * spacing.md }}>
-        <CardComponent {...rest} route={`${path}/${key}`} title={name} />
-      </View>
+      displayed && (
+        <View
+          key={key}
+          style={{ paddingLeft: (nestingDepth - 1) * spacing.md }}>
+          <CardComponent {...rest} route={`${path}/${key}`} title={name} />
+        </View>
+      )
     );
   });
 }

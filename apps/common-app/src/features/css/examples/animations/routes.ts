@@ -1,4 +1,6 @@
 /* eslint-disable perfectionist/sort-objects */
+
+import { IS_WEB } from '@/utils';
 import type { RouteNames, Routes } from '~/css/navigation/types';
 
 import routeCards from './routeCards';
@@ -572,11 +574,13 @@ const routes = {
       },
       IterationCountAndFillMode: {
         name: 'Iteration Count and Fill Mode',
+        displayed: !IS_WEB,
         labelTypes: ['needsFix'],
         Component: testExamples.IterationCountAndFillMode,
       },
       RelativeMargins: {
         name: 'Relative Margins',
+        displayed: !IS_WEB,
         labelTypes: ['needsFix'],
         Component: testExamples.RelativeMargins,
       },

@@ -7,7 +7,6 @@ import type {
 import Animated from 'react-native-reanimated';
 
 import { colors, radius, sizes, spacing } from '@/theme';
-import { stringifyConfig } from '@/utils';
 import type { ExampleCardProps } from '~/css/components';
 import {
   Screen,
@@ -16,6 +15,7 @@ import {
   TabView,
   VerticalExampleCard,
 } from '~/css/components';
+import { stringifyConfig } from '~/css/utils';
 
 import splashImage from './images/splash.png';
 

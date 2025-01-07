@@ -2,13 +2,7 @@ import { Portal } from '@gorhom/portal';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import {
-  Dimensions,
-  Platform,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import {
   Gesture,
   GestureDetector,
@@ -29,6 +23,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { radius, spacing } from '@/theme';
 import type { AnyRecord } from '@/types';
+import { IS_ANDROID } from '@/utils';
 
 const filterPaddingAndMarginProps = (
   style: ViewStyle
@@ -116,7 +111,7 @@ export default function ActionSheetDropdown({
             sticky: styleOptions?.sticky,
             width,
             x,
-            y: y - (Platform.OS === 'android' ? insets.top : 0),
+            y: y - (IS_ANDROID ? insets.top : 0),
           },
         });
       });

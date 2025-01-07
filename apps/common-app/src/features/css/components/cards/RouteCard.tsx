@@ -84,9 +84,9 @@ const styles = StyleSheet.create({
   showcase: {
     alignItems: 'center',
     alignSelf: 'stretch',
-    flexBasis: 85,
     justifyContent: 'center',
     minHeight: 110,
+    width: 85,
   },
   showcaseWrapper: {
     alignItems: 'center',

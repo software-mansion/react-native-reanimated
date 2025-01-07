@@ -109,7 +109,6 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
   },
   codeContainer: {
-    alignItems: 'center',
     paddingBottom: spacing.sm,
     paddingHorizontal: 0,
     paddingVertical: 0,
