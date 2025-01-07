@@ -1,7 +1,7 @@
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import type { CSSTransitionProperties } from '../types';
 import { convertConfigPropertiesToArrays } from '../utils';
-import { kebabize, maybeAddSuffix, parseTimingFunction } from '../web/utils';
+import { kebabize, maybeAddSuffix, parseTimingFunction } from '../web';
 
 export default class CSSTransitionManager {
   private readonly element: ReanimatedHTMLElement;
@@ -32,6 +32,8 @@ export default class CSSTransitionManager {
     this.element.style.transitionDelay = '';
     this.element.style.transitionProperty = '';
     this.element.style.transitionTimingFunction = '';
+    // @ts-ignore this is correct
+    this.element.style.transitionBehavior = '';
   }
 
   private setElementAnimation(transitionProperties: CSSTransitionProperties) {
@@ -62,9 +64,15 @@ export default class CSSTransitionManager {
     }
 
     if (propertiesAsArray.transitionTimingFunction) {
-      this.element.style.animationTimingFunction = parseTimingFunction(
+      this.element.style.transitionTimingFunction = parseTimingFunction(
         propertiesAsArray.transitionTimingFunction
       );
+    }
+
+    if (propertiesAsArray.transitionBehavior) {
+      // @ts-ignore this is correct
+      this.element.style.transitionBehavior =
+        propertiesAsArray.transitionBehavior.map(kebabize).join(',');
     }
   }
 }

@@ -63,6 +63,9 @@ const barTrackInner = css.keyframes({
 });
 
 const thumb = css.keyframes({
+  from: {
+    top: 0,
+  },
   to: {
     top: '100%',
   },

@@ -13,6 +13,9 @@ export default function AnimationIterationCount() {
         animationDuration: '2s',
         animationFillMode: 'forwards',
         animationName: {
+          '0%, 100%': {
+            left: 0,
+          },
           '50%': {
             left: '100%',
             transform: [{ translateX: '-100%' }],

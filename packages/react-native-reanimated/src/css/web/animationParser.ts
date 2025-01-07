@@ -7,11 +7,32 @@ import type {
   PlainStyle,
 } from '../types';
 import { hasSuffix, kebabize } from './utils';
-
-let currentAnimationID = 0;
+import { normalizeFontWeight } from '../normalization/common/style';
 
 const propertiesWithoutPx = new Set([
+  'color',
+  'background-color',
+  'text-decoration-color',
+  'text-shadow-color',
+  'border-color',
+  'border-top-color',
+  'border-block-start-color',
+  'border-right-color',
+  'border-end-color',
+  'border-bottom-color',
+  'border-block-end-color',
+  'border-left-color',
+  'border-start-color',
+  'border-block-color',
+  'shadow-color',
+  'overlay-color',
+  'tint-color',
+  'shadow-opacity',
+  'flex',
+  'flex-grow',
+  'flex-shrink',
   'font-weight',
+  'aspect-ratio',
   'opacity',
   'z-index',
 
@@ -19,14 +40,14 @@ const propertiesWithoutPx = new Set([
   'scale',
   'scaleY',
   'scaleX',
+  'matrix',
 ]);
 
-const generateNextKeyframeName = () => `REACSS${currentAnimationID++}`;
 const shouldHaveSuffix = (property: string, value: number | string) =>
   !propertiesWithoutPx.has(property) &&
   (typeof value === 'number' || !hasSuffix(value));
 
-function processKeyframeDefinitions(definitions: CSSAnimationKeyframes) {
+export function processKeyframeDefinitions(definitions: CSSAnimationKeyframes) {
   return Object.entries(definitions)
     .map(([timestamp, rules]) => {
       const step = hasSuffix(timestamp)
@@ -54,7 +75,7 @@ function processTransformProperty(
         ? 'px'
         : '';
 
-      return `${transformProperty}(${transformPropertyValue}${suffix})`;
+      return `${transformProperty === 'matrix' ? 'matrix3d' : transformProperty}(${transformPropertyValue}${suffix})`;
     })
     .join(' ');
 }
@@ -95,6 +116,26 @@ function processBoxShadowProperty(
     .join(', ');
 }
 
+function convertPropertyName(property: string) {
+  if (property === 'marginHorizontal') {
+    return 'margin-inline';
+  }
+
+  if (property === 'marginVertical') {
+    return 'margin-block';
+  }
+
+  if (property === 'paddingHorizontal') {
+    return 'padding-inline';
+  }
+
+  if (property === 'paddingVertical') {
+    return 'padding-block';
+  }
+
+  return kebabize(property);
+}
+
 function processKeyframeBlock(rules: CSSAnimationKeyframeBlock<PlainStyle>) {
   return Object.entries(rules)
     .map(([property, values]) => {
@@ -110,8 +151,19 @@ function processKeyframeBlock(rules: CSSAnimationKeyframeBlock<PlainStyle>) {
         return `box-shadow: ${processBoxShadowProperty(values)};`;
       }
 
+      if (property === 'fontWeight') {
+        return `font-weight: ${normalizeFontWeight(values)};`;
+      }
+
+      if (
+        property.toLowerCase().includes('color') &&
+        values.startsWith('hwb')
+      ) {
+        return `${kebabize(property)}: ${values.replace(/,/g, '')};`;
+      }
+
       if (property !== 'transform') {
-        const convertedPropertyName = kebabize(property);
+        const convertedPropertyName = convertPropertyName(property);
         const suffix = shouldHaveSuffix(convertedPropertyName, values)
           ? 'px'
           : '';
@@ -122,18 +174,4 @@ function processKeyframeBlock(rules: CSSAnimationKeyframeBlock<PlainStyle>) {
       return `transform: ${processTransformProperty(values)};`;
     })
     .join(' ');
-}
-
-function parseCSSAnimation(
-  definitions: CSSAnimationKeyframes,
-  animationName: string
-): string {
-  return `@keyframes ${animationName} { ${processKeyframeDefinitions(definitions)} }`;
-}
-
-export function generateKeyframe(definitions: CSSAnimationKeyframes) {
-  const animationName = generateNextKeyframeName();
-  const keyframes = parseCSSAnimation(definitions, animationName);
-
-  return { animationName, keyframes };
 }

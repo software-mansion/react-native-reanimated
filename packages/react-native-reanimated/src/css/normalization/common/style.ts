@@ -85,7 +85,7 @@ const FONT_WEIGHT_MAPPINGS = {
   black: '900',
 } as const;
 
-function normalizeFontWeight(value: string | number): string {
+export function normalizeFontWeight(value: string | number): string {
   if (typeof value === 'number' || !isNaN(+value)) {
     return value.toString();
   }

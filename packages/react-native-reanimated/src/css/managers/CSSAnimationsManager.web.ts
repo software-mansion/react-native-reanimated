@@ -1,23 +1,39 @@
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
-import type { CSSAnimationKeyframes, CSSAnimationProperties } from '../types';
-import { convertConfigPropertiesToArrays } from '../utils';
-import { generateKeyframe } from '../web/animationParser';
+import type {
+  ConvertValuesToArrays,
+  CSSAnimationKeyframes,
+  CSSAnimationProperties,
+  CSSAnimationSettings,
+} from '../types';
+import CSSKeyframesRuleImpl from '../models/CSSKeyframesRule.web';
 import {
   configureWebCSSAnimations,
-  insertCSSAnimation,
   removeCSSAnimation,
-} from '../web/domUtils';
-import { kebabize, maybeAddSuffix, parseTimingFunction } from '../web/utils';
+  kebabize,
+  maybeAddSuffix,
+  parseTimingFunction,
+  processKeyframeDefinitions,
+  insertCSSAnimation,
+} from '../web';
+import { convertConfigPropertiesToArrays } from '../utils';
+
+type ProcessedAnimation = {
+  keyframesRule: CSSKeyframesRuleImpl;
+  removable: boolean;
+};
+
+type ProcessedSettings = ConvertValuesToArrays<CSSAnimationSettings>;
 
 export default class CSSAnimationsManager {
   private readonly element: ReanimatedHTMLElement;
-  private readonly animations: string[];
+
+  // Keys are processed keyframes
+  private attachedAnimations: Record<string, ProcessedAnimation> = {};
 
   constructor(element: ReanimatedHTMLElement) {
     configureWebCSSAnimations();
 
     this.element = element;
-    this.animations = [];
   }
 
   attach(animationProperties: CSSAnimationProperties | null) {
@@ -34,16 +50,46 @@ export default class CSSAnimationsManager {
       return;
     }
 
-    const definitions =
-      animationProperties.animationName as CSSAnimationKeyframes;
+    const { animationName: definitions, ...animationSettings } =
+      convertConfigPropertiesToArrays(animationProperties);
 
-    if (Array.isArray(definitions)) {
-      definitions.forEach(this.createAnimation.bind(this));
-    } else {
-      this.createAnimation(definitions);
+    if (definitions.length === 0) {
+      this.detach();
+      return;
     }
 
-    this.setElementAnimation(animationProperties);
+    const processedAnimations = definitions.map((definition) => {
+      // If the CSSKeyframesRule instance was provided, we can just use it
+      if (definition instanceof CSSKeyframesRuleImpl) {
+        return { keyframesRule: definition, removable: false };
+      }
+
+      // If keyframes was defined as an object, the additional processing is needed
+      const keyframes = definition as CSSAnimationKeyframes;
+      const processedKeyframes = processKeyframeDefinitions(keyframes);
+
+      // If the animation with the same keyframes was already attached, we can reuse it
+      if (this.attachedAnimations[processedKeyframes]) {
+        return {
+          keyframesRule:
+            this.attachedAnimations[processedKeyframes].keyframesRule,
+          removable: true,
+        };
+      }
+
+      // Otherwise, we need to create a new CSSKeyframesRule object
+      return {
+        keyframesRule: new CSSKeyframesRuleImpl(keyframes, processedKeyframes),
+        removable: true,
+      };
+    });
+
+    const animationNames = processedAnimations.map(
+      ({ keyframesRule: { name } }) => name
+    );
+
+    this.updateAttachedAnimations(processedAnimations);
+    this.setElementAnimations(animationNames, animationSettings);
   }
 
   detach() {
@@ -54,22 +100,46 @@ export default class CSSAnimationsManager {
     this.element.style.animationPlayState = '';
     this.element.style.animationTimingFunction = '';
 
-    this.animations.forEach(removeCSSAnimation);
+    Object.values(this.attachedAnimations).forEach(
+      ({ keyframesRule: { name }, removable }) => {
+        if (removable) {
+          removeCSSAnimation(name);
+        }
+      }
+    );
+    this.attachedAnimations = {};
   }
 
-  private createAnimation(definition: CSSAnimationKeyframes) {
-    const { animationName, keyframes } = generateKeyframe(definition);
-    insertCSSAnimation(animationName, keyframes);
+  private updateAttachedAnimations(processedAnimations: ProcessedAnimation[]) {
+    const newAttachedAnimations: Record<string, ProcessedAnimation> = {};
 
-    this.animations.push(animationName);
+    processedAnimations.forEach((processedAnimation) => {
+      const rule = processedAnimation.keyframesRule;
+      if (!this.attachedAnimations[rule.processedKeyframes]) {
+        insertCSSAnimation(rule.name, rule.processedKeyframes);
+      }
+      newAttachedAnimations[rule.processedKeyframes] = processedAnimation;
+    });
+
+    Object.values(this.attachedAnimations).forEach(
+      ({ keyframesRule: rule, removable }) => {
+        if (removable && !newAttachedAnimations[rule.processedKeyframes]) {
+          removeCSSAnimation(rule.name);
+        }
+      }
+    );
+
+    this.attachedAnimations = newAttachedAnimations;
   }
 
-  private setElementAnimation(animationProperties: CSSAnimationProperties) {
-    const propertiesAsArray =
-      convertConfigPropertiesToArrays(animationProperties);
+  private setElementAnimations(
+    animationNames: string[],
+    animationSettings: ProcessedSettings
+  ) {
+    this.element.style.animationName = animationNames.join(',');
 
     const maybeDuration = maybeAddSuffix(
-      propertiesAsArray,
+      animationSettings,
       'animationDuration',
       'ms'
     );
@@ -79,7 +149,7 @@ export default class CSSAnimationsManager {
     }
 
     const maybeDelay = maybeAddSuffix(
-      propertiesAsArray,
+      animationSettings,
       'animationDelay',
       'ms'
     );
@@ -87,32 +157,30 @@ export default class CSSAnimationsManager {
       this.element.style.animationDelay = maybeDelay.join(',');
     }
 
-    if (propertiesAsArray.animationIterationCount) {
+    if (animationSettings.animationIterationCount) {
       this.element.style.animationIterationCount =
-        propertiesAsArray.animationIterationCount.join(',');
+        animationSettings.animationIterationCount.join(',');
     }
 
-    if (propertiesAsArray.animationDirection) {
+    if (animationSettings.animationDirection) {
       this.element.style.animationDirection =
-        propertiesAsArray.animationDirection.map(kebabize).join(',');
+        animationSettings.animationDirection.map(kebabize).join(',');
     }
 
-    if (propertiesAsArray.animationFillMode) {
+    if (animationSettings.animationFillMode) {
       this.element.style.animationFillMode =
-        propertiesAsArray.animationFillMode.join(',');
+        animationSettings.animationFillMode.join(',');
     }
 
-    if (propertiesAsArray.animationPlayState) {
+    if (animationSettings.animationPlayState) {
       this.element.style.animationPlayState =
-        propertiesAsArray.animationPlayState.join(',');
+        animationSettings.animationPlayState.join(',');
     }
 
-    if (propertiesAsArray.animationTimingFunction) {
+    if (animationSettings.animationTimingFunction) {
       this.element.style.animationTimingFunction = parseTimingFunction(
-        propertiesAsArray.animationTimingFunction
+        animationSettings.animationTimingFunction
       );
     }
-
-    this.element.style.animationName = this.animations.join(',');
   }
 }

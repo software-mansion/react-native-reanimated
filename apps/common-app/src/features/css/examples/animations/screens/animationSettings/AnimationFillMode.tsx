@@ -15,6 +15,7 @@ export default function AnimationFillMode() {
         animationName: {
           from: {
             backgroundColor: colors.primaryDark,
+            left: 0,
           },
           to: {
             backgroundColor: colors.primaryDark,

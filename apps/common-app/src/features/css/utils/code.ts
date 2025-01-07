@@ -53,8 +53,8 @@ export const stringifyConfig = <T extends AnyRecord>(
     throw new Error('Object nesting is too deep');
   }
 
-  if ('keyframes' in object) {
-    object = object.keyframes;
+  if ('cssRules' in object) {
+    object = object.cssRules;
   }
 
   const formatValue = (

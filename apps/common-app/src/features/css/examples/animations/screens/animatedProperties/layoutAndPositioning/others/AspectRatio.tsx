@@ -28,7 +28,10 @@ export default function AspectRatio() {
           ),
           sections: [
             {
-              description: 'When both `width` and `height` are set.',
+              description: [
+                "(both **don't** work on **web**)",
+                'When both `width` and `height` are set.',
+              ],
               examples: [
                 {
                   description:
@@ -61,6 +64,7 @@ export default function AspectRatio() {
                   title: 'When aspectRatio is missing in the last keyframe',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'width and height',
             },
             {
@@ -160,6 +164,7 @@ export default function AspectRatio() {
                   title: 'Flex row',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'flexBasis',
             },
           ],
@@ -216,6 +221,7 @@ export default function AspectRatio() {
                   title: 'Flex row',
                 },
               ],
+              labelTypes: ['iOS', 'Android'],
               title: 'flexGrow',
             },
           ],

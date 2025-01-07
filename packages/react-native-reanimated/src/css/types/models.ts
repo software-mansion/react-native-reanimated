@@ -1,4 +1,5 @@
 'use strict';
+import type { CSSAnimationKeyframes } from './animation';
 import type { PlainStyle } from './common';
 
 export type CSSRuleList<S extends PlainStyle> = CSSKeyframeRule<S>[];
@@ -9,6 +10,8 @@ export interface CSSKeyframeRule<S extends PlainStyle> {
 }
 
 export interface CSSKeyframesRule {
-  readonly length: number;
+  readonly cssRules: CSSAnimationKeyframes;
   readonly cssText: string;
+  readonly length: number;
+  readonly name: string;
 }

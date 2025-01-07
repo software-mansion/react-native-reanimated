@@ -629,7 +629,7 @@ function AngryEmoji() {
         style={StyleSheet.absoluteFill}
         width={EMOJI_SIZE}>
         <Defs>
-          <LinearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
+          <LinearGradient id="angry" x1="0" x2="0" y1="0" y2="1">
             <Stop offset="0" stopColor={COLORS.red} stopOpacity="1" />
             <Stop offset="0.9" stopColor={COLORS.red} stopOpacity="0" />
           </LinearGradient>
