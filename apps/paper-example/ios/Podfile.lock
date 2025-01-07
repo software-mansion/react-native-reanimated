@@ -1545,6 +1545,8 @@ PODS:
     - React-utils (= 0.77.0-rc.6)
   - RNCAsyncStorage (2.1.0):
     - React-Core
+  - RNCClipboard (1.16.0):
+    - React-Core
   - RNCMaskedView (0.3.2):
     - DoubleConversion
     - glog
@@ -1816,6 +1818,7 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../../../node_modules/react-native/ReactCommon`)
   - "RNCAsyncStorage (from `../../../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCClipboard (from `../../../node_modules/@react-native-clipboard/clipboard`)"
   - "RNCMaskedView (from `../../../node_modules/@react-native-masked-view/masked-view`)"
   - "RNFlashList (from `../../../node_modules/@shopify/flash-list`)"
   - RNGestureHandler (from `../../../node_modules/react-native-gesture-handler`)
@@ -1968,6 +1971,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native/ReactCommon"
   RNCAsyncStorage:
     :path: "../../../node_modules/@react-native-async-storage/async-storage"
+  RNCClipboard:
+    :path: "../../../node_modules/@react-native-clipboard/clipboard"
   RNCMaskedView:
     :path: "../../../node_modules/@react-native-masked-view/masked-view"
   RNFlashList:
@@ -2053,6 +2058,7 @@ SPEC CHECKSUMS:
   ReactCodegen: ef05d5dd3c7327234365df4c9c18a99a73496a87
   ReactCommon: f579a0130fb73a351de4723fb33d277c5bf3283d
   RNCAsyncStorage: cc6479c4acd84cc7004946946c8afe30b018184d
+  RNCClipboard: 88f7f4933e7731052210d77535560c485ecb75b0
   RNCMaskedView: 6d4bf14f158d1a93484edf30850cbbd7ccbb8668
   RNFlashList: 9843320e0885ed1b494ea72ab0febfd3beb3dab0
   RNGestureHandler: 8b33b2c5688a54fcce223d184753757da498235c

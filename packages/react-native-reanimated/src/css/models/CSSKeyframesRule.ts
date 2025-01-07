@@ -1,5 +1,5 @@
 'use strict';
-import { normalizeAnimationKeyframes } from '../normalization';
+import { normalizeAnimationKeyframes } from '../normalization/animation/keyframes';
 import type {
   CSSAnimationKeyframes,
   CSSKeyframesRule,
@@ -13,11 +13,13 @@ export default class CSSKeyframesRuleImpl<S extends PlainStyle = PlainStyle>
   private cssText_: string;
   private normalizedKeyframes_: NormalizedCSSAnimationKeyframes;
   private length_: number;
+  private keyframes_: CSSAnimationKeyframes<S>;
 
   constructor(keyframes: CSSAnimationKeyframes<S>) {
     this.normalizedKeyframes_ = normalizeAnimationKeyframes(keyframes);
     this.cssText_ = JSON.stringify(keyframes);
     this.length_ = Object.keys(keyframes).length;
+    this.keyframes_ = keyframes;
   }
 
   get length() {
@@ -26,6 +28,10 @@ export default class CSSKeyframesRuleImpl<S extends PlainStyle = PlainStyle>
 
   get cssText() {
     return this.cssText_;
+  }
+
+  get keyframes() {
+    return this.keyframes_;
   }
 
   get normalizedKeyframes(): NormalizedCSSAnimationKeyframes {

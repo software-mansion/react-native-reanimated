@@ -5,10 +5,13 @@
   "scripts": {
     "build": "yarn patch-package",
     "lint": "eslint .",
-    "format": "prettier --write --list-different ."
+    "format": "prettier --write --list-different .",
+    "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src",
+    "type:check": "tsc --noEmit"
   },
   "peerDependencies": {
     "@react-native-async-storage/async-storage": "*",
+    "@react-native-clipboard/clipboard": "*",
     "@react-native-community/slider": "*",
     "@react-native-masked-view/masked-view": "*",
     "@react-navigation/bottom-tabs": "*",
@@ -17,8 +20,20 @@
     "@react-navigation/stack": "*",
     "@shopify/flash-list": "*",
     "d3-shape": "*",
+    "eslint": "*",
+    "eslint-config-prettier": "*",
+    "eslint-import-resolver-typescript": "*",
+    "eslint-plugin-import": "*",
+    "eslint-plugin-no-relative-import-paths": "*",
+    "eslint-plugin-perfectionist": "*",
+    "eslint-plugin-prettier": "*",
+    "eslint-plugin-react-hooks": "*",
+    "eslint-plugin-reanimated": "*",
+    "eslint-plugin-simple-import-sort": "*",
+    "madge": "*",
+    "patch-package": "*",
+    "prettier": "*",
     "react": "*",
-    "react-dom": "*",
     "react-native": "*",
     "react-native-gesture-handler": "*",
     "react-native-pager-view": "*",
@@ -26,11 +41,13 @@
     "react-native-safe-area-context": "*",
     "react-native-screens": "*",
     "react-native-svg": "*",
-    "react-native-web": "*",
-    "react-strict-dom": "*"
+    "react-strict-dom": "*",
+    "typescript": "*",
+    "typescript-eslint": "*"
   },
   "devDependencies": {
     "@react-native-async-storage/async-storage": "2.1.0",
+    "@react-native-clipboard/clipboard": "^1.15.0",
     "@react-native-community/slider": "4.5.5",
     "@react-native-masked-view/masked-view": "0.3.2",
     "@react-navigation/bottom-tabs": "^7.0.0",
@@ -42,7 +59,15 @@
     "@types/d3-shape": "^3.1.1",
     "d3-shape": "^3.2.0",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^3.6.3",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-no-relative-import-paths": "patch:eslint-plugin-no-relative-import-paths@npm%3A1.5.5#~/.yarn/patches/eslint-plugin-no-relative-import-paths-npm-1.5.5-8fb4e4bf7a.patch",
+    "eslint-plugin-perfectionist": "^2.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-reanimated": "workspace:*",
+    "madge": "^5.0.1",
     "patch-package": "^8.0.0",
     "prettier": "^3.3.3",
     "react": "18.3.1",
@@ -54,6 +79,8 @@
     "react-native-screens": "4.5.0",
     "react-native-svg": "15.11.1",
     "react-strict-dom": "0.0.27",
-    "typescript": "~5.3.0"
+    "ts-patch": "^3.3.0",
+    "typescript": "~5.3.0",
+    "typescript-eslint": "^8.12.2"
   }
 }
