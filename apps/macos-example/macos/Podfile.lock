@@ -1482,7 +1482,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (4.0.0-beta.2):
+  - RNReanimated (4.0.0-beta.3):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1502,10 +1502,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 4.0.0-beta.2)
-    - RNReanimated/worklets (= 4.0.0-beta.2)
+    - RNReanimated/reanimated (= 4.0.0-beta.3)
+    - RNReanimated/worklets (= 4.0.0-beta.3)
     - Yoga
-  - RNReanimated/reanimated (4.0.0-beta.2):
+  - RNReanimated/reanimated (4.0.0-beta.3):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1525,9 +1525,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 4.0.0-beta.2)
+    - RNReanimated/reanimated/apple (= 4.0.0-beta.3)
     - Yoga
-  - RNReanimated/reanimated/apple (4.0.0-beta.2):
+  - RNReanimated/reanimated/apple (4.0.0-beta.3):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1548,7 +1548,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated/worklets (4.0.0-beta.2):
+  - RNReanimated/worklets (4.0.0-beta.3):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1568,9 +1568,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/apple (= 4.0.0-beta.2)
+    - RNReanimated/worklets/apple (= 4.0.0-beta.3)
     - Yoga
-  - RNReanimated/worklets/apple (4.0.0-beta.2):
+  - RNReanimated/worklets/apple (4.0.0-beta.3):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1871,7 +1871,7 @@ SPEC CHECKSUMS:
   RNCClipboard: 88f7f4933e7731052210d77535560c485ecb75b0
   RNCPicker: d162737e03e48797110dbb60e5ddc03012e87e0b
   RNGestureHandler: 6baec83f39066ab8eee46ab18d0f8bf2d5a6ead3
-  RNReanimated: e3a2eaa87e596a96f8ec33cc5a268d29e82d3eb4
+  RNReanimated: 459c5fb10854af3c96fb64a1e35ea98e7da966e8
   RNSVG: 669ed128ab9005090c612a0d627dbecb6ab5c76f
   SocketRocket: 9ee265c4b5ae2382d18e4ee1d2dd2d7af0ff1ab5
   Yoga: 209f62622a01344dbb9fa8d348610eaeb7df2cca

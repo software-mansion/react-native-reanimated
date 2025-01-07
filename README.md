@@ -79,17 +79,17 @@ To integrate the library into your own project, follow these steps:
      - Using **npm**:
 
      ```bash
-     npm i /path/to/react-native-reanimated-4.0.0-beta.2.tgz
+     npm i /path/to/react-native-reanimated-4.0.0-beta.3.tgz
      ```
 
      - Using **yarn**:
 
      ```bash
-     yarn add /path/to/react-native-reanimated-4.0.0-beta.2.tgz
+     yarn add /path/to/react-native-reanimated-4.0.0-beta.3.tgz
      ```
 
 > [!NOTE]  
-> Make sure to replace `/path/to/react-native-reanimated-4.0.0-beta.2.tgz` with the actual path to the library archive on your computer.
+> Make sure to replace `/path/to/react-native-reanimated-4.0.0-beta.3.tgz` with the actual path to the library archive on your computer.
 
 3. **Additional setup** (Optional):
    - If you want to use other Reanimated features, such as worklets, continue following steps for `react-native-reanimated` installation as described in [this quick start guide](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#step-2-add-reanimateds-babel-plugin).
