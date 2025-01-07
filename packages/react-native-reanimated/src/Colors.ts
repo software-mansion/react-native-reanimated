@@ -682,17 +682,14 @@ export function processColorsInProps(props: StyleProps) {
     } else if (
       NestedColorProperties[key as keyof typeof NestedColorProperties]
     ) {
-      const nestedPropGroup = props[key] as StyleProps;
-      for (const groupKey in nestedPropGroup) {
-        const nestedProp = nestedPropGroup[groupKey] as StyleProps;
-
-        for (const propName in nestedProp) {
-          if (
-            NestedColorProperties[key as keyof typeof NestedColorProperties] ===
-            propName
-          ) {
-            nestedProp[propName] = processColor(nestedProp[propName]);
-          }
+      const propGroupList = props[key] as StyleProps[];
+      for (const propGroup of propGroupList) {
+        const nestedPropertyName =
+          NestedColorProperties[key as keyof typeof NestedColorProperties];
+        if (propGroup[nestedPropertyName] !== undefined) {
+          propGroup[nestedPropertyName] = processColor(
+            propGroup[nestedPropertyName]
+          );
         }
       }
     }
