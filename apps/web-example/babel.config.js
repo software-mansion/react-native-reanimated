@@ -15,6 +15,16 @@ module.exports = function (api) {
         runtimeInjection: true,
       },
     ],
+    [
+      'module-resolver',
+      {
+        alias: {
+          '@': '../common-app/src',
+          '~': '../common-app/src/features',
+        },
+        extensions: ['.ts', '.tsx', '.svg', '.json'],
+      },
+    ],
   ];
 
   const disableBabelPlugin = process.env.DISABLE_BABEL_PLUGIN === '1';

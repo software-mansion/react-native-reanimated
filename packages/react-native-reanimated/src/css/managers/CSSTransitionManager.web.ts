@@ -1,4 +1,4 @@
-import type { ReanimatedHTMLElement } from '../../js-reanimated';
+import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import type { CSSTransitionProperties } from '../types';
 import { convertConfigPropertiesToArrays } from '../utils';
 import { kebabize, maybeAddSuffix, parseTimingFunction } from '../web/utils';

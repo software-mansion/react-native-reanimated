@@ -1,5 +1,6 @@
 import type { CSSTimingFunction } from '../easings';
 import { CubicBezierEasing, LinearEasing, StepsEasing } from '../easings';
+import { ReanimatedError } from '../errors';
 import type { ConvertValuesToArrays } from '../types';
 
 export const hasSuffix = (value: unknown): value is string =>
@@ -31,6 +32,10 @@ export function maybeAddSuffix<T, K extends keyof T>(
 }
 
 function easingMapper(easing: CSSTimingFunction) {
+  if (typeof easing === 'string') {
+    return kebabize(easing);
+  }
+
   if (easing instanceof StepsEasing) {
     return `steps(${easing.stepsNumber}, ${kebabize(easing.modifier)})`;
   }
@@ -47,7 +52,7 @@ function easingMapper(easing: CSSTimingFunction) {
     return `linear(${values})`;
   }
 
-  return kebabize(easing);
+  throw new ReanimatedError(`Invalid timing function ${easing.toString()}`);
 }
 
 export function parseTimingFunction(timingFunction: CSSTimingFunction[]) {

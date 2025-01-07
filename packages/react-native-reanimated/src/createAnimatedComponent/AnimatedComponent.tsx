@@ -37,9 +37,9 @@ import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type { CustomConfig } from '../layoutReanimation/web/config';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
 import { NativeEventsManager } from './NativeEventsManager';
-import type { ReanimatedHTMLElement } from '../js-reanimated';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { Platform } from 'react-native';
+import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 
 let id = 0;
 

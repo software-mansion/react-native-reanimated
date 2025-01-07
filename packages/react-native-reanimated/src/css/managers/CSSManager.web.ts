@@ -1,7 +1,7 @@
 'use strict';
 
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
-import type { ReanimatedHTMLElement } from '../../js-reanimated';
+import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import { filterCSSPropertiesAndNormalizeStyle } from '../normalization';
 import type { CSSStyleDeclaration } from '../types';
 import CSSAnimationsManager from './CSSAnimationsManager.web';

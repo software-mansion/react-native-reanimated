@@ -1457,6 +1457,8 @@ PODS:
     - React-utils (= 0.75.16)
   - RNCAsyncStorage (2.1.0):
     - React-Core
+  - RNCClipboard (1.16.0):
+    - React-Core
   - RNCPicker (2.10.2):
     - React-Core
   - RNGestureHandler (2.22.0):
@@ -1658,6 +1660,7 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native-macos/ReactCommon`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
   - "RNCPicker (from `../node_modules/@react-native-picker/picker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
@@ -1788,6 +1791,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-macos/ReactCommon"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
+  RNCClipboard:
+    :path: "../node_modules/@react-native-clipboard/clipboard"
   RNCPicker:
     :path: "../node_modules/@react-native-picker/picker"
   RNGestureHandler:
@@ -1863,6 +1868,7 @@ SPEC CHECKSUMS:
   ReactCodegen: 023efeb9a9e9d4df117128652aa688e25c518fba
   ReactCommon: e10fb4f939b3abe445dc8095997470a538627ec6
   RNCAsyncStorage: cc6479c4acd84cc7004946946c8afe30b018184d
+  RNCClipboard: 88f7f4933e7731052210d77535560c485ecb75b0
   RNCPicker: d162737e03e48797110dbb60e5ddc03012e87e0b
   RNGestureHandler: 6baec83f39066ab8eee46ab18d0f8bf2d5a6ead3
   RNReanimated: e3a2eaa87e596a96f8ec33cc5a268d29e82d3eb4
@@ -1872,4 +1878,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 8d50cc2acc9f6a6b1a12bd9106b86385ad72266f
 
-COCOAPODS: 1.16.1
+COCOAPODS: 1.14.3

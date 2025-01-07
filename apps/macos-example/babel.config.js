@@ -5,10 +5,12 @@ module.exports = {
     [
       'module-resolver',
       {
-        extensions: ['.js', '.ts', '.tsx'],
         alias: {
           'react-native': './node_modules/react-native-macos',
+          '@': '../common-app/src',
+          '~': '../common-app/src/features',
         },
+        extensions: ['.js', '.ts', '.tsx', '.svg', '.json'],
       },
     ],
     ['react-native-reanimated/plugin', { processNestedWorklets: true }],

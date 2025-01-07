@@ -1,3 +1,12 @@
 {
-  "extends": "../../tsconfig.json"
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "plugins": [{ "name": "./resolver.js" }],
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["src/features/*"],
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src", ".eslintrc.js", "index.ts"]
 }

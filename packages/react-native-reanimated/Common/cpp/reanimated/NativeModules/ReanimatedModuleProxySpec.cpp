@@ -233,6 +233,8 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
   methodMap_["setShouldAnimateExitingForTag"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)};
 
+#ifdef RCT_NEW_ARCH_ENABLED
+        
   methodMap_["setViewStyle"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(setViewStyle)};
   methodMap_["removeViewStyle"] =
@@ -251,5 +253,7 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(updateCSSTransition)};
   methodMap_["unregisterCSSTransition"] =
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSTransition)};
+        
+#endif
 }
 } // namespace reanimated

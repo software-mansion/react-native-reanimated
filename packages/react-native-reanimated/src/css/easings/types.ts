@@ -1,8 +1,5 @@
 'use strict';
 import type { Percentage, Point } from '../types';
-import type { CubicBezierEasing } from './cubicBezier';
-import type { LinearEasing } from './linear';
-import type { StepsEasing } from './steps';
 
 export type NormalizedCubicBezierEasing = {
   name: string;
@@ -43,9 +40,7 @@ export type PredefinedTimingFunction =
 
 export type CSSTimingFunction =
   | PredefinedTimingFunction
-  | CubicBezierEasing
-  | LinearEasing
-  | StepsEasing;
+  | ParametrizedTimingFunction;
 
 export type NormalizedCSSTimingFunction =
   | PredefinedTimingFunction

@@ -3,7 +3,6 @@ import {
   isAnimationSetting,
   isColorProp,
   isCSSKeyframesObject,
-  isCSSKeyframesRule,
   isTransformString,
   isTransitionProp,
 } from '../../utils';
@@ -159,8 +158,7 @@ export function filterCSSPropertiesAndNormalizeStyle(
     animationName &&
     (Array.isArray(animationName) ? animationName : [animationName]).every(
       (keyframes) =>
-        (isCSSKeyframesRule(keyframes) && keyframes.length > 0) ||
-        isCSSKeyframesObject(keyframes)
+        'normalizedKeyframes' in keyframes || isCSSKeyframesObject(keyframes)
     );
   const finalAnimationConfig = hasAnimationName
     ? ({ ...animationProperties, animationName } as CSSAnimationProperties)

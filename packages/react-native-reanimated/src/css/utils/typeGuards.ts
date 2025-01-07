@@ -1,9 +1,7 @@
 'use strict';
-import { CSSKeyframesRuleImpl } from '../models';
 import type {
   CSSAnimationSettingProp,
   CSSAnimationKeyframes,
-  CSSKeyframesRule,
   CSSTransitionProp,
 } from '../types';
 
@@ -59,9 +57,6 @@ export const isAngleValue = (
 
 export const isNumberArray = (value: unknown): value is number[] =>
   Array.isArray(value) && value.every(isNumber);
-
-export const isCSSKeyframesRule = (value: object): value is CSSKeyframesRule =>
-  value instanceof CSSKeyframesRuleImpl;
 
 export const isCSSKeyframesObject = (
   value: object
