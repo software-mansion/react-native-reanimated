@@ -32,7 +32,7 @@ export default function AppSettings() {
   return (
     <Screen>
       <Animated.ScrollView
-        contentContainerStyle={flex.fill}
+        contentContainerStyle={styles.scrollViewContent}
         style={[
           flex.fill,
           {
@@ -297,6 +297,11 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
+  },
+  scrollViewContent: {
+    marginHorizontal: 'auto',
+    maxWidth: '100%',
+    width: 600,
   },
   sectionContent: {
     gap: spacing.md,

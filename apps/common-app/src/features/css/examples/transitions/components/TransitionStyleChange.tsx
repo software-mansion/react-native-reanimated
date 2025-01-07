@@ -14,8 +14,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { colors, flex, iconSizes, radius, spacing } from '@/theme';
-import { stringifyConfig } from '@/utils';
 import { CodeBlock, Text } from '~/css/components';
+import { stringifyConfig } from '~/css/utils';
 
 const CARDS_ORDER_CHANGE_DELAY = 300;
 

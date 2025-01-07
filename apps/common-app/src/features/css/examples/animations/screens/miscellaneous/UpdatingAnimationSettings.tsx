@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { colors, flex, radius, sizes, spacing } from '@/theme';
-import { stringifyConfig, typedMemo } from '@/utils';
+import { typedMemo } from '@/utils';
 import {
   Button,
   CodeBlock,
@@ -21,6 +21,7 @@ import {
   Stagger,
   Text,
 } from '~/css/components';
+import { stringifyConfig } from '~/css/utils';
 
 const keyframes: CSSAnimationKeyframes = {
   to: {

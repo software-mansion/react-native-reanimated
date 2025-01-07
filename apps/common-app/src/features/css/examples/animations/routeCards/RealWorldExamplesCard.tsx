@@ -89,7 +89,7 @@ function Rocket({ size }: RocketProps) {
         width: size,
       }}>
       <Defs>
-        <LinearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
+        <LinearGradient id="rocket-card" x1="0" x2="1" y1="0" y2="0">
           <Stop offset="0" stopColor={colors.background2} />
           <Stop offset="65%" stopColor={colors.background2} />
           <Stop offset="65%" stopColor={colors.background3} />
@@ -98,10 +98,10 @@ function Rocket({ size }: RocketProps) {
       </Defs>
 
       {/* Capsule base */}
-      <Rect fill="url(#grad)" height="94" width="112" x="34" y="62" />
+      <Rect fill="url(#rocket-card)" height="94" width="112" x="34" y="62" />
 
       {/* Capsule top */}
-      <Polygon fill="url(#grad)" points="90 0, 34 62, 146 62" />
+      <Polygon fill="url(#rocket-card)" points="90 0, 34 62, 146 62" />
 
       {/* Window */}
       <Circle cx="90" cy="92" fill={colors.primary} r="35" />
@@ -132,7 +132,7 @@ function Flame({ height, width }: FlameProps) {
   return (
     <Svg height={height} width={width}>
       <Defs>
-        <LinearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
+        <LinearGradient id="flame-card" x1="0" x2="1" y1="0" y2="0">
           <Stop offset="0" stopColor={colors.primaryLight} />
           <Stop offset="50%" stopColor={colors.primaryLight} />
           <Stop offset="50%" stopColor={colors.primaryDark} />
@@ -140,7 +140,7 @@ function Flame({ height, width }: FlameProps) {
         </LinearGradient>
       </Defs>
       <Polygon
-        fill="url(#grad)"
+        fill="url(#flame-card)"
         points={`0 ${height / 2}, ${width / 2} 0, ${width} ${height / 2}, ${
           width / 2
         } ${height}`}

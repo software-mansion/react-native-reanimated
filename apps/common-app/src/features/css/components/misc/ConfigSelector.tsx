@@ -15,14 +15,13 @@ import Animated, {
 import { useStableCallback } from '@/hooks';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 import type { AnyRecord, UnpackArray } from '@/types';
+import { deepEqual, typedMemo } from '@/utils';
 import {
-  deepEqual,
   formatLeafValue,
   isEasingFunction,
   isLeafValue,
   isValidPropertyName,
-  typedMemo,
-} from '@/utils';
+} from '~/css/utils';
 
 import Text from '../core/Text';
 import Checkbox from '../inputs/Checkbox';
@@ -479,7 +478,6 @@ const styles = StyleSheet.create({
     transform: [{ translateY: '-50%' }, { translateX: '-100%' }],
   },
   codeContainer: {
-    alignItems: 'center',
     paddingBottom: spacing.sm,
   },
   collapseButton: {

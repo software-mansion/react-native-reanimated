@@ -2,7 +2,7 @@ import type { ComponentType } from 'react';
 import type { CSSAnimationProperties } from 'react-native-reanimated';
 
 import type { AnyRecord } from '@/types';
-import { stringifyConfig } from '@/utils';
+import { stringifyConfig } from '~/css/utils';
 
 import Scroll from '../layout/Scroll';
 import { Section } from '../layout/Section';

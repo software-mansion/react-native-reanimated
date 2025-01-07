@@ -2,7 +2,8 @@ import { StyleSheet, View } from 'react-native';
 
 import { colors, radius, spacing } from '@/theme';
 import type { AnyRecord } from '@/types';
-import { getCodeWithOverrides, typedMemo } from '@/utils';
+import { typedMemo } from '@/utils';
+import { getCodeWithOverrides } from '~/css/utils';
 
 import { CodeBlock } from '../misc/CodeBlock';
 

@@ -13,18 +13,20 @@ import { BOTTOM_BAR_HEIGHT } from '~/css/navigation/constants';
 const EXAMPLE_SCALE = 0.85;
 
 const CONTAINER_SIZE = 320;
+const MAX_SIZE = 600;
 const BOX_SIZE = 40;
 
-const WINDOW_DIMENSIONS = Dimensions.get('window');
-const SCALE =
-  (EXAMPLE_SCALE *
-    Math.min(WINDOW_DIMENSIONS.width, WINDOW_DIMENSIONS.height)) /
-  CONTAINER_SIZE;
-
 export default function SquishySquashy() {
+  const dimensions = Dimensions.get('window');
+  const scale =
+    Math.min(
+      EXAMPLE_SCALE * Math.min(dimensions.width, dimensions.height),
+      MAX_SIZE
+    ) / CONTAINER_SIZE;
+
   return (
     <Screen style={styles.wrapper}>
-      <View style={[styles.container, { transform: [{ scale: SCALE }] }]}>
+      <View style={[styles.container, { transform: [{ scale }] }]}>
         <Animated.View style={styles.box} />
       </View>
     </Screen>

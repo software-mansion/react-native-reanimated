@@ -2,7 +2,7 @@ import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useNavigation } from '@react-navigation/native';
 import { useCallback, useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   interpolateColor,
@@ -57,14 +57,20 @@ export default function BottomTabBar({
 
   const gradient = useMemo(
     () => (
-      <Svg style={StyleSheet.absoluteFill}>
+      <Svg height="100%" width="100%">
         <Defs>
-          <LinearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
+          <LinearGradient id="bottom-tab-bar" x1="0" x2="0" y1="0" y2="1">
             <Stop offset="0" stopColor={colors.black} stopOpacity="0" />
             <Stop offset="1" stopColor={colors.black} stopOpacity="0.2" />
           </LinearGradient>
         </Defs>
-        <Rect fill="url(#gradient)" height="100%" width="100%" x="0" y="0" />
+        <Rect
+          fill="url(#bottom-tab-bar)"
+          height="100%"
+          width="100%"
+          x="0"
+          y="0"
+        />
       </Svg>
     ),
     []
@@ -80,9 +86,13 @@ export default function BottomTabBar({
     [buttonWidths]
   );
 
+  const inset = Platform.select({
+    default: insets.bottom,
+    web: spacing.md,
+  });
+
   return (
-    <View
-      style={[styles.wrapper, { height: BOTTOM_BAR_HEIGHT + insets.bottom }]}>
+    <View style={[styles.wrapper, { height: BOTTOM_BAR_HEIGHT + inset }]}>
       <View style={StyleSheet.absoluteFill}>{gradient}</View>
       <View style={styles.container}>
         <View style={[flex.row, { gap: TABS_GAP }]}>

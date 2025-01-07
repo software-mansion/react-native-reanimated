@@ -11,7 +11,6 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { colors, flex, radius, sizes, spacing } from '@/theme';
-import { stringifyConfig } from '@/utils';
 import type {
   SelectableConfig,
   SelectableConfigPropertyOptions,
@@ -27,6 +26,7 @@ import {
   Text,
   useSelectableConfig,
 } from '~/css/components';
+import { stringifyConfig } from '~/css/utils';
 
 const AVAILABLE_TIMING_FUNCTIONS = [
   'linear',

@@ -1,13 +1,16 @@
 import { PortalProvider } from '@gorhom/portal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { NavigationState } from '@react-navigation/native';
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  getPathFromState,
+  NavigationContainer,
+} from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { flex } from '@/theme';
-import { noop } from '@/utils';
+import { IS_WEB, noop } from '@/utils';
 
 import { Navigator } from './navigation';
 
@@ -18,13 +21,16 @@ export default function App() {
   const [navigationState, setNavigationState] = useState<NavigationState>();
 
   useEffect(() => {
+    if (IS_WEB) {
+      return;
+    }
+
     const restoreState = async () => {
       try {
         const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
         const state = savedStateString
           ? (JSON.parse(savedStateString) as NavigationState)
           : undefined;
-
         if (state !== undefined) {
           setNavigationState(state);
         }
@@ -32,7 +38,6 @@ export default function App() {
         setIsReady(true);
       }
     };
-
     if (!isReady) {
       restoreState().catch(noop);
     }
@@ -47,6 +52,26 @@ export default function App() {
       <GestureHandlerRootView style={flex.fill}>
         <NavigationContainer
           initialState={navigationState}
+          linking={{
+            getPathFromState: (state, options) =>
+              getPathFromState(state, options).replace(/%2F/g, '/'),
+            getStateFromPath: (path) => {
+              const chunks = path.split('/').filter(Boolean);
+              const routes = chunks.reduce<Array<{ name: string }>>(
+                (result, chunk) => {
+                  const lastRoute = result[result.length - 1];
+                  const route = {
+                    name: lastRoute ? `${lastRoute.name}/${chunk}` : chunk,
+                  };
+                  result.push(route);
+                  return result;
+                },
+                []
+              );
+              return { routes };
+            },
+            prefixes: [],
+          }}
           onStateChange={persistNavigationState}>
           <PortalProvider>
             <Navigator />

@@ -69,7 +69,7 @@ export default function RocketInSpace() {
         <Animated.View style={styles.turbulence}>
           <Svg style={styles.rocket}>
             <Defs>
-              <LinearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
+              <LinearGradient id="rocket" x1="0" x2="1" y1="0" y2="0">
                 <Stop offset="0" stopColor={COLORS.grayLightest} />
                 <Stop offset="65%" stopColor={COLORS.grayLightest} />
                 <Stop offset="65%" stopColor={COLORS.grayLighter} />
@@ -78,10 +78,10 @@ export default function RocketInSpace() {
             </Defs>
 
             {/* Capsule base */}
-            <Rect fill="url(#grad)" height="94" width="112" x="34" y="62" />
+            <Rect fill="url(#rocket)" height="94" width="112" x="34" y="62" />
 
             {/* Capsule top */}
-            <Polygon fill="url(#grad)" points="90 0, 34 62, 146 62" />
+            <Polygon fill="url(#rocket)" points="90 0, 34 62, 146 62" />
 
             {/* Window */}
             <Circle cx="90" cy="92" fill={COLORS.purple} r="35" />
@@ -187,7 +187,7 @@ function Flame({ height, width }: FlameProps) {
   return (
     <Svg height={height} width={width}>
       <Defs>
-        <LinearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
+        <LinearGradient id="flame" x1="0" x2="1" y1="0" y2="0">
           <Stop offset="0" stopColor={COLORS.orange} />
           <Stop offset="50%" stopColor={COLORS.orange} />
           <Stop offset="50%" stopColor={COLORS.red} />
@@ -195,7 +195,7 @@ function Flame({ height, width }: FlameProps) {
         </LinearGradient>
       </Defs>
       <Polygon
-        fill="url(#grad)"
+        fill="url(#flame)"
         points={`0 ${height / 2}, ${width / 2} 0, ${width} ${height / 2}, ${
           width / 2
         } ${height}`}
@@ -308,7 +308,7 @@ const styles = css.create({
     padding: spacing.lg,
     paddingBottom: 80,
     paddingLeft: 100,
-    transform: [{ scale: Dimensions.get('window').width / 375 }],
+    transform: [{ scale: Math.min(Dimensions.get('window').width, 450) / 375 }],
   },
   spark: {
     animationDuration: '0.24s',

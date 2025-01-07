@@ -6,7 +6,7 @@
 import { faHeart, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import type { ComponentType } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { css } from 'react-native-reanimated';
 import {
   Circle,
@@ -21,8 +21,7 @@ import {
 import { colors, radius, spacing } from '@/theme';
 import { Grid, ScrollScreen, Stagger, Text } from '~/css/components';
 
-const WINDOW_WIDTH = Dimensions.get('window').width;
-const EMOJI_SIZE = 0.2 * WINDOW_WIDTH;
+const EMOJI_SIZE = 80;
 
 const COLORS = {
   base: '#f7d154',
@@ -287,21 +286,21 @@ function YayEmoji() {
         style={yayStyles.cheeks}
         width={EMOJI_SIZE}>
         <Defs>
-          <RadialGradient cx="50%" cy="50%" id="grad" rx="50%" ry="50%">
+          <RadialGradient cx="50%" cy="50%" id="yay" rx="50%" ry="50%">
             <Stop offset="0" stopColor={COLORS.red} stopOpacity="0.3" />
             <Stop offset="0.3" stopColor={COLORS.red} stopOpacity="0.3" />
             <Stop offset="0.85" stopColor={COLORS.red} stopOpacity="0" />
           </RadialGradient>
         </Defs>
         <Rect
-          fill="url(#grad)"
+          fill="url(#yay)"
           height={0.5 * EMOJI_SIZE}
           width={0.5 * EMOJI_SIZE}
           x="0"
           y="0"
         />
         <Rect
-          fill="url(#grad)"
+          fill="url(#yay)"
           height={0.5 * EMOJI_SIZE}
           width={0.5 * EMOJI_SIZE}
           x="50%"
@@ -599,6 +598,7 @@ const sadStyles = css.create({
     borderBlockStartColor: COLORS.black,
     borderColor: COLORS.baseTransparent,
     borderRadius: '50%',
+    borderTopColor: COLORS.black,
     borderWidth: 0.04 * EMOJI_SIZE,
     height: 0.35 * EMOJI_SIZE,
     transform: [{ scaleY: 1.25 }],
@@ -637,7 +637,7 @@ function AngryEmoji() {
         <Circle
           cx={0.5 * EMOJI_SIZE}
           cy={0.5 * EMOJI_SIZE}
-          fill="url(#grad)"
+          fill="url(#angry)"
           r={0.5 * EMOJI_SIZE}
         />
       </Svg>

@@ -1,5 +1,6 @@
 import type { PropsWithChildren } from 'react';
 import { useState } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Animated, {
@@ -13,6 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { colors, flex, radius, spacing } from '@/theme';
+import { IS_WEB } from '@/utils';
 
 import ExpandableCard from '../cards/ExpandableCard';
 import Text from '../core/Text';
@@ -59,6 +61,13 @@ export default function ExampleCard({
     };
   });
 
+  const itemWrapperStyle: StyleProp<ViewStyle> = [
+    styles.itemWrapper,
+    {
+      flexBasis: isExpanded ? undefined : '50%',
+    },
+  ];
+
   return (
     <LayoutAnimationConfig skipEntering skipExiting>
       <ExpandableCard
@@ -94,7 +103,7 @@ export default function ExampleCard({
             { height: isExpanded ? 'auto' : collapsedExampleHeight },
           ]}>
           {/* Code block */}
-          <Animated.View layout={LinearTransition} style={styles.itemWrapper}>
+          <Animated.View layout={LinearTransition} style={itemWrapperStyle}>
             <CodeBlock code={code} />
             {/* Render collapsedCode block as an overlay to ensure that the layout
             transition is smooth when the container is expanded/collapsed */}
@@ -115,8 +124,8 @@ export default function ExampleCard({
           <Animated.View
             layout={LinearTransition}
             style={[
-              styles.itemWrapper,
               flex.center,
+              itemWrapperStyle,
               {
                 minHeight:
                   minExampleHeight ??
@@ -155,7 +164,7 @@ export default function ExampleCard({
 
 const styles = StyleSheet.create({
   collapsedCodeOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...(!IS_WEB && StyleSheet.absoluteFillObject),
     backgroundColor: colors.background2,
     padding: spacing.xs,
   },
@@ -171,7 +180,6 @@ const styles = StyleSheet.create({
   itemWrapper: {
     backgroundColor: colors.background2,
     borderRadius: radius.sm,
-    flexBasis: '50%',
     overflow: 'hidden',
     padding: spacing.xs,
   },
