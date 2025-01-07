@@ -12,12 +12,12 @@ type ScreenProps = PropsWithChildren<{
 }>;
 
 export function Screen({ children, style }: ScreenProps) {
-  const windowHeight = Dimensions.get('screen').height;
+  const screenHeight = Dimensions.get('screen').height;
   const headerHeight = useHeaderHeight();
 
   const defaultStyle = Platform.select({
     default: {
-      height: windowHeight - headerHeight,
+      height: screenHeight - headerHeight,
     },
     web: {
       flex: 1,

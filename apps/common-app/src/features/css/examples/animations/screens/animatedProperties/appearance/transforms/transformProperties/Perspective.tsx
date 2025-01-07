@@ -62,7 +62,7 @@ export default function Perspective() {
         },
         {
           description:
-            'Negative perspective values are allowed. They **invert** the view transformation relative to the **transformation origin** (e.g. invert the rotation direction).',
+            'Negative perspective values are allowed (on **mobile**). They **invert** the view transformation relative to the **transformation origin** (e.g. invert the rotation direction).',
           examples: [
             {
               from: [{ perspective: -20 }, { rotateY: '30deg' }],
@@ -71,6 +71,7 @@ export default function Perspective() {
               to: [{ perspective: -100 }, { rotateY: '30deg' }],
             },
           ],
+          labelTypes: ['iOS', 'Android'],
           title: 'Negative Perspective',
         },
       ]}

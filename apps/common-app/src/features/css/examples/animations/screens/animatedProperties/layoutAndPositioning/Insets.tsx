@@ -94,6 +94,7 @@ export default function Insets() {
         {
           buildAnimation: ({ property }) => ({
             ...SHARED_SETTINGS,
+            animationDuration: '3s',
             animationName: {
               '0%, 100%': {
                 [property]: 0,

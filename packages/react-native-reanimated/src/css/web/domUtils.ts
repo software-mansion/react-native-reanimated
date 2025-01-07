@@ -30,9 +30,10 @@ export function configureWebCSSAnimations() {
   document.head.append(cssStyleTag);
 }
 
-export function insertCSSAnimation(animationName: string, keyframe: string) {
-  // Without this check SSR crashes because document is undefined (NextExample on CI)
-  if (!isWindowAvailable()) {
+export function insertCSSAnimation(animationName: string, keyframes: string) {
+  // Without window availability check SSR crashes because document is undefined
+  // (NextExample on CI)
+  if (!isWindowAvailable() || cssNameToIndex.has(animationName)) {
     return;
   }
 
@@ -45,7 +46,9 @@ export function insertCSSAnimation(animationName: string, keyframe: string) {
     return;
   }
 
-  styleTag.sheet.insertRule(keyframe, 0);
+  const animation = `@keyframes ${animationName} { ${keyframes} }`;
+
+  styleTag.sheet.insertRule(animation, 0);
   cssNameList.unshift(animationName);
   cssNameToIndex.set(animationName, 0);
 

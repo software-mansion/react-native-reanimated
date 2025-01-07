@@ -109,6 +109,7 @@ const flameOdd = css.keyframes({
 const styles = css.create({
   campfire: {
     alignItems: 'center',
+    maxWidth: 300,
     width: '40%',
   },
   container: {

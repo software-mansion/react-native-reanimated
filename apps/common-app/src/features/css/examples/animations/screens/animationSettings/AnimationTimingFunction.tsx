@@ -11,6 +11,9 @@ export default function AnimationTimingFunction() {
     animationDuration: '2s',
     animationIterationCount: 'infinite',
     animationName: {
+      from: {
+        left: 0,
+      },
       to: {
         left: '100%',
         transform: [{ translateX: '-100%' }],

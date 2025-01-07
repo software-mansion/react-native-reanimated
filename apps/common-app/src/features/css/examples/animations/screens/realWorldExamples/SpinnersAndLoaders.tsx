@@ -164,9 +164,11 @@ const ringStyles = css.create({
     animationIterationCount: 'infinite',
     animationName: ringPart,
     animationTimingFunction: cubicBezier(0.5, 0, 0.5, 1),
+    // borderBlock props are needed for Android
     borderBlockStartColor: colors.primary,
     borderColor: 'rgba(0, 0, 0, 0.01)',
     borderRadius: SPINNER_SIZE / 2,
+    borderTopColor: colors.primary,
     borderWidth: 0.1 * SPINNER_SIZE,
   },
 });
@@ -458,10 +460,13 @@ const dualRingStyles = css.create({
     animationIterationCount: 'infinite',
     animationName: dualRing,
     animationTimingFunction: 'linear',
+    // borderBock props are needed for Android
     borderBlockEndColor: colors.primary,
     borderBlockStartColor: colors.primary,
+    borderBottomColor: colors.primary,
     borderColor: 'rgba(0, 0, 0, 0.01)',
     borderRadius: SPINNER_SIZE / 2,
+    borderTopColor: colors.primary,
     borderWidth: 0.1 * SPINNER_SIZE,
   },
 });

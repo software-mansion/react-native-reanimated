@@ -45,6 +45,9 @@ const color = css.keyframes({
 });
 
 const jump = css.keyframes({
+  '0%, 100%': {
+    top: 0,
+  },
   '50%': {
     top: '-50%',
     transform: [{ translateY: '50%' }],
