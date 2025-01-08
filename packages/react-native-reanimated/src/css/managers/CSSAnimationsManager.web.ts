@@ -93,6 +93,12 @@ export default class CSSAnimationsManager {
   }
 
   detach() {
+    const attachedAnimations = Object.values(this.attachedAnimations);
+
+    if (attachedAnimations.length === 0) {
+      return;
+    }
+
     this.element.style.animationDuration = '';
     this.element.style.animationDelay = '';
     this.element.style.animationDirection = '';
@@ -100,13 +106,11 @@ export default class CSSAnimationsManager {
     this.element.style.animationPlayState = '';
     this.element.style.animationTimingFunction = '';
 
-    Object.values(this.attachedAnimations).forEach(
-      ({ keyframesRule: { name }, removable }) => {
-        if (removable) {
-          removeCSSAnimation(name);
-        }
+    attachedAnimations.forEach(({ keyframesRule: { name }, removable }) => {
+      if (removable) {
+        removeCSSAnimation(name);
       }
-    );
+    });
     this.attachedAnimations = {};
   }
 

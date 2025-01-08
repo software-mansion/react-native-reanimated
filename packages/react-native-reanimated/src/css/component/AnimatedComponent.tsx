@@ -1,6 +1,6 @@
 'use strict';
 import React, { Component } from 'react';
-import type { MutableRefObject, Ref } from 'react';
+import type { MutableRefObject, Ref, RefObject } from 'react';
 import type {
   AnimatedComponentRef,
   ViewInfo,
@@ -70,7 +70,11 @@ export default class AnimatedComponent<
     if (SHOULD_BE_USE_WEB) {
       // At this point we assume that `_setComponentRef` was already called and `_component` is set.
       // `this._component` on web represents HTMLElement of our component, that's why we use casting
-      viewTag = this._componentRef as HTMLElement;
+      // TODO - implement a valid solution later on - this is a temporary fix
+      viewTag =
+        this._componentRef && 'elementRef' in this._componentRef
+          ? (this._componentRef.elementRef as RefObject<HTMLElement>).current
+          : (this._componentRef as HTMLElement);
       viewName = null;
       shadowNodeWrapper = null;
       viewConfig = null;

@@ -132,7 +132,7 @@ export function normalizeStyle(style: PlainStyle): PlainStyle {
   return Object.fromEntries(entries);
 }
 
-export function filterCSSPropertiesAndNormalizeStyle(
+export function filterCSSAndStyleProperties(
   style: PlainStyle
 ): [CSSAnimationProperties | null, CSSTransitionProperties | null, PlainStyle] {
   let animationName: CSSAnimationProperties['animationName'] | null = null;
@@ -170,9 +170,5 @@ export function filterCSSPropertiesAndNormalizeStyle(
     ? transitionProperties
     : null;
 
-  return [
-    finalAnimationConfig,
-    finalTransitionConfig,
-    normalizeStyle(filteredStyle),
-  ];
+  return [finalAnimationConfig, finalTransitionConfig, filteredStyle];
 }

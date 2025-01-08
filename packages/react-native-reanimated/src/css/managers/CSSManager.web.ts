@@ -2,7 +2,7 @@
 
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
-import { filterCSSPropertiesAndNormalizeStyle } from '../normalization';
+import { filterCSSAndStyleProperties } from '../normalization';
 import type { CSSStyleDeclaration } from '../types';
 import CSSAnimationsManager from './CSSAnimationsManager.web';
 import CSSTransitionManager from './CSSTransitionManager.web';
@@ -22,7 +22,7 @@ export default class CSSManager {
 
   attach(style: CSSStyleDeclaration): void {
     const [animationConfig, transitionConfig] =
-      filterCSSPropertiesAndNormalizeStyle(style);
+      filterCSSAndStyleProperties(style);
 
     if (animationConfig) {
       this.animationsManager.attach(animationConfig);
@@ -35,7 +35,7 @@ export default class CSSManager {
 
   update(style: CSSStyleDeclaration): void {
     const [animationConfig, transitionConfig] =
-      filterCSSPropertiesAndNormalizeStyle(style);
+      filterCSSAndStyleProperties(style);
 
     if (animationConfig) {
       this.animationsManager.update(animationConfig);
