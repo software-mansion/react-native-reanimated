@@ -16,9 +16,7 @@ export default function ShadowOffset() {
         animationName: keyframes,
       })}
       renderExample={({ animation }) => (
-        <Animated.View
-          style={[styles.box, animation, { shadowOffset: undefined }]}
-        />
+        <Animated.View style={[styles.box, animation]} />
       )}
       sections={[
         {

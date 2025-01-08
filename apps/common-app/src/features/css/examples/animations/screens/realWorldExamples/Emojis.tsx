@@ -711,6 +711,7 @@ const angryStyles = css.create({
   },
   eyeBrow: {
     borderBlockEndColor: COLORS.black,
+    borderBottomColor: COLORS.black,
     borderColor: COLORS.baseTransparent,
     borderRadius: '50%',
     borderWidth: 0.04 * EMOJI_SIZE,

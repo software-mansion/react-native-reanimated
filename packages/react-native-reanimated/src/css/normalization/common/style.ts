@@ -70,7 +70,7 @@ function normalizeAspectRatio(value: string | number): number {
   throw new ReanimatedError(ERROR_MESSAGES.unsupportedAspectRatio(value));
 }
 
-const FONT_WEIGHT_MAPPINGS = {
+export const FONT_WEIGHT_MAPPINGS = {
   thin: '100',
   ultralight: '200',
   light: '300',
@@ -85,7 +85,7 @@ const FONT_WEIGHT_MAPPINGS = {
   black: '900',
 } as const;
 
-export function normalizeFontWeight(value: string | number): string {
+function normalizeFontWeight(value: string | number): string {
   if (typeof value === 'number' || !isNaN(+value)) {
     return value.toString();
   }
