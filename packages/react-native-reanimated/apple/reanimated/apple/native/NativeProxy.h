@@ -23,6 +23,7 @@ std::shared_ptr<reanimated::ReanimatedModuleProxy> createReanimatedModule(
 
 void commonInit(
     REAModule *reaModule,
+    jsi::Runtime &uiRuntime,
     std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy);
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -30,6 +31,7 @@ void commonInit(
 #else // RCT_NEW_ARCH_ENABLED
 void setupLayoutAnimationCallbacks(
     std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy,
+    std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy,
     REAAnimationsManager *animationsManager);
 #endif // RCT_NEW_ARCH_ENABLED
 

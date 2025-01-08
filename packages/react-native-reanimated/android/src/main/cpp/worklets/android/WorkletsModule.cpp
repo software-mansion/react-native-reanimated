@@ -28,6 +28,7 @@ WorkletsModule::WorkletsModule(
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
       workletsModuleProxy_(std::make_shared<WorkletsModuleProxy>(
+          *rnRuntime,
           valueUnpackerCode,
           std::make_shared<JMessageQueueThread>(messageQueueThread),
           jsCallInvoker,

@@ -300,8 +300,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   auto reanimatedModuleProxy =
       reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, isBridgeless);
 
+  auto &uiRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime() -> getJSIRuntime();
+
   jsi::Runtime &rnRuntime = *jsiRuntime;
-  [self commonInit:reanimatedModuleProxy withRnRuntime:rnRuntime];
+  [self commonInit:reanimatedModuleProxy withRnRuntime:rnRuntime withUIRuntime:uiRuntime];
 
   return @YES;
 }
@@ -314,10 +316,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
-- (void)commonInit:(std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy withRnRuntime:(jsi::Runtime &)rnRuntime
+- (void)commonInit:(std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy
+     withRnRuntime:(jsi::Runtime &)rnRuntime
+     withUIRuntime:(jsi::Runtime &)uiRuntime
 {
   WorkletRuntimeCollector::install(rnRuntime);
-  RNRuntimeDecorator::decorate(rnRuntime, reanimatedModuleProxy);
+  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
 #ifdef RCT_NEW_ARCH_ENABLED
   [self attachReactEventListener];
   weakReanimatedModuleProxy_ = reanimatedModuleProxy;

@@ -155,7 +155,7 @@ export function unregisterSensor(sensorId: number): void {
 }
 
 if (!isWeb()) {
-  initializeUIRuntime();
+  initializeUIRuntime(ReanimatedModule);
 }
 
 type FeaturesConfig = {
