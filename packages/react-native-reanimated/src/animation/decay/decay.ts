@@ -94,7 +94,7 @@ export const withDecay = function (
       value: number,
       now: Timestamp
     ): void {
-      const initialVelocity = config.velocity ?? 0;
+      const initialVelocity = config.velocity;
       animation.current = value;
       animation.lastTimestamp = now;
       animation.startTimestamp = now;
