@@ -5,12 +5,14 @@ import type {
   CSSAnimationProperties,
   CSSAnimationSettings,
 } from '../types';
-import CSSKeyframesRuleImpl from '../models/CSSKeyframesRule.web';
+import CSSKeyframesRuleImpl, {
+  isCSSKeyframesRuleImpl,
+} from '../models/CSSKeyframesRule.web';
 import {
   configureWebCSSAnimations,
   removeCSSAnimation,
   kebabize,
-  maybeAddSuffix,
+  maybeAddSuffixes,
   parseTimingFunction,
   processKeyframeDefinitions,
   insertCSSAnimation,
@@ -60,7 +62,7 @@ export default class CSSAnimationsManager {
 
     const processedAnimations = definitions.map((definition) => {
       // If the CSSKeyframesRule instance was provided, we can just use it
-      if (definition instanceof CSSKeyframesRuleImpl) {
+      if (isCSSKeyframesRuleImpl(definition)) {
         return { keyframesRule: definition, removable: false };
       }
 
@@ -142,7 +144,7 @@ export default class CSSAnimationsManager {
   ) {
     this.element.style.animationName = animationNames.join(',');
 
-    const maybeDuration = maybeAddSuffix(
+    const maybeDuration = maybeAddSuffixes(
       animationSettings,
       'animationDuration',
       'ms'
@@ -152,7 +154,7 @@ export default class CSSAnimationsManager {
       this.element.style.animationDuration = maybeDuration.join(',');
     }
 
-    const maybeDelay = maybeAddSuffix(
+    const maybeDelay = maybeAddSuffixes(
       animationSettings,
       'animationDelay',
       'ms'

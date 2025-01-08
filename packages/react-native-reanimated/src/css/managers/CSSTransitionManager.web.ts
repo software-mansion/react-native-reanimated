@@ -1,7 +1,7 @@
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import type { CSSTransitionProperties } from '../types';
 import { convertConfigPropertiesToArrays } from '../utils';
-import { kebabize, maybeAddSuffix, parseTimingFunction } from '../web';
+import { kebabize, maybeAddSuffixes, parseTimingFunction } from '../web';
 
 export default class CSSTransitionManager {
   private readonly element: ReanimatedHTMLElement;
@@ -40,7 +40,7 @@ export default class CSSTransitionManager {
     const propertiesAsArray =
       convertConfigPropertiesToArrays(transitionProperties);
 
-    const maybeDuration = maybeAddSuffix(
+    const maybeDuration = maybeAddSuffixes(
       propertiesAsArray,
       'transitionDuration',
       'ms'
@@ -49,7 +49,7 @@ export default class CSSTransitionManager {
       this.element.style.transitionDuration = maybeDuration.join(',');
     }
 
-    const maybeDelay = maybeAddSuffix(
+    const maybeDelay = maybeAddSuffixes(
       propertiesAsArray,
       'transitionDelay',
       'ms'
