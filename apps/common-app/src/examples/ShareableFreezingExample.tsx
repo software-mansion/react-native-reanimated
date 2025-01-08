@@ -93,11 +93,7 @@ function tryModifyConvertedRemoteFunction() {
 }
 
 function tryModifyConvertedHostObject() {
-  const obj = TurboModuleRegistry.get('Clipboard');
-  if (!obj) {
-    console.warn('No host object found.');
-    return;
-  }
+  const obj = TurboModuleRegistry.getEnforcing('Clipboard');
   makeShareableCloneRecursive(obj);
   // @ts-expect-error It's ok
   obj.prop = 2; // shouldn't warn because it's not frozen
