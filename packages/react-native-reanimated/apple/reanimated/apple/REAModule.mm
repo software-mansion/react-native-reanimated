@@ -1,7 +1,6 @@
 #import <React/RCTBridge+Private.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#import <React/RCTCallInvoker.h>
 #import <React/RCTFabricSurface.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurface.h>
