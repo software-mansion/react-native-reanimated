@@ -6,7 +6,7 @@ import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import CSSTransitionManager from './CSSTransitionManager';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import type { CSSStyleDeclaration } from '../types';
-import { filterCSSPropertiesAndNormalizeStyle } from '../normalization';
+import { filterCSSAndStyleProperties, normalizeStyle } from '../normalization';
 
 export default class CSSManager {
   private readonly viewTag: number;
@@ -31,8 +31,9 @@ export default class CSSManager {
   }
 
   update(style: CSSStyleDeclaration, isMount = false): void {
-    const [animationProperties, transitionProperties, normalizedStyle] =
-      filterCSSPropertiesAndNormalizeStyle(style);
+    const [animationProperties, transitionProperties, filteredStyle] =
+      filterCSSAndStyleProperties(style);
+    const normalizedStyle = normalizeStyle(filteredStyle);
 
     // If the update is called during component mount, we won't recognize style
     // changes and treat styles as initial, thus we need to set them before

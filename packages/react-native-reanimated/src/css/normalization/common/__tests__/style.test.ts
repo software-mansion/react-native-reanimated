@@ -7,7 +7,7 @@ import type {
 } from '../../../types';
 import {
   ERROR_MESSAGES,
-  filterCSSPropertiesAndNormalizeStyle,
+  filterCSSAndStyleProperties,
   normalizeStyle,
 } from '../style';
 
@@ -195,7 +195,7 @@ describe(normalizeStyle, () => {
   });
 });
 
-describe(filterCSSPropertiesAndNormalizeStyle, () => {
+describe(filterCSSAndStyleProperties, () => {
   describe('animation config', () => {
     it('returns null if there is no animationName', () => {
       const style: CSSStyleDeclaration = {
@@ -203,7 +203,7 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
         animationDuration: 100,
       };
 
-      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
+      expect(filterCSSAndStyleProperties(style)).toEqual([
         null,
         expect.any(Object),
         expect.any(Object),
@@ -215,7 +215,7 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
         animationName: {},
         animationDuration: 100,
       };
-      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
+      expect(filterCSSAndStyleProperties(style)).toEqual([
         null,
         expect.any(Object),
         expect.any(Object),
@@ -227,7 +227,7 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
         animationName: css.keyframes({}),
         animationDuration: 100,
       };
-      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
+      expect(filterCSSAndStyleProperties(style)).toEqual([
         style,
         expect.any(Object),
         expect.any(Object),
@@ -242,7 +242,7 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
         }),
         animationDuration: 100,
       };
-      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
+      expect(filterCSSAndStyleProperties(style)).toEqual([
         style,
         expect.any(Object),
         expect.any(Object),
@@ -266,7 +266,7 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
           }),
           [key]: value,
         };
-        expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
+        expect(filterCSSAndStyleProperties(style)).toEqual([
           expect.objectContaining({ [key]: value }),
           null,
           {},
@@ -278,7 +278,7 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
   describe('transition config', () => {
     it('returns null if there are no transition properties', () => {
       const style: CSSStyleDeclaration = {};
-      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
+      expect(filterCSSAndStyleProperties(style)).toEqual([
         expect.any(Object),
         null,
         expect.any(Object),
@@ -293,12 +293,12 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
       const style2: CSSStyleDeclaration = {
         transitionDuration: 100,
       };
-      expect(filterCSSPropertiesAndNormalizeStyle(style1)).toEqual([
+      expect(filterCSSAndStyleProperties(style1)).toEqual([
         expect.any(Object),
         style1,
         expect.any(Object),
       ]);
-      expect(filterCSSPropertiesAndNormalizeStyle(style2)).toEqual([
+      expect(filterCSSAndStyleProperties(style2)).toEqual([
         expect.any(Object),
         style2,
         expect.any(Object),
@@ -316,7 +316,7 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
           transitionProperty: value as CSSTransitionProperty,
           [key]: value,
         };
-        expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
+        expect(filterCSSAndStyleProperties(style)).toEqual([
           null,
           expect.objectContaining({ [key]: value }),
           {},
@@ -338,7 +338,7 @@ describe(filterCSSPropertiesAndNormalizeStyle, () => {
           to: { opacity: 1 },
         }),
       };
-      expect(filterCSSPropertiesAndNormalizeStyle(style)).toEqual([
+      expect(filterCSSAndStyleProperties(style)).toEqual([
         expect.objectContaining({
           animationName: style.animationName,
           animationDuration: style.animationDuration,
