@@ -2,6 +2,7 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/CollectionUtils.h>
 #include <reanimated/Tools/FeaturesConfig.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <unordered_map>
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -586,6 +587,8 @@ void ReanimatedModuleProxy::performOperations() {
     // nothing to do
     return;
   }
+
+  ReanimatedSystraceSection s("performOperations");
 
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_.clear();
