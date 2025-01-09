@@ -63,7 +63,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   private ArrayList<UIThreadOperation> mOperations = new ArrayList<>();
   private @Nullable NodesManager mNodesManager;
   private final WorkletsModule mWorkletsModule;
-  private Runnable unsubscribe = () -> {};
+  private Runnable mUnsubscribe = () -> {};
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -82,7 +82,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
       UIManager uiManager = reactCtx.getFabricUIManager();
       if (uiManager instanceof FabricUIManager) {
         ((FabricUIManager) uiManager).addUIManagerEventListener(this);
-        unsubscribe = Utils.combineRunnables(unsubscribe, () -> ((FabricUIManager) uiManager).removeUIManagerEventListener(this));
+        mUnsubscribe = Utils.combineRunnables(mUnsubscribe, () -> ((FabricUIManager) uiManager).removeUIManagerEventListener(this));
       } else {
         throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
       }
@@ -90,10 +90,10 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
       UIManagerModule uiManager =
           Objects.requireNonNull(reactCtx.getNativeModule(UIManagerModule.class));
       uiManager.addUIManagerListener(this);
-      unsubscribe = Utils.combineRunnables(unsubscribe, () -> uiManager.removeUIManagerListener(this));
+      mUnsubscribe = Utils.combineRunnables(mUnsubscribe, () -> uiManager.removeUIManagerListener(this));
     }
     reactCtx.addLifecycleEventListener(this);
-    unsubscribe = Utils.combineRunnables(unsubscribe, () -> reactCtx.removeLifecycleEventListener(this));
+    mUnsubscribe = Utils.combineRunnables(mUnsubscribe, () -> reactCtx.removeLifecycleEventListener(this));
   }
 
   @Override
@@ -179,6 +179,6 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
       mNodesManager.invalidate();
     }
 
-    unsubscribe.run();
+    mUnsubscribe.run();
   }
 }

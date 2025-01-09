@@ -111,7 +111,7 @@ public class NodesManager implements EventDispatcherListener {
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
   private ReaCompatibility compatibility;
-  private @Nullable Runnable unsubscribe = null;
+  private @Nullable Runnable mUnsubscribe = null;
 
   public NativeProxy getNativeProxy() {
     return mNativeProxy;
@@ -136,9 +136,9 @@ public class NodesManager implements EventDispatcherListener {
       compatibility.unregisterFabricEventListener(this);
     }
 
-    if (unsubscribe != null) {
-      unsubscribe.run();
-      unsubscribe = null;
+    if (mUnsubscribe != null) {
+      mUnsubscribe.run();
+      mUnsubscribe = null;
     }
   }
 
@@ -197,7 +197,7 @@ public class NodesManager implements EventDispatcherListener {
       UIManagerHelper.getEventDispatcher(context, uiManagerType)
     );
     eventDispatcher.addListener(this);
-    unsubscribe = () -> eventDispatcher.removeListener(this);
+    mUnsubscribe = () -> eventDispatcher.removeListener(this);
 
     mAnimationManager = new AnimationsManager(mContext, mUIManager);
   }
