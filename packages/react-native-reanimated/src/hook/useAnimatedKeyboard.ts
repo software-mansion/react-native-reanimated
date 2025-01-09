@@ -21,8 +21,8 @@ import { KeyboardState } from '../commonTypes';
  */
 export function useAnimatedKeyboard(
   options: AnimatedKeyboardOptions = {
-    isStatusBarTranslucentAndroid: false,
-    isNavigationBarTranslucentAndroid: false,
+    isStatusBarTranslucentAndroid: undefined,
+    isNavigationBarTranslucentAndroid: undefined,
   }
 ): AnimatedKeyboardInfo {
   const ref = useRef<AnimatedKeyboardInfo | null>(null);
