@@ -39,22 +39,20 @@ concept can_construct_from_jsi =
     };
 
 /**
- * Checks whether a type has canConstruct(...) for a generic value
+ * Checks whether a type has canConstruct(...) for a a generic value
  */
-template <typename Type, typename Arg>
-static constexpr bool has_can_construct = requires(Arg &&value) {
-  { Type::canConstruct(std::forward<Arg>(value)) } -> std::same_as<bool>;
+template <typename Type, typename V>
+static constexpr bool has_can_construct = requires(V &&value) {
+  { Type::canConstruct(std::forward<V>(value)) } -> std::same_as<bool>;
 };
 
 /**
  * Checks whether a type has canConstruct(...) for jsi::Value
  */
-template <typename Type, typename Arg>
+template <typename Type, typename V>
 static constexpr bool has_can_construct_jsi =
-    requires(jsi::Runtime &rt, Arg &&value) {
-      {
-        Type::canConstruct(rt, std::forward<Arg>(value))
-      } -> std::same_as<bool>;
+    requires(jsi::Runtime &rt, V &&value) {
+      { Type::canConstruct(rt, std::forward<V>(value)) } -> std::same_as<bool>;
     };
 
 /**
@@ -69,6 +67,7 @@ class CSSValueVariant final : public CSSValue {
 
   /**
    * Construct from any T that is or can construct one of the AllowedTypes
+   * (chooses the first one that matches)
    */
   template <typename T>
   explicit CSSValueVariant(T &&value)
@@ -89,6 +88,7 @@ class CSSValueVariant final : public CSSValue {
 
   /**
    * Construct from jsi::Value if it matches any AllowedType's constructor
+   * (chooses the first one that matches)
    */
   CSSValueVariant(jsi::Runtime &rt, const jsi::Value &jsiValue)
     requires((can_construct_from_jsi<AllowedTypes> || ...))
@@ -203,7 +203,7 @@ class CSSValueVariant final : public CSSValue {
   }
 
   /**
-   * Tries to construct type with given value
+   * Tries to construct type from a given value
    */
   template <typename T>
   bool tryConstruct(T &&value) {
@@ -226,7 +226,7 @@ class CSSValueVariant final : public CSSValue {
   }
 
   /**
-   * Tries to construct type with given jsi::Value
+   * Tries to construct type from a given jsi::Value
    */
   bool tryConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
     auto tryOne = [&]<typename Type>() -> bool {

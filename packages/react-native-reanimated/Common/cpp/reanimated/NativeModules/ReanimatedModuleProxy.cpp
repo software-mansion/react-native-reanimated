@@ -5,11 +5,6 @@
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <unordered_map>
 
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
-#include <reanimated/Fabric/ShadowTreeCloner.h>
-#endif // RCT_NEW_ARCH_ENABLED
-
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/AsyncQueue.h>
@@ -46,8 +41,6 @@
 #define COPY_CAPTURE_WITH_THIS [=] // NOLINT (whitespace/braces)
 #endif // REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 202002L
 
-using namespace facebook;
-
 namespace reanimated {
 
 ReanimatedModuleProxy::ReanimatedModuleProxy(
@@ -76,8 +69,13 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef RCT_NEW_ARCH_ENABLED
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
-      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
+#ifdef ANDROID
+      updatesRegistryManager_(
+          std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
+#else
+      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
+#endif
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
@@ -567,8 +565,7 @@ void ReanimatedModuleProxy::updateCSSAnimations(
   maybeRunCSSLoop();
 }
 
-void ReanimatedModuleProxy::unregisterCSSAnimations(
-    const jsi::Value &viewTag) {
+void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
   cssAnimationsRegistry_->remove(viewTag.asNumber());
 }
 
@@ -662,6 +659,7 @@ bool ReanimatedModuleProxy::handleEvent(
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
+
 bool ReanimatedModuleProxy::handleRawEvent(
     const RawEvent &rawEvent,
     double currentTime) {
@@ -708,7 +706,11 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
     *cssLoop = [this, cssLoop](const double timestampMs) {
       shouldUpdateCssAnimations_ = true;
       if (cssAnimationsRegistry_->hasUpdates() ||
-          cssTransitionsRegistry_->hasUpdates()) {
+          cssTransitionsRegistry_->hasUpdates()
+#ifdef ANDROID
+          || updatesRegistryManager_->hasPropsToRevert()
+#endif
+      ) {
         jsi::Runtime &rt =
             workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
         requestRender_(*cssLoop, rt);
@@ -770,14 +772,22 @@ void ReanimatedModuleProxy::performOperations() {
   }
 
   bool hasLayoutUpdates = false;
-  for (const auto &[shadowNode, props] : updatesBatch) {
-    if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
-      hasLayoutUpdates = true;
-      break;
+#ifdef ANDROID
+  bool hasPropsToRevert = updatesRegistryManager_->hasPropsToRevert();
+#else
+  bool hasPropsToRevert = false;
+#endif
+
+  if (!hasPropsToRevert) {
+    for (const auto &[shadowNode, props] : updatesBatch) {
+      if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
+        hasLayoutUpdates = true;
+        break;
+      }
     }
   }
 
-  if (!hasLayoutUpdates) {
+  if (!hasLayoutUpdates && !hasPropsToRevert) {
     // If there's no layout props to be updated, we can apply the updates
     // directly onto the components and skip the commit.
     for (const auto &[shadowNode, props] : updatesBatch) {
@@ -796,10 +806,25 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
+  commitUpdates(rt, updatesBatch);
+
+  // Clear the entire cache after the commit
+  // (we don't know if the view is updated from outside of Reanimated
+  // so we have to clear the entire cache)
+  viewStylesRepository_->clearNodesCache();
+}
+
+void ReanimatedModuleProxy::commitUpdates(
+    jsi::Runtime &rt,
+    const UpdatesBatch &updatesBatch) {
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
   std::unordered_map<SurfaceId, PropsMap> propsMapBySurface;
+
+#ifdef ANDROID
+  updatesRegistryManager_->collectPropsToRevertBySurface(propsMapBySurface);
+#endif
 
   for (auto const &[shadowNode, props] : updatesBatch) {
     SurfaceId surfaceId = shadowNode->getSurfaceId();
@@ -810,7 +835,7 @@ void ReanimatedModuleProxy::performOperations() {
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
-      shadowTree.commit(
+      const auto status = shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode)
               -> RootShadowNode::Unshared {
             if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -833,6 +858,12 @@ void ReanimatedModuleProxy::performOperations() {
           {/* .enableStateReconciliation = */
            false,
            /* .mountSynchronously = */ true});
+
+#ifdef ANDROID
+      if (status == ShadowTree::CommitStatus::Succeeded) {
+        updatesRegistryManager_->clearPropsToRevert(surfaceId);
+      }
+#endif
     });
 
     // Clear the entire cache after the commit

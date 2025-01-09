@@ -36,14 +36,11 @@ function normalizeColor(value: string | number) {
     if (value === 'transparent') {
       normalizedColor = 'transparent';
     } else {
-      normalizedColor = processColor(value, false);
+      normalizedColor = processColor(value);
     }
   } else {
     // case of number format 0xRRGGBBAA format needs to be re-formatted
-    normalizedColor = processColor(
-      `#${value.toString(16).padStart(8, '0')}`,
-      false
-    );
+    normalizedColor = processColor(`#${value.toString(16).padStart(8, '0')}`);
   }
 
   if (!normalizedColor && normalizedColor !== 0) {

@@ -6,6 +6,7 @@
 #include <react/renderer/uimanager/UIManager.h>
 
 #include <memory>
+#include <string>
 
 namespace reanimated {
 

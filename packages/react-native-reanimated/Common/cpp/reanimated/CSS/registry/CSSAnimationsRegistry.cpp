@@ -15,7 +15,7 @@ void CSSAnimationsRegistry::set(
   std::lock_guard<std::mutex> lock{mutex_};
 
   const auto viewTag = shadowNode->getTag();
-  clearViewAnimations(viewTag);
+  removeViewAnimations(viewTag);
 
   const auto &storedAnimations = registry_[viewTag] = std::move(animations);
 
@@ -28,7 +28,10 @@ void CSSAnimationsRegistry::set(
 void CSSAnimationsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
 
-  clearViewAnimations(viewTag);
+  removeViewAnimations(viewTag);
+  removeFromUpdatesRegistry(viewTag);
+
+  registry_.erase(viewTag);
 }
 
 void CSSAnimationsRegistry::updateSettings(
@@ -140,8 +143,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
   }
 
   if (hasUpdates) {
-    updatesBatch_.emplace_back(
-        shadowNode, std::make_unique<jsi::Value>(rt, result));
+    addUpdatesToBatch(rt, shadowNode, jsi::Value(rt, result));
   }
 }
 
@@ -169,7 +171,7 @@ void CSSAnimationsRegistry::scheduleOrActivateAnimation(
   }
 }
 
-void CSSAnimationsRegistry::clearViewAnimations(const Tag viewTag) {
+void CSSAnimationsRegistry::removeViewAnimations(const Tag viewTag) {
   const auto it = registry_.find(viewTag);
   if (it == registry_.end()) {
     return;
@@ -179,7 +181,6 @@ void CSSAnimationsRegistry::clearViewAnimations(const Tag viewTag) {
     delayedAnimationsManager_.remove(animation->getId());
   }
   runningAnimationsMap_.erase(viewTag);
-  updatesRegistry_.erase(viewTag);
 }
 
 void CSSAnimationsRegistry::applyViewAnimationsStyle(
@@ -189,11 +190,11 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
   const auto it = registry_.find(viewTag);
   // Remove the style from the registry if there are no animations for the view
   if (it == registry_.end() || it->second.empty()) {
-    updatesRegistry_.erase(viewTag);
+    removeFromUpdatesRegistry(viewTag);
     return;
   }
 
-  folly::dynamic updatedStyle = folly::dynamic::object();
+  auto updatedStyle = jsi::Object(rt);
   ShadowNode::Shared shadowNode = nullptr;
 
   for (const auto &animation : it->second) {
@@ -212,18 +213,15 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
       style = animation->getCurrentInterpolationStyle(rt);
     }
 
-    if (!style.isUndefined()) {
+    if (!shadowNode) {
       shadowNode = animation->getShadowNode();
-      updatedStyle.update(dynamicFromValue(rt, style));
+    }
+    if (style.isObject()) {
+      updateJSIObject(rt, updatedStyle, style.asObject(rt));
     }
   }
 
-  if (updatedStyle.empty()) {
-    updatesRegistry_.erase(viewTag);
-  } else {
-    updatesRegistry_[viewTag] =
-        std::make_pair(shadowNode, std::move(updatedStyle));
-  }
+  setInUpdatesRegistry(rt, shadowNode, jsi::Value(rt, updatedStyle));
 }
 
 void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {

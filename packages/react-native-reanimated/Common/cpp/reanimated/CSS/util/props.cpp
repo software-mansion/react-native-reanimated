@@ -318,6 +318,20 @@ ChangedProps getChangedProps(
       std::move(propNamesVec));
 }
 
+void updateJSIObject(
+    jsi::Runtime &rt,
+    const jsi::Object &target,
+    const jsi::Object &source) {
+  const auto propertyNames = source.getPropertyNames(rt);
+  const auto propertiesCount = propertyNames.size(rt);
+
+  for (size_t i = 0; i < propertiesCount; ++i) {
+    const auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt);
+    const auto propertyValue = source.getProperty(rt, propertyName);
+    target.setProperty(rt, propertyName, propertyValue);
+  }
+}
+
 } // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED

@@ -7,6 +7,9 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
+
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
@@ -36,6 +39,8 @@
 #include <vector>
 
 namespace reanimated {
+
+using namespace facebook;
 
 class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
  public:
@@ -199,6 +204,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   void commonInit(const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
+  void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
 
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
@@ -227,8 +233,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   bool shouldUpdateCssAnimations_{true};
 
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
-  const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
+  const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;

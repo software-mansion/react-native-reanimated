@@ -31,11 +31,17 @@ ChangedProps getChangedProps(
     const jsi::Value &newProps,
     bool allowDiscrete,
     const std::optional<PropertyNames> &propertyNames);
+
 ChangedProps getChangedProps(
     jsi::Runtime &rt,
     const jsi::Value &oldProps,
     const jsi::Value &newProps,
     bool allowDiscrete);
+
+void updateJSIObject(
+    jsi::Runtime &rt,
+    const jsi::Object &target,
+    const jsi::Object &source);
 
 }; // namespace reanimated
 

@@ -26,11 +26,17 @@ CSSColor::CSSColor(const ColorChannels &colorChannels)
 CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
     : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
   if (jsiValue.isNumber()) {
-    const auto color = static_cast<unsigned>(jsiValue.asNumber());
-    channels[0] = (color << 8) >> 24; // Red
-    channels[1] = (color << 16) >> 24; // Green
-    channels[2] = (color << 24) >> 24; // Blue
-    channels[3] = color >> 24; // Alpha
+#ifdef ANDROID
+    // Android uses signed 32-bit integers for colors
+    auto color = static_cast<int32_t>(jsiValue.asNumber());
+#else
+    // iOS uses unsigned 32-bit integers for colors
+    auto color = static_cast<unsigned>(jsiValue.asNumber());
+#endif
+    channels[0] = (color >> 16) & 0xFF; // Red
+    channels[1] = (color >> 8) & 0xFF; // Green
+    channels[2] = color & 0xFF; // Blue
+    channels[3] = (color >> 24) & 0xFF; // Alpha
     colorType = ColorType::Rgba;
   } else if (
       jsiValue.isUndefined() ||
