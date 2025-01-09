@@ -132,7 +132,7 @@ public class NodesManager implements EventDispatcherListener {
     if (mNativeProxy != null) {
       mNativeProxy = null;
     }
-    
+
     if (compatibility != null) {
       compatibility.unregisterFabricEventListener(this);
     }
@@ -194,9 +194,8 @@ public class NodesManager implements EventDispatcherListener {
     // Events are handled in the native modules thread in the `onEventDispatch()` method.
     // This method indirectly uses `mChoreographerCallback` which was created after event
     // registration, creating race condition
-    EventDispatcher eventDispatcher = Objects.requireNonNull(
-      UIManagerHelper.getEventDispatcher(context, uiManagerType)
-    );
+    EventDispatcher eventDispatcher =
+        Objects.requireNonNull(UIManagerHelper.getEventDispatcher(context, uiManagerType));
     eventDispatcher.addListener(this);
     mUnsubscribe = () -> eventDispatcher.removeListener(this);
 

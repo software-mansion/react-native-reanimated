@@ -50,7 +50,7 @@ public class Utils {
   public static Runnable combineRunnables(final Runnable... runnables) {
     return new Runnable() {
       public void run() {
-        for(Runnable r: runnables) {
+        for (Runnable r : runnables) {
           r.run();
         }
       }

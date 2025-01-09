@@ -82,17 +82,22 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
       UIManager uiManager = reactCtx.getFabricUIManager();
       if (uiManager instanceof FabricUIManager) {
         ((FabricUIManager) uiManager).addUIManagerEventListener(this);
-        mUnsubscribe = Utils.combineRunnables(mUnsubscribe, () -> ((FabricUIManager) uiManager).removeUIManagerEventListener(this));
+        mUnsubscribe =
+            Utils.combineRunnables(
+                mUnsubscribe,
+                () -> ((FabricUIManager) uiManager).removeUIManagerEventListener(this));
       } else {
         throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
       }
     } else {
       UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
       uiManager.addUIManagerListener(this);
-      mUnsubscribe = Utils.combineRunnables(mUnsubscribe, () -> uiManager.removeUIManagerListener(this));
+      mUnsubscribe =
+          Utils.combineRunnables(mUnsubscribe, () -> uiManager.removeUIManagerListener(this));
     }
     reactCtx.addLifecycleEventListener(this);
-    mUnsubscribe = Utils.combineRunnables(mUnsubscribe, () -> reactCtx.removeLifecycleEventListener(this));
+    mUnsubscribe =
+        Utils.combineRunnables(mUnsubscribe, () -> reactCtx.removeLifecycleEventListener(this));
   }
 
   @Override
