@@ -770,10 +770,7 @@ void NativeReanimatedModule::performOperations() {
         },
         {/* .enableStateReconciliation = */
          false,
-         /* .mountSynchronously = */ true,
-         /* .shouldYield = */ [this]() {
-           return propsRegistry_->shouldReanimatedSkipCommit();
-         }});
+         /* .mountSynchronously = */ true});
   });
 }
 
