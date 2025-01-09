@@ -252,9 +252,11 @@ ChangedProps processPropertyChanges(
 }
 
 bool isDiscreteProperty(const std::string &propName) {
-  const auto &it = PROPERTY_INTERPOLATOR_FACTORIES.find(propName);
-  return it != PROPERTY_INTERPOLATOR_FACTORIES.end() &&
-      it->second->getType() == PropertyType::Discrete;
+  const auto it = PROPERTY_INTERPOLATORS_CONFIG.find(propName);
+  if (it == PROPERTY_INTERPOLATORS_CONFIG.end()) {
+    return false;
+  }
+  return it->second->isDiscreteProperty();
 }
 
 ChangedProps getChangedProps(

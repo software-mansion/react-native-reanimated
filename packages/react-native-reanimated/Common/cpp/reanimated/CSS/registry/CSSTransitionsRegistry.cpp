@@ -1,7 +1,11 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 
+#include <worklets/Tools/JSISerializer.h>
+
 namespace reanimated {
+
+using namespace worklets;
 
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,

@@ -5,6 +5,7 @@
 #include <reanimated/CSS/common/definitions.h>
 #include <reanimated/CSS/common/vectors.h>
 
+#include <folly/dynamic.h>
 #include <string>
 #include <utility>
 
@@ -56,6 +57,7 @@ class TransformMatrix {
 
   std::string toString() const;
   jsi::Value toJSIValue(jsi::Runtime &rt) const;
+  folly::dynamic toDynamic() const;
 
   bool isSingular() const;
   bool normalize();

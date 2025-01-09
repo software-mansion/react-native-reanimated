@@ -3,7 +3,7 @@
 
 #include <reanimated/CSS/config/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
-#include <reanimated/CSS/interpolation/TransitionStyleInterpolator.h>
+#include <reanimated/CSS/interpolation/styles/TransitionStyleInterpolator.h>
 #include <reanimated/CSS/progress/TransitionProgressProvider.h>
 
 #include <memory>

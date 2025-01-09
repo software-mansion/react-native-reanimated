@@ -12,19 +12,17 @@ import {
 } from '../style';
 
 describe(normalizeStyle, () => {
-  it('converts all "auto" values to undefined', () => {
+  it("doesn't include undefined values", () => {
     const style: PlainStyle = {
-      width: 'auto',
+      width: undefined,
       margin: 'auto',
       borderRadius: 10,
-      flexDirection: 'row',
+      flexDirection: undefined,
     };
 
     expect(normalizeStyle(style)).toEqual({
-      width: undefined,
-      margin: undefined,
+      margin: 'auto',
       borderRadius: 10,
-      flexDirection: 'row',
     });
   });
 
@@ -164,7 +162,7 @@ describe(normalizeStyle, () => {
     it('normalizes all props', () => {
       const style: PlainStyle = {
         width: 'auto',
-        margin: 'auto',
+        margin: undefined,
         backgroundColor: 'red',
         transform: 'translate(100px, 20%) translateY(50%) scale(2) skew(0)',
         transformOrigin: 'top right',
@@ -174,8 +172,7 @@ describe(normalizeStyle, () => {
       };
 
       expect(normalizeStyle(style)).toEqual({
-        width: undefined,
-        margin: undefined,
+        width: 'auto',
         backgroundColor: 0xffff0000, // ARGB
         transform: [
           { translateX: 100 },

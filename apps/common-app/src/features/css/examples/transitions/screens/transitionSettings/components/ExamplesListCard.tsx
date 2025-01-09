@@ -189,12 +189,14 @@ const Example = memo(
       [handlePress]
     );
 
+    const { label, ...rest } = item;
+
     return (
       <Animated.View layout={LinearTransition} style={{ overflow: 'hidden' }}>
         <View style={styles.exampleRow}>
           <View style={styles.labelWrapper}>
             <Text style={styles.label} variant="label2">
-              {item.label}
+              {label}
             </Text>
           </View>
           <View key={key} style={styles.example}>
@@ -202,7 +204,7 @@ const Example = memo(
               {
                 transitionProperty: 'all',
                 ...transitionProperties,
-                ...item,
+                ...rest,
               },
               currentTransitionStyle
             )}

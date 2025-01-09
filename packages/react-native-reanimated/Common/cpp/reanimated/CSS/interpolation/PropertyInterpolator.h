@@ -2,20 +2,16 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/definitions.h>
+#include <reanimated/CSS/common/values/CSSValue.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace reanimated {
-
-enum class PropertyType {
-  Continuous,
-  Discrete,
-  Object,
-};
 
 class PropertyInterpolator {
  public:
@@ -63,29 +59,27 @@ class PropertyInterpolator {
 
 class PropertyInterpolatorFactory {
  public:
-  explicit PropertyInterpolatorFactory(PropertyType type);
+  PropertyInterpolatorFactory() = default;
   virtual ~PropertyInterpolatorFactory() = default;
+
+  virtual bool isDiscreteProperty() const;
 
   virtual std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       const = 0;
-
-  virtual PropertyType getType() const;
-
-  template <typename T>
-  static std::shared_ptr<PropertyInterpolatorFactory> create(PropertyType type);
-
- private:
-  PropertyType type_;
 };
 
-using PropertiesInterpolators =
+using PropertyInterpolatorsRecord =
     std::unordered_map<std::string, std::shared_ptr<PropertyInterpolator>>;
-
-using PropertyInterpolatorFactories = std::
+using InterpolatorFactoriesRecord = std::
     unordered_map<std::string, std::shared_ptr<PropertyInterpolatorFactory>>;
+
+using PropertyInterpolatorsArray =
+    std::vector<std::shared_ptr<PropertyInterpolator>>;
+using InterpolatorFactoriesArray =
+    std::vector<std::shared_ptr<PropertyInterpolatorFactory>>;
 
 } // namespace reanimated
 
