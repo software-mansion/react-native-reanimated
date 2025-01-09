@@ -751,6 +751,11 @@ void ReanimatedModuleProxy::performOperations() {
     }
 
     shouldUpdateCssAnimations_ = false;
+
+    if (updatesBatch.size() > 0 &&
+        updatesRegistryManager_->shouldReanimatedSkipCommit()) {
+      updatesRegistryManager_->pleaseCommitAfterPause();
+    }
   }
 
   ReanimatedSystraceSection s("performOperations");
