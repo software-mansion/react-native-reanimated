@@ -93,7 +93,7 @@ export function registerLoggerConfig(config: LoggerConfigInternal) {
  */
 export function replaceLoggerImplementation(logFunction: LogFunction) {
   'worklet';
-  registerLoggerConfig({ ...__reanimatedLoggerConfig, logFunction });
+  registerLoggerConfig({ ...global.__reanimatedLoggerConfig, logFunction });
 }
 
 /**
@@ -108,7 +108,7 @@ export function replaceLoggerImplementation(logFunction: LogFunction) {
 export function updateLoggerConfig(options?: Partial<LoggerConfig>) {
   'worklet';
   registerLoggerConfig({
-    ...__reanimatedLoggerConfig,
+    ...global.__reanimatedLoggerConfig,
     // Don't reuse previous level and strict values from the global config
     level: options?.level ?? DEFAULT_LOGGER_CONFIG.level,
     strict: options?.strict ?? DEFAULT_LOGGER_CONFIG.strict,
@@ -125,7 +125,7 @@ function handleLog(
   options: LogOptions
 ) {
   'worklet';
-  const config = __reanimatedLoggerConfig;
+  const config = global.__reanimatedLoggerConfig;
   if (
     // Don't log if the log is marked as strict-only and the config doesn't
     // enable strict logging

@@ -2,6 +2,7 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/CollectionUtils.h>
 #include <reanimated/Tools/FeaturesConfig.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <unordered_map>
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -22,7 +23,6 @@
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
-#include <react/utils/CoreFeatures.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <functional>
@@ -588,6 +588,8 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
+  ReanimatedSystraceSection s("performOperations");
+
   auto copiedOperationsQueue = std::move(operationsInBatch_);
   operationsInBatch_.clear();
 
@@ -700,10 +702,7 @@ void ReanimatedModuleProxy::performOperations() {
           },
           {/* .enableStateReconciliation = */
            false,
-           /* .mountSynchronously = */ true,
-           /* .shouldYield = */ [this]() {
-             return propsRegistry_->shouldReanimatedSkipCommit();
-           }});
+           /* .mountSynchronously = */ true});
     });
   }
 }
