@@ -58,7 +58,7 @@ public class ReanimatedPackage extends TurboReactPackage implements ReactPackage
           new ReactModuleInfo(
               reactModule.name(),
               moduleClass.getName(),
-              true,
+              true, // override UIManagerModule
               reactModule.needsEagerInit(),
               reactModule.isCxxModule(),
               BuildConfig.IS_NEW_ARCHITECTURE_ENABLED));
