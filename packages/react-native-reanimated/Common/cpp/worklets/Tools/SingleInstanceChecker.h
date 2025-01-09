@@ -53,7 +53,7 @@ SingleInstanceChecker<T>::SingleInstanceChecker() {
       __cxxabiv1::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
 
   assertWithMessage(
-      instanceCount_ < 1,
+      instanceCount_ == 0,
       "[Reanimated] More than one instance of " + className +
           " present. This may indicate a memory leak due to a retain cycle.");
 
