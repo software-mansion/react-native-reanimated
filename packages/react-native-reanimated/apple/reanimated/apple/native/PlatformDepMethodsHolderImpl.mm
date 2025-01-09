@@ -10,9 +10,7 @@
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/NativeMethods.h>
 #import <reanimated/apple/native/NativeProxy.h>
-#import <reanimated/apple/native/REAIOSUIScheduler.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
-#import <reanimated/apple/native/REAMessageThread.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
 #ifndef NDEBUG
@@ -20,6 +18,7 @@
 #endif
 
 #import <worklets/WorkletRuntime/ReanimatedRuntime.h>
+#import <worklets/apple/WorkletsMessageThread.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTBridge+Private.h>
@@ -70,7 +69,7 @@ SetGestureStateFunction makeSetGestureStateFunction(RCTBridge *bridge)
   return setGestureStateFunction;
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
 SetGestureStateFunction makeSetGestureStateFunctionBridgeless(RCTModuleRegistry *moduleRegistry)
 {
   id<RNGestureHandlerStateManager> gestureHandlerStateManager = nil;
@@ -82,7 +81,7 @@ SetGestureStateFunction makeSetGestureStateFunctionBridgeless(RCTModuleRegistry 
   };
   return setGestureStateFunction;
 }
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#endif // RCT_NEW_ARCH_ENABLED
 
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 {
@@ -379,7 +378,7 @@ makePlatformDepMethodsHolder(RCTBridge *bridge, REANodesManager *nodesManager, R
   return platformDepMethodsHolder;
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
 PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
     RCTModuleRegistry *moduleRegistry,
     REANodesManager *nodesManager,
@@ -426,6 +425,6 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
   };
   return platformDepMethodsHolder;
 }
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#endif // RCT_NEW_ARCH_ENABLED
 
 } // namespace reanimated

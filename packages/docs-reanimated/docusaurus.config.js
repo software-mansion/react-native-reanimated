@@ -114,10 +114,12 @@ const config = {
           },
         ],
       },
+      // State of React Native survey banner
       announcementBar: {
+        id: 'state-of-react-native-2024',
         content: ' ',
-        backgroundColor: '#03c',
-        textColor: '#fff',
+        backgroundColor: '#b1dfd0',
+        textColor: '#001a72',
       },
       footer: {
         style: 'light',

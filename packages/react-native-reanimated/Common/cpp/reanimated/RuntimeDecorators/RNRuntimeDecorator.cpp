@@ -5,10 +5,8 @@ namespace reanimated {
 
 void RNRuntimeDecorator::decorate(
     jsi::Runtime &rnRuntime,
-    const std::shared_ptr<NativeReanimatedModule> &nativeReanimatedModule) {
-  rnRuntime.global().setProperty(rnRuntime, "_WORKLET", false);
-
-  jsi::Runtime &uiRuntime = nativeReanimatedModule->getUIRuntime();
+    jsi::Runtime &uiRuntime,
+    const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy) {
   auto workletRuntimeValue =
       rnRuntime.global()
           .getPropertyAsObject(rnRuntime, "ArrayBuffer")
@@ -21,30 +19,23 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(
       rnRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
-#ifdef RCT_NEW_ARCH_ENABLED
-  constexpr auto isFabric = true;
-#else
-  constexpr auto isFabric = false;
-#endif // RCT_NEW_ARCH_ENABLED
-  rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", isFabric);
-
   rnRuntime.global().setProperty(
-      rnRuntime, "_IS_BRIDGELESS", nativeReanimatedModule->isBridgeless());
+      rnRuntime, "_IS_BRIDGELESS", reanimatedModuleProxy->isBridgeless());
 
 #ifndef NDEBUG
-  checkJSVersion(rnRuntime, nativeReanimatedModule->getJSLogger());
+  checkJSVersion(rnRuntime, reanimatedModuleProxy->getJSLogger());
 #endif // NDEBUG
   injectReanimatedCppVersion(rnRuntime);
 
   rnRuntime.global().setProperty(
       rnRuntime,
       "_REANIMATED_IS_REDUCED_MOTION",
-      nativeReanimatedModule->isReducedMotion());
+      reanimatedModuleProxy->isReducedMotion());
 
   rnRuntime.global().setProperty(
       rnRuntime,
       "__reanimatedModuleProxy",
-      jsi::Object::createFromHostObject(rnRuntime, nativeReanimatedModule));
+      jsi::Object::createFromHostObject(rnRuntime, reanimatedModuleProxy));
 }
 
 } // namespace reanimated

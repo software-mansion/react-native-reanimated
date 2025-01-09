@@ -1,18 +1,13 @@
 #pragma once
 
-// JS_RUNTIME_HERMES is only set on Android so we have to check __has_include
-// on iOS.
-#if __APPLE__ &&    \
-    (__has_include( \
-        <reacthermes/HermesExecutorFactory.h>) || __has_include(<hermes/hermes.h>))
-#define JS_RUNTIME_HERMES 1
-#endif
+#include <worklets/Tools/Defs.h>
 
 // Only include this file in Hermes-enabled builds as some platforms (like tvOS)
 // don't support hermes and it causes the compilation to fail.
 #if JS_RUNTIME_HERMES
 
 #include <cxxreact/MessageQueueThread.h>
+#include <hermes/hermes.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
 
@@ -21,19 +16,8 @@
 #include <string>
 #include <thread>
 
-#if __has_include(<reacthermes/HermesExecutorFactory.h>)
-#include <reacthermes/HermesExecutorFactory.h>
-#else // __has_include(<hermes/hermes.h>) || ANDROID
-#include <hermes/hermes.h>
-#endif
-
 #if HERMES_ENABLE_DEBUGGER
-#if REACT_NATIVE_MINOR_VERSION >= 73
 #include <hermes/inspector-modern/chrome/Registration.h>
-#else
-#include <hermes/inspector/RuntimeAdapter.h>
-#include <hermes/inspector/chrome/Registration.h>
-#endif
 #endif // HERMES_ENABLE_DEBUGGER
 
 namespace worklets {
@@ -41,11 +25,7 @@ namespace worklets {
 using namespace facebook;
 using namespace react;
 #if HERMES_ENABLE_DEBUGGER
-#if REACT_NATIVE_MINOR_VERSION >= 73
 using namespace facebook::hermes::inspector_modern;
-#else
-using namespace facebook::hermes::inspector;
-#endif
 #endif // HERMES_ENABLE_DEBUGGER
 
 // ReentrancyCheck is copied from React Native

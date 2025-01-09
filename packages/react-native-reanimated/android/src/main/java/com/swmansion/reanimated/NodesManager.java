@@ -34,6 +34,7 @@ import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
+import com.swmansion.worklets.WorkletsModule;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -93,6 +94,7 @@ public class NodesManager implements EventDispatcherListener {
     void onAnimationFrame(double timestampMs);
   }
 
+  private final WorkletsModule mWorkletsModule;
   private final AnimationsManager mAnimationManager;
   private final UIImplementation mUIImplementation;
   private final DeviceEventManagerModule.RCTDeviceEventEmitter mEventEmitter;
@@ -127,7 +129,6 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (mNativeProxy != null) {
-      mNativeProxy.invalidate();
       mNativeProxy = null;
     }
     
@@ -141,10 +142,9 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
-  public void initWithContext(
-      ReactApplicationContext reactApplicationContext, String valueUnpackerCode) {
-    mNativeProxy = new NativeProxy(reactApplicationContext, valueUnpackerCode);
-    mAnimationManager.setAndroidUIScheduler(getNativeProxy().getAndroidUIScheduler());
+  public void initWithContext(ReactApplicationContext reactApplicationContext) {
+    mNativeProxy = new NativeProxy(reactApplicationContext, mWorkletsModule);
+    mAnimationManager.setAndroidUIScheduler(mWorkletsModule.getAndroidUIScheduler());
     compatibility = new ReaCompatibility(reactApplicationContext);
     compatibility.registerFabricEventListener(this);
   }
@@ -162,8 +162,9 @@ public class NodesManager implements EventDispatcherListener {
   private Queue<NativeUpdateOperation> mOperationsInBatch = new LinkedList<>();
   private boolean mTryRunBatchUpdatesSynchronously = false;
 
-  public NodesManager(ReactContext context) {
+  public NodesManager(ReactContext context, WorkletsModule workletsModule) {
     mContext = context;
+    mWorkletsModule = workletsModule;
     int uiManagerType =
         BuildConfig.IS_NEW_ARCHITECTURE_ENABLED ? UIManagerType.FABRIC : UIManagerType.DEFAULT;
     mUIManager = UIManagerHelper.getUIManager(context, uiManagerType);

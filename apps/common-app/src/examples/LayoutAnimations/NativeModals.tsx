@@ -66,7 +66,7 @@ const App = ({
       </Pressable>
       <Pressable
         style={[styles.button, styles.buttonOpen]}
-        onPress={() => navigation.navigate('Home')}>
+        onPress={() => navigation.popTo('Home')}>
         <Text style={styles.textStyle}>Go back</Text>
       </Pressable>
     </View>

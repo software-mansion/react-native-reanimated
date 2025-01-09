@@ -12,10 +12,9 @@ import type {
   ShareableRef,
   Value3D,
   ValueRotation,
+  WorkletFunction,
 } from '../../commonTypes';
 import type { WebSensor } from './WebSensor';
-import { mockedRequestAnimationFrame } from '../../mockedRequestAnimationFrame';
-import type { WorkletRuntime } from '../../runtimes';
 import { logger } from '../../logger';
 import { ReanimatedError } from '../../errors';
 import { WorkletsModule } from '../../worklets';
@@ -23,14 +22,6 @@ import { WorkletsModule } from '../../worklets';
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();
 }
-
-// In Node.js environments (like when static rendering with Expo Router)
-// requestAnimationFrame is unavailable, so we use our mock.
-// It also has to be mocked for Jest purposes (see `initializeUIRuntime`).
-const requestAnimationFrameImpl =
-  isJest() || !globalThis.requestAnimationFrame
-    ? mockedRequestAnimationFrame
-    : globalThis.requestAnimationFrame;
 
 class JSReanimated implements IReanimatedModule {
   /**
@@ -41,32 +32,6 @@ class JSReanimated implements IReanimatedModule {
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
-
-  makeShareableClone<T>(): ShareableRef<T> {
-    throw new ReanimatedError(
-      'makeShareableClone should never be called in JSReanimated.'
-    );
-  }
-
-  scheduleOnUI<T>(worklet: ShareableRef<T>) {
-    // @ts-ignore web implementation has still not been updated after the rewrite, this will be addressed once the web implementation updates are ready
-    requestAnimationFrameImpl(worklet);
-  }
-
-  createWorkletRuntime(
-    _name: string,
-    _initializer: ShareableRef<() => void>
-  ): WorkletRuntime {
-    throw new ReanimatedError(
-      'createWorkletRuntime is not available in JSReanimated.'
-    );
-  }
-
-  scheduleOnRuntime() {
-    throw new ReanimatedError(
-      'scheduleOnRuntime is not available in JSReanimated.'
-    );
-  }
 
   registerEventHandler<T>(
     _eventHandler: ShareableRef<T>,
@@ -216,7 +181,7 @@ class JSReanimated implements IReanimatedModule {
     }
   }
 
-  subscribeForKeyboardEvents(_: ShareableRef<number>): number {
+  subscribeForKeyboardEvents(_: ShareableRef<WorkletFunction>): number {
     if (isWeb()) {
       logger.warn('useAnimatedKeyboard is not available on web yet.');
     } else if (isJest()) {
@@ -296,12 +261,6 @@ class JSReanimated implements IReanimatedModule {
   configureProps() {
     throw new ReanimatedError(
       'configureProps is not available in JSReanimated.'
-    );
-  }
-
-  executeOnUIRuntimeSync<T, R>(_shareable: ShareableRef<T>): R {
-    throw new ReanimatedError(
-      '`executeOnUIRuntimeSync` is not available in JSReanimated.'
     );
   }
 }

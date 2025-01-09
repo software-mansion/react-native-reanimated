@@ -12,22 +12,12 @@
 #include <string>
 #include <utility>
 
-#if __has_include(<reacthermes/HermesExecutorFactory.h>)
-#include <reacthermes/HermesExecutorFactory.h>
-#else // __has_include(<hermes/hermes.h>) || ANDROID
-#include <hermes/hermes.h>
-#endif
-
 namespace worklets {
 
 using namespace facebook;
 using namespace react;
 #if HERMES_ENABLE_DEBUGGER
-#if REACT_NATIVE_MINOR_VERSION >= 73
 using namespace facebook::hermes::inspector_modern;
-#else
-using namespace facebook::hermes::inspector;
-#endif
 #endif // HERMES_ENABLE_DEBUGGER
 
 #if HERMES_ENABLE_DEBUGGER

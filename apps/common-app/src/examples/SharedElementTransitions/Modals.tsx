@@ -100,7 +100,7 @@ function Screen2({
   const { title, sharedTransitionTag } = route.params;
 
   const goNext = () => {
-    navigation.navigate('Screen1', {
+    navigation.popTo('Screen1', {
       title,
       sharedTransitionTag,
     });
