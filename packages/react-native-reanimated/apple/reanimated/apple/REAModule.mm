@@ -1,6 +1,9 @@
 #import <React/RCTBridge+Private.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#if REACT_NATIVE_MINOR_VERSION >= 77
+#import <React/RCTCallInvoker.h>
+#endif // REACT_NATIVE_MINOR_VERSION >= 77
 #import <React/RCTFabricSurface.h>
 #import <React/RCTScheduler.h>
 #import <React/RCTSurface.h>
@@ -64,9 +67,11 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#if REACT_NATIVE_MINOR_VERSION >= 77 && defined(RCT_NEW_ARCH_ENABLED)
+@synthesize callInvoker = _callInvoker;
+#elif REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 @synthesize runtimeExecutor = _runtimeExecutor;
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#endif
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
@@ -285,6 +290,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
 #if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
     RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
     auto &rnRuntime = *(jsi::Runtime *)cxxBridge.runtime;
+#if REACT_NATIVE_MINOR_VERSION >= 77
+    auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
+        _moduleRegistry, rnRuntime, std::string([valueUnpackerCode UTF8String]), _callInvoker.callInvoker);
+#else
     auto executorFunction = ([executor = _runtimeExecutor](std::function<void(jsi::Runtime & runtime)> &&callback) {
       // Convert to Objective-C block so it can be captured properly.
       __block auto callbackBlock = callback;
@@ -295,6 +304,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
     });
     auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
         _moduleRegistry, rnRuntime, std::string([valueUnpackerCode UTF8String]), executorFunction);
+#endif
     [self attachReactEventListener];
     [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
 #else // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)

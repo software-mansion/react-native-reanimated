@@ -103,7 +103,12 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
     const std::string &valueUnpackerCode,
-    RuntimeExecutor runtimeExecutor)
+#if REACT_NATIVE_MINOR_VERSION >= 77
+    const std::shared_ptr<facebook::react::CallInvoker> &callInvoker
+#elif
+    RuntimeExecutor runtimeExecutor
+#endif
+)
 {
   REAModule *reaModule = [moduleRegistry moduleForName:"ReanimatedModule"];
 
@@ -117,7 +122,13 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
       makePlatformDepMethodsHolderBridgeless(moduleRegistry, nodesManager, reaModule);
 
   auto uiScheduler = std::make_shared<REAIOSUIScheduler>();
+
+#if REACT_NATIVE_MINOR_VERSION >= 77
+  auto jsScheduler = std::make_shared<JSScheduler>(runtime, callInvoker);
+#else
   auto jsScheduler = std::make_shared<JSScheduler>(runtime, runtimeExecutor);
+#endif
+
   constexpr auto isBridgeless = true;
 
   auto nativeReanimatedModule = std::make_shared<NativeReanimatedModule>(

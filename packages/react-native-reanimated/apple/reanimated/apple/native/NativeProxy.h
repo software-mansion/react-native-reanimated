@@ -25,7 +25,12 @@ createReanimatedModuleBridgeless(
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &runtime,
     const std::string &valueUnpackerCode,
-    RuntimeExecutor runtimeExecutor);
+#if REACT_NATIVE_MINOR_VERSION >= 77
+    const std::shared_ptr<facebook::react::CallInvoker> &callInvoker
+#else
+    RuntimeExecutor runtimeExecutor
+#endif
+);
 #endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
 
 void commonInit(
