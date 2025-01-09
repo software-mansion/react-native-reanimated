@@ -9,4 +9,4 @@ interface Spec extends TurboModule {
   installTurboModule: (valueUnpackerCode: string) => boolean;
 }
 
-export default TurboModuleRegistry.getEnforcing<Spec>('WorkletsModule');
+export default TurboModuleRegistry.get<Spec>('WorkletsModule');
