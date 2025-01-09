@@ -58,7 +58,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   // it up later instead there's a chance the runtime will retain references
   // to invalidated memory and will crash on destruction.
   workletsModuleProxy_.reset();
-  
+
   [super invalidate];
 }
 
