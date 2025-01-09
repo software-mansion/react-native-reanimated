@@ -18011,7 +18011,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-is-edge-to-edge@npm:^1.1.6":
+"react-native-is-edge-to-edge@npm:1.1.6":
   version: 1.1.6
   resolution: "react-native-is-edge-to-edge@npm:1.1.6"
   peerDependencies:
@@ -18165,7 +18165,7 @@ __metadata:
     react-native: "npm:0.77.0-rc.6"
     react-native-builder-bob: "npm:0.33.1"
     react-native-gesture-handler: "npm:2.22.0"
-    react-native-is-edge-to-edge: "npm:^1.1.6"
+    react-native-is-edge-to-edge: "npm:1.1.6"
     react-native-web: "npm:0.19.11"
     react-test-renderer: "npm:18.2.0"
     shelljs: "npm:^0.8.5"
