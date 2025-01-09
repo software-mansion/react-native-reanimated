@@ -7,6 +7,7 @@
 
 #include <jsi/jsi.h>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -19,30 +20,59 @@ using namespace react;
 
 using UpdatesBatch =
     std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>;
-
 using RegistryMap =
     std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>>;
 
+#ifdef ANDROID
+struct PropsToRevert {
+  ShadowNode::Shared shadowNode;
+  std::unordered_set<std::string> props;
+};
+
+using PropsToRevertMap = std::unordered_map<Tag, PropsToRevert>;
+#endif
+
 class UpdatesRegistry {
  public:
+  folly::dynamic get(Tag tag) const;
+
+#ifdef ANDROID
+  bool hasPropsToRevert() const;
+  void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
+#endif
+
   void flushUpdates(jsi::Runtime &rt, UpdatesBatch &updatesBatch, bool merge);
   void collectProps(PropsMap &propsMap);
-  folly::dynamic get(Tag tag) const;
 
  protected:
   mutable std::mutex mutex_;
-
-  UpdatesBatch updatesBatch_;
   std::unordered_set<Tag> tagsToRemove_;
+
+  void addUpdatesToBatch(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const jsi::Value &props);
+  void setInUpdatesRegistry(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const jsi::Value &props);
+  void removeFromUpdatesRegistry(Tag tag);
+
+ private:
+  UpdatesBatch updatesBatch_;
   RegistryMap updatesRegistry_;
 
   void flushUpdatesToRegistry(
       jsi::Runtime &rt,
       const UpdatesBatch &updatesBatch,
       bool merge);
-
- private:
   void runMarkedRemovals();
+
+#ifdef ANDROID
+  PropsToRevertMap propsToRevertMap_;
+
+  void updatePropsToRevert(Tag tag, const folly::dynamic *newProps = nullptr);
+#endif
 };
 
 } // namespace reanimated

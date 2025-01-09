@@ -33,6 +33,10 @@ class ValueInterpolatorFactory : public PropertyInterpolatorFactory {
     return (Discrete<AllowedTypes> && ...);
   }
 
+  const CSSValue &getDefaultValue() const override {
+    return defaultValue_;
+  }
+
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
@@ -58,6 +62,10 @@ class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
         relativeTo_(relativeTo),
         relativeProperty_(relativeProperty),
         defaultValue_(defaultValue) {}
+
+  const CSSValue &getDefaultValue() const override {
+    return defaultValue_;
+  }
 
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,

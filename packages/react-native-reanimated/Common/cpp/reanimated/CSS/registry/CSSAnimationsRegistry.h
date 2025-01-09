@@ -3,6 +3,7 @@
 
 #include <reanimated/CSS/core/CSSAnimation.h>
 #include <reanimated/CSS/util/DelayedItemsManager.h>
+#include <reanimated/CSS/util/props.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <memory>
@@ -58,7 +59,7 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
       jsi::Runtime &rt,
       const std::shared_ptr<CSSAnimation> &animation,
       double timestamp);
-  void clearViewAnimations(Tag viewTag);
+  void removeViewAnimations(Tag viewTag);
   void
   applyViewAnimationsStyle(jsi::Runtime &rt, Tag viewTag, double timestamp);
   void activateDelayedAnimations(double timestamp);

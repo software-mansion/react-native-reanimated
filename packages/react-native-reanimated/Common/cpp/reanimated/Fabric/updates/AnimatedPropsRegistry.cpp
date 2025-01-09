@@ -15,8 +15,7 @@ SurfaceId AnimatedPropsRegistry::update(
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
 
     const jsi::Value &updates = item.getProperty(rt, "updates");
-    updatesBatch_.emplace_back(
-        shadowNode, std::make_unique<jsi::Value>(rt, updates));
+    addUpdatesToBatch(rt, shadowNode, updates);
     surfaceId = shadowNode->getSurfaceId();
   }
 

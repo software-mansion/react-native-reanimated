@@ -63,6 +63,7 @@ class PropertyInterpolatorFactory {
   virtual ~PropertyInterpolatorFactory() = default;
 
   virtual bool isDiscreteProperty() const;
+  virtual const CSSValue &getDefaultValue() const = 0;
 
   virtual std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,

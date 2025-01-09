@@ -1,11 +1,5 @@
 # Limitations and Known Issues
 
-## Android-specific issues
-
-### Animation removal
-
-After removing the animation from view style props on Android, changes applied during the animation sometimes aren't reverted. Removal of styles applied during animation works properly on iOS, though.
-
 ## Cross-Platform Issues
 
 ### Style Inheritance

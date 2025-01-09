@@ -32,10 +32,11 @@ void CSSTransitionsRegistry::add(
 void CSSTransitionsRegistry::remove(const Tag viewTag) {
   std::lock_guard<std::mutex> lock{mutex_};
 
+  removeFromUpdatesRegistry(viewTag);
+
   staticPropsRegistry_->removeObserver(viewTag);
   delayedTransitionsManager_.remove(viewTag);
   runningTransitionTags_.erase(viewTag);
-  updatesRegistry_.erase(viewTag);
   registry_.erase(viewTag);
 }
 
@@ -52,8 +53,7 @@ void CSSTransitionsRegistry::updateSettings(
   // updated (we want to keep overrides only for transitioned properties)
   if (config.properties.has_value()) {
     const auto &currentStyle = transition->getCurrentInterpolationStyle(rt);
-    updatesRegistry_[viewTag] = std::make_pair(
-        transition->getShadowNode(), dynamicFromValue(rt, currentStyle));
+    setInUpdatesRegistry(rt, transition->getShadowNode(), currentStyle);
   }
 }
 
@@ -71,9 +71,7 @@ void CSSTransitionsRegistry::update(jsi::Runtime &rt, const double timestamp) {
 
     const jsi::Value &updates = transition->update(rt, timestamp);
     if (!updates.isUndefined()) {
-      updatesBatch_.emplace_back(
-          transition->getShadowNode(),
-          std::make_unique<jsi::Value>(rt, updates));
+      addUpdatesToBatch(rt, transition->getShadowNode(), updates);
     }
 
     // We remove transition from running and schedule it when animation of one
@@ -146,8 +144,8 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
       const auto &initialProps =
           transition->run(rt, changedProps, getCurrentTimestamp_());
       const auto &shadowNode = transition->getShadowNode();
-      updatesRegistry_[viewTag] =
-          std::make_pair(shadowNode, dynamicFromValue(rt, initialProps));
+
+      setInUpdatesRegistry(rt, shadowNode, initialProps);
       scheduleOrActivateTransition(transition);
     }
   };

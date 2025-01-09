@@ -15,8 +15,8 @@ concept ResolvableOperation =
     requires(T t) {
       {
         t.value
-      } -> std::convertible_to<
-          typename std::remove_reference_t<decltype(t.value)>>;
+        } -> std::convertible_to<
+            typename std::remove_reference_t<decltype(t.value)>>;
       requires Resolvable<std::remove_reference_t<decltype(t.value)>>;
     };
 

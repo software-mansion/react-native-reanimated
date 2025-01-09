@@ -9,6 +9,11 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
       const InterpolatorFactoriesRecord &factories)
       : PropertyInterpolatorFactory(), factories_(factories) {}
 
+  const CSSValue &getDefaultValue() const override {
+    static EmptyObjectValue emptyObjectValue;
+    return emptyObjectValue;
+  }
+
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
@@ -19,6 +24,25 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
  private:
+  // Helper private type just for a default value
+  struct EmptyObjectValue : public CSSValue {
+    CSSValueType type() const override {
+      return CSSValueType::Empty;
+    }
+
+    jsi::Value toJSIValue(jsi::Runtime &rt) const override {
+      return jsi::Object(rt);
+    }
+
+    folly::dynamic toDynamic() const override {
+      return folly::dynamic::object;
+    }
+
+    std::string toString() const override {
+      return "{}";
+    }
+  };
+
   const InterpolatorFactoriesRecord factories_;
 };
 
@@ -26,6 +50,11 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
   explicit ArrayInterpolatorFactory(const InterpolatorFactoriesArray &factories)
       : PropertyInterpolatorFactory(), factories_(factories) {}
+
+  const CSSValue &getDefaultValue() const override {
+    static EmptyArrayValue emptyArrayValue;
+    return emptyArrayValue;
+  }
 
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
@@ -37,6 +66,25 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
  private:
+  // Helper private type just for a default value
+  struct EmptyArrayValue : public CSSValue {
+    CSSValueType type() const override {
+      return CSSValueType::Empty;
+    }
+
+    jsi::Value toJSIValue(jsi::Runtime &rt) const override {
+      return jsi::Array(rt, 0);
+    }
+
+    folly::dynamic toDynamic() const override {
+      return folly::dynamic::array;
+    }
+
+    std::string toString() const override {
+      return "[]";
+    }
+  };
+
   const InterpolatorFactoriesArray factories_;
 };
 
@@ -45,6 +93,11 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
   explicit TransformsInterpolatorFactory(
       const std::shared_ptr<TransformInterpolators> &interpolators)
       : PropertyInterpolatorFactory(), interpolators_(interpolators) {}
+
+  const CSSValue &getDefaultValue() const override {
+    static EmptyTransformsValue emptyTransformsValue;
+    return emptyTransformsValue;
+  }
 
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
@@ -56,6 +109,30 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
   }
 
  private:
+  static TransformMatrix &getIdentityMatrix() {
+    static TransformMatrix identityMatrix = TransformMatrix::Identity();
+    return identityMatrix;
+  }
+
+  // Helper private type just for a default value
+  struct EmptyTransformsValue : public CSSValue {
+    CSSValueType type() const override {
+      return CSSValueType::Empty;
+    }
+
+    jsi::Value toJSIValue(jsi::Runtime &rt) const override {
+      return getIdentityMatrix().toJSIValue(rt);
+    }
+
+    folly::dynamic toDynamic() const override {
+      return getIdentityMatrix().toDynamic();
+    }
+
+    std::string toString() const override {
+      return getIdentityMatrix().toString();
+    }
+  };
+
   const std::shared_ptr<TransformInterpolators> interpolators_;
 };
 
