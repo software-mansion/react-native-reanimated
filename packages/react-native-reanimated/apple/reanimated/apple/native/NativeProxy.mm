@@ -105,7 +105,7 @@ std::shared_ptr<NativeReanimatedModule> createReanimatedModuleBridgeless(
     const std::string &valueUnpackerCode,
 #if REACT_NATIVE_MINOR_VERSION >= 77
     const std::shared_ptr<facebook::react::CallInvoker> &callInvoker
-#elif
+#else
     RuntimeExecutor runtimeExecutor
 #endif
 )
