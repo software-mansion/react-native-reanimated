@@ -101,30 +101,28 @@ export function normalizeStyle(style: PlainStyle): PlainStyle {
   const entries: [string, PlainStyle[PropertyName]][] = [];
 
   for (const [key, value] of Object.entries(style)) {
-    let propValue = value;
-
-    if (value === 'auto' || value === undefined) {
-      propValue = undefined;
-    } else if (isColorProp(key, propValue)) {
-      entries.push([key, normalizeColor(propValue)]);
-    } else if (isTransformString(key, propValue)) {
-      entries.push([key, normalizeTransformString(propValue)]);
+    if (value === undefined) {
+      continue;
+    } else if (isColorProp(key, value)) {
+      entries.push([key, normalizeColor(value)]);
+    } else if (isTransformString(key, value)) {
+      entries.push([key, normalizeTransformString(value)]);
     } else {
       switch (key) {
         case 'transformOrigin':
-          entries.push([key, normalizeTransformOrigin(propValue)]);
+          entries.push([key, normalizeTransformOrigin(value)]);
           break;
         case 'gap':
-          entries.push(['rowGap', propValue], ['columnGap', propValue]);
+          entries.push(['rowGap', value], ['columnGap', value]);
           break;
         case 'aspectRatio':
-          entries.push([key, normalizeAspectRatio(propValue)]);
+          entries.push([key, normalizeAspectRatio(value)]);
           break;
         case 'fontWeight':
-          entries.push([key, normalizeFontWeight(propValue)]);
+          entries.push([key, normalizeFontWeight(value)]);
           break;
         default:
-          entries.push([key, propValue]);
+          entries.push([key, value]);
       }
     }
   }

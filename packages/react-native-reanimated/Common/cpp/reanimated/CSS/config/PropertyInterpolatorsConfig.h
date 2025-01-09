@@ -3,219 +3,278 @@
 
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 
+#include <reanimated/CSS/common/values/CSSAngle.h>
+#include <reanimated/CSS/common/values/CSSBoolean.h>
+#include <reanimated/CSS/common/values/CSSColor.h>
+#include <reanimated/CSS/common/values/CSSDimension.h>
+#include <reanimated/CSS/common/values/CSSKeyword.h>
+#include <reanimated/CSS/common/values/CSSNumber.h>
+
 namespace reanimated {
 
 using namespace Interpolators;
 
-const PropertyInterpolatorFactories PROPERTY_INTERPOLATOR_FACTORIES = []() {
+const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
   // Local constants
-  const auto BLACK = Color(0, 0, 0, 255);
-  const auto TRANSPARENT = Color::Transparent;
+  const auto BLACK = CSSColor(0, 0, 0, 255);
+  const auto TRANSPARENT = CSSColor::Transparent;
 
   // Initialize the factories
-  // TODO: Set proper default values for all the interpolators
   // TODO: Add value inheritance support
-  return PropertyInterpolatorFactories{
+  return InterpolatorFactoriesRecord{
       /**
        * Layout and Positioning
        */
       // FLEXBOX
-      {"flex", numeric(0)},
-      {"flexDirection", discrete()},
-      {"direction", discrete()},
-      {"justifyContent", discrete()},
-      {"alignItems", discrete()},
-      {"alignSelf", discrete()},
-      {"alignContent", discrete()},
-      {"flexGrow", numeric(0)},
-      {"flexShrink", numeric(0)},
-      {"flexBasis", relOrNum(RelativeTo::Parent, "width")},
-      {"flexWrap", discrete()},
-      {"rowGap", relOrNum(RelativeTo::Self, "height", 0)},
-      {"columnGap", relOrNum(RelativeTo::Self, "width", 0)},
-      {"start", relOrNum(RelativeTo::Parent, "width")},
-      {"end", relOrNum(RelativeTo::Parent, "width")},
+      {"flex", value<CSSDouble>(0)},
+      {"flexBasis",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", "auto")},
+      {"flexDirection", value<CSSKeyword>("column")},
+      {"justifyContent", value<CSSKeyword>("flex-start")},
+      {"alignItems", value<CSSKeyword>("stretch")},
+      {"alignSelf", value<CSSKeyword>("auto")},
+      {"alignContent", value<CSSKeyword>("flex-start")},
+      {"flexGrow", value<CSSDouble>(0)},
+      {"flexShrink", value<CSSDouble>(0)},
+      {"flexWrap", value<CSSKeyword>("no-wrap")},
+      {"rowGap", value<CSSDimension>(RelativeTo::Self, "height", 0)},
+      {"columnGap", value<CSSDimension>(RelativeTo::Self, "width", 0)},
+      {"start",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", "auto")},
+      {"end",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", "auto")},
+      {"direction", value<CSSKeyword>("inherit")},
 
       // DIMENSIONS
-      {"height", relOrNum(RelativeTo::Parent, "height")},
-      {"width", relOrNum(RelativeTo::Parent, "width", "100%")},
-      {"maxHeight", relOrNum(RelativeTo::Parent, "height")},
-      {"maxWidth", relOrNum(RelativeTo::Parent, "width", "100%")},
-      {"minHeight", relOrNum(RelativeTo::Parent, "height")},
-      {"minWidth", relOrNum(RelativeTo::Parent, "width")},
+      {"height",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "height", "auto")},
+      {"width",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", "auto")},
+      {"maxHeight",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "height", "auto")},
+      {"maxWidth",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", "auto")},
+      {"minHeight",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "height", "auto")},
+      {"minWidth",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", "auto")},
 
       // MARGINS
       // (relative to parent width)
-      {"margin", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"marginTop", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"marginRight", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"marginBottom", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"marginLeft", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"marginStart", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"marginEnd", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"marginHorizontal", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"marginVertical", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"margin",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"marginTop",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"marginRight",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"marginBottom",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"marginLeft",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"marginStart",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"marginEnd",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"marginHorizontal",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"marginVertical",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
 
       // PADDINGS
       // (relative to parent width)
-      {"padding", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"paddingTop", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"paddingRight", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"paddingBottom", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"paddingLeft", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"paddingStart", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"paddingEnd", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"paddingHorizontal", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"paddingVertical", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"padding",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"paddingTop",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"paddingRight",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"paddingBottom",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"paddingLeft",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"paddingStart",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"paddingEnd",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"paddingHorizontal",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
+      {"paddingVertical",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", 0)},
 
       // INSETS
-      // TODO
-      {"top", relOrNum(RelativeTo::Parent, "height", 0)},
-      {"bottom", relOrNum(RelativeTo::Parent, "height", 0)},
-      {"left", relOrNum(RelativeTo::Parent, "width", 0)},
-      {"right", relOrNum(RelativeTo::Parent, "width", 0)},
+      {"top",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "height", "auto")},
+      {"bottom",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "height", "auto")},
+      {"left",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", "auto")},
+      {"right",
+       value<CSSDimension, CSSKeyword>(RelativeTo::Parent, "width", "auto")},
 
       // OTHERS
-      {"position", discrete()},
-      {"display", display("flex")},
-      {"overflow", discrete()},
-      {"zIndex", steps(0)},
-      {"aspectRatio", numeric()},
+      {"position", value<CSSKeyword>("relative")},
+      {"display", value<CSSDisplay>("flex")},
+      {"overflow", value<CSSKeyword>("visible")},
+      {"zIndex", value<CSSInteger>(0)},
+      {"aspectRatio", // TODO - check which value should be used by default
+       value<CSSDouble, CSSKeyword>("auto")},
 
       /**
        * Appearance
        */
       // COLORS
       // Background
-      {"backgroundColor", color(TRANSPARENT)},
+      {"backgroundColor", value<CSSColor>(TRANSPARENT)},
       // Text
-      {"color", color(BLACK)},
-      {"textDecorationColor", color(BLACK)}, // TODO - add example
-      {"textShadowColor", color(BLACK)}, // TODO - add example
+      {"color", value<CSSColor>(BLACK)},
+      {"textDecorationColor", value<CSSColor>(BLACK)},
+      {"textShadowColor", value<CSSColor>(BLACK)},
       // Border
-      {"borderColor", color(BLACK)},
-      {"borderTopColor", color(BLACK)},
-      {"borderBlockStartColor", color(BLACK)},
-      {"borderRightColor", color(BLACK)},
-      {"borderEndColor", color(BLACK)},
-      {"borderBottomColor", color(BLACK)},
-      {"borderBlockEndColor", color(BLACK)},
-      {"borderLeftColor", color(BLACK)},
-      {"borderStartColor", color(BLACK)},
-      {"borderBlockColor", color(BLACK)},
+      {"borderColor", value<CSSColor>(BLACK)},
+      {"borderTopColor", value<CSSColor>(BLACK)},
+      {"borderBlockStartColor", value<CSSColor>(BLACK)},
+      {"borderRightColor", value<CSSColor>(BLACK)},
+      {"borderEndColor", value<CSSColor>(BLACK)},
+      {"borderBottomColor", value<CSSColor>(BLACK)},
+      {"borderBlockEndColor", value<CSSColor>(BLACK)},
+      {"borderLeftColor", value<CSSColor>(BLACK)},
+      {"borderStartColor", value<CSSColor>(BLACK)},
+      {"borderBlockColor", value<CSSColor>(BLACK)},
       // Other
-      {"shadowColor", color(BLACK)},
-      {"overlayColor", color(BLACK)}, // TODO - add example
-      {"tintColor", color(BLACK)}, // TODO - fix (have to pass in style)
+      {"shadowColor", value<CSSColor>(BLACK)},
+      {"overlayColor", value<CSSColor>(BLACK)},
+      {"tintColor", value<CSSColor>(BLACK)},
 
       // SHADOWS
       // View
       // iOS only
-      {"shadowOffset", object({{"width", numeric(0)}, {"height", numeric(0)}})},
-      {"shadowRadius", numeric(0)},
-      {"shadowOpacity", numeric(1)},
+      {"shadowOffset",
+       record(
+           {{"width", value<CSSDouble>(0)}, {"height", value<CSSDouble>(0)}})},
+      {"shadowRadius", value<CSSDouble>(0)},
+      {"shadowOpacity", value<CSSDouble>(1)},
       // Android only
-      {"elevation", numeric(0)},
+      {"elevation", value<CSSDouble>(0)},
       // Text
       {"textShadowOffset",
-       object({{"width", numeric(0)}, {"height", numeric(0)}})},
-      {"textShadowRadius", numeric(0)},
+       record(
+           {{"width", value<CSSDouble>(0)}, {"height", value<CSSDouble>(0)}})},
+      {"textShadowRadius", value<CSSDouble>(0)},
 
       // BORDERS
       // Radius
       // TODO - fix interpolation between absolute and relative values
       // when yoga supports it (relativeProperty "width" is just a placeholder)
-      {"borderRadius", relOrNum(RelativeTo::Self, "width", 0)},
+      {"borderRadius", value<CSSDimension>(RelativeTo::Self, "width", 0)},
       // top-left
-      {"borderTopLeftRadius", relOrNum(RelativeTo::Self, "width", 0)},
-      {"borderTopStartRadius", relOrNum(RelativeTo::Self, "width", 0)},
-      {"borderStartStartRadius", relOrNum(RelativeTo::Self, "width", 0)},
+      {"borderTopLeftRadius",
+       value<CSSDimension>(RelativeTo::Self, "width", 0)},
+      {"borderTopStartRadius",
+       value<CSSDimension>(RelativeTo::Self, "width", 0)},
+      {"borderStartStartRadius",
+       value<CSSDimension>(RelativeTo::Self, "width", 0)},
       // top-right
-      {"borderTopRightRadius", relOrNum(RelativeTo::Self, "width", 0)},
-      {"borderTopEndRadius", relOrNum(RelativeTo::Self, "width", 0)},
-      {"borderStartEndRadius", relOrNum(RelativeTo::Self, "width", 0)},
+      {"borderTopRightRadius",
+       value<CSSDimension>(RelativeTo::Self, "width", 0)},
+      {"borderTopEndRadius", value<CSSDimension>(RelativeTo::Self, "width", 0)},
+      {"borderStartEndRadius",
+       value<CSSDimension>(RelativeTo::Self, "width", 0)},
       // bottom-left
-      {"borderBottomLeftRadius", relOrNum(RelativeTo::Self, "width", 0)},
-      {"borderBottomStartRadius", relOrNum(RelativeTo::Self, "width", 0)},
-      {"borderEndStartRadius", relOrNum(RelativeTo::Self, "width", 0)},
+      {"borderBottomLeftRadius",
+       value<CSSDimension>(RelativeTo::Self, "width", 0)},
+      {"borderBottomStartRadius",
+       value<CSSDimension>(RelativeTo::Self, "width", 0)},
+      {"borderEndStartRadius",
+       value<CSSDimension>(RelativeTo::Self, "width", 0)},
       // bottom-right
-      {"borderBottomRightRadius", relOrNum(RelativeTo::Self, "width", 0)},
-      {"borderBottomEndRadius", relOrNum(RelativeTo::Self, "width", 0)},
-      {"borderEndEndRadius", relOrNum(RelativeTo::Self, "width", 0)},
+      {"borderBottomRightRadius",
+       value<CSSDimension>(RelativeTo::Self, "width", 0)},
+      {"borderBottomEndRadius",
+       value<CSSDimension>(RelativeTo::Self, "width", 0)},
+      {"borderEndEndRadius", value<CSSDimension>(RelativeTo::Self, "width", 0)},
 
       // Width
-      {"borderWidth", numeric(0)},
+      {"borderWidth", value<CSSDouble>(0)},
       // top
-      {"borderTopWidth", numeric(0)},
-      {"borderStartWidth", numeric(0)},
+      {"borderTopWidth", value<CSSDouble>(0)},
+      {"borderStartWidth", value<CSSDouble>(0)},
       // bottom
-      {"borderBottomWidth", numeric(0)},
-      {"borderEndWidth", numeric(0)},
+      {"borderBottomWidth", value<CSSDouble>(0)},
+      {"borderEndWidth", value<CSSDouble>(0)},
       // left
-      {"borderLeftWidth", numeric(0)},
+      {"borderLeftWidth", value<CSSDouble>(0)},
       // right
-      {"borderRightWidth", numeric(0)},
+      {"borderRightWidth", value<CSSDouble>(0)},
 
       // Decoration
-      {"borderCurve", discrete()},
-      {"borderStyle", discrete()},
+      {"borderCurve", value<CSSKeyword>("continuous")},
+      {"borderStyle", value<CSSKeyword>("solid")},
 
       // TRANSFORMS
-      {"transformOrigin", transformOrigin("50%", "50%", 0)},
+      {"transformOrigin",
+       array(
+           {value<CSSDimension>(RelativeTo::Self, "width", "50%"),
+            value<CSSDimension>(RelativeTo::Self, "height", "50%"),
+            value<CSSDouble>(0)})},
       {"transform",
        transforms(
-           {{"perspective", perspective(0)}, // 0 means no perspective
-            {"rotate", rotate("0deg")},
-            {"rotateX", rotateX("0deg")},
-            {"rotateY", rotateY("0deg")},
-            {"rotateZ", rotateZ("0deg")},
-            {"scale", scale(1)},
-            {"scaleX", scaleX(1)},
-            {"scaleY", scaleY(1)},
-            {"translateX", translateX(RelativeTo::Self, "width", 0)},
-            {"translateY", translateY(RelativeTo::Self, "height", 0)},
-            {"skewX", skewX("0deg")},
-            {"skewY", skewY("0deg")},
-            {"matrix", matrix(TransformMatrix::Identity())}})},
+           {{"perspective",
+             transformOp<PerspectiveOperation>(0)}, // 0 - no perspective
+            {"rotate", transformOp<RotateOperation>("0deg")},
+            {"rotateX", transformOp<RotateXOperation>("0deg")},
+            {"rotateY", transformOp<RotateYOperation>("0deg")},
+            {"rotateZ", transformOp<RotateZOperation>("0deg")},
+            {"scale", transformOp<ScaleOperation>(1)},
+            {"scaleX", transformOp<ScaleXOperation>(1)},
+            {"scaleY", transformOp<ScaleYOperation>(1)},
+            {"translateX",
+             transformOp<TranslateXOperation>(RelativeTo::Self, "width", 0)},
+            {"translateY",
+             transformOp<TranslateYOperation>(RelativeTo::Self, "height", 0)},
+            {"skewX", transformOp<SkewXOperation>("0deg")},
+            {"skewY", transformOp<SkewYOperation>("0deg")},
+            {"matrix",
+             transformOp<MatrixOperation>(TransformMatrix::Identity())}})},
 
       // OTHERS
-      {"backfaceVisibility", discrete()},
-      {"opacity", numeric(1)},
+      {"backfaceVisibility", value<CSSKeyword>("visible")},
+      {"opacity", value<CSSDouble>(1)},
 
       /**
        * Typography
        */
       // Font
-      {"fontFamily", discrete()},
-      {"fontSize", numeric()}, // TODO - should determine the default value
-      {"fontStyle", discrete()},
-      {"fontVariant", discrete()},
-      {"fontWeight", discrete()},
+      {"fontFamily", value<CSSKeyword>("inherit")},
+      {"fontSize", value<CSSDouble>(14)},
+      {"fontStyle", value<CSSKeyword>("normal")},
+      {"fontVariant", value<CSSKeyword>("normal")},
+      {"fontWeight", value<CSSKeyword>("normal")},
       // Alignment
-      {"textAlign", discrete()},
-      {"textAlignVertical", discrete()},
-      {"verticalAlign", discrete()},
+      {"textAlign", value<CSSKeyword>("auto")},
+      {"textAlignVertical", value<CSSKeyword>("auto")},
+      {"verticalAlign", value<CSSKeyword>("auto")},
       // Decoration
-      {"letterSpacing", numeric(0)},
-      {"lineHeight", numeric()}, // TODO - should inherit from font size
-      {"textTransform", discrete()},
-      {"textDecorationLine", discrete()},
-      {"textDecorationStyle", discrete()},
+      {"letterSpacing", value<CSSDouble>(0)},
+      {"lineHeight", // TODO - should inherit from font size
+       value<CSSDouble>(14)},
+      {"textTransform", value<CSSKeyword>("none")},
+      {"textDecorationLine", value<CSSKeyword>("none")},
+      {"textDecorationStyle", value<CSSKeyword>("solid")},
       // Others
-      {"userSelect", discrete()},
-      {"writingDirection", discrete()},
-      {"includeFontPadding", discrete()},
+      {"userSelect", value<CSSKeyword>("auto")},
+      {"writingDirection", value<CSSKeyword>("inherit")},
+      {"includeFontPadding", value<CSSBoolean>(false)},
 
       /**
        * Others
        */
       // Image
-      {"resizeMode", discrete()},
-      {"objectFit", discrete()},
+      {"resizeMode", value<CSSKeyword>("cover")},
+      {"objectFit", value<CSSKeyword>("cover")},
 
       // Cursor
-      {"cursor", discrete()},
-      {"pointerEvents", discrete()},
+      {"cursor", value<CSSKeyword>("auto")},
+      {"pointerEvents", value<CSSKeyword>("auto")},
   };
 }();
 

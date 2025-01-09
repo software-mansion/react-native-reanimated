@@ -1,8 +1,9 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
+
 namespace reanimated {
 
-constexpr std::array<const char *, 14> transformOperationStrings = {
+constexpr std::array<const char *, 13> transformOperationStrings = {
     "perspective",
     "rotate",
     "rotateX",
@@ -47,9 +48,6 @@ std::string getOperationNameFromType(const TransformOperationType type) {
   return transformOperationStrings[static_cast<size_t>(type)];
 }
 
-TransformOperation::TransformOperation(const TransformOperationType type)
-    : type(type) {}
-
 std::ostream &operator<<(
     std::ostream &os,
     const TransformOperation &operation) {
@@ -80,7 +78,7 @@ TransformOperations TransformOperation::convertTo(
 }
 
 std::string TransformOperation::getOperationName() const {
-  return transformOperationStrings[static_cast<size_t>(type)];
+  return transformOperationStrings[static_cast<size_t>(type())];
 }
 
 bool TransformOperation::isRelative() const {
@@ -113,16 +111,16 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
           obj.getProperty(rt, "perspective").asNumber());
     case TransformOperationType::Rotate:
       return std::make_shared<RotateOperation>(
-          AngleValue(rt, obj.getProperty(rt, "rotate")));
+          obj.getProperty(rt, "rotate").asString(rt).utf8(rt));
     case TransformOperationType::RotateX:
       return std::make_shared<RotateXOperation>(
-          AngleValue(rt, obj.getProperty(rt, "rotateX")));
+          obj.getProperty(rt, "rotateX").asString(rt).utf8(rt));
     case TransformOperationType::RotateY:
       return std::make_shared<RotateYOperation>(
-          AngleValue(rt, obj.getProperty(rt, "rotateY")));
+          obj.getProperty(rt, "rotateY").asString(rt).utf8(rt));
     case TransformOperationType::RotateZ:
       return std::make_shared<RotateZOperation>(
-          AngleValue(rt, obj.getProperty(rt, "rotateZ")));
+          obj.getProperty(rt, "rotateZ").asString(rt).utf8(rt));
     case TransformOperationType::Scale:
       return std::make_shared<ScaleOperation>(
           obj.getProperty(rt, "scale").asNumber());
@@ -132,18 +130,28 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
     case TransformOperationType::ScaleY:
       return std::make_shared<ScaleYOperation>(
           obj.getProperty(rt, "scaleY").asNumber());
-    case TransformOperationType::TranslateX:
+    case TransformOperationType::TranslateX: {
+      const auto &property = obj.getProperty(rt, "translateX");
+      if (property.isNumber()) {
+        return std::make_shared<TranslateXOperation>(property.asNumber());
+      }
       return std::make_shared<TranslateXOperation>(
-          UnitValue(rt, obj.getProperty(rt, "translateX")));
-    case TransformOperationType::TranslateY:
+          property.asString(rt).utf8(rt));
+    }
+    case TransformOperationType::TranslateY: {
+      const auto &property = obj.getProperty(rt, "translateY");
+      if (property.isNumber()) {
+        return std::make_shared<TranslateYOperation>(property.asNumber());
+      }
       return std::make_shared<TranslateYOperation>(
-          UnitValue(rt, obj.getProperty(rt, "translateY")));
+          property.asString(rt).utf8(rt));
+    }
     case TransformOperationType::SkewX:
       return std::make_shared<SkewXOperation>(
-          AngleValue(rt, obj.getProperty(rt, "skewX")));
+          obj.getProperty(rt, "skewX").asString(rt).utf8(rt));
     case TransformOperationType::SkewY:
       return std::make_shared<SkewYOperation>(
-          AngleValue(rt, obj.getProperty(rt, "skewY")));
+          obj.getProperty(rt, "skewY").asString(rt).utf8(rt));
     case TransformOperationType::Matrix:
       return std::make_shared<MatrixOperation>(
           TransformMatrix(rt, obj.getProperty(rt, "matrix")));
@@ -166,15 +174,13 @@ jsi::Value TransformOperation::toJSIValue(jsi::Runtime &rt) const {
 }
 
 template <typename T>
-TransformOperationBase<T>::TransformOperationBase(
-    const TransformOperationType type,
-    const T &value)
-    : TransformOperation(type), value(value) {}
+TransformOperationBase<T>::TransformOperationBase(const T &value)
+    : TransformOperation(), value(value) {}
 
 template <typename T>
 bool TransformOperationBase<T>::operator==(
     const TransformOperation &other) const {
-  if (type != other.type) {
+  if (type() != other.type()) {
     return false;
   }
   const auto &otherOperation =
@@ -213,27 +219,25 @@ std::string TransformOperationBase<
  */
 
 // Perspective
-PerspectiveOperation::PerspectiveOperation(const double value)
-    : TransformOperationBase<double>(
-          TransformOperationType::Perspective,
-          value) {}
+PerspectiveOperation::PerspectiveOperation(double value)
+    : TransformOperationBase<CSSDouble>(CSSDouble(value)) {}
+TransformOperationType PerspectiveOperation::type() const {
+  return TransformOperationType::Perspective;
+}
 jsi::Value PerspectiveOperation::valueToJSIValue(jsi::Runtime &rt) const {
   // Perspective cannot be 0, so we return undefined in this case
-  return value != 0 ? jsi::Value(value) : jsi::Value::undefined();
+  return value.value != 0 ? value.toJSIValue(rt) : jsi::Value::undefined();
 }
 TransformMatrix PerspectiveOperation::toMatrix() const {
-  return TransformMatrix::Perspective(value);
+  return TransformMatrix::Perspective(value.value);
 }
 
 // Rotate
-RotateOperation::RotateOperation(const AngleValue &value)
-    : TransformOperationBase<AngleValue>(
-          TransformOperationType::Rotate,
-          value) {}
-RotateOperation::RotateOperation(
-    const TransformOperationType type,
-    const AngleValue &value)
-    : TransformOperationBase<AngleValue>(type, value) {}
+RotateOperation::RotateOperation(const std::string &value)
+    : TransformOperationBase<CSSAngle>(CSSAngle(value)) {}
+TransformOperationType RotateOperation::type() const {
+  return TransformOperationType::Rotate;
+}
 jsi::Value RotateOperation::valueToJSIValue(jsi::Runtime &rt) const {
   return value.toJSIValue(rt);
 }
@@ -241,25 +245,28 @@ TransformMatrix RotateOperation::toMatrix() const {
   return TransformMatrix::RotateZ(value.value);
 }
 
-RotateXOperation::RotateXOperation(const AngleValue &value)
-    : RotateOperation(TransformOperationType::RotateX, value) {}
+TransformOperationType RotateXOperation::type() const {
+  return TransformOperationType::RotateX;
+}
 TransformMatrix RotateXOperation::toMatrix() const {
   return TransformMatrix::RotateX(value.value);
 }
 
-RotateYOperation::RotateYOperation(const AngleValue &value)
-    : RotateOperation(TransformOperationType::RotateY, value) {}
+TransformOperationType RotateYOperation::type() const {
+  return TransformOperationType::RotateY;
+}
 TransformMatrix RotateYOperation::toMatrix() const {
   return TransformMatrix::RotateY(value.value);
 }
 
-RotateZOperation::RotateZOperation(const AngleValue &value)
-    : RotateOperation(TransformOperationType::RotateZ, value) {}
-bool RotateZOperation::canConvertTo(const TransformOperationType type) const {
+TransformOperationType RotateZOperation::type() const {
+  return TransformOperationType::RotateZ;
+}
+bool RotateZOperation::canConvertTo(TransformOperationType type) const {
   return type == TransformOperationType::Rotate;
 }
 TransformOperations RotateZOperation::convertTo(
-    const TransformOperationType type) const {
+    TransformOperationType type) const {
   assertCanConvertTo(type);
   return {std::make_shared<RotateOperation>(value)};
 }
@@ -268,23 +275,21 @@ TransformMatrix RotateZOperation::toMatrix() const {
 }
 
 // Scale
-ScaleOperation::ScaleOperation(const double value)
-    : TransformOperationBase<double>(TransformOperationType::Scale, value) {}
-ScaleOperation::ScaleOperation(
-    const TransformOperationType type,
-    const double value)
-    : TransformOperationBase<double>(type, value) {}
-jsi::Value ScaleOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  return {value};
+ScaleOperation::ScaleOperation(double value)
+    : TransformOperationBase<CSSDouble>(CSSDouble(value)) {}
+TransformOperationType ScaleOperation::type() const {
+  return TransformOperationType::Scale;
 }
-bool ScaleOperation::canConvertTo(const TransformOperationType type) const {
+jsi::Value ScaleOperation::valueToJSIValue(jsi::Runtime &rt) const {
+  return value.toJSIValue(rt);
+}
+bool ScaleOperation::canConvertTo(TransformOperationType type) const {
   return type == TransformOperationType::ScaleX ||
       type == TransformOperationType::ScaleY;
 }
 TransformOperations ScaleOperation::convertTo(
-    const TransformOperationType type) const {
+    TransformOperationType type) const {
   assertCanConvertTo(type);
-
   if (type == TransformOperationType::ScaleX) {
     return {
         std::make_shared<ScaleXOperation>(value),
@@ -296,26 +301,28 @@ TransformOperations ScaleOperation::convertTo(
   }
 }
 TransformMatrix ScaleOperation::toMatrix() const {
-  return TransformMatrix::Scale(value);
+  return TransformMatrix::Scale(value.value);
 }
 
-ScaleXOperation::ScaleXOperation(const double value)
-    : ScaleOperation(TransformOperationType::ScaleX, value) {}
+TransformOperationType ScaleXOperation::type() const {
+  return TransformOperationType::ScaleX;
+}
 TransformMatrix ScaleXOperation::toMatrix() const {
-  return TransformMatrix::ScaleX(value);
+  return TransformMatrix::ScaleX(value.value);
 }
 
-ScaleYOperation::ScaleYOperation(const double value)
-    : ScaleOperation(TransformOperationType::ScaleY, value) {}
+TransformOperationType ScaleYOperation::type() const {
+  return TransformOperationType::ScaleY;
+}
 TransformMatrix ScaleYOperation::toMatrix() const {
-  return TransformMatrix::ScaleY(value);
+  return TransformMatrix::ScaleY(value.value);
 }
 
 // Translate
-TranslateOperation::TranslateOperation(
-    const TransformOperationType type,
-    const UnitValue &value)
-    : TransformOperationBase<UnitValue>(type, value) {}
+TranslateOperation::TranslateOperation(const double value)
+    : TransformOperationBase<CSSDimension>(CSSDimension(value)) {}
+TranslateOperation::TranslateOperation(const std::string &value)
+    : TransformOperationBase<CSSDimension>(CSSDimension(value)) {}
 bool TranslateOperation::isRelative() const {
   return value.isRelative;
 }
@@ -326,10 +333,10 @@ TransformMatrix TranslateOperation::toMatrix() const {
   return toMatrix(value.value);
 }
 
-TranslateXOperation::TranslateXOperation(const UnitValue &value)
-    : TranslateOperation(TransformOperationType::TranslateX, value) {}
-TransformMatrix TranslateXOperation::toMatrix(
-    const double resolvedValue) const {
+TransformOperationType TranslateXOperation::type() const {
+  return TransformOperationType::TranslateX;
+}
+TransformMatrix TranslateXOperation::toMatrix(double resolvedValue) const {
   if (value.isRelative) {
     throw std::invalid_argument(
         "[Reanimated] Cannot convert relative translateX to the matrix.");
@@ -337,10 +344,10 @@ TransformMatrix TranslateXOperation::toMatrix(
   return TransformMatrix::TranslateX(resolvedValue);
 }
 
-TranslateYOperation::TranslateYOperation(const UnitValue &value)
-    : TranslateOperation(TransformOperationType::TranslateY, value) {}
-TransformMatrix TranslateYOperation::toMatrix(
-    const double resolvedValue) const {
+TransformOperationType TranslateYOperation::type() const {
+  return TransformOperationType::TranslateY;
+}
+TransformMatrix TranslateYOperation::toMatrix(double resolvedValue) const {
   if (value.isRelative) {
     throw std::invalid_argument(
         "[Reanimated] Cannot convert relative translateY to the matrix.");
@@ -349,22 +356,22 @@ TransformMatrix TranslateYOperation::toMatrix(
 }
 
 // Skew
-SkewOperation::SkewOperation(
-    const TransformOperationType type,
-    const AngleValue &value)
-    : TransformOperationBase<AngleValue>(type, value) {}
+SkewOperation::SkewOperation(const std::string &value)
+    : TransformOperationBase<CSSAngle>(CSSAngle(value)) {}
 jsi::Value SkewOperation::valueToJSIValue(jsi::Runtime &rt) const {
   return value.toJSIValue(rt);
 }
 
-SkewXOperation::SkewXOperation(const AngleValue &value)
-    : SkewOperation(TransformOperationType::SkewX, value) {}
+TransformOperationType SkewXOperation::type() const {
+  return TransformOperationType::SkewX;
+}
 TransformMatrix SkewXOperation::toMatrix() const {
   return TransformMatrix::SkewX(value.value);
 }
 
-SkewYOperation::SkewYOperation(const AngleValue &value)
-    : SkewOperation(TransformOperationType::SkewY, value) {}
+TransformOperationType SkewYOperation::type() const {
+  return TransformOperationType::SkewY;
+}
 TransformMatrix SkewYOperation::toMatrix() const {
   return TransformMatrix::SkewY(value.value);
 }
@@ -383,7 +390,7 @@ std::variant<TransformMatrix, TransformOperations> simplifyOperations(
     auto operation = operationsStack.back();
     operationsStack.pop_back();
 
-    if (operation->type == TransformOperationType::Matrix) {
+    if (operation->type() == TransformOperationType::Matrix) {
       const auto matrixOperation =
           std::static_pointer_cast<MatrixOperation>(operation);
       if (std::holds_alternative<TransformOperations>(matrixOperation->value)) {
@@ -406,8 +413,8 @@ std::variant<TransformMatrix, TransformOperations> simplifyOperations(
       hasSimplifications = true;
     } else {
       // If the current operation is relative, we need to add the current
-      // simplified matrix to the list of operations before adding the relative
-      // operation
+      // simplified matrix to the list of operations before adding the
+      // relative operation
       if (hasSimplifications) {
         reversedOperations.emplace_back(
             std::make_shared<MatrixOperation>(simplifiedMatrix));
@@ -436,19 +443,18 @@ std::variant<TransformMatrix, TransformOperations> simplifyOperations(
 
 MatrixOperation::MatrixOperation(const TransformMatrix &value)
     : TransformOperationBase<
-          std::variant<TransformMatrix, TransformOperations>>(
-          TransformOperationType::Matrix,
-          value) {}
+          std::variant<TransformMatrix, TransformOperations>>(value) {}
 MatrixOperation::MatrixOperation(const TransformOperations &operations)
-    // Simplify operations to reduce the number of matrix multiplications during
-    // matrix keyframe interpolation
+    // Simplify operations to reduce the number of matrix multiplications
+    // during matrix keyframe interpolation
     : TransformOperationBase<
           std::variant<TransformMatrix, TransformOperations>>(
-          TransformOperationType::Matrix,
           simplifyOperations(operations)) {}
-
+TransformOperationType MatrixOperation::type() const {
+  return TransformOperationType::Matrix;
+}
 bool MatrixOperation::operator==(const TransformOperation &other) const {
-  if (type != other.type) {
+  if (type() != other.type()) {
     return false;
   }
 

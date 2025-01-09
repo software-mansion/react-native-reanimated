@@ -1,99 +1,87 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 
 #include <memory>
-#include <string>
 #include <unordered_map>
 
 namespace reanimated {
 
 class TransformInterpolator {
  public:
-  using TransformInterpolators = std::unordered_map<
+  using Interpolators = std::unordered_map<
       TransformOperationType,
       std::shared_ptr<TransformInterpolator>>;
 
   struct UpdateContext {
     const ShadowNode::Shared &node;
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository;
-    const std::shared_ptr<TransformInterpolators> &interpolators;
+    const std::shared_ptr<Interpolators> &interpolators;
   };
 
-  TransformInterpolator(
-      const std::shared_ptr<TransformOperation> &defaultOperation)
+  virtual ~TransformInterpolator() = default;
+
+  virtual std::shared_ptr<TransformOperation> getDefaultOperation() const = 0;
+  virtual std::shared_ptr<TransformOperation> interpolate(
+      double progress,
+      const std::shared_ptr<TransformOperation> &from,
+      const std::shared_ptr<TransformOperation> &to,
+      const UpdateContext &context) const = 0;
+  virtual std::shared_ptr<TransformOperation> resolveOperation(
+      const std::shared_ptr<TransformOperation> &operation,
+      const UpdateContext &context) const = 0;
+};
+
+template <typename T>
+class TransformInterpolatorBase : public TransformInterpolator {
+ public:
+  explicit TransformInterpolatorBase(std::shared_ptr<T> defaultOperation)
       : defaultOperation_(defaultOperation) {}
 
-  std::shared_ptr<TransformOperation> getDefaultOperation() const {
+  std::shared_ptr<TransformOperation> getDefaultOperation() const override {
     return defaultOperation_;
   }
 
-  virtual std::shared_ptr<TransformOperation> resolveOperation(
-      const TransformOperation &operation,
-      const ShadowNode::Shared &shadowNode,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      const = 0;
-  virtual std::shared_ptr<TransformOperation> interpolate(
+  std::shared_ptr<TransformOperation> interpolate(
       double progress,
-      const TransformOperation &fromOperation,
-      const TransformOperation &toOperation,
-      const UpdateContext &context) const = 0;
-
- protected:
-  const std::shared_ptr<TransformOperation> defaultOperation_;
-};
-
-template <typename OperationType>
-class TransformInterpolatorBase : public TransformInterpolator {
- public:
-  TransformInterpolatorBase(
-      const std::shared_ptr<OperationType> &defaultOperation)
-      : TransformInterpolator(defaultOperation) {}
+      const std::shared_ptr<TransformOperation> &from,
+      const std::shared_ptr<TransformOperation> &to,
+      const UpdateContext &context) const override {
+    return std::make_shared<T>(interpolate(
+        progress,
+        *std::static_pointer_cast<T>(from),
+        *std::static_pointer_cast<T>(to),
+        context));
+  }
 
   std::shared_ptr<TransformOperation> resolveOperation(
-      const TransformOperation &operation,
-      const ShadowNode::Shared &shadowNode,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      const override {
-    const auto &op = static_cast<const OperationType &>(operation);
-    return std::make_shared<OperationType>(
-        resolveOperation(op, shadowNode, viewStylesRepository));
-  }
-
-  std::shared_ptr<TransformOperation> interpolate(
-      const double progress,
-      const TransformOperation &fromOperation,
-      const TransformOperation &toOperation,
+      const std::shared_ptr<TransformOperation> &operation,
       const UpdateContext &context) const override {
-    const auto &from = static_cast<const OperationType &>(fromOperation);
-    const auto &to = static_cast<const OperationType &>(toOperation);
-
-    return std::make_shared<OperationType>(
-        interpolate(progress, from, to, context));
+    return std::make_shared<T>(
+        resolveOperation(*std::static_pointer_cast<T>(operation), context));
   }
 
  protected:
-  virtual OperationType resolveOperation(
-      const OperationType &operation,
-      const ShadowNode::Shared &shadowNode,
-      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) const {
+  virtual T interpolate(
+      double progress,
+      const T &from,
+      const T &to,
+      const UpdateContext &context) const = 0;
+
+  virtual T resolveOperation(const T &operation, const UpdateContext &context)
+      const {
     return operation;
   }
 
-  virtual OperationType interpolate(
-      double progress,
-      const OperationType &fromOperation,
-      const OperationType &toOperation,
-      const UpdateContext &context) const = 0;
+ private:
+  std::shared_ptr<T> defaultOperation_;
 };
 
+using TransformInterpolators = TransformInterpolator::Interpolators;
 using TransformInterpolatorUpdateContext = TransformInterpolator::UpdateContext;
-using TransformInterpolators = TransformInterpolator::TransformInterpolators;
-using TransformInterpolatorsMap =
-    std::unordered_map<std::string, std::shared_ptr<TransformInterpolator>>;
 
 } // namespace reanimated
 
-#endif // RCT_NEW_ARCH_ENABLED
+#endif

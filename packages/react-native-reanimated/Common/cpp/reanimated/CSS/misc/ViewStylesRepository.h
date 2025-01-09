@@ -8,7 +8,6 @@
 #include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/core/LayoutableShadowNode.h>
 #include <react/renderer/dom/DOM.h>
-#include <react/renderer/graphics/Color.h>
 
 #include <map>
 #include <memory>

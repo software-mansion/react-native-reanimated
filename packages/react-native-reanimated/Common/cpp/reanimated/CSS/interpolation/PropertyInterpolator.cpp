@@ -17,17 +17,8 @@ void PropertyInterpolator::setProgressProvider(
   progressProvider_ = progressProvider;
 }
 
-PropertyInterpolatorFactory::PropertyInterpolatorFactory(PropertyType type)
-    : type_(type) {}
-
-PropertyType PropertyInterpolatorFactory::getType() const {
-  return type_;
-}
-
-template <typename T>
-std::shared_ptr<PropertyInterpolatorFactory>
-PropertyInterpolatorFactory::create(PropertyType type) {
-  return std::make_shared<PropertyInterpolatorFactory>(type);
+bool PropertyInterpolatorFactory::isDiscreteProperty() const {
+  return false;
 }
 
 } // namespace reanimated

@@ -1,130 +1,156 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/interpolation/groups/ObjectPropertiesInterpolator.h>
-#include <reanimated/CSS/interpolation/groups/TransformsStyleInterpolator.h>
+#include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 
-#include <reanimated/CSS/interpolation/values/ColorValueInterpolator.h>
-#include <reanimated/CSS/interpolation/values/DiscreteStringInterpolator.h>
-#include <reanimated/CSS/interpolation/values/NumberStepsInterpolator.h>
-#include <reanimated/CSS/interpolation/values/NumericValueInterpolator.h>
-#include <reanimated/CSS/interpolation/values/RelativeOrNumericValueInterpolator.h>
-#include <reanimated/CSS/interpolation/values/TransformOriginInterpolator.h>
+#include <reanimated/CSS/interpolation/values/ResolvableValueInterpolator.h>
+#include <reanimated/CSS/interpolation/values/ValueInterpolator.h>
 
-#include <reanimated/CSS/interpolation/transforms/AngleTransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/MatrixTransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/PerspectiveTransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/ScaleTransformInterpolator.h>
-#include <reanimated/CSS/interpolation/transforms/TranslateTransformInterpolator.h>
+#include <reanimated/CSS/interpolation/groups/ArrayPropertiesInterpolator.h>
+#include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
+
+#include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
+#include <reanimated/CSS/interpolation/transforms/TransformOperationInterpolator.h>
+#include <reanimated/CSS/interpolation/transforms/TransformsStyleInterpolator.h>
 
 #include <memory>
 #include <string>
-#include <utility>
+#include <unordered_map>
 
 namespace reanimated::Interpolators {
 
+// Template class implementations
+template <typename... AllowedTypes>
+class ValueInterpolatorFactory : public PropertyInterpolatorFactory {
+ public:
+  template <typename DefaultType>
+  explicit ValueInterpolatorFactory(const DefaultType &defaultValue)
+      : PropertyInterpolatorFactory(), defaultValue_(defaultValue) {}
+
+  bool isDiscreteProperty() const override {
+    // The property is considered discrete if all of the allowed types are
+    // discrete
+    return (Discrete<AllowedTypes> && ...);
+  }
+
+  std::shared_ptr<PropertyInterpolator> create(
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+      const override {
+    return std::make_shared<ValueInterpolator<AllowedTypes...>>(
+        propertyPath, defaultValue_, progressProvider, viewStylesRepository);
+  }
+
+ private:
+  const CSSValueVariant<AllowedTypes...> defaultValue_;
+};
+
+template <typename... AllowedTypes>
+class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
+ public:
+  template <typename DefaultType>
+  explicit ResolvableValueInterpolatorFactory(
+      RelativeTo relativeTo,
+      const std::string &relativeProperty,
+      const DefaultType &defaultValue)
+      : PropertyInterpolatorFactory(),
+        relativeTo_(relativeTo),
+        relativeProperty_(relativeProperty),
+        defaultValue_(defaultValue) {}
+
+  std::shared_ptr<PropertyInterpolator> create(
+      const PropertyPath &propertyPath,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
+      const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
+      const override {
+    return std::make_shared<ResolvableValueInterpolator<AllowedTypes...>>(
+        propertyPath,
+        defaultValue_,
+        progressProvider,
+        viewStylesRepository,
+        relativeTo_,
+        relativeProperty_);
+  }
+
+ private:
+  const RelativeTo relativeTo_;
+  const std::string relativeProperty_;
+  const CSSValueVariant<AllowedTypes...> defaultValue_;
+};
+
 /**
- * Generic property interpolators
- * - can be used for multiple properties with the same interpolation behavior
+ * Value interpolator factories
  */
+template <typename... AllowedTypes>
+auto value(const auto &defaultValue) -> std::enable_if_t<
+    (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
+    std::shared_ptr<PropertyInterpolatorFactory>> {
+  return std::make_shared<ValueInterpolatorFactory<AllowedTypes...>>(
+      CSSValueVariant<AllowedTypes...>(defaultValue));
+}
 
-std::shared_ptr<PropertyInterpolatorFactory> object(
-    const PropertyInterpolatorFactories &factories);
-
-std::shared_ptr<PropertyInterpolatorFactory> color(
-    const std::optional<Color> &defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> color();
-
-std::shared_ptr<PropertyInterpolatorFactory> numeric(
-    const std::optional<double> &defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> numeric();
-
-std::shared_ptr<PropertyInterpolatorFactory> steps(
-    const std::optional<int> &defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> steps();
-
-std::shared_ptr<PropertyInterpolatorFactory> discrete(
-    const std::optional<std::string> &defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> discrete();
-
-std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
+template <typename... AllowedTypes>
+auto value(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
-    const std::optional<UnitValue> &defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
-    RelativeTo relativeTo,
-    const std::string &relativeProperty,
-    double defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
-    RelativeTo relativeTo,
-    const std::string &relativeProperty,
-    const std::string &defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> relOrNum(
-    RelativeTo relativeTo,
-    const std::string &relativeProperty);
+    const auto &defaultValue)
+    -> std::enable_if_t<
+        (std::is_constructible_v<AllowedTypes, decltype(defaultValue)> || ...),
+        std::shared_ptr<PropertyInterpolatorFactory>> {
+  return std::make_shared<ResolvableValueInterpolatorFactory<AllowedTypes...>>(
+      relativeTo,
+      relativeProperty,
+      CSSValueVariant<AllowedTypes...>(defaultValue));
+}
 
 /**
- * Specific property interpolators
- * - can be used only for a single (specific) property
+ * Transform operation interpolator factories
  */
+template <typename OperationType>
+auto transformOp(const auto &defaultValue) -> std::enable_if_t<
+    std::is_base_of_v<TransformOperation, OperationType> &&
+        std::is_constructible_v<OperationType, decltype(defaultValue)>,
+    std::shared_ptr<TransformInterpolator>> {
+  return std::make_shared<TransformOperationInterpolator<OperationType>>(
+      std::make_shared<OperationType>(defaultValue));
+}
 
-std::shared_ptr<PropertyInterpolatorFactory> transforms(
-    const TransformInterpolatorsMap &interpolators);
+template <typename OperationType>
+auto transformOp(
+    RelativeTo relativeTo,
+    const std::string &relativeProperty,
+    const auto &defaultValue)
+    -> std::enable_if_t<
+        std::is_base_of_v<TransformOperation, OperationType> &&
+            std::is_constructible_v<OperationType, decltype(defaultValue)> &&
+            ResolvableOperation<OperationType>,
+        std::shared_ptr<TransformInterpolator>> {
+  return std::make_shared<TransformOperationInterpolator<OperationType>>(
+      std::make_shared<OperationType>(defaultValue),
+      relativeTo,
+      relativeProperty);
+}
 
-std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
-    const TransformOrigin &defaultValue);
-std::shared_ptr<PropertyInterpolatorFactory> transformOrigin(
-    const std::variant<double, std::string> &x,
-    const std::variant<double, std::string> &y,
-    double z);
+/**
+ * Record property interpolator factory
+ */
+std::shared_ptr<PropertyInterpolatorFactory> record(
+    const InterpolatorFactoriesRecord &factories);
 
-std::shared_ptr<PropertyInterpolatorFactory> display(
-    const std::string &defaultValue);
+/**
+ * Array property interpolator factory
+ */
+std::shared_ptr<PropertyInterpolatorFactory> array(
+    const InterpolatorFactoriesArray &factories);
 
 /**
  * Transform interpolators
- * - can be used only within the transforms group interpolator
  */
-
-std::shared_ptr<TransformInterpolator> perspective(double defaultValue);
-
-std::shared_ptr<TransformInterpolator> rotate(const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolator> rotate(const std::string &defaultValue);
-std::shared_ptr<TransformInterpolator> rotateX(const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolator> rotateX(const std::string &defaultValue);
-std::shared_ptr<TransformInterpolator> rotateY(const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolator> rotateY(const std::string &defaultValue);
-std::shared_ptr<TransformInterpolator> rotateZ(const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolator> rotateZ(const std::string &defaultValue);
-
-std::shared_ptr<TransformInterpolator> scale(double defaultValue);
-std::shared_ptr<TransformInterpolator> scaleX(double defaultValue);
-std::shared_ptr<TransformInterpolator> scaleY(double defaultValue);
-
-std::shared_ptr<TransformInterpolator> translateX(
-    RelativeTo relativeTo,
-    const std::string &relativeProperty,
-    const UnitValue &defaultValue);
-std::shared_ptr<TransformInterpolator> translateX(
-    RelativeTo relativeTo,
-    const std::string &relativeProperty,
-    double defaultValue);
-std::shared_ptr<TransformInterpolator> translateY(
-    RelativeTo relativeTo,
-    const std::string &relativeProperty,
-    const UnitValue &defaultValue);
-std::shared_ptr<TransformInterpolator> translateY(
-    RelativeTo relativeTo,
-    const std::string &relativeProperty,
-    double defaultValue);
-
-std::shared_ptr<TransformInterpolator> skewX(const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolator> skewX(const std::string &defaultValue);
-std::shared_ptr<TransformInterpolator> skewY(const AngleValue &defaultValue);
-std::shared_ptr<TransformInterpolator> skewY(const std::string &defaultValue);
-
-std::shared_ptr<TransformInterpolator> matrix(
-    const TransformMatrix &defaultValue);
+std::shared_ptr<PropertyInterpolatorFactory> transforms(
+    const std::unordered_map<
+        std::string,
+        std::shared_ptr<TransformInterpolator>> &interpolators);
 
 } // namespace reanimated::Interpolators
 
