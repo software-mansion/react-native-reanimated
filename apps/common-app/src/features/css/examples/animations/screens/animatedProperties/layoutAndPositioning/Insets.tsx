@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import type {
+  CSSAnimationKeyframes,
   CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
@@ -16,24 +17,42 @@ const SHARED_SETTINGS: CSSAnimationSettings = {
 
 const EXAMPLES = [
   {
-    property: 'top',
-    title: 'Top',
+    buildKeyframes: ({ property }: { property: string }) => ({
+      from: {
+        [property]: 0,
+      },
+      to: {
+        [property]: 50,
+      },
+    }),
+    name: 'Absolute',
   },
   {
-    property: 'right',
-    title: 'Right',
+    buildKeyframes: ({ property }: { property: string }) => ({
+      from: {
+        [property]: '0%',
+      },
+      to: {
+        [property]: '50%',
+      },
+    }),
+    name: 'Relative',
   },
   {
-    property: 'bottom',
-    title: 'Bottom',
+    buildKeyframes: ({ property }: { property: string }) => ({
+      from: {
+        [property]: 50,
+      },
+      to: {
+        [property]: '50%',
+      },
+    }),
+    name: 'Mixed',
   },
-  {
-    property: 'left',
-    title: 'Left',
-  },
-];
-
-const DESCRIPTION = 'In all examples the box position is set to `absolute`.';
+] satisfies Array<{
+  buildKeyframes: ({ property }: { property: string }) => CSSAnimationKeyframes;
+  name: string;
+}>;
 
 function renderExample({ animation }: { animation: CSSAnimationProperties }) {
   return (
@@ -46,81 +65,67 @@ function renderExample({ animation }: { animation: CSSAnimationProperties }) {
 export default function Insets() {
   return (
     <ExamplesScreen<{ property: string }>
-      tabs={[
-        {
-          buildAnimation: ({ property }) => ({
-            ...SHARED_SETTINGS,
-            animationName: {
-              from: {
-                [property]: 0,
+      tabs={EXAMPLES.map(({ buildKeyframes, name }) => ({
+        buildAnimation: ({ property }) => ({
+          ...SHARED_SETTINGS,
+          animationDuration: '3s',
+          animationName: buildKeyframes({ property }),
+        }),
+        name,
+        renderExample,
+        sections: [
+          {
+            description:
+              'In all examples the box position is set to `absolute`.',
+            examples: [
+              {
+                description: '(or insetBlockStart)',
+                property: 'top',
+                title: 'Top',
               },
-              to: {
-                [property]: 50,
+              {
+                description: '(or insetBlockEnd)',
+                property: 'bottom',
+                title: 'Bottom',
               },
-            },
-          }),
-          name: 'Absolute',
-          renderExample,
-          sections: [
-            {
-              description: DESCRIPTION,
-              examples: EXAMPLES,
-              title: 'Absolute Insets',
-            },
-          ],
-        },
-        {
-          buildAnimation: ({ property }) => ({
-            ...SHARED_SETTINGS,
-            animationName: {
-              from: {
-                [property]: '0%',
+              {
+                description: '(or insetInlineEnd)',
+                property: 'right',
+                title: 'Right',
               },
-              to: {
-                [property]: '50%',
+              {
+                description: '(or insetInlineStart)',
+                property: 'left',
+                title: 'Left',
               },
-            },
-          }),
-          name: 'Relative',
-          renderExample,
-          sections: [
-            {
-              description: DESCRIPTION,
-              examples: EXAMPLES,
-              title: 'Relative Insets',
-            },
-          ],
-        },
-        {
-          buildAnimation: ({ property }) => ({
-            ...SHARED_SETTINGS,
-            animationDuration: '3s',
-            animationName: {
-              '0%, 100%': {
-                [property]: 0,
+            ],
+            title: 'Top / Right / Bottom / Left',
+          },
+          {
+            examples: [
+              {
+                description:
+                  'Applies the same offset value to all `top`, `right`, `bottom`, and `left` properties.',
+                property: 'inset',
+                title: 'Inset',
               },
-              '25%': {
-                [property]: '25%',
+              {
+                description:
+                  'Applies the same offset value to all `top` and `bottom` properties.',
+                property: 'insetBlock',
+                title: 'Inset Block',
               },
-              '50%': {
-                [property]: 50,
+              {
+                description:
+                  'Applies the same offset value to all `left` and `right` properties.',
+                property: 'insetInline',
+                title: 'Inset Inline',
               },
-              '75%': {
-                [property]: '50%',
-              },
-            },
-          }),
-          name: 'Mixed',
-          renderExample,
-          sections: [
-            {
-              description: DESCRIPTION,
-              examples: EXAMPLES,
-              title: 'Mixed Insets',
-            },
-          ],
-        },
-      ]}
+            ],
+            title: 'Inset Properties',
+          },
+        ],
+      }))}
     />
   );
 }

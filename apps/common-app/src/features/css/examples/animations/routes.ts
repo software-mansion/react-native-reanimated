@@ -129,8 +129,6 @@ const layoutAndPositioningRoutes = {
     routes: {
       Position: {
         name: 'Position',
-        disabled: true,
-        labelTypes: ['unimplemented'],
         Component: animatedProperties.layoutAndPositioning.others.Position,
       },
       Display: {
@@ -139,14 +137,10 @@ const layoutAndPositioningRoutes = {
       },
       Overflow: {
         name: 'Overflow',
-        disabled: true,
-        labelTypes: ['unimplemented'],
         Component: animatedProperties.layoutAndPositioning.others.Overflow,
       },
       ZIndex: {
-        name: 'Z Index',
-        disabled: true,
-        labelTypes: ['unimplemented'],
+        name: 'Z-index',
         Component: animatedProperties.layoutAndPositioning.others.ZIndex,
       },
       AspectRatio: {
@@ -205,11 +199,18 @@ const appearanceRoutes = {
         routes: {
           TextShadowOffset: {
             name: 'Text Shadow Offset',
+            labelTypes: ['iOS', 'Android'],
             Component: animatedProperties.appearance.shadows.TextShadowOffset,
           },
           TextShadowRadius: {
             name: 'Text Shadow Radius',
+            labelTypes: ['iOS', 'Android'],
             Component: animatedProperties.appearance.shadows.TextShadowRadius,
+          },
+          BoxShadow: {
+            name: 'Box Shadow',
+            labelTypes: ['unimplemented'],
+            Component: animatedProperties.appearance.shadows.BoxShadow,
           },
         },
       },
@@ -297,8 +298,6 @@ const appearanceRoutes = {
   },
   Others: {
     name: 'Others',
-    disabled: true,
-    labelTypes: ['unimplemented'],
     routes: {
       Opacity: {
         name: 'Opacity',
@@ -353,8 +352,7 @@ const typographyRoutes = {
       },
       VerticalAlign: {
         name: 'Vertical Align',
-        labelTypes: ['unsupported' /* 'Android' */],
-        disabled: true,
+        labelTypes: ['web'],
         Component: animatedProperties.typography.alignment.VerticalAlign,
       },
       TextAlignVertical: {

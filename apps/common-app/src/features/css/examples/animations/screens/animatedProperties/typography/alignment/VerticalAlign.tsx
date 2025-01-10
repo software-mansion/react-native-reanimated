@@ -3,7 +3,7 @@ import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { colors } from '@/theme';
-import { ExamplesScreen, VerticalExampleCard } from '~/css/components';
+import { ExamplesScreen, Text, VerticalExampleCard } from '~/css/components';
 
 export default function VerticalAlign() {
   return (
@@ -16,9 +16,13 @@ export default function VerticalAlign() {
         animationTimingFunction: 'linear',
       })}
       renderExample={({ animation }) => (
-        <Animated.Text style={[styles.text, animation]}>
-          Hello from Reanimated!
-        </Animated.Text>
+        <Text style={styles.outerText}>
+          Hello from
+          <Animated.Text style={[styles.innerText, animation]}>
+            {' '}
+            Reanimated!
+          </Animated.Text>
+        </Text>
       )}
       sections={[
         {
@@ -40,7 +44,7 @@ export default function VerticalAlign() {
               title: 'Changing Vertical Alignment',
             },
           ],
-          labelTypes: ['Android'],
+          labelTypes: ['web'],
           title: 'Vertical Align',
         },
       ]}
@@ -49,11 +53,15 @@ export default function VerticalAlign() {
 }
 
 const styles = StyleSheet.create({
-  text: {
+  innerText: {
+    fontSize: 10,
+    lineHeight: 10,
+  },
+  outerText: {
     color: colors.primary,
     fontFamily: 'Poppins',
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: 'bold',
-    height: 100,
+    lineHeight: 48,
   },
 });

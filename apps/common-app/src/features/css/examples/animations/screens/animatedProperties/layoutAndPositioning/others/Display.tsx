@@ -1,5 +1,8 @@
 import { StyleSheet } from 'react-native';
-import type { CSSAnimationKeyframes } from 'react-native-reanimated';
+import type {
+  CSSAnimationDelay,
+  CSSAnimationKeyframes,
+} from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { colors, radius, sizes } from '@/theme';
@@ -9,8 +12,10 @@ export default function Display() {
   return (
     <ExamplesScreen<{
       keyframes: CSSAnimationKeyframes;
+      animationDelay?: CSSAnimationDelay;
     }>
-      buildAnimation={({ keyframes }) => ({
+      buildAnimation={({ animationDelay, keyframes }) => ({
+        animationDelay,
         animationDuration: '1s',
         animationFillMode: 'both',
         animationName: keyframes,
@@ -29,6 +34,7 @@ export default function Display() {
           ],
           examples: [
             {
+              animationDelay: '1s',
               keyframes: {
                 from: {
                   display: 'none',
