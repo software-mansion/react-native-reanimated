@@ -3730,12 +3730,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/metro-runtime@npm:^3.2.1":
-  version: 3.2.3
-  resolution: "@expo/metro-runtime@npm:3.2.3"
+"@expo/metro-runtime@npm:~4.0.0":
+  version: 4.0.0
+  resolution: "@expo/metro-runtime@npm:4.0.0"
   peerDependencies:
     react-native: "*"
-  checksum: 10/c798321e05943d3962e9d3b0693af14934e284c8de2de5534989d414c5a1889c96f26f229cd2cd4598d988c9e146c56fb19d9ca5b074518dbdf8110bd45f942a
+  checksum: 10/2f5bd81e4d0735dc9b99ac4f35169969eb9dc303669ddc3158f670a3c36115f87d479a6fda11c1d5acab551f1015a32271c83001e8874493f0ec58c02f8ddbf3
   languageName: node
   linkType: hard
 
@@ -18223,6 +18223,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-web@npm:0.19.13":
+  version: 0.19.13
+  resolution: "react-native-web@npm:0.19.13"
+  dependencies:
+    "@babel/runtime": "npm:^7.18.6"
+    "@react-native/normalize-colors": "npm:^0.74.1"
+    fbjs: "npm:^3.0.4"
+    inline-style-prefixer: "npm:^6.0.1"
+    memoize-one: "npm:^6.0.0"
+    nullthrows: "npm:^1.1.1"
+    postcss-value-parser: "npm:^4.2.0"
+    styleq: "npm:^0.1.3"
+  peerDependencies:
+    react: ^18.0.0
+    react-dom: ^18.0.0
+  checksum: 10/65e0660fb37c1f7e3864a7b506acdd3bbf249de516166775cbf2f371bc28f6e965bc01cbd214bfe820c1a933aee58b6fb29298ccd0dc5f412f147a57e7126dd9
+  languageName: node
+  linkType: hard
+
 "react-native-worklets@workspace:packages/react-native-worklets":
   version: 0.0.0-use.local
   resolution: "react-native-worklets@workspace:packages/react-native-worklets"
@@ -21393,7 +21412,7 @@ __metadata:
   resolution: "web-example@workspace:apps/web-example"
   dependencies:
     "@babel/core": "npm:^7.20.0"
-    "@expo/metro-runtime": "npm:^3.2.1"
+    "@expo/metro-runtime": "npm:~4.0.0"
     "@expo/vector-icons": "npm:^14.0.0"
     "@react-navigation/native": "npm:^7.0.0"
     "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch"
@@ -21407,7 +21426,7 @@ __metadata:
     react-dom: "npm:18.3.1"
     react-native: "npm:0.76.5"
     react-native-reanimated: "workspace:*"
-    react-native-web: "npm:0.19.11"
+    react-native-web: "npm:0.19.13"
     serve: "npm:^14.2.3"
     typescript: "npm:~5.3.0"
   languageName: unknown
