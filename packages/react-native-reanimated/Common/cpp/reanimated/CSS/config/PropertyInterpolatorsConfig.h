@@ -251,7 +251,6 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       // Alignment
       {"textAlign", value<CSSKeyword>("auto")},
       {"textAlignVertical", value<CSSKeyword>("auto")},
-      {"verticalAlign", value<CSSKeyword>("auto")},
       // Decoration
       {"letterSpacing", value<CSSDouble>(0)},
       {"lineHeight", // TODO - should inherit from fontSize

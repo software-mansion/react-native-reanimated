@@ -11,8 +11,11 @@ import {
 } from './style';
 import type { StyleBuilderConfig } from './style';
 import type { PlainStyle } from '../../types';
+import { Platform } from 'react-native';
 
 const colorAttributes = { process: processColor };
+
+const IS_ANDROID = Platform.OS === 'android';
 
 export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   /** Layout and Positioning */
@@ -119,16 +122,16 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   borderBlockColor: colorAttributes,
   // Other
   outlineColor: false, // TODO
-  shadowColor: colorAttributes, // iOS only
+  shadowColor: colorAttributes,
   overlayColor: colorAttributes,
   tintColor: colorAttributes,
 
   // SHADOWS
   // View
-  shadowOffset: true,
-  shadowOpacity: true,
-  shadowRadius: true,
-  elevation: true,
+  shadowOffset: !IS_ANDROID,
+  shadowOpacity: !IS_ANDROID,
+  shadowRadius: !IS_ANDROID,
+  elevation: IS_ANDROID,
   textShadowOffset: true,
   textShadowRadius: true,
   boxShadow: true,
@@ -201,7 +204,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   // Alignment
   textAlign: true,
   textAlignVertical: true,
-  verticalAlign: true,
+  verticalAlign: false,
   // Decoration
   letterSpacing: true,
   lineHeight: true,
