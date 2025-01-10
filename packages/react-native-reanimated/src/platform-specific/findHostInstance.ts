@@ -18,7 +18,10 @@ type HostInstancePaper = {
 
 export type HostInstance = HostInstanceFabric & HostInstancePaper;
 
-function findHostInstanceFastPath(maybeNativeRef: HostInstance) {
+function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
+  if (!maybeNativeRef) {
+    return undefined;
+  }
   if (
     maybeNativeRef.__internalInstanceHandle &&
     maybeNativeRef.__nativeTag &&
