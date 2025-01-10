@@ -52,7 +52,6 @@ else()
 endif()
 
 if(NOT ${HAS_EXTERNAL_WORKLETS})
-  find_package(react-native-worklets REQUIRED CONFIG)
   if(${JS_RUNTIME} STREQUAL "hermes")
     target_link_libraries(reanimated hermes-engine::libhermes)
 
