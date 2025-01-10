@@ -18,7 +18,7 @@
     "@react-navigation/native": "^7.0.0",
     "@react-navigation/native-stack": "^7.0.0",
     "@react-navigation/stack": "^7.0.0",
-    "@shopify/flash-list": "1.7.2",
+    "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch",
     "common-app": "workspace:*",
     "react": "18.3.1",
     "react-native": "0.75.4",

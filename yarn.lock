@@ -6348,6 +6348,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@shopify/flash-list@patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch":
+  version: 1.7.2
+  resolution: "@shopify/flash-list@patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch::version=1.7.2&hash=562d5c"
+  dependencies:
+    recyclerlistview: "npm:4.2.1"
+    tslib: "npm:2.6.3"
+  peerDependencies:
+    "@babel/runtime": "*"
+    react: "*"
+    react-native: "*"
+  checksum: 10/fa621d15ddea3b234106859e5b435b8457fd9a04996d793f8818af26133a2332224338a55db74f8f865ecdf69fbdafc65bb3fd5fddd3db02bddcc9a98728e2a2
+  languageName: node
+  linkType: hard
+
 "@sideway/address@npm:^4.1.5":
   version: 4.1.5
   resolution: "@sideway/address@npm:4.1.5"
@@ -9085,7 +9099,7 @@ __metadata:
     "@react-navigation/native": "npm:^7.0.0"
     "@react-navigation/native-stack": "npm:^7.0.0"
     "@react-navigation/stack": "npm:^7.0.0"
-    "@shopify/flash-list": "npm:1.7.2"
+    "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch"
     "@tsconfig/react-native": "npm:^3.0.0"
     "@types/d3-shape": "npm:^3.1.1"
     d3-shape: "npm:^3.2.0"
@@ -11651,7 +11665,7 @@ __metadata:
     "@react-native/typescript-config": "npm:0.77.0-rc.6"
     "@react-navigation/native": "npm:^7.0.0"
     "@react-navigation/native-stack": "npm:^7.0.0"
-    "@shopify/flash-list": "npm:1.7.2"
+    "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch"
     "@types/jest": "npm:^29.5.13"
     "@types/react": "npm:^18.2.6"
     "@types/react-test-renderer": "npm:^18.0.0"
@@ -15045,7 +15059,7 @@ __metadata:
     "@react-navigation/native": "npm:^7.0.0"
     "@react-navigation/native-stack": "npm:^7.0.0"
     "@react-navigation/stack": "npm:^7.0.0"
-    "@shopify/flash-list": "npm:1.7.2"
+    "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch"
     "@types/react": "npm:^18.2.6"
     "@types/react-test-renderer": "npm:^18.0.0"
     babel-jest: "npm:^29.6.3"
@@ -17107,7 +17121,7 @@ __metadata:
     "@react-native/typescript-config": "npm:0.77.0-rc.6"
     "@react-navigation/native": "npm:^7.0.0"
     "@react-navigation/native-stack": "npm:^7.0.0"
-    "@shopify/flash-list": "npm:1.7.2"
+    "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch"
     "@types/jest": "npm:^29.5.13"
     "@types/react": "npm:^18.2.6"
     "@types/react-test-renderer": "npm:^18.0.0"
@@ -17970,7 +17984,7 @@ __metadata:
 
 "react-native-gesture-handler@patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch":
   version: 2.21.2
-  resolution: "react-native-gesture-handler@patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch::version=2.21.2&hash=a3aad0"
+  resolution: "react-native-gesture-handler@patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch::version=2.21.2&hash=ed3248"
   dependencies:
     "@egjs/hammerjs": "npm:^2.0.17"
     hoist-non-react-statics: "npm:^3.3.0"
@@ -17979,7 +17993,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/18e8e4801b15cd08a2c82d42632fb2666a4e5fc3a9452d176b7cad58850c43741ef633db794ea82e8d914ef8cf39d269128ea330fef478c29dc426bd34378fdd
+  checksum: 10/7b437c6985863c630f9b3378bc4cbb664c48271f33ecf53334e19187d4007403e3b81c3f0169e426d61a174504ea0a52f9e773cb37db9f6ffe65c20c8cad71bc
   languageName: node
   linkType: hard
 
@@ -21368,7 +21382,7 @@ __metadata:
     "@expo/metro-runtime": "npm:^3.2.1"
     "@expo/vector-icons": "npm:^14.0.0"
     "@react-navigation/native": "npm:^7.0.0"
-    "@shopify/flash-list": "npm:1.7.2"
+    "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch"
     "@types/eslint": "npm:^8"
     common-app: "workspace:*"
     eslint: "npm:^8.57.0"
