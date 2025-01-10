@@ -622,7 +622,9 @@ void NativeProxy::setupLayoutAnimations() {
 
 void NativeProxy::invalidateCpp() {
   workletsModuleProxy_.reset();
-  reanimatedModuleProxy_->invalidate();
+  if (reanimatedModuleProxy_ != nullptr) {
+    reanimatedModuleProxy_->invalidate();
+  }
   reanimatedModuleProxy_.reset();
 }
 
