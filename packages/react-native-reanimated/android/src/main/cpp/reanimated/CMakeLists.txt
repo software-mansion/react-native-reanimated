@@ -37,7 +37,7 @@ endif()
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(reanimated log ReactAndroid::jsi fbjni::fbjni)
+target_link_libraries(reanimated log ReactAndroid::jsi fbjni::fbjni android)
 
 if(${HAS_EXTERNAL_WORKLETS})
   target_link_libraries(reanimated react-native-worklets::worklets)

@@ -19,13 +19,6 @@ void RNRuntimeDecorator::decorate(
   rnRuntime.global().setProperty(
       rnRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
 
-#ifdef RCT_NEW_ARCH_ENABLED
-  constexpr auto isFabric = true;
-#else
-  constexpr auto isFabric = false;
-#endif // RCT_NEW_ARCH_ENABLED
-  rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", isFabric);
-
   rnRuntime.global().setProperty(
       rnRuntime, "_IS_BRIDGELESS", reanimatedModuleProxy->isBridgeless());
 

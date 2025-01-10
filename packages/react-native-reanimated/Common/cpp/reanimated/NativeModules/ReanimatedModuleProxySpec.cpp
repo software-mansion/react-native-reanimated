@@ -7,45 +7,6 @@
 
 namespace reanimated {
 
-// scheduler
-
-static jsi::Value REANIMATED_SPEC_PREFIX(scheduleOnUI)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->scheduleOnUI(rt, std::move(args[0]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(executeOnUIRuntimeSync)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->executeOnUIRuntimeSync(rt, std::move(args[0]));
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(createWorkletRuntime)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->createWorkletRuntime(rt, std::move(args[0]), std::move(args[1]));
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(scheduleOnRuntime)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->scheduleOnRuntime(rt, std::move(args[0]), std::move(args[1]));
-}
-
 static jsi::Value REANIMATED_SPEC_PREFIX(registerEventHandler)(
     jsi::Runtime &rt,
     TurboModule &turboModule,
@@ -163,15 +124,6 @@ static jsi::Value REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)(
 ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
     const std::shared_ptr<CallInvoker> &jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
-  methodMap_["scheduleOnUI"] =
-      MethodMetadata{1, REANIMATED_SPEC_PREFIX(scheduleOnUI)};
-  methodMap_["executeOnUIRuntimeSync"] =
-      MethodMetadata{1, REANIMATED_SPEC_PREFIX(executeOnUIRuntimeSync)};
-  methodMap_["createWorkletRuntime"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(createWorkletRuntime)};
-  methodMap_["scheduleOnRuntime"] =
-      MethodMetadata{2, REANIMATED_SPEC_PREFIX(scheduleOnRuntime)};
-
   methodMap_["registerEventHandler"] =
       MethodMetadata{3, REANIMATED_SPEC_PREFIX(registerEventHandler)};
   methodMap_["unregisterEventHandler"] =

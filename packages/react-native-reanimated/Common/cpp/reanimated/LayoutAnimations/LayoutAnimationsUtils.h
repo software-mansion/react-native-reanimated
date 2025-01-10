@@ -96,7 +96,6 @@ struct Node {
  */
 struct MutationNode : public Node {
   ShadowViewMutation mutation;
-  std::unordered_set<Tag> animatedChildren;
   ExitingState state = UNDEFINED;
   explicit MutationNode(ShadowViewMutation &mutation)
       : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
