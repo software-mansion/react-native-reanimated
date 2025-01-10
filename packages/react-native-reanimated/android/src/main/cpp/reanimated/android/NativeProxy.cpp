@@ -311,4 +311,11 @@ void NativeProxy::invalidateCpp() {
   reanimatedModuleProxy_.reset();
 }
 
+void NativeProxy::invalidateCpp() {
+  if (reanimatedModuleProxy_ != nullptr) {
+    reanimatedModuleProxy_->invalidate();
+  }
+  reanimatedModuleProxy_.reset();
+}
+
 } // namespace reanimated
