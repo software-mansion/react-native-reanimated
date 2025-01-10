@@ -9,6 +9,7 @@ import FlexDirection from './FlexDirection';
 import FlexGrow from './FlexGrow';
 import FlexShrink from './FlexShrink';
 import FlexWrap from './FlexWrap';
+import Gap from './Gap';
 import JustifyContent from './JustifyContent';
 import LayoutDirection from './LayoutDirection';
 import RowGap from './RowGap';
@@ -26,6 +27,7 @@ export default {
   FlexGrow,
   FlexShrink,
   FlexWrap,
+  Gap,
   JustifyContent,
   LayoutDirection,
   RowGap,

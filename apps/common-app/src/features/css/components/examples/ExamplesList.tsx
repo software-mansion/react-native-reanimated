@@ -22,7 +22,10 @@ export type ExamplesListProps<P extends AnyRecord> = {
     labelTypes?: Array<LabelType>;
     CardComponent?: ComponentType<ExampleCardProps>;
     examples: Array<
-      Omit<ExampleCardProps, 'children' | 'code' | 'collapsedCode'> & P
+      {
+        CardComponent?: ComponentType<ExampleCardProps>;
+      } & Omit<ExampleCardProps, 'children' | 'code' | 'collapsedCode'> &
+        P
     >;
   }>;
 };
@@ -45,9 +48,13 @@ export default function ExamplesList<P extends AnyRecord>({
               <Example
                 {...exampleProps}
                 buildAnimation={buildAnimation}
-                CardComponent={SectionCardComponent ?? CardComponent}
                 key={exampleIndex}
                 renderExample={renderExample}
+                CardComponent={
+                  exampleProps.CardComponent ??
+                  SectionCardComponent ??
+                  CardComponent
+                }
               />
             ))}
           </Section>

@@ -17,6 +17,7 @@ export const labelColors = {
   new: '#008080',
   unimplemented: '#4A4E6A',
   unsupported: '#E65100',
+  web: '#673AB7',
 } as const;
 
 export const colors = {

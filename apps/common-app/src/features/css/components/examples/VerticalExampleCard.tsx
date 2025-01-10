@@ -43,7 +43,16 @@ export default function VerticalExampleCard({
             />
           )}
         </View>
-        {description && <Text style={styles.description}>{description}</Text>}
+        {description &&
+          (Array.isArray(description) ? (
+            <View style={styles.description}>
+              {description.map((paragraph, index) => (
+                <Text key={index}>{paragraph}</Text>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.description}>{description}</Text>
+          ))}
         <Animated.View style={styles.itemsContainer}>
           {/* Code block */}
           <Animated.View layout={LinearTransition} style={styles.itemWrapper}>

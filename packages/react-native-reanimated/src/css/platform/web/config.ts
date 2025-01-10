@@ -31,8 +31,8 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   gap: 'px',
   rowGap: 'px',
   columnGap: 'px',
-  start: 'px',
-  end: 'px',
+  start: false,
+  end: false,
   direction: true,
 
   // DIMENSIONS

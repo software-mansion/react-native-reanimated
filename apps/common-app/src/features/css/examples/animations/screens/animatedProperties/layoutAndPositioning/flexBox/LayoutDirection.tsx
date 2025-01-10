@@ -58,6 +58,7 @@ export default function LayoutDirection() {
               title: 'Changing Layout Direction',
             },
           ],
+          labelTypes: ['iOS', 'Android'],
           title: 'Layout Direction',
         },
       ]}
