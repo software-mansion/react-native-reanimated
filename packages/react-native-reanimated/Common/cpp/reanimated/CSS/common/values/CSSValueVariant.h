@@ -29,6 +29,7 @@ using namespace worklets;
   using R = std::remove_reference_t<decltype(rhs)>; \
   if constexpr (std::is_same_v<L, R>)
 
+// clang-format off
 /**
  * Checks if type has a constructor from jsi::Value
  */
@@ -54,6 +55,7 @@ static constexpr bool has_can_construct_jsi =
     requires(jsi::Runtime &rt, V &&value) {
       { Type::canConstruct(rt, std::forward<V>(value)) } -> std::same_as<bool>;
     };
+// clang-format on
 
 /**
  * CSSValueVariant

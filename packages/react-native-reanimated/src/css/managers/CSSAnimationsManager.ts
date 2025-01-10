@@ -1,22 +1,19 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import { CSSKeyframesRuleImpl } from '../models';
+import type {
+  NormalizedSingleCSSAnimationConfig,
+  NormalizedSingleCSSAnimationSettings,
+} from '../platform/native';
 import {
   registerCSSAnimations,
   unregisterCSSAnimations,
   updateCSSAnimations,
-} from '../native';
-import {
   getAnimationSettingsUpdates,
   createSingleCSSAnimationProperties,
   normalizeSingleCSSAnimationSettings,
-} from '../normalization';
-import type {
-  CSSAnimationKeyframes,
-  CSSAnimationProperties,
-  NormalizedSingleCSSAnimationConfig,
-  NormalizedSingleCSSAnimationSettings,
-} from '../types';
+} from '../platform/native';
+import type { CSSAnimationKeyframes, CSSAnimationProperties } from '../types';
 
 type ProcessedAnimation = {
   normalizedConfig: NormalizedSingleCSSAnimationConfig;

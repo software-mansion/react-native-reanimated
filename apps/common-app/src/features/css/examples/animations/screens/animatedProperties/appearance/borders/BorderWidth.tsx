@@ -40,6 +40,7 @@ export default function BorderWidth() {
               title: 'borderTopWidth',
             },
             {
+              description: ['(or borderEndWidth)'],
               propertyName: 'borderRightWidth',
               title: 'borderRightWidth',
             },
@@ -48,6 +49,7 @@ export default function BorderWidth() {
               title: 'borderBottomWidth',
             },
             {
+              description: ['(or borderStartWidth)'],
               propertyName: 'borderLeftWidth',
               title: 'borderLeftWidth',
             },

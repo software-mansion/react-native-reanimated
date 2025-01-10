@@ -20,28 +20,32 @@ const SHARED_EXAMPLES = [
     title: 'Padding',
   },
   {
+    description: ['(or paddingBlockStart)'],
     property: 'paddingTop',
     title: 'Top Padding',
   },
   {
-    description: '(or paddingEnd)',
+    description: ['(or paddingEnd / paddingInlineEnd)'],
     property: 'paddingRight',
     title: 'Right Padding',
   },
   {
+    description: ['(or paddingBlockEnd)'],
     property: 'paddingBottom',
     title: 'Bottom Padding',
   },
   {
-    description: '(or paddingStart)',
+    description: ['(or paddingStart / paddingInlineStart)'],
     property: 'paddingLeft',
     title: 'Left Padding',
   },
   {
+    description: ['(or paddingInline)'],
     property: 'paddingHorizontal',
     title: 'Horizontal Padding',
   },
   {
+    description: ['(or paddingBlock)'],
     property: 'paddingVertical',
     title: 'Vertical Padding',
   },

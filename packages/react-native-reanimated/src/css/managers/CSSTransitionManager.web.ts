@@ -1,7 +1,11 @@
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import type { CSSTransitionProperties } from '../types';
 import { convertConfigPropertiesToArrays } from '../utils';
-import { kebabize, maybeAddSuffixes, parseTimingFunction } from '../web';
+import {
+  kebabize,
+  maybeAddSuffixes,
+  parseTimingFunction,
+} from '../platform/web';
 
 export default class CSSTransitionManager {
   private readonly element: ReanimatedHTMLElement;

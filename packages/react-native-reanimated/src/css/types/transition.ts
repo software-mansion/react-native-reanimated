@@ -1,12 +1,7 @@
 'use strict';
 import type { PlainStyle, TimeUnit } from './common';
-import type {
-  CSSTimingFunction,
-  NormalizedCSSTimingFunction,
-} from '../easings';
+import type { CSSTimingFunction } from '../easings';
 import type { AddArrayPropertyTypes } from './helpers';
-
-// BEFORE NORMALIZATION
 
 export type CSSTransitionProperty<S extends object = PlainStyle> =
   | 'all'
@@ -41,22 +36,3 @@ export type CSSTransitionProperties<S extends object = PlainStyle> =
   };
 
 export type CSSTransitionProp = keyof CSSTransitionProperties;
-
-// AFTER NORMALIZATION
-
-export type NormalizedSingleCSSTransitionSettings = {
-  duration: number;
-  timingFunction: NormalizedCSSTimingFunction;
-  delay: number;
-};
-
-export type NormalizedCSSTransitionPropertyNames = 'all' | (keyof PlainStyle)[];
-
-export type NormalizedCSSTransitionConfig = {
-  properties: NormalizedCSSTransitionPropertyNames;
-  settings: Record<string, NormalizedSingleCSSTransitionSettings>;
-  allowDiscrete: boolean;
-};
-
-export type NormalizedCSSTransitionConfigUpdates =
-  Partial<NormalizedCSSTransitionConfig>;

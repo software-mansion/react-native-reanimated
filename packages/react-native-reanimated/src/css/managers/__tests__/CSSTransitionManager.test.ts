@@ -4,11 +4,11 @@ import {
   registerCSSTransition,
   unregisterCSSTransition,
   updateCSSTransition,
-} from '../../native';
-import { normalizeCSSTransitionProperties } from '../../normalization';
+} from '../../platform/native/native';
 import type { CSSTransitionProperties } from '../../types';
+import { normalizeCSSTransitionProperties } from '../../platform/native';
 
-jest.mock('../../native', () => ({
+jest.mock('../../platform/native/native.ts', () => ({
   registerCSSTransition: jest.fn(),
   unregisterCSSTransition: jest.fn(),
   updateCSSTransition: jest.fn(),

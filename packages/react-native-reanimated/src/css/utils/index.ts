@@ -1,4 +1,5 @@
 'use strict';
-export * from './typeGuards';
+export * from './guards';
 export * from './equality';
 export * from './conversions';
+export * from './props';
