@@ -95,6 +95,8 @@ export interface AnimatedComponentRef extends Component {
   setNativeProps?: (props: Record<string, unknown>) => void;
   getScrollableNode?: () => AnimatedComponentRef;
   getAnimatableRef?: () => AnimatedComponentRef;
+  // Case for SVG components on Web
+  elementRef?: React.RefObject<AnimatedComponentRef>;
 }
 
 export interface IAnimatedComponentInternal {

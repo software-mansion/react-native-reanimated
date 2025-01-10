@@ -497,6 +497,10 @@ export function createAnimatedComponent(
       if (componentRef && componentRef.getAnimatableRef) {
         return componentRef.getAnimatableRef();
       }
+      // Case for SVG components on Web
+      if (SHOULD_BE_USE_WEB && componentRef && componentRef.elementRef) {
+        return componentRef.elementRef.current;
+      }
       return componentRef;
     };
 
