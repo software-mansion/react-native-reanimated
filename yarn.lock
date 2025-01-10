@@ -9151,7 +9151,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
-    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch"
+    react-native-gesture-handler: "npm:2.22.0"
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.1.0"
@@ -11718,7 +11718,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
-    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch"
+    react-native-gesture-handler: "npm:2.22.0"
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.1.0"
@@ -15111,7 +15111,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.75.4"
-    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch"
+    react-native-gesture-handler: "npm:2.22.0"
     react-native-macos: "npm:^0.75.13"
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
@@ -17174,7 +17174,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
-    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch"
+    react-native-gesture-handler: "npm:2.22.0"
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.1.0"
@@ -17730,7 +17730,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prop-types@npm:15.8.1, prop-types@npm:^15.7.2, prop-types@npm:^15.8.1":
+"prop-types@npm:15.8.1, prop-types@npm:^15.8.1":
   version: 15.8.1
   resolution: "prop-types@npm:15.8.1"
   dependencies:
@@ -18009,33 +18009,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-gesture-handler@npm:2.21.2":
-  version: 2.21.2
-  resolution: "react-native-gesture-handler@npm:2.21.2"
+"react-native-gesture-handler@npm:2.22.0":
+  version: 2.22.0
+  resolution: "react-native-gesture-handler@npm:2.22.0"
   dependencies:
     "@egjs/hammerjs": "npm:^2.0.17"
     hoist-non-react-statics: "npm:^3.3.0"
     invariant: "npm:^2.2.4"
-    prop-types: "npm:^15.7.2"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/b098fdfdda8ac9e834b0165d3f17d09682119fa2bf85ddb19a6f63257825cec073362f93d75b94da3b3581eccbce775d711aa044e9ea1ac888be2c071f9f00fd
-  languageName: node
-  linkType: hard
-
-"react-native-gesture-handler@patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch":
-  version: 2.21.2
-  resolution: "react-native-gesture-handler@patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch::version=2.21.2&hash=ed3248"
-  dependencies:
-    "@egjs/hammerjs": "npm:^2.0.17"
-    hoist-non-react-statics: "npm:^3.3.0"
-    invariant: "npm:^2.2.4"
-    prop-types: "npm:^15.7.2"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/7b437c6985863c630f9b3378bc4cbb664c48271f33ecf53334e19187d4007403e3b81c3f0169e426d61a174504ea0a52f9e773cb37db9f6ffe65c20c8cad71bc
+  checksum: 10/8c428bf6c6b5bf0752085d5e5a1659af687ca34962c17019d289cac66573141ee76b0d0a681b5276688068ced69999304455c99d22da28aca8b1c6c606c1af92
   languageName: node
   linkType: hard
 
@@ -18182,7 +18166,7 @@ __metadata:
     react: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
     react-native-builder-bob: "npm:0.33.1"
-    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch"
+    react-native-gesture-handler: "npm:2.22.0"
     react-native-web: "npm:0.19.11"
     react-test-renderer: "npm:18.2.0"
     shelljs: "npm:^0.8.5"

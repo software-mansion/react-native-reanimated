@@ -22,7 +22,7 @@
     "common-app": "workspace:*",
     "react": "18.3.1",
     "react-native": "0.75.4",
-    "react-native-gesture-handler": "patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch",
+    "react-native-gesture-handler": "2.22.0",
     "react-native-macos": "^0.75.13",
     "react-native-pager-view": "6.6.1",
     "react-native-reanimated": "workspace:*",
