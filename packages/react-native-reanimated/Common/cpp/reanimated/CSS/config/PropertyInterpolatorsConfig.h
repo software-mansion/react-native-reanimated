@@ -116,8 +116,7 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       {"display", value<CSSDisplay>("flex")},
       {"overflow", value<CSSKeyword>("visible")},
       {"zIndex", value<CSSInteger>(0)},
-      {"aspectRatio", // TODO - check which value should be used by default
-       value<CSSDouble, CSSKeyword>("auto")},
+      {"aspectRatio", value<CSSDouble, CSSKeyword>("auto")},
 
       /**
        * Appearance
@@ -255,7 +254,7 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       {"verticalAlign", value<CSSKeyword>("auto")},
       // Decoration
       {"letterSpacing", value<CSSDouble>(0)},
-      {"lineHeight", // TODO - should inherit from font size
+      {"lineHeight", // TODO - should inherit from fontSize
        value<CSSDouble>(14)},
       {"textTransform", value<CSSKeyword>("none")},
       {"textDecorationLine", value<CSSKeyword>("none")},
@@ -275,6 +274,9 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       // Cursor
       {"cursor", value<CSSKeyword>("auto")},
       {"pointerEvents", value<CSSKeyword>("auto")},
+
+      // Others
+      {"isolation", value<CSSKeyword>("auto")},
   };
 }();
 

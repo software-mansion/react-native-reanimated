@@ -4,12 +4,12 @@ import {
   registerCSSAnimations,
   unregisterCSSAnimations,
   updateCSSAnimations,
-} from '../../native';
+} from '../../platform/native/native';
 import type { CSSAnimationProperties } from '../../types';
 import { CSSKeyframesRuleImpl } from '../../models';
-import { normalizeSingleCSSAnimationSettings } from '../../normalization';
+import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
 
-jest.mock('../../native', () => ({
+jest.mock('../../platform/native/native.ts', () => ({
   registerCSSAnimations: jest.fn(),
   unregisterCSSAnimations: jest.fn(),
   updateCSSAnimations: jest.fn(),

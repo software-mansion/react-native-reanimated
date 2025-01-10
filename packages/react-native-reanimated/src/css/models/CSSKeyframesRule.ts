@@ -1,10 +1,7 @@
 'use strict';
-import { normalizeAnimationKeyframes } from '../normalization';
-import type {
-  CSSAnimationKeyframes,
-  NormalizedCSSAnimationKeyframes,
-  PlainStyle,
-} from '../types';
+import type { NormalizedCSSAnimationKeyframes } from '../platform/native';
+import { normalizeAnimationKeyframes } from '../platform/native';
+import type { CSSAnimationKeyframes, PlainStyle } from '../types';
 import CSSKeyframesRuleBase from './CSSKeyframesRuleBase';
 
 export default class CSSKeyframesRuleImpl<

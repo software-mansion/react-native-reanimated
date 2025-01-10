@@ -1,7 +1,7 @@
 'use strict';
 import { logger } from '../../logger';
+import { PERCENTAGE_REGEX } from '../constants';
 import { ReanimatedError } from '../errors';
-import { PERCENTAGE_REGEX } from '../normalization';
 import type { Point } from '../types';
 import type {
   ParametrizedTimingFunction,

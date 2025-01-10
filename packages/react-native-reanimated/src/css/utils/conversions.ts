@@ -6,7 +6,10 @@ export function convertConfigPropertiesToArrays<T extends AnyRecord>(
 ) {
   return Object.fromEntries(
     Object.entries(config).map(([key, value]) => {
-      return [key, Array.isArray(value) ? value : [value]];
+      return [
+        key,
+        value !== undefined ? (Array.isArray(value) ? value : [value]) : [],
+      ];
     })
   ) as ConvertValuesToArrays<T>;
 }

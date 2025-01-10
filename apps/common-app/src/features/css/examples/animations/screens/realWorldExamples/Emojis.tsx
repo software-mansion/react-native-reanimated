@@ -435,10 +435,11 @@ const wowStyles = css.create({
     width: 0.12 * EMOJI_SIZE,
   },
   eyeBrow: {
-    borderBlockStartColor: COLORS.black,
     // (Android border colors support is pretty limited)
+    borderBlockStartColor: COLORS.black,
     borderColor: COLORS.baseTransparent,
     borderRadius: '50%',
+    borderTopColor: COLORS.black, // for web
     // use this trick with border colors to properly apply color only for
     // the top border and leave other borders "transparent" on Android
     borderWidth: 0.05 * EMOJI_SIZE,
@@ -473,6 +474,7 @@ const wowStyles = css.create({
     aspectRatio: 1,
     backgroundColor: COLORS.black,
     borderRadius: '50%',
+    top: 0,
     transform: [{ scaleY: 1.25 }],
     width: 0.25 * EMOJI_SIZE,
   },

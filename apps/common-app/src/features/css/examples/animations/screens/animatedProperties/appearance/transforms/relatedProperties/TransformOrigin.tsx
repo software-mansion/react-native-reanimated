@@ -4,10 +4,11 @@ import type {
   CSSAnimationProperties,
   CSSAnimationSettings,
 } from 'react-native-reanimated';
-import Animated, { normalizeTransformOrigin } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { colors, radius, sizes } from '@/theme';
 import { ExamplesScreen } from '~/css/components';
+import { normalizeTransformOrigin } from '~/css/utils';
 
 const SHARED_SETTINGS: CSSAnimationSettings = {
   animationDuration: '3s',

@@ -1,12 +1,16 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import { adaptViewConfig } from '../../ConfigHelper';
-import { removeViewStyle, setViewStyle } from '../native';
+import {
+  removeViewStyle,
+  setViewStyle,
+  styleBuilder,
+} from '../platform/native';
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import CSSTransitionManager from './CSSTransitionManager';
 import CSSAnimationsManager from './CSSAnimationsManager';
 import type { CSSStyleDeclaration } from '../types';
-import { filterCSSAndStyleProperties, normalizeStyle } from '../normalization';
+import { filterCSSAndStyleProperties } from '../utils';
 
 export default class CSSManager {
   private readonly viewTag: number;
@@ -33,12 +37,12 @@ export default class CSSManager {
   update(style: CSSStyleDeclaration, isMount = false): void {
     const [animationProperties, transitionProperties, filteredStyle] =
       filterCSSAndStyleProperties(style);
-    const normalizedStyle = normalizeStyle(filteredStyle);
+    const normalizedStyle = styleBuilder.buildFrom(filteredStyle);
 
     // If the update is called during component mount, we won't recognize style
     // changes and treat styles as initial, thus we need to set them before
     // attaching transition and animation
-    if (isMount) {
+    if (isMount && normalizedStyle) {
       setViewStyle(this.viewTag, normalizedStyle);
     }
 
@@ -48,7 +52,7 @@ export default class CSSManager {
     // If the update is called during component mount, we want to first - update
     // the transition or animation config, and then - set the style (which may
     // trigger the transition)
-    if (!isMount) {
+    if (!isMount && normalizedStyle) {
       setViewStyle(this.viewTag, normalizedStyle);
     }
   }

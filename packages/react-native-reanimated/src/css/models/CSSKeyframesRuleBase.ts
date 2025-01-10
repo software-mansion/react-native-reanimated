@@ -7,7 +7,7 @@ import type {
 
 let currentAnimationID = 0;
 
-export default class CSSKeyframesRuleBase<S extends PlainStyle>
+export default abstract class CSSKeyframesRuleBase<S extends PlainStyle>
   implements CSSKeyframesRule
 {
   // TODO - change cssRules prop to match specification

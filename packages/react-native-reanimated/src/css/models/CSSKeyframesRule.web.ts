@@ -1,17 +1,7 @@
 'use strict';
-import type {
-  CSSAnimationKeyframes,
-  PlainStyle,
-  SingleCSSAnimationName,
-} from '../types';
-import { processKeyframeDefinitions } from '../web/parser/animationParser';
+import type { CSSAnimationKeyframes, PlainStyle } from '../types';
+import { processKeyframeDefinitions } from '../platform/web';
 import CSSKeyframesRuleBase from './CSSKeyframesRuleBase';
-
-export const isCSSKeyframesRuleImpl = (
-  keyframes: SingleCSSAnimationName
-): keyframes is CSSKeyframesRuleImpl => {
-  return typeof keyframes === 'object' && 'processedKeyframes' in keyframes;
-};
 
 export default class CSSKeyframesRuleImpl<
   S extends PlainStyle = PlainStyle,

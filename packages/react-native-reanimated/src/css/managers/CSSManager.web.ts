@@ -2,8 +2,8 @@
 
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
-import { filterCSSAndStyleProperties } from '../normalization';
 import type { CSSStyleDeclaration } from '../types';
+import { filterCSSAndStyleProperties } from '../utils';
 import CSSAnimationsManager from './CSSAnimationsManager.web';
 import CSSTransitionManager from './CSSTransitionManager.web';
 

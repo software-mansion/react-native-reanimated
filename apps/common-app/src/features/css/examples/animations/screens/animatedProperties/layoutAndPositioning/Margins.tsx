@@ -31,7 +31,10 @@ const EXAMPLES = [
     containerStyle: {
       justifyContent: 'center',
     },
-    description: 'Parent container with `justifyContent: center`',
+    description: [
+      '(or marginBlockStart)',
+      'Parent container with `justifyContent: center`',
+    ],
     property: 'marginTop',
     title: 'Top Margin',
   },
@@ -40,7 +43,7 @@ const EXAMPLES = [
       justifyContent: 'center',
     },
     description: [
-      '(or marginEnd)',
+      '(or marginEnd / marginInlineEnd)',
       'Parent container with `justifyContent: center`',
     ],
     property: 'marginRight',
@@ -50,7 +53,10 @@ const EXAMPLES = [
     containerStyle: {
       justifyContent: 'center',
     },
-    description: 'Parent container with `justifyContent: center`',
+    description: [
+      '(or marginBlockEnd)',
+      'Parent container with `justifyContent: center`',
+    ],
     property: 'marginBottom',
     title: 'Bottom Margin',
   },
@@ -59,7 +65,7 @@ const EXAMPLES = [
       justifyContent: 'center',
     },
     description: [
-      '(or marginStart)',
+      '(or marginStart / marginInlineStart)',
       'Parent container with `justifyContent: center`',
     ],
     property: 'marginLeft',
@@ -69,7 +75,10 @@ const EXAMPLES = [
     containerStyle: {
       justifyContent: 'center',
     },
-    description: ['Parent container with `justifyContent: center`'],
+    description: [
+      '(or marginInline)',
+      'Parent container with `justifyContent: center`',
+    ],
     property: 'marginHorizontal',
     title: 'Horizontal Margin',
   },
@@ -78,8 +87,10 @@ const EXAMPLES = [
       alignItems: 'center',
       justifyContent: 'center',
     },
-    description:
+    description: [
+      '(or marginBlock)',
       'Parent container with `alignItems: center` and `justifyContent: center`',
+    ],
     property: 'marginVertical',
     title: 'Vertical Margin',
   },

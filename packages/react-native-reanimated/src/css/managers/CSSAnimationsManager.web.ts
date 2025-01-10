@@ -4,20 +4,24 @@ import type {
   CSSAnimationKeyframes,
   CSSAnimationProperties,
   CSSAnimationSettings,
+  SingleCSSAnimationName,
 } from '../types';
-import CSSKeyframesRuleImpl, {
-  isCSSKeyframesRuleImpl,
-} from '../models/CSSKeyframesRule.web';
+import CSSKeyframesRuleImpl from '../models/CSSKeyframesRule.web';
 import {
   configureWebCSSAnimations,
   removeCSSAnimation,
   kebabize,
   maybeAddSuffixes,
   parseTimingFunction,
-  processKeyframeDefinitions,
   insertCSSAnimation,
-} from '../web';
+  processKeyframeDefinitions,
+} from '../platform/web';
 import { convertConfigPropertiesToArrays } from '../utils';
+
+export const isCSSKeyframesRuleImpl = (
+  keyframes: SingleCSSAnimationName
+): keyframes is CSSKeyframesRuleImpl =>
+  typeof keyframes === 'object' && 'processedKeyframes' in keyframes;
 
 type ProcessedAnimation = {
   keyframesRule: CSSKeyframesRuleImpl;
@@ -108,11 +112,13 @@ export default class CSSAnimationsManager {
     this.element.style.animationPlayState = '';
     this.element.style.animationTimingFunction = '';
 
-    attachedAnimations.forEach(({ keyframesRule: { name }, removable }) => {
-      if (removable) {
-        removeCSSAnimation(name);
+    attachedAnimations.forEach(
+      ({ keyframesRule: { name, processedKeyframes }, removable }) => {
+        if (removable && processedKeyframes) {
+          removeCSSAnimation(name);
+        }
       }
-    });
+    );
     this.attachedAnimations = {};
   }
 
@@ -121,7 +127,10 @@ export default class CSSAnimationsManager {
 
     processedAnimations.forEach((processedAnimation) => {
       const rule = processedAnimation.keyframesRule;
-      if (!this.attachedAnimations[rule.processedKeyframes]) {
+      if (
+        rule.processedKeyframes &&
+        !this.attachedAnimations[rule.processedKeyframes]
+      ) {
         insertCSSAnimation(rule.name, rule.processedKeyframes);
       }
       newAttachedAnimations[rule.processedKeyframes] = processedAnimation;
@@ -129,7 +138,11 @@ export default class CSSAnimationsManager {
 
     Object.values(this.attachedAnimations).forEach(
       ({ keyframesRule: rule, removable }) => {
-        if (removable && !newAttachedAnimations[rule.processedKeyframes]) {
+        if (
+          removable &&
+          rule.processedKeyframes &&
+          !newAttachedAnimations[rule.processedKeyframes]
+        ) {
           removeCSSAnimation(rule.name);
         }
       }

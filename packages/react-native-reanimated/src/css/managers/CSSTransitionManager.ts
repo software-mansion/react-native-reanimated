@@ -1,18 +1,16 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import {
+  getNormalizedCSSTransitionConfigUpdates,
+  normalizeCSSTransitionProperties,
+} from '../platform/native';
+import type { NormalizedCSSTransitionConfig } from '../platform/native';
+import {
   registerCSSTransition,
   unregisterCSSTransition,
   updateCSSTransition,
-} from '../native';
-import {
-  normalizeCSSTransitionProperties,
-  getNormalizedCSSTransitionConfigUpdates,
-} from '../normalization';
-import type {
-  CSSTransitionProperties,
-  NormalizedCSSTransitionConfig,
-} from '../types';
+} from '../platform/native/native';
+import type { CSSTransitionProperties } from '../types';
 
 export default class CSSTransitionManager {
   private readonly viewTag: number;

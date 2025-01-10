@@ -20,6 +20,5 @@ export type {
   CSSKeyframesRule,
 } from './types';
 export { cubicBezier, linear, steps } from './easings';
-export { normalizeTransformOrigin } from './normalization';
 export { createAnimatedComponent } from './component';
 export { css } from './stylesheet';

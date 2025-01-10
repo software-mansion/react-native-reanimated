@@ -77,6 +77,7 @@ inline bool isDiscrete(const CSSValue &value) {
   return value.type() == CSSValueType::Keyword;
 }
 
+// clang-format off
 template <typename T>
 concept Resolvable = requires {
   { T::is_resolvable_value } -> std::convertible_to<bool>;
@@ -88,6 +89,7 @@ concept Discrete = requires {
   { T::is_discrete_value } -> std::convertible_to<bool>;
   requires T::is_discrete_value == true;
 };
+// clang-format on
 
 } // namespace reanimated
 
