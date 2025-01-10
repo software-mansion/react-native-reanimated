@@ -133,7 +133,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/core@npm:^7.24.7":
+"@babel/core@npm:^7.24.7, @babel/core@npm:^7.25.8":
   version: 7.26.0
   resolution: "@babel/core@npm:7.26.0"
   dependencies:
@@ -367,6 +367,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/helper-module-imports@npm:^7.22.15, @babel/helper-module-imports@npm:^7.25.9":
+  version: 7.25.9
+  resolution: "@babel/helper-module-imports@npm:7.25.9"
+  dependencies:
+    "@babel/traverse": "npm:^7.25.9"
+    "@babel/types": "npm:^7.25.9"
+  checksum: 10/e090be5dee94dda6cd769972231b21ddfae988acd76b703a480ac0c96f3334557d70a965bf41245d6ee43891e7571a8b400ccf2b2be5803351375d0f4e5bcf08
+  languageName: node
+  linkType: hard
+
 "@babel/helper-module-imports@npm:^7.24.7":
   version: 7.24.7
   resolution: "@babel/helper-module-imports@npm:7.24.7"
@@ -374,16 +384,6 @@ __metadata:
     "@babel/traverse": "npm:^7.24.7"
     "@babel/types": "npm:^7.24.7"
   checksum: 10/df8bfb2bb18413aa151ecd63b7d5deb0eec102f924f9de6bc08022ced7ed8ca7fed914562d2f6fa5b59b74a5d6e255dc35612b2bc3b8abf361e13f61b3704770
-  languageName: node
-  linkType: hard
-
-"@babel/helper-module-imports@npm:^7.25.9":
-  version: 7.25.9
-  resolution: "@babel/helper-module-imports@npm:7.25.9"
-  dependencies:
-    "@babel/traverse": "npm:^7.25.9"
-    "@babel/types": "npm:^7.25.9"
-  checksum: 10/e090be5dee94dda6cd769972231b21ddfae988acd76b703a480ac0c96f3334557d70a965bf41245d6ee43891e7571a8b400ccf2b2be5803351375d0f4e5bcf08
   languageName: node
   linkType: hard
 
@@ -2230,7 +2230,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/traverse@npm:^7.25.9":
+"@babel/traverse@npm:^7.25.7, @babel/traverse@npm:^7.25.9":
   version: 7.26.4
   resolution: "@babel/traverse@npm:7.26.4"
   dependencies:
@@ -2256,7 +2256,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/types@npm:^7.25.9, @babel/types@npm:^7.26.0, @babel/types@npm:^7.26.3":
+"@babel/types@npm:^7.25.8, @babel/types@npm:^7.25.9, @babel/types@npm:^7.26.0, @babel/types@npm:^7.26.3":
   version: 7.26.3
   resolution: "@babel/types@npm:7.26.3"
   dependencies:
@@ -2823,6 +2823,13 @@ __metadata:
     debug: "npm:^3.1.0"
     lodash.once: "npm:^4.1.1"
   checksum: 10/cb995b069f8c4f1e7857049bda0bd73a58e0048ccaf276ef0e66d1e1c03ba6fa099b5d765ad12ea37a7e5b7685f7413a2b9a99b27891407565b915f4a2f919a7
+  languageName: node
+  linkType: hard
+
+"@dual-bundle/import-meta-resolve@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "@dual-bundle/import-meta-resolve@npm:4.1.0"
+  checksum: 10/a69d804a8e8e93732ac5525f85b9366ae78ec60fa02f0d5b4f2d625e18b355ba02502cdaef616ab1eac4450b966d2a398b59577a17483e4f8a350d062357bdf4
   languageName: node
   linkType: hard
 
@@ -6407,6 +6414,41 @@ __metadata:
   dependencies:
     "@sinonjs/commons": "npm:^3.0.0"
   checksum: 10/78155c7bd866a85df85e22028e046b8d46cf3e840f72260954f5e3ed5bd97d66c595524305a6841ffb3f681a08f6e5cef572a2cce5442a8a232dc29fb409b83e
+  languageName: node
+  linkType: hard
+
+"@stylexjs/babel-plugin@npm:^0.10.0":
+  version: 0.10.0
+  resolution: "@stylexjs/babel-plugin@npm:0.10.0"
+  dependencies:
+    "@babel/core": "npm:^7.25.8"
+    "@babel/helper-module-imports": "npm:^7.22.15"
+    "@babel/traverse": "npm:^7.25.7"
+    "@babel/types": "npm:^7.25.8"
+    "@dual-bundle/import-meta-resolve": "npm:^4.1.0"
+    "@stylexjs/shared": "npm:0.10.0"
+    "@stylexjs/stylex": "npm:0.10.0"
+  checksum: 10/42e676a35096055549c5838e5484dc5951305a422e7087687f2034347cbafd04fb4d2bbf0cbb2ed0efffa37a55074052fcb75737a11809d3d62e763419885d60
+  languageName: node
+  linkType: hard
+
+"@stylexjs/shared@npm:0.10.0":
+  version: 0.10.0
+  resolution: "@stylexjs/shared@npm:0.10.0"
+  dependencies:
+    postcss-value-parser: "npm:^4.1.0"
+  checksum: 10/8472c331368907e575eed3e3a9127f2b017f4ba21a64598890c059d6e8c0ed22c4764adb8dffbfffc018d71009068e7808c2b5ee191c567e9a3f38bc846ed98c
+  languageName: node
+  linkType: hard
+
+"@stylexjs/stylex@npm:0.10.0":
+  version: 0.10.0
+  resolution: "@stylexjs/stylex@npm:0.10.0"
+  dependencies:
+    css-mediaquery: "npm:^0.1.2"
+    invariant: "npm:^2.2.4"
+    styleq: "npm:0.1.3"
+  checksum: 10/8675c3a65453f5709dc7131fc7639e82b3c7dcda39f1da5debb6b51ad68169f00cdb0bc937b8719ef3576e17f6f1e533ba8892bce8e87ae0d939733de7078a11
   languageName: node
   linkType: hard
 
@@ -21383,6 +21425,7 @@ __metadata:
     "@expo/vector-icons": "npm:^14.0.0"
     "@react-navigation/native": "npm:^7.0.0"
     "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch"
+    "@stylexjs/babel-plugin": "npm:^0.10.0"
     "@types/eslint": "npm:^8"
     common-app: "workspace:*"
     eslint: "npm:^8.57.0"
