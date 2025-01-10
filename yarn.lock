@@ -9095,7 +9095,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
-    react-native-gesture-handler: "npm:2.21.2"
+    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch"
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.1.0"
@@ -11662,7 +11662,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
-    react-native-gesture-handler: "npm:2.21.2"
+    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch"
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.1.0"
@@ -15055,7 +15055,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.75.4"
-    react-native-gesture-handler: "npm:2.21.2"
+    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch"
     react-native-macos: "npm:^0.75.13"
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
@@ -17118,7 +17118,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
-    react-native-gesture-handler: "npm:2.21.2"
+    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch"
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.1.0"
@@ -17968,6 +17968,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-gesture-handler@patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch":
+  version: 2.21.2
+  resolution: "react-native-gesture-handler@patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch::version=2.21.2&hash=a3aad0"
+  dependencies:
+    "@egjs/hammerjs": "npm:^2.0.17"
+    hoist-non-react-statics: "npm:^3.3.0"
+    invariant: "npm:^2.2.4"
+    prop-types: "npm:^15.7.2"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10/18e8e4801b15cd08a2c82d42632fb2666a4e5fc3a9452d176b7cad58850c43741ef633db794ea82e8d914ef8cf39d269128ea330fef478c29dc426bd34378fdd
+  languageName: node
+  linkType: hard
+
 "react-native-macos@npm:^0.75.13":
   version: 0.75.16
   resolution: "react-native-macos@npm:0.75.16"
@@ -18111,7 +18126,7 @@ __metadata:
     react: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
     react-native-builder-bob: "npm:0.33.1"
-    react-native-gesture-handler: "npm:2.21.2"
+    react-native-gesture-handler: "patch:react-native-gesture-handler@npm%3A2.21.2#~/.yarn/patches/react-native-gesture-handler-npm-2.21.2-353343d965.patch"
     react-native-web: "npm:0.19.11"
     react-test-renderer: "npm:18.2.0"
     shelljs: "npm:^0.8.5"
