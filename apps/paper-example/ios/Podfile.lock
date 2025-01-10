@@ -1210,6 +1210,50 @@ PODS:
     - React-jsiexecutor
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
+  - react-native-pager-view (6.6.1):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
+  - react-native-safe-area-context (5.1.0):
+    - React-Core
+  - react-native-slider (4.5.5):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - React-nativeconfig (0.77.0-rc.6)
   - React-NativeModulesApple (0.77.0-rc.6):
     - glog
@@ -1499,6 +1543,71 @@ PODS:
     - React-logger (= 0.77.0-rc.6)
     - React-perflogger (= 0.77.0-rc.6)
     - React-utils (= 0.77.0-rc.6)
+  - RNCAsyncStorage (2.1.0):
+    - React-Core
+  - RNCMaskedView (0.3.2):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
+  - RNFlashList (1.7.2):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
+  - RNGestureHandler (2.21.2):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - RNReanimated (3.17.0):
     - DoubleConversion
     - glog
@@ -1608,6 +1717,30 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNScreens (4.4.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-RCTImage
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
+  - RNSVG (15.11.1):
+    - React-Core
   - SocketRocket (0.7.1)
   - Yoga (0.0.0)
 
@@ -1650,6 +1783,9 @@ DEPENDENCIES:
   - React-logger (from `../../../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../../../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../../../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
+  - react-native-pager-view (from `../../../node_modules/react-native-pager-view`)
+  - react-native-safe-area-context (from `../../../node_modules/react-native-safe-area-context`)
+  - "react-native-slider (from `../../../node_modules/@react-native-community/slider`)"
   - React-nativeconfig (from `../../../node_modules/react-native/ReactCommon`)
   - React-NativeModulesApple (from `../../../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-perflogger (from `../../../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -1679,7 +1815,13 @@ DEPENDENCIES:
   - ReactAppDependencyProvider (from `build/generated/ios`)
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../../../node_modules/react-native/ReactCommon`)
+  - "RNCAsyncStorage (from `../../../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCMaskedView (from `../../../node_modules/@react-native-masked-view/masked-view`)"
+  - "RNFlashList (from `../../../node_modules/@shopify/flash-list`)"
+  - RNGestureHandler (from `../../../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../../../node_modules/react-native-reanimated`)
+  - RNScreens (from `../../../node_modules/react-native-screens`)
+  - RNSVG (from `../../../node_modules/react-native-svg`)
   - Yoga (from `../../../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -1760,6 +1902,12 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../../../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
+  react-native-pager-view:
+    :path: "../../../node_modules/react-native-pager-view"
+  react-native-safe-area-context:
+    :path: "../../../node_modules/react-native-safe-area-context"
+  react-native-slider:
+    :path: "../../../node_modules/@react-native-community/slider"
   React-nativeconfig:
     :path: "../../../node_modules/react-native/ReactCommon"
   React-NativeModulesApple:
@@ -1818,8 +1966,20 @@ EXTERNAL SOURCES:
     :path: build/generated/ios
   ReactCommon:
     :path: "../../../node_modules/react-native/ReactCommon"
+  RNCAsyncStorage:
+    :path: "../../../node_modules/@react-native-async-storage/async-storage"
+  RNCMaskedView:
+    :path: "../../../node_modules/@react-native-masked-view/masked-view"
+  RNFlashList:
+    :path: "../../../node_modules/@shopify/flash-list"
+  RNGestureHandler:
+    :path: "../../../node_modules/react-native-gesture-handler"
   RNReanimated:
     :path: "../../../node_modules/react-native-reanimated"
+  RNScreens:
+    :path: "../../../node_modules/react-native-screens"
+  RNSVG:
+    :path: "../../../node_modules/react-native-svg"
   Yoga:
     :path: "../../../node_modules/react-native/ReactCommon/yoga"
 
@@ -1860,6 +2020,9 @@ SPEC CHECKSUMS:
   React-logger: 3dc0ffac00a531441ae6fb6cc8108ba374c8e8d1
   React-Mapbuffer: ade5ce90a8643af61bd7365c51a6e957b5722045
   React-microtasksnativemodule: c314f95dc827b8fa3765372bb847b477b7663065
+  react-native-pager-view: afc974c10c91fc6ae02b3ca4c87977abda2f635d
+  react-native-safe-area-context: 04803a01f39f31cc6605a5531280b477b48f8a88
+  react-native-slider: d1358b33bc126281514fe480bb9a00c0aa9f9aac
   React-nativeconfig: b9c086f83aba945dad592d2556fe2b983f541032
   React-NativeModulesApple: acb8da00a222da8da6e458a9dfae63cc264780c6
   React-perflogger: 85a817dc96114c0df3e0d5a700688cd0a5643a9d
@@ -1889,7 +2052,13 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 3c3394a2c93b03ae9859e02bed235c4d91e31723
   ReactCodegen: ef05d5dd3c7327234365df4c9c18a99a73496a87
   ReactCommon: f579a0130fb73a351de4723fb33d277c5bf3283d
+  RNCAsyncStorage: cc6479c4acd84cc7004946946c8afe30b018184d
+  RNCMaskedView: 6d4bf14f158d1a93484edf30850cbbd7ccbb8668
+  RNFlashList: 9843320e0885ed1b494ea72ab0febfd3beb3dab0
+  RNGestureHandler: f353fb56ea8f6c929da175128437cdd3abc0e5f4
   RNReanimated: 33b68f6cf45ff999826c655cb9b200c00be35d1c
+  RNScreens: da1dc8c54f52381ebfe1c5fc39a14e6e02dd0fe6
+  RNSVG: 515a902fc18a375907eb4c3abec0b803fbfa37ef
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: dd05f79b1943c96893294ee5040576aa6e8a8d82
 

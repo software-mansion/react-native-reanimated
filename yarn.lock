@@ -4724,14 +4724,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-async-storage/async-storage@npm:^1.24.0":
-  version: 1.24.0
-  resolution: "@react-native-async-storage/async-storage@npm:1.24.0"
+"@react-native-async-storage/async-storage@npm:2.1.0":
+  version: 2.1.0
+  resolution: "@react-native-async-storage/async-storage@npm:2.1.0"
   dependencies:
     merge-options: "npm:^3.0.4"
   peerDependencies:
-    react-native: ^0.0.0-0 || >=0.60 <1.0
-  checksum: 10/5a6b7ac8bd7a9e537a53a3f2301530c284fd885a45ce4a4e0014859bc0f7c89bee5c4b5a6b3740b8d83751561159b237474d18f32fad75ea7d56d4ddb2180d91
+    react-native: ^0.0.0-0 || >=0.65 <1.0
+  checksum: 10/ce7995f456a688042a5a4cd31e97aafff24d42d10c9d573e9e763ca7775156a87e4d1685daa9c9ea67c2721cbceeb464a0b75641723a89b47f45806e5f8960c2
   languageName: node
   linkType: hard
 
@@ -5079,7 +5079,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-community/slider@npm:^4.5.5":
+"@react-native-community/slider@npm:4.5.5":
   version: 4.5.5
   resolution: "@react-native-community/slider@npm:4.5.5"
   checksum: 10/8c49f7e0b7d7c37b91c936805106e88ee31011dc210d5c237c07e35d330870536b560b48e6212195fffc2e2706b16c31715b6cebbb2cc33127702bff9850f134
@@ -5103,13 +5103,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-masked-view/masked-view@npm:^0.3.1":
-  version: 0.3.1
-  resolution: "@react-native-masked-view/masked-view@npm:0.3.1"
+"@react-native-masked-view/masked-view@npm:0.3.2":
+  version: 0.3.2
+  resolution: "@react-native-masked-view/masked-view@npm:0.3.2"
   peerDependencies:
     react: ">=16"
     react-native: ">=0.57"
-  checksum: 10/71d7a6277a869beaed34497d5b92cba7405586fe19ad05c2e892e5e5843b664386080573f4cfaea1fb68ed77de94bf46c20958f4e58d1a5a716c3652d65815b9
+  checksum: 10/04ffbc01083aa563ca1e2d7ef6759e7b326b8129f5bb1aa5f3142348adab06d5e321a400cf70a5434324dfa906add383f8214640697c48c9e5311b30bfea03d9
   languageName: node
   linkType: hard
 
@@ -6334,9 +6334,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shopify/flash-list@npm:^1.7.1":
-  version: 1.7.1
-  resolution: "@shopify/flash-list@npm:1.7.1"
+"@shopify/flash-list@npm:1.7.2":
+  version: 1.7.2
+  resolution: "@shopify/flash-list@npm:1.7.2"
   dependencies:
     recyclerlistview: "npm:4.2.1"
     tslib: "npm:2.6.3"
@@ -6344,7 +6344,7 @@ __metadata:
     "@babel/runtime": "*"
     react: "*"
     react-native: "*"
-  checksum: 10/0144b523ff75500e6c310dac0739c0779f4ce63acb70cf4e9f8d30a653c6faed43e228158ef16c2f38c43b76425b9f55de411bd865b8deee72e9b549164f1c12
+  checksum: 10/f8b48a85b85be3a46221b9fa1417ac702d55533e5bca9f68409f2c218c418a02873f3e59c2237a398cfe483658771e67f319fab368934a7d3abdb141a0a71a7d
   languageName: node
   linkType: hard
 
@@ -9078,14 +9078,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "common-app@workspace:apps/common-app"
   dependencies:
-    "@react-native-async-storage/async-storage": "npm:^1.24.0"
-    "@react-native-community/slider": "npm:^4.5.5"
-    "@react-native-masked-view/masked-view": "npm:^0.3.1"
+    "@react-native-async-storage/async-storage": "npm:2.1.0"
+    "@react-native-community/slider": "npm:4.5.5"
+    "@react-native-masked-view/masked-view": "npm:0.3.2"
     "@react-navigation/bottom-tabs": "npm:^7.0.0"
     "@react-navigation/native": "npm:^7.0.0"
     "@react-navigation/native-stack": "npm:^7.0.0"
     "@react-navigation/stack": "npm:^7.0.0"
-    "@shopify/flash-list": "npm:^1.7.1"
+    "@shopify/flash-list": "npm:1.7.2"
     "@tsconfig/react-native": "npm:^3.0.0"
     "@types/d3-shape": "npm:^3.1.1"
     d3-shape: "npm:^3.2.0"
@@ -9095,12 +9095,12 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
-    react-native-gesture-handler: "npm:2.20.2"
-    react-native-pager-view: "npm:^6.4.1"
+    react-native-gesture-handler: "npm:2.21.2"
+    react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "npm:^4.13.1"
-    react-native-screens: "npm:^4.0.0"
-    react-native-svg: "npm:^15.8.0"
+    react-native-safe-area-context: "npm:5.1.0"
+    react-native-screens: "npm:4.4.0"
+    react-native-svg: "npm:15.11.1"
     react-strict-dom: "npm:0.0.27"
     typescript: "npm:~5.3.0"
   peerDependencies:
@@ -11639,23 +11639,35 @@ __metadata:
     "@babel/core": "npm:^7.25.2"
     "@babel/preset-env": "npm:^7.25.3"
     "@babel/runtime": "npm:^7.25.0"
+    "@react-native-async-storage/async-storage": "npm:2.1.0"
     "@react-native-community/cli": "npm:15.0.1"
     "@react-native-community/cli-platform-android": "npm:15.0.1"
     "@react-native-community/cli-platform-ios": "npm:15.0.1"
+    "@react-native-community/slider": "npm:4.5.5"
+    "@react-native-masked-view/masked-view": "npm:0.3.2"
     "@react-native/babel-preset": "npm:0.77.0-rc.6"
     "@react-native/eslint-config": "npm:0.77.0-rc.6"
     "@react-native/metro-config": "npm:0.77.0-rc.6"
     "@react-native/typescript-config": "npm:0.77.0-rc.6"
+    "@react-navigation/native": "npm:^7.0.0"
+    "@react-navigation/native-stack": "npm:^7.0.0"
+    "@shopify/flash-list": "npm:1.7.2"
     "@types/jest": "npm:^29.5.13"
     "@types/react": "npm:^18.2.6"
     "@types/react-test-renderer": "npm:^18.0.0"
+    common-app: "workspace:*"
     eslint: "npm:^8.57.0"
     jest: "npm:^29.6.3"
     patch-package: "npm:^8.0.0"
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
+    react-native-gesture-handler: "npm:2.21.2"
+    react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
+    react-native-safe-area-context: "npm:5.1.0"
+    react-native-screens: "npm:4.4.0"
+    react-native-svg: "npm:15.11.1"
     react-test-renderer: "npm:18.3.1"
     typescript: "npm:~5.3.0"
   languageName: unknown
@@ -15022,9 +15034,9 @@ __metadata:
     "@babel/core": "npm:^7.20.0"
     "@babel/preset-env": "npm:^7.20.0"
     "@babel/runtime": "npm:^7.20.0"
-    "@react-native-async-storage/async-storage": "npm:^1.24.0"
-    "@react-native-community/slider": "npm:^4.5.5"
-    "@react-native-masked-view/masked-view": "npm:^0.3.1"
+    "@react-native-async-storage/async-storage": "npm:2.1.0"
+    "@react-native-community/slider": "npm:4.5.5"
+    "@react-native-masked-view/masked-view": "npm:0.3.2"
     "@react-native-picker/picker": "npm:^2.9.0"
     "@react-native/babel-preset": "npm:0.75.4"
     "@react-native/eslint-config": "npm:0.75.4"
@@ -15033,7 +15045,7 @@ __metadata:
     "@react-navigation/native": "npm:^7.0.0"
     "@react-navigation/native-stack": "npm:^7.0.0"
     "@react-navigation/stack": "npm:^7.0.0"
-    "@shopify/flash-list": "npm:^1.7.1"
+    "@shopify/flash-list": "npm:1.7.2"
     "@types/react": "npm:^18.2.6"
     "@types/react-test-renderer": "npm:^18.0.0"
     babel-jest: "npm:^29.6.3"
@@ -15043,13 +15055,13 @@ __metadata:
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.75.4"
-    react-native-gesture-handler: "npm:2.20.2"
+    react-native-gesture-handler: "npm:2.21.2"
     react-native-macos: "npm:^0.75.13"
-    react-native-pager-view: "npm:^6.4.1"
+    react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "npm:^4.13.1"
-    react-native-screens: "npm:^4.0.0"
-    react-native-svg: "npm:^15.8.0"
+    react-native-safe-area-context: "npm:5.1.0"
+    react-native-screens: "npm:4.4.0"
+    react-native-svg: "npm:15.11.1"
     react-test-renderer: "npm:18.2.0"
     typescript: "npm:~5.3.0"
   languageName: unknown
@@ -17083,23 +17095,35 @@ __metadata:
     "@babel/core": "npm:^7.25.2"
     "@babel/preset-env": "npm:^7.25.3"
     "@babel/runtime": "npm:^7.25.0"
+    "@react-native-async-storage/async-storage": "npm:2.1.0"
     "@react-native-community/cli": "npm:15.0.1"
     "@react-native-community/cli-platform-android": "npm:15.0.1"
     "@react-native-community/cli-platform-ios": "npm:15.0.1"
+    "@react-native-community/slider": "npm:4.5.5"
+    "@react-native-masked-view/masked-view": "npm:0.3.2"
     "@react-native/babel-preset": "npm:0.77.0-rc.6"
     "@react-native/eslint-config": "npm:0.77.0-rc.6"
     "@react-native/metro-config": "npm:0.77.0-rc.6"
     "@react-native/typescript-config": "npm:0.77.0-rc.6"
+    "@react-navigation/native": "npm:^7.0.0"
+    "@react-navigation/native-stack": "npm:^7.0.0"
+    "@shopify/flash-list": "npm:1.7.2"
     "@types/jest": "npm:^29.5.13"
     "@types/react": "npm:^18.2.6"
     "@types/react-test-renderer": "npm:^18.0.0"
+    common-app: "workspace:*"
     eslint: "npm:^8.57.0"
     jest: "npm:^29.6.3"
     patch-package: "npm:^8.0.0"
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
+    react-native-gesture-handler: "npm:2.21.2"
+    react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
+    react-native-safe-area-context: "npm:5.1.0"
+    react-native-screens: "npm:4.4.0"
+    react-native-svg: "npm:15.11.1"
     react-test-renderer: "npm:18.3.1"
     typescript: "npm:~5.3.0"
   languageName: unknown
@@ -17929,9 +17953,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-gesture-handler@npm:2.20.2":
-  version: 2.20.2
-  resolution: "react-native-gesture-handler@npm:2.20.2"
+"react-native-gesture-handler@npm:2.21.2":
+  version: 2.21.2
+  resolution: "react-native-gesture-handler@npm:2.21.2"
   dependencies:
     "@egjs/hammerjs": "npm:^2.0.17"
     hoist-non-react-statics: "npm:^3.3.0"
@@ -17940,7 +17964,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/64ab125c539ca8c275f5d305f5e11d366e6098d9e24e3cab25cbfd46a8d618fc3925ea86219972ccc63364e578384bb0120a72562312e596894a04ee0518a363
+  checksum: 10/b098fdfdda8ac9e834b0165d3f17d09682119fa2bf85ddb19a6f63257825cec073362f93d75b94da3b3581eccbce775d711aa044e9ea1ac888be2c071f9f00fd
   languageName: node
   linkType: hard
 
@@ -18000,13 +18024,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-pager-view@npm:^6.4.1":
-  version: 6.4.1
-  resolution: "react-native-pager-view@npm:6.4.1"
+"react-native-pager-view@npm:6.6.1":
+  version: 6.6.1
+  resolution: "react-native-pager-view@npm:6.6.1"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/5f9cbce2d49d607fb9f241a37fee393024e13c77c8f1bea9a11c8de7e737dcdabe2590c95f282868ac119cf4d520fc83439a537d034563254ab34527351d80ae
+  checksum: 10/f56c3598a0e88fc66bdea806abacb0dd366bbd16a0c371a9a0c4dc21b2e53b020321bb896e1ae0f07c75caea16aaed292ae66c1a7546ade9c6d2a14aee8b9d63
   languageName: node
   linkType: hard
 
@@ -18087,7 +18111,7 @@ __metadata:
     react: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
     react-native-builder-bob: "npm:0.33.1"
-    react-native-gesture-handler: "npm:2.20.2"
+    react-native-gesture-handler: "npm:2.21.2"
     react-native-web: "npm:0.19.11"
     react-test-renderer: "npm:18.2.0"
     shelljs: "npm:^0.8.5"
@@ -18100,32 +18124,32 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native-safe-area-context@npm:^4.13.1":
-  version: 4.13.1
-  resolution: "react-native-safe-area-context@npm:4.13.1"
+"react-native-safe-area-context@npm:5.1.0":
+  version: 5.1.0
+  resolution: "react-native-safe-area-context@npm:5.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/022098fb1922aeb30e9bfc935906cf38e815fbcabfb04a8ba9b973a25cbece2b5affefcad88dcfc2a1086785182c0168600ae61bd422a22f2268f019257a6494
+  checksum: 10/7ff5fd17733b73d3c9fc5f7afa81c9c45389e5bc13ec2101135bdded9d8f435465582e0874de3f517bfb2c4f3fc7300dfdbc51176bc0ca84240184b2a888d74b
   languageName: node
   linkType: hard
 
-"react-native-screens@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "react-native-screens@npm:4.0.0"
+"react-native-screens@npm:4.4.0":
+  version: 4.4.0
+  resolution: "react-native-screens@npm:4.4.0"
   dependencies:
     react-freeze: "npm:^1.0.0"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/460867348d9293ea92efb9d9083654ee6ae0adcde15bed54dd57c0512d7fe3d2206bfdd8686eb770a397cb37e4e896ea40af2add8772f38d54fccd55765b1872
+  checksum: 10/a70d036674611b327c01e6c3a147b9d22b59d7e58cfd82a9df5a070fac26af17b65bcd1ec911ec3516c6d9e2782a48577b5ac2f576a196ad5fff1fddcf17bf38
   languageName: node
   linkType: hard
 
-"react-native-svg@npm:^15.8.0":
-  version: 15.8.0
-  resolution: "react-native-svg@npm:15.8.0"
+"react-native-svg@npm:15.11.1":
+  version: 15.11.1
+  resolution: "react-native-svg@npm:15.11.1"
   dependencies:
     css-select: "npm:^5.1.0"
     css-tree: "npm:^1.1.3"
@@ -18133,7 +18157,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/9a60d1f33539c41ca50b2c21e6d8909e52a3bdf67b29b9231c7ffe72120fc8cb6d7fca45723bd9219b993202ade2343c97c7e4f53de7ee2446279ac91426b096
+  checksum: 10/fcec888f1a472a5a6b6cb6438e6fe3c044be57f08ee8969c393c739edea5364f6d2187983e17b28fffc48b1f275f686b4bcca24359e7f4fa378299dea18fbc20
   languageName: node
   linkType: hard
 
@@ -21329,7 +21353,7 @@ __metadata:
     "@expo/metro-runtime": "npm:^3.2.1"
     "@expo/vector-icons": "npm:^14.0.0"
     "@react-navigation/native": "npm:^7.0.0"
-    "@shopify/flash-list": "npm:^1.7.1"
+    "@shopify/flash-list": "npm:1.7.2"
     "@types/eslint": "npm:^8"
     common-app: "workspace:*"
     eslint: "npm:^8.57.0"
