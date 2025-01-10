@@ -192,7 +192,8 @@ void NativeProxy::registerNatives() {
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations)});
+       makeNativeMethod("performOperations", NativeProxy::performOperations),
+       makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp)});
 }
 
 void NativeProxy::requestRender(std::function<void(double)> onRender) {
@@ -605,6 +606,13 @@ void NativeProxy::setupLayoutAnimations() {
           return {};
         }
       });
+}
+
+void NativeProxy::invalidateCpp() {
+  if (reanimatedModuleProxy_ != nullptr) {
+    reanimatedModuleProxy_->invalidate();
+  }
+  reanimatedModuleProxy_.reset();
 }
 
 } // namespace reanimated
