@@ -10,7 +10,8 @@ export type LabelType =
   | 'needsFix'
   | 'new'
   | 'unimplemented'
-  | 'unsupported';
+  | 'unsupported'
+  | 'web';
 
 const labelTexts = {
   Android: 'Android',
@@ -19,7 +20,8 @@ const labelTexts = {
   new: 'New',
   unimplemented: 'Unimplemented',
   unsupported: 'Unsupported',
-};
+  web: 'Web',
+} satisfies Record<LabelType, string>;
 
 const variants = {
   large: {

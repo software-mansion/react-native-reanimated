@@ -5,7 +5,9 @@ import Animated from 'react-native-reanimated';
 import { colors, flex, radius, sizes, spacing } from '@/theme';
 import { ExamplesScreen, VerticalExampleCard } from '~/css/components';
 
-export default function ColumnGap() {
+const MIN_EXAMPLE_HEIGHT = 3.5 * sizes.md;
+
+export default function Gap() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
@@ -18,7 +20,7 @@ export default function ColumnGap() {
       })}
       renderExample={({ animation }) => (
         <Animated.View style={[styles.container, animation]}>
-          {Array.from({ length: 9 }).map((_, index) => (
+          {Array.from({ length: 6 }).map((_, index) => (
             <View key={index} style={[styles.box]} />
           ))}
         </Animated.View>
@@ -31,18 +33,19 @@ export default function ColumnGap() {
               examples: [
                 {
                   description:
-                    'We can use absolute values for the `columnGap` property.',
+                    'We can use absolute values for the `gap` property.',
                   keyframes: {
                     from: {
-                      columnGap: 0,
+                      gap: 0,
                     },
                     to: {
-                      columnGap: spacing.sm,
+                      gap: spacing.sm,
                     },
                   },
+                  minExampleHeight: MIN_EXAMPLE_HEIGHT,
                 },
               ],
-              title: 'Absolute Column Gap',
+              title: 'Absolute Gap',
             },
           ],
         },
@@ -50,21 +53,24 @@ export default function ColumnGap() {
           name: 'Relative',
           sections: [
             {
+              description:
+                'Relative `gap` works different for rows on **web** than on **mobile**. It is not a reanimated bug, it is a difference in how the browser and the native platform handle the `gap` property.',
               examples: [
                 {
                   description:
-                    "We can use relative values for the `columnGap` property. They are relative to the parent's container `width`.",
+                    "We can use relative values for the `gap` property. They are relative to the parent's container `width` and `height` respectively.",
                   keyframes: {
                     from: {
-                      columnGap: '2%',
+                      gap: '2%',
                     },
                     to: {
-                      columnGap: '10%',
+                      gap: '10%',
                     },
                   },
+                  minExampleHeight: MIN_EXAMPLE_HEIGHT,
                 },
               ],
-              title: 'Relative Column Gap',
+              title: 'Relative Gap',
             },
           ],
         },
@@ -72,21 +78,24 @@ export default function ColumnGap() {
           name: 'Mixed',
           sections: [
             {
+              description:
+                'Relative `gap` works different for rows on **web** than on **mobile**. It is not a reanimated bug, it is a difference in how the browser and the native platform handle the `gap` property.',
               examples: [
                 {
                   description:
-                    'We can use a mix of absolute and relative values for the `columnGap` property. Relative values are calculated based on the parent container `width`.',
+                    'We can use a mix of absolute and relative values for the `gap` property. Relative values are calculated based on the parent container `width` and `height` respectively.',
                   keyframes: {
                     from: {
-                      columnGap: spacing.xs,
+                      gap: spacing.xs,
                     },
                     to: {
-                      columnGap: '10%',
+                      gap: '10%',
                     },
                   },
+                  minExampleHeight: MIN_EXAMPLE_HEIGHT,
                 },
               ],
-              title: 'Mixed Column Gap',
+              title: 'Mixed Gap',
             },
           ],
         },

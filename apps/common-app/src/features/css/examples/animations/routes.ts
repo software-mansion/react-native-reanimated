@@ -29,6 +29,7 @@ const layoutAndPositioningRoutes = {
           },
           LayoutDirection: {
             name: 'Layout Direction',
+            labelTypes: ['iOS', 'Android'],
             Component:
               animatedProperties.layoutAndPositioning.flexBox.LayoutDirection,
           },
@@ -62,54 +63,45 @@ const layoutAndPositioningRoutes = {
         name: 'Numeric Properties',
         routes: {
           Flex: {
-            disabled: true,
             name: 'Flex',
-            labelTypes: ['unimplemented'],
             Component: animatedProperties.layoutAndPositioning.flexBox.Flex,
           },
           FlexBasis: {
             name: 'Flex Basis',
-            disabled: true,
-            labelTypes: ['unsupported'],
+            labelTypes: ['web'],
             Component:
               animatedProperties.layoutAndPositioning.flexBox.FlexBasis,
           },
           FlexGrow: {
             name: 'Flex Grow',
-            disabled: true,
-            labelTypes: ['unimplemented'],
             Component: animatedProperties.layoutAndPositioning.flexBox.FlexGrow,
           },
           FlexShrink: {
             name: 'Flex Shrink',
-            disabled: true,
-            labelTypes: ['unimplemented'],
             Component:
               animatedProperties.layoutAndPositioning.flexBox.FlexShrink,
           },
+          Gap: {
+            name: 'Gap',
+            Component: animatedProperties.layoutAndPositioning.flexBox.Gap,
+          },
           RowGap: {
             name: 'Row Gap',
-            disabled: true,
-            labelTypes: ['unimplemented'],
             Component: animatedProperties.layoutAndPositioning.flexBox.RowGap,
           },
           ColumnGap: {
             name: 'Column Gap',
-            disabled: true,
-            labelTypes: ['unimplemented'],
             Component:
               animatedProperties.layoutAndPositioning.flexBox.ColumnGap,
           },
           Start: {
             name: 'Start',
-            disabled: true,
-            labelTypes: ['unimplemented'],
+            labelTypes: ['iOS', 'Android'],
             Component: animatedProperties.layoutAndPositioning.flexBox.Start,
           },
           End: {
             name: 'End',
-            disabled: true,
-            labelTypes: ['unimplemented'],
+            labelTypes: ['iOS', 'Android'],
             Component: animatedProperties.layoutAndPositioning.flexBox.End,
           },
         },

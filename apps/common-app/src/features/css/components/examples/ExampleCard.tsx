@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from 'react';
 import { useState } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Animated, {
   FadeInDown,
@@ -14,7 +14,6 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { colors, flex, radius, spacing } from '@/theme';
-import { IS_WEB } from '@/utils';
 
 import ExpandableCard from '../cards/ExpandableCard';
 import Text from '../core/Text';
@@ -164,7 +163,10 @@ export default function ExampleCard({
 
 const styles = StyleSheet.create({
   collapsedCodeOverlay: {
-    ...(!IS_WEB && StyleSheet.absoluteFillObject),
+    ...Platform.select<ViewStyle>({
+      default: StyleSheet.absoluteFillObject,
+      web: { height: '100%', position: 'absolute', width: '100%' },
+    }),
     backgroundColor: colors.background2,
     padding: spacing.xs,
   },
