@@ -74,11 +74,6 @@ void NativeProxy::commonInit(
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
-void NativeProxy::invalidateCpp() {
-  javaPart_ = nullptr;
-  layoutAnimations_->cthis()->invalidate();
-}
-
 NativeProxy::~NativeProxy() {
   // removed temporary, new event listener mechanism need fix on the RN side
   // reactScheduler_->removeEventListener(eventListener_);

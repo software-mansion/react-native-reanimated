@@ -171,9 +171,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
-
-  void invalidateCpp();
-
 #ifndef NDEBUG
   void checkJavaVersion(jsi::Runtime &);
   void injectCppVersion();

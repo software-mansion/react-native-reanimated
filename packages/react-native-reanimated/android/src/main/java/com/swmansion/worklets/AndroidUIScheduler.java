@@ -32,7 +32,7 @@ public class AndroidUIScheduler {
 
   public native void triggerUI();
 
-  public native void invalidateCpp();
+  public native void invalidate();
 
   @DoNotStrip
   private void scheduleTriggerOnUI() {
@@ -46,6 +46,6 @@ public class AndroidUIScheduler {
 
   public void deactivate() {
     mActive.set(false);
-    invalidateCpp();
+    invalidate();
   }
 }
