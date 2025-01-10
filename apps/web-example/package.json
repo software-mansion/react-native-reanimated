@@ -21,11 +21,12 @@
     "react-dom": "18.3.1",
     "react-native": "0.76.5",
     "react-native-reanimated": "workspace:*",
-    "react-native-web": "0.19.11"
+    "react-native-web": "0.19.13"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "@expo/metro-runtime": "^3.2.1",
+    "@expo/metro-runtime": "~4.0.0",
+    "@stylexjs/babel-plugin": "^0.10.0",
     "@types/eslint": "^8",
     "eslint": "^8.57.0",
     "prettier": "^3.3.3",
