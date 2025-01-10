@@ -27,7 +27,7 @@
     "react-native-pager-view": "6.6.1",
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.1.0",
-    "react-native-screens": "4.4.0",
+    "react-native-screens": "4.5.0",
     "react-native-svg": "15.11.1"
   },
   "devDependencies": {

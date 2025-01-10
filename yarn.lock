@@ -9113,7 +9113,7 @@ __metadata:
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.1.0"
-    react-native-screens: "npm:4.4.0"
+    react-native-screens: "npm:4.5.0"
     react-native-svg: "npm:15.11.1"
     react-strict-dom: "npm:0.0.27"
     typescript: "npm:~5.3.0"
@@ -11680,7 +11680,7 @@ __metadata:
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.1.0"
-    react-native-screens: "npm:4.4.0"
+    react-native-screens: "npm:4.5.0"
     react-native-svg: "npm:15.11.1"
     react-test-renderer: "npm:18.3.1"
     typescript: "npm:~5.3.0"
@@ -15074,7 +15074,7 @@ __metadata:
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.1.0"
-    react-native-screens: "npm:4.4.0"
+    react-native-screens: "npm:4.5.0"
     react-native-svg: "npm:15.11.1"
     react-test-renderer: "npm:18.2.0"
     typescript: "npm:~5.3.0"
@@ -17136,7 +17136,7 @@ __metadata:
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.1.0"
-    react-native-screens: "npm:4.4.0"
+    react-native-screens: "npm:4.5.0"
     react-native-svg: "npm:15.11.1"
     react-test-renderer: "npm:18.3.1"
     typescript: "npm:~5.3.0"
@@ -18163,16 +18163,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-screens@npm:4.4.0":
-  version: 4.4.0
-  resolution: "react-native-screens@npm:4.4.0"
+"react-native-screens@npm:4.5.0":
+  version: 4.5.0
+  resolution: "react-native-screens@npm:4.5.0"
   dependencies:
     react-freeze: "npm:^1.0.0"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/a70d036674611b327c01e6c3a147b9d22b59d7e58cfd82a9df5a070fac26af17b65bcd1ec911ec3516c6d9e2782a48577b5ac2f576a196ad5fff1fddcf17bf38
+  checksum: 10/e9f56b52989aab7e58ed6a3930632d00c5ab94365e5a591cfc0187ffa742870b3eadb1d1832ff4cc6a7a3b8b77fce0a022ab781a72866539e830dc43b380ac60
   languageName: node
   linkType: hard
 
