@@ -30,6 +30,7 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.events.Event;
+import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
@@ -111,6 +112,7 @@ public class NodesManager implements EventDispatcherListener {
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
   private ReaCompatibility compatibility;
+  private @Nullable Runnable mUnsubscribe = null;
 
   public NativeProxy getNativeProxy() {
     return mNativeProxy;
@@ -129,6 +131,15 @@ public class NodesManager implements EventDispatcherListener {
 
     if (mNativeProxy != null) {
       mNativeProxy = null;
+    }
+
+    if (compatibility != null) {
+      compatibility.unregisterFabricEventListener(this);
+    }
+
+    if (mUnsubscribe != null) {
+      mUnsubscribe.run();
+      mUnsubscribe = null;
     }
   }
 
@@ -183,8 +194,10 @@ public class NodesManager implements EventDispatcherListener {
     // Events are handled in the native modules thread in the `onEventDispatch()` method.
     // This method indirectly uses `mChoreographerCallback` which was created after event
     // registration, creating race condition
-    Objects.requireNonNull(UIManagerHelper.getEventDispatcher(context, uiManagerType))
-        .addListener(this);
+    EventDispatcher eventDispatcher =
+        Objects.requireNonNull(UIManagerHelper.getEventDispatcher(context, uiManagerType));
+    eventDispatcher.addListener(this);
+    mUnsubscribe = () -> eventDispatcher.removeListener(this);
 
     mAnimationManager = new AnimationsManager(mContext, mUIManager);
   }
