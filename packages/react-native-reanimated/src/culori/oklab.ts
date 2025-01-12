@@ -7,24 +7,10 @@ import type { LabColor, RgbColor } from './Colors';
  * - https://github.com/Evercoder/culori/tree/v4.0.1/src/oklab
  */
 
-// TODO Once we have the option to workletize external dependencies, we can replace everything below
-//  with a workletized version of the culori package, as follows (see
-//  https://github.com/software-mansion/react-native-reanimated/pull/6782#pullrequestreview-2488830278):
-//
-// import { converter } from 'culori';
-//
-// export default {
-//   convert: {
-//     fromRgb: (rgbColor: RgbColor) => converter('oklab')({
-//       mode: 'rgb',
-//       ...rgbColor,
-//     }),
-//     toRgb: (labColor: LabColor) => converter('rgb')({
-//       mode: 'oklab',
-//       ...labColor,
-//     }),
-//   },
-// };
+// TODO Once we have the option to workletize external dependencies, we can replace most of the code below with
+//  a simple implementation based on their converter utils (see
+//  https://github.com/software-mansion/react-native-reanimated/pull/6782#pullrequestreview-2488830278,
+//  https://culorijs.org/api/#converter).
 
 import lrgb from './lrgb';
 
