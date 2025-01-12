@@ -21,8 +21,8 @@
 		96B7B4417BB849DABA330489 /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A855ACED713A4D3791AC9660 /* Poppins-Regular.ttf */; };
 		B2EAE56926634BF78EF65B2D /* Poppins-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 74937F8590434194BDCF3A71 /* Poppins-ExtraBold.ttf */; };
 		B38121616D8F41CCA854FA11 /* Poppins-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7F855F37E6C4419C9300E211 /* Poppins-SemiBold.ttf */; };
+		C200C1042D33B9D500F25439 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200C1032D33B9D500F25439 /* AppDelegate.swift */; };
 		C29CFC1D29193CAB008EC329 /* MBFingerTipWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = C29CFC1B29193CAB008EC329 /* MBFingerTipWindow.m */; };
-		C29F8F682CF74A200029AD2A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29F8F672CF74A200029AD2A /* AppDelegate.swift */; };
 		F4C3F7602BCFD377008A4CDE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F4C3F75F2BCFD377008A4CDE /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
@@ -56,9 +56,9 @@
 		A0ACA5199B664A06875E3078 /* OFL.txt */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = OFL.txt; path = ../assets/fonts/Poppins/OFL.txt; sourceTree = "<group>"; };
 		A855ACED713A4D3791AC9660 /* Poppins-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Regular.ttf"; path = "../assets/fonts/Poppins/Poppins-Regular.ttf"; sourceTree = "<group>"; };
 		B15A28D1B67746649BDE2A19 /* Poppins-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-ExtraLight.ttf"; path = "../assets/fonts/Poppins/Poppins-ExtraLight.ttf"; sourceTree = "<group>"; };
+		C200C1032D33B9D500F25439 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = ReanimatedExample/AppDelegate.swift; sourceTree = "<group>"; };
 		C29CFC1B29193CAB008EC329 /* MBFingerTipWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MBFingerTipWindow.m; sourceTree = "<group>"; };
 		C29CFC1C29193CAB008EC329 /* MBFingerTipWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBFingerTipWindow.h; sourceTree = "<group>"; };
-		C29F8F672CF74A200029AD2A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		EB011F0FB31E4F7CAB35AC19 /* Poppins-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Light.ttf"; path = "../assets/fonts/Poppins/Poppins-Light.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F4C3F75F2BCFD377008A4CDE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -103,9 +103,9 @@
 		13B07FAE1A68108700A75B9A /* ReanimatedExample */ = {
 			isa = PBXGroup;
 			children = (
+				C200C1032D33B9D500F25439 /* AppDelegate.swift */,
 				C29CFC1C29193CAB008EC329 /* MBFingerTipWindow.h */,
 				C29CFC1B29193CAB008EC329 /* MBFingerTipWindow.m */,
-				C29F8F672CF74A200029AD2A /* AppDelegate.swift */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				8C80EB542A570619005E26CE /* Launch Screen.storyboard */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -237,7 +237,7 @@
 						TestTargetID = 13B07F861A680F5B00A75B9A;
 					};
 					13B07F861A680F5B00A75B9A = {
-						LastSwiftMigration = 1600;
+						LastSwiftMigration = 1620;
 					};
 				};
 			};
@@ -365,7 +365,7 @@
 		};
 		EC2A315BF2310B4CCE81E020 /* [CP-User] Generate metadata for clangd */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = true;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -389,7 +389,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C29F8F682CF74A200029AD2A /* AppDelegate.swift in Sources */,
+				C200C1042D33B9D500F25439 /* AppDelegate.swift in Sources */,
 				C29CFC1D29193CAB008EC329 /* MBFingerTipWindow.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -579,10 +579,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -655,10 +652,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
