@@ -134,6 +134,7 @@ import StrictDOMExample from './StrictDOMExample';
 import BottomTabsExample from './LayoutAnimations/BottomTabs';
 import ListItemLayoutAnimation from './LayoutAnimations/ListItemLayoutAnimation';
 import ViewFlatteningExample from './LayoutAnimations/ViewFlattening';
+import ViewRecyclingExample from './LayoutAnimations/ViewRecyclingExample';
 import InvalidValueAccessExample from './InvalidValueAccessExample';
 
 interface Example {
@@ -721,6 +722,10 @@ export const EXAMPLES: Record<string, Example> = {
   ViewFlattening: {
     title: '[LA] View Flattening',
     screen: ViewFlatteningExample,
+  },
+  ViewRecycling: {
+    title: '[LA] View Recycling',
+    screen: ViewRecyclingExample,
   },
 
   // Shared Element Transitions

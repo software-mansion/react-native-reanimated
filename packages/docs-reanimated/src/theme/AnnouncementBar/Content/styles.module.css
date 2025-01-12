@@ -1,8 +1,11 @@
 .content {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto auto 1fr auto;
+  grid-template-areas: 'logo headline subText link close';
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   margin: 0 auto;
+  width: 100%;
   max-width: 1440px;
 
   padding: 8px 16px;
@@ -11,7 +14,6 @@
 .logo {
   height: 36px;
   width: 36px;
-  margin: auto;
   grid-area: logo;
 }
 
@@ -19,18 +21,10 @@
   color: inherit;
 }
 
-.wrapper {
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  align-items: center;
-  justify-content: center;
-}
-
 .headline {
   font-size: 16px;
-  grid-area: headline;
   text-wrap: nowrap;
+  grid-area: headline;
 }
 
 p.subText {
@@ -48,12 +42,16 @@ a.link {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   font-size: 14px;
   padding: 4px 12px;
   border: 1px solid var(--swm-navy-light-100);
   background-color: var(--swm-navy-light-100);
-  transition: all 0.2s ease-in-out;
+  transition: border 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  grid-area: link;
+  margin-left: auto;
+  margin-right: 64px;
 }
 
 .linkTitle {
@@ -86,32 +84,44 @@ a.link {
   align-items: center;
 }
 
-@media screen and (max-width: 996px) {
+.close {
+  opacity: 1;
+  grid-area: close;
+}
+
+.close svg g {
+  stroke: var(--swm-navy-light-100);
+  stroke-width: 2;
+}
+
+@media screen and (max-width: 1200px) {
   .content {
-    gap: 12px;
-  }
-  .wrapper {
-    display: grid;
-    grid-template-columns: 50px 1fr;
+    grid-template-columns: auto 1fr 1fr auto;
     grid-template-areas:
-      'logo headline'
-      'logo subText';
-    gap: 0;
-    align-items: center;
+      'logo headline link close'
+      'logo subText link close';
   }
-}
-
-@media screen and (max-width: 768px) {
-  .content {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 8px 16px;
-  }
-}
-
-@media screen and (max-width: 450px) {
   .link {
-    width: 100%;
-    justify-content: center;
+    margin: auto;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .content {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      'logo headline close'
+      'logo subText  close'
+      'link link link';
+  }
+  .link {
+    margin: 0;
+  }
+  .logo {
+    margin-bottom: auto;
+  }
+  .close {
+    padding: 8px !important;
+    margin-bottom: auto;
   }
 }
