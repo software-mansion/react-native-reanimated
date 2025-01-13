@@ -1,7 +1,6 @@
 'use strict';
 /**
- * Copied from:
- * react-native/Libraries/StyleSheet/normalizeColor.js
+ * Copied from: react-native/Libraries/StyleSheet/normalizeColor.js
  * react-native/Libraries/StyleSheet/processColor.js
  * https://github.com/wcandillon/react-native-redash/blob/master/src/Colors.ts
  */
@@ -336,11 +335,18 @@ export const ColorProperties = makeShareable([
   'borderBlockEndColor',
   'borderBlockStartColor',
   'color',
+  'outlineColor',
   'shadowColor',
   'textDecorationColor',
   'tintColor',
   'textShadowColor',
   'overlayColor',
+  // SVG color properties
+  'fill',
+  'floodColor',
+  'lightingColor',
+  'stopColor',
+  'stroke',
 ]);
 
 // // ts-prune-ignore-next Exported for the purpose of tests only
@@ -524,11 +530,10 @@ export const rgbaColor = (
 };
 
 /**
- *
- * @param r - red value (0-255)
- * @param g - green value (0-255)
- * @param b - blue value (0-255)
- * @returns \{h: hue (0-1), s: saturation (0-1), v: value (0-1)\}
+ * @param r - Red value (0-255)
+ * @param g - Green value (0-255)
+ * @param b - Blue value (0-255)
+ * @returns `{h: hue (0-1), s: saturation (0-1), v: value (0-1)}`
  */
 export function RGBtoHSV(r: number, g: number, b: number): HSV {
   'worklet';
@@ -561,11 +566,10 @@ export function RGBtoHSV(r: number, g: number, b: number): HSV {
 }
 
 /**
- *
- * @param h - hue (0-1)
- * @param s - saturation (0-1)
- * @param v - value (0-1)
- * @returns \{r: red (0-255), g: green (0-255), b: blue (0-255)\}
+ * @param h - Hue (0-1)
+ * @param s - Saturation (0-1)
+ * @param v - Value (0-1)
+ * @returns `{r: red (0-255), g: green (0-255), b: blue (0-255)}`
  */
 function HSVtoRGB(h: number, s: number, v: number): RGB {
   'worklet';

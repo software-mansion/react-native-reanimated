@@ -1,36 +1,70 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
 
-REANIMATED_PATH=packages/react-native-reanimated
+print() {
+  echo "    [PRECOMMIT]: $1" >&2
+}
 
+BRANCH=$(git symbolic-ref HEAD)
+if [ "$BRANCH" = "refs/heads/main" ]; then
+  print "You tried to commit to main, which is probably a mistake. Aborting commit."
+  exit 1
+fi
+
+# `lint-staged` is great, but its' parsing capabilities of more advanced CLIs is poor.
+# We can use it reliably only with programs that expect the following syntax:
+#     command [options] [arg1] [arg2] [arg3] ...
+# more sophisticated checks should be done in this script without `lint-staged`.
+print 'Running "lint-staged" ...'
 yarn lint-staged
 
-cd $REANIMATED_PATH
-# This step can take several seconds, so we don't want to run it on irrelevant commits.
-! git diff-index --name-only HEAD -- | grep "$REANIMATED_PATH/src/.*\.\(ts\|tsx\)$" >/dev/null
-if [ $? -eq 1 ]; then
-  yarn type:check:all
-  yarn find-unused-code:js
+LOGFILE=.husky/log.txt
+try() {
+  if ! "$@" >"$LOGFILE" 2>&1; then
+    print "Errors detected. Aborting commit."
+    print "Error logs:\n"
+    cat "$LOGFILE"
+    exit 1
+  fi
+}
+
+# Some precommit checks can take several seconds. Therefore, we
+# want them to trigger only when relevant files are staged.
+STAGED_FILES=$(git diff-index HEAD --cached --name-only)
+
+print "Checking for changes in Reanimated TypeScript source files..."
+REANIMATED_PATH="packages/react-native-reanimated"
+if echo "$STAGED_FILES" | grep "$REANIMATED_PATH/src/.*\.\(ts\|tsx\)$" --silent; then
+  print "Changes spotted. Running TypeScript checks..."
+
+  try yarn workspace react-native-reanimated type:check
+  try yarn workspace react-native-reanimated find-unused-code:js
+
+  print "Success."
 else
-  echo "[PRECOMMIT]: Reanimated TypeScript source files weren't changed. Skipping TypeScript checks." >&2
+  print "No changes. Skipping TypeScript checks."
 fi
 
 # This automatically builds Reanimated Babel plugin JavaScript files if their
 # TypeScript counterparts were changed. It also adds the output file to the commit
-# if the built file differs from currently committed one.
-! git diff-index HEAD --name-only |
-  grep -E "$REANIMATED_PATH/plugin/" >/dev/null
-if [ $? -eq 1 ]; then
-  yarn build:plugin
-  ! git status -u |
-    grep -E 'plugin/build/plugin.js' >/dev/null
-  if [ $? -eq 1 ]; then
-    git add plugin/build/plugin.js
-    echo "[PRECOMMIT]: Babel plugin files were automatically built and changes were spotted.\
-    \n             Those changes were added to the commit." >&2
+# if the built file differs from currently staged one.
+print "Checking for changes in Reanimated Babel plugin source files..."
+PLUGIN_PATH="$REANIMATED_PATH/plugin"
+if echo "$STAGED_FILES" | grep -E "$PLUGIN_PATH" >/dev/null; then
+  print "Changes spotted. Building Reanimated Babel plugin files..."
+
+  yarn workspace babel-plugin-reanimated build
+
+  PLUGIN_OUTPUT_PATH="$PLUGIN_PATH/index.js"
+  if git status -u | grep -E "$PLUGIN_OUTPUT_PATH" --silent; then
+    git add "$PLUGIN_PATH"
+    print "Non-committed changes were automatically added to the commit."
   else
-    echo "[PRECOMMIT]: All Babel plugin files were already commited." >&2
+    print "All Babel plugin files were already committed."
   fi
 else
-  echo "[PRECOMMIT]: Babel plugin files weren't changed. Skipping plugin checks." >&2
+  print "No changes. Skipping plugin checks."
 fi
+
+print "All good, committing..."
+
+exit 0

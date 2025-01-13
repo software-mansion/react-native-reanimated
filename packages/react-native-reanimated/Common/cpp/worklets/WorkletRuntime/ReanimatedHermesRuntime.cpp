@@ -1,4 +1,4 @@
-#include "ReanimatedHermesRuntime.h"
+#include <worklets/WorkletRuntime/ReanimatedHermesRuntime.h>
 
 // Only include this file in Hermes-enabled builds as some platforms (like tvOS)
 // don't support hermes and it causes the compilation to fail.
@@ -12,22 +12,12 @@
 #include <string>
 #include <utility>
 
-#if __has_include(<reacthermes/HermesExecutorFactory.h>)
-#include <reacthermes/HermesExecutorFactory.h>
-#else // __has_include(<hermes/hermes.h>) || ANDROID
-#include <hermes/hermes.h>
-#endif
-
-namespace reanimated {
+namespace worklets {
 
 using namespace facebook;
 using namespace react;
 #if HERMES_ENABLE_DEBUGGER
-#if REACT_NATIVE_MINOR_VERSION >= 73
 using namespace facebook::hermes::inspector_modern;
-#else
-using namespace facebook::hermes::inspector;
-#endif
 #endif // HERMES_ENABLE_DEBUGGER
 
 #if HERMES_ENABLE_DEBUGGER
@@ -74,10 +64,6 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
   auto adapter =
       std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
   debugToken_ = chrome::enableDebugging(std::move(adapter), name);
-#else
-  // This is required by iOS, because there is an assertion in the destructor
-  // that the thread was indeed `quit` before
-  jsQueue->quitSynchronous();
 #endif // HERMES_ENABLE_DEBUGGER
 
 #ifndef NDEBUG
@@ -117,6 +103,6 @@ ReanimatedHermesRuntime::~ReanimatedHermesRuntime() {
 #endif // HERMES_ENABLE_DEBUGGER
 }
 
-} // namespace reanimated
+} // namespace worklets
 
 #endif // JS_RUNTIME_HERMES

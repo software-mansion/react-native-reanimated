@@ -9,11 +9,15 @@ public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callb
   private final Keyboard mKeyboard;
   private final NotifyAboutKeyboardChangeFunction mNotifyAboutKeyboardChange;
   private static final int CONTENT_TYPE_MASK = WindowInsetsCompat.Type.ime();
+  private final boolean mIsNavigationBarTranslucent;
 
   public KeyboardAnimationCallback(
-      Keyboard keyboard, NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange) {
+      Keyboard keyboard,
+      NotifyAboutKeyboardChangeFunction notifyAboutKeyboardChange,
+      boolean isNavigationBarTranslucent) {
     super(WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_CONTINUE_ON_SUBTREE);
     mNotifyAboutKeyboardChange = notifyAboutKeyboardChange;
+    mIsNavigationBarTranslucent = isNavigationBarTranslucent;
     mKeyboard = keyboard;
   }
 
@@ -43,7 +47,7 @@ public class KeyboardAnimationCallback extends WindowInsetsAnimationCompat.Callb
       }
     }
     if (isAnyKeyboardAnimationRunning) {
-      mKeyboard.updateHeight(insets);
+      mKeyboard.updateHeight(insets, mIsNavigationBarTranslucent);
       mNotifyAboutKeyboardChange.call();
     }
     return insets;

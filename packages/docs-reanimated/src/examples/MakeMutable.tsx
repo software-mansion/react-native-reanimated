@@ -1,5 +1,4 @@
-import { Text, StyleSheet, View, TouchableOpacity } from 'react-native';
-import { useColorScheme } from '@mui/material';
+import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
 
 import React, { useCallback, useMemo, useState } from 'react';
 import Animated, {
@@ -9,12 +8,7 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
-
-function useTextColorStyle() {
-  const { colorScheme } = useColorScheme();
-
-  return colorScheme === 'light' ? styles.darkText : styles.lightText;
-}
+import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
 
 type CheckListSelectorProps = {
   items: string[];
@@ -22,6 +16,8 @@ type CheckListSelectorProps = {
 };
 
 function CheckListSelector({ items, onSubmit }: CheckListSelectorProps) {
+  const textColor = useThemedTextStyle();
+
   const checkListItemProps = useMemo(
     () =>
       items.map((item) => ({
@@ -48,7 +44,7 @@ function CheckListSelector({ items, onSubmit }: CheckListSelectorProps) {
         <CheckListItem key={props.item} {...props} />
       ))}
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitButtonText}>Submit</Text>
+        <Text style={[styles.submitButtonText, textColor]}>Submit</Text>
       </TouchableOpacity>
     </View>
   );
@@ -60,7 +56,7 @@ type CheckListItemProps = {
 };
 
 function CheckListItem({ item, selected }: CheckListItemProps) {
-  const textColor = useTextColorStyle();
+  const textColor = useThemedTextStyle();
 
   const onPress = useCallback(() => {
     // highlight-start
@@ -109,7 +105,7 @@ const ITEMS = [
 ];
 
 export default function App() {
-  const textColor = useTextColorStyle();
+  const textColor = useThemedTextStyle();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   return (
@@ -165,11 +161,5 @@ const styles = StyleSheet.create({
     color: 'var(--swm-off-white)',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  lightText: {
-    color: 'var(--swm-off-white)',
-  },
-  darkText: {
-    color: 'var(--swm-navy-light-100)',
   },
 });

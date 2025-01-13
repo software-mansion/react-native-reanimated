@@ -1,7 +1,7 @@
-#include "JSLogger.h"
+#include <worklets/Tools/JSLogger.h>
 #include <memory>
 
-namespace reanimated {
+namespace worklets {
 
 void JSLogger::warnOnJS(const std::string &warning) const {
 #ifndef NDEBUG
@@ -13,4 +13,4 @@ void JSLogger::warnOnJS(const std::string &warning) const {
 #endif // NDEBUG
 }
 
-} // namespace reanimated
+} // namespace worklets

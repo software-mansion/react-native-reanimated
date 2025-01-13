@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace reanimated {
+namespace worklets {
 
 struct AsyncQueueState {
   std::atomic_bool running{true};
@@ -32,4 +32,4 @@ class AsyncQueue {
   const std::shared_ptr<AsyncQueueState> state_;
 };
 
-} // namespace reanimated
+} // namespace worklets

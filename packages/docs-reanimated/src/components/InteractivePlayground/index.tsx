@@ -10,6 +10,7 @@ import ReducedMotionWarning from '../ReducedMotionWarning';
 import useClampPlayground from './useClampPlayground';
 import useSpringPlayground from './useSpringPlayground';
 import useTimingPlayground from './useTimingPlayground';
+import useEnteringExitingPlayground from './useEnteringExitingAnimationPlayground';
 import useRepeatPlayground from './useRepeatPlayground';
 import useInterpolateColorPlayground from './useInterpolateColorPlayground';
 import useAnimatedSensorPlayground from './useAnimatedSensorPlayground';
@@ -32,6 +33,7 @@ export {
   useSpringPlayground,
   useTimingPlayground,
   useRepeatPlayground,
+  useEnteringExitingPlayground,
   useInterpolateColorPlayground,
   useAnimatedSensorPlayground,
   useDecayPlayground,

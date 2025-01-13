@@ -71,12 +71,8 @@ import RunOnUISrc from '!!raw-loader!@site/src/examples/RunOnUI';
 
 - Make sure not to execute `runOnUI` on the UI thread as this will result in an error.
 
+- In browsers there's no separate UI thread available. Because of that, on the Web, `runOnUI` behaves similarly to `requestAnimationFrame`. It creates a function that, when called, will be scheduled to run with given arguments on next animation frame.
+
 ## Platform compatibility
 
-<div className="platform-compatibility">
-
-| Android | iOS | Web |
-| ------- | --- | --- |
-| ✅      | ✅  | ✅  |
-
-</div>
+<PlatformCompatibility android ios web />

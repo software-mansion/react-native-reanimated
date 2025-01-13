@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { useTestRef } from '../../../ReJest/RuntimeTestsApi';
+import {
+  clearRenderOutput,
+  getTestComponent,
+  mockAnimationTimer,
+  mockWindowDimensions,
+  recordAnimationUpdates,
+  render,
+  unmockAnimationTimer,
+  unmockWindowDimensions,
+  useTestRef,
+  waitForAnimationUpdates,
+} from '../../../ReJest/RuntimeTestsApi';
 
 export const TRANSITION_REF = 'TRANSITION_REF';
 export enum Direction {
@@ -11,6 +22,32 @@ export enum Direction {
   RIGHT = 'RIGHT',
   RIGHT_UP = 'RIGHT_UP',
   LEFT_UP = 'LEFT_UP',
+}
+
+export async function getSnapshotUpdates(
+  layout: any,
+  direction: Direction,
+  snapshotLength: number,
+  changeSize?: boolean,
+) {
+  await mockAnimationTimer();
+  await mockWindowDimensions();
+
+  const updatesContainer = await recordAnimationUpdates();
+  if (direction === Direction.UP || direction === Direction.DOWN) {
+    await render(<TransitionUpOrDown layout={layout} direction={direction} changeSize={!!changeSize} />);
+  } else {
+    await render(<TransitionLeftOrRight layout={layout} direction={direction} changeSize={!!changeSize} />);
+  }
+  await waitForAnimationUpdates(snapshotLength);
+  const component = getTestComponent(TRANSITION_REF);
+  const updates = updatesContainer.getUpdates(component);
+
+  await unmockAnimationTimer();
+  await unmockWindowDimensions();
+  await clearRenderOutput();
+
+  return updates;
 }
 
 export const TransitionUpOrDown = ({
@@ -118,7 +155,6 @@ const styles = StyleSheet.create({
   containerVertical: {
     flex: 1,
     flexDirection: 'column',
-    margin: 5,
     width: 250,
   },
   containerHorizontal: {
@@ -126,16 +162,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    margin: 5,
     width: 250,
   },
   animatedBox: {
-    backgroundColor: 'royalblue',
+    backgroundColor: 'powderblue',
+    borderColor: 'steelblue',
+    borderWidth: 1,
     width: 100,
     height: 100,
     margin: 5,
   },
-  mainBox: { backgroundColor: 'darkorange' },
+  mainBox: { backgroundColor: 'orange', borderColor: 'darkorange' },
   bigBox: {
     width: 150,
     height: 200,

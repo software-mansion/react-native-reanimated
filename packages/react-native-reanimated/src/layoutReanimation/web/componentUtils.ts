@@ -13,16 +13,16 @@ import type { WebEasingsNames } from './Easing.web';
 import type { TransitionData } from './animationParser';
 import { TransitionGenerator } from './createAnimation';
 import { scheduleAnimationCleanup } from './domUtils';
-import { _updatePropsJS } from '../../js-reanimated';
-import type { ReanimatedHTMLElement } from '../../js-reanimated';
-import { ReduceMotion } from '../../commonTypes';
-import { LayoutAnimationType } from '../animationBuilder/commonTypes';
+import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
 import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Keyframe } from '../animationBuilder';
 import { ReducedMotionManager } from '../../ReducedMotion';
 import { prepareCurvedTransition } from './transition/Curved.web';
 import { EasingNameSymbol } from '../../Easing';
+import { logger } from '../../logger';
+import { _updatePropsJS } from '../../ReanimatedModule/js-reanimated';
+import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 
 function getEasingFromConfig(config: CustomConfig): string {
   if (!config.easingV) {
@@ -32,9 +32,7 @@ function getEasingFromConfig(config: CustomConfig): string {
   const easingName = config.easingV[EasingNameSymbol];
 
   if (!(easingName in WebEasings)) {
-    console.warn(
-      `[Reanimated] Selected easing is not currently supported on web.`
-    );
+    logger.warn(`Selected easing is not currently supported on web.`);
 
     return getEasingByName('linear');
   }

@@ -1,10 +1,11 @@
 #pragma once
 
-#include "LayoutAnimationsManager.h"
-#include "PropsRegistry.h"
+#include <reanimated/Fabric/PropsRegistry.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
+
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -83,6 +84,10 @@ struct Node {
       : children(std::move(node.children)),
         unflattenedChildren(std::move(node.unflattenedChildren)),
         tag(node.tag) {}
+  Node(Node &node)
+      : children(node.children),
+        unflattenedChildren(node.unflattenedChildren),
+        tag(node.tag) {}
   virtual ~Node() = default;
 };
 
@@ -91,7 +96,6 @@ struct Node {
  */
 struct MutationNode : public Node {
   ShadowViewMutation mutation;
-  std::unordered_set<Tag> animatedChildren;
   ExitingState state = UNDEFINED;
   explicit MutationNode(ShadowViewMutation &mutation)
       : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}

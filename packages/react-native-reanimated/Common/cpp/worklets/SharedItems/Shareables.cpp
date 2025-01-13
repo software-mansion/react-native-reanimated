@@ -1,8 +1,8 @@
-#include "Shareables.h"
+#include <worklets/SharedItems/Shareables.h>
 
 using namespace facebook;
 
-namespace reanimated {
+namespace worklets {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt) {
   auto valueUnpacker = rt.global().getProperty(rt, "__valueUnpacker");
@@ -47,7 +47,12 @@ jsi::Value makeShareableClone(
   if (value.isObject()) {
     auto object = value.asObject(rt);
     if (!object.getProperty(rt, "__workletHash").isUndefined()) {
-      shareable = std::make_shared<ShareableWorklet>(rt, object);
+      if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
+        shareable =
+            std::make_shared<RetainingShareable<ShareableWorklet>>(rt, object);
+      } else {
+        shareable = std::make_shared<ShareableWorklet>(rt, object);
+      }
     } else if (!object.getProperty(rt, "__init").isUndefined()) {
       shareable = std::make_shared<ShareableHandle>(rt, object);
     } else if (object.isFunction(rt)) {
@@ -77,22 +82,10 @@ jsi::Value makeShareableClone(
     } else {
       if (shouldRetainRemote.isBool() && shouldRetainRemote.getBool()) {
         shareable = std::make_shared<RetainingShareable<ShareableObject>>(
-            rt,
-            object
-#if SUPPORTS_NATIVE_STATE
-            ,
-            nativeStateSource
-#endif // SUPPORTS_NATIVE_STATE
-        );
+            rt, object, nativeStateSource);
       } else {
-        shareable = std::make_shared<ShareableObject>(
-            rt,
-            object
-#if SUPPORTS_NATIVE_STATE
-            ,
-            nativeStateSource
-#endif // SUPPORTS_NATIVE_STATE
-        );
+        shareable =
+            std::make_shared<ShareableObject>(rt, object, nativeStateSource);
       }
     }
   } else if (value.isString()) {
@@ -209,14 +202,11 @@ ShareableObject::ShareableObject(jsi::Runtime &rt, const jsi::Object &object)
     auto value = extractShareableOrThrow(rt, object.getProperty(rt, key));
     data_.emplace_back(key.utf8(rt), value);
   }
-#if SUPPORTS_NATIVE_STATE
   if (object.hasNativeState(rt)) {
     nativeState_ = object.getNativeState(rt);
   }
-#endif // SUPPORTS_NATIVE_STATE
 }
 
-#if SUPPORTS_NATIVE_STATE
 ShareableObject::ShareableObject(
     jsi::Runtime &rt,
     const jsi::Object &object,
@@ -227,18 +217,18 @@ ShareableObject::ShareableObject(
     nativeState_ = nativeStateSource.asObject(rt).getNativeState(rt);
   }
 }
-#endif // SUPPORTS_NATIVE_STATE
 
 jsi::Value ShareableObject::toJSValue(jsi::Runtime &rt) {
   auto obj = jsi::Object(rt);
   for (size_t i = 0, size = data_.size(); i < size; i++) {
-    obj.setProperty(rt, jsi::String::createFromUtf8(rt, data_[i].first), data_[i].second->toJSValue(rt));
+    obj.setProperty(
+        rt,
+        jsi::String::createFromUtf8(rt, data_[i].first),
+        data_[i].second->toJSValue(rt));
   }
-#if SUPPORTS_NATIVE_STATE
   if (nativeState_ != nullptr) {
     obj.setNativeState(rt, nativeState_);
   }
-#endif // SUPPORTS_NATIVE_STATE
   return obj;
 }
 
@@ -298,7 +288,12 @@ jsi::Value ShareableHandle::toJSValue(jsi::Runtime &rt) {
       remoteRuntime_ = &rt;
     }
   }
-  return jsi::Value(rt, *remoteValue_);
+  if (&rt == remoteRuntime_) {
+    return jsi::Value(rt, *remoteValue_);
+  }
+  auto initObj = initializer_->toJSValue(rt);
+  return getValueUnpacker(rt).call(
+      rt, initObj, jsi::String::createFromAscii(rt, "Handle"));
 }
 
 jsi::Value ShareableString::toJSValue(jsi::Runtime &rt) {
@@ -327,4 +322,4 @@ jsi::Value ShareableScalar::toJSValue(jsi::Runtime &) {
   }
 }
 
-} /* namespace reanimated */
+} // namespace worklets

@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import type { ReactNode } from 'react';
 import { setShouldAnimateExitingForTag } from '../core';
-import { findNodeHandle } from 'react-native';
+import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 
 export const SkipEnteringContext =
   createContext<React.MutableRefObject<boolean> | null>(null);
@@ -45,8 +45,10 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
 /**
  * A component that lets you skip entering and exiting animations.
  *
- * @param skipEntering - A boolean indicating whether children's entering animations should be skipped when `LayoutAnimationConfig` is mounted.
- * @param skipExiting - A boolean indicating whether children's exiting animations should be skipped when LayoutAnimationConfig is unmounted.
+ * @param skipEntering - A boolean indicating whether children's entering
+ *   animations should be skipped when `LayoutAnimationConfig` is mounted.
+ * @param skipExiting - A boolean indicating whether children's exiting
+ *   animations should be skipped when LayoutAnimationConfig is unmounted.
  * @see https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/layout-animation-config/
  */
 export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps> {

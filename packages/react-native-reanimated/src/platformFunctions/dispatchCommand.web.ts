@@ -1,5 +1,7 @@
 'use strict';
 
+import { logger } from '../logger';
+
 export function dispatchCommand() {
-  console.warn('[Reanimated] dispatchCommand() is not supported on web.');
+  logger.warn('dispatchCommand() is not supported on web.');
 }

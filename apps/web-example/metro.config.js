@@ -1,4 +1,7 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const {
+  wrapWithReanimatedMetroConfig,
+} = require('react-native-reanimated/metro-config');
 
 const path = require('path');
 const exclusionList = require('metro-config/src/defaults/exclusionList');
@@ -13,18 +16,26 @@ const config = getDefaultConfig(projectRoot);
 // 1. Watch all files within the monorepo
 config.watchFolders = [monorepoRoot];
 // 2. Let Metro know where to resolve packages and in what order
+// @ts-expect-error
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
-const modulesToBlock = ['@react-native'];
+const hasReactNative = require.resolve('react-native/package.json', {
+  paths: [projectRoot],
+});
+if (!hasReactNative) {
+  const modulesToBlock = ['@react-native'];
+  // @ts-expect-error
+  config.resolver.blacklistRE = exclusionList(
+    modulesToBlock.map(
+      (m) =>
+        new RegExp(
+          `^${escape(path.join(monorepoRoot, 'node_modules', m))}\\/.*$`
+        )
+    )
+  );
+}
 
-config.resolver.blacklistRE = exclusionList(
-  modulesToBlock.map(
-    (m) =>
-      new RegExp(`^${escape(path.join(monorepoRoot, 'node_modules', m))}\\/.*$`)
-  )
-);
-
-module.exports = config;
+module.exports = wrapWithReanimatedMetroConfig(config);

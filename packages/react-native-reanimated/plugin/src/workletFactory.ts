@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import type { NodePath } from '@babel/core';
-import { transformSync, traverse } from '@babel/core';
+import { traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   File as BabelFile,
@@ -44,24 +44,10 @@ import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 import { buildWorkletString } from './workletStringCode';
+import { workletTransformSync } from './transform';
 
 const REAL_VERSION = require('../../package.json').version;
 const MOCK_VERSION = 'x.y.z';
-
-const workletStringTransformPresets = [
-  require.resolve('@babel/preset-typescript'),
-];
-
-const workletStringTransformPlugins = [
-  require.resolve('@babel/plugin-transform-shorthand-properties'),
-  require.resolve('@babel/plugin-transform-arrow-functions'),
-  require.resolve('@babel/plugin-transform-optional-chaining'),
-  require.resolve('@babel/plugin-transform-nullish-coalescing-operator'),
-  [
-    require.resolve('@babel/plugin-transform-template-literals'),
-    { loose: true },
-  ],
-];
 
 export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
@@ -91,10 +77,9 @@ export function makeWorkletFactory(
   codeObject.code =
     '(' + (fun.isObjectMethod() ? 'function ' : '') + codeObject.code + '\n)';
 
-  const transformed = transformSync(codeObject.code, {
+  const transformed = workletTransformSync(codeObject.code, {
+    extraPlugins,
     filename: state.file.opts.filename,
-    presets: workletStringTransformPresets,
-    plugins: workletStringTransformPlugins,
     ast: true,
     babelrc: false,
     configFile: false,
@@ -105,9 +90,6 @@ export function makeWorkletFactory(
   assert(transformed.ast, '[Reanimated] `transformed.ast` is undefined.');
 
   const variables = makeArrayFromCapturedBindings(transformed.ast, fun);
-
-  const functionName = makeWorkletName(fun, state);
-  const functionIdentifier = identifier(functionName);
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -120,11 +102,13 @@ export function makeWorkletFactory(
       )
     : clone;
 
+  const { workletName, reactName } = makeWorkletName(fun, state);
+
   let [funString, sourceMapString] = buildWorkletString(
     transformed.ast,
     state,
     variables,
-    functionName,
+    workletName,
     transformed.map
   );
   assert(funString, '[Reanimated] `funString` is undefined.');
@@ -219,12 +203,12 @@ export function makeWorkletFactory(
     VariableDeclaration | ExpressionStatement | ReturnStatement
   > = [
     variableDeclaration('const', [
-      variableDeclarator(functionIdentifier, funExpression),
+      variableDeclarator(identifier(reactName), funExpression),
     ]),
     expressionStatement(
       assignmentExpression(
         '=',
-        memberExpression(functionIdentifier, identifier('__closure'), false),
+        memberExpression(identifier(reactName), identifier('__closure'), false),
         objectExpression(
           variables.map((variable) =>
             variable.name.endsWith(workletClassFactorySuffix)
@@ -249,7 +233,7 @@ export function makeWorkletFactory(
       assignmentExpression(
         '=',
         memberExpression(
-          functionIdentifier,
+          identifier(reactName),
           identifier('__workletHash'),
           false
         ),
@@ -263,7 +247,11 @@ export function makeWorkletFactory(
       expressionStatement(
         assignmentExpression(
           '=',
-          memberExpression(functionIdentifier, identifier('__initData'), false),
+          memberExpression(
+            identifier(reactName),
+            identifier('__initData'),
+            false
+          ),
           initDataId
         )
       )
@@ -291,7 +279,7 @@ export function makeWorkletFactory(
         assignmentExpression(
           '=',
           memberExpression(
-            functionIdentifier,
+            identifier(reactName),
             identifier('__stackDetails'),
             false
           ),
@@ -301,7 +289,7 @@ export function makeWorkletFactory(
     );
   }
 
-  statements.push(returnStatement(functionIdentifier));
+  statements.push(returnStatement(identifier(reactName)));
 
   const newFun = functionExpression(undefined, [], blockStatement(statements));
 
@@ -344,7 +332,7 @@ function hash(str: string): number {
 function makeWorkletName(
   fun: NodePath<WorkletizableFunction>,
   state: ReanimatedPluginPass
-): string {
+): { workletName: string; reactName: string } {
   let source = 'unknownFile';
 
   if (state.file.opts.filename) {
@@ -361,18 +349,25 @@ function makeWorkletName(
   }
 
   const suffix = `${source}${state.workletNumber++}`;
+  let reactName = '';
+
   if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
-    return toIdentifier(`${fun.node.key.name}_${suffix}`);
-  }
-  if (isFunctionDeclaration(fun.node) && isIdentifier(fun.node.id)) {
-    return toIdentifier(`${fun.node.id.name}_${suffix}`);
-  }
-  if (isFunctionExpression(fun.node) && isIdentifier(fun.node.id)) {
-    return toIdentifier(`${fun.node.id.name}_${suffix}`);
+    reactName = fun.node.key.name;
+  } else if (
+    (isFunctionDeclaration(fun.node) || isFunctionExpression(fun.node)) &&
+    isIdentifier(fun.node.id)
+  ) {
+    reactName = fun.node.id.name;
   }
 
+  const workletName = reactName
+    ? toIdentifier(`${reactName}_${suffix}`)
+    : toIdentifier(suffix);
+
   // Fallback for ArrowFunctionExpression and unnamed FunctionExpression.
-  return toIdentifier(suffix);
+  reactName = reactName || toIdentifier(suffix);
+
+  return { workletName, reactName };
 }
 
 function makeArrayFromCapturedBindings(
@@ -459,3 +454,14 @@ function makeArrayFromCapturedBindings(
 
   return Array.from(closure.values());
 }
+
+const extraPlugins = [
+  require.resolve('@babel/plugin-transform-shorthand-properties'),
+  require.resolve('@babel/plugin-transform-arrow-functions'),
+  require.resolve('@babel/plugin-transform-optional-chaining'),
+  require.resolve('@babel/plugin-transform-nullish-coalescing-operator'),
+  [
+    require.resolve('@babel/plugin-transform-template-literals'),
+    { loose: true },
+  ],
+];

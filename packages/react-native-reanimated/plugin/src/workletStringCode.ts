@@ -1,5 +1,5 @@
 import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
-import { transformSync, traverse } from '@babel/core';
+import { traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   File as BabelFile,
@@ -34,6 +34,7 @@ import * as fs from 'fs';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
+import { workletTransformSync } from './transform';
 
 const MOCK_SOURCE_MAP = 'mock source map';
 
@@ -41,10 +42,10 @@ export function buildWorkletString(
   fun: BabelFile,
   state: ReanimatedPluginPass,
   closureVariables: Array<Identifier>,
-  nameWithSource: string,
+  workletName: string,
   inputMap: BabelFileResult['map']
 ): Array<string | null | undefined> {
-  restoreRecursiveCalls(fun, nameWithSource);
+  restoreRecursiveCalls(fun, workletName);
 
   const draftExpression = (fun.program.body.find((obj) =>
     isFunctionDeclaration(obj)
@@ -105,7 +106,7 @@ export function buildWorkletString(
   });
 
   const workletFunction = functionExpression(
-    identifier(nameWithSource),
+    identifier(workletName),
     expression.params,
     expression.body,
     expression.generator,
@@ -130,8 +131,9 @@ export function buildWorkletString(
     }
   }
 
-  const transformed = transformSync(code, {
-    plugins: [prependClosureVariablesIfNecessary(closureVariables)],
+  const transformed = workletTransformSync(code, {
+    filename: state.file.opts.filename,
+    extraPlugins: [getClosurePlugin(closureVariables)],
     compact: true,
     sourceMaps: includeSourceMap,
     inputSourceMap: inputMap,
@@ -161,7 +163,8 @@ export function buildWorkletString(
 }
 
 /**
- * Function that restores recursive calls after the name of the worklet has changed.
+ * Function that restores recursive calls after the name of the worklet has
+ * changed.
  */
 function restoreRecursiveCalls(file: BabelFile, newName: string): void {
   traverse(file, {
@@ -221,9 +224,8 @@ function prependRecursiveDeclaration(path: NodePath<WorkletizableFunction>) {
   }
 }
 
-function prependClosureVariablesIfNecessary(
-  closureVariables: Array<Identifier>
-): PluginItem {
+/** Prepends necessary closure variables to the worklet function. */
+function getClosurePlugin(closureVariables: Array<Identifier>): PluginItem {
   const closureDeclaration = variableDeclaration('const', [
     variableDeclarator(
       objectPattern(

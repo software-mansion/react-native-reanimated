@@ -7,12 +7,14 @@ import Animated, {
   runOnUI,
   MeasuredDimensions,
 } from 'react-native-reanimated';
+import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
 
 type MeasurableTextProps = React.PropsWithChildren<{
   onPress: (measurements: MeasuredDimensions) => void;
 }>;
 
 function MeasurableText(props: MeasurableTextProps) {
+  const textColor = useThemedTextStyle();
   const { children, onPress } = props;
   const animatedRef = useAnimatedRef<Animated.View>();
 
@@ -27,7 +29,7 @@ function MeasurableText(props: MeasurableTextProps) {
 
   return (
     <Animated.Text
-      style={styles.title}
+      style={[styles.title, textColor]}
       onPress={handleMeasure}
       ref={animatedRef}>
       {children}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Animated, {
   useHandler,
   useEvent,
@@ -7,10 +7,12 @@ import Animated, {
   type ScrollEvent,
 } from 'react-native-reanimated';
 import { TextInput, SafeAreaView, View, StyleSheet } from 'react-native';
+import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 function UseHandlerExample() {
+  const textColor = useThemedTextStyle();
   const offsetY = useSharedValue(0);
 
   const handlers = {
@@ -60,7 +62,7 @@ function UseHandlerExample() {
       <AnimatedTextInput
         animatedProps={animatedProps}
         editable={false}
-        style={styles.header}
+        style={[styles.header, textColor]}
       />
       <Animated.ScrollView onScroll={scrollHandler}>
         <View style={styles.container}>{content}</View>
@@ -77,12 +79,10 @@ const styles = StyleSheet.create({
     height: 350,
   },
   header: {
-    backgroundColor: '#f8f9ff',
     paddingVertical: 16,
     paddingHorizontal: 32,
     textAlign: 'center',
     fontFamily: 'Aeonik',
-    color: '#001a72',
     marginTop: '-1px',
   },
   section: {

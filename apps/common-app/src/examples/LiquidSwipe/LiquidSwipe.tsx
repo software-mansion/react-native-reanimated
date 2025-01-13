@@ -15,7 +15,7 @@ import {
 import Weave from './Weave';
 import { initialSideWidth, initialWaveCenter } from './WeaveHelpers';
 import Content from './Content';
-import Button from './Button';
+import LiquidButton from './LiquidButton';
 
 export const assets = [
   require('./assets/firstPageImage.png'),
@@ -94,7 +94,7 @@ export default function LiquidSwipe() {
               color="#fd5587"
             />
           </Weave>
-          <Button y={centerY} progress={progress} />
+          <LiquidButton y={centerY} progress={progress} />
         </Animated.View>
       </GestureDetector>
     </GestureHandlerRootView>

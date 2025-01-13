@@ -57,10 +57,6 @@ react-native-reanimated-tests.js
 # Eclipse
 .settings/
 
-# plugin
-plugin/build/plugin.js.map
-plugin/types
-
 # yarn
 **/.yarn/*
 !.yarn/patches
@@ -68,3 +64,11 @@ plugin/types
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# pre-commit
+.husky/log.txt
+
+# clangd
+.cache
+CompilationDatabase
+compile_commands.json

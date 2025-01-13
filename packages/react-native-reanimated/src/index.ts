@@ -5,6 +5,8 @@ import * as Animated from './Animated';
 
 export default Animated;
 
+export { configureReanimatedLogger } from './ConfigHelper';
+export { LogLevel as ReanimatedLogLevel } from './logger';
 export type { WorkletRuntime } from './core';
 export {
   runOnJS,
@@ -84,9 +86,7 @@ export type {
   InterpolateHSV,
 } from './interpolateColor';
 export {
-  /**
-   * @deprecated Please use {@link Extrapolation} instead.
-   */
+  /** @deprecated Please use {@link Extrapolation} instead. */
   Extrapolate,
   ColorSpace,
   interpolateColor,
@@ -110,19 +110,6 @@ export {
 export type { ParsedColorArray } from './Colors';
 export { isColor, processColor, convertToRGBA } from './Colors';
 export { createAnimatedPropAdapter } from './PropAdapters';
-export type {
-  LayoutAnimation,
-  EntryAnimationsValues,
-  ExitAnimationsValues,
-  EntryExitAnimationFunction,
-  LayoutAnimationsValues,
-  LayoutAnimationFunction,
-  LayoutAnimationStartFunction,
-  LayoutAnimationType,
-  SharedTransitionAnimationsValues,
-  ILayoutAnimationBuilder,
-  IEntryExitAnimationBuilder,
-} from './layoutReanimation';
 export {
   BaseAnimationBuilder,
   ComplexAnimationBuilder,
@@ -226,7 +213,6 @@ export {
   combineTransition,
   // SET
   SharedTransition,
-  SharedTransitionType,
 } from './layoutReanimation';
 export { isSharedValue } from './isSharedValue';
 export type {
@@ -250,6 +236,18 @@ export type {
   AnimateStyle,
   AnimatedStyle,
   StylesOrDefault,
+  LayoutAnimation,
+  EntryAnimationsValues,
+  ExitAnimationsValues,
+  EntryExitAnimationFunction,
+  LayoutAnimationsValues,
+  LayoutAnimationFunction,
+  LayoutAnimationStartFunction,
+  LayoutAnimationType,
+  SharedTransitionAnimationsValues,
+  ILayoutAnimationBuilder,
+  IEntryExitAnimationBuilder,
+  BaseLayoutAnimationConfig,
 } from './commonTypes';
 export {
   SensorType,
@@ -258,6 +256,7 @@ export {
   KeyboardState,
   ReduceMotion,
   isWorkletFunction,
+  SharedTransitionType,
 } from './commonTypes';
 export type { FrameInfo } from './frameCallback';
 export { getUseOfValueInStyleWarning } from './pluginUtils';

@@ -1,0 +1,55 @@
+name: Example macOS build check
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  pull_request:
+    paths:
+      - .github/workflows/example-macos-build-check.yml
+      - packages/react-native-reanimated/RNReanimated.podspec
+      - packages/react-native-reanimated/scripts/reanimated_utils.rb
+      - packages/react-native-reanimated/apple/**
+      - packages/react-native-reanimated/Common/**
+      - apps/macos-example/package.json
+      - apps/macos-example/ios/**
+      - apps/macos-example/macos/**
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/example-macos-build-check.yml
+      - packages/react-native-reanimated/RNReanimated.podspec
+      - packages/react-native-reanimated/scripts/reanimated_utils.rb
+      - packages/react-native-reanimated/apple/**
+      - packages/react-native-reanimated/Common/**
+      - apps/macos-example/package.json
+      - apps/macos-example/ios/**
+      - apps/macos-example/macos/**
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: macos-14
+    env:
+      WORKING_DIRECTORY: apps/macos-example
+    concurrency:
+      group: macos-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+      # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+
+      - name: Install Pods
+        working-directory: ${{ env.WORKING_DIRECTORY }}/macos
+        run: bundle install && bundle exec pod update # There's some bug on the macOS runners for pod installation and this is the workaround.
+
+      - name: Build app
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: yarn macos

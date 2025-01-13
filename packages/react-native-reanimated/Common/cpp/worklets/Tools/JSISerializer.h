@@ -6,7 +6,8 @@
 
 using namespace facebook;
 
-namespace {
+namespace worklets {
+
 class JSISerializer {
  public:
   explicit JSISerializer(jsi::Runtime &rt);
@@ -40,6 +41,7 @@ class JSISerializer {
   jsi::Runtime &rt_;
   jsi::Object visitedNodes_;
 };
-} // namespace
 
 std::string stringifyJSIValue(jsi::Runtime &rt, const jsi::Value &value);
+
+} // namespace worklets

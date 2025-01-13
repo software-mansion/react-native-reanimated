@@ -79,8 +79,8 @@ function getTheme(theme: boolean, disabled: boolean) {
   const transition = disabled
     ? undefined
     : theme
-    ? customTransition
-    : new SharedTransition();
+      ? customTransition
+      : new SharedTransition();
 
   return { style, transition };
 }
@@ -212,7 +212,7 @@ function Screen2({ navigation }: NativeStackScreenProps<ParamListBase>) {
       />
       <Button
         title="go to Screen1"
-        onPress={() => navigation.navigate('Screen1')}
+        onPress={() => navigation.popTo('Screen1')}
       />
     </View>
   );
@@ -266,12 +266,12 @@ function Screen3({ navigation }: NativeStackScreenProps<ParamListBase>) {
         </Animated.Text>
       </Animated.View>
       <Button
-        onPress={() => navigation.navigate('Screen1')}
+        onPress={() => navigation.popTo('Screen1')}
         title="go to screen1"
       />
       <Button
         title="go to Screen2"
-        onPress={() => navigation.navigate('Screen2')}
+        onPress={() => navigation.popTo('Screen2')}
       />
     </View>
   );

@@ -15,7 +15,7 @@ import type {
   NativeScrollEvent,
 } from 'react-native';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
-import type { ReanimatedHTMLElement } from '../js-reanimated';
+import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 
 export type DependencyList = Array<unknown> | undefined;
 
@@ -37,13 +37,13 @@ export interface AnimatedRef<T extends Component> {
 // Might make that type generic if it's ever needed.
 export type AnimatedRefOnJS = AnimatedRef<Component>;
 
-/**
- * `AnimatedRef` is mapped to this type on the UI thread via a shareable handle.
- */
+/** `AnimatedRef` is mapped to this type on the UI thread via a shareable handle. */
 export type AnimatedRefOnUI = {
   (): number | ShadowNodeWrapper | null;
   /**
-   * @remarks `viewName` is required only on iOS with Paper and it's value is null on other platforms.
+   * @remarks
+   *   `viewName` is required only on iOS with Paper and it's value is null on
+   *   other platforms.
    */
   viewName: SharedValue<string | null>;
 };
@@ -53,9 +53,9 @@ type ReanimatedPayload = {
 };
 
 /**
- * This utility type is to convert type of events that would normally be
- * sent by React Native (they have `nativeEvent` field) to the type
- * that is sent by Reanimated.
+ * This utility type is to convert type of events that would normally be sent by
+ * React Native (they have `nativeEvent` field) to the type that is sent by
+ * Reanimated.
  */
 export type ReanimatedEvent<Event extends object> = ReanimatedPayload &
   (Event extends {
@@ -90,7 +90,7 @@ export interface IWorkletEventHandler<Event extends object> {
 }
 
 export interface AnimatedStyleHandle<
-  Style extends DefaultStyle = DefaultStyle
+  Style extends DefaultStyle = DefaultStyle,
 > {
   viewDescriptors: ViewDescriptorsSet;
   initial: {
@@ -100,7 +100,7 @@ export interface AnimatedStyleHandle<
 }
 
 export interface JestAnimatedStyleHandle<
-  Style extends DefaultStyle = DefaultStyle
+  Style extends DefaultStyle = DefaultStyle,
 > extends AnimatedStyleHandle<Style> {
   jestAnimatedStyle: MutableRefObject<AnimatedStyle<Style>>;
 }

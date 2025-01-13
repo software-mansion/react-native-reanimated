@@ -7,7 +7,14 @@
       "packages/react-native-reanimated",
       "packages/eslint-plugin-reanimated",
       "packages/react-native-reanimated/plugin",
-      "apps/*"
+      "packages/react-native-worklets",
+      "apps/common-app",
+      "apps/paper-example",
+      "apps/fabric-example",
+      "apps/macos-example",
+      "apps/tvos-example",
+      "apps/web-example",
+      "apps/next-example"
     ]
   },
   "private": true,
@@ -18,12 +25,11 @@
   },
   "devDependencies": {
     "eslint": "^8.57.0",
+    "eslint-plugin-jsdoc": "^50.2.2",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
-    "prettier": "2.8.8",
+    "prettier": "^3.3.3",
+    "prettier-plugin-jsdoc": "^1.3.0",
     "typescript": "~5.3.0"
-  },
-  "resolutions": {
-    "@react-native/codegen": "0.75.0-rc.6"
   }
 }

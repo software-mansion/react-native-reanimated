@@ -1,16 +1,17 @@
 #pragma once
 
+#include <worklets/Registries/WorkletRuntimeRegistry.h>
+
 #include <jsi/jsi.h>
+
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "WorkletRuntimeRegistry.h"
-
 using namespace facebook;
 
-namespace reanimated {
+namespace worklets {
 
 jsi::Function getValueUnpacker(jsi::Runtime &rt);
 
@@ -191,20 +192,16 @@ class ShareableObject : public Shareable {
  public:
   ShareableObject(jsi::Runtime &rt, const jsi::Object &object);
 
-#if SUPPORTS_NATIVE_STATE
   ShareableObject(
       jsi::Runtime &rt,
       const jsi::Object &object,
       const jsi::Value &nativeStateSource);
-#endif // SUPPORTS_NATIVE_STATE
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
  protected:
   std::vector<std::pair<std::string, std::shared_ptr<Shareable>>> data_;
-#if SUPPORTS_NATIVE_STATE
   std::shared_ptr<jsi::NativeState> nativeState_;
-#endif // SUPPORTS_NATIVE_STATE
 };
 
 class ShareableHostObject : public Shareable {
@@ -240,19 +237,11 @@ class ShareableHostFunction : public Shareable {
 
 class ShareableArrayBuffer : public Shareable {
  public:
-  ShareableArrayBuffer(
-      jsi::Runtime &rt,
-#if REACT_NATIVE_MINOR_VERSION >= 72
-      const jsi::ArrayBuffer &arrayBuffer
-#else
-      jsi::ArrayBuffer arrayBuffer
-#endif
-      )
+  ShareableArrayBuffer(jsi::Runtime &rt, const jsi::ArrayBuffer &arrayBuffer)
       : Shareable(ArrayBufferType),
         data_(
             arrayBuffer.data(rt),
-            arrayBuffer.data(rt) + arrayBuffer.size(rt)) {
-  }
+            arrayBuffer.data(rt) + arrayBuffer.size(rt)) {}
 
   jsi::Value toJSValue(jsi::Runtime &rt) override;
 
@@ -366,4 +355,4 @@ class ShareableScalar : public Shareable {
   Data data_;
 };
 
-} // namespace reanimated
+} // namespace worklets

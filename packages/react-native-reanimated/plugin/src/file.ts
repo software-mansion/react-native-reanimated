@@ -36,7 +36,7 @@ import { contextObjectMarker } from './contextObject';
 
 export function processIfWorkletFile(
   path: NodePath<Program>,
-  _state: ReanimatedPluginPass
+  state: ReanimatedPluginPass
 ): boolean {
   if (
     !path.node.directives.some(
@@ -50,20 +50,21 @@ export function processIfWorkletFile(
   path.node.directives = path.node.directives.filter(
     (functionDirective) => functionDirective.value.value !== 'worklet'
   );
-  processWorkletFile(path);
+  processWorkletFile(path, state);
 
   return true;
 }
 
-/**
- * Adds a worklet directive to each viable top-level entity in the file.
- */
-function processWorkletFile(programPath: NodePath<Program>) {
+/** Adds a worklet directive to each viable top-level entity in the file. */
+function processWorkletFile(
+  programPath: NodePath<Program>,
+  state: ReanimatedPluginPass
+) {
   const statements = programPath.get('body');
   dehoistCommonJSExports(programPath.node);
   statements.forEach((statement) => {
     const candidatePath = getCandidate(statement);
-    processWorkletizableEntity(candidatePath);
+    processWorkletizableEntity(candidatePath, state);
   });
 }
 
@@ -78,7 +79,10 @@ function getCandidate(statementPath: NodePath<Statement>) {
   }
 }
 
-function processWorkletizableEntity(nodePath: NodePath<unknown>) {
+function processWorkletizableEntity(
+  nodePath: NodePath<unknown>,
+  state: ReanimatedPluginPass
+) {
   if (isWorkletizableFunctionPath(nodePath)) {
     if (nodePath.isArrowFunctionExpression()) {
       replaceImplicitReturnWithBlock(nodePath.node);
@@ -88,35 +92,46 @@ function processWorkletizableEntity(nodePath: NodePath<unknown>) {
     if (isImplicitContextObject(nodePath)) {
       appendWorkletContextObjectMarker(nodePath.node);
     } else {
-      processWorkletAggregator(nodePath);
+      processWorkletAggregator(nodePath, state);
     }
   } else if (nodePath.isVariableDeclaration()) {
-    processVariableDeclaration(nodePath);
+    processVariableDeclaration(nodePath, state);
   } else if (nodePath.isClassDeclaration()) {
     appendWorkletClassMarker(nodePath.node.body);
+    if (nodePath.node.id?.name) {
+      // We don't support unnamed classes yet.
+      state.classesToWorkletize.push({
+        node: nodePath.node,
+        name: nodePath.node.id.name,
+      });
+    }
   }
 }
 
 function processVariableDeclaration(
-  variableDeclarationPath: NodePath<VariableDeclaration>
+  variableDeclarationPath: NodePath<VariableDeclaration>,
+  state: ReanimatedPluginPass
 ) {
   const declarations = variableDeclarationPath.get('declarations');
   declarations.forEach((declaration) => {
     const initPath = declaration.get('init');
     if (initPath.isExpression()) {
-      processWorkletizableEntity(initPath);
+      processWorkletizableEntity(initPath, state);
     }
   });
 }
 
-function processWorkletAggregator(objectPath: NodePath<ObjectExpression>) {
+function processWorkletAggregator(
+  objectPath: NodePath<ObjectExpression>,
+  state: ReanimatedPluginPass
+) {
   const properties = objectPath.get('properties');
   properties.forEach((property) => {
     if (property.isObjectMethod()) {
       appendWorkletDirective(property.node.body);
     } else if (property.isObjectProperty()) {
       const valuePath = property.get('value');
-      processWorkletizableEntity(valuePath);
+      processWorkletizableEntity(valuePath, state);
     }
   });
 }
@@ -126,7 +141,8 @@ function processWorkletAggregator(objectPath: NodePath<ObjectExpression>) {
  *
  * `() => 1` becomes `() => { return 1 }`
  *
- * This is necessary because the worklet directive is only allowed on block statements.
+ * This is necessary because the worklet directive is only allowed on block
+ * statements.
  */
 function replaceImplicitReturnWithBlock(path: ArrowFunctionExpression) {
   if (!isBlockStatement(path.body)) {

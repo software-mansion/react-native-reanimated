@@ -1,5 +1,40 @@
+/* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 import type { WorkletStackDetails } from './commonTypes';
+
+type ReanimatedError = Error & 'ReanimatedError'; // signed type
+
+interface ReanimatedErrorConstructor extends Error {
+  new (message?: string): ReanimatedError;
+  (message?: string): ReanimatedError;
+  readonly prototype: ReanimatedError;
+}
+
+const ReanimatedErrorConstructor: ReanimatedErrorConstructor =
+  function ReanimatedError(message?: string) {
+    'worklet';
+    const prefix = '[Reanimated]';
+    const errorInstance = new Error(message ? `${prefix} ${message}` : prefix);
+    errorInstance.name = 'ReanimatedError';
+    return errorInstance;
+  } as ReanimatedErrorConstructor;
+
+export { ReanimatedErrorConstructor as ReanimatedError };
+
+/**
+ * Registers `ReanimatedError` in global scope. Use it only for Worklet
+ * runtimes.
+ */
+export function registerReanimatedError() {
+  'worklet';
+  if (!_WORKLET) {
+    throw new Error(
+      '[Reanimated] registerReanimatedError() must be called on Worklet runtime'
+    );
+  }
+  (global as Record<string, unknown>).ReanimatedError =
+    ReanimatedErrorConstructor;
+}
 
 const _workletStackDetails = new Map<number, WorkletStackDetails>();
 

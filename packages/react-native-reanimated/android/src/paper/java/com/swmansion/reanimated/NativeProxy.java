@@ -2,36 +2,41 @@ package com.swmansion.reanimated;
 
 import static com.swmansion.reanimated.Utils.simplifyStringNumbersList;
 
+import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.queue.MessageQueueThread;
+import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.layoutReanimation.NativeMethodsHolder;
 import com.swmansion.reanimated.nativeProxy.NativeProxyCommon;
+import com.swmansion.worklets.JSCallInvokerResolver;
+import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.Objects;
 
+/**
+ * @noinspection JavaJniMissingFunction
+ */
 public class NativeProxy extends NativeProxyCommon {
   @DoNotStrip
   @SuppressWarnings("unused")
   private final HybridData mHybridData;
 
-  public NativeProxy(ReactApplicationContext context, String valueUnpackerCode) {
+  @OptIn(markerClass = FrameworkAPI.class)
+  public NativeProxy(ReactApplicationContext context, WorkletsModule workletsModule) {
     super(context);
-    CallInvokerHolderImpl holder =
-        (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
+    CallInvokerHolderImpl holder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
     LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
-    ReanimatedMessageQueueThread messageQueueThread = new ReanimatedMessageQueueThread();
     mHybridData =
         initHybrid(
-            context.getJavaScriptContextHolder().get(),
+            workletsModule,
+            Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
             holder,
-            mAndroidUIScheduler,
             LayoutAnimations,
-            messageQueueThread,
-            valueUnpackerCode);
+            /* isBridgeless */ false);
     prepareLayoutAnimations(LayoutAnimations);
     installJSIBindings();
     if (BuildConfig.DEBUG) {
@@ -39,13 +44,13 @@ public class NativeProxy extends NativeProxyCommon {
     }
   }
 
+  @OptIn(markerClass = FrameworkAPI.class)
   private native HybridData initHybrid(
+      WorkletsModule workletsModule,
       long jsContext,
       CallInvokerHolderImpl jsCallInvokerHolder,
-      AndroidUIScheduler androidUIScheduler,
       LayoutAnimations LayoutAnimations,
-      MessageQueueThread messageQueueThread,
-      String valueUnpackerCode);
+      boolean isBridgeless);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 
@@ -54,6 +59,12 @@ public class NativeProxy extends NativeProxyCommon {
   @Override
   protected HybridData getHybridData() {
     return mHybridData;
+  }
+
+  private native void invalidateCpp();
+
+  public void invalidate() {
+    invalidateCpp();
   }
 
   public static NativeMethodsHolder createNativeMethodsHolder(LayoutAnimations layoutAnimations) {

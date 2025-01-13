@@ -1,5 +1,5 @@
 'use strict';
-import { NativeEventEmitter, Platform, findNodeHandle } from 'react-native';
+import { NativeEventEmitter, Platform } from 'react-native';
 import type { NativeModule } from 'react-native';
 import { shouldBeUseWeb } from '../PlatformChecker';
 import type { StyleProps } from '../commonTypes';
@@ -38,7 +38,7 @@ class JSPropsUpdaterPaper implements IJSPropsUpdater {
     > &
       IAnimatedComponentInternal
   ) {
-    const viewTag = findNodeHandle(animatedComponent);
+    const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterPaper._tagToComponentMapping.set(viewTag, animatedComponent);
     if (JSPropsUpdaterPaper._tagToComponentMapping.size === 1) {
       const listener = (data: ListenerData) => {
@@ -60,7 +60,7 @@ class JSPropsUpdaterPaper implements IJSPropsUpdater {
     > &
       IAnimatedComponentInternal
   ) {
-    const viewTag = findNodeHandle(animatedComponent);
+    const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterPaper._tagToComponentMapping.delete(viewTag);
     if (JSPropsUpdaterPaper._tagToComponentMapping.size === 0) {
       this._reanimatedEventEmitter.removeAllListeners(
@@ -100,7 +100,7 @@ class JSPropsUpdaterFabric implements IJSPropsUpdater {
     if (!JSPropsUpdaterFabric.isInitialized) {
       return;
     }
-    const viewTag = findNodeHandle(animatedComponent);
+    const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterFabric._tagToComponentMapping.set(viewTag, animatedComponent);
   }
 
@@ -113,7 +113,7 @@ class JSPropsUpdaterFabric implements IJSPropsUpdater {
     if (!JSPropsUpdaterFabric.isInitialized) {
       return;
     }
-    const viewTag = findNodeHandle(animatedComponent);
+    const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterFabric._tagToComponentMapping.delete(viewTag);
   }
 }

@@ -1,3 +1,5 @@
+import type { ReanimatedPluginPass } from './types';
+
 const notCapturedIdentifiers = [
   // Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
 
@@ -116,14 +118,16 @@ const notCapturedIdentifiers = [
 
   // Reanimated
   '_WORKLET',
+  'ReanimatedError',
+  '__reanimatedLoggerConfig',
 ];
 
 /**
- * @deprecated Since we moved on to using `global.` prefix in Reanimated, we don't need to
- * capture these identifiers anymore. However, for safety reasons and 3rd party libraries,
- * we still keep them in the list.
+ * @deprecated Since we moved on to using `global.` prefix in Reanimated, we
+ *   don't need to capture these identifiers anymore. However, for safety
+ *   reasons and 3rd party libraries, we still keep them in the list.
  *
- * `_WORKLET` is the only exception since it's a part of the public API.
+ *   `_WORKLET` is the only exception since it's a part of the public API.
  */
 // eslint-disable-next-line camelcase
 const notCapturedIdentifiers_DEPRECATED = [
@@ -131,7 +135,8 @@ const notCapturedIdentifiers_DEPRECATED = [
   '_IS_FABRIC',
   '_log',
   '_toString',
-  '_scheduleOnJS',
+  '_scheduleHostFunctionOnJS',
+  '_scheduleRemoteFunctionOnJS',
   '_scheduleOnRuntime',
   '_makeShareableClone',
   '_updatePropsPaper',
@@ -149,6 +154,13 @@ const notCapturedIdentifiers_DEPRECATED = [
   '_getAnimationTimestamp',
 ];
 
+export function initializeState(state: ReanimatedPluginPass) {
+  state.workletNumber = 1;
+  state.classesToWorkletize = [];
+  initializeGlobals();
+  addCustomGlobals(state);
+}
+
 export const defaultGlobals = new Set(
   notCapturedIdentifiers.concat(notCapturedIdentifiers_DEPRECATED)
 );
@@ -157,4 +169,24 @@ export let globals: Set<string>;
 
 export function initializeGlobals() {
   globals = new Set(defaultGlobals);
+}
+
+/**
+ * This function allows to add custom globals such as host-functions. Those
+ * globals have to be passed as an argument for the plugin in babel.config.js.
+ *
+ * For example:
+ *
+ * ```js
+ * plugins: [
+ *   ['react-native-reanimated/plugin', { globals: ['myHostFunction'] }],
+ * ];
+ * ```
+ */
+export function addCustomGlobals(state: ReanimatedPluginPass) {
+  if (state.opts && Array.isArray(state.opts.globals)) {
+    state.opts.globals.forEach((name: string) => {
+      globals.add(name);
+    });
+  }
 }
