@@ -1,4 +1,9 @@
-import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
+import type {
+  ImageProps,
+  ImageStyle,
+  TextStyle,
+  ViewStyle,
+} from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
 import type {
   CSSAnimationProperties,
@@ -7,6 +12,7 @@ import type {
 import Animated from 'react-native-reanimated';
 
 import { colors, radius, sizes, spacing } from '@/theme';
+import { splashImage } from '~/css/assets';
 import type { ExampleCardProps, LabelType } from '~/css/components';
 import {
   Screen,
@@ -16,8 +22,6 @@ import {
   VerticalExampleCard,
 } from '~/css/components';
 import { stringifyConfig } from '~/css/utils';
-
-import splashImage from './images/splash.png';
 
 const sharedConfig: CSSAnimationSettings = {
   animationDirection: 'alternate',
@@ -292,7 +296,8 @@ function OtherColors() {
           }}
         />
         <ImageExample
-          labelTypes={['iOS']}
+          labelTypes={['iOS', 'Android']}
+          source={splashImage}
           title="tintColor"
           animation={{
             animationName: {
@@ -301,24 +306,6 @@ function OtherColors() {
               },
               to: {
                 tintColor: 'green',
-              },
-            },
-            ...sharedConfig,
-          }}
-          style={{
-            overlayColor: colors.primary,
-          }}
-        />
-        <ImageExample
-          labelTypes={['Android']}
-          title="overlayColor"
-          animation={{
-            animationName: {
-              from: {
-                overlayColor: 'magenta',
-              },
-              to: {
-                overlayColor: 'green',
               },
             },
             ...sharedConfig,
@@ -375,14 +362,15 @@ const TextExample = (props: ConcreteExampleProps<TextStyle>) => (
   />
 );
 
-const ImageExample = (props: ConcreteExampleProps<ImageStyle>) => (
+type ImageExampleProps = {
+  source: ImageProps['source'];
+} & ConcreteExampleProps<ImageStyle>;
+
+const ImageExample = ({ source, ...props }: ImageExampleProps) => (
   <Example
     {...props}
     renderExample={(...styleProps) => (
-      <Animated.Image
-        source={splashImage}
-        style={[styles.box, ...styleProps]}
-      />
+      <Animated.Image source={source} style={[styles.box, ...styleProps]} />
     )}
   />
 );

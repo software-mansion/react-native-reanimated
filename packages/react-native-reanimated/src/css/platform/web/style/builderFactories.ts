@@ -115,6 +115,7 @@ class StyleBuilderImpl<P extends AnyRecord>
   override build(): string | null {
     this.buildRuleBuilders();
     const result = this.buildHandler(this.processedProps, this.nameAliases);
+    console.log(this.processedProps, this.nameAliases, result);
     this.cleanup();
     return result;
   }
@@ -132,9 +133,12 @@ class StyleBuilderImpl<P extends AnyRecord>
     } else {
       if (hasValueProcessor(configValue)) {
         this.handleProcess(property, value, configValue.process);
+      } else {
+        this.maybeAssignProp(property, String(value));
       }
+
       if (hasProp(configValue, 'name')) {
-        this.maybeAssignProp(property, configValue.name);
+        this.nameAliases[property] = configValue.name;
       }
     }
   }

@@ -119,6 +119,7 @@ export const PropsAllowlists: AllowlistsHolder = {
     flexWrap: true,
     justifyContent: true,
     position: true,
+    cursor: true,
     /* text color */
     color: true,
     tintColor: true,
