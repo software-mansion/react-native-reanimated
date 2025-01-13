@@ -159,6 +159,21 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
        record(
            {{"width", value<CSSDouble>(0)}, {"height", value<CSSDouble>(0)}})},
       {"textShadowRadius", value<CSSDouble>(0)},
+      {"boxShadow",
+       array({record({
+           {"offsetX", value<CSSDouble>(0)},
+           {"offsetY", value<CSSDouble>(0)},
+#ifdef ANDROID
+           // For some reason Android crashes when blurRadius is smaller than 1,
+           // so we use a custom value type that will never be smaller than 1
+           {"blurRadius", value<CSSShadowRadiusAndroid>(1)},
+#else
+           {"blurRadius", value<CSSDouble>(0)},
+#endif
+           {"spreadDistance", value<CSSDouble>(0)},
+           {"color", value<CSSColor>(BLACK)},
+           {"inset", value<CSSBoolean>(false)},
+       })})},
 
       // BORDERS
       // Radius

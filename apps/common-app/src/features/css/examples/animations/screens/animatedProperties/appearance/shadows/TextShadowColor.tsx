@@ -37,12 +37,12 @@ export default function TextShadowColor() {
       sections={[
         {
           description: [
-            'In this example, the following non-animated text shadow style properties are applied to the box:',
-            '• **textShadowRadius**: 10',
-            '`shadowOpacity` is necessary to make the shadow visible on iOS.',
-            '`elevation` is necessary to make the shadow visible on Android.',
-            '`textShadowRadius` is necessary to make the shadow visible.',
-            '',
+            // 'In this example, the following non-animated text shadow style properties are applied to the box:',
+            // '• **textShadowRadius**: 10',
+            // '`shadowOpacity` is necessary to make the shadow visible on iOS.',
+            // '`elevation` is necessary to make the shadow visible on Android.',
+            // '`textShadowRadius` is necessary to make the shadow visible.',
+            // '',
             "On **web** other shadow properties than the one you want to animate **aren't inherited** from the element style. That is why you have to set `textShadowRadius` in the animation **keyframes**.",
           ],
           examples: [

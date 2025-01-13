@@ -1,21 +1,20 @@
-import { processColor } from 'react-native';
 import type { BoxShadowValue, ViewStyle } from 'react-native';
 import type { ValueProcessor } from '../types';
 import { maybeAddSuffix } from '../../utils';
+import { parseBoxShadowString } from '../../../../utils';
 
 export const processBoxShadow: ValueProcessor<
   string | ReadonlyArray<BoxShadowValue>
 > = (value) => {
-  if (typeof value === 'string') {
-    return value;
-  }
+  const parsedShadow =
+    typeof value === 'string' ? parseBoxShadowString(value) : value;
 
-  return value
+  return parsedShadow
     .map(
       ({
         offsetX,
         offsetY,
-        color = '',
+        color = '#000',
         blurRadius = '',
         spreadDistance = '',
         inset = '',
@@ -25,9 +24,11 @@ export const processBoxShadow: ValueProcessor<
           maybeAddSuffix(offsetY, 'px'),
           maybeAddSuffix(blurRadius, 'px'),
           maybeAddSuffix(spreadDistance, 'px'),
-          processColor(color),
-          inset === undefined ? '' : inset ? 'inset' : 'outset',
-        ].join(' ')
+          color,
+          inset ? 'inset' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')
     )
     .join(', ');
 };

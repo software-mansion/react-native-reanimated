@@ -1,5 +1,6 @@
 import {
   processAspectRatio,
+  processBoxShadow,
   processColor,
   processFontWeight,
   processGap,
@@ -11,11 +12,9 @@ import {
 } from './style';
 import type { StyleBuilderConfig } from './style';
 import type { PlainStyle } from '../../types';
-import { Platform } from 'react-native';
+import { IS_ANDROID } from '../../constants';
 
 const colorAttributes = { process: processColor };
-
-const IS_ANDROID = Platform.OS === 'android';
 
 export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   /** Layout and Positioning */
@@ -134,7 +133,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   elevation: IS_ANDROID,
   textShadowOffset: true,
   textShadowRadius: true,
-  boxShadow: true,
+  boxShadow: { process: processBoxShadow },
 
   // BORDERS
   // Radius
@@ -230,4 +229,5 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
 
 export const SEPARATELY_INTERPOLATED_ARRAY_PROPERTIES = new Set([
   'transformOrigin',
+  'boxShadow',
 ]);
