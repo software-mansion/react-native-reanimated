@@ -52,6 +52,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           valueUnpackerCode_)) {}
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
+  jsQueue_->quitSynchronous();
   uiWorkletRuntime_.reset();
 }
 
