@@ -20,6 +20,7 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		BD279FF3747F4A548A65D128 /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E7907DF98A294F2D9672CB3E /* Poppins-Regular.ttf */; };
 		BDBBD9F50A6744649FFA1379 /* Poppins-Thin.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 849F4FC4D7AC4BA291D6C4B4 /* Poppins-Thin.ttf */; };
+		C200C1022D33B96D00F25439 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C200C1012D33B96D00F25439 /* AppDelegate.swift */; };
 		D509140DC52141079A0DB2B6 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = C06453E54CB742B58CB6EFDC /* OFL.txt */; };
 		E218AE03408043D2A0CDC9E8 /* Poppins-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 973BD397ECB7436F828E47A9 /* Poppins-Bold.ttf */; };
 		F089D8C46C244B0FB512E5C3 /* Poppins-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7DCAC1E7776A4A36A864F95E /* Poppins-SemiBold.ttf */; };
@@ -261,7 +262,7 @@
 		};
 		1232BDDFC9DE5BCE2776187D /* [CP-User] Generate metadata for clangd */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = true;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -448,10 +449,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -524,10 +522,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
