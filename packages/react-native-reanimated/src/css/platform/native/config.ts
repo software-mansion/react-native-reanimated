@@ -52,6 +52,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   marginLeft: true,
   marginStart: true,
   marginEnd: true,
+  // TODO - check if these props should depend on layout direction
   marginBlock: { as: 'marginVertical' },
   marginBlockEnd: { as: 'marginBottom' },
   marginBlockStart: { as: 'marginTop' },
@@ -69,6 +70,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   paddingLeft: true,
   paddingStart: true,
   paddingEnd: true,
+  // TODO - check if these props should depend on layout direction
   paddingBlock: { as: 'paddingVertical' },
   paddingBlockEnd: { as: 'paddingBottom' },
   paddingBlockStart: { as: 'paddingTop' },
@@ -87,6 +89,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   inset: { process: processInset },
   insetBlock: { process: processInsetBlock },
   insetInline: { process: processInsetInline },
+  // TODO - check if these props should depend on layout direction
   insetBlockStart: { as: 'top' },
   insetBlockEnd: { as: 'bottom' },
   insetInlineStart: { as: 'left' },
@@ -212,7 +215,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   textDecorationStyle: true,
   // Others
   userSelect: true,
-  writingDirection: true,
+  writingDirection: false,
   includeFontPadding: true,
 
   /** Others */

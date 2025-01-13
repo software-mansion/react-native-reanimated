@@ -36,7 +36,7 @@ abstract class BuilderBase<P extends AnyRecord, R> {
   add(property: keyof P, value: P[keyof P]) {
     const configValue = this.config[property];
 
-    if (!configValue || !isDefined(value)) {
+    if (!configValue || !isDefined(value) || configValue === false) {
       return;
     }
 

@@ -22,7 +22,6 @@ export const PropsAllowlists: AllowlistsHolder = {
     /* ios styles */
     shadowOpacity: true,
     shadowRadius: true,
-    textDecorationColor: true,
     /* legacy android transform properties */
     scaleX: true,
     scaleY: true,
@@ -110,6 +109,8 @@ export const PropsAllowlists: AllowlistsHolder = {
     textDecorationStyle: true,
     textTransform: true,
     writingDirection: true,
+    includeFontPadding: true,
+    userSelect: true,
     alignContent: true,
     alignItems: true,
     alignSelf: true,
@@ -124,5 +125,6 @@ export const PropsAllowlists: AllowlistsHolder = {
     shadowColor: true,
     textShadowColor: true,
     placeholderTextColor: true,
+    textDecorationColor: true,
   },
 };

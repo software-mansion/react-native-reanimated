@@ -103,10 +103,14 @@ function TextColors() {
           }}
         />
         <TextExample
+          labelTypes={['iOS', 'web']}
           style={{ textDecorationLine: 'underline' }}
           title="textDecorationColor"
           animation={{
             animationName: {
+              from: {
+                textDecorationColor: 'red',
+              },
               to: {
                 textDecorationColor: 'cyan',
               },
