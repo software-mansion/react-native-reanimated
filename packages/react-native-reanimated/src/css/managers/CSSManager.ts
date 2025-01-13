@@ -1,4 +1,3 @@
-'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import { adaptViewConfig } from '../../ConfigHelper';
 import {

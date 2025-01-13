@@ -78,7 +78,11 @@ export type SelectableConfig<C extends AnyRecord> = {
     ? SelectableConfig<C[K]>
     : SelectableConfigPropertyOptions<C[K]>;
 } & {
-  [K in keyof C]: C[K] extends AnyRecord ? SelectableConfig<C[K]> : C[K];
+  [K in keyof C]: C[K] extends infer U
+    ? U extends AnyRecord
+      ? SelectableConfig<U>
+      : C[K]
+    : never;
 };
 
 type ConfigSelectorProps<T extends AnyRecord> = {

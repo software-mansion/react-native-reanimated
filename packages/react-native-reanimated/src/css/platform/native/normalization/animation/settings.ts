@@ -1,4 +1,3 @@
-'use strict';
 import { ReanimatedError } from '../../../../errors';
 import type {
   CSSAnimationDirection,

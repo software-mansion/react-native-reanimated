@@ -2,9 +2,8 @@ import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated
 import type {
   ConvertValuesToArrays,
   CSSAnimationKeyframes,
-  CSSAnimationProperties,
   CSSAnimationSettings,
-  SingleCSSAnimationName,
+  ExistingCSSAnimationProperties,
 } from '../types';
 import CSSKeyframesRuleImpl from '../models/CSSKeyframesRule.web';
 import {
@@ -19,7 +18,7 @@ import {
 import { convertConfigPropertiesToArrays } from '../utils';
 
 export const isCSSKeyframesRuleImpl = (
-  keyframes: SingleCSSAnimationName
+  keyframes: ExistingCSSAnimationProperties['animationName']
 ): keyframes is CSSKeyframesRuleImpl =>
   typeof keyframes === 'object' && 'processedKeyframes' in keyframes;
 
@@ -42,7 +41,7 @@ export default class CSSAnimationsManager {
     this.element = element;
   }
 
-  attach(animationProperties: CSSAnimationProperties | null) {
+  attach(animationProperties: ExistingCSSAnimationProperties | null) {
     if (!animationProperties) {
       return;
     }
@@ -50,7 +49,7 @@ export default class CSSAnimationsManager {
     this.update(animationProperties);
   }
 
-  update(animationProperties: CSSAnimationProperties | null) {
+  update(animationProperties: ExistingCSSAnimationProperties | null) {
     if (!animationProperties) {
       this.detach();
       return;

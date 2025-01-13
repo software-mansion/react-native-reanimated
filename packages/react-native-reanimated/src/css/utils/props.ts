@@ -2,6 +2,7 @@ import type {
   AnyRecord,
   CSSAnimationProperties,
   CSSTransitionProperties,
+  ExistingCSSAnimationProperties,
   PlainStyle,
 } from '../types';
 import {
@@ -13,7 +14,11 @@ import {
 
 export function filterCSSAndStyleProperties(
   style: PlainStyle
-): [CSSAnimationProperties | null, CSSTransitionProperties | null, PlainStyle] {
+): [
+  ExistingCSSAnimationProperties | null,
+  CSSTransitionProperties | null,
+  PlainStyle,
+] {
   let animationName: CSSAnimationProperties['animationName'] | null = null;
   const animationProperties: Partial<CSSAnimationProperties> = {};
   const transitionProperties: Partial<CSSTransitionProperties> = {};
@@ -37,10 +42,15 @@ export function filterCSSAndStyleProperties(
     animationName &&
     (Array.isArray(animationName) ? animationName : [animationName]).every(
       (keyframes) =>
-        isCSSKeyframesRule(keyframes) || isCSSKeyframesObject(keyframes)
+        keyframes === 'none'
+          ? false
+          : isCSSKeyframesRule(keyframes) || isCSSKeyframesObject(keyframes)
     );
   const finalAnimationConfig = hasAnimationName
-    ? ({ ...animationProperties, animationName } as CSSAnimationProperties)
+    ? ({
+        ...animationProperties,
+        animationName,
+      } as ExistingCSSAnimationProperties)
     : null;
 
   // Return transitionProperties only if the transitionProperty is present

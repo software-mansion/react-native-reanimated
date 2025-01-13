@@ -102,13 +102,13 @@ export default function KeyframeTimingFunctions() {
             config={selectableConfig}
             onChange={setSelectableConfig}
           />
-          <View style={styles.buttonRow}>
+          <Animated.View layout={LinearTransition} style={styles.buttonRow}>
             <Text variant="label1">Reset config</Text>
             <Button
               title="Reset"
               onPress={() => setSelectableConfig(DEFAULT_ANIMATION_CONFIG)}
             />
-          </View>
+          </Animated.View>
           <Animated.View layout={LinearTransition} style={styles.preview}>
             <Animated.View style={[styles.box, animation]} />
           </Animated.View>

@@ -1,4 +1,3 @@
-'use strict';
 import type { Percentage, Point } from '../types';
 
 export type NormalizedCubicBezierEasing = {

@@ -1,4 +1,3 @@
-'use strict';
 import type { PlainStyle, TimeUnit } from './common';
 import type { CSSTimingFunction } from '../easings';
 import type { AddArrayPropertyTypes } from './helpers';

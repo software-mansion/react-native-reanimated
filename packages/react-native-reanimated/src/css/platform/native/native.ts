@@ -1,4 +1,3 @@
-'use strict';
 import type { ShadowNodeWrapper, StyleProps } from '../../../commonTypes';
 import { ReanimatedModule } from '../../../ReanimatedModule';
 import type {

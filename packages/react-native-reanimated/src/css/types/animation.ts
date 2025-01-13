@@ -1,7 +1,6 @@
-'use strict';
 import type { PlainStyle, TimeUnit } from './common';
 import type { CSSTimingFunction } from '../easings';
-import type { AddArrayPropertyTypes } from './helpers';
+import type { AddArrayPropertyType, AddArrayPropertyTypes } from './helpers';
 
 export type CSSRuleList<S extends PlainStyle> = CSSKeyframeRule<S>[];
 
@@ -49,19 +48,26 @@ export type SingleCSSAnimationSettings = {
   // animationTimeline?: // TODO - This is still experimental in browsers and we might not want to support it when CSS animations in reanimated are released
 };
 
-export type SingleCSSAnimationName<S extends object = PlainStyle> =
-  | CSSKeyframesRule
-  | CSSAnimationKeyframes<S>;
-
 export type SingleCSSAnimationProperties<S extends object = PlainStyle> =
   SingleCSSAnimationSettings & {
-    animationName: SingleCSSAnimationName<S>;
+    animationName: CSSKeyframesRule | CSSAnimationKeyframes<S>;
   };
 
 export type CSSAnimationSettings =
   AddArrayPropertyTypes<SingleCSSAnimationSettings>;
 
 export type CSSAnimationProperties<S extends object = PlainStyle> =
-  AddArrayPropertyTypes<SingleCSSAnimationProperties<S>>;
+  CSSAnimationSettings & {
+    animationName:
+      | AddArrayPropertyType<CSSKeyframesRule | CSSAnimationKeyframes<S>>
+      | 'none';
+  };
+
+export type ExistingCSSAnimationProperties<S extends object = PlainStyle> =
+  CSSAnimationProperties<S> & {
+    animationName: AddArrayPropertyType<
+      CSSKeyframesRule | CSSAnimationKeyframes<S>
+    >;
+  };
 
 export type CSSAnimationSettingProp = keyof CSSAnimationSettings;

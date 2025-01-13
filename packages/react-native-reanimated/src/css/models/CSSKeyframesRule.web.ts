@@ -1,4 +1,3 @@
-'use strict';
 import type { CSSAnimationKeyframes, PlainStyle } from '../types';
 import { processKeyframeDefinitions } from '../platform/web';
 import CSSKeyframesRuleBase from './CSSKeyframesRuleBase';

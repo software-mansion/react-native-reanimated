@@ -1,4 +1,3 @@
-'use strict';
 export function areArraysEqual<T>(array1: T[], array2: T[]): boolean {
   if (array1.length !== array2.length) {
     return false;

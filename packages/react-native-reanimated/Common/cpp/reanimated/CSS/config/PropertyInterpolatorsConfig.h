@@ -10,6 +10,9 @@
 #include <reanimated/CSS/common/values/CSSDiscreteArray.h>
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
+
+#include <vector>
+
 namespace reanimated {
 
 using namespace Interpolators;

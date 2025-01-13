@@ -1,12 +1,11 @@
-'use strict';
 import { convertConfigPropertiesToArrays } from '../../../../utils';
 import type {
-  CSSAnimationProperties,
+  ExistingCSSAnimationProperties,
   SingleCSSAnimationProperties,
 } from '../../../../types';
 
 export function createSingleCSSAnimationProperties(
-  properties: CSSAnimationProperties
+  properties: ExistingCSSAnimationProperties
 ): SingleCSSAnimationProperties[] {
   const {
     animationName: animationNames,
