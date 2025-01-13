@@ -6,4 +6,4 @@ interface Spec extends TurboModule {
   installTurboModule: () => boolean;
 }
 
-export default TurboModuleRegistry.get<Spec>('ReanimatedModule');
+export default TurboModuleRegistry.getEnforcing<Spec>('ReanimatedModule');
