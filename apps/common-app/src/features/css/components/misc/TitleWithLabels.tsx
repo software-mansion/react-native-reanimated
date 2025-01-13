@@ -29,6 +29,7 @@ export default function TitleWithLabels({
 
 const styles = StyleSheet.create({
   titleWithLabels: {
+    alignItems: 'center',
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,

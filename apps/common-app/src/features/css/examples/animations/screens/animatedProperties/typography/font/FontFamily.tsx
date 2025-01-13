@@ -47,6 +47,6 @@ export default function FontFamily() {
 const styles = StyleSheet.create({
   text: {
     color: colors.foreground1,
-    fontSize: 24,
+    fontSize: 20,
   },
 });

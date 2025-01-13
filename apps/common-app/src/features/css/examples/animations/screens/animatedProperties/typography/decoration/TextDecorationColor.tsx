@@ -11,7 +11,7 @@ export default function TextDecorationStyle() {
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
         animationDirection: 'alternate',
-        animationDuration: '3s',
+        animationDuration: '1s',
         animationIterationCount: 'infinite',
         animationName: keyframes,
         animationTimingFunction: 'linear',
@@ -26,27 +26,21 @@ export default function TextDecorationStyle() {
           examples: [
             {
               description:
-                "`textDecorationStyle` is a **discrete** property. That means, it **can't be smoothly animated** between values.",
+                '`textDecorationColor` is a **continuous** property. That means, it **can be smoothly animated** between values.',
               keyframes: {
-                '0%, 100%': {
-                  textDecorationStyle: 'solid',
+                from: {
+                  textDecorationColor: 'red',
                 },
-                '25%': {
-                  textDecorationStyle: 'dotted',
-                },
-                '50%': {
-                  textDecorationStyle: 'dashed',
-                },
-                '75%': {
-                  textDecorationStyle: 'dotted',
+                to: {
+                  textDecorationColor: 'cyan',
                 },
               },
-              title: 'Changing Text Decoration Style',
+              title: 'Changing Text Decoration Color',
             },
           ],
 
           labelTypes: ['iOS', 'web'],
-          title: 'Text Decoration Style',
+          title: 'Text Decoration Color',
         },
       ]}
     />

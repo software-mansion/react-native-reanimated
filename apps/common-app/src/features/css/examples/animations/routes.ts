@@ -362,8 +362,6 @@ const typographyRoutes = {
   },
   TextDecoration: {
     name: 'Text Decoration',
-    disabled: true,
-    labelTypes: ['unimplemented'],
     routes: {
       LetterSpacing: {
         name: 'Letter Spacing',
@@ -381,24 +379,24 @@ const typographyRoutes = {
         name: 'Text Decoration Line',
         Component: animatedProperties.typography.decoration.TextDecorationLine,
       },
+      TextDecorationColor: {
+        name: 'Text Decoration Color',
+        labelTypes: ['iOS', 'web'],
+        Component: animatedProperties.typography.decoration.TextDecorationColor,
+      },
       TextDecorationStyle: {
         name: 'Text Decoration Style',
+        labelTypes: ['iOS', 'web'],
         Component: animatedProperties.typography.decoration.TextDecorationStyle,
       },
     },
   },
   Others: {
     name: 'Others',
-    disabled: true,
-    labelTypes: ['unimplemented'],
     routes: {
       UserSelect: {
         name: 'User Select',
         Component: animatedProperties.typography.others.UserSelect,
-      },
-      WritingDirection: {
-        name: 'Writing Direction',
-        Component: animatedProperties.typography.others.WritingDirection,
       },
       IncludeFontPadding: {
         name: 'Include Font Padding',

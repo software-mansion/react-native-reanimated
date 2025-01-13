@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   outerText: {
     color: colors.primary,
     fontFamily: 'Poppins',
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     lineHeight: 48,
   },

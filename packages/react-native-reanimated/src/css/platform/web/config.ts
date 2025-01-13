@@ -52,6 +52,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   marginRight: 'px',
   marginBottom: 'px',
   marginLeft: 'px',
+  // TODO - check if these props should depend on writing direction
   marginStart: { as: 'marginLeft' },
   marginEnd: { as: 'marginRight' },
   marginBlock: 'px',
@@ -69,6 +70,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   paddingRight: 'px',
   paddingBottom: 'px',
   paddingLeft: 'px',
+  // TODO - check if these props should depend on writing direction
   paddingStart: { as: 'paddingLeft' },
   paddingEnd: { as: 'paddingRight' },
   paddingBlock: 'px',
@@ -214,8 +216,8 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   textDecorationStyle: true,
   // Others
   userSelect: true,
-  writingDirection: true,
-  includeFontPadding: true,
+  writingDirection: false,
+  includeFontPadding: false,
 
   /** Others */
   // Image
