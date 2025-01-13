@@ -17,10 +17,12 @@ export const PropsAllowlists: AllowlistsHolder = {
     borderEndColor: true,
     borderLeftColor: true,
     borderStartColor: true,
+    overlayColor: true,
     borderTopColor: true,
     /* ios styles */
     shadowOpacity: true,
     shadowRadius: true,
+    textDecorationColor: true,
     /* legacy android transform properties */
     scaleX: true,
     scaleY: true,
@@ -120,6 +122,7 @@ export const PropsAllowlists: AllowlistsHolder = {
     color: true,
     tintColor: true,
     shadowColor: true,
+    textShadowColor: true,
     placeholderTextColor: true,
   },
 };

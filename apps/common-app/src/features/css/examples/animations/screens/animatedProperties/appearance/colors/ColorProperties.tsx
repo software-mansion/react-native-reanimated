@@ -1,5 +1,5 @@
 import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import type {
   CSSAnimationProperties,
   CSSAnimationSettings,
@@ -7,7 +7,7 @@ import type {
 import Animated from 'react-native-reanimated';
 
 import { colors, radius, sizes, spacing } from '@/theme';
-import type { ExampleCardProps } from '~/css/components';
+import type { ExampleCardProps, LabelType } from '~/css/components';
 import {
   Screen,
   Scroll,
@@ -102,8 +102,9 @@ function TextColors() {
             ...sharedConfig,
           }}
         />
-        {/* TODO - uncomment when issue with RN warning is fixed */}
-        {/* <TextExample
+        <TextExample
+          style={{ textDecorationLine: 'underline' }}
+          title="textDecorationColor"
           animation={{
             animationName: {
               to: {
@@ -112,20 +113,37 @@ function TextColors() {
             },
             ...sharedConfig,
           }}
-          title="textDecorationColor"
-        /> */}
-        {/* TODO - uncomment when issue with RN warning is fixed */}
-        {/* <TextExample
+        />
+        <TextExample
+          title="textShadowColor"
           animation={{
-            animationName: {
-              to: {
-                textShadowColor: 'cyan',
+            animationName: Platform.select({
+              default: {
+                from: {
+                  textShadowColor: 'red',
+                },
+                to: {
+                  textShadowColor: 'cyan',
+                },
               },
-            },
+              web: {
+                from: {
+                  textShadowColor: 'red',
+                  textShadowRadius: 10,
+                },
+                to: {
+                  textShadowColor: 'cyan',
+                  textShadowRadius: 10,
+                },
+              },
+            }),
             ...sharedConfig,
           }}
-          title="textShadowColor"
-        /> */}
+          style={{
+            textShadowOffset: { height: 0, width: 0 },
+            textShadowRadius: 10,
+          }}
+        />
       </Section>
     </Scroll>
   );
@@ -241,14 +259,26 @@ function OtherColors() {
         <ViewExample
           title="shadowColor"
           animation={{
-            animationName: {
-              '50%': {
-                shadowColor: 'indigo',
+            animationName: Platform.select({
+              default: {
+                '50%': {
+                  shadowColor: 'indigo',
+                },
+                from: {
+                  shadowColor: 'aqua',
+                },
               },
-              from: {
-                shadowColor: 'aqua',
+              web: {
+                '50%': {
+                  shadowColor: 'indigo',
+                  shadowRadius: spacing.lg,
+                },
+                from: {
+                  shadowColor: 'aqua',
+                  shadowRadius: spacing.lg,
+                },
               },
-            },
+            }),
             ...sharedConfig,
           }}
           style={{
@@ -258,7 +288,8 @@ function OtherColors() {
           }}
         />
         <ImageExample
-          title="overlayColor"
+          labelTypes={['iOS']}
+          title="tintColor"
           animation={{
             animationName: {
               from: {
@@ -274,6 +305,24 @@ function OtherColors() {
             overlayColor: colors.primary,
           }}
         />
+        <ImageExample
+          labelTypes={['Android']}
+          title="overlayColor"
+          animation={{
+            animationName: {
+              from: {
+                overlayColor: 'magenta',
+              },
+              to: {
+                overlayColor: 'green',
+              },
+            },
+            ...sharedConfig,
+          }}
+          style={{
+            overlayColor: colors.primary,
+          }}
+        />
       </Section>
     </Scroll>
   );
@@ -281,6 +330,7 @@ function OtherColors() {
 
 type ExampleProps<S> = {
   style?: S;
+  labelTypes?: Array<LabelType>;
   animation: CSSAnimationProperties;
   renderExample: (animation: CSSAnimationProperties, style?: S) => JSX.Element;
 } & Omit<ExampleCardProps, 'code'>;
@@ -327,9 +377,7 @@ const ImageExample = (props: ConcreteExampleProps<ImageStyle>) => (
     renderExample={(...styleProps) => (
       <Animated.Image
         source={splashImage}
-        // TODO - fix tintColor (animation is applied only if this style
-        // prop is listed in the view style and is not empty)
-        style={[styles.box, ...styleProps, { tintColor: 'transparent' }]}
+        style={[styles.box, ...styleProps]}
       />
     )}
   />

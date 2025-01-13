@@ -7,9 +7,9 @@
 #include <reanimated/CSS/common/values/CSSBoolean.h>
 #include <reanimated/CSS/common/values/CSSColor.h>
 #include <reanimated/CSS/common/values/CSSDimension.h>
+#include <reanimated/CSS/common/values/CSSDiscreteArray.h>
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
-
 namespace reanimated {
 
 using namespace Interpolators;
@@ -261,7 +261,8 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       {"fontFamily", value<CSSKeyword>("inherit")},
       {"fontSize", value<CSSDouble>(14)},
       {"fontStyle", value<CSSKeyword>("normal")},
-      {"fontVariant", value<CSSKeyword>("normal")},
+      {"fontVariant",
+       value<CSSDiscreteArray<CSSKeyword>>(std::vector<CSSKeyword>{})},
       {"fontWeight", value<CSSKeyword>("normal")},
       // Alignment
       {"textAlign", value<CSSKeyword>("auto")},

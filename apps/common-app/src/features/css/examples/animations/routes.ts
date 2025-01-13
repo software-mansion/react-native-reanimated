@@ -211,7 +211,6 @@ const appearanceRoutes = {
           },
           TextShadowColor: {
             name: 'Text Shadow Color',
-            labelTypes: ['web'],
             Component: animatedProperties.appearance.shadows.TextShadowColor,
           },
         },
@@ -242,12 +241,6 @@ const appearanceRoutes = {
         name: 'Border Style',
         Component: animatedProperties.appearance.borders.BorderStyle,
       },
-      // TODO - check if this is needed (it seems that this prop has no effect in React Native)
-      // BorderCurve: {
-      //   name: 'Border Curve',
-      //   labelTypes: ['iOS'],
-      //   Component: animatedProperties.appearance.borders.BorderCurve,
-      // },
     },
   },
   Transforms: {
@@ -328,8 +321,6 @@ const typographyRoutes = {
     routes: {
       FontFamily: {
         name: 'Font Family',
-        labelTypes: ['unimplemented'],
-        disabled: true,
         Component: animatedProperties.typography.font.FontFamily,
       },
       FontSize: {
@@ -338,14 +329,10 @@ const typographyRoutes = {
       },
       FontStyle: {
         name: 'Font Style',
-        labelTypes: ['unimplemented'],
-        disabled: true,
         Component: animatedProperties.typography.font.FontStyle,
       },
       FontVariant: {
         name: 'Font Variant',
-        labelTypes: ['unimplemented'],
-        disabled: true,
         Component: animatedProperties.typography.font.FontVariant,
       },
       FontWeight: {

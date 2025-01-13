@@ -13,3 +13,4 @@ export type { LabelType } from './Label';
 export { default as Label } from './Label';
 export { default as RotatableChevron } from './RotatableChevron';
 export { default as Stagger } from './Stagger';
+export { default as TitleWithLabels } from './TitleWithLabels';

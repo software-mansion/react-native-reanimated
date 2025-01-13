@@ -107,7 +107,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   // Text
   color: colorAttributes,
   textDecorationColor: colorAttributes,
-  textShadowColor: false, // TODO - fix error
+  textShadowColor: colorAttributes,
   // Border
   borderColor: colorAttributes,
   borderTopColor: colorAttributes,
@@ -122,7 +122,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   // Other
   outlineColor: false, // TODO
   shadowColor: colorAttributes,
-  overlayColor: colorAttributes,
+  overlayColor: IS_ANDROID ? colorAttributes : false,
   tintColor: colorAttributes,
 
   // SHADOWS
@@ -169,7 +169,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   borderRightWidth: true,
 
   // Decoration
-  borderCurve: true,
+  borderCurve: false,
   borderStyle: true,
 
   // OUTLINES

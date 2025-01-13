@@ -18,6 +18,7 @@ enum class CSSValueType {
   Keyword,
   Dimension,
   Number,
+  Array,
   TransformOrigin,
   Empty
 };

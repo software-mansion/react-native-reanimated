@@ -16,6 +16,7 @@ import ExpandableCard from '../cards/ExpandableCard';
 import Text from '../core/Text';
 import Button from '../inputs/Button';
 import Description from '../layout/Description';
+import { TitleWithLabels } from '../misc';
 import { CodeBlock } from '../misc/CodeBlock';
 import type { ExampleCardProps } from './ExampleCard';
 
@@ -25,6 +26,7 @@ export default function VerticalExampleCard({
   collapsedCode,
   collapsedExampleHeight = 150,
   description,
+  labelTypes,
   minExampleHeight,
   showRestartButton,
   title,
@@ -36,7 +38,11 @@ export default function VerticalExampleCard({
     <LayoutAnimationConfig skipEntering skipExiting>
       <ExpandableCard expanded={true}>
         <View style={styles.titleRow}>
-          {title && <Text variant="subHeading2">{title}</Text>}
+          <TitleWithLabels
+            labelTypes={labelTypes}
+            title={title}
+            variant="subHeading2"
+          />
           {showRestartButton && (
             <Button
               title="Restart"
@@ -142,6 +148,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.xs,
     justifyContent: 'space-between',
-    marginBottom: spacing.xs,
   },
 });
