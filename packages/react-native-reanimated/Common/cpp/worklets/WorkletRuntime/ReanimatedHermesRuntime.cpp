@@ -64,10 +64,6 @@ ReanimatedHermesRuntime::ReanimatedHermesRuntime(
   auto adapter =
       std::make_unique<HermesExecutorRuntimeAdapter>(*runtime_, jsQueue);
   debugToken_ = chrome::enableDebugging(std::move(adapter), name);
-#else
-  // This is required by iOS, because there is an assertion in the destructor
-  // that the thread was indeed `quit` before
-  jsQueue->quitSynchronous();
 #endif // HERMES_ENABLE_DEBUGGER
 
 #ifndef NDEBUG
