@@ -553,6 +553,11 @@ bool ReanimatedModuleProxy::handleRawEvent(
   if (eventType.rfind("top", 0) == 0) {
     eventType = "on" + eventType.substr(3);
   }
+
+  if (!isAnyHandlerWaitingForEvent(eventType, tag)) {
+    return false;
+  }
+
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   const auto &eventPayload = rawEvent.eventPayload;
