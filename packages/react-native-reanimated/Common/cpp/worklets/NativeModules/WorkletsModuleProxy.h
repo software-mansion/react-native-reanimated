@@ -7,6 +7,7 @@
 #include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <memory>
+#include <shared_mutex>
 #include <string>
 
 namespace worklets {
@@ -74,6 +75,8 @@ class WorkletsModuleProxy : public WorkletsModuleProxySpec {
 #ifndef NDEBUG
   SingleInstanceChecker<WorkletsModuleProxy> singleInstanceChecker_;
 #endif // NDEBUG
+  bool isValid_{true};
+  std::shared_mutex uiWorkletRuntimeMutex_;
 };
 
 } // namespace worklets

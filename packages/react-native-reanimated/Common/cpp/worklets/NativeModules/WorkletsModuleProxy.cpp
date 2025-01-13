@@ -52,8 +52,15 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           valueUnpackerCode_)) {}
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
+  // We need an exclusive lock to make sure nothing can be scheduled on the UI
+  // during the destructor invocation.
+  uiWorkletRuntimeMutex_.lock();
+
+  isValid_ = false;
   jsQueue_->quitSynchronous();
   uiWorkletRuntime_.reset();
+
+  uiWorkletRuntimeMutex_.unlock();
 }
 
 jsi::Value WorkletsModuleProxy::makeShareableClone(
@@ -70,6 +77,13 @@ jsi::Value WorkletsModuleProxy::makeShareableClone(
 void WorkletsModuleProxy::scheduleOnUI(
     jsi::Runtime &rt,
     const jsi::Value &worklet) {
+  // We need a shared lock here to make sure the UI runtime is not being
+  // destroyed while we are scheduling worklets on it.
+  uiWorkletRuntimeMutex_.lock_shared();
+  if (!isValid_) {
+    return;
+  }
+
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt, worklet, "[Worklets] Only worklets can be scheduled to run on UI.");
   uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
@@ -82,6 +96,8 @@ void WorkletsModuleProxy::scheduleOnUI(
     const auto scope = jsi::Scope(uiWorkletRuntime_->getJSIRuntime());
 #endif
     uiWorkletRuntime_->runGuarded(shareableWorklet);
+
+    uiWorkletRuntimeMutex_.unlock_shared();
   });
 }
 
