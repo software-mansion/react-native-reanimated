@@ -25,6 +25,8 @@ jobs:
             { version: '0.75', architecture: 'Fabric' },
             { version: '0.76', architecture: 'Paper' },
             { version: '0.76', architecture: 'Fabric' },
+            { version: '0.77', architecture: 'Paper' },
+            { version: '0.77', architecture: 'Fabric' },
           ]
       fail-fast: false
     env:

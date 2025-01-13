@@ -576,10 +576,26 @@ static BOOL _isConfigured = NO;
     return;
   }
 
+  // Add safety check for disappearing screens
+  if ([_disappearingScreens count] == 0) {
+    return;
+  }
+
   REAUIView *navTabScreen = _disappearingScreens[0];
   REAUIView *sourceScreen = _disappearingScreens[[_disappearingScreens count] - 1];
+
+  // Add null checks
+  if (!navTabScreen || !navTabScreen.reactSuperview) {
+    return;
+  }
+
   REAUIView *targetTabScreen = [REAScreensHelper getActiveTabForTabNavigator:navTabScreen.reactSuperview];
   REAUIView *targetScreen = [REAScreensHelper findTopScreenInChildren:targetTabScreen];
+
+  if (!targetScreen) {
+    return;
+  }
+
   if (!layoutedScreen && _isTabNavigator) {
     // just wait for the next layout computation for your screen
     return;

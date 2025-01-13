@@ -12,12 +12,6 @@
 #include <string>
 #include <utility>
 
-#if __has_include(<reacthermes/HermesExecutorFactory.h>)
-#include <reacthermes/HermesExecutorFactory.h>
-#else // __has_include(<hermes/hermes.h>) || ANDROID
-#include <hermes/hermes.h>
-#endif
-
 namespace worklets {
 
 using namespace facebook;

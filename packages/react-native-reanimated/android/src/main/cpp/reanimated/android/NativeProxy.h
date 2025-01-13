@@ -1,11 +1,9 @@
 #pragma once
 
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
-#include <reanimated/android/AndroidUIScheduler.h>
 #include <reanimated/android/JNIHelper.h>
 #include <reanimated/android/LayoutAnimations.h>
 
-#include <worklets/Tools/UIScheduler.h>
 #include <worklets/android/WorkletsModule.h>
 
 #include <ReactCommon/CallInvokerHolder.h>
@@ -153,8 +151,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       jlong jsContext,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
-      jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
-      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations
+      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
+      const bool isBridgeless
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
@@ -162,17 +160,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 #endif
   );
 
-#ifdef RCT_NEW_ARCH_ENABLED
-  static jni::local_ref<jhybriddata> initHybridBridgeless(
-      jni::alias_ref<jhybridobject> jThis,
-      jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
-      jlong jsContext,
-      jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder,
-      jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
-      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager);
-#endif // RCT_NEW_ARCH_ENABLED
   static void registerNatives();
 
   ~NativeProxy();
@@ -181,6 +168,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
+  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
 #ifndef NDEBUG
@@ -255,7 +243,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`
    * @tparam TReturn return type of passed method
-   * @tparam TParams paramater types of passed method
+   * @tparam TParams parameter types of passed method
    * @param methodPtr pointer to method to be wrapped
    * @return a function object with the same signature as the method, calling
    * that method on `this`
@@ -278,8 +266,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<UIScheduler> &uiScheduler,
-      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations
+      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
+      const bool isBridgeless
 #ifdef RCT_NEW_ARCH_ENABLED
       ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
@@ -288,19 +276,11 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   );
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  explicit NativeProxy(
-      jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
-      jsi::Runtime *rnRuntime,
-      RuntimeExecutor runtimeExecutor,
-      const std::shared_ptr<UIScheduler> &uiScheduler,
-      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager);
-
   void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
                       &fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
+
+  void invalidateCpp();
 };
 
 } // namespace reanimated

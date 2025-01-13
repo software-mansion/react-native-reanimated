@@ -23,7 +23,6 @@ module.exports = function (api) {
   if (disableBabelPlugin) {
     console.log('Starting Web example without Babel plugin.');
   } else {
-    // @ts-expect-error
     plugins.push('react-native-reanimated/plugin');
   }
 
