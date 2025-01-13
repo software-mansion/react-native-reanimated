@@ -128,7 +128,7 @@ export function createAnimatedComponent(
     jestInlineStyle: NestedArray<StyleProps> | undefined;
     jestAnimatedStyle: { value: StyleProps } = { value: {} };
     _componentRef: AnimatedComponentRef | HTMLElement | null = null;
-    // used only on web
+    // Used only on web
     _componentDOMRef: HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
     _jsPropsUpdater = new JSPropsUpdater();
