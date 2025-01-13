@@ -1,3 +1,4 @@
+export { default as Description } from './Description';
 export { default as Grid } from './Grid';
 export { default as Group } from './Group';
 export * from './Screens';

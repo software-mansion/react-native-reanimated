@@ -75,3 +75,8 @@ export const isConfigPropertyAlias = <P extends AnyRecord>(
   typeof value === 'object' &&
   'as' in value &&
   typeof value.as === 'string';
+
+export const hasProp = <P extends AnyRecord, K extends string>(
+  obj: P,
+  key: K
+): obj is P & Record<K, string> => key in obj;

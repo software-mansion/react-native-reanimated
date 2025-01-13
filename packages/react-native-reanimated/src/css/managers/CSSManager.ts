@@ -9,7 +9,7 @@ import {
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import CSSTransitionManager from './CSSTransitionManager';
 import CSSAnimationsManager from './CSSAnimationsManager';
-import type { CSSStyleDeclaration } from '../types';
+import type { CSSStyleProperties } from '../types';
 import { filterCSSAndStyleProperties } from '../utils';
 
 export default class CSSManager {
@@ -30,11 +30,11 @@ export default class CSSManager {
     }
   }
 
-  attach(style: CSSStyleDeclaration): void {
+  attach(style: CSSStyleProperties): void {
     this.update(style, true);
   }
 
-  update(style: CSSStyleDeclaration, isMount = false): void {
+  update(style: CSSStyleProperties, isMount = false): void {
     const [animationProperties, transitionProperties, filteredStyle] =
       filterCSSAndStyleProperties(style);
     const normalizedStyle = styleBuilder.buildFrom(filteredStyle);

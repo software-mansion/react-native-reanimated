@@ -174,18 +174,22 @@ const appearanceRoutes = {
         routes: {
           ShadowOffset: {
             name: 'Shadow Offset',
-            labelTypes: ['iOS'],
+            labelTypes: ['iOS', 'web'],
             Component: animatedProperties.appearance.shadows.ShadowOffset,
           },
           ShadowRadius: {
             name: 'Shadow Radius',
-            labelTypes: ['iOS'],
+            labelTypes: ['iOS', 'web'],
             Component: animatedProperties.appearance.shadows.ShadowRadius,
           },
           ShadowOpacity: {
             name: 'Shadow Opacity',
-            labelTypes: ['iOS'],
+            labelTypes: ['iOS', 'web'],
             Component: animatedProperties.appearance.shadows.ShadowOpacity,
+          },
+          ShadowColor: {
+            name: 'Shadow Color',
+            Component: animatedProperties.appearance.shadows.ShadowColor,
           },
           Elevation: {
             name: 'Elevation',
@@ -199,14 +203,22 @@ const appearanceRoutes = {
         routes: {
           TextShadowOffset: {
             name: 'Text Shadow Offset',
-            labelTypes: ['iOS', 'Android'],
             Component: animatedProperties.appearance.shadows.TextShadowOffset,
           },
           TextShadowRadius: {
             name: 'Text Shadow Radius',
-            labelTypes: ['iOS', 'Android'],
             Component: animatedProperties.appearance.shadows.TextShadowRadius,
           },
+          TextShadowColor: {
+            name: 'Text Shadow Color',
+            labelTypes: ['web'],
+            Component: animatedProperties.appearance.shadows.TextShadowColor,
+          },
+        },
+      },
+      CombinedShadows: {
+        name: 'Combined Shadows',
+        routes: {
           BoxShadow: {
             name: 'Box Shadow',
             labelTypes: ['unimplemented'],

@@ -9,6 +9,8 @@ import {
   processPaddingVertical,
   processTransform,
   processTransformOrigin,
+  boxShadowBuilder,
+  textShadowBuilder,
 } from './style';
 import type { StyleBuilderConfig } from './style';
 import type { PlainStyle } from '../../types';
@@ -106,7 +108,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   // Text
   color: colorAttributes,
   textDecorationColor: colorAttributes,
-  textShadowColor: colorAttributes,
+  textShadowColor: textShadowBuilder,
   // Border
   borderColor: colorAttributes,
   borderTopColor: colorAttributes,
@@ -120,18 +122,18 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   borderBlockColor: colorAttributes,
   // Other
   outlineColor: false, // TODO
-  shadowColor: colorAttributes, // iOS only
+  shadowColor: boxShadowBuilder,
   overlayColor: colorAttributes,
   tintColor: colorAttributes,
 
   // SHADOWS
   // View
-  shadowOffset: false, // iOS only
-  shadowOpacity: false, // iOS only
-  shadowRadius: false, // iOS only
+  shadowOffset: boxShadowBuilder,
+  shadowOpacity: boxShadowBuilder,
+  shadowRadius: boxShadowBuilder,
   elevation: false, // Android only
-  textShadowOffset: false,
-  textShadowRadius: false,
+  textShadowOffset: textShadowBuilder,
+  textShadowRadius: textShadowBuilder,
   boxShadow: { process: processBoxShadow },
 
   // BORDERS

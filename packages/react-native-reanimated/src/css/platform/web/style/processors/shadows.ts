@@ -1,5 +1,5 @@
 import { processColor } from 'react-native';
-import type { BoxShadowValue } from 'react-native';
+import type { BoxShadowValue, ViewStyle } from 'react-native';
 import type { ValueProcessor } from '../types';
 import { maybeAddSuffix } from '../../utils';
 
@@ -31,3 +31,8 @@ export const processBoxShadow: ValueProcessor<
     )
     .join(', ');
 };
+
+type ShadowOffset = NonNullable<ViewStyle['shadowOffset']>;
+
+export const processShadowOffset: ValueProcessor<ShadowOffset> = (value) =>
+  `${value.width}px ${value.height}px`;

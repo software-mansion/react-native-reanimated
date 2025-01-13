@@ -23,11 +23,21 @@ export function configureWebCSSAnimations() {
 
   cssStyleTag.onload = () => {
     if (!cssStyleTag.sheet) {
-      logger.error('Failed to create layout animations stylesheet.');
+      logger.error('Failed to create CSS animations stylesheet.');
     }
   };
 
   document.head.append(cssStyleTag);
+}
+
+function getStyleSheet() {
+  return (
+    (
+      document.getElementById(
+        CSS_ANIMATIONS_STYLE_TAG_ID
+      ) as HTMLStyleElement | null
+    )?.sheet ?? null
+  );
 }
 
 export function insertCSSAnimation(animationName: string, keyframes: string) {
@@ -37,18 +47,16 @@ export function insertCSSAnimation(animationName: string, keyframes: string) {
     return;
   }
 
-  const styleTag = document.getElementById(
-    CSS_ANIMATIONS_STYLE_TAG_ID
-  ) as HTMLStyleElement;
+  const sheet = getStyleSheet();
 
-  if (!styleTag.sheet) {
-    logger.error('Failed to create layout animations stylesheet.');
+  if (!sheet) {
+    logger.error('Failed to create CSS animations stylesheet.');
     return;
   }
 
   const animation = `@keyframes ${animationName} { ${keyframes} }`;
 
-  styleTag.sheet.insertRule(animation, 0);
+  sheet.insertRule(animation, 0);
   cssNameList.unshift(animationName);
   cssNameToIndex.set(animationName, 0);
 
@@ -57,7 +65,7 @@ export function insertCSSAnimation(animationName: string, keyframes: string) {
     const nextCSSIndex = cssNameToIndex.get(nextCSSName);
 
     if (nextCSSIndex === undefined) {
-      throw new ReanimatedError('Failed to obtain animation index.');
+      throw new ReanimatedError('Failed to obtain CSS animation index.');
     }
 
     cssNameToIndex.set(cssNameList[i], nextCSSIndex + 1);
@@ -70,18 +78,14 @@ export function removeCSSAnimation(animationName: string) {
     return;
   }
 
-  const styleTag = document.getElementById(
-    CSS_ANIMATIONS_STYLE_TAG_ID
-  ) as HTMLStyleElement;
-
+  const sheet = getStyleSheet();
   const currentCSSIndex = cssNameToIndex.get(animationName);
 
   if (currentCSSIndex === undefined) {
-    throw new ReanimatedError('Failed to obtain animation index.');
+    throw new ReanimatedError('Failed to obtain CSS animation index.');
   }
 
-  styleTag.sheet?.deleteRule(currentCSSIndex);
-
+  sheet?.deleteRule(currentCSSIndex);
   cssNameList.splice(currentCSSIndex, 1);
   cssNameToIndex.delete(animationName);
 
@@ -90,7 +94,7 @@ export function removeCSSAnimation(animationName: string) {
     const nextCSSIndex = cssNameToIndex.get(nextCSSName);
 
     if (nextCSSIndex === undefined) {
-      throw new ReanimatedError('Failed to obtain animation index.');
+      throw new ReanimatedError('Failed to obtain CSS animation index.');
     }
 
     cssNameToIndex.set(cssNameList[i], nextCSSIndex - 1);

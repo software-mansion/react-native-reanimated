@@ -1,8 +1,9 @@
-import type { DimensionValue } from 'react-native';
+import type { ColorValue, DimensionValue } from 'react-native';
 import type { CSSTimingFunction } from '../../easings';
 import { CubicBezierEasing, LinearEasing, StepsEasing } from '../../easings';
 import { ReanimatedError } from '../../errors';
 import type { ConvertValuesToArrays } from '../../types';
+import { processColor } from '../../../Colors';
 
 export function hasSuffix(value: unknown): value is string {
   return typeof value === 'string' && isNaN(parseInt(value[value.length - 1]));
@@ -71,7 +72,7 @@ export function parseTimingFunction(
   return easingMapper(timingFunction);
 }
 
-export const parseDimensionValue = (value: DimensionValue) => {
+export function parseDimensionValue(value: DimensionValue) {
   if (typeof value === 'object') {
     return;
   }
@@ -83,4 +84,24 @@ export const parseDimensionValue = (value: DimensionValue) => {
   }
 
   return value;
-};
+}
+
+export function opacifyColor(
+  color: ColorValue,
+  opacity: number
+): string | null {
+  const colorNumber = processColor(color);
+  if (colorNumber == null) {
+    return null;
+  }
+
+  const a = (colorNumber >> 24) & 0xff;
+  const r = (colorNumber >> 16) & 0xff;
+  const g = (colorNumber >> 8) & 0xff;
+  const b = colorNumber & 0xff;
+
+  // Combine the existing alpha with the new opacity
+  const newAlpha = (a / 255) * opacity;
+
+  return `rgba(${r}, ${g}, ${b}, ${newAlpha})`;
+}

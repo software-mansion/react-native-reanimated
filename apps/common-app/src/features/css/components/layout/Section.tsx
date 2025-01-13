@@ -8,6 +8,7 @@ import { flex, spacing } from '@/theme';
 import Text from '../core/Text';
 import type { LabelType } from '../misc/Label';
 import Label from '../misc/Label';
+import Description from './Description';
 import Group from './Group';
 
 type SectionProps = PropsWithChildren<{
@@ -38,16 +39,7 @@ export function Section({
             <Label key={index} type={labelType} />
           ))}
         </View>
-        {description &&
-          (Array.isArray(description) ? (
-            <View style={styles.description}>
-              {description.map((paragraph, index) => (
-                <Text key={index}>{paragraph}</Text>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.description}>{description}</Text>
-          ))}
+        {description && <Description>{description}</Description>}
       </View>
       <Group style={[styles.sectionContent, fill && flex.fill]}>
         {children}
@@ -57,9 +49,6 @@ export function Section({
 }
 
 const styles = StyleSheet.create({
-  description: {
-    gap: spacing.xs,
-  },
   sectionContainer: {
     gap: spacing.xxs,
     marginTop: spacing.md,

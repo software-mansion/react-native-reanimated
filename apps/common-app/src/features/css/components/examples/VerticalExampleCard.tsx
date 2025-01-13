@@ -15,6 +15,7 @@ import { colors, flex, radius, sizes, spacing } from '@/theme';
 import ExpandableCard from '../cards/ExpandableCard';
 import Text from '../core/Text';
 import Button from '../inputs/Button';
+import Description from '../layout/Description';
 import { CodeBlock } from '../misc/CodeBlock';
 import type { ExampleCardProps } from './ExampleCard';
 
@@ -43,16 +44,9 @@ export default function VerticalExampleCard({
             />
           )}
         </View>
-        {description &&
-          (Array.isArray(description) ? (
-            <View style={styles.description}>
-              {description.map((paragraph, index) => (
-                <Text key={index}>{paragraph}</Text>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.description}>{description}</Text>
-          ))}
+        {description && (
+          <Description style={styles.description}>{description}</Description>
+        )}
         <Animated.View style={styles.itemsContainer}>
           {/* Code block */}
           <Animated.View layout={LinearTransition} style={styles.itemWrapper}>

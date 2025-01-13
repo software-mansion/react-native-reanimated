@@ -108,7 +108,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   // Text
   color: colorAttributes,
   textDecorationColor: colorAttributes,
-  textShadowColor: colorAttributes,
+  textShadowColor: false, // TODO - fix error
   // Border
   borderColor: colorAttributes,
   borderTopColor: colorAttributes,

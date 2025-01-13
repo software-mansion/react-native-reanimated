@@ -1,3 +1,3 @@
-export { default as createStyleBuilder } from './createStyleBuilder';
+export { default as createStyleBuilder } from './builderFactory';
 export * from './processors';
 export * from './types';

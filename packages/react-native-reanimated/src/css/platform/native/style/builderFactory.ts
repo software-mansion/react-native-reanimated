@@ -22,19 +22,21 @@ class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
     }
 
     if (configValue === true) {
-      this.processedProps[property] = value;
+      this.maybeAssignProp(property, value);
     } else if (isConfigPropertyAlias<P>(configValue)) {
       this.add(configValue.as, value);
     } else {
       const { process } = configValue;
       const processedValue = process ? process(value) : value;
 
-      if (isDefined(processedValue)) {
-        if (isRecord(processedValue)) {
-          Object.assign(this.processedProps, processedValue);
-        } else {
-          this.processedProps[property] = processedValue;
-        }
+      if (!isDefined(processedValue)) {
+        return;
+      }
+
+      if (isRecord<P>(processedValue)) {
+        this.maybeAssignProps(processedValue);
+      } else {
+        this.maybeAssignProp(property, processedValue);
       }
     }
   }
@@ -53,6 +55,16 @@ class StyleBuilderImpl<P extends AnyRecord> implements StyleBuilder<P> {
   buildFrom(props: P): P | null {
     Object.entries(props).forEach(([key, value]) => this.add(key, value));
     return this.build();
+  }
+
+  private maybeAssignProp(property: keyof P, value: P[keyof P]) {
+    this.processedProps[property] ??= value;
+  }
+
+  private maybeAssignProps(props: P) {
+    Object.entries(props).forEach(([key, value]) =>
+      this.maybeAssignProp(key, value)
+    );
   }
 
   private cleanup() {
