@@ -111,7 +111,7 @@ jsi::Value makeShareableClone(
     throw std::runtime_error(
         "[Reanimated] Attempted to convert an unsupported value type.");
   }
-  return ShareableNativeState::createObjectWithShareableNativeState(rt, shareable);
+  return ShareableNativeState::createFromShareable(rt, shareable);
 }
 
 std::shared_ptr<Shareable> extractShareableOrThrow(
@@ -260,11 +260,11 @@ jsi::Value ShareableRemoteFunction::toJSValue(jsi::Runtime &rt) {
 #ifndef NDEBUG
     return getValueUnpacker(rt).call(
         rt,
-        ShareableNativeState::createObjectWithShareableNativeState(rt, shared_from_this()),
+        ShareableNativeState::createFromShareable(rt, shared_from_this()),
         jsi::String::createFromAscii(rt, "RemoteFunction"),
         jsi::String::createFromUtf8(rt, name_));
 #else
-    return ShareableNativeState::createObjectWithShareableNativeState(rt, shared_from_this());
+    return ShareableNativeState::createFromShareable(rt, shared_from_this());
 #endif
   }
 }
