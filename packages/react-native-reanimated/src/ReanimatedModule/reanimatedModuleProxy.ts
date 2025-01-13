@@ -51,4 +51,6 @@ export interface ReanimatedModuleProxy {
   ): void;
 
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
+
+  isFabric(): boolean;
 }

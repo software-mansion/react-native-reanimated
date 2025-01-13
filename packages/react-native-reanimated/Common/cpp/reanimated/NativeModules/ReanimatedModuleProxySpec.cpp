@@ -121,6 +121,14 @@ static jsi::Value REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)(
   return jsi::Value::undefined();
 }
 
+static jsi::Value REANIMATED_SPEC_PREFIX(isFabric)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)->isFabric();
+}
+
 ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
     const std::shared_ptr<CallInvoker> &jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
@@ -148,5 +156,7 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(configureLayoutAnimationBatch)};
   methodMap_["setShouldAnimateExitingForTag"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)};
+
+  methodMap_["isFabric"] = MethodMetadata{0, REANIMATED_SPEC_PREFIX(isFabric)};
 }
 } // namespace reanimated

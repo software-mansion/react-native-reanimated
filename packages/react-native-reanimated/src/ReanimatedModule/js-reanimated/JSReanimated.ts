@@ -263,6 +263,10 @@ class JSReanimated implements IReanimatedModule {
       'configureProps is not available in JSReanimated.'
     );
   }
+
+  isFabric() {
+    return false;
+  }
 }
 
 // Lack of this export breaks TypeScript generation since

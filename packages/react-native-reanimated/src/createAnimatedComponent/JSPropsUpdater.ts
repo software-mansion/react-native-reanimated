@@ -1,7 +1,7 @@
 'use strict';
 import { NativeEventEmitter, Platform } from 'react-native';
 import type { NativeModule } from 'react-native';
-import { shouldBeUseWeb } from '../PlatformChecker';
+import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
 import type { StyleProps } from '../commonTypes';
 import { runOnJS, runOnUIImmediately } from '../threads';
 import type {
@@ -146,7 +146,7 @@ type JSPropsUpdaterOptions =
 let JSPropsUpdater: JSPropsUpdaterOptions;
 if (SHOULD_BE_USE_WEB) {
   JSPropsUpdater = JSPropsUpdaterWeb;
-} else if (global._IS_FABRIC) {
+} else if (isFabric()) {
   JSPropsUpdater = JSPropsUpdaterFabric;
 } else {
   JSPropsUpdater = JSPropsUpdaterPaper;

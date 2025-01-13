@@ -1,5 +1,6 @@
 'use strict';
 import { Platform } from 'react-native';
+import { ReanimatedModule } from './ReanimatedModule';
 
 // This type is necessary since some libraries tend to do a lib check
 // and this file causes type errors on `global` access.
@@ -34,9 +35,17 @@ export function shouldBeUseWeb() {
   return isJest() || isChromeDebugger() || isWeb() || isWindows();
 }
 
-export function isFabric() {
-  return !!(global as localGlobal)._IS_FABRIC;
-}
+export let isFabric = () => {
+  if (ReanimatedModule.isFabric()) {
+    isFabric = () => true;
+    global._IS_FABRIC = true;
+    return true;
+  } else {
+    isFabric = () => false;
+    global._IS_FABRIC = false;
+    return false;
+  }
+};
 
 export function isWindowAvailable() {
   // the window object is unavailable when building the server portion of a site that uses SSG
