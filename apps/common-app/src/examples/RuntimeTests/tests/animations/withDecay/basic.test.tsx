@@ -51,7 +51,7 @@ describe('withDecay animation, test various config', () => {
     { velocity: 900, clamp: [0, 150], rubberBandEffect: true },
     { velocity: 2000, clamp: [0, 150], rubberBandEffect: true },
     { velocity: 2000, clamp: [0, 150], rubberBandEffect: true, rubberBandFactor: 2 },
-  ] as Array<WithDecayConfig>)('Config ${0}', async config => {
+  ] as Array<WithDecayConfig>)('Config %p', async config => {
     const snapshotName = ('decay_' +
       Object.entries(config)
         .map(([key, val]) => {
