@@ -46,4 +46,14 @@ public class Utils {
     }
     return 0;
   }
+
+  public static Runnable combineRunnables(final Runnable... runnables) {
+    return new Runnable() {
+      public void run() {
+        for (Runnable r : runnables) {
+          r.run();
+        }
+      }
+    };
+  }
 }
