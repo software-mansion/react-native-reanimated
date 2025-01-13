@@ -2,10 +2,10 @@ import { Platform, StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
-import { colors, spacing } from '@/theme';
+import { colors, radius, spacing } from '@/theme';
 import { ExamplesScreen, VerticalExampleCard } from '~/css/components';
 
-export default function TextShadowOffset() {
+export default function TextShadowColor() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
@@ -37,37 +37,30 @@ export default function TextShadowOffset() {
       sections={[
         {
           description: [
-            'In this example, the following non-animated text shadow style properties are applied to the text:',
-            `• **textShadowColor**: ${colors.primaryDark}`,
+            'In this example, the following non-animated text shadow style properties are applied to the box:',
             '• **textShadowRadius**: 10',
+            '`shadowOpacity` is necessary to make the shadow visible on iOS.',
+            '`elevation` is necessary to make the shadow visible on Android.',
             '`textShadowRadius` is necessary to make the shadow visible.',
-            'iOS requires also `textShadowColor` and `textShadowRadius` to be set.',
             '',
-            "On **web** other text shadow properties than the one you want to animate **aren't inherited** from the element style. That is why you have to set `textShadowColor` and `textShadowRadius` in the animation **keyframes** if you want to use a custom `textShadowColor` and `textShadowRadius`.",
+            "On **web** other shadow properties than the one you want to animate **aren't inherited** from the element style. That is why you have to set `textShadowRadius` in the animation **keyframes**.",
           ],
           examples: [
             {
               keyframes: Platform.select({
                 default: {
-                  from: { textShadowOffset: { height: 0, width: 0 } },
-                  to: { textShadowOffset: { height: 25, width: 25 } },
+                  from: { textShadowColor: 'red' },
+                  to: { textShadowColor: 'cyan' },
                 },
                 web: {
-                  from: {
-                    textShadowColor: colors.primaryDark,
-                    textShadowOffset: { height: 0, width: 0 },
-                    textShadowRadius: 10,
-                  },
-                  to: {
-                    textShadowColor: colors.primaryDark,
-                    textShadowOffset: { height: 25, width: 25 },
-                    textShadowRadius: 10,
-                  },
+                  from: { textShadowColor: 'red', textShadowRadius: radius.md },
+                  to: { textShadowColor: 'cyan', textShadowRadius: radius.md },
                 },
               }),
             },
           ],
-          title: 'Text Shadow Offset',
+          labelTypes: ['web'],
+          title: 'Text Shadow Color',
         },
       ]}
     />
@@ -79,7 +72,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 36,
     fontWeight: 'bold',
-    textShadowColor: colors.primaryDark,
     textShadowRadius: 10,
   },
 });

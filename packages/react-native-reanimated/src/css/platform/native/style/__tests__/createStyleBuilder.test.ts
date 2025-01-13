@@ -1,4 +1,4 @@
-import createStyleBuilder from '../createStyleBuilder';
+import createStyleBuilder from '../builderFactory';
 import type { PlainStyle } from '../../../../types';
 
 // TODO - add more tests

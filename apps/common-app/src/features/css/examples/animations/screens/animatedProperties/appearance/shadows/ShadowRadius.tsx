@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
@@ -24,17 +24,25 @@ export default function ShadowRadius() {
             'In this example, the following non-animated shadow style properties are applied to the box:',
             `• **shadowColor**: ${colors.primaryDark}`,
             '• **shadowOpacity**: 1',
-            '`shadowOpacity` is necessary to make the shadow visible.',
+            '`shadowOpacity` is necessary to make the shadow visible on iOS.',
+            '',
+            "On **web** other shadow properties than the one you want to animate **aren't inherited** from the element style. That is why you have to set `shadowColor` in the animation **keyframes** if you want to use a custom `shadowColor`.",
           ],
           examples: [
             {
-              keyframes: {
-                from: { shadowRadius: 5 },
-                to: { shadowRadius: 25 },
-              },
+              keyframes: Platform.select({
+                default: {
+                  from: { shadowRadius: 5 },
+                  to: { shadowRadius: 25 },
+                },
+                web: {
+                  from: { shadowColor: colors.primaryDark, shadowRadius: 5 },
+                  to: { shadowColor: colors.primaryDark, shadowRadius: 25 },
+                },
+              }),
             },
           ],
-          labelTypes: ['iOS'],
+          labelTypes: ['iOS', 'web'],
           title: 'Shadow Radius',
         },
       ]}

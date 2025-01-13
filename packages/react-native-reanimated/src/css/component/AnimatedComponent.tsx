@@ -10,7 +10,7 @@ import { CSSManager } from '../managers';
 import type {
   AnyComponent,
   AnyRecord,
-  CSSStyleDeclaration,
+  CSSStyleProperties,
   PlainStyle,
 } from '../types';
 import { Platform, StyleSheet } from 'react-native';
@@ -41,7 +41,7 @@ export default class AnimatedComponent<
   _CSSManager?: CSSManager;
 
   _viewInfo?: ViewInfo;
-  _planStyle: CSSStyleDeclaration = {};
+  _planStyle: CSSStyleProperties = {};
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
 
   constructor(ChildComponent: AnyComponent, props: P) {

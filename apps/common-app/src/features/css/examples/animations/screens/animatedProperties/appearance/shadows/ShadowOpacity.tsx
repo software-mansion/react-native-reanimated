@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
@@ -25,16 +25,32 @@ export default function ShadowOpacity() {
             `• **shadowColor**: ${colors.primaryDark}`,
             '• **shadowRadius**: 10',
             '`shadowRadius` is necessary to make the shadow visible.',
+            '',
+            "On **web** other shadow properties than the one you want to animate **aren't inherited** from the element style. That is why you have to set `shadowColor` and `shadowRadius` in the animation **keyframes** if you want to use a custom `shadowColor` and `shadowRadius`.",
           ],
           examples: [
             {
-              keyframes: {
-                from: { shadowOpacity: 0 },
-                to: { shadowOpacity: 1 },
-              },
+              keyframes: Platform.select({
+                default: {
+                  from: { shadowOpacity: 0 },
+                  to: { shadowOpacity: 1 },
+                },
+                web: {
+                  from: {
+                    shadowColor: colors.primaryDark,
+                    shadowOpacity: 0,
+                    shadowRadius: 10,
+                  },
+                  to: {
+                    shadowColor: colors.primaryDark,
+                    shadowOpacity: 1,
+                    shadowRadius: 10,
+                  },
+                },
+              }),
             },
           ],
-          labelTypes: ['iOS'],
+          labelTypes: ['iOS', 'web'],
           title: 'Shadow Opacity',
         },
       ]}

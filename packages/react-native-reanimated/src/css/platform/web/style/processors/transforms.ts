@@ -1,6 +1,6 @@
 import type { TransformsStyle } from 'react-native';
 import type { ValueProcessor } from '../types';
-import createStyleBuilder from '../createStyleBuilder';
+import { createStyleBuilder } from '../builderFactories';
 
 const transformBuilder = createStyleBuilder(
   {

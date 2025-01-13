@@ -5,7 +5,7 @@ import Animated from 'react-native-reanimated';
 import { colors, radius, sizes } from '@/theme';
 import { ExamplesScreen, VerticalExampleCard } from '~/css/components';
 
-export default function ShadowOffset() {
+export default function ShadowColor() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
@@ -22,37 +22,28 @@ export default function ShadowOffset() {
         {
           description: [
             'In this example, the following non-animated shadow style properties are applied to the box:',
-            `• **shadowColor**: ${colors.primaryDark}`,
             '• **shadowOpacity**: 1',
-            '• **shadowRadius**: 5',
+            '• **elevation**: 12',
             '`shadowOpacity` is necessary to make the shadow visible on iOS.',
+            '`elevation` is necessary to make the shadow visible on Android.',
             '',
-            "On **web** other shadow properties than the one you want to animate **aren't inherited** from the element style. That is why you have to set `shadowColor` and `shadowRadius` in the animation **keyframes** if you want to use a custom `shadowColor` and `shadowRadius`.",
+            "On **web** other shadow properties than the one you want to animate **aren't inherited** from the element style. That is why you have to set `shadowRadius` in the animation **keyframes**.",
           ],
           examples: [
             {
               keyframes: Platform.select({
                 default: {
-                  from: { shadowOffset: { height: 0, width: 0 } },
-                  to: { shadowOffset: { height: 25, width: 25 } },
+                  from: { shadowColor: 'red' },
+                  to: { shadowColor: 'cyan' },
                 },
                 web: {
-                  from: {
-                    shadowColor: colors.primaryDark,
-                    shadowOffset: { height: 0, width: 0 },
-                    shadowRadius: 5,
-                  },
-                  to: {
-                    shadowColor: colors.primaryDark,
-                    shadowOffset: { height: 25, width: 25 },
-                    shadowRadius: 5,
-                  },
+                  from: { shadowColor: 'red', shadowRadius: radius.md },
+                  to: { shadowColor: 'cyan', shadowRadius: radius.md },
                 },
               }),
             },
           ],
-          labelTypes: ['iOS', 'web'],
-          title: 'Shadow Offset',
+          title: 'Shadow Color',
         },
       ]}
     />
@@ -63,10 +54,9 @@ const styles = StyleSheet.create({
   box: {
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
+    elevation: radius.md,
     height: sizes.md,
-    shadowColor: colors.primaryDark,
     shadowOpacity: 1,
-    shadowRadius: 5,
     width: sizes.md,
   },
 });

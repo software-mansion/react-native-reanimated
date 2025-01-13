@@ -18,6 +18,7 @@ import { colors, flex, radius, spacing } from '@/theme';
 import ExpandableCard from '../cards/ExpandableCard';
 import Text from '../core/Text';
 import Button from '../inputs/Button';
+import Description from '../layout/Description';
 import { CodeBlock } from '../misc/CodeBlock';
 
 export type ExampleCardProps = PropsWithChildren<{
@@ -82,17 +83,9 @@ export default function ExampleCard({
             />
           )}
         </View>
-        {description &&
-          (Array.isArray(description) ? (
-            <View style={styles.description}>
-              {description.map((paragraph, index) => (
-                <Text key={index}>{paragraph}</Text>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.description}>{description}</Text>
-          ))}
-
+        {description && (
+          <Description style={styles.description}>{description}</Description>
+        )}
         <View
           style={[
             styles.itemsContainer,
@@ -171,7 +164,6 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
   },
   description: {
-    gap: spacing.xs,
     marginBottom: spacing.sm,
   },
   exampleOuterContainer: {
