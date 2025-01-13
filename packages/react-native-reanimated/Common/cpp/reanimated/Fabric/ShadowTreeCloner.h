@@ -24,6 +24,10 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     const RootShadowNode &oldRootNode,
     const PropsMap &propsMap);
 
+RootShadowNode::Unshared cloneShadowTreeWithNewPropsUnmounted(
+    RootShadowNode::Unshared const &oldRootShadowNode,
+    const PropsMap &propsMap);
+
 } // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED
