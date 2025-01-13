@@ -396,6 +396,7 @@ const typographyRoutes = {
     routes: {
       UserSelect: {
         name: 'User Select',
+        labelTypes: ['web'],
         Component: animatedProperties.typography.others.UserSelect,
       },
       IncludeFontPadding: {
@@ -410,23 +411,16 @@ const typographyRoutes = {
 const othersRoutes = {
   Image: {
     name: 'Image',
-    disabled: true,
-    labelTypes: ['unimplemented'],
     routes: {
       ResizeMode: {
         name: 'Resize Mode',
+        labelTypes: ['iOS', 'Android'],
         Component: animatedProperties.others.image.ResizeMode,
-      },
-      ObjectFit: {
-        name: 'Object Fit',
-        Component: animatedProperties.others.image.ObjectFit,
       },
     },
   },
   Cursor: {
     name: 'Cursor',
-    disabled: true,
-    labelTypes: ['unimplemented'],
     routes: {
       Cursor: {
         name: 'Cursor',
@@ -437,6 +431,10 @@ const othersRoutes = {
         Component: animatedProperties.others.cursor.PointerEvents,
       },
     },
+  },
+  Filter: {
+    name: 'Filter',
+    Component: animatedProperties.others.Filter,
   },
 } satisfies Routes;
 

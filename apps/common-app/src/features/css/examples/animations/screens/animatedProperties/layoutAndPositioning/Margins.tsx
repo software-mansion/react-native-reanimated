@@ -125,7 +125,6 @@ const renderExample = ({
 
 export default function Margins() {
   return (
-    // TODO - improve the typing of the tabs prop
     <ExamplesScreen<{
       property?: string;
       keyframes?: CSSAnimationKeyframes;

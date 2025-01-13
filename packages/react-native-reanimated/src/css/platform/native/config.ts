@@ -221,7 +221,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   /** Others */
   // Image
   resizeMode: true,
-  objectFit: true,
+  objectFit: false,
   // Cursor
   cursor: true,
   pointerEvents: true,

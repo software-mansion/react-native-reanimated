@@ -15,13 +15,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
 
 import { colors, flex, radius, sizes, spacing } from '@/theme';
+import {
+  newYorkImage,
+  parisImage,
+  tokyoImage,
+  veniceImage,
+} from '~/css/assets';
 import { Screen } from '~/css/components';
 import { BOTTOM_BAR_HEIGHT } from '~/css/navigation/constants';
-
-import newYorkImage from './images/new-york.jpg';
-import parisImage from './images/paris.jpg';
-import tokyoImage from './images/tokyo.jpg';
-import veniceImage from './images/venice.jpg';
 
 const AnimatedTouchableOpacity =
   Animated.createAnimatedComponent(TouchableOpacity);

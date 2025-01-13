@@ -221,7 +221,6 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       {"borderRightWidth", value<CSSDouble>(0)},
 
       // Decoration
-      {"borderCurve", value<CSSKeyword>("continuous")},
       {"borderStyle", value<CSSKeyword>("solid")},
 
       // TRANSFORMS
@@ -276,7 +275,6 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       {"textDecorationStyle", value<CSSKeyword>("solid")},
       // Others
       {"userSelect", value<CSSKeyword>("auto")},
-      {"writingDirection", value<CSSKeyword>("inherit")},
       {"includeFontPadding", value<CSSBoolean>(false)},
 
       /**
@@ -284,7 +282,6 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
        */
       // Image
       {"resizeMode", value<CSSKeyword>("cover")},
-      {"objectFit", value<CSSKeyword>("cover")},
 
       // Cursor
       {"cursor", value<CSSKeyword>("auto")},

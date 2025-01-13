@@ -2,17 +2,16 @@ import { StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
-import { colors, radius, sizes } from '@/theme';
+import { radius, sizes } from '@/theme';
 import { balloonsImage } from '~/css/assets';
 import { ExamplesScreen, VerticalExampleCard } from '~/css/components';
 
-export default function ResizeMode() {
+export default function Filter() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
-        animationDirection: 'alternate',
-        animationDuration: '3s',
+        animationDuration: '5s',
         animationIterationCount: 'infinite',
         animationName: keyframes,
         animationTimingFunction: 'linear',
@@ -25,39 +24,45 @@ export default function ResizeMode() {
       )}
       sections={[
         {
+          description: [
+            'Most of `filter` properties are **continuous**. That means, they **can be smoothly animated** between values.',
+          ],
           examples: [
             {
-              description:
-                "`resizeMode` is a **discrete** property. That means, it **can't be smoothly animated** between values.",
               keyframes: {
                 '0%, 100%': {
-                  resizeMode: 'contain',
-                },
-                '25%': {
-                  resizeMode: 'cover',
+                  filter: 'blur(0px) brightness(0)',
                 },
                 '50%': {
-                  resizeMode: 'stretch',
-                },
-                '75%': {
-                  resizeMode: 'center',
+                  filter: 'blur(10px) brightness(150%)',
                 },
               },
-              title: 'Changing Resize Mode',
+              title: 'String syntax',
+            },
+            {
+              keyframes: {
+                '0%, 100%': {
+                  filter: [{ blur: 0, brightness: 0 }],
+                },
+                '50%': {
+                  filter: [{ blur: 10, brightness: 150 }],
+                },
+              },
+              title: 'Object syntax',
             },
           ],
-          labelTypes: ['iOS', 'Android'],
-          title: 'Resize Mode',
+          labelTypes: ['web'],
+          title: 'Filter',
         },
       ]}
     />
   );
 }
+
 const styles = StyleSheet.create({
   image: {
-    backgroundColor: colors.primaryLight,
     borderRadius: radius.md,
-    height: sizes.xxxl,
-    width: sizes.xxxl,
+    height: sizes.xxl,
+    width: sizes.xxl,
   },
 });

@@ -37,6 +37,7 @@ export default function IncludeFontPadding() {
               title: 'Changing User Select',
             },
           ],
+          labelTypes: ['web'],
           title: 'User Select',
         },
       ]}

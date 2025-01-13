@@ -12789,6 +12789,7 @@ __metadata:
     react: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
     react-native-gesture-handler: "npm:2.22.0"
+    react-native-monorepo-tools: "npm:^1.2.1"
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.1.0"
@@ -13057,6 +13058,13 @@ __metadata:
     make-dir: "npm:^2.0.0"
     pkg-dir: "npm:^3.0.0"
   checksum: 10/60ad475a6da9f257df4e81900f78986ab367d4f65d33cf802c5b91e969c28a8762f098693d7a571b6e4dd4c15166c2da32ae2d18b6766a18e2071079448fdce4
+  languageName: node
+  linkType: hard
+
+"find-root@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "find-root@npm:1.1.0"
+  checksum: 10/caa799c976a14925ba7f31ca1a226fe73d3aa270f4f1b623fcfeb1c6e263111db4beb807d8acd31bd4d48d44c343b93688a9288dfbccca27463c36a0301b0bb9
   languageName: node
   linkType: hard
 
@@ -13590,7 +13598,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:^7.0.0, glob@npm:^7.1.1, glob@npm:^7.1.2, glob@npm:^7.1.3, glob@npm:^7.1.4, glob@npm:^7.1.6, glob@npm:^7.2.0":
+"glob@npm:^7.0.0, glob@npm:^7.1.1, glob@npm:^7.1.2, glob@npm:^7.1.3, glob@npm:^7.1.4, glob@npm:^7.1.6, glob@npm:^7.1.7, glob@npm:^7.2.0":
   version: 7.2.3
   resolution: "glob@npm:7.2.3"
   dependencies:
@@ -19414,6 +19422,16 @@ __metadata:
   bin:
     react-native: cli.js
   checksum: 10/a13ea5e8319fe16e61a6dd3531c9b388f8563e35a57af42125d2765502d92dece85ee611d0e304072d44b030e52f832d18e0c96419bb67d28d17d1c46b301306
+  languageName: node
+  linkType: hard
+
+"react-native-monorepo-tools@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "react-native-monorepo-tools@npm:1.2.1"
+  dependencies:
+    find-root: "npm:^1.1.0"
+    glob: "npm:^7.1.7"
+  checksum: 10/356fc34b41c21a4e6db64e539dd604c3d01d8c3548988affe13c9a83893ad162d48d45e3333d553023177e2523e147390820594aaba771d10575d77ccdde544d
   languageName: node
   linkType: hard
 
