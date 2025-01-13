@@ -1,4 +1,3 @@
-'use strict';
 import React, { Component } from 'react';
 import type { MutableRefObject, Ref, RefObject } from 'react';
 import type {

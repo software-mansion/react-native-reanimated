@@ -44,7 +44,7 @@ export const formatLeafValue = (
 
 export const MAX_NOT_WRAPPED_LENGTH = 48;
 
-export const stringifyConfig = <T extends AnyRecord>(
+const stringifyConfigObject = <T extends AnyRecord>(
   object: T,
   dense = false,
   depth = 0
@@ -69,14 +69,14 @@ export const stringifyConfig = <T extends AnyRecord>(
     if (key === 'animationName') {
       return Array.isArray(value) && value.length > 0
         ? `[\n${nextTab}  ${value
-            .map((item) => stringifyConfig(item, makeDense, depth + 2))
+            .map((item) => stringifyConfigObject(item, makeDense, depth + 2))
             .join(`,\n${nextTab}  `)}\n${nextTab}]`
-        : stringifyConfig(value, makeDense, currentDepth);
+        : stringifyConfigObject(value, makeDense, currentDepth);
     }
 
     return isLeafValue(value)
       ? formatLeafValue(value, nextTab, makeDense)
-      : stringifyConfig(value, makeDense, currentDepth);
+      : stringifyConfigObject(value, makeDense, currentDepth);
   };
 
   const formatLine = (
@@ -106,6 +106,16 @@ export const stringifyConfig = <T extends AnyRecord>(
       return formatLine(formattedKey, value, depth + 1, false);
     })
     .join(',\n')}\n${currentTab}}`;
+};
+
+export const stringifyConfig = <T extends AnyRecord>(
+  object: 'none' | T,
+  dense = false,
+  depth = 0
+): string => {
+  return object === 'none'
+    ? 'none'
+    : stringifyConfigObject(object, dense, depth);
 };
 
 export const getCodeWithOverrides = <C extends AnyRecord, O extends AnyRecord>(

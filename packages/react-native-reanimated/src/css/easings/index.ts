@@ -1,4 +1,3 @@
-'use strict';
 import { CubicBezierEasing } from './cubicBezier';
 import { LinearEasing } from './linear';
 import { StepsEasing } from './steps';

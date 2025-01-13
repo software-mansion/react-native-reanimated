@@ -1,5 +1,3 @@
-'use strict';
-
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import type { CSSStyleProperties } from '../types';

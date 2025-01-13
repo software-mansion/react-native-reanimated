@@ -1,4 +1,3 @@
-'use strict';
 import type { ComponentType } from 'react';
 import type {
   ImageStyle,

@@ -23,7 +23,7 @@ export type CSSStyleProperties<S extends PlainStyle = PlainStyle> = S &
 type CSSStyleProps<P extends object> = {
   [K in keyof PickStyleProps<P>]: P[K] extends StyleProp<infer U>
     ? U extends object
-      ? CSSStyleProperties<U>
+      ? StyleProp<CSSStyleProperties<U>>
       : never
     : never;
 };

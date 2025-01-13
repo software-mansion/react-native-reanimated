@@ -1,4 +1,3 @@
-'use strict';
 import { CSSKeyframesRuleImpl } from './models';
 import type {
   CSSAnimationKeyframes,

@@ -1,4 +1,3 @@
-'use strict';
 import type {
   CSSAnimationKeyframeSelector,
   CSSAnimationKeyframes,

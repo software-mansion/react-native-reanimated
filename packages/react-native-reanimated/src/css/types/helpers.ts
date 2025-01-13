@@ -1,5 +1,3 @@
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type AnyRecord = Record<string, any>;
 
@@ -22,6 +20,8 @@ export type ConvertValuesToArrays<T> = {
         : U[]
     : never;
 };
+
+export type AddArrayPropertyType<T> = T | T[];
 
 export type AddArrayPropertyTypes<T> = {
   [P in keyof T]: T[P] extends undefined ? undefined : T[P] | NoUndef<T[P]>[];

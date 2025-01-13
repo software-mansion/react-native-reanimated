@@ -1,4 +1,3 @@
-'use strict';
 export type {
   CSSAnimationKeyframeSelector,
   CSSAnimationKeyframes,

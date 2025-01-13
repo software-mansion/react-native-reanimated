@@ -1,4 +1,3 @@
-'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import { CSSKeyframesRuleImpl } from '../models';
 import type {
@@ -13,7 +12,10 @@ import {
   createSingleCSSAnimationProperties,
   normalizeSingleCSSAnimationSettings,
 } from '../platform/native';
-import type { CSSAnimationKeyframes, CSSAnimationProperties } from '../types';
+import type {
+  CSSAnimationKeyframes,
+  ExistingCSSAnimationProperties,
+} from '../types';
 
 type ProcessedAnimation = {
   normalizedConfig: NormalizedSingleCSSAnimationConfig;
@@ -38,7 +40,7 @@ export default class CSSAnimationsManager {
     }
   }
 
-  update(animationProperties: CSSAnimationProperties | null): void {
+  update(animationProperties: ExistingCSSAnimationProperties | null): void {
     if (!animationProperties) {
       this.detach();
       return;
@@ -94,7 +96,7 @@ export default class CSSAnimationsManager {
   }
 
   private processAnimations(
-    animationProperties: CSSAnimationProperties
+    animationProperties: ExistingCSSAnimationProperties
   ): [ProcessedAnimation[], boolean] {
     const singleAnimationPropertiesArray =
       createSingleCSSAnimationProperties(animationProperties);

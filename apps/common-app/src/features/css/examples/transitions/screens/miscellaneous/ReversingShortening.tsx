@@ -110,7 +110,7 @@ export default function ReversingShortening() {
             onChange={setSelectableConfig}
           />
 
-          <View style={styles.buttonRows}>
+          <Animated.View layout={LinearTransition} style={styles.buttonRows}>
             <View style={styles.buttonRow}>
               <Text variant="label1">Reset config</Text>
               <Button
@@ -131,7 +131,7 @@ export default function ReversingShortening() {
                 }
               />
             </View>
-          </View>
+          </Animated.View>
 
           <TabPanel
             contentContainerStyle={styles.previewContainer}
