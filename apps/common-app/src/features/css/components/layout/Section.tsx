@@ -5,9 +5,8 @@ import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import { flex, spacing } from '@/theme';
 
-import Text from '../core/Text';
+import { TitleWithLabels } from '../misc';
 import type { LabelType } from '../misc/Label';
-import Label from '../misc/Label';
 import Description from './Description';
 import Group from './Group';
 
@@ -33,12 +32,11 @@ export function Section({
       layout={LinearTransition}
       style={[styles.sectionContainer, style, fill && flex.fill]}>
       <View style={styles.textWrapper}>
-        <View style={styles.titleWrapper}>
-          <Text variant="heading3">{title}</Text>
-          {labelTypes?.map((labelType, index) => (
-            <Label key={index} type={labelType} />
-          ))}
-        </View>
+        <TitleWithLabels
+          labelTypes={labelTypes}
+          title={title}
+          variant="heading3"
+        />
         {description && <Description>{description}</Description>}
       </View>
       <Group style={[styles.sectionContent, fill && flex.fill]}>
@@ -61,11 +59,5 @@ const styles = StyleSheet.create({
   textWrapper: {
     gap: spacing.xs,
     marginHorizontal: spacing.sm,
-  },
-  titleWrapper: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    marginBottom: spacing.xxs,
   },
 });

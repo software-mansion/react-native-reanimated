@@ -16,14 +16,15 @@ import Animated, {
 import { colors, flex, radius, spacing } from '@/theme';
 
 import ExpandableCard from '../cards/ExpandableCard';
-import Text from '../core/Text';
 import Button from '../inputs/Button';
 import Description from '../layout/Description';
+import { type LabelType, TitleWithLabels } from '../misc';
 import { CodeBlock } from '../misc/CodeBlock';
 
 export type ExampleCardProps = PropsWithChildren<{
-  title?: string;
   code: string;
+  title?: string;
+  labelTypes?: Array<LabelType>;
   collapsedCode?: string;
   description?: Array<string> | string;
   collapsedExampleHeight?: number;
@@ -37,6 +38,7 @@ export default function ExampleCard({
   collapsedCode,
   collapsedExampleHeight = 150,
   description,
+  labelTypes,
   minExampleHeight,
   showRestartButton,
   title,
@@ -75,7 +77,11 @@ export default function ExampleCard({
         showExpandOverlay
         onChange={setIsExpanded}>
         <View style={styles.titleRow}>
-          {title && <Text variant="subHeading2">{title}</Text>}
+          <TitleWithLabels
+            labelTypes={labelTypes}
+            title={title}
+            variant="subHeading2"
+          />
           {showRestartButton && (
             <Button
               title="Restart"

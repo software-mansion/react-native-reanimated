@@ -22,10 +22,10 @@ struct CSSNumberBase : public CSSBaseValue<CSSValueType::Number, Derived> {
 
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
 
-  jsi::Value toJSIValue(jsi::Runtime &rt) const;
-  folly::dynamic toDynamic() const;
-  std::string toString() const;
-  Derived interpolate(double progress, const Derived &other) const;
+  jsi::Value toJSIValue(jsi::Runtime &rt) const override;
+  folly::dynamic toDynamic() const override;
+  std::string toString() const override;
+  Derived interpolate(double progress, const Derived &other) const override;
 
   bool operator==(const CSSNumberBase<T, Derived> &other) const;
 };

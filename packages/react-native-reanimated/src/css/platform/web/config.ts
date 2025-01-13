@@ -11,6 +11,7 @@ import {
   processTransformOrigin,
   boxShadowBuilder,
   textShadowBuilder,
+  processFontVariant,
 } from './style';
 import type { StyleBuilderConfig } from './style';
 import type { PlainStyle } from '../../types';
@@ -199,7 +200,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   fontFamily: true,
   fontSize: 'px',
   fontStyle: true,
-  fontVariant: true,
+  fontVariant: { process: processFontVariant },
   fontWeight: { process: processFontWeight },
   // Alignment
   textAlign: true,
