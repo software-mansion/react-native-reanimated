@@ -30,16 +30,10 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     const InterpolatorFactoriesArray &factories,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
-  if (arrayIndex >= factories.size()) {
-    throw std::invalid_argument(
-        "[Reanimated] Array index out of bounds: " +
-        std::to_string(arrayIndex));
-  }
-
   PropertyPath newPath = propertyPath;
   newPath.emplace_back(std::to_string(arrayIndex));
 
-  return factories[arrayIndex]->create(
+  return factories[arrayIndex % factories.size()]->create(
       newPath, progressProvider, viewStylesRepository);
 }
 

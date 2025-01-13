@@ -221,7 +221,6 @@ const appearanceRoutes = {
         routes: {
           BoxShadow: {
             name: 'Box Shadow',
-            labelTypes: ['unimplemented'],
             Component: animatedProperties.appearance.shadows.BoxShadow,
           },
         },
