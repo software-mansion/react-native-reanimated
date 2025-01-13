@@ -843,4 +843,10 @@ void ReanimatedModuleProxy::unsubscribeFromKeyboardEvents(
   unsubscribeFromKeyboardEventsFunction_(listenerId.asNumber());
 }
 
+void ReanimatedModuleProxy::invalidate() {
+  // Make sure to release WorkletsModuleProxy on invalidate to allow it
+  // to destroy its runtime during the invalidation stage.
+  workletsModuleProxy_.reset();
+}
+
 } // namespace reanimated

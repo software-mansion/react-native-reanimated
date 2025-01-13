@@ -70,6 +70,12 @@ public class NativeProxy extends NativeProxyCommon {
     return mHybridData;
   }
 
+  private native void invalidateCpp();
+
+  public void invalidate() {
+    invalidateCpp();
+  }
+
   public static NativeMethodsHolder createNativeMethodsHolder(
       LayoutAnimations ignoredLayoutAnimations) {
     return new NativeMethodsHolder() {
