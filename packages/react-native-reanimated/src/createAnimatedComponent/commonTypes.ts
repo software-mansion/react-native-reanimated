@@ -21,7 +21,7 @@ export interface AnimatedProps extends Record<string, unknown> {
 }
 
 export interface ViewInfo {
-  viewTag: number | HTMLElement | null;
+  viewTag: number | AnimatedComponentRef | HTMLElement | null;
   viewName: string | null;
   shadowNodeWrapper: ShadowNodeWrapper | null;
   viewConfig: ViewConfig;
@@ -96,7 +96,7 @@ export interface AnimatedComponentRef extends Component {
   getScrollableNode?: () => AnimatedComponentRef;
   getAnimatableRef?: () => AnimatedComponentRef;
   // Case for SVG components on Web
-  elementRef?: React.RefObject<AnimatedComponentRef>;
+  elementRef?: React.RefObject<HTMLElement>;
 }
 
 export interface IAnimatedComponentInternal {

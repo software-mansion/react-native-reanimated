@@ -128,6 +128,8 @@ export function createAnimatedComponent(
     jestInlineStyle: NestedArray<StyleProps> | undefined;
     jestAnimatedStyle: { value: StyleProps } = { value: {} };
     _componentRef: AnimatedComponentRef | HTMLElement | null = null;
+    // used only on web
+    _componentDOMRef: HTMLElement | null = null;
     _sharedElementTransition: SharedTransition | null = null;
     _jsPropsUpdater = new JSPropsUpdater();
     _InlinePropManager = new InlinePropManager();
@@ -178,9 +180,9 @@ export function createAnimatedComponent(
         this._configureLayoutTransition();
       }
 
-      if (IS_WEB) {
+      if (IS_WEB && this._componentDOMRef) {
         if (this.props.exiting) {
-          saveSnapshot(this._componentRef as HTMLElement);
+          saveSnapshot(this._componentDOMRef);
         }
 
         if (
@@ -196,11 +198,11 @@ export function createAnimatedComponent(
         if (!skipEntering) {
           startWebLayoutAnimation(
             this.props,
-            this._componentRef as ReanimatedHTMLElement,
+            this._componentDOMRef as ReanimatedHTMLElement,
             LayoutAnimationType.ENTERING
           );
         } else {
-          (this._componentRef as HTMLElement).style.visibility = 'initial';
+          this._componentDOMRef.style.visibility = 'initial';
         }
       }
 
@@ -232,7 +234,7 @@ export function createAnimatedComponent(
 
         startWebLayoutAnimation(
           this.props,
-          this._componentRef as ReanimatedHTMLElement,
+          this._componentDOMRef as ReanimatedHTMLElement,
           LayoutAnimationType.EXITING
         );
       } else if (exiting && !IS_WEB && !isFabric()) {
@@ -290,7 +292,7 @@ export function createAnimatedComponent(
         return this._viewInfo;
       }
 
-      let viewTag: number | HTMLElement | null;
+      let viewTag: number | typeof this._componentRef;
       let viewName: string | null;
       let shadowNodeWrapper: ShadowNodeWrapper | null = null;
       let viewConfig;
@@ -298,7 +300,7 @@ export function createAnimatedComponent(
       if (SHOULD_BE_USE_WEB) {
         // At this point I assume that `_setComponentRef` was already called and `_component` is set.
         // `this._component` on web represents HTMLElement of our component, that's why we use casting
-        viewTag = this._componentRef as HTMLElement;
+        viewTag = this._componentRef;
         viewName = null;
         shadowNodeWrapper = null;
         viewConfig = null;
@@ -425,8 +427,8 @@ export function createAnimatedComponent(
       this._attachAnimatedStyles();
       this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-      if (IS_WEB && this.props.exiting) {
-        saveSnapshot(this._componentRef as HTMLElement);
+      if (IS_WEB && this.props.exiting && this._componentDOMRef) {
+        saveSnapshot(this._componentDOMRef);
       }
 
       // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
@@ -438,7 +440,7 @@ export function createAnimatedComponent(
       ) {
         tryActivateLayoutTransition(
           this.props,
-          this._componentRef as ReanimatedHTMLElement,
+          this._componentDOMRef as ReanimatedHTMLElement,
           snapshot
         );
       }
@@ -498,8 +500,12 @@ export function createAnimatedComponent(
         return componentRef.getAnimatableRef();
       }
       // Case for SVG components on Web
-      if (SHOULD_BE_USE_WEB && componentRef && componentRef.elementRef) {
-        return componentRef.elementRef.current;
+      if (SHOULD_BE_USE_WEB) {
+        if (componentRef && componentRef.elementRef) {
+          this._componentDOMRef = componentRef.elementRef.current;
+        } else {
+          this._componentDOMRef = ref as HTMLElement;
+        }
       }
       return componentRef;
     };
@@ -571,9 +577,9 @@ export function createAnimatedComponent(
     getSnapshotBeforeUpdate() {
       if (
         IS_WEB &&
-        (this._componentRef as HTMLElement)?.getBoundingClientRect !== undefined
+        this._componentDOMRef?.getBoundingClientRect !== undefined
       ) {
-        return (this._componentRef as HTMLElement).getBoundingClientRect();
+        return this._componentDOMRef.getBoundingClientRect();
       }
 
       return null;
