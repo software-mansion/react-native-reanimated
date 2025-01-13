@@ -12024,10 +12024,9 @@ react-native-gradle-plugin@^0.71.16:
   resolved "https://registry.yarnpkg.com/react-native-gradle-plugin/-/react-native-gradle-plugin-0.71.16.tgz#822bb0c680e03b5df5aa65f2e5ffc2bc2930854a"
   integrity sha512-H2BjG2zk7B7Wii9sXvd9qhCVRQYDAHSWdMw9tscmZBqSP62DkIWEQSk4/B2GhQ4aK9ydVXgtqR6tBeg3yy8TSA==
 
-react-native-reanimated@^3.15.0-nightly-20240722-a15e0edec:
-  version "3.15.0-nightly-20240722-a15e0edec"
-  resolved "https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-3.15.0-nightly-20240722-a15e0edec.tgz#015086fc2be672da4ceb8999ba58687918b09592"
-  integrity sha512-jAeN0/Q/GSG7gPLeKHe2Yk7XCx718L+42SXHSfT0dgcXrIzKENq3Pfn9rj9j2B7XVA8YPOAkUmQ6telB9WDHOA==
+react-native-reanimated@./react-native-reanimated-4.0.0-beta.3.1.tgz:
+  version "4.0.0-beta.3"
+  resolved "./react-native-reanimated-4.0.0-beta.3.1.tgz#374d8cafec974583b57a5ecf45aa6061bae5c5fa"
   dependencies:
     "@babel/plugin-transform-arrow-functions" "^7.0.0-0"
     "@babel/plugin-transform-class-properties" "^7.0.0-0"

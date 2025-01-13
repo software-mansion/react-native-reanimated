@@ -1,0 +1,182 @@
+---
+sidebar_position: 5
+---
+
+# transitionTimingFunction
+
+`transitionTimingFunction` lets you adjust how intermediate values are calculated during the transition. Defaults to `ease`.
+
+import TransitionTimingFunctionBasic from '@site/src/examples/css-transitions/TransitionTimingFunctionBasic';
+import TransitionTimingFunctionBasicSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionTimingFunctionBasic';
+
+<InteractiveExample
+  src={TransitionTimingFunctionBasicSrc}
+  component={TransitionTimingFunctionBasic}
+/>
+
+## Reference
+
+```javascript
+function App() {
+  return (
+    <Animated.View
+      style={{
+        transitionProperty: 'height',
+        transitionDuration: 300,
+        // highlight-next-line
+        transitionTimingFunction: 'easeOut',
+      }}
+    />
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type NormalizedCubicBezierEasing = {
+  name: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+};
+type NormalizedLinearEasing = {
+  name: string;
+  points: Point[];
+};
+type NormalizedStepsEasing = {
+  name: string;
+  points: Point[];
+};
+
+type ControlPoint = number | [number, ...Percentage[]];
+
+type StepsModifier =
+  | 'jumpStart'
+  | 'start'
+  | 'jumpEnd'
+  | 'end'
+  | 'jumpNone'
+  | 'jumpBoth';
+
+type NormalizedCSSTimingFunction =
+  | PredefinedTimingFunction
+  | NormalizedCubicBezierEasing
+  | NormalizedLinearEasing
+  | NormalizedStepsEasing;
+
+type PredefinedTimingFunction =
+  | 'linear'
+  | 'ease'
+  | 'easeIn'
+  | 'easeOut'
+  | 'easeInOut'
+  | 'stepStart'
+  | 'stepEnd';
+
+interface ParametrizedTimingFunction {
+  toString(): string;
+  normalize(): NormalizedCSSTimingFunction;
+}
+
+type CSSTimingFunction = PredefinedTimingFunction | ParametrizedTimingFunction;
+type CSSTransitionTimingFunction = CSSTimingFunction | CSSTimingFunction[];
+```
+
+</details>
+
+### Values
+
+Easings control the pacing of animations and transitions.
+
+#### `<predefined timing function>`
+
+A string representing a predefined timing function. Available functions:
+
+- `linear` - a constant speed from start to finish,
+- `ease` - starts slow, speeds up, then slows down,
+- `easeIn` - starts slow and accelerates,
+- `easeOut` - starts quickly and decelerates,
+- `easeInOut` - starts slowly, speeds up, and then slows down again.
+- `stepStart` - jumps instantly at the start,
+- `stepEnd` - jumps instantly at the end.
+
+```typescript
+transitionTimingFunction: 'linear',
+```
+
+#### `<parametrized timing function>`
+
+A returned object from parametrized timing functions. Available functions:
+
+- `cubicBezier(x1: number, y1: number, x2: number, y2: number)` - a Bézier curve to shape the progress of an animation. It is defined by two control points (x1, y1, x2, y2) that mathematically describe the curve.
+
+<Indent>
+
+```typescript
+import { cubicBezier } from 'react-native-reanimated';
+
+transitionTimingFunction: cubicBezier(0.25, 0.1, 0.5, 2),
+```
+
+</Indent>
+
+- `linear(...points: ControlPoint[])` - a simple polygonal chain that always starts at an x-value of 0 and ends at an x-value of 1. You can either specify the points' y and x coordinates or leave the x coordinates to be inferred.
+
+<Indent>
+
+```typescript
+import { linear } from 'react-native-reanimated';
+
+transitionTimingFunction: linear(0, [0.25, '75%'], 1),
+```
+
+</Indent>
+
+- `steps(stepsNumber: number, modifier?: StepsModifier)` - creates an easing function that makes given number of even steps over increasing y-values. The second argument is a modifier that adds jumps before or after the steps. Modifier defaults to `jumpEnd`.
+  - `jumpStart` - a left-continuous function, where the first jump occurs at the start of the transition,
+  - `jumpEnd` - a right-continuous function, where the final jump occurs at the end of the transition,
+  - `jumpNone` - no jump on either end. Maintaining a hold at both the 0% and 100% points, each for 1/n of the total duration,
+  - `jumpBoth` - adds pauses at both the 0% and 100% points, introducing an additional step during the transition,
+  - `start` - an alias for `jumpStart`,
+  - `end` - an alias for `jumpEnd`,
+
+<Indent>
+
+```typescript
+import { steps } from 'react-native-reanimated';
+
+transitionTimingFunction: steps(4, 'jumpEnd'),
+```
+
+</Indent>
+
+#### `<timing function[]>`
+
+An array of timing functions. The order in this array corresponds to the array of style properties passed to the [`transitionProperty`](docs/next/css-transitions/transition-property#style-property-1).
+
+```typescript
+// highlight-next-line
+transitionTimingFunction: ['linear', steps(60, 'jumpNone'), 'easeInOut'];
+transitionProperty: ['width', 'transform', 'borderRadius'];
+```
+
+In the following example, the `width` property will be transitions using `linear` easing, `transform` will use the `steps` timing function, and `borderRadius` will be transitioned using `easeInOut` easing.
+
+## Examples
+
+### Steps
+
+import TransitionTimingFunctionSteps from '@site/src/examples/css-transitions/TransitionTimingFunctionSteps';
+import TransitionTimingFunctionStepsSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionTimingFunctionSteps';
+
+<InteractiveExample
+  src={TransitionTimingFunctionStepsSrc}
+  component={TransitionTimingFunctionSteps}
+/>
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />
