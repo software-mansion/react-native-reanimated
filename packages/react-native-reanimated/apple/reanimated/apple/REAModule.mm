@@ -16,6 +16,7 @@
 #import <reanimated/apple/Fabric/REAInitializerRCTFabricSurface.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
+#import <reanimated/NativeModules/DummyReanimatedModuleProxy.h>
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
@@ -296,13 +297,26 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 
   assert(jsiRuntime != nullptr);
 
-  auto reanimatedModuleProxy =
-      reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, isBridgeless);
+  if ([workletsModule isValid]) {
+    auto reanimatedModuleProxy =
+        reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, isBridgeless);
 
-  auto &uiRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime() -> getJSIRuntime();
+    auto workletsModuleProxy = [workletsModule getWorkletsModuleProxy];
 
-  jsi::Runtime &rnRuntime = *jsiRuntime;
-  [self commonInit:reanimatedModuleProxy withRnRuntime:rnRuntime withUIRuntime:uiRuntime];
+    auto *uiRuntime = workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
+
+    [self commonInit:reanimatedModuleProxy withRnRuntime:jsiRuntime withUIRuntime:uiRuntime];
+  } else {
+    // This path takes place when JavaScript reload is called
+    // after WorkletsModule is created and before ReaModule is.
+    // Therefore WorkletsModule would already be cleaned up
+    // and we only install a DummyReanimatedModuleProxy. It will be
+    // cleaned up when reload finishes anyway.
+    auto &rnRuntime = *jsiRuntime;
+    auto dummyReanimatedModuleProxy =
+        std::make_shared<DummyReanimatedModuleProxy>(rnRuntime, jsCallInvoker, isBridgeless, false);
+    RNRuntimeDecorator::decorate(jsiRuntime, nullptr, dummyReanimatedModuleProxy);
+  }
 
   return @YES;
 }
@@ -316,8 +330,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 #endif // RCT_NEW_ARCH_ENABLED
 
 - (void)commonInit:(std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy
-     withRnRuntime:(jsi::Runtime &)rnRuntime
-     withUIRuntime:(jsi::Runtime &)uiRuntime
+     withRnRuntime:(jsi::Runtime *)rnRuntime
+     withUIRuntime:(jsi::Runtime *)uiRuntime
 {
   WorkletRuntimeCollector::install(rnRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
@@ -326,7 +340,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   weakReanimatedModuleProxy_ = reanimatedModuleProxy;
   if (self->_surfacePresenter != nil) {
     // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
-    [self injectDependencies:rnRuntime];
+    [self injectDependencies:*rnRuntime];
   }
 #endif // RCT_NEW_ARCH_ENABLED
 }

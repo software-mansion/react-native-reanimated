@@ -28,27 +28,39 @@ public class NativeProxy extends NativeProxyCommon {
   public @OptIn(markerClass = FrameworkAPI.class) NativeProxy(
       ReactApplicationContext context, WorkletsModule workletsModule) {
     super(context);
-    ReactFeatureFlagsWrapper.enableMountHooks();
-
-    FabricUIManager fabricUIManager =
-        (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
-
-    LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
 
     CallInvokerHolderImpl callInvokerHolder = JSCallInvokerResolver.getJSCallInvokerHolder(context);
-    mHybridData =
-        initHybrid(
-            workletsModule,
-            Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
-            callInvokerHolder,
-            LayoutAnimations,
-            context.isBridgeless(),
-            fabricUIManager);
 
-    prepareLayoutAnimations(LayoutAnimations);
-    installJSIBindings();
-    if (BuildConfig.DEBUG) {
-      checkCppVersion();
+    if (workletsModule.isValid()) {
+      ReactFeatureFlagsWrapper.enableMountHooks();
+
+      FabricUIManager fabricUIManager =
+          (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
+
+      LayoutAnimations LayoutAnimations = new LayoutAnimations(context);
+
+      mHybridData =
+          initHybrid(
+              workletsModule,
+              Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
+              callInvokerHolder,
+              LayoutAnimations,
+              context.isBridgeless(),
+              fabricUIManager);
+
+      prepareLayoutAnimations(LayoutAnimations);
+
+      installJSIBindings();
+      if (BuildConfig.DEBUG) {
+        checkCppVersion();
+      }
+    } else {
+      mHybridData =
+          initDummyHybrid(
+              Objects.requireNonNull(context.getJavaScriptContextHolder()).get(),
+              callInvokerHolder,
+              context.isBridgeless());
+      installDummyJSIBindings();
     }
   }
 
@@ -60,6 +72,10 @@ public class NativeProxy extends NativeProxyCommon {
       LayoutAnimations LayoutAnimations,
       boolean isBridgeless,
       FabricUIManager fabricUIManager);
+
+  @OptIn(markerClass = FrameworkAPI.class)
+  private native HybridData initDummyHybrid(
+      long jsContext, CallInvokerHolderImpl jsCallInvokerHolder, boolean isBridgeless);
 
   public native boolean isAnyHandlerWaitingForEvent(String eventName, int emitterReactTag);
 

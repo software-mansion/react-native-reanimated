@@ -22,11 +22,17 @@ using worklets::WorkletsModuleProxy;
 #ifndef NDEBUG
   worklets::SingleInstanceChecker<WorkletsModule> singleInstanceChecker_;
 #endif // NDEBUG
+  bool isValid_;
 }
 
 - (std::shared_ptr<WorkletsModuleProxy>)getWorkletsModuleProxy
 {
   return workletsModuleProxy_;
+}
+
+- (BOOL)isValid
+{
+  return isValid_;
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
@@ -48,12 +54,15 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   workletsModuleProxy_ = std::make_shared<WorkletsModuleProxy>(
       rnRuntime, valueUnpackerCodeStr, jsQueue, jsCallInvoker, jsScheduler, uiScheduler);
   RNRuntimeWorkletDecorator::decorate(rnRuntime, workletsModuleProxy_);
+  isValid_ = true;
 
   return @YES;
 }
 
 - (void)invalidate
 {
+  isValid_ = false;
+
   // We have to destroy extra runtimes when invalidate is called. If we clean
   // it up later instead there's a chance the runtime will retain references
   // to invalidated memory and will crash on destruction.

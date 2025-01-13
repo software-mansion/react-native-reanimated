@@ -23,10 +23,11 @@ class WorkletRuntimeCollector : public jsi::HostObject {
     WorkletRuntimeRegistry::unregisterRuntime(runtime_);
   }
 
-  static void install(jsi::Runtime &rt) {
-    auto collector = std::make_shared<WorkletRuntimeCollector>(rt);
-    auto object = jsi::Object::createFromHostObject(rt, collector);
-    rt.global().setProperty(rt, "__workletRuntimeCollector", object);
+  static void install(jsi::Runtime *rt) {
+    auto &runtime = *rt;
+    auto collector = std::make_shared<WorkletRuntimeCollector>(runtime);
+    auto object = jsi::Object::createFromHostObject(runtime, collector);
+    runtime.global().setProperty(runtime, "__workletRuntimeCollector", object);
   }
 
  private:

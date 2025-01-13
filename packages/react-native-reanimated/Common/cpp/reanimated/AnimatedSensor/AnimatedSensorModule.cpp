@@ -41,7 +41,7 @@ jsi::Value AnimatedSensorModule::registerSensor(
           return;
         }
 
-        jsi::Runtime &uiRuntime = uiWorkletRuntime->getJSIRuntime();
+        jsi::Runtime &uiRuntime = *uiWorkletRuntime->getJSIRuntime();
         jsi::Object value(uiRuntime);
         if (sensorType == SensorType::ROTATION_VECTOR) {
           // TODO: timestamp should be provided by the platform implementation

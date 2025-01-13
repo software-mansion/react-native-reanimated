@@ -154,7 +154,7 @@ void ReanimatedModuleProxy::commonInit(
 #endif
 
   jsi::Runtime &uiRuntime =
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+      *workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   UIRuntimeDecorator::decorate(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -293,7 +293,7 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
   workletsModuleProxy_->getUIScheduler()->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
     jsi::Runtime &uiRuntime =
-        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+        *workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
     const auto resultStr =
         obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
 
@@ -435,7 +435,7 @@ void ReanimatedModuleProxy::maybeRequestRender() {
   if (!renderRequested_) {
     renderRequested_ = true;
     jsi::Runtime &uiRuntime =
-        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+        *workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
     requestRender_(onRenderCallback_, uiRuntime);
   }
 }
@@ -444,7 +444,7 @@ void ReanimatedModuleProxy::onRender(double timestampMs) {
   auto callbacks = std::move(frameCallbacks_);
   frameCallbacks_.clear();
   jsi::Runtime &uiRuntime =
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+      *workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   jsi::Value timestamp{timestampMs};
   for (const auto &callback : callbacks) {
     runOnRuntimeGuarded(uiRuntime, *callback, timestamp);
@@ -554,7 +554,7 @@ bool ReanimatedModuleProxy::handleRawEvent(
     eventType = "on" + eventType.substr(3);
   }
   jsi::Runtime &rt =
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+      *workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(rt);
 
@@ -594,7 +594,7 @@ void ReanimatedModuleProxy::performOperations() {
   operationsInBatch_.clear();
 
   jsi::Runtime &rt =
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+      *workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
 
   {
     auto lock = propsRegistry_->createLock();
@@ -732,7 +732,7 @@ jsi::String ReanimatedModuleProxy::obtainProp(
     const jsi::Value &shadowNodeWrapper,
     const jsi::Value &propName) {
   jsi::Runtime &uiRuntime =
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+      *workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   const auto propNameStr = propName.asString(rt).utf8(rt);
   const auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
   const auto resultStr =
@@ -810,7 +810,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         layoutAnimationsManager_,
         componentDescriptorRegistry,
         scheduler->getContextContainer(),
-        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
+        *workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
         workletsModuleProxy_->getUIScheduler());
   }
 }

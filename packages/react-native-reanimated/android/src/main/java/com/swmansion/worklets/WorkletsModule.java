@@ -34,6 +34,12 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   private final WorkletsMessageQueueThread mMessageQueueThread = new WorkletsMessageQueueThread();
   private final AndroidUIScheduler mAndroidUIScheduler;
 
+  private boolean mIsValid = true;
+
+  public boolean isValid() {
+    return mIsValid;
+  }
+
   public AndroidUIScheduler getAndroidUIScheduler() {
     return mAndroidUIScheduler;
   }
@@ -69,6 +75,8 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   }
 
   public void invalidate() {
+    mIsValid = false;
+
     // We have to destroy extra runtimes when invalidate is called. If we clean
     // it up later instead there's a chance the runtime will retain references
     // to invalidated memory and will crash on its destruction.

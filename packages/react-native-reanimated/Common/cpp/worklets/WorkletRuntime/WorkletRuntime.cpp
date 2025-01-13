@@ -70,7 +70,7 @@ WorkletRuntime::WorkletRuntime(
 #endif
       name_(name) {
   jsi::Runtime &rt = *runtime_;
-  WorkletRuntimeCollector::install(rt);
+  WorkletRuntimeCollector::install(&rt);
   WorkletRuntimeDecorator::decorate(rt, name, jsScheduler);
 
   auto codeBuffer = std::make_shared<const jsi::StringBuffer>(
@@ -93,7 +93,7 @@ jsi::Value WorkletRuntime::executeSync(
       worklet,
       "[Reanimated] Only worklets can be executed synchronously on UI runtime.");
   auto lock = std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
-  jsi::Runtime &uiRuntime = getJSIRuntime();
+  jsi::Runtime &uiRuntime = *getJSIRuntime();
   auto result = runGuarded(shareableWorklet);
   auto shareableResult = extractShareableOrThrow(uiRuntime, result);
   lock.unlock();

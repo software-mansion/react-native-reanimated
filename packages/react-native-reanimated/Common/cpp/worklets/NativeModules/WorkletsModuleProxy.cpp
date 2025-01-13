@@ -93,7 +93,7 @@ void WorkletsModuleProxy::scheduleOnUI(
     // temporary JSI objects and hence it allows for such objects to be
     // garbage collected much sooner. Apparently the scope API is only
     // supported on Hermes at the moment.
-    const auto scope = jsi::Scope(uiWorkletRuntime_->getJSIRuntime());
+    const auto scope = jsi::Scope(*uiWorkletRuntime_->getJSIRuntime());
 #endif
     uiWorkletRuntime_->runGuarded(shareableWorklet);
 

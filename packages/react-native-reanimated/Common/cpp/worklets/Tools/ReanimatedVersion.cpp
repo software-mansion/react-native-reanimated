@@ -55,6 +55,10 @@ bool matchVersion(const std::string &version1, const std::string &version2) {
 void checkJSVersion(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<JSLogger> &jsLogger) {
+  if (!jsLogger) {
+    return;
+  }
+
   auto cppVersion = getReanimatedCppVersion();
 
   auto maybeJSVersion =

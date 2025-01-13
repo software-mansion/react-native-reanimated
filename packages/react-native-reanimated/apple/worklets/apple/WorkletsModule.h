@@ -6,4 +6,6 @@
 
 - (std::shared_ptr<worklets::WorkletsModuleProxy>)getWorkletsModuleProxy;
 
+- (BOOL)isValid;
+
 @end

@@ -55,6 +55,19 @@ NativeProxy::NativeProxy(
 #endif // RCT_NEW_ARCH_ENABLED
 }
 
+NativeProxy::NativeProxy(
+    jni::alias_ref<NativeProxy::javaobject> jThis,
+    jsi::Runtime *rnRuntime,
+    const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
+    const bool isBridgeless)
+    : javaPart_(jni::make_global(jThis)),
+      rnRuntime_(rnRuntime),
+      dummyReanimatedModuleProxy_(std::make_shared<DummyReanimatedModuleProxy>(
+          *rnRuntime,
+          jsCallInvoker,
+          isBridgeless,
+          getIsReducedMotion())) {}
+
 #ifdef RCT_NEW_ARCH_ENABLED
 void NativeProxy::commonInit(
     jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
@@ -114,6 +127,17 @@ jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
   );
 }
 
+jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initDummyHybrid(
+    jni::alias_ref<jhybridobject> jThis,
+    jlong jsContext,
+    jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
+        jsCallInvokerHolder,
+    bool isBridgeless) {
+  auto jsCallInvoker = jsCallInvokerHolder->cthis()->getCallInvoker();
+  return makeCxxInstance(
+      jThis, (jsi::Runtime *)jsContext, jsCallInvoker, isBridgeless);
+}
+
 #ifndef NDEBUG
 void NativeProxy::checkJavaVersion(jsi::Runtime &rnRuntime) {
   std::string javaVersion;
@@ -155,9 +179,9 @@ void NativeProxy::injectCppVersion() {
 
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
-  WorkletRuntimeCollector::install(rnRuntime);
+  WorkletRuntimeCollector::install(&rnRuntime);
   RNRuntimeDecorator::decorate(
-      rnRuntime,
+      &rnRuntime,
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
       reanimatedModuleProxy_);
 #ifndef NDEBUG
@@ -167,6 +191,11 @@ void NativeProxy::installJSIBindings() {
 
   registerEventHandler();
   setupLayoutAnimations();
+}
+
+void NativeProxy::installDummyJSIBindings() {
+  RNRuntimeDecorator::decorate(
+      rnRuntime_, nullptr, dummyReanimatedModuleProxy_);
 }
 
 bool NativeProxy::isAnyHandlerWaitingForEvent(
@@ -190,7 +219,10 @@ bool NativeProxy::getIsReducedMotion() {
 void NativeProxy::registerNatives() {
   registerHybrid(
       {makeNativeMethod("initHybrid", NativeProxy::initHybrid),
+       makeNativeMethod("initDummyHybrid", NativeProxy::initDummyHybrid),
        makeNativeMethod("installJSIBindings", NativeProxy::installJSIBindings),
+       makeNativeMethod(
+           "installDummyJSIBindings", NativeProxy::installDummyJSIBindings),
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
@@ -413,7 +445,7 @@ void NativeProxy::handleEvent(
   }
 
   jsi::Runtime &rt =
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+      *workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   jsi::Value payload;
   try {
     payload = jsi::Value::createFromJsonUtf8(
@@ -520,7 +552,7 @@ void NativeProxy::setupLayoutAnimations() {
         if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
           if (auto workletsModuleProxy = weakWorkletsModuleProxy.lock()) {
             jsi::Runtime &rt =
-                workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
+                *workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
             jsi::Object yogaValues(rt);
             for (const auto &entry : *values) {
               try {
@@ -592,7 +624,7 @@ void NativeProxy::setupLayoutAnimations() {
         if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
           if (auto workletsModuleProxy = weakWorkletsModuleProxy.lock()) {
             jsi::Runtime &rt =
-                workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
+                *workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
             reanimatedModuleProxy->layoutAnimationsManager()
                 .cancelLayoutAnimation(rt, tag);
           }

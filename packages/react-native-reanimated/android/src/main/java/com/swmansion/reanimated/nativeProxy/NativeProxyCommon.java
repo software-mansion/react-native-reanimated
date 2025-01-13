@@ -75,6 +75,8 @@ public abstract class NativeProxyCommon {
 
   protected native void installJSIBindings();
 
+  protected native void installDummyJSIBindings();
+
   private void toggleSlowAnimations() {
     slowAnimationsEnabled = !slowAnimationsEnabled;
     if (slowAnimationsEnabled) {

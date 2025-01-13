@@ -1,5 +1,6 @@
 #pragma once
 
+#include <reanimated/NativeModules/DummyReanimatedModuleProxy.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/android/JNIHelper.h>
 #include <reanimated/android/LayoutAnimations.h>
@@ -160,6 +161,13 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 #endif
   );
 
+  static jni::local_ref<jhybriddata> initDummyHybrid(
+      jni::alias_ref<jhybridobject> jThis,
+      jlong jsContext,
+      jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
+          jsCallInvokerHolder,
+      const bool isBridgeless);
+
   static void registerNatives();
 
   ~NativeProxy();
@@ -170,6 +178,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   jsi::Runtime *rnRuntime_;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
+  std::shared_ptr<DummyReanimatedModuleProxy> dummyReanimatedModuleProxy_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
 #ifndef NDEBUG
   void checkJavaVersion(jsi::Runtime &);
@@ -181,6 +190,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   // std::shared_ptr<EventListener> eventListener_;
 #endif // RCT_NEW_ARCH_ENABLED
   void installJSIBindings();
+  void installDummyJSIBindings();
 #ifdef RCT_NEW_ARCH_ENABLED
   void synchronouslyUpdateUIProps(
       jsi::Runtime &rt,
@@ -274,6 +284,12 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
           fabricUIManager
 #endif
   );
+
+  explicit NativeProxy(
+      jni::alias_ref<NativeProxy::jhybridobject> jThis,
+      jsi::Runtime *rnRuntime,
+      const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
+      const bool isBridgeless);
 
 #ifdef RCT_NEW_ARCH_ENABLED
   void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject>

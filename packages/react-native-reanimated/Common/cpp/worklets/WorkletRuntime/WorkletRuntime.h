@@ -28,8 +28,8 @@ class WorkletRuntime : public jsi::HostObject,
       const bool supportsLocking,
       const std::string &valueUnpackerCode);
 
-  jsi::Runtime &getJSIRuntime() const {
-    return *runtime_;
+  jsi::Runtime *getJSIRuntime() const {
+    return runtime_.get();
   }
 
   template <typename... Args>
