@@ -21,6 +21,12 @@ class ReaCompatibility {
     }
   }
 
+  public void unregisterFabricEventListener(NodesManager nodesManager) {
+    if (fabricUIManager != null) {
+      fabricUIManager.getEventDispatcher().removeListener(nodesManager);
+    }
+  }
+
   public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
     fabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, uiProps);
   }

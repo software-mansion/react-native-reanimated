@@ -11,24 +11,24 @@
     "test": "jest"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "^1.24.0",
-    "@react-native-community/slider": "^4.5.5",
-    "@react-native-masked-view/masked-view": "^0.3.1",
+    "@react-native-async-storage/async-storage": "2.1.0",
+    "@react-native-community/slider": "4.5.5",
+    "@react-native-masked-view/masked-view": "0.3.2",
     "@react-native-picker/picker": "^2.9.0",
     "@react-navigation/native": "^7.0.0",
     "@react-navigation/native-stack": "^7.0.0",
     "@react-navigation/stack": "^7.0.0",
-    "@shopify/flash-list": "^1.7.1",
+    "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch",
     "common-app": "workspace:*",
     "react": "18.3.1",
     "react-native": "0.75.4",
-    "react-native-gesture-handler": "2.20.2",
+    "react-native-gesture-handler": "2.22.0",
     "react-native-macos": "^0.75.13",
-    "react-native-pager-view": "^6.4.1",
+    "react-native-pager-view": "6.6.1",
     "react-native-reanimated": "workspace:*",
-    "react-native-safe-area-context": "^4.13.1",
-    "react-native-screens": "^4.0.0",
-    "react-native-svg": "^15.8.0"
+    "react-native-safe-area-context": "5.1.0",
+    "react-native-screens": "4.5.0",
+    "react-native-svg": "15.11.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
