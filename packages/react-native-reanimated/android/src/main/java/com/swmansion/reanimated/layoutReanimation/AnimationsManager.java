@@ -102,9 +102,11 @@ public class AnimationsManager implements ViewHierarchyObserver {
       return;
     }
 
-    AndroidUIScheduler androidUIScheduler = mWeakAndroidUIScheduler.get();
-    if (androidUIScheduler != null) {
-      androidUIScheduler.triggerUI();
+    if (mWeakAndroidUIScheduler != null) {
+      AndroidUIScheduler androidUIScheduler = mWeakAndroidUIScheduler.get();
+      if (androidUIScheduler != null) {
+        androidUIScheduler.triggerUI();
+      }
     }
     int tag = view.getId();
     HashMap<String, Object> targetValues = after.toTargetMap();
