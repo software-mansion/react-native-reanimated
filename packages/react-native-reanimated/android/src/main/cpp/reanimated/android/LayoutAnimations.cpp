@@ -115,6 +115,10 @@ jni::local_ref<JArrayInt> LayoutAnimations::getSharedGroup(const int tag) {
   return jGroup;
 }
 
+void LayoutAnimations::invalidate() {
+  javaPart_ = nullptr;
+}
+
 void LayoutAnimations::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", LayoutAnimations::initHybrid),

@@ -279,6 +279,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
                       &fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
+
+  void invalidateCpp();
 };
 
 } // namespace reanimated
