@@ -9,8 +9,10 @@ import com.facebook.react.bridge.UIManager;
 import com.facebook.react.bridge.UIManagerListener;
 import com.facebook.react.fabric.FabricUIManager;
 import com.facebook.react.module.annotations.ReactModule;
+import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerModuleListener;
+import com.facebook.react.uimanager.common.UIManagerType;
 import com.swmansion.worklets.WorkletsModule;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -79,7 +81,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     ReactApplicationContext reactCtx = getReactApplicationContext();
 
     if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
-      UIManager uiManager = reactCtx.getFabricUIManager();
+      UIManager uiManager = UIManagerHelper.getUIManager(reactCtx, UIManagerType.FABRIC);
       if (uiManager instanceof FabricUIManager) {
         ((FabricUIManager) uiManager).addUIManagerEventListener(this);
         mUnsubscribe =
@@ -90,11 +92,10 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
         throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
       }
     } else {
-      UIManagerModule uiManager =
-          Objects.requireNonNull(reactCtx.getNativeModule(UIManagerModule.class));
-      uiManager.addUIManagerListener(this);
+      UIManager uiManager = Objects.requireNonNull(UIManagerHelper.getUIManager(reactCtx, UIManagerType.DEFAULT));
+      uiManager.addUIManagerEventListener(this);
       mUnsubscribe =
-          Utils.combineRunnables(mUnsubscribe, () -> uiManager.removeUIManagerListener(this));
+          Utils.combineRunnables(mUnsubscribe, () -> uiManager.removeUIManagerEventListener(this));
     }
     reactCtx.addLifecycleEventListener(this);
     mUnsubscribe =
