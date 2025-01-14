@@ -620,6 +620,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
 
   uiScheduler_->scheduleOnUI(
       [finalView, current, parent, mutation, opacity, this, tag]() {
+        // This could be unsafe.
         Rect window{};
         {
           auto lock = std::unique_lock<std::recursive_mutex>(mutex);
@@ -653,6 +654,7 @@ void LayoutAnimationsProxy::startExitingAnimation(
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
   uiScheduler_->scheduleOnUI([this, tag, mutation, surfaceId]() {
+    // This could be unsafe.
     auto oldView = mutation.oldChildShadowView;
     Rect window{};
     {
@@ -687,6 +689,7 @@ void LayoutAnimationsProxy::startLayoutAnimation(
   auto surfaceId = mutation.oldChildShadowView.surfaceId;
 
   uiScheduler_->scheduleOnUI([this, mutation, surfaceId, tag]() {
+    // This could be unsafe.
     auto oldView = mutation.oldChildShadowView;
     Rect window{};
     {
@@ -732,6 +735,7 @@ void LayoutAnimationsProxy::maybeCancelAnimation(const int tag) const {
   }
   layoutAnimations_.erase(tag);
   uiScheduler_->scheduleOnUI([this, tag]() {
+    // This could be unsafe.
     layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime_, tag);
   });
 }

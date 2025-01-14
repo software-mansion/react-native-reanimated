@@ -30,7 +30,7 @@
 
 namespace reanimated {
 
-class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
+class ReanimatedModuleProxy : public ReanimatedModuleProxySpec, public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
   ReanimatedModuleProxy(
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
@@ -41,8 +41,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
       const bool isReducedMotion);
 
   ~ReanimatedModuleProxy();
-
-  void invalidate();
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,

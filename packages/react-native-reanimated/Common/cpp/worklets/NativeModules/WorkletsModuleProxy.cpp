@@ -15,18 +15,6 @@
 
 #include <jsi/jsi.h>
 
-// Standard `__cplusplus` macro reference:
-// https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros
-#if REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 202002L
-// Implicit copy capture of `this` is deprecated in NDK27, which uses C++20.
-#define COPY_CAPTURE_WITH_THIS [ =, this ] // NOLINT (whitespace/braces)
-#else
-// React Native 0.75 is the last one which allows NDK23. NDK23 uses C++17 and
-// explicitly disallows C++20 features, including the syntax above. Therefore we
-// fallback to the deprecated syntax here.
-#define COPY_CAPTURE_WITH_THIS [=] // NOLINT (whitespace/braces)
-#endif // REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 202002L
-
 using namespace facebook;
 
 namespace worklets {
@@ -72,17 +60,31 @@ void WorkletsModuleProxy::scheduleOnUI(
     const jsi::Value &worklet) {
   auto shareableWorklet = extractShareableOrThrow<ShareableWorklet>(
       rt, worklet, "[Worklets] Only worklets can be scheduled to run on UI.");
-  uiScheduler_->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
+  uiScheduler_->scheduleOnUI(
+      [shareableWorklet, weakWorkletsModuleProxy = weak_from_this()] {
+        // This callback can outlive the WorkletsModuleProxy object during the
+        // invalidation of React Native. This happens when WorkletsModuleProxy
+        // destructor is called on the JS thread and the UI thread is executing
+        // callbacks from the `scheduleOnUI` queue. Therefore, we need to
+        // make sure it's still alive before we try to access it.
+        auto workletsModuleProxy = weakWorkletsModuleProxy.lock();
+        if (!workletsModuleProxy) {
+          return;
+        }
+
+        auto uiWorkletRuntime = workletsModuleProxy->getUIWorkletRuntime();
+
 #if JS_RUNTIME_HERMES
-    // JSI's scope defined here allows for JSI-objects to be cleared up
-    // after each runtime loop. Within these loops we typically create some
-    // temporary JSI objects and hence it allows for such objects to be
-    // garbage collected much sooner. Apparently the scope API is only
-    // supported on Hermes at the moment.
-    const auto scope = jsi::Scope(uiWorkletRuntime_->getJSIRuntime());
-#endif
-    uiWorkletRuntime_->runGuarded(shareableWorklet);
-  });
+        // JSI's scope defined here allows for JSI-objects to be cleared up
+        // after each runtime loop. Within these loops we typically create some
+        // temporary JSI objects and hence it allows for such objects to be
+        // garbage collected much sooner. Apparently the scope API is only
+        // supported on Hermes at the moment.
+        const auto scope = jsi::Scope(uiWorkletRuntime->getJSIRuntime());
+#endif // JS_RUNTIME_HERMES
+
+        uiWorkletRuntime->runGuarded(shareableWorklet);
+      });
 }
 
 jsi::Value WorkletsModuleProxy::executeOnUIRuntimeSync(
