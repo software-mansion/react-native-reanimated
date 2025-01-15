@@ -10,7 +10,6 @@ import type {
 } from '../commonTypes';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
-import type { WorkletRuntime } from '../runtimes';
 import { isFabric } from '../PlatformChecker';
 import type React from 'react';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
@@ -63,28 +62,6 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
-  }
-
-  scheduleOnUI<T>(shareable: ShareableRef<T>) {
-    return this.#reanimatedModuleProxy.scheduleOnUI(shareable);
-  }
-
-  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R {
-    return this.#reanimatedModuleProxy.executeOnUIRuntimeSync(shareable);
-  }
-
-  createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
-    return this.#reanimatedModuleProxy.createWorkletRuntime(name, initializer);
-  }
-
-  scheduleOnRuntime<T>(
-    workletRuntime: WorkletRuntime,
-    shareableWorklet: ShareableRef<T>
-  ) {
-    return this.#reanimatedModuleProxy.scheduleOnRuntime(
-      workletRuntime,
-      shareableWorklet
-    );
   }
 
   registerSensor(

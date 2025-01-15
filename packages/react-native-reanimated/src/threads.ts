@@ -7,7 +7,7 @@ import {
 } from './shareables';
 import { isWorkletFunction } from './commonTypes';
 import { ReanimatedError } from './errors';
-import { ReanimatedModule } from './ReanimatedModule';
+import { WorkletsModule } from './worklets';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -101,7 +101,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       // that's not possible, and hence in Jest environment instead of using scheduling
       // mechanism we just schedule the work ommiting the queue. This is ok for the
       // uses that we currently have but may not be ok for future tests that we write.
-      ReanimatedModule.scheduleOnUI(
+      WorkletsModule.scheduleOnUI(
         makeShareableCloneRecursive(() => {
           'worklet';
           worklet(...args);
@@ -123,7 +123,7 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
       queueMicrotask(() => {
         const queue = _runOnUIQueue;
         _runOnUIQueue = [];
-        ReanimatedModule.scheduleOnUI(
+        WorkletsModule.scheduleOnUI(
           makeShareableCloneRecursive(() => {
             'worklet';
             // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -147,7 +147,7 @@ export function executeOnUIRuntimeSync<Args extends unknown[], ReturnValue>(
   worklet: WorkletFunction<Args, ReturnValue>
 ): (...args: Args) => ReturnValue {
   return (...args) => {
-    return ReanimatedModule.executeOnUIRuntimeSync(
+    return WorkletsModule.executeOnUIRuntimeSync(
       makeShareableCloneRecursive(() => {
         'worklet';
         const result = worklet(...args);
@@ -177,7 +177,7 @@ export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
     );
   }
   return (...args) => {
-    ReanimatedModule.scheduleOnUI(
+    WorkletsModule.scheduleOnUI(
       makeShareableCloneRecursive(() => {
         'worklet';
         worklet(...args);

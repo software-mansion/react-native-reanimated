@@ -8,10 +8,14 @@ import type {
 import type { WorkletsModuleProxy } from './worklets';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
 
-export interface IWorkletsModule extends WorkletsModuleProxy {}
+type DisallowKeysOf<TInterface> = {
+  [TKey in keyof TInterface]?: never;
+};
 
+export interface IWorkletsModule extends WorkletsModuleProxy {}
 export interface IReanimatedModule
-  extends Omit<ReanimatedModuleProxy, 'getViewProp'> {
+  extends Omit<ReanimatedModuleProxy, 'getViewProp'>,
+    DisallowKeysOf<IWorkletsModule> {
   getViewProp<TValue>(
     viewTag: number,
     propName: string,
