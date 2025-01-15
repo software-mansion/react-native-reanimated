@@ -120,7 +120,8 @@ function runAnimations(
   timestamp: Timestamp,
   key: number | string,
   result: AnimatedStyle<any>,
-  animationsActive: SharedValue<boolean>
+  animationsActive: SharedValue<boolean>,
+  forceCopyAnimation?: boolean
 ): boolean {
   'worklet';
   if (!animationsActive.value) {
@@ -129,9 +130,17 @@ function runAnimations(
   if (Array.isArray(animation)) {
     result[key] = [];
     let allFinished = true;
+    forceCopyAnimation = key === 'boxShadow';
     animation.forEach((entry, index) => {
       if (
-        !runAnimations(entry, timestamp, index, result[key], animationsActive)
+        !runAnimations(
+          entry,
+          timestamp,
+          index,
+          result[key],
+          animationsActive,
+          forceCopyAnimation
+        )
       ) {
         allFinished = false;
       }
@@ -152,11 +161,11 @@ function runAnimations(
       }
     }
     /*
-     * If `animation.current` is an object, spread its properties into a new object
+     * If `animation.current` is a boxShadow object, spread its properties into a new object
      * to avoid modifying the original reference. This ensures when `newValues` has a nested color prop, it stays unparsed
      * in rgba format, allowing the animation to run correctly.
      */
-    if (typeof animation.current === 'object') {
+    if (forceCopyAnimation) {
       result[key] = { ...animation.current };
     } else {
       result[key] = animation.current;
@@ -172,7 +181,8 @@ function runAnimations(
           timestamp,
           k,
           result[key],
-          animationsActive
+          animationsActive,
+          forceCopyAnimation
         )
       ) {
         allFinished = false;
