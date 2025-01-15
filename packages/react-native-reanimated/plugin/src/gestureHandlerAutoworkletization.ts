@@ -24,7 +24,7 @@ const gestureHandlerGestureObjects = new Set([
   'Hover',
 ]);
 
-const gestureHandlerBuilderMethods = new Set([
+export const gestureHandlerBuilderMethods = new Set([
   'onBegin',
   'onStart',
   'onEnd',
@@ -94,7 +94,7 @@ export function isGestureHandlerEventCallback(
   );
 }
 
-function isGestureObjectEventCallbackMethod(exp: Expression): boolean {
+export function isGestureObjectEventCallbackMethod(exp: Expression): boolean {
   // Checks if node matches the pattern `Gesture.Foo()[*].onBar`
   // where `[*]` represents any number of method calls.
   return (
