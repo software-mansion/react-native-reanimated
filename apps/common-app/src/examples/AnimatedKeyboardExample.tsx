@@ -91,10 +91,12 @@ export default function AnimatedKeyboardExample() {
       <View style={styles.infoContainer}>
         <AnimatedTextInput
           style={styles.infoText}
+          editable={false}
           animatedProps={animatedHeightProps}
         />
         <AnimatedTextInput
           style={styles.infoText}
+          editable={false}
           animatedProps={animatedStateProps}
         />
       </View>
