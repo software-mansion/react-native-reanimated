@@ -60,7 +60,7 @@ export function valueSetter<Value>(
         return;
       }
       const finished = animation.onFrame(animation, timestamp);
-      animation.finished = finished;
+      animation.finished = true;
       animation.timestamp = timestamp;
       // TODO TYPESCRIPT
       // For now I'll assume that `animation.current` is always defined
