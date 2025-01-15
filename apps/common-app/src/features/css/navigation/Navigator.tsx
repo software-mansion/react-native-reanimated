@@ -138,7 +138,7 @@ function createStackScreens(
       if (isRouteWithRoutes(value)) {
         return createStackScreens(value.routes, newPath, value.name, {
           depth: depth + 1,
-          flatten,
+          flatten: !!value.flatten,
           parentFlattened: flatten,
         });
       }
@@ -161,7 +161,7 @@ export default function Navigator() {
   const routesArray = Object.values(tabRoutes);
 
   return (
-    <View style={flex.fill}>
+    <>
       <Stack.Navigator
         screenListeners={{
           focus: (e) => {
@@ -183,7 +183,7 @@ export default function Navigator() {
         )}
       </Stack.Navigator>
       <BottomTabBar currentRoute={currentRoute} routes={routesArray} />
-    </View>
+    </>
   );
 }
 

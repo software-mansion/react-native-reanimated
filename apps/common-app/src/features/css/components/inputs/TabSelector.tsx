@@ -4,8 +4,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useEffect, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   runOnUI,
   scrollTo,
