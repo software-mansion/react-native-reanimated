@@ -63,6 +63,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
   private ArrayList<UIThreadOperation> mOperations = new ArrayList<>();
   private @Nullable NodesManager mNodesManager;
   private final WorkletsModule mWorkletsModule;
+  private Runnable mUnsubscribe = () -> {};
 
   public ReanimatedModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -81,14 +82,22 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
       UIManager uiManager = reactCtx.getFabricUIManager();
       if (uiManager instanceof FabricUIManager) {
         ((FabricUIManager) uiManager).addUIManagerEventListener(this);
+        mUnsubscribe =
+            Utils.combineRunnables(
+                mUnsubscribe,
+                () -> ((FabricUIManager) uiManager).removeUIManagerEventListener(this));
       } else {
         throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
       }
     } else {
       UIManagerModule uiManager = reactCtx.getNativeModule(UIManagerModule.class);
       uiManager.addUIManagerListener(this);
+      mUnsubscribe =
+          Utils.combineRunnables(mUnsubscribe, () -> uiManager.removeUIManagerListener(this));
     }
     reactCtx.addLifecycleEventListener(this);
+    mUnsubscribe =
+        Utils.combineRunnables(mUnsubscribe, () -> reactCtx.removeLifecycleEventListener(this));
   }
 
   @Override
@@ -176,5 +185,7 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
     if (mNodesManager != null) {
       mNodesManager.invalidate();
     }
+
+    mUnsubscribe.run();
   }
 }

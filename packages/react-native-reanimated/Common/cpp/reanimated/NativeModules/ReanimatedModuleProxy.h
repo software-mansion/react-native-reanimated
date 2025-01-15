@@ -42,18 +42,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 
   ~ReanimatedModuleProxy();
 
-  void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
-  jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
-      override;
-
-  jsi::Value createWorkletRuntime(
-      jsi::Runtime &rt,
-      const jsi::Value &name,
-      const jsi::Value &initializer) override;
-  jsi::Value scheduleOnRuntime(
-      jsi::Runtime &rt,
-      const jsi::Value &workletRuntimeValue,
-      const jsi::Value &shareableWorkletValue) override;
+  void invalidate();
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
@@ -161,10 +150,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
     return *layoutAnimationsManager_;
   }
 
-  [[nodiscard]] inline jsi::Runtime &getUIRuntime() const {
-    return uiWorkletRuntime_->getJSIRuntime();
-  }
-
   [[nodiscard]] inline bool isBridgeless() const {
     return isBridgeless_;
   }
@@ -192,9 +177,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 
   const bool isBridgeless_;
   const bool isReducedMotion_;
-  const std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   const std::string valueUnpackerCode_;
-  std::shared_ptr<WorkletRuntime> uiWorkletRuntime_;
 
   std::unique_ptr<EventHandlerRegistry> eventHandlerRegistry_;
   const RequestRenderFunction requestRender_;

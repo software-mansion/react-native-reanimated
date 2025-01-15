@@ -14,18 +14,19 @@
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
     "@react-navigation/native": "^7.0.0",
-    "@shopify/flash-list": "^1.7.1",
+    "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch",
     "common-app": "workspace:*",
     "expo": "^52.0.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-native": "0.76.0",
+    "react-native": "0.76.5",
     "react-native-reanimated": "workspace:*",
-    "react-native-web": "0.19.11"
+    "react-native-web": "0.19.13"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "@expo/metro-runtime": "^3.2.1",
+    "@expo/metro-runtime": "~4.0.0",
+    "@stylexjs/babel-plugin": "^0.10.0",
     "@types/eslint": "^8",
     "eslint": "^8.57.0",
     "prettier": "^3.3.3",
