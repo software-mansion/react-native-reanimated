@@ -22,15 +22,20 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
-const modulesToBlock = ['@react-native'];
+const hasReactNative = require.resolve('react-native/package.json', {
+  paths: [projectRoot],
+});
+if (!hasReactNative) {
+  const modulesToBlock = ['@react-native'];
+  // @ts-expect-error
+  config.resolver.blacklistRE = exclusionList(
+    modulesToBlock.map(
+      (m) =>
+        new RegExp(
+          `^${escape(path.join(monorepoRoot, 'node_modules', m))}\\/.*$`
+        )
+    )
+  );
+}
 
-// @ts-expect-error
-config.resolver.blacklistRE = exclusionList(
-  modulesToBlock.map(
-    (m) =>
-      new RegExp(`^${escape(path.join(monorepoRoot, 'node_modules', m))}\\/.*$`)
-  )
-);
-
-// @ts-expect-error
 module.exports = wrapWithReanimatedMetroConfig(config);
