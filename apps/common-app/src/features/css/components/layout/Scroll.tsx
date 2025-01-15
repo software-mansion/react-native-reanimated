@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { ScrollViewProps } from 'react-native';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,7 +11,9 @@ export type ScrollProps = {
   fill?: boolean;
   withBottomBarSpacing?: boolean;
   noPadding?: boolean;
-} & ScrollViewProps;
+  gap?: number;
+  rowGap?: number;
+} & Omit<ScrollViewProps, 'gap' | 'rowGap'>;
 
 export default function Scroll({
   children,
@@ -29,6 +32,12 @@ export default function Scroll({
     web: spacing.md,
   });
 
+  const flattenedStyle = useMemo(
+    () => StyleSheet.flatten(contentContainerStyle),
+    [contentContainerStyle]
+  );
+  const gap = +(flattenedStyle?.gap ?? flattenedStyle?.rowGap ?? spacing.xxs);
+
   return (
     <ScrollView
       horizontal={horizontal}
@@ -36,7 +45,7 @@ export default function Scroll({
       style={[style, fill && flex.fill]}
       contentContainerStyle={[
         IS_WEB && !horizontal && styles.scrollViewContentWeb,
-        { gap: spacing.xxs },
+        { gap },
         noPadding
           ? {}
           : {
@@ -48,7 +57,7 @@ export default function Scroll({
       {...rest}>
       {children}
       {withBottomBarSpacing && (
-        <View style={{ height: BOTTOM_BAR_HEIGHT + inset }} />
+        <View style={{ height: BOTTOM_BAR_HEIGHT + inset - gap }} />
       )}
     </ScrollView>
   );

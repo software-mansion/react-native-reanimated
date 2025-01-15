@@ -27,6 +27,8 @@ class MainActivity : ReactActivity() {
     installSplashScreen()
     super.onCreate(savedInstanceState)
 
-    WindowCompat.setDecorFitsSystemWindows(window, false)
+    // Comment out this for now, as react-native-screens goes crazy with
+    // screen height measurements when the nav bar is transparent
+    // WindowCompat.setDecorFitsSystemWindows(window, false)
   }
 }
