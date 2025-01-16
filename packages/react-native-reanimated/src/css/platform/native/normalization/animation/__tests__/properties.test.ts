@@ -1,3 +1,4 @@
+'use strict';
 import { cubicBezier } from '../../../../../easings';
 import type { ExistingCSSAnimationProperties } from '../../../../../types';
 import { createSingleCSSAnimationProperties } from '../properties';

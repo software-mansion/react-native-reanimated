@@ -1,3 +1,4 @@
+'use strict';
 import CSSTransitionManager from '../CSSTransitionManager';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import {

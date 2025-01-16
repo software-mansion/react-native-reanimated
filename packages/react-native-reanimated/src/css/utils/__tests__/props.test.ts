@@ -1,3 +1,4 @@
+'use strict';
 import { css } from '../../stylesheet';
 import type { CSSStyleProperties, CSSTransitionProperty } from '../../types';
 import { filterCSSAndStyleProperties } from '../props';

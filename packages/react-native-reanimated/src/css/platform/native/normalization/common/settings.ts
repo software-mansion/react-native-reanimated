@@ -1,3 +1,4 @@
+'use strict';
 import type {
   CSSTimingFunction,
   NormalizedCSSTimingFunction,

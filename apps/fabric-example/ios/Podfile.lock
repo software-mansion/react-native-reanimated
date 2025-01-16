@@ -1650,7 +1650,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNCClipboard (1.16.0):
+  - RNCClipboard (1.16.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1734,7 +1734,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (4.0.0-beta.3):
+  - RNReanimated (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1754,10 +1754,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 4.0.0-beta.3)
-    - RNReanimated/worklets (= 4.0.0-beta.3)
+    - RNReanimated/reanimated (= 4.0.0-beta.1)
+    - RNReanimated/worklets (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/reanimated (4.0.0-beta.3):
+  - RNReanimated/reanimated (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1777,9 +1777,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 4.0.0-beta.3)
+    - RNReanimated/reanimated/apple (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/reanimated/apple (4.0.0-beta.3):
+  - RNReanimated/reanimated/apple (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1800,7 +1800,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated/worklets (4.0.0-beta.3):
+  - RNReanimated/worklets (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1820,9 +1820,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/apple (= 4.0.0-beta.3)
+    - RNReanimated/worklets/apple (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/worklets/apple (4.0.0-beta.3):
+  - RNReanimated/worklets/apple (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2246,11 +2246,11 @@ SPEC CHECKSUMS:
   ReactCodegen: ef05d5dd3c7327234365df4c9c18a99a73496a87
   ReactCommon: f579a0130fb73a351de4723fb33d277c5bf3283d
   RNCAsyncStorage: 309dabeb856c37a9167db791615cf7738d201103
-  RNCClipboard: 2893494a6edb8f12ce47eeaba64edbb9c7ac8543
+  RNCClipboard: 5917a290577018d3396eb64e332aff17495a0025
   RNCMaskedView: 18c76ebdf9752bb75652829f99f6c3d1318cc864
   RNFlashList: ee2388e0d3ffde77431ba5d09b8f59a0c65a8e05
   RNGestureHandler: 4e7defe5095e936424173fc75f0bf2af5bba8e23
-  RNReanimated: ec8469babf9e6e069ee93c785c8fe761993ebc86
+  RNReanimated: 4ed0a35da49cbc246b2b7b6b739ae71a12e6200e
   RNScreens: d0854539b51a53e38b61bcc9fb402439a9c73b26
   RNSVG: 7e38044415125a1d108294377de261d2fe2c54c9
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748

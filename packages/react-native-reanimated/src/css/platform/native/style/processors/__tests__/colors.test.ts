@@ -1,3 +1,4 @@
+'use strict';
 import { ERROR_MESSAGES, processColor } from '../colors';
 import { ReanimatedError } from '../../../../../errors';
 

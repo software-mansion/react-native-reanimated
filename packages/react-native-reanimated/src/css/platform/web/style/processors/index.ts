@@ -1,3 +1,4 @@
+'use strict';
 export * from './colors';
 export * from './filter';
 export * from './font';

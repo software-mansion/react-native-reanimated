@@ -1,3 +1,4 @@
+'use strict';
 import type { AnyRecord, ConvertValuesToArrays } from '../types';
 
 export function convertConfigPropertiesToArrays<T extends AnyRecord>(

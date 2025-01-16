@@ -1,3 +1,4 @@
+'use strict';
 import { ReanimatedError } from '../../../../errors';
 import type { NormalizedTransformOrigin, TransformOrigin } from '../../types';
 import type { ValueProcessor } from '../types';

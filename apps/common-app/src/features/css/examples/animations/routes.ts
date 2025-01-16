@@ -434,6 +434,7 @@ const othersRoutes = {
   },
   Filter: {
     name: 'Filter',
+    labelTypes: ['web'],
     Component: animatedProperties.others.Filter,
   },
 } satisfies Routes;

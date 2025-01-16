@@ -505,6 +505,12 @@ TransformMatrix MatrixOperation::toMatrix() const {
   return std::get<TransformMatrix>(value);
 }
 
+template struct TransformOperationBase<CSSDouble>;
+template struct TransformOperationBase<CSSAngle>;
+template struct TransformOperationBase<CSSDimension>;
+template struct TransformOperationBase<
+    std::variant<TransformMatrix, TransformOperations>>;
+
 } // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED

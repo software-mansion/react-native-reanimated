@@ -1,3 +1,4 @@
+'use strict';
 import type { BoxShadowValue } from 'react-native';
 import { isLength } from './guards';
 

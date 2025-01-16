@@ -1,3 +1,4 @@
+'use strict';
 import { CubicBezierEasing, ERROR_MESSAGES } from '../cubicBezier';
 
 describe(CubicBezierEasing, () => {

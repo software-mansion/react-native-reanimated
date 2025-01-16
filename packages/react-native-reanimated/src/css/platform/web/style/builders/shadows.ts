@@ -1,3 +1,4 @@
+'use strict';
 import type { TextStyle, ViewStyle } from 'react-native';
 import { createRuleBuilder } from '../builderFactories';
 import { processColor, processShadowOffset } from '../processors';

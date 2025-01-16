@@ -1,3 +1,4 @@
+'use strict';
 import createStyleBuilder from '../builderFactory';
 import type { PlainStyle } from '../../../../types';
 

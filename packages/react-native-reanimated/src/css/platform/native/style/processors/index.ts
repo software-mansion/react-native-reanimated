@@ -1,3 +1,4 @@
+'use strict';
 export { processInset, processInsetBlock, processInsetInline } from './insets';
 export { processTransformOrigin } from './transformOrigin';
 export { processTransform } from './transform';

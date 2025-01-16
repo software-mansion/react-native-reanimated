@@ -1,3 +1,4 @@
+'use strict';
 import { ReanimatedError } from '../../../../errors';
 import type { ValueProcessor } from '../types';
 

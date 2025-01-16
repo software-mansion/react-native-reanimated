@@ -1,3 +1,4 @@
+'use strict';
 import { convertConfigPropertiesToArrays } from '../../../../utils';
 import type {
   ExistingCSSAnimationProperties,

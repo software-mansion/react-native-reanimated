@@ -1,3 +1,4 @@
+'use strict';
 import type { ColorValue, DimensionValue } from 'react-native';
 import type { CSSTimingFunction } from '../../easings';
 import { CubicBezierEasing, LinearEasing, StepsEasing } from '../../easings';

@@ -1,3 +1,4 @@
+'use strict';
 import type { StyleProp } from 'react-native';
 import type { CSSAnimationProperties } from './animation';
 import type { PlainStyle } from './common';

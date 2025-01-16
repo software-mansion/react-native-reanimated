@@ -1,3 +1,4 @@
+'use strict';
 import { ReanimatedError } from '../../../../errors';
 import type { BoxShadowValue } from 'react-native';
 import type { ValueProcessor } from '../types';

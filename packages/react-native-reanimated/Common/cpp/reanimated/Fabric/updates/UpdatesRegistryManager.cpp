@@ -4,7 +4,7 @@
 
 namespace reanimated {
 
-UpdatesRegistryManager::UpdatesRegistryManager() {}
+UpdatesRegistryManager::UpdatesRegistryManager() = default;
 
 std::lock_guard<std::mutex> UpdatesRegistryManager::createLock() const {
   return std::lock_guard<std::mutex>{mutex_};
@@ -70,20 +70,20 @@ void UpdatesRegistryManager::addToPropsMap(
 
   if (it == propsMap.cend()) {
     auto propsVector = std::vector<RawProps>{};
-    propsVector.emplace_back(RawProps(props));
+    propsVector.emplace_back(props);
     propsMap.emplace(&family, propsVector);
   } else {
-    it->second.push_back(RawProps(props));
+    it->second.emplace_back(props);
   }
 }
 
 void UpdatesRegistryManager::collectPropsToRevertBySurface(
     std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface) {
-  for (auto &registry : registries_) {
+  for (const auto &registry : registries_) {
     registry->collectPropsToRevert(propsToRevertMap_);
   }
 
-  for (auto &[tag, pair] : propsToRevertMap_) {
+  for (const auto &[tag, pair] : propsToRevertMap_) {
     const auto &[shadowNode, props] = pair;
     const auto &staticStyle = staticPropsRegistry_->get(tag);
     folly::dynamic filteredStyle = folly::dynamic::object;

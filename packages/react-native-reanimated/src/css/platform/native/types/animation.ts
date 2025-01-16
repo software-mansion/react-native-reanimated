@@ -1,3 +1,4 @@
+'use strict';
 import type { NormalizedCSSTimingFunction } from '../../../easings';
 import type {
   CSSAnimationDirection,

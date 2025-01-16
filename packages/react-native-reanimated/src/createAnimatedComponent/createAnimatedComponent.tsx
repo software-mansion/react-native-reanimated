@@ -1,4 +1,5 @@
-import { forwardRef } from 'react';
+'use strict';
+import React from 'react';
 import type {
   ComponentType,
   ComponentClass,
@@ -73,7 +74,7 @@ export function createAnimatedComponent(
     }
   }
 
-  return forwardRef<Component>((props, ref) => {
+  return React.forwardRef<Component>((props, ref) => {
     return (
       <AnimatedComponent
         {...props}
