@@ -187,18 +187,20 @@ public class NodesManager implements EventDispatcherListener {
           }
         };
 
-    // We register as event listener at the end, because we pass `this` and we haven't finished
-    // constructing an object yet.
-    // This lead to a crash described in
-    // https://github.com/software-mansion/react-native-reanimated/issues/604 which was caused by
-    // Nodes Manager being constructed on UI thread and registering for events.
-    // Events are handled in the native modules thread in the `onEventDispatch()` method.
-    // This method indirectly uses `mChoreographerCallback` which was created after event
-    // registration, creating race condition
-    EventDispatcher eventDispatcher =
-        Objects.requireNonNull(UIManagerHelper.getEventDispatcher(context, uiManagerType));
-    eventDispatcher.addListener(this);
-    mUnsubscribe = () -> eventDispatcher.removeListener(this);
+    if(!BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
+      // We register as event listener at the end, because we pass `this` and we haven't finished
+      // constructing an object yet.
+      // This lead to a crash described in
+      // https://github.com/software-mansion/react-native-reanimated/issues/604 which was caused by
+      // Nodes Manager being constructed on UI thread and registering for events.
+      // Events are handled in the native modules thread in the `onEventDispatch()` method.
+      // This method indirectly uses `mChoreographerCallback` which was created after event
+      // registration, creating race condition
+      EventDispatcher eventDispatcher =
+              Objects.requireNonNull(UIManagerHelper.getEventDispatcher(context, uiManagerType));
+      eventDispatcher.addListener(this);
+      mUnsubscribe = () -> eventDispatcher.removeListener(this);
+    }
 
     mAnimationManager = new AnimationsManager(mContext, mUIManager);
   }
