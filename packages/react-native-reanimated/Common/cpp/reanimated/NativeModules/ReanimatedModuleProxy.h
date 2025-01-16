@@ -30,7 +30,9 @@
 
 namespace reanimated {
 
-class ReanimatedModuleProxy : public ReanimatedModuleProxySpec, public std::enable_shared_from_this<ReanimatedModuleProxy> {
+class ReanimatedModuleProxy
+    : public ReanimatedModuleProxySpec,
+      public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
   ReanimatedModuleProxy(
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
