@@ -42,6 +42,11 @@ class ReanimatedModuleProxy
       const bool isBridgeless,
       const bool isReducedMotion);
 
+  // We need this init method to initialize callbacks with
+  // weak_from_this() which is available only after the object
+  // is fully constructed.
+  void init(const PlatformDepMethodsHolder &platformDepMethodsHolder);
+
   ~ReanimatedModuleProxy();
 
   jsi::Value registerEventHandler(
@@ -164,8 +169,6 @@ class ReanimatedModuleProxy
   }
 
  private:
-  void commonInit(const PlatformDepMethodsHolder &platformDepMethodsHolder);
-
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -184,7 +187,7 @@ class ReanimatedModuleProxy
   const RequestRenderFunction requestRender_;
   std::vector<std::shared_ptr<jsi::Value>> frameCallbacks_;
   volatile bool renderRequested_{false};
-  const std::function<void(const double)> onRenderCallback_;
+  std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   const std::shared_ptr<JSLogger> jsLogger_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;

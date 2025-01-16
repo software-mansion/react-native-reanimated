@@ -53,16 +53,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       valueUnpackerCode_(workletsModuleProxy->getValueUnpackerCode()),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
-      onRenderCallback_([weakReanimatedModuleProxy =
-                             weak_from_this()](const double timestampMs) {
-        auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-        if (!reanimatedModuleProxy) {
-          return;
-        }
-
-        reanimatedModuleProxy->renderRequested_ = false;
-        reanimatedModuleProxy->onRender(timestampMs);
-      }),
       animatedSensorModule_(platformDepMethodsHolder),
       jsLogger_(
           std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
@@ -82,11 +72,22 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
-  commonInit(platformDepMethodsHolder);
 }
 
-void ReanimatedModuleProxy::commonInit(
+void ReanimatedModuleProxy::init(
     const PlatformDepMethodsHolder &platformDepMethodsHolder) {
+  auto onRenderCallback = [weakReanimatedModuleProxy =
+                               weak_from_this()](const double timestampMs) {
+    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+    if (!reanimatedModuleProxy) {
+      return;
+    }
+
+    reanimatedModuleProxy->renderRequested_ = false;
+    reanimatedModuleProxy->onRender(timestampMs);
+  };
+  onRenderCallback_ = std::move(onRenderCallback);
+
   auto requestAnimationFrame = [weakReanimatedModuleProxy = weak_from_this()](
                                    jsi::Runtime &rt,
                                    const jsi::Value &callback) {
