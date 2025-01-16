@@ -523,7 +523,7 @@ void ReanimatedModuleProxy::registerCSSAnimations(
 
   std::vector<std::shared_ptr<CSSAnimation>> animations;
   animations.reserve(animationsCount);
-  const auto timestamp = getAnimationTimestamp_();
+  const auto timestamp = getCssTimestamp();
 
   for (size_t i = 0; i < animationsCount; ++i) {
     auto animationConfig = animationConfigsArray.getValueAtIndex(rt, i);
@@ -561,7 +561,7 @@ void ReanimatedModuleProxy::updateCSSAnimations(
   }
 
   cssAnimationsRegistry_->updateSettings(
-      rt, viewTag.asNumber(), updates, getAnimationTimestamp_());
+      rt, viewTag.asNumber(), updates, getCssTimestamp());
   maybeRunCSSLoop();
 }
 
@@ -725,6 +725,14 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
   });
 }
 
+double ReanimatedModuleProxy::getCssTimestamp() {
+  if (cssLoopRunning_) {
+    return currentCssTimestamp_;
+  }
+  currentCssTimestamp_ = getAnimationTimestamp_();
+  return currentCssTimestamp_;
+}
+
 void ReanimatedModuleProxy::performOperations() {
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
@@ -733,11 +741,12 @@ void ReanimatedModuleProxy::performOperations() {
 
   {
     auto lock = updatesRegistryManager_->createLock();
-    const auto timestamp = getAnimationTimestamp_();
 
     if (shouldUpdateCssAnimations_) {
+      currentCssTimestamp_ = getAnimationTimestamp_();
+
       // Update CSS transitions and flush updates
-      cssTransitionsRegistry_->update(rt, timestamp);
+      cssTransitionsRegistry_->update(rt, currentCssTimestamp_);
       cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, false);
     }
 
@@ -746,7 +755,7 @@ void ReanimatedModuleProxy::performOperations() {
 
     if (shouldUpdateCssAnimations_) {
       // Update CSS animations and flush updates
-      cssAnimationsRegistry_->update(rt, timestamp);
+      cssAnimationsRegistry_->update(rt, currentCssTimestamp_);
       cssAnimationsRegistry_->flushUpdates(rt, updatesBatch, true);
     }
 

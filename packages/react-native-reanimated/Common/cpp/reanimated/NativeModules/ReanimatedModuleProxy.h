@@ -115,9 +115,10 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 #ifdef RCT_NEW_ARCH_ENABLED
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
-  void performOperations();
-
   void maybeRunCSSLoop();
+  double getCssTimestamp();
+
+  void performOperations();
 
   void setViewStyle(
       jsi::Runtime &rt,
@@ -236,6 +237,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 #ifdef RCT_NEW_ARCH_ENABLED
   bool cssLoopRunning_{false};
   bool shouldUpdateCssAnimations_{true};
+  double currentCssTimestamp_{0};
 
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
