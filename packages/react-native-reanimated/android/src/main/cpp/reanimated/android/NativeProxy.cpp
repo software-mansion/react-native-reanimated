@@ -477,8 +477,14 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto progressLayoutAnimation =
       bindThis(&NativeProxy::progressLayoutAnimation);
 
-  auto endLayoutAnimation = [this](int tag, bool removeView) {
-    this->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
+  auto endLayoutAnimation = [weakNativeProxy = weak_from_this()](
+                                int tag, bool removeView) {
+    auto nativeProxy = weakNativeProxy.lock();
+    if (!nativeProxy) {
+      return;
+    }
+    nativeProxy->layoutAnimations_->cthis()->endLayoutAnimation(
+        tag, removeView);
   };
 
   auto maybeFlushUiUpdatesQueueFunction =

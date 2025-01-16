@@ -1,3 +1,4 @@
+#include <jsi/jsi.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/CollectionUtils.h>
@@ -52,9 +53,15 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       valueUnpackerCode_(workletsModuleProxy->getValueUnpackerCode()),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
-      onRenderCallback_([this](const double timestampMs) {
-        renderRequested_ = false;
-        onRender(timestampMs);
+      onRenderCallback_([weakReanimatedModuleProxy =
+                             weak_from_this()](const double timestampMs) {
+        auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+        if (!reanimatedModuleProxy) {
+          return;
+        }
+
+        reanimatedModuleProxy->renderRequested_ = false;
+        reanimatedModuleProxy->onRender(timestampMs);
       }),
       animatedSensorModule_(platformDepMethodsHolder),
       jsLogger_(
@@ -80,64 +87,112 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 
 void ReanimatedModuleProxy::commonInit(
     const PlatformDepMethodsHolder &platformDepMethodsHolder) {
-  auto requestAnimationFrame =
-      [this](jsi::Runtime &rt, const jsi::Value &callback) {
-        this->requestAnimationFrame(rt, callback);
-      };
+  auto requestAnimationFrame = [weakReanimatedModuleProxy = weak_from_this()](
+                                   jsi::Runtime &rt,
+                                   const jsi::Value &callback) {
+    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+    if (!reanimatedModuleProxy) {
+      return;
+    }
+
+    reanimatedModuleProxy->requestAnimationFrame(rt, callback);
+  };
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  auto updateProps = [this](jsi::Runtime &rt, const jsi::Value &operations) {
-    this->updateProps(rt, operations);
+  auto updateProps = [weakReanimatedModuleProxy = weak_from_this()](
+                         jsi::Runtime &rt, const jsi::Value &operations) {
+    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+    if (!reanimatedModuleProxy) {
+      return;
+    }
+
+    reanimatedModuleProxy->updateProps(rt, operations);
   };
 
-  auto removeFromPropsRegistry =
-      [this](jsi::Runtime &rt, const jsi::Value &viewTags) {
-        this->removeFromPropsRegistry(rt, viewTags);
-      };
+  auto removeFromPropsRegistry = [weakReanimatedModuleProxy = weak_from_this()](
+                                     jsi::Runtime &rt,
+                                     const jsi::Value &viewTags) {
+    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+    if (!reanimatedModuleProxy) {
+      return;
+    }
 
-  auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
-    return this->measure(rt, shadowNodeValue);
+    reanimatedModuleProxy->removeFromPropsRegistry(rt, viewTags);
   };
 
-  auto dispatchCommand = [this](
+  auto measure = [weakReanimatedModuleProxy = weak_from_this()](
+                     jsi::Runtime &rt,
+                     const jsi::Value &shadowNodeValue) -> jsi::Value {
+    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+    if (!reanimatedModuleProxy) {
+      return jsi::Value::undefined();
+    }
+    return reanimatedModuleProxy->measure(rt, shadowNodeValue);
+  };
+
+  auto dispatchCommand = [weakReanimatedModuleProxy = weak_from_this()](
                              jsi::Runtime &rt,
                              const jsi::Value &shadowNodeValue,
                              const jsi::Value &commandNameValue,
                              const jsi::Value &argsValue) {
-    this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
+    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+    if (!reanimatedModuleProxy) {
+      return;
+    }
+
+    reanimatedModuleProxy->dispatchCommand(
+        rt, shadowNodeValue, commandNameValue, argsValue);
   };
   ProgressLayoutAnimationFunction progressLayoutAnimation =
-      [this](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool) {
-        auto surfaceId =
-            layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
+      [weakReanimatedModuleProxy = weak_from_this()](
+          jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool) {
+        auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+        if (!reanimatedModuleProxy) {
+          return;
+        }
+
+        auto surfaceId = reanimatedModuleProxy->layoutAnimationsProxy_
+                             ->progressLayoutAnimation(tag, newStyle);
         if (!surfaceId) {
           return;
         }
-        uiManager_->getShadowTreeRegistry().visit(
+        reanimatedModuleProxy->uiManager_->getShadowTreeRegistry().visit(
             *surfaceId, [](const ShadowTree &shadowTree) {
               shadowTree.notifyDelegatesOfUpdates();
             });
       };
 
   EndLayoutAnimationFunction endLayoutAnimation =
-      [this](int tag, bool shouldRemove) {
+      [weakReanimatedModuleProxy = weak_from_this()](
+          int tag, bool shouldRemove) {
+        auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+        if (!reanimatedModuleProxy) {
+          return;
+        }
+
         auto surfaceId =
-            layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
+            reanimatedModuleProxy->layoutAnimationsProxy_->endLayoutAnimation(
+                tag, shouldRemove);
         if (!surfaceId) {
           return;
         }
 
-        uiManager_->getShadowTreeRegistry().visit(
+        reanimatedModuleProxy->uiManager_->getShadowTreeRegistry().visit(
             *surfaceId, [](const ShadowTree &shadowTree) {
               shadowTree.notifyDelegatesOfUpdates();
             });
       };
 
-  auto obtainProp = [this](
+  auto obtainProp = [weakReanimatedModuleProxy = weak_from_this()](
                         jsi::Runtime &rt,
                         const jsi::Value &shadowNodeWrapper,
                         const jsi::Value &propName) {
-    return this->obtainProp(rt, shadowNodeWrapper, propName);
+    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+    if (!reanimatedModuleProxy) {
+      return jsi::String::createFromUtf8(rt, "");
+    }
+
+    return reanimatedModuleProxy->obtainProp(rt, shadowNodeWrapper, propName);
   };
 #endif
 

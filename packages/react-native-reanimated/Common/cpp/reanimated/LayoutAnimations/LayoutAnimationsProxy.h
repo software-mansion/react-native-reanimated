@@ -30,7 +30,7 @@ struct LayoutAnimation {
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
 
-struct LayoutAnimationsProxy : public MountingOverrideDelegate {
+struct LayoutAnimationsProxy : public MountingOverrideDelegate, public std::enable_shared_from_this<LayoutAnimationsProxy> {
   mutable std::unordered_map<Tag, std::shared_ptr<Node>> nodeForTag_;
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
   mutable std::recursive_mutex mutex;

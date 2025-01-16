@@ -109,9 +109,15 @@ jsi::Value WorkletRuntime::get(
         rt,
         propName,
         0,
-        [this](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *, size_t)
+        [weakWorkletRuntime = weak_from_this()](
+            jsi::Runtime &rt, const jsi::Value &, const jsi::Value *, size_t)
             -> jsi::Value {
-          return jsi::String::createFromUtf8(rt, toString());
+          auto workletRuntime = weakWorkletRuntime.lock();
+          if (!workletRuntime) {
+            return jsi::String::createFromUtf8(rt, "");
+          }
+
+          return jsi::String::createFromUtf8(rt, workletRuntime->toString());
         });
   }
   if (name == "name") {
