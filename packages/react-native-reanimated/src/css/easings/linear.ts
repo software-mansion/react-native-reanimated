@@ -1,3 +1,4 @@
+'use strict';
 import { logger } from '../../logger';
 import { PERCENTAGE_REGEX } from '../constants';
 import { ReanimatedError } from '../errors';

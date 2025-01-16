@@ -23,8 +23,8 @@ const BackButton = memo(function BackButton({ tabRoutes }: BackButtonProps) {
   useFocusEffect(
     useCallback(() => {
       return navigation.addListener('state', (e) => {
-        const { index, routes } = e.data.state;
-        setPrevRoute(routes[index - 1]?.key?.split('-')[0]);
+        const { index, routes } = e.data.state ?? {};
+        setPrevRoute(routes?.[index - 1]?.key?.split('-')[0]);
       });
     }, [navigation])
   );

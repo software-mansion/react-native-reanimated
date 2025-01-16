@@ -1,3 +1,4 @@
+'use strict';
 import type { BoxShadowValue, ViewStyle } from 'react-native';
 import type { ValueProcessor } from '../types';
 import { maybeAddSuffix } from '../../utils';

@@ -1,3 +1,4 @@
+'use strict';
 import { ReanimatedError } from '../../../../../errors';
 import type { TransformsArray } from '../../../../../types';
 import { ERROR_MESSAGES, processTransform } from '../transform';

@@ -1,3 +1,4 @@
+'use strict';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import type { CSSTransitionProperties } from '../types';
 import { convertConfigPropertiesToArrays } from '../utils';

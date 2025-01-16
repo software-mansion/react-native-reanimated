@@ -7,6 +7,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <memory>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -37,7 +38,8 @@ class UpdatesRegistryManager {
 
 #ifdef ANDROID
   bool hasPropsToRevert();
-  void collectPropsToRevertBySurface(std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
+  void collectPropsToRevertBySurface(
+      std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
   void clearPropsToRevert(SurfaceId surfaceId);
 #endif
 
@@ -51,7 +53,7 @@ class UpdatesRegistryManager {
   PropsToRevertMap propsToRevertMap_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
-  void addToPropsMap(
+  static void addToPropsMap(
       PropsMap &propsMap,
       const ShadowNode::Shared &shadowNode,
       const folly::dynamic &props);

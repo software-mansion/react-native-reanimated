@@ -1,7 +1,6 @@
 #pragma once
 
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
-#include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxySpec.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
@@ -18,6 +17,7 @@
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
+#include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #endif // RCT_NEW_ARCH_ENABLED
@@ -32,6 +32,8 @@
 #include <react/renderer/uimanager/UIManager.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
+#include <react/renderer/core/ShadowNode.h>
+
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -41,6 +43,9 @@
 namespace reanimated {
 
 using namespace facebook;
+
+using UpdatesBatch =
+    std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>;
 
 class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
  public:

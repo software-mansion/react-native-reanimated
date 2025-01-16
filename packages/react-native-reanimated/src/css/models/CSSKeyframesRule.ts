@@ -1,3 +1,4 @@
+'use strict';
 import type { NormalizedCSSAnimationKeyframes } from '../platform/native';
 import { normalizeAnimationKeyframes } from '../platform/native';
 import type { CSSAnimationKeyframes, PlainStyle } from '../types';

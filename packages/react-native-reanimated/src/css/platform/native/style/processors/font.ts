@@ -1,3 +1,4 @@
+'use strict';
 import { ReanimatedError } from '../../../../errors';
 import { FONT_WEIGHT_MAPPINGS } from '../../../../constants';
 import type { ValueProcessor } from '../types';

@@ -1,3 +1,4 @@
+'use strict';
 import { hasSuffix, kebabize } from '../utils';
 import type {
   AnyBuilderConfig,
@@ -115,7 +116,6 @@ class StyleBuilderImpl<P extends AnyRecord>
   override build(): string | null {
     this.buildRuleBuilders();
     const result = this.buildHandler(this.processedProps, this.nameAliases);
-    console.log(this.processedProps, this.nameAliases, result);
     this.cleanup();
     return result;
   }

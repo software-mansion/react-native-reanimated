@@ -1,3 +1,4 @@
+'use strict';
 import type { Percentage } from '../../types';
 import { ERROR_MESSAGES, LinearEasing, WARN_MESSAGES } from '../linear';
 import type { ControlPoint } from '../types';

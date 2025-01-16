@@ -1,3 +1,4 @@
+'use strict';
 type ReanimatedError = Error & 'ReanimatedError'; // signed type
 
 interface ReanimatedErrorConstructor extends Error {

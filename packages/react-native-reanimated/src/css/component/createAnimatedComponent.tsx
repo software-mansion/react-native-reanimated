@@ -1,3 +1,4 @@
+'use strict';
 import { forwardRef } from 'react';
 import type {
   FunctionComponent,

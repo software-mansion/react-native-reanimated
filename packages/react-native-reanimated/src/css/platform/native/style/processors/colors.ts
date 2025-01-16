@@ -1,3 +1,4 @@
+'use strict';
 import type { ColorValue } from 'react-native';
 import type { Maybe } from '../../../../types';
 import { ReanimatedError } from '../../../../errors';

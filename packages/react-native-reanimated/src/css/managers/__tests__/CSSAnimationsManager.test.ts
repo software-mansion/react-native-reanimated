@@ -1,3 +1,4 @@
+'use strict';
 import CSSAnimationsManager from '../CSSAnimationsManager';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
 import {

@@ -3,7 +3,6 @@
 #include <reanimated/Tools/CollectionUtils.h>
 #include <reanimated/Tools/FeaturesConfig.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#include <unordered_map>
 
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/SharedItems/Shareables.h>
@@ -21,6 +20,7 @@
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <functional>
+#include <unordered_map>
 #include <utility>
 
 #ifdef RCT_NEW_ARCH_ENABLED

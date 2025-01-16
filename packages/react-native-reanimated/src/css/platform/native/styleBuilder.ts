@@ -1,3 +1,4 @@
+'use strict';
 import { PROPERTIES_CONFIG } from './config';
 import { createStyleBuilder } from './style';
 

@@ -1,3 +1,4 @@
+'use strict';
 import { normalizeTransitionBehavior, ERROR_MESSAGES } from '../settings';
 import { ReanimatedError } from '../../../../../errors';
 import type { CSSTransitionBehavior } from '../../../../../types';

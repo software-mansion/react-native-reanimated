@@ -265,6 +265,7 @@ function OtherColors() {
     <Scroll withBottomBarSpacing>
       <Section title="Other Colors">
         <ViewExample
+          labelTypes={['iOS', 'web']}
           title="shadowColor"
           animation={{
             animationName: Platform.select({

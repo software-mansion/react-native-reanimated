@@ -1,3 +1,4 @@
+'use strict';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import type {
   ConvertValuesToArrays,
@@ -126,10 +127,8 @@ export default class CSSAnimationsManager {
 
     processedAnimations.forEach((processedAnimation) => {
       const rule = processedAnimation.keyframesRule;
-      if (
-        rule.processedKeyframes &&
-        !this.attachedAnimations[rule.processedKeyframes]
-      ) {
+      if (rule.processedKeyframes) {
+        // We always call insert as it will insert animation only if it doesn't exist
         insertCSSAnimation(rule.name, rule.processedKeyframes);
       }
       newAttachedAnimations[rule.processedKeyframes] = processedAnimation;

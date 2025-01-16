@@ -1,3 +1,4 @@
+'use strict';
 import { isWindowAvailable } from '../../../PlatformChecker';
 import { logger } from '../../../logger';
 import { ReanimatedError } from '../../errors';

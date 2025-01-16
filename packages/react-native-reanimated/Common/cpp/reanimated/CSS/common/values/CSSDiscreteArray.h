@@ -5,6 +5,9 @@
 
 #include <worklets/Tools/JSISerializer.h>
 
+#include <string>
+#include <vector>
+
 namespace reanimated {
 
 using namespace worklets;

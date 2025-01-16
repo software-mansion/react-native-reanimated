@@ -1,3 +1,4 @@
+'use strict';
 import type { ValueProcessor } from '../types';
 import { FONT_WEIGHT_MAPPINGS } from '../../../../constants';
 import type { FontVariant } from 'react-native';

@@ -1,3 +1,4 @@
+'use strict';
 export * from './native';
 export * from './normalization';
 export * from './types';

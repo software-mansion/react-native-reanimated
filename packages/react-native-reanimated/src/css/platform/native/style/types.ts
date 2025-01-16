@@ -1,3 +1,4 @@
+'use strict';
 import type { AnyRecord, Maybe, ConfigPropertyAlias } from '../../../types';
 
 export type ValueProcessor<V, R = V> = (

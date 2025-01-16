@@ -1,3 +1,4 @@
+'use strict';
 import { ERROR_MESSAGES, processAspectRatio } from '../others';
 import { ReanimatedError } from '../../../../../errors';
 

@@ -1,3 +1,4 @@
+'use strict';
 export const FONT_WEIGHT_MAPPINGS = {
   thin: '100',
   ultralight: '200',

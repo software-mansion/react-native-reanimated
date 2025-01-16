@@ -1,3 +1,4 @@
+'use strict';
 import type { TransformsStyle } from 'react-native';
 import type { ValueProcessor } from '../types';
 import { createStyleBuilder } from '../builderFactories';
