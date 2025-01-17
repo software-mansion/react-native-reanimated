@@ -187,7 +187,7 @@ public class NodesManager implements EventDispatcherListener {
           }
         };
 
-    if(!BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
+    if (!BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
       // We register as event listener at the end, because we pass `this` and we haven't finished
       // constructing an object yet.
       // This lead to a crash described in
@@ -197,7 +197,7 @@ public class NodesManager implements EventDispatcherListener {
       // This method indirectly uses `mChoreographerCallback` which was created after event
       // registration, creating race condition
       EventDispatcher eventDispatcher =
-              Objects.requireNonNull(UIManagerHelper.getEventDispatcher(context, uiManagerType));
+          Objects.requireNonNull(UIManagerHelper.getEventDispatcher(context, uiManagerType));
       eventDispatcher.addListener(this);
       mUnsubscribe = () -> eventDispatcher.removeListener(this);
     }
