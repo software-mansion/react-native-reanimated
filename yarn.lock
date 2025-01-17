@@ -8973,18 +8973,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"clang-format@npm:^1.6.0":
-  version: 1.8.0
-  resolution: "clang-format@npm:1.8.0"
-  dependencies:
-    async: "npm:^3.2.3"
-    glob: "npm:^7.0.0"
-    resolve: "npm:^1.1.6"
+"clang-format-node@npm:^1.2.4":
+  version: 1.2.4
+  resolution: "clang-format-node@npm:1.2.4"
   bin:
-    check-clang-format: bin/check-clang-format.js
-    clang-format: index.js
-    git-clang-format: bin/git-clang-format
-  checksum: 10/d4a25ae743d09b8aecc7afb7cb29c531ae3fcc9cb3195b69cc76e1a9ada69d423f341fbccc47458ab35c1c8746856a778de8f7ba51b2886c66ef78f779c842f7
+    clang-format: build/cli.js
+    clang-format-node: build/cli.js
+  checksum: 10/e28c6c123217c3821a6077e13884e7496474a5ad97965a0ac085939eb4d3346b15a5a78d7320c301238e074edb79578c99d5a322e2ef422154a7e310edf448bb
   languageName: node
   linkType: hard
 
@@ -18684,7 +18679,7 @@ __metadata:
     axios: "npm:^1.7.4"
     babel-eslint: "npm:^10.1.0"
     babel-plugin-module-resolver: "npm:^5.0.0"
-    clang-format: "npm:^1.6.0"
+    clang-format-node: "npm:^1.2.4"
     code-tag: "npm:^1.1.0"
     convert-source-map: "npm:^2.0.0"
     cspell: "npm:^8.8.0"
