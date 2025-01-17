@@ -11,14 +11,12 @@
 namespace reanimated {
 
 template <typename T>
-concept ResolvableOperation =
-    requires(T t) {
-      {
-        t.value
-        } -> std::convertible_to<
-            typename std::remove_reference_t<decltype(t.value)>>;
-      requires Resolvable<std::remove_reference_t<decltype(t.value)>>;
-    };
+concept ResolvableOperation = requires(T t) {
+  {
+    t.value
+  } -> std::convertible_to<typename std::remove_reference_t<decltype(t.value)>>;
+  requires Resolvable<std::remove_reference_t<decltype(t.value)>>;
+}; // NOLINT(readability/braces)
 
 // Base implementation for simple operations
 template <typename OperationType>

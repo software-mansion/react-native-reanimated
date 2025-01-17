@@ -13,7 +13,6 @@
 namespace reanimated {
 
 using namespace worklets;
-
 /**
  * Macro to check if two lambda parameters have the same reference-removed type.
  *
@@ -27,17 +26,16 @@ using namespace worklets;
 #define REA_IF_SAME_TYPE(lhs, rhs)                  \
   using L = std::remove_reference_t<decltype(lhs)>; \
   using R = std::remove_reference_t<decltype(rhs)>; \
-  if constexpr (std::is_same_v<L, R>)
+  if constexpr (std::is_same_v<L, R>) // NOLINT(readability/braces)
 
-// clang-format off
 /**
  * Checks if type has a constructor from jsi::Value
  */
 template <typename T>
 concept can_construct_from_jsi =
     requires(jsi::Runtime &rt, const jsi::Value &value) {
-      { T(rt, value) };
-    };
+      { T(rt, value) }; // NOLINT(readability/braces)
+    }; // NOLINT(readability/braces)
 
 /**
  * Checks whether a type has canConstruct(...) for a a generic value
@@ -45,7 +43,7 @@ concept can_construct_from_jsi =
 template <typename Type, typename V>
 static constexpr bool has_can_construct = requires(V &&value) {
   { Type::canConstruct(std::forward<V>(value)) } -> std::same_as<bool>;
-};
+}; // NOLINT(readability/braces)
 
 /**
  * Checks whether a type has canConstruct(...) for jsi::Value
@@ -54,8 +52,7 @@ template <typename Type, typename V>
 static constexpr bool has_can_construct_jsi =
     requires(jsi::Runtime &rt, V &&value) {
       { Type::canConstruct(rt, std::forward<V>(value)) } -> std::same_as<bool>;
-    };
-// clang-format on
+    }; // NOLINT(readability/braces)
 
 /**
  * CSSValueVariant
@@ -74,7 +71,7 @@ class CSSValueVariant final : public CSSValue {
   template <typename T>
   explicit CSSValueVariant(T &&value)
     requires((std::is_constructible_v<AllowedTypes, T> || ...))
-  {
+  { // NOLINT(whitespace/braces)
     // If T exactly matches one of AllowedTypes, store it directly:
     if constexpr ((std::is_same_v<std::remove_reference_t<T>, AllowedTypes> ||
                    ...)) {
@@ -94,7 +91,7 @@ class CSSValueVariant final : public CSSValue {
    */
   CSSValueVariant(jsi::Runtime &rt, const jsi::Value &jsiValue)
     requires((can_construct_from_jsi<AllowedTypes> || ...))
-  {
+  { // NOLINT(whitespace/braces)
     if (!tryConstruct(rt, jsiValue)) {
       throw std::runtime_error(
           "[Reanimated] No compatible type found for construction from: " +
