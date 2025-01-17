@@ -643,7 +643,7 @@ export function isColor(value: unknown): boolean {
   if (typeof value !== 'string') {
     return false;
   }
-  return processColorInitially(value) !== null;
+  return processColorInitially(value) != null;
 }
 
 const IS_ANDROID = isAndroid();
