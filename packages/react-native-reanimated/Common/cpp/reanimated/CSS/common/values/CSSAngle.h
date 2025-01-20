@@ -31,7 +31,10 @@ struct CSSAngle : public CSSBaseValue<CSSValueType::Angle, CSSAngle> {
   CSSAngle interpolate(double progress, const CSSAngle &to) const override;
 
   bool operator==(const CSSAngle &other) const;
+
+#ifndef NDEBUG
   friend std::ostream &operator<<(std::ostream &os, const CSSAngle &angleValue);
+#endif // NDEBUG
 };
 
 } // namespace reanimated

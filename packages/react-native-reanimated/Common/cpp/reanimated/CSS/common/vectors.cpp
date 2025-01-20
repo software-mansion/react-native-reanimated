@@ -18,11 +18,15 @@ Vector3D &Vector3D::operator*=(const double scalar) {
   return *this;
 }
 
+#ifndef NDEBUG
+
 std::ostream &operator<<(std::ostream &os, const Vector3D &vector) {
   os << "Vector3D(" << vector.vec[0] << ", " << vector.vec[1] << ", "
      << vector.vec[2] << ")";
   return os;
 }
+
+#endif // NDEBUG
 
 double Vector3D::length() const {
   return std::hypot(vec[0], vec[1], vec[2]);
@@ -85,11 +89,15 @@ Vector4D Vector4D::interpolate(const double progress, const Vector4D &other)
       vec[3] + progress * (other.vec[3] - vec[3])};
 }
 
+#ifndef NDEBUG
+
 std::ostream &operator<<(std::ostream &os, const Vector4D &vector) {
   os << "Vector4D(" << vector.vec[0] << ", " << vector.vec[1] << ", "
      << vector.vec[2] << ", " << vector.vec[3] << ")";
   return os;
 }
+
+#endif // NDEBUG
 
 } // namespace reanimated
 

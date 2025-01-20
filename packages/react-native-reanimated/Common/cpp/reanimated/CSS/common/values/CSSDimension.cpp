@@ -117,10 +117,14 @@ bool CSSDimension::operator==(const CSSDimension &other) const {
   return value == other.value && isRelative == other.isRelative;
 }
 
+#ifndef NDEBUG
+
 std::ostream &operator<<(std::ostream &os, const CSSDimension &dimension) {
   os << "CSSDimension(" << dimension.toString() << ")";
   return os;
 }
+
+#endif // NDEBUG
 
 } // namespace reanimated
 

@@ -4,14 +4,15 @@
 
 namespace reanimated {
 
-template <typename T>
-CSSKeywordBase<T>::CSSKeywordBase() : value("") {}
+template <typename TValue>
+CSSKeywordBase<TValue>::CSSKeywordBase() : value("") {}
 
-template <typename T>
-CSSKeywordBase<T>::CSSKeywordBase(const std::string &value) : value(value) {}
+template <typename TValue>
+CSSKeywordBase<TValue>::CSSKeywordBase(const std::string &value)
+    : value(value) {}
 
-template <typename T>
-CSSKeywordBase<T>::CSSKeywordBase(
+template <typename TValue>
+CSSKeywordBase<TValue>::CSSKeywordBase(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
   if (jsiValue.isString()) {
@@ -23,35 +24,36 @@ CSSKeywordBase<T>::CSSKeywordBase(
   }
 }
 
-template <typename T>
-bool CSSKeywordBase<T>::canConstruct(
+template <typename TValue>
+bool CSSKeywordBase<TValue>::canConstruct(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
   return jsiValue.isString();
 }
 
-template <typename T>
-CSSValueType CSSKeywordBase<T>::type() const {
+template <typename TValue>
+CSSValueType CSSKeywordBase<TValue>::type() const {
   return CSSValueType::Keyword;
 }
 
-template <typename T>
-jsi::Value CSSKeywordBase<T>::toJSIValue(jsi::Runtime &rt) const {
+template <typename TValue>
+jsi::Value CSSKeywordBase<TValue>::toJSIValue(jsi::Runtime &rt) const {
   return jsi::String::createFromUtf8(rt, value);
 }
 
-template <typename T>
-folly::dynamic CSSKeywordBase<T>::toDynamic() const {
+template <typename TValue>
+folly::dynamic CSSKeywordBase<TValue>::toDynamic() const {
   return value;
 }
 
-template <typename T>
-std::string CSSKeywordBase<T>::toString() const {
+template <typename TValue>
+std::string CSSKeywordBase<TValue>::toString() const {
   return value;
 }
 
-template <typename T>
-bool CSSKeywordBase<T>::operator==(const CSSKeywordBase &other) const {
+template <typename TValue>
+bool CSSKeywordBase<TValue>::operator==(
+    const CSSKeywordBase<TValue> &other) const {
   return value == other.value;
 }
 
@@ -60,10 +62,14 @@ CSSKeyword CSSKeyword::interpolate(double progress, const CSSKeyword &to)
   return CSSKeyword(progress < 0.5 ? value : to.value);
 }
 
+#ifndef NDEBUG
+
 std::ostream &operator<<(std::ostream &os, const CSSKeyword &keywordValue) {
   os << "CSSKeyword(" << keywordValue.toString() << ")";
   return os;
 }
+
+#endif // NDEBUG
 
 CSSDisplay CSSDisplay::interpolate(double progress, const CSSDisplay &to)
     const {
@@ -76,10 +82,14 @@ CSSDisplay CSSDisplay::interpolate(double progress, const CSSDisplay &to)
   return CSSDisplay(progress < 0.5 ? value : to.value);
 }
 
+#ifndef NDEBUG
+
 std::ostream &operator<<(std::ostream &os, const CSSDisplay &displayValue) {
   os << "CSSDisplay(" << displayValue.toString() << ")";
   return os;
 }
+
+#endif // NDEBUG
 
 // Explicit template instantiations
 template class CSSKeywordBase<CSSKeyword>;

@@ -16,6 +16,7 @@ namespace reanimated {
 class UpdatesRegistryManager {
  public:
   UpdatesRegistryManager();
+
 #ifdef ANDROID
   explicit UpdatesRegistryManager(
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);

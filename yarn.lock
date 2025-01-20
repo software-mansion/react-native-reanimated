@@ -9348,7 +9348,6 @@ __metadata:
     react-native-screens: "npm:4.5.0"
     react-native-svg: "npm:15.11.1"
     react-strict-dom: "npm:0.0.27"
-    ts-patch: "npm:^3.3.0"
     typescript: "npm:~5.3.0"
     typescript-eslint: "npm:^8.12.2"
   peerDependencies:
@@ -9362,19 +9361,6 @@ __metadata:
     "@react-navigation/stack": "*"
     "@shopify/flash-list": "*"
     d3-shape: "*"
-    eslint: "*"
-    eslint-config-prettier: "*"
-    eslint-import-resolver-typescript: "*"
-    eslint-plugin-import: "*"
-    eslint-plugin-no-relative-import-paths: "*"
-    eslint-plugin-perfectionist: "*"
-    eslint-plugin-prettier: "*"
-    eslint-plugin-react-hooks: "*"
-    eslint-plugin-reanimated: "*"
-    eslint-plugin-simple-import-sort: "*"
-    madge: "*"
-    patch-package: "*"
-    prettier: "*"
     react: "*"
     react-dom: "*"
     react-native: "*"
@@ -9386,8 +9372,6 @@ __metadata:
     react-native-svg: "*"
     react-native-web: "*"
     react-strict-dom: "*"
-    typescript: "*"
-    typescript-eslint: "*"
   languageName: unknown
   linkType: soft
 
@@ -12995,17 +12979,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"global-prefix@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "global-prefix@npm:4.0.0"
-  dependencies:
-    ini: "npm:^4.1.3"
-    kind-of: "npm:^6.0.3"
-    which: "npm:^4.0.0"
-  checksum: 10/535489396c0e5828682f081f5227556a3b7a30ebecde9f5eb35aee4aea121fe5c5fb1b04e0fba85d1e34e6004687e51b306bdd446d391eca8449adbb4666dbe2
-  languageName: node
-  linkType: hard
-
 "globals@npm:^11.1.0":
   version: 11.12.0
   resolution: "globals@npm:11.12.0"
@@ -13537,13 +13510,6 @@ __metadata:
   version: 4.1.1
   resolution: "ini@npm:4.1.1"
   checksum: 10/64c7102301742a7527bb17257d18451410eacf63b4b5648a20e108816c355c21c4e8a1761bbcbf3fe8c4ded3297f1b832b885d5e3e485d781e293ebfaf56fea6
-  languageName: node
-  linkType: hard
-
-"ini@npm:^4.1.3":
-  version: 4.1.3
-  resolution: "ini@npm:4.1.3"
-  checksum: 10/f536b414d1442e5b233429e2b56efcdb354109b2d65ddd489e5939d8f0f5ad23c88aa2b19c92987249d0dd63ba8192e9aeb1a02b0459549c5a9ff31acd729a5d
   languageName: node
   linkType: hard
 
@@ -15140,7 +15106,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kind-of@npm:^6.0.2, kind-of@npm:^6.0.3":
+"kind-of@npm:^6.0.2":
   version: 6.0.3
   resolution: "kind-of@npm:6.0.3"
   checksum: 10/5873d303fb36aad875b7538798867da2ae5c9e328d67194b0162a3659a627d22f742fc9c4ae95cd1704132a24b00cae5041fc00c0f6ef937dc17080dc4dbb962
@@ -21209,23 +21175,6 @@ __metadata:
   version: 0.0.5
   resolution: "ts-object-utils@npm:0.0.5"
   checksum: 10/83c48fbdaba392fb2c01cea53b267ed5538d2bb44fc6c3eecc10bcfabc1780bfa6ec8569b52bbf0140d9b521d9049d5f15884e12286918244d463d854dbc73cb
-  languageName: node
-  linkType: hard
-
-"ts-patch@npm:^3.3.0":
-  version: 3.3.0
-  resolution: "ts-patch@npm:3.3.0"
-  dependencies:
-    chalk: "npm:^4.1.2"
-    global-prefix: "npm:^4.0.0"
-    minimist: "npm:^1.2.8"
-    resolve: "npm:^1.22.2"
-    semver: "npm:^7.6.3"
-    strip-ansi: "npm:^6.0.1"
-  bin:
-    ts-patch: bin/ts-patch.js
-    tspc: bin/tspc.js
-  checksum: 10/5b0a42cacdfef2136b18b785b4ca6579d470001560d42139057fccf6ed85a622a73e5efba1b20426b047bf9aaf2090a23a9afca4e72ab330b166344dd45b3386
   languageName: node
   linkType: hard
 

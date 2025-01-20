@@ -23,8 +23,8 @@ namespace reanimated::Interpolators {
 template <typename... AllowedTypes>
 class ValueInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
-  template <typename DefaultType>
-  explicit ValueInterpolatorFactory(const DefaultType &defaultValue)
+  template <typename TValue>
+  explicit ValueInterpolatorFactory(const TValue &defaultValue)
       : PropertyInterpolatorFactory(), defaultValue_(defaultValue) {}
 
   bool isDiscreteProperty() const override {
@@ -53,11 +53,11 @@ class ValueInterpolatorFactory : public PropertyInterpolatorFactory {
 template <typename... AllowedTypes>
 class ResolvableValueInterpolatorFactory : public PropertyInterpolatorFactory {
  public:
-  template <typename DefaultType>
+  template <typename TValue>
   explicit ResolvableValueInterpolatorFactory(
       RelativeTo relativeTo,
       const std::string &relativeProperty,
-      const DefaultType &defaultValue)
+      const TValue &defaultValue)
       : PropertyInterpolatorFactory(),
         relativeTo_(relativeTo),
         relativeProperty_(relativeProperty),
@@ -115,29 +115,27 @@ auto value(
 /**
  * Transform operation interpolator factories
  */
-template <typename OperationType>
+template <typename TOperation>
 auto transformOp(const auto &defaultValue) -> std::enable_if_t<
-    std::is_base_of_v<TransformOperation, OperationType> &&
-        std::is_constructible_v<OperationType, decltype(defaultValue)>,
+    std::is_base_of_v<TransformOperation, TOperation> &&
+        std::is_constructible_v<TOperation, decltype(defaultValue)>,
     std::shared_ptr<TransformInterpolator>> {
-  return std::make_shared<TransformOperationInterpolator<OperationType>>(
-      std::make_shared<OperationType>(defaultValue));
+  return std::make_shared<TransformOperationInterpolator<TOperation>>(
+      std::make_shared<TOperation>(defaultValue));
 }
 
-template <typename OperationType>
+template <typename TOperation>
 auto transformOp(
     RelativeTo relativeTo,
     const std::string &relativeProperty,
     const auto &defaultValue)
     -> std::enable_if_t<
-        std::is_base_of_v<TransformOperation, OperationType> &&
-            std::is_constructible_v<OperationType, decltype(defaultValue)> &&
-            ResolvableOperation<OperationType>,
+        std::is_base_of_v<TransformOperation, TOperation> &&
+            std::is_constructible_v<TOperation, decltype(defaultValue)> &&
+            ResolvableOperation<TOperation>,
         std::shared_ptr<TransformInterpolator>> {
-  return std::make_shared<TransformOperationInterpolator<OperationType>>(
-      std::make_shared<OperationType>(defaultValue),
-      relativeTo,
-      relativeProperty);
+  return std::make_shared<TransformOperationInterpolator<TOperation>>(
+      std::make_shared<TOperation>(defaultValue), relativeTo, relativeProperty);
 }
 
 /**

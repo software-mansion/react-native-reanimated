@@ -34,10 +34,11 @@ class TransformInterpolator {
       const UpdateContext &context) const = 0;
 };
 
-template <typename T>
+template <typename TOperation>
 class TransformInterpolatorBase : public TransformInterpolator {
  public:
-  explicit TransformInterpolatorBase(std::shared_ptr<T> defaultOperation)
+  explicit TransformInterpolatorBase(
+      std::shared_ptr<TOperation> defaultOperation)
       : defaultOperation_(defaultOperation) {}
 
   std::shared_ptr<TransformOperation> getDefaultOperation() const override {
@@ -49,34 +50,35 @@ class TransformInterpolatorBase : public TransformInterpolator {
       const std::shared_ptr<TransformOperation> &from,
       const std::shared_ptr<TransformOperation> &to,
       const UpdateContext &context) const override {
-    return std::make_shared<T>(interpolate(
+    return std::make_shared<TOperation>(interpolate(
         progress,
-        *std::static_pointer_cast<T>(from),
-        *std::static_pointer_cast<T>(to),
+        *std::static_pointer_cast<TOperation>(from),
+        *std::static_pointer_cast<TOperation>(to),
         context));
   }
 
   std::shared_ptr<TransformOperation> resolveOperation(
       const std::shared_ptr<TransformOperation> &operation,
       const UpdateContext &context) const override {
-    return std::make_shared<T>(
-        resolveOperation(*std::static_pointer_cast<T>(operation), context));
+    return std::make_shared<TOperation>(resolveOperation(
+        *std::static_pointer_cast<TOperation>(operation), context));
   }
 
  protected:
-  virtual T interpolate(
+  virtual TOperation interpolate(
       double progress,
-      const T &from,
-      const T &to,
+      const TOperation &from,
+      const TOperation &to,
       const UpdateContext &context) const = 0;
 
-  virtual T resolveOperation(const T &operation, const UpdateContext &context)
-      const {
+  virtual TOperation resolveOperation(
+      const TOperation &operation,
+      const UpdateContext &context) const {
     return operation;
   }
 
  private:
-  std::shared_ptr<T> defaultOperation_;
+  std::shared_ptr<TOperation> defaultOperation_;
 };
 
 using TransformInterpolators = TransformInterpolator::Interpolators;

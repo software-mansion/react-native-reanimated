@@ -14,6 +14,8 @@ DecomposedTransformMatrix DecomposedTransformMatrix::interpolate(
       .perspective = perspective.interpolate(progress, other.perspective)};
 }
 
+#ifndef NDEBUG
+
 std::ostream &operator<<(
     std::ostream &os,
     const DecomposedTransformMatrix &decomposed) {
@@ -23,6 +25,8 @@ std::ostream &operator<<(
      << ", perspective=" << decomposed.perspective << ")";
   return os;
 }
+
+#endif // NDEBUG
 
 TransformMatrix::TransformMatrix(const Vec16Array &matrix) {
   for (size_t i = 0; i < 16; ++i) {
@@ -67,35 +71,35 @@ TransformMatrix TransformMatrix::Perspective(const double v) {
 }
 
 TransformMatrix TransformMatrix::RotateX(const double v) {
-  const auto cos = std::cos(v);
-  const auto sin = std::sin(v);
+  const auto cosVal = std::cos(v);
+  const auto sinVal = std::sin(v);
   return TransformMatrix({{// clang-format off
-    {1,    0,   0, 0},
-    {0,  cos, sin, 0},
-    {0, -sin, cos, 0},
-    {0,    0,   0, 1}
+    {1,       0,      0, 0},
+    {0,  cosVal, sinVal, 0},
+    {0, -sinVal, cosVal, 0},
+    {0,       0,      0, 1}
   }}); // clang-format on
 }
 
 TransformMatrix TransformMatrix::RotateY(const double v) {
-  const auto cos = std::cos(v);
-  const auto sin = std::sin(v);
+  const auto cosVal = std::cos(v);
+  const auto sinVal = std::sin(v);
   return TransformMatrix({{// clang-format off
-    {cos, 0, -sin, 0},
-    {  0, 1,    0, 0},
-    {sin, 0,  cos, 0},
-    {  0, 0,    0, 1}
+    {cosVal, 0, -sinVal, 0},
+    {     0, 1,       0, 0},
+    {sinVal, 0,  cosVal, 0},
+    {     0, 0,       0, 1}
   }}); // clang-format on
 }
 
 TransformMatrix TransformMatrix::RotateZ(const double v) {
-  const auto cos = std::cos(v);
-  const auto sin = std::sin(v);
+  const auto cosVal = std::cos(v);
+  const auto sinVal = std::sin(v);
   return TransformMatrix({{// clang-format off
-    { cos, sin, 0, 0},
-    {-sin, cos, 0, 0},
-    {   0,   0, 1, 0},
-    {   0,   0, 0, 1}
+    { cosVal, sinVal, 0, 0},
+    {-sinVal, cosVal, 0, 0},
+    {      0,      0, 1, 0},
+    {      0,      0, 0, 1}
   }}); // clang-format on
 }
 
@@ -187,40 +191,18 @@ bool TransformMatrix::operator==(const TransformMatrix &other) const {
 TransformMatrix TransformMatrix::operator*(const TransformMatrix &rhs) const {
   const auto &a = matrix_;
   const auto &b = rhs.matrix_;
+  Matrix4x4 result{};
 
-  return TransformMatrix(Matrix4x4{
-      {{a[0][0] * b[0][0] + a[0][1] * b[1][0] + a[0][2] * b[2][0] +
-            a[0][3] * b[3][0],
-        a[0][0] * b[0][1] + a[0][1] * b[1][1] + a[0][2] * b[2][1] +
-            a[0][3] * b[3][1],
-        a[0][0] * b[0][2] + a[0][1] * b[1][2] + a[0][2] * b[2][2] +
-            a[0][3] * b[3][2],
-        a[0][0] * b[0][3] + a[0][1] * b[1][3] + a[0][2] * b[2][3] +
-            a[0][3] * b[3][3]},
-       {a[1][0] * b[0][0] + a[1][1] * b[1][0] + a[1][2] * b[2][0] +
-            a[1][3] * b[3][0],
-        a[1][0] * b[0][1] + a[1][1] * b[1][1] + a[1][2] * b[2][1] +
-            a[1][3] * b[3][1],
-        a[1][0] * b[0][2] + a[1][1] * b[1][2] + a[1][2] * b[2][2] +
-            a[1][3] * b[3][2],
-        a[1][0] * b[0][3] + a[1][1] * b[1][3] + a[1][2] * b[2][3] +
-            a[1][3] * b[3][3]},
-       {a[2][0] * b[0][0] + a[2][1] * b[1][0] + a[2][2] * b[2][0] +
-            a[2][3] * b[3][0],
-        a[2][0] * b[0][1] + a[2][1] * b[1][1] + a[2][2] * b[2][1] +
-            a[2][3] * b[3][1],
-        a[2][0] * b[0][2] + a[2][1] * b[1][2] + a[2][2] * b[2][2] +
-            a[2][3] * b[3][2],
-        a[2][0] * b[0][3] + a[2][1] * b[1][3] + a[2][2] * b[2][3] +
-            a[2][3] * b[3][3]},
-       {a[3][0] * b[0][0] + a[3][1] * b[1][0] + a[3][2] * b[2][0] +
-            a[3][3] * b[3][0],
-        a[3][0] * b[0][1] + a[3][1] * b[1][1] + a[3][2] * b[2][1] +
-            a[3][3] * b[3][1],
-        a[3][0] * b[0][2] + a[3][1] * b[1][2] + a[3][2] * b[2][2] +
-            a[3][3] * b[3][2],
-        a[3][0] * b[0][3] + a[3][1] * b[1][3] + a[3][2] * b[2][3] +
-            a[3][3] * b[3][3]}}});
+  for (size_t i = 0; i < 4; ++i) {
+    for (size_t j = 0; j < 4; ++j) {
+      result[i][j] = 0;
+      for (size_t k = 0; k < 4; ++k) {
+        result[i][j] += a[i][k] * b[k][j];
+      }
+    }
+  }
+
+  return TransformMatrix(result);
 }
 
 TransformMatrix TransformMatrix::operator*=(const TransformMatrix &rhs) {
@@ -229,12 +211,19 @@ TransformMatrix TransformMatrix::operator*=(const TransformMatrix &rhs) {
 }
 
 Vector4D operator*(const Vector4D &v, const TransformMatrix &m) {
-  return Vector4D(
-      v[0] * m[0][0] + v[1] * m[1][0] + v[2] * m[2][0] + v[3] * m[3][0],
-      v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1] + v[3] * m[3][1],
-      v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2] + v[3] * m[3][2],
-      v[0] * m[0][3] + v[1] * m[1][3] + v[2] * m[2][3] + v[3] * m[3][3]);
+  Vector4D result;
+
+  for (size_t i = 0; i < 4; ++i) {
+    result[i] = 0;
+    for (size_t j = 0; j < 4; ++j) {
+      result[i] += v[j] * m[j][i];
+    }
+  }
+
+  return result;
 }
+
+#ifndef NDEBUG
 
 std::ostream &operator<<(std::ostream &os, const TransformMatrix &matrix) {
   std::string result = "TransformMatrix{";
@@ -247,6 +236,9 @@ std::ostream &operator<<(std::ostream &os, const TransformMatrix &matrix) {
   result += "}";
   return os << result;
 }
+
+#endif // NDEBUG
+
 
 std::string TransformMatrix::toString() const {
   std::string result = "[";

@@ -1,3 +1,4 @@
+// TODO - merge this eslint config with config in the features/reanimated directory
 module.exports = {
   env: {
     es2021: true,
@@ -182,7 +183,7 @@ module.exports = {
         allowSameFolder: true,
         allowedDepth: 1,
         prefix: '~',
-        rootDir: 'src/features',
+        rootDir: 'src/apps',
       },
       { allowSameFolder: true, allowedDepth: 1, prefix: '@', rootDir: 'src' },
     ],

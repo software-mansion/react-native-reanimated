@@ -122,10 +122,14 @@ bool CSSColor::operator==(const CSSColor &other) const {
       channels[3] == other.channels[3];
 }
 
+#ifndef NDEBUG
+
 std::ostream &operator<<(std::ostream &os, const CSSColor &colorValue) {
   os << "CSSColor(" << colorValue.toString() << ")";
   return os;
 }
+
+#endif // NDEBUG
 
 } // namespace reanimated
 

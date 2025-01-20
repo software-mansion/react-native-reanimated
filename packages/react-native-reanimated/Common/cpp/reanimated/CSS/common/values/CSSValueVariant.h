@@ -31,27 +31,31 @@ using namespace worklets;
 /**
  * Checks if type has a constructor from jsi::Value
  */
-template <typename T>
+template <typename TValue>
 concept can_construct_from_jsi =
     requires(jsi::Runtime &rt, const jsi::Value &value) {
-      { T(rt, value) }; // NOLINT(readability/braces)
+      { TValue(rt, value) }; // NOLINT(readability/braces)
     }; // NOLINT(readability/braces)
 
 /**
  * Checks whether a type has canConstruct(...) for a a generic value
  */
-template <typename Type, typename V>
-static constexpr bool has_can_construct = requires(V &&value) {
-  { Type::canConstruct(std::forward<V>(value)) } -> std::same_as<bool>;
+template <typename TCSSValue, typename TValue>
+static constexpr bool has_can_construct = requires(TValue &&value) {
+  {
+    TCSSValue::canConstruct(std::forward<TValue>(value))
+  } -> std::same_as<bool>;
 }; // NOLINT(readability/braces)
 
 /**
  * Checks whether a type has canConstruct(...) for jsi::Value
  */
-template <typename Type, typename V>
+template <typename TCSSValue, typename TValue>
 static constexpr bool has_can_construct_jsi =
-    requires(jsi::Runtime &rt, V &&value) {
-      { Type::canConstruct(rt, std::forward<V>(value)) } -> std::same_as<bool>;
+    requires(jsi::Runtime &rt, TValue &&value) {
+      {
+        TCSSValue::canConstruct(rt, std::forward<TValue>(value))
+      } -> std::same_as<bool>;
     }; // NOLINT(readability/braces)
 
 /**
@@ -65,20 +69,22 @@ class CSSValueVariant final : public CSSValue {
   CSSValueVariant() = default;
 
   /**
-   * Construct from any T that is or can construct one of the AllowedTypes
+   * Construct from any TValue that is or can construct one of the AllowedTypes
    * (chooses the first one that matches)
    */
-  template <typename T>
-  explicit CSSValueVariant(T &&value)
-    requires((std::is_constructible_v<AllowedTypes, T> || ...))
+  template <typename TValue>
+  explicit CSSValueVariant(TValue &&value)
+    requires((std::is_constructible_v<AllowedTypes, TValue> || ...))
   { // NOLINT(whitespace/braces)
-    // If T exactly matches one of AllowedTypes, store it directly:
-    if constexpr ((std::is_same_v<std::remove_reference_t<T>, AllowedTypes> ||
+    // If TValue exactly matches one of AllowedTypes, store it directly:
+    if constexpr ((std::is_same_v<
+                       std::remove_reference_t<TValue>,
+                       AllowedTypes> ||
                    ...)) {
-      storage_ = std::forward<T>(value);
+      storage_ = std::forward<TValue>(value);
     } else {
       // Otherwise, try each type in turn
-      if (!tryConstruct(std::forward<T>(value))) {
+      if (!tryConstruct(std::forward<TValue>(value))) {
         throw std::runtime_error(
             "[RNReanimated] No compatible type found for construction");
       }
@@ -204,17 +210,17 @@ class CSSValueVariant final : public CSSValue {
   /**
    * Tries to construct type from a given value
    */
-  template <typename T>
-  bool tryConstruct(T &&value) {
-    auto tryOne = [&]<typename Type>() -> bool {
-      if constexpr (std::is_constructible_v<Type, T>) {
-        if constexpr (has_can_construct<Type, T>) {
-          // If the Type has a canConstruct method, check it first
-          if (!Type::canConstruct(std::forward<T>(value))) {
+  template <typename TValue>
+  bool tryConstruct(TValue &&value) {
+    auto tryOne = [&]<typename TCSSValue>() -> bool {
+      if constexpr (std::is_constructible_v<TCSSValue, TValue>) {
+        if constexpr (has_can_construct<TCSSValue, TValue>) {
+          // If the TCSSValue has a canConstruct method, check it first
+          if (!TCSSValue::canConstruct(std::forward<TValue>(value))) {
             return false;
           }
         }
-        storage_ = Type(std::forward<T>(value));
+        storage_ = TCSSValue(std::forward<TValue>(value));
         return true;
       }
       return false;
@@ -228,15 +234,15 @@ class CSSValueVariant final : public CSSValue {
    * Tries to construct type from a given jsi::Value
    */
   bool tryConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-    auto tryOne = [&]<typename Type>() -> bool {
-      if constexpr (can_construct_from_jsi<Type>) {
-        if constexpr (has_can_construct_jsi<Type, const jsi::Value &>) {
-          // If the Type has a canConstruct method, check it first
-          if (!Type::canConstruct(rt, jsiValue)) {
+    auto tryOne = [&]<typename TCSSValue>() -> bool {
+      if constexpr (can_construct_from_jsi<TCSSValue>) {
+        if constexpr (has_can_construct_jsi<TCSSValue, const jsi::Value &>) {
+          // If the TCSSValue has a canConstruct method, check it first
+          if (!TCSSValue::canConstruct(rt, jsiValue)) {
             return false;
           }
         }
-        storage_ = Type(rt, jsiValue);
+        storage_ = TCSSValue(rt, jsiValue);
         return true;
       }
       return false;

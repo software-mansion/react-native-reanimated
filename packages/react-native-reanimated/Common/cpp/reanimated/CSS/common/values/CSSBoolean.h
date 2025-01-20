@@ -26,9 +26,12 @@ struct CSSBoolean : public CSSBaseValue<CSSValueType::Boolean, CSSBoolean> {
   CSSBoolean interpolate(double progress, const CSSBoolean &to) const override;
 
   bool operator==(const CSSBoolean &other) const;
+
+#ifndef NDEBUG
   friend std::ostream &operator<<(
       std::ostream &os,
       const CSSBoolean &boolValue);
+#endif // NDEBUG
 };
 
 } // namespace reanimated

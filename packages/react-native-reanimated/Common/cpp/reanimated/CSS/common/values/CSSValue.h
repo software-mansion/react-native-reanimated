@@ -45,32 +45,35 @@ struct CSSValue {
   virtual std::string toString() const = 0;
 };
 
-template <CSSValueType Type, typename T>
+template <CSSValueType TValueType, typename TDerived>
 struct CSSBaseValue : public CSSValue {
   static constexpr bool is_resolvable_value = false;
   static constexpr bool is_discrete_value = false;
 
   CSSValueType type() const override {
-    return Type;
+    return TValueType;
   }
 
-  virtual T interpolate(double progress, const T &to) const = 0;
+  virtual TDerived interpolate(double progress, const TDerived &to) const = 0;
 };
 
-template <CSSValueType Type, typename T, typename U = T>
+template <
+    CSSValueType TValueType,
+    typename TDerived,
+    typename TResolved = TDerived>
 struct CSSResolvableValue : public CSSValue {
   static constexpr bool is_resolvable_value = true;
   static constexpr bool is_discrete_value = false;
 
   CSSValueType type() const override {
-    return Type;
+    return TValueType;
   }
 
-  virtual T interpolate(
+  virtual TDerived interpolate(
       double progress,
-      const T &to,
+      const TDerived &to,
       const CSSResolvableValueInterpolationContext &context) const = 0;
-  virtual std::optional<U> resolve(
+  virtual std::optional<TResolved> resolve(
       const CSSResolvableValueInterpolationContext &context) const = 0;
 };
 
@@ -79,16 +82,16 @@ inline bool isDiscrete(const CSSValue &value) {
 }
 
 // clang-format off
-template <typename T>
+template <typename TCSSValue>
 concept Resolvable = requires {
-  { T::is_resolvable_value } -> std::convertible_to<bool>;
-  requires T::is_resolvable_value == true;
+  { TCSSValue::is_resolvable_value } -> std::convertible_to<bool>;
+  requires TCSSValue::is_resolvable_value == true;
 };
 
-template <typename T>
+template <typename TCSSValue>
 concept Discrete = requires {
-  { T::is_discrete_value } -> std::convertible_to<bool>;
-  requires T::is_discrete_value == true;
+  { TCSSValue::is_discrete_value } -> std::convertible_to<bool>;
+  requires TCSSValue::is_discrete_value == true;
 };
 // clang-format on
 
