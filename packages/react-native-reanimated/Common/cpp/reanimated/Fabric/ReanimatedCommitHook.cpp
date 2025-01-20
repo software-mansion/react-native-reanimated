@@ -74,6 +74,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     auto lock = updatesRegistryManager_->createLock();
 
     PropsMap propsMap = updatesRegistryManager_->collectProps();
+    updatesRegistryManager_->cancelCommitAfterPause();
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
 
     // If the commit comes from React Native then pause commits from
