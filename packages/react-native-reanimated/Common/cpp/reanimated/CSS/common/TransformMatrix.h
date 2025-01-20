@@ -18,9 +18,11 @@ struct DecomposedTransformMatrix {
   Vector3D translation;
   Vector4D perspective;
 
+#ifndef NDEBUG
   friend std::ostream &operator<<(
       std::ostream &os,
       const DecomposedTransformMatrix &decomposed);
+#endif // NDEBUG
 
   DecomposedTransformMatrix interpolate(
       double progress,
@@ -51,9 +53,12 @@ class TransformMatrix {
   bool operator==(const TransformMatrix &other) const;
   TransformMatrix operator*(const TransformMatrix &rhs) const;
   TransformMatrix operator*=(const TransformMatrix &rhs);
+
+#ifndef NDEBUG
   friend std::ostream &operator<<(
       std::ostream &os,
       const TransformMatrix &matrix);
+#endif // NDEBUG
 
   std::string toString() const;
   jsi::Value toJSIValue(jsi::Runtime &rt) const;

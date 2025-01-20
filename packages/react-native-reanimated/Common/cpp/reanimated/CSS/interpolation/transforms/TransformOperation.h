@@ -42,9 +42,12 @@ std::string getOperationNameFromType(TransformOperationType type);
 // Base struct for TransformOperation
 struct TransformOperation {
   virtual bool operator==(const TransformOperation &other) const = 0;
+
+#ifndef NDEBUG
   friend std::ostream &operator<<(
       std::ostream &os,
       const TransformOperation &operation);
+#endif // NDEBUG
 
   std::string getOperationName() const;
   virtual TransformOperationType type() const = 0;
@@ -67,11 +70,11 @@ struct TransformOperation {
 
 using TransformOperations = std::vector<std::shared_ptr<TransformOperation>>;
 
-template <typename T>
+template <typename TValue>
 struct TransformOperationBase : public TransformOperation {
-  const T value;
+  const TValue value;
 
-  explicit TransformOperationBase(const T &value);
+  explicit TransformOperationBase(const TValue &value);
   virtual ~TransformOperationBase() = default;
 
   bool operator==(const TransformOperation &other) const override;

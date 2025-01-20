@@ -6,7 +6,7 @@ EasingFunction steps(
     const std::vector<double> &pointsX,
     const std::vector<double> &pointsY) {
   return [=](double x) {
-    size_t stepIdx = firstSmallerThanOrEqualBinsearch(x, pointsX);
+    size_t stepIdx = firstSmallerOrEqual(x, pointsX);
     return pointsY[stepIdx];
   };
 }

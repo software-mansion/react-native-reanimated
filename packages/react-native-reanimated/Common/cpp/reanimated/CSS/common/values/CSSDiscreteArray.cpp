@@ -4,15 +4,15 @@
 
 namespace reanimated {
 
-template <CSSValueDerived T>
-CSSDiscreteArray<T>::CSSDiscreteArray() : values() {}
+template <CSSValueDerived TValue>
+CSSDiscreteArray<TValue>::CSSDiscreteArray() : values() {}
 
-template <CSSValueDerived T>
-CSSDiscreteArray<T>::CSSDiscreteArray(const std::vector<T> &values)
+template <CSSValueDerived TValue>
+CSSDiscreteArray<TValue>::CSSDiscreteArray(const std::vector<TValue> &values)
     : values(values) {}
 
-template <CSSValueDerived T>
-CSSDiscreteArray<T>::CSSDiscreteArray(
+template <CSSValueDerived TValue>
+CSSDiscreteArray<TValue>::CSSDiscreteArray(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
   if (!canConstruct(rt, jsiValue)) {
@@ -29,16 +29,16 @@ CSSDiscreteArray<T>::CSSDiscreteArray(
   }
 }
 
-template <CSSValueDerived T>
-bool CSSDiscreteArray<T>::canConstruct(
+template <CSSValueDerived TValue>
+bool CSSDiscreteArray<TValue>::canConstruct(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
   // TODO - maybe add better validation
   return jsiValue.isObject() && jsiValue.asObject(rt).isArray(rt);
 }
 
-template <CSSValueDerived T>
-jsi::Value CSSDiscreteArray<T>::toJSIValue(jsi::Runtime &rt) const {
+template <CSSValueDerived TValue>
+jsi::Value CSSDiscreteArray<TValue>::toJSIValue(jsi::Runtime &rt) const {
   jsi::Array array(rt, values.size());
   for (size_t i = 0; i < values.size(); i++) {
     array.setValueAtIndex(rt, i, values[i].toJSIValue(rt));
@@ -46,8 +46,8 @@ jsi::Value CSSDiscreteArray<T>::toJSIValue(jsi::Runtime &rt) const {
   return array;
 }
 
-template <CSSValueDerived T>
-folly::dynamic CSSDiscreteArray<T>::toDynamic() const {
+template <CSSValueDerived TValue>
+folly::dynamic CSSDiscreteArray<TValue>::toDynamic() const {
   folly::dynamic array = folly::dynamic::array;
   for (const auto &value : values) {
     array.push_back(value.toDynamic());
@@ -55,8 +55,8 @@ folly::dynamic CSSDiscreteArray<T>::toDynamic() const {
   return array;
 }
 
-template <CSSValueDerived T>
-std::string CSSDiscreteArray<T>::toString() const {
+template <CSSValueDerived TValue>
+std::string CSSDiscreteArray<TValue>::toString() const {
   std::stringstream ss;
 
   ss << "{";
@@ -71,15 +71,16 @@ std::string CSSDiscreteArray<T>::toString() const {
   return ss.str();
 }
 
-template <CSSValueDerived T>
-CSSDiscreteArray<T> CSSDiscreteArray<T>::interpolate(
+template <CSSValueDerived TValue>
+CSSDiscreteArray<TValue> CSSDiscreteArray<TValue>::interpolate(
     double progress,
-    const CSSDiscreteArray<T> &other) const {
-  return CSSDiscreteArray<T>(progress < 0.5 ? values : other.values);
+    const CSSDiscreteArray<TValue> &other) const {
+  return CSSDiscreteArray<TValue>(progress < 0.5 ? values : other.values);
 }
 
-template <CSSValueDerived T>
-bool CSSDiscreteArray<T>::operator==(const CSSDiscreteArray<T> &other) const {
+template <CSSValueDerived TValue>
+bool CSSDiscreteArray<TValue>::operator==(
+    const CSSDiscreteArray<TValue> &other) const {
   if (values.size() != other.values.size()) {
     return false;
   }
@@ -91,13 +92,17 @@ bool CSSDiscreteArray<T>::operator==(const CSSDiscreteArray<T> &other) const {
   return true;
 }
 
-template <CSSValueDerived T>
+#ifndef NDEBUG
+
+template <CSSValueDerived TValue>
 std::ostream &operator<<(
     std::ostream &os,
-    const CSSDiscreteArray<T> &arrayValue) {
+    const CSSDiscreteArray<TValue> &arrayValue) {
   os << "CSSDiscreteArray(" << arrayValue.toString() << ")";
   return os;
 }
+
+#endif // NDEBUG
 
 template struct CSSDiscreteArray<CSSKeyword>;
 

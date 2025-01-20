@@ -14,6 +14,8 @@ CSSAngle::CSSAngle(const std::string &rotationString) {
       {"deg", M_PI / 180},
   };
 
+  // Find position of the first non-numeric character (first character
+  // of the unit, e.g. "deg" or "rad")
   size_t pos = rotationString.find_first_not_of("0123456789.-+");
 
   if (pos == std::string::npos) {
@@ -79,10 +81,14 @@ bool CSSAngle::operator==(const CSSAngle &other) const {
   return value == other.value;
 }
 
+#ifndef NDEBUG
+
 std::ostream &operator<<(std::ostream &os, const CSSAngle &angleValue) {
   os << "CSSAngle(" << angleValue.value << ")";
   return os;
 }
+
+#endif // NDEBUG
 
 } // namespace reanimated
 

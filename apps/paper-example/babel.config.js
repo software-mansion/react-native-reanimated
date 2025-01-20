@@ -8,9 +8,8 @@ module.exports = {
       {
         alias: {
           '@': '../common-app/src',
-          '~': '../common-app/src/features',
         },
-        extensions: ['.ts', '.tsx', '.svg', '.json'],
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
       },
     ],
   ],

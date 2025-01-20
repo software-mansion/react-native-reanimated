@@ -15,8 +15,8 @@ struct ValueInterpolatorUpdateContext {
   const ShadowNode::Shared &node;
 };
 
-template <typename T>
-struct is_css_value : std::is_base_of<CSSValue, T> {};
+template <typename TValue>
+struct is_css_value : std::is_base_of<CSSValue, TValue> {};
 
 template <typename... AllowedTypes>
 struct ValueKeyframe {
@@ -28,7 +28,7 @@ template <typename... AllowedTypes>
 class ValueInterpolator : public PropertyInterpolator {
   static_assert(
       (... && is_css_value<AllowedTypes>::value),
-      "[Reanimated] ValueInterpolator: All types must inherit from CSSValue");
+      "[Reanimated] ValueInterpolator: All interpolated types must inherit from CSSValue");
 
  public:
   using ValueType = CSSValueVariant<AllowedTypes...>;

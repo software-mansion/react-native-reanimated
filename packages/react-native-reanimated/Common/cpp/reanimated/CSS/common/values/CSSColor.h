@@ -40,7 +40,10 @@ struct CSSColor : public CSSBaseValue<CSSValueType::Color, CSSColor> {
   static uint8_t interpolateChannel(uint8_t from, uint8_t to, double progress);
 
   bool operator==(const CSSColor &other) const;
+
+#ifndef NDEBUG
   friend std::ostream &operator<<(std::ostream &os, const CSSColor &colorValue);
+#endif // NDEBUG
 };
 
 inline const CSSColor CSSColor::Transparent(ColorType::Transparent);

@@ -53,7 +53,7 @@ function setAndForwardRef<T>({
     if (typeof forwardedRef === 'function') {
       // Handle function-based refs. String-based refs are handled as functions.
       forwardedRef(ref);
-    } else if (typeof forwardedRef === 'object' && forwardedRef !== null) {
+    } else if (typeof forwardedRef === 'object' && forwardedRef) {
       // Handle createRef-based refs
       forwardedRef.current = ref;
     }

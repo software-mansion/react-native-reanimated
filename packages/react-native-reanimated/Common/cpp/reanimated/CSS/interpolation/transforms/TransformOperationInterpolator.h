@@ -10,12 +10,13 @@
 
 namespace reanimated {
 
-template <typename T>
-concept ResolvableOperation = requires(T t) {
+template <typename TOperation>
+concept ResolvableOperation = requires(TOperation operation) {
   {
-    t.value
-  } -> std::convertible_to<typename std::remove_reference_t<decltype(t.value)>>;
-  requires Resolvable<std::remove_reference_t<decltype(t.value)>>;
+    operation.value
+  } -> std::convertible_to<
+      typename std::remove_reference_t<decltype(operation.value)>>;
+  requires Resolvable<std::remove_reference_t<decltype(operation.value)>>;
 }; // NOLINT(readability/braces)
 
 // Base implementation for simple operations
@@ -74,38 +75,38 @@ class TransformOperationInterpolator<MatrixOperation>
 };
 
 // Specialization for resolvable operations
-template <ResolvableOperation OperationType>
-class TransformOperationInterpolator<OperationType>
-    : public TransformInterpolatorBase<OperationType> {
+template <ResolvableOperation TOperation>
+class TransformOperationInterpolator<TOperation>
+    : public TransformInterpolatorBase<TOperation> {
  public:
   TransformOperationInterpolator(
-      const std::shared_ptr<OperationType> &defaultOperation,
+      const std::shared_ptr<TOperation> &defaultOperation,
       RelativeTo relativeTo,
       const std::string &relativeProperty)
-      : TransformInterpolatorBase<OperationType>(defaultOperation),
+      : TransformInterpolatorBase<TOperation>(defaultOperation),
         relativeTo_(relativeTo),
         relativeProperty_(relativeProperty) {}
 
-  OperationType interpolate(
+  TOperation interpolate(
       double progress,
-      const OperationType &from,
-      const OperationType &to,
+      const TOperation &from,
+      const TOperation &to,
       const TransformInterpolatorUpdateContext &context) const override {
-    return OperationType{from.value.interpolate(
+    return TOperation{from.value.interpolate(
         progress, to.value, getResolvableValueContext(context))};
   }
 
-  OperationType resolveOperation(
-      const OperationType &operation,
+  TOperation resolveOperation(
+      const TOperation &operation,
       const TransformInterpolatorUpdateContext &context) const override {
     const auto &resolved =
         operation.value.resolve(getResolvableValueContext(context));
 
     if (!resolved.has_value()) {
-      return OperationType{operation.value};
+      return TOperation{operation.value};
     }
 
-    return OperationType{resolved.value()};
+    return TOperation{resolved.value()};
   }
 
  private:

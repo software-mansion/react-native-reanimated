@@ -48,6 +48,8 @@ std::string getOperationNameFromType(const TransformOperationType type) {
   return transformOperationStrings[static_cast<size_t>(type)];
 }
 
+#ifndef NDEBUG
+
 std::ostream &operator<<(
     std::ostream &os,
     const TransformOperation &operation) {
@@ -55,6 +57,8 @@ std::ostream &operator<<(
      << ")";
   return os;
 }
+
+#endif // NDEBUG
 
 bool TransformOperation::canConvertTo(
     const TransformOperationType targetType) const {
@@ -173,23 +177,23 @@ jsi::Value TransformOperation::toJSIValue(jsi::Runtime &rt) const {
   return obj;
 }
 
-template <typename T>
-TransformOperationBase<T>::TransformOperationBase(const T &value)
+template <typename TValue>
+TransformOperationBase<TValue>::TransformOperationBase(const TValue &value)
     : TransformOperation(), value(value) {}
 
-template <typename T>
-bool TransformOperationBase<T>::operator==(
+template <typename TValue>
+bool TransformOperationBase<TValue>::operator==(
     const TransformOperation &other) const {
   if (type() != other.type()) {
     return false;
   }
   const auto &otherOperation =
-      static_cast<const TransformOperationBase<T> &>(other);
+      static_cast<const TransformOperationBase<TValue> &>(other);
   return value == otherOperation.value;
 }
 
-template <typename T>
-std::string TransformOperationBase<T>::getOperationValue() const {
+template <typename TValue>
+std::string TransformOperationBase<TValue>::getOperationValue() const {
   std::ostringstream ss;
   ss << value;
   return ss.str();

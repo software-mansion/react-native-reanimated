@@ -11,8 +11,8 @@ namespace reanimated {
 
 using namespace worklets;
 
-template <typename T>
-class CSSKeywordBase : public CSSBaseValue<CSSValueType::Keyword, T> {
+template <typename TValue>
+class CSSKeywordBase : public CSSBaseValue<CSSValueType::Keyword, TValue> {
  public:
   static constexpr bool is_discrete_value = true;
 
@@ -38,9 +38,11 @@ struct CSSKeyword : public CSSKeywordBase<CSSKeyword> {
 
   CSSKeyword interpolate(double progress, const CSSKeyword &to) const override;
 
+#ifndef NDEBUG
   friend std::ostream &operator<<(
       std::ostream &os,
       const CSSKeyword &keywordValue);
+#endif // NDEBUG
 };
 
 struct CSSDisplay : public CSSKeywordBase<CSSDisplay> {
@@ -48,9 +50,11 @@ struct CSSDisplay : public CSSKeywordBase<CSSDisplay> {
 
   CSSDisplay interpolate(double progress, const CSSDisplay &to) const override;
 
+#ifndef NDEBUG
   friend std::ostream &operator<<(
       std::ostream &os,
       const CSSDisplay &displayValue);
+#endif // NDEBUG
 };
 
 } // namespace reanimated

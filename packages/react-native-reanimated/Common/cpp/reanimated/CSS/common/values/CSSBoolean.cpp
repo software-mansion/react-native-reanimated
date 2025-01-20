@@ -36,10 +36,14 @@ bool CSSBoolean::operator==(const CSSBoolean &other) const {
   return value == other.value;
 }
 
+#ifndef NDEBUG
+
 std::ostream &operator<<(std::ostream &os, const CSSBoolean &boolValue) {
   os << boolValue.toString();
   return os;
 }
+
+#endif // NDEBUG
 
 } // namespace reanimated
 

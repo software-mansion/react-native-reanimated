@@ -12,12 +12,12 @@ namespace reanimated {
 
 using namespace worklets;
 
-template <typename T, typename Derived>
-struct CSSNumberBase : public CSSBaseValue<CSSValueType::Number, Derived> {
-  T value;
+template <typename TValue, typename TDerived>
+struct CSSNumberBase : public CSSBaseValue<CSSValueType::Number, TDerived> {
+  TValue value;
 
   CSSNumberBase();
-  explicit CSSNumberBase(T value);
+  explicit CSSNumberBase(TValue value);
   explicit CSSNumberBase(jsi::Runtime &rt, const jsi::Value &jsiValue);
 
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
@@ -25,18 +25,22 @@ struct CSSNumberBase : public CSSBaseValue<CSSValueType::Number, Derived> {
   jsi::Value toJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  Derived interpolate(double progress, const Derived &other) const override;
+  TDerived interpolate(double progress, const TDerived &other) const override;
 
-  bool operator==(const CSSNumberBase<T, Derived> &other) const;
+  bool operator==(const CSSNumberBase<TValue, TDerived> &other) const;
 };
 
-template <typename T, typename Derived>
+#ifndef NDEBUG
+
+template <typename TValue, typename TDerived>
 std::ostream &operator<<(
     std::ostream &os,
-    const CSSNumberBase<T, Derived> &numberValue) {
+    const CSSNumberBase<TValue, TDerived> &numberValue) {
   os << "CSSNumberBase(" << numberValue.toString() << ")";
   return os;
 }
+
+#endif // NDEBUG
 
 struct CSSDouble : public CSSNumberBase<double, CSSDouble> {
   // Inherit all constructors from the base class

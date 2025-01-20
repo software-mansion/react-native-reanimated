@@ -8,9 +8,8 @@ module.exports = {
         alias: {
           'react-native': './node_modules/react-native-macos',
           '@': '../common-app/src',
-          '~': '../common-app/src/features',
         },
-        extensions: ['.js', '.ts', '.tsx', '.svg', '.json'],
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
       },
     ],
     ['react-native-reanimated/plugin', { processNestedWorklets: true }],

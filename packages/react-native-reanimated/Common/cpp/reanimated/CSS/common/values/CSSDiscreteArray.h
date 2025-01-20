@@ -12,8 +12,8 @@ namespace reanimated {
 
 using namespace worklets;
 
-template <typename T>
-concept CSSValueDerived = std::is_base_of_v<CSSValue, T>;
+template <typename TValue>
+concept CSSValueDerived = std::is_base_of_v<CSSValue, TValue>;
 
 /*
  * CSSDiscreteArray is used for array interpolation when arrays need to be
@@ -21,15 +21,15 @@ concept CSSValueDerived = std::is_base_of_v<CSSValue, T>;
  * elements of two arrays, this type interpolates between entire arrays
  * treated as single discrete values.
  */
-template <CSSValueDerived T>
+template <CSSValueDerived TValue>
 struct CSSDiscreteArray
-    : public CSSBaseValue<CSSValueType::Array, CSSDiscreteArray<T>> {
+    : public CSSBaseValue<CSSValueType::Array, CSSDiscreteArray<TValue>> {
   static constexpr bool is_discrete_value = true;
 
-  std::vector<T> values;
+  std::vector<TValue> values;
 
   CSSDiscreteArray();
-  explicit CSSDiscreteArray(const std::vector<T> &values);
+  explicit CSSDiscreteArray(const std::vector<TValue> &values);
   explicit CSSDiscreteArray(jsi::Runtime &rt, const jsi::Value &jsiValue);
 
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
@@ -37,14 +37,17 @@ struct CSSDiscreteArray
   jsi::Value toJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
-  CSSDiscreteArray<T> interpolate(
+  CSSDiscreteArray<TValue> interpolate(
       double progress,
-      const CSSDiscreteArray<T> &other) const override;
+      const CSSDiscreteArray<TValue> &other) const override;
 
-  bool operator==(const CSSDiscreteArray<T> &other) const;
+  bool operator==(const CSSDiscreteArray<TValue> &other) const;
+
+#ifndef NDEBUG
   friend std::ostream &operator<<(
       std::ostream &os,
-      const CSSDiscreteArray &arrayValue);
+      const CSSDiscreteArray<TValue> &arrayValue);
+#endif // NDEBUG
 };
 
 } // namespace reanimated

@@ -4,7 +4,6 @@
     "plugins": [{ "name": "./resolver.js" }],
     "baseUrl": ".",
     "paths": {
-      "~/*": ["src/features/*"],
       "@/*": ["src/*"]
     }
   },

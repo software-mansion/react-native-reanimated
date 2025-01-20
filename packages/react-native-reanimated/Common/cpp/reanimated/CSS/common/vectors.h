@@ -3,9 +3,12 @@
 
 #include <array>
 #include <cmath>
-#include <iostream>
 #include <string>
 #include <unordered_map>
+
+#ifndef NDEBUG
+#include <iostream>
+#endif // NDEBUG
 
 namespace reanimated {
 
@@ -19,7 +22,10 @@ struct Vector3D {
   double &operator[](size_t idx);
   const double &operator[](size_t idx) const;
   Vector3D &operator*=(double scalar);
+
+#ifndef NDEBUG
   friend std::ostream &operator<<(std::ostream &os, const Vector3D &vector);
+#endif // NDEBUG
 
   double length() const;
   void scaleToLength(double targetLength);
@@ -40,7 +46,10 @@ struct Vector4D {
 
   double &operator[](size_t idx);
   const double &operator[](size_t idx) const;
+
+#ifndef NDEBUG
   friend std::ostream &operator<<(std::ostream &os, const Vector4D &vector);
+#endif // NDEBUG
 
   Vector4D interpolate(double progress, const Vector4D &other) const;
 };

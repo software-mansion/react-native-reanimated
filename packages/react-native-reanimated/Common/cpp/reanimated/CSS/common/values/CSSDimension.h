@@ -32,9 +32,12 @@ struct CSSDimension
       const CSSResolvableValueInterpolationContext &context) const override;
 
   bool operator==(const CSSDimension &other) const;
+
+#ifndef NDEBUG
   friend std::ostream &operator<<(
       std::ostream &os,
       const CSSDimension &dimension);
+#endif // NDEBUG
 };
 
 } // namespace reanimated
