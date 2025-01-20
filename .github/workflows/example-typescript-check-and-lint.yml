@@ -26,7 +26,6 @@ jobs:
             apps/paper-example,
             apps/tvos-example,
             apps/web-example,
-            apps/external-worklets-example,
           ]
     concurrency:
       group: typescript-${{ matrix.working-directory }}-${{ github.ref }}

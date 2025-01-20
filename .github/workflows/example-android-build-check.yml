@@ -34,12 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory:
-          [
-            apps/paper-example,
-            apps/fabric-example,
-            apps/external-worklets-example,
-          ]
+        working-directory: [apps/paper-example, apps/fabric-example]
+        use-external-worklets: [true, false]
       fail-fast: false
     concurrency:
       group: android-${{ matrix.working-directory }}-${{ github.ref }}
@@ -57,6 +53,11 @@ jobs:
       # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+
+      - name: Use external worklets
+        if: ${{ matrix.use-external-worklets == 'true' }}
+        working-directory: ${{ matrix.working-directory }}
+        run: yarn add react-native-worklets
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android

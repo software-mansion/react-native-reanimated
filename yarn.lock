@@ -11680,49 +11680,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"external-worklets-example@workspace:apps/external-worklets-example":
-  version: 0.0.0-use.local
-  resolution: "external-worklets-example@workspace:apps/external-worklets-example"
-  dependencies:
-    "@babel/core": "npm:^7.25.2"
-    "@babel/preset-env": "npm:^7.25.3"
-    "@babel/runtime": "npm:^7.25.0"
-    "@react-native-async-storage/async-storage": "npm:^1.24.0"
-    "@react-native-community/cli": "npm:15.0.0"
-    "@react-native-community/cli-platform-android": "npm:15.0.0"
-    "@react-native-community/cli-platform-ios": "npm:15.0.0"
-    "@react-native-community/slider": "npm:^4.5.5"
-    "@react-native-masked-view/masked-view": "npm:^0.3.1"
-    "@react-native-picker/picker": "npm:^2.9.0"
-    "@react-native/babel-preset": "npm:0.76.1"
-    "@react-native/eslint-config": "npm:0.76.1"
-    "@react-native/metro-config": "npm:0.76.1"
-    "@react-native/typescript-config": "npm:0.76.1"
-    "@react-navigation/native": "npm:^7.0.0"
-    "@react-navigation/native-stack": "npm:^7.0.0"
-    "@shopify/flash-list": "npm:^1.7.1"
-    "@types/react": "npm:^18.2.6"
-    "@types/react-test-renderer": "npm:^18.0.0"
-    babel-jest: "npm:^29.6.3"
-    common-app: "workspace:*"
-    eslint: "npm:^8.57.0"
-    jest: "npm:^29.6.3"
-    patch-package: "npm:^8.0.0"
-    prettier: "npm:^3.3.3"
-    react: "npm:18.3.1"
-    react-native: "npm:^0.76.1"
-    react-native-gesture-handler: "npm:2.20.2"
-    react-native-pager-view: "npm:^6.4.1"
-    react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "npm:^4.13.1"
-    react-native-screens: "npm:^4.0.0"
-    react-native-svg: "npm:^15.8.0"
-    react-native-worklets: "workspace:*"
-    react-test-renderer: "npm:18.3.1"
-    typescript: "npm:~5.3.0"
-  languageName: unknown
-  linkType: soft
-
 "extract-zip@npm:2.0.1":
   version: 2.0.1
   resolution: "extract-zip@npm:2.0.1"
