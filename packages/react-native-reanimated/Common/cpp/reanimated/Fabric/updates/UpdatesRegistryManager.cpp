@@ -34,6 +34,10 @@ void UpdatesRegistryManager::pleaseCommitAfterPause() {
   shouldCommitAfterPause_ = true;
 }
 
+void UpdatesRegistryManager::cancelCommitAfterPause() {
+  shouldCommitAfterPause_ = false;
+}
+
 bool UpdatesRegistryManager::shouldCommitAfterPause() {
   return shouldCommitAfterPause_.exchange(false);
 }

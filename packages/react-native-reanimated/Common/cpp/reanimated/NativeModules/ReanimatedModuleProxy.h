@@ -206,6 +206,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
     return workletsModuleProxy_;
   }
 
+  void requestFlushRegistry();
+
  private:
   void commonInit(const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
@@ -221,6 +223,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 
   const bool isBridgeless_;
   const bool isReducedMotion_;
+  bool shouldFlushRegistry_ = false;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   const std::string valueUnpackerCode_;
 

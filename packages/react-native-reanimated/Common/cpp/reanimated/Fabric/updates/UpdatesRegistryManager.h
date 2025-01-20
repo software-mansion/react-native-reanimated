@@ -33,6 +33,7 @@ class UpdatesRegistryManager {
 
   void pleaseCommitAfterPause();
   bool shouldCommitAfterPause();
+  void cancelCommitAfterPause();
 
   PropsMap collectProps();
 

@@ -828,6 +828,12 @@ void ReanimatedModuleProxy::performOperations() {
   viewStylesRepository_->clearNodesCache();
 }
 
+void ReanimatedModuleProxy::requestFlushRegistry() {
+  jsi::Runtime &rt =
+      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+  requestRender_([this](double time) { shouldFlushRegistry_ = true; }, rt);
+}
+
 void ReanimatedModuleProxy::commitUpdates(
     jsi::Runtime &rt,
     const UpdatesBatch &updatesBatch) {
@@ -840,11 +846,21 @@ void ReanimatedModuleProxy::commitUpdates(
   updatesRegistryManager_->collectPropsToRevertBySurface(propsMapBySurface);
 #endif
 
-  for (auto const &[shadowNode, props] : updatesBatch) {
-    SurfaceId surfaceId = shadowNode->getSurfaceId();
-    auto family = &shadowNode->getFamily();
-    react_native_assert(family->getSurfaceId() == surfaceId);
-    propsMapBySurface[surfaceId][family].emplace_back(rt, std::move(*props));
+  if (shouldFlushRegistry_) {
+    shouldFlushRegistry_ = false;
+    const auto propsMap = updatesRegistryManager_->collectProps();
+    for (auto const &[family, props] : propsMap) {
+      const auto surfaceId = family->getSurfaceId();
+      auto &propsVector = propsMapBySurface[surfaceId][family];
+      propsVector.insert(propsVector.end(), props.begin(), props.end());
+    }
+  } else {
+    for (auto const &[shadowNode, props] : updatesBatch) {
+      SurfaceId surfaceId = shadowNode->getSurfaceId();
+      auto family = &shadowNode->getFamily();
+      react_native_assert(family->getSurfaceId() == surfaceId);
+      propsMapBySurface[surfaceId][family].emplace_back(rt, std::move(*props));
+    }
   }
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
@@ -962,8 +978,9 @@ void ReanimatedModuleProxy::initializeFabric(
 
   initializeLayoutAnimationsProxy();
 
+  const std::function<void()> request = [this]() { requestFlushRegistry(); };
   mountHook_ = std::make_shared<ReanimatedMountHook>(
-      uiManager_, updatesRegistryManager_);
+      uiManager_, updatesRegistryManager_, request);
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
       uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
 }
