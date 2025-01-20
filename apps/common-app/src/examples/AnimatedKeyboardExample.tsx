@@ -3,6 +3,7 @@ import Animated, {
   useAnimatedKeyboard,
   useAnimatedStyle,
   useAnimatedProps,
+  KeyboardState,
 } from 'react-native-reanimated';
 import {
   Keyboard,
@@ -17,12 +18,12 @@ import {
 Animated.addWhitelistedNativeProps({ text: true });
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
-const KeyboardStateToName = {
-  0: 'UNKNOWN',
-  1: 'OPENING',
-  2: 'OPEN',
-  3: 'CLOSING',
-  4: 'CLOSED',
+const KeyboardStateNames = {
+  [KeyboardState.UNKNOWN]: 'UNKNOWN',
+  [KeyboardState.OPENING]: 'OPENING',
+  [KeyboardState.OPEN]: 'OPEN',
+  [KeyboardState.CLOSING]: 'CLOSING',
+  [KeyboardState.CLOSED]: 'CLOSED',
 };
 
 function getRandomColor() {
@@ -34,17 +35,21 @@ function getRandomColor() {
   return color;
 }
 
-function RandomView({ number }: { number: number }) {
-  const color = getRandomColor();
+function RandomView({ id }: { id: number }) {
+  const color = React.useMemo(() => {
+    return getRandomColor();
+  }, []);
+
   return (
     <View style={[styles.randomView, { backgroundColor: color }]}>
-      <Text>Random view {number}</Text>
+      <Text>Random view {id}</Text>
     </View>
   );
 }
 
 export default function AnimatedKeyboardExample() {
   const keyboard = useAnimatedKeyboard();
+  const [inputFocused, setInputFocused] = React.useState(false);
 
   const translateStyle = useAnimatedStyle(() => {
     return {
@@ -58,7 +63,7 @@ export default function AnimatedKeyboardExample() {
   });
 
   const animatedStateProps = useAnimatedProps(() => {
-    const text = `Keyboard state: ${KeyboardStateToName[keyboard.state.value]} - ${keyboard.state.value}`;
+    const text = `Keyboard state: ${KeyboardStateNames[keyboard.state.value]} - ${keyboard.state.value}`;
     return { text, defaultValue: text };
   });
 
@@ -69,15 +74,20 @@ export default function AnimatedKeyboardExample() {
         keyboardDismissMode="interactive"
         scrollEnabled={true}>
         {Array.from({ length: 10 }).map((_, index) => {
-          return <RandomView key={index} number={index} />;
+          return <RandomView key={index} id={index} />;
         })}
       </ScrollView>
       <Animated.View style={[styles.accessoryBar, translateStyle]}>
         <View style={styles.inputContainer}>
           <TextInput
-            style={styles.textInput}
+            style={[
+              styles.textInput,
+              { backgroundColor: inputFocused ? '#FFFFFF' : '#DCDCDC' },
+            ]}
             autoCorrect
             defaultValue="press me!!!"
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => setInputFocused(false)}
           />
         </View>
         <TouchableOpacity
