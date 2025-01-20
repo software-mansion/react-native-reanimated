@@ -53,8 +53,8 @@ SingleInstanceChecker<T>::SingleInstanceChecker() {
       __cxxabiv1::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
 
   // React Native can spawn up to two instances of a Native Module at the same
-  // time. This happens during a reload when new instance of React Native is
-  // created while simultaneously an old one is torn down.
+  // time. This happens during a reload when a new instance of React Native is
+  // created while simultaneously the old one is torn down.
   instanceCount_++;
   assertWithMessage(
       instanceCount_ <= 2,
