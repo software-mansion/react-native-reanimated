@@ -1,6 +1,5 @@
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { useNavigation } from '@react-navigation/native';
 import { useCallback, useMemo } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
@@ -19,6 +18,8 @@ import { BOTTOM_BAR_HEIGHT } from '@/apps/css/navigation/constants';
 import type { TabRoute } from '@/apps/css/navigation/types';
 import { colors, flex, spacing, text } from '@/theme';
 
+import { useLocalNavigationRef } from '../LocalNavigationProvider';
+
 const TABS_GAP = spacing.xxs;
 
 type BottomTabBarProps = {
@@ -31,7 +32,7 @@ export default function BottomTabBar({
   routes,
 }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
+  const navigationRef = useLocalNavigationRef();
 
   const buttonWidths = useSharedValue<Array<number>>([]);
   const currentRouteIndex = useDerivedValue(() =>
@@ -108,7 +109,7 @@ export default function BottomTabBar({
               name={name}
               onMeasure={(width) => handleMeasure(width, idx)}
               onPress={() => {
-                navigation.reset({
+                navigationRef.current?.reset({
                   routes: [{ name: name as never }],
                 });
               }}

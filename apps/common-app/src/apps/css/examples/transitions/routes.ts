@@ -38,7 +38,6 @@ const routes = {
         Component: transitionSettings.TransitionTimingFunction,
       },
       TransitionBehavior: {
-        labelTypes: ['new'],
         name: 'Transition Behavior',
         Component: transitionSettings.TransitionBehavior,
       },
@@ -57,12 +56,10 @@ const routes = {
         Component: miscellaneous.UpdatingTransitionSettings,
       },
       MultipleTransitionSettings: {
-        labelTypes: ['new'],
         name: 'Multiple Transition Settings',
         Component: miscellaneous.MultipleTransitionSettings,
       },
       ReversingShortening: {
-        labelTypes: ['new'],
         name: 'Reversing Shortening',
         Component: miscellaneous.ReversingShortening,
       },

@@ -22,7 +22,6 @@ export default function TransitionBehavior() {
             { label: 'normal (default)' },
             { label: 'allowDiscrete', transitionBehavior: 'allowDiscrete' },
           ],
-          labelTypes: ['new'],
           title: 'Transition Behavior',
         },
       ]}

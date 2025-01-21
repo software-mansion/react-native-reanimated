@@ -1,17 +1,24 @@
 import { faExchange, faFire } from '@fortawesome/free-solid-svg-icons';
+import { useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createStackNavigator } from '@react-navigation/stack';
+import { memo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { useSharedValue } from 'react-native-reanimated';
+import { useReducedMotion, useSharedValue } from 'react-native-reanimated';
 
 import { RouteCard, ScrollScreen, Stagger, Text } from '@/apps/css/components';
 import { animationRoutes, transitionRoutes } from '@/apps/css/examples';
+import { BackButton, DrawerButton } from '@/components';
 import { colors, flex, iconSizes, radius, spacing } from '@/theme';
 import type { FontVariant } from '@/types';
 
-import { BackButton, BottomTabBar } from './components';
+import { BottomTabBar } from './components';
+import {
+  LocalNavigationProvider,
+  useLocalNavigationRef,
+} from './LocalNavigationProvider';
 import type { Routes, TabRoute } from './types';
-import { getScreenTitle, isRouteWithRoutes } from './utils';
+import { isRouteWithRoutes } from './utils';
 
 // We use stack navigator to mimic the tab navigator, thus top-level routes will be
 // displayed as tabs in the bottom tab bar
@@ -90,6 +97,13 @@ function createRoutesScreen(
   flatten: boolean
 ): React.ComponentType {
   function RoutesScreen() {
+    const navigation = useNavigation();
+    const ref = useLocalNavigationRef();
+
+    if (!ref.current) {
+      ref.current = navigation;
+    }
+
     return (
       <ScrollScreen contentContainerStyle={styles.scrollViewContent}>
         <Stagger interval={50}>
@@ -106,29 +120,37 @@ function createRoutesScreen(
 
 type StackScreensOptions = {
   flatten: boolean;
-  parentFlattened: boolean;
   depth: number;
+  parentOptions?: StackScreensOptions;
 };
 
 function createStackScreens(
   routes: Routes,
-  path: string,
-  parentName?: string,
+  pathChunks: Array<string>,
+  reducedMotion: boolean,
   options?: StackScreensOptions
 ): Array<React.ReactNode> {
-  const { depth = 0, flatten = false, parentFlattened = false } = options ?? {};
+  const { depth = 0, flatten = false } = options ?? {};
+
+  const path = pathChunks.join('/');
+
+  const sharedOptions = {
+    contentStyle: styles.content,
+    headerLeft: () => <BackButton />,
+    headerRight: () => <DrawerButton />,
+  };
 
   return [
     // Create a screen for the navigation routes
-    !parentFlattened && (
+    !options?.parentOptions?.flatten && (
       <Stack.Screen
         component={createRoutesScreen(routes, path, flatten)}
         key={path}
         name={path}
         options={{
-          animation: depth === 0 ? 'none' : 'slide_from_right',
-          contentStyle: styles.content,
-          title: parentName ?? getScreenTitle(path),
+          ...sharedOptions,
+          animation: reducedMotion || depth === 0 ? 'none' : 'default',
+          title: pathChunks[pathChunks.length - 1],
         }}
       />
     ),
@@ -136,18 +158,27 @@ function createStackScreens(
     ...Object.entries(routes).flatMap(([key, value]) => {
       const newPath = `${path}/${key}`;
       if (isRouteWithRoutes(value)) {
-        return createStackScreens(value.routes, newPath, value.name, {
-          depth: depth + 1,
-          flatten: !!value.flatten,
-          parentFlattened: flatten,
-        });
+        return createStackScreens(
+          value.routes,
+          [...pathChunks, key],
+          reducedMotion,
+          {
+            depth: depth + 1,
+            flatten: !!value.flatten,
+            parentOptions: options,
+          }
+        );
       }
       return (
         <Stack.Screen
           component={value.Component}
           key={key}
           name={newPath}
-          options={{ contentStyle: styles.content, title: value.name }}
+          options={{
+            ...sharedOptions,
+            animation: 'slide_from_right',
+            title: key,
+          }}
         />
       );
     }),
@@ -156,12 +187,14 @@ function createStackScreens(
 
 const INITIAL_ROUTE_NAME = Object.values(tabRoutes)[0]?.name;
 
-export default function Navigator() {
+function Navigator() {
+  const shouldReduceMotion = useReducedMotion();
   const currentRoute = useSharedValue<string | undefined>(INITIAL_ROUTE_NAME);
-  const routesArray = Object.values(tabRoutes);
+
+  const tabRoutesArray = Object.values(tabRoutes);
 
   return (
-    <>
+    <LocalNavigationProvider>
       <Stack.Navigator
         screenListeners={{
           focus: (e) => {
@@ -169,8 +202,7 @@ export default function Navigator() {
           },
         }}
         screenOptions={{
-          animation: 'slide_from_right',
-          headerLeft: () => <BackButton tabRoutes={routesArray} />,
+          animation: 'default',
           headerStyle: {
             backgroundColor: colors.background1,
           },
@@ -179,11 +211,11 @@ export default function Navigator() {
           statusBarStyle: 'dark',
         }}>
         {Object.entries(tabRoutes).flatMap(([key, value]) =>
-          createStackScreens(value.routes, key, value.name)
+          createStackScreens(value.routes, [key], shouldReduceMotion)
         )}
       </Stack.Navigator>
-      <BottomTabBar currentRoute={currentRoute} routes={routesArray} />
-    </>
+      <BottomTabBar currentRoute={currentRoute} routes={tabRoutesArray} />
+    </LocalNavigationProvider>
   );
 }
 
@@ -209,3 +241,5 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
   },
 });
+
+export default memo(Navigator);

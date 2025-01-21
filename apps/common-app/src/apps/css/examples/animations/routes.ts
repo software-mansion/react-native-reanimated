@@ -512,12 +512,10 @@ const routes = {
         Component: miscellaneous.UpdatingAnimationSettings,
       },
       KeyframeTimingFunctions: {
-        labelTypes: ['new'],
         name: 'Keyframe Timing Functions',
         Component: miscellaneous.KeyframeTimingFunctions,
       },
       MultipleAnimations: {
-        labelTypes: ['new'],
         name: 'Multiple Animations',
         Component: miscellaneous.MultipleAnimations,
       },

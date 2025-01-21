@@ -192,6 +192,8 @@ bool TransformOperationBase<TValue>::operator==(
   return value == otherOperation.value;
 }
 
+#ifndef NDEBUG
+
 template <typename TValue>
 std::string TransformOperationBase<TValue>::getOperationValue() const {
   std::ostringstream ss;
@@ -217,6 +219,8 @@ std::string TransformOperationBase<
   }
   return ss.str();
 }
+
+#endif // NDEBUG
 
 /**
  * Concrete transform operations

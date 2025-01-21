@@ -239,7 +239,6 @@ std::ostream &operator<<(std::ostream &os, const TransformMatrix &matrix) {
 
 #endif // NDEBUG
 
-
 std::string TransformMatrix::toString() const {
   std::string result = "[";
   for (size_t i = 0; i < 16; ++i) {
