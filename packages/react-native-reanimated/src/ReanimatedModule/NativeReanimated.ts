@@ -12,7 +12,7 @@ import type {
 } from '../commonTypes';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
-import { isFabric } from '../PlatformChecker';
+import { isFabric, isWeb } from '../PlatformChecker';
 import type React from 'react';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { ReanimatedTurboModule } from '../specs';
@@ -24,6 +24,8 @@ import type {
   NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
+
+const IS_WEB = isWeb();
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
@@ -63,6 +65,11 @@ class NativeReanimatedModule implements IReanimatedModule {
       throw new ReanimatedError(
         `Native part of Reanimated doesn't seem to be initialized.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
+      );
+    }
+    if (!isFabric() && !IS_WEB) {
+      throw new ReanimatedError(
+        'CSS Animations and Transitions are supported only on the New Architecture and web.'
       );
     }
     if (__DEV__) {
