@@ -69,7 +69,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     }
     if (!isFabric() && !IS_WEB) {
       throw new ReanimatedError(
-        'CSS Animations and Transitions are supported only on the New Architecture and web.'
+        'Reanimated 4 supports only the React Native New Architecture and web.'
       );
     }
     if (__DEV__) {
