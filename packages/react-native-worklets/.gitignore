@@ -61,7 +61,7 @@ lib/
 apple/generated
 android/generated
 
-# Duplicate worklets code
+# Duplicated worklets code
 apple/duplicated
 android/src/duplicated
 Common/duplicated

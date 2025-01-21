@@ -147,9 +147,7 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
 def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
 
-// TODO: Uncomment me when when dynamic worklets linking is ready
 def hasExternalWorklets = rootProject.subprojects.find { it.name == 'react-native-worklets' } != null
-// def hasExternalWorklets = false
 
 def workletsPrefabHeadersDir = project.file("$buildDir/prefab-headers/worklets")
 def reanimatedPrefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")

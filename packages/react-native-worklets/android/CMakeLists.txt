@@ -55,5 +55,4 @@ set(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")
 set(DUPLICATED_ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/duplicated/main/cpp")
 set(DUPLICATED_COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/duplicated/cpp")
 
-# TODO: Uncomment me when worklets get some sources
 add_subdirectory("${ANDROID_CPP_DIR}/worklets")

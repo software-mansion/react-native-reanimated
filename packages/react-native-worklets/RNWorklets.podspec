@@ -36,9 +36,6 @@ Pod::Spec.new do |s|
     ss.header_mappings_dir = "Common/duplicated/cpp/worklets"
 
     ss.subspec "apple" do |sss|
-      # Please be careful with the snakes.
-      # 🐍🐍🐍
-      # Thank you for your understanding.
       sss.source_files = "apple/duplicated/worklets/**/*.{mm,h,m}"
       sss.header_dir = "worklets"
       sss.header_mappings_dir = "apple/duplicated/worklets"
