@@ -1,11 +1,10 @@
 {
-  "extends": "../../tsconfig.json"
-  // "compilerOptions": {
-  //   "baseUrl": ".",
-  //   "paths": {
-  //     "react-native-reanimated": ["../"],
-  //     "react": ["./node_modules/@types/react"]
-  //   }
-  // },
-  // "exclude": []
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["../common-app/src/*"]
+      // "react": ["./node_modules/@types/react"]
+    }
+  }
 }

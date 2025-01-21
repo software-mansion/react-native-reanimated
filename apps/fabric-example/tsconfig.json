@@ -1,4 +1,10 @@
 {
   "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["../common-app/src/*"]
+    }
+  },
   "exclude": ["node_modules", "metro.config.js"]
 }
