@@ -98,7 +98,6 @@ export default function MultipleTransitionSettings() {
       <Stagger>
         <Section
           description="Change the **transition property**, **duration**, **delay**, and **timing function** to see how they influence the transition between styles."
-          labelTypes={['new']}
           title="Multiple Transition Settings">
           <ConfigSelector
             blockStyle={styles.block}

@@ -102,7 +102,6 @@ export default function ReversingShortening() {
       <Stagger>
         <Section
           description="This example demonstrates how transition duration is shortened for **reverse transitions**. This applies only to transitions where the property is animated **between 2 states** that are applied interchangeably and the transition is **interrupted before finishing**."
-          labelTypes={['new']}
           title="Reversing Shortening of Interrupted Transitions">
           <ConfigSelector
             blockStyle={styles.block}

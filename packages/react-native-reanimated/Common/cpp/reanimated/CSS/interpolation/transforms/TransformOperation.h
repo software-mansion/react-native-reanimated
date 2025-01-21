@@ -15,6 +15,10 @@
 #include <variant>
 #include <vector>
 
+#ifndef NDEBUG
+#include <iostream>
+#endif // NDEBUG
+
 namespace reanimated {
 
 using namespace facebook;
@@ -47,11 +51,11 @@ struct TransformOperation {
   friend std::ostream &operator<<(
       std::ostream &os,
       const TransformOperation &operation);
+  virtual std::string getOperationValue() const = 0;
 #endif // NDEBUG
 
   std::string getOperationName() const;
   virtual TransformOperationType type() const = 0;
-  virtual std::string getOperationValue() const = 0;
   virtual bool isRelative() const;
 
   static std::shared_ptr<TransformOperation> fromJSIValue(
@@ -78,7 +82,10 @@ struct TransformOperationBase : public TransformOperation {
   virtual ~TransformOperationBase() = default;
 
   bool operator==(const TransformOperation &other) const override;
+
+#ifndef NDEBUG
   std::string getOperationValue() const override;
+#endif // NDEBUG
 };
 
 /**

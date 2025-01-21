@@ -124,7 +124,6 @@ export default function MultipleAnimations() {
     <ScrollScreen>
       <Stagger>
         <Section
-          labelTypes={['new']}
           title="Multiple Animations"
           description="This example demonstrates how to apply **multiple animations** to a single element. It also allows selecting **separate animation settings** or **sharing them** across all animations if only a single value is set.
         ">

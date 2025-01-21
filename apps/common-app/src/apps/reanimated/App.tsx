@@ -1,37 +1,22 @@
 import './types';
 
 import {
-  ActivityIndicator,
   FlatList,
-  Linking,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import {
-  GestureHandlerRootView,
-  RectButton,
-} from 'react-native-gesture-handler';
-import type { HeaderBackButtonProps } from '@react-navigation/elements';
-import { HeaderBackButton } from '@react-navigation/elements';
+import { RectButton } from 'react-native-gesture-handler';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type { NavigationState, PathConfigMap } from '@react-navigation/native';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import { createStackNavigator } from '@react-navigation/stack';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXAMPLES } from './examples';
-import React, { useCallback } from 'react';
+import React, { memo } from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
-
-function isFabric(): boolean {
-  return !!(global as Record<string, unknown>)._IS_FABRIC;
-}
+import { createStack, IS_MACOS, isFabric } from '@/utils';
+import { BackButton, DrawerButton } from '@/components';
 
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;
@@ -118,7 +103,7 @@ function Item({
   wasClicked,
 }: ItemProps) {
   const isDisabled = missingOnFabric && isFabric();
-  const Button = Platform.OS === 'macos' ? Pressable : RectButton;
+  const Button = IS_MACOS ? Pressable : RectButton;
   return (
     <Button
       style={[
@@ -138,146 +123,47 @@ function ItemSeparator() {
   return <View style={styles.separator} />;
 }
 
-const Stack =
-  Platform.OS === 'macos'
-    ? createStackNavigator<RootStackParamList>()
-    : createNativeStackNavigator<RootStackParamList>();
+const Stack = createStack<RootStackParamList>();
 
-const linking = {
-  prefixes: [],
-  config: {
-    screens: EXAMPLES_NAMES.reduce<PathConfigMap<RootStackParamList>>(
-      (acc, name) => {
-        acc[name] = name;
-        return acc;
-      },
-      { Home: '' }
-    ),
-  },
+const screenOptions = {
+  headerLeft: IS_MACOS ? undefined : () => <BackButton />,
+  headerRight: IS_MACOS ? undefined : () => <DrawerButton />,
 };
 
-function BackButton(props: HeaderBackButtonProps) {
-  const navigation = useNavigation<
-    | StackNavigationProp<RootStackParamList>
-    | NativeStackNavigationProp<RootStackParamList>
-  >();
-
-  return (
-    <HeaderBackButton {...props} onPress={() => navigation.popTo('Home')} />
-  );
-}
-
-export default function App() {
-  const { isReady, navigationState, updateNavigationState } =
-    useNavigationState();
-
+function Navigator() {
   const shouldReduceMotion = useReducedMotion();
 
-  if (!isReady) {
-    return (
-      <View style={[styles.container, styles.center]}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <NavigationContainer
-        linking={linking}
-        initialState={navigationState}
-        onStateChange={updateNavigationState}>
-        <Stack.Navigator>
-          <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{
-              headerTitle: '🐎 Reanimated examples',
-              title: 'Reanimated examples',
-              headerLeft: Platform.OS === 'web' ? () => null : undefined,
-            }}
-          />
-          {EXAMPLES_NAMES.map((name) => (
-            <Stack.Screen
-              key={name}
-              name={name}
-              component={EXAMPLES[name].screen}
-              options={{
-                animation: shouldReduceMotion ? 'fade' : 'default',
-                headerTitle: EXAMPLES[name].title,
-                title: EXAMPLES[name].title,
-                headerLeft: Platform.OS === 'web' ? BackButton : undefined,
-              }}
-            />
-          ))}
-        </Stack.Navigator>
-      </NavigationContainer>
-    </GestureHandlerRootView>
+    <Stack.Navigator screenOptions={screenOptions}>
+      <Stack.Screen
+        name="Examples"
+        component={HomeScreen}
+        options={{
+          headerTitle: '🐎 Reanimated examples',
+          title: 'Reanimated examples',
+        }}
+      />
+      {EXAMPLES_NAMES.map((name) => (
+        <Stack.Screen
+          key={name}
+          name={name}
+          component={EXAMPLES[name].screen}
+          options={{
+            animation: shouldReduceMotion ? 'fade' : 'default',
+            headerTitle: EXAMPLES[name].title,
+            title: EXAMPLES[name].title,
+          }}
+        />
+      ))}
+    </Stack.Navigator>
   );
 }
 
-// copied from https://reactnavigation.org/docs/state-persistence/
-const PERSISTENCE_KEY = 'NAVIGATION_STATE_V1';
-
-function noop() {
-  // do nothing
-}
-
-function useNavigationState() {
-  const [isReady, setIsReady] = React.useState(!__DEV__);
-
-  const [navigationState, setNavigationState] = React.useState<
-    undefined | NavigationState
-  >();
-
-  const updateNavigationState = useCallback((state?: NavigationState) => {
-    AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state)).catch(noop);
-  }, []);
-
-  React.useEffect(() => {
-    const restoreState = async () => {
-      try {
-        const initialUrl = await Linking.getInitialURL();
-
-        if (
-          Platform.OS !== 'web' &&
-          Platform.OS !== 'macos' &&
-          initialUrl == null
-        ) {
-          // Only restore state if there's no deep link and we're not on web
-          const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
-          // Erase the state immediately after fetching it.
-          // This prevents the app to boot on the screen that previously crashed.
-          updateNavigationState();
-          const state = savedStateString
-            ? JSON.parse(savedStateString)
-            : undefined;
-
-          if (state !== undefined) {
-            setNavigationState(state);
-          }
-        }
-      } finally {
-        setIsReady(true);
-      }
-    };
-
-    if (!isReady) {
-      restoreState().catch(noop);
-    }
-  }, [isReady, updateNavigationState]);
-
-  return { isReady, navigationState, updateNavigationState };
+function App() {
+  return <Navigator />;
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  center: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   list: {
     backgroundColor: '#EFEFF4',
   },
@@ -305,3 +191,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#e6f0f7',
   },
 });
+
+export default memo(App);

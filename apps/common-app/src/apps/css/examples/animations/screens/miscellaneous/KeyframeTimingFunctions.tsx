@@ -87,7 +87,6 @@ export default function KeyframeTimingFunctions() {
     <ScrollScreen>
       <Stagger>
         <Section
-          labelTypes={['new']}
           title="Keyframe Timing Functions"
           description={[
             '**Enable**, **disable** or **change** the animation timing function in the animation properties config below.',
