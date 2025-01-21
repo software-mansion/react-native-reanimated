@@ -1,5 +1,5 @@
+#include <reanimated/Tools/ReanimatedVersion.h>
 #include <worklets/Tools/JSLogger.h>
-#include <worklets/Tools/ReanimatedVersion.h>
 
 #include <memory>
 #include <regex>
@@ -13,7 +13,7 @@
 
 using namespace facebook;
 
-namespace worklets {
+namespace reanimated {
 
 std::string getReanimatedCppVersion() {
   return std::string(REANIMATED_VERSION_STRING);
@@ -54,7 +54,7 @@ bool matchVersion(const std::string &version1, const std::string &version2) {
 
 void checkJSVersion(
     jsi::Runtime &rnRuntime,
-    const std::shared_ptr<JSLogger> &jsLogger) {
+    const std::shared_ptr<worklets::JSLogger> &jsLogger) {
   auto cppVersion = getReanimatedCppVersion();
 
   auto maybeJSVersion =
@@ -92,4 +92,4 @@ bool matchVersion(const std::string &version1, const std::string &version2) {
 }
 #endif // NDEBUG
 
-}; // namespace worklets
+}; // namespace reanimated

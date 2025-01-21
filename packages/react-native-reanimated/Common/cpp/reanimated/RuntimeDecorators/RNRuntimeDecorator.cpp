@@ -1,5 +1,5 @@
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
-#include <worklets/Tools/ReanimatedVersion.h>
+#include <reanimated/Tools/ReanimatedVersion.h>
 
 namespace reanimated {
 
