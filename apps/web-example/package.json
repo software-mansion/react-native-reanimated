@@ -6,8 +6,6 @@
   "scripts": {
     "start": "expo start --web",
     "start:noplugin": "DISABLE_BABEL_PLUGIN=1 yarn start",
-    "lint": "eslint --max-warnings=0 .",
-    "format": "prettier --write --list-different .",
     "production": "yarn expo export -p web && yarn serve dist --single",
     "build": ""
   },
