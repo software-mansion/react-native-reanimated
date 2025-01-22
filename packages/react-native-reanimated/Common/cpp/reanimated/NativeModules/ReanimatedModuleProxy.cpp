@@ -791,20 +791,27 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
 
   cssLoopRunning_ = true;
 
-  // To prevent memory leaks and unsafe raw pointer passing.
-
-  jsi::Runtime &rt =
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-  requestRender_(
-      [weakThis = weak_from_this()](const double timestampMs) {
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
+      [weakThis = weak_from_this()]() {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
         }
 
-        strongThis->cssLoopCallback(timestampMs);
-      },
-      rt);
+        jsi::Runtime &rt =
+            strongThis->workletsModuleProxy_->getUIWorkletRuntime()
+                ->getJSIRuntime();
+        strongThis->requestRender_(
+            [weakThis](const double timestampMs) {
+              auto strongThis = weakThis.lock();
+              if (!strongThis) {
+                return;
+              }
+
+              strongThis->cssLoopCallback(timestampMs);
+            },
+            rt);
+      });
 }
 
 double ReanimatedModuleProxy::getCssTimestamp() {
