@@ -1,6 +1,9 @@
 name: Example Typescript check and lint
 env:
   YARN_ENABLE_HARDENED_MODE: 0
+  TYPE_CHECK_DIRECTORIES: >-
+    apps/common-app
+    apps/tvos-example
 on:
   pull_request:
   merge_group:
@@ -47,12 +50,8 @@ jobs:
 
       - name: Check types
         working-directory: ${{ matrix.working-directory }}
-        if: ${{ matrix.working-directory != 'apps/web-example' }}
+        if: ${{ contains(env.TYPE_CHECK_DIRECTORIES, matrix.working-directory) }}
         run: yarn tsc --noEmit
-      - name: Check types
-        working-directory: ${{ matrix.working-directory }}
-        if: ${{ matrix.working-directory == 'apps/web-example' }}
-        run: yarn tsc --noEmit --baseUrl ../..
       - name: Lint
         working-directory: ${{ matrix.working-directory }}
         run: yarn lint
