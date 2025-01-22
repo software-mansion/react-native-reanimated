@@ -54,6 +54,7 @@ jobs:
         run: yarn tsc --noEmit
       - name: Lint
         working-directory: ${{ matrix.working-directory }}
+        if: ${{ contains(env.TYPE_CHECK_DIRECTORIES, matrix.working-directory) }}
         run: yarn lint
       - name: Build WebExample
         working-directory: ${{ matrix.working-directory }}
