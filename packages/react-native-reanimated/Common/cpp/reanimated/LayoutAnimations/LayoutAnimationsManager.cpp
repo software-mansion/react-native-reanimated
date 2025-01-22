@@ -116,8 +116,8 @@ void LayoutAnimationsManager::startLayoutAnimation(
   std::shared_ptr<Shareable> config;
   {
     auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
-    if (!collection::contains(getConfigsForType(type), tag)){
-        return;
+    if (!collection::contains(getConfigsForType(type), tag)) {
+      return;
     }
     config = getConfigsForType(type)[tag];
   }
