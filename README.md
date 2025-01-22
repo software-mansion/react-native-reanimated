@@ -6,7 +6,7 @@
 
 React Native Reanimated provides a more comprehensive,
 low-level abstraction for the Animated library API on which to build,
-allowing for much greater flexibility, especially when it comes to 
+allowing for much greater flexibility, especially when it comes to
 gesture-based interactions.
 
 ### Nightly CI state
@@ -36,7 +36,7 @@ Check out our dedicated documentation page for info about this library, API refe
 ## Examples
 
 The source code for the example (showcase) app is under the [`apps/common-app`](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/) directory.
-If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Check [Example README](apps/paper-example/README.md) for installation instructions.
+If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Check [Example README](apps/fabric-example/README.md) for installation instructions.
 
 ## License
 
