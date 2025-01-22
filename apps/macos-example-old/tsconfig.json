@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["../common-app/src/*"]
+      // "react": ["./node_modules/@types/react"]
+    }
+  }
+}

@@ -1,0 +1,39 @@
+current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/bigdecimal-3.1.9/ext/bigdecimal
+/Users/mateu/.rbenv/versions/2.7.6/bin/ruby -I /Users/mateu/.rbenv/versions/2.7.6/lib/ruby/2.7.0 -r ./siteconf20250122-90481-fxpk3w.rb extconf.rb
+checking for __builtin_clz()... yes
+checking for __builtin_clzl()... yes
+checking for __builtin_clzll()... yes
+checking for float.h... yes
+checking for math.h... yes
+checking for stdbool.h... yes
+checking for stdlib.h... yes
+checking for x86intrin.h... no
+checking for intrin.h... no
+checking for labs() in stdlib.h... yes
+checking for llabs() in stdlib.h... yes
+checking for finite() in math.h... yes
+checking for isfinite() in math.h... no
+checking for ruby/atomic.h... no
+checking for ruby/internal/has/builtin.h... no
+checking for ruby/internal/static_assert.h... no
+checking for rb_rational_num() in ruby.h... yes
+checking for rb_rational_den() in ruby.h... yes
+checking for rb_complex_real() in ruby.h... yes
+checking for rb_complex_imag() in ruby.h... yes
+checking for rb_opts_exception_p() in ruby.h... yes
+checking for rb_category_warn() in ruby.h... no
+checking for RB_WARN_CATEGORY_DEPRECATED in ruby.h... no
+creating Makefile
+
+current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/bigdecimal-3.1.9/ext/bigdecimal
+make "DESTDIR=" clean
+
+current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/bigdecimal-3.1.9/ext/bigdecimal
+make "DESTDIR="
+compiling bigdecimal.c
+compiling missing.c
+linking shared-object bigdecimal.bundle
+
+current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/bigdecimal-3.1.9/ext/bigdecimal
+make "DESTDIR=" install
+/usr/bin/install -c -m 0755 bigdecimal.bundle ./.gem.20250122-90481-1tpbk43

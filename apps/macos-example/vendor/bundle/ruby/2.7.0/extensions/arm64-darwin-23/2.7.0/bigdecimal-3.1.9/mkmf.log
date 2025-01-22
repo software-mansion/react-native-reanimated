@@ -1,0 +1,639 @@
+have_builtin_func: checking for __builtin_clz()... -------------------- yes
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int main(int argc, char **argv)
+4: {
+5:   return !!argv[argc];
+6: }
+/* end */
+
+"clang -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe -m64  -c conftest.c"
+conftest.c:4:14: warning: ignoring return value of function declared with const attribute [-Wunused-value]
+    4 | int main() { __builtin_clz(0); return 0; }
+      |              ^~~~~~~~~~~~~ ~
+1 warning generated.
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int foo;
+4: int main() { __builtin_clz(0); return 0; }
+/* end */
+
+--------------------
+
+have_builtin_func: checking for __builtin_clzl()... -------------------- yes
+
+"clang -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe -m64  -c conftest.c"
+conftest.c:4:14: warning: ignoring return value of function declared with const attribute [-Wunused-value]
+    4 | int main() { __builtin_clzl(0); return 0; }
+      |              ^~~~~~~~~~~~~~ ~
+1 warning generated.
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int foo;
+4: int main() { __builtin_clzl(0); return 0; }
+/* end */
+
+--------------------
+
+have_builtin_func: checking for __builtin_clzll()... -------------------- yes
+
+"clang -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe -m64  -c conftest.c"
+conftest.c:4:14: warning: ignoring return value of function declared with const attribute [-Wunused-value]
+    4 | int main() { __builtin_clzll(0); return 0; }
+      |              ^~~~~~~~~~~~~~~ ~
+1 warning generated.
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: int foo;
+4: int main() { __builtin_clzll(0); return 0; }
+/* end */
+
+--------------------
+
+have_header: checking for float.h... -------------------- yes
+
+"clang -E -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe  conftest.c -o conftest.i"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <float.h>
+/* end */
+
+--------------------
+
+have_header: checking for math.h... -------------------- yes
+
+"clang -E -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe  conftest.c -o conftest.i"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <math.h>
+/* end */
+
+--------------------
+
+have_header: checking for stdbool.h... -------------------- yes
+
+"clang -E -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe  conftest.c -o conftest.i"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <stdbool.h>
+/* end */
+
+--------------------
+
+have_header: checking for stdlib.h... -------------------- yes
+
+"clang -E -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe  conftest.c -o conftest.i"
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <stdlib.h>
+/* end */
+
+--------------------
+
+have_header: checking for x86intrin.h... -------------------- no
+
+"clang -E -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe  conftest.c -o conftest.i"
+In file included from conftest.c:3:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/x86intrin.h:15:
+/opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/immintrin.h:14:2: error: "This header is only meant to be used on x86 and x64 architecture"
+   14 | #error "This header is only meant to be used on x86 and x64 architecture"
+      |  ^
+In file included from conftest.c:3:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/x86intrin.h:15:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/immintrin.h:20:
+/opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/mmintrin.h:14:2: error: "This header is only meant to be used on x86 and x64 architecture"
+   14 | #error "This header is only meant to be used on x86 and x64 architecture"
+      |  ^
+In file included from conftest.c:3:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/x86intrin.h:15:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/immintrin.h:24:
+/opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/xmmintrin.h:14:2: error: "This header is only meant to be used on x86 and x64 architecture"
+   14 | #error "This header is only meant to be used on x86 and x64 architecture"
+      |  ^
+In file included from conftest.c:3:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/x86intrin.h:15:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/immintrin.h:28:
+/opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/emmintrin.h:14:2: error: "This header is only meant to be used on x86 and x64 architecture"
+   14 | #error "This header is only meant to be used on x86 and x64 architecture"
+      |  ^
+In file included from conftest.c:3:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/x86intrin.h:15:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/immintrin.h:32:
+/opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/pmmintrin.h:14:2: error: "This header is only meant to be used on x86 and x64 architecture"
+   14 | #error "This header is only meant to be used on x86 and x64 architecture"
+      |  ^
+In file included from conftest.c:3:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/x86intrin.h:15:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/immintrin.h:36:
+/opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/tmmintrin.h:14:2: error: "This header is only meant to be used on x86 and x64 architecture"
+   14 | #error "This header is only meant to be used on x86 and x64 architecture"
+      |  ^
+In file included from conftest.c:3:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/x86intrin.h:15:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/immintrin.h:41:
+/opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/smmintrin.h:14:2: error: "This header is only meant to be used on x86 and x64 architecture"
+   14 | #error "This header is only meant to be used on x86 and x64 architecture"
+      |  ^
+In file included from conftest.c:3:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/x86intrin.h:15:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/immintrin.h:46:
+/opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/wmmintrin.h:14:2: error: "This header is only meant to be used on x86 and x64 architecture"
+   14 | #error "This header is only meant to be used on x86 and x64 architecture"
+      |  ^
+In file included from conftest.c:3:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/x86intrin.h:15:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/immintrin.h:581:
+/opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/adcintrin.h:14:2: error: "This header is only meant to be used on x86 and x64 architecture"
+   14 | #error "This header is only meant to be used on x86 and x64 architecture"
+      |  ^
+In file included from conftest.c:3:
+In file included from /opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/x86intrin.h:22:
+/opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/ammintrin.h:14:2: error: "This header is only meant to be used on x86 and x64 architecture"
+   14 | #error "This header is only meant to be used on x86 and x64 architecture"
+      |  ^
+10 errors generated.
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <x86intrin.h>
+/* end */
+
+--------------------
+
+have_header: checking for intrin.h... -------------------- no
+
+"clang -E -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe  conftest.c -o conftest.i"
+In file included from conftest.c:3:
+/opt/homebrew/Cellar/llvm/19.1.7/lib/clang/19/include/intrin.h:12:15: fatal error: 'intrin.h' file not found
+   12 | #include_next <intrin.h>
+      |               ^~~~~~~~~~
+1 error generated.
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <intrin.h>
+/* end */
+
+--------------------
+
+have_func: checking for labs() in stdlib.h... -------------------- yes
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <stdlib.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: int t(void) { void ((*volatile p)()); p = (void ((*)()))labs; return !p; }
+/* end */
+
+--------------------
+
+have_func: checking for llabs() in stdlib.h... -------------------- yes
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <stdlib.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: int t(void) { void ((*volatile p)()); p = (void ((*)()))llabs; return !p; }
+/* end */
+
+--------------------
+
+have_func: checking for finite() in math.h... -------------------- yes
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <math.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: int t(void) { void ((*volatile p)()); p = (void ((*)()))finite; return !p; }
+/* end */
+
+--------------------
+
+have_func: checking for isfinite() in math.h... -------------------- no
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+conftest.c:16:57: error: use of undeclared identifier 'isfinite'
+   16 | int t(void) { void ((*volatile p)()); p = (void ((*)()))isfinite; return !p; }
+      |                                                         ^
+1 error generated.
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <math.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: int t(void) { void ((*volatile p)()); p = (void ((*)()))isfinite; return !p; }
+/* end */
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+conftest.c:16:13: error: expected identifier or '('
+   16 | extern void isfinite();
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/math.h:156:7: note: expanded from macro 'isfinite'
+  156 |     ( sizeof(x) == sizeof(float)  ? __inline_isfinitef((float)(x))       \
+      |       ^
+conftest.c:16:13: error: expected ')'
+/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/math.h:156:7: note: expanded from macro 'isfinite'
+  156 |     ( sizeof(x) == sizeof(float)  ? __inline_isfinitef((float)(x))       \
+      |       ^
+conftest.c:16:13: note: to match this '('
+/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/math.h:156:5: note: expanded from macro 'isfinite'
+  156 |     ( sizeof(x) == sizeof(float)  ? __inline_isfinitef((float)(x))       \
+      |     ^
+conftest.c:17:15: error: expected expression
+   17 | int t(void) { isfinite(); return 0; }
+      |               ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/math.h:156:15: note: expanded from macro 'isfinite'
+  156 |     ( sizeof(x) == sizeof(float)  ? __inline_isfinitef((float)(x))       \
+      |               ^
+conftest.c:17:15: error: expected expression
+/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/math.h:156:65: note: expanded from macro 'isfinite'
+  156 |     ( sizeof(x) == sizeof(float)  ? __inline_isfinitef((float)(x))       \
+      |                                                                 ^
+conftest.c:17:15: error: expected expression
+/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/math.h:157:15: note: expanded from macro 'isfinite'
+  157 |     : sizeof(x) == sizeof(double) ? __inline_isfinited((double)(x))      \
+      |               ^
+conftest.c:17:15: error: expected expression
+/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/math.h:157:66: note: expanded from macro 'isfinite'
+  157 |     : sizeof(x) == sizeof(double) ? __inline_isfinited((double)(x))      \
+      |                                                                  ^
+conftest.c:17:15: error: expected expression
+/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/usr/include/math.h:158:71: note: expanded from macro 'isfinite'
+  158 |                                   : __inline_isfinitel((long double)(x)))
+      |                                                                       ^
+7 errors generated.
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <math.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: extern void isfinite();
+17: int t(void) { isfinite(); return 0; }
+/* end */
+
+--------------------
+
+have_header: checking for ruby/atomic.h... -------------------- no
+
+"clang -E -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe  conftest.c -o conftest.i"
+conftest.c:3:10: fatal error: 'ruby/atomic.h' file not found
+    3 | #include <ruby/atomic.h>
+      |          ^~~~~~~~~~~~~~~
+conftest.c:3:10: note: did not find header 'atomic.h' in framework 'ruby' (loaded from '/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/System/Library/Frameworks')
+1 error generated.
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <ruby/atomic.h>
+/* end */
+
+--------------------
+
+have_header: checking for ruby/internal/has/builtin.h... -------------------- no
+
+"clang -E -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe  conftest.c -o conftest.i"
+conftest.c:3:10: fatal error: 'ruby/internal/has/builtin.h' file not found
+    3 | #include <ruby/internal/has/builtin.h>
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+conftest.c:3:10: note: did not find header 'internal/has/builtin.h' in framework 'ruby' (loaded from '/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/System/Library/Frameworks')
+1 error generated.
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <ruby/internal/has/builtin.h>
+/* end */
+
+--------------------
+
+have_header: checking for ruby/internal/static_assert.h... -------------------- no
+
+"clang -E -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe  conftest.c -o conftest.i"
+conftest.c:3:10: fatal error: 'ruby/internal/static_assert.h' file not found
+    3 | #include <ruby/internal/static_assert.h>
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+conftest.c:3:10: note: did not find header 'internal/static_assert.h' in framework 'ruby' (loaded from '/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk/System/Library/Frameworks')
+1 error generated.
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <ruby/internal/static_assert.h>
+/* end */
+
+--------------------
+
+have_func: checking for rb_rational_num() in ruby.h... -------------------- yes
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <ruby.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_rational_num; return !p; }
+/* end */
+
+--------------------
+
+have_func: checking for rb_rational_den() in ruby.h... -------------------- yes
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <ruby.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_rational_den; return !p; }
+/* end */
+
+--------------------
+
+have_func: checking for rb_complex_real() in ruby.h... -------------------- yes
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <ruby.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_complex_real; return !p; }
+/* end */
+
+--------------------
+
+have_func: checking for rb_complex_imag() in ruby.h... -------------------- yes
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <ruby.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_complex_imag; return !p; }
+/* end */
+
+--------------------
+
+have_func: checking for rb_opts_exception_p() in ruby.h... -------------------- yes
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+conftest.c:16:57: error: use of undeclared identifier 'rb_opts_exception_p'
+   16 | int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_opts_exception_p; return !p; }
+      |                                                         ^
+1 error generated.
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <ruby.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_opts_exception_p; return !p; }
+/* end */
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <ruby.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: extern void rb_opts_exception_p();
+17: int t(void) { rb_opts_exception_p(); return 0; }
+/* end */
+
+--------------------
+
+have_func: checking for rb_category_warn() in ruby.h... -------------------- no
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+conftest.c:16:57: error: use of undeclared identifier 'rb_category_warn'
+   16 | int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_category_warn; return !p; }
+      |                                                         ^
+1 error generated.
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <ruby.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: int t(void) { void ((*volatile p)()); p = (void ((*)()))rb_category_warn; return !p; }
+/* end */
+
+"clang -o conftest -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe conftest.c  -L. -L/Users/mateu/.rbenv/versions/2.7.6/lib -L. -fstack-protector-strong  -m64   -lruby.2.7   "
+Undefined symbols for architecture arm64:
+  "_rb_category_warn", referenced from:
+      _t in conftest-f0edab.o
+ld: symbol(s) not found for architecture arm64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: #include <ruby.h>
+ 4: 
+ 5: /*top*/
+ 6: extern int t(void);
+ 7: int main(int argc, char **argv)
+ 8: {
+ 9:   if (argc > 1000000) {
+10:     int (* volatile tp)(void)=(int (*)(void))&t;
+11:     printf("%d", (*tp)());
+12:   }
+13: 
+14:   return !!argv[argc];
+15: }
+16: extern void rb_category_warn();
+17: int t(void) { rb_category_warn(); return 0; }
+/* end */
+
+--------------------
+
+have_const: checking for RB_WARN_CATEGORY_DEPRECATED in ruby.h... -------------------- no
+
+"clang -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/arm64-darwin23 -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0/ruby/backward -I/Users/mateu/.rbenv/versions/2.7.6/include/ruby-2.7.0 -I. -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT   -g -O2 -fno-common -pipe -m64  -c conftest.c"
+conftest.c:7:34: error: use of undeclared identifier 'RB_WARN_CATEGORY_DEPRECATED'
+    7 | conftest_type conftestval = (int)RB_WARN_CATEGORY_DEPRECATED;
+      |                                  ^
+1 error generated.
+checked program was:
+/* begin */
+1: #include "ruby.h"
+2: 
+3: #include <ruby.h>
+4: 
+5: /*top*/
+6: typedef int conftest_type;
+7: conftest_type conftestval = (int)RB_WARN_CATEGORY_DEPRECATED;
+/* end */
+
+--------------------
+
