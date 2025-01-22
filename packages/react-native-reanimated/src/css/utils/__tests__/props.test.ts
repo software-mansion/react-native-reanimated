@@ -1,12 +1,12 @@
 'use strict';
 import { css } from '../../stylesheet';
-import type { CSSStyleProperties, CSSTransitionProperty } from '../../types';
+import type { CSSStyle, CSSTransitionProperty } from '../../types';
 import { filterCSSAndStyleProperties } from '../props';
 
 describe(filterCSSAndStyleProperties, () => {
   describe('animation config', () => {
     it('returns null if there is no animationName', () => {
-      const style: CSSStyleProperties = {
+      const style: CSSStyle = {
         transitionProperty: 'opacity',
         animationDuration: 100,
       };
@@ -19,7 +19,7 @@ describe(filterCSSAndStyleProperties, () => {
     });
 
     it('returns null if the animationName is an empty object', () => {
-      const style: CSSStyleProperties = {
+      const style: CSSStyle = {
         animationName: {},
         animationDuration: 100,
       };
@@ -31,7 +31,7 @@ describe(filterCSSAndStyleProperties, () => {
     });
 
     it('returns null if animationName is an empty keyframes object created with css.keyframes', () => {
-      const style: CSSStyleProperties = {
+      const style: CSSStyle = {
         animationName: css.keyframes({}),
         animationDuration: 100,
       };
@@ -43,7 +43,7 @@ describe(filterCSSAndStyleProperties, () => {
     });
 
     it('returns animation config if animationName is present', () => {
-      const style: CSSStyleProperties = {
+      const style: CSSStyle = {
         animationName: css.keyframes({
           from: { opacity: 0 },
           to: { opacity: 1 },
@@ -67,7 +67,7 @@ describe(filterCSSAndStyleProperties, () => {
         ['animationFillMode', 'both'],
         ['animationPlayState', 'paused'],
       ])(`returns %p setting`, (key, value) => {
-        const style: CSSStyleProperties = {
+        const style: CSSStyle = {
           animationName: css.keyframes({
             from: { opacity: 0 },
             to: { opacity: 1 },
@@ -85,7 +85,7 @@ describe(filterCSSAndStyleProperties, () => {
 
   describe('transition config', () => {
     it('returns null if there are no transition properties', () => {
-      const style: CSSStyleProperties = {};
+      const style: CSSStyle = {};
       expect(filterCSSAndStyleProperties(style)).toEqual([
         expect.any(Object),
         null,
@@ -94,11 +94,11 @@ describe(filterCSSAndStyleProperties, () => {
     });
 
     it('returns transition config if at least one transition property is present', () => {
-      const style1: CSSStyleProperties = {
+      const style1: CSSStyle = {
         transitionProperty: 'opacity',
         transitionDuration: 100,
       };
-      const style2: CSSStyleProperties = {
+      const style2: CSSStyle = {
         transitionDuration: 100,
       };
       expect(filterCSSAndStyleProperties(style1)).toEqual([
@@ -120,7 +120,7 @@ describe(filterCSSAndStyleProperties, () => {
         ['transitionTimingFunction', 'easeInOut'],
         ['transitionDelay', '1s'],
       ])(`returns %p setting`, (key, value) => {
-        const style: CSSStyleProperties = {
+        const style: CSSStyle = {
           transitionProperty: value as CSSTransitionProperty,
           [key]: value,
         };
@@ -135,7 +135,7 @@ describe(filterCSSAndStyleProperties, () => {
 
   describe('all together', () => {
     it('returns all configs and style without css configs', () => {
-      const style: CSSStyleProperties = {
+      const style: CSSStyle = {
         width: 100,
         transitionDuration: 100,
         height: 100,

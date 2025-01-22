@@ -3,11 +3,11 @@ import { CSSKeyframesRuleImpl } from './models';
 import type {
   CSSAnimationKeyframes,
   CSSKeyframesRule,
-  CSSStyleProperties,
+  CSSStyle,
   PlainStyle,
 } from './types';
 
-type NamedStyles<T> = { [P in keyof T]: CSSStyleProperties };
+type NamedStyles<T> = { [P in keyof T]: CSSStyle };
 
 const create = <T extends NamedStyles<T>>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -2,6 +2,7 @@
 import type {
   AnyRecord,
   CSSAnimationProperties,
+  CSSStyle,
   CSSTransitionProperties,
   ExistingCSSAnimationProperties,
   PlainStyle,
@@ -13,8 +14,8 @@ import {
   isTransitionProp,
 } from './guards';
 
-export function filterCSSAndStyleProperties(
-  style: PlainStyle
+export function filterCSSAndStyleProperties<S extends AnyRecord>(
+  style: CSSStyle<S>
 ): [
   ExistingCSSAnimationProperties | null,
   CSSTransitionProperties | null,

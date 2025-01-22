@@ -14,6 +14,7 @@ export type {
   CSSTransitionProperty,
   CSSTransitionDuration,
   CSSTransitionTimingFunction,
+  CSSStyle,
   CSSTransitionDelay,
   CSSTransitionProperties,
   CSSTransitionSettings,
