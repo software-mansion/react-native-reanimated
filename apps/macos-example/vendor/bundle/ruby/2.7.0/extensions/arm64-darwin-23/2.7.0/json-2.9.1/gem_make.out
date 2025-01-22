@@ -1,4 +1,4 @@
-current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/json-2.9.1/ext/json/ext/parser
+current directory: /Users/mateu/Downloads/MacOSExample/vendor/bundle/ruby/2.7.0/gems/json-2.9.1/ext/json/ext/parser
 /Users/mateu/.rbenv/versions/2.7.6/bin/ruby -I /Users/mateu/.rbenv/versions/2.7.6/lib/ruby/2.7.0 -r ./siteconf20250122-90481-tgavfk.rb extconf.rb
 checking for rb_enc_interned_str() in ruby.h... no
 checking for rb_hash_new_capa() in ruby.h... no
@@ -8,14 +8,14 @@ checking for strnlen() in string.h... yes
 checking for whether -std=c99 is accepted as CFLAGS... yes
 creating Makefile
 
-current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/json-2.9.1/ext/json/ext/parser
+current directory: /Users/mateu/Downloads/MacOSExample/vendor/bundle/ruby/2.7.0/gems/json-2.9.1/ext/json/ext/parser
 make "DESTDIR=" clean
 
-current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/json-2.9.1/ext/json/ext/parser
+current directory: /Users/mateu/Downloads/MacOSExample/vendor/bundle/ruby/2.7.0/gems/json-2.9.1/ext/json/ext/parser
 make "DESTDIR="
 compiling parser.c
 linking shared-object json/ext/parser.bundle
 
-current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/json-2.9.1/ext/json/ext/parser
+current directory: /Users/mateu/Downloads/MacOSExample/vendor/bundle/ruby/2.7.0/gems/json-2.9.1/ext/json/ext/parser
 make "DESTDIR=" install
 /usr/bin/install -c -m 0755 parser.bundle ./.gem.20250122-90481-huz8mj/json/ext

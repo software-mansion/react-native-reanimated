@@ -1,15 +1,15 @@
-current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/nkf-0.2.0/ext/nkf
+current directory: /Users/mateu/Downloads/MacOSExample/vendor/bundle/ruby/2.7.0/gems/nkf-0.2.0/ext/nkf
 /Users/mateu/.rbenv/versions/2.7.6/bin/ruby -I /Users/mateu/.rbenv/versions/2.7.6/lib/ruby/2.7.0 -r ./siteconf20250122-90481-saxljt.rb extconf.rb
 creating Makefile
 
-current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/nkf-0.2.0/ext/nkf
+current directory: /Users/mateu/Downloads/MacOSExample/vendor/bundle/ruby/2.7.0/gems/nkf-0.2.0/ext/nkf
 make "DESTDIR=" clean
 
-current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/nkf-0.2.0/ext/nkf
+current directory: /Users/mateu/Downloads/MacOSExample/vendor/bundle/ruby/2.7.0/gems/nkf-0.2.0/ext/nkf
 make "DESTDIR="
 compiling nkf.c
 linking shared-object nkf.bundle
 
-current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/nkf-0.2.0/ext/nkf
+current directory: /Users/mateu/Downloads/MacOSExample/vendor/bundle/ruby/2.7.0/gems/nkf-0.2.0/ext/nkf
 make "DESTDIR=" install
 /usr/bin/install -c -m 0755 nkf.bundle ./.gem.20250122-90481-1ml7b1v

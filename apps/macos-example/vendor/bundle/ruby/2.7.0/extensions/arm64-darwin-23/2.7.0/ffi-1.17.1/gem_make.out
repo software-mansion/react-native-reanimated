@@ -1,4 +1,4 @@
-current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/ffi-1.17.1/ext/ffi_c
+current directory: /Users/mateu/Downloads/MacOSExample/vendor/bundle/ruby/2.7.0/gems/ffi-1.17.1/ext/ffi_c
 /Users/mateu/.rbenv/versions/2.7.6/bin/ruby -I /Users/mateu/.rbenv/versions/2.7.6/lib/ruby/2.7.0 -r ./siteconf20250122-90481-10pivi3.rb extconf.rb
 checking for ffi_prep_closure_loc() in -lffi... yes
 checking for ffi_prep_cif_var()... yes
@@ -9,10 +9,10 @@ checking for whether -pthread is accepted as LDFLAGS... yes
 creating extconf.h
 creating Makefile
 
-current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/ffi-1.17.1/ext/ffi_c
+current directory: /Users/mateu/Downloads/MacOSExample/vendor/bundle/ruby/2.7.0/gems/ffi-1.17.1/ext/ffi_c
 make "DESTDIR=" clean
 
-current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/ffi-1.17.1/ext/ffi_c
+current directory: /Users/mateu/Downloads/MacOSExample/vendor/bundle/ruby/2.7.0/gems/ffi-1.17.1/ext/ffi_c
 make "DESTDIR="
 compiling AbstractMemory.c
 compiling ArrayType.c
@@ -40,6 +40,6 @@ compiling ffi.c
 linking shared-object ffi_c.bundle
 ld: warning: ignoring duplicate libraries: '-lffi'
 
-current directory: /Users/mateu/Downloads/testMacos/vendor/bundle/ruby/2.7.0/gems/ffi-1.17.1/ext/ffi_c
+current directory: /Users/mateu/Downloads/MacOSExample/vendor/bundle/ruby/2.7.0/gems/ffi-1.17.1/ext/ffi_c
 make "DESTDIR=" install
 /usr/bin/install -c -m 0755 ffi_c.bundle ./.gem.20250122-90481-170k22k
