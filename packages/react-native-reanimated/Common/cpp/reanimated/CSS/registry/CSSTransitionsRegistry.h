@@ -17,7 +17,7 @@
 
 namespace reanimated {
 
-class CSSTransitionsRegistry : public UpdatesRegistry {
+class CSSTransitionsRegistry : public UpdatesRegistry, public std::enable_shared_from_this<CSSTransitionsRegistry> {
  public:
   CSSTransitionsRegistry(
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,

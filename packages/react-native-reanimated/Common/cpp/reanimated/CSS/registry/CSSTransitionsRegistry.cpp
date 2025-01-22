@@ -118,11 +118,16 @@ void CSSTransitionsRegistry::scheduleOrActivateTransition(
 }
 
 PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
-  return [this, viewTag](
+  return [weakCSSTransitionsRegistry = weak_from_this(), viewTag](
              jsi::Runtime &rt,
              const jsi::Value &oldProps,
              const jsi::Value &newProps) {
-    const auto &transition = registry_.at(viewTag);
+    auto cssTransitionsRegistry = weakCSSTransitionsRegistry.lock();
+    if (!cssTransitionsRegistry) {
+      return;
+    }
+
+    const auto &transition = cssTransitionsRegistry->registry_.at(viewTag);
     const auto changedProps = getChangedProps(
         rt,
         oldProps,
@@ -135,14 +140,15 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
     }
 
     {
-      std::lock_guard<std::mutex> lock{mutex_};
+      std::lock_guard<std::mutex> lock{cssTransitionsRegistry->mutex_};
 
-      const auto &initialProps =
-          transition->run(rt, changedProps, getCurrentTimestamp_());
+      const auto &initialProps = transition->run(
+          rt, changedProps, cssTransitionsRegistry->getCurrentTimestamp_());
       const auto &shadowNode = transition->getShadowNode();
 
-      setInUpdatesRegistry(rt, shadowNode, initialProps);
-      scheduleOrActivateTransition(transition);
+      cssTransitionsRegistry->setInUpdatesRegistry(
+          rt, shadowNode, initialProps);
+      cssTransitionsRegistry->scheduleOrActivateTransition(transition);
     }
   };
 }

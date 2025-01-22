@@ -15,7 +15,9 @@
 
 namespace reanimated {
 
-class CSSAnimationsRegistry : public UpdatesRegistry {
+class CSSAnimationsRegistry
+    : public UpdatesRegistry,
+      std::enable_shared_from_this<CSSAnimationsRegistry> {
  public:
   using SettingsUpdates =
       std::vector<std::pair<unsigned, PartialCSSAnimationSettings>>;
