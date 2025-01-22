@@ -113,7 +113,7 @@ void LayoutAnimationsManager::startLayoutAnimation(
     const int tag,
     const LayoutAnimationType type,
     const jsi::Object &values) {
-  std::shared_ptr<Shareable> config, viewShareable;
+  std::shared_ptr<Shareable> config;
   {
     auto lock = std::unique_lock<std::recursive_mutex>(animationsMutex_);
     config = getConfigsForType(type)[tag];

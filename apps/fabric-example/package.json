@@ -12,10 +12,16 @@
     "test": "jest"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.5.2",
+    "@fortawesome/free-solid-svg-icons": "^6.5.2",
+    "@fortawesome/react-native-fontawesome": "^0.3.2",
+    "@gorhom/portal": "^1.0.14",
     "@react-native-async-storage/async-storage": "2.1.0",
+    "@react-native-clipboard/clipboard": "^1.15.0",
     "@react-native-community/slider": "4.5.5",
     "@react-native-masked-view/masked-view": "0.3.2",
-    "@react-navigation/native": "^7.0.0",
+    "@react-navigation/drawer": "^7.1.1",
+    "@react-navigation/native": "^7.0.14",
     "@react-navigation/native-stack": "^7.0.0",
     "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch",
     "common-app": "workspace:*",
@@ -43,11 +49,23 @@
     "@types/react": "^18.2.6",
     "@types/react-test-renderer": "^18.0.0",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^3.6.3",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-no-relative-import-paths": "patch:eslint-plugin-no-relative-import-paths@npm%3A1.5.5#~/.yarn/patches/eslint-plugin-no-relative-import-paths-npm-1.5.5-8fb4e4bf7a.patch",
+    "eslint-plugin-perfectionist": "^2.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-unused-imports": "^4.1.4",
     "jest": "^29.6.3",
+    "madge": "^5.0.1",
     "patch-package": "^8.0.0",
     "prettier": "^3.3.3",
+    "react-native-monorepo-tools": "^1.2.1",
     "react-test-renderer": "18.3.1",
-    "typescript": "~5.3.0"
+    "typescript": "~5.3.0",
+    "typescript-eslint": "^8.12.2"
   },
   "engines": {
     "node": ">=18"

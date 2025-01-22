@@ -1,0 +1,95 @@
+---
+sidebar_position: 5
+---
+
+# animationDirection
+
+`animationDirection` lets you specify which direction the animation should run. Defaults to `normal`.
+
+import AnimationDirectionBasic from '@site/src/examples/css-animations/AnimationDirectionBasic';
+import AnimationDirectionBasicSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationDirectionBasic';
+
+<InteractiveExample
+  src={AnimationDirectionBasicSrc}
+  component={AnimationDirectionBasic}
+/>
+
+## Reference
+
+```javascript
+function App() {
+  return (
+    <Animated.View
+      style={{
+        animationName: {
+          from: { width: 120 },
+          to: { width: 240 },
+        },
+        animationDuration: '1s',
+        animationIterationCount: 'infinite',
+        // highlight-next-line
+        animationDirection: 'alternate',
+      }}
+    />
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type CSSAnimationDirection =
+  | 'normal'
+  | 'reverse'
+  | 'alternate'
+  | 'alternateReverse';
+
+animationDirection: CSSAnimationDirection | CSSAnimationDirection[];
+```
+
+</details>
+
+### Values
+
+#### `normal`
+
+Runs the animation forwards.
+
+#### `reverse`
+
+Runs the animation backwards.
+
+#### `alternate`
+
+For each animation iteration, the animation alternates between running forwards and backwards.
+
+#### `alternateReverse`
+
+For each animation iteration, the animation alternates between running forwards and backwards but the first iteration runs backwards.
+
+#### `<animation direction[]>`
+
+An array of animation direction values. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/next/css-animations/animation-name).
+
+```typescript
+// highlight-next-line
+animationDirection: ['alternate', 'normal', 'reverse'];
+animationName: [bounceIn, move, slide];
+```
+
+In the following example, `bounceIn` keyframe would alternate between running forwards and backwards, `move` would run forwards, and `slide` would run in reverse.
+
+## Example
+
+import AnimationDirection from '@site/src/examples/css-animations/AnimationDirection';
+import AnimationDirectionSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationDirection';
+
+<InteractiveExample
+  src={AnimationDirectionSrc}
+  component={AnimationDirection}
+/>
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />
