@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* ReanimatedExampleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* ReanimatedExampleTests.m */; };
 		01F23DE32D5D40AFBA54CECA /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = A0ACA5199B664A06875E3078 /* OFL.txt */; };
+		03C802C22D28AAC200625950 /* UbuntuMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 03C802C02D28AAC200625950 /* UbuntuMono-Regular.ttf */; };
+		03C802C32D28AAC200625950 /* UFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 03C802C12D28AAC200625950 /* UFL.txt */; };
 		0C80B921A6F3F58F76C31292 /* libPods-ReanimatedExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-ReanimatedExample.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		16712F083334447A86E4B6F6 /* Poppins-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EB011F0FB31E4F7CAB35AC19 /* Poppins-Light.ttf */; };
@@ -40,6 +42,8 @@
 		00E356EE1AD99517003FC87E /* ReanimatedExampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ReanimatedExampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* ReanimatedExampleTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReanimatedExampleTests.m; sourceTree = "<group>"; };
+		03C802C02D28AAC200625950 /* UbuntuMono-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "UbuntuMono-Regular.ttf"; path = "../assets/fonts/UbuntuMono/UbuntuMono-Regular.ttf"; sourceTree = "<group>"; };
+		03C802C12D28AAC200625950 /* UFL.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = UFL.txt; path = ../assets/fonts/UbuntuMono/UFL.txt; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* ReanimatedExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ReanimatedExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = ReanimatedExample/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ReanimatedExample/Info.plist; sourceTree = "<group>"; };
@@ -126,6 +130,8 @@
 		49FFB853C7D843B494AD6F9F /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				03C802C02D28AAC200625950 /* UbuntuMono-Regular.ttf */,
+				03C802C12D28AAC200625950 /* UFL.txt */,
 				4B3B68A8164D4E14B932F176 /* Poppins-Black.ttf */,
 				45466F56418D4C20A76796CD /* Poppins-Bold.ttf */,
 				74937F8590434194BDCF3A71 /* Poppins-ExtraBold.ttf */,
@@ -273,10 +279,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				03C802C22D28AAC200625950 /* UbuntuMono-Regular.ttf in Resources */,
 				45B1CC687A294F2690285A0E /* Poppins-Black.ttf in Resources */,
 				78A3D55742104724B1664729 /* Poppins-Bold.ttf in Resources */,
 				F4C3F7602BCFD377008A4CDE /* PrivacyInfo.xcprivacy in Resources */,
 				B2EAE56926634BF78EF65B2D /* Poppins-ExtraBold.ttf in Resources */,
+				03C802C32D28AAC200625950 /* UFL.txt in Resources */,
 				1B7257DC9801417BA628EDDF /* Poppins-ExtraLight.ttf in Resources */,
 				16712F083334447A86E4B6F6 /* Poppins-Light.ttf in Resources */,
 				8C80EB552A570619005E26CE /* Launch Screen.storyboard in Resources */,

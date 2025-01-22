@@ -98,7 +98,9 @@ export interface AnimatedComponentRef extends Component {
 }
 
 export interface IAnimatedComponentInternal {
-  _styles: StyleProps[] | null;
+  ChildComponent: AnyComponent;
+  _animatedStyles: StyleProps[];
+  _prevAnimatedStyles: StyleProps[];
   _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   _isFirstRender: boolean;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
@@ -121,7 +123,15 @@ export interface IAnimatedComponentInternal {
 
 export type NestedArray<T> = T | NestedArray<T>[];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyComponent = React.ComponentType<any>;
+
 export interface InitialComponentProps extends Record<string, unknown> {
   ref?: Ref<Component>;
   collapsable?: boolean;
 }
+
+export type ManagedAnimatedComponent = React.Component<
+  AnimatedComponentProps<InitialComponentProps>
+> &
+  IAnimatedComponentInternal;

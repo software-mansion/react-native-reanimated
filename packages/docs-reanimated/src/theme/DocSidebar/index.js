@@ -13,7 +13,7 @@ export default function DocSidebarWrapper(props) {
     title: useBaseUrl('/img/title-hero.svg'),
   };
 
-  const newItems = ['animations/withClamp'];
+  const newItems = [];
   const experimentalItems = ['shared-element-transitions/overview'];
   const unreleasedItems = [];
 

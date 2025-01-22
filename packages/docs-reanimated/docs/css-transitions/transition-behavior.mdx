@@ -1,0 +1,72 @@
+---
+sidebar_position: 6
+---
+
+# transitionBehavior
+
+`transitionBehavior` lets you determine whether the transition is applied to discrete properties. Defaults to `normal` which transitions only continuous properties and discards discrete properties.
+
+import TransitionBehaviorBasic from '@site/src/examples/css-transitions/TransitionBehaviorBasic';
+import TransitionBehaviorBasicSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionBehaviorBasic';
+
+<InteractiveExample
+  src={TransitionBehaviorBasicSrc}
+  component={TransitionBehaviorBasic}
+/>
+
+## Reference
+
+```javascript
+function App() {
+  return (
+    <Animated.View
+      style={{
+        transitionProperty: 'alignItems',
+        transitionDuration: 500,
+        // highlight-next-line
+        transitionBehavior: 'allowDiscrete',
+      }}
+    />
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type CSSTransitionBehavior = 'normal' | 'allowDiscrete';
+```
+
+</details>
+
+### Values
+
+#### `allowDiscrete`
+
+Allows transitions to be applied to discrete properties, resulting in delayed changes.
+
+#### `normal`
+
+Doesn't allow transitions to be applied to discrete properties, resulting in changes applied immediately.
+
+## Example
+
+import TransitionBehavior from '@site/src/examples/css-transitions/TransitionBehavior';
+import TransitionBehaviorSrc from '!!raw-loader!@site/src/examples/css-transitions/TransitionBehavior';
+
+<InteractiveExample
+  src={TransitionBehaviorSrc}
+  component={TransitionBehavior}
+  label="Comparison between allowDiscrete and normal"
+/>
+
+## Remarks
+
+- Discrete style properties (like `flexDirection`, `justifyContent`) can't be smoothly animated using the `transitionProperty` property. For example, you can't animate smoothly from `alignItems: start` to `alignItems: center`. You can use [Layout Animations](docs/layout-animations/layout-transitions) to animate discrete style properties instead.
+
+- When using `allowDiscrete` the discrete properties flip between two values at the midpoint of the animation, except for the `display` property, which is immediately at the moment of the transition start.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />
