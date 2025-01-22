@@ -1,7 +1,7 @@
 'use strict';
 import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
-import type { CSSStyleProperties } from '../types';
+import type { CSSStyle } from '../types';
 import { filterCSSAndStyleProperties } from '../utils';
 import CSSAnimationsManager from './CSSAnimationsManager.web';
 import CSSTransitionManager from './CSSTransitionManager.web';
@@ -19,7 +19,7 @@ export default class CSSManager {
     this.transitionsManager = new CSSTransitionManager(this.element);
   }
 
-  attach(style: CSSStyleProperties): void {
+  attach(style: CSSStyle): void {
     const [animationConfig, transitionConfig] =
       filterCSSAndStyleProperties(style);
 
@@ -32,7 +32,7 @@ export default class CSSManager {
     }
   }
 
-  update(style: CSSStyleProperties): void {
+  update(style: CSSStyle): void {
     const [animationConfig, transitionConfig] =
       filterCSSAndStyleProperties(style);
 

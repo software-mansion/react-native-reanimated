@@ -7,12 +7,7 @@ import type {
 } from '../../createAnimatedComponent/commonTypes';
 import { isFabric, isWeb, shouldBeUseWeb } from '../../PlatformChecker';
 import { CSSManager } from '../managers';
-import type {
-  AnyComponent,
-  AnyRecord,
-  CSSStyleProperties,
-  PlainStyle,
-} from '../types';
+import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { Platform, StyleSheet } from 'react-native';
 import type { StyleProp } from 'react-native';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
@@ -41,7 +36,7 @@ export default class AnimatedComponent<
   _CSSManager?: CSSManager;
 
   _viewInfo?: ViewInfo;
-  _planStyle: CSSStyleProperties = {};
+  _planStyle: CSSStyle = {};
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
 
   constructor(ChildComponent: AnyComponent, props: P) {
