@@ -39,7 +39,7 @@ if [ ! -d "$REANIMATED_DIR" ]; then
   exit 1
 fi
 
-copy_files "src/duplicated" "$REANIMATED_DIR/src/PlatformChecker.ts" "$REANIMATED_DIR/src/commonTypes.ts" "$REANIMATED_DIR/src/workletTypes.ts" "$REANIMATED_DIR/src/troll/specs.ts"
+copy_files "src/duplicated" "$REANIMATED_DIR/src/PlatformChecker.ts" "$REANIMATED_DIR/src/commonTypes.ts" "$REANIMATED_DIR/src/workletTypes.ts" "$REANIMATED_DIR/src/workletsExtraDuplicationFiles/specs.ts"
 
 copy_files_recursively "apple/duplicated/worklets" "$REANIMATED_DIR/apple/worklets"
 
