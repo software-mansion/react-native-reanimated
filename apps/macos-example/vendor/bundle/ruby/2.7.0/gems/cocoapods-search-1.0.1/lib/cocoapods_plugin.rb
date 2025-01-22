@@ -1,1 +1,0 @@
-require 'cocoapods-search/command'

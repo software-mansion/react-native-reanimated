@@ -1,4 +1,0 @@
-@set UPDATED 15 February 2024
-@set UPDATED-MONTH February 2024
-@set EDITION 3.4.6
-@set VERSION 3.4.6
