@@ -35,14 +35,14 @@ jobs:
       # Setup repo
       - name: Install monorepo node dependencies
         run: yarn install --immutable
-      - name: Build Worklets for TypeScript types
+      - name: Build Worklets
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn build
 
       # Checks
       - name: Check TypeScript types
         working-directory: ${{ env.PACKAGE_PATH }}
-        run: yarn type-check
+        run: yarn typecheck
       - name: Lint JavaScript
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn lint

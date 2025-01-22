@@ -1,6 +1,6 @@
 'use strict';
 
-import type { ShareableRef } from '../../commonTypes';
+import type { ShareableRef } from '../../workletTypes';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
@@ -10,3 +10,5 @@ export interface WorkletsModuleProxy {
     nativeStateSource?: object
   ): ShareableRef<TValue>;
 }
+
+export interface IWorkletsModule extends WorkletsModuleProxy {}

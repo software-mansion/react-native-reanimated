@@ -1,3 +1,3 @@
 'use strict';
 
-export { DummyWorkletsTurboModule } from './specs';
+export { WorkletsModule } from './duplicated/worklets';

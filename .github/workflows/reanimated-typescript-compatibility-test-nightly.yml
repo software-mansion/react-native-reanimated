@@ -42,13 +42,13 @@ jobs:
 
       - name: Check source types
         working-directory: packages/react-native-reanimated
-        run: yarn type:check:src
+        run: yarn typecheck:src
       - name: Check plugin types
         working-directory: packages/react-native-reanimated
-        run: yarn type:check:plugin
+        run: yarn typecheck:plugin
       - name: Check API
         working-directory: packages/react-native-reanimated
-        run: yarn type:check:app
+        run: yarn typecheck:app
       - name: Run common type tests
         working-directory: packages/react-native-reanimated
-        run: yarn type:check:tests:common
+        run: yarn typecheck:tests:common

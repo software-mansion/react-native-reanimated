@@ -1,23 +1,26 @@
 'use strict';
+
+import type React from 'react';
 import type {
+  LayoutAnimationBatchItem,
   Value3D,
   ValueRotation,
-  ShareableRef,
-  LayoutAnimationBatchItem,
-  IReanimatedModule,
-  IWorkletsModule,
   WorkletFunction,
 } from '../commonTypes';
+import { ReanimatedError } from '../errors';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
-import type { WorkletRuntime } from '../runtimes';
 import { isFabric } from '../PlatformChecker';
-import type React from 'react';
-import { getShadowNodeWrapperFromRef } from '../fabricUtils';
+import type { WorkletRuntime } from '../runtimes';
 import { ReanimatedTurboModule } from '../specs';
-import { ReanimatedError } from '../errors';
-import { WorkletsModule } from '../worklets';
-import type { ReanimatedModuleProxy } from './reanimatedModuleProxy';
+import type { IWorkletsModule } from '../WorkletsResolver';
+import { WorkletsModule } from '../WorkletsResolver';
+import type { ShareableRef } from '../workletTypes';
+import type {
+  IReanimatedModule,
+  ReanimatedModuleProxy,
+} from './reanimatedModuleProxy';
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();

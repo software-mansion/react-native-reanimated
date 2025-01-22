@@ -8,7 +8,7 @@
     "format:js": "prettier --write --list-different src",
     "lint": "yarn lint:js",
     "lint:js": "eslint --ext '.js,.ts,.tsx' src && yarn prettier --check src",
-    "type-check": "yarn tsc --noEmit",
+    "typecheck": "yarn tsc --noEmit",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib"
   },
   "repository": {
@@ -34,6 +34,7 @@
     "@types/react": "^18.2.44",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "eslint": "^8.57.0",
+    "eslint-plugin-reanimated": "workspace:*",
     "madge": "^5.0.1",
     "prettier": "^3.3.3",
     "react": "18.3.1",

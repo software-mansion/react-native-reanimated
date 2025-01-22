@@ -1,14 +1,14 @@
 'use strict';
 
 import type {
-  ShareableRef,
+  LayoutAnimationBatchItem,
   ShadowNodeWrapper,
   Value3D,
   ValueRotation,
-  LayoutAnimationBatchItem,
   WorkletFunction,
 } from '../commonTypes';
 import type { WorkletRuntime } from '../runtimes';
+import type { ShareableRef } from '../workletTypes';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
@@ -66,4 +66,14 @@ export interface ReanimatedModuleProxy {
   ): void;
 
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
+}
+
+export interface IReanimatedModule
+  extends Omit<ReanimatedModuleProxy, 'getViewProp'> {
+  getViewProp<TValue>(
+    viewTag: number,
+    propName: string,
+    component: React.Component | undefined,
+    callback?: (result: TValue) => void
+  ): Promise<TValue>;
 }

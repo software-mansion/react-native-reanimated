@@ -36,7 +36,7 @@ REANIMATED_PATH="packages/react-native-reanimated"
 if echo "$STAGED_FILES" | grep "$REANIMATED_PATH/src/.*\.\(ts\|tsx\)$" --silent; then
   print "Changes spotted. Running TypeScript checks..."
 
-  try yarn workspace react-native-reanimated type:check
+  try yarn workspace react-native-reanimated typecheck
   try yarn workspace react-native-reanimated find-unused-code:js
 
   print "Success."

@@ -1,7 +1,8 @@
+/* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 
-import type { IWorkletsModule, ShareableRef } from '../../commonTypes';
-import { ReanimatedError } from '../../errors';
+import type { ShareableRef } from '../../workletTypes';
+import type { IWorkletsModule } from './workletsModuleProxy';
 
 export function createJSWorkletsModule(): IWorkletsModule {
   return new JSWorklets();
@@ -9,8 +10,8 @@ export function createJSWorkletsModule(): IWorkletsModule {
 
 class JSWorklets implements IWorkletsModule {
   makeShareableClone<T>(): ShareableRef<T> {
-    throw new ReanimatedError(
-      'makeShareableClone should never be called in JSWorklets.'
+    throw new Error(
+      '[Worklets] makeShareableClone should never be called in JSWorklets.'
     );
   }
 }

@@ -1,25 +1,26 @@
 'use strict';
+
+import type {
+  Value3D,
+  ValueRotation,
+  WorkletFunction,
+} from '../../commonTypes';
+import { SensorType } from '../../commonTypes';
+import { ReanimatedError } from '../../errors';
+import { logger } from '../../logger';
+import { mockedRequestAnimationFrame } from '../../mockedRequestAnimationFrame';
 import {
   isChromeDebugger,
   isJest,
   isWeb,
   isWindowAvailable,
 } from '../../PlatformChecker';
-import { SensorType } from '../../commonTypes';
-import type {
-  IReanimatedModule,
-  IWorkletsModule,
-  ShareableRef,
-  Value3D,
-  ValueRotation,
-  WorkletFunction,
-} from '../../commonTypes';
-import type { WebSensor } from './WebSensor';
-import { mockedRequestAnimationFrame } from '../../mockedRequestAnimationFrame';
 import type { WorkletRuntime } from '../../runtimes';
-import { logger } from '../../logger';
-import { ReanimatedError } from '../../errors';
-import { WorkletsModule } from '../../worklets';
+import type { IWorkletsModule } from '../../WorkletsResolver';
+import { WorkletsModule } from '../../WorkletsResolver';
+import type { ShareableRef } from '../../workletTypes';
+import type { IReanimatedModule } from '../reanimatedModuleProxy';
+import type { WebSensor } from './WebSensor';
 
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();

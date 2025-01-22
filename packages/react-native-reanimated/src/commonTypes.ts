@@ -1,24 +1,12 @@
 'use strict';
+
 import type {
-  ViewStyle,
+  ImageStyle,
   TextStyle,
   TransformsStyle,
-  ImageStyle,
+  ViewStyle,
 } from 'react-native';
-import type { WorkletsModuleProxy } from './worklets';
-import type { ReanimatedModuleProxy } from './ReanimatedModule';
-
-export interface IWorkletsModule extends WorkletsModuleProxy {}
-
-export interface IReanimatedModule
-  extends Omit<ReanimatedModuleProxy, 'getViewProp'> {
-  getViewProp<TValue>(
-    viewTag: number,
-    propName: string,
-    component: React.Component | undefined,
-    callback?: (result: TValue) => void
-  ): Promise<TValue>;
-}
+import type { ShareableRef } from './workletTypes';
 
 export type LayoutAnimationsOptions =
   | 'originX'
@@ -261,17 +249,6 @@ export interface Mutable<Value = unknown> extends SharedValue<Value> {
    */
   _value: Value;
 }
-
-// The below type is used for HostObjects returned by the JSI API that don't have
-// any accessible fields or methods but can carry data that is accessed from the
-// c++ side. We add a field to the type to make it possible for typescript to recognize
-// which JSI methods accept those types as arguments and to be able to correctly type
-// check other methods that may use them. However, this field is not actually defined
-// nor should be used for anything else as assigning any data to those objects will
-// throw an error.
-export type ShareableRef<T = unknown> = {
-  __hostObjectShareableJSRef: T;
-};
 
 // In case of objects with depth or arrays of objects or arrays of arrays etc.
 // we add this utility type that makes it a `SharaebleRef` of the outermost type.
