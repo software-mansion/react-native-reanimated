@@ -127,7 +127,7 @@ void ReanimatedModuleProxy::init(
       return;
     }
 
-    reanimatedModuleProxy->animatedPropsRegistry->update(rt, operations);
+    reanimatedModuleProxy->animatedPropsRegistry_->update(rt, operations);
   };
 
   auto removeFromPropsRegistry = [weakReanimatedModuleProxy = weak_from_this()](
@@ -138,7 +138,7 @@ void ReanimatedModuleProxy::init(
       return;
     }
 
-    reanimatedModuleProxy->animatedPropsRegistry->remove(rt, viewTags);
+    reanimatedModuleProxy->animatedPropsRegistry_->remove(rt, viewTags);
   };
 
   auto measure = [weakReanimatedModuleProxy = weak_from_this()](
@@ -761,6 +761,31 @@ bool ReanimatedModuleProxy::handleRawEvent(
   return res;
 }
 
+void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
+  shouldUpdateCssAnimations_ = true;
+  if (cssAnimationsRegistry_->hasUpdates() ||
+      cssTransitionsRegistry_->hasUpdates()
+#ifdef ANDROID
+      || updatesRegistryManager_->hasPropsToRevert()
+#endif // ANDROID
+  ) {
+    jsi::Runtime &rt =
+        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+    requestRender_(
+        [weakThis = weak_from_this()](const double newTimestampMs) {
+          auto strongThis = weakThis.lock();
+          if (!strongThis) {
+            return;
+          }
+
+          strongThis->cssLoopCallback(newTimestampMs);
+        },
+        rt);
+  } else {
+    cssLoopRunning_ = false;
+  }
+}
+
 void ReanimatedModuleProxy::maybeRunCSSLoop() {
   if (cssLoopRunning_) {
     return;
@@ -768,30 +793,20 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
 
   cssLoopRunning_ = true;
 
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI([this]() {
-    std::shared_ptr<std::function<void(const double)>> cssLoop =
-        std::make_shared<std::function<void(const double)>>();
+  // To prevent memory leaks and unsafe raw pointer passing.
 
-    *cssLoop = [this, cssLoop](const double timestampMs) {
-      shouldUpdateCssAnimations_ = true;
-      if (cssAnimationsRegistry_->hasUpdates() ||
-          cssTransitionsRegistry_->hasUpdates()
-#ifdef ANDROID
-          || updatesRegistryManager_->hasPropsToRevert()
-#endif
-      ) {
-        jsi::Runtime &rt =
-            workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-        requestRender_(*cssLoop, rt);
-      } else {
-        cssLoopRunning_ = false;
-      }
-    };
+  jsi::Runtime &rt =
+      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+  requestRender_(
+      [weakThis = weak_from_this()](const double timestampMs) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
 
-    jsi::Runtime &rt =
-        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-    requestRender_(*cssLoop, rt);
-  });
+        strongThis->cssLoopCallback(timestampMs);
+      },
+      rt);
 }
 
 double ReanimatedModuleProxy::getCssTimestamp() {
@@ -900,7 +915,16 @@ void ReanimatedModuleProxy::performOperations() {
 void ReanimatedModuleProxy::requestFlushRegistry() {
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-  requestRender_([this](double time) { shouldFlushRegistry_ = true; }, rt);
+  requestRender_(
+      [weakReanimatedModuleProxy = weak_from_this()](double time) {
+        auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+        if (!reanimatedModuleProxy) {
+          return;
+        }
+
+        reanimatedModuleProxy->shouldFlushRegistry_ = true;
+      },
+      rt);
 }
 
 void ReanimatedModuleProxy::commitUpdates(
@@ -1047,7 +1071,15 @@ void ReanimatedModuleProxy::initializeFabric(
 
   initializeLayoutAnimationsProxy();
 
-  const std::function<void()> request = [this]() { requestFlushRegistry(); };
+  const std::function<void()> request = [weakReanimatedModuleProxy =
+                                             weak_from_this()]() {
+    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
+    if (!reanimatedModuleProxy) {
+      return;
+    }
+
+    reanimatedModuleProxy->requestFlushRegistry();
+  };
   mountHook_ = std::make_shared<ReanimatedMountHook>(
       uiManager_, updatesRegistryManager_, request);
   commitHook_ = std::make_shared<ReanimatedCommitHook>(

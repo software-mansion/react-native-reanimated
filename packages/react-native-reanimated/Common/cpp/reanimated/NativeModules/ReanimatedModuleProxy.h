@@ -152,6 +152,8 @@ class ReanimatedModuleProxy
   void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag)
       override;
 
+  void cssLoopCallback(const double /*timestampMs*/);
+
   void dispatchCommand(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeValue,
