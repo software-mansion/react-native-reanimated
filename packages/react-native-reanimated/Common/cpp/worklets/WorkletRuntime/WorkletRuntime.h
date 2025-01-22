@@ -46,7 +46,7 @@ class WorkletRuntime : public jsi::HostObject,
     if (queue_ == nullptr) {
       queue_ = std::make_shared<AsyncQueue>(name_);
     }
-    queue_->push([=, weakThis = weak_from_this()]{
+    queue_->push([=, weakThis = weak_from_this()] {
       auto strongThis = weakThis.lock();
       if (!strongThis) {
         return;

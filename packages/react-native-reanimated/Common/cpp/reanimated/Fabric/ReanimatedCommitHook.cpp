@@ -34,21 +34,20 @@ void ReanimatedCommitHook::maybeInitializeLayoutAnimations(
     // when a new surfaceId is observed we call setMountingOverrideDelegate
     // for all yet unseen surfaces
     uiManager_->getShadowTreeRegistry().enumerate(
-        [weakReanimatedCommitHook = weak_from_this()](
+        [weakThis = weak_from_this()](
             const ShadowTree &shadowTree, bool &stop) {
-          auto reanimatedCommitHook = weakReanimatedCommitHook.lock();
-          if (!reanimatedCommitHook) {
+          auto strongThis = weakThis.lock();
+          if (!strongThis) {
             return;
           }
 
-          if (shadowTree.getSurfaceId() <=
-              reanimatedCommitHook->currentMaxSurfaceId_) {
+          if (shadowTree.getSurfaceId() <= strongThis->currentMaxSurfaceId_) {
             // the set function actually adds our delegate to a list, so we
             // shouldn't invoke it twice for the same surface
             return;
           }
           shadowTree.getMountingCoordinator()->setMountingOverrideDelegate(
-              reanimatedCommitHook->layoutAnimationsProxy_);
+              strongThis->layoutAnimationsProxy_);
         });
     currentMaxSurfaceId_ = surfaceId;
   }

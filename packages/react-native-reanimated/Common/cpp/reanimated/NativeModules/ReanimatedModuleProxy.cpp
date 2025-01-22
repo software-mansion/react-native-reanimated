@@ -96,124 +96,123 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 
 void ReanimatedModuleProxy::init(
     const PlatformDepMethodsHolder &platformDepMethodsHolder) {
-  auto onRenderCallback = [weakReanimatedModuleProxy =
+  auto onRenderCallback = [weakThis =
                                weak_from_this()](const double timestampMs) {
-    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-    if (!reanimatedModuleProxy) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
       return;
     }
 
-    reanimatedModuleProxy->renderRequested_ = false;
-    reanimatedModuleProxy->onRender(timestampMs);
+    strongThis->renderRequested_ = false;
+    strongThis->onRender(timestampMs);
   };
   onRenderCallback_ = std::move(onRenderCallback);
 
-  auto requestAnimationFrame = [weakReanimatedModuleProxy = weak_from_this()](
+  auto requestAnimationFrame = [weakThis = weak_from_this()](
                                    jsi::Runtime &rt,
                                    const jsi::Value &callback) {
-    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-    if (!reanimatedModuleProxy) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
       return;
     }
 
-    reanimatedModuleProxy->requestAnimationFrame(rt, callback);
+    strongThis->requestAnimationFrame(rt, callback);
   };
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  auto updateProps = [weakReanimatedModuleProxy = weak_from_this()](
+  auto updateProps = [weakThis = weak_from_this()](
                          jsi::Runtime &rt, const jsi::Value &operations) {
-    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-    if (!reanimatedModuleProxy) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
       return;
     }
 
-    reanimatedModuleProxy->animatedPropsRegistry_->update(rt, operations);
+    strongThis->animatedPropsRegistry_->update(rt, operations);
   };
 
-  auto removeFromPropsRegistry = [weakReanimatedModuleProxy = weak_from_this()](
+  auto removeFromPropsRegistry = [weakThis = weak_from_this()](
                                      jsi::Runtime &rt,
                                      const jsi::Value &viewTags) {
-    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-    if (!reanimatedModuleProxy) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
       return;
     }
 
-    reanimatedModuleProxy->animatedPropsRegistry_->remove(rt, viewTags);
+    strongThis->animatedPropsRegistry_->remove(rt, viewTags);
   };
 
-  auto measure = [weakReanimatedModuleProxy = weak_from_this()](
+  auto measure = [weakThis = weak_from_this()](
                      jsi::Runtime &rt,
                      const jsi::Value &shadowNodeValue) -> jsi::Value {
-    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-    if (!reanimatedModuleProxy) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
       return jsi::Value::undefined();
     }
-    return reanimatedModuleProxy->measure(rt, shadowNodeValue);
+    return strongThis->measure(rt, shadowNodeValue);
   };
 
-  auto dispatchCommand = [weakReanimatedModuleProxy = weak_from_this()](
+  auto dispatchCommand = [weakThis = weak_from_this()](
                              jsi::Runtime &rt,
                              const jsi::Value &shadowNodeValue,
                              const jsi::Value &commandNameValue,
                              const jsi::Value &argsValue) {
-    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-    if (!reanimatedModuleProxy) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
       return;
     }
 
-    reanimatedModuleProxy->dispatchCommand(
+    strongThis->dispatchCommand(
         rt, shadowNodeValue, commandNameValue, argsValue);
   };
   ProgressLayoutAnimationFunction progressLayoutAnimation =
-      [weakReanimatedModuleProxy = weak_from_this()](
+      [weakThis = weak_from_this()](
           jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool) {
-        auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-        if (!reanimatedModuleProxy) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
           return;
         }
 
-        auto surfaceId = reanimatedModuleProxy->layoutAnimationsProxy_
-                             ->progressLayoutAnimation(tag, newStyle);
+        auto surfaceId =
+            strongThis->layoutAnimationsProxy_->progressLayoutAnimation(
+                tag, newStyle);
         if (!surfaceId) {
           return;
         }
-        reanimatedModuleProxy->uiManager_->getShadowTreeRegistry().visit(
+        strongThis->uiManager_->getShadowTreeRegistry().visit(
             *surfaceId, [](const ShadowTree &shadowTree) {
               shadowTree.notifyDelegatesOfUpdates();
             });
       };
 
   EndLayoutAnimationFunction endLayoutAnimation =
-      [weakReanimatedModuleProxy = weak_from_this()](
-          int tag, bool shouldRemove) {
-        auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-        if (!reanimatedModuleProxy) {
+      [weakThis = weak_from_this()](int tag, bool shouldRemove) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
           return;
         }
 
-        auto surfaceId =
-            reanimatedModuleProxy->layoutAnimationsProxy_->endLayoutAnimation(
-                tag, shouldRemove);
+        auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(
+            tag, shouldRemove);
         if (!surfaceId) {
           return;
         }
 
-        reanimatedModuleProxy->uiManager_->getShadowTreeRegistry().visit(
+        strongThis->uiManager_->getShadowTreeRegistry().visit(
             *surfaceId, [](const ShadowTree &shadowTree) {
               shadowTree.notifyDelegatesOfUpdates();
             });
       };
 
-  auto obtainProp = [weakReanimatedModuleProxy = weak_from_this()](
+  auto obtainProp = [weakThis = weak_from_this()](
                         jsi::Runtime &rt,
                         const jsi::Value &shadowNodeWrapper,
                         const jsi::Value &propName) {
-    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-    if (!reanimatedModuleProxy) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
       return jsi::String::createFromUtf8(rt, "");
     }
 
-    return reanimatedModuleProxy->obtainProp(rt, shadowNodeWrapper, propName);
+    return strongThis->obtainProp(rt, shadowNodeWrapper, propName);
   };
 #endif
 
@@ -268,9 +267,9 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
   int emitterReactTagInt = emitterReactTag.asNumber();
 
   workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
-      [=, weakReanimatedModuleProxy = weak_from_this()]() {
-        auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-        if (!reanimatedModuleProxy) {
+      [=, weakThis = weak_from_this()]() {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
           return;
         }
         auto handler = std::make_shared<WorkletEventHandler>(
@@ -278,7 +277,7 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
             eventNameStr,
             emitterReactTagInt,
             handlerShareable);
-        reanimatedModuleProxy->eventHandlerRegistry_->registerEventHandler(
+        strongThis->eventHandlerRegistry_->registerEventHandler(
             std::move(handler));
       });
 
@@ -290,13 +289,12 @@ void ReanimatedModuleProxy::unregisterEventHandler(
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
   workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
-      [=, weakReanimatedModuleProxy = weak_from_this()]() {
-        auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-        if (!reanimatedModuleProxy) {
+      [=, weakThis = weak_from_this()]() {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
           return;
         }
-        reanimatedModuleProxy->eventHandlerRegistry_->unregisterEventHandler(
-            id);
+        strongThis->eventHandlerRegistry_->unregisterEventHandler(id);
       });
 }
 
@@ -367,19 +365,19 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
   const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
   workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
-      [=, weakReanimatedModuleProxy = weak_from_this()]() {
-        auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-        if (!reanimatedModuleProxy) {
+      [=, weakThis = weak_from_this()]() {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
           return;
         }
         jsi::Runtime &uiRuntime =
-            reanimatedModuleProxy->workletsModuleProxy_->getUIWorkletRuntime()
+            strongThis->workletsModuleProxy_->getUIWorkletRuntime()
                 ->getJSIRuntime();
-        const auto resultStr = reanimatedModuleProxy->obtainPropFromShadowNode(
+        const auto resultStr = strongThis->obtainPropFromShadowNode(
             uiRuntime, propNameStr, shadowNode);
 
-        reanimatedModuleProxy->workletsModuleProxy_->getJSScheduler()
-            ->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
+        strongThis->workletsModuleProxy_->getJSScheduler()->scheduleOnJS(
+            [=](jsi::Runtime &rnRuntime) {
               const auto resultValue =
                   jsi::String::createFromUtf8(rnRuntime, resultStr);
               funPtr->call(rnRuntime, resultValue);
@@ -402,23 +400,23 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   const int viewTagInt = viewTag.asNumber();
 
   workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
-      [=, weakReanimatedModuleProxy = weak_from_this()]
+      [=, weakThis = weak_from_this()]
 
       () {
-        auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-        if (!reanimatedModuleProxy) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
           return;
         }
         jsi::Runtime &uiRuntime =
-            reanimatedModuleProxy->workletsModuleProxy_->getUIWorkletRuntime()
+            strongThis->workletsModuleProxy_->getUIWorkletRuntime()
                 ->getJSIRuntime();
         const jsi::Value propNameValue =
             jsi::String::createFromUtf8(uiRuntime, propNameStr);
-        const auto resultValue = reanimatedModuleProxy->obtainPropFunction_(
+        const auto resultValue = strongThis->obtainPropFunction_(
             uiRuntime, viewTagInt, propNameValue);
         const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
         const auto jsScheduler =
-            reanimatedModuleProxy->workletsModuleProxy_->getJSScheduler();
+            strongThis->workletsModuleProxy_->getJSScheduler();
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
           const auto resultValue =
               jsi::String::createFromUtf8(rnRuntime, resultStr);
@@ -916,13 +914,13 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   requestRender_(
-      [weakReanimatedModuleProxy = weak_from_this()](double time) {
-        auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-        if (!reanimatedModuleProxy) {
+      [weakThis = weak_from_this()](double time) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
           return;
         }
 
-        reanimatedModuleProxy->shouldFlushRegistry_ = true;
+        strongThis->shouldFlushRegistry_ = true;
       },
       rt);
 }
@@ -1071,14 +1069,13 @@ void ReanimatedModuleProxy::initializeFabric(
 
   initializeLayoutAnimationsProxy();
 
-  const std::function<void()> request = [weakReanimatedModuleProxy =
-                                             weak_from_this()]() {
-    auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-    if (!reanimatedModuleProxy) {
+  const std::function<void()> request = [weakThis = weak_from_this()]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
       return;
     }
 
-    reanimatedModuleProxy->requestFlushRegistry();
+    strongThis->requestFlushRegistry();
   };
   mountHook_ = std::make_shared<ReanimatedMountHook>(
       uiManager_, updatesRegistryManager_, request);
@@ -1117,17 +1114,13 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
       handlerWorklet,
       "[Reanimated] Keyboard event handler must be a worklet.");
   return subscribeForKeyboardEventsFunction_(
-      [=, weakReanimatedModuleProxy = weak_from_this()](
-          int keyboardState, int height) {
-        auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock();
-        if (!reanimatedModuleProxy) {
+      [=, weakThis = weak_from_this()](int keyboardState, int height) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
           return;
         }
-        reanimatedModuleProxy->workletsModuleProxy_->getUIWorkletRuntime()
-            ->runGuarded(
-                shareableHandler,
-                jsi::Value(keyboardState),
-                jsi::Value(height));
+        strongThis->workletsModuleProxy_->getUIWorkletRuntime()->runGuarded(
+            shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool(),
       isNavigationBarTranslucent.getBool());
