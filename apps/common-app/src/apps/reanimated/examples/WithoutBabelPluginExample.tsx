@@ -4,9 +4,15 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import {
+  Gesture,
+  GestureDetector,
+  enableExperimentalWebImplementation,
+} from 'react-native-gesture-handler';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+
+enableExperimentalWebImplementation(true);
 
 function isBabelPluginEnabled() {
   function worklet() {

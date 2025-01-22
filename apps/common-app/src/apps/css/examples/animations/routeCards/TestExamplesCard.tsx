@@ -69,13 +69,11 @@ const styles = css.create({
     animationIterationCount: 'infinite',
     animationTimingFunction: 'linear',
     position: 'absolute',
-    transformOrigin: 'right bottom',
   },
   cog1: {
     animationName: rootateRight,
     left: -spacing.xl,
     top: -spacing.xxl + 1,
-    transformOrigin: 'right bottom',
   },
   cog2: {
     animationDelay: -0.1175 * ANIMATION_DURATION,
