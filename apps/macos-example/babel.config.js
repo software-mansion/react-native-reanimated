@@ -7,6 +7,7 @@ module.exports = {
       {
         alias: {
           'react-native': './node_modules/react-native-macos',
+          'react-native-safe-area-context': './lib/react-native-safe-area-context',
           '@': '../common-app/src',
         },
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
