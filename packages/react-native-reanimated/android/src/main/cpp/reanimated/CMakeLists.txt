@@ -18,14 +18,6 @@ if(${JS_RUNTIME} STREQUAL "hermes")
   find_package(hermes-engine REQUIRED CONFIG)
 endif()
 
-if(${JS_RUNTIME} STREQUAL "hermes")
-  find_package(hermes-engine REQUIRED CONFIG)
-endif()
-
-if(${JS_RUNTIME} STREQUAL "hermes")
-  find_package(hermes-engine REQUIRED CONFIG)
-endif()
-
 target_include_directories(
   reanimated
   PRIVATE "${COMMON_CPP_DIR}"
@@ -108,39 +100,11 @@ elseif(${JS_RUNTIME} STREQUAL "jsc")
 elseif(${JS_RUNTIME} STREQUAL "v8")
   # TODO: Refactor this when adding support for newest V8
   target_include_directories(reanimated PRIVATE "${JS_RUNTIME_DIR}/src")
-  file(GLOB V8_SO_DIR
-       "${JS_RUNTIME_DIR}/android/build/intermediates/library_jni/**/\
-    jni/${ANDROID_ABI}")
-  find_library(
-    V8EXECUTOR_LIB v8executor
-    PATHS ${V8_SO_DIR}
-    NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
-  target_link_libraries(reanimated ${V8EXECUTOR_LIB})
-endif()
-
-if(${JS_RUNTIME} STREQUAL "hermes")
-  target_link_libraries(reanimated hermes-engine::libhermes)
-
-  if(${HERMES_ENABLE_DEBUGGER})
-    if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
-      target_link_libraries(reanimated ReactAndroid::hermestooling)
-    else()
-      target_link_libraries(reanimated ReactAndroid::hermes_executor)
-    endif()
-  endif()
-elseif(${JS_RUNTIME} STREQUAL "jsc")
-  if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
-    target_link_libraries(reanimated ReactAndroid::jsctooling)
-  else()
-    target_link_libraries(reanimated ReactAndroid::jscexecutor)
-  endif()
-elseif(${JS_RUNTIME} STREQUAL "v8")
-  # TODO: Refactor this when adding support for newest V8
-  target_include_directories(reanimated PRIVATE "${JS_RUNTIME_DIR}/src")
   file(
     GLOB
     V8_SO_DIR
-    "${JS_RUNTIME_DIR}/android/build/intermediates/library_jni/**/jni/${ANDROID_ABI}"
+    "${JS_RUNTIME_DIR}/android/build/intermediates/library_jni/**/\
+    jni/${ANDROID_ABI}"
   )
   find_library(
     V8EXECUTOR_LIB v8executor
