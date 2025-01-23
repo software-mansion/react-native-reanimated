@@ -6,11 +6,15 @@
     "build": "cd ios && bundle install && bundle exec pod update",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "start": "react-native start"
+    "start": "react-native start",
+    "lint": "eslint --max-warnings=0 --ignore-pattern 'common-app/' ."
   },
   "dependencies": {
     "common-app": "workspace:*",
     "react-native": "0.77.0-rc.6"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0"
   },
   "engines": {
     "node": ">=18"
