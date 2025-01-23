@@ -9,8 +9,6 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
-      - apps/paper-example/package.json
-      - apps/paper-example/ios/**
       - apps/fabric-example/package.json
       - apps/fabric-example/ios/**
   merge_group:
@@ -25,8 +23,6 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
-      - apps/paper-example/package.json
-      - apps/paper-example/ios/**
       - apps/fabric-example/package.json
       - apps/fabric-example/ios/**
   workflow_call:
@@ -38,7 +34,7 @@ jobs:
     runs-on: macos-14
     strategy:
       matrix:
-        working-directory: [apps/paper-example, apps/fabric-example]
+        working-directory: [apps/fabric-example]
       fail-fast: false
     concurrency:
       group: ios-${{ matrix.working-directory }}-${{ github.ref }}

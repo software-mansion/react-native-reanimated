@@ -23,7 +23,6 @@ jobs:
             apps/fabric-example,
             apps/macos-example,
             # apps/next-example, # next-example doesn't use TypeScript.
-            apps/paper-example,
             apps/tvos-example,
             apps/web-example,
           ]
