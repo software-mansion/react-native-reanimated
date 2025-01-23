@@ -9,29 +9,26 @@ import { SensorType } from '../../commonTypes';
 import type {
   IReanimatedModule,
   IWorkletsModule,
+  ShadowNodeWrapper,
   ShareableRef,
+  StyleProps,
   Value3D,
   ValueRotation,
   WorkletFunction,
 } from '../../commonTypes';
 import type { WebSensor } from './WebSensor';
-import { mockedRequestAnimationFrame } from '../../mockedRequestAnimationFrame';
-import type { WorkletRuntime } from '../../runtimes';
 import { logger } from '../../logger';
 import { ReanimatedError } from '../../errors';
 import { WorkletsModule } from '../../worklets';
+import type {
+  NormalizedCSSTransitionConfig,
+  NormalizedSingleCSSAnimationConfig,
+  NormalizedSingleCSSAnimationSettings,
+} from '../../css/platform/native';
 
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();
 }
-
-// In Node.js environments (like when static rendering with Expo Router)
-// requestAnimationFrame is unavailable, so we use our mock.
-// It also has to be mocked for Jest purposes (see `initializeUIRuntime`).
-const requestAnimationFrameImpl =
-  isJest() || !globalThis.requestAnimationFrame
-    ? mockedRequestAnimationFrame
-    : globalThis.requestAnimationFrame;
 
 class JSReanimated implements IReanimatedModule {
   /**
@@ -42,26 +39,6 @@ class JSReanimated implements IReanimatedModule {
   nextSensorId = 0;
   sensors = new Map<number, WebSensor>();
   platform?: Platform = undefined;
-
-  scheduleOnUI<T>(worklet: ShareableRef<T>) {
-    // @ts-ignore web implementation has still not been updated after the rewrite, this will be addressed once the web implementation updates are ready
-    requestAnimationFrameImpl(worklet);
-  }
-
-  createWorkletRuntime(
-    _name: string,
-    _initializer: ShareableRef<() => void>
-  ): WorkletRuntime {
-    throw new ReanimatedError(
-      'createWorkletRuntime is not available in JSReanimated.'
-    );
-  }
-
-  scheduleOnRuntime() {
-    throw new ReanimatedError(
-      'scheduleOnRuntime is not available in JSReanimated.'
-    );
-  }
 
   registerEventHandler<T>(
     _eventHandler: ShareableRef<T>,
@@ -294,9 +271,64 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  executeOnUIRuntimeSync<T, R>(_shareable: ShareableRef<T>): R {
+  setViewStyle(_viewTag: number, _style: StyleProps): void {
+    throw new ReanimatedError('setViewStyle is not available in JSReanimated.');
+  }
+
+  removeViewStyle(_viewTag: number): void {
     throw new ReanimatedError(
-      '`executeOnUIRuntimeSync` is not available in JSReanimated.'
+      'removeViewStyle is not available in JSReanimated.'
+    );
+  }
+
+  registerCSSAnimations(
+    _shadowNodeWrapper: ShadowNodeWrapper,
+    _animationConfigs: NormalizedSingleCSSAnimationConfig[]
+  ): void {
+    throw new ReanimatedError(
+      '`registerCSSAnimations` is not available in JSReanimated.'
+    );
+  }
+
+  updateCSSAnimations(
+    _viewTag: number,
+    _settingsUpdates: {
+      index: number;
+      settings: Partial<NormalizedSingleCSSAnimationSettings>;
+    }[]
+  ): void {
+    throw new ReanimatedError(
+      '`updateCSSAnimations` is not available in JSReanimated.'
+    );
+  }
+
+  unregisterCSSAnimations(_viewTag: number): void {
+    throw new ReanimatedError(
+      '`unregisterCSSAnimations` is not available in JSReanimated.'
+    );
+  }
+
+  registerCSSTransition(
+    _shadowNodeWrapper: ShadowNodeWrapper,
+    _transitionConfig: NormalizedCSSTransitionConfig
+  ): void {
+    throw new ReanimatedError(
+      '`registerCSSTransition` is not available in JSReanimated.'
+    );
+  }
+
+  updateCSSTransition(
+    _viewTag: number,
+    _settingsUpdates: Partial<NormalizedCSSTransitionConfig>
+  ): void {
+    throw new ReanimatedError(
+      '`updateCSSTransition` is not available in JSReanimated.'
+    );
+  }
+
+  unregisterCSSTransition(_viewTag: number): void {
+    throw new ReanimatedError(
+      '`unregisterCSSTransition` is not available in JSReanimated.'
     );
   }
 }

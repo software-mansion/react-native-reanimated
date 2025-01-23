@@ -72,8 +72,8 @@ elseif(${JS_RUNTIME} STREQUAL "jsc")
   else()
     target_link_libraries(worklets ReactAndroid::jscexecutor)
   endif()
-elseif(${JS_RUNTIME} STREQUAL "v8") # TODO: Refactor this when adding support
-                                    # for newest V8
+elseif(${JS_RUNTIME} STREQUAL "v8")
+  # TODO: Refactor this when adding support for newest V8
   target_include_directories(worklets PRIVATE "${JS_RUNTIME_DIR}/src")
   file(GLOB V8_SO_DIR "${JS_RUNTIME_DIR}/android/build/intermediates/\
     library_jni/*/jni/${ANDROID_ABI}")

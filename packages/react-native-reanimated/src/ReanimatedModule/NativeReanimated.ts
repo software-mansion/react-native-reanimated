@@ -7,17 +7,25 @@ import type {
   IReanimatedModule,
   IWorkletsModule,
   WorkletFunction,
+  ShadowNodeWrapper,
+  StyleProps,
 } from '../commonTypes';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
-import type { WorkletRuntime } from '../runtimes';
-import { isFabric } from '../PlatformChecker';
+import { isFabric, isWeb } from '../PlatformChecker';
 import type React from 'react';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { ReanimatedTurboModule } from '../specs';
 import { ReanimatedError } from '../errors';
 import { WorkletsModule } from '../worklets';
 import type { ReanimatedModuleProxy } from './reanimatedModuleProxy';
+import type {
+  NormalizedCSSTransitionConfig,
+  NormalizedSingleCSSAnimationConfig,
+  NormalizedSingleCSSAnimationSettings,
+} from '../css/platform/native';
+
+const IS_WEB = isWeb();
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
@@ -59,32 +67,15 @@ class NativeReanimatedModule implements IReanimatedModule {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
+    if (!isFabric() && !IS_WEB) {
+      throw new ReanimatedError(
+        'Reanimated 4 supports only the React Native New Architecture and web.'
+      );
+    }
     if (__DEV__) {
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
-  }
-
-  scheduleOnUI<T>(shareable: ShareableRef<T>) {
-    return this.#reanimatedModuleProxy.scheduleOnUI(shareable);
-  }
-
-  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R {
-    return this.#reanimatedModuleProxy.executeOnUIRuntimeSync(shareable);
-  }
-
-  createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
-    return this.#reanimatedModuleProxy.createWorkletRuntime(name, initializer);
-  }
-
-  scheduleOnRuntime<T>(
-    workletRuntime: WorkletRuntime,
-    shareableWorklet: ShareableRef<T>
-  ) {
-    return this.#reanimatedModuleProxy.scheduleOnRuntime(
-      workletRuntime,
-      shareableWorklet
-    );
   }
 
   registerSensor(
@@ -179,5 +170,61 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
 
   unsubscribeFromKeyboardEvents(listenerId: number) {
     this.#reanimatedModuleProxy.unsubscribeFromKeyboardEvents(listenerId);
+  }
+
+  setViewStyle(viewTag: number, style: StyleProps) {
+    this.#reanimatedModuleProxy.setViewStyle(viewTag, style);
+  }
+
+  removeViewStyle(viewTag: number) {
+    this.#reanimatedModuleProxy.removeViewStyle(viewTag);
+  }
+
+  registerCSSAnimations(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    animationConfigs: NormalizedSingleCSSAnimationConfig[]
+  ) {
+    this.#reanimatedModuleProxy.registerCSSAnimations(
+      shadowNodeWrapper,
+      animationConfigs
+    );
+  }
+
+  updateCSSAnimations(
+    animationId: number,
+    settingsUpdates: {
+      index: number;
+      settings: Partial<NormalizedSingleCSSAnimationSettings>;
+    }[]
+  ) {
+    this.#reanimatedModuleProxy.updateCSSAnimations(
+      animationId,
+      settingsUpdates
+    );
+  }
+
+  unregisterCSSAnimations(viewTag: number) {
+    this.#reanimatedModuleProxy.unregisterCSSAnimations(viewTag);
+  }
+
+  registerCSSTransition(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    transitionConfig: NormalizedCSSTransitionConfig
+  ) {
+    this.#reanimatedModuleProxy.registerCSSTransition(
+      shadowNodeWrapper,
+      transitionConfig
+    );
+  }
+
+  updateCSSTransition(
+    viewTag: number,
+    configUpdates: Partial<NormalizedCSSTransitionConfig>
+  ) {
+    this.#reanimatedModuleProxy.updateCSSTransition(viewTag, configUpdates);
+  }
+
+  unregisterCSSTransition(viewTag: number) {
+    this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
   }
 }

@@ -67,6 +67,8 @@ class LayoutAnimations : public jni::HybridClass<LayoutAnimations> {
   int findPrecedingViewTagForTransition(int tag);
   jni::local_ref<JArrayInt> getSharedGroup(const int tag);
 
+  void invalidate();
+
  private:
   friend HybridBase;
   jni::global_ref<LayoutAnimations::javaobject> javaPart_;

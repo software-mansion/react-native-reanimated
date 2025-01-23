@@ -1,6 +1,5 @@
 #pragma once
 
-#include <reanimated/Fabric/PropsRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
@@ -96,7 +95,6 @@ struct Node {
  */
 struct MutationNode : public Node {
   ShadowViewMutation mutation;
-  std::unordered_set<Tag> animatedChildren;
   ExitingState state = UNDEFINED;
   explicit MutationNode(ShadowViewMutation &mutation)
       : Node(mutation.oldChildShadowView.tag), mutation(mutation) {}
