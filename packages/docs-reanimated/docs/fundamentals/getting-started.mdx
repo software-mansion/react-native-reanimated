@@ -20,54 +20,51 @@ With Reanimated, you can easily create smooth animations and interactions that r
 Reanimated 4.x works only with [the React Native New Architecture (Fabric)](https://reactnative.dev/architecture/landing-page).
 If your app still uses the old architecture, you can use Reanimated in version 3 which is still actively maintained.
 
-## Quick start
-
-If you don't have an existing project, you can create a new Expo app using a template:
-
-<Tabs groupId="package-managers">
-  <TabItem value="npm" label="NPM">
-
-    npx create-expo-app@latest my-app -e with-reanimated
-
-  </TabItem>
-  <TabItem value="yarn" label="YARN">
-
-    yarn create expo-app my-app -e with-reanimated
-
-  </TabItem>
-</Tabs>
-
 Alternatively, you can dive into [our examples](https://github.com/software-mansion/react-native-reanimated/tree/3.14.0/apps/common-app/src/examples) on GitHub.
 
 ## Installation
 
-It takes three steps to add Reanimated to a project:
+It takes two steps to add Reanimated 4 to an Expo project:
 
 ### Step 1: Install the package
 
-Install `react-native-reanimated` package from npm:
+Install `react-native-reanimated@next` package from npm:
 
 <Tabs groupId="package-managers">
-  <TabItem value="expo" label="EXPO" default>
-
-    npx expo install react-native-reanimated
-
-  </TabItem>
   <TabItem value="npm" label="NPM">
 
-    npm install react-native-reanimated
+    npm install react-native-reanimated@next
 
   </TabItem>
   <TabItem value="yarn" label="YARN">
 
-    yarn add react-native-reanimated
+    yarn add react-native-reanimated@next
 
   </TabItem>
 </Tabs>
 
-### Step 2: Add Reanimated's babel plugin
+### Step 2: Rebuild native dependencies
 
-Add `react-native-reanimated/plugin` plugin to your `babel.config.js`.
+Run prebuild to update the native code in the `ios` and `android` directories.
+
+<Tabs groupId="package-managers">
+  <TabItem value="npm" label="NPM">
+
+    npx expo prebuild
+
+  </TabItem>
+  <TabItem value="yarn" label="YARN">
+
+    yarn expo prebuild
+
+  </TabItem>
+</Tabs>
+
+And that's it! Reanimated 4 is now configured in your Expo project.
+
+### React Native Community CLI
+
+When using [React Native Community CLI](https://github.com/react-native-community/cli), you also need to manually add the `react-native-reanimated/plugin` plugin to your `babel.config.js`.
 
 ```js {7}
   module.exports = {
@@ -92,65 +89,11 @@ Add `react-native-reanimated/plugin` plugin to your `babel.config.js`.
 
 In short, the Reanimated babel plugin automatically converts special JavaScript functions (called [worklets](/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
 
+Since [Expo SDK 50](https://expo.dev/changelog/2024/01-18-sdk-50), the Expo starter template includes the Reanimated babel plugin by default.
+
 To learn more about the plugin head onto to [Reanimated babel plugin](/docs/fundamentals/glossary#reanimated-babel-plugin) section.
 
 </details>
-
-### Step 3: Wrap metro config with reanimated wrapper (recommended)
-
-Wrap your existing Metro configuration in the `metro.config.js` file with the `wrapWithReanimatedMetroConfig` function.
-
-```js
-// metro.config.js
-const {
-  wrapWithReanimatedMetroConfig,
-} = require('react-native-reanimated/metro-config');
-
-const config = {
-  // Your existing Metro configuration options
-};
-
-module.exports = wrapWithReanimatedMetroConfig(config);
-```
-
-<details>
-<summary>Why should I do this?</summary>
-
-Wrapping your Metro configuration with the Reanimated Metro config wrapper will result in displaying improved reanimated errors and warnings with more accurate call stacks. Thanks to this, identifying misuses of the Reanimated API will be much easier than before.
-
-To learn more about this feature, head onto to [Accurate Call Stacks](/docs/debugging/accurate-call-stacks).
-
-</details>
-
-### Step 4: Clear Metro bundler cache (recommended)
-
-<Tabs groupId="package-managers">
-  <TabItem value="expo" label="EXPO" default>
-
-    npx expo start -c
-
-  </TabItem>
-  <TabItem value="npm" label="NPM">
-
-    npm start -- --reset-cache
-
-  </TabItem>
-  <TabItem value="yarn" label="YARN">
-
-    yarn start --reset-cache
-
-  </TabItem>
-</Tabs>
-
-### Expo development build
-
-When using an [Expo development build](https://docs.expo.dev/develop/development-builds/introduction/), run prebuild to update the native code in the `ios` and `android` directories.
-
-```bash
-npx expo prebuild
-```
-
-### Platform specific setup
 
 #### Android
 
@@ -171,11 +114,6 @@ For building apps that target web using [react-native-web](https://www.npmjs.com
 To use Reanimated on the web all you need to do is to install and add [`@babel/plugin-proposal-export-namespace-from`](https://babeljs.io/docs/en/babel-plugin-proposal-export-namespace-from) Babel plugin to your `babel.config.js`.
 
 <Tabs groupId="package-managers">
-  <TabItem value="expo" label="EXPO" default>
-
-    npx expo install @babel/plugin-proposal-export-namespace-from
-
-  </TabItem>
   <TabItem value="npm" label="NPM">
 
     npm install @babel/plugin-proposal-export-namespace-from
