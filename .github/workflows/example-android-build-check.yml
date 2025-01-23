@@ -7,8 +7,6 @@ on:
       - .github/workflows/example-android-build-check.yml
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
-      - apps/paper-example/package.json
-      - apps/paper-example/android/**
       - apps/fabric-example/package.json
       - apps/fabric-example/android/**
   merge_group:
@@ -21,8 +19,6 @@ on:
       - .github/workflows/example-android-build-check.yml
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
-      - apps/paper-example/package.json
-      - apps/paper-example/android/**
       - apps/fabric-example/package.json
       - apps/fabric-example/android/**
   workflow_call:
@@ -34,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        working-directory: [apps/paper-example, apps/fabric-example]
+        working-directory: [apps/fabric-example]
         use-external-worklets: [true, false]
       fail-fast: false
     concurrency:

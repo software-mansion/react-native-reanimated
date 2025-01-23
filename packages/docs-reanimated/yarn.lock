@@ -10679,9 +10679,9 @@ multicast-dns@^7.2.5:
     thunky "^1.0.2"
 
 nanoid@^3.3.6:
-  version "3.3.6"
-  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.6.tgz#443380c856d6e9f9824267d960b4236ad583ea4c"
-  integrity sha512-BGcqMMJuToF7i1rt+2PWSNVnWIkGCU78jBG3RxO/bZlnZPK2Cmi2QaffxGO/2RvWi9sL+FAiRiXMgsyxQ1DIDA==
+  version "3.3.8"
+  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.8.tgz#b1be3030bee36aaff18bacb375e5cce521684baf"
+  integrity sha512-WNLf5Sd8oZxOm+TzppcYk8gVOgP+l58xNy58D0nbUnOxOWRWvlcCV4kUF7ltmI6PsrLl/BgKEyS4mqsGChFN0w==
 
 nanomatch@^1.2.9:
   version "1.2.13"
@@ -12024,10 +12024,9 @@ react-native-gradle-plugin@^0.71.16:
   resolved "https://registry.yarnpkg.com/react-native-gradle-plugin/-/react-native-gradle-plugin-0.71.16.tgz#822bb0c680e03b5df5aa65f2e5ffc2bc2930854a"
   integrity sha512-H2BjG2zk7B7Wii9sXvd9qhCVRQYDAHSWdMw9tscmZBqSP62DkIWEQSk4/B2GhQ4aK9ydVXgtqR6tBeg3yy8TSA==
 
-react-native-reanimated@^3.15.0-nightly-20240722-a15e0edec:
-  version "3.15.0-nightly-20240722-a15e0edec"
-  resolved "https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-3.15.0-nightly-20240722-a15e0edec.tgz#015086fc2be672da4ceb8999ba58687918b09592"
-  integrity sha512-jAeN0/Q/GSG7gPLeKHe2Yk7XCx718L+42SXHSfT0dgcXrIzKENq3Pfn9rj9j2B7XVA8YPOAkUmQ6telB9WDHOA==
+react-native-reanimated@./react-native-reanimated-4.0.0-beta.1.tgz:
+  version "4.0.0-beta.1"
+  resolved "./react-native-reanimated-4.0.0-beta.1.tgz#23ff7d8ea5aaadfc05234345856948412c6adb58"
   dependencies:
     "@babel/plugin-transform-arrow-functions" "^7.0.0-0"
     "@babel/plugin-transform-class-properties" "^7.0.0-0"

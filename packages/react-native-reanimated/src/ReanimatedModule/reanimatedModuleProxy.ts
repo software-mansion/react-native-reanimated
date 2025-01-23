@@ -7,25 +7,16 @@ import type {
   ValueRotation,
   LayoutAnimationBatchItem,
   WorkletFunction,
+  StyleProps,
 } from '../commonTypes';
-import type { WorkletRuntime } from '../runtimes';
+import type {
+  NormalizedCSSTransitionConfig,
+  NormalizedSingleCSSAnimationConfig,
+  NormalizedSingleCSSAnimationSettings,
+} from '../css/platform/native';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
-  scheduleOnUI<T>(shareable: ShareableRef<T>): void;
-
-  executeOnUIRuntimeSync<T, R>(shareable: ShareableRef<T>): R;
-
-  createWorkletRuntime(
-    name: string,
-    initializer: ShareableRef<() => void>
-  ): WorkletRuntime;
-
-  scheduleOnRuntime<T>(
-    workletRuntime: WorkletRuntime,
-    worklet: ShareableRef<T>
-  ): void;
-
   registerEventHandler<T>(
     eventHandler: ShareableRef<T>,
     eventName: string,
@@ -66,4 +57,35 @@ export interface ReanimatedModuleProxy {
   ): void;
 
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
+
+  setViewStyle(viewTag: number, style: StyleProps): void;
+
+  removeViewStyle(viewTag: number): void;
+
+  registerCSSAnimations(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    animationConfigs: NormalizedSingleCSSAnimationConfig[]
+  ): void;
+
+  updateCSSAnimations(
+    _viewTag: number,
+    updatedSettings: {
+      index: number;
+      settings: Partial<NormalizedSingleCSSAnimationSettings>;
+    }[]
+  ): void;
+
+  unregisterCSSAnimations(viewTag: number): void;
+
+  registerCSSTransition(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    transitionConfig: NormalizedCSSTransitionConfig
+  ): void;
+
+  updateCSSTransition(
+    viewTag: number,
+    settingsUpdates: Partial<NormalizedCSSTransitionConfig>
+  ): void;
+
+  unregisterCSSTransition(viewTag: number): void;
 }

@@ -7,11 +7,16 @@ import type {
 } from 'react-native';
 import type { WorkletsModuleProxy } from './worklets';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
+import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
+
+type DisallowKeysOf<TInterface> = {
+  [TKey in keyof TInterface]?: never;
+};
 
 export interface IWorkletsModule extends WorkletsModuleProxy {}
-
 export interface IReanimatedModule
-  extends Omit<ReanimatedModuleProxy, 'getViewProp'> {
+  extends Omit<ReanimatedModuleProxy, 'getViewProp'>,
+    DisallowKeysOf<IWorkletsModule> {
   getViewProp<TValue>(
     viewTag: number,
     propName: string,
@@ -215,6 +220,8 @@ export interface StyleProps extends ViewStyle, TextStyle {
   originY?: number;
   [key: string]: any;
 }
+
+export type PlainStyle = ViewStyle & TextStyle & ImageStyle;
 
 /**
  * A value that can be used both on the [JavaScript
@@ -592,7 +599,7 @@ type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<Style = DefaultStyle> =
-  | Style
+  | (Style & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) // TODO - maybe add css animation config somewhere else
   | MaybeSharedValueRecursive<Style>;
 
 export type AnimatedTransform = MaybeSharedValueRecursive<

@@ -14,6 +14,7 @@ class RNRuntimeDecorator {
  public:
   static void decorate(
       jsi::Runtime &rnRuntime,
+      jsi::Runtime &uiRuntime,
       const std::shared_ptr<ReanimatedModuleProxy> &reanimatedModuleProxy);
 };
 
