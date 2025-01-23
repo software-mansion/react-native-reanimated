@@ -7,14 +7,14 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "lint": "eslint --max-warnings=0 --ignore-pattern 'common-app/' ."
+    "format": "prettier --write --list-different ."
   },
   "dependencies": {
     "common-app": "workspace:*",
     "react-native": "0.77.0-rc.6"
   },
   "devDependencies": {
-    "eslint": "^8.57.0"
+    "prettier": "^3.3.3"
   },
   "engines": {
     "node": ">=18"

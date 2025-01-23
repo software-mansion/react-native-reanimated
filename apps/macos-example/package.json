@@ -5,7 +5,6 @@
   "scripts": {
     "macos": "react-native run-macos",
     "build": "cd macos && bundle install && bundle exec pod update",
-    "lint": "eslint . --max-warnings 0",
     "format": "prettier --write --list-different .",
     "start": "react-native start"
   },
@@ -23,7 +22,8 @@
     "@react-native/babel-preset": "0.75.4",
     "@react-native/eslint-config": "0.75.4",
     "@react-native/metro-config": "0.75.4",
-    "@react-native/typescript-config": "0.75.4"
+    "@react-native/typescript-config": "0.75.4",
+    "prettier": "^3.3.3"
   },
   "engines": {
     "node": ">=18"
