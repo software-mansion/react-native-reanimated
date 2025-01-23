@@ -1,6 +1,4 @@
-/**
- * This file is required to properly resolve native dependencies
- */
+/** This file is required to properly resolve native dependencies */
 import { getDependencies } from '../common-app/scripts/dependencies';
 
 const { dependencies } = getDependencies();

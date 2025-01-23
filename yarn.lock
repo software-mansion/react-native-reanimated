@@ -12085,7 +12085,7 @@ __metadata:
   resolution: "fabric-example@workspace:apps/fabric-example"
   dependencies:
     common-app: "workspace:*"
-    eslint: "npm:^8.57.0"
+    prettier: "npm:^3.3.3"
     react-native: "npm:0.77.0-rc.6"
   languageName: unknown
   linkType: soft
@@ -15486,6 +15486,7 @@ __metadata:
     "@react-native/metro-config": "npm:0.75.4"
     "@react-native/typescript-config": "npm:0.75.4"
     common-app: "workspace:*"
+    prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.75.4"
     react-native-macos: "npm:^0.75.13"
@@ -21838,8 +21839,8 @@ __metadata:
     "@expo/metro-runtime": "npm:~4.0.0"
     "@stylexjs/babel-plugin": "npm:^0.10.0"
     common-app: "workspace:*"
-    eslint: "npm:^8.57.0"
     expo: "npm:^52.0.4"
+    prettier: "npm:^3.3.3"
     react-dom: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
     react-native-web: "npm:0.19.13"
