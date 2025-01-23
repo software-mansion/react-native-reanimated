@@ -8,7 +8,7 @@
     "format:js": "prettier --write --list-different src",
     "lint": "yarn lint:js",
     "lint:js": "eslint --ext '.js,.ts,.tsx' src && yarn prettier --check src",
-    "type-check": "yarn tsc --noEmit",
+    "type:check": "yarn tsc --noEmit",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib"
   },
   "repository": {

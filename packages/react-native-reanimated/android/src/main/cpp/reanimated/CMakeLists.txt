@@ -48,15 +48,9 @@ set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(reanimated log ReactAndroid::jsi fbjni::fbjni android)
 
 if(${HAS_EXTERNAL_WORKLETS})
-  target_link_libraries(
-      reanimated
-      react-native-worklets::worklets
-  )
+  target_link_libraries(reanimated react-native-worklets::worklets)
 else()
-  target_link_libraries(
-      reanimated
-      worklets
-  )
+  target_link_libraries(reanimated worklets)
 endif()
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
@@ -114,12 +108,9 @@ elseif(${JS_RUNTIME} STREQUAL "jsc")
 elseif(${JS_RUNTIME} STREQUAL "v8")
   # TODO: Refactor this when adding support for newest V8
   target_include_directories(reanimated PRIVATE "${JS_RUNTIME_DIR}/src")
-  file(
-    GLOB
-    V8_SO_DIR
-    "${JS_RUNTIME_DIR}/android/build/intermediates/library_jni/**/\
-    jni/${ANDROID_ABI}"
-  )
+  file(GLOB V8_SO_DIR
+       "${JS_RUNTIME_DIR}/android/build/intermediates/library_jni/**/\
+    jni/${ANDROID_ABI}")
   find_library(
     V8EXECUTOR_LIB v8executor
     PATHS ${V8_SO_DIR}

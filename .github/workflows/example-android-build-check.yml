@@ -53,7 +53,7 @@ jobs:
       - name: Use external worklets
         if: ${{ matrix.use-external-worklets == 'true' }}
         working-directory: ${{ matrix.working-directory }}
-        run: yarn add react-native-worklets
+        run: yarn add react-native-worklets@workspace:"*"
 
       - name: Build app
         working-directory: ${{ matrix.working-directory }}/android

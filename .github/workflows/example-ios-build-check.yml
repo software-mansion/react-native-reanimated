@@ -50,7 +50,7 @@ jobs:
       - name: Use external worklets
         if: ${{ matrix.use-external-worklets == 'true' }}
         working-directory: ${{ matrix.working-directory }}
-        run: yarn add react-native-worklets
+        run: yarn add react-native-worklets@workspace:"*"
 
       # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install Pods
