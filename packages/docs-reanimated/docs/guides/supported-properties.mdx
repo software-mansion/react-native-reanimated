@@ -185,29 +185,44 @@ Even though changes of this property are calculated properly during the animatio
 
 ### textShadow
 
-On the Web, to animate `textShadow` props (`textShadowColor`, `textShadowOffset`, `textShadowRadius`) using CSS Animations you need to specify them in every keyframe of the animation. Consider this example:
+On the Web, to animate `textShadow` props (`textShadowColor`, `textShadowOffset`, `textShadowRadius`) using CSS Animations you need to specify them in keyframes. Consider this example:
 
 ```jsx
-function App() {
-  return (
-    <Animated.Text
-      style={{
-        // highlight-start
-        animationName: {
-          from: { textShadowColor: 'red' },
-          to: { textShadowColor: 'blue' },
-        },
-        textShadowOffset: { width: 10, height: 10 }, // 🚨 needs to be specified
-        textShadowRadius: 8, // 🚨 in keyframes to work on the web
-        // highlight-end
-        fontSize: 24,
-        animationDuration: '3s',
-        animationIterationCount: 'infinite',
-      }}>
-      Reanimated
-    </Animated.Text>
-  );
-}
+<Animated.Text
+  style={{
+    // highlight-start
+    animationName: {
+      from: { textShadowColor: 'red' },
+      to: { textShadowColor: 'blue' },
+    },
+    textShadowOffset: { width: 10, height: 10 }, // 🚨 needs to be specified
+    textShadowRadius: 8, // 🚨 in keyframes to work on the web
+    // highlight-end
+    // other styles...
+  }}>
+  Reanimated
+</Animated.Text>
 ```
 
 This animation will correctly work on both iOS and Android. However, on the Web, while `textShadowColor` will animate correctly from `"red"` to `"blue"`, `textShadowOffset` and `textShadowRadius` won't be included in the keyframe, resulting in no animation.
+
+To mitigate the problem, move `textShadow` styles to keyframes:
+
+```jsx
+<Animated.Text
+  style={{
+    animationName: {
+      from: {
+        textShadowColor: 'red',
+        textShadowOffset: { width: 10, height: 10 }, // ✅
+        textShadowRadius: 8, // ✅
+      },
+      to: {
+        textShadowColor: 'blue',
+      },
+    },
+    // other styles...
+  }}>
+  Reanimated
+</Animated.Text>
+```
