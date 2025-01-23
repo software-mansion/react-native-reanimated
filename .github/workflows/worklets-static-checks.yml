@@ -1,4 +1,4 @@
-name: Reanimated static checks
+name: Worklets static checks
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
@@ -13,13 +13,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  reanimated-static-checks:
+  worklets-static-checks:
     if: github.repository == 'software-mansion/react-native-reanimated'
     env:
-      PACKAGE_PATH: packages/react-native-reanimated
+      PACKAGE_PATH: packages/react-native-worklets
     runs-on: ubuntu-latest
     concurrency:
-      group: static-root-${{ github.ref }}
+      group: worklets-static-checks-${{ github.ref }}
       cancel-in-progress: true
     steps:
       # Setup VM
@@ -35,26 +35,17 @@ jobs:
       # Setup repo
       - name: Install monorepo node dependencies
         run: yarn install --immutable
-      - name: Build Reanimated for TypeScript types
+      - name: Build Worklets for TypeScript types
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn build
 
       # Checks
       - name: Check TypeScript types
         working-directory: ${{ env.PACKAGE_PATH }}
-        run: yarn type:check
+        run: yarn type-check
       - name: Lint JavaScript
         working-directory: ${{ env.PACKAGE_PATH }}
-        run: yarn lint:js
-      - name: Find unused code
-        working-directory: ${{ env.PACKAGE_PATH }}
-        run: yarn find-unused-code:js
+        run: yarn lint
       - name: Find circular dependencies
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn circular-dependency-check
-      - name: Check use strict
-        working-directory: ${{ env.PACKAGE_PATH }}
-        run: yarn use-strict-check
-      - name: Run jest unit tests
-        working-directory: ${{ env.PACKAGE_PATH }}
-        run: yarn test
