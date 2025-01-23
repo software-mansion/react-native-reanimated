@@ -5,19 +5,17 @@ GEM
       base64
       nkf
       rexml
-    activesupport (7.1.5)
+    activesupport (7.2.1.2)
       base64
-      benchmark (>= 0.3)
       bigdecimal
-      concurrent-ruby (~> 1.0, >= 1.0.2)
+      concurrent-ruby (~> 1.0, >= 1.3.1)
       connection_pool (>= 2.2.5)
       drb
       i18n (>= 1.6, < 2)
       logger (>= 1.4.2)
       minitest (>= 5.1)
-      mutex_m
       securerandom (>= 0.3)
-      tzinfo (~> 2.0)
+      tzinfo (~> 2.0, >= 2.0.5)
     addressable (2.8.7)
       public_suffix (>= 2.0.2, < 7.0)
     algoliasearch (1.27.5)
@@ -25,7 +23,6 @@ GEM
       json (>= 1.5.1)
     atomos (0.1.3)
     base64 (0.2.0)
-    benchmark (0.4.0)
     bigdecimal (3.1.8)
     claide (1.1.0)
     cocoapods (1.16.1)
@@ -83,7 +80,6 @@ GEM
     logger (1.6.1)
     minitest (5.25.1)
     molinillo (0.8.0)
-    mutex_m (0.3.0)
     nanaimo (0.4.0)
     nap (1.1.0)
     netrc (0.11.0)
