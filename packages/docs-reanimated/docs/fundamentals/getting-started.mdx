@@ -96,7 +96,7 @@ To learn more about the plugin head onto to [Reanimated babel plugin](/docs/fund
 
 </details>
 
-### Step 3: Wrap metro config with reanimated wrapper (recommended)
+### Step 3: Wrap Metro config with Reanimated wrapper (recommended)
 
 Wrap your existing Metro configuration in the `metro.config.js` file with the `wrapWithReanimatedMetroConfig` function.
 
@@ -106,19 +106,22 @@ const {
   wrapWithReanimatedMetroConfig,
 } = require('react-native-reanimated/metro-config');
 
-const config = {
-  // Your existing Metro configuration options
-};
-
-module.exports = wrapWithReanimatedMetroConfig(config);
+module.exports = wrapWithReanimatedMetroConfig(
+  config // your existing metro config
+);
 ```
+
+:::note Important
+
+- `wrapWithReanimatedMetroConfig` was introduced in **Reanimated 3.16.0**. If you are using an older version of Reanimated, please skip this step.
+- If your project extends the default config from `expo/metro-config`, the necessary adjustments are **already included** and you **don't** need to apply this step.
+
+:::
 
 <details>
 <summary>Why should I do this?</summary>
 
-Wrapping your Metro configuration with the Reanimated Metro config wrapper will result in displaying improved reanimated errors and warnings with more accurate call stacks. Thanks to this, identifying misuses of the Reanimated API will be much easier than before.
-
-To learn more about this feature, head onto to [Accurate Call Stacks](/docs/debugging/accurate-call-stacks).
+Wrapping your Metro configuration with the Reanimated Metro config wrapper provides improved error messages and more accurate call stacks, making it easier to debug issues when using the Reanimated API. For more information, check out the [Accurate Call Stacks](/docs/debugging/accurate-call-stacks) page.
 
 </details>
 
