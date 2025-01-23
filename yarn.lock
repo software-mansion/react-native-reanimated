@@ -18726,6 +18726,7 @@ __metadata:
     react-native-builder-bob: "npm:0.33.1"
     react-native-gesture-handler: "npm:2.22.0"
     react-native-web: "npm:0.19.11"
+    react-native-worklets: "workspace:*"
     react-test-renderer: "npm:18.2.0"
     shelljs: "npm:^0.8.5"
     ts-prune: "npm:^0.10.3"
@@ -18812,7 +18813,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-worklets@workspace:packages/react-native-worklets":
+"react-native-worklets@workspace:*, react-native-worklets@workspace:packages/react-native-worklets":
   version: 0.0.0-use.local
   resolution: "react-native-worklets@workspace:packages/react-native-worklets"
   dependencies:
