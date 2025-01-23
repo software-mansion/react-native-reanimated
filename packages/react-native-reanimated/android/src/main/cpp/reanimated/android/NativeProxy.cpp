@@ -49,6 +49,7 @@ NativeProxy::NativeProxy(
           isBridgeless,
           getIsReducedMotion())),
       layoutAnimations_(std::move(layoutAnimations)) {
+  reanimatedModuleProxy_->init(getPlatformDependentMethods());
 #ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
@@ -81,8 +82,6 @@ NativeProxy::~NativeProxy() {
   // has already been destroyed when AnimatedSensorModule's
   // destructor is ran
   reanimatedModuleProxy_->cleanupSensors();
-
-  layoutAnimations_->cthis()->invalidate();
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -477,8 +476,13 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto progressLayoutAnimation =
       bindThis(&NativeProxy::progressLayoutAnimation);
 
-  auto endLayoutAnimation = [this](int tag, bool removeView) {
-    this->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
+  auto endLayoutAnimation = [weakThis = weak_from_this()](
+                                int tag, bool removeView) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    strongThis->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
   };
 
   auto maybeFlushUiUpdatesQueueFunction =
@@ -609,9 +613,6 @@ void NativeProxy::setupLayoutAnimations() {
 }
 
 void NativeProxy::invalidateCpp() {
-  if (reanimatedModuleProxy_ != nullptr) {
-    reanimatedModuleProxy_->invalidate();
-  }
   layoutAnimations_->cthis()->invalidate();
   reanimatedModuleProxy_.reset();
 }

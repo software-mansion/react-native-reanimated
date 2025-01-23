@@ -12,7 +12,9 @@ using namespace facebook::react;
 
 namespace reanimated {
 
-class ReanimatedCommitHook : public UIManagerCommitHook {
+class ReanimatedCommitHook
+    : public UIManagerCommitHook,
+      public std::enable_shared_from_this<ReanimatedCommitHook> {
  public:
   ReanimatedCommitHook(
       const std::shared_ptr<PropsRegistry> &propsRegistry,
