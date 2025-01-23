@@ -95,7 +95,7 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 #endif
       double frameTimestamp =
 
-          (targetTimestamp)*1000;
+          (targetTimestamp) * 1000;
       onRender(frameTimestamp);
     }];
   };

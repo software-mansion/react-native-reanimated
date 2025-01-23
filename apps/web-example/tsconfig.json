@@ -2,9 +2,10 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "baseUrl": "../..",
     "paths": {
-      "@/*": ["./*"],
-      "react-native-reanimated": ["../../packages/react-native-reanimated/src"]
+      "@/*": ["./apps/common-app/src/*"]
+      // "react-native-reanimated": ["./packages/react-native-reanimated/src"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"]

@@ -14,11 +14,11 @@ using namespace facebook::react;
 namespace reanimated {
 
 ReanimatedCommitHook::ReanimatedCommitHook(
-    const std::shared_ptr<PropsRegistry> &propsRegistry,
     const std::shared_ptr<UIManager> &uiManager,
+    const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
     const std::shared_ptr<LayoutAnimationsProxy> &layoutAnimationsProxy)
-    : propsRegistry_(propsRegistry),
-      uiManager_(uiManager),
+    : uiManager_(uiManager),
+      updatesRegistryManager_(updatesRegistryManager),
       layoutAnimationsProxy_(layoutAnimationsProxy) {
   uiManager_->registerCommitHook(*this);
 }
@@ -59,36 +59,32 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
 
   if (reaShadowNode->hasReanimatedCommitTrait()) {
     // ShadowTree commited by Reanimated, no need to apply updates from
-    // PropsRegistry
+    // the updates registry manager
     reaShadowNode->unsetReanimatedCommitTrait();
     reaShadowNode->setReanimatedMountTrait();
     return newRootShadowNode;
   }
 
-  // ShadowTree not commited by Reanimated, apply updates from PropsRegistry
+  // ShadowTree not commited by Reanimated, apply updates from the updates
+  // registry manager
   reaShadowNode->unsetReanimatedMountTrait();
   RootShadowNode::Unshared rootNode = newRootShadowNode;
-  PropsMap propsMap;
 
   {
-    auto lock = propsRegistry_->createLock();
+    auto lock = updatesRegistryManager_->createLock();
 
-    propsRegistry_->for_each(
-        [&](const ShadowNodeFamily &family, const folly::dynamic &props) {
-          propsMap[&family].emplace_back(props);
-        });
-
+    PropsMap propsMap = updatesRegistryManager_->collectProps();
+    updatesRegistryManager_->cancelCommitAfterPause();
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
 
     // If the commit comes from React Native then pause commits from
     // Reanimated since the ShadowTree to be committed by Reanimated may not
     // include the new changes from React Native yet and all changes of animated
-    // props will be applied in ReanimatedCommitHook by iterating over
-    // PropsRegistry.
+    // props will be applied in ReanimatedCommitHook by UpdatesRegistryManager
     // This is very important, since if we didn't pause Reanimated commits,
     // it could lead to RN commits being delayed until the animation is finished
     // (very bad).
-    propsRegistry_->pauseReanimatedCommits();
+    updatesRegistryManager_->pauseReanimatedCommits();
   }
 
   return rootNode;

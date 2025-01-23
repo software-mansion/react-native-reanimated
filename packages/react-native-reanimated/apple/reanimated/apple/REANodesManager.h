@@ -42,7 +42,6 @@ typedef void (^REAPerformOperations)();
 - (void)dispatchEvent:(id<RCTEvent>)event;
 
 #ifdef RCT_NEW_ARCH_ENABLED
-- (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter;
 - (void)registerPerformOperations:(REAPerformOperations)performOperations;
 - (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps;
 #else

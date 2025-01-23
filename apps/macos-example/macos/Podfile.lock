@@ -1210,7 +1210,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context (4.13.1):
+  - react-native-safe-area-context (5.1.0):
     - React-Core
   - React-nativeconfig (0.75.16)
   - React-NativeModulesApple (0.75.16):
@@ -1455,11 +1455,13 @@ PODS:
     - React-logger (= 0.75.16)
     - React-perflogger (= 0.75.16)
     - React-utils (= 0.75.16)
-  - RNCAsyncStorage (1.24.0):
+  - RNCAsyncStorage (2.1.0):
+    - React-Core
+  - RNCClipboard (1.16.1):
     - React-Core
   - RNCPicker (2.10.2):
     - React-Core
-  - RNGestureHandler (2.20.2):
+  - RNGestureHandler (2.22.0):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1480,7 +1482,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (3.17.0):
+  - RNReanimated (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1500,10 +1502,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 3.17.0)
-    - RNReanimated/worklets (= 3.17.0)
+    - RNReanimated/reanimated (= 4.0.0-beta.1)
+    - RNReanimated/worklets (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/reanimated (3.17.0):
+  - RNReanimated/reanimated (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1523,52 +1525,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 3.17.0)
+    - RNReanimated/reanimated/apple (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/reanimated/apple (3.17.0):
-    - DoubleConversion
-    - glog
-    - RCT-Folly (= 2024.01.01.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
-  - RNReanimated/worklets (3.17.0):
-    - DoubleConversion
-    - glog
-    - RCT-Folly (= 2024.01.01.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/apple (= 3.17.0)
-    - Yoga
-  - RNReanimated/worklets/apple (3.17.0):
+  - RNReanimated/reanimated/apple (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1589,7 +1548,50 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNSVG (15.8.0):
+  - RNReanimated/worklets (4.0.0-beta.1):
+    - DoubleConversion
+    - glog
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - RNReanimated/worklets/apple (= 4.0.0-beta.1)
+    - Yoga
+  - RNReanimated/worklets/apple (4.0.0-beta.1):
+    - DoubleConversion
+    - glog
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
+  - RNSVG (15.11.1):
     - React-Core
   - SocketRocket (0.7.0)
   - Yoga (0.0.0)
@@ -1658,6 +1660,7 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native-macos/ReactCommon`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
   - "RNCPicker (from `../node_modules/@react-native-picker/picker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
@@ -1788,6 +1791,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-macos/ReactCommon"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
+  RNCClipboard:
+    :path: "../node_modules/@react-native-clipboard/clipboard"
   RNCPicker:
     :path: "../node_modules/@react-native-picker/picker"
   RNGestureHandler:
@@ -1836,7 +1841,7 @@ SPEC CHECKSUMS:
   React-logger: 7e30032239af894a3de5320d132b7afe49ee4f10
   React-Mapbuffer: 5c2e4284948e47d5a46243f218dbe39393e3e37f
   React-microtasksnativemodule: 03881a25bb7a2db99a79e3a8e575bbadb24391ce
-  react-native-safe-area-context: 004fe00b8c5aae5d57de1c27ff728cf6d3918b03
+  react-native-safe-area-context: 04803a01f39f31cc6605a5531280b477b48f8a88
   React-nativeconfig: 33b8222107c5eb4b73b9cd6d28397ab123904d5c
   React-NativeModulesApple: 7ac40d907aa6e653e4063072c474ff8416cabad7
   React-perflogger: 4ef0d0f93248f8331d7de7824e4b7b34d9740147
@@ -1862,14 +1867,15 @@ SPEC CHECKSUMS:
   React-utils: 1cf02e8d4880550ff7550c162a454adae239f82c
   ReactCodegen: 023efeb9a9e9d4df117128652aa688e25c518fba
   ReactCommon: e10fb4f939b3abe445dc8095997470a538627ec6
-  RNCAsyncStorage: ec53e44dc3e75b44aa2a9f37618a49c3bc080a7a
+  RNCAsyncStorage: cc6479c4acd84cc7004946946c8afe30b018184d
+  RNCClipboard: d7a8903d32692b0a1e71738c3825465a9acae10e
   RNCPicker: d162737e03e48797110dbb60e5ddc03012e87e0b
-  RNGestureHandler: 82f59e40580e0c2f8262552c149716511131b412
-  RNReanimated: ed490424d3b8b9f2acd104577c73b374fc79310b
-  RNSVG: 8b1a777d54096b8c2a0fd38fc9d5a454332bbb4d
+  RNGestureHandler: 6baec83f39066ab8eee46ab18d0f8bf2d5a6ead3
+  RNReanimated: c5abea1d20bfb7a2d3c7d3a1ce95a253bb9fb592
+  RNSVG: 669ed128ab9005090c612a0d627dbecb6ab5c76f
   SocketRocket: 9ee265c4b5ae2382d18e4ee1d2dd2d7af0ff1ab5
   Yoga: 209f62622a01344dbb9fa8d348610eaeb7df2cca
 
 PODFILE CHECKSUM: 8d50cc2acc9f6a6b1a12bd9106b86385ad72266f
 
-COCOAPODS: 1.16.1
+COCOAPODS: 1.14.3
