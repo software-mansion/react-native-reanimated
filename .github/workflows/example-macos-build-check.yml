@@ -53,7 +53,9 @@ jobs:
 
       - name: Install Pods
         working-directory: ${{ env.WORKING_DIRECTORY }}/macos
-        run: bundle install && bundle exec pod update # There's some bug on the macOS runners for pod installation and this is the workaround.
+        run: |
+          bundle install
+          bundle exec pod install
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}
