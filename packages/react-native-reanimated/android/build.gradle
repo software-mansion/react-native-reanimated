@@ -109,11 +109,6 @@ def getReanimatedVersion() {
     return json.version
 }
 
-def getReanimatedMajorVersion() {
-    def (major, minor, patch) = getReanimatedVersion().tokenize('.')
-    return major.toInteger()
-}
-
 def toPlatformFileString(String path) {
   if (Os.isFamily(Os.FAMILY_WINDOWS)) {
       path = path.replace(File.separatorChar, '/' as char)
@@ -133,7 +128,6 @@ file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { rea
 def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.startsWith("0.0.0-") ? 1000 : REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def REANIMATED_VERSION = getReanimatedVersion()
-def REANIMATED_MAJOR_VERSION = getReanimatedMajorVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 
 // We download various C++ open-source dependencies into downloads.
