@@ -5,5 +5,6 @@
     "paths": {
       "@/*": ["../common-app/src/*"]
     }
-  }
+  },
+  "exclude": ["metro.config.js"]
 }

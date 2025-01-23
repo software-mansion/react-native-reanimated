@@ -1,7 +1,7 @@
 const path = require('path');
 
 /**
- * @param {Object.<string, string>} dependencies
+ * @param {Object<string, string>} dependencies
  * @param {string[]} exclude
  */
 function resolveDependencies(dependencies = {}, exclude = []) {
@@ -16,10 +16,10 @@ function resolveDependencies(dependencies = {}, exclude = []) {
 }
 
 /**
- * This function will return the dependencies from the common-app package
- * that aren't listed in the current app's package.json
- * 
- * @param {string} currentAppDir - the current app directory (e.g. __dirname)
+ * This function will return the dependencies from the common-app package that
+ * aren't listed in the current app's package.json
+ *
+ * @param {string} currentAppDir - The current app directory (e.g. __dirname)
  */
 function getDependencies(currentAppDir = '.') {
   const commonAppDir = path.resolve(__dirname, '..');
