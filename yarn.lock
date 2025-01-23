@@ -157,8 +157,8 @@ __metadata:
   linkType: hard
 
 "@babel/eslint-parser@npm:^7.20.0":
-  version: 7.25.9
-  resolution: "@babel/eslint-parser@npm:7.25.9"
+  version: 7.26.5
+  resolution: "@babel/eslint-parser@npm:7.26.5"
   dependencies:
     "@nicolo-ribaudo/eslint-scope-5-internals": "npm:5.1.1-v1"
     eslint-visitor-keys: "npm:^2.1.0"
@@ -166,7 +166,7 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.11.0
     eslint: ^7.5.0 || ^8.0.0 || ^9.0.0
-  checksum: 10/ebb68d80b1fa2b964ad1147cc610e0c69b224e620419a885ba5abc996740523bee636a0d447fc29a0d495dbce5fa0246737b25e9e679cca6c5797fdac5176378
+  checksum: 10/b9e4141f2aa01ea8e54233987d119402462a6b884f399add3b3f28d539bc4d3b311c6c1b58b196fef232e515fc77495aeff59f4668a19d978bddcffa3e66e7ca
   languageName: node
   linkType: hard
 
@@ -5179,16 +5179,6 @@ __metadata:
     react: ">=16"
     react-native: ">=0.57"
   checksum: 10/04ffbc01083aa563ca1e2d7ef6759e7b326b8129f5bb1aa5f3142348adab06d5e321a400cf70a5434324dfa906add383f8214640697c48c9e5311b30bfea03d9
-  languageName: node
-  linkType: hard
-
-"@react-native-picker/picker@npm:^2.9.0":
-  version: 2.10.2
-  resolution: "@react-native-picker/picker@npm:2.10.2"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/c6cbbc335ab5e7371866c3fb032a946ffc428440129b28c9dd23f6914cdff37c8e9d224ffd1aa77a99c18beaf21fd154cd60a9940ebcbc958fc6ee5fce4d864c
   languageName: node
   linkType: hard
 
@@ -15491,52 +15481,15 @@ __metadata:
     "@babel/core": "npm:^7.20.0"
     "@babel/preset-env": "npm:^7.20.0"
     "@babel/runtime": "npm:^7.20.0"
-    "@fortawesome/free-solid-svg-icons": "npm:^6.5.2"
-    "@fortawesome/react-native-fontawesome": "npm:^0.3.2"
-    "@gorhom/portal": "npm:^1.0.14"
-    "@react-native-async-storage/async-storage": "npm:2.1.0"
-    "@react-native-clipboard/clipboard": "npm:^1.15.0"
-    "@react-native-community/slider": "npm:4.5.5"
-    "@react-native-masked-view/masked-view": "npm:0.3.2"
-    "@react-native-picker/picker": "npm:^2.9.0"
     "@react-native/babel-preset": "npm:0.75.4"
     "@react-native/eslint-config": "npm:0.75.4"
     "@react-native/metro-config": "npm:0.75.4"
     "@react-native/typescript-config": "npm:0.75.4"
-    "@react-navigation/drawer": "npm:^7.1.1"
-    "@react-navigation/native": "npm:^7.0.14"
-    "@react-navigation/native-stack": "npm:^7.0.0"
-    "@react-navigation/stack": "npm:^7.1.1"
-    "@shopify/flash-list": "patch:@shopify/flash-list@npm%3A1.7.2#~/.yarn/patches/@shopify-flash-list-npm-1.7.2-2a363895ca.patch"
-    "@types/react": "npm:^18.2.6"
-    "@types/react-test-renderer": "npm:^18.0.0"
-    babel-jest: "npm:^29.6.3"
     common-app: "workspace:*"
-    eslint: "npm:^8.57.0"
-    eslint-config-prettier: "npm:^9.1.0"
-    eslint-import-resolver-typescript: "npm:^3.6.3"
-    eslint-plugin-import: "npm:^2.31.0"
-    eslint-plugin-no-relative-import-paths: "patch:eslint-plugin-no-relative-import-paths@npm%3A1.5.5#~/.yarn/patches/eslint-plugin-no-relative-import-paths-npm-1.5.5-8fb4e4bf7a.patch"
-    eslint-plugin-perfectionist: "npm:^2.1.0"
-    eslint-plugin-prettier: "npm:^5.2.1"
-    eslint-plugin-react-hooks: "npm:^5.0.0"
-    eslint-plugin-simple-import-sort: "npm:^12.1.1"
-    eslint-plugin-unused-imports: "npm:^4.1.4"
-    jest: "npm:^29.6.3"
-    madge: "npm:^5.0.1"
-    prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
     react-native: "npm:0.75.4"
-    react-native-gesture-handler: "npm:2.22.0"
     react-native-macos: "npm:^0.75.13"
-    react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "npm:5.1.0"
-    react-native-screens: "npm:4.5.0"
-    react-native-svg: "npm:15.11.1"
-    react-test-renderer: "npm:18.2.0"
-    typescript: "npm:~5.3.0"
-    typescript-eslint: "npm:^8.12.2"
   languageName: unknown
   linkType: soft
 

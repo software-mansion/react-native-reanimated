@@ -6,5 +6,5 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", ".eslintrc.js", "index.ts"]
+  "include": ["src", "index.ts"]
 }
