@@ -315,6 +315,7 @@ void NativeProxy::invalidateCpp() {
   if (reanimatedModuleProxy_ != nullptr) {
     reanimatedModuleProxy_->invalidate();
   }
+  layoutAnimations_->cthis()->invalidate();
   reanimatedModuleProxy_.reset();
 }
 
