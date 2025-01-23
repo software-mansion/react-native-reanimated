@@ -1459,8 +1459,6 @@ PODS:
     - React-Core
   - RNCClipboard (1.16.1):
     - React-Core
-  - RNCPicker (2.10.2):
-    - React-Core
   - RNGestureHandler (2.22.0):
     - DoubleConversion
     - glog
@@ -1633,7 +1631,7 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native-macos/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native-macos/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native-macos/ReactCommon/react/nativemodule/microtasks`)
-  - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - react-native-safe-area-context (from `../../../node_modules/react-native-safe-area-context`)
   - React-nativeconfig (from `../node_modules/react-native-macos/ReactCommon`)
   - React-NativeModulesApple (from `../node_modules/react-native-macos/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-perflogger (from `../node_modules/react-native-macos/ReactCommon/reactperflogger`)
@@ -1659,12 +1657,11 @@ DEPENDENCIES:
   - React-utils (from `../node_modules/react-native-macos/ReactCommon/react/utils`)
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native-macos/ReactCommon`)
-  - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
-  - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
-  - "RNCPicker (from `../node_modules/@react-native-picker/picker`)"
-  - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - "RNCAsyncStorage (from `../../../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCClipboard (from `../../../node_modules/@react-native-clipboard/clipboard`)"
+  - RNGestureHandler (from `../../../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
-  - RNSVG (from `../node_modules/react-native-svg`)
+  - RNSVG (from `../../../node_modules/react-native-svg`)
   - SocketRocket (from `../node_modules/react-native-macos/third-party-podspecs/SocketRocket.podspec`)
   - Yoga (from `../node_modules/react-native-macos/ReactCommon/yoga`)
 
@@ -1738,7 +1735,7 @@ EXTERNAL SOURCES:
   React-microtasksnativemodule:
     :path: "../node_modules/react-native-macos/ReactCommon/react/nativemodule/microtasks"
   react-native-safe-area-context:
-    :path: "../node_modules/react-native-safe-area-context"
+    :path: "../../../node_modules/react-native-safe-area-context"
   React-nativeconfig:
     :path: "../node_modules/react-native-macos/ReactCommon"
   React-NativeModulesApple:
@@ -1790,17 +1787,15 @@ EXTERNAL SOURCES:
   ReactCommon:
     :path: "../node_modules/react-native-macos/ReactCommon"
   RNCAsyncStorage:
-    :path: "../node_modules/@react-native-async-storage/async-storage"
+    :path: "../../../node_modules/@react-native-async-storage/async-storage"
   RNCClipboard:
-    :path: "../node_modules/@react-native-clipboard/clipboard"
-  RNCPicker:
-    :path: "../node_modules/@react-native-picker/picker"
+    :path: "../../../node_modules/@react-native-clipboard/clipboard"
   RNGestureHandler:
-    :path: "../node_modules/react-native-gesture-handler"
+    :path: "../../../node_modules/react-native-gesture-handler"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNSVG:
-    :path: "../node_modules/react-native-svg"
+    :path: "../../../node_modules/react-native-svg"
   SocketRocket:
     :podspec: "../node_modules/react-native-macos/third-party-podspecs/SocketRocket.podspec"
   Yoga:
@@ -1869,7 +1864,6 @@ SPEC CHECKSUMS:
   ReactCommon: e10fb4f939b3abe445dc8095997470a538627ec6
   RNCAsyncStorage: cc6479c4acd84cc7004946946c8afe30b018184d
   RNCClipboard: d7a8903d32692b0a1e71738c3825465a9acae10e
-  RNCPicker: d162737e03e48797110dbb60e5ddc03012e87e0b
   RNGestureHandler: 6baec83f39066ab8eee46ab18d0f8bf2d5a6ead3
   RNReanimated: c5abea1d20bfb7a2d3c7d3a1ce95a253bb9fb592
   RNSVG: 669ed128ab9005090c612a0d627dbecb6ab5c76f
