@@ -12095,6 +12095,7 @@ __metadata:
   resolution: "fabric-example@workspace:apps/fabric-example"
   dependencies:
     common-app: "workspace:*"
+    eslint: "npm:^8.57.0"
     react-native: "npm:0.77.0-rc.6"
   languageName: unknown
   linkType: soft
@@ -21884,6 +21885,7 @@ __metadata:
     "@expo/metro-runtime": "npm:~4.0.0"
     "@stylexjs/babel-plugin": "npm:^0.10.0"
     common-app: "workspace:*"
+    eslint: "npm:^8.57.0"
     expo: "npm:^52.0.4"
     react-dom: "npm:18.3.1"
     react-native: "npm:0.77.0-rc.6"
