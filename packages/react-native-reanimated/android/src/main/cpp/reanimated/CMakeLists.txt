@@ -119,7 +119,8 @@ elseif(${JS_RUNTIME} STREQUAL "v8")
   file(
     GLOB
     V8_SO_DIR
-    "${JS_RUNTIME_DIR}/android/build/intermediates/library_jni/**/jni/${ANDROID_ABI}"
+    "${JS_RUNTIME_DIR}/android/build/intermediates/library_jni/**/\
+    jni/${ANDROID_ABI}"
   )
   find_library(
     V8EXECUTOR_LIB v8executor
