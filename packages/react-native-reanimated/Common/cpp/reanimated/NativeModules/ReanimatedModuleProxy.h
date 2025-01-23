@@ -54,7 +54,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
       jsi::Runtime &rt,
       const jsi::Value &workletRuntimeValue,
       const jsi::Value &shareableWorkletValue) override;
-      
+
   void invalidate();
 
   jsi::Value registerEventHandler(
