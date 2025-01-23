@@ -25,6 +25,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   float _targetKeyboardHeight;
   REAUIView *_keyboardView;
   bool _isKeyboardObserverAttached;
+  bool _isInteractiveDismissalCanceled;
 }
 
 - (instancetype)init
@@ -35,6 +36,7 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   _state = UNKNOWN;
   _animationStartTimestamp = 0;
   _isKeyboardObserverAttached = false;
+  _isInteractiveDismissalCanceled = false;
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
 
   [notificationCenter addObserver:self
@@ -169,31 +171,13 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   return keyboardHeight;
 }
 
-- (float)getStaticKeyboardHeight
-{
-  CGRect measuringFrame = _measuringView.frame;
-  CGFloat keyboardHeight = measuringFrame.size.height;
-  return keyboardHeight;
-}
-
 - (void)updateKeyboardFrame
 {
-  CGFloat keyboardHeight = 0;
   bool isKeyboardAnimationRunning = [self hasAnyAnimation:_measuringView];
   if (isKeyboardAnimationRunning) {
-    keyboardHeight = [self getAnimatingKeyboardHeight];
-  } else {
-    // measuring view is no longer running an animation, we should settle in OPEN/CLOSE state
-    if (_state == OPENING || _state == CLOSING) {
-      _state = _state == OPENING ? OPEN : CLOSED;
-    }
-    if (_state == OPEN || _state == CLOSED) {
-      keyboardHeight = [self getStaticKeyboardHeight];
-    }
-    // stop display link updates if no animation is running
-    [[self getDisplayLink] setPaused:YES];
+    CGFloat keyboardHeight = [self getAnimatingKeyboardHeight];
+    [self runListeners:keyboardHeight];
   }
-  [self runListeners:keyboardHeight];
 }
 
 - (void)keyboardWillChangeFrame:(NSNotification *)notification
@@ -202,37 +186,51 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   CGRect beginFrame = [[userInfo objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
   CGRect endFrame = [[userInfo objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
   NSTimeInterval animationDuration = [[userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
-  CGSize windowSize = [[[UIApplication sharedApplication] delegate] window].frame.size;
-
-  _initialKeyboardHeight = windowSize.height - beginFrame.origin.y;
-  _targetKeyboardHeight = windowSize.height - endFrame.origin.y;
+  auto window = [[[UIApplication sharedApplication] delegate] window];
 
   /*
-    This may seem a bit confusing, but usually, the state should be either OPENED or CLOSED.
-    However, if it shows as OPENING, it means that the interactive dismissal was canceled.
-  */
-  bool isInteractiveMode = _state == OPENING;
-  if (_targetKeyboardHeight > 0 && _state != OPEN) {
-    _state = OPENING;
-  } else if (_targetKeyboardHeight == 0 && _state != CLOSED) {
-    _state = CLOSING;
-  }
-  auto keyboardView = [self getKeyboardView];
-  bool hasKeyboardAnimation = [self hasAnyAnimation:keyboardView];
-  if (isInteractiveMode) {
-    // This condition can be met after canceling interactive dismissal.
-    _initialKeyboardHeight = windowSize.height - keyboardView.frame.origin.y;
-  }
+   The keyboard frame is in the screen's coordinate space and must first be converted
+   to the window coordinate space in order to support Slide Over and Stage Manager on
+   iPadOS.
+   */
+  beginFrame = [window convertRect:beginFrame fromCoordinateSpace:window.screen.coordinateSpace];
+  endFrame = [window convertRect:endFrame fromCoordinateSpace:window.screen.coordinateSpace];
 
-  if (hasKeyboardAnimation || isInteractiveMode) {
+  /*
+   In some cases, such as when the user has enabled "prefer cross-fade transitions" or
+   when the keyboard is floating, the begin or end frame is an empty rectangle. In
+   such cases we should treat the keyboard as closed, rather than at (0, 0).
+   */
+  CGRect beginFrameIntersection = CGRectIntersection(window.bounds, beginFrame);
+  _initialKeyboardHeight =
+      CGRectIsEmpty(beginFrameIntersection) ? 0 : CGRectGetMaxY(window.bounds) - CGRectGetMinY(beginFrameIntersection);
+
+  CGRect endFrameIntersection = CGRectIntersection(window.bounds, endFrame);
+  _targetKeyboardHeight =
+      CGRectIsEmpty(endFrameIntersection) ? 0 : CGRectGetMaxY(window.bounds) - CGRectGetMinY(endFrameIntersection);
+
+  bool forceAnimation = false;
+  auto keyboardView = [self getKeyboardView];
+  if (_state == CLOSING) {
+    _targetKeyboardHeight = 0;
+  } else if (_isInteractiveDismissalCanceled && keyboardView) {
+    // Prefer the keyboard view frame over notification frame which may not be current.
+    beginFrameIntersection = CGRectIntersection(window.bounds, keyboardView.frame);
+    _initialKeyboardHeight = CGRectIsEmpty(beginFrameIntersection)
+        ? 0
+        : CGRectGetMaxY(window.bounds) - CGRectGetMinY(beginFrameIntersection);
+    forceAnimation = true;
+  }
+  _isInteractiveDismissalCanceled = false;
+
+  bool hasKeyboardAnimation = [self hasAnyAnimation:keyboardView];
+  if (hasKeyboardAnimation || forceAnimation) {
     _measuringView.frame = CGRectMake(0, -1, 0, _initialKeyboardHeight);
     [UIView animateWithDuration:animationDuration
                      animations:^{
                        self->_measuringView.frame = CGRectMake(0, -1, 0, self->_targetKeyboardHeight);
                      }];
     [self runUpdater];
-  } else {
-    [self runListeners:_targetKeyboardHeight];
   }
 }
 
@@ -249,8 +247,8 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
     if ([self->_listeners count] == 0) {
       NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
       [notificationCenter addObserver:self
-                             selector:@selector(keyboardWillChangeFrame:)
-                                 name:UIKeyboardWillChangeFrameNotification
+                             selector:@selector(keyboardWillShow:)
+                                 name:UIKeyboardWillShowNotification
                                object:nil];
       [notificationCenter addObserver:self
                              selector:@selector(keyboardDidShow:)
@@ -259,6 +257,10 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
       [notificationCenter addObserver:self
                              selector:@selector(keyboardWillHide:)
                                  name:UIKeyboardWillHideNotification
+                               object:nil];
+      [notificationCenter addObserver:self
+                             selector:@selector(keyboardDidHide:)
+                                 name:UIKeyboardDidHideNotification
                                object:nil];
     }
 
@@ -274,9 +276,10 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
     [self->_listeners removeObjectForKey:_listenerId];
     if ([self->_listeners count] == 0) {
       NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-      [notificationCenter removeObserver:self name:UIKeyboardWillChangeFrameNotification object:nil];
+      [notificationCenter removeObserver:self name:UIKeyboardWillShowNotification object:nil];
       [notificationCenter removeObserver:self name:UIKeyboardDidShowNotification object:nil];
       [notificationCenter removeObserver:self name:UIKeyboardWillHideNotification object:nil];
+      [notificationCenter removeObserver:self name:UIKeyboardDidHideNotification object:nil];
     }
   });
 }
@@ -291,12 +294,30 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
   });
 }
 
+- (void)keyboardWillShow:(NSNotification *)notification
+{
+  _state = OPENING;
+  [self keyboardWillChangeFrame:notification];
+}
+
 - (void)keyboardDidShow:(NSNotification *)notification
 {
+  [[self getDisplayLink] setPaused:YES];
+
+  auto window = [[[UIApplication sharedApplication] delegate] window];
+  auto keyboardView = [self getKeyboardView];
+  if (keyboardView) {
+    CGRect frameIntersection = CGRectIntersection(window.bounds, keyboardView.frame);
+    _targetKeyboardHeight =
+        CGRectIsEmpty(frameIntersection) ? 0 : CGRectGetMaxY(window.bounds) - CGRectGetMinY(frameIntersection);
+  }
+  _state = OPEN;
+  [self runListeners:_targetKeyboardHeight];
+
   if (_isKeyboardObserverAttached) {
     return;
   }
-  if (auto keyboardView = [self getKeyboardView]) {
+  if (keyboardView) {
     [_keyboardView addObserver:self
                     forKeyPath:@"center"
                        options:NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew
@@ -311,23 +332,48 @@ typedef NS_ENUM(NSUInteger, KeyboardState) {
     [_keyboardView removeObserver:self forKeyPath:@"center"];
     _isKeyboardObserverAttached = false;
   }
+
+  _state = CLOSING;
+  [self keyboardWillChangeFrame:notification];
+}
+
+- (void)keyboardDidHide:(NSNotification *)notification
+{
+  [[self getDisplayLink] setPaused:YES];
+
+  _targetKeyboardHeight = 0;
+  _state = CLOSED;
+  [self runListeners:_targetKeyboardHeight];
 }
 
 - (void)updateKeyboardHeightDuringInteractiveDismiss:(CGPoint)oldKeyboardFrame
                                     newKeyboardFrame:(CGPoint)newKeyboardFrame
 {
   auto keyboardView = [self getKeyboardView];
-  bool hasKeyboardAnimation = [self hasAnyAnimation:keyboardView];
-  if (hasKeyboardAnimation) {
+  if (!keyboardView) {
     return;
   }
-  float windowHeight = keyboardView.window.bounds.size.height;
+
+  bool hasKeyboardAnimation = [self hasAnyAnimation:keyboardView];
   float keyboardHeight = keyboardView.frame.size.height;
+  /*
+   If the keyboard is animating, height will be updated by the notification observers.
+   If the keyboard state is CLOSED, height is 0, or the keyboard is floating (keyboard
+   width != window width), don't update to prevent jumping to intermediate state.
+   */
+  if (hasKeyboardAnimation || _state == CLOSED || keyboardHeight == 0 ||
+      CGRectGetWidth(keyboardView.frame) != CGRectGetWidth(keyboardView.window.bounds)) {
+    return;
+  }
+
+  float windowHeight = keyboardView.window.bounds.size.height;
   float visibleKeyboardHeight = windowHeight - (newKeyboardFrame.y - keyboardHeight / 2);
   if (oldKeyboardFrame.y > newKeyboardFrame.y) {
     _state = OPENING;
+    _isInteractiveDismissalCanceled = true;
   } else if (oldKeyboardFrame.y < newKeyboardFrame.y) {
     _state = CLOSING;
+    _isInteractiveDismissalCanceled = false;
   }
   [self runListeners:visibleKeyboardHeight];
 }
