@@ -55,8 +55,6 @@ NativeProxy::~NativeProxy() {
   // has already been destroyed when AnimatedSensorModule's
   // destructor is ran
   reanimatedModuleProxy_->cleanupSensors();
-
-  layoutAnimations_->cthis()->invalidate();
 }
 
 jni::local_ref<NativeProxy::jhybriddata> NativeProxy::initHybrid(
@@ -312,9 +310,6 @@ void NativeProxy::invalidateCpp() {
 }
 
 void NativeProxy::invalidateCpp() {
-  if (reanimatedModuleProxy_ != nullptr) {
-    reanimatedModuleProxy_->invalidate();
-  }
   layoutAnimations_->cthis()->invalidate();
   reanimatedModuleProxy_.reset();
 }
