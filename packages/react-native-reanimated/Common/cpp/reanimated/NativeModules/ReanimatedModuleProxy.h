@@ -30,7 +30,11 @@
 
 namespace reanimated {
 
-class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
+using namespace facebook;
+
+class ReanimatedModuleProxy
+    : public ReanimatedModuleProxySpec,
+      public std::enable_shared_from_this<ReanimatedModuleProxy> {
  public:
   ReanimatedModuleProxy(
       const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
@@ -40,7 +44,10 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
       const bool isBridgeless,
       const bool isReducedMotion);
 
-  ~ReanimatedModuleProxy();
+  // We need this init method to initialize callbacks with
+  // weak_from_this() which is available only after the object
+  // is fully constructed.
+  void init(const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
   void scheduleOnUI(jsi::Runtime &rt, const jsi::Value &worklet) override;
   jsi::Value executeOnUIRuntimeSync(jsi::Runtime &rt, const jsi::Value &worklet)
@@ -55,7 +62,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
       const jsi::Value &workletRuntimeValue,
       const jsi::Value &shareableWorkletValue) override;
 
-  void invalidate();
+  ~ReanimatedModuleProxy();
 
   jsi::Value registerEventHandler(
       jsi::Runtime &rt,
@@ -181,8 +188,6 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   }
 
  private:
-  void commonInit(const PlatformDepMethodsHolder &platformDepMethodsHolder);
-
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -202,7 +207,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   const RequestRenderFunction requestRender_;
   std::vector<std::shared_ptr<jsi::Value>> frameCallbacks_;
   volatile bool renderRequested_{false};
-  const std::function<void(const double)> onRenderCallback_;
+  std::function<void(const double)> onRenderCallback_;
   AnimatedSensorModule animatedSensorModule_;
   const std::shared_ptr<JSLogger> jsLogger_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
