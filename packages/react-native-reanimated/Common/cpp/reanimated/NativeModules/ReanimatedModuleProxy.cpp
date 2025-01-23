@@ -1,3 +1,4 @@
+#include <jsi/jsi.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/CollectionUtils.h>
@@ -29,18 +30,6 @@
 #include <string>
 #endif // RCT_NEW_ARCH_ENABLED
 
-// Standard `__cplusplus` macro reference:
-// https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros
-#if REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 202002L
-// Implicit copy capture of `this` is deprecated in NDK27, which uses C++20.
-#define COPY_CAPTURE_WITH_THIS [ =, this ] // NOLINT (whitespace/braces)
-#else
-// React Native 0.75 is the last one which allows NDK23. NDK23 uses C++17 and
-// explicitly disallows C++20 features, including the syntax above. Therefore we
-// fallback to the deprecated syntax here.
-#define COPY_CAPTURE_WITH_THIS [=] // NOLINT (whitespace/braces)
-#endif // REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 202002L
-
 namespace reanimated {
 
 ReanimatedModuleProxy::ReanimatedModuleProxy(
@@ -57,10 +46,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       valueUnpackerCode_(workletsModuleProxy->getValueUnpackerCode()),
       eventHandlerRegistry_(std::make_unique<EventHandlerRegistry>()),
       requestRender_(platformDepMethodsHolder.requestRender),
-      onRenderCallback_([this](const double timestampMs) {
-        renderRequested_ = false;
-        onRender(timestampMs);
-      }),
       animatedSensorModule_(platformDepMethodsHolder),
       jsLogger_(
           std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
@@ -95,8 +80,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           platformDepMethodsHolder.subscribeForKeyboardEvents),
       unsubscribeFromKeyboardEventsFunction_(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
-  commonInit(platformDepMethodsHolder);
-
 #ifdef RCT_NEW_ARCH_ENABLED
   {
     auto lock = updatesRegistryManager_->createLock();
@@ -111,66 +94,125 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #endif
 }
 
-void ReanimatedModuleProxy::commonInit(
+void ReanimatedModuleProxy::init(
     const PlatformDepMethodsHolder &platformDepMethodsHolder) {
-  auto requestAnimationFrame =
-      [this](jsi::Runtime &rt, const jsi::Value &callback) {
-        this->requestAnimationFrame(rt, callback);
-      };
+  auto onRenderCallback = [weakThis =
+                               weak_from_this()](const double timestampMs) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->renderRequested_ = false;
+    strongThis->onRender(timestampMs);
+  };
+  onRenderCallback_ = std::move(onRenderCallback);
+
+  auto requestAnimationFrame = [weakThis = weak_from_this()](
+                                   jsi::Runtime &rt,
+                                   const jsi::Value &callback) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->requestAnimationFrame(rt, callback);
+  };
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  auto updateProps = [this](jsi::Runtime &rt, const jsi::Value &operations) {
-    animatedPropsRegistry_->update(rt, operations);
+  auto updateProps = [weakThis = weak_from_this()](
+                         jsi::Runtime &rt, const jsi::Value &operations) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->animatedPropsRegistry_->update(rt, operations);
   };
 
-  auto removeFromPropsRegistry =
-      [this](jsi::Runtime &rt, const jsi::Value &viewTags) {
-        animatedPropsRegistry_->remove(rt, viewTags);
-      };
+  auto removeFromPropsRegistry = [weakThis = weak_from_this()](
+                                     jsi::Runtime &rt,
+                                     const jsi::Value &viewTags) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
 
-  auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
-    return this->measure(rt, shadowNodeValue);
+    strongThis->animatedPropsRegistry_->remove(rt, viewTags);
   };
 
-  auto dispatchCommand = [this](
+  auto measure = [weakThis = weak_from_this()](
+                     jsi::Runtime &rt,
+                     const jsi::Value &shadowNodeValue) -> jsi::Value {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return jsi::Value::undefined();
+    }
+    return strongThis->measure(rt, shadowNodeValue);
+  };
+
+  auto dispatchCommand = [weakThis = weak_from_this()](
                              jsi::Runtime &rt,
                              const jsi::Value &shadowNodeValue,
                              const jsi::Value &commandNameValue,
                              const jsi::Value &argsValue) {
-    this->dispatchCommand(rt, shadowNodeValue, commandNameValue, argsValue);
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->dispatchCommand(
+        rt, shadowNodeValue, commandNameValue, argsValue);
   };
   ProgressLayoutAnimationFunction progressLayoutAnimation =
-      [this](jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool) {
+      [weakThis = weak_from_this()](
+          jsi::Runtime &rt, int tag, const jsi::Object &newStyle, bool) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+
         auto surfaceId =
-            layoutAnimationsProxy_->progressLayoutAnimation(tag, newStyle);
+            strongThis->layoutAnimationsProxy_->progressLayoutAnimation(
+                tag, newStyle);
         if (!surfaceId) {
           return;
         }
-        uiManager_->getShadowTreeRegistry().visit(
+        strongThis->uiManager_->getShadowTreeRegistry().visit(
             *surfaceId, [](const ShadowTree &shadowTree) {
               shadowTree.notifyDelegatesOfUpdates();
             });
       };
 
   EndLayoutAnimationFunction endLayoutAnimation =
-      [this](int tag, bool shouldRemove) {
-        auto surfaceId =
-            layoutAnimationsProxy_->endLayoutAnimation(tag, shouldRemove);
+      [weakThis = weak_from_this()](int tag, bool shouldRemove) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+
+        auto surfaceId = strongThis->layoutAnimationsProxy_->endLayoutAnimation(
+            tag, shouldRemove);
         if (!surfaceId) {
           return;
         }
 
-        uiManager_->getShadowTreeRegistry().visit(
+        strongThis->uiManager_->getShadowTreeRegistry().visit(
             *surfaceId, [](const ShadowTree &shadowTree) {
               shadowTree.notifyDelegatesOfUpdates();
             });
       };
 
-  auto obtainProp = [this](
+  auto obtainProp = [weakThis = weak_from_this()](
                         jsi::Runtime &rt,
                         const jsi::Value &shadowNodeWrapper,
                         const jsi::Value &propName) {
-    return this->obtainProp(rt, shadowNodeWrapper, propName);
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return jsi::String::createFromUtf8(rt, "");
+    }
+
+    return strongThis->obtainProp(rt, shadowNodeWrapper, propName);
   };
 #endif
 
@@ -224,11 +266,20 @@ jsi::Value ReanimatedModuleProxy::registerEventHandler(
       rt, worklet, "[Reanimated] Event handler must be a worklet.");
   int emitterReactTagInt = emitterReactTag.asNumber();
 
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
-    auto handler = std::make_shared<WorkletEventHandler>(
-        newRegistrationId, eventNameStr, emitterReactTagInt, handlerShareable);
-    eventHandlerRegistry_->registerEventHandler(std::move(handler));
-  });
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
+      [=, weakThis = weak_from_this()]() {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        auto handler = std::make_shared<WorkletEventHandler>(
+            newRegistrationId,
+            eventNameStr,
+            emitterReactTagInt,
+            handlerShareable);
+        strongThis->eventHandlerRegistry_->registerEventHandler(
+            std::move(handler));
+      });
 
   return jsi::Value(static_cast<double>(newRegistrationId));
 }
@@ -238,9 +289,13 @@ void ReanimatedModuleProxy::unregisterEventHandler(
     const jsi::Value &registrationId) {
   uint64_t id = registrationId.asNumber();
   workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
-      COPY_CAPTURE_WITH_THIS
-
-      { eventHandlerRegistry_->unregisterEventHandler(id); });
+      [=, weakThis = weak_from_this()]() {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->eventHandlerRegistry_->unregisterEventHandler(id);
+      });
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -309,19 +364,25 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   const auto funPtr = std::make_shared<jsi::Function>(
       callback.getObject(rnRuntime).asFunction(rnRuntime));
   const auto shadowNode = shadowNodeFromValue(rnRuntime, shadowNodeWrapper);
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(COPY_CAPTURE_WITH_THIS {
-    jsi::Runtime &uiRuntime =
-        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-    const auto resultStr =
-        obtainPropFromShadowNode(uiRuntime, propNameStr, shadowNode);
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
+      [=, weakThis = weak_from_this()]() {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        jsi::Runtime &uiRuntime =
+            strongThis->workletsModuleProxy_->getUIWorkletRuntime()
+                ->getJSIRuntime();
+        const auto resultStr = strongThis->obtainPropFromShadowNode(
+            uiRuntime, propNameStr, shadowNode);
 
-    workletsModuleProxy_->getJSScheduler()->scheduleOnJS(
-        [=](jsi::Runtime &rnRuntime) {
-          const auto resultValue =
-              jsi::String::createFromUtf8(rnRuntime, resultStr);
-          funPtr->call(rnRuntime, resultValue);
-        });
-  });
+        strongThis->workletsModuleProxy_->getJSScheduler()->scheduleOnJS(
+            [=](jsi::Runtime &rnRuntime) {
+              const auto resultValue =
+                  jsi::String::createFromUtf8(rnRuntime, resultStr);
+              funPtr->call(rnRuntime, resultValue);
+            });
+      });
   return jsi::Value::undefined();
 }
 
@@ -339,17 +400,23 @@ jsi::Value ReanimatedModuleProxy::getViewProp(
   const int viewTagInt = viewTag.asNumber();
 
   workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
-      COPY_CAPTURE_WITH_THIS
+      [=, weakThis = weak_from_this()]
 
       () {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
         jsi::Runtime &uiRuntime =
-            workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+            strongThis->workletsModuleProxy_->getUIWorkletRuntime()
+                ->getJSIRuntime();
         const jsi::Value propNameValue =
             jsi::String::createFromUtf8(uiRuntime, propNameStr);
-        const auto resultValue =
-            obtainPropFunction_(uiRuntime, viewTagInt, propNameValue);
+        const auto resultValue = strongThis->obtainPropFunction_(
+            uiRuntime, viewTagInt, propNameValue);
         const auto resultStr = resultValue.asString(uiRuntime).utf8(uiRuntime);
-        const auto jsScheduler = workletsModuleProxy_->getJSScheduler();
+        const auto jsScheduler =
+            strongThis->workletsModuleProxy_->getJSScheduler();
         jsScheduler->scheduleOnJS([=](jsi::Runtime &rnRuntime) {
           const auto resultValue =
               jsi::String::createFromUtf8(rnRuntime, resultStr);
@@ -692,6 +759,31 @@ bool ReanimatedModuleProxy::handleRawEvent(
   return res;
 }
 
+void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
+  shouldUpdateCssAnimations_ = true;
+  if (cssAnimationsRegistry_->hasUpdates() ||
+      cssTransitionsRegistry_->hasUpdates()
+#ifdef ANDROID
+      || updatesRegistryManager_->hasPropsToRevert()
+#endif // ANDROID
+  ) {
+    jsi::Runtime &rt =
+        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+    requestRender_(
+        [weakThis = weak_from_this()](const double newTimestampMs) {
+          auto strongThis = weakThis.lock();
+          if (!strongThis) {
+            return;
+          }
+
+          strongThis->cssLoopCallback(newTimestampMs);
+        },
+        rt);
+  } else {
+    cssLoopRunning_ = false;
+  }
+}
+
 void ReanimatedModuleProxy::maybeRunCSSLoop() {
   if (cssLoopRunning_) {
     return;
@@ -699,30 +791,27 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
 
   cssLoopRunning_ = true;
 
-  workletsModuleProxy_->getUIScheduler()->scheduleOnUI([this]() {
-    std::shared_ptr<std::function<void(const double)>> cssLoop =
-        std::make_shared<std::function<void(const double)>>();
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI(
+      [weakThis = weak_from_this()]() {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
 
-    *cssLoop = [this, cssLoop](const double timestampMs) {
-      shouldUpdateCssAnimations_ = true;
-      if (cssAnimationsRegistry_->hasUpdates() ||
-          cssTransitionsRegistry_->hasUpdates()
-#ifdef ANDROID
-          || updatesRegistryManager_->hasPropsToRevert()
-#endif
-      ) {
         jsi::Runtime &rt =
-            workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-        requestRender_(*cssLoop, rt);
-      } else {
-        cssLoopRunning_ = false;
-      }
-    };
+            strongThis->workletsModuleProxy_->getUIWorkletRuntime()
+                ->getJSIRuntime();
+        strongThis->requestRender_(
+            [weakThis](const double timestampMs) {
+              auto strongThis = weakThis.lock();
+              if (!strongThis) {
+                return;
+              }
 
-    jsi::Runtime &rt =
-        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-    requestRender_(*cssLoop, rt);
-  });
+              strongThis->cssLoopCallback(timestampMs);
+            },
+            rt);
+      });
 }
 
 double ReanimatedModuleProxy::getCssTimestamp() {
@@ -831,7 +920,16 @@ void ReanimatedModuleProxy::performOperations() {
 void ReanimatedModuleProxy::requestFlushRegistry() {
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-  requestRender_([this](double time) { shouldFlushRegistry_ = true; }, rt);
+  requestRender_(
+      [weakThis = weak_from_this()](double time) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+
+        strongThis->shouldFlushRegistry_ = true;
+      },
+      rt);
 }
 
 void ReanimatedModuleProxy::commitUpdates(
@@ -978,7 +1076,14 @@ void ReanimatedModuleProxy::initializeFabric(
 
   initializeLayoutAnimationsProxy();
 
-  const std::function<void()> request = [this]() { requestFlushRegistry(); };
+  const std::function<void()> request = [weakThis = weak_from_this()]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->requestFlushRegistry();
+  };
   mountHook_ = std::make_shared<ReanimatedMountHook>(
       uiManager_, updatesRegistryManager_, request);
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
@@ -1016,10 +1121,12 @@ jsi::Value ReanimatedModuleProxy::subscribeForKeyboardEvents(
       handlerWorklet,
       "[Reanimated] Keyboard event handler must be a worklet.");
   return subscribeForKeyboardEventsFunction_(
-      COPY_CAPTURE_WITH_THIS
-
-      (int keyboardState, int height) {
-        workletsModuleProxy_->getUIWorkletRuntime()->runGuarded(
+      [=, weakThis = weak_from_this()](int keyboardState, int height) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->workletsModuleProxy_->getUIWorkletRuntime()->runGuarded(
             shareableHandler, jsi::Value(keyboardState), jsi::Value(height));
       },
       isStatusBarTranslucent.getBool(),
@@ -1030,12 +1137,6 @@ void ReanimatedModuleProxy::unsubscribeFromKeyboardEvents(
     jsi::Runtime &,
     const jsi::Value &listenerId) {
   unsubscribeFromKeyboardEventsFunction_(listenerId.asNumber());
-}
-
-void ReanimatedModuleProxy::invalidate() {
-  // Make sure to release WorkletsModuleProxy on invalidate to allow it
-  // to destroy its runtime during the invalidation stage.
-  workletsModuleProxy_.reset();
 }
 
 } // namespace reanimated
