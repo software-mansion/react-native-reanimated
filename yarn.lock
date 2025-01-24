@@ -12168,7 +12168,6 @@ __metadata:
     react-native-safe-area-context: "npm:5.1.0"
     react-native-screens: "npm:4.5.0"
     react-native-svg: "npm:15.11.1"
-    react-native-worklets: "workspace:*"
     react-test-renderer: "npm:18.3.1"
     typescript: "npm:~5.3.0"
     typescript-eslint: "npm:^8.12.2"
