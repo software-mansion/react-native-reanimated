@@ -11,7 +11,7 @@ copy_files_recursively() {
       echo "Recursing into $file"
       copy_files_recursively "$file" "$dest_dir/$(basename "$file")"
     else
-      ln -h "$file" "$dest_dir/"
+      ln "$file" "$dest_dir/"
     fi
   done
 }

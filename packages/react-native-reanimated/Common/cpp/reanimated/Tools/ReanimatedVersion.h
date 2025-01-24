@@ -14,6 +14,8 @@ namespace reanimated {
 std::string getReanimatedCppVersion();
 void injectReanimatedCppVersion(jsi::Runtime &);
 bool matchVersion(const std::string &, const std::string &);
-void checkJSVersion(jsi::Runtime &, const std::shared_ptr<worklets::JSLogger> &);
+void checkJSVersion(
+    jsi::Runtime &,
+    const std::shared_ptr<worklets::JSLogger> &);
 
 }; // namespace reanimated
