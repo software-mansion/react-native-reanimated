@@ -3,17 +3,22 @@
 import type React from 'react';
 import type {
   LayoutAnimationBatchItem,
+  ShadowNodeWrapper,
+  StyleProps,
   Value3D,
   ValueRotation,
   WorkletFunction,
-  ShadowNodeWrapper,
-  StyleProps,
 } from '../commonTypes';
+import type {
+  NormalizedCSSTransitionConfig,
+  NormalizedSingleCSSAnimationConfig,
+  NormalizedSingleCSSAnimationSettings,
+} from '../css/platform/native';
 import { ReanimatedError } from '../errors';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
-import { isFabric } from '../PlatformChecker';
+import { isFabric, isWeb } from '../PlatformChecker';
 import { ReanimatedTurboModule } from '../specs';
 import type { IWorkletsModule } from '../WorkletsResolver';
 import { WorkletsModule } from '../WorkletsResolver';
@@ -22,12 +27,6 @@ import type {
   IReanimatedModule,
   ReanimatedModuleProxy,
 } from './reanimatedModuleProxy';
-import { isWeb } from '../PlatformChecker';
-import type {
-  NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationConfig,
-  NormalizedSingleCSSAnimationSettings,
-} from '../css/platform/native';
 
 const IS_WEB = isWeb();
 

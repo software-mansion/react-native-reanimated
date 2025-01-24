@@ -1,11 +1,11 @@
 /* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 
+import type { WorkletRuntime } from '../../runtimes';
 import { WorkletsTurboModule } from '../../specs';
+import type { ShareableRef } from '../../workletTypes';
 import { getValueUnpackerCode } from '../valueUnpacker';
 import type { WorkletsModuleProxy } from './workletsModuleProxy';
-import type { WorkletRuntime } from '../../runtimes';
-import type { ShareableRef } from '../../workletTypes';
 
 export interface IWorkletsModule extends WorkletsModuleProxy {}
 

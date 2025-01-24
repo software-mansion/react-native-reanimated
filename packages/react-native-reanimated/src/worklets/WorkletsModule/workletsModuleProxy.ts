@@ -1,7 +1,7 @@
 'use strict';
 
-import type { ShareableRef } from '../../workletTypes';
 import type { WorkletRuntime } from '../../runtimes';
+import type { ShareableRef } from '../../workletTypes';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {

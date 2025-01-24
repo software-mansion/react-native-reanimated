@@ -1,11 +1,18 @@
 'use strict';
 
 import type {
+  ShadowNodeWrapper,
+  StyleProps,
   Value3D,
   ValueRotation,
   WorkletFunction,
 } from '../../commonTypes';
 import { SensorType } from '../../commonTypes';
+import type {
+  NormalizedCSSTransitionConfig,
+  NormalizedSingleCSSAnimationConfig,
+  NormalizedSingleCSSAnimationSettings,
+} from '../../css/platform/native';
 import { ReanimatedError } from '../../errors';
 import { logger } from '../../logger';
 import {
@@ -19,12 +26,6 @@ import { WorkletsModule } from '../../WorkletsResolver';
 import type { ShareableRef } from '../../workletTypes';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
-import type { ShadowNodeWrapper, StyleProps } from '../../commonTypes';
-import type {
-  NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationConfig,
-  NormalizedSingleCSSAnimationSettings,
-} from '../../css/platform/native';
 
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();

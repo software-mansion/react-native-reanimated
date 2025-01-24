@@ -42,7 +42,7 @@ jobs:
       # Checks
       - name: Check TypeScript types
         working-directory: ${{ env.PACKAGE_PATH }}
-        run: yarn typecheck
+        run: yarn type:check
       - name: Lint JavaScript
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn lint:js

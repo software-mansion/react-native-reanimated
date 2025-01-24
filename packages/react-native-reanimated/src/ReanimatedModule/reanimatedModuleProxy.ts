@@ -3,17 +3,17 @@
 import type {
   LayoutAnimationBatchItem,
   ShadowNodeWrapper,
+  StyleProps,
   Value3D,
   ValueRotation,
   WorkletFunction,
-  StyleProps,
 } from '../commonTypes';
-import type { ShareableRef } from '../workletTypes';
 import type {
   NormalizedCSSTransitionConfig,
   NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
+import type { ShareableRef } from '../workletTypes';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {

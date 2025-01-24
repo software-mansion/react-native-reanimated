@@ -6,8 +6,8 @@ import type {
   TransformsStyle,
   ViewStyle,
 } from 'react-native';
-import type { ShareableRef } from './workletTypes';
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
+import type { ShareableRef } from './workletTypes';
 
 export type LayoutAnimationsOptions =
   | 'originX'

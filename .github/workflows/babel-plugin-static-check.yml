@@ -49,7 +49,7 @@ jobs:
         run: git diff
       - name: Check types
         working-directory: packages/react-native-reanimated
-        run: yarn typecheck:plugin
+        run: yarn type:check:plugin
       - name: Lint and format
         working-directory: packages/react-native-reanimated
         run: yarn lint:plugin
