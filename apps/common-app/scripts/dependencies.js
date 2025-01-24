@@ -28,7 +28,8 @@ function getDependencies(currentAppDir = '.', exclude = []) {
   const commonAppPkg = require(path.resolve(commonAppDir, 'package.json'));
 
   const currentAppPkg = require(path.resolve(currentAppDir, 'package.json'));
-  const currentAppDeps = new Set([
+
+  const excludedDependencies = new Set([
     ...Object.keys(currentAppPkg.devDependencies),
     ...Object.keys(currentAppPkg.dependencies),
     ...exclude,
@@ -36,8 +37,8 @@ function getDependencies(currentAppDir = '.', exclude = []) {
 
   return {
     // Get all common-app dependencies that aren't already in the current app
-    ...resolveDependencies(commonAppPkg.devDependencies, currentAppDeps),
-    ...resolveDependencies(commonAppPkg.dependencies, currentAppDeps),
+    ...resolveDependencies(commonAppPkg.devDependencies, excludedDependencies),
+    ...resolveDependencies(commonAppPkg.dependencies, excludedDependencies),
   };
 }
 
