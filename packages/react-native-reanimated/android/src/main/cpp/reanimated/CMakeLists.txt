@@ -50,15 +50,9 @@ else()
 endif()
 
 if(${HAS_EXTERNAL_WORKLETS})
-  target_link_libraries(
-      reanimated
-      react-native-worklets::worklets
-  )
+  target_link_libraries(reanimated react-native-worklets::worklets)
 else()
-  target_link_libraries(
-      reanimated
-      worklets
-  )
+  target_link_libraries(reanimated worklets)
 endif()
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
