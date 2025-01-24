@@ -232,7 +232,7 @@ To mitigate this limitation, you need to specify the `textShadowColor` in every 
 <details>
 <summary>Why do I need this?</summary>
 
-On the web, the shadow styles aren't inherited from the style object provided to the element. Reanimated provides the default values to every keyframe definition:
+In CSS the `text-shadow` is a single property but in React Native that's three separate properties for color, offset and radius. Because of that Reanimated has to provide these default values to every keyframe definition:
 
 ```json
 {
@@ -242,7 +242,7 @@ On the web, the shadow styles aren't inherited from the style object provided to
 }
 ```
 
-and you need to override them to retain your expected result.
+and the shadow styles aren't inherited from the style object provided to the element. To retain the styles in an animation you need to override these styles to achieve your expected result.
 
 </details>
 
