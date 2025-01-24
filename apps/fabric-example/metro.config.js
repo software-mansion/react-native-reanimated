@@ -2,7 +2,9 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const {
   wrapWithReanimatedMetroConfig,
 } = require('react-native-reanimated/metro-config');
-const { getMetroAndroidAssetsResolutionFix } = require('react-native-monorepo-tools');
+const {
+  getMetroAndroidAssetsResolutionFix,
+} = require('react-native-monorepo-tools');
 const androidAssetsResolutionFix = getMetroAndroidAssetsResolutionFix();
 
 const path = require('path');
