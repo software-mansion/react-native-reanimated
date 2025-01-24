@@ -23,7 +23,7 @@ copy_files_recursively "apple/worklets" "../react-native-worklets/apple/worklets
 copy_files_recursively "android/src/worklets" "../react-native-worklets/android/src/worklets"
 
 # Worklets Android-specific cpp files
-copy_files_recursively "android/src/main/cpp/worklets/android" "../react-native-worklets/android/src/main/cpp/worklets/android"
+copy_files_recursively "android/src/main/cpp/worklets" "../react-native-worklets/android/src/main/cpp/worklets"
 
 # Worklets Common cpp files
 copy_files_recursively "Common/cpp/worklets" "../react-native-worklets/Common/cpp/worklets"

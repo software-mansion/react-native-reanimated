@@ -333,10 +333,10 @@ android {
     sourceSets {
         main {
             java {
-                srcDirs += "src/duplicated/worklets/main"
+                srcDirs += "src/worklets/main"
 
                 if (!IS_NEW_ARCHITECTURE_ENABLED) {
-                    srcDirs += "src/duplicated/paper"
+                    srcDirs += "src/paper"
                 }
             }
         }
