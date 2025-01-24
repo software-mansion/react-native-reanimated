@@ -15,6 +15,15 @@ module.exports = function (api) {
         runtimeInjection: true,
       },
     ],
+    [
+      'module-resolver',
+      {
+        alias: {
+          '@': '../common-app/src',
+        },
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      },
+    ],
   ];
 
   const disableBabelPlugin = process.env.DISABLE_BABEL_PLUGIN === '1';
@@ -23,7 +32,6 @@ module.exports = function (api) {
   if (disableBabelPlugin) {
     console.log('Starting Web example without Babel plugin.');
   } else {
-    // @ts-expect-error
     plugins.push('react-native-reanimated/plugin');
   }
 

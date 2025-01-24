@@ -6,14 +6,13 @@
 
 React Native Reanimated provides a more comprehensive,
 low-level abstraction for the Animated library API on which to build,
-allowing for much greater flexibility, especially when it comes to 
+allowing for much greater flexibility, especially when it comes to
 gesture-based interactions.
 
 ### Nightly CI state
 
 [![NPM Reanimated publish nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish-nightly.yml)
 [![Reanimated compatibility check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/reanimated-compatibility-check-nightly.yml)
-[![Monorepo app Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/monorepo-app-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/monorepo-app-reanimated-build-check-nightly.yml)
 [![Static framework Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/static-framework-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/static-framework-reanimated-build-check-nightly.yml)
 [![React Native nightly Reanimated build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/react-native-nightly-reanimated-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/react-native-nightly-reanimated-build-check-nightly.yml)
 [![Expo DevClient build check](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/expo-devclient-build-check-nightly.yml)
@@ -37,7 +36,7 @@ Check out our dedicated documentation page for info about this library, API refe
 ## Examples
 
 The source code for the example (showcase) app is under the [`apps/common-app`](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/) directory.
-If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Check [Example README](apps/paper-example/README.md) for installation instructions.
+If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Check [Example README](apps/fabric-example/README.md) for installation instructions.
 
 ## License
 

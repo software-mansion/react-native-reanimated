@@ -1,3 +1,4 @@
+#include <worklets/Tools/Defs.h>
 #include <worklets/WorkletRuntime/ReanimatedRuntime.h>
 
 #include <cxxreact/MessageQueueThread.h>
@@ -25,26 +26,17 @@ std::shared_ptr<jsi::Runtime> ReanimatedRuntime::make(
     const std::string &name) {
   (void)rnRuntime; // used only for V8
 #if JS_RUNTIME_HERMES
-  // We don't call `jsQueue->quitSynchronous()` here, since it will be done
-  // later in ReanimatedHermesRuntime
-
   auto runtime = facebook::hermes::makeHermesRuntime();
   return std::make_shared<ReanimatedHermesRuntime>(
       std::move(runtime), jsQueue, name);
 #elif JS_RUNTIME_V8
-  // This is required by iOS, because there is an assertion in the destructor
-  // that the thread was indeed `quit` before.
-  jsQueue->quitSynchronous();
-
+  (void)jsQueue;
   auto config = std::make_unique<rnv8::V8RuntimeConfig>();
   config->enableInspector = false;
   config->appName = name;
   return rnv8::createSharedV8Runtime(&rnRuntime, std::move(config));
 #else
-  // This is required by iOS, because there is an assertion in the destructor
-  // that the thread was indeed `quit` before
-  jsQueue->quitSynchronous();
-
+  (void)jsQueue;
   return facebook::jsc::makeJSCRuntime();
 #endif
 }

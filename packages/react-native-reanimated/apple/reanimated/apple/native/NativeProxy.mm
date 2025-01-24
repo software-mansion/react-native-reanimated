@@ -72,28 +72,31 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
 
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
       workletsModuleProxy, rnRuntime, jsInvoker, platformDepMethodsHolder, isBridgeless, getIsReducedMotion());
+  reanimatedModuleProxy->init(platformDepMethodsHolder);
 
-  commonInit(reaModule, reanimatedModuleProxy);
+  commonInit(reaModule, workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime(), reanimatedModuleProxy);
   // Layout Animation callbacks setup
 #ifdef RCT_NEW_ARCH_ENABLED
   // nothing
 #else
   REAAnimationsManager *animationsManager = reaModule.animationsManager;
-  setupLayoutAnimationCallbacks(reanimatedModuleProxy, animationsManager);
+  setupLayoutAnimationCallbacks(reanimatedModuleProxy, workletsModuleProxy, animationsManager);
 
 #endif // RCT_NEW_ARCH_ENABLED
 
   return reanimatedModuleProxy;
 }
 
-void commonInit(REAModule *reaModule, std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy)
+void commonInit(
+    REAModule *reaModule,
+    jsi::Runtime &uiRuntime,
+    std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy)
 {
   [reaModule.nodesManager registerEventHandler:^(id<RCTEvent> event) {
     // handles RCTEvents from RNGestureHandler
     std::string eventName = [event.eventName UTF8String];
     int emitterReactTag = [event.viewTag intValue];
     id eventData = [event arguments][2];
-    jsi::Runtime &uiRuntime = reanimatedModuleProxy->getUIRuntime();
     jsi::Value payload = convertObjCObjectToJSIValue(uiRuntime, eventData);
     double currentTime = CACurrentMediaTime() * 1000;
     reanimatedModuleProxy->handleEvent(eventName, emitterReactTag, payload, currentTime);
@@ -114,28 +117,32 @@ void commonInit(REAModule *reaModule, std::shared_ptr<ReanimatedModuleProxy> rea
 #else // RCT_NEW_ARCH_ENABLED
 void setupLayoutAnimationCallbacks(
     std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy,
+    std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy,
     REAAnimationsManager *animationsManager)
 {
   std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy; // to avoid retain cycle
+  std::weak_ptr<WorkletsModuleProxy> weakWorkletsModuleProxy = workletsModuleProxy; // to avoid retain cycle
   [animationsManager
       setAnimationStartingBlock:^(NSNumber *_Nonnull tag, LayoutAnimationType type, NSDictionary *_Nonnull values) {
         if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
-          jsi::Runtime &rt = reanimatedModuleProxy->getUIRuntime();
-          jsi::Object yogaValues(rt);
-          for (NSString *key in values.allKeys) {
-            NSObject *value = values[key];
-            if ([values[key] isKindOfClass:[NSArray class]]) {
-              NSArray *transformArray = (NSArray *)value;
-              jsi::Array matrix(rt, 9);
-              for (int i = 0; i < 9; i++) {
-                matrix.setValueAtIndex(rt, i, [(NSNumber *)transformArray[i] doubleValue]);
+          if (auto workletsModuleProxy = weakWorkletsModuleProxy.lock()) {
+            jsi::Runtime &rt = workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
+            jsi::Object yogaValues(rt);
+            for (NSString *key in values.allKeys) {
+              NSObject *value = values[key];
+              if ([values[key] isKindOfClass:[NSArray class]]) {
+                NSArray *transformArray = (NSArray *)value;
+                jsi::Array matrix(rt, 9);
+                for (int i = 0; i < 9; i++) {
+                  matrix.setValueAtIndex(rt, i, [(NSNumber *)transformArray[i] doubleValue]);
+                }
+                yogaValues.setProperty(rt, [key UTF8String], matrix);
+              } else {
+                yogaValues.setProperty(rt, [key UTF8String], [(NSNumber *)value doubleValue]);
               }
-              yogaValues.setProperty(rt, [key UTF8String], matrix);
-            } else {
-              yogaValues.setProperty(rt, [key UTF8String], [(NSNumber *)value doubleValue]);
             }
+            reanimatedModuleProxy->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
           }
-          reanimatedModuleProxy->layoutAnimationsManager().startLayoutAnimation(rt, [tag intValue], type, yogaValues);
         }
       }];
 
@@ -171,8 +178,10 @@ void setupLayoutAnimationCallbacks(
 
   [animationsManager setCancelAnimationBlock:^(NSNumber *_Nonnull tag) {
     if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
-      jsi::Runtime &rt = reanimatedModuleProxy->getUIRuntime();
-      reanimatedModuleProxy->layoutAnimationsManager().cancelLayoutAnimation(rt, [tag intValue]);
+      if (auto workletsModuleProxy = weakWorkletsModuleProxy.lock()) {
+        jsi::Runtime &rt = workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
+        reanimatedModuleProxy->layoutAnimationsManager().cancelLayoutAnimation(rt, [tag intValue]);
+      }
     }
   }];
 

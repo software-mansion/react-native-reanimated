@@ -114,7 +114,7 @@ public class TabNavigatorObserver {
           nextTransition.add(firstScreen);
         }
         firstScreen = null;
-      } catch (IllegalAccessException | InvocationTargetException e) {
+      } catch (IllegalAccessException | NullPointerException | InvocationTargetException e) {
         String message = e.getMessage() != null ? e.getMessage() : "Unable to get screen view";
         Log.e("[Reanimated]", message);
       }

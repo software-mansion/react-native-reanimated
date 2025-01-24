@@ -51,10 +51,10 @@ const config = {
           sidebarCollapsible: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/packages/docs-reanimated',
-          lastVersion: 'current', // <- this makes 3.x docs as default
+          lastVersion: '3.x', // <- this makes 3.x docs as default
           versions: {
             current: {
-              label: '3.x',
+              label: '4.x',
             },
           },
         },
@@ -114,10 +114,12 @@ const config = {
           },
         ],
       },
+      // State of React Native survey banner
       announcementBar: {
+        id: 'state-of-react-native-2024',
         content: ' ',
-        backgroundColor: '#03c',
-        textColor: '#fff',
+        backgroundColor: '#b1dfd0',
+        textColor: '#001a72',
       },
       footer: {
         style: 'light',

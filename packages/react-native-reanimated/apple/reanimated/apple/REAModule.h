@@ -30,8 +30,4 @@
 @property (nonatomic, readonly) REANodesManager *nodesManager;
 @property REAAnimationsManager *animationsManager;
 
-#ifdef RCT_NEW_ARCH_ENABLED
-- (void)installReanimatedAfterReload;
-#endif // RCT_NEW_ARCH_ENABLED
-
 @end

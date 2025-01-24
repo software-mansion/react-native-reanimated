@@ -18,7 +18,10 @@ type HostInstancePaper = {
 
 export type HostInstance = HostInstanceFabric & HostInstancePaper;
 
-function findHostInstanceFastPath(maybeNativeRef: HostInstance) {
+function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
+  if (!maybeNativeRef) {
+    return undefined;
+  }
   if (
     maybeNativeRef.__internalInstanceHandle &&
     maybeNativeRef.__nativeTag &&
@@ -42,16 +45,24 @@ function resolveFindHostInstance_DEPRECATED() {
   }
   if (isFabric()) {
     try {
+      const ReactFabric = require('react-native/Libraries/Renderer/shims/ReactFabric');
+      // Since RN 0.77 ReactFabric exports findHostInstance_DEPRECATED in default object so we're trying to
+      // access it first, then fallback on named export
       findHostInstance_DEPRECATED =
-        require('react-native/Libraries/Renderer/shims/ReactFabric').findHostInstance_DEPRECATED;
+        ReactFabric?.default?.findHostInstance_DEPRECATED ??
+        ReactFabric?.findHostInstance_DEPRECATED;
     } catch (e) {
       throw new ReanimatedError(
         'Failed to resolve findHostInstance_DEPRECATED'
       );
     }
   } else {
+    const ReactNative = require('react-native/Libraries/Renderer/shims/ReactNative');
+    // Since RN 0.77 ReactFabric exports findHostInstance_DEPRECATED in default object so we're trying to
+    // access it first, then fallback on named export
     findHostInstance_DEPRECATED =
-      require('react-native/Libraries/Renderer/shims/ReactNative').findHostInstance_DEPRECATED;
+      ReactNative?.default?.findHostInstance_DEPRECATED ??
+      ReactNative?.findHostInstance_DEPRECATED;
   }
 }
 

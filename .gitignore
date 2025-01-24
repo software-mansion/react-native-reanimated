@@ -72,3 +72,5 @@ react-native-reanimated-tests.js
 .cache
 CompilationDatabase
 compile_commands.json
+
+build/
