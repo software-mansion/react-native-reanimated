@@ -53,4 +53,5 @@ set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")
 set(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")
 
-add_subdirectory("${ANDROID_CPP_DIR}/worklets")
+# TODO: Uncomment me when worklets get some sources
+# add_subdirectory("${ANDROID_CPP_DIR}/worklets")

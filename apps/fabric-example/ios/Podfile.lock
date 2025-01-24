@@ -1650,6 +1650,27 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNCClipboard (1.16.1):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - RNCMaskedView (0.3.2):
     - DoubleConversion
     - glog
@@ -1713,7 +1734,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (3.17.0):
+  - RNReanimated (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1733,10 +1754,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 3.17.0)
-    - RNReanimated/worklets (= 3.17.0)
+    - RNReanimated/reanimated (= 4.0.0-beta.1)
+    - RNReanimated/worklets (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/reanimated (3.17.0):
+  - RNReanimated/reanimated (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1756,9 +1777,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 3.17.0)
+    - RNReanimated/reanimated/apple (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/reanimated/apple (3.17.0):
+  - RNReanimated/reanimated/apple (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1779,7 +1800,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated/worklets (3.17.0):
+  - RNReanimated/worklets (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1799,9 +1820,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/apple (= 3.17.0)
+    - RNReanimated/worklets/apple (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/worklets/apple (3.17.0):
+  - RNReanimated/worklets/apple (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1985,6 +2006,7 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../../../node_modules/react-native/ReactCommon`)
   - "RNCAsyncStorage (from `../../../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCClipboard (from `../../../node_modules/@react-native-clipboard/clipboard`)"
   - "RNCMaskedView (from `../../../node_modules/@react-native-masked-view/masked-view`)"
   - "RNFlashList (from `../../../node_modules/@shopify/flash-list`)"
   - RNGestureHandler (from `../../../node_modules/react-native-gesture-handler`)
@@ -2137,6 +2159,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native/ReactCommon"
   RNCAsyncStorage:
     :path: "../../../node_modules/@react-native-async-storage/async-storage"
+  RNCClipboard:
+    :path: "../../../node_modules/@react-native-clipboard/clipboard"
   RNCMaskedView:
     :path: "../../../node_modules/@react-native-masked-view/masked-view"
   RNFlashList:
@@ -2222,14 +2246,15 @@ SPEC CHECKSUMS:
   ReactCodegen: ef05d5dd3c7327234365df4c9c18a99a73496a87
   ReactCommon: f579a0130fb73a351de4723fb33d277c5bf3283d
   RNCAsyncStorage: 309dabeb856c37a9167db791615cf7738d201103
+  RNCClipboard: 5917a290577018d3396eb64e332aff17495a0025
   RNCMaskedView: 18c76ebdf9752bb75652829f99f6c3d1318cc864
   RNFlashList: ee2388e0d3ffde77431ba5d09b8f59a0c65a8e05
   RNGestureHandler: 4e7defe5095e936424173fc75f0bf2af5bba8e23
-  RNReanimated: fad8bf501ad210124744b387afe1e4712f8f3ac0
+  RNReanimated: 4ed0a35da49cbc246b2b7b6b739ae71a12e6200e
   RNScreens: d0854539b51a53e38b61bcc9fb402439a9c73b26
   RNSVG: 7e38044415125a1d108294377de261d2fe2c54c9
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Yoga: dd05f79b1943c96893294ee5040576aa6e8a8d82
+  Yoga: 0c8754b0ea9edb13b6ce6b60f0f69eb5f164f16a
 
 PODFILE CHECKSUM: 4a9e0af2552a3fcd2303b56ad75e373f8bae65b9
 

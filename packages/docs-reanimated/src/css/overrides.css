@@ -36,6 +36,10 @@ table thead tr {
   white-space: nowrap;
 }
 
+.fixed table {
+  table-layout: fixed;
+}
+
 .compatibility td {
   padding: 0;
   border: transparent 2px solid;

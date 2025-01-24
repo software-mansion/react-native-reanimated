@@ -72,6 +72,7 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModule(
 
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
       workletsModuleProxy, rnRuntime, jsInvoker, platformDepMethodsHolder, isBridgeless, getIsReducedMotion());
+  reanimatedModuleProxy->init(platformDepMethodsHolder);
 
   commonInit(reaModule, workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime(), reanimatedModuleProxy);
   // Layout Animation callbacks setup

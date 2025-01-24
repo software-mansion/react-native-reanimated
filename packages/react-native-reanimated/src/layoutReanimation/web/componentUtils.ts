@@ -160,6 +160,7 @@ export function setElementAnimation(
 
   const configureAnimation = () => {
     element.style.animationName = animationName;
+    element.style.animationFillMode = 'backwards';
     element.style.animationDuration = `${duration}s`;
     element.style.animationDelay = `${delay}s`;
     element.style.animationTimingFunction = easing;

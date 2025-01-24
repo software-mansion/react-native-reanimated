@@ -5,7 +5,7 @@ import com.facebook.react.module.annotations.ReactModule;
 
 @ReactModule(name = DummyWorkletsModule.NAME)
 public class DummyWorkletsModule extends
-        NativeSulphateWorkletsSpec {
+        NativeDummyWorkletsSpec {
 
   public DummyWorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);

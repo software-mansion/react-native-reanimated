@@ -78,6 +78,41 @@ class JSI_EXPORT ReanimatedModuleProxySpec : public TurboModule {
       jsi::Runtime &rt,
       const jsi::Value &viewTag,
       const jsi::Value &shouldAnimate) = 0;
+
+#ifdef RCT_NEW_ARCH_ENABLED
+
+  // JS View style
+  virtual void setViewStyle(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &viewStyle) = 0;
+  virtual void removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag) = 0;
+
+  // CSS animations
+  virtual void registerCSSAnimations(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &animationConfigs) = 0;
+  virtual void updateCSSAnimations(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &settingsUpdates) = 0;
+  virtual void unregisterCSSAnimations(const jsi::Value &viewTag) = 0;
+
+  // CSS transitions
+  virtual void registerCSSTransition(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &transitionConfig) = 0;
+  virtual void updateCSSTransition(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &configUpdates) = 0;
+  virtual void unregisterCSSTransition(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag) = 0;
+
+#endif // RCT_NEW_ARCH_ENABLED
 };
 
 } // namespace reanimated
