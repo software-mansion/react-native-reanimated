@@ -156,20 +156,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/eslint-parser@npm:^7.20.0":
-  version: 7.26.5
-  resolution: "@babel/eslint-parser@npm:7.26.5"
-  dependencies:
-    "@nicolo-ribaudo/eslint-scope-5-internals": "npm:5.1.1-v1"
-    eslint-visitor-keys: "npm:^2.1.0"
-    semver: "npm:^6.3.1"
-  peerDependencies:
-    "@babel/core": ^7.11.0
-    eslint: ^7.5.0 || ^8.0.0 || ^9.0.0
-  checksum: 10/b9e4141f2aa01ea8e54233987d119402462a6b884f399add3b3f28d539bc4d3b311c6c1b58b196fef232e515fc77495aeff59f4668a19d978bddcffa3e66e7ca
-  languageName: node
-  linkType: hard
-
 "@babel/eslint-parser@npm:^7.25.1":
   version: 7.25.1
   resolution: "@babel/eslint-parser@npm:7.25.1"
@@ -5631,18 +5617,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native/metro-config@npm:0.76.5":
-  version: 0.76.5
-  resolution: "@react-native/metro-config@npm:0.76.5"
-  dependencies:
-    "@react-native/js-polyfills": "npm:0.76.5"
-    "@react-native/metro-babel-transformer": "npm:0.76.5"
-    metro-config: "npm:^0.81.0"
-    metro-runtime: "npm:^0.81.0"
-  checksum: 10/afdd47fe403d30bf29961e4e3271f16cbd2170150d6c516aeb6018846f6d1bd71e1eca0a7548c90b9ce847c7a7a256971b96b172edc4840a8cb5dd1226bb6d43
-  languageName: node
-  linkType: hard
-
 "@react-native/metro-config@npm:0.77.0-rc.6":
   version: 0.77.0-rc.6
   resolution: "@react-native/metro-config@npm:0.77.0-rc.6"
@@ -5708,13 +5682,6 @@ __metadata:
   version: 0.76.1
   resolution: "@react-native/typescript-config@npm:0.76.1"
   checksum: 10/ee87d6a70f31319cef777a8d54a4afd33fb25a0e47ec9d13b89ea8278ad9d048c8f8bd78b3822c99070cee3c0c4afcdb59b4e6ff2cda5800b8384db0cbb29674
-  languageName: node
-  linkType: hard
-
-"@react-native/typescript-config@npm:0.76.5":
-  version: 0.76.5
-  resolution: "@react-native/typescript-config@npm:0.76.5"
-  checksum: 10/d4ce87d4773025d53315405685e07986db125615319c5c847b7debaf1ee1870a094d7be1892755fb482ee2fb278f6074148ece1d091448291a43580561626ddc
   languageName: node
   linkType: hard
 
@@ -14953,18 +14920,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "macos-example@workspace:apps/macos-example"
   dependencies:
-    "@babel/core": "npm:^7.20.0"
-    "@babel/preset-env": "npm:^7.20.0"
-    "@babel/runtime": "npm:^7.20.0"
-    "@react-native/babel-preset": "npm:0.75.4"
-    "@react-native/eslint-config": "npm:0.75.4"
-    "@react-native/metro-config": "npm:0.75.4"
-    "@react-native/typescript-config": "npm:0.75.4"
+    "@react-native-community/cli": "npm:15.0.1"
     common-app: "workspace:*"
     prettier: "npm:^3.3.3"
     react: "npm:18.3.1"
-    react-native: "npm:0.75.4"
-    react-native-macos: "npm:^0.75.13"
+    react-native: "npm:0.76.5"
+    react-native-macos: "npm:^0.76.6"
     react-native-reanimated: "workspace:*"
   languageName: unknown
   linkType: soft

@@ -7,25 +7,26 @@ import {
   NavigationContainer,
 } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
-import { Linking, Platform } from 'react-native';
+import { ActivityIndicator, Linking, Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { colors, flex, radius, text } from '@/theme';
-import { IS_MACOS, IS_WEB, isFabric, noop } from '@/utils';
+import { IS_WEB, isFabric, noop } from '@/utils';
 
 import { CSSApp, ReanimatedApp } from './apps';
 
 export default function App() {
-  const { navigationState, updateNavigationState } = useNavigationState();
+  const { isReady, navigationState, updateNavigationState } =
+    useNavigationState();
 
-  // if (!isReady) {
-  //   return (
-  //     <View style={[flex.fill, flex.center]}>
-  //       <ActivityIndicator />
-  //     </View>
-  //   );
-  // }
+  if (!isReady) {
+    return (
+      <View style={[flex.fill, flex.center]}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaProvider>
@@ -74,10 +75,6 @@ const SCREENS = [
 ];
 
 function Navigator() {
-  if (IS_MACOS) {
-    return <CSSApp />;
-  }
-
   const Drawer = createDrawerNavigator();
   const screens = isFabric() || IS_WEB ? SCREENS : SCREENS.reverse();
 

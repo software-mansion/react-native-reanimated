@@ -6,6 +6,7 @@ module.exports = {
       'module-resolver',
       {
         alias: {
+          // Override the react-native-safe-area-context package since it doesn't work on Fabric macos
           'react-native-safe-area-context': './lib/react-native-safe-area-context',
           '@': '../common-app/src',
         },
