@@ -183,46 +183,63 @@ Yoga calculates borders in different ways for numeric values and relative (%) va
 
 Even though changes of this property are calculated properly during the animation, they aren't applied to the view. Other flex properties, such as `flexGrow` and `flexShrink` work fine, so they could be used for animations.
 
-### textShadow
+### Animating text shadow styles
 
-On the Web, to animate `textShadow` props (`textShadowColor`, `textShadowOffset`, `textShadowRadius`) using CSS Animations you need to specify them in keyframes. Consider this example:
+On the web, all text shadow styles (i.e. `textShadowColor`, `textShadowOffset`, `textShadowRadius`) need to be specified in the animation keyframes to preserve the style during animation.
 
-```jsx
-<Animated.Text
-  style={{
-    // highlight-start
-    animationName: {
-      from: { textShadowColor: 'red' },
-      to: { textShadowColor: 'blue' },
-    },
-    textShadowOffset: { width: 10, height: 10 }, // 🚨 needs to be specified
-    textShadowRadius: 8, // 🚨 in keyframes to work on the web
-    // highlight-end
-    // other styles...
-  }}>
-  Reanimated
-</Animated.Text>
-```
-
-This animation will correctly work on both iOS and Android. However, on the Web, while `textShadowColor` will animate correctly from `"red"` to `"blue"`, `textShadowOffset` and `textShadowRadius` won't be included in the keyframe, resulting in no animation.
-
-To mitigate the problem, move `textShadow` styles to keyframes:
+So, for example, if we want to have a shadow color and animate the shadow radius, we can't specify `textShadowColor` just in the element style but we also have to add it to every keyframe of the animation, even though only the `textShadowRadius` is the style we want to animate. Consider this:
 
 ```jsx
 <Animated.Text
   style={{
     animationName: {
       from: {
-        textShadowColor: 'red',
-        textShadowOffset: { width: 10, height: 10 }, // ✅
-        textShadowRadius: 8, // ✅
+        textShadowRadius: 8, // while the shadow radius correctly animates from 8 ✅
       },
       to: {
-        textShadowColor: 'blue',
+        textShadowRadius: 16, // to 16 ✅
       },
     },
-    // other styles...
+    textShadowColor: 'red', // 🚨 the shadow color would be overridden in the animation keyframes
+    // that means the shadow would be black!
+  }}>
+  Reanimatedą
+</Animated.Text>
+```
+
+To mitigate this limitation, you need to specify the `textShadowColor` in every keyframe definition:
+
+```jsx
+<Animated.Text
+  style={{
+    animationName: {
+      from: {
+        textShadowColor: 'red', // shadows starts 'red'
+        textShadowRadius: 8,
+      },
+      to: {
+        textShadowColor: 'red', // and keeps being 'red' throughout the animation
+        textShadowRadius: 16,
+      },
+    },
   }}>
   Reanimated
 </Animated.Text>
 ```
+
+<details>
+<summary>Why do I need this?</summary>
+
+On the web, the shadow styles aren't inherited from the style object provided to the element. Reanimated provides the default values to every keyframe definition:
+
+```json
+{
+  "textShadowColor": "none",
+  "textShadowRadius": 0,
+  "textShadowOffset": { "width": 0, "height": 0 }
+}
+```
+
+and you need to override them to retain your expected result.
+
+</details>
