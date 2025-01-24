@@ -20,21 +20,14 @@ cd MacOSExample
 yarn
 ```
 
-4. Install Pods in `MacOSExample/ios/` directory:
-
-```
-cd ios
-pod install
-```
-
-5. Install Pods in `MacOSExample/macos/` directory:
+4. Install Pods in `MacOSExample/macos/` directory:
 
 ```
 cd ../macos
 pod install
 ```
 
-6. Start Metro bundler in `MacOSExample/` directory
+5. Start Metro bundler in `MacOSExample/` directory
 
 ```
 cd ..

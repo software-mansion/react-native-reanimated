@@ -12,7 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { colors, flex, radius, text } from '@/theme';
-import { IS_MACOS, IS_WEB, isFabric, noop } from '@/utils';
+import { IS_WEB, isFabric, noop } from '@/utils';
 
 import { CSSApp, ReanimatedApp } from './apps';
 
@@ -75,10 +75,6 @@ const SCREENS = [
 ];
 
 function Navigator() {
-  if (IS_MACOS) {
-    return <ReanimatedApp />;
-  }
-
   const Drawer = createDrawerNavigator();
   const screens = isFabric() || IS_WEB ? SCREENS : SCREENS.reverse();
 
