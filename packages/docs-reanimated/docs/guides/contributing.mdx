@@ -215,7 +215,19 @@ We have shared code of example app, that is run on different platforms and archi
 - `packages/react-native-reanimated/android/src/main/java/com/swmansion/reanimated` &ndash; containing source code related to Android native part of Reanimated features
 - `packages/react-native-reanimated/apple` &ndash; containing source code related to iOS native part of Reanimated features
 
-Our workflow usually starts from editing `apps/common-app/src/apps/reanimated/examples/EmptyExample.tsx` with testing example for our new feature or a bug. This is the part that we often attach to PR so other developers can test the same use-case (remember not to commit your changes from `EmptyExample` file!). Next, we run the `apps/fabric-example` app and start development.
+We use two separate example apps depending on the feature or a bug we're currently working on. If the code relates to CSS Animations then we start from editing
+
+```
+apps/common-app/src/apps/css/examples/animations/screens/testExamples/Playground.tsx
+```
+
+For other features like worklet API, Layout Animations and Shared Element Transitions we would usually start from editing
+
+```
+apps/common-app/src/apps/reanimated/examples/EmptyExample.tsx
+```
+
+This is the part that we often attach to PR so other developers can test the same use-case (remember not to commit your changes from `EmptyExample` file!). Next, we run the `apps/fabric-example` app and start development.
 
 :::info
 
@@ -268,3 +280,10 @@ When the code changes are ready, it's time to open a Pull Request. We configured
 If you want to test changes in your own project, the best way is to create a patch using `git diff` or by pointing to a specific commit in `package.json`.
 
 See you on GitHub! 🎉
+
+````
+
+```
+
+```
+````
