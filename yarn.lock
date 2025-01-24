@@ -9349,7 +9349,7 @@ __metadata:
     eslint-config-prettier: "npm:^9.1.0"
     eslint-import-resolver-typescript: "npm:^3.6.3"
     eslint-plugin-import: "npm:^2.31.0"
-    eslint-plugin-no-relative-import-paths: "patch:eslint-plugin-no-relative-import-paths@npm%3A1.5.5#~/.yarn/patches/eslint-plugin-no-relative-import-paths-npm-1.5.5-8fb4e4bf7a.patch"
+    eslint-plugin-no-relative-import-paths: "npm:^1.6.1"
     eslint-plugin-perfectionist: "npm:^2.1.0"
     eslint-plugin-prettier: "npm:^5.2.1"
     eslint-plugin-react-hooks: "npm:^5.0.0"
@@ -11248,17 +11248,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-no-relative-import-paths@npm:1.5.5":
-  version: 1.5.5
-  resolution: "eslint-plugin-no-relative-import-paths@npm:1.5.5"
-  checksum: 10/9c4ac94a4a6b63748ee8c3e97a240e5681da3e38f154d0cffb864b8667a207cf84c3f0411785e65a3c31edcfaa9cffb1e756b3691354285fd2fc1684bd2266c7
-  languageName: node
-  linkType: hard
-
-"eslint-plugin-no-relative-import-paths@patch:eslint-plugin-no-relative-import-paths@npm%3A1.5.5#~/.yarn/patches/eslint-plugin-no-relative-import-paths-npm-1.5.5-8fb4e4bf7a.patch":
-  version: 1.5.5
-  resolution: "eslint-plugin-no-relative-import-paths@patch:eslint-plugin-no-relative-import-paths@npm%3A1.5.5#~/.yarn/patches/eslint-plugin-no-relative-import-paths-npm-1.5.5-8fb4e4bf7a.patch::version=1.5.5&hash=17eb79"
-  checksum: 10/c76734a94546f5e100a4a435d0bdcf8c43d4c6f52f6cf663917bdc4bdbabc37e311e3c0aa3ee45026e3b05a878ca920213b7f04193074f95a517ac5309135e74
+"eslint-plugin-no-relative-import-paths@npm:^1.6.1":
+  version: 1.6.1
+  resolution: "eslint-plugin-no-relative-import-paths@npm:1.6.1"
+  checksum: 10/b769becc029586c9dec93162000dd074fb3ca688d9af6d1d151f1aadc85cc309dd2272e75667477a33604801d8cb80698dcc3d66bbb74c2220a9af48375d724f
   languageName: node
   linkType: hard
 

@@ -58,7 +58,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-no-relative-import-paths": "patch:eslint-plugin-no-relative-import-paths@npm%3A1.5.5#~/.yarn/patches/eslint-plugin-no-relative-import-paths-npm-1.5.5-8fb4e4bf7a.patch",
+    "eslint-plugin-no-relative-import-paths": "^1.6.1",
     "eslint-plugin-perfectionist": "^2.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-react-hooks": "^5.0.0",
