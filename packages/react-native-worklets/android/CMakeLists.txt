@@ -47,7 +47,7 @@ endif()
 # Resolves "CMake Warning: Manually-specified variables were not used by the
 # project" when any of the following variables is not used in some build
 # configuration.
-set(ignoreMe "${JS_RUNTIME_DIR}")
+set(IGNORE_ME "${JS_RUNTIME_DIR}")
 
 set(BUILD_DIR "${CMAKE_SOURCE_DIR}/build")
 set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")

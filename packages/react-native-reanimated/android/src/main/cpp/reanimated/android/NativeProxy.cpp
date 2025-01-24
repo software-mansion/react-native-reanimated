@@ -41,6 +41,7 @@ NativeProxy::NativeProxy(
     )
     : javaPart_(jni::make_global(jThis)),
       rnRuntime_(rnRuntime),
+      workletsModuleProxy_(workletsModuleProxy),
       reanimatedModuleProxy_(std::make_shared<ReanimatedModuleProxy>(
           workletsModuleProxy,
           *rnRuntime,
@@ -49,6 +50,7 @@ NativeProxy::NativeProxy(
           isBridgeless,
           getIsReducedMotion())),
       layoutAnimations_(std::move(layoutAnimations)) {
+  reanimatedModuleProxy_->init(getPlatformDependentMethods());
 #ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
@@ -155,7 +157,10 @@ void NativeProxy::injectCppVersion() {
 void NativeProxy::installJSIBindings() {
   jsi::Runtime &rnRuntime = *rnRuntime_;
   WorkletRuntimeCollector::install(rnRuntime);
-  RNRuntimeDecorator::decorate(rnRuntime, reanimatedModuleProxy_);
+  RNRuntimeDecorator::decorate(
+      rnRuntime,
+      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime(),
+      reanimatedModuleProxy_);
 #ifndef NDEBUG
   checkJavaVersion(rnRuntime);
   injectCppVersion();
@@ -190,7 +195,8 @@ void NativeProxy::registerNatives() {
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations)});
+       makeNativeMethod("performOperations", NativeProxy::performOperations),
+       makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp)});
 }
 
 void NativeProxy::requestRender(
@@ -407,7 +413,8 @@ void NativeProxy::handleEvent(
     return;
   }
 
-  jsi::Runtime &rt = reanimatedModuleProxy_->getUIRuntime();
+  jsi::Runtime &rt =
+      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
   jsi::Value payload;
   try {
     payload = jsi::Value::createFromJsonUtf8(
@@ -471,8 +478,13 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto progressLayoutAnimation =
       bindThis(&NativeProxy::progressLayoutAnimation);
 
-  auto endLayoutAnimation = [this](int tag, bool removeView) {
-    this->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
+  auto endLayoutAnimation = [weakThis = weak_from_this()](
+                                int tag, bool removeView) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    strongThis->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
   };
 
   auto maybeFlushUiUpdatesQueueFunction =
@@ -505,34 +517,43 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 void NativeProxy::setupLayoutAnimations() {
   auto weakReanimatedModuleProxy =
       std::weak_ptr<ReanimatedModuleProxy>(reanimatedModuleProxy_);
+  auto weakWorkletsModuleProxy =
+      std::weak_ptr<WorkletsModuleProxy>(workletsModuleProxy_);
 
   layoutAnimations_->cthis()->setAnimationStartingBlock(
-      [weakReanimatedModuleProxy](
+      [weakReanimatedModuleProxy, weakWorkletsModuleProxy](
           int tag, int type, alias_ref<JMap<jstring, jstring>> values) {
         if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
-          jsi::Runtime &rt = reanimatedModuleProxy->getUIRuntime();
-          jsi::Object yogaValues(rt);
-          for (const auto &entry : *values) {
-            try {
-              std::string keyString = entry.first->toStdString();
-              std::string valueString = entry.second->toStdString();
-              auto key = jsi::String::createFromAscii(rt, keyString);
-              if (keyString == "currentTransformMatrix" ||
-                  keyString == "targetTransformMatrix") {
-                jsi::Array matrix =
-                    jsi_utils::convertStringToArray(rt, valueString, 9);
-                yogaValues.setProperty(rt, key, matrix);
-              } else {
-                auto value = stod(valueString);
-                yogaValues.setProperty(rt, key, value);
+          if (auto workletsModuleProxy = weakWorkletsModuleProxy.lock()) {
+            jsi::Runtime &rt =
+                workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
+            jsi::Object yogaValues(rt);
+            for (const auto &entry : *values) {
+              try {
+                std::string keyString = entry.first->toStdString();
+                std::string valueString = entry.second->toStdString();
+                auto key = jsi::String::createFromAscii(rt, keyString);
+                if (keyString == "currentTransformMatrix" ||
+                    keyString == "targetTransformMatrix") {
+                  jsi::Array matrix =
+                      jsi_utils::convertStringToArray(rt, valueString, 9);
+                  yogaValues.setProperty(rt, key, matrix);
+                } else {
+                  auto value = stod(valueString);
+                  yogaValues.setProperty(rt, key, value);
+                }
+              } catch (std::invalid_argument e) {
+                throw std::runtime_error(
+                    "[Reanimated] Failed to convert value to number.");
               }
-            } catch (std::invalid_argument e) {
-              throw std::runtime_error(
-                  "[Reanimated] Failed to convert value to number.");
             }
+            reanimatedModuleProxy->layoutAnimationsManager()
+                .startLayoutAnimation(
+                    rt,
+                    tag,
+                    static_cast<LayoutAnimationType>(type),
+                    yogaValues);
           }
-          reanimatedModuleProxy->layoutAnimationsManager().startLayoutAnimation(
-              rt, tag, static_cast<LayoutAnimationType>(type), yogaValues);
         }
       });
 
@@ -573,11 +594,14 @@ void NativeProxy::setupLayoutAnimations() {
       });
 
   layoutAnimations_->cthis()->setCancelAnimationForTag(
-      [weakReanimatedModuleProxy](int tag) {
+      [weakReanimatedModuleProxy, weakWorkletsModuleProxy](int tag) {
         if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
-          jsi::Runtime &rt = reanimatedModuleProxy->getUIRuntime();
-          reanimatedModuleProxy->layoutAnimationsManager()
-              .cancelLayoutAnimation(rt, tag);
+          if (auto workletsModuleProxy = weakWorkletsModuleProxy.lock()) {
+            jsi::Runtime &rt =
+                workletsModuleProxy->getUIWorkletRuntime()->getJSIRuntime();
+            reanimatedModuleProxy->layoutAnimationsManager()
+                .cancelLayoutAnimation(rt, tag);
+          }
         }
       });
 
@@ -600,6 +624,12 @@ void NativeProxy::setupLayoutAnimations() {
           return {};
         }
       });
+}
+
+void NativeProxy::invalidateCpp() {
+  layoutAnimations_->cthis()->invalidate();
+  workletsModuleProxy_.reset();
+  reanimatedModuleProxy_.reset();
 }
 
 } // namespace reanimated

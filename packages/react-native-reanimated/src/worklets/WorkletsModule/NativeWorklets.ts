@@ -4,6 +4,8 @@
 import { WorkletsTurboModule } from '../../specs';
 import { getValueUnpackerCode } from '../valueUnpacker';
 import type { WorkletsModuleProxy } from './workletsModuleProxy';
+import type { WorkletRuntime } from '../../runtimes';
+import type { ShareableRef } from '../../workletTypes';
 
 export interface IWorkletsModule extends WorkletsModuleProxy {}
 
@@ -28,8 +30,8 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#workletsModuleProxy = global.__workletsModuleProxy;
   }
 
-  makeShareableClone<T>(
-    value: T,
+  makeShareableClone<TValue>(
+    value: TValue,
     shouldPersistRemote: boolean,
     nativeStateSource?: object
   ) {
@@ -37,6 +39,30 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       value,
       shouldPersistRemote,
       nativeStateSource
+    );
+  }
+
+  scheduleOnUI<TValue>(shareable: ShareableRef<TValue>) {
+    return this.#workletsModuleProxy.scheduleOnUI(shareable);
+  }
+
+  executeOnUIRuntimeSync<TValue, TReturn>(
+    shareable: ShareableRef<TValue>
+  ): TReturn {
+    return this.#workletsModuleProxy.executeOnUIRuntimeSync(shareable);
+  }
+
+  createWorkletRuntime(name: string, initializer: ShareableRef<() => void>) {
+    return this.#workletsModuleProxy.createWorkletRuntime(name, initializer);
+  }
+
+  scheduleOnRuntime<T>(
+    workletRuntime: WorkletRuntime,
+    shareableWorklet: ShareableRef<T>
+  ) {
+    return this.#workletsModuleProxy.scheduleOnRuntime(
+      workletRuntime,
+      shareableWorklet
     );
   }
 }

@@ -35,17 +35,17 @@ jobs:
       # Setup repo
       - name: Install monorepo node dependencies
         run: yarn install --immutable
-      - name: Build Worklets
+      - name: Build Worklets package
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn build
 
       # Checks
       - name: Check TypeScript types
         working-directory: ${{ env.PACKAGE_PATH }}
-        run: yarn typecheck
+        run: yarn type:check
       - name: Lint JavaScript
         working-directory: ${{ env.PACKAGE_PATH }}
-        run: yarn lint
+        run: yarn lint:js
       - name: Find circular dependencies
         working-directory: ${{ env.PACKAGE_PATH }}
         run: yarn circular-dependency-check

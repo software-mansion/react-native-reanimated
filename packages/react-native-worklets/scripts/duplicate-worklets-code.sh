@@ -11,7 +11,7 @@ copy_files() {
     if [ -d "$file" ]; then
       pass
     else
-      ln -h "$file" "$dest_dir/"
+      ln "$file" "$dest_dir/"
     fi
   done
 }

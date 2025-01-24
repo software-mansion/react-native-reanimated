@@ -141,7 +141,8 @@ class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
   std::function<void(int, int)> callback_;
 };
 
-class NativeProxy : public jni::HybridClass<NativeProxy> {
+class NativeProxy : public jni::HybridClass<NativeProxy>,
+                    std::enable_shared_from_this<NativeProxy> {
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/NativeProxy;";
@@ -168,6 +169,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
+  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
 #ifndef NDEBUG
@@ -250,6 +252,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   template <class TReturn, class... TParams>
   std::function<TReturn(TParams...)> bindThis(
       TReturn (NativeProxy::*methodPtr)(TParams...)) {
+    // It's probably safe to pass `this` as reference here...
     return [this, methodPtr](TParams &&...args) {
       return (this->*methodPtr)(std::forward<TParams>(args)...);
     };
@@ -278,6 +281,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
                       &fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
+
+  void invalidateCpp();
 };
 
 } // namespace reanimated

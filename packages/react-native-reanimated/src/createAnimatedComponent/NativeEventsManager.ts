@@ -1,10 +1,10 @@
 'use strict';
 import type {
   INativeEventsManager,
-  IAnimatedComponentInternal,
   AnimatedComponentProps,
   InitialComponentProps,
   AnimatedComponentRef,
+  ManagedAnimatedComponent,
 } from './commonTypes';
 import { has } from './utils';
 import { WorkletEventHandler } from '../WorkletEventHandler';
@@ -151,11 +151,6 @@ function executeForEachEventHandler(
     }
   }
 }
-
-type ManagedAnimatedComponent = React.Component<
-  AnimatedComponentProps<InitialComponentProps>
-> &
-  IAnimatedComponentInternal;
 
 type ComponentOptions = {
   setNativeProps: (

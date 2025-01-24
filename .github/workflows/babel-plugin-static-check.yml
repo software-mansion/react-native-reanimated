@@ -57,5 +57,5 @@ jobs:
         working-directory: packages/react-native-reanimated
         run: yarn jest plugin
       - name: Check Example App bundling
-        working-directory: apps/paper-example
+        working-directory: apps/fabric-example
         run: yarn && yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='/dev/null' --dev=true --platform='ios'

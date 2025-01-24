@@ -7,6 +7,7 @@ import type {
   ViewStyle,
 } from 'react-native';
 import type { ShareableRef } from './workletTypes';
+import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
 
 export type LayoutAnimationsOptions =
   | 'originX'
@@ -203,6 +204,8 @@ export interface StyleProps extends ViewStyle, TextStyle {
   originY?: number;
   [key: string]: any;
 }
+
+export type PlainStyle = ViewStyle & TextStyle & ImageStyle;
 
 /**
  * A value that can be used both on the [JavaScript
@@ -569,7 +572,7 @@ type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<Style = DefaultStyle> =
-  | Style
+  | (Style & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) // TODO - maybe add css animation config somewhere else
   | MaybeSharedValueRecursive<Style>;
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
