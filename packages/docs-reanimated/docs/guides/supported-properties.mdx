@@ -187,6 +187,8 @@ Even though changes of this property are calculated properly during the animatio
 
 On the web, all text shadow styles (i.e. `textShadowColor`, `textShadowOffset`, `textShadowRadius`) need to be specified in the animation keyframes to preserve the style during animation.
 
+iOS and Android text shadow styles doesn't have this limitations and work as intended.
+
 So, for example, if we want to have a shadow color and animate the shadow radius, we can't specify `textShadowColor` just in the element style but we also have to add it to every keyframe of the animation, even though only the `textShadowRadius` is the style we want to animate. Consider this:
 
 ```jsx
@@ -243,3 +245,9 @@ On the web, the shadow styles aren't inherited from the style object provided to
 and you need to override them to retain your expected result.
 
 </details>
+
+### Animating box shadow styles
+
+Similarly to the text shadow styles - all shadow styles (i.e. `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`) need to be specified in the animation keyframes to preserve the style during animation on the Web. Keep in mind that `shadowOffset`, `shadowOpacity`, `shadowRadius` style properties [aren't implemented on Android in React Native](https://reactnative.dev/docs/shadow-props#props) so they also can't be animated.
+
+We highly recommend to use [the `boxShadow` property](https://reactnative.dev/blog/2024/10/23/release-0.76-new-architecture#boxshadow) which doesn't have this limitation and also works on Android.
