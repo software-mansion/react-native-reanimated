@@ -197,6 +197,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 13,
+    fontVariant: ['tabular-nums'],
     color: '#ffff',
     fontFamily: 'monospace',
     paddingHorizontal: 3,
