@@ -10,7 +10,6 @@ import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
-import com.swmansion.reanimated.NativeWorkletsModuleSpec;
 import java.util.Objects;
 
 /**

@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "The React Native multithreading library",
   "scripts": {
-    "build": "./scripts/duplicate-worklets-code.sh && bob build",
+    "build": "bob build",
     "format": "yarn format:js",
     "format:js": "prettier --write --list-different src",
     "lint": "yarn lint:js",

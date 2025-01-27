@@ -60,8 +60,3 @@ lib/
 # React Native Codegen
 apple/generated
 android/generated
-
-# Duplicated worklets code
-# apple/duplicated
-# android/src/duplicated
-# Common/duplicated
