@@ -14,6 +14,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace reanimated {
@@ -38,9 +39,8 @@ struct LayoutAnimationsProxy
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
-  mutable std::
-      map<SurfaceId, std::vector<std::pair<Tag, bool>>>
-          endLayoutAnimations_;
+  mutable std::map<SurfaceId, std::vector<std::pair<Tag, bool>>>
+      endLayoutAnimations_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;

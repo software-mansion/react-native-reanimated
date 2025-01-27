@@ -35,6 +35,7 @@
 #include <react/renderer/core/ShadowNode.h>
 
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_set>
 #include <utility>
