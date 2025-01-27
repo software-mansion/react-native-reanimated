@@ -36,7 +36,7 @@ Use this if you want the animation to start delayed (value in milliseconds)
 
 #### `interpolation`
 
-Specify the transition timing curve. Possible values are: `linear`, `easeIn`, `easeOut`, `easeInOut`
+Specify the transition timing curve. Possible values are: `linear`, `ease-in`, `ease-out`, `ease-in-out`
 
 #### `propagation`
 

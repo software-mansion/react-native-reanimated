@@ -1,7 +1,7 @@
 /** This file is required to properly resolve native dependencies */
-const { getDependencies } = require('../common-app/scripts/dependencies');
+import { getDependencies } from '../common-app/scripts/dependencies';
 
-const dependencies = getDependencies(__dirname);
+const { dependencies } = getDependencies();
 
 module.exports = {
   dependencies,

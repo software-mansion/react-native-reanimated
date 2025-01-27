@@ -208,10 +208,10 @@ describe(normalizeAnimationKeyframes, () => {
     it('moves timing functions from keyframes to keyframeTimingFunctions', () => {
       expect(
         normalizeAnimationKeyframes({
-          '0%, 90%': { opacity: 0, animationTimingFunction: 'easeIn' },
+          '0%, 90%': { opacity: 0, animationTimingFunction: 'ease-in' },
           '25%, 35%, 70%': { opacity: 0.5, animationTimingFunction: 'ease' },
           '50%': { opacity: 0.75 },
-          '75%': { opacity: 1, animationTimingFunction: 'easeOut' },
+          '75%': { opacity: 1, animationTimingFunction: 'ease-out' },
         })
       ).toEqual({
         keyframesStyle: {
@@ -226,12 +226,12 @@ describe(normalizeAnimationKeyframes, () => {
           ],
         },
         keyframeTimingFunctions: {
-          0: 'easeIn',
+          0: 'ease-in',
           0.25: 'ease',
           0.35: 'ease',
           0.7: 'ease',
-          0.75: 'easeOut',
-          0.9: 'easeIn',
+          0.75: 'ease-out',
+          0.9: 'ease-in',
         },
       });
     });
@@ -239,7 +239,7 @@ describe(normalizeAnimationKeyframes, () => {
     it('ignores timing function for keyframe with offset 1', () => {
       expect(
         normalizeAnimationKeyframes({
-          '0%, 100%': { opacity: 0, animationTimingFunction: 'easeIn' },
+          '0%, 100%': { opacity: 0, animationTimingFunction: 'ease-in' },
         })
       ).toEqual({
         keyframesStyle: {
@@ -249,7 +249,7 @@ describe(normalizeAnimationKeyframes, () => {
           ],
         },
         keyframeTimingFunctions: {
-          0: 'easeIn',
+          0: 'ease-in',
         },
       });
     });

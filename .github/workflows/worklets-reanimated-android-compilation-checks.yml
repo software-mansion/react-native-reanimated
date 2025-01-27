@@ -1,0 +1,34 @@
+name: Worklets & Reanimated Android compilation checks
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  pull_request:
+    paths:
+      - .github/workflows/worklets-reanimated-android-compilation-checks.yml
+      - packages/react-native-reanimated/android/**
+      - packages/react-native-reanimated/Common/**
+      - packages/react-native-worklets/**
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/worklets-reanimated-android-compilation-checks.yml
+      - packages/react-native-reanimated/android/**
+      - packages/react-native-reanimated/Common/**
+      - packages/react-native-worklets/**
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  android-with-external-worklets-build:
+    uses: ./.github/workflows/example-android-build-check.yml
+    with:
+      use-external-worklets: true
+
+  android-without-external-worklets-build:
+    uses: ./.github/workflows/example-android-build-check.yml
+    with:
+      use-external-worklets: false

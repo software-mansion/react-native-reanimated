@@ -26,7 +26,17 @@ on:
       - packages/react-native-reanimated/TVOSExample/package.json
       - packages/react-native-reanimated/TVOSExample/ios/**
   workflow_call:
+    inputs:
+      use-external-worklets:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
+    inputs:
+      use-external-worklets:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -34,12 +44,17 @@ jobs:
     runs-on: macos-14
     env:
       WORKING_DIRECTORY: apps/tvos-example
+      COMMON_APP_DIR: apps/common-app
     concurrency:
       group: tvos-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
@@ -51,6 +66,11 @@ jobs:
       - name: Install app node_modules
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn install --immutable
+
+      - name: Use external worklets
+        if: ${{ inputs.use-external-worklets == 'true' }}
+        working-directory: ${{ env.COMMON_APP_DIR }}
+        run: yarn add react-native-worklets@workspace:"*"
 
       - name: Install Pods
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios

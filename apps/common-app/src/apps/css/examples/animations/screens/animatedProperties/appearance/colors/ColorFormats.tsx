@@ -20,7 +20,7 @@ export default function ColorsFormats() {
             backgroundColor: to,
           },
         },
-        animationTimingFunction: 'easeInOut',
+        animationTimingFunction: 'ease-in-out',
       })}
       renderExample={({ animation }) => (
         <Animated.View style={[styles.box, animation]} />
@@ -35,7 +35,7 @@ export default function ColorsFormats() {
               from: { backgroundColor: from },
               to: { backgroundColor: to },
             },
-            animationTimingFunction: 'easeInOut',
+            animationTimingFunction: 'ease-in-out',
           }),
           name: 'Predefined',
           sections: [

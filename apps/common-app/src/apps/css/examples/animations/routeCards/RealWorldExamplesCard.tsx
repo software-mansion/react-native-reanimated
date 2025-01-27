@@ -273,7 +273,7 @@ const styles = css.create({
     animationDuration: `${TIME_MULTIPLIER * 0.6}s`,
     animationIterationCount: 'infinite',
     animationName: propulsedFlame,
-    animationTimingFunction: 'easeIn',
+    animationTimingFunction: 'ease-in',
   },
   scene: {
     transform: [
@@ -286,7 +286,7 @@ const styles = css.create({
     animationDuration: `${TIME_MULTIPLIER * 0.48}s`,
     animationIterationCount: 'infinite',
     animationName: propulsedSpark,
-    animationTimingFunction: 'easeIn',
+    animationTimingFunction: 'ease-in',
     height: 0.5 * sizes.xxxs,
     width: 0.5 * sizes.xxxs,
   },

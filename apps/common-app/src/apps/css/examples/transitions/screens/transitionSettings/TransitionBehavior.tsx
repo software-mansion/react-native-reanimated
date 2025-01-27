@@ -20,7 +20,7 @@ export default function TransitionBehavior() {
           ],
           items: [
             { label: 'normal (default)' },
-            { label: 'allowDiscrete', transitionBehavior: 'allowDiscrete' },
+            { label: 'allow-discrete', transitionBehavior: 'allow-discrete' },
           ],
           title: 'Transition Behavior',
         },

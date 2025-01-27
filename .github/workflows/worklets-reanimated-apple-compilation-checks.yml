@@ -1,0 +1,54 @@
+name: Worklets & Reanimated Apple compilation checks
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  pull_request:
+    paths:
+      - .github/workflows/worklets-reanimated-apple-compilation-checks.yml
+      - packages/react-native-reanimated/apple/**
+      - packages/react-native-reanimated/Common/**
+      - packages/react-native-worklets/**
+  merge_group:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/worklets-reanimated-apple-compilation-checks.yml
+      - packages/react-native-reanimated/apple/**
+      - packages/react-native-reanimated/Common/**
+      - packages/react-native-worklets/**
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  ios-with-external-worklets-build:
+    uses: ./.github/workflows/example-ios-build-check.yml
+    with:
+      use-external-worklets: true
+
+  ios-without-external-worklets-build:
+    uses: ./.github/workflows/example-ios-build-check.yml
+    with:
+      use-external-worklets: false
+
+  macos-with-external-worklets-build:
+    uses: ./.github/workflows/example-macos-build-check.yml
+    with:
+      use-external-worklets: true
+
+  macos-without-external-worklets-build:
+    uses: ./.github/workflows/example-macos-build-check.yml
+    with:
+      use-external-worklets: false
+
+  tvos-with-external-worklets-build:
+    uses: ./.github/workflows/example-tvos-build-check.yml
+    with:
+      use-external-worklets: true
+
+  tvos-without-external-worklets-build:
+    uses: ./.github/workflows/example-tvos-build-check.yml
+    with:
+      use-external-worklets: false

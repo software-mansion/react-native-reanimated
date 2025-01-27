@@ -17,7 +17,7 @@ export class StepsEasing implements ParametrizedTimingFunction {
   readonly stepsNumber: number;
   readonly modifier: StepsModifier;
 
-  constructor(stepsNumber: number, modifier: StepsModifier = 'jumpEnd') {
+  constructor(stepsNumber: number, modifier: StepsModifier = 'jump-end') {
     if (stepsNumber <= 0 || stepsNumber % 1 !== 0) {
       throw new ReanimatedError(ERROR_MESSAGES.invalidStepsNumber(stepsNumber));
     }
@@ -31,15 +31,15 @@ export class StepsEasing implements ParametrizedTimingFunction {
 
   normalize(): NormalizedStepsEasing | 'linear' {
     switch (this.modifier) {
-      case 'jumpStart':
+      case 'jump-start':
       case 'start':
         return this.jumpStart();
-      case 'jumpEnd':
+      case 'jump-end':
       case 'end':
         return this.jumpEnd();
-      case 'jumpBoth':
+      case 'jump-both':
         return this.jumpBoth();
-      case 'jumpNone':
+      case 'jump-none':
       default:
         if (this.stepsNumber === 1) {
           // CSS animations standard returns here linear easing

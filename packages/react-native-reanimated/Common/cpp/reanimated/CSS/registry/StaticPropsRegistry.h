@@ -20,6 +20,7 @@ class StaticPropsRegistry {
  public:
   void set(jsi::Runtime &rt, Tag viewTag, const jsi::Value &props);
   folly::dynamic get(Tag viewTag) const;
+  bool has(Tag viewTag) const;
   void remove(Tag viewTag);
 
   bool hasObservers(const Tag viewTag) const;
