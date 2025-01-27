@@ -11,7 +11,9 @@ void StaticPropsRegistry::set(
     remove(viewTag);
   } else {
     const auto newProps = dynamicFromValue(rt, props);
-    notifyObservers(rt, viewTag, valueFromDynamic(rt, get(viewTag)), props);
+    if (has(viewTag)) {
+      notifyObservers(rt, viewTag, valueFromDynamic(rt, get(viewTag)), props);
+    }
     registry_[viewTag] = newProps;
   }
 }
@@ -22,6 +24,10 @@ folly::dynamic StaticPropsRegistry::get(const Tag viewTag) const {
     return nullptr;
   }
   return it->second;
+}
+
+bool StaticPropsRegistry::has(const Tag viewTag) const {
+  return registry_.find(viewTag) != registry_.end();
 }
 
 void StaticPropsRegistry::remove(const Tag viewTag) {
