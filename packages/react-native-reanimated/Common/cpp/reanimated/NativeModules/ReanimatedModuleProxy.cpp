@@ -178,7 +178,7 @@ void ReanimatedModuleProxy::init(
         if (!surfaceId) {
           return;
         }
-        flushLayoutAnimations_.insert(*surfaceId);
+        strongThis->flushLayoutAnimations_.insert(*surfaceId);
       };
 
   EndLayoutAnimationFunction endLayoutAnimation =
@@ -193,7 +193,7 @@ void ReanimatedModuleProxy::init(
         if (!surfaceId) {
           return;
         }
-        flushLayoutAnimations_.insert(*surfaceId);
+        strongThis->flushLayoutAnimations_.insert(*surfaceId);
       };
 
   auto obtainProp = [weakThis = weak_from_this()](
