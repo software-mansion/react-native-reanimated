@@ -24,11 +24,13 @@ on:
 
 jobs:
   android-with-external-worklets-build:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     uses: ./.github/workflows/example-android-build-check.yml
     with:
       use-external-worklets: true
 
   android-without-external-worklets-build:
+    if: github.repository == 'software-mansion/react-native-reanimated'
     uses: ./.github/workflows/example-android-build-check.yml
     with:
       use-external-worklets: false

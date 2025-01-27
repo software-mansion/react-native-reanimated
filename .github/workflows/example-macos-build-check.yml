@@ -48,7 +48,7 @@ jobs:
       WORKING_DIRECTORY: apps/macos-example
       COMMON_APP_DIR: apps/common-app
     concurrency:
-      group: macos-${{ github.ref }}
+      group: macos-${{ github.ref }}-${{ inputs.use-external-worklets }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
