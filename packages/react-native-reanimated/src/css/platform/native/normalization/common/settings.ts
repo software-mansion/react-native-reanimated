@@ -12,11 +12,11 @@ export const VALID_PREDEFINED_TIMING_FUNCTIONS =
   new Set<PredefinedTimingFunction>([
     'linear',
     'ease',
-    'easeIn',
-    'easeOut',
-    'easeInOut',
-    'stepStart',
-    'stepEnd',
+    'ease-in',
+    'ease-out',
+    'ease-in-out',
+    'step-start',
+    'step-end',
   ]);
 
 export const ERROR_MESSAGES = {

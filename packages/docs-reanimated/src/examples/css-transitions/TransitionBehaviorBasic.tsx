@@ -16,7 +16,7 @@ export default function App() {
             transitionProperty: ['alignSelf', 'backgroundColor'],
             transitionDuration: '1s',
             // highlight-next-line
-            transitionBehavior: 'allowDiscrete',
+            transitionBehavior: 'allow-discrete',
           },
         ]}
       />

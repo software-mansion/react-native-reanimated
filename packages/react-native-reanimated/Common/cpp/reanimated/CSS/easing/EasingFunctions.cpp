@@ -7,11 +7,11 @@ inline const std::unordered_map<std::string, EasingFunction>
     PREDEFINED_EASING_MAP = {
         {"linear", [](double x) { return x; }},
         {"ease", cubicBezier(0.25, 0.1, 0.25, 0.1)},
-        {"easeIn", cubicBezier(0.42, 0.0, 1.0, 1.0)},
-        {"easeOut", cubicBezier(0.0, 0.0, 0.58, 1.0)},
-        {"easeInOut", cubicBezier(0.42, 0.0, 0.58, 1.0)},
-        {"stepStart", steps(std::vector<double>{0}, std::vector<double>{1})},
-        {"stepEnd",
+        {"ease-in", cubicBezier(0.42, 0.0, 1.0, 1.0)},
+        {"ease-out", cubicBezier(0.0, 0.0, 0.58, 1.0)},
+        {"ease-in-out", cubicBezier(0.42, 0.0, 0.58, 1.0)},
+        {"step-start", steps(std::vector<double>{0}, std::vector<double>{1})},
+        {"step-end",
          steps(std::vector<double>{0, 1}, std::vector<double>{0, 1})}};
 
 EasingFunction createEasingFunction(

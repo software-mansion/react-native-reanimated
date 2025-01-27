@@ -297,7 +297,7 @@ const styles = css.create({
     animationDuration: '0.3s',
     animationIterationCount: 'infinite',
     animationName: propulsedFlame,
-    animationTimingFunction: 'easeIn',
+    animationTimingFunction: 'ease-in',
     position: 'absolute',
   },
   rocket: {
@@ -314,7 +314,7 @@ const styles = css.create({
     animationDuration: '0.24s',
     animationIterationCount: 'infinite',
     animationName: propulsedSpark,
-    animationTimingFunction: 'easeIn',
+    animationTimingFunction: 'ease-in',
     height: 10,
     position: 'absolute',
     width: 10,

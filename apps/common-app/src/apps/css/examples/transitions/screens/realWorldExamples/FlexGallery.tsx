@@ -123,7 +123,7 @@ function GalleryCard({
           flexGrow: expanded ? 100 : 1,
           transitionDuration: 300,
           transitionProperty: 'flexGrow',
-          transitionTimingFunction: 'easeInOut',
+          transitionTimingFunction: 'ease-in-out',
         },
       ]}>
       <View style={StyleSheet.absoluteFill}>

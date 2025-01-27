@@ -23,7 +23,7 @@ export default function App() {
             animationDuration: '2s',
             animationIterationCount: 'infinite',
             animationDirection: 'alternate',
-            animationTimingFunction: 'easeInOut',
+            animationTimingFunction: 'ease-in-out',
           },
         ]}
       />
