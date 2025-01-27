@@ -14,7 +14,7 @@ const animationSettings: CSSAnimationSettings = {
   animationDirection: 'alternate',
   animationDuration: '2s',
   animationIterationCount: 'infinite',
-  animationTimingFunction: 'easeInOut',
+  animationTimingFunction: 'ease-in-out',
 };
 
 const AnimationSettingsCard: RouteCardComponent = (props) => (

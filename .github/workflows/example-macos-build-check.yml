@@ -42,13 +42,20 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
       # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install monorepo node dependencies
         run: yarn install --immutable
 
       - name: Install Pods
         working-directory: ${{ env.WORKING_DIRECTORY }}/macos
-        run: bundle install && bundle exec pod update # There's some bug on the macOS runners for pod installation and this is the workaround.
+        run: |
+          bundle install
+          bundle exec pod install
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}

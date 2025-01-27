@@ -35,7 +35,7 @@ describe(normalizeDirection, () => {
   });
 
   describe('when invalid value is passed', () => {
-    it.each(['invalid', 'normal ', 'alternate-reverse'])(
+    it.each(['invalid', 'normal ', 'alternateReverse'])(
       'throws an error for %p',
       (direction) => {
         const value = direction as CSSAnimationDirection;
@@ -202,7 +202,7 @@ describe(getAnimationSettingsUpdates, () => {
       { playState: 'paused' },
       {
         duration: 2000,
-        timingFunction: 'easeIn',
+        timingFunction: 'ease-in',
         direction: 'reverse',
         iterationCount: 2,
         fillMode: 'forwards',

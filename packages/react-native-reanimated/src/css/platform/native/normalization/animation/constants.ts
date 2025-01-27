@@ -9,7 +9,7 @@ export const VALID_ANIMATION_DIRECTIONS = new Set<CSSAnimationDirection>([
   'normal',
   'reverse',
   'alternate',
-  'alternateReverse',
+  'alternate-reverse',
 ]);
 
 export const VALID_FILL_MODES = new Set<CSSAnimationFillMode>([

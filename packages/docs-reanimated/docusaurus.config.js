@@ -114,11 +114,11 @@ const config = {
           },
         ],
       },
-      // State of React Native survey banner
+      // React Native Paradise banner
       announcementBar: {
-        id: 'state-of-react-native-2024',
+        id: 'react-native-paradise-2025',
         content: ' ',
-        backgroundColor: '#b1dfd0',
+        backgroundColor: '#fff5f7',
         textColor: '#001a72',
       },
       footer: {

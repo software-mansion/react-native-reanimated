@@ -39,7 +39,7 @@ AnimationDirection getDirection(jsi::Runtime &rt, const jsi::Object &config) {
           {"normal", AnimationDirection::Normal},
           {"reverse", AnimationDirection::Reverse},
           {"alternate", AnimationDirection::Alternate},
-          {"alternateReverse", AnimationDirection::AlternateReverse}};
+          {"alternate-reverse", AnimationDirection::AlternateReverse}};
 
   const auto str = config.getProperty(rt, "direction").asString(rt).utf8(rt);
   auto it = strToEnumMap.find(str);

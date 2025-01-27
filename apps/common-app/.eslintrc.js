@@ -7,16 +7,58 @@ module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:react/recommended',
-    'plugin:@typescript-eslint/recommended-requiring-type-checking',
     'plugin:import/recommended',
     'plugin:import/typescript',
     'plugin:perfectionist/recommended-natural',
     'prettier',
   ],
-  parser: '@typescript-eslint/parser',
+  overrides: [
+    {
+      extends: [
+        'plugin:@typescript-eslint/recommended-requiring-type-checking',
+      ],
+      files: ['*.ts', '*.tsx'],
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        project: './tsconfig.json',
+        tsconfigRootDir: __dirname,
+      },
+      plugins: ['@typescript-eslint'],
+      rules: {
+        '@typescript-eslint/array-type': ['error', { default: 'generic' }],
+        '@typescript-eslint/consistent-type-exports': 'error',
+        '@typescript-eslint/consistent-type-imports': 'error',
+        '@typescript-eslint/member-ordering': [
+          'error',
+          { default: ['signature', 'method', 'constructor', 'field'] },
+        ],
+        '@typescript-eslint/naming-convention': [
+          2,
+          {
+            format: ['PascalCase'],
+            selector: 'enumMember',
+          },
+        ],
+        '@typescript-eslint/no-floating-promises': [
+          'error',
+          {
+            ignoreIIFE: true,
+            ignoreVoid: true,
+          },
+        ],
+        '@typescript-eslint/no-shadow': 'error',
+        '@typescript-eslint/prefer-nullish-coalescing': [
+          'error',
+          {
+            ignoreConditionalTests: true,
+            ignoreMixedLogicalExpressions: true,
+          },
+        ],
+      },
+    },
+  ],
   parserOptions: {
-    project: './tsconfig.json',
-    tsconfigRootDir: __dirname,
+    ecmaVersion: 2021,
   },
   plugins: [
     'react',
@@ -27,40 +69,10 @@ module.exports = {
     'simple-import-sort',
     'no-relative-import-paths',
     'perfectionist',
-    '@typescript-eslint',
     'prettier',
   ],
   root: true,
   rules: {
-    '@typescript-eslint/array-type': ['error', { default: 'generic' }],
-    '@typescript-eslint/consistent-type-exports': 'error',
-    '@typescript-eslint/consistent-type-imports': 'error',
-    '@typescript-eslint/member-ordering': [
-      'error',
-      { default: ['signature', 'method', 'constructor', 'field'] },
-    ],
-    '@typescript-eslint/naming-convention': [
-      2,
-      {
-        format: ['PascalCase'],
-        selector: 'enumMember',
-      },
-    ],
-    '@typescript-eslint/no-floating-promises': [
-      'error',
-      {
-        ignoreIIFE: true,
-        ignoreVoid: true,
-      },
-    ],
-    '@typescript-eslint/no-shadow': 'error',
-    '@typescript-eslint/prefer-nullish-coalescing': [
-      'error',
-      {
-        ignoreConditionalTests: true,
-        ignoreMixedLogicalExpressions: true,
-      },
-    ],
     camelcase: [
       'error',
       {
@@ -179,12 +191,6 @@ module.exports = {
     'no-regex-spaces': ['error'],
     'no-relative-import-paths/no-relative-import-paths': [
       'warn',
-      {
-        allowSameFolder: true,
-        allowedDepth: 1,
-        prefix: '~',
-        rootDir: 'src/apps',
-      },
       { allowSameFolder: true, allowedDepth: 1, prefix: '@', rootDir: 'src' },
     ],
     'no-return-assign': ['error', 'except-parens'],

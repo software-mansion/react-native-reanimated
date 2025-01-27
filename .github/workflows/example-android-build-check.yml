@@ -7,8 +7,6 @@ on:
       - .github/workflows/example-android-build-check.yml
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
-      - apps/paper-example/package.json
-      - apps/paper-example/android/**
       - apps/fabric-example/package.json
       - apps/fabric-example/android/**
   merge_group:
@@ -21,8 +19,6 @@ on:
       - .github/workflows/example-android-build-check.yml
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
-      - apps/paper-example/package.json
-      - apps/paper-example/android/**
       - apps/fabric-example/package.json
       - apps/fabric-example/android/**
   workflow_call:
@@ -32,12 +28,10 @@ jobs:
   build:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        working-directory: [apps/paper-example, apps/fabric-example]
-      fail-fast: false
+    env:
+      WORKING_DIRECTORY: apps/fabric-example
     concurrency:
-      group: android-${{ matrix.working-directory }}-${{ github.ref }}
+      group: android-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -54,5 +48,5 @@ jobs:
         run: yarn install --immutable
 
       - name: Build app
-        working-directory: ${{ matrix.working-directory }}/android
+        working-directory: ${{ env.WORKING_DIRECTORY }}/android
         run: ./gradlew assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a

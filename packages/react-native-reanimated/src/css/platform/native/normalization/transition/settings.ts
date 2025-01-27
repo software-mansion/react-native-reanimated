@@ -16,5 +16,5 @@ export function normalizeTransitionBehavior(
       ERROR_MESSAGES.invalidTransitionBehavior(behavior)
     );
   }
-  return behavior === 'allowDiscrete';
+  return behavior === 'allow-discrete';
 }

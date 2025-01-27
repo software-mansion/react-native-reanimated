@@ -157,7 +157,7 @@ const sharedStyles = StyleSheet.create({
 const SHARED_CONFIG: CSSTransitionProperties = {
   transitionDuration: 300,
   transitionProperty: 'all',
-  transitionTimingFunction: 'easeOut',
+  transitionTimingFunction: 'ease-out',
 };
 
 function Simple({ open }: ExampleComponentProps) {

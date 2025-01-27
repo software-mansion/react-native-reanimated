@@ -19,7 +19,7 @@ export default function Display() {
         animationDuration: '1s',
         animationFillMode: 'both',
         animationName: keyframes,
-        animationTimingFunction: 'easeOut',
+        animationTimingFunction: 'ease-out',
       })}
       renderExample={({ animation }) => (
         <Animated.View style={[animation, styles.box]} />

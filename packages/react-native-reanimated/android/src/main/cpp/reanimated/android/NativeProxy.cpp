@@ -50,6 +50,7 @@ NativeProxy::NativeProxy(
           isBridgeless,
           getIsReducedMotion())),
       layoutAnimations_(std::move(layoutAnimations)) {
+  reanimatedModuleProxy_->init(getPlatformDependentMethods());
 #ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
@@ -477,8 +478,13 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto progressLayoutAnimation =
       bindThis(&NativeProxy::progressLayoutAnimation);
 
-  auto endLayoutAnimation = [this](int tag, bool removeView) {
-    this->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
+  auto endLayoutAnimation = [weakThis = weak_from_this()](
+                                int tag, bool removeView) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    strongThis->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
   };
 
   auto maybeFlushUiUpdatesQueueFunction =
@@ -622,12 +628,7 @@ void NativeProxy::setupLayoutAnimations() {
 
 void NativeProxy::invalidateCpp() {
   layoutAnimations_->cthis()->invalidate();
-
   workletsModuleProxy_.reset();
-
-  if (reanimatedModuleProxy_ != nullptr) {
-    reanimatedModuleProxy_->invalidate();
-  }
   reanimatedModuleProxy_.reset();
 }
 
