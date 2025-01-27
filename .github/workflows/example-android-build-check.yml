@@ -7,6 +7,7 @@ on:
       - .github/workflows/example-android-build-check.yml
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
+      - packages/react-native-worklets/**
       - apps/fabric-example/package.json
       - apps/fabric-example/android/**
   merge_group:
@@ -19,6 +20,7 @@ on:
       - .github/workflows/example-android-build-check.yml
       - packages/react-native-reanimated/android/**
       - packages/react-native-reanimated/Common/**
+      - packages/react-native-worklets/**
       - apps/fabric-example/package.json
       - apps/fabric-example/android/**
   workflow_call:
