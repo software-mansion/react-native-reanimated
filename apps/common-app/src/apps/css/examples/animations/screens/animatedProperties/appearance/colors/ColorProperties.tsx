@@ -27,7 +27,7 @@ const sharedConfig: CSSAnimationSettings = {
   animationDirection: 'alternate',
   animationDuration: '3s',
   animationIterationCount: 'infinite',
-  animationTimingFunction: 'easeInOut',
+  animationTimingFunction: 'ease-in-out',
 };
 
 export default function ColorProperties() {

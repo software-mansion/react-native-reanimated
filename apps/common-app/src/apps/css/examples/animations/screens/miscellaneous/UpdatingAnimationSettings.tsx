@@ -39,8 +39,8 @@ const SETTINGS_OPTIONS = {
   animationTimingFunction: [
     'ease',
     'linear',
-    'easeIn',
-    'easeOut',
+    'ease-in',
+    'ease-out',
     cubicBezier(0.42, 0, 0.58, 1),
   ],
 } satisfies {

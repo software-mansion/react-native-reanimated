@@ -41,9 +41,9 @@ const DEFAULT_TRANSITION_CONFIG: SelectableConfig<CSSTransitionProperties> = {
     options: [
       'linear',
       'ease',
-      'easeIn',
-      'easeOut',
-      'easeInOut',
+      'ease-in',
+      'ease-out',
+      'ease-in-out',
       cubicBezier(0.175, 0.885, 0.32, 1.275),
       steps(5),
     ],

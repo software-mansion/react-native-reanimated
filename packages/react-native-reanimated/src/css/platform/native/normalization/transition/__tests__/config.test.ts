@@ -101,7 +101,7 @@ describe(normalizeCSSTransitionProperties, () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['opacity', 'transform'],
         transitionDuration: ['1.5s', '2s'],
-        transitionTimingFunction: ['easeIn', cubicBezier(0.4, 0, 0.2, 1)],
+        transitionTimingFunction: ['ease-in', cubicBezier(0.4, 0, 0.2, 1)],
         transitionDelay: ['300ms', '500ms'],
       };
 
@@ -111,7 +111,7 @@ describe(normalizeCSSTransitionProperties, () => {
         settings: {
           opacity: {
             duration: 1500,
-            timingFunction: 'easeIn',
+            timingFunction: 'ease-in',
             delay: 300,
           },
           transform: {
@@ -127,7 +127,7 @@ describe(normalizeCSSTransitionProperties, () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['opacity', 'width'],
         transitionDuration: '1.5s',
-        transitionTimingFunction: 'easeIn',
+        transitionTimingFunction: 'ease-in',
         transitionDelay: ['300ms', '300ms'],
       };
 
@@ -137,12 +137,12 @@ describe(normalizeCSSTransitionProperties, () => {
         settings: {
           opacity: {
             duration: 1500,
-            timingFunction: 'easeIn',
+            timingFunction: 'ease-in',
             delay: 300,
           },
           width: {
             duration: 1500,
-            timingFunction: 'easeIn',
+            timingFunction: 'ease-in',
             delay: 300,
           },
         },
@@ -153,7 +153,7 @@ describe(normalizeCSSTransitionProperties, () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['width', 'opacity', 'transform'],
         transitionDuration: ['1.5s', '2s'],
-        transitionTimingFunction: 'easeIn',
+        transitionTimingFunction: 'ease-in',
         transitionDelay: ['300ms', '500ms'],
       };
 
@@ -163,17 +163,17 @@ describe(normalizeCSSTransitionProperties, () => {
         settings: {
           width: {
             duration: 1500,
-            timingFunction: 'easeIn',
+            timingFunction: 'ease-in',
             delay: 300,
           },
           opacity: {
             duration: 2000,
-            timingFunction: 'easeIn',
+            timingFunction: 'ease-in',
             delay: 500,
           },
           transform: {
             duration: 1500,
-            timingFunction: 'easeIn',
+            timingFunction: 'ease-in',
             delay: 300,
           },
         },
@@ -184,7 +184,7 @@ describe(normalizeCSSTransitionProperties, () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['opacity', 'opacity'],
         transitionDuration: ['1.5s', '2s'],
-        transitionTimingFunction: ['easeIn', cubicBezier(0.4, 0, 0.2, 1)],
+        transitionTimingFunction: ['ease-in', cubicBezier(0.4, 0, 0.2, 1)],
         transitionDelay: '300ms',
       };
 
@@ -205,7 +205,7 @@ describe(normalizeCSSTransitionProperties, () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['all', 'opacity'],
         transitionDuration: ['1.5s', '2s'],
-        transitionTimingFunction: ['easeIn', cubicBezier(0.4, 0, 0.2, 1)],
+        transitionTimingFunction: ['ease-in', cubicBezier(0.4, 0, 0.2, 1)],
         transitionDelay: ['300ms', '500ms'],
       };
 
@@ -215,7 +215,7 @@ describe(normalizeCSSTransitionProperties, () => {
         settings: {
           all: {
             duration: 1500,
-            timingFunction: 'easeIn',
+            timingFunction: 'ease-in',
             delay: 300,
           },
           opacity: {
@@ -231,7 +231,7 @@ describe(normalizeCSSTransitionProperties, () => {
       const config: CSSTransitionProperties = {
         transitionProperty: ['opacity', 'none'] as CSSTransitionProperty,
         transitionDuration: ['1.5s', '2s'],
-        transitionTimingFunction: ['easeIn', cubicBezier(0.4, 0, 0.2, 1)],
+        transitionTimingFunction: ['ease-in', cubicBezier(0.4, 0, 0.2, 1)],
         transitionDelay: ['300ms', '500ms'],
       };
 
@@ -346,7 +346,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
           settings: {
             all: {
               duration: 1500,
-              timingFunction: 'easeIn', // changed
+              timingFunction: 'ease-in', // changed
               delay: 300,
             },
           },
@@ -359,7 +359,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
           settings: {
             all: {
               duration: 1500,
-              timingFunction: 'easeIn',
+              timingFunction: 'ease-in',
               delay: 300,
             },
           },
@@ -408,12 +408,12 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
             },
             transform: {
               duration: 2000,
-              timingFunction: 'easeIn',
+              timingFunction: 'ease-in',
               delay: 500,
             },
             width: {
               duration: 1000,
-              timingFunction: 'easeOut',
+              timingFunction: 'ease-out',
               delay: 200,
             },
           },
@@ -429,7 +429,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
             },
             transform: {
               duration: 2000,
-              timingFunction: 'easeIn',
+              timingFunction: 'ease-in',
               delay: 500,
             },
             width: {
@@ -454,7 +454,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
             },
             transform: {
               duration: 2000,
-              timingFunction: 'easeIn',
+              timingFunction: 'ease-in',
               delay: 500,
             },
             width: {

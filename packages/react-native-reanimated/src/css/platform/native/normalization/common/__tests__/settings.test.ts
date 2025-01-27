@@ -150,7 +150,7 @@ describe(normalizeTimingFunction, () => {
         linear([0.6, '0%'], [0.1, '50%'], [1, '100%']),
         steps(4, 'start'),
         steps(2, 'end'),
-        steps(5, 'jumpNone'),
+        steps(5, 'jump-none'),
       ])('returns normalized value for %p', (timingFunction) => {
         expect(normalizeTimingFunction(timingFunction)).toEqual(
           timingFunction.normalize()

@@ -33,7 +33,7 @@ const PROPERTIES = [
 
 const transitionSettings: CSSTransitionSettings = {
   transitionDuration: '1s',
-  transitionTimingFunction: 'easeInOut',
+  transitionTimingFunction: 'ease-in-out',
 };
 
 const transitionStyles: Array<StyleProps> = [

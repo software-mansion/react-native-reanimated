@@ -93,11 +93,11 @@ const DEFAULT_ANIMATION_SETTINGS: SelectableConfig<CSSAnimationSettings> = {
     maxNumberOfValues: 3,
     options: [
       'linear',
-      'easeInOut',
+      'ease-in-out',
       steps(5),
       cubicBezier(0.175, 0.885, 0.32, 1.275),
     ],
-    value: ['easeInOut', cubicBezier(0.175, 0.885, 0.32, 1.275)],
+    value: ['ease-in-out', cubicBezier(0.175, 0.885, 0.32, 1.275)],
   },
 };
 

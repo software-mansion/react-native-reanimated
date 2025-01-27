@@ -202,7 +202,7 @@ describe(getAnimationSettingsUpdates, () => {
       { playState: 'paused' },
       {
         duration: 2000,
-        timingFunction: 'easeIn',
+        timingFunction: 'ease-in',
         direction: 'reverse',
         iterationCount: 2,
         fillMode: 'forwards',
