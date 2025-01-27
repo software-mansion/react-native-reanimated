@@ -24,7 +24,7 @@ describe(normalizeCSSTransitionProperties, () => {
         transitionDuration: '1.5s',
         transitionTimingFunction: cubicBezier(0.4, 0, 0.2, 1),
         transitionDelay: '300ms',
-        transitionBehavior: 'allowDiscrete',
+        transitionBehavior: 'allow-discrete',
       };
 
       expect(normalizeCSSTransitionProperties(config)).toEqual({

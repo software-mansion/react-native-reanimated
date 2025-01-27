@@ -27,7 +27,7 @@ import { colors, flex, radius, sizes, spacing } from '@/theme';
 import { typedMemo } from '@/utils';
 
 const SETTINGS_OPTIONS = {
-  transitionBehavior: ['normal', 'allowDiscrete'],
+  transitionBehavior: ['normal', 'allow-discrete'],
   transitionDelay: ['-5s', '0s', '1s', '2s', '5s'],
   transitionDuration: [0, '250ms', '1s', '2s', '5s', '10s'],
   transitionTimingFunction: [

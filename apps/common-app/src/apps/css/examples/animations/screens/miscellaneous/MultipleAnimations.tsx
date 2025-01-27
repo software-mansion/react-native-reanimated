@@ -61,7 +61,7 @@ const DEFAULT_ANIMATION_SETTINGS: SelectableConfig<CSSAnimationSettings> = {
   $animationDirection: {
     canDisable: true,
     maxNumberOfValues: 3,
-    options: ['normal', 'reverse', 'alternate', 'alternateReverse'],
+    options: ['normal', 'reverse', 'alternate', 'alternate-reverse'],
     value: 'alternate',
   },
   $animationDuration: {
