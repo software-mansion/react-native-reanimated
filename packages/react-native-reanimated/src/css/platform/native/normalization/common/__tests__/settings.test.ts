@@ -127,7 +127,7 @@ describe(normalizeTimingFunction, () => {
     });
 
     describe('when invalid function is passed', () => {
-      it.each(['invalid', 'ease-in', 'ease-out', ''])(
+      it.each(['invalid', 'easeIn', 'easeOut', ''])(
         'throws an error for %p',
         (timingFunction) => {
           const value = timingFunction as PredefinedTimingFunction;
