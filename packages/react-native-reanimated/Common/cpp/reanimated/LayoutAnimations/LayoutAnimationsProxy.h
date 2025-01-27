@@ -10,6 +10,7 @@
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
 
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
