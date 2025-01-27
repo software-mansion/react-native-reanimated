@@ -125,7 +125,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   borderStartColor: { as: 'borderLeftColor' },
   borderBlockColor: colorAttributes,
   // Other
-  outlineColor: false, // TODO
+  outlineColor: colorAttributes,
   shadowColor: boxShadowBuilder,
   overlayColor: colorAttributes,
   tintColor: colorAttributes,
@@ -178,9 +178,9 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   borderStyle: true,
 
   // OUTLINES
-  outlineOffset: false, // TODO
-  outlineStyle: false, // TODO
-  outlineWidth: false, // TODO
+  outlineOffset: 'px',
+  outlineStyle: true,
+  outlineWidth: 'px',
 
   // TRANSFORMS
   transformOrigin: { process: processTransformOrigin },

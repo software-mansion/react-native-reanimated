@@ -143,6 +143,7 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       {"borderStartColor", value<CSSColor>(BLACK)},
       {"borderBlockColor", value<CSSColor>(BLACK)},
       // Other
+      {"outlineColor", value<CSSColor>(BLACK)},
       {"shadowColor", value<CSSColor>(BLACK)},
       {"overlayColor", value<CSSColor>(BLACK)},
       {"tintColor", value<CSSColor>(BLACK)},

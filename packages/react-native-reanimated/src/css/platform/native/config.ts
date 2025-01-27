@@ -124,7 +124,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   borderStartColor: colorAttributes,
   borderBlockColor: colorAttributes,
   // Other
-  outlineColor: false, // TODO
+  outlineColor: colorAttributes,
   shadowColor: colorAttributes,
   overlayColor: IS_ANDROID ? colorAttributes : false,
   tintColor: colorAttributes,

@@ -129,7 +129,6 @@ export default class CSSAnimationsManager {
       const rule = processedAnimation.keyframesRule;
       if (rule.processedKeyframes) {
         // We always call insert as it will insert animation only if it doesn't exist
-        console.log('insertCSSAnimation', rule.name, rule.processedKeyframes);
         insertCSSAnimation(rule.name, rule.processedKeyframes);
       }
       newAttachedAnimations[rule.processedKeyframes] = processedAnimation;

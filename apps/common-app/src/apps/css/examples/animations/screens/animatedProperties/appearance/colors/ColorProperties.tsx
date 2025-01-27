@@ -296,6 +296,26 @@ function OtherColors() {
             shadowRadius: spacing.sm,
           }}
         />
+        <ViewExample
+          title="outlineColor"
+          animation={{
+            animationName: {
+              from: {
+                outlineColor: 'red',
+              },
+              to: {
+                outlineColor: 'cyan',
+              },
+            },
+            ...sharedConfig,
+          }}
+          style={{
+            backgroundColor: colors.primary,
+            outlineOffset: spacing.xs,
+            outlineStyle: 'solid',
+            outlineWidth: spacing.xs,
+          }}
+        />
         <ImageExample
           labelTypes={['iOS', 'Android']}
           source={splashImage}

@@ -121,7 +121,11 @@ function useNavigationState() {
   >();
 
   const updateNavigationState = useCallback((state?: NavigationState) => {
-    AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state)).catch(noop);
+    if (IS_WEB) {
+      localStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state));
+    } else {
+      AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state)).catch(noop);
+    }
   }, []);
 
   useEffect(() => {
