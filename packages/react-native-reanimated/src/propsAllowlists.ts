@@ -89,6 +89,7 @@ export const PropsAllowlists: AllowlistsHolder = {
     textShadowOffset: true,
     letterSpacing: true,
     aspectRatio: true,
+    boxSizing: true,
     columnGap: true, // iOS only
     end: true, // number or string
     flexBasis: true, // number or string

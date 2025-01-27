@@ -102,7 +102,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   overflow: true,
   zIndex: true,
   aspectRatio: { process: processAspectRatio },
-  boxSizing: false, // TODO
+  boxSizing: false, // web only
 
   /** Appearance */
   // COLORS

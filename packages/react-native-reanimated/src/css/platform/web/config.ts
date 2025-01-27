@@ -103,7 +103,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   overflow: true,
   zIndex: true,
   aspectRatio: true,
-  boxSizing: false, // TODO
+  boxSizing: true,
 
   /** Appearance */
   // COLORS

@@ -1,7 +1,10 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
+#include <worklets/Tools/JSISerializer.h>
 
 namespace reanimated {
+
+using namespace worklets;
 
 bool CSSAnimationsRegistry::hasUpdates() const {
   return !runningAnimationsMap_.empty() || !delayedAnimationsManager_.empty();
@@ -113,6 +116,8 @@ void CSSAnimationsRegistry::updateViewAnimations(
     bool updatesAddedToBatch = false;
     const auto updates = animation->update(rt, timestamp);
     const auto newState = animation->getState(timestamp);
+
+    LOG(INFO) << "updates: " << stringifyJSIValue(rt, updates);
 
     if (newState == AnimationProgressState::Finished) {
       // Revert changes applied during animation if there is no forwards fill

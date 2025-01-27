@@ -147,6 +147,11 @@ const layoutAndPositioningRoutes = {
         name: 'Aspect Ratio',
         Component: animatedProperties.layoutAndPositioning.others.AspectRatio,
       },
+      BoxSizing: {
+        name: 'Box Sizing',
+        labelTypes: ['web'],
+        Component: animatedProperties.layoutAndPositioning.others.BoxSizing,
+      },
     },
   },
 } satisfies Routes;
