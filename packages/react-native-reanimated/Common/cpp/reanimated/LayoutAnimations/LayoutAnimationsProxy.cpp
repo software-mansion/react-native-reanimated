@@ -32,6 +32,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   PropsParserContext propsParserContext{surfaceId, *contextContainer_};
   ShadowViewMutationList filteredMutations;
 
+  addOngoingAnimations(surfaceId, filteredMutations);
+  endLayoutAnimationBatch(surfaceId);
+
   std::vector<std::shared_ptr<MutationNode>> roots;
   std::unordered_map<Tag, ShadowView> movedViews;
 
@@ -42,6 +45,8 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   handleUpdatesAndEnterings(
       filteredMutations, movedViews, mutations, propsParserContext, surfaceId);
 
+  // we call this function again, because on iOS animations start synchronously,
+  // so we might already have some new updates
   addOngoingAnimations(surfaceId, filteredMutations);
 
   return MountingTransaction{
@@ -88,6 +93,41 @@ std::optional<SurfaceId> LayoutAnimationsProxy::progressLayoutAnimation(
   return layoutAnimation.finalView->surfaceId;
 }
 
+void LayoutAnimationsProxy::endLayoutAnimationBatch(SurfaceId surfaceId) const {
+  for (const auto &[tag, shouldRemove] : endLayoutAnimations_[surfaceId]) {
+    auto layoutAnimationIt = layoutAnimations_.find(tag);
+
+    if (layoutAnimationIt == layoutAnimations_.end()) {
+      continue;
+    }
+
+    auto &layoutAnimation = layoutAnimationIt->second;
+
+    // multiple layout animations can be triggered for a view
+    // one after the other, so we need to keep count of how many
+    // were actually triggered, so that we don't cleanup necessary
+    // structures too early
+    if (layoutAnimation.count > 1) {
+      layoutAnimation.count--;
+      continue;
+    }
+
+    auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
+    layoutAnimations_.erase(tag);
+    updateMap.erase(tag);
+
+    if (!shouldRemove || !nodeForTag_.contains(tag)) {
+      continue;
+    }
+
+    auto node = nodeForTag_[tag];
+    auto mutationNode = std::static_pointer_cast<MutationNode>(node);
+    mutationNode->state = DEAD;
+    deadNodes.insert(mutationNode);
+  }
+  endLayoutAnimations_[surfaceId].clear();
+}
+
 std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
     int tag,
     bool shouldRemove) {
@@ -104,29 +144,8 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(
 
   auto &layoutAnimation = layoutAnimationIt->second;
 
-  // multiple layout animations can be triggered for a view
-  // one after the other, so we need to keep count of how many
-  // were actually triggered, so that we don't cleanup necessary
-  // structures too early
-  if (layoutAnimation.count > 1) {
-    layoutAnimation.count--;
-    return {};
-  }
-
   auto surfaceId = layoutAnimation.finalView->surfaceId;
-  auto &updateMap = surfaceManager.getUpdateMap(surfaceId);
-  layoutAnimations_.erase(tag);
-  updateMap.erase(tag);
-
-  if (!shouldRemove || !nodeForTag_.contains(tag)) {
-    return {};
-  }
-
-  auto node = nodeForTag_[tag];
-  auto mutationNode = std::static_pointer_cast<MutationNode>(node);
-  mutationNode->state = DEAD;
-  deadNodes.insert(mutationNode);
-
+  endLayoutAnimations_[surfaceId].push_back({tag, shouldRemove});
   return surfaceId;
 }
 
@@ -431,6 +450,7 @@ void LayoutAnimationsProxy::maybeDropAncestors(
     nodeForTag_.erase(node->tag);
     cleanupMutations.push_back(node->mutation);
     maybeCancelAnimation(node->tag);
+    node->state = DELETED;
 #ifdef LAYOUT_ANIMATIONS_LOGS
     LOG(INFO) << "delete " << node->tag << std::endl;
 #endif

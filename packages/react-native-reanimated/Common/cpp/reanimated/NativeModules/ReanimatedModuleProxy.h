@@ -258,6 +258,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
+  std::set<SurfaceId> flushLayoutAnimations_;
 #else
   const ObtainPropFunction obtainPropFunction_;
   const ConfigurePropsFunction configurePropsPlatformFunction_;

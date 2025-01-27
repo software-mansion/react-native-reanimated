@@ -36,6 +36,9 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
+  mutable std::
+      map<SurfaceId, std::vector<std::pair<Tag, bool>>>
+          endLayoutAnimations_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
@@ -65,6 +68,8 @@ struct LayoutAnimationsProxy : public MountingOverrideDelegate {
       int tag,
       const jsi::Object &newStyle);
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
+  void endLayoutAnimationBatch(SurfaceId surfaceId) const;
+
   void maybeCancelAnimation(const int tag) const;
 
   void parseRemoveMutations(
