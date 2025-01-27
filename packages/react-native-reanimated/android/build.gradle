@@ -341,19 +341,19 @@ android {
     }
     sourceSets.main {
         java {
-            // Always present
-            srcDirs += "src/worklets/WorkletsModule/java"
-
-            if(!hasExternalWorklets){
-                srcDirs += "src/worklets/main/java"
+            if(hasExternalWorklets){
+                // Nothing for now.
+            } else {
+                srcDirs += "src/worklets/main"
+                srcDirs += "src/externalWorklets/without"
+                if(!IS_NEW_ARCHITECTURE_ENABLED){
+                    srcDirs += "src/externalWorklets/withoutPaper"
+                }
             }
 
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 srcDirs += "src/fabric/java"
             } else {
-                if(!hasExternalWorklets){
-                    srcDirs +="src/worklets/paper/java"
-                }
                 srcDirs += "src/paper/java"
             }
 
