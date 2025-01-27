@@ -344,15 +344,14 @@ android {
             } else {
                 srcDirs += "src/worklets/main"
                 srcDirs += "src/externalWorklets/without"
-                                if(!hasExternalWorklets){
-                    srcDirs +="src/externalWorklets/withoutPaper"
+                if(!IS_NEW_ARCHITECTURE_ENABLED){
+                    srcDirs += "src/externalWorklets/withoutPaper"
                 }
             }
 
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 srcDirs += "src/fabric/java"
             } else {
-
                 srcDirs += "src/paper/java"
             }
 

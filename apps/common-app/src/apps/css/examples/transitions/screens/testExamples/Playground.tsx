@@ -61,7 +61,7 @@ export default function Playground() {
               marginTop: 60,
               transitionDuration: '0.5s',
               transitionProperty: 'all',
-              transitionTimingFunction: 'easeInOut',
+              transitionTimingFunction: 'ease-in-out',
               width: 65,
             },
             stateToStyle(state),

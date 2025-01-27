@@ -52,11 +52,11 @@ const DEFAULT_TRANSITION_CONFIG: SelectableConfig<
     maxNumberOfValues: 3,
     options: [
       'ease',
-      'easeInOut',
+      'ease-in-out',
       cubicBezier(0.175, 0.885, 0.32, 1.275),
       steps(5),
     ],
-    value: [cubicBezier(0.175, 0.885, 0.32, 1.275), 'easeInOut'],
+    value: [cubicBezier(0.175, 0.885, 0.32, 1.275), 'ease-in-out'],
   },
   transitionBehavior: 'normal',
 };

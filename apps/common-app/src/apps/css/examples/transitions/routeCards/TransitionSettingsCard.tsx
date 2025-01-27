@@ -69,7 +69,7 @@ function Showcase() {
                 transitionDelay: index * 75,
                 transitionDuration: 300,
                 transitionProperty: 'height',
-                transitionTimingFunction: 'easeInOut',
+                transitionTimingFunction: 'ease-in-out',
               },
             ]}
           />

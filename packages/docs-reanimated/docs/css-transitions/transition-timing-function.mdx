@@ -24,7 +24,7 @@ function App() {
         transitionProperty: 'height',
         transitionDuration: 300,
         // highlight-next-line
-        transitionTimingFunction: 'easeOut',
+        transitionTimingFunction: 'ease-out',
       }}
     />
   );
@@ -54,12 +54,12 @@ type NormalizedStepsEasing = {
 type ControlPoint = number | [number, ...Percentage[]];
 
 type StepsModifier =
-  | 'jumpStart'
+  | 'jump-start'
   | 'start'
-  | 'jumpEnd'
+  | 'jump-end'
   | 'end'
-  | 'jumpNone'
-  | 'jumpBoth';
+  | 'jump-none'
+  | 'jump-both';
 
 type NormalizedCSSTimingFunction =
   | PredefinedTimingFunction
@@ -70,11 +70,11 @@ type NormalizedCSSTimingFunction =
 type PredefinedTimingFunction =
   | 'linear'
   | 'ease'
-  | 'easeIn'
-  | 'easeOut'
-  | 'easeInOut'
-  | 'stepStart'
-  | 'stepEnd';
+  | 'ease-in'
+  | 'ease-out'
+  | 'ease-in-out'
+  | 'step-start'
+  | 'step-end';
 
 interface ParametrizedTimingFunction {
   toString(): string;
@@ -97,11 +97,11 @@ A string representing a predefined timing function. Available functions:
 
 - `linear` - a constant speed from start to finish,
 - `ease` - starts slow, speeds up, then slows down,
-- `easeIn` - starts slow and accelerates,
-- `easeOut` - starts quickly and decelerates,
-- `easeInOut` - starts slowly, speeds up, and then slows down again.
-- `stepStart` - jumps instantly at the start,
-- `stepEnd` - jumps instantly at the end.
+- `ease-in` - starts slow and accelerates,
+- `ease-out` - starts quickly and decelerates,
+- `ease-in-out` - starts slowly, speeds up, and then slows down again.
+- `step-start` - jumps instantly at the start,
+- `step-end` - jumps instantly at the end.
 
 ```typescript
 transitionTimingFunction: 'linear',
@@ -135,20 +135,20 @@ transitionTimingFunction: linear(0, [0.25, '75%'], 1),
 
 </Indent>
 
-- `steps(stepsNumber: number, modifier?: StepsModifier)` - creates an easing function that makes given number of even steps over increasing y-values. The second argument is a modifier that adds jumps before or after the steps. Modifier defaults to `jumpEnd`.
-  - `jumpStart` - a left-continuous function, where the first jump occurs at the start of the transition,
-  - `jumpEnd` - a right-continuous function, where the final jump occurs at the end of the transition,
-  - `jumpNone` - no jump on either end. Maintaining a hold at both the 0% and 100% points, each for 1/n of the total duration,
-  - `jumpBoth` - adds pauses at both the 0% and 100% points, introducing an additional step during the transition,
-  - `start` - an alias for `jumpStart`,
-  - `end` - an alias for `jumpEnd`,
+- `steps(stepsNumber: number, modifier?: StepsModifier)` - creates an easing function that makes given number of even steps over increasing y-values. The second argument is a modifier that adds jumps before or after the steps. Modifier defaults to `jump-end`.
+  - `jump-start` - a left-continuous function, where the first jump occurs at the start of the transition,
+  - `jump-end` - a right-continuous function, where the final jump occurs at the end of the transition,
+  - `jump-none` - no jump on either end. Maintaining a hold at both the 0% and 100% points, each for 1/n of the total duration,
+  - `jump-both` - adds pauses at both the 0% and 100% points, introducing an additional step during the transition,
+  - `start` - an alias for `jump-start`,
+  - `end` - an alias for `jump-end`,
 
 <Indent>
 
 ```typescript
 import { steps } from 'react-native-reanimated';
 
-transitionTimingFunction: steps(4, 'jumpEnd'),
+transitionTimingFunction: steps(4, 'jump-end'),
 ```
 
 </Indent>
@@ -159,11 +159,11 @@ An array of timing functions. The order in this array corresponds to the array o
 
 ```typescript
 // highlight-next-line
-transitionTimingFunction: ['linear', steps(60, 'jumpNone'), 'easeInOut'];
+transitionTimingFunction: ['linear', steps(60, 'jump-none'), 'ease-in-out'];
 transitionProperty: ['width', 'transform', 'borderRadius'];
 ```
 
-In the following example, the `width` property will be transitions using `linear` easing, `transform` will use the `steps` timing function, and `borderRadius` will be transitioned using `easeInOut` easing.
+In the following example, the `width` property will be transitions using `linear` easing, `transform` will use the `steps` timing function, and `borderRadius` will be transitioned using `ease-in-out` easing.
 
 ## Examples
 

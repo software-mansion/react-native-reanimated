@@ -20,7 +20,7 @@ export default function App() {
           {
             animationName: pulse,
             animationDuration: '1s',
-            animationTimingFunction: 'easeInOut',
+            animationTimingFunction: 'ease-in-out',
             // highlight-next-line
             animationFillMode: 'forwards',
           },
