@@ -10,7 +10,6 @@ copy_files_recursively() {
 
   for file in "$src_dir"/*; do
     if [ -d "$file" ]; then
-      # echo "Recursing into $file"
       copy_files_recursively "$dest_dir/$(basename "$file")" "$file"
     else
       echo "    Linking $(basename "$file") in Reanimated"

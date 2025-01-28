@@ -19,7 +19,6 @@ import com.facebook.react.uimanager.ReanimatedUIManager;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.systrace.Systrace;
-import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.worklets.WorkletsModule;
 import java.util.HashMap;
 import java.util.List;
@@ -31,20 +30,20 @@ import java.util.Objects;
 // are ignored by React Native tools.
 @ReactModuleList(
     nativeModules = {
-            ReanimatedModule.class,
-            ReanimatedUIManager.class,
-            WorkletsModule.class,
+      ReanimatedModule.class,
+      ReanimatedUIManager.class,
+      WorkletsModule.class,
     })
 public class ReanimatedPackage extends BaseReactPackage implements ReactPackage {
   @Override
   public NativeModule getModule(
       @NonNull String name, @NonNull ReactApplicationContext reactContext) {
-      return switch (name) {
-        case WorkletsModule.NAME -> new WorkletsModule(reactContext);
-        case ReanimatedModule.NAME -> new ReanimatedModule(reactContext);
-        case ReanimatedUIManager.NAME -> createUIManager(reactContext);
-        default -> null;
-      };
+    return switch (name) {
+      case WorkletsModule.NAME -> new WorkletsModule(reactContext);
+      case ReanimatedModule.NAME -> new ReanimatedModule(reactContext);
+      case ReanimatedUIManager.NAME -> createUIManager(reactContext);
+      default -> null;
+    };
 
   }
 
