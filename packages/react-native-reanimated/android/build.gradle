@@ -260,6 +260,7 @@ android {
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
                         "-DHAS_EXTERNAL_WORKLETS=${hasExternalWorklets}"
                 abiFilters (*reactNativeArchitectures())
+                targets("reanimated", "worklets")
             }
         }
 
