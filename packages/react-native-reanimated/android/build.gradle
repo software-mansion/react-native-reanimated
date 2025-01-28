@@ -253,6 +253,7 @@ android {
                         "-DIS_REANIMATED_EXAMPLE_APP=${isReanimatedExampleApp()}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}"
                 abiFilters (*reactNativeArchitectures())
+                targets("reanimated", "worklets")
             }
         }
 
