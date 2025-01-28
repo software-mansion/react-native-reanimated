@@ -25,6 +25,7 @@ export interface ViewInfo {
   viewName: string | null;
   shadowNodeWrapper: ShadowNodeWrapper | null;
   viewConfig: ViewConfig;
+  DOMElement?: HTMLElement | null;
 }
 
 export interface IInlinePropManager {
