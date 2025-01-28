@@ -129,7 +129,7 @@ function useNavigationState() {
       try {
         const initialUrl = await Linking.getInitialURL();
 
-        if (!IS_MACOS && !IS_WEB && initialUrl !== null) {
+        if (!IS_MACOS && !IS_WEB && initialUrl === null) {
           // Only restore state if there's no deep link and we're not on web
           const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
           // Erase the state immediately after fetching it.
