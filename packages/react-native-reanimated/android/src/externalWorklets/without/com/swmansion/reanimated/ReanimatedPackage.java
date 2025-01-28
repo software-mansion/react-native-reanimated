@@ -44,7 +44,6 @@ public class ReanimatedPackage extends BaseReactPackage implements ReactPackage 
       case ReanimatedUIManager.NAME -> createUIManager(reactContext);
       default -> null;
     };
-
   }
 
   @Override

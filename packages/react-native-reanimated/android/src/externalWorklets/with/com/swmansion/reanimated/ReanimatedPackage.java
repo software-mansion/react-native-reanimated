@@ -26,19 +26,18 @@ import java.util.Objects;
 
 @ReactModuleList(
     nativeModules = {
-            ReanimatedModule.class,
-            ReanimatedUIManager.class,
+      ReanimatedModule.class,
+      ReanimatedUIManager.class,
     })
 public class ReanimatedPackage extends BaseReactPackage implements ReactPackage {
   @Override
   public NativeModule getModule(
       @NonNull String name, @NonNull ReactApplicationContext reactContext) {
-      return switch (name) {
-        case ReanimatedModule.NAME -> new ReanimatedModule(reactContext);
-        case ReanimatedUIManager.NAME -> createUIManager(reactContext);
-        default -> null;
-      };
-
+    return switch (name) {
+      case ReanimatedModule.NAME -> new ReanimatedModule(reactContext);
+      case ReanimatedUIManager.NAME -> createUIManager(reactContext);
+      default -> null;
+    };
   }
 
   @Override
