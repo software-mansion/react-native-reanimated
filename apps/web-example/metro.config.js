@@ -11,22 +11,16 @@ const escape = require('escape-string-regexp');
 const projectRoot = __dirname;
 // This can be replaced with `find-yarn-workspace-root`
 const monorepoRoot = path.resolve(projectRoot, '../..');
-const libraryRoot = path.resolve(monorepoRoot, './packages/react-native-reanimated');
 
 const config = getDefaultConfig(projectRoot);
 // 1. Watch all files within the monorepo
-config.watchFolders = [monorepoRoot, libraryRoot];
+config.watchFolders = [monorepoRoot];
 // 2. Let Metro know where to resolve packages and in what order
 // @ts-expect-error
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(monorepoRoot, 'node_modules'),
 ];
-
-config.resolver.extraNodeModules = {
-  ...config.resolver.extraNodeModules,
-  'react-native-reanimated': path.resolve(libraryRoot, 'src'),
-};
 
 const hasReactNative = require.resolve('react-native/package.json', {
   paths: [projectRoot],
