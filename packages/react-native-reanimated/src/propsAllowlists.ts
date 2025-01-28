@@ -33,6 +33,7 @@ export const PropsAllowlists: AllowlistsHolder = {
     outlineWidth: true,
     outlineOffset: true,
     borderStyle: true,
+    mixBlendMode: true,
   },
   /**
    * Whitelist of view props that can be updated in native thread via

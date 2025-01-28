@@ -333,6 +333,10 @@ const appearanceRoutes = {
         name: 'Backface Visibility',
         Component: animatedProperties.appearance.others.BackfaceVisibility,
       },
+      MixBlendMode: {
+        name: 'Mix Blend Mode',
+        Component: animatedProperties.appearance.others.MixBlendMode,
+      },
     },
   },
 } satisfies Routes;

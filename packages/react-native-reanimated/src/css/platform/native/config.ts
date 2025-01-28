@@ -194,7 +194,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   // OTHERS
   backfaceVisibility: true,
   opacity: true,
-  mixBlendMode: false, // TODO
+  mixBlendMode: true,
   experimental_backgroundImage: false, // TODO
 
   /** Typography */

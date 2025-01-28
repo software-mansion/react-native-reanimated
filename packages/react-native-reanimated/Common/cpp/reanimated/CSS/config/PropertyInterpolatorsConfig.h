@@ -261,6 +261,7 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       // OTHERS
       {"backfaceVisibility", value<CSSKeyword>("visible")},
       {"opacity", value<CSSDouble>(1)},
+      {"mixBlendMode", value<CSSKeyword>("normal")},
 
       /**
        * Typography
