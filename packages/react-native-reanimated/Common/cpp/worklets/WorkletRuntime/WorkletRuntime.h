@@ -46,8 +46,14 @@ class WorkletRuntime : public jsi::HostObject,
     if (queue_ == nullptr) {
       queue_ = std::make_shared<AsyncQueue>(name_);
     }
-    queue_->push(
-        [=, self = shared_from_this()] { self->runGuarded(shareableWorklet); });
+    queue_->push([=, weakThis = weak_from_this()] {
+      auto strongThis = weakThis.lock();
+      if (!strongThis) {
+        return;
+      }
+
+      strongThis->runGuarded(shareableWorklet);
+    });
   }
 
   jsi::Value executeSync(jsi::Runtime &rt, const jsi::Value &worklet) const;
