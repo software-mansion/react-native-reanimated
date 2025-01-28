@@ -7,7 +7,7 @@ import {
   NavigationContainer,
 } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Linking, Platform, View } from 'react-native';
+import { ActivityIndicator, Linking, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -38,18 +38,23 @@ export default function App() {
               getPathFromState(state, options).replace(/%2F/g, '/'),
             getStateFromPath: (path) => {
               const chunks = path.split('/').filter(Boolean);
-              const routes = chunks.reduce<Array<{ name: string }>>(
-                (result, chunk) => {
-                  const lastRoute = result[result.length - 1];
-                  const route = {
-                    name: lastRoute ? `${lastRoute.name}/${chunk}` : chunk,
-                  };
-                  result.push(route);
-                  return result;
-                },
-                []
-              );
-              return { routes };
+              if (chunks.length === 0) return { routes: [] };
+
+              const drawerRoute = chunks[0];
+              const stackRoutes = chunks.slice(1).map((_, index, array) => ({
+                name: array.slice(0, index + 1).join('/'),
+              }));
+
+              return {
+                routes: [
+                  {
+                    name: drawerRoute,
+                    state: {
+                      routes: stackRoutes,
+                    },
+                  },
+                ],
+              };
             },
             prefixes: [],
           }}
@@ -124,11 +129,7 @@ function useNavigationState() {
       try {
         const initialUrl = await Linking.getInitialURL();
 
-        if (
-          Platform.OS !== 'web' &&
-          Platform.OS !== 'macos' &&
-          initialUrl === null
-        ) {
+        if (!IS_MACOS && !IS_WEB && initialUrl !== null) {
           // Only restore state if there's no deep link and we're not on web
           const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
           // Erase the state immediately after fetching it.

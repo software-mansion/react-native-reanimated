@@ -159,7 +159,7 @@ const appearanceRoutes = {
         name: 'Color Formats',
         Component: animatedProperties.appearance.colors.ColorFormats,
       },
-      ColorFunctions: {
+      ColorProperties: {
         name: 'Color Properties',
         Component: animatedProperties.appearance.colors.ColorProperties,
       },
