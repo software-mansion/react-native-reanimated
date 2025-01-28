@@ -9,8 +9,7 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
-      - packages/react-native-reanimated/TVOSExample/package.json
-      - packages/react-native-reanimated/TVOSExample/ios/**
+      - packages/react-native-worklets/**
   merge_group:
     branches:
       - main
@@ -23,10 +22,19 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
-      - packages/react-native-reanimated/TVOSExample/package.json
-      - packages/react-native-reanimated/TVOSExample/ios/**
+      - packages/react-native-worklets/**
   workflow_call:
+    inputs:
+      use-external-worklets:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
+    inputs:
+      use-external-worklets:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -34,8 +42,9 @@ jobs:
     runs-on: macos-14
     env:
       WORKING_DIRECTORY: apps/tvos-example
+      COMMON_APP_DIR: apps/common-app
     concurrency:
-      group: tvos-${{ github.ref }}
+      group: tvos-${{ github.ref }}-${{ inputs.use-external-worklets }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -55,6 +64,11 @@ jobs:
       - name: Install app node_modules
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn install --immutable
+
+      - name: Use external worklets
+        if: ${{ inputs.use-external-worklets == 'true' }}
+        working-directory: ${{ env.COMMON_APP_DIR }}
+        run: yarn add react-native-worklets@workspace:"*"
 
       - name: Install Pods
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios

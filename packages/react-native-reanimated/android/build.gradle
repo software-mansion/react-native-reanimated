@@ -341,6 +341,16 @@ android {
     }
     sourceSets.main {
         java {
+            if(hasExternalWorklets){
+                // Nothing for now.
+            } else {
+                srcDirs += "src/worklets/main"
+                srcDirs += "src/externalWorklets/without"
+                if(!IS_NEW_ARCHITECTURE_ENABLED){
+                    srcDirs += "src/externalWorklets/withoutPaper"
+                }
+            }
+
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 srcDirs += "src/fabric/java"
             } else {

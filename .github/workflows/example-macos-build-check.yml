@@ -9,6 +9,7 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
+      - packages/react-native-worklets/**
       - apps/macos-example/package.json
       - apps/macos-example/ios/**
       - apps/macos-example/macos/**
@@ -24,11 +25,22 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
+      - packages/react-native-worklets/**
       - apps/macos-example/package.json
       - apps/macos-example/ios/**
       - apps/macos-example/macos/**
   workflow_call:
+    inputs:
+      use-external-worklets:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
+    inputs:
+      use-external-worklets:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -36,8 +48,9 @@ jobs:
     runs-on: macos-14
     env:
       WORKING_DIRECTORY: apps/macos-example
+      COMMON_APP_DIR: apps/common-app
     concurrency:
-      group: macos-${{ github.ref }}
+      group: macos-${{ github.ref }}-${{ inputs.use-external-worklets }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -50,6 +63,11 @@ jobs:
       # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+
+      - name: Use external worklets
+        if: ${{ inputs.use-external-worklets == 'true' }}
+        working-directory: ${{ env.COMMON_APP_DIR }}
+        run: yarn add react-native-worklets@workspace:"*"
 
       - name: Install Pods
         working-directory: ${{ env.WORKING_DIRECTORY }}/macos
