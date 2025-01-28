@@ -50,10 +50,16 @@ void AndroidUIScheduler::scheduleTriggerOnUI() {
   method(javaPart_.get());
 }
 
+void AndroidUIScheduler::invalidate() {
+  javaPart_ = nullptr;
+  uiScheduler_.reset();
+}
+
 void AndroidUIScheduler::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", AndroidUIScheduler::initHybrid),
       makeNativeMethod("triggerUI", AndroidUIScheduler::triggerUI),
+      makeNativeMethod("invalidate", AndroidUIScheduler::invalidate),
   });
 }
 
