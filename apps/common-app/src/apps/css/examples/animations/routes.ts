@@ -248,6 +248,23 @@ const appearanceRoutes = {
       },
     },
   },
+  Outlines: {
+    name: 'Outlines',
+    routes: {
+      OutlineOffset: {
+        name: 'Outline Offset',
+        Component: animatedProperties.appearance.outlines.OutlineOffset,
+      },
+      OutlineStyle: {
+        name: 'Outline Style',
+        Component: animatedProperties.appearance.outlines.OutlineStyle,
+      },
+      OutlineWidth: {
+        name: 'Outline Width',
+        Component: animatedProperties.appearance.outlines.OutlineWidth,
+      },
+    },
+  },
   Transforms: {
     name: 'Transforms',
     flatten: true,

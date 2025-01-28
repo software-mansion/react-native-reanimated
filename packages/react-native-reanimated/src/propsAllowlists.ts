@@ -29,6 +29,10 @@ export const PropsAllowlists: AllowlistsHolder = {
     scaleY: true,
     translateX: true,
     translateY: true,
+    outlineStyle: true,
+    outlineWidth: true,
+    outlineOffset: true,
+    borderStyle: true,
   },
   /**
    * Whitelist of view props that can be updated in native thread via

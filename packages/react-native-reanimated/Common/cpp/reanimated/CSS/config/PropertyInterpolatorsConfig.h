@@ -227,6 +227,11 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       // Decoration
       {"borderStyle", value<CSSKeyword>("solid")},
 
+      // OUTLINES
+      {"outlineOffset", value<CSSDouble>(0)},
+      {"outlineStyle", value<CSSKeyword>("solid")},
+      {"outlineWidth", value<CSSDouble>(0)},
+
       // TRANSFORMS
       {"transformOrigin",
        array(

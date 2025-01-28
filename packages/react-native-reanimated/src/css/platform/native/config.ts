@@ -177,9 +177,9 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   borderStyle: true,
 
   // OUTLINES
-  outlineOffset: false, // TODO
-  outlineStyle: false, // TODO
-  outlineWidth: false, // TODO
+  outlineOffset: true,
+  outlineStyle: true,
+  outlineWidth: true,
 
   // TRANSFORMS
   transformOrigin: { process: processTransformOrigin },
