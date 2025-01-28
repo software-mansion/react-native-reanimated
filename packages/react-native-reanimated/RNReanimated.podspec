@@ -8,12 +8,11 @@ assert_minimal_react_native_version($config)
 $new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
 is_release = ENV['PRODUCTION'] == '1'
 
-folly_flags = "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32 -DREACT_NATIVE_MINOR_VERSION=#{$config[:react_native_minor_version]}"
-folly_compiler_flags = "#{folly_flags} -Wno-comma -Wno-shorten-64-to-32"
+folly_flags = "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32"
 boost_compiler_flags = '-Wno-documentation'
 fabric_flags = $new_arch_enabled ? '-DRCT_NEW_ARCH_ENABLED' : ''
 example_flag = $config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP' : ''
-version_flag = "-DREANIMATED_VERSION=#{reanimated_package_json['version']}"
+version_flags = "-DREACT_NATIVE_MINOR_VERSION=#{$config[:react_native_minor_version]} -DREANIMATED_VERSION=#{reanimated_package_json['version']}"
 debug_flag = is_release ? '-DNDEBUG' : ''
 ios_min_version = '13.4'
 
@@ -119,7 +118,7 @@ Pod::Spec.new do |s|
     "GCC_PREPROCESSOR_DEFINITIONS[config=Debug]" => gcc_debug_definitions,
     "GCC_PREPROCESSOR_DEFINITIONS[config=Release]" => '$(inherited) NDEBUG=1',
   }
-  s.compiler_flags = "#{folly_compiler_flags} #{boost_compiler_flags}"
+  s.compiler_flags = "#{folly_flags} #{boost_compiler_flags}"
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [
       '"$(PODS_ROOT)/boost"',
@@ -132,7 +131,7 @@ Pod::Spec.new do |s|
       "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/apple\"",
       "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/Common/cpp\"",
     ].join(' '),
-    "OTHER_CFLAGS" => "$(inherited) #{folly_flags} #{fabric_flags} #{example_flag} #{version_flag} #{debug_flag} #{compilation_metadata_generation_flag}"
+    "OTHER_CFLAGS" => "$(inherited) #{folly_flags} #{fabric_flags} #{example_flag} #{version_flags} #{debug_flag} #{compilation_metadata_generation_flag}"
   }
   s.requires_arc = true
   s.dependency "ReactCommon/turbomodule/core"
