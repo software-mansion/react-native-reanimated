@@ -251,6 +251,7 @@ android {
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${isReanimatedExampleApp()}"
                 abiFilters (*reactNativeArchitectures())
+                targets("worklets")
             }
         }
 
