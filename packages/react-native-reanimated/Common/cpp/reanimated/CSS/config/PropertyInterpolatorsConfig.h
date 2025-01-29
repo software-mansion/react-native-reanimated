@@ -143,6 +143,7 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       {"borderStartColor", value<CSSColor>(BLACK)},
       {"borderBlockColor", value<CSSColor>(BLACK)},
       // Other
+      {"outlineColor", value<CSSColor>(BLACK)},
       {"shadowColor", value<CSSColor>(BLACK)},
       {"overlayColor", value<CSSColor>(BLACK)},
       {"tintColor", value<CSSColor>(BLACK)},
@@ -226,6 +227,11 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       // Decoration
       {"borderStyle", value<CSSKeyword>("solid")},
 
+      // OUTLINES
+      {"outlineOffset", value<CSSDouble>(0)},
+      {"outlineStyle", value<CSSKeyword>("solid")},
+      {"outlineWidth", value<CSSDouble>(0)},
+
       // TRANSFORMS
       {"transformOrigin",
        array(
@@ -255,6 +261,7 @@ const InterpolatorFactoriesRecord PROPERTY_INTERPOLATORS_CONFIG = []() {
       // OTHERS
       {"backfaceVisibility", value<CSSKeyword>("visible")},
       {"opacity", value<CSSDouble>(1)},
+      {"mixBlendMode", value<CSSKeyword>("normal")},
 
       /**
        * Typography
