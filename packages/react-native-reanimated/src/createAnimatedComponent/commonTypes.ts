@@ -21,10 +21,11 @@ export interface AnimatedProps extends Record<string, unknown> {
 }
 
 export interface ViewInfo {
-  viewTag: number | HTMLElement | null;
+  viewTag: number | AnimatedComponentRef | HTMLElement | null;
   viewName: string | null;
   shadowNodeWrapper: ShadowNodeWrapper | null;
   viewConfig: ViewConfig;
+  DOMElement?: HTMLElement | null;
 }
 
 export interface IInlinePropManager {
@@ -95,10 +96,14 @@ export interface AnimatedComponentRef extends Component {
   setNativeProps?: (props: Record<string, unknown>) => void;
   getScrollableNode?: () => AnimatedComponentRef;
   getAnimatableRef?: () => AnimatedComponentRef;
+  // Case for SVG components on Web
+  elementRef?: React.RefObject<HTMLElement>;
 }
 
 export interface IAnimatedComponentInternal {
-  _styles: StyleProps[] | null;
+  ChildComponent: AnyComponent;
+  _animatedStyles: StyleProps[];
+  _prevAnimatedStyles: StyleProps[];
   _animatedProps?: Partial<AnimatedComponentProps<AnimatedProps>>;
   _isFirstRender: boolean;
   jestInlineStyle: NestedArray<StyleProps> | undefined;
@@ -121,7 +126,15 @@ export interface IAnimatedComponentInternal {
 
 export type NestedArray<T> = T | NestedArray<T>[];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyComponent = React.ComponentType<any>;
+
 export interface InitialComponentProps extends Record<string, unknown> {
   ref?: Ref<Component>;
   collapsable?: boolean;
 }
+
+export type ManagedAnimatedComponent = React.Component<
+  AnimatedComponentProps<InitialComponentProps>
+> &
+  IAnimatedComponentInternal;
