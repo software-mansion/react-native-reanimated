@@ -765,12 +765,11 @@ void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
       || updatesRegistryManager_->hasPropsToRevert()
 #endif // ANDROID
   ) {
-    requestRender_(
-        [weakThis = weak_from_this()](const double newTimestampMs) {
-          if (auto strongThis = weakThis.lock()) {
-            strongThis->cssLoopCallback(newTimestampMs);
-          }
-        });
+    requestRender_([weakThis = weak_from_this()](const double newTimestampMs) {
+      if (auto strongThis = weakThis.lock()) {
+        strongThis->cssLoopCallback(newTimestampMs);
+      }
+    });
   } else {
     cssLoopRunning_ = false;
   }
@@ -789,12 +788,11 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
         if (!strongThis) {
           return;
         }
-        strongThis->requestRender_(
-            [weakThis](const double timestampMs) {
-              if (auto strongThis = weakThis.lock()) {
-                strongThis->cssLoopCallback(timestampMs);
-              }
-            });
+        strongThis->requestRender_([weakThis](const double timestampMs) {
+          if (auto strongThis = weakThis.lock()) {
+            strongThis->cssLoopCallback(timestampMs);
+          }
+        });
       });
 }
 
@@ -902,12 +900,11 @@ void ReanimatedModuleProxy::performOperations() {
 }
 
 void ReanimatedModuleProxy::requestFlushRegistry() {
-  requestRender_(
-      [weakThis = weak_from_this()](double time) {
-        if (auto strongThis = weakThis.lock()) {
-          strongThis->shouldFlushRegistry_ = true;
-        }
-      });
+  requestRender_([weakThis = weak_from_this()](double time) {
+    if (auto strongThis = weakThis.lock()) {
+      strongThis->shouldFlushRegistry_ = true;
+    }
+  });
 }
 
 void ReanimatedModuleProxy::commitUpdates(
