@@ -164,6 +164,13 @@ function parsePercentage(str: string): number {
   return int / 100;
 }
 
+export function clampRGBA(RGBA: ParsedColorArray): void {
+  'worklet';
+  for (let i = 0; i < 4; i++) {
+    RGBA[i] = Math.max(0, Math.min(RGBA[i], 1));
+  }
+}
+
 const names: Record<string, number> = makeShareable({
   transparent: 0x00000000,
 
