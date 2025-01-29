@@ -8,6 +8,7 @@ import {
   rgbaArrayToRGBAColor,
   toGammaSpace,
   toLinearSpace,
+  clampRGBA,
 } from '../Colors';
 import { ReduceMotion, isWorkletFunction } from '../commonTypes';
 import type {
@@ -263,6 +264,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       res.push(animation[i].current);
     });
 
+    // We need to clamp the res values to make sure they are in the correct RGBA range
+    clampRGBA(res as ParsedColorArray);
+
     animation.current = rgbaArrayToRGBAColor(
       toGammaSpace(res as ParsedColorArray)
     );
@@ -282,6 +286,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       finished = finished && result;
       res.push(animation[i].current);
     });
+
+    // We need to clamp the res values to make sure they are in the correct RGBA range
+    clampRGBA(res as ParsedColorArray);
 
     animation.current = rgbaArrayToRGBAColor(
       toGammaSpace(res as ParsedColorArray)
