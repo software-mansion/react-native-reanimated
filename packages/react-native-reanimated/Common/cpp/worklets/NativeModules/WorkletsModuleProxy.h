@@ -11,7 +11,9 @@
 
 namespace worklets {
 
-class WorkletsModuleProxy : public WorkletsModuleProxySpec {
+class WorkletsModuleProxy
+    : public WorkletsModuleProxySpec,
+      public std::enable_shared_from_this<WorkletsModuleProxy> {
  public:
   explicit WorkletsModuleProxy(
       jsi::Runtime &rnRuntime,

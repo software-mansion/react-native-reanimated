@@ -21,7 +21,7 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 class JSPropsUpdaterPaper implements IJSPropsUpdater {
   private static _tagToComponentMapping = new Map();
-  private _reanimatedEventEmitter: NativeEventEmitter;
+  _reanimatedEventEmitter: NativeEventEmitter;
 
   constructor() {
     this._reanimatedEventEmitter = new NativeEventEmitter(

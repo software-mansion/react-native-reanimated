@@ -1,6 +1,5 @@
 #pragma once
 
-#include <reanimated/Fabric/PropsRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <react/renderer/mounting/MountingOverrideDelegate.h>

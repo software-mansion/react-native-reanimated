@@ -17,15 +17,23 @@ export const PropsAllowlists: AllowlistsHolder = {
     borderEndColor: true,
     borderLeftColor: true,
     borderStartColor: true,
+    overlayColor: true,
     borderTopColor: true,
     /* ios styles */
     shadowOpacity: true,
     shadowRadius: true,
+    outlineColor: true,
+    shadowColor: true,
     /* legacy android transform properties */
     scaleX: true,
     scaleY: true,
     translateX: true,
     translateY: true,
+    outlineStyle: true,
+    outlineWidth: true,
+    outlineOffset: true,
+    borderStyle: true,
+    mixBlendMode: true,
   },
   /**
    * Whitelist of view props that can be updated in native thread via
@@ -108,6 +116,8 @@ export const PropsAllowlists: AllowlistsHolder = {
     textDecorationStyle: true,
     textTransform: true,
     writingDirection: true,
+    includeFontPadding: true,
+    userSelect: true,
     alignContent: true,
     alignItems: true,
     alignSelf: true,
@@ -116,10 +126,12 @@ export const PropsAllowlists: AllowlistsHolder = {
     flexWrap: true,
     justifyContent: true,
     position: true,
+    cursor: true,
     /* text color */
     color: true,
     tintColor: true,
-    shadowColor: true,
+    textShadowColor: true,
     placeholderTextColor: true,
+    textDecorationColor: true,
   },
 };
