@@ -13,6 +13,9 @@ if (externalWorklets) {
   module.exports = { WorkletsModule: externalWorklets.WorkletsModule };
 } else {
   module.exports = {
-    WorkletsModule: require('./WorkletsModule').WorkletsModule,
+    WorkletsModule: require('../worklets').WorkletsModule,
+    isWorkletFunction: require('../worklets').isWorkletFunction,
+    mockedRequestAnimationFrame:
+      require('../worklets').mockedRequestAnimationFrame,
   };
 }
