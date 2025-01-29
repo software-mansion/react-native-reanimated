@@ -93,7 +93,9 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
       // TODO macOS targetTimestamp isn't available on macOS
       auto targetTimestamp = displayLink.timestamp + displayLink.duration;
 #endif
-      const double frameTimestamp = targetTimestamp * 1000;
+      double frameTimestamp =
+
+          (targetTimestamp) * 1000;
       onRender(frameTimestamp);
     }];
   };

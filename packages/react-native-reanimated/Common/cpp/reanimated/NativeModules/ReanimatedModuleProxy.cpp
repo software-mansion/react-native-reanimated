@@ -900,7 +900,7 @@ void ReanimatedModuleProxy::performOperations() {
 }
 
 void ReanimatedModuleProxy::requestFlushRegistry() {
-  requestRender_([weakThis = weak_from_this()](double time) {
+  requestRender_([weakThis = weak_from_this()](const double timestamp) {
     if (auto strongThis = weakThis.lock()) {
       strongThis->shouldFlushRegistry_ = true;
     }
