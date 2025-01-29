@@ -4,8 +4,8 @@
     "strict": true,
     "baseUrl": "../..",
     "paths": {
-      "@/*": ["./apps/common-app/src/*"]
-      // "react-native-reanimated": ["./packages/react-native-reanimated/src"]
+      "@/*": ["./apps/common-app/src/*"],
+      "react-native-reanimated": ["./packages/react-native-reanimated/src"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"]

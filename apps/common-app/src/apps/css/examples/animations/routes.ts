@@ -147,6 +147,11 @@ const layoutAndPositioningRoutes = {
         name: 'Aspect Ratio',
         Component: animatedProperties.layoutAndPositioning.others.AspectRatio,
       },
+      BoxSizing: {
+        name: 'Box Sizing',
+        labelTypes: ['web'],
+        Component: animatedProperties.layoutAndPositioning.others.BoxSizing,
+      },
     },
   },
 } satisfies Routes;
@@ -159,7 +164,7 @@ const appearanceRoutes = {
         name: 'Color Formats',
         Component: animatedProperties.appearance.colors.ColorFormats,
       },
-      ColorFunctions: {
+      ColorProperties: {
         name: 'Color Properties',
         Component: animatedProperties.appearance.colors.ColorProperties,
       },
@@ -243,6 +248,23 @@ const appearanceRoutes = {
       },
     },
   },
+  Outlines: {
+    name: 'Outlines',
+    routes: {
+      OutlineOffset: {
+        name: 'Outline Offset',
+        Component: animatedProperties.appearance.outlines.OutlineOffset,
+      },
+      OutlineStyle: {
+        name: 'Outline Style',
+        Component: animatedProperties.appearance.outlines.OutlineStyle,
+      },
+      OutlineWidth: {
+        name: 'Outline Width',
+        Component: animatedProperties.appearance.outlines.OutlineWidth,
+      },
+    },
+  },
   Transforms: {
     name: 'Transforms',
     flatten: true,
@@ -310,6 +332,10 @@ const appearanceRoutes = {
       BackfaceVisibility: {
         name: 'Backface Visibility',
         Component: animatedProperties.appearance.others.BackfaceVisibility,
+      },
+      MixBlendMode: {
+        name: 'Mix Blend Mode',
+        Component: animatedProperties.appearance.others.MixBlendMode,
       },
     },
   },

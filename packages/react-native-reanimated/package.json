@@ -25,7 +25,7 @@
     "type:check:plugin": "cd plugin && yarn type:check:src",
     "type:check:app": "yarn workspace common-app type:check",
     "type:check:tests:common": "./scripts/test-ts.sh __typetests__/common",
-    "build": "yarn build:plugin && bob build",
+    "build": "./scripts/duplicate-worklets-code.sh && yarn build:plugin && bob build",
     "build:plugin": "cd plugin && yarn build",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib",
     "use-strict-check": "node ./scripts/validate-use-strict.js",

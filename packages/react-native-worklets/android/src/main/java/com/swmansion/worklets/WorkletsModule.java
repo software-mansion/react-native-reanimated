@@ -1,9 +1,5 @@
 package com.swmansion.worklets;
 
-// In Reanimated the codegen will generate `NativeReaWorkletsModuleSpec`.
-// Therefore we must override this file in Reanimated when
-// `react-native-worklets` isn't installed.
-
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -14,14 +10,13 @@ import com.facebook.react.common.annotations.FrameworkAPI;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.soloader.SoLoader;
-import com.swmansion.reanimated.NativeReaWorkletsModuleSpec;
 import java.util.Objects;
 
 /**
  * @noinspection JavaJniMissingFunction
  */
 @ReactModule(name = WorkletsModule.NAME)
-public class WorkletsModule extends NativeReaWorkletsModuleSpec {
+public class WorkletsModule extends NativeWorkletsModuleSpec {
   static {
     SoLoader.loadLibrary("worklets");
   }

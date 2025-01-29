@@ -25,11 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-// `WorkletsModule` should be included from a separate Java package, called `WorkletsPackage`.
-// However, it's not possible with the current state of the Gradle Tools provided by
-// RNC CLI - all packages besides the first found are ignored.
-// Therefore, until we extract `react-native-worklets` to a separate package,
-// we will host this module in Reanimated's package.
+// `WorkletsPackage` must be registered within `ReanimatedPackage` when
+// `react-native-worklets` isn't installed . Extra `...Package` files
+// are ignored by React Native tools.
 @ReactModuleList(
     nativeModules = {
       WorkletsModule.class,

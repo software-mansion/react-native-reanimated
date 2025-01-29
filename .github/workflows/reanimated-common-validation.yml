@@ -28,7 +28,8 @@ jobs:
     strategy:
       matrix:
         python-version: [3.13]
-
+    env:
+      REANIMATED_DIR: packages/react-native-reanimated
     steps:
       - uses: actions/checkout@v4
 
@@ -42,11 +43,15 @@ jobs:
           pip install cpplint==1.6.1
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+      - name: Build Reanimated
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: yarn build
 
       - name: Lint Common
-        working-directory: packages/react-native-reanimated
+        working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn lint:common
 
       - name: Disallow DEBUG macros
+        working-directory: ${{ env.REANIMATED_DIR }}
         run: |
-          ! egrep -r '(#if DEBUG|#ifdef DEBUG)' packages/react-native-reanimated/Common/cpp/ packages/react-native-reanimated/apple/ packages/react-native-reanimated/android/src/main/cpp/
+          ! egrep -r '(#if DEBUG|#ifdef DEBUG)' Common/cpp/ apple/ android/src/main/cpp/

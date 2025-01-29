@@ -77,11 +77,9 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
-  # TODO: Uncomment me when dynamic worklets linking is ready
-  # if File.directory?(File.join(__dir__, "../react-native-worklets"))
-  #   # This condition is really naïve...
-  #   s.dependency "RNWorklets"
-  # else
+  if $config[:has_external_worklets]
+    s.dependency "RNWorklets"
+  else
     s.subspec "worklets" do |ss|
       ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
       ss.header_dir = "worklets"
@@ -94,7 +92,7 @@ Pod::Spec.new do |s|
         sss.source_files = "apple/worklets/**/*.{mm,h,m}"
         sss.header_dir = "worklets"
         sss.header_mappings_dir = "apple/worklets"
-      # end
+      end
     end
   end
 

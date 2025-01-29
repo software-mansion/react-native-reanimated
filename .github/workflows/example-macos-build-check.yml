@@ -49,6 +49,7 @@ jobs:
     env:
       WORKING_DIRECTORY: apps/macos-example
       COMMON_APP_DIR: apps/common-app
+      REANIMATED_DIR: packages/react-native-reanimated
     concurrency:
       group: macos-${{ github.ref }}-${{ inputs.use-external-worklets }}
       cancel-in-progress: true
@@ -63,6 +64,14 @@ jobs:
       # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+      - name: Build Reanimated package
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: yarn build
+
+      - name: Use external worklets
+        if: ${{ inputs.use-external-worklets == 'true' }}
+        working-directory: ${{ env.COMMON_APP_DIR }}
+        run: yarn add react-native-worklets@workspace:"*"
 
       - name: Use external worklets
         if: ${{ inputs.use-external-worklets == 'true' }}
