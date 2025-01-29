@@ -1,5 +1,4 @@
 'use strict';
-
 import { shouldBeUseWeb } from './PlatformChecker';
 import type { ShareableRef } from './WorkletsResolver';
 

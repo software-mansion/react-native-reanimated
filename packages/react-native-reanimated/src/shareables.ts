@@ -1,5 +1,4 @@
 'use strict';
-
 import type { FlatShareableRef } from './commonTypes';
 import { ReanimatedError, registerWorkletStackDetails } from './errors';
 import { logger } from './logger';

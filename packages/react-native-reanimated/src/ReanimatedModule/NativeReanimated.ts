@@ -1,5 +1,4 @@
 'use strict';
-
 import type React from 'react';
 import type {
   LayoutAnimationBatchItem,

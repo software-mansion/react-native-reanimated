@@ -30,9 +30,9 @@ import java.util.Objects;
 // are ignored by React Native tools.
 @ReactModuleList(
     nativeModules = {
+      WorkletsModule.class,
       ReanimatedModule.class,
       ReanimatedUIManager.class,
-      WorkletsModule.class,
     })
 public class ReanimatedPackage extends BaseReactPackage implements ReactPackage {
   @Override

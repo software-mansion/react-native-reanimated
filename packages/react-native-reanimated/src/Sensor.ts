@@ -1,5 +1,4 @@
 'use strict';
-
 import { ReanimatedModule } from './ReanimatedModule';
 import type {
   SensorConfig,
