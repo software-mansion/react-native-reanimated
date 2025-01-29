@@ -2,61 +2,57 @@ import { StyleSheet } from 'react-native';
 import type { CSSAnimationKeyframes } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
-import { balloonsImage } from '@/apps/css/assets';
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
-import { radius, sizes } from '@/theme';
+import { colors, radius, sizes, spacing } from '@/theme';
 
-export default function ResizeMode() {
+export default function OutlineStyle() {
   return (
     <ExamplesScreen<{ keyframes: CSSAnimationKeyframes }>
       CardComponent={VerticalExampleCard}
       buildAnimation={({ keyframes }) => ({
-        animationDirection: 'alternate',
         animationDuration: '3s',
         animationIterationCount: 'infinite',
         animationName: keyframes,
         animationTimingFunction: 'linear',
       })}
       renderExample={({ animation }) => (
-        <Animated.Image
-          source={balloonsImage}
-          style={[styles.image, animation]}
-        />
+        <Animated.View style={[styles.box, animation]} />
       )}
       sections={[
         {
           examples: [
             {
               description:
-                "`resizeMode` is a **discrete** property. That means, it **can't be smoothly animated** between values.",
+                "`outlineStyle` is a **discrete** property. That means, it **can't be smoothly animated** between values. However, we can still change this property in the animation keyframes but the change will be **abrupt**.",
               keyframes: {
                 '0%, 100%': {
-                  resizeMode: 'contain',
+                  outlineStyle: 'solid',
                 },
-                '25%': {
-                  resizeMode: 'cover',
+                '33.3%': {
+                  outlineStyle: 'dotted',
                 },
-                '50%': {
-                  resizeMode: 'stretch',
-                },
-                '75%': {
-                  resizeMode: 'center',
+                '66.6%': {
+                  outlineStyle: 'dashed',
                 },
               },
-              title: 'Changing Resize Mode',
+              title: 'Changing Outline Style',
             },
           ],
-          labelTypes: ['iOS', 'Android'],
-          title: 'Resize Mode',
+          title: 'Outline Style',
         },
       ]}
     />
   );
 }
+
 const styles = StyleSheet.create({
-  image: {
-    borderRadius: radius.md,
-    height: sizes.xxxl,
-    width: sizes.xxxl,
+  box: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
+    borderRadius: radius.sm,
+    height: sizes.xl,
+    outlineColor: colors.primaryDark,
+    outlineWidth: spacing.xxs,
+    width: sizes.xl,
   },
 });

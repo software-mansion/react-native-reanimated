@@ -26,6 +26,7 @@ if [ ! -d "$WORKLETS_DIR" ]; then
 fi
 
 # Worklets TypeScript files
+# Note that we only duplicate "worklets" subdirectory
 copy_files_recursively "src/worklets" "$WORKLETS_DIR/src/worklets"
 
 # Worklets iOS files

@@ -1,7 +1,7 @@
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { useNavigation } from '@react-navigation/native';
-import { memo } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { memo, useCallback, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import Animated, { FadeInRight } from 'react-native-reanimated';
@@ -13,9 +13,17 @@ import { IS_WEB } from '@/utils';
 
 function BackButton() {
   const navigation = useNavigation();
+  const [prevRouteName, setPrevRouteName] = useState<string | undefined>(() => {
+    const routes = navigation.getState()?.routes;
+    return routes?.[routes.length - 2]?.name;
+  });
 
-  const routes = navigation.getState()?.routes;
-  const prevRouteName = routes?.[routes.length - 2]?.name;
+  useFocusEffect(
+    useCallback(() => {
+      const routes = navigation.getState()?.routes;
+      setPrevRouteName(routes?.[routes.length - 2]?.name);
+    }, [navigation])
+  );
 
   if (!prevRouteName || !navigation.canGoBack()) {
     return null;

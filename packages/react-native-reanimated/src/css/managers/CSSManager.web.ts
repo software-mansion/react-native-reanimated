@@ -13,7 +13,7 @@ export default class CSSManager {
   private readonly transitionsManager: CSSTransitionManager;
 
   constructor(viewInfo: ViewInfo) {
-    this.element = viewInfo.viewTag as ReanimatedHTMLElement;
+    this.element = viewInfo.DOMElement as ReanimatedHTMLElement;
 
     this.animationsManager = new CSSAnimationsManager(this.element);
     this.transitionsManager = new CSSTransitionManager(this.element);
