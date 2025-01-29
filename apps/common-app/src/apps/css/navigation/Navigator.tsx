@@ -126,6 +126,7 @@ type StackScreensOptions = {
 
 function createStackScreens(
   routes: Routes,
+  name: string,
   pathChunks: Array<string>,
   reducedMotion: boolean,
   options?: StackScreensOptions
@@ -150,7 +151,7 @@ function createStackScreens(
         options={{
           ...sharedOptions,
           animation: reducedMotion || depth === 0 ? 'none' : 'default',
-          title: pathChunks[pathChunks.length - 1],
+          title: name,
         }}
       />
     ),
@@ -160,6 +161,7 @@ function createStackScreens(
       if (isRouteWithRoutes(value)) {
         return createStackScreens(
           value.routes,
+          value.name,
           [...pathChunks, key],
           reducedMotion,
           {
@@ -177,7 +179,7 @@ function createStackScreens(
           options={{
             ...sharedOptions,
             animation: 'slide_from_right',
-            title: key,
+            title: value.name,
           }}
         />
       );
@@ -211,7 +213,12 @@ function Navigator() {
           statusBarStyle: 'dark',
         }}>
         {Object.entries(tabRoutes).flatMap(([key, value]) =>
-          createStackScreens(value.routes, [key], shouldReduceMotion)
+          createStackScreens(
+            value.routes,
+            value.name,
+            [key],
+            shouldReduceMotion
+          )
         )}
       </Stack.Navigator>
       <BottomTabBar currentRoute={currentRoute} routes={tabRoutesArray} />
