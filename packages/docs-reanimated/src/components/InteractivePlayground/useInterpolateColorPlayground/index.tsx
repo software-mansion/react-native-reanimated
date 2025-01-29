@@ -40,7 +40,7 @@ export default function useInterpolateColorPlayground() {
   const [colorBarsSectionCollapsed, setColorBarsSectionCollapsed] =
     useState(true);
   // TODO (OKLAB): Uncomment "LAB" option below when OKLAB support is released officially
-  const [colorSpace, setColorSpace] = useState<'RGB' | 'HSV'/* | 'LAB'*/>(
+  const [colorSpace, setColorSpace] = useState<'RGB' | 'HSV' /* | 'LAB'*/>(
     ColorSpace[initialState.colorSpace]
   );
   const [gamma, setGamma] = useState(initialState.gamma);
@@ -88,7 +88,7 @@ export default function useInterpolateColorPlayground() {
         label="Colorspace"
         value={colorSpace}
         onChange={(changedString) => setColorSpace(ColorSpace[changedString])}
-        options={['RGB', 'HSV'/*, 'LAB'*/]} // TODO (OKLAB): Uncomment "LAB" option when OKLAB support is released officially
+        options={['RGB', 'HSV' /*, 'LAB'*/]} // TODO (OKLAB): Uncomment "LAB" option when OKLAB support is released officially
       />
       {colorSpace === ColorSpace.RGB && (
         <Range
