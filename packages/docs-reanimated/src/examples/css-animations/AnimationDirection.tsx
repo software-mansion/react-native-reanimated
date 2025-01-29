@@ -29,7 +29,7 @@ export default function App() {
                 animationTimingFunction: 'ease',
                 animationDelay: 250 * id,
                 // highlight-next-line
-                animationDirection: 'alternateReverse',
+                animationDirection: 'alternate-reverse',
                 animationIterationCount: 'infinite',
               },
             ]}

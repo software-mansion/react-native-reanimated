@@ -6,8 +6,8 @@ import type {
   TransformsStyle,
   ViewStyle,
 } from 'react-native';
+import type { ShareableRef, WorkletFunction } from './WorkletsResolver';
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
-import type { ShareableRef } from './workletTypes';
 
 export type LayoutAnimationsOptions =
   | 'originX'
@@ -271,98 +271,6 @@ export type MapperRegistry = {
   ) => void;
   stop: (mapperID: number) => void;
 };
-
-export type WorkletStackDetails = [
-  error: Error,
-  lineOffset: number,
-  columnOffset: number,
-];
-
-type WorkletClosure = Record<string, unknown>;
-
-interface WorkletInitDataCommon {
-  code: string;
-}
-
-type WorkletInitDataRelease = WorkletInitDataCommon;
-
-interface WorkletInitDataDev extends WorkletInitDataCommon {
-  location: string;
-  sourceMap: string;
-  version: string;
-}
-
-interface WorkletBaseCommon {
-  __closure: WorkletClosure;
-  __workletHash: number;
-}
-
-interface WorkletBaseRelease extends WorkletBaseCommon {
-  __initData: WorkletInitDataRelease;
-}
-
-interface WorkletBaseDev extends WorkletBaseCommon {
-  __initData: WorkletInitDataDev;
-  /** `__stackDetails` is removed after parsing. */
-  __stackDetails?: WorkletStackDetails;
-}
-
-export type WorkletFunctionDev<
-  Args extends unknown[] = unknown[],
-  ReturnValue = unknown,
-> = ((...args: Args) => ReturnValue) & WorkletBaseDev;
-
-type WorkletFunctionRelease<
-  Args extends unknown[] = unknown[],
-  ReturnValue = unknown,
-> = ((...args: Args) => ReturnValue) & WorkletBaseRelease;
-
-export type WorkletFunction<
-  Args extends unknown[] = unknown[],
-  ReturnValue = unknown,
-> =
-  | WorkletFunctionDev<Args, ReturnValue>
-  | WorkletFunctionRelease<Args, ReturnValue>;
-
-/**
- * This function allows you to determine if a given function is a worklet. It
- * only works with Reanimated Babel plugin enabled. Unless you are doing
- * something with internals of Reanimated you shouldn't need to use this
- * function.
- *
- * ### Note
- *
- * Do not call it before the worklet is declared, as it will always return false
- * then. E.g.:
- *
- * ```ts
- * isWorkletFunction(myWorklet); // Will always return false.
- *
- * function myWorklet() {
- *   'worklet';
- * }
- * ```
- *
- * ### Maintainer note
- *
- * This function is supposed to be used only in the React Runtime. It always
- * returns `false` in Worklet Runtimes.
- */
-export function isWorkletFunction<
-  Args extends unknown[] = unknown[],
-  ReturnValue = unknown,
-  BuildType extends WorkletBaseDev | WorkletBaseRelease = WorkletBaseDev,
->(value: unknown): value is WorkletFunction<Args, ReturnValue> & BuildType {
-  'worklet';
-  // Since host objects always return true for `in` operator, we have to use dot notation to check if the property exists.
-  // See https://github.com/facebook/hermes/blob/340726ef8cf666a7cce75bc60b02fa56b3e54560/lib/VM/JSObject.cpp#L1276.
-
-  return (
-    // `__workletHash` isn't extracted in Worklet Runtimes.
-    typeof value === 'function' &&
-    !!(value as unknown as Record<string, unknown>).__workletHash
-  );
-}
 
 export type AnimatedPropsAdapterFunction = (
   props: Record<string, unknown>

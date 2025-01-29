@@ -5,7 +5,6 @@ import type {
   StyleProps,
   Value3D,
   ValueRotation,
-  WorkletFunction,
 } from '../../commonTypes';
 import { SensorType } from '../../commonTypes';
 import type {
@@ -21,9 +20,12 @@ import {
   isWeb,
   isWindowAvailable,
 } from '../../PlatformChecker';
-import type { IWorkletsModule } from '../../WorkletsResolver';
+import type {
+  IWorkletsModule,
+  ShareableRef,
+  WorkletFunction,
+} from '../../WorkletsResolver';
 import { WorkletsModule } from '../../WorkletsResolver';
-import type { ShareableRef } from '../../workletTypes';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
 

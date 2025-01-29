@@ -22,21 +22,21 @@ export type NormalizedStepsEasing = {
 export type ControlPoint = number | [number, ...Percentage[]];
 
 export type StepsModifier =
-  | 'jumpStart'
+  | 'jump-start'
   | 'start'
-  | 'jumpEnd'
+  | 'jump-end'
   | 'end'
-  | 'jumpNone'
-  | 'jumpBoth';
+  | 'jump-none'
+  | 'jump-both';
 
 export type PredefinedTimingFunction =
   | 'linear'
   | 'ease'
-  | 'easeIn'
-  | 'easeOut'
-  | 'easeInOut'
-  | 'stepStart'
-  | 'stepEnd';
+  | 'ease-in'
+  | 'ease-out'
+  | 'ease-in-out'
+  | 'step-start'
+  | 'step-end';
 
 export type CSSTimingFunction =
   | PredefinedTimingFunction

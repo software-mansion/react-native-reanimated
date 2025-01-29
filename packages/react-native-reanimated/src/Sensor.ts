@@ -6,11 +6,10 @@ import type {
   SharedValue,
   Value3D,
   ValueRotation,
-  WorkletFunction,
 } from './commonTypes';
 import { SensorType } from './commonTypes';
 import { makeMutable } from './mutables';
-import type { ShareableRef } from './workletTypes';
+import type { ShareableRef, WorkletFunction } from './WorkletsResolver';
 
 function initSensorData(
   sensorType: SensorType

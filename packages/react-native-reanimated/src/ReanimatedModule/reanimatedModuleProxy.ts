@@ -6,14 +6,13 @@ import type {
   StyleProps,
   Value3D,
   ValueRotation,
-  WorkletFunction,
 } from '../commonTypes';
 import type {
   NormalizedCSSTransitionConfig,
   NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
-import type { ShareableRef } from '../workletTypes';
+import type { ShareableRef, WorkletFunction } from '../WorkletsResolver';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {

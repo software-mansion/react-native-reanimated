@@ -1,11 +1,6 @@
 'use strict';
 
-import type {
-  FlatShareableRef,
-  WorkletFunction,
-  WorkletFunctionDev,
-} from './commonTypes';
-import { isWorkletFunction } from './commonTypes';
+import type { FlatShareableRef } from './commonTypes';
 import { ReanimatedError, registerWorkletStackDetails } from './errors';
 import { logger } from './logger';
 import { jsVersion } from './platform-specific/jsVersion';
@@ -14,8 +9,12 @@ import {
   shareableMappingCache,
   shareableMappingFlag,
 } from './shareableMappingCache';
-import { WorkletsModule } from './WorkletsResolver';
-import type { ShareableRef } from './workletTypes';
+import type {
+  ShareableRef,
+  WorkletFunction,
+  WorkletFunctionDev,
+} from './WorkletsResolver';
+import { isWorkletFunction, WorkletsModule } from './WorkletsResolver';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used

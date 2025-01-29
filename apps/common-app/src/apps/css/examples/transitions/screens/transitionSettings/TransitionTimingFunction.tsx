@@ -46,14 +46,17 @@ export default function TransitionTimingFunction() {
             {
               items: [
                 { label: 'ease', transitionTimingFunction: 'ease' },
-                { label: 'easeIn', transitionTimingFunction: 'easeIn' },
-                { label: 'easeOut', transitionTimingFunction: 'easeOut' },
-                { label: 'easeInOut', transitionTimingFunction: 'easeInOut' },
-                { label: 'linear', transitionTimingFunction: 'linear' },
-                { label: 'stepStart', transitionTimingFunction: 'stepStart' },
+                { label: 'ease-in', transitionTimingFunction: 'ease-in' },
+                { label: 'ease-out', transitionTimingFunction: 'ease-out' },
                 {
-                  label: 'stepEnd',
-                  transitionTimingFunction: 'stepEnd',
+                  label: 'ease-in-out',
+                  transitionTimingFunction: 'ease-in-out',
+                },
+                { label: 'linear', transitionTimingFunction: 'linear' },
+                { label: 'step-start', transitionTimingFunction: 'step-start' },
+                {
+                  label: 'step-end',
+                  transitionTimingFunction: 'step-end',
                 },
               ],
               title: 'Predefined Easings',
@@ -124,20 +127,20 @@ export default function TransitionTimingFunction() {
                 'Creates an easing function that makes given number of even steps over increasing y-values. The second argument is a modifier that adds jumps before or after the steps.',
               items: [
                 {
-                  label: steps(2, 'jumpStart').toString(),
-                  transitionTimingFunction: steps(2, 'jumpStart'),
+                  label: steps(2, 'jump-start').toString(),
+                  transitionTimingFunction: steps(2, 'jump-start'),
                 },
                 {
-                  label: steps(4, 'jumpEnd').toString(),
-                  transitionTimingFunction: steps(4, 'jumpEnd'),
+                  label: steps(4, 'jump-end').toString(),
+                  transitionTimingFunction: steps(4, 'jump-end'),
                 },
                 {
-                  label: steps(5, 'jumpNone').toString(),
-                  transitionTimingFunction: steps(5, 'jumpNone'),
+                  label: steps(5, 'jump-none').toString(),
+                  transitionTimingFunction: steps(5, 'jump-none'),
                 },
                 {
-                  label: steps(3, 'jumpBoth').toString(),
-                  transitionTimingFunction: steps(3, 'jumpBoth'),
+                  label: steps(3, 'jump-both').toString(),
+                  transitionTimingFunction: steps(3, 'jump-both'),
                 },
               ],
               title: 'Steps Easing',

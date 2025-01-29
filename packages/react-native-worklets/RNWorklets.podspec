@@ -30,18 +30,6 @@ Pod::Spec.new do |s|
     end
   end
 
-  s.subspec "duplicated" do |ss|
-    ss.source_files = "Common/duplicated/cpp/worklets/**/*.{cpp,h}"
-    ss.header_dir = "worklets"
-    ss.header_mappings_dir = "Common/duplicated/cpp/worklets"
-
-    ss.subspec "apple" do |sss|
-      sss.source_files = "apple/duplicated/worklets/**/*.{mm,h,m}"
-      sss.header_dir = "worklets"
-      sss.header_mappings_dir = "apple/duplicated/worklets"
-    end
-  end
-
   # Use install_modules_dependencies helper to install the dependencies if React Native version >=0.71.0.
   # See https://github.com/facebook/react-native/blob/febf6b7f33fdb4904669f99d795eba4c0f95d7bf/scripts/cocoapods/new_architecture.rb#L79.
   if respond_to?(:install_modules_dependencies, true)

@@ -9,6 +9,7 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
+      - packages/react-native-worklets/**
       - apps/fabric-example/package.json
       - apps/fabric-example/ios/**
   merge_group:
@@ -23,42 +24,59 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
+      - packages/react-native-worklets/**
       - apps/fabric-example/package.json
       - apps/fabric-example/ios/**
   workflow_call:
+    inputs:
+      use-external-worklets:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
+    inputs:
+      use-external-worklets:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: macos-14
-    strategy:
-      matrix:
-        working-directory: [apps/fabric-example]
-        use-external-worklets: [true, false]
-      fail-fast: false
+    env:
+      WORKING_DIRECTORY: apps/fabric-example
+      COMMON_APP_DIR: apps/common-app
+      REANIMATED_DIR: packages/react-native-reanimated
     concurrency:
-      group: ios-${{ matrix.working-directory }}-${{ github.ref }}
+      group: ios-${{ github.ref }}-${{ inputs.use-external-worklets }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+      - name: Build Reanimated package
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: yarn build
 
       - name: Use external worklets
-        if: ${{ matrix.use-external-worklets == 'true' }}
-        working-directory: ${{ matrix.working-directory }}
+        if: ${{ inputs.use-external-worklets == 'true' }}
+        working-directory: ${{ env.COMMON_APP_DIR }}
         run: yarn add react-native-worklets@workspace:"*"
 
       # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install Pods
-        working-directory: ${{ matrix.working-directory }}/ios
+        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
         run: |
           bundle install
           bundle exec pod install
 
       - name: Build app
-        working-directory: ${{ matrix.working-directory }}
+        working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn react-native run-ios --no-packager

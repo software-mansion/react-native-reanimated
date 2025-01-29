@@ -7,7 +7,6 @@ export default Animated;
 
 export { configureReanimatedLogger } from './ConfigHelper';
 export { LogLevel as ReanimatedLogLevel } from './logger';
-export type { WorkletRuntime } from './core';
 export {
   runOnJS,
   runOnUI,
@@ -255,9 +254,10 @@ export {
   InterfaceOrientation,
   KeyboardState,
   ReduceMotion,
-  isWorkletFunction,
   SharedTransitionType,
 } from './commonTypes';
+export { isWorkletFunction } from './WorkletsResolver';
+export type { WorkletRuntime } from './WorkletsResolver';
 export type { FrameInfo } from './frameCallback';
 export { getUseOfValueInStyleWarning } from './pluginUtils';
 export {

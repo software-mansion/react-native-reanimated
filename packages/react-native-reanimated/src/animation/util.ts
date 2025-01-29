@@ -9,7 +9,7 @@ import {
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import { ReduceMotion, isWorkletFunction } from '../commonTypes';
+import { ReduceMotion } from '../commonTypes';
 import type {
   SharedValue,
   AnimatableValue,
@@ -39,6 +39,7 @@ import { ReducedMotionManager } from '../ReducedMotion';
 import { logger } from '../logger';
 import { ReanimatedError } from '../errors';
 import { runOnUI } from '../threads';
+import { isWorkletFunction } from '../WorkletsResolver';
 
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();

@@ -8,7 +8,7 @@ import type {
   ValueRotation,
 } from './commonTypes';
 import Sensor from './Sensor';
-import type { ShareableRef } from './workletTypes';
+import type { ShareableRef } from './WorkletsResolver';
 
 export class SensorContainer {
   private nativeSensors: Map<number, Sensor> = new Map();

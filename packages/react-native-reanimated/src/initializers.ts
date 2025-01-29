@@ -8,7 +8,7 @@ import {
   runOnUIImmediately,
   executeOnUIRuntimeSync,
 } from './threads';
-import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
+import { mockedRequestAnimationFrame } from './WorkletsResolver';
 import {
   DEFAULT_LOGGER_CONFIG,
   logToLogBoxAndConsole,

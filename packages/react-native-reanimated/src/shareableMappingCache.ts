@@ -1,7 +1,7 @@
 'use strict';
 
 import { shouldBeUseWeb } from './PlatformChecker';
-import type { ShareableRef } from './workletTypes';
+import type { ShareableRef } from './WorkletsResolver';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

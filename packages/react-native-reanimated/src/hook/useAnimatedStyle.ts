@@ -28,13 +28,13 @@ import type {
   NestedObjectValues,
   SharedValue,
   StyleProps,
-  WorkletFunction,
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
   AnimatedStyle,
 } from '../commonTypes';
-import { isWorkletFunction } from '../commonTypes';
 import { ReanimatedError } from '../errors';
+import { isWorkletFunction } from '../WorkletsResolver';
+import type { WorkletFunction } from '../WorkletsResolver';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

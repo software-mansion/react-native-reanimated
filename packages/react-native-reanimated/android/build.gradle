@@ -258,6 +258,11 @@ android {
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
                         "-DHAS_EXTERNAL_WORKLETS=${hasExternalWorklets}"
                 abiFilters (*reactNativeArchitectures())
+                if(hasExternalWorklets){
+                    targets("reanimated")
+                } else {
+                    targets("reanimated", "worklets")
+                }
             }
         }
 
@@ -339,19 +344,19 @@ android {
     }
     sourceSets.main {
         java {
-            // Always present
-            srcDirs += "src/worklets/WorkletsModule/java"
-
-            if(!hasExternalWorklets){
-                srcDirs += "src/worklets/main/java"
+            if(hasExternalWorklets){
+                srcDirs += "src/externalWorklets/with"
+            } else {
+                srcDirs += "src/worklets/main"
+                srcDirs += "src/externalWorklets/without"
+                if(!IS_NEW_ARCHITECTURE_ENABLED){
+                    srcDirs += "src/externalWorklets/withoutPaper"
+                }
             }
 
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 srcDirs += "src/fabric/java"
             } else {
-                if(!hasExternalWorklets){
-                    srcDirs +="src/worklets/paper/java"
-                }
                 srcDirs += "src/paper/java"
             }
 

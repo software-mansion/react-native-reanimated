@@ -5,7 +5,7 @@ import type { CSSTransitionBehavior } from '../../../../../types';
 
 describe(normalizeTransitionBehavior, () => {
   it('returns true if the behavior is "allowDiscrete"', () => {
-    expect(normalizeTransitionBehavior('allowDiscrete')).toBe(true);
+    expect(normalizeTransitionBehavior('allow-discrete')).toBe(true);
   });
 
   it('returns false if the behavior is not "allowDiscrete"', () => {

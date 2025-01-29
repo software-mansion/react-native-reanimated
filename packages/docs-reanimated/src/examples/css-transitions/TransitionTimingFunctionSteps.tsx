@@ -3,10 +3,10 @@ import { StyleSheet, View, Button, Text } from 'react-native';
 import Animated, { steps } from 'react-native-reanimated';
 
 const stepsModifiers = [
-  'jumpStart',
-  'jumpEnd',
-  'jumpNone',
-  'jumpBoth',
+  'jump-start',
+  'jump-end',
+  'jump-none',
+  'jump-both',
 ] as const;
 
 export default function App() {

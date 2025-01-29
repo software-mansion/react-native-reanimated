@@ -19,10 +19,10 @@ describe(StepsEasing, () => {
 
   describe('toString', () => {
     it.each([
-      [1, 'jumpEnd', 'steps(1, jumpEnd)'],
-      [2, 'jumpStart', 'steps(2, jumpStart)'],
-      [3, 'jumpBoth', 'steps(3, jumpBoth)'],
-      [4, 'jumpNone', 'steps(4, jumpNone)'],
+      [1, 'jump-end', 'steps(1, jump-end)'],
+      [2, 'jump-start', 'steps(2, jump-start)'],
+      [3, 'jump-both', 'steps(3, jump-both)'],
+      [4, 'jump-none', 'steps(4, jump-none)'],
     ] satisfies [number, StepsModifier, string][])(
       'returns correct string for %s steps and %s modifier',
       (stepsNumber, modifier, expected) => {
@@ -33,9 +33,9 @@ describe(StepsEasing, () => {
   });
 
   describe('normalize', () => {
-    describe('jumpStart', () => {
+    describe('jump-start', () => {
       it('returns correct normalized object', () => {
-        const easing = new StepsEasing(4, 'jumpStart');
+        const easing = new StepsEasing(4, 'jump-start');
         expect(easing.normalize()).toEqual({
           name: 'steps',
           points: [
@@ -48,9 +48,9 @@ describe(StepsEasing, () => {
       });
     });
 
-    describe('jumpEnd', () => {
+    describe('jump-end', () => {
       it('returns correct normalized object', () => {
-        const easing = new StepsEasing(4, 'jumpEnd');
+        const easing = new StepsEasing(4, 'jump-end');
         expect(easing.normalize()).toEqual({
           name: 'steps',
           points: [
@@ -64,9 +64,9 @@ describe(StepsEasing, () => {
       });
     });
 
-    describe('jumpBoth', () => {
+    describe('jump-both', () => {
       it('returns correct normalized object', () => {
-        const easing = new StepsEasing(4, 'jumpBoth');
+        const easing = new StepsEasing(4, 'jump-both');
         expect(easing.normalize()).toEqual({
           name: 'steps',
           points: [

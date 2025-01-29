@@ -251,6 +251,7 @@ android {
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${isReanimatedExampleApp()}"
                 abiFilters (*reactNativeArchitectures())
+                targets("worklets")
             }
         }
 
@@ -333,10 +334,10 @@ android {
     sourceSets {
         main {
             java {
-                srcDirs += "src/duplicated/worklets/main"
+                srcDirs += "src/worklets/main"
 
                 if (!IS_NEW_ARCHITECTURE_ENABLED) {
-                    srcDirs += "src/duplicated/paper"
+                    srcDirs += "src/worklets/paper"
                 }
             }
         }
@@ -355,8 +356,6 @@ def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
 task prepareWorkletsHeadersForPrefabs(type: Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
-    from("$projectDir/src/duplicated/main/cpp")
-    from("$projectDir/../Common/duplicated/cpp")
     include("worklets/**/*.h")
     into(workletsPrefabHeadersDir)
 }

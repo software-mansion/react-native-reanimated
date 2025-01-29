@@ -7,7 +7,6 @@ import type {
   StyleProps,
   Value3D,
   ValueRotation,
-  WorkletFunction,
 } from '../commonTypes';
 import type {
   NormalizedCSSTransitionConfig,
@@ -18,17 +17,20 @@ import { ReanimatedError } from '../errors';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
-import { isFabric, isWeb } from '../PlatformChecker';
+import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
 import { ReanimatedTurboModule } from '../specs';
-import type { IWorkletsModule } from '../WorkletsResolver';
+import type {
+  ShareableRef,
+  WorkletFunction,
+  IWorkletsModule,
+} from '../WorkletsResolver';
 import { WorkletsModule } from '../WorkletsResolver';
-import type { ShareableRef } from '../workletTypes';
 import type {
   IReanimatedModule,
   ReanimatedModuleProxy,
 } from './reanimatedModuleProxy';
 
-const IS_WEB = isWeb();
+const IS_WEB = shouldBeUseWeb();
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
