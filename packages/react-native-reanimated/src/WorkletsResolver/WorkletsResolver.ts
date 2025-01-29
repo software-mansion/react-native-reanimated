@@ -6,8 +6,9 @@ let externalWorklets;
 
 try {
   externalWorklets = require('react-native-worklets');
-  throw new Error('This should not happen');
-} catch (_e) {}
+} catch (_e) {
+  // Ignore for now.
+}
 
 if (externalWorklets) {
   module.exports = { WorkletsModule: externalWorklets.WorkletsModule };
