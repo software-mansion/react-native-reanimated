@@ -26,6 +26,7 @@ import type { SensorContainer } from './SensorContainer';
 import type { UpdatePropsManager } from './UpdateProps';
 
 declare global {
+  var __DISALLOW_WORKLETS_IMPORT: boolean | undefined;
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;

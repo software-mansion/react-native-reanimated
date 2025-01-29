@@ -2,21 +2,23 @@
 /* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 
-let externalWorklets;
+let worklets;
 
 try {
-  externalWorklets = require('react-native-worklets');
+  const resolvedWorklets = require('react-native-worklets');
+  // `globalThis.__DISALLOW_WORKLETS_IMPORT` applies only to our monorepo.
+  if (resolvedWorklets && !globalThis.__DISALLOW_WORKLETS_IMPORT) {
+    worklets = resolvedWorklets;
+  }
 } catch (_e) {
-  // Ignore for now.
+} finally {
+  if (!worklets) {
+    worklets = require('../worklets');
+  }
 }
 
-if (externalWorklets) {
-  module.exports = { WorkletsModule: externalWorklets.WorkletsModule };
-} else {
-  module.exports = {
-    WorkletsModule: require('../worklets').WorkletsModule,
-    isWorkletFunction: require('../worklets').isWorkletFunction,
-    mockedRequestAnimationFrame:
-      require('../worklets').mockedRequestAnimationFrame,
-  };
-}
+module.exports = {
+  WorkletsModule: worklets.WorkletsModule,
+  isWorkletFunction: worklets.isWorkletFunction,
+  mockedRequestAnimationFrame: worklets.mockedRequestAnimationFrame,
+};
