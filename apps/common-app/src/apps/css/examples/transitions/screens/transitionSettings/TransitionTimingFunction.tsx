@@ -1,3 +1,4 @@
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type {
   CSSTransitionProperties,
@@ -10,7 +11,7 @@ import { colors, radius, sizes } from '@/theme';
 import { ExampleScreen } from './components';
 
 export default function TransitionTimingFunction() {
-  const transitionProperties: CSSTransitionProperties = {
+  const transitionProperties: CSSTransitionProperties<ViewStyle> = {
     transitionDuration: '1.5s',
     transitionProperty: ['left', 'transform'],
   };
@@ -21,7 +22,7 @@ export default function TransitionTimingFunction() {
   ];
 
   const renderExample = (
-    exampleConfig: CSSTransitionProperties,
+    exampleConfig: CSSTransitionProperties<ViewStyle>,
     style: StyleProps
   ) => (
     <View style={styles.outerWrapper}>

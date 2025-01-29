@@ -55,28 +55,28 @@ const getTimeout = (settings: CSSTransitionSettings): number => {
   return Math.max(duration + delay, MIN_STYLE_CHANGE_DURATION);
 };
 
-export type ExampleItemProps = {
+export type ExampleItemProps<S extends object> = {
   label: string;
-} & Partial<CSSTransitionProperties>;
+} & Partial<CSSTransitionProperties<S>>;
 
-type ExamplesListCardProps = {
-  transitionProperties: Partial<CSSTransitionProperties>;
+type ExamplesListCardProps<S extends object> = {
+  transitionProperties: Partial<CSSTransitionProperties<S>>;
   transitionStyles: Array<StyleProps>;
-  items: Array<ExampleItemProps>;
+  items: Array<ExampleItemProps<S>>;
   displayStyleChanges: boolean;
   renderExample: (
-    transition: CSSTransitionProperties,
+    transition: CSSTransitionProperties<S>,
     style: StyleProps
   ) => JSX.Element;
 };
 
-export default function ExamplesListCard({
+export default function ExamplesListCard<S extends object>({
   displayStyleChanges: inDisplayStyleChanges,
   items,
   renderExample,
   transitionProperties,
   transitionStyles,
-}: ExamplesListCardProps) {
+}: ExamplesListCardProps<S>) {
   const [displayStyleChanges, setDisplayStyleChanges] = useState(
     inDisplayStyleChanges
   );
@@ -131,26 +131,26 @@ type ExampleRef = {
   reset: () => void;
 };
 
-type ExampleProps = {
-  transitionProperties: Partial<CSSTransitionProperties>;
+type ExampleProps<S extends object> = {
+  transitionProperties: Partial<CSSTransitionProperties<S>>;
   transitionStyles: Array<StyleProps>;
-  item: ExampleItemProps;
+  item: ExampleItemProps<S>;
   displayStyleChanges: boolean;
   renderExample: (
-    config: CSSTransitionProperties,
+    config: CSSTransitionProperties<S>,
     style: StyleProps
   ) => JSX.Element;
 };
 
 const Example = memo(
-  forwardRef(function Example(
+  forwardRef(function Example<S extends object>(
     {
       displayStyleChanges,
       item,
       renderExample,
       transitionProperties,
       transitionStyles,
-    }: ExampleProps,
+    }: ExampleProps<S>,
     ref: React.Ref<ExampleRef>
   ) {
     const [key, setKey] = useState(0);
@@ -220,7 +220,9 @@ const Example = memo(
       </Animated.View>
     );
   })
-);
+) as <S extends object>(
+  props: { ref?: React.ForwardedRef<ExampleRef> } & ExampleProps<S>
+) => JSX.Element;
 
 const styles = StyleSheet.create({
   cardFooter: {

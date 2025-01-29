@@ -1,6 +1,6 @@
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { memo, useCallback } from 'react';
+import { useCallback } from 'react';
 import type { ListRenderItem } from 'react-native';
 import { FlatList, StyleSheet, View } from 'react-native';
 import type {
@@ -18,22 +18,23 @@ import type { ExampleItemProps } from '@/apps/css/examples/transitions/screens/t
 import { stringifyConfig } from '@/apps/css/utils';
 import { colors, flex, radius, spacing } from '@/theme';
 import { iconSizes } from '@/theme/icons';
+import { typedMemo } from '@/utils';
 
-type TransitionConfigurationProps = {
-  transitionProperties: Partial<CSSTransitionProperties>;
+type TransitionConfigurationProps<S extends object> = {
+  transitionProperties: Partial<CSSTransitionProperties<S>>;
   transitionStyles: Array<StyleProps>;
   stylesTitle?: string;
   settingsTitle?: string;
-  overrides?: Array<ExampleItemProps>;
+  overrides?: Array<ExampleItemProps<S>>;
 };
 
-function TransitionConfiguration({
+function TransitionConfiguration<S extends object>({
   overrides,
   settingsTitle = 'Transition settings',
   stylesTitle = 'Transition styles',
   transitionProperties,
   transitionStyles,
-}: TransitionConfigurationProps) {
+}: TransitionConfigurationProps<S>) {
   const renderItem = useCallback<ListRenderItem<StyleProps>>(
     ({ item }) => (
       <View style={styles.codeBlock}>
@@ -84,7 +85,7 @@ function TransitionConfiguration({
   );
 }
 
-export default memo(TransitionConfiguration);
+export default typedMemo(TransitionConfiguration);
 
 const styles = StyleSheet.create({
   codeBlock: {

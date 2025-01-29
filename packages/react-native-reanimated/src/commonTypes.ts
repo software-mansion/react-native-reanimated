@@ -1,13 +1,13 @@
-'use strict';
 import type {
   ViewStyle,
   TextStyle,
   TransformsStyle,
   ImageStyle,
+  StyleProp,
 } from 'react-native';
 import type { WorkletsModuleProxy } from './worklets';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
-import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
+import type { CSSStyle, ExcludedCSSProps } from './css/types';
 
 type DisallowKeysOf<TInterface> = {
   [TKey in keyof TInterface]?: never;
@@ -586,20 +586,21 @@ type MaybeSharedValueRecursive<Value> = Value extends (infer Item)[]
       | (MaybeSharedValueRecursive<Item> | Item)[]
   : Value extends object
     ?
-        | SharedValueDisableContravariance<Value>
+        | SharedValueDisableContravariance<Omit<Value, ExcludedCSSProps>>
         | {
-            [Key in keyof Value]:
+            [Key in keyof Omit<Value, ExcludedCSSProps>]:
               | MaybeSharedValueRecursive<Value[Key]>
               | Value[Key];
           }
     : MaybeSharedValue<Value>;
 
-type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
+type UnwrapStyleProp<Style> =
+  Style extends StyleProp<infer U> ? (U extends object ? U : never) : never;
 
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
-export type AnimatedStyle<Style = DefaultStyle> =
-  | (Style & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) // TODO - maybe add css animation config somewhere else
+export type AnimatedStyle<Style extends StyleProp<any> = PlainStyle> =
+  | CSSStyle<UnwrapStyleProp<Style>>
   | MaybeSharedValueRecursive<Style>;
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
@@ -607,7 +608,7 @@ export type AnimatedTransform = MaybeSharedValueRecursive<
 >;
 
 /** @deprecated Please use {@link AnimatedStyle} type instead. */
-export type AnimateStyle<Style = DefaultStyle> = AnimatedStyle<Style>;
+export type AnimateStyle<Style = PlainStyle> = AnimatedStyle<Style>;
 
 /** @deprecated This type is no longer relevant. */
 export type StylesOrDefault<T> = 'style' extends keyof T

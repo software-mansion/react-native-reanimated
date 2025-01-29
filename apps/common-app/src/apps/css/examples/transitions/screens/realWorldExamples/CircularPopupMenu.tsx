@@ -9,6 +9,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useState } from 'react';
+import type { ViewStyle } from 'react-native';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { CSSTransitionProperties } from 'react-native-reanimated';
@@ -77,7 +78,7 @@ type MenuButtonProps = {
 };
 
 function MenuButton({ open }: MenuButtonProps) {
-  const transitionProperties: CSSTransitionProperties = {
+  const transitionProperties: CSSTransitionProperties<ViewStyle> = {
     transitionDuration: 200,
     transitionProperty: 'all',
   };

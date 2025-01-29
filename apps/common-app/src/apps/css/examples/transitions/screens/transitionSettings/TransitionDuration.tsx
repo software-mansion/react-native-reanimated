@@ -1,8 +1,4 @@
 import { StyleSheet, View } from 'react-native';
-import type {
-  CSSTransitionProperties,
-  StyleProps,
-} from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { colors, radius, sizes } from '@/theme';
@@ -38,10 +34,7 @@ export default function TransitionDuration() {
           title: 'Zero Duration',
         },
       ]}
-      renderExample={(
-        exampleConfig: CSSTransitionProperties,
-        style: StyleProps
-      ) => (
+      renderExample={(exampleConfig, style) => (
         <View style={styles.wrapper}>
           <Animated.View style={[styles.box, exampleConfig, style]} />
         </View>

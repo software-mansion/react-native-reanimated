@@ -35,6 +35,7 @@ import type {
 } from '../commonTypes';
 import { isWorkletFunction } from '../commonTypes';
 import { ReanimatedError } from '../errors';
+import type { PlainStyle } from '../css/types';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -440,7 +441,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
     : [];
   const adaptersHash = adapters ? buildWorkletsHash(adaptersArray) : null;
   const areAnimationsActive = useSharedValue<boolean>(true);
-  const jestAnimatedStyle = useRef<Style>({} as Style);
+  const jestAnimatedStyle = useRef({} as PlainStyle<Style>);
 
   // build dependencies
   if (!dependencies) {
@@ -530,12 +531,18 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
   checkSharedValueUsage(initial.value);
 
   const animatedStyleHandle = useRef<
-    AnimatedStyleHandle<Style> | JestAnimatedStyleHandle<Style> | null
+    | AnimatedStyleHandle<PlainStyle<Style>>
+    | JestAnimatedStyleHandle<PlainStyle<Style>>
+    | null
   >(null);
 
   if (!animatedStyleHandle.current) {
     animatedStyleHandle.current = isJest()
-      ? { viewDescriptors, initial, jestAnimatedStyle }
+      ? {
+          viewDescriptors,
+          initial,
+          jestAnimatedStyle,
+        }
       : { viewDescriptors, initial };
   }
 

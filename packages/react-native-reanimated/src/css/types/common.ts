@@ -1,13 +1,6 @@
 'use strict';
 import type { ComponentType } from 'react';
-import type {
-  ImageStyle,
-  TextStyle,
-  TransformsStyle,
-  ViewStyle,
-} from 'react-native';
-
-export type PlainStyle = ViewStyle & TextStyle & ImageStyle;
+import type { TransformsStyle } from 'react-native';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyComponent = ComponentType<any>;

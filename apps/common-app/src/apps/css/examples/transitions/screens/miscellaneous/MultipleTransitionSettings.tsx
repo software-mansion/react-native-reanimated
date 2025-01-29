@@ -91,7 +91,7 @@ export default function MultipleTransitionSettings() {
 
   const transition = useSelectableConfig(
     selectableConfig
-  ) as CSSTransitionProperties;
+  ) as CSSTransitionProperties<ViewStyle>;
 
   return (
     <ScrollScreen>

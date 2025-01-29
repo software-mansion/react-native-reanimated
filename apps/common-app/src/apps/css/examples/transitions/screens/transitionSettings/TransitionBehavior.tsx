@@ -1,8 +1,4 @@
 import { StyleSheet } from 'react-native';
-import type {
-  CSSTransitionProperties,
-  StyleProps,
-} from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import { colors, radius, sizes } from '@/theme';
@@ -25,10 +21,7 @@ export default function TransitionBehavior() {
           title: 'Transition Behavior',
         },
       ]}
-      renderExample={(
-        exampleConfig: CSSTransitionProperties,
-        style: StyleProps
-      ) => (
+      renderExample={(exampleConfig, style) => (
         <Animated.View style={[styles.wrapper, exampleConfig, style]}>
           {Array.from({ length: 3 }).map((_, index) => (
             <Animated.View key={index} style={styles.box} />

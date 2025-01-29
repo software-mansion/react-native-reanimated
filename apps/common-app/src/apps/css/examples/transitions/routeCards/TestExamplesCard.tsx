@@ -1,7 +1,6 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import type { CSSTransitionProperties } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import type { RouteCardComponent } from '@/apps/css/components';
@@ -16,11 +15,11 @@ const TestExamplesCard: RouteCardComponent = (props) => (
   </RouteCard>
 );
 
-const TRANSITION_CONFIG: CSSTransitionProperties = {
+const TRANSITION_CONFIG = {
   transitionDuration: 500,
   transitionProperty: 'transform',
   transitionTimingFunction: 'ease-in-out',
-};
+} as const;
 
 function Showcase() {
   const [open, setOpen] = useState(false);

@@ -88,7 +88,9 @@ export default function ReversingShortening() {
   const [displayStyleChanges, setDisplayStyleChanges] = useState(false);
   const [exampleIndex, setExampleIndex] = useState(0);
 
-  const transition = useSelectableConfig(selectableConfig);
+  const transition = useSelectableConfig(
+    selectableConfig
+  ) as CSSTransitionProperties<ViewStyle>;
 
   const { name: exampleName, transitionStyles } = EXAMPLES[exampleIndex];
 

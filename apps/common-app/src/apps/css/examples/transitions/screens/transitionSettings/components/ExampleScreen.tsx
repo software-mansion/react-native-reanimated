@@ -18,31 +18,31 @@ import { TransitionConfiguration } from '@/apps/css/examples/transitions/compone
 import type { ExampleItemProps } from './ExamplesListCard';
 import ExamplesListCard from './ExamplesListCard';
 
-type ExampleCardsSection = {
+type ExampleCardsSection<S extends object> = {
   title: string;
-  items: Array<ExampleItemProps>;
+  items: Array<ExampleItemProps<S>>;
   description?: ReactNode;
   labelTypes?: Array<LabelType>;
 };
 
-type ExampleScreenContentProps = {
-  transitionProperties: Partial<CSSTransitionProperties>;
-  cards: Array<ExampleCardsSection>;
+type ExampleScreenContentProps<S extends object> = {
+  transitionProperties: Partial<CSSTransitionProperties<S>>;
+  cards: Array<ExampleCardsSection<S>>;
   transitionStyles: Array<StyleProps>;
   displayStyleChanges?: boolean;
   renderExample: (
-    transition: CSSTransitionProperties,
+    transition: CSSTransitionProperties<S>,
     style: StyleProps
   ) => JSX.Element;
 };
 
-function ExampleScreenContent({
+function ExampleScreenContent<S extends object>({
   cards,
   displayStyleChanges = false,
   renderExample,
   transitionProperties,
   transitionStyles,
-}: ExampleScreenContentProps) {
+}: ExampleScreenContentProps<S>) {
   const configOverrides = useMemo(
     () => cards.flatMap((card) => card.items),
     [cards]
@@ -81,17 +81,19 @@ function ExampleScreenContent({
   );
 }
 
-type ExampleScreenProps =
+type ExampleScreenProps<S extends object> =
   | {
       tabs: Array<
         {
           name: string;
-        } & ExampleScreenContentProps
+        } & ExampleScreenContentProps<S>
       >;
     }
-  | ExampleScreenContentProps;
+  | ExampleScreenContentProps<S>;
 
-export default function ExampleScreen(props: ExampleScreenProps) {
+export default function ExampleScreen<S extends object>(
+  props: ExampleScreenProps<S>
+) {
   if ('tabs' in props) {
     return (
       <Screen>

@@ -5,6 +5,7 @@ import type {
   CSSAnimationKeyframes,
   CSSAnimationSettings,
   ExistingCSSAnimationProperties,
+  PlainStyle,
 } from '../types';
 import CSSKeyframesRuleImpl from '../models/CSSKeyframesRule.web';
 import {
@@ -71,7 +72,7 @@ export default class CSSAnimationsManager {
       }
 
       // If keyframes was defined as an object, the additional processing is needed
-      const keyframes = definition as CSSAnimationKeyframes;
+      const keyframes = definition as CSSAnimationKeyframes<PlainStyle>;
       const processedKeyframes = processKeyframeDefinitions(keyframes);
 
       // If the animation with the same keyframes was already attached, we can reuse it

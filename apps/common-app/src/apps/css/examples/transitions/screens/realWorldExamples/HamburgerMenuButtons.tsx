@@ -1,7 +1,6 @@
 import type { ComponentType } from 'react';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import type { CSSTransitionProperties } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 
 import {
@@ -154,11 +153,11 @@ const sharedStyles = StyleSheet.create({
   },
 });
 
-const SHARED_CONFIG: CSSTransitionProperties = {
+const SHARED_CONFIG = {
   transitionDuration: 300,
   transitionProperty: 'all',
   transitionTimingFunction: 'ease-out',
-};
+} as const;
 
 function Simple({ open }: ExampleComponentProps) {
   const lineStyle = [sharedStyles.line, SHARED_CONFIG];
