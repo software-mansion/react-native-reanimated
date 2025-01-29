@@ -43,6 +43,7 @@ jobs:
     env:
       WORKING_DIRECTORY: apps/tvos-example
       COMMON_APP_DIR: apps/common-app
+      REANIMATED_DIR: packages/react-native-reanimated
     concurrency:
       group: tvos-${{ github.ref }}-${{ inputs.use-external-worklets }}
       cancel-in-progress: true
@@ -56,14 +57,14 @@ jobs:
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
-      # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
-      - name: Install Reanimated node_modules
-        working-directory: packages/react-native-reanimated
-        run: yarn install --immutable
+      - name: Build Reanimated package
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: yarn build
 
-      - name: Install app node_modules
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn install --immutable
+      - name: Use external worklets
+        if: ${{ inputs.use-external-worklets == 'true' }}
+        working-directory: ${{ env.COMMON_APP_DIR }}
+        run: yarn add react-native-worklets@workspace:"*"
 
       - name: Use external worklets
         if: ${{ inputs.use-external-worklets == 'true' }}

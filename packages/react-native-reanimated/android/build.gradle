@@ -141,9 +141,7 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
 def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
 
-// TODO: Uncomment me when when dynamic worklets linking is ready
-// def hasExternalWorklets = rootProject.subprojects.find { it.name == 'react-native-worklets' } != null
-def hasExternalWorklets = false
+def hasExternalWorklets = rootProject.subprojects.find { it.name == 'react-native-worklets' } != null
 
 def workletsPrefabHeadersDir = project.file("$buildDir/prefab-headers/worklets")
 def reanimatedPrefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
@@ -260,7 +258,11 @@ android {
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
                         "-DHAS_EXTERNAL_WORKLETS=${hasExternalWorklets}"
                 abiFilters (*reactNativeArchitectures())
-                targets("reanimated", "worklets")
+                if(hasExternalWorklets){
+                    targets("reanimated")
+                } else {
+                    targets("reanimated", "worklets")
+                }
             }
         }
 
@@ -343,7 +345,7 @@ android {
     sourceSets.main {
         java {
             if(hasExternalWorklets){
-                // Nothing for now.
+                srcDirs += "src/externalWorklets/with"
             } else {
                 srcDirs += "src/worklets/main"
                 srcDirs += "src/externalWorklets/without"

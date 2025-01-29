@@ -16,14 +16,14 @@ import java.util.Objects;
 
 @ReactModuleList(
         nativeModules = {
-          DummyWorkletsModule.class
+          WorkletsModule.class
         })
 public class WorkletsPackage extends BaseReactPackage implements ReactPackage {
   @Override
   public NativeModule getModule(
           @NonNull String name, @NonNull ReactApplicationContext reactContext) {
     return switch (name) {
-      case DummyWorkletsModule.NAME -> new DummyWorkletsModule(reactContext);
+      case WorkletsModule.NAME -> new WorkletsModule(reactContext);
       default -> null;
     };
   }
@@ -32,7 +32,7 @@ public class WorkletsPackage extends BaseReactPackage implements ReactPackage {
   public ReactModuleInfoProvider getReactModuleInfoProvider() {
     Class<? extends NativeModule>[] moduleList =
             new Class[] {
-                    DummyWorkletsModule.class
+                    WorkletsModule.class
             };
 
     final Map<String, ReactModuleInfo> reactModuleInfoMap = new HashMap<>();

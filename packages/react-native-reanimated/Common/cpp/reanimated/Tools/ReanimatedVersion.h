@@ -9,11 +9,13 @@
 
 using namespace facebook;
 
-namespace worklets {
+namespace reanimated {
 
 std::string getReanimatedCppVersion();
 void injectReanimatedCppVersion(jsi::Runtime &);
 bool matchVersion(const std::string &, const std::string &);
-void checkJSVersion(jsi::Runtime &, const std::shared_ptr<JSLogger> &);
+void checkJSVersion(
+    jsi::Runtime &,
+    const std::shared_ptr<worklets::JSLogger> &);
 
-}; // namespace worklets
+}; // namespace reanimated
