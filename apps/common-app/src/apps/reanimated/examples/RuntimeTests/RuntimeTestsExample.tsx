@@ -63,6 +63,12 @@ export default function RuntimeTestsExample() {
           },
         },
         {
+          testSuiteName: 'props',
+          importTest: () => {
+            require('./tests/props/boxShadow.test');
+          },
+        },
+        {
           testSuiteName: 'utilities',
           importTest: () => {
             require('./tests/utilities/relativeCoords.test');
