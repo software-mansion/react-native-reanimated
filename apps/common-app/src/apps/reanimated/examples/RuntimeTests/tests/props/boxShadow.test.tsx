@@ -4,11 +4,7 @@ import { useEffect } from 'react';
 import type { BoxShadowValue } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type { AnimatableValue } from 'react-native-reanimated';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { DefaultStyle } from 'react-native-reanimated/lib/typescript/hook/commonTypes';
 
 import {
@@ -67,14 +63,8 @@ describe.skip('animation of BoxShadow', () => {
 
     return (
       <View style={styles.container}>
-        <Animated.View
-          ref={refActive}
-          style={[styles.animatedBox, styleActive]}
-        />
-        <Animated.View
-          ref={refPassive}
-          style={[styles.animatedBox, stylePassive]}
-        />
+        <Animated.View ref={refActive} style={[styles.animatedBox, styleActive]} />
+        <Animated.View ref={refPassive} style={[styles.animatedBox, stylePassive]} />
       </View>
     );
   }
@@ -98,26 +88,15 @@ describe.skip('animation of BoxShadow', () => {
       },
     },
   ])('Animate', async ({ finalBoxShadow, startBoxShadow }) => {
-    await render(
-      <BoxShadowComponent
-        finalBoxShadow={finalBoxShadow}
-        startBoxShadow={startBoxShadow}
-      />
-    );
+    await render(<BoxShadowComponent finalBoxShadow={finalBoxShadow} startBoxShadow={startBoxShadow} />);
 
     const activeComponent = getTestComponent(Component.ACTIVE);
     const passiveComponent = getTestComponent(Component.PASSIVE);
 
     await wait(200);
 
-    expect(await activeComponent.getAnimatedStyle('boxShadow')).toBe(
-      [finalBoxShadow],
-      ComparisonMode.ARRAY
-    );
-    expect(await passiveComponent.getAnimatedStyle('boxShadow')).toBe(
-      [finalBoxShadow],
-      ComparisonMode.ARRAY
-    );
+    expect(await activeComponent.getAnimatedStyle('boxShadow')).toBe([finalBoxShadow], ComparisonMode.ARRAY);
+    expect(await passiveComponent.getAnimatedStyle('boxShadow')).toBe([finalBoxShadow], ComparisonMode.ARRAY);
   });
 });
 
