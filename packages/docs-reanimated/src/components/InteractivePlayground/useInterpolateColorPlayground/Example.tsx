@@ -11,7 +11,8 @@ import Animated, {
 
 interface InterpolateColorProps {
   outputRange: any[];
-  colorSpace: 'RGB' | 'HSV';
+  // TODO (OKLAB): Uncomment "LAB" space when OKLAB support is released officially
+  colorSpace: 'RGB' | 'HSV' /* | 'LAB'*/;
   options: InterpolationOptions;
 }
 
