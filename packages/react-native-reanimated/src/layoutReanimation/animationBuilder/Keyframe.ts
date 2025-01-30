@@ -36,6 +36,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
   reduceMotionV: ReduceMotion = ReduceMotion.System;
   callbackV?: (finished: boolean) => void;
   definitions: MaybeInvalidKeyframeProps;
+  parsedAnimation?: EntryExitAnimationFunction;
 
   /*
     Keyframe definition should be passed in the constructor as the map
@@ -232,7 +233,11 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
     const { keyframes, initialValues } = this.parseDefinitions();
     const callback = this.callbackV;
 
-    return () => {
+    if (this.parsedAnimation) {
+      return this.parsedAnimation;
+    }
+
+    this.parsedAnimation = () => {
       'worklet';
       const animations: StylePropsWithArrayTransform = {};
 
@@ -296,6 +301,7 @@ class InnerKeyframe implements IEntryExitAnimationBuilder {
         callback,
       };
     };
+    return this.parsedAnimation;
   };
 }
 
