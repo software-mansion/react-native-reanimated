@@ -519,9 +519,7 @@ void ReanimatedModuleProxy::requestAnimationFrame(
 void ReanimatedModuleProxy::maybeRequestRender() {
   if (!renderRequested_) {
     renderRequested_ = true;
-    jsi::Runtime &uiRuntime =
-        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-    requestRender_(onRenderCallback_, uiRuntime);
+    requestRender_(onRenderCallback_);
   }
 }
 
@@ -767,18 +765,11 @@ void ReanimatedModuleProxy::cssLoopCallback(const double /*timestampMs*/) {
       || updatesRegistryManager_->hasPropsToRevert()
 #endif // ANDROID
   ) {
-    jsi::Runtime &rt =
-        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-    requestRender_(
-        [weakThis = weak_from_this()](const double newTimestampMs) {
-          auto strongThis = weakThis.lock();
-          if (!strongThis) {
-            return;
-          }
-
-          strongThis->cssLoopCallback(newTimestampMs);
-        },
-        rt);
+    requestRender_([weakThis = weak_from_this()](const double newTimestampMs) {
+      if (auto strongThis = weakThis.lock()) {
+        strongThis->cssLoopCallback(newTimestampMs);
+      }
+    });
   } else {
     cssLoopRunning_ = false;
   }
@@ -797,20 +788,11 @@ void ReanimatedModuleProxy::maybeRunCSSLoop() {
         if (!strongThis) {
           return;
         }
-
-        jsi::Runtime &rt =
-            strongThis->workletsModuleProxy_->getUIWorkletRuntime()
-                ->getJSIRuntime();
-        strongThis->requestRender_(
-            [weakThis](const double timestampMs) {
-              auto strongThis = weakThis.lock();
-              if (!strongThis) {
-                return;
-              }
-
-              strongThis->cssLoopCallback(timestampMs);
-            },
-            rt);
+        strongThis->requestRender_([weakThis](const double timestampMs) {
+          if (auto strongThis = weakThis.lock()) {
+            strongThis->cssLoopCallback(timestampMs);
+          }
+        });
       });
 }
 
@@ -918,18 +900,11 @@ void ReanimatedModuleProxy::performOperations() {
 }
 
 void ReanimatedModuleProxy::requestFlushRegistry() {
-  jsi::Runtime &rt =
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-  requestRender_(
-      [weakThis = weak_from_this()](double time) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-
-        strongThis->shouldFlushRegistry_ = true;
-      },
-      rt);
+  requestRender_([weakThis = weak_from_this()](const double timestamp) {
+    if (auto strongThis = weakThis.lock()) {
+      strongThis->shouldFlushRegistry_ = true;
+    }
+  });
 }
 
 void ReanimatedModuleProxy::commitUpdates(

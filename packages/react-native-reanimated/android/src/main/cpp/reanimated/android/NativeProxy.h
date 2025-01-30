@@ -197,7 +197,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       const int emitterReactTag);
   void performOperations();
   bool getIsReducedMotion();
-  void requestRender(std::function<void(double)> onRender, jsi::Runtime &rt);
+  void requestRender(std::function<void(double)> onRender);
   void registerEventHandler();
   void maybeFlushUIUpdatesQueue();
   void setGestureState(int handlerTag, int newState);

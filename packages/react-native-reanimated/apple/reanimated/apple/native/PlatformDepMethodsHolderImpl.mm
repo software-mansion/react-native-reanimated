@@ -85,7 +85,7 @@ SetGestureStateFunction makeSetGestureStateFunctionBridgeless(RCTModuleRegistry 
 
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 {
-  auto requestRender = [nodesManager](std::function<void(double)> onRender, jsi::Runtime &rt) {
+  auto requestRender = [nodesManager](std::function<void(double)> onRender) {
     [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
 #if !TARGET_OS_OSX
       auto targetTimestamp = displayLink.targetTimestamp;
