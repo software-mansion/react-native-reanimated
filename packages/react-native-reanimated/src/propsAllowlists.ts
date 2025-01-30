@@ -48,6 +48,7 @@ export const PropsAllowlists: AllowlistsHolder = {
     borderTopWidth: true,
     borderWidth: true,
     bottom: true,
+    boxShadow: true,
     flex: true,
     flexGrow: true,
     flexShrink: true,

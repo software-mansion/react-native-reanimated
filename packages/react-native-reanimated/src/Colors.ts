@@ -356,6 +356,10 @@ export const ColorProperties = makeShareable([
   'stroke',
 ]);
 
+const NestedColorProperties = makeShareable({
+  boxShadow: 'color',
+});
+
 // // ts-prune-ignore-next Exported for the purpose of tests only
 export function normalizeColor(color: unknown): number | null {
   'worklet';
@@ -682,6 +686,19 @@ export function processColorsInProps(props: StyleProps) {
   for (const key in props) {
     if (ColorProperties.includes(key)) {
       props[key] = processColor(props[key]);
+    } else if (
+      NestedColorProperties[key as keyof typeof NestedColorProperties]
+    ) {
+      const propGroupList = props[key] as StyleProps[];
+      for (const propGroup of propGroupList) {
+        const nestedPropertyName =
+          NestedColorProperties[key as keyof typeof NestedColorProperties];
+        if (propGroup[nestedPropertyName] !== undefined) {
+          propGroup[nestedPropertyName] = processColor(
+            propGroup[nestedPropertyName]
+          );
+        }
+      }
     }
   }
 }
