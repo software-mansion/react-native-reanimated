@@ -195,9 +195,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("performOperations", NativeProxy::performOperations)});
 }
 
-void NativeProxy::requestRender(
-    std::function<void(double)> onRender,
-    jsi::Runtime &) {
+void NativeProxy::requestRender(std::function<void(double)> onRender) {
   static const auto method =
       getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
   method(

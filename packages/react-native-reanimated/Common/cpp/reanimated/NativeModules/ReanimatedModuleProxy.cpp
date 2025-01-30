@@ -488,8 +488,7 @@ void ReanimatedModuleProxy::requestAnimationFrame(
 void ReanimatedModuleProxy::maybeRequestRender() {
   if (!renderRequested_) {
     renderRequested_ = true;
-    jsi::Runtime &uiRuntime = uiWorkletRuntime_->getJSIRuntime();
-    requestRender_(onRenderCallback_, uiRuntime);
+    requestRender_(onRenderCallback_);
   }
 }
 
