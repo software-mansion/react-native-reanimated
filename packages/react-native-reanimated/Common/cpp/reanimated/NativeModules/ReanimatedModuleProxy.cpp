@@ -3,12 +3,6 @@
 #include <reanimated/Tools/CollectionUtils.h>
 #include <reanimated/Tools/FeaturesConfig.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
-#include <unordered_map>
-
-#ifdef RCT_NEW_ARCH_ENABLED
-#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
-#include <reanimated/Fabric/ShadowTreeCloner.h>
-#endif // RCT_NEW_ARCH_ENABLED
 
 #include <worklets/Registries/EventHandlerRegistry.h>
 #include <worklets/SharedItems/Shareables.h>
@@ -26,6 +20,7 @@
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <functional>
+#include <unordered_map>
 #include <utility>
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -45,8 +40,6 @@
 // fallback to the deprecated syntax here.
 #define COPY_CAPTURE_WITH_THIS [=] // NOLINT (whitespace/braces)
 #endif // REACT_NATIVE_MINOR_VERSION >= 75 || __cplusplus >= 202002L
-
-using namespace facebook;
 
 namespace reanimated {
 
@@ -73,10 +66,25 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           std::make_shared<JSLogger>(workletsModuleProxy->getJSScheduler())),
       layoutAnimationsManager_(
           std::make_shared<LayoutAnimationsManager>(jsLogger_)),
+      getAnimationTimestamp_(platformDepMethodsHolder.getAnimationTimestamp),
 #ifdef RCT_NEW_ARCH_ENABLED
+      animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
+      staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
+#ifdef ANDROID
+      updatesRegistryManager_(
+          std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
+#else
+      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
+#endif
+      cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
+      cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
+          staticPropsRegistry_,
+          getAnimationTimestamp_)),
+      viewStylesRepository_(std::make_shared<ViewStylesRepository>(
+          staticPropsRegistry_,
+          animatedPropsRegistry_)),
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
-      propsRegistry_(std::make_shared<PropsRegistry>()),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(
@@ -88,6 +96,19 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       unsubscribeFromKeyboardEventsFunction_(
           platformDepMethodsHolder.unsubscribeFromKeyboardEvents) {
   commonInit(platformDepMethodsHolder);
+
+#ifdef RCT_NEW_ARCH_ENABLED
+  {
+    auto lock = updatesRegistryManager_->createLock();
+    // Add registries in order of their priority (from the lowest to the
+    // highest)
+    // CSS transitions should be overriden by animated style animations;
+    // animated style animations should be overriden by CSS animations
+    updatesRegistryManager_->addRegistry(cssTransitionsRegistry_);
+    updatesRegistryManager_->addRegistry(animatedPropsRegistry_);
+    updatesRegistryManager_->addRegistry(cssAnimationsRegistry_);
+  }
+#endif
 }
 
 void ReanimatedModuleProxy::commonInit(
@@ -99,12 +120,12 @@ void ReanimatedModuleProxy::commonInit(
 
 #ifdef RCT_NEW_ARCH_ENABLED
   auto updateProps = [this](jsi::Runtime &rt, const jsi::Value &operations) {
-    this->updateProps(rt, operations);
+    animatedPropsRegistry_->update(rt, operations);
   };
 
   auto removeFromPropsRegistry =
       [this](jsi::Runtime &rt, const jsi::Value &viewTags) {
-        this->removeFromPropsRegistry(rt, viewTags);
+        animatedPropsRegistry_->remove(rt, viewTags);
       };
 
   auto measure = [this](jsi::Runtime &rt, const jsi::Value &shadowNodeValue) {
@@ -188,9 +209,6 @@ ReanimatedModuleProxy::~ReanimatedModuleProxy() {
   // runtime, so they have to go away before we tear down the runtime
   eventHandlerRegistry_.reset();
   frameCallbacks_.clear();
-#ifdef RCT_NEW_ARCH_ENABLED
-  operationsInBatch_.clear();
-#endif // RCT_NEW_ARCH_ENABLED
 }
 
 jsi::Value ReanimatedModuleProxy::registerEventHandler(
@@ -477,6 +495,112 @@ void ReanimatedModuleProxy::cleanupSensors() {
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
+void ReanimatedModuleProxy::setViewStyle(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag,
+    const jsi::Value &viewStyle) {
+  const auto tag = viewTag.asNumber();
+  staticPropsRegistry_->set(rt, tag, viewStyle);
+  if (staticPropsRegistry_->hasObservers(tag)) {
+    maybeRunCSSLoop();
+  }
+}
+
+void ReanimatedModuleProxy::removeViewStyle(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag) {
+  staticPropsRegistry_->remove(viewTag.asNumber());
+}
+
+void ReanimatedModuleProxy::registerCSSAnimations(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &animationConfigs) {
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+
+  const auto animationConfigsArray = animationConfigs.asObject(rt).asArray(rt);
+  const auto animationsCount = animationConfigsArray.size(rt);
+
+  std::vector<std::shared_ptr<CSSAnimation>> animations;
+  animations.reserve(animationsCount);
+  const auto timestamp = getCssTimestamp();
+
+  for (size_t i = 0; i < animationsCount; ++i) {
+    auto animationConfig = animationConfigsArray.getValueAtIndex(rt, i);
+    animations.emplace_back(std::make_shared<CSSAnimation>(
+        rt,
+        shadowNode,
+        i,
+        parseCSSAnimationConfig(rt, animationConfig),
+        viewStylesRepository_,
+        timestamp));
+  }
+
+  cssAnimationsRegistry_->set(rt, shadowNode, std::move(animations), timestamp);
+  maybeRunCSSLoop();
+}
+
+void ReanimatedModuleProxy::updateCSSAnimations(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag,
+    const jsi::Value &settingsUpdates) {
+  const auto settingsUpdatesArray = settingsUpdates.asObject(rt).asArray(rt);
+  const auto settingsUpdatesCount = settingsUpdatesArray.size(rt);
+
+  std::vector<std::pair<unsigned, PartialCSSAnimationSettings>> updates;
+  updates.reserve(settingsUpdatesCount);
+
+  for (size_t i = 0; i < settingsUpdatesCount; ++i) {
+    auto settingsUpdate =
+        settingsUpdatesArray.getValueAtIndex(rt, i).asObject(rt);
+    const auto animationIndex = settingsUpdate.getProperty(rt, "index");
+    const auto settings = settingsUpdate.getProperty(rt, "settings");
+    updates.emplace_back(
+        animationIndex.asNumber(),
+        parsePartialCSSAnimationSettings(rt, settings));
+  }
+
+  cssAnimationsRegistry_->updateSettings(
+      rt, viewTag.asNumber(), updates, getCssTimestamp());
+  maybeRunCSSLoop();
+}
+
+void ReanimatedModuleProxy::unregisterCSSAnimations(const jsi::Value &viewTag) {
+  cssAnimationsRegistry_->remove(viewTag.asNumber());
+}
+
+void ReanimatedModuleProxy::registerCSSTransition(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &transitionConfig) {
+  auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
+
+  auto transition = std::make_shared<CSSTransition>(
+      std::move(shadowNode),
+      parseCSSTransitionConfig(rt, transitionConfig),
+      viewStylesRepository_);
+
+  cssTransitionsRegistry_->add(transition);
+  maybeRunCSSLoop();
+}
+
+void ReanimatedModuleProxy::updateCSSTransition(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag,
+    const jsi::Value &configUpdates) {
+  cssTransitionsRegistry_->updateSettings(
+      rt,
+      viewTag.asNumber(),
+      parsePartialCSSTransitionConfig(rt, configUpdates));
+  maybeRunCSSLoop();
+}
+
+void ReanimatedModuleProxy::unregisterCSSTransition(
+    jsi::Runtime &rt,
+    const jsi::Value &viewTag) {
+  cssTransitionsRegistry_->remove(viewTag.asNumber());
+}
+
 bool ReanimatedModuleProxy::isThereAnyLayoutProp(
     jsi::Runtime &rt,
     const jsi::Object &props) {
@@ -535,6 +659,7 @@ bool ReanimatedModuleProxy::handleEvent(
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
+
 bool ReanimatedModuleProxy::handleRawEvent(
     const RawEvent &rawEvent,
     double currentTime) {
@@ -567,62 +692,84 @@ bool ReanimatedModuleProxy::handleRawEvent(
   return res;
 }
 
-void ReanimatedModuleProxy::updateProps(
-    jsi::Runtime &rt,
-    const jsi::Value &operations) {
-  auto array = operations.asObject(rt).asArray(rt);
-  size_t length = array.size(rt);
-  for (size_t i = 0; i < length; ++i) {
-    auto item = array.getValueAtIndex(rt, i).asObject(rt);
-    auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
-    auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
-    const jsi::Value &updates = item.getProperty(rt, "updates");
-    operationsInBatch_.emplace_back(
-        shadowNode, std::make_unique<jsi::Value>(rt, updates));
+void ReanimatedModuleProxy::maybeRunCSSLoop() {
+  if (cssLoopRunning_) {
+    return;
   }
+
+  cssLoopRunning_ = true;
+
+  workletsModuleProxy_->getUIScheduler()->scheduleOnUI([this]() {
+    std::shared_ptr<std::function<void(const double)>> cssLoop =
+        std::make_shared<std::function<void(const double)>>();
+
+    *cssLoop = [this, cssLoop](const double timestampMs) {
+      shouldUpdateCssAnimations_ = true;
+      if (cssAnimationsRegistry_->hasUpdates() ||
+          cssTransitionsRegistry_->hasUpdates()
+#ifdef ANDROID
+          || updatesRegistryManager_->hasPropsToRevert()
+#endif
+      ) {
+        jsi::Runtime &rt =
+            workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+        requestRender_(*cssLoop, rt);
+      } else {
+        cssLoopRunning_ = false;
+      }
+    };
+
+    jsi::Runtime &rt =
+        workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+    requestRender_(*cssLoop, rt);
+  });
+}
+
+double ReanimatedModuleProxy::getCssTimestamp() {
+  if (cssLoopRunning_) {
+    return currentCssTimestamp_;
+  }
+  currentCssTimestamp_ = getAnimationTimestamp_();
+  return currentCssTimestamp_;
 }
 
 void ReanimatedModuleProxy::performOperations() {
-  if (operationsInBatch_.empty() && tagsToRemove_.empty()) {
-    // nothing to do
-    return;
+  jsi::Runtime &rt =
+      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+
+  UpdatesBatch updatesBatch;
+
+  {
+    auto lock = updatesRegistryManager_->createLock();
+
+    if (shouldUpdateCssAnimations_) {
+      currentCssTimestamp_ = getAnimationTimestamp_();
+
+      // Update CSS transitions and flush updates
+      cssTransitionsRegistry_->update(rt, currentCssTimestamp_);
+      cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, false);
+    }
+
+    // Flush all animated props updates
+    animatedPropsRegistry_->flushUpdates(rt, updatesBatch, true);
+
+    if (shouldUpdateCssAnimations_) {
+      // Update CSS animations and flush updates
+      cssAnimationsRegistry_->update(rt, currentCssTimestamp_);
+      cssAnimationsRegistry_->flushUpdates(rt, updatesBatch, true);
+    }
+
+    shouldUpdateCssAnimations_ = false;
+
+    if (updatesBatch.size() > 0 &&
+        updatesRegistryManager_->shouldReanimatedSkipCommit()) {
+      updatesRegistryManager_->pleaseCommitAfterPause();
+    }
   }
 
   ReanimatedSystraceSection s("performOperations");
 
-  auto copiedOperationsQueue = std::move(operationsInBatch_);
-  operationsInBatch_.clear();
-
-  jsi::Runtime &rt =
-      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
-
-  {
-    auto lock = propsRegistry_->createLock();
-
-    if (copiedOperationsQueue.size() > 0 &&
-        propsRegistry_->shouldReanimatedSkipCommit()) {
-      propsRegistry_->pleaseCommitAfterPause();
-    }
-
-    // remove recently unmounted ShadowNodes from PropsRegistry
-    if (!tagsToRemove_.empty()) {
-      for (auto tag : tagsToRemove_) {
-        propsRegistry_->remove(tag);
-      }
-      tagsToRemove_.clear();
-    }
-
-    // Even if only non-layout props are changed, we need to store the update
-    // in PropsRegistry anyway so that React doesn't overwrite it in the next
-    // render. Currently, only opacity and transform are treated in a special
-    // way but backgroundColor, shadowOpacity etc. would get overwritten (see
-    // `_propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN`).
-    for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-      propsRegistry_->update(shadowNode, dynamicFromValue(rt, *props));
-    }
-  }
-
-  for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+  for (const auto &[shadowNode, props] : updatesBatch) {
     const jsi::Value &nonAnimatableProps = filterNonAnimatableProps(rt, *props);
     if (nonAnimatableProps.isUndefined()) {
       continue;
@@ -639,51 +786,89 @@ void ReanimatedModuleProxy::performOperations() {
   }
 
   bool hasLayoutUpdates = false;
+#ifdef ANDROID
+  bool hasPropsToRevert = updatesRegistryManager_->hasPropsToRevert();
+#else
+  bool hasPropsToRevert = false;
+#endif
 
-  for (const auto &[shadowNode, props] : copiedOperationsQueue) {
-    if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
-      hasLayoutUpdates = true;
-      break;
+  if (!hasPropsToRevert) {
+    for (const auto &[shadowNode, props] : updatesBatch) {
+      if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
+        hasLayoutUpdates = true;
+        break;
+      }
     }
   }
 
-  if (!hasLayoutUpdates) {
+  if (!hasLayoutUpdates && !hasPropsToRevert) {
     // If there's no layout props to be updated, we can apply the updates
     // directly onto the components and skip the commit.
-    for (const auto &[shadowNode, props] : copiedOperationsQueue) {
+    for (const auto &[shadowNode, props] : updatesBatch) {
       Tag tag = shadowNode->getTag();
       synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
     }
     return;
   }
 
-  if (propsRegistry_->shouldReanimatedSkipCommit()) {
+  if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
     // It may happen that `performOperations` is called on the UI thread
     // while React Native tries to commit a new tree on the JS thread.
     // In this case, we should skip the commit here and let React Native do
-    // it. The commit will include the current values from PropsRegistry which
-    // will be applied in ReanimatedCommitHook.
+    // it. The commit will include the current values from the updates manager
+    // which will be applied in ReanimatedCommitHook.
     return;
   }
 
+  commitUpdates(rt, updatesBatch);
+
+  // Clear the entire cache after the commit
+  // (we don't know if the view is updated from outside of Reanimated
+  // so we have to clear the entire cache)
+  viewStylesRepository_->clearNodesCache();
+}
+
+void ReanimatedModuleProxy::requestFlushRegistry() {
+  jsi::Runtime &rt =
+      workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+  requestRender_([this](double time) { shouldFlushRegistry_ = true; }, rt);
+}
+
+void ReanimatedModuleProxy::commitUpdates(
+    jsi::Runtime &rt,
+    const UpdatesBatch &updatesBatch) {
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
   std::unordered_map<SurfaceId, PropsMap> propsMapBySurface;
 
-  for (auto const &[shadowNode, props] : copiedOperationsQueue) {
-    SurfaceId surfaceId = shadowNode->getSurfaceId();
-    auto family = &shadowNode->getFamily();
-    react_native_assert(family->getSurfaceId() == surfaceId);
-    propsMapBySurface[surfaceId][family].emplace_back(rt, std::move(*props));
+#ifdef ANDROID
+  updatesRegistryManager_->collectPropsToRevertBySurface(propsMapBySurface);
+#endif
+
+  if (shouldFlushRegistry_) {
+    shouldFlushRegistry_ = false;
+    const auto propsMap = updatesRegistryManager_->collectProps();
+    for (auto const &[family, props] : propsMap) {
+      const auto surfaceId = family->getSurfaceId();
+      auto &propsVector = propsMapBySurface[surfaceId][family];
+      propsVector.insert(propsVector.end(), props.begin(), props.end());
+    }
+  } else {
+    for (auto const &[shadowNode, props] : updatesBatch) {
+      SurfaceId surfaceId = shadowNode->getSurfaceId();
+      auto family = &shadowNode->getFamily();
+      react_native_assert(family->getSurfaceId() == surfaceId);
+      propsMapBySurface[surfaceId][family].emplace_back(rt, std::move(*props));
+    }
   }
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
-      shadowTree.commit(
+      const auto status = shadowTree.commit(
           [&](RootShadowNode const &oldRootShadowNode)
               -> RootShadowNode::Unshared {
-            if (propsRegistry_->shouldReanimatedSkipCommit()) {
+            if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
               return nullptr;
             }
 
@@ -703,16 +888,18 @@ void ReanimatedModuleProxy::performOperations() {
           {/* .enableStateReconciliation = */
            false,
            /* .mountSynchronously = */ true});
-    });
-  }
-}
 
-void ReanimatedModuleProxy::removeFromPropsRegistry(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTags) {
-  auto array = viewTags.asObject(rt).asArray(rt);
-  for (size_t i = 0, size = array.size(rt); i < size; ++i) {
-    tagsToRemove_.push_back(array.getValueAtIndex(rt, i).asNumber());
+#ifdef ANDROID
+      if (status == ShadowTree::CommitStatus::Succeeded) {
+        updatesRegistryManager_->clearPropsToRevert(surfaceId);
+      }
+#endif
+    });
+
+    // Clear the entire cache after the commit
+    // (we don't know if the view is updated from outside of Reanimated
+    // so we have to clear the entire cache)
+    viewStylesRepository_->clearNodesCache();
   }
 }
 
@@ -787,13 +974,15 @@ jsi::Value ReanimatedModuleProxy::measure(
 void ReanimatedModuleProxy::initializeFabric(
     const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
+  viewStylesRepository_->setUIManager(uiManager_);
 
   initializeLayoutAnimationsProxy();
 
-  mountHook_ =
-      std::make_shared<ReanimatedMountHook>(propsRegistry_, uiManager_);
+  const std::function<void()> request = [this]() { requestFlushRegistry(); };
+  mountHook_ = std::make_shared<ReanimatedMountHook>(
+      uiManager_, updatesRegistryManager_, request);
   commitHook_ = std::make_shared<ReanimatedCommitHook>(
-      propsRegistry_, uiManager_, layoutAnimationsProxy_);
+      uiManager_, updatesRegistryManager_, layoutAnimationsProxy_);
 }
 
 void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {

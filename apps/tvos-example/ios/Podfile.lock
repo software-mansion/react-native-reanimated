@@ -1508,7 +1508,7 @@ PODS:
     - React-logger (= 0.76.0-0)
     - React-perflogger (= 0.76.0-0)
     - React-utils (= 0.76.0-0)
-  - RNReanimated (3.17.0):
+  - RNReanimated (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1528,10 +1528,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 3.17.0)
-    - RNReanimated/worklets (= 3.17.0)
+    - RNReanimated/reanimated (= 4.0.0-beta.1)
+    - RNReanimated/worklets (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/reanimated (3.17.0):
+  - RNReanimated/reanimated (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1551,9 +1551,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 3.17.0)
+    - RNReanimated/reanimated/apple (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/reanimated/apple (3.17.0):
+  - RNReanimated/reanimated/apple (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1574,7 +1574,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated/worklets (3.17.0):
+  - RNReanimated/worklets (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1594,9 +1594,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/apple (= 3.17.0)
+    - RNReanimated/worklets/apple (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/worklets/apple (3.17.0):
+  - RNReanimated/worklets/apple (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1886,10 +1886,10 @@ SPEC CHECKSUMS:
   React-utils: 3fce26d04c6776ddd47f255e7f3adc70d61b4491
   ReactCodegen: 61cc9f25250fd53c91d30d82e84a1c6aafcf451a
   ReactCommon: b927fd46115bd2acb146e24cf1a08f22abda8b3f
-  RNReanimated: 3a5e1e235c940894097b0734aad9ebce45431ddd
+  RNReanimated: c5133742ac745dc11856e0b665e5acd65b4dac05
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 2b0e5affb9ab46e4ebad33530df829c153c323d8
 
 PODFILE CHECKSUM: 79e1477a8eb76b717bdd7c1610f7f8e6772536a9
 
-COCOAPODS: 1.16.1
+COCOAPODS: 1.14.3

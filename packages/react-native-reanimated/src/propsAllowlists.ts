@@ -17,6 +17,7 @@ export const PropsAllowlists: AllowlistsHolder = {
     borderEndColor: true,
     borderLeftColor: true,
     borderStartColor: true,
+    overlayColor: true,
     borderTopColor: true,
     /* ios styles */
     shadowOpacity: true,
@@ -109,6 +110,8 @@ export const PropsAllowlists: AllowlistsHolder = {
     textDecorationStyle: true,
     textTransform: true,
     writingDirection: true,
+    includeFontPadding: true,
+    userSelect: true,
     alignContent: true,
     alignItems: true,
     alignSelf: true,
@@ -117,10 +120,13 @@ export const PropsAllowlists: AllowlistsHolder = {
     flexWrap: true,
     justifyContent: true,
     position: true,
+    cursor: true,
     /* text color */
     color: true,
     tintColor: true,
     shadowColor: true,
+    textShadowColor: true,
     placeholderTextColor: true,
+    textDecorationColor: true,
   },
 };

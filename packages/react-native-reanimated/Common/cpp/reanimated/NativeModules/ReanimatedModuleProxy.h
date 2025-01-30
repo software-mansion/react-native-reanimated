@@ -6,9 +6,19 @@
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <reanimated/Fabric/PropsRegistry.h>
+#include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
+#include <reanimated/Fabric/ShadowTreeCloner.h>
+
+#include <reanimated/CSS/core/CSSAnimation.h>
+#include <reanimated/CSS/core/CSSTransition.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
+#include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
+#include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
+#include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedMountHook.h>
+#include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
+#include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
@@ -22,6 +32,8 @@
 #include <react/renderer/uimanager/UIManager.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
+#include <react/renderer/core/ShadowNode.h>
+
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -29,6 +41,11 @@
 #include <vector>
 
 namespace reanimated {
+
+using namespace facebook;
+
+using UpdatesBatch =
+    std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>;
 
 class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
  public:
@@ -98,11 +115,37 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 #ifdef RCT_NEW_ARCH_ENABLED
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
-  void updateProps(jsi::Runtime &rt, const jsi::Value &operations);
-
-  void removeFromPropsRegistry(jsi::Runtime &rt, const jsi::Value &viewTags);
+  void maybeRunCSSLoop();
+  double getCssTimestamp();
 
   void performOperations();
+
+  void setViewStyle(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &viewStyle) override;
+  void removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag) override;
+
+  void registerCSSAnimations(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &animationConfigs) override;
+  void updateCSSAnimations(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &settingsUpdates) override;
+  void unregisterCSSAnimations(const jsi::Value &viewTag) override;
+
+  void registerCSSTransition(
+      jsi::Runtime &rt,
+      const jsi::Value &shadowNodeWrapper,
+      const jsi::Value &transitionConfig) override;
+  void updateCSSTransition(
+      jsi::Runtime &rt,
+      const jsi::Value &viewTag,
+      const jsi::Value &configUpdates) override;
+  void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag)
+      override;
 
   void dispatchCommand(
       jsi::Runtime &rt,
@@ -163,10 +206,13 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
     return workletsModuleProxy_;
   }
 
+  void requestFlushRegistry();
+
  private:
   void commonInit(const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
+  void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
 
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
@@ -177,6 +223,7 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
 
   const bool isBridgeless_;
   const bool isReducedMotion_;
+  bool shouldFlushRegistry_ = false;
   std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
   const std::string valueUnpackerCode_;
 
@@ -188,8 +235,20 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
   AnimatedSensorModule animatedSensorModule_;
   const std::shared_ptr<JSLogger> jsLogger_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
+  GetAnimationTimestampFunction getAnimationTimestamp_;
 
 #ifdef RCT_NEW_ARCH_ENABLED
+  bool cssLoopRunning_{false};
+  bool shouldUpdateCssAnimations_{true};
+  double currentCssTimestamp_{0};
+
+  const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
+  const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
+  const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
+  const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
+  const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
+  const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
+
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
@@ -197,15 +256,8 @@ class ReanimatedModuleProxy : public ReanimatedModuleProxySpec {
       animatablePropNames_; // filled by configureProps
   std::shared_ptr<UIManager> uiManager_;
   std::shared_ptr<LayoutAnimationsProxy> layoutAnimationsProxy_;
-
-  std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>
-      operationsInBatch_; // TODO: refactor std::pair to custom struct
-
-  std::shared_ptr<PropsRegistry> propsRegistry_;
   std::shared_ptr<ReanimatedCommitHook> commitHook_;
   std::shared_ptr<ReanimatedMountHook> mountHook_;
-
-  std::vector<Tag> tagsToRemove_; // from `propsRegistry_`
 #else
   const ObtainPropFunction obtainPropFunction_;
   const ConfigurePropsFunction configurePropsPlatformFunction_;

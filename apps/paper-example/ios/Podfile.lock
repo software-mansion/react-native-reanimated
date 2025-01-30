@@ -1545,6 +1545,8 @@ PODS:
     - React-utils (= 0.77.0-rc.6)
   - RNCAsyncStorage (2.1.0):
     - React-Core
+  - RNCClipboard (1.16.1):
+    - React-Core
   - RNCMaskedView (0.3.2):
     - DoubleConversion
     - glog
@@ -1608,7 +1610,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (3.17.0):
+  - RNReanimated (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1628,10 +1630,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 3.17.0)
-    - RNReanimated/worklets (= 3.17.0)
+    - RNReanimated/reanimated (= 4.0.0-beta.1)
+    - RNReanimated/worklets (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/reanimated (3.17.0):
+  - RNReanimated/reanimated (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1651,9 +1653,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 3.17.0)
+    - RNReanimated/reanimated/apple (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/reanimated/apple (3.17.0):
+  - RNReanimated/reanimated/apple (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1674,7 +1676,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated/worklets (3.17.0):
+  - RNReanimated/worklets (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1694,9 +1696,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/apple (= 3.17.0)
+    - RNReanimated/worklets/apple (= 4.0.0-beta.1)
     - Yoga
-  - RNReanimated/worklets/apple (3.17.0):
+  - RNReanimated/worklets/apple (4.0.0-beta.1):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1816,6 +1818,7 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../../../node_modules/react-native/ReactCommon`)
   - "RNCAsyncStorage (from `../../../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCClipboard (from `../../../node_modules/@react-native-clipboard/clipboard`)"
   - "RNCMaskedView (from `../../../node_modules/@react-native-masked-view/masked-view`)"
   - "RNFlashList (from `../../../node_modules/@shopify/flash-list`)"
   - RNGestureHandler (from `../../../node_modules/react-native-gesture-handler`)
@@ -1968,6 +1971,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native/ReactCommon"
   RNCAsyncStorage:
     :path: "../../../node_modules/@react-native-async-storage/async-storage"
+  RNCClipboard:
+    :path: "../../../node_modules/@react-native-clipboard/clipboard"
   RNCMaskedView:
     :path: "../../../node_modules/@react-native-masked-view/masked-view"
   RNFlashList:
@@ -2053,10 +2058,11 @@ SPEC CHECKSUMS:
   ReactCodegen: ef05d5dd3c7327234365df4c9c18a99a73496a87
   ReactCommon: f579a0130fb73a351de4723fb33d277c5bf3283d
   RNCAsyncStorage: cc6479c4acd84cc7004946946c8afe30b018184d
+  RNCClipboard: d7a8903d32692b0a1e71738c3825465a9acae10e
   RNCMaskedView: 6d4bf14f158d1a93484edf30850cbbd7ccbb8668
   RNFlashList: 9843320e0885ed1b494ea72ab0febfd3beb3dab0
   RNGestureHandler: 8b33b2c5688a54fcce223d184753757da498235c
-  RNReanimated: 33b68f6cf45ff999826c655cb9b200c00be35d1c
+  RNReanimated: b5dbd55ba3fe0c499b1224a8299c29c026b0d0b6
   RNScreens: 81237378a6d7921fb2dbb6a6c6c45c3d8cc696bb
   RNSVG: 515a902fc18a375907eb4c3abec0b803fbfa37ef
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748

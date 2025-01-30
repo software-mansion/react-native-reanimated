@@ -1,0 +1,88 @@
+---
+sidebar_position: 6
+---
+
+# animationIterationCount
+
+`animationIterationCount` lets you repeat an animation given number of times or run it indefinitely. Default to `1`.
+
+import AnimationIterationCountBasic from '@site/src/examples/css-animations/AnimationIterationCountBasic';
+import AnimationIterationCountBasicSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationIterationCountBasic';
+
+<InteractiveExample
+  src={AnimationIterationCountBasicSrc}
+  component={AnimationIterationCountBasic}
+/>
+
+## Reference
+
+```javascript
+function App() {
+  return (
+    <Animated.View
+      style={{
+        animationName: {
+          from: { width: 120 },
+          to: { width: 240 },
+        },
+        animationDuration: '1s',
+        // highlight-next-line
+        animationIterationCount: 'infinite',
+        animationDirection: 'alternate',
+      }}
+    />
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type CSSAnimationIterationCount = 'infinite' | number;
+
+animationIterationCount: CSSAnimationIterationCount | CSSAnimationIterationCount[];
+```
+
+</details>
+
+### Values
+
+#### `infinity`
+
+Animation will repeat forever.
+
+#### `<number>`
+
+A non-negative number specifying how many times the animation will repeat.
+
+#### `<animation iteration count[]>`
+
+An array of animation iteration count values. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/next/css-animations/animation-name).
+
+```typescript
+// highlight-next-line
+animationIterationCount: ['infinity', 1, 60];
+animationName: [bounceIn, move, slide];
+```
+
+In the following example, `bounceIn` keyframe would run indefinitely, `move` would run once, and `slide` would repeat 60 times.
+
+## Example
+
+import AnimationIterationCount from '@site/src/examples/css-animations/AnimationIterationCount';
+import AnimationIterationCountSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationIterationCount';
+
+<InteractiveExample
+  src={AnimationIterationCountSrc}
+  component={AnimationIterationCount}
+  label="Square wobbles 3 times"
+/>
+
+## Remarks
+
+- You can also provide non-integer values. For example, passing `0.5` will play half of the animation cycle.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />

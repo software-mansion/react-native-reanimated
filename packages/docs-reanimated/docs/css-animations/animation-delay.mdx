@@ -1,0 +1,110 @@
+---
+sidebar_position: 3
+---
+
+# animationDelay
+
+`animationDelay` lets you specify the length of time to wait before animation starts. Defaults to `0`.
+
+import AnimationDelayBasic from '@site/src/examples/css-animations/AnimationDelayBasic';
+import AnimationDelayBasicSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationDelayBasic';
+
+<InteractiveExample
+  src={AnimationDelayBasicSrc}
+  component={AnimationDelayBasic}
+/>
+
+## Reference
+
+```javascript
+function App() {
+  return (
+    <Animated.View
+      style={{
+        animationName: {
+          '100%': {
+            transform: [{ rotateZ: '180deg' }],
+          },
+        },
+        animationDuration: '100ms',
+        // highlight-next-line
+        animationDelay: 500,
+      }}
+    />
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type TimeUnit = `${number}s` | `${number}ms` | number;
+
+type CSSAnimationDelay = TimeUnit | TimeUnit[];
+```
+
+</details>
+
+### Values
+
+#### `<time unit>`
+
+A value which is either:
+
+- A string which is a number followed by `s`. Represents a time in seconds.
+
+<Indent>
+
+```typescript
+animationDelay: '3s';
+```
+
+</Indent>
+
+- A string which is a number followed by `ms`. Represents a time in milliseconds.
+
+<Indent>
+
+```typescript
+animationDelay: '-150ms';
+```
+
+</Indent>
+
+- A number which represents a time in milliseconds.
+
+<Indent>
+
+```typescript
+animationDelay: 500;
+```
+
+</Indent>
+
+#### `<time unit[]>`
+
+An array of time units. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/next/css-animations/animation-name).
+
+```typescript
+// highlight-next-line
+animationDelay: ['3s', '-150ms', 500];
+animationName: [bounceIn, move, slide];
+```
+
+In the following example, `bounceIn` keyframe would be delayed by 3 seconds, `move` would start 150 milliseconds into the animation, and `slide` would be delayed by 500 milliseconds.
+
+## Example
+
+import AnimationDelay from '@site/src/examples/css-animations/AnimationDelay';
+import AnimationDelaySrc from '!!raw-loader!@site/src/examples/css-animations/AnimationDelay';
+
+<InteractiveExample src={AnimationDelaySrc} component={AnimationDelay} />
+
+## Remarks
+
+- A negative delay causes the animation to begin immediately, but partway through its cycle. For example, if your animation lasts for 10 seconds and you set `animationDelay` to `-5s`, the animation starts in the halfway of its length.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />
