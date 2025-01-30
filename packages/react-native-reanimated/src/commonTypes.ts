@@ -8,6 +8,7 @@ import type {
 import type { WorkletsModuleProxy } from './worklets';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { CSSAnimationProperties, CSSTransitionProperties } from './css';
+import type { EasingFunctionFactory } from './Easing';
 
 type DisallowKeysOf<TInterface> = {
   [TKey in keyof TInterface]?: never;
@@ -48,7 +49,7 @@ interface WindowDimensions {
 }
 
 export interface KeyframeProps extends StyleProps {
-  easing?: EasingFunction;
+  easing?: EasingFunction | EasingFunctionFactory;
 }
 
 type FirstFrame =
@@ -134,7 +135,7 @@ export interface ILayoutAnimationBuilder {
 
 export interface BaseLayoutAnimationConfig {
   duration?: number;
-  easing?: EasingFunction;
+  easing?: EasingFunction | EasingFunctionFactory;
   type?: AnimationFunction;
   damping?: number;
   dampingRatio?: number;
