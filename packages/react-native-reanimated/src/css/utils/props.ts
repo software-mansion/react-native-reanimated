@@ -1,4 +1,5 @@
 'use strict';
+import { isSharedValue } from '../../isSharedValue';
 import type {
   AnyRecord,
   CSSAnimationProperties,
@@ -33,7 +34,7 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
       animationProperties[prop] = value;
     } else if (isTransitionProp(prop)) {
       transitionProperties[prop] = value;
-    } else {
+    } else if (!isSharedValue(value)) {
       filteredStyle[prop] = value;
     }
   }
