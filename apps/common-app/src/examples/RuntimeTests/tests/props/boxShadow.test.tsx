@@ -2,24 +2,25 @@
 
 import { useEffect } from 'react';
 import type { BoxShadowValue } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { AnimatableValue } from 'react-native-reanimated';
-import type { DefaultStyle } from 'react-native-reanimated/lib/typescript/hook/commonTypes';
-import { ComparisonMode } from '../../../../apps/reanimated/examples/RuntimeTests/ReJest/types';
-import { View, StyleSheet } from 'react-native';
 import Animated, {
+  useAnimatedStyle,
   useSharedValue,
   withSpring,
-  useAnimatedStyle,
 } from 'react-native-reanimated';
+import type { DefaultStyle } from 'react-native-reanimated/lib/typescript/hook/commonTypes';
+
 import {
   describe,
-  test,
   expect,
-  render,
-  useTestRef,
   getTestComponent,
+  render,
+  test,
+  useTestRef,
   wait,
-} from '../../../../apps/reanimated/examples/RuntimeTests/ReJest/RuntimeTestsApi';
+} from '@/apps/reanimated/examples/RuntimeTests/ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '@/apps/reanimated/examples/RuntimeTests/ReJest/types';
 
 describe.skip('animation of BoxShadow', () => {
   enum Component {
@@ -27,11 +28,11 @@ describe.skip('animation of BoxShadow', () => {
     PASSIVE = 'PASSIVE',
   }
   function BoxShadowComponent({
-    startBoxShadow,
     finalBoxShadow,
+    startBoxShadow,
   }: {
-    startBoxShadow: BoxShadowValue;
     finalBoxShadow: BoxShadowValue;
+    startBoxShadow: BoxShadowValue;
   }) {
     const boxShadowActiveSV = useSharedValue(startBoxShadow);
     const boxShadowPassiveSV = useSharedValue(startBoxShadow);
@@ -80,67 +81,56 @@ describe.skip('animation of BoxShadow', () => {
 
   test.each([
     {
-      startBoxShadow: {
-        offsetX: -10,
-        offsetY: 6,
-        blurRadius: 7,
-        spreadDistance: 10,
-        color: 'rgba(245, 40, 145, 0.8)',
-      },
-
+      description: 'one boxShadow',
       finalBoxShadow: {
+        blurRadius: 10,
+        color: 'rgba(39, 185, 245, 0.8)',
         offsetX: -20,
         offsetY: 4,
-        blurRadius: 10,
         spreadDistance: 20,
-        color: 'rgba(39, 185, 245, 0.8)',
       },
-
-      description: 'one boxShadow',
+      startBoxShadow: {
+        blurRadius: 7,
+        color: 'rgba(245, 40, 145, 0.8)',
+        offsetX: -10,
+        offsetY: 6,
+        spreadDistance: 10,
+      },
     },
-  ])(
-    '${description}, from ${startBoxShadow} to ${finalBoxShadow}',
-    async ({
-      startBoxShadow,
-      finalBoxShadow,
-    }: {
-      startBoxShadow: BoxShadowValue;
-      finalBoxShadow: BoxShadowValue;
-    }) => {
-      await render(
-        <BoxShadowComponent
-          startBoxShadow={startBoxShadow}
-          finalBoxShadow={finalBoxShadow}
-        />
-      );
+  ])('Animate', async ({ finalBoxShadow, startBoxShadow }) => {
+    await render(
+      <BoxShadowComponent
+        finalBoxShadow={finalBoxShadow}
+        startBoxShadow={startBoxShadow}
+      />
+    );
 
-      const activeComponent = getTestComponent(Component.ACTIVE);
-      const passiveComponent = getTestComponent(Component.PASSIVE);
+    const activeComponent = getTestComponent(Component.ACTIVE);
+    const passiveComponent = getTestComponent(Component.PASSIVE);
 
-      await wait(200);
+    await wait(200);
 
-      expect(await activeComponent.getAnimatedStyle('boxShadow')).toBe(
-        [finalBoxShadow],
-        ComparisonMode.ARRAY
-      );
-      expect(await passiveComponent.getAnimatedStyle('boxShadow')).toBe(
-        [finalBoxShadow],
-        ComparisonMode.ARRAY
-      );
-    }
-  );
+    expect(await activeComponent.getAnimatedStyle('boxShadow')).toBe(
+      [finalBoxShadow],
+      ComparisonMode.ARRAY
+    );
+    expect(await passiveComponent.getAnimatedStyle('boxShadow')).toBe(
+      [finalBoxShadow],
+      ComparisonMode.ARRAY
+    );
+  });
 });
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   animatedBox: {
     backgroundColor: 'palevioletred',
-    width: 100,
     height: 100,
     margin: 30,
+    width: 100,
+  },
+  container: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
   },
 });
