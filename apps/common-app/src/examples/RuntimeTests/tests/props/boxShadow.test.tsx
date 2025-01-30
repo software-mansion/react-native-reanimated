@@ -4,10 +4,22 @@ import { useEffect } from 'react';
 import type { BoxShadowValue } from 'react-native';
 import type { AnimatableValue } from 'react-native-reanimated';
 import type { DefaultStyle } from 'react-native-reanimated/lib/typescript/hook/commonTypes';
-import { ComparisonMode } from '../../ReJest/types';
+import { ComparisonMode } from '../../../../apps/reanimated/examples/RuntimeTests/ReJest/types';
 import { View, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
-import { describe, test, expect, render, useTestRef, getTestComponent, wait } from '../../ReJest/RuntimeTestsApi';
+import Animated, {
+  useSharedValue,
+  withSpring,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
+import {
+  describe,
+  test,
+  expect,
+  render,
+  useTestRef,
+  getTestComponent,
+  wait,
+} from '../../../../apps/reanimated/examples/RuntimeTests/ReJest/RuntimeTestsApi';
 
 describe.skip('animation of BoxShadow', () => {
   enum Component {
@@ -29,7 +41,11 @@ describe.skip('animation of BoxShadow', () => {
 
     const styleActive = useAnimatedStyle(() => {
       return {
-        boxShadow: [withSpring(boxShadowActiveSV.value as unknown as AnimatableValue, { duration: 700 })],
+        boxShadow: [
+          withSpring(boxShadowActiveSV.value as unknown as AnimatableValue, {
+            duration: 700,
+          }),
+        ],
       } as DefaultStyle;
     });
 
@@ -50,8 +66,14 @@ describe.skip('animation of BoxShadow', () => {
 
     return (
       <View style={styles.container}>
-        <Animated.View ref={refActive} style={[styles.animatedBox, styleActive]} />
-        <Animated.View ref={refPassive} style={[styles.animatedBox, stylePassive]} />
+        <Animated.View
+          ref={refActive}
+          style={[styles.animatedBox, styleActive]}
+        />
+        <Animated.View
+          ref={refPassive}
+          style={[styles.animatedBox, stylePassive]}
+        />
       </View>
     );
   }
@@ -78,17 +100,34 @@ describe.skip('animation of BoxShadow', () => {
     },
   ])(
     '${description}, from ${startBoxShadow} to ${finalBoxShadow}',
-    async ({ startBoxShadow, finalBoxShadow }: { startBoxShadow: BoxShadowValue; finalBoxShadow: BoxShadowValue }) => {
-      await render(<BoxShadowComponent startBoxShadow={startBoxShadow} finalBoxShadow={finalBoxShadow} />);
+    async ({
+      startBoxShadow,
+      finalBoxShadow,
+    }: {
+      startBoxShadow: BoxShadowValue;
+      finalBoxShadow: BoxShadowValue;
+    }) => {
+      await render(
+        <BoxShadowComponent
+          startBoxShadow={startBoxShadow}
+          finalBoxShadow={finalBoxShadow}
+        />
+      );
 
       const activeComponent = getTestComponent(Component.ACTIVE);
       const passiveComponent = getTestComponent(Component.PASSIVE);
 
       await wait(200);
 
-      expect(await activeComponent.getAnimatedStyle('boxShadow')).toBe([finalBoxShadow], ComparisonMode.ARRAY);
-      expect(await passiveComponent.getAnimatedStyle('boxShadow')).toBe([finalBoxShadow], ComparisonMode.ARRAY);
-    },
+      expect(await activeComponent.getAnimatedStyle('boxShadow')).toBe(
+        [finalBoxShadow],
+        ComparisonMode.ARRAY
+      );
+      expect(await passiveComponent.getAnimatedStyle('boxShadow')).toBe(
+        [finalBoxShadow],
+        ComparisonMode.ARRAY
+      );
+    }
   );
 });
 
