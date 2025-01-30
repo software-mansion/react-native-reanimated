@@ -401,8 +401,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
         previousAnimation ? previousAnimation[i] : undefined
       );
     });
-
-    animation.current = value;
+    animation.current = [...value];
   };
 
   const arrayOnFrame = (
