@@ -1,6 +1,10 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/core/CSSTransition.h>
 
+#include <worklets/Tools/JSISerializer.h>
+
+using namespace worklets;
+
 namespace reanimated {
 
 CSSTransition::CSSTransition(
@@ -58,6 +62,8 @@ jsi::Value CSSTransition::run(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
     const double timestamp) {
+  LOG(INFO) << "CSSTransition run newProps: "
+            << stringifyJSIValue(rt, changedProps.newProps);
   progressProvider_.runProgressProviders(
       timestamp,
       changedProps.changedPropertyNames,

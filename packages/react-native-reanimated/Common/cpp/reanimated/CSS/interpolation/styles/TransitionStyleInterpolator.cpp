@@ -36,6 +36,10 @@ TransitionStyleInterpolator::getReversedPropertyNames(
     const auto propertyValue = propertyValuesObject.getProperty(
         rt, jsi::PropNameID::forUtf8(rt, propertyName));
 
+    LOG(INFO) << "TransitionStyleInterpolator propertyName: " << propertyName;
+    LOG(INFO) << "TransitionStyleInterpolator propertyValue: "
+              << stringifyJSIValue(rt, propertyValue);
+
     const auto it = interpolators_.find(propertyName);
     if (it != interpolators_.end() &&
         it->second->equalsReversingAdjustedStartValue(rt, propertyValue)) {

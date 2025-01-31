@@ -157,17 +157,16 @@ ChangedProps processPropertyChanges(
     const auto [oldChangedProp, newChangedProp] =
         getChangedValueForProp(rt, oldObject, newObject, propName);
 
-    if (oldChangedProp.isUndefined()) {
-      oldResult.setProperty(rt, propName.c_str(), jsi::Value::undefined());
-    } else {
+    const auto hasOldChangedProp = !oldChangedProp.isUndefined();
+    const auto hasNewChangedProp = !newChangedProp.isUndefined();
+
+    if (hasOldChangedProp) {
       oldResult.setProperty(rt, propName.c_str(), oldChangedProp);
     }
-    if (newChangedProp.isUndefined()) {
-      newResult.setProperty(rt, propName.c_str(), jsi::Value::undefined());
-    } else {
+    if (hasNewChangedProp) {
       newResult.setProperty(rt, propName.c_str(), newChangedProp);
     }
-    if (!oldChangedProp.isUndefined() || !newChangedProp.isUndefined()) {
+    if (hasOldChangedProp || hasNewChangedProp) {
       changedPropertyNames.push_back(propName);
     }
   }

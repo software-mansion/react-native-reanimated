@@ -9,7 +9,11 @@
 #include <string>
 #include <vector>
 
+#include <worklets/Tools/JSISerializer.h>
+
 namespace reanimated {
+
+using namespace worklets;
 
 struct ValueInterpolatorUpdateContext {
   const ShadowNode::Shared &node;
@@ -79,6 +83,8 @@ class ValueInterpolator : public PropertyInterpolator {
     if (!reversingAdjustedStartValue_.has_value()) {
       return propertyValue.isUndefined();
     }
+    LOG(INFO) << "ValueInterpolator equalsReversingAdjustedStartValue: "
+              << stringifyJSIValue(rt, propertyValue);
     return reversingAdjustedStartValue_.value() == ValueType(rt, propertyValue);
   }
 
@@ -94,6 +100,8 @@ class ValueInterpolator : public PropertyInterpolator {
         keyframes_.push_back(
             ValueKeyframe<AllowedTypes...>{offset, std::nullopt});
       } else {
+        LOG(INFO) << "ValueInterpolator keyframe value: "
+                  << stringifyJSIValue(rt, value);
         keyframes_.push_back(
             ValueKeyframe<AllowedTypes...>{offset, ValueType(rt, value)});
       }
@@ -106,6 +114,11 @@ class ValueInterpolator : public PropertyInterpolator {
       const jsi::Value &newStyleValue) override {
     keyframeAfterIndex_ = 1;
     ValueKeyframe<AllowedTypes...> firstKeyframe, lastKeyframe;
+
+    LOG(INFO) << "ValueInterpolator oldStyleValue: "
+              << stringifyJSIValue(rt, oldStyleValue);
+    LOG(INFO) << "ValueInterpolator newStyleValue: "
+              << stringifyJSIValue(rt, newStyleValue);
 
     if (!oldStyleValue.isUndefined()) {
       reversingAdjustedStartValue_ = ValueType(rt, oldStyleValue);
@@ -190,6 +203,8 @@ class ValueInterpolator : public PropertyInterpolator {
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const {
     const jsi::Value &styleValue = getStyleValue(rt, shadowNode);
+    LOG(INFO) << "ValueInterpolator fallback value: "
+              << stringifyJSIValue(rt, styleValue);
     return styleValue.isUndefined() ? defaultStyleValue_
                                     : ValueType(rt, styleValue);
   }
