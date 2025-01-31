@@ -163,7 +163,7 @@ const updatePropsDOM = (
       // internal _valueTracker (https://github.com/facebook/react/blob/main/packages/react-dom-bindings/src/client/inputValueTracking.js)
       // prevents updates when only modifying attributes.
       if (
-        (component as HTMLElement).nodeName.toLowerCase() === 'input' &&
+        (component as HTMLElement).nodeName === 'INPUT' &&
         key === 'text'
       ) {
         (component as HTMLInputElement).value = domStyle[key] as string;
