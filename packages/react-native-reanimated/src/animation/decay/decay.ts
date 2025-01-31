@@ -109,6 +109,9 @@ export const withDecay = function (
       }
     }
 
+    // To ensure the animation is correctly initialized and starts as expected
+    // we need to set its current value to undefined.
+    // Setting current to 0 breaks the animation.
     return {
       onFrame: decay,
       onStart,
