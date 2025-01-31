@@ -69,11 +69,6 @@ jobs:
         working-directory: ${{ env.COMMON_APP_DIR }}
         run: yarn add react-native-worklets@workspace:"*"
 
-      - name: Use external worklets
-        if: ${{ inputs.use-external-worklets == 'true' }}
-        working-directory: ${{ env.COMMON_APP_DIR }}
-        run: yarn add react-native-worklets@workspace:"*"
-
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}/android
         run: ./gradlew assembleDebug --build-cache -PreactNativeArchitectures=arm64-v8a

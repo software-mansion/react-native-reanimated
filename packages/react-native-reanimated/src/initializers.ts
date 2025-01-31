@@ -8,14 +8,14 @@ import {
   runOnUIImmediately,
   executeOnUIRuntimeSync,
 } from './threads';
-import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
+import { mockedRequestAnimationFrame } from './WorkletsResolver';
 import {
   DEFAULT_LOGGER_CONFIG,
   logToLogBoxAndConsole,
   registerLoggerConfig,
   replaceLoggerImplementation,
 } from './logger';
-import type { IReanimatedModule } from './commonTypes';
+import type { IReanimatedModule } from './ReanimatedModule';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();

@@ -3,8 +3,8 @@ import { useEvent } from './useEvent';
 import { useHandler } from './useHandler';
 import { WorkletEventHandler } from '../WorkletEventHandler';
 import type { ReanimatedEvent } from './commonTypes';
-import type { WorkletFunction } from '../commonTypes';
 import type { EventHandlerProcessed, EventHandlerInternal } from './useEvent';
+import type { WorkletFunction } from '../WorkletsResolver';
 
 type ComposedHandlerProcessed<
   Event extends object,

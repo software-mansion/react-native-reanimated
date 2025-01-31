@@ -1,10 +1,10 @@
+/* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 
-import type { IWorkletsModule, ShareableRef } from '../../commonTypes';
-import { ReanimatedError } from '../../errors';
-import { mockedRequestAnimationFrame } from '../../mockedRequestAnimationFrame';
-import { isJest } from '../../PlatformChecker';
-import type { WorkletRuntime } from '../../runtimes';
+import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type { IWorkletsModule } from './workletsModuleProxy';
+import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
+import { isJest } from '../PlatformChecker';
 
 export function createJSWorkletsModule(): IWorkletsModule {
   return new JSWorklets();
@@ -20,19 +20,21 @@ const requestAnimationFrameImpl =
 
 class JSWorklets implements IWorkletsModule {
   makeShareableClone<TValue>(): ShareableRef<TValue> {
-    throw new ReanimatedError(
-      'makeShareableClone should never be called in JSWorklets.'
+    throw new Error(
+      '[Worklets] makeShareableClone should never be called in JSWorklets.'
     );
   }
 
   scheduleOnUI<TValue>(worklet: ShareableRef<TValue>) {
+    // TODO: `requestAnimationFrame` should be used exclusively in Reanimated
+
     // @ts-ignore web implementation has still not been updated after the rewrite,
     // this will be addressed once the web implementation updates are ready
     requestAnimationFrameImpl(worklet);
   }
 
   executeOnUIRuntimeSync<T, R>(_shareable: ShareableRef<T>): R {
-    throw new ReanimatedError(
+    throw new Error(
       '`executeOnUIRuntimeSync` is not available in JSReanimated.'
     );
   }
@@ -41,14 +43,10 @@ class JSWorklets implements IWorkletsModule {
     _name: string,
     _initializer: ShareableRef<() => void>
   ): WorkletRuntime {
-    throw new ReanimatedError(
-      'createWorkletRuntime is not available in JSReanimated.'
-    );
+    throw new Error('createWorkletRuntime is not available in JSReanimated.');
   }
 
   scheduleOnRuntime() {
-    throw new ReanimatedError(
-      'scheduleOnRuntime is not available in JSReanimated.'
-    );
+    throw new Error('scheduleOnRuntime is not available in JSReanimated.');
   }
 }

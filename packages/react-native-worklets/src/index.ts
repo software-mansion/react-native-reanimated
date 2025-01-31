@@ -1,3 +1,16 @@
 'use strict';
 
-export { WorkletsTurboModule } from './specs';
+export {
+  isWorkletFunction,
+  mockedRequestAnimationFrame,
+  WorkletsModule,
+} from './worklets';
+export type {
+  IWorkletsModule,
+  ShareableRef,
+  WorkletFunction,
+  WorkletFunctionDev,
+  WorkletRuntime,
+  WorkletsModuleProxy,
+  WorkletStackDetails,
+} from './worklets';
