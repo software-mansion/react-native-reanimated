@@ -16,6 +16,9 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
+  void setProgressProvider(const std::shared_ptr<KeyframeProgressProvider>
+                               &progressProvider) override;
+
   jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
@@ -31,6 +34,8 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
       override;
 
  protected:
+  virtual void forEachInterpolator(
+      const std::function<void(PropertyInterpolator &)> &callback) const = 0;
   virtual jsi::Value mapInterpolators(
       jsi::Runtime &rt,
       const std::function<jsi::Value(PropertyInterpolator &)> &callback)

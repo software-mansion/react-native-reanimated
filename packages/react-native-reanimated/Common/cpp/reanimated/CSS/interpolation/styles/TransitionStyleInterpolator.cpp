@@ -109,6 +109,9 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
       interpolatorIt =
           interpolators_.emplace(propertyName, newInterpolator).first;
     } else {
+      // We have to set the new progress provider when the new transition
+      // starts and the interpolator already exists, because the new property
+      // progress provider was created on the new transition start.
       interpolatorIt->second->setProgressProvider(
           progressProviders.at(propertyName));
     }
