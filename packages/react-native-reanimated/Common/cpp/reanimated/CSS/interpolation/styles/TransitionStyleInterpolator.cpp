@@ -90,8 +90,8 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
     const TransitionPropertyProgressProviders &progressProviders) {
-  const auto oldPropsObj = changedProps.oldProps->asObject(rt);
-  const auto newPropsObj = changedProps.newProps->asObject(rt);
+  const auto oldPropsObj = changedProps.oldProps.asObject(rt);
+  const auto newPropsObj = changedProps.newProps.asObject(rt);
 
   for (const auto &propertyName : changedProps.changedPropertyNames) {
     auto interpolatorIt = interpolators_.find(propertyName);

@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_set>
 
 namespace reanimated {
 
@@ -33,6 +34,8 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
       jsi::Runtime &rt,
       const std::function<jsi::Value(PropertyInterpolator &)> &callback)
       const override;
+
+  void maybeCreateInterpolator(const std::string &propertyName);
 
  private:
   const InterpolatorFactoriesRecord &factories_;
