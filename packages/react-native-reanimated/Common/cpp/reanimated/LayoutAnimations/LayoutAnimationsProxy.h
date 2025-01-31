@@ -10,10 +10,12 @@
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
 
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace reanimated {
@@ -38,6 +40,8 @@ struct LayoutAnimationsProxy
   mutable SurfaceManager surfaceManager;
   mutable std::unordered_set<std::shared_ptr<MutationNode>> deadNodes;
   mutable std::unordered_map<Tag, int> leastRemoved;
+  mutable std::map<SurfaceId, std::vector<std::pair<Tag, bool>>>
+      endLayoutAnimations_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   ContextContainer::Shared contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
@@ -67,6 +71,8 @@ struct LayoutAnimationsProxy
       int tag,
       const jsi::Object &newStyle);
   std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove);
+  void endLayoutAnimationBatch(SurfaceId surfaceId) const;
+
   void maybeCancelAnimation(const int tag) const;
 
   void parseRemoveMutations(
