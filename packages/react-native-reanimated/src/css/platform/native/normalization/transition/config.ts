@@ -21,6 +21,7 @@ import {
   normalizeTimingFunction,
 } from '../common';
 import { normalizeTransitionBehavior } from './settings';
+import { parseTransitionShorthand } from './shorthand';
 
 export const ERROR_MESSAGES = {
   invalidTransitionProperty: (
@@ -34,13 +35,28 @@ const hasNoTransitionProperties = (properties: string[]) =>
 export function normalizeCSSTransitionProperties(
   config: CSSTransitionProperties
 ): NormalizedCSSTransitionConfig | null {
-  const {
+  let {
     transitionProperty = ['all'],
     transitionDuration,
     transitionTimingFunction,
     transitionDelay,
     transitionBehavior,
   } = convertConfigPropertiesToArrays(config);
+
+  if (config.transition) {
+    const parsed = parseTransitionShorthand(config.transition);
+    // @ts-ignore blabla
+    transitionProperty = parsed.map(
+      (transition) => transition.property ?? 'all'
+    );
+    transitionDuration = parsed.map((transition) => transition.duration ?? 0);
+    transitionDelay = parsed.map((transition) => transition.delay ?? 0);
+    // @ts-ignore blabla
+    transitionTimingFunction = parsed.map(
+      (transition) => transition.timingFunction ?? 'ease'
+    );
+    // TODO: respect order of keys in config
+  }
 
   if (hasNoTransitionProperties(transitionProperty)) {
     return null;
