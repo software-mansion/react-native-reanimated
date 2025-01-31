@@ -20,7 +20,7 @@ class PropertyInterpolator {
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  void setProgressProvider(
+  virtual void setProgressProvider(
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider);
 
   virtual jsi::Value getStyleValue(
