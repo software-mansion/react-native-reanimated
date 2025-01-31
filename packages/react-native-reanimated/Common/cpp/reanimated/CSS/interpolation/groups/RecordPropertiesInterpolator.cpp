@@ -96,6 +96,13 @@ void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
   }
 }
 
+void RecordPropertiesInterpolator::forEachInterpolator(
+    const std::function<void(PropertyInterpolator &)> &callback) const {
+  for (const auto &[propName, interpolator] : interpolators_) {
+    callback(*interpolator);
+  }
+}
+
 jsi::Value RecordPropertiesInterpolator::mapInterpolators(
     jsi::Runtime &rt,
     const std::function<jsi::Value(PropertyInterpolator &)> &callback) const {

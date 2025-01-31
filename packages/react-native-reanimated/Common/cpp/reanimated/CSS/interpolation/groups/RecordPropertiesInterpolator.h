@@ -30,6 +30,8 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
       const jsi::Value &newStyleValue) override;
 
  protected:
+  void forEachInterpolator(const std::function<void(PropertyInterpolator &)>
+                               &callback) const override;
   jsi::Value mapInterpolators(
       jsi::Runtime &rt,
       const std::function<jsi::Value(PropertyInterpolator &)> &callback)
