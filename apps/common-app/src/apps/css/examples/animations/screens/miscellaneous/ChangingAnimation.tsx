@@ -20,7 +20,7 @@ import { colors, flex, radius, sizes, spacing } from '@/theme';
 const animationSettings: CSSAnimationSettings = {
   animationDuration: '1s',
   animationIterationCount: 'infinite',
-  animationTimingFunction: 'easeInOut',
+  animationTimingFunction: 'ease-in-out',
 };
 
 const wiggle = css.keyframes({

@@ -6,5 +6,5 @@
       "@/*": ["../common-app/src/*"]
     }
   },
-  "exclude": ["node_modules", "metro.config.js"]
+  "exclude": ["metro.config.js", "android", "ios", ".bundle", "node_modules"]
 }

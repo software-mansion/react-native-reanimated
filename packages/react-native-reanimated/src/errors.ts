@@ -1,6 +1,7 @@
 /* eslint-disable reanimated/use-reanimated-error */
 'use strict';
-import type { WorkletStackDetails } from './commonTypes';
+
+import type { WorkletStackDetails } from './WorkletsResolver';
 
 type ReanimatedError = Error & 'ReanimatedError'; // signed type
 

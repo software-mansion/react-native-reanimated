@@ -19,7 +19,7 @@ const TestExamplesCard: RouteCardComponent = (props) => (
 const TRANSITION_CONFIG: CSSTransitionProperties = {
   transitionDuration: 500,
   transitionProperty: 'transform',
-  transitionTimingFunction: 'easeInOut',
+  transitionTimingFunction: 'ease-in-out',
 };
 
 function Showcase() {

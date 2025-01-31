@@ -31,8 +31,8 @@ import { colors, flex, radius, sizes, spacing } from '@/theme';
 const AVAILABLE_TIMING_FUNCTIONS = [
   'linear',
   'ease',
-  'easeIn',
-  'easeOut',
+  'ease-in',
+  'ease-out',
   cubicBezier(0.175, 0.885, 0.32, 1.275),
   steps(4),
 ] satisfies Array<CSSAnimationTimingFunction>;
@@ -56,7 +56,7 @@ const DEFAULT_ANIMATION_CONFIG: SelectableConfig<CSSAnimationProperties> = {
   animationIterationCount: 'infinite',
   animationName: {
     '0%': {
-      $animationTimingFunction: getOptions('easeIn'),
+      $animationTimingFunction: getOptions('ease-in'),
       transform: [{ translateX: -sizes.lg }],
       width: sizes.xl,
     },

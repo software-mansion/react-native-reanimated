@@ -31,7 +31,7 @@ const keyframes: CSSAnimationKeyframes = {
 
 const SETTINGS_OPTIONS = {
   animationDelay: ['-5s', '0s', '1s', '2s', '5s'],
-  animationDirection: ['normal', 'reverse', 'alternate', 'alternateReverse'],
+  animationDirection: ['normal', 'reverse', 'alternate', 'alternate-reverse'],
   animationDuration: ['1s', '2s', '5s', '10s'],
   animationFillMode: ['none', 'forwards', 'backwards', 'both'],
   animationIterationCount: [1, 2, 'infinite'],
@@ -39,8 +39,8 @@ const SETTINGS_OPTIONS = {
   animationTimingFunction: [
     'ease',
     'linear',
-    'easeIn',
-    'easeOut',
+    'ease-in',
+    'ease-out',
     cubicBezier(0.42, 0, 0.58, 1),
   ],
 } satisfies {

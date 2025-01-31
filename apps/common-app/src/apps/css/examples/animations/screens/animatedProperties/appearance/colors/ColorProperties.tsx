@@ -27,7 +27,7 @@ const sharedConfig: CSSAnimationSettings = {
   animationDirection: 'alternate',
   animationDuration: '3s',
   animationIterationCount: 'infinite',
-  animationTimingFunction: 'easeInOut',
+  animationTimingFunction: 'ease-in-out',
 };
 
 export default function ColorProperties() {
@@ -294,6 +294,26 @@ function OtherColors() {
             backgroundColor: colors.primary,
             shadowOpacity: 1,
             shadowRadius: spacing.sm,
+          }}
+        />
+        <ViewExample
+          title="outlineColor"
+          animation={{
+            animationName: {
+              from: {
+                outlineColor: 'red',
+              },
+              to: {
+                outlineColor: 'cyan',
+              },
+            },
+            ...sharedConfig,
+          }}
+          style={{
+            backgroundColor: colors.primary,
+            outlineOffset: spacing.xs,
+            outlineStyle: 'solid',
+            outlineWidth: spacing.xs,
           }}
         />
         <ImageExample

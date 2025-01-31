@@ -41,7 +41,7 @@ export function kebabize<T extends string>(property: T) {
 
 function easingMapper(easing: CSSTimingFunction) {
   if (typeof easing === 'string') {
-    return kebabize(easing);
+    return easing;
   }
 
   if (easing instanceof StepsEasing) {

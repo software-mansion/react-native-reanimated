@@ -34,7 +34,7 @@ export type CSSAnimationDirection =
   | 'normal'
   | 'reverse'
   | 'alternate'
-  | 'alternateReverse';
+  | 'alternate-reverse';
 export type CSSAnimationFillMode = 'none' | 'forwards' | 'backwards' | 'both';
 export type CSSAnimationPlayState = 'running' | 'paused';
 

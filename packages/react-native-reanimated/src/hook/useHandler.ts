@@ -1,10 +1,10 @@
 'use strict';
 import { useEffect, useRef } from 'react';
-import type { WorkletFunction } from '../commonTypes';
 import { isWeb, isJest } from '../PlatformChecker';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
 import { areDependenciesEqual, buildDependencies } from './utils';
 import { makeShareable } from '../shareables';
+import type { WorkletFunction } from '../WorkletsResolver';
 
 interface GeneralHandler<
   Event extends object,

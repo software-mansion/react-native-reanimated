@@ -251,6 +251,7 @@ android {
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${isReanimatedExampleApp()}"
                 abiFilters (*reactNativeArchitectures())
+                targets("worklets")
             }
         }
 
@@ -329,6 +330,17 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    sourceSets {
+        main {
+            java {
+                srcDirs += "src/worklets/main"
+
+                if (!IS_NEW_ARCHITECTURE_ENABLED) {
+                    srcDirs += "src/worklets/paper"
+                }
+            }
+        }
     }
 }
 

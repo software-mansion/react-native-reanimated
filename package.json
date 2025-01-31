@@ -9,7 +9,6 @@
       "packages/react-native-reanimated/plugin",
       "packages/react-native-worklets",
       "apps/common-app",
-      "apps/paper-example",
       "apps/fabric-example",
       "apps/macos-example",
       "apps/tvos-example",

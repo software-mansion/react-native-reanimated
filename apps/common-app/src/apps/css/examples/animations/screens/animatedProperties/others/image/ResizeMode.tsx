@@ -4,7 +4,7 @@ import Animated from 'react-native-reanimated';
 
 import { balloonsImage } from '@/apps/css/assets';
 import { ExamplesScreen, VerticalExampleCard } from '@/apps/css/components';
-import { colors, radius, sizes } from '@/theme';
+import { radius, sizes } from '@/theme';
 
 export default function ResizeMode() {
   return (
@@ -55,7 +55,6 @@ export default function ResizeMode() {
 }
 const styles = StyleSheet.create({
   image: {
-    backgroundColor: colors.primaryLight,
     borderRadius: radius.md,
     height: sizes.xxxl,
     width: sizes.xxxl,

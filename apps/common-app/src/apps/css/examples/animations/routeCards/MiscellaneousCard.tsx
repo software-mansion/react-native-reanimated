@@ -116,7 +116,7 @@ const styles = css.create({
   box: {
     animationDuration: ANIMATION_DURATION,
     animationIterationCount: 'infinite',
-    animationTimingFunction: 'easeInOut',
+    animationTimingFunction: 'ease-in-out',
     backgroundColor: colors.primary,
     borderRadius: radius.sm,
     height: sizes.md,

@@ -30,8 +30,8 @@ export default function AnimationDirection() {
             { animationDirection: 'reverse', label: 'reverse' },
             { animationDirection: 'alternate', label: 'alternate' },
             {
-              animationDirection: 'alternateReverse',
-              label: 'alternateReverse',
+              animationDirection: 'alternate-reverse',
+              label: 'alternate-reverse',
             },
           ],
           title: 'Animation Direction',
