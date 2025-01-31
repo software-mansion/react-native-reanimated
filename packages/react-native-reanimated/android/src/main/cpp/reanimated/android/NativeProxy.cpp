@@ -199,9 +199,7 @@ void NativeProxy::registerNatives() {
        makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp)});
 }
 
-void NativeProxy::requestRender(
-    std::function<void(double)> onRender,
-    jsi::Runtime &) {
+void NativeProxy::requestRender(std::function<void(double)> onRender) {
   static const auto method =
       getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
   method(

@@ -113,6 +113,7 @@ export function getComparisonModeForProp(prop: ValidPropNames): ComparisonMode {
     top: ComparisonMode.PIXEL,
     left: ComparisonMode.PIXEL,
     backgroundColor: ComparisonMode.COLOR,
+    boxShadow: ComparisonMode.ARRAY,
   };
   return propToComparisonModeDict[prop];
 }

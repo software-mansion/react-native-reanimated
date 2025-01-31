@@ -94,10 +94,13 @@ export const withDecay = function (
       value: number,
       now: Timestamp
     ): void {
+      const initialVelocity = config.velocity;
       animation.current = value;
       animation.lastTimestamp = now;
       animation.startTimestamp = now;
-      animation.initialVelocity = config.velocity;
+      animation.initialVelocity = initialVelocity;
+      animation.velocity = initialVelocity;
+
       validateConfig(config);
 
       if (animation.reduceMotion && config.clamp) {

@@ -85,7 +85,7 @@ SetGestureStateFunction makeSetGestureStateFunctionBridgeless(RCTModuleRegistry 
 
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 {
-  auto requestRender = [nodesManager](std::function<void(double)> onRender, jsi::Runtime &rt) {
+  auto requestRender = [nodesManager](std::function<void(double)> onRender) {
     [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
 #if !TARGET_OS_OSX
       auto targetTimestamp = displayLink.targetTimestamp;
@@ -93,9 +93,7 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
       // TODO macOS targetTimestamp isn't available on macOS
       auto targetTimestamp = displayLink.timestamp + displayLink.duration;
 #endif
-      double frameTimestamp =
-
-          (targetTimestamp) * 1000;
+      const double frameTimestamp = calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
       onRender(frameTimestamp);
     }];
   };
