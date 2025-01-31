@@ -34,6 +34,8 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
       const std::function<jsi::Value(PropertyInterpolator &)> &callback)
       const override;
 
+  void maybeCreateInterpolator(const std::string &propertyName);
+
  private:
   const InterpolatorFactoriesRecord &factories_;
   PropertyInterpolatorsRecord interpolators_;
