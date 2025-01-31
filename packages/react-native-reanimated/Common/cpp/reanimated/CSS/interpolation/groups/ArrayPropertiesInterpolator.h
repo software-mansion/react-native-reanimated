@@ -5,6 +5,7 @@
 #include <reanimated/CSS/util/interpolators.h>
 
 #include <memory>
+#include <algorithm>
 
 namespace reanimated {
 
