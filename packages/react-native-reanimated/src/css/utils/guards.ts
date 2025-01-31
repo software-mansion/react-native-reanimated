@@ -24,6 +24,7 @@ const TRANSITION_PROPS: CSSTransitionProp[] = [
   'transitionTimingFunction',
   'transitionDelay',
   'transitionBehavior',
+  'transition',
 ];
 
 const ANIMATION_SETTINGS_SET = new Set<string>(ANIMATION_SETTINGS);
