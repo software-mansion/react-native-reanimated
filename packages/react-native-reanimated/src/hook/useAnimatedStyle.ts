@@ -2,7 +2,7 @@
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
 
-import { makeShareable, startMapper, stopMapper } from '../core';
+import { makeShareable, runOnUI, startMapper, stopMapper } from '../core';
 import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
 import { useSharedValue } from './useSharedValue';
@@ -36,6 +36,7 @@ import type {
 import { isWorkletFunction } from '../commonTypes';
 import { processBoxShadow } from '../processBoxShadow';
 import { ReanimatedError } from '../errors';
+import { Platform } from 'react-native';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -44,6 +45,7 @@ interface AnimatedState {
   animations: AnimatedStyle<any>;
   isAnimationRunning: boolean;
   isAnimationCancelled: boolean;
+  isFirstRun: boolean;
 }
 
 interface AnimatedUpdaterData {
@@ -502,6 +504,7 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
         animations: {},
         isAnimationCancelled: false,
         isAnimationRunning: false,
+        isFirstRun: true,
       }),
       viewDescriptors: makeViewDescriptorsSet(),
     };
@@ -548,11 +551,44 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
           areAnimationsActive,
           isAnimatedProps
         );
+        if (
+          Platform.OS === 'android' &&
+          !globalThis._IS_FABRIC &&
+          remoteState.isFirstRun
+        ) {
+          /* 
+            This is a makeshift patch for a bug on Paper Android.
+
+            When an Animated Component gets mounted and it already has an
+            update (i.e. animation starts on mount), the first update can be 
+            lost. This is due to fact that Android UIManager is batching the
+            Native Views creation - an update might come before such batch
+            is executed, in result trying to modify a view which doesn't exist.
+            
+            After failing to force the UIManager 
+            to create the View pre-update, I decided to instead schedule the 
+            first update twice for Animated Style, because on another
+            frame the view should exist and the update should be successful.
+          */
+          requestAnimationFrame(() =>
+            styleUpdater(
+              shareableViewDescriptors,
+              updater,
+              remoteState,
+              areAnimationsActive,
+              isAnimatedProps
+            )
+          );
+          remoteState.isFirstRun = false;
+        }
       };
     }
     const mapperId = startMapper(fun, inputs);
     return () => {
       stopMapper(mapperId);
+      if (Platform.OS === 'android' && !globalThis._IS_FABRIC) {
+        runOnUI(() => (remoteState.isFirstRun = true))();
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
