@@ -12,29 +12,10 @@ import { Button, Screen } from '@/apps/css/components';
 
 const transitionStyles: Array<ViewStyle> = [
   {
-    transform: [
-      { perspective: 100 },
-      { rotate: '45deg' },
-      { skewX: '45deg' },
-      { rotateX: '45deg' },
-    ],
+    boxShadow: '0 0 10px 0 rgba(0, 0, 0, 0.5)',
   },
   {
-    backgroundColor: 'blue',
-    borderRadius: 100,
-    opacity: 0.5,
-    transform: [{ translateY: 200 }, { rotate: '45deg' }, { scale: 2 }],
-  },
-  {
-    backgroundColor: 'green',
-    transform: [
-      { perspective: 200 },
-      { rotate: '45deg' },
-      { translateY: 150 },
-      { rotateY: '-25deg' },
-      { rotateX: '35deg' },
-    ],
-    width: 200,
+    boxShadow: '0 0 20px 0 rgba(0, 0, 0, 0.5)',
   },
 ];
 
