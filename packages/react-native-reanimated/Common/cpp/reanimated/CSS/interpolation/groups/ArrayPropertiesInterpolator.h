@@ -4,8 +4,8 @@
 #include <reanimated/CSS/interpolation/groups/GroupPropertiesInterpolator.h>
 #include <reanimated/CSS/util/interpolators.h>
 
-#include <memory>
 #include <algorithm>
+#include <memory>
 
 namespace reanimated {
 

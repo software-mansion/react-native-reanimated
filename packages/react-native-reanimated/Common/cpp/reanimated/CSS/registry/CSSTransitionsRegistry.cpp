@@ -1,11 +1,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
 namespace reanimated {
-
-using namespace worklets;
 
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
@@ -142,9 +138,6 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
     if (changedProps.changedPropertyNames.empty()) {
       return;
     }
-
-    LOG(INFO) << "oldProps: " << stringifyJSIValue(rt, changedProps.oldProps);
-    LOG(INFO) << "newProps: " << stringifyJSIValue(rt, changedProps.newProps);
 
     {
       std::lock_guard<std::mutex> lock{strongThis->mutex_};
