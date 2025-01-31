@@ -1,19 +1,18 @@
 'use strict';
 
 import type {
-  ShareableRef,
+  LayoutAnimationBatchItem,
   ShadowNodeWrapper,
+  StyleProps,
   Value3D,
   ValueRotation,
-  LayoutAnimationBatchItem,
-  WorkletFunction,
-  StyleProps,
 } from '../commonTypes';
 import type {
   NormalizedCSSTransitionConfig,
   NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
+import type { ShareableRef, WorkletFunction } from '../WorkletsResolver';
 
 /** Type of `__reanimatedModuleProxy` injected with JSI. */
 export interface ReanimatedModuleProxy {
@@ -88,4 +87,14 @@ export interface ReanimatedModuleProxy {
   ): void;
 
   unregisterCSSTransition(viewTag: number): void;
+}
+
+export interface IReanimatedModule
+  extends Omit<ReanimatedModuleProxy, 'getViewProp'> {
+  getViewProp<TValue>(
+    viewTag: number,
+    propName: string,
+    component: React.Component | undefined,
+    callback?: (result: TValue) => void
+  ): Promise<TValue>;
 }

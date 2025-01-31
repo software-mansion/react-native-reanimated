@@ -1,31 +1,35 @@
 'use strict';
+import type React from 'react';
 import type {
-  Value3D,
-  ValueRotation,
-  ShareableRef,
   LayoutAnimationBatchItem,
-  IReanimatedModule,
-  IWorkletsModule,
-  WorkletFunction,
   ShadowNodeWrapper,
   StyleProps,
+  Value3D,
+  ValueRotation,
 } from '../commonTypes';
-import { checkCppVersion } from '../platform-specific/checkCppVersion';
-import { jsVersion } from '../platform-specific/jsVersion';
-import { isFabric, isWeb } from '../PlatformChecker';
-import type React from 'react';
-import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { ReanimatedTurboModule } from '../specs';
-import { ReanimatedError } from '../errors';
-import { WorkletsModule } from '../worklets';
-import type { ReanimatedModuleProxy } from './reanimatedModuleProxy';
 import type {
   NormalizedCSSTransitionConfig,
   NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
+import { ReanimatedError } from '../errors';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
+import { checkCppVersion } from '../platform-specific/checkCppVersion';
+import { jsVersion } from '../platform-specific/jsVersion';
+import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
+import { ReanimatedTurboModule } from '../specs';
+import type {
+  ShareableRef,
+  WorkletFunction,
+  IWorkletsModule,
+} from '../WorkletsResolver';
+import { WorkletsModule } from '../WorkletsResolver';
+import type {
+  IReanimatedModule,
+  ReanimatedModuleProxy,
+} from './reanimatedModuleProxy';
 
-const IS_WEB = isWeb();
+const IS_WEB = shouldBeUseWeb();
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();

@@ -1,6 +1,4 @@
 'use strict';
-import { isWorkletFunction } from './commonTypes';
-import type { WorkletFunction } from './commonTypes';
 import { ReanimatedError, registerReanimatedError } from './errors';
 import { setupCallGuard, setupConsole } from './initializers';
 import { registerLoggerConfig } from './logger';
@@ -9,14 +7,10 @@ import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
-import { WorkletsModule } from './worklets';
+import type { WorkletRuntime, WorkletFunction } from './WorkletsResolver';
+import { WorkletsModule, isWorkletFunction } from './WorkletsResolver';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
-
-export type WorkletRuntime = {
-  __hostObjectWorkletRuntime: never;
-  readonly name: string;
-};
 
 /**
  * Lets you create a new JS runtime which can be used to run worklets possibly

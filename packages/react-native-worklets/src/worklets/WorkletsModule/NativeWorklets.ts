@@ -1,10 +1,12 @@
+/* eslint-disable reanimated/use-reanimated-error */
 'use strict';
-import { getValueUnpackerCode } from '../valueUnpacker';
+
 import { WorkletsTurboModule } from '../../specs';
-import { ReanimatedError } from '../../errors';
-import type { IWorkletsModule, ShareableRef } from '../../commonTypes';
+import { getValueUnpackerCode } from '../valueUnpacker';
 import type { WorkletsModuleProxy } from './workletsModuleProxy';
-import type { WorkletRuntime } from '../../runtimes';
+import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+
+export interface IWorkletsModule extends WorkletsModuleProxy {}
 
 export function createNativeWorkletsModule(): IWorkletsModule {
   return new NativeWorklets();
@@ -19,8 +21,8 @@ class NativeWorklets {
       WorkletsTurboModule?.installTurboModule(valueUnpackerCode);
     }
     if (global.__workletsModuleProxy === undefined) {
-      throw new ReanimatedError(
-        `Native part of Reanimated doesn't seem to be initialized (Worklets).
+      throw new Error(
+        `[Worklets] Native part of Worklets doesn't seem to be initialized.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }

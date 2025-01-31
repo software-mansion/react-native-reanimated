@@ -19,7 +19,7 @@
     "format:android:cpp": "find android/src -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:android:cmake": "find ./android -type d \\( -name build -o -name .cxx \\) -prune -o -type f -name 'CMakeLists.txt' -print | xargs ./scripts/format-cmake.sh",
     "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
-    "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.\" --error",
+    "find-unused-code:js": "yarn ts-prune --ignore \"index|.web.|src/worklets\" --error",
     "type:check": "yarn type:check:src && yarn type:check:plugin && yarn type:check:app && ./scripts/test-ts.sh __typetests__/common",
     "type:check:src": "yarn tsc --noEmit",
     "type:check:plugin": "cd plugin && yarn type:check:src",

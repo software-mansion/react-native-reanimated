@@ -4,7 +4,6 @@ import type {
   AnimatedPropsAdapterFunction,
   ShadowNodeWrapper,
   SharedValue,
-  WorkletFunction,
   AnimatedStyle,
 } from '../commonTypes';
 import type {
@@ -16,6 +15,7 @@ import type {
 } from 'react-native';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
+import type { WorkletFunction } from '../WorkletsResolver';
 
 export type DependencyList = Array<unknown> | undefined;
 
