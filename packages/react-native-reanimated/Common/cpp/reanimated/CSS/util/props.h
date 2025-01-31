@@ -20,18 +20,13 @@ struct ChangedProps {
   const PropertyNames changedPropertyNames;
 };
 
-namespace {
-// Private methods
-bool areArraysDifferentRecursive(
-    jsi::Runtime &rt,
-    const jsi::Array &oldArray,
-    const jsi::Array &newArray);
-
+// We need to specify it here because there are 2 methods referencing
+// each other in the recursion and areArraysDifferentRecursive must be
+// aware that getChangedPropsRecursive exists
 std::pair<jsi::Value, jsi::Value> getChangedPropsRecursive(
     jsi::Runtime &rt,
     const jsi::Value &oldProp,
     const jsi::Value &newProp);
-} // anonymous namespace
 
 ChangedProps getChangedProps(
     jsi::Runtime &rt,

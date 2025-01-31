@@ -2,8 +2,7 @@
 #include <reanimated/CSS/util/props.h>
 
 namespace reanimated {
-namespace {
-// Private implementations
+
 bool areArraysDifferentRecursive(
     jsi::Runtime &rt,
     const jsi::Array &oldArray,
@@ -105,7 +104,6 @@ std::pair<jsi::Value, jsi::Value> getChangedPropsRecursive(
       oldHasChanges ? jsi::Value(rt, oldResult) : jsi::Value::undefined(),
       newHasChanges ? jsi::Value(rt, newResult) : jsi::Value::undefined());
 }
-} // anonymous namespace
 
 std::pair<jsi::Value, jsi::Value> getChangedValueForProp(
     jsi::Runtime &rt,
