@@ -341,6 +341,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   @Override
+  @SuppressWarnings("rawtypes")
   public void onEventDispatch(Event event) {
     if (mNativeProxy == null) {
       return;
@@ -361,6 +362,7 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
+  @SuppressWarnings("rawtypes")
   private void handleEvent(Event event) {
     event.dispatch(mCustomEventHandler);
   }
