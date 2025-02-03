@@ -196,13 +196,15 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
     globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
   }
 
-  executeOnUIRuntimeSync(() => {
-    'worklet';
-    setupCallGuard();
-    setupConsole();
-    if (!SHOULD_BE_USE_WEB) {
-      setupMicrotasks();
-      setupRequestAnimationFrame();
-    }
-  })();
+  if (!SHOULD_BE_USE_WEB) {
+    executeOnUIRuntimeSync(() => {
+      'worklet';
+      setupCallGuard();
+      setupConsole();
+      if (!SHOULD_BE_USE_WEB) {
+        setupMicrotasks();
+        setupRequestAnimationFrame();
+      }
+    })();
+  }
 }
