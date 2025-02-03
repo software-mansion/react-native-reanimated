@@ -81,7 +81,7 @@ void checkJSVersion(
 #else
 void checkJSVersion(
     jsi::Runtime &rnRuntime,
-    const std::shared_ptr<JSLogger> &jsLogger) {
+    const std::shared_ptr<worklets::JSLogger> &jsLogger) {
   // In release builds we don't check the version, hence
   // this function is a NOOP.
 }
