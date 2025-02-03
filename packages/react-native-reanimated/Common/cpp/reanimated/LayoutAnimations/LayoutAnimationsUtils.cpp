@@ -31,7 +31,13 @@ Rect SurfaceManager::getWindow(SurfaceId surfaceId) {
 }
 
 void Node::applyMutationToIndices(ShadowViewMutation mutation) {
-  if (tag != mutation.parentTag) {
+  if (
+#if REACT_NATIVE_MINOR_VERSION >= 78
+      tag != mutation.parentTag
+#else
+      tag != mutation.parentShadowView.tag
+#endif // REACT_NATIVE_MINOR_VERSION >= 78
+  ) {
     return;
   }
 
