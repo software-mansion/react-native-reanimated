@@ -31,6 +31,25 @@ function overrideLogFunctionImplementation() {
   });
 }
 
+// Register logger config and replace the log function implementation in
+// the React runtime global scope
+registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
+overrideLogFunctionImplementation();
+
+// this is for web implementation
+if (SHOULD_BE_USE_WEB) {
+  global._WORKLET = false;
+  global._log = console.log;
+  global._getAnimationTimestamp = () => performance.now();
+} else {
+  // Register WorkletsError and logger config in the UI runtime global scope.
+  // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
+  // are applied before any async operations are executed on the UI runtime)
+  executeOnUIRuntimeSync(registerWorkletsError);
+  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
+  executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
+}
+
 // callGuard is only used with debug builds
 export function callGuardDEV<Args extends unknown[], ReturnValue>(
   fn: (...args: Args) => ReturnValue,
@@ -60,25 +79,6 @@ export function setupCallGuard() {
       });
     },
   };
-}
-
-// Register logger config and replace the log function implementation in
-// the React runtime global scope
-registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
-overrideLogFunctionImplementation();
-
-// this is for web implementation
-if (SHOULD_BE_USE_WEB) {
-  global._WORKLET = false;
-  global._log = console.log;
-  global._getAnimationTimestamp = () => performance.now();
-} else {
-  // Register WorkletsError and logger config in the UI runtime global scope.
-  // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
-  // are applied before any async operations are executed on the UI runtime)
-  executeOnUIRuntimeSync(registerWorkletsError);
-  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
-  executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
 }
 
 /**
