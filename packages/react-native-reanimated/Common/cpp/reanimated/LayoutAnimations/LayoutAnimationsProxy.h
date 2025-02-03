@@ -23,7 +23,8 @@ class ReanimatedModuleProxy;
 using namespace facebook;
 
 struct LayoutAnimation {
-  std::shared_ptr<ShadowView> finalView, currentView, parentView;
+  std::shared_ptr<ShadowView> finalView, currentView;
+  Tag parentTag;
   std::optional<double> opacity;
   int count = 1;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;

@@ -31,7 +31,7 @@ Rect SurfaceManager::getWindow(SurfaceId surfaceId) {
 }
 
 void Node::applyMutationToIndices(ShadowViewMutation mutation) {
-  if (tag != mutation.parentShadowView.tag) {
+  if (tag != mutation.parentTag) {
     return;
   }
 

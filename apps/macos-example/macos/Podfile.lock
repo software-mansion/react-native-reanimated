@@ -1210,7 +1210,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-safe-area-context (5.1.0):
+  - react-native-safe-area-context (5.2.0-beta.0):
     - React-Core
   - React-nativeconfig (0.75.16)
   - React-NativeModulesApple (0.75.16):
@@ -1589,8 +1589,6 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNSVG (15.11.1):
-    - React-Core
   - SocketRocket (0.7.0)
   - Yoga (0.0.0)
 
@@ -1661,7 +1659,6 @@ DEPENDENCIES:
   - "RNCClipboard (from `../../../node_modules/@react-native-clipboard/clipboard`)"
   - RNGestureHandler (from `../../../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
-  - RNSVG (from `../../../node_modules/react-native-svg`)
   - SocketRocket (from `../node_modules/react-native-macos/third-party-podspecs/SocketRocket.podspec`)
   - Yoga (from `../node_modules/react-native-macos/ReactCommon/yoga`)
 
@@ -1794,8 +1791,6 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native-gesture-handler"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
-  RNSVG:
-    :path: "../../../node_modules/react-native-svg"
   SocketRocket:
     :podspec: "../node_modules/react-native-macos/third-party-podspecs/SocketRocket.podspec"
   Yoga:
@@ -1836,7 +1831,7 @@ SPEC CHECKSUMS:
   React-logger: d2346d2c6056e50941ee0e91db9639188842fe34
   React-Mapbuffer: 42c1c6a2fcfc7993c96fd1540993ec5070fc870f
   React-microtasksnativemodule: 74040ecf5ffab05e7276a3c73bc6aa423e152c1b
-  react-native-safe-area-context: e134b241010ebe2aacdcea013565963d13826faa
+  react-native-safe-area-context: 173688ed63d15920de28a80e02300d415399adb8
   React-nativeconfig: 33b8222107c5eb4b73b9cd6d28397ab123904d5c
   React-NativeModulesApple: 89541f2dd4928c7a6e40a01a7771664e1ff61066
   React-perflogger: 4ef0d0f93248f8331d7de7824e4b7b34d9740147
@@ -1866,7 +1861,6 @@ SPEC CHECKSUMS:
   RNCClipboard: ee059e6006b137e369caed5eb852b4aad9f5d886
   RNGestureHandler: 8c8722468ee6ced80a0723943c894798d2613a81
   RNReanimated: 5e21c891ee78aa03ffbd0ce2c8d15a7c263f499f
-  RNSVG: 46769c92d1609e617dbf9326ad8a0cff912d0982
   SocketRocket: 9ee265c4b5ae2382d18e4ee1d2dd2d7af0ff1ab5
   Yoga: 446e6f351a519539ff00a1159fe41e589aab1b94
 
