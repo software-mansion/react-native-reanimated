@@ -15,6 +15,7 @@ import {
 } from './logger';
 import { reportFatalErrorOnJS } from './errors';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
+import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
