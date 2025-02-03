@@ -1,14 +1,16 @@
 'use strict';
 import { ReanimatedError, registerReanimatedError } from './errors';
-import { setupCallGuard, setupConsole } from './initializers';
-import { registerLoggerConfig } from './logger';
 import { shouldBeUseWeb } from './PlatformChecker';
+import type { WorkletRuntime, WorkletFunction } from './WorkletsResolver';
 import {
+  WorkletsModule,
+  isWorkletFunction,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
-} from './shareables';
-import type { WorkletRuntime, WorkletFunction } from './WorkletsResolver';
-import { WorkletsModule, isWorkletFunction } from './WorkletsResolver';
+  registerLoggerConfig,
+  setupCallGuard,
+  setupConsole,
+} from './WorkletsResolver';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -36,7 +38,7 @@ export function createWorkletRuntime(
 ): WorkletRuntime {
   // Assign to a different variable as __reanimatedLoggerConfig is not a captured
   // identifier in the Worklet runtime.
-  const config = __reanimatedLoggerConfig;
+  const config = __workletsLoggerConfig;
   return WorkletsModule.createWorkletRuntime(
     name,
     makeShareableCloneRecursive(() => {

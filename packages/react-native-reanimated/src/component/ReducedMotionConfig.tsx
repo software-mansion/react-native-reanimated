@@ -5,7 +5,7 @@ import {
   ReducedMotionManager,
   isReducedMotionEnabledInSystem,
 } from '../ReducedMotion';
-import { logger } from '../logger';
+import { logger } from '../WorkletsResolver';
 
 /**
  * A component that lets you overwrite default reduce motion behavior globally

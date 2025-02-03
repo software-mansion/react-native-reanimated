@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { isWeb, isJest } from '../PlatformChecker';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
 import { areDependenciesEqual, buildDependencies } from './utils';
-import { makeShareable } from '../shareables';
+import { makeShareable } from '../WorkletsResolver';
 import type { WorkletFunction } from '../WorkletsResolver';
 
 interface GeneralHandler<

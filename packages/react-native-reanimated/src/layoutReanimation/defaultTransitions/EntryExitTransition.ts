@@ -11,7 +11,7 @@ import type {
   StylePropsWithArrayTransform,
   TransformArrayItem,
 } from '../../commonTypes';
-import { logger } from '../../logger';
+import { logger } from '../../WorkletsResolver';
 
 export class EntryExitTransition
   extends BaseAnimationBuilder

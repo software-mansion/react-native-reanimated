@@ -1,21 +1,20 @@
 'use strict';
-import { registerReanimatedError, reportFatalErrorOnJS } from './errors';
 import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
 import {
   runOnJS,
   setupMicrotasks,
   callMicrotasks,
-  runOnUIImmediately,
   executeOnUIRuntimeSync,
 } from './threads';
-import { mockedRequestAnimationFrame } from './WorkletsResolver';
+import type { IWorkletsModule } from './WorkletsModule';
 import {
   DEFAULT_LOGGER_CONFIG,
   logToLogBoxAndConsole,
   registerLoggerConfig,
   replaceLoggerImplementation,
 } from './logger';
-import type { IReanimatedModule } from './ReanimatedModule';
+import { reportFatalErrorOnJS } from './errors';
+import { registerWorkletsError } from './WorkletsError';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -30,25 +29,6 @@ function overrideLogFunctionImplementation() {
     'worklet';
     runOnJS(logToLogBoxAndConsole)(data);
   });
-}
-
-// Register logger config and replace the log function implementation in
-// the React runtime global scope
-registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
-overrideLogFunctionImplementation();
-
-// this is for web implementation
-if (SHOULD_BE_USE_WEB) {
-  global._WORKLET = false;
-  global._log = console.log;
-  global._getAnimationTimestamp = () => performance.now();
-} else {
-  // Register ReanimatedError and logger config in the UI runtime global scope.
-  // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
-  // are applied before any async operations are executed on the UI runtime)
-  executeOnUIRuntimeSync(registerReanimatedError)();
-  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
-  executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
 }
 
 // callGuard is only used with debug builds
@@ -75,6 +55,7 @@ export function setupCallGuard() {
     reportFatalError: (error: Error) => {
       runOnJS(reportFatalErrorOnJS)({
         message: error.message,
+        moduleName: 'Worklets',
         stack: error.stack,
       });
     },
@@ -179,11 +160,10 @@ function setupRequestAnimationFrame() {
   };
 }
 
-export function initializeUIRuntime(ReanimatedModule: IReanimatedModule) {
-  if (!ReanimatedModule) {
-    // eslint-disable-next-line reanimated/use-reanimated-error
+export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
+  if (!WorkletsModule) {
     throw new Error(
-      '[Reanimated] Reanimated is trying to initialize the UI runtime without a valid ReanimatedModule'
+      '[Worklets] Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
     );
   }
   if (IS_JEST) {
@@ -196,7 +176,26 @@ export function initializeUIRuntime(ReanimatedModule: IReanimatedModule) {
     globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
   }
 
-  runOnUIImmediately(() => {
+  // Register logger config and replace the log function implementation in
+  // the React runtime global scope
+  registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
+  overrideLogFunctionImplementation();
+
+  // this is for web implementation
+  if (SHOULD_BE_USE_WEB) {
+    global._WORKLET = false;
+    global._log = console.log;
+    global._getAnimationTimestamp = () => performance.now();
+  } else {
+    // Register WorkletsError and logger config in the UI runtime global scope.
+    // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
+    // are applied before any async operations are executed on the UI runtime)
+    executeOnUIRuntimeSync(registerWorkletsError);
+    executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
+    executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
+  }
+
+  executeOnUIRuntimeSync(() => {
     'worklet';
     setupCallGuard();
     setupConsole();

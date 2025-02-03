@@ -6,7 +6,6 @@
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 
 import type {
-  FlatShareableRef,
   MapperRegistry,
   MeasuredDimensions,
   ShadowNodeWrapper,
@@ -15,10 +14,8 @@ import type {
 } from './commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
 import type { AnimatedStyle } from './helperTypes';
-import type { callGuardDEV } from './initializers';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
-import type { LoggerConfigInternal } from './logger';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { WorkletRuntime } from './runtimes';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
@@ -32,7 +29,6 @@ declare global {
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_JS: string | undefined;
   var __reanimatedModuleProxy: ReanimatedModuleProxy | undefined;
-  var __callGuardDEV: typeof callGuardDEV | undefined;
   var _log: (value: unknown) => void;
   var _notifyAboutProgress: (
     tag: number,
@@ -41,12 +37,6 @@ declare global {
   ) => void;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _makeShareableClone: <T>(
-    value: T,
-    nativeStateSource?: object
-  ) => FlatShareableRef<T>;
-  var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
-  var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
     worklet: ShareableRef<() => void>
@@ -90,18 +80,10 @@ declare global {
         args: Array<unknown>
       ) => void)
     | undefined;
-  var _getAnimationTimestamp: () => number;
-  var __ErrorUtils: {
-    reportFatalError: (error: Error) => void;
-  };
   var _frameCallbackRegistry: FrameCallbackRegistryUI;
   var console: Console;
-  var __frameTimestamp: number | undefined;
-  var __flushAnimationFrame: (timestamp: number) => void;
-  var __callMicrotasks: () => void;
   var __mapperRegistry: MapperRegistry;
   var __sensorContainer: SensorContainer;
-  var _maybeFlushUIUpdatesQueue: () => void;
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
   var ProgressTransitionRegister: ProgressTransitionRegister;
@@ -112,5 +94,4 @@ declare global {
     shadowNodeWrapper: ShadowNodeWrapper,
     propName: string
   ) => string;
-  var __reanimatedLoggerConfig: LoggerConfigInternal;
 }

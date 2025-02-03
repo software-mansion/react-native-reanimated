@@ -12,7 +12,7 @@ import type {
   NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
-import { ReanimatedError } from '../errors';
+import { ReanimatedError, registerReanimatedError } from '../errors';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
@@ -23,7 +23,7 @@ import type {
   WorkletFunction,
   IWorkletsModule,
 } from '../WorkletsResolver';
-import { WorkletsModule } from '../WorkletsResolver';
+import { executeOnUIRuntimeSync, WorkletsModule } from '../WorkletsResolver';
 import type {
   IReanimatedModule,
   ReanimatedModuleProxy,
@@ -80,6 +80,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
+    executeOnUIRuntimeSync(registerReanimatedError);
   }
 
   registerSensor(

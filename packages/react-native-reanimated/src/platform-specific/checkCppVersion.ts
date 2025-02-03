@@ -1,7 +1,7 @@
 'use strict';
 
 import { jsVersion } from './jsVersion';
-import { logger } from '../logger';
+import { logger } from '../WorkletsResolver';
 import { ReanimatedError } from '../errors';
 
 export function checkCppVersion() {

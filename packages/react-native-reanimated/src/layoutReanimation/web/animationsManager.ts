@@ -28,7 +28,7 @@ import type { TransitionData } from './animationParser';
 import { Keyframe } from '../animationBuilder';
 import { makeElementVisible } from './componentStyle';
 import { EasingNameSymbol } from '../../Easing';
-import { logger } from '../../logger';
+import { logger } from '../../WorkletsResolver';
 import { LayoutAnimationType } from '../../commonTypes';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 

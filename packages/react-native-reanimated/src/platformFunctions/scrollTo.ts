@@ -12,7 +12,7 @@ import type {
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 import type { Component } from 'react';
-import { logger } from '../logger';
+import { logger } from '../WorkletsResolver';
 
 type ScrollTo = <T extends Component>(
   animatedRef: AnimatedRef<T>,

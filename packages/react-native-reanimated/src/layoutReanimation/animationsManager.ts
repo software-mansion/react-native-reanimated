@@ -8,7 +8,7 @@ import type {
   SharedValue,
 } from '../commonTypes';
 import { makeMutableUI } from '../mutables';
-import { runOnUIImmediately } from '../threads';
+import { runOnUIImmediately } from '../WorkletsResolver';
 
 const TAG_OFFSET = 1e9;
 

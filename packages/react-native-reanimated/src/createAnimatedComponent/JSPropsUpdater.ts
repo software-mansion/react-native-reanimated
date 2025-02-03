@@ -3,7 +3,7 @@ import { NativeEventEmitter, Platform } from 'react-native';
 import type { NativeModule } from 'react-native';
 import { shouldBeUseWeb } from '../PlatformChecker';
 import type { StyleProps } from '../commonTypes';
-import { runOnJS, runOnUIImmediately } from '../threads';
+import { runOnJS, runOnUIImmediately } from '../WorkletsResolver';
 import type {
   AnimatedComponentProps,
   IAnimatedComponentInternal,

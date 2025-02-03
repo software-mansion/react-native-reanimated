@@ -12,7 +12,7 @@ import type {
   ReduceMotion,
 } from '../commonTypes';
 import type { ClampAnimation } from './commonTypes';
-import { logger } from '../logger';
+import { logger } from '../WorkletsResolver';
 
 type withClampType = <T extends number | string>(
   config: {

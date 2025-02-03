@@ -6,7 +6,7 @@ import * as Animated from './Animated';
 export default Animated;
 
 export { configureReanimatedLogger } from './ConfigHelper';
-export { LogLevel as ReanimatedLogLevel } from './logger';
+export { LogLevel as ReanimatedLogLevel } from './WorkletsResolver';
 export {
   runOnJS,
   runOnUI,

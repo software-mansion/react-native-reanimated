@@ -5,8 +5,10 @@ import { useSharedValue } from './useSharedValue';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { makeShareableCloneRecursive } from '../shareables';
-import { shareableMappingCache } from '../shareableMappingCache';
+import {
+  makeShareableCloneRecursive,
+  shareableMappingCache,
+} from '../WorkletsResolver';
 import { Platform } from 'react-native';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import type { ScrollView, FlatList } from 'react-native';

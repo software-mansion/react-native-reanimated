@@ -5,7 +5,7 @@ import type {
   Timestamp,
   ReduceMotion,
 } from '../commonTypes';
-import { logger } from '../logger';
+import { logger } from '../WorkletsResolver';
 
 /**
  * Spring animation configuration.

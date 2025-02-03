@@ -3,7 +3,7 @@ import { isWindowAvailable } from '../../PlatformChecker';
 import { setElementPosition, snapshots } from './componentStyle';
 import { Animations } from './config';
 import type { AnimationNames } from './config';
-import { logger } from '../../logger';
+import { logger } from '../../WorkletsResolver';
 import { ReanimatedError } from '../../errors';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 

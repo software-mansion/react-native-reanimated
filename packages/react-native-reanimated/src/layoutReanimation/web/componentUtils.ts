@@ -20,7 +20,7 @@ import { Keyframe } from '../animationBuilder';
 import { ReducedMotionManager } from '../../ReducedMotion';
 import { prepareCurvedTransition } from './transition/Curved.web';
 import { EasingNameSymbol } from '../../Easing';
-import { logger } from '../../logger';
+import { logger } from '../../WorkletsResolver';
 import { _updatePropsJS } from '../../ReanimatedModule/js-reanimated';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 

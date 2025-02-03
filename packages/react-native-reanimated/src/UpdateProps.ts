@@ -9,10 +9,10 @@ import type {
 } from './commonTypes';
 import type { Descriptor } from './hook/commonTypes';
 import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
-import { runOnUIImmediately } from './threads';
 import { ReanimatedError } from './errors';
 import { _updatePropsJS } from './ReanimatedModule/js-reanimated';
 import type { ReanimatedHTMLElement } from './ReanimatedModule/js-reanimated';
+import { runOnUIImmediately } from './WorkletsResolver';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,

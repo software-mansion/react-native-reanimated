@@ -1,12 +1,32 @@
 'use strict';
 
 export {
+  callMicrotasks,
+  createCustomError,
+  executeOnUIRuntimeSync,
   isWorkletFunction,
+  logger,
+  LogLevel,
+  makeShareable,
+  makeShareableCloneRecursive,
+  makeShareableCloneOnUIRecursive,
   mockedRequestAnimationFrame,
+  registerCustomError,
+  registerLoggerConfig,
+  registerWorkletStackDetails,
+  reportFatalErrorOnJS,
+  runOnJS,
+  runOnUI,
+  runOnUIImmediately,
+  shareableMappingCache,
+  updateLoggerConfig,
   WorkletsModule,
+  setupCallGuard,
+  setupConsole,
 } from './worklets';
 export type {
   IWorkletsModule,
+  LoggerConfig,
   ShareableRef,
   WorkletFunction,
   WorkletFunctionDev,

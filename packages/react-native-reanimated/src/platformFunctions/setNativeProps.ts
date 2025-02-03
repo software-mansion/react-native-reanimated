@@ -13,7 +13,7 @@ import type {
 } from '../hook/commonTypes';
 import type { Component } from 'react';
 import { processColorsInProps } from '../Colors';
-import { logger } from '../logger';
+import { logger } from '../WorkletsResolver';
 
 type SetNativeProps = <T extends Component>(
   animatedRef: AnimatedRef<T>,

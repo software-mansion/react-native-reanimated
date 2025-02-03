@@ -6,7 +6,7 @@ import {
   createTextShadowValue,
 } from './webUtils';
 import { PropsAllowlists } from '../../propsAllowlists';
-import { logger } from '../../logger';
+import { logger } from '../../WorkletsResolver';
 import { ReanimatedError } from '../../errors';
 
 export { createJSReanimatedModule } from './JSReanimated';

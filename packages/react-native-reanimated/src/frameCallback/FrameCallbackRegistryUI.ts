@@ -1,5 +1,5 @@
 'use strict';
-import { runOnUIImmediately } from '../threads';
+import { runOnUIImmediately } from '../WorkletsResolver';
 
 type CallbackDetails = {
   callback: (frameInfo: FrameInfo) => void;

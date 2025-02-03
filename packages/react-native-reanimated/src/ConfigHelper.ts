@@ -2,8 +2,8 @@
 import { PropsAllowlists } from './propsAllowlists';
 import { executeOnUIRuntimeSync, jsiConfigureProps } from './core';
 import { ReanimatedError } from './errors';
-import { updateLoggerConfig } from './logger';
-import type { LoggerConfig } from './logger';
+import { updateLoggerConfig } from './WorkletsResolver';
+import type { LoggerConfig } from './WorkletsResolver';
 import { shouldBeUseWeb } from './PlatformChecker';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();

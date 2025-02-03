@@ -8,7 +8,7 @@ import type {
   ReduceMotion,
   Timestamp,
 } from '../commonTypes';
-import { logger } from '../logger';
+import { logger } from '../WorkletsResolver';
 
 /**
  * Lets you run animations in a sequence.

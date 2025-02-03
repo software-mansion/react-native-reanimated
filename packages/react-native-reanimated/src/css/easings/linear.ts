@@ -1,5 +1,5 @@
 'use strict';
-import { logger } from '../../logger';
+import { logger } from '../../WorkletsResolver';
 import { PERCENTAGE_REGEX } from '../constants';
 import { ReanimatedError } from '../errors';
 import type { Point } from '../types';

@@ -12,7 +12,7 @@ import type {
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
 import { ColorProperties, processColor } from '../Colors';
-import { logger } from '../logger';
+import { logger } from '../WorkletsResolver';
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined
