@@ -14,7 +14,7 @@ import {
   replaceLoggerImplementation,
 } from './logger';
 import { reportFatalErrorOnJS } from './errors';
-import { registerWorkletsError } from './WorkletsError';
+import { registerWorkletsError, WorkletsError } from './WorkletsError';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -162,8 +162,8 @@ function setupRequestAnimationFrame() {
 
 export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
   if (!WorkletsModule) {
-    throw new Error(
-      '[Worklets] Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
+    throw new WorkletsError(
+      'Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
     );
   }
   if (IS_JEST) {

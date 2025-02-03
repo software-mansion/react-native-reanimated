@@ -14,6 +14,7 @@ import type {
   WorkletFunction,
   WorkletFunctionDev,
 } from './workletTypes';
+import { WorkletsError } from './WorkletsError';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -73,14 +74,14 @@ const INACCESSIBLE_OBJECT = {
             // need to allow for this key to be accessed here.
             return false;
           }
-          throw new Error(
+          throw new WorkletsError(
             `Trying to access property \`${String(
               prop
             )}\` of an object which cannot be sent to the UI runtime.`
           );
         },
         set: () => {
-          throw new Error(
+          throw new WorkletsError(
             'Trying to write to an object which cannot be sent to the UI runtime.'
           );
         },
@@ -184,7 +185,7 @@ function detectCyclicObject(value: unknown, depth: number) {
     if (depth === DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
       processedObjectAtThresholdDepth = value;
     } else if (value === processedObjectAtThresholdDepth) {
-      throw new Error(
+      throw new WorkletsError(
         'Trying to convert a cyclic object to a shareable. This is not supported.'
       );
     }
@@ -374,7 +375,7 @@ function cloneError<T extends Error>(value: T): ShareableRef<T> {
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
-      // eslint-disable-next-line reanimated/use-reanimated-error
+      // eslint-disable-next-line reanimated/use-worklets-error
       const error = new Error();
       error.name = name;
       error.message = message;
@@ -410,14 +411,14 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
     __init: () => {
       'worklet';
       if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
-        throw new Error(
-          `[Reanimated] Invalid array view name \`${typeName}\`.`
-        );
+        // eslint-disable-next-line reanimated/use-worklets-error
+        throw new Error(`[Worklets] Invalid array view name \`${typeName}\`.`);
       }
       const constructor = global[typeName as keyof typeof global];
       if (constructor === undefined) {
+        // eslint-disable-next-line reanimated/use-worklets-error
         throw new Error(
-          `[Reanimated] Constructor for \`${typeName}\` not found.`
+          `[Worklets] Constructor for \`${typeName}\` not found.`
         );
       }
       return new constructor(buffer);

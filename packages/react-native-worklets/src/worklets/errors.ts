@@ -16,6 +16,7 @@ export function createCustomError<TName extends string>(
   const constructor = function CustomError(message?: string) {
     'worklet';
     const prefix = `[${name}]`;
+    // eslint-disable-next-line reanimated/use-worklets-error
     const errorInstance = new Error(message ? `${prefix} ${message}` : prefix);
     errorInstance.name = `${name}Error`;
     return errorInstance;
@@ -33,6 +34,7 @@ export function registerCustomError<TName extends string>(
 ) {
   'worklet';
   if (!_WORKLET) {
+    // eslint-disable-next-line reanimated/use-worklets-error
     throw new Error(
       '[Worklets] registerCustomError() must be called on a Worklet runtime'
     );
@@ -89,6 +91,7 @@ export function reportFatalErrorOnJS({
   stack?: string;
   moduleName: string;
 }) {
+  // eslint-disable-next-line reanimated/use-worklets-error
   const error = new Error();
   error.message = message;
   error.stack = stack ? processStack(stack) : undefined;

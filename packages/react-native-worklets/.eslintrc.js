@@ -6,7 +6,7 @@ module.exports = {
       files: ['./src/**/*.ts', './src/**/*.tsx'],
       plugins: ['reanimated'],
       rules: {
-        // TODO: Add `use-worklets-error` rule.
+        'reanimated/use-worklets-error': 'error',
       },
     },
   ],
