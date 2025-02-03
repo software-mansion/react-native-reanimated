@@ -1,6 +1,6 @@
 'use strict';
-export * from './guards';
-export * from './equality';
 export * from './conversions';
-export * from './props';
+export * from './equality';
+export * from './guards';
 export * from './parsers';
+export * from './props';

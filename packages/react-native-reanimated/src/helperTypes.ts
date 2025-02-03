@@ -8,6 +8,7 @@ This will not be easy though!
 */
 
 import type { RegisteredStyle, StyleProp } from 'react-native';
+
 import type {
   AnimatedStyle,
   EntryExitAnimationFunction,

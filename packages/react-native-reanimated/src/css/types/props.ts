@@ -1,9 +1,10 @@
 'use strict';
 import type { StyleProp } from 'react-native';
+
 import type { CSSAnimationProperties } from './animation';
 import type { PlainStyle } from './common';
-import type { CSSTransitionProperties } from './transition';
 import type { AnyRecord } from './helpers';
+import type { CSSTransitionProperties } from './transition';
 
 /*
   Style type properties (properties that extends StyleProp<ViewStyle>)

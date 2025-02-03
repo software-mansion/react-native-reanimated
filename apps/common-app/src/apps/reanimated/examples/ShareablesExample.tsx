@@ -1,6 +1,5 @@
-import { Button, StyleSheet, View } from 'react-native';
-
 import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import { runOnJS, runOnUI } from 'react-native-reanimated';
 
 export default function ShareablesExample() {

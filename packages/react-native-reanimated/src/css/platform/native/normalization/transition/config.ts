@@ -1,9 +1,9 @@
 'use strict';
 import { ReanimatedError } from '../../../../errors';
 import type {
-  PlainStyle,
   CSSTransitionProperties,
   CSSTransitionProperty,
+  PlainStyle,
 } from '../../../../types';
 import {
   areArraysEqual,
@@ -16,9 +16,9 @@ import type {
   NormalizedSingleCSSTransitionSettings,
 } from '../../types';
 import {
+  normalizeDelay,
   normalizeDuration,
   normalizeTimingFunction,
-  normalizeDelay,
 } from '../common';
 import { normalizeTransitionBehavior } from './settings';
 

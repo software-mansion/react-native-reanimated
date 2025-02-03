@@ -1,10 +1,10 @@
 'use strict';
 import type {
-  CSSAnimationSettingProp,
-  CSSAnimationKeyframes,
-  CSSTransitionProp,
-  CSSKeyframesRule,
   AnyRecord,
+  CSSAnimationKeyframes,
+  CSSAnimationSettingProp,
+  CSSKeyframesRule,
+  CSSTransitionProp,
 } from '../types';
 import type { ConfigPropertyAlias } from '../types/config';
 

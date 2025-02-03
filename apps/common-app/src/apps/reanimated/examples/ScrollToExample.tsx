@@ -1,23 +1,22 @@
-import type { AnimatedProps } from 'react-native-reanimated';
-import Animated, {
-  runOnUI,
-  scrollTo,
-  useAnimatedRef,
-} from 'react-native-reanimated';
-import type { ListRenderItem as FlatListRenderItem } from 'react-native';
-import { Button, StyleSheet, Switch, Text, View } from 'react-native';
-
+import type {
+  FlashListProps,
+  ListRenderItem as FlashListRenderItem,
+} from '@shopify/flash-list';
+import { FlashList } from '@shopify/flash-list';
 import React, {
   forwardRef,
   useCallback,
   useImperativeHandle,
   useRef,
 } from 'react';
-import type {
-  FlashListProps,
-  ListRenderItem as FlashListRenderItem,
-} from '@shopify/flash-list';
-import { FlashList } from '@shopify/flash-list';
+import type { ListRenderItem as FlatListRenderItem } from 'react-native';
+import { Button, StyleSheet, Switch, Text, View } from 'react-native';
+import type { AnimatedProps } from 'react-native-reanimated';
+import Animated, {
+  runOnUI,
+  scrollTo,
+  useAnimatedRef,
+} from 'react-native-reanimated';
 
 const DATA = [...Array(100).keys()];
 

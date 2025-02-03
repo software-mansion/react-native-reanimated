@@ -1,4 +1,11 @@
 'use strict';
+import type { AnyRecord } from '../../../types';
+import {
+  hasProp,
+  isConfigPropertyAlias,
+  isDefined,
+  isRecord,
+} from '../../../utils';
 import { hasSuffix, kebabize } from '../utils';
 import type {
   AnyBuilderConfig,
@@ -10,13 +17,6 @@ import type {
   StyleBuildHandler,
   ValueProcessor,
 } from './types';
-import {
-  hasProp,
-  isConfigPropertyAlias,
-  isDefined,
-  isRecord,
-} from '../../../utils';
-import type { AnyRecord } from '../../../types';
 
 const hasValueProcessor = (
   configValue: unknown

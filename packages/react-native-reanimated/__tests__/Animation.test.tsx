@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Button } from 'react-native';
-import { render, fireEvent } from '@testing-library/react-native';
 import { renderHook } from '@testing-library/react-hooks';
+import { fireEvent, render } from '@testing-library/react-native';
+import React from 'react';
+import { Button, View } from 'react-native';
+
 import type { SharedValue } from '../src';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from '../src';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from '../src';
 import { getAnimatedStyle } from '../src/jestUtils';
 
 interface Props {

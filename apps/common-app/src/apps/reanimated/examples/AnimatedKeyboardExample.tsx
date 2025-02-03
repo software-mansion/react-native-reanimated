@@ -1,8 +1,4 @@
-import Animated, {
-  KeyboardState,
-  useAnimatedKeyboard,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
+import React from 'react';
 import {
   Button,
   Keyboard,
@@ -11,8 +7,11 @@ import {
   TextInput,
   View,
 } from 'react-native';
-
-import React from 'react';
+import Animated, {
+  KeyboardState,
+  useAnimatedKeyboard,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 
 const BOX_SIZE = 50;
 

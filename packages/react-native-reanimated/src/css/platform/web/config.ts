@@ -1,8 +1,12 @@
 'use strict';
+import type { PlainStyle } from '../../types';
+import type { StyleBuilderConfig } from './style';
 import {
+  boxShadowBuilder,
   processBoxShadow,
   processColor,
   processFilter,
+  processFontVariant,
   processFontWeight,
   processMarginHorizontal,
   processMarginVertical,
@@ -10,12 +14,8 @@ import {
   processPaddingVertical,
   processTransform,
   processTransformOrigin,
-  boxShadowBuilder,
   textShadowBuilder,
-  processFontVariant,
 } from './style';
-import type { StyleBuilderConfig } from './style';
-import type { PlainStyle } from '../../types';
 
 const colorAttributes = { process: processColor };
 

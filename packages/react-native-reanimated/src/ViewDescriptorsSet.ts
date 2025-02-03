@@ -1,6 +1,6 @@
 'use strict';
-import { makeMutable } from './core';
 import type { SharedValue } from './commonTypes';
+import { makeMutable } from './core';
 import type { Descriptor } from './hook/commonTypes';
 
 export interface ViewDescriptorsSet {

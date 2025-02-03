@@ -1,23 +1,23 @@
 'use strict';
-import { Easing } from '../../Easing';
 import { withDelay, withSequence, withTiming } from '../../animation';
-import type {
-  StyleProps,
-  EasingFunction,
-  TransformArrayItem,
-  AnimationFunction,
-  EntryExitAnimationFunction,
-  IEntryExitAnimationBuilder,
-  KeyframeProps,
-  MaybeInvalidKeyframeProps,
-  StylePropsWithArrayTransform,
-  ValidKeyframeProps,
-} from '../../commonTypes';
-import { ReduceMotion } from '../../commonTypes';
 import {
   assertEasingIsWorklet,
   getReduceMotionFromConfig,
 } from '../../animation/util';
+import type {
+  AnimationFunction,
+  EasingFunction,
+  EntryExitAnimationFunction,
+  IEntryExitAnimationBuilder,
+  KeyframeProps,
+  MaybeInvalidKeyframeProps,
+  StyleProps,
+  StylePropsWithArrayTransform,
+  TransformArrayItem,
+  ValidKeyframeProps,
+} from '../../commonTypes';
+import { ReduceMotion } from '../../commonTypes';
+import { Easing } from '../../Easing';
 import { ReanimatedError } from '../../errors';
 
 interface KeyframePoint {

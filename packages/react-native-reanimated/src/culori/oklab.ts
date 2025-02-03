@@ -1,17 +1,14 @@
 'use strict';
 import type { LabColor, RgbColor } from './Colors';
-
 /*
  * The vast majority of the code exported by this module is a direct copy of the code from the culori package (see
  * https://culorijs.org/), which deserves full credit for it. In particular, code from the following path has been used:
  * - https://github.com/Evercoder/culori/tree/v4.0.1/src/oklab
  */
-
 // TODO Once we have the option to workletize external dependencies, we can replace most of the code below with
 //  a simple implementation based on their converter utils (see
 //  https://github.com/software-mansion/react-native-reanimated/pull/6782#pullrequestreview-2488830278,
 //  https://culorijs.org/api/#converter).
-
 import lrgb from './lrgb';
 
 function convertLrgbToOklab({

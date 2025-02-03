@@ -1,6 +1,6 @@
 'use strict';
-import type { PlainStyle, TimeUnit } from './common';
 import type { CSSTimingFunction } from '../easings';
+import type { PlainStyle, TimeUnit } from './common';
 import type { AddArrayPropertyTypes } from './helpers';
 
 export type CSSTransitionProperty<S extends object = PlainStyle> =

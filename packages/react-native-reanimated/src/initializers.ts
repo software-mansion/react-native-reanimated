@@ -1,21 +1,21 @@
 'use strict';
 import { registerReanimatedError, reportFatalErrorOnJS } from './errors';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
-import {
-  runOnJS,
-  setupMicrotasks,
-  callMicrotasks,
-  runOnUIImmediately,
-  executeOnUIRuntimeSync,
-} from './threads';
-import { mockedRequestAnimationFrame } from './WorkletsResolver';
 import {
   DEFAULT_LOGGER_CONFIG,
   logToLogBoxAndConsole,
   registerLoggerConfig,
   replaceLoggerImplementation,
 } from './logger';
+import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { IReanimatedModule } from './ReanimatedModule';
+import {
+  callMicrotasks,
+  executeOnUIRuntimeSync,
+  runOnJS,
+  runOnUIImmediately,
+  setupMicrotasks,
+} from './threads';
+import { mockedRequestAnimationFrame } from './WorkletsResolver';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();

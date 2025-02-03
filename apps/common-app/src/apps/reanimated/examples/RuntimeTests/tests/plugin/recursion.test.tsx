@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import { useSharedValue, runOnUI } from 'react-native-reanimated';
-import { render, wait, describe, getRegisteredValue, registerValue, test, expect } from '../../ReJest/RuntimeTestsApi';
+import { runOnUI, useSharedValue } from 'react-native-reanimated';
+
+import { describe, expect, getRegisteredValue, registerValue, render, test, wait } from '../../ReJest/RuntimeTestsApi';
 
 const SHARED_VALUE_REF = 'SHARED_VALUE_REF';
 
