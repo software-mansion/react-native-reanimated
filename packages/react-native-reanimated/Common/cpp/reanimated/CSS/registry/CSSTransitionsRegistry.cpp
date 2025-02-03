@@ -128,12 +128,11 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
     }
 
     const auto &transition = strongThis->registry_.at(viewTag);
-    const auto changedProps = getChangedProps(
-        rt,
-        oldProps,
-        newProps,
-        transition->getAllowDiscrete(),
-        transition->getProperties());
+    const auto allowedProperties =
+        transition->getAllowedProperties(rt, oldProps, newProps);
+
+    const auto changedProps =
+        getChangedProps(rt, oldProps, newProps, allowedProperties);
 
     if (changedProps.changedPropertyNames.empty()) {
       return;

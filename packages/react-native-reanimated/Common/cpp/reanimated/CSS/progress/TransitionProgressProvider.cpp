@@ -76,15 +76,6 @@ double TransitionPropertyProgressProvider::getElapsedTime(
 
 // TransitionProgressProvider
 
-TransitionProgressProvider::TransitionProgressProvider(
-    const CSSTransitionPropertiesSettings &settings)
-    : settings_(std::move(settings)) {}
-
-void TransitionProgressProvider::setSettings(
-    const CSSTransitionPropertiesSettings &settings) {
-  settings_ = settings;
-}
-
 TransitionProgressState TransitionProgressProvider::getState() const {
   for (const auto &[_, propertyProgressProvider] : propertyProgressProviders_) {
     if (propertyProgressProvider->getState() ==
@@ -139,15 +130,24 @@ void TransitionProgressProvider::discardIrrelevantProgressProviders(
 
 void TransitionProgressProvider::runProgressProviders(
     const double timestamp,
+    const CSSTransitionPropertiesSettings &propertiesSettings,
     const PropertyNames &changedPropertyNames,
     const std::unordered_set<std::string> &reversedPropertyNames) {
   for (const auto &propertyName : changedPropertyNames) {
-    const auto propertySettings = getPropertySettings(propertyName);
-    const auto progressProviderIt =
-        propertyProgressProviders_.find(propertyName);
+    const auto propertySettingsOptional =
+        getTransitionPropertySettings(propertiesSettings, propertyName);
 
-    if (progressProviderIt != propertyProgressProviders_.end()) {
-      const auto &progressProvider = progressProviderIt->second;
+    if (!propertySettingsOptional.has_value()) {
+      throw std::invalid_argument(
+          "[Reanimated] Property '" + propertyName +
+          "' is not a valid transition property");
+    }
+
+    const auto &propertySettings = propertySettingsOptional.value();
+    const auto it = propertyProgressProviders_.find(propertyName);
+
+    if (it != propertyProgressProviders_.end()) {
+      const auto &progressProvider = it->second;
       progressProvider->update(timestamp);
 
       if (reversedPropertyNames.find(propertyName) !=
@@ -190,15 +190,6 @@ void TransitionProgressProvider::update(const double timestamp) {
       ++it;
     }
   }
-}
-
-CSSTransitionPropertySettings TransitionProgressProvider::getPropertySettings(
-    const std::string &propertyName) const {
-  // Find property settings or fallback to "all" settings if no property
-  // specific settings are available
-  const auto propertySettingsIt = settings_.find(propertyName);
-  return (propertySettingsIt != settings_.end()) ? propertySettingsIt->second
-                                                 : settings_.at("all");
 }
 
 std::shared_ptr<TransitionPropertyProgressProvider>
