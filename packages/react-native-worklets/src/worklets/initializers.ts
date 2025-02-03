@@ -45,7 +45,7 @@ if (SHOULD_BE_USE_WEB) {
   // Register WorkletsError and logger config in the UI runtime global scope.
   // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
   // are applied before any async operations are executed on the UI runtime)
-  executeOnUIRuntimeSync(registerWorkletsError);
+  executeOnUIRuntimeSync(registerWorkletsError)();
   executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
   executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
 }
