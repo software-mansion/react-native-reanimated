@@ -8,9 +8,9 @@ CSSTransition::CSSTransition(
     const CSSTransitionConfig &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : shadowNode_(std::move(shadowNode)),
+      viewStylesRepository_(viewStylesRepository),
       properties_(config.properties),
       settings_(config.settings),
-      viewStylesRepository_(viewStylesRepository),
       progressProvider_(TransitionProgressProvider()),
       styleInterpolator_(TransitionStyleInterpolator(viewStylesRepository)) {}
 
