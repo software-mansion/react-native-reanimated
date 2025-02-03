@@ -411,15 +411,11 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
     __init: () => {
       'worklet';
       if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
-        // eslint-disable-next-line reanimated/use-worklets-error
-        throw new Error(`[Worklets] Invalid array view name \`${typeName}\`.`);
+        throw new WorkletsError(`Invalid array view name \`${typeName}\`.`);
       }
       const constructor = global[typeName as keyof typeof global];
       if (constructor === undefined) {
-        // eslint-disable-next-line reanimated/use-worklets-error
-        throw new Error(
-          `[Worklets] Constructor for \`${typeName}\` not found.`
-        );
+        throw new WorkletsError(`Constructor for \`${typeName}\` not found.`);
       }
       return new constructor(buffer);
     },

@@ -62,6 +62,25 @@ export function setupCallGuard() {
   };
 }
 
+// Register logger config and replace the log function implementation in
+// the React runtime global scope
+registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
+overrideLogFunctionImplementation();
+
+// this is for web implementation
+if (SHOULD_BE_USE_WEB) {
+  global._WORKLET = false;
+  global._log = console.log;
+  global._getAnimationTimestamp = () => performance.now();
+} else {
+  // Register WorkletsError and logger config in the UI runtime global scope.
+  // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
+  // are applied before any async operations are executed on the UI runtime)
+  executeOnUIRuntimeSync(registerWorkletsError);
+  executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
+  executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
+}
+
 /**
  * Currently there seems to be a bug in the JSI layer which causes a crash when
  * we try to copy some of the console methods, i.e. `clear` or `dirxml`.
@@ -174,25 +193,6 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
     // when executed. For non-jest environments we define requestAnimationFrame in setupRequestAnimationFrame
     // @ts-ignore TypeScript uses Node definition for rAF, setTimeout, etc which returns a Timeout object rather than a number
     globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
-  }
-
-  // Register logger config and replace the log function implementation in
-  // the React runtime global scope
-  registerLoggerConfig(DEFAULT_LOGGER_CONFIG);
-  overrideLogFunctionImplementation();
-
-  // this is for web implementation
-  if (SHOULD_BE_USE_WEB) {
-    global._WORKLET = false;
-    global._log = console.log;
-    global._getAnimationTimestamp = () => performance.now();
-  } else {
-    // Register WorkletsError and logger config in the UI runtime global scope.
-    // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
-    // are applied before any async operations are executed on the UI runtime)
-    executeOnUIRuntimeSync(registerWorkletsError);
-    executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
-    executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
   }
 
   executeOnUIRuntimeSync(() => {
