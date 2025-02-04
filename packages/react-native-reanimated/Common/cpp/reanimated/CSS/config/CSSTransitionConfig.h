@@ -14,6 +14,7 @@ struct CSSTransitionPropertySettings {
   double duration;
   EasingFunction easingFunction;
   double delay;
+  bool allowDiscrete;
 };
 
 using CSSTransitionPropertiesSettings =
@@ -22,14 +23,16 @@ using CSSTransitionPropertiesSettings =
 struct CSSTransitionConfig {
   TransitionProperties properties;
   CSSTransitionPropertiesSettings settings;
-  bool allowDiscrete;
 };
 
 struct PartialCSSTransitionConfig {
   std::optional<TransitionProperties> properties;
   std::optional<CSSTransitionPropertiesSettings> settings;
-  std::optional<bool> allowDiscrete;
 };
+
+std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
+    const CSSTransitionPropertiesSettings &propertiesSettings,
+    const std::string &propName);
 
 TransitionProperties getProperties(jsi::Runtime &rt, const jsi::Object &config);
 

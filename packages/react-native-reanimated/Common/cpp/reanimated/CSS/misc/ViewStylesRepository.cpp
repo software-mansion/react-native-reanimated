@@ -128,7 +128,7 @@ void ViewStylesRepository::updateCacheIfNeeded(
 jsi::Value ViewStylesRepository::getPropertyValue(
     jsi::Runtime &rt,
     const folly::dynamic &value,
-    const std::vector<std::string> &propertyPath) {
+    const PropertyPath &propertyPath) {
   const folly::dynamic *currentValue = &value;
 
   for (size_t i = 0; i < propertyPath.size(); ++i) {
