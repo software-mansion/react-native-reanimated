@@ -74,7 +74,7 @@ export function createAnimatedComponent(
     }
   }
 
-  return React.forwardRef<Component>((props, ref) => {
+  const animatedComponent = React.forwardRef<Component>((props, ref) => {
     return (
       <AnimatedComponent
         {...props}
@@ -82,4 +82,9 @@ export function createAnimatedComponent(
       />
     );
   });
+
+  animatedComponent.displayName =
+    Component.displayName || Component.name || 'Component';
+
+  return animatedComponent;
 }
