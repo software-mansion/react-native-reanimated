@@ -82,6 +82,13 @@ void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
   }
 }
 
+void ArrayPropertiesInterpolator::forEachInterpolator(
+    const std::function<void(PropertyInterpolator &)> &callback) const {
+  for (const auto &interpolator : interpolators_) {
+    callback(*interpolator);
+  }
+}
+
 jsi::Value ArrayPropertiesInterpolator::mapInterpolators(
     jsi::Runtime &rt,
     const std::function<jsi::Value(PropertyInterpolator &)> &callback) const {
