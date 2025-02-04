@@ -4,8 +4,12 @@ import { ReanimatedError } from '../../../../../errors';
 import type {
   CSSTransitionProperties,
   CSSTransitionProperty,
+  Repeat,
 } from '../../../../../types';
-import type { NormalizedCSSTransitionConfig } from '../../../types';
+import type {
+  NormalizedCSSTransitionConfig,
+  NormalizedCSSTransitionPropertyNames,
+} from '../../../types';
 import {
   ERROR_MESSAGES,
   getNormalizedCSSTransitionConfigUpdates,
@@ -288,7 +292,7 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
       [['opacity', 'transform'], 'all', 'all'],
       ['all', ['opacity', 'transform'], ['opacity', 'transform']],
       [['opacity', 'transform'], ['opacity'], ['opacity']],
-    ])(
+    ] satisfies Repeat<NormalizedCSSTransitionPropertyNames, 3>[])(
       'returns property update if properties changed from %p to %p',
       (oldProperties, newProperties, expected) => {
         const oldConfig: NormalizedCSSTransitionConfig = {
@@ -306,7 +310,11 @@ describe(getNormalizedCSSTransitionConfigUpdates, () => {
       }
     );
 
-    it.each(['all', ['opacity'], ['opacity', 'transform']])(
+    it.each([
+      'all',
+      ['opacity'],
+      ['opacity', 'transform'],
+    ] satisfies NormalizedCSSTransitionPropertyNames[])(
       'does not return property update if properties did not change from %p',
       (properties) => {
         const oldConfig: NormalizedCSSTransitionConfig = {
