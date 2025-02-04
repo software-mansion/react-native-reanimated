@@ -1,13 +1,13 @@
 'use strict';
 import { ReanimatedError } from '../../../../errors';
 import type {
+  AnyRecord,
   CSSTransitionProperties,
   CSSTransitionProperty,
-  PlainStyle,
 } from '../../../../types';
 import {
   areArraysEqual,
-  convertConfigPropertiesToArrays,
+  convertPropertyToArray,
   deepEqual,
 } from '../../../../utils';
 import type {
@@ -21,6 +21,7 @@ import {
   normalizeTimingFunction,
 } from '../common';
 import { normalizeTransitionBehavior } from './settings';
+import type { ExpandedConfigProperties } from './shorthand';
 import { parseTransitionShorthand } from './shorthand';
 
 export const ERROR_MESSAGES = {
@@ -29,40 +30,52 @@ export const ERROR_MESSAGES = {
   ) => `Invalid transition property "${JSON.stringify(transitionProperty)}"`,
 };
 
-const hasNoTransitionProperties = (properties: string[]) =>
-  properties.length === 0 || properties.every((prop) => prop === 'none');
+function getExpandedConfigProperties(
+  config: CSSTransitionProperties
+): ExpandedConfigProperties {
+  const configEntries = Object.entries(config);
+  const shorthandIndex = config.transition
+    ? configEntries.findIndex(([key]) => key === 'transition')
+    : -1;
+  const result: AnyRecord = config.transition
+    ? parseTransitionShorthand(config.transition)
+    : {};
+  // If there is a shorthand `transition` property, all properties specified
+  // before are ignored and only these specified later are taken into account
+  // and override ones from the shorthand
+  const longhandEntries = config.transition
+    ? configEntries.slice(shorthandIndex + 1)
+    : configEntries;
+
+  for (const [key, value] of longhandEntries) {
+    result[key] = convertPropertyToArray(value);
+  }
+
+  return result as ExpandedConfigProperties;
+}
+
+const hasTransitionProperties = (
+  transitionProperty: ExpandedConfigProperties['transitionProperty']
+): transitionProperty is string[] =>
+  !!transitionProperty?.length &&
+  transitionProperty.some((prop) => prop !== 'none');
 
 export function normalizeCSSTransitionProperties(
   config: CSSTransitionProperties
 ): NormalizedCSSTransitionConfig | null {
-  let {
-    transitionProperty = ['all'],
+  const {
+    transitionProperty,
     transitionDuration,
     transitionTimingFunction,
     transitionDelay,
     transitionBehavior,
-  } = convertConfigPropertiesToArrays(config);
+  } = getExpandedConfigProperties(config);
 
-  if (config.transition) {
-    const parsed = parseTransitionShorthand(config.transition);
-    // @ts-ignore blabla
-    transitionProperty = parsed.map(
-      (transition) => transition.property ?? 'all'
-    );
-    transitionDuration = parsed.map((transition) => transition.duration ?? 0);
-    transitionDelay = parsed.map((transition) => transition.delay ?? 0);
-    // @ts-ignore blabla
-    transitionTimingFunction = parsed.map(
-      (transition) => transition.timingFunction ?? 'ease'
-    );
-    // TODO: respect order of keys in config
-  }
-
-  if (hasNoTransitionProperties(transitionProperty)) {
+  if (!hasTransitionProperties(transitionProperty)) {
     return null;
   }
 
-  const specificProperties: (keyof PlainStyle)[] = [];
+  const specificProperties: string[] = [];
   let allPropertiesTransition = false;
   const settings: Record<string, NormalizedSingleCSSTransitionSettings> = {};
 
@@ -78,6 +91,8 @@ export function normalizeCSSTransitionProperties(
         ERROR_MESSAGES.invalidTransitionProperty(config.transitionProperty)
       );
     }
+    // Continue if there was a prop with the same name specified later
+    // (we don't want to override the last occurrence of the property)
     if (settings?.[property]) {
       continue;
     }

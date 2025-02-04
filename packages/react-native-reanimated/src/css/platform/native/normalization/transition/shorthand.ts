@@ -1,62 +1,109 @@
+'use strict';
+import type { ControlPoint, CSSTimingFunction } from '../../../../easings';
 import { cubicBezier, linear, steps } from '../../../../easings';
-import type { CSSTimingFunction } from '../../../../easings';
 import { ReanimatedError } from '../../../../errors';
+import type {
+  ConvertValuesToArraysWithUndefined,
+  CSSTransitionProperties,
+  SingleCSSTransitionConfig,
+} from '../../../../types';
+import {
+  camelizeKebabCase,
+  isArrayOfLength,
+  isPercentage,
+  isPredefinedTimingFunction,
+  isStepsModifier,
+  isTimeUnit,
+  VALID_PREDEFINED_TIMING_FUNCTIONS_SET,
+} from '../../../../utils';
 
-type TimingFunctionArgument = number | string | (number | string)[];
+const VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET = new Set<string>([
+  'cubic-bezier',
+  'steps',
+  'linear',
+]);
 
-type TimingFunction = CSSTimingFunction;
-
-type TransitionBehavior = 'normal' | 'allow-discrete';
-
-type Transition = {
-  property?: string;
-  duration?: number;
-  timingFunction?: TimingFunction;
-  delay?: number;
-  behavior?: TransitionBehavior;
+export type ExpandedConfigProperties = Required<
+  ConvertValuesToArraysWithUndefined<
+    Omit<CSSTransitionProperties, 'transition' | 'transitionProperty'>
+  >
+> & {
+  transitionProperty: string[];
 };
 
-export function parseTransitionShorthand(value: string): Transition[] {
-  return splitByComma(value).map(parseSingleTransitionShorthand);
+export function parseTransitionShorthand(value: string) {
+  return splitByComma(value).reduce<ExpandedConfigProperties>(
+    (acc, part) => {
+      const result = parseSingleTransitionShorthand(part);
+      acc.transitionProperty.push(result.transitionProperty ?? 'all');
+      acc.transitionDuration.push(result.transitionDuration);
+      acc.transitionTimingFunction.push(result.transitionTimingFunction);
+      acc.transitionDelay.push(result.transitionDelay);
+      acc.transitionBehavior.push(result.transitionBehavior);
+      return acc;
+    },
+    {
+      transitionProperty: [],
+      transitionDuration: [],
+      transitionTimingFunction: [],
+      transitionDelay: [],
+      transitionBehavior: [],
+    }
+  );
 }
 
-function parseSingleTransitionShorthand(value: string): Transition {
-  const transition: Transition = {};
+type ParsedShorthandSingleTransitionConfig = Omit<
+  SingleCSSTransitionConfig,
+  'transitionProperty'
+> & {
+  transitionProperty?: string;
+};
+
+function parseSingleTransitionShorthand(
+  value: string
+): ParsedShorthandSingleTransitionConfig {
+  const result: ParsedShorthandSingleTransitionConfig = {};
   const parts = splitByWhitespace(value);
+
+  console.log(parts);
   for (const part of parts) {
     if (part === 'all') {
-      transition.property = 'all';
+      console.log('>', part);
+
+      result.transitionProperty = 'all';
       continue;
     }
     if (part === 'normal' || part === 'allow-discrete') {
-      transition.behavior = parseTransitionBehavior(part);
+      result.transitionBehavior = part;
       continue;
     }
-    if (smellsLikeTimeUnit(part)) {
-      const timeUnit = parseTimeUnit(part);
-      if (transition.duration === undefined) {
-        transition.duration = timeUnit;
+    if (isTimeUnit(part)) {
+      const timeUnit = part;
+      if (result.transitionDuration === undefined) {
+        result.transitionDuration = timeUnit;
         continue;
       }
-      if (transition.delay === undefined) {
-        transition.delay = timeUnit;
+      if (result.transitionDelay === undefined) {
+        result.transitionDelay = timeUnit;
         continue;
       }
     }
     if (
-      transition.timingFunction === undefined &&
+      result.transitionTimingFunction === undefined &&
       smellsLikeTimingFunction(part)
     ) {
-      transition.timingFunction = parseTimingFunction(part);
+      result.transitionTimingFunction = parseTimingFunction(part);
       continue;
     }
-    if (transition.property === undefined) {
-      transition.property = kebabCaseToCamelCase(part);
+    if (result.transitionProperty === undefined) {
+      console.log('>', part);
+      result.transitionProperty = camelizeKebabCase(part);
       continue;
     }
     throw new ReanimatedError(`Invalid transition shorthand: ${value}`);
   }
-  return transition;
+
+  return result;
 }
 
 function splitByComma(str: string) {
@@ -85,83 +132,24 @@ function splitByWhitespace(str: string) {
   return str.split(/\s+(?![^()]*\))/);
 }
 
-function parseTransitionBehavior(value: string): TransitionBehavior {
-  switch (value) {
-    case 'allow-discrete':
-    case 'normal':
-      return value;
-  }
-  throw new ReanimatedError(`Unsupported transition behavior: ${value}`);
-}
-
-function kebabCaseToCamelCase(str: string) {
-  return str.replace(/-./g, (x) => x[1].toUpperCase());
-}
-
 function smellsLikeTimingFunction(value: string) {
-  // TODO: implement more strict check
-  return [
-    'ease',
-    'ease-in',
-    'ease-out',
-    'ease-in-out',
-    'linear',
-    'step-start',
-    'step-end',
-    'steps',
-    'cubic-bezier',
-  ].includes(value.trim().split('(')[0]);
+  return (
+    VALID_PREDEFINED_TIMING_FUNCTIONS_SET.has(value) ||
+    VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET.has(value.split('(')[0].trim())
+  );
 }
 
-function smellsLikeTimeUnit(value: string) {
-  // TODO: implement more strict check
-  return /^-?(\d+)?(\.\d+)?(ms|s)$/.test(value);
-}
-
-function parseTimeUnit(value: string): number {
-  // TODO: implement more strict check
-  if (value.endsWith('ms')) {
-    return parseFloat(value); // already in ms
+function asControlPoint(value: string[]): ControlPoint | null {
+  const [first, ...rest] = value;
+  if (!first || isNaN(Number(first)) || !rest.every(isPercentage)) {
+    return null;
   }
-  if (value.endsWith('s')) {
-    return parseFloat(value) * 1000; // convert to ms
-  }
-  throw new ReanimatedError(`Unsupported time unit: ${value}`);
+  return [Number(first), ...rest];
 }
 
-function isFloat(str: string) {
-  return str !== '' && /^-?\d*(\.\d+)?$/.test(str);
-}
-
-function isPercent(str: string) {
-  return str.endsWith('%') && isFloat(str.slice(0, -1));
-}
-
-function parseTimingFunctionArgument(arg: string): TimingFunctionArgument {
-  const parts = splitByWhitespace(arg);
-  if (parts.length > 1) {
-    return parts.map(parseTimingFunctionArgument) as TimingFunctionArgument;
-  }
-  if (isFloat(arg)) {
-    return parseFloat(arg);
-  }
-  if (isPercent(arg)) {
-    return arg;
-  }
-  // TODO: throw error for unsupported values
-  return arg;
-}
-
-function parseTimingFunction(value: string): TimingFunction {
-  switch (value) {
-    case 'ease':
-    case 'ease-in':
-    case 'ease-out':
-    case 'ease-in-out':
-    case 'linear':
-    case 'step-start':
-    case 'step-end':
-      return value;
+function parseTimingFunction(value: string): CSSTimingFunction {
+  if (isPredefinedTimingFunction(value)) {
+    return value;
   }
 
   // TODO: implement more strict check
@@ -171,20 +159,45 @@ function parseTimingFunction(value: string): TimingFunction {
   }
 
   const [, name, args] = value.match(regex)!;
-
-  const parsedArgs = splitByComma(args).map(parseTimingFunctionArgument);
+  const parsedArgs = splitByComma(args);
 
   switch (name) {
-    case 'cubic-bezier':
-      // @ts-ignore blabla
-      return cubicBezier(...parsedArgs);
-    case 'linear':
-      // @ts-ignore blabla
-      return linear(...parsedArgs);
-    case 'steps':
-      // @ts-ignore blabla
-      return steps(...parsedArgs);
-    default:
-      throw new ReanimatedError(`Unsupported timing function: ${value}`);
+    case 'cubic-bezier': {
+      const numberArgs = parsedArgs.map(Number);
+      if (
+        isArrayOfLength(numberArgs, 4) &&
+        numberArgs.every((n) => !isNaN(n))
+      ) {
+        return cubicBezier(...numberArgs);
+      }
+      break;
+    }
+    case 'linear': {
+      const controlPoints = parsedArgs.map((arg) => {
+        const parts = splitByWhitespace(arg);
+        const controlPoint = asControlPoint(parts);
+        if (!controlPoint) {
+          throw new ReanimatedError(
+            `Invalid control point: ${arg} in ${value} timing function`
+          );
+        }
+        return controlPoint;
+      });
+      return linear(...controlPoints);
+    }
+    case 'steps': {
+      const stepsNumber = Number(parsedArgs[0]);
+      const stepsModifier = parsedArgs[1];
+      if (
+        !isNaN(stepsNumber) &&
+        stepsNumber > 0 &&
+        (stepsModifier === undefined || isStepsModifier(stepsModifier))
+      ) {
+        return steps(stepsNumber, stepsModifier);
+      }
+      break;
+    }
   }
+
+  throw new ReanimatedError(`Invalid timing function: ${value}`);
 }

@@ -1,7 +1,8 @@
+/* eslint-disable no-inline-styles/no-inline-styles */
 import { StyleSheet, View, Button } from 'react-native';
 
 import React, { useReducer } from 'react';
-import Animated from 'react-native-reanimated';
+import Animated, { steps } from 'react-native-reanimated';
 
 export default function EmptyExample() {
   const [state, toggleState] = useReducer((s) => !s, false);
@@ -12,10 +13,12 @@ export default function EmptyExample() {
         style={{
           width: state ? 200 : 100,
           height: state ? 200 : 100,
-          // eslint-disable-next-line no-inline-styles/no-inline-styles
+          transform: [{ rotate: state ? '45deg' : '0deg' }],
+          transitionTimingFunction: steps(5),
           backgroundColor: 'red',
-          // eslint-disable-next-line no-inline-styles/no-inline-styles
-          transition: 'all 0.5s 0.1s ease-in-out, height 1s steps(5)',
+          transition:
+            'all 0.5s 0.1s steps(4), height 1s 1.5s ease-out, boxShadow 2s ease-in',
+          transitionDuration: 1000,
         }}
       />
       <Button title="Toggle width" onPress={toggleState} />

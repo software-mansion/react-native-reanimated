@@ -1,4 +1,5 @@
 'use strict';
+import { VALID_PREDEFINED_TIMING_FUNCTIONS } from '../../../../../constants';
 import type {
   CSSTimingFunction,
   PredefinedTimingFunction,
@@ -11,7 +12,6 @@ import {
   normalizeDelay,
   normalizeDuration,
   normalizeTimingFunction,
-  VALID_PREDEFINED_TIMING_FUNCTIONS,
 } from '../settings';
 
 type TestCases = [TimeUnit, number][];

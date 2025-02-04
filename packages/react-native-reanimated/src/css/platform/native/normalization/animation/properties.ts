@@ -3,7 +3,7 @@ import type {
   ExistingCSSAnimationProperties,
   SingleCSSAnimationProperties,
 } from '../../../../types';
-import { convertConfigPropertiesToArrays } from '../../../../utils';
+import { convertPropertiesToArrays } from '../../../../utils';
 
 export function createSingleCSSAnimationProperties(
   properties: ExistingCSSAnimationProperties
@@ -17,7 +17,7 @@ export function createSingleCSSAnimationProperties(
     animationDirection,
     animationFillMode,
     animationPlayState,
-  } = convertConfigPropertiesToArrays(properties);
+  } = convertPropertiesToArrays(properties);
 
   return animationNames.map((animationName, index) => {
     return {
