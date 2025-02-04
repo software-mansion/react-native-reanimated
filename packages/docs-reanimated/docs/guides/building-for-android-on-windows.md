@@ -34,7 +34,7 @@ Downgrading the dependencies increases the technical debt of your project. Newer
 
 Before you report an error, search for similar issues on GitHub, Stack Overflow, Google, etc. Instead posting another "same issue" comment which will be marked as spam, just add a reaction under the original issue. This way we know how many developers are affected which lets us prioritize our work.
 
-## What should I do then?
+## What should you do then?
 
 ### ✅ Make sure your environment is set up correctly
 
@@ -110,7 +110,7 @@ Make sure to remove these directories and their contents before trying to build 
 It is also recommended to invalidate Android Studio caches (File &rarr; Invalidate Caches&hellip; &rarr; Select all checkboxes &rarr; Invalidate and Restart).
 
 :::tip
-You can remove all untracked files in your repository using `git clean -fdX` command. Note that this command will remove all untracked files including hidden files like `.env` so please be extrac careful and proceed with caution when doing so. You will also need to reinstall `node_modules` afterwards using your chosen package manager and rebuild the app.
+You can remove all untracked files in your repository using `git clean -fdX` command. Note that this command will remove all untracked files including hidden files like `.env` so please be extra careful and proceed with caution when doing so. You will also need to reinstall `node_modules` afterwards using your chosen package manager and rebuild the app.
 :::
 
 ### ⚠️ I have followed all of the above steps and it still doesn't work
