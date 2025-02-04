@@ -1,23 +1,32 @@
 'use strict';
+import type {
+  ShadowNodeWrapper,
+  StyleProps,
+  Value3D,
+  ValueRotation,
+} from '../../commonTypes';
+import { SensorType } from '../../commonTypes';
+import type {
+  NormalizedCSSTransitionConfig,
+  NormalizedSingleCSSAnimationConfig,
+  NormalizedSingleCSSAnimationSettings,
+} from '../../css/platform/native';
+import { ReanimatedError } from '../../errors';
+import { logger } from '../../logger';
 import {
   isChromeDebugger,
   isJest,
   isWeb,
   isWindowAvailable,
 } from '../../PlatformChecker';
-import { SensorType } from '../../commonTypes';
 import type {
-  IReanimatedModule,
   IWorkletsModule,
   ShareableRef,
-  Value3D,
-  ValueRotation,
   WorkletFunction,
-} from '../../commonTypes';
+} from '../../WorkletsResolver';
+import { WorkletsModule } from '../../WorkletsResolver';
+import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
-import { logger } from '../../logger';
-import { ReanimatedError } from '../../errors';
-import { WorkletsModule } from '../../worklets';
 
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();
@@ -261,6 +270,67 @@ class JSReanimated implements IReanimatedModule {
   configureProps() {
     throw new ReanimatedError(
       'configureProps is not available in JSReanimated.'
+    );
+  }
+
+  setViewStyle(_viewTag: number, _style: StyleProps): void {
+    throw new ReanimatedError('setViewStyle is not available in JSReanimated.');
+  }
+
+  removeViewStyle(_viewTag: number): void {
+    throw new ReanimatedError(
+      'removeViewStyle is not available in JSReanimated.'
+    );
+  }
+
+  registerCSSAnimations(
+    _shadowNodeWrapper: ShadowNodeWrapper,
+    _animationConfigs: NormalizedSingleCSSAnimationConfig[]
+  ): void {
+    throw new ReanimatedError(
+      '`registerCSSAnimations` is not available in JSReanimated.'
+    );
+  }
+
+  updateCSSAnimations(
+    _viewTag: number,
+    _settingsUpdates: {
+      index: number;
+      settings: Partial<NormalizedSingleCSSAnimationSettings>;
+    }[]
+  ): void {
+    throw new ReanimatedError(
+      '`updateCSSAnimations` is not available in JSReanimated.'
+    );
+  }
+
+  unregisterCSSAnimations(_viewTag: number): void {
+    throw new ReanimatedError(
+      '`unregisterCSSAnimations` is not available in JSReanimated.'
+    );
+  }
+
+  registerCSSTransition(
+    _shadowNodeWrapper: ShadowNodeWrapper,
+    _transitionConfig: NormalizedCSSTransitionConfig
+  ): void {
+    throw new ReanimatedError(
+      '`registerCSSTransition` is not available in JSReanimated.'
+    );
+  }
+
+  updateCSSTransition(
+    _viewTag: number,
+    _settingsUpdates: Partial<NormalizedCSSTransitionConfig>
+  ): void {
+    throw new ReanimatedError(
+      '`updateCSSTransition` is not available in JSReanimated.'
+    );
+  }
+
+  unregisterCSSTransition(_viewTag: number): void {
+    throw new ReanimatedError(
+      '`unregisterCSSTransition` is not available in JSReanimated.'
     );
   }
 }

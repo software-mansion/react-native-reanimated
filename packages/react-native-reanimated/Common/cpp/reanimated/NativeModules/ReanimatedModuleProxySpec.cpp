@@ -121,6 +121,90 @@ static jsi::Value REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)(
   return jsi::Value::undefined();
 }
 
+#ifdef RCT_NEW_ARCH_ENABLED
+
+static jsi::Value REANIMATED_SPEC_PREFIX(setViewStyle)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->setViewStyle(rt, std::move(args[0]), std::move(args[1]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(removeViewStyle)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->removeViewStyle(rt, std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(registerCSSAnimations)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->registerCSSAnimations(rt, std::move(args[0]), std::move(args[1]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(updateCSSAnimations)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->updateCSSAnimations(rt, std::move(args[0]), std::move(args[1]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSAnimations)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->unregisterCSSAnimations(std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(registerCSSTransition)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->registerCSSTransition(rt, std::move(args[0]), std::move(args[1]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(updateCSSTransition)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->updateCSSTransition(rt, std::move(args[0]), std::move(args[1]));
+  return jsi::Value::undefined();
+}
+
+static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSTransition)(
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t) {
+  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+      ->unregisterCSSTransition(rt, std::move(args[0]));
+  return jsi::Value::undefined();
+}
+
+#endif // RCT_NEW_ARCH_ENABLED
+
 ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
     const std::shared_ptr<CallInvoker> &jsInvoker)
     : TurboModule("NativeReanimated", jsInvoker) {
@@ -148,5 +232,28 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
       MethodMetadata{1, REANIMATED_SPEC_PREFIX(configureLayoutAnimationBatch)};
   methodMap_["setShouldAnimateExitingForTag"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(setShouldAnimateExiting)};
+
+#ifdef RCT_NEW_ARCH_ENABLED
+
+  methodMap_["setViewStyle"] =
+      MethodMetadata{2, REANIMATED_SPEC_PREFIX(setViewStyle)};
+  methodMap_["removeViewStyle"] =
+      MethodMetadata{1, REANIMATED_SPEC_PREFIX(removeViewStyle)};
+
+  methodMap_["registerCSSAnimations"] =
+      MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSAnimations)};
+  methodMap_["updateCSSAnimations"] =
+      MethodMetadata{2, REANIMATED_SPEC_PREFIX(updateCSSAnimations)};
+  methodMap_["unregisterCSSAnimations"] =
+      MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSAnimations)};
+
+  methodMap_["registerCSSTransition"] =
+      MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSTransition)};
+  methodMap_["updateCSSTransition"] =
+      MethodMetadata{2, REANIMATED_SPEC_PREFIX(updateCSSTransition)};
+  methodMap_["unregisterCSSTransition"] =
+      MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSTransition)};
+
+#endif
 }
 } // namespace reanimated

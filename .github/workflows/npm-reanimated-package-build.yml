@@ -29,6 +29,9 @@ jobs:
   build:
     if: github.repository == 'software-mansion/react-native-reanimated'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     env:
       PACKAGE_NAME: PLACEHOLDER # Will be reassigned later on.
     steps:
@@ -87,7 +90,7 @@ jobs:
         run: mv $PACKAGE_NAME ../../
 
       - name: Publish npm package
-        run: npm publish $PACKAGE_NAME --tag nightly
+        run: npm publish $PACKAGE_NAME --tag nightly --provenance
         if: ${{ inputs.publish_on_npm }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}

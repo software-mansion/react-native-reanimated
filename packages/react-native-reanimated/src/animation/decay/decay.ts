@@ -94,10 +94,13 @@ export const withDecay = function (
       value: number,
       now: Timestamp
     ): void {
+      const initialVelocity = config.velocity;
       animation.current = value;
       animation.lastTimestamp = now;
       animation.startTimestamp = now;
-      animation.initialVelocity = config.velocity;
+      animation.initialVelocity = initialVelocity;
+      animation.velocity = initialVelocity;
+
       validateConfig(config);
 
       if (animation.reduceMotion && config.clamp) {
@@ -109,13 +112,16 @@ export const withDecay = function (
       }
     }
 
+    // To ensure the animation is correctly initialized and starts as expected
+    // we need to set its current value to undefined.
+    // Setting current to 0 breaks the animation.
     return {
       onFrame: decay,
       onStart,
       callback,
       velocity: config.velocity ?? 0,
       initialVelocity: 0,
-      current: 0,
+      current: undefined,
       lastTimestamp: 0,
       startTimestamp: 0,
       reduceMotion: getReduceMotionForAnimation(config.reduceMotion),

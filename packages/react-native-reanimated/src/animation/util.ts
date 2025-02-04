@@ -8,8 +8,9 @@ import {
   rgbaArrayToRGBAColor,
   toGammaSpace,
   toLinearSpace,
+  clampRGBA,
 } from '../Colors';
-import { ReduceMotion, isWorkletFunction } from '../commonTypes';
+import { ReduceMotion } from '../commonTypes';
 import type {
   SharedValue,
   AnimatableValue,
@@ -39,6 +40,7 @@ import { ReducedMotionManager } from '../ReducedMotion';
 import { logger } from '../logger';
 import { ReanimatedError } from '../errors';
 import { runOnUI } from '../threads';
+import { isWorkletFunction } from '../WorkletsResolver';
 
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -263,6 +265,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       res.push(animation[i].current);
     });
 
+    // We need to clamp the res values to make sure they are in the correct RGBA range
+    clampRGBA(res as ParsedColorArray);
+
     animation.current = rgbaArrayToRGBAColor(
       toGammaSpace(res as ParsedColorArray)
     );
@@ -282,6 +287,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       finished = finished && result;
       res.push(animation[i].current);
     });
+
+    // We need to clamp the res values to make sure they are in the correct RGBA range
+    clampRGBA(res as ParsedColorArray);
 
     animation.current = rgbaArrayToRGBAColor(
       toGammaSpace(res as ParsedColorArray)
@@ -394,8 +402,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
         previousAnimation ? previousAnimation[i] : undefined
       );
     });
-
-    animation.current = value;
+    animation.current = [...value];
   };
 
   const arrayOnFrame = (

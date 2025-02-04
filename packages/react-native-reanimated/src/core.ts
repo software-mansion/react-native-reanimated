@@ -9,17 +9,16 @@ import type {
   SharedValue,
   Value3D,
   ValueRotation,
-  WorkletFunction,
 } from './commonTypes';
 import { makeShareableCloneRecursive } from './shareables';
 import { initializeUIRuntime } from './initializers';
 import { SensorContainer } from './SensorContainer';
 import { ReanimatedError } from './errors';
+import type { WorkletFunction } from './WorkletsResolver';
 
 export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export type { WorkletRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable } from './mutables';
 
@@ -155,7 +154,7 @@ export function unregisterSensor(sensorId: number): void {
 }
 
 if (!isWeb()) {
-  initializeUIRuntime();
+  initializeUIRuntime(ReanimatedModule);
 }
 
 type FeaturesConfig = {

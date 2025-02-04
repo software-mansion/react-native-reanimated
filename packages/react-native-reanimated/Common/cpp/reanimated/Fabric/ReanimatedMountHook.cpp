@@ -6,9 +6,12 @@
 namespace reanimated {
 
 ReanimatedMountHook::ReanimatedMountHook(
-    const std::shared_ptr<PropsRegistry> &propsRegistry,
-    const std::shared_ptr<UIManager> &uiManager)
-    : propsRegistry_(propsRegistry), uiManager_(uiManager) {
+    const std::shared_ptr<UIManager> &uiManager,
+    const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
+    const std::function<void()> &requestFlush)
+    : uiManager_(uiManager),
+      updatesRegistryManager_(updatesRegistryManager),
+      requestFlush_(requestFlush) {
   uiManager_->registerMountHook(*this);
 }
 
@@ -34,47 +37,10 @@ void ReanimatedMountHook::shadowTreeDidMount(
 
   // When commit from React Native has finished, we reset the skip commit flag
   // in order to allow Reanimated to commit its tree
-  propsRegistry_->unpauseReanimatedCommits();
-  if (!propsRegistry_->shouldCommitAfterPause()) {
-    return;
+  updatesRegistryManager_->unpauseReanimatedCommits();
+  if (updatesRegistryManager_->shouldCommitAfterPause()) {
+    requestFlush_();
   }
-
-  const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
-  shadowTreeRegistry.visit(
-      rootShadowNode->getSurfaceId(), [&](ShadowTree const &shadowTree) {
-        shadowTree.commit(
-            [&](RootShadowNode const &oldRootShadowNode)
-                -> RootShadowNode::Unshared {
-              PropsMap propsMap;
-
-              RootShadowNode::Unshared rootNode =
-                  std::static_pointer_cast<RootShadowNode>(
-                      oldRootShadowNode.ShadowNode::clone({}));
-              {
-                auto lock = propsRegistry_->createLock();
-
-                propsRegistry_->for_each([&](const ShadowNodeFamily &family,
-                                             const folly::dynamic &props) {
-                  propsMap[&family].emplace_back(props);
-                });
-
-                rootNode =
-                    cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
-              }
-
-              // Mark the commit as Reanimated commit so that we can
-              // distinguish it in ReanimatedCommitHook.
-              auto reaShadowNode =
-                  std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(
-                      rootNode);
-              reaShadowNode->setReanimatedCommitTrait();
-
-              return rootNode;
-            },
-            {/* .enableStateReconciliation = */
-             false,
-             /* .mountSynchronously = */ true});
-      });
 }
 
 } // namespace reanimated

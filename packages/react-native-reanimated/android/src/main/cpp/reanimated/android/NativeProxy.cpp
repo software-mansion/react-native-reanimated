@@ -1,10 +1,10 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
+#include <reanimated/Tools/ReanimatedVersion.h>
 #include <reanimated/android/NativeProxy.h>
 
 #include <worklets/Tools/ReanimatedJSIUtils.h>
-#include <worklets/Tools/ReanimatedVersion.h>
 #include <worklets/WorkletRuntime/ReanimatedRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 #include <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
@@ -50,6 +50,7 @@ NativeProxy::NativeProxy(
           isBridgeless,
           getIsReducedMotion())),
       layoutAnimations_(std::move(layoutAnimations)) {
+  reanimatedModuleProxy_->init(getPlatformDependentMethods());
 #ifdef RCT_NEW_ARCH_ENABLED
   commonInit(fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
@@ -194,12 +195,11 @@ void NativeProxy::registerNatives() {
        makeNativeMethod(
            "isAnyHandlerWaitingForEvent",
            NativeProxy::isAnyHandlerWaitingForEvent),
-       makeNativeMethod("performOperations", NativeProxy::performOperations)});
+       makeNativeMethod("performOperations", NativeProxy::performOperations),
+       makeNativeMethod("invalidateCpp", NativeProxy::invalidateCpp)});
 }
 
-void NativeProxy::requestRender(
-    std::function<void(double)> onRender,
-    jsi::Runtime &) {
+void NativeProxy::requestRender(std::function<void(double)> onRender) {
   static const auto method =
       getJniMethod<void(AnimationFrameCallback::javaobject)>("requestRender");
   method(
@@ -476,8 +476,13 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto progressLayoutAnimation =
       bindThis(&NativeProxy::progressLayoutAnimation);
 
-  auto endLayoutAnimation = [this](int tag, bool removeView) {
-    this->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
+  auto endLayoutAnimation = [weakThis = weak_from_this()](
+                                int tag, bool removeView) {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+    strongThis->layoutAnimations_->cthis()->endLayoutAnimation(tag, removeView);
   };
 
   auto maybeFlushUiUpdatesQueueFunction =
@@ -617,6 +622,12 @@ void NativeProxy::setupLayoutAnimations() {
           return {};
         }
       });
+}
+
+void NativeProxy::invalidateCpp() {
+  layoutAnimations_->cthis()->invalidate();
+  workletsModuleProxy_.reset();
+  reanimatedModuleProxy_.reset();
 }
 
 } // namespace reanimated

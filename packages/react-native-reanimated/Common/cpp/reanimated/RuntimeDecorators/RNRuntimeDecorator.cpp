@@ -1,5 +1,5 @@
 #include <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
-#include <worklets/Tools/ReanimatedVersion.h>
+#include <reanimated/Tools/ReanimatedVersion.h>
 
 namespace reanimated {
 
@@ -18,13 +18,6 @@ void RNRuntimeDecorator::decorate(
   workletRuntimeData[0] = reinterpret_cast<uintptr_t>(&uiRuntime);
   rnRuntime.global().setProperty(
       rnRuntime, "_WORKLET_RUNTIME", workletRuntimeValue);
-
-#ifdef RCT_NEW_ARCH_ENABLED
-  constexpr auto isFabric = true;
-#else
-  constexpr auto isFabric = false;
-#endif // RCT_NEW_ARCH_ENABLED
-  rnRuntime.global().setProperty(rnRuntime, "_IS_FABRIC", isFabric);
 
   rnRuntime.global().setProperty(
       rnRuntime, "_IS_BRIDGELESS", reanimatedModuleProxy->isBridgeless());
