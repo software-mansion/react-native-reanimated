@@ -291,27 +291,24 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
       }
       case ShadowViewMutation::Type::Insert: {
         updateIndexForMutation(mutation);
+
 #if REACT_NATIVE_MINOR_VERSION >= 78
-        if (nodeForTag_.contains(mutation.parentTag)) {
-          nodeForTag_[mutation.parentTag]->applyMutationToIndices(mutation);
-        }
+        const auto parentTag = mutation.parentTag;
+        const auto mutationParent = parentTag;
 #else
-        if (nodeForTag_.contains(mutation.parentShadowView.tag)) {
-          nodeForTag_[mutation.parentShadowView.tag]->applyMutationToIndices(
-              mutation);
-        }
+        const auto parentTag = mutation.parentShadowView.tag;
+        const auto mutationParent = mutation.parentShadowView;
 #endif // REACT_NATIVE_MINOR_VERSION >= 78
+        if (nodeForTag_.contains(parentTag)) {
+          nodeForTag_[parentTag]->applyMutationToIndices(mutation);
+        }
 
         if (movedViews.contains(tag)) {
           auto layoutAnimationIt = layoutAnimations_.find(tag);
           if (layoutAnimationIt == layoutAnimations_.end()) {
             if (oldShadowViewsForReparentings.contains(tag)) {
               filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-#if REACT_NATIVE_MINOR_VERSION >= 78
-                  mutation.parentTag,
-#else
-                  mutation.parentShadowView,
-#endif // REACT_NATIVE_MINOR_VERSION >= 78
+                  mutationParent,
                   oldShadowViewsForReparentings[tag],
                   mutation.index));
             } else {
@@ -322,13 +319,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
 
           auto oldView = *layoutAnimationIt->second.currentView;
           filteredMutations.push_back(ShadowViewMutation::InsertMutation(
-#if REACT_NATIVE_MINOR_VERSION >= 78
-              mutation.parentTag,
-#else
-              mutation.parentShadowView,
-#endif // REACT_NATIVE_MINOR_VERSION >= 78
-              oldView,
-              mutation.index));
+              mutationParent, oldView, mutation.index));
           continue;
         }
 
@@ -348,14 +339,7 @@ void LayoutAnimationsProxy::handleUpdatesAndEnterings(
             cloneViewWithoutOpacity(mutation, propsParserContext);
 
         filteredMutations.push_back(ShadowViewMutation::UpdateMutation(
-            mutation.newChildShadowView,
-            *newView,
-#if REACT_NATIVE_MINOR_VERSION >= 78
-            mutation.parentTag
-#else
-            mutation.parentShadowView
-#endif // REACT_NATIVE_MINOR_VERSION >= 78
-            ));
+            mutation.newChildShadowView, *newView, mutationParent));
         break;
       }
 
@@ -583,22 +567,18 @@ void LayoutAnimationsProxy::updateIndexForMutation(
   if (mutation.index == -1) {
     return;
   }
-  if (!nodeForTag_.contains(
+
 #if REACT_NATIVE_MINOR_VERSION >= 78
-          mutation.parentTag
+  const auto parentTag = mutation.parentTag;
 #else
-          mutation.parentShadowView.tag
+  const auto parentTag = mutation.parentShadowView.tag;
 #endif // REACT_NATIVE_MINOR_VERSION >= 78
-          )) {
+
+  if (!nodeForTag_.contains(parentTag)) {
     return;
   }
 
-#if REACT_NATIVE_MINOR_VERSION >= 78
-  auto parent = nodeForTag_[mutation.parentTag];
-#else
-  auto parent = nodeForTag_[mutation.parentShadowView.tag];
-#endif // REACT_NATIVE_MINOR_VERSION >= 78
-
+  auto parent = nodeForTag_[parentTag];
   int size = 0, prevIndex = -1, offset = 0;
 
   for (auto &subNode : parent->children) {
@@ -613,14 +593,8 @@ void LayoutAnimationsProxy::updateIndexForMutation(
   int tag = mutation.type == ShadowViewMutation::Insert
       ? mutation.newChildShadowView.tag
       : mutation.oldChildShadowView.tag;
-  LOG(INFO) << "update index for " << tag << " in "
-#if REACT_NATIVE_MINOR_VERSION >= 78
-            << mutation.parentTag
-#else
-            << mutation.parentShadowView.tag
-#endif // REACT_NATIVE_MINOR_VERSION >= 78
-            << ": " << mutation.index << " -> " << mutation.index + offset
-            << std::endl;
+  LOG(INFO) << "update index for " << tag << " in " << parentTag << ": "
+            << mutation.index << " -> " << mutation.index + offset << std::endl;
 #endif
   mutation.index += offset;
 }

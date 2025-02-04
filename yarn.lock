@@ -6295,9 +6295,9 @@ __metadata:
   linkType: hard
 
 "@types/hammerjs@npm:^2.0.36":
-  version: 2.0.46
-  resolution: "@types/hammerjs@npm:2.0.46"
-  checksum: 10/1b6502d668f45ca49fb488c01f7938d3aa75e989d70c64801c8feded7d659ca1a118f745c1b604d220efe344c93231767d5cc68c05e00e069c14539b6143cfd9
+  version: 2.0.45
+  resolution: "@types/hammerjs@npm:2.0.45"
+  checksum: 10/8d7f8791789853a9461f6445e625f18922a823a61042161dde5513f4a2c15ecd6361fa6f9b457ce13bfb6b518489b892fedb9e2cebb4420523cb45f1cbb4ee88
   languageName: node
   linkType: hard
 
@@ -8931,7 +8931,7 @@ __metadata:
     react-native-monorepo-tools: "npm:^1.2.1"
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
-    react-native-safe-area-context: "npm:5.2.0-beta.0"
+    react-native-safe-area-context: "npm:5.1.0"
     react-native-screens: "npm:4.5.0"
     react-native-svg: "npm:15.11.1"
     react-strict-dom: "npm:0.0.27"
@@ -9924,13 +9924,13 @@ __metadata:
   linkType: hard
 
 "domutils@npm:^3.0.1":
-  version: 3.2.2
-  resolution: "domutils@npm:3.2.2"
+  version: 3.1.0
+  resolution: "domutils@npm:3.1.0"
   dependencies:
     dom-serializer: "npm:^2.0.0"
     domelementtype: "npm:^2.3.0"
     domhandler: "npm:^5.0.3"
-  checksum: 10/2e08842151aa406f50fe5e6d494f4ec73c2373199fa00d1f77b56ec604e566b7f226312ae35ab8160bb7f27a27c7285d574c8044779053e499282ca9198be210
+  checksum: 10/9a169a6e57ac4c738269a73ab4caf785114ed70e46254139c1bbc8144ac3102aacb28a6149508395ae34aa5d6a40081f4fa5313855dc8319c6d8359866b6dfea
   languageName: node
   linkType: hard
 
@@ -18107,13 +18107,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native-safe-area-context@npm:5.2.0-beta.0":
-  version: 5.2.0-beta.0
-  resolution: "react-native-safe-area-context@npm:5.2.0-beta.0"
+"react-native-safe-area-context@npm:5.1.0":
+  version: 5.1.0
+  resolution: "react-native-safe-area-context@npm:5.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/b4d705e1af9e10d88a7f99103b1a07d780151988c0e541710be0fa933322a9b1a1547889978129a83486d4f17b52e94337e120952fc17cab1797ba005d141c3b
+  checksum: 10/7ff5fd17733b73d3c9fc5f7afa81c9c45389e5bc13ec2101135bdded9d8f435465582e0874de3f517bfb2c4f3fc7300dfdbc51176bc0ca84240184b2a888d74b
   languageName: node
   linkType: hard
 
