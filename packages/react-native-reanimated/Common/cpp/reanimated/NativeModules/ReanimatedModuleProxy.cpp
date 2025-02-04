@@ -602,6 +602,11 @@ bool ReanimatedModuleProxy::handleRawEvent(
     eventType = "on" + eventType.substr(3);
   }
   jsi::Runtime &rt = uiWorkletRuntime_->getJSIRuntime();
+
+  if (!isAnyHandlerWaitingForEvent(eventType, tag)) {
+    return false;
+  }
+
   const auto &eventPayload = rawEvent.eventPayload;
   jsi::Value payload = eventPayload->asJSIValue(rt);
 
