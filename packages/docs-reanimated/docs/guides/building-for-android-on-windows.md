@@ -11,8 +11,8 @@ There are many possible errors including, but not limited to:
 - `Execution failed for task ':react-native-reanimated:buildCMakeDebug[x86_64]`
 - `Execution failed for task ':react-native-reanimated:buildCMakeRelWithDebInfo[arm64-v8a]'`
 - `Task :react-native-reanimated:buildCMakeDebug[x86_64] FAILED`
+- `C/C++: ninja: error: mkdir(...): No such file or directory`
 - `C++ build system [build] failed while executing`
-- `ninja: error: mkdir(...): No such file or directory`
 
 ## What should you definitely not do?
 
@@ -60,14 +60,22 @@ How to determine which version is compatible? Open https://github.com/expo/expo/
 
 For instance, Reanimated 3.15.x works only with React Native 0.72, 0.73, 0.74 or 0.75 and **is not** compatible with React Native 0.76. If you want to use Reanimated with React Native 0.76, you need to upgrade to at least 3.16.0. It is recommended to use the latest available version (in this case, 3.16.7).
 
-### ✅ Use appropriate version of CMake and Ninja
+### ✅ Use appropriate version of CMake
 
-CMake and Ninja are tools that are used to compile C++ part of Reanimated on your machine. Some older versions of these tools do not support projects with paths longer than 240 characters. Make sure to use CMake `3.31.1` or newer and Ninja `1.12.1` or newer.
+[CMake](https://cmake.org/) is a build system used to compile the C++ part of Reanimated on your machine. Make sure to use CMake `3.22.1` or newer.
 
 CMake version used for building Reanimated can be controlled via `CMAKE_VERSION` environmental variable, e.g. using `set CMAKE_VERSION=3.31.1`. If not set, CMake 3.22.1 is used.
 
 :::tip
 You can install a specific version CMake directly from Android Studio (Tools &rarr; SDK Manager &rarr; SDK Tools &rarr; CMake).
+:::
+
+### ✅ Use appropriate version of Ninja
+
+[Ninja](https://ninja-build.org/) is a build system used to compile the C++ part of Reanimated on your machine. Make sure to use Ninja `1.12.1` or newer.
+
+:::tip
+See [this comment on GitHub](https://github.com/ninja-build/ninja/issues/1900#issuecomment-1817532728) for instructions on how to use a different version of Ninja.
 :::
 
 ### ✅ Make sure that project path doesn't contain any whitespace
