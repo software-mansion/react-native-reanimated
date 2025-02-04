@@ -24,15 +24,15 @@ Starting from React Native 0.76, New Architecture is enabled by default and will
 
 ### ❌ Do not downgrade Android Gradle Plugin
 
-It is not recommended to change the version of AG by changing `distributionUrl=...` in `gradle.properties`. You should use the version of AGP used in the official app template.
+It is not recommended to change the version of Android Gradle Plugin (AGP) by changing `distributionUrl=...` in `gradle.properties`. You should use the version of AGP used in the official app template.
 
 ### ❌ Do not downgrade Reanimated or any other dependency
 
-Newer version of Reanimated contain various bug fixes and are more stable than previous releases. You should always try to use the latest supported version of Reanimated in your app. In fact, you should try upgrading all the dependencies to the latest available rather than downgrading them.
+Downgrading the dependencies increases the technical debt of your project. Newer version of Reanimated contain various bug fixes and are more stable than previous releases. You should always try to use the latest supported version of Reanimated in your app. In fact, you should try upgrading all the dependencies to the latest available rather than downgrading them.
 
 ### ❌ Do not post another "same issue" comment
 
-Before you report an error, search for similar issues on GitHub, Stack Overflow, Google, etc. Instead posting another "same issue" comment, just add a reaction under the original issue or some other comment so we know how many developers are affected which lets us prioritize our work.
+Before you report an error, search for similar issues on GitHub, Stack Overflow, Google, etc. Instead posting another "same issue" comment which will be marked as spam, just add a reaction under the original issue. This way we know how many developers are affected which lets us prioritize our work.
 
 ## What should I do then?
 
@@ -62,9 +62,7 @@ For instance, Reanimated 3.15.x works only with React Native 0.72, 0.73, 0.74 or
 
 ### ✅ Use appropriate version of CMake
 
-[CMake](https://cmake.org/) is a build system used to compile the C++ part of Reanimated on your machine. Make sure to use CMake `3.22.1` or newer.
-
-CMake version used for building Reanimated can be controlled via `CMAKE_VERSION` environmental variable, e.g. using `set CMAKE_VERSION=3.31.1`. If not set, CMake 3.22.1 is used.
+[CMake](https://cmake.org/) is a build system used to compile the C++ part of Reanimated on your machine. Make sure to use CMake `3.22.1` or newer. CMake version can be customized with `CMAKE_VERSION` environmental variable, e.g. using `set CMAKE_VERSION=3.31.1`. If not set, CMake `3.22.1` is used.
 
 :::tip
 You can install a specific version CMake directly from Android Studio (Tools &rarr; SDK Manager &rarr; SDK Tools &rarr; CMake).
@@ -72,11 +70,15 @@ You can install a specific version CMake directly from Android Studio (Tools &ra
 
 ### ✅ Use appropriate version of Ninja
 
-[Ninja](https://ninja-build.org/) is a build system used to compile the C++ part of Reanimated on your machine. Make sure to use Ninja `1.12.1` or newer.
+[Ninja](https://ninja-build.org/) is a build system used to compile the C++ part of Reanimated on your machine. Make sure to use Ninja `1.12.0` or newer (current latest is `1.12.1`) as some older versions of Ninja do not handle long paths correctly (see [this issue on GitHub](https://github.com/ninja-build/ninja/issues/1900)).
 
 :::tip
 See [this comment on GitHub](https://github.com/ninja-build/ninja/issues/1900#issuecomment-1817532728) for instructions on how to use a different version of Ninja.
 :::
+
+### ✅ Enable long paths
+
+See [this page](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry#enable-long-paths-in-windows-10-version-1607-and-later) for instructions on how to enable support for long paths on Windows.
 
 ### ✅ Make sure that project path doesn't contain any whitespace
 
