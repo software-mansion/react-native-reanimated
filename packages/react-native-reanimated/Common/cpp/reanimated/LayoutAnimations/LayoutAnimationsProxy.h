@@ -24,7 +24,12 @@ class ReanimatedModuleProxy;
 using namespace facebook;
 
 struct LayoutAnimation {
+#if REACT_NATIVE_MINOR_VERSION >= 78
+  std::shared_ptr<ShadowView> finalView, currentView;
+  Tag parentTag;
+#else
   std::shared_ptr<ShadowView> finalView, currentView, parentView;
+#endif // REACT_NATIVE_MINOR_VERSION >= 78
   std::optional<double> opacity;
   int count = 1;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
