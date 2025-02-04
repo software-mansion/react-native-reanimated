@@ -20,11 +20,11 @@ If you stumble across any of the above errors or similar, please don't disable o
 
 ### ❌ Do not disable New Architecture if it's already enabled
 
-Starting from React Native 0.76, New Architecture is enabled by default and will be removed in a future release of React Native. Disabling it manually by changing `newArchEnabled=...` in `gradle.properties` does not fix the problem, it just postpones it.
+Starting from React Native 0.76, New Architecture is enabled by default and the legacy architecture will be removed in a future release of React Native. Disabling it manually by changing `newArchEnabled=...` in `gradle.properties` does not fix the problem, it just postpones it.
 
 ### ❌ Do not downgrade Android Gradle Plugin
 
-It is not recommended to change the version of Android Gradle Plugin (AGP) by changing `distributionUrl=...` in `gradle.properties`. You should use the version of AGP used in the official app template.
+It is not recommended to change the version of Android Gradle Plugin (AGP) by modifying `distributionUrl=...` in `gradle.properties`. You should use the version of AGP used in the official app template. Changing the AGP version will lead to other problems, including version conflicts and unsupported features.
 
 ### ❌ Do not downgrade Reanimated or any other dependency
 
@@ -38,11 +38,11 @@ Before you report an error, search for similar issues on GitHub, Stack Overflow,
 
 ### ✅ Make sure your environment is set up correctly
 
-First all, make sure that you have followed all instructions in [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment). Run `npx react-native doctor` and see if there are any problems. Make sure to open a new terminal, restart Visual Studio Code or your IDE, or even reboot your computer if some changes were applied.
+First all, make sure that you have followed all instructions in [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment). Run `npx react-native doctor` to see if there are any problems. Make sure to open a new terminal, restart Visual Studio Code or your IDE, or even reboot your computer if changes have been applied.
 
 ### ✅ Use appropriate version of Reanimated
 
-Make sure to use latest supported version of Reanimated. This depends on the setup of your app.
+Make sure to use latest supported version of Reanimated, depending on the setup of your app.
 
 **If your app uses Expo SDK**, you must use a specific major and minor version of Reanimated (first and second number). For instance, Expo SDK 52 supports only Reanimated 3.16.x. Make sure to update to the latest available patch version (third number), for instance 3.16.7.
 
@@ -65,7 +65,7 @@ For instance, Reanimated 3.15.x works only with React Native 0.72, 0.73, 0.74 or
 [CMake](https://cmake.org/) is a build system used to compile the C++ part of Reanimated on your machine. Make sure to use CMake `3.22.1` or newer. CMake version can be customized with `CMAKE_VERSION` environmental variable, e.g. using `set CMAKE_VERSION=3.31.1`. If not set, CMake `3.22.1` is used.
 
 :::tip
-You can install a specific version CMake directly from Android Studio (Tools &rarr; SDK Manager &rarr; SDK Tools &rarr; CMake).
+CMake will be installed automatically during app build. You can install a specific version CMake directly from Android Studio (Tools &rarr; SDK Manager &rarr; SDK Tools &rarr; CMake).
 :::
 
 ### ✅ Use appropriate version of Ninja
@@ -76,17 +76,17 @@ You can install a specific version CMake directly from Android Studio (Tools &ra
 See [this comment on GitHub](https://github.com/ninja-build/ninja/issues/1900#issuecomment-1817532728) for instructions on how to use a different version of Ninja.
 :::
 
-### ✅ Enable long paths
+### ✅ Enable long paths support in Windows registry
 
 See [this page](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry#enable-long-paths-in-windows-10-version-1607-and-later) for instructions on how to enable support for long paths on Windows.
 
 ### ✅ Make sure that project path doesn't contain any whitespace
 
-CMake build may not work properly for paths with space characters. Spaces often appear in usernames, for example `C:\Users\Szczepan Czekan`, or project names, for instance `D:\Work\My Awesome Project`. In such case, move the project to another directory that does not contain whitespace.
+The build process may not work properly for paths with space characters. Spaces often appear in usernames, for example `C:\Users\Szczepan Czekan`, or project names, for instance `D:\Mobile Apps\My Awesome Project`. In such case, move the project to another directory that does not contain whitespace.
 
 ### ✅ Make sure that project path is not too long
 
-CMake build may not work properly for paths that are too long (more than 240 characters). In such case, move the project or clone the repository again to a location with shorter path, for example `D:\AwesomeProject`.
+The build process may not work properly for paths that are too long. Actually, CMake will raise a warning when it comes across a path longer than 240 characters. In such case, move the project or clone the repository again to a location with shorter path, for example `D:\AwesomeProject`.
 
 :::tip
 On Windows, you can mount a specific directory (e.g. `C:\Users\Tomek\AwesomeProject`) as a drive (e.g. `H:`) using the following command: `subst H: C:\Users\Tomek\AwesomeProject`
@@ -110,7 +110,7 @@ Make sure to remove these directories and their contents before trying to build 
 It is also recommended to invalidate Android Studio caches (File &rarr; Invalidate Caches&hellip; &rarr; Select all checkboxes &rarr; Invalidate and Restart).
 
 :::tip
-You can remove all untracked files in your repository using `git clean -fdX` command. Note that this command will remove all untracked files including hidden files like `.env`. You will also need to re-install `node_modules` afterwards using your chosen package manager and rebuild the app again.
+You can remove all untracked files in your repository using `git clean -fdX` command. Note that this command will remove all untracked files including hidden files like `.env` so please be extrac careful and proceed with caution when doing so. You will also need to reinstall `node_modules` afterwards using your chosen package manager and rebuild the app.
 :::
 
 ### ⚠️ I have followed all of the above steps and it still doesn't work
