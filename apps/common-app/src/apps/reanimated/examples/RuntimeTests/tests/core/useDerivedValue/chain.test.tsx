@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, useDerivedValue, withTiming } from 'react-native-reanimated';
-import { describe, render, expect, getTestComponent, test, wait, useTestRef } from '../../../ReJest/RuntimeTestsApi';
+import { StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
+
+import { describe, expect, getTestComponent, render, test, useTestRef, wait } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
 const COMPONENT_REF_ARRAY = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];

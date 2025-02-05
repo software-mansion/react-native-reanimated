@@ -1,5 +1,6 @@
 'use strict';
 import { Text } from 'react-native';
+
 import { createAnimatedComponent } from '../createAnimatedComponent';
 
 // Since createAnimatedComponent return type is ComponentClass that has the props of the argument,

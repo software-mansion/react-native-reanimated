@@ -1,11 +1,12 @@
-import { View, Pressable, Text } from 'react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import type { ViewStyle } from 'react-native';
-import { render, fireEvent } from '@testing-library/react-native';
+import { Pressable, Text, View } from 'react-native';
+
 import Animated, {
   interpolate,
   interpolateColor,
-  useSharedValue,
   useAnimatedStyle,
+  useSharedValue,
 } from '../src';
 import { getAnimatedStyle } from '../src/jestUtils';
 import { processBoxShadow } from '../src/processBoxShadow';

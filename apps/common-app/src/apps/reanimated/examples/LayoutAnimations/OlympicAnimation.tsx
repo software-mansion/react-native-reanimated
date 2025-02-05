@@ -1,6 +1,6 @@
-import Animated, { Easing, Keyframe } from 'react-native-reanimated';
-import { Button, View, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
+import { Button, StyleSheet, View } from 'react-native';
+import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 
 export default function OlympicAnimation() {

@@ -1,8 +1,8 @@
 'use strict';
+import { logger } from '../../../logger';
 import type { Percentage } from '../../types';
 import { ERROR_MESSAGES, LinearEasing, WARN_MESSAGES } from '../linear';
 import type { ControlPoint } from '../types';
-import { logger } from '../../../logger';
 
 const warn = jest.fn();
 logger.warn = warn;

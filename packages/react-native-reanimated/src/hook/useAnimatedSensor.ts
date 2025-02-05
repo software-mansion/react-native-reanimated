@@ -1,17 +1,18 @@
 'use strict';
 import { useEffect, useMemo, useRef } from 'react';
-import { initializeSensor, registerSensor, unregisterSensor } from '../core';
+
 import type {
-  SensorConfig,
   AnimatedSensor,
+  SensorConfig,
   Value3D,
   ValueRotation,
 } from '../commonTypes';
 import {
-  SensorType,
-  IOSReferenceFrame,
   InterfaceOrientation,
+  IOSReferenceFrame,
+  SensorType,
 } from '../commonTypes';
+import { initializeSensor, registerSensor, unregisterSensor } from '../core';
 import { callMicrotasks } from '../threads';
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll

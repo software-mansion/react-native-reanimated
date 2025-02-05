@@ -9,14 +9,13 @@ import type {
   IWorkletsModule,
   mockedRequestAnimationFrame as mockedRequestAnimationFrameType,
 } from '../worklets';
-
 import {
-  // @ts-expect-error - required for resolving the module
-  WorkletsModule as ResolvedWorkletsModule,
   // @ts-expect-error - required for resolving the module
   isWorkletFunction as ResolvedIsWorkletFunction,
   // @ts-expect-error - required for resolving the module
   mockedRequestAnimationFrame as ResolvedMockedRequestAnimationFrame,
+  // @ts-expect-error - required for resolving the module
+  WorkletsModule as ResolvedWorkletsModule,
 } from './WorkletsResolver';
 
 export const WorkletsModule = ResolvedWorkletsModule as IWorkletsModule;
@@ -27,10 +26,10 @@ export const mockedRequestAnimationFrame =
 
 export type {
   IWorkletsModule,
-  WorkletsModuleProxy,
   ShareableRef,
   WorkletFunction,
-  WorkletRuntime,
-  WorkletStackDetails,
   WorkletFunctionDev,
+  WorkletRuntime,
+  WorkletsModuleProxy,
+  WorkletStackDetails,
 } from '../worklets';

@@ -1,8 +1,9 @@
 'use strict';
 import type { ColorValue } from 'react-native';
-import type { Maybe } from '../../../../types';
-import { ReanimatedError } from '../../../../errors';
+
 import { processColor as processColorInternal } from '../../../../../Colors';
+import { ReanimatedError } from '../../../../errors';
+import type { Maybe } from '../../../../types';
 import type { ValueProcessor } from '../types';
 
 export const ERROR_MESSAGES = {

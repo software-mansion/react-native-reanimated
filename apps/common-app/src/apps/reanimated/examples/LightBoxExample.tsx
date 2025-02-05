@@ -1,24 +1,25 @@
+import '../types';
+
+import { useHeaderHeight } from '@react-navigation/elements';
 import type { Component } from 'react';
-import React, { useState, useRef, useEffect } from 'react';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  runOnUI,
-  useAnimatedGestureHandler,
-  interpolate,
-  Extrapolation,
-  withTiming,
-  Easing,
-  runOnJS,
-} from 'react-native-reanimated';
-import { Dimensions, StyleSheet, View, Image, Platform } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Dimensions, Image, Platform, StyleSheet, View } from 'react-native';
 import {
-  ScrollView,
   PanGestureHandler,
+  ScrollView,
   TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
-import { useHeaderHeight } from '@react-navigation/elements';
-import '../types';
+import Animated, {
+  Easing,
+  Extrapolation,
+  interpolate,
+  runOnJS,
+  runOnUI,
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 

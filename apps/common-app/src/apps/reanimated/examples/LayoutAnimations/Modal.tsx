@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import type {
   EntryAnimationsValues,
   EntryExitAnimationFunction,
@@ -7,8 +9,6 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, Text, View } from 'react-native';
-import React, { useState } from 'react';
 
 function AnimatedView() {
   const style = useAnimatedStyle(() => {

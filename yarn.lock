@@ -18022,6 +18022,7 @@ __metadata:
     eslint: "npm:^8.57.0"
     eslint-config-standard: "npm:^17.1.0"
     eslint-plugin-jsdoc: "npm:^50.2.2"
+    eslint-plugin-simple-import-sort: "npm:^12.1.1"
     husky: "npm:^9.0.11"
     lint-staged: "npm:^15.2.2"
     prettier: "npm:^3.3.3"

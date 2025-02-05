@@ -1,12 +1,12 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
-import type { CSSTransitionProperties } from '../types';
-import { convertConfigPropertiesToArrays } from '../utils';
 import {
   kebabize,
   maybeAddSuffixes,
   parseTimingFunction,
 } from '../platform/web';
+import type { CSSTransitionProperties } from '../types';
+import { convertConfigPropertiesToArrays } from '../utils';
 
 export default class CSSTransitionManager {
   private readonly element: ReanimatedHTMLElement;

@@ -1,13 +1,14 @@
 import React from 'react';
 import { useSharedValue } from 'react-native-reanimated';
+
 import {
   describe,
-  test,
   expect,
-  render,
-  registerValue,
   getRegisteredValue,
   Presets,
+  registerValue,
+  render,
+  test,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 import { ProgressBar } from './components';

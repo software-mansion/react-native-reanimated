@@ -1,15 +1,15 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import Animated, {
-  useSharedValue,
-  withSpring,
-  useAnimatedStyle,
-  useAnimatedGestureHandler,
-  interpolate,
-  Extrapolation,
-} from 'react-native-reanimated';
+import { StyleSheet, View } from 'react-native';
 import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import { PanGestureHandler } from 'react-native-gesture-handler';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
 export default function DragAndSnapExample() {
   const translation = {

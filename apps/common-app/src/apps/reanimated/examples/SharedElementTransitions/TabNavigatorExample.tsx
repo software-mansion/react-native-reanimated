@@ -1,8 +1,8 @@
-import React from 'react';
-import { StyleSheet, View, Button, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 function getStyle(index: number) {

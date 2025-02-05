@@ -1,4 +1,5 @@
 'use strict';
+import { MILLISECONDS_REGEX, SECONDS_REGEX } from '../../../../constants/regex';
 import type {
   CSSTimingFunction,
   NormalizedCSSTimingFunction,
@@ -6,7 +7,6 @@ import type {
 } from '../../../../easings';
 import { ReanimatedError } from '../../../../errors';
 import type { TimeUnit } from '../../../../types';
-import { MILLISECONDS_REGEX, SECONDS_REGEX } from '../../../../constants/regex';
 
 export const VALID_PREDEFINED_TIMING_FUNCTIONS =
   new Set<PredefinedTimingFunction>([
