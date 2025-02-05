@@ -3,6 +3,8 @@
 import { initializeUIRuntime } from './initializers';
 import { WorkletsModule } from './WorkletsModule';
 
+// TODO: Specify the initialization pipeline since now there's no
+// universal source of truth for it.
 initializeUIRuntime(WorkletsModule);
 
 export type { CustomError } from './errors';
