@@ -1,8 +1,9 @@
 'use strict';
 import type { BoxShadowValue } from 'react-native';
+
+import { processColor } from '../../../../../../Colors';
 import type { ProcessedBoxShadowValue } from '../shadows';
 import { processBoxShadow } from '../shadows';
-import { processColor } from '../../../../../../Colors';
 
 describe(processBoxShadow, () => {
   describe('returns a correct number of shadows', () => {

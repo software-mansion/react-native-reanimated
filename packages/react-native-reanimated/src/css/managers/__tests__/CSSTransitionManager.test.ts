@@ -1,13 +1,13 @@
 'use strict';
-import CSSTransitionManager from '../CSSTransitionManager';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
+import { normalizeCSSTransitionProperties } from '../../platform/native';
 import {
   registerCSSTransition,
   unregisterCSSTransition,
   updateCSSTransition,
 } from '../../platform/native/native';
 import type { CSSTransitionProperties } from '../../types';
-import { normalizeCSSTransitionProperties } from '../../platform/native';
+import CSSTransitionManager from '../CSSTransitionManager';
 
 jest.mock('../../platform/native/native.ts', () => ({
   registerCSSTransition: jest.fn(),

@@ -1,9 +1,9 @@
 'use strict';
 
 import type {
-  WorkletFunction,
   WorkletBaseDev,
   WorkletBaseRelease,
+  WorkletFunction,
 } from './workletTypes';
 
 /**

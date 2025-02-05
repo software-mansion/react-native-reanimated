@@ -7,8 +7,8 @@ import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
-import type { WorkletRuntime, WorkletFunction } from './WorkletsResolver';
-import { WorkletsModule, isWorkletFunction } from './WorkletsResolver';
+import type { WorkletFunction, WorkletRuntime } from './WorkletsResolver';
+import { isWorkletFunction, WorkletsModule } from './WorkletsResolver';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

@@ -1,11 +1,11 @@
 import React, { useRef, useState } from 'react';
-import { Text, StyleSheet, Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { PerformanceMonitor } from 'react-native-reanimated';
 
-import EmptyExample from './EmptyExample';
 import BokehExample from './BokehExample';
-import PlanetsExample from './PlanetsExample';
 import EmojiWaterfallExample from './EmojiWaterfallExample';
+import EmptyExample from './EmptyExample';
+import PlanetsExample from './PlanetsExample';
 
 enum Examples {
   Empty = 'Empty Example',

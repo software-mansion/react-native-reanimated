@@ -1,12 +1,12 @@
 'use strict';
+import { ReanimatedError } from './errors';
 import { isJest, shouldBeUseWeb } from './PlatformChecker';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
-import { ReanimatedError } from './errors';
 import type { WorkletFunction } from './WorkletsResolver';
-import { WorkletsModule, isWorkletFunction } from './WorkletsResolver';
+import { isWorkletFunction, WorkletsModule } from './WorkletsResolver';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();

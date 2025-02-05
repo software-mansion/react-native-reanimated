@@ -1,6 +1,6 @@
+import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import { runOnUI } from 'react-native-reanimated';
-import React from 'react';
 
 export default function LogExample() {
   const handlePress = () => {

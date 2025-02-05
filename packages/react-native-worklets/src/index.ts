@@ -1,10 +1,5 @@
 'use strict';
 
-export {
-  isWorkletFunction,
-  mockedRequestAnimationFrame,
-  WorkletsModule,
-} from './worklets';
 export type {
   IWorkletsModule,
   ShareableRef,
@@ -13,4 +8,9 @@ export type {
   WorkletRuntime,
   WorkletsModuleProxy,
   WorkletStackDetails,
+} from './worklets';
+export {
+  isWorkletFunction,
+  mockedRequestAnimationFrame,
+  WorkletsModule,
 } from './worklets';

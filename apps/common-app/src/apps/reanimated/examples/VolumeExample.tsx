@@ -1,22 +1,22 @@
+import Slider from '@react-native-community/slider';
+import { useNavigation } from '@react-navigation/native';
+import React, { useLayoutEffect } from 'react';
+import {
+  StatusBar,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import Animated, {
-  useSharedValue,
+  SensorType,
   useAnimatedProps,
   useAnimatedSensor,
-  SensorType,
-  useFrameCallback,
   useAnimatedStyle,
+  useFrameCallback,
+  useSharedValue,
 } from 'react-native-reanimated';
-import {
-  View,
-  StyleSheet,
-  Text,
-  Switch,
-  TextInput,
-  StatusBar,
-} from 'react-native';
-import React, { useLayoutEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
-import Slider from '@react-native-community/slider';
 
 const dogeThumbImage = require('./assets/doge.png');
 

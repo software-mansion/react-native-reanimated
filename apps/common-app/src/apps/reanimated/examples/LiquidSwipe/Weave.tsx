@@ -1,10 +1,14 @@
+import MaskedView from '@react-native-masked-view/masked-view';
+import type { PropsWithChildren } from 'react';
+import React from 'react';
+import { Dimensions, StyleSheet } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   useAnimatedProps,
   useDerivedValue,
 } from 'react-native-reanimated';
-import { Dimensions, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+
 import {
   initialHorRadius,
   initialSideWidth,
@@ -12,10 +16,6 @@ import {
   maxHorRadius,
   maxVertRadius,
 } from './WeaveHelpers';
-
-import MaskedView from '@react-native-masked-view/masked-view';
-import type { PropsWithChildren } from 'react';
-import React from 'react';
 
 const { width, height } = Dimensions.get('window');
 const AnimatedPath = Animated.createAnimatedComponent(Path);

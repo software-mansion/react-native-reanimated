@@ -1,20 +1,20 @@
 'use strict';
-import { defineAnimation, getReduceMotionForAnimation } from '../util';
 import type {
+  Animation,
   AnimationCallback,
   Timestamp,
-  Animation,
 } from '../../commonTypes';
+import { ReanimatedError } from '../../errors';
+import { defineAnimation, getReduceMotionForAnimation } from '../util';
+import { rigidDecay } from './rigidDecay';
 import { rubberBandDecay } from './rubberBandDecay';
-import { isValidRubberBandConfig } from './utils';
 import type {
   DecayAnimation,
   DecayConfig,
   DefaultDecayConfig,
   InnerDecayAnimation,
 } from './utils';
-import { rigidDecay } from './rigidDecay';
-import { ReanimatedError } from '../../errors';
+import { isValidRubberBandConfig } from './utils';
 
 export type WithDecayConfig = DecayConfig;
 

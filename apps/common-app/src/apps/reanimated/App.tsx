@@ -1,5 +1,8 @@
 import './types';
 
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import React, { memo } from 'react';
 import {
   FlatList,
   Pressable,
@@ -9,14 +12,12 @@ import {
   View,
 } from 'react-native';
 import { RectButton } from 'react-native-gesture-handler';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { StackNavigationProp } from '@react-navigation/stack';
+import { useReducedMotion } from 'react-native-reanimated';
+
+import { BackButton, DrawerButton } from '@/components';
+import { createStack, IS_MACOS, isFabric } from '@/utils';
 
 import { EXAMPLES } from './examples';
-import React, { memo } from 'react';
-import { useReducedMotion } from 'react-native-reanimated';
-import { createStack, IS_MACOS, isFabric } from '@/utils';
-import { BackButton, DrawerButton } from '@/components';
 
 type RootStackParamList = { [P in keyof typeof EXAMPLES]: undefined } & {
   Home: undefined;

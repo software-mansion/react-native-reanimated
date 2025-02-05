@@ -4,6 +4,7 @@
 'use strict';
 
 import type { BoxShadowValue, OpaqueColorValue } from 'react-native';
+
 import type { StyleProps } from '.';
 
 function parseBoxShadowString(rawBoxShadows: string): Array<BoxShadowValue> {

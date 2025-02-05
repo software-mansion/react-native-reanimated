@@ -1,3 +1,5 @@
+import React, { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -5,8 +7,6 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
 
 const colors = [
   ['lime', 'green'],

@@ -1,20 +1,20 @@
 import React from 'react';
-import { StyleSheet, View, Text, Dimensions, Alert } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedGestureHandler,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  Easing,
-  runOnJS,
-} from 'react-native-reanimated';
+import { Alert, Dimensions, StyleSheet, Text, View } from 'react-native';
 import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import {
+  FlatList,
   PanGestureHandler,
   TouchableOpacity,
-  FlatList,
 } from 'react-native-gesture-handler';
+import Animated, {
+  Easing,
+  runOnJS,
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 const windowDimensions = Dimensions.get('window');
 const BUTTON_WIDTH = 80;

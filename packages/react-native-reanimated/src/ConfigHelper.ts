@@ -1,10 +1,10 @@
 'use strict';
-import { PropsAllowlists } from './propsAllowlists';
 import { executeOnUIRuntimeSync, jsiConfigureProps } from './core';
 import { ReanimatedError } from './errors';
-import { updateLoggerConfig } from './logger';
 import type { LoggerConfig } from './logger';
+import { updateLoggerConfig } from './logger';
 import { shouldBeUseWeb } from './PlatformChecker';
+import { PropsAllowlists } from './propsAllowlists';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

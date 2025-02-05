@@ -1,22 +1,23 @@
 import React from 'react';
 import type { LayoutAnimationsValues } from 'react-native-reanimated';
 import { withDelay, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+
 import {
+  clearRenderOutput,
   describe,
   expect,
-  test,
+  getTestComponent,
   mockAnimationTimer,
+  mockWindowDimensions,
   recordAnimationUpdates,
   render,
+  test,
   unmockAnimationTimer,
-  clearRenderOutput,
-  getTestComponent,
-  mockWindowDimensions,
   unmockWindowDimensions,
   waitForAnimationUpdates,
 } from '../../../ReJest/RuntimeTestsApi';
-import { Direction, TransitionUpOrDown, TransitionLeftOrRight, TRANSITION_REF } from './TestComponents';
-import { SnapshotsStaticSize, SnapshotsDynamicSize } from './custom.snapshot';
+import { SnapshotsDynamicSize, SnapshotsStaticSize } from './custom.snapshot';
+import { Direction, TRANSITION_REF, TransitionLeftOrRight, TransitionUpOrDown } from './TestComponents';
 
 const moveCornersFirst = (values: LayoutAnimationsValues) => {
   'worklet';

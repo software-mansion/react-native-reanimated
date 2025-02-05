@@ -1,8 +1,8 @@
-import React from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from 'react';
 import type { ImageSourcePropType } from 'react-native';
-import { View, Pressable, ScrollView, Button, StyleSheet } from 'react-native';
+import { Button, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 const florence = require('./assets/florence.jpg');

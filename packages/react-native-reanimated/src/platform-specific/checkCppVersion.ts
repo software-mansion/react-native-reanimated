@@ -1,8 +1,8 @@
 'use strict';
 
-import { jsVersion } from './jsVersion';
-import { logger } from '../logger';
 import { ReanimatedError } from '../errors';
+import { logger } from '../logger';
+import { jsVersion } from './jsVersion';
 
 export function checkCppVersion() {
   const cppVersion = global._REANIMATED_VERSION_CPP;

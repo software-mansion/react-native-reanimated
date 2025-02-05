@@ -1,6 +1,6 @@
-import Animated, { FadeOut } from 'react-native-reanimated';
-import { Button, View, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
+import { Button, StyleSheet, View } from 'react-native';
+import Animated, { FadeOut } from 'react-native-reanimated';
 
 const levelOne = {
   width: 100,

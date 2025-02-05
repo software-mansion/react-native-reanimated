@@ -1,11 +1,11 @@
 import React from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
-  useAnimatedStyle,
-  useAnimatedSensor,
-  SensorType,
   IOSReferenceFrame,
+  SensorType,
+  useAnimatedSensor,
+  useAnimatedStyle,
 } from 'react-native-reanimated';
-import { View, Button, StyleSheet, Text } from 'react-native';
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
 // https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix (ZXY Tait–Bryan angles)

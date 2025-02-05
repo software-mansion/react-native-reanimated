@@ -1,12 +1,12 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import React from 'react';
-import { View, StyleSheet, Platform, Dimensions } from 'react-native';
+import { Dimensions, Platform, StyleSheet, View } from 'react-native';
 import Animated, {
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
   useSharedValue,
   withSpring,
-  useAnimatedStyle,
-  useAnimatedScrollHandler,
 } from 'react-native-reanimated';
-import { useHeaderHeight } from '@react-navigation/elements';
 
 const size = 40;
 

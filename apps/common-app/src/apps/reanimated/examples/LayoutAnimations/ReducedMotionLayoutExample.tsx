@@ -1,11 +1,10 @@
+import React from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   PinwheelIn,
   PinwheelOut,
   ReduceMotion,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, View, Text } from 'react-native';
-
-import React from 'react';
 
 interface BoxProps {
   config: ReduceMotion;
