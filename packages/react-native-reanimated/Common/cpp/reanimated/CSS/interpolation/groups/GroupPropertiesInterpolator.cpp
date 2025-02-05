@@ -63,6 +63,16 @@ jsi::Value GroupPropertiesInterpolator::update(
       });
 }
 
+folly::dynamic GroupPropertiesInterpolator::update(
+    const ShadowNode::Shared &shadowNode) {
+    // TODO
+      return folly::dynamic();
+//  return mapInterpolators(
+//      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
+//        return interpolator.update(rt, shadowNode);
+//      });
+}
+
 jsi::Value GroupPropertiesInterpolator::reset(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode) {
