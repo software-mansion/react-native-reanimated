@@ -75,6 +75,8 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   static std::optional<TransformOperations> parseTransformOperations(
       jsi::Runtime &rt,
       const jsi::Value &values);
+  static std::optional<TransformOperations> parseTransformOperations(
+      const folly::dynamic &values);
   std::shared_ptr<TransformKeyframe> createTransformKeyframe(
       double fromOffset,
       double toOffset,
@@ -94,6 +96,8 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
 
   TransformOperations getFallbackValue(
       jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode) const;
+  TransformOperations getFallbackValue(
       const ShadowNode::Shared &shadowNode) const;
   TransformOperations resolveTransformOperations(
       const ShadowNode::Shared &shadowNode,

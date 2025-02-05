@@ -125,7 +125,7 @@ folly::dynamic TransformsStyleInterpolator::update(
     // If the value is nullopt, we would have to read it from the view style
     // and build the keyframe again
     // TODO
-//    const auto fallbackValue = getFallbackValue(rt, shadowNode);
+    const auto fallbackValue = getFallbackValue(shadowNode);
 //    keyframe = createTransformKeyframe(
 //        keyframe->fromOffset,
 //        keyframe->toOffset,
@@ -233,6 +233,29 @@ TransformsStyleInterpolator::parseTransformOperations(
         TransformOperation::fromJSIValue(rt, transform));
   }
   return transformOperations;
+}
+
+std::optional<TransformOperations>
+TransformsStyleInterpolator::parseTransformOperations(
+  const folly::dynamic &values) {
+  // TODO
+  return std::nullopt;
+//  if (values.isUndefined()) {
+//    return std::nullopt;
+//  }
+//
+//  const auto transformsArray = values.asObject(rt).asArray(rt);
+//  const auto transformsCount = transformsArray.size(rt);
+//
+//  TransformOperations transformOperations;
+//  transformOperations.reserve(transformsCount);
+//
+//  for (size_t i = 0; i < transformsCount; ++i) {
+//    const auto transform = transformsArray.getValueAtIndex(rt, i);
+//    transformOperations.emplace_back(
+//        TransformOperation::fromJSIValue(rt, transform));
+//  }
+//  return transformOperations;
 }
 
 std::shared_ptr<TransformKeyframe>
@@ -385,6 +408,13 @@ TransformOperations TransformsStyleInterpolator::getFallbackValue(
     const ShadowNode::Shared &shadowNode) const {
   const jsi::Value &styleValue = getStyleValue(rt, shadowNode);
   return parseTransformOperations(rt, styleValue)
+      .value_or(TransformOperations{});
+}
+
+TransformOperations TransformsStyleInterpolator::getFallbackValue(
+    const ShadowNode::Shared &shadowNode) const {
+  const auto &styleValue = getStyleValue(shadowNode);
+  return parseTransformOperations(styleValue)
       .value_or(TransformOperations{});
 }
 
