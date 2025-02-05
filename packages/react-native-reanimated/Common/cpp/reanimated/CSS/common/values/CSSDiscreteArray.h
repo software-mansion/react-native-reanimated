@@ -22,8 +22,7 @@ concept CSSValueDerived = std::is_base_of_v<CSSValue, TValue>;
  * treated as single discrete values.
  */
 template <CSSValueDerived TValue>
-struct CSSDiscreteArray
-    : public CSSBaseValue<CSSValueType::Array, CSSDiscreteArray<TValue>> {
+struct CSSDiscreteArray : public CSSSimpleValue<CSSDiscreteArray<TValue>> {
   static constexpr bool is_discrete_value = true;
 
   std::vector<TValue> values;

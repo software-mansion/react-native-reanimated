@@ -17,7 +17,7 @@ enum class ColorType {
   Transparent,
 };
 
-struct CSSColor : public CSSBaseValue<CSSValueType::Color, CSSColor> {
+struct CSSColor : public CSSSimpleValue<CSSColor> {
   ColorChannels channels;
   ColorType colorType;
 
