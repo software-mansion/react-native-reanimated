@@ -104,6 +104,17 @@ class CSSValueVariant final : public CSSValue {
           stringifyJSIValue(rt, jsiValue));
     }
   }
+  
+  CSSValueVariant(const folly::dynamic &jsiValue)
+  // TODO
+//    requires((can_construct_from_jsi<AllowedTypes> || ...))
+  { // NOLINT(whitespace/braces)
+//    if (!tryConstruct(rt, jsiValue)) {
+//      throw std::runtime_error(
+//          "[Reanimated] No compatible type found for construction from: " +
+//          stringifyJSIValue(rt, jsiValue));
+//    }
+  }
 
   bool operator==(const CSSValueVariant &other) const {
     if (storage_.index() != other.storage_.index()) {

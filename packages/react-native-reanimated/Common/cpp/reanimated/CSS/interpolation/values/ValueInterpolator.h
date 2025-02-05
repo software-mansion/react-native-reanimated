@@ -236,11 +236,9 @@ class ValueInterpolator : public PropertyInterpolator {
   
   ValueType getFallbackValue(
       const ShadowNode::Shared &shadowNode) const {
-      // TODO
-      return defaultStyleValue_;
     const folly::dynamic &styleValue = getStyleValue(shadowNode);
-//    return styleValue.isUndefined() ? defaultStyleValue_
-//                                    : ValueType(rt, styleValue);
+    return styleValue.empty() ? defaultStyleValue_
+                              : ValueType(styleValue);
   }
 
   ValueType resolveKeyframeValue(
