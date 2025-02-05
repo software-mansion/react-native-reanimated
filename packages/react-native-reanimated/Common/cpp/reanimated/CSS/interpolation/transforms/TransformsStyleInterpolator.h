@@ -107,6 +107,8 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   void updateCurrentKeyframe(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode);
+  void updateCurrentKeyframe(
+      const ShadowNode::Shared &shadowNode);
   TransformOperations interpolateOperations(
       const ShadowNode::Shared &shadowNode,
       double keyframeProgress,

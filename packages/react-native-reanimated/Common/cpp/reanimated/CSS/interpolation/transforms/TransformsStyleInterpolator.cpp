@@ -116,37 +116,38 @@ jsi::Value TransformsStyleInterpolator::update(
 
 folly::dynamic TransformsStyleInterpolator::update(
     const ShadowNode::Shared &shadowNode) {
+  updateCurrentKeyframe(shadowNode);
+
+  // Get or create the current keyframe
+  auto &keyframe = currentKeyframe_;
+  if (!keyframe->fromOperations.has_value() ||
+      !keyframe->toOperations.has_value()) {
+    // If the value is nullopt, we would have to read it from the view style
+    // and build the keyframe again
     // TODO
-      return folly::dynamic();
-//  updateCurrentKeyframe(rt, shadowNode);
-//
-//  // Get or create the current keyframe
-//  auto &keyframe = currentKeyframe_;
-//  if (!keyframe->fromOperations.has_value() ||
-//      !keyframe->toOperations.has_value()) {
-//    // If the value is nullopt, we would have to read it from the view style
-//    // and build the keyframe again
 //    const auto fallbackValue = getFallbackValue(rt, shadowNode);
 //    keyframe = createTransformKeyframe(
 //        keyframe->fromOffset,
 //        keyframe->toOffset,
 //        keyframe->fromOperations.value_or(fallbackValue),
 //        keyframe->toOperations.value_or(fallbackValue));
-//  }
-//
-//  // Interpolate the current keyframe
-//  TransformOperations result = interpolateOperations(
-//      shadowNode,
-//      progressProvider_->getKeyframeProgress(
-//          keyframe->fromOffset, keyframe->toOffset),
-//      keyframe->fromOperations.value(),
-//      keyframe->toOperations.value());
-//
-//  // Convert the result to JSI value
+  }
+
+  // Interpolate the current keyframe
+  TransformOperations result = interpolateOperations(
+      shadowNode,
+      progressProvider_->getKeyframeProgress(
+          keyframe->fromOffset, keyframe->toOffset),
+      keyframe->fromOperations.value(),
+      keyframe->toOperations.value());
+
+  // Convert the result to JSI value
+  // TODO
+  auto updates = folly::dynamic();
 //  auto updates = convertResultToJSI(rt, result);
 //  previousResult_ = std::move(result);
-//
-//  return updates;
+
+  return updates;
 }
 
 jsi::Value TransformsStyleInterpolator::reset(
@@ -479,6 +480,37 @@ void TransformsStyleInterpolator::updateCurrentKeyframe(
         shadowNode,
         keyframeIndex_,
         static_cast<int>(prevIndex - keyframeIndex_));
+  }
+}
+
+void TransformsStyleInterpolator::updateCurrentKeyframe(
+    const ShadowNode::Shared &shadowNode) {
+  const auto progress = progressProvider_->getGlobalProgress();
+  const bool isProgressLessThanHalf = progress < 0.5;
+  const auto prevIndex = keyframeIndex_;
+  if (progressProvider_->isFirstUpdate()) {
+    keyframeIndex_ = isProgressLessThanHalf ? 0 : keyframes_.size() - 1;
+  }
+
+  while (keyframeIndex_ < keyframes_.size() - 1 &&
+         keyframes_[keyframeIndex_ + 1]->fromOffset < progress)
+    ++keyframeIndex_;
+
+  while (keyframeIndex_ > 0 &&
+         keyframes_[keyframeIndex_]->fromOffset >= progress)
+    --keyframeIndex_;
+
+  if (progressProvider_->isFirstUpdate()) {
+  // TODO
+//    currentKeyframe_ = getKeyframeAtIndex(
+//        rt, shadowNode, keyframeIndex_, isProgressLessThanHalf ? -1 : 1);
+  } else if (keyframeIndex_ != prevIndex) {
+  // TODO
+//    currentKeyframe_ = getKeyframeAtIndex(
+//        rt,
+//        shadowNode,
+//        keyframeIndex_,
+//        static_cast<int>(prevIndex - keyframeIndex_));
   }
 }
 
