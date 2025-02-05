@@ -17,6 +17,7 @@ type SingleCSSTransitionSettings = {
   transitionDuration?: CSSTransitionDuration;
   transitionTimingFunction?: CSSTransitionTimingFunction;
   transitionDelay?: CSSTransitionDelay;
+  transitionBehavior?: CSSTransitionBehavior;
 };
 
 export type SingleCSSTransitionConfig<S extends object = PlainStyle> =
@@ -25,14 +26,11 @@ export type SingleCSSTransitionConfig<S extends object = PlainStyle> =
   };
 
 export type CSSTransitionSettings =
-  AddArrayPropertyTypes<SingleCSSTransitionSettings> & {
-    transitionBehavior?: CSSTransitionBehavior;
-  };
+  AddArrayPropertyTypes<SingleCSSTransitionSettings>;
 
 export type CSSTransitionProperties<S extends object = PlainStyle> =
-  AddArrayPropertyTypes<SingleCSSTransitionSettings> & {
+  CSSTransitionSettings & {
     transitionProperty?: CSSTransitionProperty<S>;
-    transitionBehavior?: CSSTransitionBehavior;
   };
 
 export type CSSTransitionProp = keyof CSSTransitionProperties;

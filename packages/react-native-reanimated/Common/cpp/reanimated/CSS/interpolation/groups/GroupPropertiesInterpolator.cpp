@@ -12,6 +12,14 @@ GroupPropertiesInterpolator::GroupPropertiesInterpolator(
           progressProvider,
           viewStylesRepository) {}
 
+void GroupPropertiesInterpolator::setProgressProvider(
+    const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
+  PropertyInterpolator::setProgressProvider(progressProvider);
+  forEachInterpolator([&](PropertyInterpolator &interpolator) -> void {
+    interpolator.setProgressProvider(progressProvider);
+  });
+}
+
 jsi::Value GroupPropertiesInterpolator::getStyleValue(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode) const {

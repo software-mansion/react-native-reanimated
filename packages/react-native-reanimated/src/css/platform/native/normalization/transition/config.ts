@@ -39,6 +39,7 @@ export function normalizeCSSTransitionProperties(
     transitionDuration,
     transitionTimingFunction,
     transitionDelay,
+    transitionBehavior,
   } = convertConfigPropertiesToArrays(config);
 
   if (hasNoTransitionProperties(transitionProperty)) {
@@ -50,7 +51,9 @@ export function normalizeCSSTransitionProperties(
   const settings: Record<string, NormalizedSingleCSSTransitionSettings> = {};
 
   // Go from the last to the first property to ensure that the last
-  // one overrides previous ones in case of duplicate properties
+  // one entry for the same property is used without having to override
+  // it multiple times if specified more than once (we just take the last
+  // occurrence and ignore remaining ones)
   for (let i = transitionProperty.length - 1; i >= 0; i--) {
     const property = transitionProperty[i];
 
@@ -77,6 +80,9 @@ export function normalizeCSSTransitionProperties(
         transitionTimingFunction?.[i % transitionTimingFunction.length]
       ),
       delay: normalizeDelay(transitionDelay?.[i % transitionDelay.length]),
+      allowDiscrete: normalizeTransitionBehavior(
+        transitionBehavior?.[i % transitionBehavior.length]
+      ),
     };
 
     // 'all' transition property overrides all properties before it,
@@ -89,7 +95,6 @@ export function normalizeCSSTransitionProperties(
   return {
     properties: allPropertiesTransition ? 'all' : specificProperties.reverse(),
     settings,
-    allowDiscrete: normalizeTransitionBehavior(config.transitionBehavior),
   };
 }
 
@@ -126,10 +131,6 @@ export function getNormalizedCSSTransitionConfigUpdates(
         break;
       }
     }
-  }
-
-  if (oldConfig.allowDiscrete !== newConfig.allowDiscrete) {
-    configUpdates.allowDiscrete = newConfig.allowDiscrete;
   }
 
   return configUpdates;

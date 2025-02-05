@@ -11,7 +11,6 @@ namespace reanimated {
 using namespace facebook;
 
 using PropertyNames = std::vector<std::string>;
-using PropertyValues = std::unique_ptr<jsi::Value>;
 using PropertyPath = std::vector<std::string>;
 /**
  * If nullopt - all style properties can trigger transition

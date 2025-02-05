@@ -14,7 +14,7 @@ const ERROR_MESSAGES = {
     `Invalid color "${color}" in box shadow "${boxShadow}".`,
 };
 
-type ProcessedBoxShadowValue = {
+export type ProcessedBoxShadowValue = {
   blurRadius?: number;
   color?: number;
   offsetX?: number;

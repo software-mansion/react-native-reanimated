@@ -129,6 +129,7 @@ export class TestRunner {
 
   private async runTestCase(testSuite: TestSuite, testCase: TestCase) {
     this._callTrackerRegistry.resetRegistry();
+    this._notificationRegistry.resetRegistry();
     this._currentTestCase = testCase;
 
     if (testSuite.beforeEach) {

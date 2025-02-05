@@ -85,6 +85,7 @@ describe('CSSTransitionManager', () => {
               duration: 1500,
               delay: 0,
               timingFunction: 'ease',
+              allowDiscrete: false,
             },
           },
         });

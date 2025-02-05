@@ -90,8 +90,8 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
     const TransitionPropertyProgressProviders &progressProviders) {
-  const auto oldPropsObj = changedProps.oldProps->asObject(rt);
-  const auto newPropsObj = changedProps.newProps->asObject(rt);
+  const auto oldPropsObj = changedProps.oldProps.asObject(rt);
+  const auto newPropsObj = changedProps.newProps.asObject(rt);
 
   for (const auto &propertyName : changedProps.changedPropertyNames) {
     auto interpolatorIt = interpolators_.find(propertyName);
@@ -109,6 +109,9 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
       interpolatorIt =
           interpolators_.emplace(propertyName, newInterpolator).first;
     } else {
+      // We have to set the new progress provider when the new transition
+      // starts and the interpolator already exists, because the new property
+      // progress provider was created on the new transition start.
       interpolatorIt->second->setProgressProvider(
           progressProviders.at(propertyName));
     }
