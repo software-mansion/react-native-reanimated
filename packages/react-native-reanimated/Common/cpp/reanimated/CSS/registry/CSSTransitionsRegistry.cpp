@@ -67,8 +67,7 @@ void CSSTransitionsRegistry::update(const double timestamp) {
 
     const folly::dynamic &updates = transition->update(timestamp);
     if (!updates.empty()) {
-    // TODO
-//      addUpdatesToBatch(rt, transition->getShadowNode(), updates);
+      addUpdatesToBatch(transition->getShadowNode(), updates);
     }
 
     // We remove transition from running and schedule it when animation of one

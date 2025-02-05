@@ -55,6 +55,9 @@ class UpdatesRegistry {
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       const jsi::Value &props);
+  void addUpdatesToBatch(
+      const ShadowNode::Shared &shadowNode,
+      const folly::dynamic &props);
   void setInUpdatesRegistry(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,

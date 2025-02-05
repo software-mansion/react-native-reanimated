@@ -77,6 +77,12 @@ void UpdatesRegistry::addUpdatesToBatch(
       shadowNode, std::make_unique<jsi::Value>(rt, props));
 }
 
+void UpdatesRegistry::addUpdatesToBatch(
+    const ShadowNode::Shared &shadowNode,
+    const folly::dynamic &props) {
+  cssUpdatesBatch_.emplace_back(shadowNode, props);
+}
+
 void UpdatesRegistry::setInUpdatesRegistry(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode,
