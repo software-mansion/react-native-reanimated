@@ -1,6 +1,11 @@
 'use strict';
 import { registerReanimatedError, reportFatalErrorOnJS } from './errors';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
+import {
+  isChromeDebugger,
+  isJest,
+  isWeb,
+  shouldBeUseWeb,
+} from './PlatformChecker';
 import {
   runOnJS,
   setupMicrotasks,
@@ -180,6 +185,9 @@ function setupRequestAnimationFrame() {
 }
 
 export function initializeUIRuntime(ReanimatedModule: IReanimatedModule) {
+  if (isWeb()) {
+    return;
+  }
   if (!ReanimatedModule) {
     // eslint-disable-next-line reanimated/use-reanimated-error
     throw new Error(
