@@ -32,6 +32,24 @@ void UpdatesRegistry::flushUpdates(
   runMarkedRemovals();
 }
 
+void UpdatesRegistry::flushCSSUpdates(
+    CSSUpdatesBatch &updatesBatch,
+    const bool merge) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  auto copiedUpdatesBatch = std::move(cssUpdatesBatch_);
+  updatesBatch_.clear();
+
+  // Store all updates in the registry for later use in the commit hook
+  flushCSSUpdatesToRegistry(copiedUpdatesBatch, merge);
+  // Flush the updates to the updatesBatch used to apply current changes
+  for (auto &[shadowNode, props] : copiedUpdatesBatch) {
+    updatesBatch.emplace_back(shadowNode, std::move(props));
+  }
+  // Remove all tags scheduled for removal
+  runMarkedRemovals();
+}
+
 void UpdatesRegistry::collectProps(PropsMap &propsMap) {
   std::lock_guard<std::mutex> lock{mutex_};
 
@@ -85,6 +103,22 @@ void UpdatesRegistry::flushUpdatesToRegistry(
   for (auto &[shadowNode, props] : updatesBatch) {
     const auto tag = shadowNode->getTag();
     auto convertedProps = dynamicFromValue(rt, *props);
+    auto it = updatesRegistry_.find(tag);
+
+    if (it == updatesRegistry_.cend() || !merge) {
+      updatesRegistry_[tag] = std::make_pair(shadowNode, convertedProps);
+    } else {
+      it->second.second.update(convertedProps);
+    }
+  }
+}
+
+void UpdatesRegistry::flushCSSUpdatesToRegistry(
+    const CSSUpdatesBatch &updatesBatch,
+    const bool merge) {
+  for (auto &[shadowNode, props] : updatesBatch) {
+    const auto tag = shadowNode->getTag();
+    auto convertedProps = props;
     auto it = updatesRegistry_.find(tag);
 
     if (it == updatesRegistry_.cend() || !merge) {

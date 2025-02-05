@@ -814,6 +814,7 @@ void ReanimatedModuleProxy::performOperations() {
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
 
   UpdatesBatch updatesBatch;
+  CSSUpdatesBatch transitionUpdatesBatch;
 
   {
     auto lock = updatesRegistryManager_->createLock();
@@ -823,7 +824,7 @@ void ReanimatedModuleProxy::performOperations() {
 
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->update(rt, currentCssTimestamp_);
-      cssTransitionsRegistry_->flushUpdates(rt, updatesBatch, false);
+      cssTransitionsRegistry_->flushCSSUpdates(transitionUpdatesBatch, false);
     }
 
     // Flush all animated props updates

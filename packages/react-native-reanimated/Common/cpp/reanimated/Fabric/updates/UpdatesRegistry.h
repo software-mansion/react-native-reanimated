@@ -20,6 +20,8 @@ using namespace react;
 
 using UpdatesBatch =
     std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>;
+using CSSUpdatesBatch =
+    std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
 using RegistryMap =
     std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>>;
 
@@ -42,6 +44,7 @@ class UpdatesRegistry {
 #endif
 
   void flushUpdates(jsi::Runtime &rt, UpdatesBatch &updatesBatch, bool merge);
+  void flushCSSUpdates(CSSUpdatesBatch &updatesBatch, bool merge);
   void collectProps(PropsMap &propsMap);
 
  protected:
@@ -60,11 +63,15 @@ class UpdatesRegistry {
 
  private:
   UpdatesBatch updatesBatch_;
+  CSSUpdatesBatch cssUpdatesBatch_;
   RegistryMap updatesRegistry_;
 
   void flushUpdatesToRegistry(
       jsi::Runtime &rt,
       const UpdatesBatch &updatesBatch,
+      bool merge);
+  void flushCSSUpdatesToRegistry(
+      const CSSUpdatesBatch &updatesBatch,
       bool merge);
   void runMarkedRemovals();
 
