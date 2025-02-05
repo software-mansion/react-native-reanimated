@@ -45,6 +45,7 @@ class ViewStylesRepository {
   jsi::Value getViewStyle(jsi::Runtime &rt, Tag tag);
   jsi::Value
   getStyleProp(jsi::Runtime &rt, Tag tag, const PropertyPath &propertyPath);
+  folly::dynamic getStyleProp(Tag tag, const PropertyPath &propertyPath);
 
   void clearNodesCache();
 

@@ -98,6 +98,20 @@ jsi::Value ViewStylesRepository::getStyleProp(
   return getPropertyValue(rt, staticPropsRegistry_->get(tag), propertyPath);
 }
 
+folly::dynamic ViewStylesRepository::getStyleProp(
+    const Tag tag,
+    const PropertyPath &propertyPath) {
+    // TODO
+  return folly::dynamic();
+//  auto animatedValue =
+//      getPropertyValue(rt, animatedPropsRegistry_->get(tag), propertyPath);
+//  if (!animatedValue.isUndefined()) {
+//    return animatedValue;
+//  }
+//
+//  return getPropertyValue(rt, staticPropsRegistry_->get(tag), propertyPath);
+}
+
 void ViewStylesRepository::clearNodesCache() {
   shadowNodeCache_.clear();
 }

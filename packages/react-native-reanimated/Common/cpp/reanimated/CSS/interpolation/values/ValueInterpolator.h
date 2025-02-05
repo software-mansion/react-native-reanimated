@@ -54,10 +54,8 @@ class ValueInterpolator : public PropertyInterpolator {
   
   folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const override {
-      // TODO
-      return folly::dynamic();
-//    return viewStylesRepository_->getStyleProp(
-//        rt, shadowNode->getTag(), propertyPath_);
+    return viewStylesRepository_->getStyleProp(
+        shadowNode->getTag(), propertyPath_);
   }
 
   jsi::Value getCurrentValue(
