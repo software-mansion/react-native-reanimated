@@ -64,6 +64,9 @@ class ViewStylesRepository {
       jsi::Runtime &rt,
       const folly::dynamic &value,
       const PropertyPath &propertyPath);
+  static folly::dynamic getPropertyValue(
+      const folly::dynamic &value,
+      const PropertyPath &propertyPath);
 };
 
 } // namespace reanimated

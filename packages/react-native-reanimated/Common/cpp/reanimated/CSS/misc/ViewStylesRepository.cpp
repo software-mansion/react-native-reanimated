@@ -101,15 +101,13 @@ jsi::Value ViewStylesRepository::getStyleProp(
 folly::dynamic ViewStylesRepository::getStyleProp(
     const Tag tag,
     const PropertyPath &propertyPath) {
-    // TODO
-  return folly::dynamic();
-//  auto animatedValue =
-//      getPropertyValue(rt, animatedPropsRegistry_->get(tag), propertyPath);
-//  if (!animatedValue.isUndefined()) {
-//    return animatedValue;
-//  }
-//
-//  return getPropertyValue(rt, staticPropsRegistry_->get(tag), propertyPath);
+  auto animatedValue =
+      getPropertyValue(animatedPropsRegistry_->get(tag), propertyPath);
+  if (!animatedValue.empty()) {
+    return animatedValue;
+  }
+
+  return getPropertyValue(staticPropsRegistry_->get(tag), propertyPath);
 }
 
 void ViewStylesRepository::clearNodesCache() {
@@ -194,6 +192,64 @@ jsi::Value ViewStylesRepository::getPropertyValue(
   }
 
   return valueFromDynamic(rt, *currentValue);
+}
+
+folly::dynamic ViewStylesRepository::getPropertyValue(
+    const folly::dynamic &value,
+    const PropertyPath &propertyPath) {
+    // TODO
+  return folly::dynamic();
+//  const folly::dynamic *currentValue = &value;
+//
+//  for (size_t i = 0; i < propertyPath.size(); ++i) {
+//    if (currentValue->isNull() || currentValue->empty()) {
+//      return jsi::Value::undefined();
+//    }
+//
+//    const auto &propName = propertyPath[i];
+//
+//    if (!currentValue->isObject()) {
+//      return jsi::Value::undefined();
+//    }
+//
+//    if (propName == "transform") {
+//      auto transformIt = currentValue->find("transform");
+//      if (transformIt == currentValue->items().end()) {
+//        return jsi::Value::undefined();
+//      }
+//
+//      const auto &transform = transformIt->second;
+//      if (!transform.isArray()) {
+//        return jsi::Value::undefined();
+//      }
+//
+//      if (i + 1 >= propertyPath.size()) {
+//        return valueFromDynamic(rt, transform);
+//      }
+//
+//      const std::string &transformPropName = propertyPath[i + 1];
+//
+//      for (const auto &transformEntry : transform) {
+//        if (transformEntry.isObject()) {
+//          auto transformPropIt = transformEntry.find(transformPropName);
+//          if (transformPropIt != transformEntry.items().end()) {
+//            return valueFromDynamic(rt, transformPropIt->second);
+//          }
+//        }
+//      }
+//
+//      return jsi::Value::undefined();
+//    }
+//
+//    auto propIt = currentValue->find(propName);
+//    if (propIt == currentValue->items().end()) {
+//      return jsi::Value::undefined();
+//    }
+//
+//    currentValue = &propIt->second;
+//  }
+//
+//  return valueFromDynamic(rt, *currentValue);
 }
 
 } // namespace reanimated
