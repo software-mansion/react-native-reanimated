@@ -6,7 +6,12 @@ import {
   registerLoggerConfig,
   replaceLoggerImplementation,
 } from './logger';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
+import {
+  isChromeDebugger,
+  isJest,
+  isWeb,
+  shouldBeUseWeb,
+} from './PlatformChecker';
 import type { IReanimatedModule } from './ReanimatedModule';
 import {
   callMicrotasks,
@@ -180,6 +185,9 @@ function setupRequestAnimationFrame() {
 }
 
 export function initializeUIRuntime(ReanimatedModule: IReanimatedModule) {
+  if (isWeb()) {
+    return;
+  }
   if (!ReanimatedModule) {
     // eslint-disable-next-line reanimated/use-reanimated-error
     throw new Error(

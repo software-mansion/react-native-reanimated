@@ -10,7 +10,7 @@ import type {
 } from './commonTypes';
 import { ReanimatedError } from './errors';
 import { initializeUIRuntime } from './initializers';
-import { isFabric, isWeb, shouldBeUseWeb } from './PlatformChecker';
+import { isFabric, shouldBeUseWeb } from './PlatformChecker';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
 import { makeShareableCloneRecursive } from './shareables';
@@ -153,9 +153,7 @@ export function unregisterSensor(sensorId: number): void {
   return sensorContainer.unregisterSensor(sensorId);
 }
 
-if (!isWeb()) {
-  initializeUIRuntime(ReanimatedModule);
-}
+initializeUIRuntime(ReanimatedModule);
 
 type FeaturesConfig = {
   enableLayoutAnimations: boolean;
