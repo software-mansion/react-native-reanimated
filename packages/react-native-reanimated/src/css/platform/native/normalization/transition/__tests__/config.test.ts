@@ -252,6 +252,87 @@ describe(normalizeCSSTransitionProperties, () => {
       );
     });
   });
+
+  describe('transition shorthand', () => {
+    it('properly parses transition shorthand', () => {
+      const config: CSSTransitionProperties = {
+        transition:
+          '4s, opacity 2s ease-in 1s, transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+      };
+
+      expect(normalizeCSSTransitionProperties(config)).toEqual({
+        properties: 'all',
+        settings: {
+          all: {
+            duration: 4000,
+            timingFunction: 'ease',
+            delay: 0,
+            allowDiscrete: false,
+          },
+          opacity: {
+            duration: 2000,
+            timingFunction: 'ease-in',
+            delay: 1000,
+            allowDiscrete: false,
+          },
+          transform: {
+            duration: 1500,
+            timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize(),
+            delay: 0,
+            allowDiscrete: false,
+          },
+        },
+      });
+    });
+
+    it('ignores all transition settings before transition shorthand', () => {
+      const config: CSSTransitionProperties = {
+        transitionProperty: 'width',
+        transitionDuration: '5s',
+        transitionTimingFunction: 'ease-out',
+        transition: 'opacity 2s ease-in',
+      };
+
+      expect(normalizeCSSTransitionProperties(config)).toEqual({
+        properties: ['opacity'],
+        settings: {
+          opacity: {
+            duration: 2000,
+            timingFunction: 'ease-in',
+            delay: 0,
+            allowDiscrete: false,
+          },
+        },
+      });
+    });
+
+    it('overrides transition shorthand settings with settings after transition shorthand', () => {
+      const config: CSSTransitionProperties = {
+        transition:
+          'opacity 2s ease-in, transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+        transitionDuration: '3s',
+        transitionDelay: '500ms',
+      };
+
+      expect(normalizeCSSTransitionProperties(config)).toEqual({
+        properties: ['opacity', 'transform'],
+        settings: {
+          opacity: {
+            duration: 3000,
+            timingFunction: 'ease-in',
+            delay: 500,
+            allowDiscrete: false,
+          },
+          transform: {
+            duration: 3000,
+            timingFunction: cubicBezier(0.4, 0, 0.2, 1).normalize(),
+            delay: 500,
+            allowDiscrete: false,
+          },
+        },
+      });
+    });
+  });
 });
 
 describe(getNormalizedCSSTransitionConfigUpdates, () => {

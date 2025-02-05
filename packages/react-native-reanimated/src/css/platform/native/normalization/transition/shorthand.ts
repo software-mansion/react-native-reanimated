@@ -65,11 +65,8 @@ function parseSingleTransitionShorthand(
   const result: ParsedShorthandSingleTransitionConfig = {};
   const parts = splitByWhitespace(value);
 
-  console.log(parts);
   for (const part of parts) {
     if (part === 'all') {
-      console.log('>', part);
-
       result.transitionProperty = 'all';
       continue;
     }
@@ -96,7 +93,6 @@ function parseSingleTransitionShorthand(
       continue;
     }
     if (result.transitionProperty === undefined) {
-      console.log('>', part);
       result.transitionProperty = camelizeKebabCase(part);
       continue;
     }
