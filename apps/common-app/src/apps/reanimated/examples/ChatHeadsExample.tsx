@@ -1,15 +1,15 @@
 import React from 'react';
-import { View, Dimensions, StyleSheet } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  useAnimatedGestureHandler,
-  useDerivedValue,
-  withSpring,
-  clamp,
-} from 'react-native-reanimated';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import { PanGestureHandler } from 'react-native-gesture-handler';
+import Animated, {
+  clamp,
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 

@@ -10,13 +10,14 @@ import {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+
 import {
   describe,
-  test,
   expect,
-  render,
-  registerValue,
   getRegisteredValue,
+  registerValue,
+  render,
+  test,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';

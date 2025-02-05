@@ -1,6 +1,6 @@
 'use strict';
-import createStyleBuilder from '../builderFactory';
 import type { PlainStyle } from '../../../../types';
+import createStyleBuilder from '../builderFactory';
 
 // TODO - add more tests
 

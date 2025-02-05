@@ -1,6 +1,4 @@
 'use strict';
-import { ReanimatedModule } from './ReanimatedModule';
-import { isWeb, shouldBeUseWeb, isFabric } from './PlatformChecker';
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
@@ -10,17 +8,19 @@ import type {
   Value3D,
   ValueRotation,
 } from './commonTypes';
-import { makeShareableCloneRecursive } from './shareables';
-import { initializeUIRuntime } from './initializers';
-import { SensorContainer } from './SensorContainer';
 import { ReanimatedError } from './errors';
+import { initializeUIRuntime } from './initializers';
+import { isFabric, shouldBeUseWeb } from './PlatformChecker';
+import { ReanimatedModule } from './ReanimatedModule';
+import { SensorContainer } from './SensorContainer';
+import { makeShareableCloneRecursive } from './shareables';
 import type { WorkletFunction } from './WorkletsResolver';
 
 export { startMapper, stopMapper } from './mappers';
-export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';
+export { makeMutable } from './mutables';
 export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { makeShareable, makeShareableCloneRecursive } from './shareables';
-export { makeMutable } from './mutables';
+export { executeOnUIRuntimeSync, runOnJS, runOnUI } from './threads';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -153,9 +153,7 @@ export function unregisterSensor(sensorId: number): void {
   return sensorContainer.unregisterSensor(sensorId);
 }
 
-if (!isWeb()) {
-  initializeUIRuntime(ReanimatedModule);
-}
+initializeUIRuntime(ReanimatedModule);
 
 type FeaturesConfig = {
   enableLayoutAnimations: boolean;

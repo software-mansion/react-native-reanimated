@@ -1,17 +1,17 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import React from 'react';
+import type { LayoutChangeEvent } from 'react-native';
+import { Dimensions, Platform, StyleSheet, View } from 'react-native';
+import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
+  Easing,
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withDecay,
   withTiming,
-  Easing,
 } from 'react-native-reanimated';
-import type { LayoutChangeEvent } from 'react-native';
-import { View, Dimensions, Platform, StyleSheet } from 'react-native';
-import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-import { useHeaderHeight } from '@react-navigation/elements';
 
 const windowDimensions = Dimensions.get('window');
 

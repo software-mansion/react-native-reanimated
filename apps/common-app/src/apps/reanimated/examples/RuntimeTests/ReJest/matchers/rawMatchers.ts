@@ -1,9 +1,10 @@
 import { makeMutable } from 'react-native-reanimated';
-import { cyan, green, red, yellow } from '../utils/stringFormatUtils';
+
 import type { TestValue, TrackerCallCount } from '../types';
 import { ComparisonMode } from '../types';
-import { getComparator } from './Comparators';
+import { cyan, green, red, yellow } from '../utils/stringFormatUtils';
 import { SyncUIRunner } from '../utils/SyncUIRunner';
+import { getComparator } from './Comparators';
 
 type ToBeArgs = [TestValue, ComparisonMode?];
 export type ToThrowArgs = [string?];

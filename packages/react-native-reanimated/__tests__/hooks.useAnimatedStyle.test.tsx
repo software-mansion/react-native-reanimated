@@ -1,9 +1,10 @@
-import { Button, View } from 'react-native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { Button, View } from 'react-native';
+
 import Animated, {
-  useSharedValue,
   getAnimatedStyle,
   useAnimatedStyle,
+  useSharedValue,
   withTiming,
 } from '../src';
 

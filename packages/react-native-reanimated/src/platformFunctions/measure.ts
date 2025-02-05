@@ -1,18 +1,19 @@
 'use strict';
+import type { Component } from 'react';
+
 import type { MeasuredDimensions, ShadowNodeWrapper } from '../commonTypes';
+import type {
+  AnimatedRef,
+  AnimatedRefOnJS,
+  AnimatedRefOnUI,
+} from '../hook/commonTypes';
+import { logger } from '../logger';
 import {
   isChromeDebugger,
   isFabric,
   isJest,
   shouldBeUseWeb,
 } from '../PlatformChecker';
-import type {
-  AnimatedRef,
-  AnimatedRefOnJS,
-  AnimatedRefOnUI,
-} from '../hook/commonTypes';
-import type { Component } from 'react';
-import { logger } from '../logger';
 
 type Measure = <T extends Component>(
   animatedRef: AnimatedRef<T>

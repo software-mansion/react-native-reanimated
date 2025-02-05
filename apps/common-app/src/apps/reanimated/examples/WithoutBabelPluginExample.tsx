@@ -1,12 +1,12 @@
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   isWorkletFunction,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 
 function isBabelPluginEnabled() {
   function worklet() {

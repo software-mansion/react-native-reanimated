@@ -1,23 +1,24 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
   cancelAnimation,
   Easing,
+  useAnimatedStyle,
   useDerivedValue,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
+
 import {
   describe,
-  test,
   expect,
-  render,
-  getTestComponent,
-  wait,
-  useTestRef,
-  registerValue,
   getRegisteredValue,
+  getTestComponent,
+  registerValue,
+  render,
+  test,
+  useTestRef,
+  wait,
 } from '../../ReJest/RuntimeTestsApi';
 
 const ELAPSED_TIME_REF = 'ElapsedTime';

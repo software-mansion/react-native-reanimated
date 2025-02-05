@@ -1,20 +1,19 @@
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  interpolateColor,
-  isColor,
-} from 'react-native-reanimated';
+import React, { useEffect, useState } from 'react';
 import {
-  StyleSheet,
-  TextInput,
-  View,
-  Text,
   Button,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
-
-import React, { useEffect, useState } from 'react';
+import Animated, {
+  interpolateColor,
+  isColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 function DefaultInterpolation({
   color1,

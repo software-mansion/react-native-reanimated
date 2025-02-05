@@ -1,10 +1,10 @@
 /* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 
-import type { ShareableRef, WorkletRuntime } from '../workletTypes';
-import type { IWorkletsModule } from './workletsModuleProxy';
 import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
 import { isJest } from '../PlatformChecker';
+import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type { IWorkletsModule } from './workletsModuleProxy';
 
 export function createJSWorkletsModule(): IWorkletsModule {
   return new JSWorklets();

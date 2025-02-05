@@ -1,9 +1,9 @@
 'use strict';
-import { addWhitelistedNativeProps } from './ConfigHelper';
 import type {
   AnimatedPropsAdapterFunction,
   AnimatedPropsAdapterWorklet,
 } from './commonTypes';
+import { addWhitelistedNativeProps } from './ConfigHelper';
 
 // @ts-expect-error This overload is required by our API.
 export function createAnimatedPropAdapter(

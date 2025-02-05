@@ -1,5 +1,6 @@
 'use strict';
-import type { Ref, Component } from 'react';
+import type { Component, Ref } from 'react';
+
 import type {
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
@@ -7,13 +8,13 @@ import type {
   SharedValue,
   StyleProps,
 } from '../commonTypes';
+import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import type { ViewConfig } from '../ConfigHelper';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type {
   BaseAnimationBuilder,
   SharedTransition,
 } from '../layoutReanimation';
-import type { SkipEnteringContext } from '../component/LayoutAnimationConfig';
+import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
 export interface AnimatedProps extends Record<string, unknown> {
   viewDescriptors?: ViewDescriptorsSet;

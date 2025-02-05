@@ -1,20 +1,20 @@
 'use strict';
-import {
-  ERROR_MESSAGES,
-  getNormalizedCSSTransitionConfigUpdates,
-  normalizeCSSTransitionProperties,
-} from '../config';
 import { cubicBezier } from '../../../../../easings';
+import { ReanimatedError } from '../../../../../errors';
 import type {
   CSSTransitionProperties,
   CSSTransitionProperty,
   Repeat,
 } from '../../../../../types';
-import { ReanimatedError } from '../../../../../errors';
 import type {
   NormalizedCSSTransitionConfig,
   NormalizedCSSTransitionPropertyNames,
 } from '../../../types';
+import {
+  ERROR_MESSAGES,
+  getNormalizedCSSTransitionConfigUpdates,
+  normalizeCSSTransitionProperties,
+} from '../config';
 
 describe(normalizeCSSTransitionProperties, () => {
   describe('when there is a single transition property', () => {

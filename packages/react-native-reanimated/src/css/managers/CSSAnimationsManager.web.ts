@@ -1,21 +1,21 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
+import CSSKeyframesRuleImpl from '../models/CSSKeyframesRule.web';
+import {
+  configureWebCSSAnimations,
+  insertCSSAnimation,
+  kebabize,
+  maybeAddSuffixes,
+  parseTimingFunction,
+  processKeyframeDefinitions,
+  removeCSSAnimation,
+} from '../platform/web';
 import type {
   ConvertValuesToArrays,
   CSSAnimationKeyframes,
   CSSAnimationSettings,
   ExistingCSSAnimationProperties,
 } from '../types';
-import CSSKeyframesRuleImpl from '../models/CSSKeyframesRule.web';
-import {
-  configureWebCSSAnimations,
-  removeCSSAnimation,
-  kebabize,
-  maybeAddSuffixes,
-  parseTimingFunction,
-  insertCSSAnimation,
-  processKeyframeDefinitions,
-} from '../platform/web';
 import { convertConfigPropertiesToArrays } from '../utils';
 
 export const isCSSKeyframesRuleImpl = (

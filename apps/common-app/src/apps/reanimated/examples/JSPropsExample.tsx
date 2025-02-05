@@ -1,15 +1,15 @@
-import type { ColorValue } from 'react-native';
-import { TextInput, View, StyleSheet } from 'react-native';
 import React from 'react';
-import Svg, { Path, Circle, G } from 'react-native-svg';
-import Animated, {
-  runOnJS,
-  useSharedValue,
-  useDerivedValue,
-  useAnimatedProps,
-  interpolate,
-} from 'react-native-reanimated';
+import type { ColorValue } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  interpolate,
+  runOnJS,
+  useAnimatedProps,
+  useDerivedValue,
+  useSharedValue,
+} from 'react-native-reanimated';
+import Svg, { Circle, G, Path } from 'react-native-svg';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedG = Animated.createAnimatedComponent(G);

@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Button } from 'react-native';
-
-import { Rect, Svg } from 'react-native-svg';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedProps,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import { Rect, Svg } from 'react-native-svg';
 
 type SwitchProps = {
   y?: number;

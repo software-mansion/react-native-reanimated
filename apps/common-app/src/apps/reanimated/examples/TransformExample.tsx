@@ -1,11 +1,10 @@
+import React from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, Text, View } from 'react-native';
-
-import React from 'react';
 
 export default function TransformExample() {
   const [count, setCount] = React.useState(0);

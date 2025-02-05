@@ -1,17 +1,12 @@
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
+import type { Dispatch, SetStateAction } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
-  TextInput,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import type { Dispatch, SetStateAction } from 'react';
-import React, { useState } from 'react';
 import type {
   GestureStateManager,
   GestureTouchEvent,
@@ -21,6 +16,11 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
 const NAVY = '#001A72';
 const LIGHT_NAVY = '#C1C6E5';

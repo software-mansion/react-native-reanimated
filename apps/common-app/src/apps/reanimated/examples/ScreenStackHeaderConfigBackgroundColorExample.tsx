@@ -1,8 +1,5 @@
-import Animated, {
-  useAnimatedProps,
-  useAnimatedStyle,
-  useSharedValue,
-} from 'react-native-reanimated';
+import React from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import type {
   GestureUpdateEvent,
   PanGestureChangeEventPayload,
@@ -12,14 +9,16 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedProps,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 import {
   Screen,
   ScreenStack,
   ScreenStackHeaderConfig,
 } from 'react-native-screens';
-import { Platform, StyleSheet, View } from 'react-native';
-
-import React from 'react';
 
 const AnimatedScreenStackHeaderConfig = Animated.createAnimatedComponent(
   Platform.OS === 'web'

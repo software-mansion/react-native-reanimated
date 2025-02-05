@@ -1,22 +1,22 @@
 'use strict';
+import type { StyleProps } from '../../../../../commonTypes';
+import { PERCENTAGE_REGEX } from '../../../../constants';
+import { ReanimatedError } from '../../../../errors';
 import type {
-  CSSAnimationKeyframeSelector,
-  CSSAnimationKeyframes,
   AnyRecord,
+  CSSAnimationKeyframes,
+  CSSAnimationKeyframeSelector,
   CSSAnimationTimingFunction,
 } from '../../../../types';
 import { isDefined, isNumber } from '../../../../utils';
-import { normalizeTimingFunction } from '../common';
-import type { StyleProps } from '../../../../../commonTypes';
-import { ReanimatedError } from '../../../../errors';
+import { SEPARATELY_INTERPOLATED_ARRAY_PROPERTIES } from '../../config';
 import styleBuilder from '../../styleBuilder';
 import type {
   NormalizedCSSAnimationKeyframes,
   NormalizedCSSKeyframesStyle,
   NormalizedCSSKeyframeTimingFunctions,
 } from '../../types';
-import { PERCENTAGE_REGEX } from '../../../../constants';
-import { SEPARATELY_INTERPOLATED_ARRAY_PROPERTIES } from '../../config';
+import { normalizeTimingFunction } from '../common';
 
 export const ERROR_MESSAGES = {
   invalidOffsetType: (selector: CSSAnimationKeyframeSelector) =>

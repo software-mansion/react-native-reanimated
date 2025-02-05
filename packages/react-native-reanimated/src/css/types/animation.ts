@@ -1,6 +1,6 @@
 'use strict';
-import type { PlainStyle, TimeUnit } from './common';
 import type { CSSTimingFunction } from '../easings';
+import type { PlainStyle, TimeUnit } from './common';
 import type { AddArrayPropertyType, AddArrayPropertyTypes } from './helpers';
 
 export type CSSRuleList<S extends PlainStyle> = CSSKeyframeRule<S>[];

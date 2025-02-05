@@ -1,12 +1,11 @@
+import React from 'react';
 import {
   Button,
-  Text,
   StyleSheet,
-  View,
+  Text,
   TurboModuleRegistry,
+  View,
 } from 'react-native';
-
-import React from 'react';
 import { makeShareableCloneRecursive } from 'react-native-reanimated';
 
 export default function FreezingShareables() {

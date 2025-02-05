@@ -1,3 +1,5 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -5,9 +7,6 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { StyleSheet, View } from 'react-native';
-
-import React from 'react';
 
 export default function AnimatedTextWidthExample() {
   const sv = useSharedValue(0);
