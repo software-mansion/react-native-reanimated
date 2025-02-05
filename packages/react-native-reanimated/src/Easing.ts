@@ -213,7 +213,7 @@ function bezier(
   y1: number,
   x2: number,
   y2: number
-): { factory: () => (x: number) => number } {
+): EasingFunctionFactory {
   'worklet';
   return {
     factory: () => {

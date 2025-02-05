@@ -9,9 +9,10 @@ import type {
   LayoutAnimationAndConfig,
 } from '../../commonTypes';
 import { assertEasingIsWorklet } from '../../animation/util';
+import type { EasingFunctionFactory } from '../../Easing';
 
 export class ComplexAnimationBuilder extends BaseAnimationBuilder {
-  easingV?: EasingFunction;
+  easingV?: EasingFunction | EasingFunctionFactory;
   rotateV?: string;
   type?: AnimationFunction;
   dampingV?: number;
@@ -37,13 +38,13 @@ export class ComplexAnimationBuilder extends BaseAnimationBuilder {
    */
   static easing<T extends typeof ComplexAnimationBuilder>(
     this: T,
-    easingFunction: EasingFunction
+    easingFunction: EasingFunction | EasingFunctionFactory
   ) {
     const instance = this.createInstance();
     return instance.easing(easingFunction);
   }
 
-  easing(easingFunction: EasingFunction): this {
+  easing(easingFunction: EasingFunction | EasingFunctionFactory): this {
     if (__DEV__) {
       assertEasingIsWorklet(easingFunction);
     }
