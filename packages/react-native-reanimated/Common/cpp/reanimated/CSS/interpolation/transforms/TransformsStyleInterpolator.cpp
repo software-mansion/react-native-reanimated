@@ -453,6 +453,59 @@ TransformsStyleInterpolator::getKeyframeAtIndex(
   }
 }
 
+std::shared_ptr<TransformKeyframe>
+TransformsStyleInterpolator::getKeyframeAtIndex(
+    const ShadowNode::Shared &shadowNode,
+    const size_t index,
+    const int resolveDirection) const {
+  const auto &keyframe = keyframes_.at(index);
+
+  if (resolveDirection == 0) {
+    return keyframe;
+  }
+
+  auto &unresolvedOperations =
+      resolveDirection < 0 ? keyframe->fromOperations : keyframe->toOperations;
+
+  // If keyframe operations are specified, we can just create a keyframe with
+  // the resolved operations
+  if (unresolvedOperations.has_value()) {
+    if (resolveDirection < 0) {
+      return std::make_shared<TransformKeyframe>(TransformKeyframe{
+          keyframe->fromOffset,
+          keyframe->toOffset,
+          resolveTransformOperations(shadowNode, unresolvedOperations.value()),
+          keyframe->toOperations});
+    } else {
+      return std::make_shared<TransformKeyframe>(TransformKeyframe{
+          keyframe->fromOffset,
+          keyframe->toOffset,
+          keyframe->fromOperations,
+          resolveTransformOperations(
+              shadowNode, unresolvedOperations.value())});
+    }
+  }
+
+  // If the operations are not specified, we would have to read the transform
+  // value from the view style and create the new keyframe then
+  // TODO
+  return keyframe;
+//  const auto fallbackValue = getFallbackValue(rt, shadowNode);
+//  if (resolveDirection < 0) {
+//    return createTransformKeyframe(
+//        keyframe->fromOffset,
+//        keyframe->toOffset,
+//        resolveTransformOperations(shadowNode, fallbackValue),
+//        keyframe->toOperations);
+//  } else {
+//    return createTransformKeyframe(
+//        keyframe->fromOffset,
+//        keyframe->toOffset,
+//        keyframe->fromOperations,
+//        resolveTransformOperations(shadowNode, fallbackValue));
+//  }
+}
+
 void TransformsStyleInterpolator::updateCurrentKeyframe(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode) {
@@ -501,16 +554,13 @@ void TransformsStyleInterpolator::updateCurrentKeyframe(
     --keyframeIndex_;
 
   if (progressProvider_->isFirstUpdate()) {
-  // TODO
-//    currentKeyframe_ = getKeyframeAtIndex(
-//        rt, shadowNode, keyframeIndex_, isProgressLessThanHalf ? -1 : 1);
+    currentKeyframe_ = getKeyframeAtIndex(
+        shadowNode, keyframeIndex_, isProgressLessThanHalf ? -1 : 1);
   } else if (keyframeIndex_ != prevIndex) {
-  // TODO
-//    currentKeyframe_ = getKeyframeAtIndex(
-//        rt,
-//        shadowNode,
-//        keyframeIndex_,
-//        static_cast<int>(prevIndex - keyframeIndex_));
+    currentKeyframe_ = getKeyframeAtIndex(
+        shadowNode,
+        keyframeIndex_,
+        static_cast<int>(prevIndex - keyframeIndex_));
   }
 }
 
