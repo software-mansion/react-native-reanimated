@@ -5,14 +5,14 @@
 
 namespace reanimated {
 
-template <CSSValueDerived TValue>
+template <CSSLeafValue TValue>
 CSSDiscreteArray<TValue>::CSSDiscreteArray() : values() {}
 
-template <CSSValueDerived TValue>
+template <CSSLeafValue TValue>
 CSSDiscreteArray<TValue>::CSSDiscreteArray(const std::vector<TValue> &values)
     : values(values) {}
 
-template <CSSValueDerived TValue>
+template <CSSLeafValue TValue>
 CSSDiscreteArray<TValue>::CSSDiscreteArray(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
@@ -30,7 +30,7 @@ CSSDiscreteArray<TValue>::CSSDiscreteArray(
   }
 }
 
-template <CSSValueDerived TValue>
+template <CSSLeafValue TValue>
 CSSDiscreteArray<TValue>::CSSDiscreteArray(const folly::dynamic &value) {
   if (!canConstruct(value)) {
     throw std::invalid_argument(
@@ -46,7 +46,7 @@ CSSDiscreteArray<TValue>::CSSDiscreteArray(const folly::dynamic &value) {
   }
 }
 
-template <CSSValueDerived TValue>
+template <CSSLeafValue TValue>
 bool CSSDiscreteArray<TValue>::canConstruct(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
@@ -54,12 +54,12 @@ bool CSSDiscreteArray<TValue>::canConstruct(
   return jsiValue.isObject() && jsiValue.asObject(rt).isArray(rt);
 }
 
-template <CSSValueDerived TValue>
+template <CSSLeafValue TValue>
 bool CSSDiscreteArray<TValue>::canConstruct(const folly::dynamic &value) {
   return value.isArray();
 }
 
-template <CSSValueDerived TValue>
+template <CSSLeafValue TValue>
 jsi::Value CSSDiscreteArray<TValue>::toJSIValue(jsi::Runtime &rt) const {
   jsi::Array array(rt, values.size());
   for (size_t i = 0; i < values.size(); i++) {
@@ -68,7 +68,7 @@ jsi::Value CSSDiscreteArray<TValue>::toJSIValue(jsi::Runtime &rt) const {
   return array;
 }
 
-template <CSSValueDerived TValue>
+template <CSSLeafValue TValue>
 folly::dynamic CSSDiscreteArray<TValue>::toDynamic() const {
   folly::dynamic array = folly::dynamic::array;
   for (const auto &value : values) {
@@ -77,7 +77,7 @@ folly::dynamic CSSDiscreteArray<TValue>::toDynamic() const {
   return array;
 }
 
-template <CSSValueDerived TValue>
+template <CSSLeafValue TValue>
 std::string CSSDiscreteArray<TValue>::toString() const {
   std::stringstream ss;
 
@@ -93,14 +93,14 @@ std::string CSSDiscreteArray<TValue>::toString() const {
   return ss.str();
 }
 
-template <CSSValueDerived TValue>
+template <CSSLeafValue TValue>
 CSSDiscreteArray<TValue> CSSDiscreteArray<TValue>::interpolate(
     double progress,
     const CSSDiscreteArray<TValue> &other) const {
   return CSSDiscreteArray<TValue>(progress < 0.5 ? values : other.values);
 }
 
-template <CSSValueDerived TValue>
+template <CSSLeafValue TValue>
 bool CSSDiscreteArray<TValue>::operator==(
     const CSSDiscreteArray<TValue> &other) const {
   if (values.size() != other.values.size()) {
@@ -116,7 +116,7 @@ bool CSSDiscreteArray<TValue>::operator==(
 
 #ifndef NDEBUG
 
-template <CSSValueDerived TValue>
+template <CSSLeafValue TValue>
 std::ostream &operator<<(
     std::ostream &os,
     const CSSDiscreteArray<TValue> &arrayValue) {

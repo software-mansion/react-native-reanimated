@@ -36,6 +36,7 @@ class CSSKeywordBase : public CSSSimpleValue<TValue> {
 
 struct CSSKeyword : public CSSKeywordBase<CSSKeyword> {
   using CSSKeywordBase<CSSKeyword>::CSSKeywordBase;
+  using CSSKeywordBase<CSSKeyword>::canConstruct;
 
   CSSKeyword interpolate(double progress, const CSSKeyword &to) const override;
 
@@ -48,6 +49,7 @@ struct CSSKeyword : public CSSKeywordBase<CSSKeyword> {
 
 struct CSSDisplay : public CSSKeywordBase<CSSDisplay> {
   using CSSKeywordBase<CSSDisplay>::CSSKeywordBase;
+  using CSSKeywordBase<CSSDisplay>::canConstruct;
 
   CSSDisplay interpolate(double progress, const CSSDisplay &to) const override;
 
