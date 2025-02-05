@@ -9,7 +9,6 @@ import type {
   MapperRegistry,
   MeasuredDimensions,
   ShadowNodeWrapper,
-  ShareableRef,
   StyleProps,
 } from './commonTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
@@ -17,7 +16,6 @@ import type { AnimatedStyle } from './helperTypes';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
-import type { WorkletRuntime } from './runtimes';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
 import type { SensorContainer } from './SensorContainer';
 import type { UpdatePropsManager } from './UpdateProps';
@@ -37,10 +35,6 @@ declare global {
   ) => void;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _scheduleOnRuntime: (
-    runtime: WorkletRuntime,
-    worklet: ShareableRef<() => void>
-  ) => void;
   var _updatePropsPaper:
     | ((
         operations: {

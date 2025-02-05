@@ -7,6 +7,7 @@
 import type {
   callMicrotasks as callMicrotasksType,
   createCustomError as createCustomErrorType,
+  createWorkletRuntime as createWorkletRuntimeType,
   executeOnUIRuntimeSync as executeOnUIRuntimeSyncType,
   isWorkletFunction as isWorkletFunctionType,
   IWorkletsModule,
@@ -21,6 +22,7 @@ import type {
   registerWorkletStackDetails as registerWorkletStackDetailsType,
   reportFatalErrorOnJS as reportFatalErrorOnJSType,
   runOnJS as runOnJSType,
+  runOnRuntime as runOnRuntimeType,
   runOnUI as runOnUIType,
   runOnUIImmediately as runOnUIImmediatelyType,
   setupCallGuard as setupCallGuardType,
@@ -33,6 +35,8 @@ import {
   callMicrotasks as ResolvedCallMicrotasks,
   // @ts-expect-error - required for resolving the module
   createCustomError as ResolvedCreateCustomError,
+  // @ts-expect-error - required for resolving the module
+  createWorkletRuntime as ResolvedCreateWorkletRuntime,
   // @ts-expect-error - required for resolving the module
   executeOnUIRuntimeSync as ResolvedExecuteOnUIRuntimeSync,
   // @ts-expect-error - required for resolving the module
@@ -59,6 +63,8 @@ import {
   reportFatalErrorOnJs as ResolvedReportFatalErrorOnJS,
   // @ts-expect-error - required for resolving the module
   runOnJS as ResolvedRunOnJS,
+  // @ts-expect-error - required for resolving the module
+  runOnRuntime as ResolvedRunOnRuntime,
   // @ts-expect-error - required for resolving the module
   runOnUI as ResolvedRunOnUI,
   // @ts-expect-error - required for resolving the module
@@ -112,6 +118,9 @@ export const registerLoggerConfig =
 export const setupCallGuard =
   ResolvedSetupCallGuard as typeof setupCallGuardType;
 export const setupConsole = ResolvedSetupConsole as typeof setupConsoleType;
+export const createWorkletRuntime =
+  ResolvedCreateWorkletRuntime as typeof createWorkletRuntimeType;
+export const runOnRuntime = ResolvedRunOnRuntime as typeof runOnRuntimeType;
 
 export type {
   IWorkletsModule,

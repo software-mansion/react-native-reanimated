@@ -17,12 +17,13 @@ import { makeShareableCloneRecursive } from './WorkletsResolver';
 
 export { startMapper, stopMapper } from './mappers';
 export { makeMutable } from './mutables';
-export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export {
+  createWorkletRuntime,
   executeOnUIRuntimeSync,
   makeShareable,
   makeShareableCloneRecursive,
   runOnJS,
+  runOnRuntime,
   runOnUI,
 } from './WorkletsResolver';
 

@@ -34,4 +34,8 @@ declare global {
   var __workletsLoggerConfig: LoggerConfigInternal;
   var _log: (value: unknown) => void;
   var _getAnimationTimestamp: () => number;
+  var _scheduleOnRuntime: (
+    runtime: WorkletRuntime,
+    worklet: ShareableRef<() => void>
+  ) => void;
 }

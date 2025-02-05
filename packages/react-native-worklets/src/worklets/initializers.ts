@@ -210,10 +210,8 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
       'worklet';
       setupCallGuard();
       setupConsole();
-      if (!SHOULD_BE_USE_WEB) {
-        setupMicrotasks();
-        setupRequestAnimationFrame();
-      }
+      setupMicrotasks();
+      setupRequestAnimationFrame();
     })();
   }
 }

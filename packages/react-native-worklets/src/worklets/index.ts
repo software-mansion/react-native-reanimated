@@ -21,6 +21,7 @@ export {
   updateLoggerConfig,
 } from './logger';
 export { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
+export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export { shareableMappingCache } from './shareableMappingCache';
 export {
   makeShareable,

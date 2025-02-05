@@ -13,6 +13,7 @@ export type {
 export {
   callMicrotasks,
   createCustomError,
+  createWorkletRuntime,
   executeOnUIRuntimeSync,
   isWorkletFunction,
   logger,
@@ -26,6 +27,7 @@ export {
   registerWorkletStackDetails,
   reportFatalErrorOnJS,
   runOnJS,
+  runOnRuntime,
   runOnUI,
   runOnUIImmediately,
   setupCallGuard,
