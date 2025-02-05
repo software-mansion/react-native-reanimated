@@ -25,21 +25,24 @@ if [ ! -d "$WORKLETS_DIR" ]; then
   exit 1
 fi
 
-# Worklets TypeScript files
-# Note that we only duplicate "worklets" subdirectory
-copy_files_recursively "src/worklets" "$WORKLETS_DIR/src/worklets"
+TYPESCRIPT_DEST_DIR="src/worklets"
+rm -r "$TYPESCRIPT_DEST_DIR"
+copy_files_recursively "$TYPESCRIPT_DEST_DIR" "$WORKLETS_DIR/src/worklets"
 
-# Worklets iOS files
-copy_files_recursively "apple/worklets" "$WORKLETS_DIR/apple/worklets"
+IOS_SOURCE_DIR="$WORKLETS_DIR/apple/worklets"
+rm -r "$IOS_SOURCE_DIR"
+copy_files_recursively "apple/worklets" "$IOS_SOURCE_DIR"
 
-# Worklets Android files
-# Note that we don't duplicate "android/src/main"
-copy_files_recursively "android/src/worklets" "$WORKLETS_DIR/android/src/worklets"
+ANDROID_JAVA_SOURCE_DIR="$WORKLETS_DIR/android/src/worklets"
+rm -r "$ANDROID_JAVA_SOURCE_DIR"
+copy_files_recursively "android/src/worklets" "$ANDROID_JAVA_SOURCE_DIR"
 
-# Worklets Android-specific cpp files
-copy_files_recursively "android/src/main/cpp/worklets" "$WORKLETS_DIR/android/src/main/cpp/worklets"
+ANDROID_CPP_SOURCE_DIR="$WORKLETS_DIR/android/src/main/cpp/worklets"
+rm -r "$ANDROID_CPP_SOURCE_DIR"
+copy_files_recursively "android/src/main/cpp/worklets" "$ANDROID_CPP_SOURCE_DIR"
 
-# Worklets Common cpp files
-copy_files_recursively "Common/cpp/worklets" "$WORKLETS_DIR/Common/cpp/worklets"
+COMMON_CPP_SOURCE_DIR="$WORKLETS_DIR/Common/cpp/worklets"
+rm -r "$COMMON_CPP_SOURCE_DIR"
+copy_files_recursively "Common/cpp/worklets" "$COMMON_CPP_SOURCE_DIR"
 
 echo "Done duplicating Worklets in Reanimated"
