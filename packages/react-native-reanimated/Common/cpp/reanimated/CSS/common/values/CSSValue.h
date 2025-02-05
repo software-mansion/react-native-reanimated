@@ -28,6 +28,7 @@ struct CSSValue {
   static constexpr bool is_discrete_value = false;
 
   virtual ~CSSValue() = default;
+
   virtual jsi::Value toJSIValue(jsi::Runtime &rt) const = 0;
   virtual folly::dynamic toDynamic() const = 0;
   virtual std::string toString() const = 0;
@@ -54,19 +55,36 @@ struct CSSResolvableValue : public CSSValue {
       const CSSResolvableValueInterpolationContext &context) const = 0;
 };
 
-// clang-format off
+// Checks if a type is a resolvable value that needs resolution before
+// interpolation
 template <typename TCSSValue>
 concept Resolvable = requires {
   { TCSSValue::is_resolvable_value } -> std::convertible_to<bool>;
   requires TCSSValue::is_resolvable_value == true;
 };
 
+// Checks if a type is a discrete value
 template <typename TCSSValue>
 concept Discrete = requires {
   { TCSSValue::is_discrete_value } -> std::convertible_to<bool>;
   requires TCSSValue::is_discrete_value == true;
 };
-// clang-format on
+
+// Checks if a value can be constructed from a JSI value
+template <typename TCSSValue>
+concept CanConstructFromJSIValue =
+    requires(jsi::Runtime &rt, const jsi::Value &jsiValue) {
+      { TCSSValue::canConstruct(rt, jsiValue) } -> std::same_as<bool>;
+      { TCSSValue(rt, jsiValue) } -> std::same_as<TCSSValue>;
+    };
+
+// Checks if a type is a leaf value of the style object tree that can be
+// constructed from JSI value
+template <typename TCSSValue>
+concept CSSLeafValue =
+    (std::is_base_of_v<CSSSimpleValue<TCSSValue>, TCSSValue> ||
+     std::is_base_of_v<CSSResolvableValue<TCSSValue>, TCSSValue>) &&
+    CanConstructFromJSIValue<TCSSValue>;
 
 } // namespace reanimated
 

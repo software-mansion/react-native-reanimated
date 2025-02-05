@@ -12,16 +12,13 @@ namespace reanimated {
 
 using namespace worklets;
 
-template <typename TValue>
-concept CSSValueDerived = std::is_base_of_v<CSSValue, TValue>;
-
 /*
  * CSSDiscreteArray is used for array interpolation when arrays need to be
  * treated as discrete values. Instead of interpolating between corresponding
  * elements of two arrays, this type interpolates between entire arrays
  * treated as single discrete values.
  */
-template <CSSValueDerived TValue>
+template <CSSLeafValue TValue>
 struct CSSDiscreteArray : public CSSSimpleValue<CSSDiscreteArray<TValue>> {
   static constexpr bool is_discrete_value = true;
 
