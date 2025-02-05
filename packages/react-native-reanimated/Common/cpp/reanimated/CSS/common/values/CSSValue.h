@@ -70,21 +70,9 @@ concept Discrete = requires {
   requires TCSSValue::is_discrete_value == true;
 };
 
-// Checks if a value can be constructed from a JSI value
+// Check if a type is derived from CSSValue
 template <typename TCSSValue>
-concept CanConstructFromJSIValue =
-    requires(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-      { TCSSValue::canConstruct(rt, jsiValue) } -> std::same_as<bool>;
-      { TCSSValue(rt, jsiValue) } -> std::same_as<TCSSValue>;
-    };
-
-// Checks if a type is a leaf value of the style object tree that can be
-// constructed from JSI value
-template <typename TCSSValue>
-concept CSSLeafValue =
-    (std::is_base_of_v<CSSSimpleValue<TCSSValue>, TCSSValue> ||
-     std::is_base_of_v<CSSResolvableValue<TCSSValue>, TCSSValue>) &&
-    CanConstructFromJSIValue<TCSSValue>;
+concept CSSValueDerived = std::is_base_of_v<CSSValue, TCSSValue>;
 
 } // namespace reanimated
 

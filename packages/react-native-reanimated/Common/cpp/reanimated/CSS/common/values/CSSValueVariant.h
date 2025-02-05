@@ -13,6 +13,7 @@
 namespace reanimated {
 
 using namespace worklets;
+
 /**
  * Macro to check if two lambda parameters have the same reference-removed type.
  *
@@ -28,34 +29,20 @@ using namespace worklets;
   using R = std::remove_reference_t<decltype(rhs)>; \
   if constexpr (std::is_same_v<L, R>) // NOLINT(readability/braces)
 
-/**
- * Checks if type has a constructor from jsi::Value
- */
-template <typename TValue>
-concept can_construct_from_jsi =
-    requires(jsi::Runtime &rt, const jsi::Value &value) {
-      { TValue(rt, value) }; // NOLINT(readability/braces)
-    }; // NOLINT(readability/braces)
-
-/**
- * Checks whether a type has canConstruct(...) for a a generic value
- */
+// Checks whether a type has canConstruct(...) for a generic value
 template <typename TCSSValue, typename TValue>
-static constexpr bool has_can_construct = requires(TValue &&value) {
+concept HasCanConstruct = requires(TValue &&value) {
   {
     TCSSValue::canConstruct(std::forward<TValue>(value))
   } -> std::same_as<bool>;
 }; // NOLINT(readability/braces)
 
-/**
- * Checks whether a type has canConstruct(...) for jsi::Value
- */
-template <typename TCSSValue, typename TValue>
-static constexpr bool has_can_construct_jsi =
-    requires(jsi::Runtime &rt, TValue &&value) {
-      {
-        TCSSValue::canConstruct(rt, std::forward<TValue>(value))
-      } -> std::same_as<bool>;
+// Checks whether a type can be constructed from a jsi::Value
+template <typename TCSSValue>
+concept CanConstructFromJSIValue =
+    requires(jsi::Runtime &rt, const jsi::Value &value) {
+      { TCSSValue::canConstruct(rt, value) } -> std::same_as<bool>;
+      { TCSSValue(rt, value) } -> std::same_as<TCSSValue>;
     }; // NOLINT(readability/braces)
 
 /**
@@ -65,6 +52,13 @@ static constexpr bool has_can_construct_jsi =
  */
 template <typename... AllowedTypes>
 class CSSValueVariant final : public CSSValue {
+  static_assert(
+      (CSSValueDerived<AllowedTypes> && ...),
+      "CSSValueVariant accepts only CSSValue-derived types");
+  static_assert(
+      (CanConstructFromJSIValue<AllowedTypes> && ...),
+      "CSSValueVariant accepts only types that can be constructed from a jsi::Value");
+
  public:
   CSSValueVariant() = default;
 
@@ -95,9 +89,7 @@ class CSSValueVariant final : public CSSValue {
    * Construct from jsi::Value if it matches any AllowedType's constructor
    * (chooses the first one that matches)
    */
-  CSSValueVariant(jsi::Runtime &rt, const jsi::Value &jsiValue)
-    requires((can_construct_from_jsi<AllowedTypes> || ...))
-  { // NOLINT(whitespace/braces)
+  CSSValueVariant(jsi::Runtime &rt, const jsi::Value &jsiValue) {
     if (!tryConstruct(rt, jsiValue)) {
       throw std::runtime_error(
           "[Reanimated] No compatible type found for construction from: " +
@@ -210,7 +202,7 @@ class CSSValueVariant final : public CSSValue {
   bool tryConstruct(TValue &&value) {
     auto tryOne = [&]<typename TCSSValue>() -> bool {
       if constexpr (std::is_constructible_v<TCSSValue, TValue>) {
-        if constexpr (has_can_construct<TCSSValue, TValue>) {
+        if constexpr (HasCanConstruct<TCSSValue, TValue>) {
           // For construction from a non-jsi::Value, we perform a runtime
           // canConstruct check only if the type has a canConstruct method.
           // (this is needed e.g. when different CSS value types can be
