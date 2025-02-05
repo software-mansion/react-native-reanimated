@@ -4,6 +4,8 @@
 #include <reanimated/CSS/common/values/CSSValue.h>
 #include <worklets/Tools/JSISerializer.h>
 
+#include <folly/json.h>
+
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -38,6 +40,15 @@ concept can_construct_from_jsi =
     }; // NOLINT(readability/braces)
 
 /**
+ * Checks if type has a constructor from folly::dynamic
+ */
+template <typename TValue>
+concept can_construct_from_dynamic =
+    requires(const folly::dynamic &value) {
+      { TValue(value) }; // NOLINT(readability/braces)
+    }; // NOLINT(readability/braces)
+
+/**
  * Checks whether a type has canConstruct(...) for a a generic value
  */
 template <typename TCSSValue, typename TValue>
@@ -55,6 +66,17 @@ static constexpr bool has_can_construct_jsi =
     requires(jsi::Runtime &rt, TValue &&value) {
       {
         TCSSValue::canConstruct(rt, std::forward<TValue>(value))
+      } -> std::same_as<bool>;
+    }; // NOLINT(readability/braces)
+    
+/**
+ * Checks whether a type has canConstruct(...) for dynamic
+ */
+template <typename TCSSValue, typename TValue>
+static constexpr bool has_can_construct_dynamic =
+    requires(TValue &&value) {
+      {
+        TCSSValue::canConstruct(std::forward<TValue>(value))
       } -> std::same_as<bool>;
     }; // NOLINT(readability/braces)
 
@@ -105,15 +127,14 @@ class CSSValueVariant final : public CSSValue {
     }
   }
   
-  CSSValueVariant(const folly::dynamic &jsiValue)
-  // TODO
-//    requires((can_construct_from_jsi<AllowedTypes> || ...))
+  CSSValueVariant(const folly::dynamic &value)
+    requires((can_construct_from_dynamic<AllowedTypes> || ...))
   { // NOLINT(whitespace/braces)
-//    if (!tryConstruct(rt, jsiValue)) {
-//      throw std::runtime_error(
-//          "[Reanimated] No compatible type found for construction from: " +
-//          stringifyJSIValue(rt, jsiValue));
-//    }
+    if (!tryConstructFromDynamic(value)) {
+      throw std::runtime_error(
+          "[Reanimated] No compatible type found for construction from: " +
+          folly::toJson(value));
+    }
   }
 
   bool operator==(const CSSValueVariant &other) const {
@@ -254,6 +275,28 @@ class CSSValueVariant final : public CSSValue {
           }
         }
         storage_ = TCSSValue(rt, jsiValue);
+        return true;
+      }
+      return false;
+    };
+
+    // Try constructing with each allowed type until one succeeds
+    return (tryOne.template operator()<AllowedTypes>() || ...);
+  }
+  
+  /**
+   * Tries to construct type from a given folly::dynamic
+   */
+  bool tryConstructFromDynamic(const folly::dynamic &value) {
+    auto tryOne = [&]<typename TCSSValue>() -> bool {
+      if constexpr (can_construct_from_dynamic<TCSSValue>) {
+        if constexpr (has_can_construct_dynamic<TCSSValue, const folly::dynamic &>) {
+          // If the TCSSValue has a canConstruct method, check it first
+          if (!TCSSValue::canConstruct(value)) {
+            return false;
+          }
+        }
+        storage_ = TCSSValue(value);
         return true;
       }
       return false;

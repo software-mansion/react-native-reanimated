@@ -1,5 +1,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/common/values/CSSNumber.h>
+#include <folly/json.h>
 
 namespace reanimated {
 
@@ -23,10 +24,27 @@ CSSNumberBase<TValue, TDerived>::CSSNumberBase(
 }
 
 template <typename TValue, typename TDerived>
+CSSNumberBase<TValue, TDerived>::CSSNumberBase(
+    const folly::dynamic &value) {
+  if (value.isInt() || value.isDouble()) {
+    this->value = static_cast<TValue>(value.getDouble());
+  } else {
+    throw std::invalid_argument(
+        "[Reanimated] CSSNumberBase: Invalid value type: " + folly::toJson(value));
+  }
+}
+
+template <typename TValue, typename TDerived>
 bool CSSNumberBase<TValue, TDerived>::canConstruct(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
   return jsiValue.isNumber();
+}
+
+template <typename TValue, typename TDerived>
+bool CSSNumberBase<TValue, TDerived>::canConstruct(
+    const folly::dynamic &value) {
+  return value.isInt() || value.isDouble();
 }
 
 template <typename TValue, typename TDerived>

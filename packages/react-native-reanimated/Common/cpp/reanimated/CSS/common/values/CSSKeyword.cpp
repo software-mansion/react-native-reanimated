@@ -1,6 +1,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/values/CSSKeyword.h>
+#include <folly/json.h>
 
 namespace reanimated {
 
@@ -8,7 +9,7 @@ template <typename TValue>
 CSSKeywordBase<TValue>::CSSKeywordBase() : value("") {}
 
 template <typename TValue>
-CSSKeywordBase<TValue>::CSSKeywordBase(const std::string &value)
+CSSKeywordBase<TValue>::CSSKeywordBase(const char* value)
     : value(value) {}
 
 template <typename TValue>
@@ -25,10 +26,27 @@ CSSKeywordBase<TValue>::CSSKeywordBase(
 }
 
 template <typename TValue>
+CSSKeywordBase<TValue>::CSSKeywordBase(
+   const folly::dynamic &value) {
+  if (value.isString()) {
+    this->value = value.getString();
+  } else {
+    throw std::invalid_argument(
+        "[Reanimated] CSSKeywordBase: Invalid value type: " + folly::toJson(value));
+  }
+}
+
+template <typename TValue>
 bool CSSKeywordBase<TValue>::canConstruct(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
   return jsiValue.isString();
+}
+
+template <typename TValue>
+bool CSSKeywordBase<TValue>::canConstruct(
+    const folly::dynamic &value) {
+  return value.isString();
 }
 
 template <typename TValue>

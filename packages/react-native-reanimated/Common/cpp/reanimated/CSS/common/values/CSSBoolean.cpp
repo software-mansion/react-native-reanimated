@@ -10,9 +10,16 @@ CSSBoolean::CSSBoolean(bool value) : value(value) {}
 
 CSSBoolean::CSSBoolean(jsi::Runtime &rt, const jsi::Value &jsiValue)
     : value(jsiValue.asBool()) {}
+    
+CSSBoolean::CSSBoolean(const folly::dynamic &value)
+    : value(value.asBool()) {}
 
 bool CSSBoolean::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   return jsiValue.isBool();
+}
+
+bool CSSBoolean::canConstruct(const folly::dynamic &value) {
+  return value.isBool();
 }
 
 jsi::Value CSSBoolean::toJSIValue(jsi::Runtime &rt) const {

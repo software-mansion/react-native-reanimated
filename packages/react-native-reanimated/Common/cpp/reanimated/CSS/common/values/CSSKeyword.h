@@ -17,10 +17,12 @@ class CSSKeywordBase : public CSSBaseValue<CSSValueType::Keyword, TValue> {
   static constexpr bool is_discrete_value = true;
 
   CSSKeywordBase();
-  explicit CSSKeywordBase(const std::string &value);
+  explicit CSSKeywordBase(const char* value);
   explicit CSSKeywordBase(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  explicit CSSKeywordBase(const folly::dynamic &value);
 
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  static bool canConstruct(const folly::dynamic &value);
 
   CSSValueType type() const override;
   jsi::Value toJSIValue(jsi::Runtime &rt) const override;
