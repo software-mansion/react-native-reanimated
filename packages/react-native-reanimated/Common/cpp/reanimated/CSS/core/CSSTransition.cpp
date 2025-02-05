@@ -111,10 +111,8 @@ jsi::Value CSSTransition::update(jsi::Runtime &rt, const double timestamp) {
 
 folly::dynamic CSSTransition::update(const double timestamp) {
   progressProvider_.update(timestamp);
-  // TODO
-  return folly::dynamic();
-//  return styleInterpolator_.update(
-//      rt, shadowNode_, progressProvider_.getRemovedProperties());
+  return styleInterpolator_.update(
+      shadowNode_, progressProvider_.getRemovedProperties());
 }
 
 void CSSTransition::updateTransitionProperties(

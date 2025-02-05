@@ -72,6 +72,31 @@ jsi::Value TransitionStyleInterpolator::update(
   return result;
 }
 
+folly::dynamic TransitionStyleInterpolator::update(
+    const ShadowNode::Shared &shadowNode,
+    const std::unordered_set<std::string> &propertiesToRemove) {
+  if (interpolators_.empty()) {
+    return folly::dynamic();
+  }
+
+  auto result = folly::dynamic::array();
+
+  for (auto it = interpolators_.begin(); it != interpolators_.end();) {
+    const auto &[propertyName, interpolator] = *it;
+// TODO
+//    folly::dynamic value = interpolator->update(shadowNode);
+//    result.push_back(folly::dynamic::object(propertyName.c_str(), value));
+
+    if (propertiesToRemove.find(propertyName) != propertiesToRemove.cend()) {
+      it = interpolators_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+
+  return result;
+}
+
 void TransitionStyleInterpolator::discardIrrelevantInterpolators(
     const std::unordered_set<std::string> &transitionPropertyNames) {
   for (auto it = interpolators_.begin(); it != interpolators_.end();) {
