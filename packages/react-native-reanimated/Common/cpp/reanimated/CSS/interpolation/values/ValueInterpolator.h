@@ -162,8 +162,7 @@ class ValueInterpolator : public PropertyInterpolator {
   
   folly::dynamic update(const ShadowNode::Shared &shadowNode)
       override {
-  // TODO
-//    updateCurrentKeyframes(shadowNode);
+    updateCurrentKeyframes(shadowNode);
 
     std::optional<ValueType> fromValue = keyframeBefore_.value;
     std::optional<ValueType> toValue = keyframeAfter_.value;
@@ -257,6 +256,30 @@ class ValueInterpolator : public PropertyInterpolator {
 
     return keyframe;
   }
+  
+  ValueKeyframe<AllowedTypes...> getKeyframeAtIndex(
+      const ShadowNode::Shared &shadowNode,
+      size_t index,
+      bool shouldResolve) const {
+    const auto &keyframe = keyframes_.at(index);
+
+    if (shouldResolve) {
+      const double offset = keyframe.offset;
+      std::optional<ValueType> unresolvedValue;
+
+      if (keyframe.value.has_value()) {
+        unresolvedValue = keyframe.value.value();
+      } else {
+      // TODO
+//        unresolvedValue = getFallbackValue(rt, shadowNode);
+      }
+
+      return ValueKeyframe<AllowedTypes...>{
+          offset, resolveKeyframeValue(unresolvedValue.value(), shadowNode)};
+    }
+
+    return keyframe;
+  }
 
   void updateCurrentKeyframes(
       jsi::Runtime &rt,
@@ -296,6 +319,45 @@ class ValueInterpolator : public PropertyInterpolator {
           Resolvable<ValueType> && keyframeAfterIndex_ > prevAfterIndex);
       keyframeAfter_ = getKeyframeAtIndex(
           rt,
+          shadowNode,
+          keyframeAfterIndex_,
+          Resolvable<ValueType> && keyframeAfterIndex_ < prevAfterIndex);
+    }
+  }
+  
+  void updateCurrentKeyframes(
+      const ShadowNode::Shared &shadowNode) {
+    const auto progress = progressProvider_->getGlobalProgress();
+    const bool isProgressLessThanHalf = progress < 0.5;
+    const auto prevAfterIndex = keyframeAfterIndex_;
+
+    if (progressProvider_->isFirstUpdate()) {
+      keyframeAfterIndex_ = isProgressLessThanHalf ? 1 : keyframes_.size() - 1;
+    }
+
+    while (keyframeAfterIndex_ < keyframes_.size() - 1 &&
+           keyframes_[keyframeAfterIndex_].offset < progress)
+      ++keyframeAfterIndex_;
+
+    while (keyframeAfterIndex_ > 1 &&
+           keyframes_[keyframeAfterIndex_ - 1].offset >= progress)
+      --keyframeAfterIndex_;
+
+    if (progressProvider_->isFirstUpdate()) {
+      keyframeBefore_ = getKeyframeAtIndex(
+          shadowNode,
+          keyframeAfterIndex_ - 1,
+          Resolvable<ValueType> && isProgressLessThanHalf);
+      keyframeAfter_ = getKeyframeAtIndex(
+          shadowNode,
+          keyframeAfterIndex_,
+          Resolvable<ValueType> && !isProgressLessThanHalf);
+    } else if (keyframeAfterIndex_ != prevAfterIndex) {
+      keyframeBefore_ = getKeyframeAtIndex(
+          shadowNode,
+          keyframeAfterIndex_ - 1,
+          Resolvable<ValueType> && keyframeAfterIndex_ > prevAfterIndex);
+      keyframeAfter_ = getKeyframeAtIndex(
           shadowNode,
           keyframeAfterIndex_,
           Resolvable<ValueType> && keyframeAfterIndex_ < prevAfterIndex);
