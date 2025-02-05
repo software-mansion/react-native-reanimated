@@ -37,7 +37,7 @@ struct CSSValue {
 // Base for leaf values that can be interpolated without resolution
 template <typename TDerived>
 struct CSSSimpleValue : public CSSValue {
-  static constexpr bool is_resolvable_value = false;
+  static constexpr bool is_simple_value = true;
 
   virtual TDerived interpolate(double progress, const TDerived &to) const = 0;
 };
@@ -55,19 +55,25 @@ struct CSSResolvableValue : public CSSValue {
       const CSSResolvableValueInterpolationContext &context) const = 0;
 };
 
-// Checks if a type is a resolvable value that needs resolution before
-// interpolation
-template <typename TCSSValue>
-concept Resolvable = requires {
-  { TCSSValue::is_resolvable_value } -> std::convertible_to<bool>;
-  requires TCSSValue::is_resolvable_value == true;
-};
-
 // Checks if a type is a discrete value
 template <typename TCSSValue>
-concept Discrete = requires {
+concept CSSDiscreteValueDerived = requires {
   { TCSSValue::is_discrete_value } -> std::convertible_to<bool>;
   requires TCSSValue::is_discrete_value == true;
+};
+
+// Checks if a type is a simple value
+template <typename TCSSValue>
+concept CSSSimpleValueDerived = requires {
+  { TCSSValue::is_simple_value } -> std::convertible_to<bool>;
+  requires TCSSValue::is_simple_value == true;
+};
+
+// Checks if a type is a resolvable value
+template <typename TCSSValue>
+concept CSSResolvableValueDerived = requires {
+  { TCSSValue::is_resolvable_value } -> std::convertible_to<bool>;
+  requires TCSSValue::is_resolvable_value == true;
 };
 
 // Check if a type is derived from CSSValue

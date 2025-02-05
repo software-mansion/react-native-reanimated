@@ -16,7 +16,8 @@ concept ResolvableOperation = requires(TOperation operation) {
     operation.value
   } -> std::convertible_to<
       typename std::remove_reference_t<decltype(operation.value)>>;
-  requires Resolvable<std::remove_reference_t<decltype(operation.value)>>;
+  requires CSSResolvableValueDerived<
+      std::remove_reference_t<decltype(operation.value)>>;
 }; // NOLINT(readability/braces)
 
 // Base implementation for simple operations

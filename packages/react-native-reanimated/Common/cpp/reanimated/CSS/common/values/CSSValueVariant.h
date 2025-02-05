@@ -145,11 +145,12 @@ class CSSValueVariant final : public CSSValue {
     return std::visit(
         [&](const auto &fromValue, const auto &toValue) -> CSSValueVariant {
           REA_IF_SAME_TYPE(fromValue, toValue) {
-            if constexpr (Resolvable<L>) {
-              throw std::runtime_error(
-                  "[Reanimated] Resolvable value cannot be interpolated as non-resolvable");
-            } else {
+            if constexpr (CSSSimpleValueDerived<L>) {
               return CSSValueVariant(fromValue.interpolate(progress, toValue));
+            } else {
+              throw std::runtime_error(
+                  "[Reanimated] Invalid values for non-resolvable interpolation: " +
+                  toString() + " and " + to.toString());
             }
           }
           return fallbackInterpolate(progress, to);
@@ -172,12 +173,13 @@ class CSSValueVariant final : public CSSValue {
     return std::visit(
         [&](const auto &fromValue, const auto &toValue) -> CSSValueVariant {
           REA_IF_SAME_TYPE(fromValue, toValue) {
-            if constexpr (Resolvable<L>) {
+            if constexpr (CSSResolvableValueDerived<L>) {
               return CSSValueVariant(
                   fromValue.interpolate(progress, toValue, context));
             } else {
               throw std::runtime_error(
-                  "[Reanimated] Non-resolvable value cannot be interpolated as resolvable");
+                  "[Reanimated] Invalid values for resolvable interpolation: " +
+                  toString() + " and " + to.toString());
             }
           }
           return fallbackInterpolate(progress, to);
