@@ -34,6 +34,7 @@ class CSSTransition {
   jsi::Value
   run(jsi::Runtime &rt, const ChangedProps &changedProps, double timestamp);
   jsi::Value update(jsi::Runtime &rt, double timestamp);
+  folly::dynamic update(double timestamp);
 
  private:
   const ShadowNode::Shared shadowNode_;

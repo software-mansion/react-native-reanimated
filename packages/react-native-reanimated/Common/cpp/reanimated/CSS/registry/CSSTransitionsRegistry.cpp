@@ -53,7 +53,7 @@ void CSSTransitionsRegistry::updateSettings(
   }
 }
 
-void CSSTransitionsRegistry::update(jsi::Runtime &rt, const double timestamp) {
+void CSSTransitionsRegistry::update(const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   // Activate all delayed transitions that should start now
@@ -65,9 +65,10 @@ void CSSTransitionsRegistry::update(jsi::Runtime &rt, const double timestamp) {
     const auto &viewTag = *it;
     const auto &transition = registry_.at(viewTag);
 
-    const jsi::Value &updates = transition->update(rt, timestamp);
-    if (!updates.isUndefined()) {
-      addUpdatesToBatch(rt, transition->getShadowNode(), updates);
+    const folly::dynamic &updates = transition->update(timestamp);
+    if (!updates.empty()) {
+    // TODO
+//      addUpdatesToBatch(rt, transition->getShadowNode(), updates);
     }
 
     // We remove transition from running and schedule it when animation of one

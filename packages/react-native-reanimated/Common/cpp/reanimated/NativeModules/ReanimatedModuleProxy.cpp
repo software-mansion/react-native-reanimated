@@ -823,7 +823,7 @@ void ReanimatedModuleProxy::performOperations() {
       currentCssTimestamp_ = getAnimationTimestamp_();
 
       // Update CSS transitions and flush updates
-      cssTransitionsRegistry_->update(rt, currentCssTimestamp_);
+      cssTransitionsRegistry_->update(currentCssTimestamp_);
       cssTransitionsRegistry_->flushCSSUpdates(transitionUpdatesBatch, false);
     }
 
