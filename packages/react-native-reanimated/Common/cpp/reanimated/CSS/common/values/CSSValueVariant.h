@@ -211,7 +211,11 @@ class CSSValueVariant final : public CSSValue {
     auto tryOne = [&]<typename TCSSValue>() -> bool {
       if constexpr (std::is_constructible_v<TCSSValue, TValue>) {
         if constexpr (has_can_construct<TCSSValue, TValue>) {
-          // If the TCSSValue has a canConstruct method, check it first
+          // For construction from a non-jsi::Value, we perform a runtime
+          // canConstruct check only if the type has a canConstruct method.
+          // (this is needed e.g. when different CSS value types can be
+          // constructed from the same value type, like CSSDimension and
+          // CSSKeyword)
           if (!TCSSValue::canConstruct(std::forward<TValue>(value))) {
             return false;
           }
@@ -231,17 +235,14 @@ class CSSValueVariant final : public CSSValue {
    */
   bool tryConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
     auto tryOne = [&]<typename TCSSValue>() -> bool {
-      if constexpr (can_construct_from_jsi<TCSSValue>) {
-        if constexpr (has_can_construct_jsi<TCSSValue, const jsi::Value &>) {
-          // If the TCSSValue has a canConstruct method, check it first
-          if (!TCSSValue::canConstruct(rt, jsiValue)) {
-            return false;
-          }
-        }
-        storage_ = TCSSValue(rt, jsiValue);
-        return true;
+      // We have to check in a runtime if the type can be constructed from the
+      // provided jsi::Value. The first match will be used to construct the
+      // CSS value.
+      if (!TCSSValue::canConstruct(rt, jsiValue)) {
+        return false;
       }
-      return false;
+      storage_ = TCSSValue(rt, jsiValue);
+      return true;
     };
 
     // Try constructing with each allowed type until one succeeds
