@@ -18,7 +18,7 @@ using namespace worklets;
  * elements of two arrays, this type interpolates between entire arrays
  * treated as single discrete values.
  */
-template <CSSLeafValue TValue>
+template <CSSValueDerived TValue>
 struct CSSDiscreteArray : public CSSSimpleValue<CSSDiscreteArray<TValue>> {
   static constexpr bool is_discrete_value = true;
 
