@@ -1,6 +1,6 @@
 'use strict';
 import { ReanimatedModule } from './ReanimatedModule';
-import { isWeb, shouldBeUseWeb, isFabric } from './PlatformChecker';
+import { shouldBeUseWeb, isFabric } from './PlatformChecker';
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
@@ -11,10 +11,10 @@ import type {
   ValueRotation,
   WorkletFunction,
 } from './commonTypes';
-import { makeShareableCloneRecursive } from './shareables';
+import { ReanimatedError } from './errors';
 import { initializeUIRuntime } from './initializers';
 import { SensorContainer } from './SensorContainer';
-import { ReanimatedError } from './errors';
+import { makeShareableCloneRecursive } from './shareables';
 
 export { startMapper, stopMapper } from './mappers';
 export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';
@@ -154,9 +154,7 @@ export function unregisterSensor(sensorId: number): void {
   return sensorContainer.unregisterSensor(sensorId);
 }
 
-if (!isWeb()) {
-  initializeUIRuntime(ReanimatedModule);
-}
+initializeUIRuntime(ReanimatedModule);
 
 type FeaturesConfig = {
   enableLayoutAnimations: boolean;

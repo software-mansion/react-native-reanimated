@@ -175,9 +175,13 @@
     }
   },
   "sideEffects": [
+    "./src/layoutReanimation/animationsManager.ts",
     "./lib/module/layoutReanimation/animationsManager.js",
+    "./src/core.ts",
     "./lib/module/core.js",
+    "./src/initializers.ts",
     "./lib/module/initializers.js",
+    "./src/index.ts",
     "./lib/module/index.js"
   ]
 }
