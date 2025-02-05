@@ -24,6 +24,14 @@ jsi::Value TransformsStyleInterpolator::getStyleValue(
       rt, shadowNode->getTag(), propertyPath_);
 }
 
+folly::dynamic TransformsStyleInterpolator::getStyleValue(
+    const ShadowNode::Shared &shadowNode) const {
+    // TODO
+    return folly::dynamic();
+//  return viewStylesRepository_->getStyleProp(
+//      rt, shadowNode->getTag(), propertyPath_);
+}
+
 jsi::Value TransformsStyleInterpolator::getCurrentValue(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode) const {

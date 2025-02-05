@@ -26,6 +26,8 @@ class PropertyInterpolator {
   virtual jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const = 0;
+  virtual folly::dynamic getStyleValue(
+      const ShadowNode::Shared &shadowNode) const = 0;
   virtual jsi::Value getCurrentValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const = 0;

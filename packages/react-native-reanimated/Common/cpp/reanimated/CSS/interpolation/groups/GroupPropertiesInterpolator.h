@@ -22,6 +22,8 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
   jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
+  folly::dynamic getStyleValue(
+      const ShadowNode::Shared &shadowNode) const override;
   jsi::Value getCurrentValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
