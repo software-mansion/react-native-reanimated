@@ -166,13 +166,13 @@ class ValueInterpolator : public PropertyInterpolator {
 
     std::optional<ValueType> fromValue = keyframeBefore_.value;
     std::optional<ValueType> toValue = keyframeAfter_.value;
-// TODO
-//    if (!fromValue.has_value()) {
-//      fromValue = getFallbackValue(rt, shadowNode);
-//    }
-//    if (!toValue.has_value()) {
-//      toValue = getFallbackValue(rt, shadowNode);
-//    }
+
+    if (!fromValue.has_value()) {
+      fromValue = getFallbackValue(shadowNode);
+    }
+    if (!toValue.has_value()) {
+      toValue = getFallbackValue(shadowNode);
+    }
 
     const auto keyframeProgress = progressProvider_->getKeyframeProgress(
         keyframeBefore_.offset, keyframeAfter_.offset);
@@ -225,6 +225,15 @@ class ValueInterpolator : public PropertyInterpolator {
     return styleValue.isUndefined() ? defaultStyleValue_
                                     : ValueType(rt, styleValue);
   }
+  
+  ValueType getFallbackValue(
+      const ShadowNode::Shared &shadowNode) const {
+      // TODO
+      return defaultStyleValue_;
+//    const jsi::Value &styleValue = getStyleValue(rt, shadowNode);
+//    return styleValue.isUndefined() ? defaultStyleValue_
+//                                    : ValueType(rt, styleValue);
+  }
 
   ValueType resolveKeyframeValue(
       const ValueType &unresolvedValue,
@@ -270,8 +279,7 @@ class ValueInterpolator : public PropertyInterpolator {
       if (keyframe.value.has_value()) {
         unresolvedValue = keyframe.value.value();
       } else {
-      // TODO
-//        unresolvedValue = getFallbackValue(rt, shadowNode);
+        unresolvedValue = getFallbackValue(shadowNode);
       }
 
       return ValueKeyframe<AllowedTypes...>{
