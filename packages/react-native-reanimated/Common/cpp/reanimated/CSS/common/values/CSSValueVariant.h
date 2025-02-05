@@ -128,10 +128,6 @@ class CSSValueVariant final : public CSSValue {
     return false;
   }
 
-  CSSValueType type() const override {
-    return std::visit([](const auto &v) { return v.type(); }, storage_);
-  }
-
   jsi::Value toJSIValue(jsi::Runtime &rt) const override {
     return std::visit(
         [&rt](const auto &v) { return v.toJSIValue(rt); }, storage_);

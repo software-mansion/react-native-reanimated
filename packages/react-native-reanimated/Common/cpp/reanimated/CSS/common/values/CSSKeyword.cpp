@@ -32,11 +32,6 @@ bool CSSKeywordBase<TValue>::canConstruct(
 }
 
 template <typename TValue>
-CSSValueType CSSKeywordBase<TValue>::type() const {
-  return CSSValueType::Keyword;
-}
-
-template <typename TValue>
 jsi::Value CSSKeywordBase<TValue>::toJSIValue(jsi::Runtime &rt) const {
   return jsi::String::createFromUtf8(rt, value);
 }

@@ -13,7 +13,7 @@ namespace reanimated {
 using namespace worklets;
 
 template <typename TValue, typename TDerived>
-struct CSSNumberBase : public CSSBaseValue<CSSValueType::Number, TDerived> {
+struct CSSNumberBase : public CSSSimpleValue<TDerived> {
   TValue value;
 
   CSSNumberBase();
