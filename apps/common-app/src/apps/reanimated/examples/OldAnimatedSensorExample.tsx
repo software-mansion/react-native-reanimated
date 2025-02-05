@@ -1,10 +1,10 @@
 import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
-  useAnimatedStyle,
-  useAnimatedSensor,
   SensorType,
+  useAnimatedSensor,
+  useAnimatedStyle,
 } from 'react-native-reanimated';
-import { View, Button, StyleSheet } from 'react-native';
 
 export default function OldAnimatedSensorExample() {
   const animatedSensor = useAnimatedSensor(SensorType.GRAVITY);

@@ -3,9 +3,9 @@
 
 import { WorkletsTurboModule } from '../../specs';
 import { getValueUnpackerCode } from '../valueUnpacker';
-import type { WorkletsModuleProxy } from './workletsModuleProxy';
-import type { ShareableRef, WorkletRuntime } from '../workletTypes';
 import { WorkletsError } from '../WorkletsError';
+import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type { WorkletsModuleProxy } from './workletsModuleProxy';
 
 export interface IWorkletsModule extends WorkletsModuleProxy {}
 

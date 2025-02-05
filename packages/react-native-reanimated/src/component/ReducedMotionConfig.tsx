@@ -1,9 +1,10 @@
 'use strict';
 import { useEffect } from 'react';
+
 import { ReduceMotion } from '../commonTypes';
 import {
-  ReducedMotionManager,
   isReducedMotionEnabledInSystem,
+  ReducedMotionManager,
 } from '../ReducedMotion';
 import { logger } from '../WorkletsResolver';
 

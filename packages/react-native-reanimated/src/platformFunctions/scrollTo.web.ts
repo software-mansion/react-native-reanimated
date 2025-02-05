@@ -1,7 +1,8 @@
 'use strict';
-import type { AnimatedRef } from '../hook/commonTypes';
 import type { Component } from 'react';
 import type { ScrollView } from 'react-native';
+
+import type { AnimatedRef } from '../hook/commonTypes';
 
 export function scrollTo<T extends Component>(
   animatedRef: AnimatedRef<T>,

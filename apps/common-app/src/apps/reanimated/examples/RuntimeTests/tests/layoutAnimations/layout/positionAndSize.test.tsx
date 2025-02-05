@@ -1,12 +1,13 @@
 import {
   CurvedTransition,
+  Easing,
   FadingTransition,
   JumpingTransition,
   LinearTransition,
   SequencedTransition,
-  Easing,
 } from 'react-native-reanimated';
-import { describe, test, expect } from '../../../ReJest/RuntimeTestsApi';
+
+import { describe, expect, test } from '../../../ReJest/RuntimeTestsApi';
 import {
   CurvedSnapshot,
   FadingSnapshot,

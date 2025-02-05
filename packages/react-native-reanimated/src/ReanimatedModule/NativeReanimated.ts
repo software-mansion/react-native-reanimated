@@ -1,5 +1,6 @@
 'use strict';
 import type React from 'react';
+
 import type {
   LayoutAnimationBatchItem,
   ShadowNodeWrapper,
@@ -19,9 +20,9 @@ import { jsVersion } from '../platform-specific/jsVersion';
 import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
 import { ReanimatedTurboModule } from '../specs';
 import type {
+  IWorkletsModule,
   ShareableRef,
   WorkletFunction,
-  IWorkletsModule,
 } from '../WorkletsResolver';
 import { executeOnUIRuntimeSync, WorkletsModule } from '../WorkletsResolver';
 import type {

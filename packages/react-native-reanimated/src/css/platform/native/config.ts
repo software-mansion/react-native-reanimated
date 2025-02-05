@@ -1,4 +1,7 @@
 'use strict';
+import { IS_ANDROID } from '../../constants';
+import type { PlainStyle } from '../../types';
+import type { StyleBuilderConfig } from './style';
 import {
   processAspectRatio,
   processBoxShadow,
@@ -11,9 +14,6 @@ import {
   processTransform,
   processTransformOrigin,
 } from './style';
-import type { StyleBuilderConfig } from './style';
-import type { PlainStyle } from '../../types';
-import { IS_ANDROID } from '../../constants';
 
 const colorAttributes = { process: processColor };
 

@@ -1,17 +1,18 @@
 'use strict';
+import type { Component } from 'react';
+
 import type { ShadowNodeWrapper } from '../commonTypes';
+import type {
+  AnimatedRef,
+  AnimatedRefOnJS,
+  AnimatedRefOnUI,
+} from '../hook/commonTypes';
 import {
   isChromeDebugger,
   isFabric,
   isJest,
   shouldBeUseWeb,
 } from '../PlatformChecker';
-import type {
-  AnimatedRef,
-  AnimatedRefOnJS,
-  AnimatedRefOnUI,
-} from '../hook/commonTypes';
-import type { Component } from 'react';
 import { logger } from '../WorkletsResolver';
 
 type DispatchCommand = <T extends Component>(

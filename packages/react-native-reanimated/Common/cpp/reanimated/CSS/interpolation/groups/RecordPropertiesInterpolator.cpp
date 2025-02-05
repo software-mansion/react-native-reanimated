@@ -53,20 +53,9 @@ void RecordPropertiesInterpolator::updateKeyframes(
         propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
     const jsi::Value &propertyKeyframes = keyframesObject.getProperty(
         rt, jsi::PropNameID::forUtf8(rt, propertyName));
-    auto interpolatorIt = interpolators_.find(propertyName);
 
-    if (interpolatorIt == interpolators_.end()) {
-      const auto newInterpolator = createPropertyInterpolator(
-          propertyName,
-          propertyPath_,
-          factories_,
-          progressProvider_,
-          viewStylesRepository_);
-      interpolatorIt =
-          interpolators_.emplace(propertyName, newInterpolator).first;
-    }
-
-    interpolatorIt->second->updateKeyframes(rt, propertyKeyframes);
+    maybeCreateInterpolator(propertyName);
+    interpolators_.at(propertyName)->updateKeyframes(rt, propertyKeyframes);
   }
 }
 
@@ -76,35 +65,41 @@ void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
     const jsi::Value &newStyleValue) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
   // used  (for now, for simplicity, we only add new ones)
-  const jsi::Array propertyNames = newStyleValue.isObject()
-      ? newStyleValue.asObject(rt).getPropertyNames(rt)
-      : oldStyleValue.asObject(rt).getPropertyNames(rt);
-  const size_t propertiesCount = propertyNames.size(rt);
 
-  for (size_t i = 0; i < propertiesCount; ++i) {
-    const std::string propertyName =
-        propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    auto interpolatorIt = interpolators_.find(propertyName);
+  const auto oldStyleObject =
+      oldStyleValue.isObject() ? oldStyleValue.asObject(rt) : jsi::Object(rt);
+  const auto newStyleObject =
+      newStyleValue.isObject() ? newStyleValue.asObject(rt) : jsi::Object(rt);
 
-    if (interpolatorIt == interpolators_.end()) {
-      const auto newInterpolator = createPropertyInterpolator(
-          propertyName,
-          propertyPath_,
-          factories_,
-          progressProvider_,
-          viewStylesRepository_);
-      interpolatorIt =
-          interpolators_.emplace(propertyName, newInterpolator).first;
+  std::unordered_set<std::string> propertyNamesSet;
+  const jsi::Object *objects[] = {&oldStyleObject, &newStyleObject};
+  for (const auto *styleObject : objects) {
+    const auto propertyNames = styleObject->getPropertyNames(rt);
+    for (size_t i = 0; i < propertyNames.size(rt); ++i) {
+      propertyNamesSet.insert(
+          propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt));
     }
+  }
 
-    interpolatorIt->second->updateKeyframesFromStyleChange(
-        rt,
-        oldStyleValue.isObject()
-            ? oldStyleValue.asObject(rt).getProperty(rt, propertyName.c_str())
-            : jsi::Value::undefined(),
-        newStyleValue.isObject()
-            ? newStyleValue.asObject(rt).getProperty(rt, propertyName.c_str())
-            : jsi::Value::undefined());
+  for (const auto &propertyName : propertyNamesSet) {
+    maybeCreateInterpolator(propertyName);
+
+    auto getValue = [&](const jsi::Object &obj) {
+      return obj.hasProperty(rt, propertyName.c_str())
+          ? obj.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName))
+          : jsi::Value::undefined();
+    };
+
+    interpolators_.at(propertyName)
+        ->updateKeyframesFromStyleChange(
+            rt, getValue(oldStyleObject), getValue(newStyleObject));
+  }
+}
+
+void RecordPropertiesInterpolator::forEachInterpolator(
+    const std::function<void(PropertyInterpolator &)> &callback) const {
+  for (const auto &[propName, interpolator] : interpolators_) {
+    callback(*interpolator);
   }
 }
 
@@ -119,6 +114,19 @@ jsi::Value RecordPropertiesInterpolator::mapInterpolators(
   }
 
   return result;
+}
+
+void RecordPropertiesInterpolator::maybeCreateInterpolator(
+    const std::string &propertyName) {
+  if (interpolators_.find(propertyName) == interpolators_.end()) {
+    const auto newInterpolator = createPropertyInterpolator(
+        propertyName,
+        propertyPath_,
+        factories_,
+        progressProvider_,
+        viewStylesRepository_);
+    interpolators_.emplace(propertyName, newInterpolator);
+  }
 }
 
 } // namespace reanimated

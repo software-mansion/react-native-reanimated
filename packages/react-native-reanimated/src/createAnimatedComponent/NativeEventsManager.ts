@@ -1,14 +1,14 @@
 'use strict';
+import { findNodeHandle } from '../platformFunctions/findNodeHandle';
+import { WorkletEventHandler } from '../WorkletEventHandler';
 import type {
-  INativeEventsManager,
   AnimatedComponentProps,
-  InitialComponentProps,
   AnimatedComponentRef,
+  INativeEventsManager,
+  InitialComponentProps,
   ManagedAnimatedComponent,
 } from './commonTypes';
 import { has } from './utils';
-import { WorkletEventHandler } from '../WorkletEventHandler';
-import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 
 export class NativeEventsManager implements INativeEventsManager {
   readonly #managedComponent: ManagedAnimatedComponent;

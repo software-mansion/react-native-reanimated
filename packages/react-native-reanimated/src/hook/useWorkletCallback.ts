@@ -1,5 +1,6 @@
 'use strict';
 import { useCallback } from 'react';
+
 import type { DependencyList } from './commonTypes';
 
 /** @deprecated Use React.useCallback instead */

@@ -3,14 +3,14 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  useSharedValue,
-  useAnimatedStyle,
-  interpolateColor,
-  makeMutable,
   createAnimatedPropAdapter,
-  useAnimatedProps,
+  interpolateColor,
   isSharedValue,
+  makeMutable,
   makeShareableCloneRecursive,
+  useAnimatedProps,
+  useAnimatedStyle,
+  useSharedValue,
 } from '../..';
 
 function MakeMutableTest() {

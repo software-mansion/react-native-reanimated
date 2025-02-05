@@ -1,6 +1,4 @@
 'use strict';
-import { ReanimatedModule } from './ReanimatedModule';
-import { shouldBeUseWeb, isFabric } from './PlatformChecker';
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
@@ -10,21 +8,23 @@ import type {
   Value3D,
   ValueRotation,
 } from './commonTypes';
-import { makeShareableCloneRecursive } from './WorkletsResolver';
-import { SensorContainer } from './SensorContainer';
 import { ReanimatedError } from './errors';
+import { isFabric, shouldBeUseWeb } from './PlatformChecker';
+import { ReanimatedModule } from './ReanimatedModule';
+import { SensorContainer } from './SensorContainer';
 import type { WorkletFunction } from './WorkletsResolver';
+import { makeShareableCloneRecursive } from './WorkletsResolver';
 
 export { startMapper, stopMapper } from './mappers';
+export { makeMutable } from './mutables';
+export { createWorkletRuntime, runOnRuntime } from './runtimes';
 export {
-  runOnJS,
-  runOnUI,
   executeOnUIRuntimeSync,
   makeShareable,
   makeShareableCloneRecursive,
+  runOnJS,
+  runOnUI,
 } from './WorkletsResolver';
-export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export { makeMutable } from './mutables';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

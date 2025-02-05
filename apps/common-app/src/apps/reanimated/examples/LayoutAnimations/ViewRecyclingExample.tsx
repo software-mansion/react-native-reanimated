@@ -1,11 +1,4 @@
-import {
-  SafeAreaView,
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Pressable,
-} from 'react-native';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type {
   FlatList,
   LayoutChangeEvent,
@@ -13,7 +6,15 @@ import type {
   NativeSyntheticEvent,
   ViewStyle,
 } from 'react-native';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   FadeInRight,
   FadeOutLeft,
@@ -25,7 +26,6 @@ import Animated, {
   ZoomIn,
   ZoomOut,
 } from 'react-native-reanimated';
-import type { SharedValue } from 'react-native-reanimated';
 
 type Option = {
   key: string;

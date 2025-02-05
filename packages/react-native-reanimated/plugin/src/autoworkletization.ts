@@ -1,20 +1,21 @@
 import type { NodePath } from '@babel/core';
 import type { CallExpression } from '@babel/types';
 import { isSequenceExpression } from '@babel/types';
+
+import { isGestureHandlerEventCallback } from './gestureHandlerAutoworkletization';
+import { isLayoutAnimationCallback } from './layoutAnimationAutoworkletization';
+import { processWorkletizableObject } from './objectWorklets';
+import { findReferencedWorklet } from './referencedWorklets';
+import type {
+  ReanimatedPluginPass,
+  WorkletizableFunction,
+  WorkletizableObject,
+} from './types';
 import {
   isWorkletizableFunctionPath,
   isWorkletizableObjectPath,
 } from './types';
-import type {
-  WorkletizableFunction,
-  WorkletizableObject,
-  ReanimatedPluginPass,
-} from './types';
 import { processWorklet } from './workletSubstitution';
-import { isGestureHandlerEventCallback } from './gestureHandlerAutoworkletization';
-import { isLayoutAnimationCallback } from './layoutAnimationAutoworkletization';
-import { findReferencedWorklet } from './referencedWorklets';
-import { processWorkletizableObject } from './objectWorklets';
 
 const objectHooks = new Set([
   'useAnimatedGestureHandler',

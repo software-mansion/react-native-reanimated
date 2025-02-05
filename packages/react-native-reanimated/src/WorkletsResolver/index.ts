@@ -5,75 +5,74 @@
 // the `WorkletsResolver` module.
 
 import type {
+  callMicrotasks as callMicrotasksType,
+  createCustomError as createCustomErrorType,
+  executeOnUIRuntimeSync as executeOnUIRuntimeSyncType,
   isWorkletFunction as isWorkletFunctionType,
   IWorkletsModule,
-  mockedRequestAnimationFrame as mockedRequestAnimationFrameType,
-  createCustomError as createCustomErrorType,
-  registerCustomError as registerCustomErrorType,
-  reportFatalErrorOnJS as reportFatalErrorOnJSType,
-  registerWorkletStackDetails as registerWorkletStackDetailsType,
-  runOnUI as runOnUIType,
-  runOnJS as runOnJSType,
-  runOnUIImmediately as runOnUIImmediatelyType,
-  executeOnUIRuntimeSync as executeOnUIRuntimeSyncType,
-  makeShareable as makeShareableType,
-  makeShareableCloneRecursive as makeShareableCloneRecursiveType,
-  makeShareableCloneOnUIRecursive as makeShareableCloneOnUIRecursiveType,
-  shareableMappingCache as shareableMappingCacheType,
-  callMicrotasks as callMicrotasksType,
   logger as loggerType,
-  updateLoggerConfig as updateLoggerConfigType,
   LogLevel as LogLevelType,
+  makeShareable as makeShareableType,
+  makeShareableCloneOnUIRecursive as makeShareableCloneOnUIRecursiveType,
+  makeShareableCloneRecursive as makeShareableCloneRecursiveType,
+  mockedRequestAnimationFrame as mockedRequestAnimationFrameType,
+  registerCustomError as registerCustomErrorType,
   registerLoggerConfig as registerLoggerConfigType,
+  registerWorkletStackDetails as registerWorkletStackDetailsType,
+  reportFatalErrorOnJS as reportFatalErrorOnJSType,
+  runOnJS as runOnJSType,
+  runOnUI as runOnUIType,
+  runOnUIImmediately as runOnUIImmediatelyType,
   setupCallGuard as setupCallGuardType,
   setupConsole as setupConsoleType,
+  shareableMappingCache as shareableMappingCacheType,
+  updateLoggerConfig as updateLoggerConfigType,
 } from '../worklets';
-
 import {
-  // @ts-expect-error - required for resolving the module
-  WorkletsModule as ResolvedWorkletsModule,
-  // @ts-expect-error - required for resolving the module
-  isWorkletFunction as ResolvedIsWorkletFunction,
-  // @ts-expect-error - required for resolving the module
-  mockedRequestAnimationFrame as ResolvedMockedRequestAnimationFrame,
-  // @ts-expect-error - required for resolving the module
-  createCustomError as ResolvedCreateCustomError,
-  // @ts-expect-error - required for resolving the module
-  registerCustomError as ResolvedRegisterCustomError,
-  // @ts-expect-error - required for resolving the module
-  reportFatalErrorOnJs as ResolvedReportFatalErrorOnJS,
-  // @ts-expect-error - required for resolving the module
-  registerWorkletStackDetails as ResolvedRegisterWorkletStackDetails,
-  // @ts-expect-error - required for resolving the module
-  runOnUI as ResolvedRunOnUI,
-  // @ts-expect-error - required for resolving the module
-  runOnJS as ResolvedRunOnJS,
-  // @ts-expect-error - required for resolving the module
-  runOnUIImmediately as ResolvedRunOnUIImmediately,
-  // @ts-expect-error - required for resolving the module
-  executeOnUIRuntimeSync as ResolvedExecuteOnUIRuntimeSync,
-  // @ts-expect-error - required for resolving the module
-  makeShareable as ResolvedMakeShareable,
-  // @ts-expect-error - required for resolving the module
-  makeShareableCloneRecursive as ResolvedMakeShareableCloneRecursive,
-  // @ts-expect-error - required for resolving the module
-  makeShareableCloneOnUIRecursive as ResolvedMakeShareableCloneOnUIRecursive,
-  // @ts-expect-error - required for resolving the module
-  shareableMappingCache as ResolvedShareableMappingCache,
   // @ts-expect-error - required for resolving the module
   callMicrotasks as ResolvedCallMicrotasks,
   // @ts-expect-error - required for resolving the module
-  logger as ResolvedLogger,
+  createCustomError as ResolvedCreateCustomError,
   // @ts-expect-error - required for resolving the module
-  updateLoggerConfig as ResolvedUpdateLoggerConfig,
+  executeOnUIRuntimeSync as ResolvedExecuteOnUIRuntimeSync,
+  // @ts-expect-error - required for resolving the module
+  isWorkletFunction as ResolvedIsWorkletFunction,
+  // @ts-expect-error - required for resolving the module
+  logger as ResolvedLogger,
   // @ts-expect-error - required for resolving the module
   LogLevel as ResolvedLogLevel,
   // @ts-expect-error - required for resolving the module
+  makeShareable as ResolvedMakeShareable,
+  // @ts-expect-error - required for resolving the module
+  makeShareableCloneOnUIRecursive as ResolvedMakeShareableCloneOnUIRecursive,
+  // @ts-expect-error - required for resolving the module
+  makeShareableCloneRecursive as ResolvedMakeShareableCloneRecursive,
+  // @ts-expect-error - required for resolving the module
+  mockedRequestAnimationFrame as ResolvedMockedRequestAnimationFrame,
+  // @ts-expect-error - required for resolving the module
+  registerCustomError as ResolvedRegisterCustomError,
+  // @ts-expect-error - required for resolving the module
   registerLoggerConfig as ResolvedRegisterLoggerConfig,
+  // @ts-expect-error - required for resolving the module
+  registerWorkletStackDetails as ResolvedRegisterWorkletStackDetails,
+  // @ts-expect-error - required for resolving the module
+  reportFatalErrorOnJs as ResolvedReportFatalErrorOnJS,
+  // @ts-expect-error - required for resolving the module
+  runOnJS as ResolvedRunOnJS,
+  // @ts-expect-error - required for resolving the module
+  runOnUI as ResolvedRunOnUI,
+  // @ts-expect-error - required for resolving the module
+  runOnUIImmediately as ResolvedRunOnUIImmediately,
   // @ts-expect-error - required for resolving the module
   setupCallGuard as ResolvedSetupCallGuard,
   // @ts-expect-error - required for resolving the module
   setupConsole as ResolvedSetupConsole,
+  // @ts-expect-error - required for resolving the module
+  shareableMappingCache as ResolvedShareableMappingCache,
+  // @ts-expect-error - required for resolving the module
+  updateLoggerConfig as ResolvedUpdateLoggerConfig,
+  // @ts-expect-error - required for resolving the module
+  WorkletsModule as ResolvedWorkletsModule,
 } from './WorkletsResolver';
 
 export const WorkletsModule = ResolvedWorkletsModule as IWorkletsModule;
@@ -116,11 +115,11 @@ export const setupConsole = ResolvedSetupConsole as typeof setupConsoleType;
 
 export type {
   IWorkletsModule,
-  WorkletsModuleProxy,
+  LoggerConfig,
   ShareableRef,
   WorkletFunction,
-  WorkletRuntime,
-  WorkletStackDetails,
   WorkletFunctionDev,
-  LoggerConfig,
+  WorkletRuntime,
+  WorkletsModuleProxy,
+  WorkletStackDetails,
 } from '../worklets';

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Dimensions, Text } from 'react-native';
 import Animated, {
-  useAnimatedStyle,
-  interpolate,
   Extrapolation,
+  interpolate,
+  useAnimatedStyle,
 } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');

@@ -1,3 +1,5 @@
+import React, { useMemo, useState } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import type { LayoutAnimationFunction } from 'react-native-reanimated';
 import Animated, {
   makeMutable,
@@ -5,8 +7,6 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, Text, View } from 'react-native';
-import React, { useMemo, useState } from 'react';
 
 function CustomLayoutTransition(): LayoutAnimationFunction {
   const isEven = makeMutable(1);

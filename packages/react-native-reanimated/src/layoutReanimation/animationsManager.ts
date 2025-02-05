@@ -1,12 +1,12 @@
 'use strict';
 import { withStyleAnimation } from '../animation/styleAnimation';
-import { LayoutAnimationType } from '../commonTypes';
 import type {
   LayoutAnimation,
   LayoutAnimationStartFunction,
   SharedTransitionAnimationsValues,
   SharedValue,
 } from '../commonTypes';
+import { LayoutAnimationType } from '../commonTypes';
 import { makeMutableUI } from '../mutables';
 import { runOnUIImmediately } from '../WorkletsResolver';
 

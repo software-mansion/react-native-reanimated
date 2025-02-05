@@ -1,13 +1,13 @@
 'use strict';
-import type { StyleProps, AnimatedStyle } from '../../commonTypes';
-import {
-  createReactDOMStyle,
-  createTransformValue,
-  createTextShadowValue,
-} from './webUtils';
+import type { AnimatedStyle, StyleProps } from '../../commonTypes';
+import { ReanimatedError } from '../../errors';
 import { PropsAllowlists } from '../../propsAllowlists';
 import { logger } from '../../WorkletsResolver';
-import { ReanimatedError } from '../../errors';
+import {
+  createReactDOMStyle,
+  createTextShadowValue,
+  createTransformValue,
+} from './webUtils';
 
 export { createJSReanimatedModule } from './JSReanimated';
 

@@ -5,26 +5,27 @@ import { WorkletsModule } from './WorkletsModule';
 
 initializeUIRuntime(WorkletsModule);
 
+export type { CustomError } from './errors';
 export {
   createCustomError,
   registerCustomError,
   registerWorkletStackDetails,
   reportFatalErrorOnJS,
 } from './errors';
-export type { CustomError } from './errors';
+export { setupCallGuard, setupConsole } from './initializers';
+export type { LoggerConfig } from './logger';
 export {
   logger,
   LogLevel,
   registerLoggerConfig,
   updateLoggerConfig,
 } from './logger';
-export type { LoggerConfig } from './logger';
 export { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
 export { shareableMappingCache } from './shareableMappingCache';
 export {
   makeShareable,
-  makeShareableCloneRecursive,
   makeShareableCloneOnUIRecursive,
+  makeShareableCloneRecursive,
 } from './shareables';
 export {
   callMicrotasks,
@@ -34,8 +35,8 @@ export {
   runOnUIImmediately,
 } from './threads';
 export { isWorkletFunction } from './workletFunction';
-export { WorkletsModule } from './WorkletsModule';
 export type { IWorkletsModule, WorkletsModuleProxy } from './WorkletsModule';
+export { WorkletsModule } from './WorkletsModule';
 export type {
   ShareableRef,
   WorkletFunction,
@@ -43,4 +44,3 @@ export type {
   WorkletRuntime,
   WorkletStackDetails,
 } from './workletTypes';
-export { setupCallGuard, setupConsole } from './initializers';

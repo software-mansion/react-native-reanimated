@@ -1,6 +1,6 @@
 'use strict';
+import type { LogBoxLogLevel, LogData } from './LogBox';
 import { addLogBoxLog } from './LogBox';
-import type { LogData, LogBoxLogLevel } from './LogBox';
 
 const DOCS_URL =
   'https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration';

@@ -59,11 +59,6 @@ using TransitionPropertyProgressProviders = std::unordered_map<
 
 class TransitionProgressProvider final {
  public:
-  explicit TransitionProgressProvider(
-      const CSSTransitionPropertiesSettings &settings);
-
-  void setSettings(const CSSTransitionPropertiesSettings &settings);
-
   TransitionProgressState getState() const;
   double getMinDelay(double timestamp) const;
   TransitionPropertyProgressProviders getPropertyProgressProviders() const;
@@ -73,18 +68,16 @@ class TransitionProgressProvider final {
       const std::unordered_set<std::string> &transitionPropertyNames);
   void runProgressProviders(
       double timestamp,
+      const CSSTransitionPropertiesSettings &propertiesSettings,
       const PropertyNames &changedPropertyNames,
       const std::unordered_set<std::string> &reversedPropertyNames);
   void update(double timestamp);
 
  private:
-  CSSTransitionPropertiesSettings settings_;
   TransitionPropertyProgressProviders propertyProgressProviders_;
 
   std::unordered_set<std::string> removedProperties_;
 
-  CSSTransitionPropertySettings getPropertySettings(
-      const std::string &propertyName) const;
   std::shared_ptr<TransitionPropertyProgressProvider>
   createReversingShorteningProgressProvider(
       double timestamp,

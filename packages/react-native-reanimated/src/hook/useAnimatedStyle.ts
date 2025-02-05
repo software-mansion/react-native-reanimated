@@ -2,16 +2,26 @@
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
 
-import { makeShareable, startMapper, stopMapper } from '../core';
-import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
-import { useSharedValue } from './useSharedValue';
-import {
-  buildWorkletsHash,
-  isAnimated,
-  shallowEqual,
-  validateAnimatedStyles,
-} from './utils';
+import type {
+  AnimatedPropsAdapterFunction,
+  AnimatedPropsAdapterWorklet,
+  AnimatedStyle,
+  AnimationObject,
+  NestedObjectValues,
+  SharedValue,
+  StyleProps,
+  Timestamp,
+} from '../commonTypes';
+import { makeShareable, startMapper, stopMapper } from '../core';
+import { ReanimatedError } from '../errors';
+import { isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { processBoxShadow } from '../processBoxShadow';
+import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
+import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
+import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
+import type { WorkletFunction } from '../WorkletsResolver';
+import { isWorkletFunction } from '../WorkletsResolver';
 import type {
   AnimatedStyleHandle,
   DefaultStyle,
@@ -19,23 +29,13 @@ import type {
   Descriptor,
   JestAnimatedStyleHandle,
 } from './commonTypes';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
-import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
-import { isJest, shouldBeUseWeb } from '../PlatformChecker';
-import type {
-  AnimationObject,
-  Timestamp,
-  NestedObjectValues,
-  SharedValue,
-  StyleProps,
-  AnimatedPropsAdapterFunction,
-  AnimatedPropsAdapterWorklet,
-  AnimatedStyle,
-} from '../commonTypes';
-import { processBoxShadow } from '../processBoxShadow';
-import { ReanimatedError } from '../errors';
-import { isWorkletFunction } from '../WorkletsResolver';
-import type { WorkletFunction } from '../WorkletsResolver';
+import { useSharedValue } from './useSharedValue';
+import {
+  buildWorkletsHash,
+  isAnimated,
+  shallowEqual,
+  validateAnimatedStyles,
+} from './utils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

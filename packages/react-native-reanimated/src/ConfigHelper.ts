@@ -1,10 +1,10 @@
 'use strict';
-import { PropsAllowlists } from './propsAllowlists';
 import { executeOnUIRuntimeSync, jsiConfigureProps } from './core';
 import { ReanimatedError } from './errors';
-import { updateLoggerConfig } from './WorkletsResolver';
-import type { LoggerConfig } from './WorkletsResolver';
 import { shouldBeUseWeb } from './PlatformChecker';
+import { PropsAllowlists } from './propsAllowlists';
+import type { LoggerConfig } from './WorkletsResolver';
+import { updateLoggerConfig } from './WorkletsResolver';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

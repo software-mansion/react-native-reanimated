@@ -1,21 +1,27 @@
 'use strict';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
-import {
-  runOnJS,
-  setupMicrotasks,
-  callMicrotasks,
-  executeOnUIRuntimeSync,
-} from './threads';
-import type { IWorkletsModule } from './WorkletsModule';
+
+import { reportFatalErrorOnJS } from './errors';
 import {
   DEFAULT_LOGGER_CONFIG,
   logToLogBoxAndConsole,
   registerLoggerConfig,
   replaceLoggerImplementation,
 } from './logger';
-import { reportFatalErrorOnJS } from './errors';
-import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
+import {
+  isChromeDebugger,
+  isJest,
+  isWeb,
+  shouldBeUseWeb,
+} from './PlatformChecker';
+import {
+  callMicrotasks,
+  executeOnUIRuntimeSync,
+  runOnJS,
+  setupMicrotasks,
+} from './threads';
+import { registerWorkletsError, WorkletsError } from './WorkletsError';
+import type { IWorkletsModule } from './WorkletsModule';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -181,6 +187,9 @@ function setupRequestAnimationFrame() {
 }
 
 export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
+  if (isWeb()) {
+    return;
+  }
   if (!WorkletsModule) {
     throw new WorkletsError(
       'Worklets are trying to initialize the UI runtime without a valid WorkletsModule'

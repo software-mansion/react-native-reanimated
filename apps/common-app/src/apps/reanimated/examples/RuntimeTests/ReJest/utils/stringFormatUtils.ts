@@ -1,4 +1,5 @@
 import { isColor, processColor } from 'react-native-reanimated';
+
 import type { TestValue } from '../types';
 
 const RESET_BACKGROUND = '\x1b[49m';

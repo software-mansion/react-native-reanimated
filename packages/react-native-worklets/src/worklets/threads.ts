@@ -5,9 +5,9 @@ import {
   makeShareableCloneRecursive,
 } from './shareables';
 import { isWorkletFunction } from './workletFunction';
+import { WorkletsError } from './WorkletsError';
 import { WorkletsModule } from './WorkletsModule';
 import type { WorkletFunction } from './workletTypes';
-import { WorkletsError } from './WorkletsError';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();

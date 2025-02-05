@@ -15,34 +15,32 @@ namespace reanimated {
 using TransformsMap = std::unordered_map<std::string, jsi::Value>;
 
 struct ChangedProps {
-  const PropertyValues oldProps;
-  const PropertyValues newProps;
+  const jsi::Value oldProps;
+  const jsi::Value newProps;
   const PropertyNames changedPropertyNames;
 };
 
-std::pair<TransformsMap, PropertyNames>
-extractTransformsMapAndOrderedProperties(
+bool isDiscreteProperty(const std::string &propName);
+
+// We need to specify it here because there are 2 methods referencing
+// each other in the recursion and areArraysDifferentRecursive must be
+// aware that getChangedPropsRecursive exists
+std::pair<jsi::Value, jsi::Value> getChangedPropsRecursive(
     jsi::Runtime &rt,
-    const jsi::Array &transformsArray);
+    const jsi::Value &oldProp,
+    const jsi::Value &newProp);
 
 ChangedProps getChangedProps(
     jsi::Runtime &rt,
     const jsi::Value &oldProps,
     const jsi::Value &newProps,
-    bool allowDiscrete,
-    const std::optional<PropertyNames> &propertyNames);
-
-ChangedProps getChangedProps(
-    jsi::Runtime &rt,
-    const jsi::Value &oldProps,
-    const jsi::Value &newProps,
-    bool allowDiscrete);
+    const PropertyNames &allowedProperties);
 
 void updateJSIObject(
     jsi::Runtime &rt,
     const jsi::Object &target,
     const jsi::Object &source);
 
-}; // namespace reanimated
+} // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED

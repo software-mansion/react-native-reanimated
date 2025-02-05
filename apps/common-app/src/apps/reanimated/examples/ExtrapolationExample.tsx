@@ -1,15 +1,15 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
+import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
+  Extrapolation,
+  interpolate,
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
-  interpolate,
   withTiming,
-  Extrapolation,
 } from 'react-native-reanimated';
-import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import { PanGestureHandler } from 'react-native-gesture-handler';
 
 export default function ExtrapolationExample() {
   const translation = {

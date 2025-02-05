@@ -1,18 +1,20 @@
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
 import type { ImageSourcePropType } from 'react-native';
 import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
   Dimensions,
-  Image,
   FlatList,
-  StatusBar,
+  Image,
   Platform,
+  Pressable,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeIn,
   runOnJS,
@@ -22,8 +24,6 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { useNavigation } from '@react-navigation/native';
 
 const leavesBackground = require('./assets/nature/leaves.jpg');
 

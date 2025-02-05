@@ -1,15 +1,15 @@
 'use strict';
 import { ReanimatedError, registerReanimatedError } from './errors';
 import { shouldBeUseWeb } from './PlatformChecker';
-import type { WorkletRuntime, WorkletFunction } from './WorkletsResolver';
+import type { WorkletFunction, WorkletRuntime } from './WorkletsResolver';
 import {
-  WorkletsModule,
   isWorkletFunction,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
   registerLoggerConfig,
   setupCallGuard,
   setupConsole,
+  WorkletsModule,
 } from './WorkletsResolver';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();

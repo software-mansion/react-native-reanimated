@@ -1,10 +1,11 @@
+import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
-import { View, Button } from 'react-native';
-import { render, fireEvent } from '@testing-library/react-native';
+import { Button, View } from 'react-native';
+
 import Animated, {
   interpolateColor,
-  useSharedValue,
   useAnimatedStyle,
+  useSharedValue,
   withTiming,
 } from '../src';
 

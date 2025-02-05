@@ -1,18 +1,18 @@
 'use strict';
-import { defineAnimation } from './util';
+import { ColorProperties, processColor } from '../Colors';
 import type {
-  Timestamp,
   AnimatableValue,
-  AnimationObject,
+  AnimatedStyle,
   Animation,
+  AnimationObject,
   NestedObject,
   NestedObjectValues,
-  AnimatedStyle,
+  Timestamp,
 } from '../commonTypes';
+import { logger } from '../WorkletsResolver';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
-import { ColorProperties, processColor } from '../Colors';
-import { logger } from '../WorkletsResolver';
+import { defineAnimation } from './util';
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined

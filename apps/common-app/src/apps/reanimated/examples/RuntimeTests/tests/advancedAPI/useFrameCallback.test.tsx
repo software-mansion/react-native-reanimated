@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, useFrameCallback } from 'react-native-reanimated';
-import { describe, test, expect, render, getTestComponent, wait, useTestRef } from '../../ReJest/RuntimeTestsApi';
+import { StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, useFrameCallback, useSharedValue } from 'react-native-reanimated';
+
+import { describe, expect, getTestComponent, render, test, useTestRef, wait } from '../../ReJest/RuntimeTestsApi';
 
 describe('Test *****useFrameCallback*****', () => {
   describe('Test _canceling frameCallback_ after predefined time', () => {

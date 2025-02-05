@@ -1,8 +1,9 @@
 import { makeMutable } from 'react-native-reanimated';
+
 import type { Operation } from '../types';
 import { SyncUIRunner } from '../utils/SyncUIRunner';
-import { createUpdatesContainer } from './UpdatesContainer';
 import { assertMockedAnimationTimestamp } from './Asserts';
+import { createUpdatesContainer } from './UpdatesContainer';
 
 export class AnimationUpdatesRecorder {
   private _syncUIRunner: SyncUIRunner = new SyncUIRunner();
