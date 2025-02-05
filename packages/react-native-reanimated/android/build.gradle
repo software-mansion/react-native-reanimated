@@ -129,6 +129,7 @@ def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.startsWith("0.0.0-") ? 1000 : REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def REANIMATED_VERSION = getReanimatedVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
+def IS_REANIMATED_EXAMPLE_APP = isReanimatedExampleApp()
 
 // Set version for prefab
 version REANIMATED_VERSION
@@ -253,8 +254,8 @@ android {
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
-                        "-DIS_REANIMATED_EXAMPLE_APP=${isReanimatedExampleApp()}",
-                        "-DREANIMATED_VERSION=${REANIMATED_VERSION}"
+                        "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
+                        "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
                 abiFilters (*reactNativeArchitectures())
                 targets("reanimated", "worklets")
             }
@@ -380,7 +381,7 @@ android {
     tasks.withType(ExternalNativeBuildJsonTask) {
         compileTask ->
             compileTask.doLast {
-                if (!isReanimatedExampleApp()) {
+                if (!IS_REANIMATED_EXAMPLE_APP) {
                     return
                 }
                 def monorepoDir = new File("${project.projectDir}/../../..")
