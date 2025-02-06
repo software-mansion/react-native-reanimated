@@ -622,6 +622,19 @@ jsi::Value TransformsStyleInterpolator::convertResultToJSI(
   return result;
 }
 
+folly::dynamic TransformsStyleInterpolator::convertResultToDynamic(
+    const TransformOperations &operations) {
+  auto result = folly::dynamic::array();
+
+  for (size_t i = 0; i < operations.size(); ++i) {
+  // TODO
+//    result.setValueAtIndex(rt, i, operations[i]->toJSIValue(rt));
+  }
+
+  return result;
+}
+
+
 TransformInterpolatorUpdateContext
 TransformsStyleInterpolator::createUpdateContext(
     const ShadowNode::Shared &shadowNode) const {

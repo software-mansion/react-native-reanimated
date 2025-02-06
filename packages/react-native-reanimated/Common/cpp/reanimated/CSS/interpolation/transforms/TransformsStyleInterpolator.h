@@ -127,6 +127,8 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   static jsi::Value convertResultToJSI(
       jsi::Runtime &rt,
       const TransformOperations &operations);
+  static folly::dynamic convertResultToDynamic(
+      const TransformOperations &operations);
   TransformInterpolatorUpdateContext createUpdateContext(
       const ShadowNode::Shared &shadowNode) const;
 };

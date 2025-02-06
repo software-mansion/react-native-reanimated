@@ -235,6 +235,20 @@ jsi::Value TransformOperation::toJSIValue(jsi::Runtime &rt) const {
   return obj;
 }
 
+folly::dynamic TransformOperation::toDynamic() const {
+// TODO
+  return folly::dynamic();
+//  const auto &value = valueToJSIValue();
+//  if (value.isUndefined()) {
+//    return jsi::Value::undefined();
+//  }
+//
+//  jsi::Object obj(rt);
+//  obj.setProperty(
+//      rt, jsi::String::createFromUtf8(rt, getOperationName()), value);
+//  return obj;
+}
+
 template <typename TValue>
 TransformOperationBase<TValue>::TransformOperationBase(const TValue &value)
     : TransformOperation(), value(value) {}

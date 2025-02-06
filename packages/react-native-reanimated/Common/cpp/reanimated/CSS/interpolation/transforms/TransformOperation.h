@@ -64,6 +64,7 @@ struct TransformOperation {
   static std::shared_ptr<TransformOperation> fromDynamic(
       const folly::dynamic &value);
   jsi::Value toJSIValue(jsi::Runtime &rt) const;
+  folly::dynamic toDynamic() const;
   virtual jsi::Value valueToJSIValue(jsi::Runtime &rt) const = 0;
 
   virtual bool canConvertTo(TransformOperationType type) const;
