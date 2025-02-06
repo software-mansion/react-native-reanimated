@@ -1,7 +1,7 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/common/values/CSSValueVariant.h>
+#include <reanimated/CSS/common/style/values/CSSValueVariant.h>
 #include <reanimated/CSS/interpolation/PropertyInterpolator.h>
 #include <reanimated/CSS/util/keyframes.h>
 
