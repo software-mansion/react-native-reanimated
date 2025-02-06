@@ -29,6 +29,7 @@ import type {
   IReanimatedModule,
   ReanimatedModuleProxy,
 } from './reanimatedModuleProxy';
+import { setupRequestAnimationFrame } from '../requestAnimationFrame';
 
 const IS_WEB = shouldBeUseWeb();
 
@@ -81,7 +82,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
-    executeOnUIRuntimeSync(registerReanimatedError);
+    executeOnUIRuntimeSync(function initializeUI() {
+      'worklet';
+      registerReanimatedError();
+      setupRequestAnimationFrame();
+    })();
   }
 
   registerSensor(
