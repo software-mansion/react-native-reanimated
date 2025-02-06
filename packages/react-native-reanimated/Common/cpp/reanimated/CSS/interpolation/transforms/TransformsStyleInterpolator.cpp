@@ -249,9 +249,7 @@ TransformsStyleInterpolator::parseTransformOperations(
 
   for (size_t i = 0; i < transformsCount; ++i) {
     const auto transform = transformsArray.at(i);
-    // TODO
-//    transformOperations.emplace_back(
-//        TransformOperation::fromDynamic(transform));
+    transformOperations.emplace_back(TransformOperation::fromDynamic(transform));
   }
   return transformOperations;
 }
