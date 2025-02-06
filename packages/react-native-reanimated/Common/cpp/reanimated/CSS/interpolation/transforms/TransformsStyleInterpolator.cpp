@@ -23,14 +23,6 @@ folly::dynamic TransformsStyleInterpolator::getStyleValue(
       shadowNode->getTag(), propertyPath_);
 }
 
-folly::dynamic TransformsStyleInterpolator::getCurrentValue(
-    const ShadowNode::Shared &shadowNode) const {
-  if (previousResult_.has_value()) {
-    return convertResultToDynamic(previousResult_.value());
-  }
-  return getStyleValue(shadowNode);
-}
-
 folly::dynamic TransformsStyleInterpolator::getFirstKeyframeValue() const {
   return convertResultToDynamic(
       keyframes_.front()->fromOperations.value_or(defaultStyleValue_));
@@ -150,7 +142,9 @@ void TransformsStyleInterpolator::updateKeyframes(
 void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
     const jsi::Value &oldStyleValue,
-    const jsi::Value &newStyleValue) {
+    const jsi::Value &newStyleValue,
+    const jsi::Value &previousValue,
+    const jsi::Value &reversingAdjustedStartValue) {
   keyframeIndex_ = 0;
   keyframes_.clear();
   keyframes_.reserve(1);
