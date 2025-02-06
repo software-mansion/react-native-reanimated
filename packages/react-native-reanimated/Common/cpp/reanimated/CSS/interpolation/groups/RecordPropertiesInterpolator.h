@@ -27,7 +27,9 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
   void updateKeyframesFromStyleChange(
       jsi::Runtime &rt,
       const jsi::Value &oldStyleValue,
-      const jsi::Value &newStyleValue) override;
+      const jsi::Value &newStyleValue,
+      const jsi::Value &previousValue,
+      const jsi::Value &reversingAdjustedStartValue) override;
 
  protected:
   void forEachInterpolator(const std::function<void(PropertyInterpolator &)>

@@ -22,12 +22,6 @@ class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
             {},
             progressProvider,
             viewStylesRepository) {}
-
-  jsi::Value getCurrentInterpolationStyle(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const {
-    return getCurrentValue(rt, shadowNode);
-  }
 };
 
 } // namespace reanimated
