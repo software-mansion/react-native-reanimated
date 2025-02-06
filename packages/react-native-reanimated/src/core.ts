@@ -9,18 +9,23 @@ import type {
   ValueRotation,
 } from './commonTypes';
 import { ReanimatedError } from './errors';
-import { initializeUIRuntime } from './initializers';
 import { isFabric, shouldBeUseWeb } from './PlatformChecker';
 import { ReanimatedModule } from './ReanimatedModule';
 import { SensorContainer } from './SensorContainer';
-import { makeShareableCloneRecursive } from './shareables';
 import type { WorkletFunction } from './WorkletsResolver';
+import { makeShareableCloneRecursive } from './WorkletsResolver';
 
 export { startMapper, stopMapper } from './mappers';
 export { makeMutable } from './mutables';
-export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export { makeShareable, makeShareableCloneRecursive } from './shareables';
-export { executeOnUIRuntimeSync, runOnJS, runOnUI } from './threads';
+export {
+  createWorkletRuntime,
+  executeOnUIRuntimeSync,
+  makeShareable,
+  makeShareableCloneRecursive,
+  runOnJS,
+  runOnRuntime,
+  runOnUI,
+} from './WorkletsResolver';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -152,8 +157,6 @@ export function unregisterSensor(sensorId: number): void {
   const sensorContainer = getSensorContainer();
   return sensorContainer.unregisterSensor(sensorId);
 }
-
-initializeUIRuntime(ReanimatedModule);
 
 type FeaturesConfig = {
   enableLayoutAnimations: boolean;

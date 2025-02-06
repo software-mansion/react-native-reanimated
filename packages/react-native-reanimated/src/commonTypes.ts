@@ -254,11 +254,6 @@ export interface Mutable<Value = unknown> extends SharedValue<Value> {
   _value: Value;
 }
 
-// In case of objects with depth or arrays of objects or arrays of arrays etc.
-// we add this utility type that makes it a `SharaebleRef` of the outermost type.
-export type FlatShareableRef<T> =
-  T extends ShareableRef<infer U> ? ShareableRef<U> : ShareableRef<T>;
-
 export type MapperRawInputs = unknown[];
 
 export type MapperOutputs = SharedValue[];

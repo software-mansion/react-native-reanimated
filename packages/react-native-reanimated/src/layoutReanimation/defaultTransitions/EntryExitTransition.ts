@@ -9,7 +9,7 @@ import type {
   StylePropsWithArrayTransform,
   TransformArrayItem,
 } from '../../commonTypes';
-import { logger } from '../../logger';
+import { logger } from '../../WorkletsResolver';
 import { BaseAnimationBuilder } from '../animationBuilder';
 import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
 

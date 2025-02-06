@@ -269,7 +269,6 @@ export {
   ZoomOutRotate,
   ZoomOutUp,
 } from './layoutReanimation';
-export { LogLevel as ReanimatedLogLevel } from './logger';
 export { startMapper, stopMapper } from './mappers';
 export type { ComponentCoords } from './platformFunctions';
 export {
@@ -293,4 +292,5 @@ export {
   startScreenTransition,
 } from './screenTransition';
 export type { WorkletRuntime } from './WorkletsResolver';
+export { LogLevel as ReanimatedLogLevel } from './WorkletsResolver';
 export { isWorkletFunction } from './WorkletsResolver';

@@ -2,10 +2,10 @@
 
 import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
 import { EasingNameSymbol } from '../../Easing';
-import { logger } from '../../logger';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../../ReanimatedModule/js-reanimated';
 import { ReducedMotionManager } from '../../ReducedMotion';
+import { logger } from '../../WorkletsResolver';
 import { Keyframe } from '../animationBuilder';
 import type { TransitionData } from './animationParser';
 import type { ReanimatedSnapshot, ScrollOffsets } from './componentStyle';
