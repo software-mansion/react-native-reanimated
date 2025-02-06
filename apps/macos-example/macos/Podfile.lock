@@ -1480,7 +1480,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (4.0.0-beta.1):
+  - RNReanimated (4.0.0-beta.2):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1500,10 +1500,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 4.0.0-beta.1)
-    - RNReanimated/worklets (= 4.0.0-beta.1)
+    - RNReanimated/reanimated (= 4.0.0-beta.2)
+    - RNReanimated/worklets (= 4.0.0-beta.2)
     - Yoga
-  - RNReanimated/reanimated (4.0.0-beta.1):
+  - RNReanimated/reanimated (4.0.0-beta.2):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1523,9 +1523,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 4.0.0-beta.1)
+    - RNReanimated/reanimated/apple (= 4.0.0-beta.2)
     - Yoga
-  - RNReanimated/reanimated/apple (4.0.0-beta.1):
+  - RNReanimated/reanimated/apple (4.0.0-beta.2):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1546,7 +1546,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated/worklets (4.0.0-beta.1):
+  - RNReanimated/worklets (4.0.0-beta.2):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1566,9 +1566,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/apple (= 4.0.0-beta.1)
+    - RNReanimated/worklets/apple (= 4.0.0-beta.2)
     - Yoga
-  - RNReanimated/worklets/apple (4.0.0-beta.1):
+  - RNReanimated/worklets/apple (4.0.0-beta.2):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1865,7 +1865,7 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: c91d753ede6dc21862c4922cd13f98f7cfde578e
   RNCClipboard: ee059e6006b137e369caed5eb852b4aad9f5d886
   RNGestureHandler: 8c8722468ee6ced80a0723943c894798d2613a81
-  RNReanimated: 618673a706b69b9c753f722bfff47ba943bb15b2
+  RNReanimated: 0bdc956768fe97d9cb4cad3589cb0893d95c168c
   RNSVG: 46769c92d1609e617dbf9326ad8a0cff912d0982
   SocketRocket: 9ee265c4b5ae2382d18e4ee1d2dd2d7af0ff1ab5
   Yoga: 446e6f351a519539ff00a1159fe41e589aab1b94
