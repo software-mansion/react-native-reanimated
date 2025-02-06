@@ -14,11 +14,7 @@ import {
   isWeb,
   shouldBeUseWeb,
 } from './PlatformChecker';
-import {
-  executeOnUIRuntimeSync,
-  runOnJS,
-  setupMicrotasks,
-} from './threads';
+import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
 import { registerWorkletsError, WorkletsError } from './WorkletsError';
 import type { IWorkletsModule } from './WorkletsModule';
 
