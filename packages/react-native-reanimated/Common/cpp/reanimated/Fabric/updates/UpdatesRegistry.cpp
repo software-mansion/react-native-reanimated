@@ -38,7 +38,7 @@ void UpdatesRegistry::flushCSSUpdates(
   std::lock_guard<std::mutex> lock{mutex_};
 
   auto copiedUpdatesBatch = std::move(cssUpdatesBatch_);
-  updatesBatch_.clear();
+  cssUpdatesBatch_.clear();
 
   // Store all updates in the registry for later use in the commit hook
   flushCSSUpdatesToRegistry(copiedUpdatesBatch, merge);
