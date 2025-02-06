@@ -30,7 +30,7 @@ class ValueInterpolatorFactory : public PropertyInterpolatorFactory {
   bool isDiscreteProperty() const override {
     // The property is considered discrete if all of the allowed types are
     // discrete
-    return (Discrete<AllowedTypes> && ...);
+    return (CSSDiscreteValueDerived<AllowedTypes> && ...);
   }
 
   const CSSValue &getDefaultValue() const override {

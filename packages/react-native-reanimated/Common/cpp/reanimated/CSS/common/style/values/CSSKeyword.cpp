@@ -1,6 +1,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/common/values/CSSKeyword.h>
+#include <reanimated/CSS/common/style/values/CSSKeyword.h>
 
 namespace reanimated {
 

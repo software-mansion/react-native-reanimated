@@ -1,5 +1,5 @@
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <reanimated/CSS/common/values/CSSAngle.h>
+#include <reanimated/CSS/common/style/values/CSSAngle.h>
 
 namespace reanimated {
 

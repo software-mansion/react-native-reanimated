@@ -1,6 +1,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/common/values/CSSBoolean.h>
+#include <reanimated/CSS/common/style/values/CSSBoolean.h>
 
 namespace reanimated {
 

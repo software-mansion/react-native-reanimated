@@ -1,7 +1,7 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/common/values/CSSValue.h>
+#include <reanimated/CSS/common/style/CSSValue.h>
 #include <reanimated/CSS/interpolation/transforms/TransformInterpolator.h>
 #include <reanimated/CSS/interpolation/transforms/TransformOperation.h>
 
@@ -16,7 +16,8 @@ concept ResolvableOperation = requires(TOperation operation) {
     operation.value
   } -> std::convertible_to<
       typename std::remove_reference_t<decltype(operation.value)>>;
-  requires Resolvable<std::remove_reference_t<decltype(operation.value)>>;
+  requires CSSResolvableValueDerived<
+      std::remove_reference_t<decltype(operation.value)>>;
 }; // NOLINT(readability/braces)
 
 // Base implementation for simple operations

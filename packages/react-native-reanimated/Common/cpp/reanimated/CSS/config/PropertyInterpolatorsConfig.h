@@ -3,13 +3,13 @@
 
 #include <reanimated/CSS/interpolation/InterpolatorFactory.h>
 
-#include <reanimated/CSS/common/values/CSSAngle.h>
-#include <reanimated/CSS/common/values/CSSBoolean.h>
-#include <reanimated/CSS/common/values/CSSColor.h>
-#include <reanimated/CSS/common/values/CSSDimension.h>
-#include <reanimated/CSS/common/values/CSSDiscreteArray.h>
-#include <reanimated/CSS/common/values/CSSKeyword.h>
-#include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/common/style/values/CSSAngle.h>
+#include <reanimated/CSS/common/style/values/CSSBoolean.h>
+#include <reanimated/CSS/common/style/values/CSSColor.h>
+#include <reanimated/CSS/common/style/values/CSSDimension.h>
+#include <reanimated/CSS/common/style/values/CSSDiscreteArray.h>
+#include <reanimated/CSS/common/style/values/CSSKeyword.h>
+#include <reanimated/CSS/common/style/values/CSSNumber.h>
 
 #include <vector>
 

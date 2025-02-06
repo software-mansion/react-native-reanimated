@@ -1,5 +1,5 @@
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/common/style/values/CSSNumber.h>
 
 namespace reanimated {
 

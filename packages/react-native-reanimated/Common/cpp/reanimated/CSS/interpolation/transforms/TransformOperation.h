@@ -3,9 +3,9 @@
 
 #include <reanimated/CSS/common/TransformMatrix.h>
 #include <reanimated/CSS/common/definitions.h>
-#include <reanimated/CSS/common/values/CSSAngle.h>
-#include <reanimated/CSS/common/values/CSSDimension.h>
-#include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/common/style/values/CSSAngle.h>
+#include <reanimated/CSS/common/style/values/CSSDimension.h>
+#include <reanimated/CSS/common/style/values/CSSNumber.h>
 
 #include <react/renderer/core/ShadowNode.h>
 
