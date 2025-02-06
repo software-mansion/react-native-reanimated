@@ -116,6 +116,18 @@ jsi::Value RecordPropertiesInterpolator::mapInterpolators(
   return result;
 }
 
+folly::dynamic RecordPropertiesInterpolator::mapInterpolators(
+    const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const {
+  folly::dynamic result = folly::dynamic::object;
+
+  for (const auto &[propName, interpolator] : interpolators_) {
+    auto value = callback(*interpolator);
+    result[propName] = value;
+  }
+
+  return result;
+}
+
 void RecordPropertiesInterpolator::maybeCreateInterpolator(
     const std::string &propertyName) {
   if (interpolators_.find(propertyName) == interpolators_.end()) {

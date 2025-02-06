@@ -35,6 +35,9 @@ class ArrayPropertiesInterpolator : public GroupPropertiesInterpolator {
       jsi::Runtime &rt,
       const std::function<jsi::Value(PropertyInterpolator &)> &callback)
       const override;
+  folly::dynamic mapInterpolators(
+      const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
+      const override;
 
  private:
   const InterpolatorFactoriesArray &factories_;

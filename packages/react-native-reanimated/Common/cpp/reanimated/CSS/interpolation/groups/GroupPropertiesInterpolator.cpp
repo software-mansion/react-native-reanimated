@@ -31,12 +31,10 @@ jsi::Value GroupPropertiesInterpolator::getStyleValue(
 
 folly::dynamic GroupPropertiesInterpolator::getStyleValue(
     const ShadowNode::Shared &shadowNode) const {
-    // TODO
-      return folly::dynamic();
-//  return mapInterpolators(
-//      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-//        return interpolator.getStyleValue(rt, shadowNode);
-//      });
+  return mapInterpolators(
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
+        return interpolator.getStyleValue(shadowNode);
+      });
 }
 
 jsi::Value GroupPropertiesInterpolator::getCurrentValue(
@@ -75,12 +73,10 @@ jsi::Value GroupPropertiesInterpolator::update(
 
 folly::dynamic GroupPropertiesInterpolator::update(
     const ShadowNode::Shared &shadowNode) {
-    // TODO
-      return folly::dynamic();
-//  return mapInterpolators(
-//      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-//        return interpolator.update(rt, shadowNode);
-//      });
+  return mapInterpolators(
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
+        return interpolator.update(shadowNode);
+      });
 }
 
 jsi::Value GroupPropertiesInterpolator::reset(

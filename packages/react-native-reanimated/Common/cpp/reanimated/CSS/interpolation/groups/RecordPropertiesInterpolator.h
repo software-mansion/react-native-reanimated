@@ -36,6 +36,9 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
       jsi::Runtime &rt,
       const std::function<jsi::Value(PropertyInterpolator &)> &callback)
       const override;
+  folly::dynamic mapInterpolators(
+      const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
+      const override;
 
   void maybeCreateInterpolator(const std::string &propertyName);
 

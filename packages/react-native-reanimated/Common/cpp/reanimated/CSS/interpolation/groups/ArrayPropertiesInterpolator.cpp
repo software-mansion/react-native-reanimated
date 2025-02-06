@@ -102,6 +102,18 @@ jsi::Value ArrayPropertiesInterpolator::mapInterpolators(
   return result;
 }
 
+folly::dynamic ArrayPropertiesInterpolator::mapInterpolators(
+    const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const {
+  auto result = folly::dynamic::array();
+
+  for (size_t i = 0; i < interpolators_.size(); ++i) {
+    folly::dynamic value = callback(*interpolators_[i]);
+    result.push_back(value);
+  }
+
+  return result;
+}
+
 void ArrayPropertiesInterpolator::resizeInterpolators(size_t valuesCount) {
   // Remove excess interpolators if the array size has decreased
   if (interpolators_.size() > valuesCount) {
