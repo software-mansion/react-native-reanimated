@@ -1,0 +1,39 @@
+Checks:
+  # - bugprone-*
+  # - clang-analyzer-*
+  # - concurrency-*
+  - cppcoreguidelines-*
+  - -cppcoreguidelines-avoid-const-or-ref-data-members
+  - -cppcoreguidelines-special-member-functions
+  - -cppcoreguidelines-explicit-virtual-functions
+  - -cppcoreguidelines-use-default-member-init
+  - -cppcoreguidelines-non-private-member-variables-in-classes
+  - -cppcoreguidelines-pro-type-vararg
+  - -cppcoreguidelines-narrowing-conversions
+  - -cppcoreguidelines-pro-type-member-init
+  - -cppcoreguidelines-pro-type-union-access
+  - -cppcoreguidelines-missing-std-forward
+  - -cppcoreguidelines-avoid-c-arrays
+  - -cppcoreguidelines-noexcept-move-operations
+  - -cppcoreguidelines-prefer-member-initializer
+  - -cppcoreguidelines-virtual-class-destructor
+  - -cppcoreguidelines-avoid-magic-numbers
+  - -cppcoreguidelines-pro-bounds-pointer-arithmetic
+  - -cppcoreguidelines-macro-usage
+  - -cppcoreguidelines-no-malloc
+  - -cppcoreguidelines-rvalue-reference-param-not-moved
+  - -cppcoreguidelines-pro-type-static-cast-downcast
+  - -cppcoreguidelines-pro-type-reinterpret-cast
+  - -cppcoreguidelines-pro-bounds-constant-array-index
+  - -cppcoreguidelines-init-variables
+  - -cppcoreguidelines-pro-bounds-array-to-pointer-decay
+  # - google-*
+  # - hicpp-*
+  # - llvm-*
+  # - misc-*
+  # - modernize-*
+  # - objc-*
+  # - performance-*
+  # - portability-*
+  # - readability-*
+WarningsAsErrors: "*"
