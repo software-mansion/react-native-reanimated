@@ -85,8 +85,10 @@ void TransitionStyleInterpolator::discardIrrelevantInterpolators(
 
 void TransitionStyleInterpolator::updateInterpolatedProperties(
     jsi::Runtime &rt,
-    const ChangedProps &changedProps,
-    const TransitionPropertyProgressProviders &progressProviders) {
+    const jsi::Value &oldStyleValue,
+    const jsi::Value &newStyleValue,
+    const jsi::Value &previousValue,
+    const jsi::Value &reversingAdjustedStartValue) {
   const auto oldPropsObj = changedProps.oldProps.asObject(rt);
   const auto newPropsObj = changedProps.newProps.asObject(rt);
 
@@ -114,7 +116,7 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
     }
 
     interpolatorIt->second->updateKeyframesFromStyleChange(
-        rt, oldValue, newValue);
+        rt, oldValue, newValue, previousValue, reversingAdjustedStartValue);
   }
 }
 

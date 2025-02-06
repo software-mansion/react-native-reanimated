@@ -62,7 +62,9 @@ void RecordPropertiesInterpolator::updateKeyframes(
 void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
     const jsi::Value &oldStyleValue,
-    const jsi::Value &newStyleValue) {
+    const jsi::Value &newStyleValue,
+    const jsi::Value &previousValue,
+    const jsi::Value &reversingAdjustedStartValue) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
   // used  (for now, for simplicity, we only add new ones)
 
@@ -92,7 +94,11 @@ void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
 
     interpolators_.at(propertyName)
         ->updateKeyframesFromStyleChange(
-            rt, getValue(oldStyleObject), getValue(newStyleObject));
+            rt,
+            getValue(oldStyleObject),
+            getValue(newStyleObject),
+            previousValue,
+            reversingAdjustedStartValue);
   }
 }
 

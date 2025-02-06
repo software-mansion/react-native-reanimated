@@ -22,11 +22,6 @@ class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
             {},
             progressProvider,
             viewStylesRepository) {}
-
-  folly::dynamic getCurrentInterpolationStyle(
-      const ShadowNode::Shared &shadowNode) const {
-    return getCurrentValue(shadowNode);
-  }
 };
 
 } // namespace reanimated

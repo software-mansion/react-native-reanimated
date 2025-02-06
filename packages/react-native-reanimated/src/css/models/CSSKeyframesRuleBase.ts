@@ -39,6 +39,10 @@ export default abstract class CSSKeyframesRuleBase<S extends PlainStyle>
     return this.name_;
   }
 
+  toString() {
+    return this.name_;
+  }
+
   static generateNextKeyframeName() {
     return `REA-CSS-${currentAnimationID++}`;
   }

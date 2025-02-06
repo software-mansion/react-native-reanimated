@@ -28,14 +28,6 @@ folly::dynamic GroupPropertiesInterpolator::getStyleValue(
       });
 }
 
-folly::dynamic GroupPropertiesInterpolator::getCurrentValue(
-    const ShadowNode::Shared &shadowNode) const {
-  return mapInterpolators(
-      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
-        return interpolator.getCurrentValue(shadowNode);
-      });
-}
-
 folly::dynamic GroupPropertiesInterpolator::getFirstKeyframeValue() const {
   return mapInterpolators(
       [&](PropertyInterpolator &interpolator) -> folly::dynamic {
@@ -55,14 +47,6 @@ folly::dynamic GroupPropertiesInterpolator::update(
   return mapInterpolators(
       [&](PropertyInterpolator &interpolator) -> folly::dynamic {
         return interpolator.update(shadowNode);
-      });
-}
-
-folly::dynamic GroupPropertiesInterpolator::reset(
-    const ShadowNode::Shared &shadowNode) {
-  return mapInterpolators(
-      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
-        return interpolator.reset(shadowNode);
       });
 }
 
