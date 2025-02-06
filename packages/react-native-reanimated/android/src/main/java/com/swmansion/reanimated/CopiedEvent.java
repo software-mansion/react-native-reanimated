@@ -11,7 +11,7 @@ public class CopiedEvent {
   private String eventName;
   private WritableMap payload;
 
-  CopiedEvent(Event event) {
+  CopiedEvent(Event<?> event) {
     event.dispatch(
         new RCTEventEmitter() {
           @Override

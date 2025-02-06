@@ -194,7 +194,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
       if (parent.getClass().getSimpleName().equals("Screen")) {
         break;
       }
-      parent = (ViewParent) parent.getParent();
+      parent = parent.getParent();
     }
 
     if (parent != null) {
@@ -329,6 +329,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     mSharedTransitionManager.setNativeMethods(nativeMethods);
   }
 
+  @SuppressWarnings("rawtypes")
   public void setNewProps(
       Map<String, Object> props,
       View view,
@@ -420,7 +421,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
 
   public void updateLayout(
       View viewToUpdate,
-      ViewManager parentViewManager,
+      ViewManager<?, ?> parentViewManager,
       int parentTag,
       float xf,
       float yf,
@@ -698,7 +699,7 @@ public class AnimationsManager implements ViewHierarchyObserver {
     }
   }
 
-  private ViewManager resolveViewManager(int tag) {
+  private ViewManager<?, ?> resolveViewManager(int tag) {
     try {
       return mReanimatedNativeHierarchyManager.resolveViewManager(tag);
     } catch (Exception e) {
