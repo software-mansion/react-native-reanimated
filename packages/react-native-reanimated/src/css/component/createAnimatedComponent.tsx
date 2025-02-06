@@ -57,7 +57,7 @@ export default function createAnimatedComponent<P extends object>(
     }
   }
 
-  return React.forwardRef<Component>((props, ref) => {
+  const animatedComponent = React.forwardRef<Component>((props, ref) => {
     return (
       <AnimatedComponent
         {...props}
@@ -65,4 +65,9 @@ export default function createAnimatedComponent<P extends object>(
       />
     );
   });
+
+  animatedComponent.displayName =
+    Component.displayName || Component.name || 'Component';
+
+  return animatedComponent;
 }
