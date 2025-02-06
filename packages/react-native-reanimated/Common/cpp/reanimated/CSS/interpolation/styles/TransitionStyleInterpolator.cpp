@@ -79,13 +79,12 @@ folly::dynamic TransitionStyleInterpolator::update(
     return folly::dynamic();
   }
 
-  auto result = folly::dynamic::array();
+  folly::dynamic result = folly::dynamic::object;
 
   for (auto it = interpolators_.begin(); it != interpolators_.end();) {
     const auto &[propertyName, interpolator] = *it;
 
-    folly::dynamic value = interpolator->update(shadowNode);
-    result.push_back(folly::dynamic::object(propertyName.c_str(), value));
+    result[propertyName] = interpolator->update(shadowNode);
 
     if (propertiesToRemove.find(propertyName) != propertiesToRemove.cend()) {
       it = interpolators_.erase(it);

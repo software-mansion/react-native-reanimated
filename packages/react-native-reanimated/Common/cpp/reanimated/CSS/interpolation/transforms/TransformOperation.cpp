@@ -237,12 +237,7 @@ jsi::Value TransformOperation::toJSIValue(jsi::Runtime &rt) const {
 
 folly::dynamic TransformOperation::toDynamic() const {
   const auto &value = valueToDynamic();
-  if (value.empty()) {
-    return folly::dynamic();
-  }
-
-  auto obj = folly::dynamic::object(getOperationName(), value);
-  return obj;
+  return folly::dynamic::object(getOperationName(), value);
 }
 
 template <typename TValue>
