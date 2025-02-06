@@ -124,13 +124,12 @@ folly::dynamic TransformsStyleInterpolator::update(
       !keyframe->toOperations.has_value()) {
     // If the value is nullopt, we would have to read it from the view style
     // and build the keyframe again
-    // TODO
     const auto fallbackValue = getFallbackValue(shadowNode);
-//    keyframe = createTransformKeyframe(
-//        keyframe->fromOffset,
-//        keyframe->toOffset,
-//        keyframe->fromOperations.value_or(fallbackValue),
-//        keyframe->toOperations.value_or(fallbackValue));
+    keyframe = createTransformKeyframe(
+        keyframe->fromOffset,
+        keyframe->toOffset,
+        keyframe->fromOperations.value_or(fallbackValue),
+        keyframe->toOperations.value_or(fallbackValue));
   }
 
   // Interpolate the current keyframe
@@ -518,22 +517,20 @@ TransformsStyleInterpolator::getKeyframeAtIndex(
 
   // If the operations are not specified, we would have to read the transform
   // value from the view style and create the new keyframe then
-  // TODO
-  return keyframe;
-//  const auto fallbackValue = getFallbackValue(rt, shadowNode);
-//  if (resolveDirection < 0) {
-//    return createTransformKeyframe(
-//        keyframe->fromOffset,
-//        keyframe->toOffset,
-//        resolveTransformOperations(shadowNode, fallbackValue),
-//        keyframe->toOperations);
-//  } else {
-//    return createTransformKeyframe(
-//        keyframe->fromOffset,
-//        keyframe->toOffset,
-//        keyframe->fromOperations,
-//        resolveTransformOperations(shadowNode, fallbackValue));
-//  }
+  const auto fallbackValue = getFallbackValue(shadowNode);
+  if (resolveDirection < 0) {
+    return createTransformKeyframe(
+        keyframe->fromOffset,
+        keyframe->toOffset,
+        resolveTransformOperations(shadowNode, fallbackValue),
+        keyframe->toOperations);
+  } else {
+    return createTransformKeyframe(
+        keyframe->fromOffset,
+        keyframe->toOffset,
+        keyframe->fromOperations,
+        resolveTransformOperations(shadowNode, fallbackValue));
+  }
 }
 
 void TransformsStyleInterpolator::updateCurrentKeyframe(
