@@ -11,7 +11,7 @@ namespace reanimated {
 
 using namespace worklets;
 
-struct CSSBoolean : public CSSBaseValue<CSSValueType::Boolean, CSSBoolean> {
+struct CSSBoolean : public CSSSimpleValue<CSSBoolean> {
   bool value;
 
   CSSBoolean();

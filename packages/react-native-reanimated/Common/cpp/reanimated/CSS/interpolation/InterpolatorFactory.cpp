@@ -26,10 +26,6 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
  private:
   // Helper private type just for a default value
   struct EmptyObjectValue : public CSSValue {
-    CSSValueType type() const override {
-      return CSSValueType::Empty;
-    }
-
     jsi::Value toJSIValue(jsi::Runtime &rt) const override {
       return jsi::Object(rt);
     }
@@ -68,10 +64,6 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
  private:
   // Helper private type just for a default value
   struct EmptyArrayValue : public CSSValue {
-    CSSValueType type() const override {
-      return CSSValueType::Empty;
-    }
-
     jsi::Value toJSIValue(jsi::Runtime &rt) const override {
       return jsi::Array(rt, 0);
     }
@@ -116,10 +108,6 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
 
   // Helper private type just for a default value
   struct EmptyTransformsValue : public CSSValue {
-    CSSValueType type() const override {
-      return CSSValueType::Empty;
-    }
-
     jsi::Value toJSIValue(jsi::Runtime &rt) const override {
       return getIdentityMatrix().toJSIValue(rt);
     }
