@@ -627,8 +627,7 @@ folly::dynamic TransformsStyleInterpolator::convertResultToDynamic(
   auto result = folly::dynamic::array();
 
   for (size_t i = 0; i < operations.size(); ++i) {
-  // TODO
-//    result.setValueAtIndex(rt, i, operations[i]->toJSIValue(rt));
+    result.push_back(operations[i]->toDynamic());
   }
 
   return result;
