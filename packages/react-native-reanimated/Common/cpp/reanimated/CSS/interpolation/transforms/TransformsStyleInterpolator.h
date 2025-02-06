@@ -35,32 +35,24 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
-  jsi::Value getCurrentValue(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const override;
   jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const override;
   jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const override;
 
-  bool equalsReversingAdjustedStartValue(
-      jsi::Runtime &rt,
-      const jsi::Value &propertyValue) const override;
-
   jsi::Value update(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
-      override;
-  jsi::Value reset(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
       override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
       jsi::Runtime &rt,
       const jsi::Value &oldStyleValue,
-      const jsi::Value &newStyleValue) override;
+      const jsi::Value &newStyleValue,
+      const jsi::Value &previousValue,
+      const jsi::Value &reversingAdjustedStartValue) override;
 
  private:
   const std::shared_ptr<TransformInterpolators> interpolators_;
   static const TransformOperations defaultStyleValue_;
 
-  size_t keyframeIndex_ = 0;
   std::vector<std::shared_ptr<TransformKeyframe>> keyframes_;
   std::shared_ptr<TransformKeyframe> currentKeyframe_;
   // Previous interpolation result

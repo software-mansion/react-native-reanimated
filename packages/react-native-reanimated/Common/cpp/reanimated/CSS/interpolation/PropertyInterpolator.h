@@ -26,9 +26,6 @@ class PropertyInterpolator {
   virtual jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const = 0;
-  virtual jsi::Value getCurrentValue(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const = 0;
   virtual jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const = 0;
   virtual jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const = 0;
 
@@ -42,7 +39,9 @@ class PropertyInterpolator {
   virtual void updateKeyframesFromStyleChange(
       jsi::Runtime &rt,
       const jsi::Value &oldStyleValue,
-      const jsi::Value &newStyleValue) = 0;
+      const jsi::Value &newStyleValue,
+      const jsi::Value &previousValue,
+      const jsi::Value &reversingAdjustedStartValue) = 0;
 
   virtual jsi::Value update(
       jsi::Runtime &rt,

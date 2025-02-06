@@ -24,15 +24,6 @@ jsi::Value TransformsStyleInterpolator::getStyleValue(
       rt, shadowNode->getTag(), propertyPath_);
 }
 
-jsi::Value TransformsStyleInterpolator::getCurrentValue(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) const {
-  if (previousResult_.has_value()) {
-    return convertResultToJSI(rt, previousResult_.value());
-  }
-  return getStyleValue(rt, shadowNode);
-}
-
 jsi::Value TransformsStyleInterpolator::getFirstKeyframeValue(
     jsi::Runtime &rt) const {
   return convertResultToJSI(
@@ -156,7 +147,9 @@ void TransformsStyleInterpolator::updateKeyframes(
 void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
     const jsi::Value &oldStyleValue,
-    const jsi::Value &newStyleValue) {
+    const jsi::Value &newStyleValue,
+    const jsi::Value &previousValue,
+    const jsi::Value &reversingAdjustedStartValue) {
   keyframeIndex_ = 0;
   keyframes_.clear();
   keyframes_.reserve(1);
