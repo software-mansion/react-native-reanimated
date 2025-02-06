@@ -29,15 +29,6 @@ jsi::Value GroupPropertiesInterpolator::getStyleValue(
       });
 }
 
-jsi::Value GroupPropertiesInterpolator::getCurrentValue(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) const {
-  return mapInterpolators(
-      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-        return interpolator.getCurrentValue(rt, shadowNode);
-      });
-}
-
 jsi::Value GroupPropertiesInterpolator::getFirstKeyframeValue(
     jsi::Runtime &rt) const {
   return mapInterpolators(
@@ -60,15 +51,6 @@ jsi::Value GroupPropertiesInterpolator::update(
   return mapInterpolators(
       rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
         return interpolator.update(rt, shadowNode);
-      });
-}
-
-jsi::Value GroupPropertiesInterpolator::reset(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) {
-  return mapInterpolators(
-      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-        return interpolator.reset(rt, shadowNode);
       });
 }
 

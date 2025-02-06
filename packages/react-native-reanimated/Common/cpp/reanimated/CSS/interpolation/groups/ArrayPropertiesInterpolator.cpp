@@ -51,7 +51,9 @@ void ArrayPropertiesInterpolator::updateKeyframes(
 void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
     const jsi::Value &oldStyleValue,
-    const jsi::Value &newStyleValue) {
+    const jsi::Value &newStyleValue,
+    const jsi::Value &previousValue,
+    const jsi::Value &reversingAdjustedStartValue) {
   auto getArrayFromStyle = [&rt](const jsi::Value &style) {
     if (!style.isObject()) {
       return jsi::Array(rt, 0);
@@ -78,7 +80,8 @@ void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
         ? newStyleArray.getValueAtIndex(rt, i)
         : jsi::Value::undefined();
 
-    interpolators_[i]->updateKeyframesFromStyleChange(rt, oldValue, newValue);
+    interpolators_[i]->updateKeyframesFromStyleChange(
+        rt, oldValue, newValue, previousValue, reversingAdjustedStartValue);
   }
 }
 
