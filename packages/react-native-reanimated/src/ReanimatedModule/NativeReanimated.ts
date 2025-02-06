@@ -18,6 +18,7 @@ import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
+import { setupRequestAnimationFrame } from '../requestAnimationFrame';
 import { ReanimatedTurboModule } from '../specs';
 import type {
   IWorkletsModule,
@@ -29,7 +30,6 @@ import type {
   IReanimatedModule,
   ReanimatedModuleProxy,
 } from './reanimatedModuleProxy';
-import { setupRequestAnimationFrame } from '../requestAnimationFrame';
 
 const IS_WEB = shouldBeUseWeb();
 
