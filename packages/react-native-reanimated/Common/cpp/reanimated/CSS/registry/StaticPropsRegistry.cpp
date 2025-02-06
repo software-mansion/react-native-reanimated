@@ -1,6 +1,8 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 
+#include <reanimated/CSS/config/CSSStyleConfig.h>
+
 namespace reanimated {
 
 void StaticPropsRegistry::set(
@@ -11,6 +13,12 @@ void StaticPropsRegistry::set(
     remove(viewTag);
   } else {
     const auto newProps = dynamicFromValue(rt, props);
+    LOG(INFO) << "Setting props for viewTag: " << viewTag
+              << " props: " << newProps;
+
+    CSSStyle style = CSSStyle(rt, props);
+    LOG(INFO) << "Style: " << style.toString();
+
     if (has(viewTag)) {
       notifyObservers(rt, viewTag, valueFromDynamic(rt, get(viewTag)), props);
     }

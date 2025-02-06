@@ -2,6 +2,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/style/CSSValue.h>
+#include <reanimated/CSS/common/style/values/CSSKeyword.h>
 
 #include <worklets/Tools/JSISerializer.h>
 

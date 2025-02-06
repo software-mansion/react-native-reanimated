@@ -2,85 +2,114 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/style/CSSValue.h>
+#include <array>
+#include <functional>
+#include <memory>
 #include <string_view>
 #include <tuple>
+#include <unordered_map>
 
 namespace reanimated {
 
-template <std::string_view Key, CSSValueDerived T>
+template <typename Key, size_t N, CSSValueDerived T>
 struct Field {
-  static constexpr std::string_view key = Key;
+  static constexpr std::array<char, N> key{};
+  static constexpr std::string_view keyView{
+      key.data(),
+      N - 1}; // -1 to exclude null terminator
   using type = T;
 };
 
 template <typename... Fields>
-  requires(CSSValueDerived<typename Fields::type> && ...)
 class CSSRecord final : public CSSValue {
+ private:
+  std::unordered_map<std::string_view, std::unique_ptr<CSSValue>> values_;
+
+  static const std::unordered_map<
+      std::string_view,
+      std::function<
+          std::unique_ptr<CSSValue>(jsi::Runtime &, const jsi::Value &)>>
+      constructors;
+
  public:
   CSSRecord(jsi::Runtime &rt, const jsi::Value &value) {
     if (!value.isObject()) {
-      throw std::runtime_error("Expected object value for CSSRecord");
+      throw std::runtime_error(
+          "[Reanimated] Expected object value for CSSRecord");
     }
+
     auto object = value.asObject(rt);
-    ((std::get<findFieldIndex<Fields::key>()>(values_) = typename Fields::type(
-          rt, object.getProperty(rt, std::string(Fields::key)))),
-     ...);
+    auto propertyNames = object.getPropertyNames(rt);
+
+    for (size_t i = 0; i < propertyNames.length(rt); i++) {
+      auto propName = propertyNames.getValueAtIndex(rt, i).getString(rt);
+      auto propValue = object.getProperty(rt, propName.utf8(rt).c_str());
+
+      if (auto constructor = constructors.find(propName.utf8(rt));
+          constructor != constructors.end()) {
+        values_[propName.utf8(rt)] = constructor->second(rt, propValue);
+      }
+    }
   }
 
-  template <std::string_view Key>
+  template <typename Key, size_t N>
   const auto &get() const {
-    return std::get<findFieldIndex<Key>()>(values_);
+    static constexpr std::string_view key{Key::key.data(), N - 1};
+    if (auto it = values_.find(key); it != values_.end()) {
+      using FieldType = typename std::tuple_element_t<
+          0,
+          std::tuple<std::conditional_t<
+              std::is_same_v<Key, typename Fields::key_type>,
+              Fields,
+              void>...>>;
+      return *static_cast<const typename FieldType::type *>(it->second.get());
+    }
+    throw std::runtime_error(
+        "[Reanimated] Attempted to access non-existent field in CSSRecord");
   }
 
   jsi::Value toJSIValue(jsi::Runtime &rt) const override {
     auto object = jsi::Object(rt);
-    ((object.setProperty(
-         rt,
-         std::string(Fields::key),
-         std::get<findFieldIndex<Fields::key>()>(values_).toJSIValue(rt))),
-     ...);
+    for (const auto &[key, value] : values_) {
+      object.setProperty(rt, std::string(key), value->toJSIValue(rt));
+    }
     return object;
   }
 
   folly::dynamic toDynamic() const override {
     folly::dynamic result = folly::dynamic::object;
-    ((result[std::string(Fields::key)] =
-          std::get<findFieldIndex<Fields::key>()>(values_).toDynamic()),
-     ...);
+    for (const auto &[key, value] : values_) {
+      result[std::string(key)] = value->toDynamic();
+    }
     return result;
   }
 
   std::string toString() const override {
-    std::string result = "{";
+    std::ostringstream oss;
+    oss << '{';
     bool first = true;
-    (((first ? first = false : result += ", "),
-      result += std::string(Fields::key) + ": " +
-          std::get<findFieldIndex<Fields::key>()>(values_).toString()),
-     ...);
-    result += "}";
-    return result;
-  }
-
- private:
-  std::tuple<typename Fields::type...> values_;
-
-  template <std::string_view Key>
-  static constexpr size_t findFieldIndex() {
-    return findFieldIndexImpl<Key, 0, Fields...>();
-  }
-
-  template <std::string_view Key, size_t I, typename Field, typename... Rest>
-  static constexpr size_t findFieldIndexImpl() {
-    if constexpr (Field::key == Key) {
-      return I;
-    } else if constexpr (sizeof...(Rest) == 0) {
-      static_assert(sizeof...(Rest) != 0, "Field key not found");
-      return 0;
-    } else {
-      return findFieldIndexImpl<Key, I + 1, Rest...>();
+    for (const auto &[key, value] : values_) {
+      if (!first) {
+        oss << ", ";
+      }
+      first = false;
+      oss << std::string(key) << ": " << value->toString();
     }
+    oss << '}';
+    return oss.str();
   }
 };
+
+// Initialize the constructors map
+template <typename... Fields>
+const std::unordered_map<
+    std::string_view,
+    std::function<
+        std::unique_ptr<CSSValue>(jsi::Runtime &, const jsi::Value &)>>
+    CSSRecord<Fields...>::constructors = {
+        {Fields::key, [](jsi::Runtime &rt, const jsi::Value &val) {
+           return std::make_unique<typename Fields::type>(rt, val);
+         }}...};
 
 } // namespace reanimated
 

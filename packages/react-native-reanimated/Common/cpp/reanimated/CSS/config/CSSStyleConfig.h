@@ -3,6 +3,7 @@
 
 #include <reanimated/CSS/common/style/groups/CSSArray.h>
 #include <reanimated/CSS/common/style/groups/CSSRecord.h>
+#include <reanimated/CSS/common/style/groups/CSSTransform.h>
 #include <reanimated/CSS/common/style/groups/CSSTuple.h>
 
 #include <reanimated/CSS/common/style/values/CSSAngle.h>

@@ -2,6 +2,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/common/style/CSSValue.h>
+#include <sstream>
 #include <vector>
 
 namespace reanimated {
@@ -10,8 +11,9 @@ template <CSSValueDerived T>
 class CSSArray final : public CSSValue {
  public:
   CSSArray(jsi::Runtime &rt, const jsi::Value &value) {
-    if (!value.isArray()) {
-      throw std::runtime_error("Expected array value for CSSArray");
+    if (!value.isObject() || !value.asObject(rt).isArray(rt)) {
+      throw std::runtime_error(
+          "[Reanimated] Expected array value for CSSArray");
     }
     auto array = value.asObject(rt).asArray(rt);
     values_.reserve(array.size(rt));
@@ -42,12 +44,6 @@ class CSSArray final : public CSSValue {
   auto end() {
     return values_.end();
   }
-  auto begin() const {
-    return values_.begin();
-  }
-  auto end() const {
-    return values_.end();
-  }
 
   // Required CSSValue interface implementations
   jsi::Value toJSIValue(jsi::Runtime &rt) const override {
@@ -67,15 +63,16 @@ class CSSArray final : public CSSValue {
   }
 
   std::string toString() const override {
-    std::string result = "[";
+    std::ostringstream oss;
+    oss << '[';
     for (size_t i = 0; i < values_.size(); i++) {
       if (i > 0) {
-        result += ", ";
+        oss << ", ";
       }
-      result += values_[i].toString();
+      oss << values_[i].toString();
     }
-    result += "]";
-    return result;
+    oss << ']';
+    return oss.str();
   }
 
  private:
