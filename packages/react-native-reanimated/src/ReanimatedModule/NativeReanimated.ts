@@ -18,6 +18,7 @@ import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { checkCppVersion } from '../platform-specific/checkCppVersion';
 import { jsVersion } from '../platform-specific/jsVersion';
 import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
+import { setupRequestAnimationFrame } from '../requestAnimationFrame';
 import { ReanimatedTurboModule } from '../specs';
 import type {
   IWorkletsModule,
@@ -81,7 +82,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
-    executeOnUIRuntimeSync(registerReanimatedError);
+    executeOnUIRuntimeSync(function initializeUI() {
+      'worklet';
+      registerReanimatedError();
+      setupRequestAnimationFrame();
+    })();
   }
 
   registerSensor(
