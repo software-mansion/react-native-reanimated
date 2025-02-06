@@ -61,6 +61,8 @@ struct TransformOperation {
   static std::shared_ptr<TransformOperation> fromJSIValue(
       jsi::Runtime &rt,
       const jsi::Value &value);
+  static std::shared_ptr<TransformOperation> fromDynamic(
+      const folly::dynamic &value);
   jsi::Value toJSIValue(jsi::Runtime &rt) const;
   virtual jsi::Value valueToJSIValue(jsi::Runtime &rt) const = 0;
 

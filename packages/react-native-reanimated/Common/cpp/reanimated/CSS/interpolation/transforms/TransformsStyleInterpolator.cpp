@@ -237,24 +237,23 @@ TransformsStyleInterpolator::parseTransformOperations(
 std::optional<TransformOperations>
 TransformsStyleInterpolator::parseTransformOperations(
   const folly::dynamic &values) {
-  // TODO
-  return std::nullopt;
-//  if (values.isUndefined()) {
-//    return std::nullopt;
-//  }
-//
-//  const auto transformsArray = values.asObject(rt).asArray(rt);
-//  const auto transformsCount = transformsArray.size(rt);
-//
-//  TransformOperations transformOperations;
-//  transformOperations.reserve(transformsCount);
-//
-//  for (size_t i = 0; i < transformsCount; ++i) {
-//    const auto transform = transformsArray.getValueAtIndex(rt, i);
+  if (values.empty()) {
+    return std::nullopt;
+  }
+
+  const auto transformsArray = values;
+  const auto transformsCount = transformsArray.size();
+
+  TransformOperations transformOperations;
+  transformOperations.reserve(transformsCount);
+
+  for (size_t i = 0; i < transformsCount; ++i) {
+    const auto transform = transformsArray.at(i);
+    // TODO
 //    transformOperations.emplace_back(
-//        TransformOperation::fromJSIValue(rt, transform));
-//  }
-//  return transformOperations;
+//        TransformOperation::fromDynamic(transform));
+  }
+  return transformOperations;
 }
 
 std::shared_ptr<TransformKeyframe>
