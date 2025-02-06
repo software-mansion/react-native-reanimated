@@ -15,7 +15,6 @@ export function setupRequestAnimationFrame() {
   global.__flushAnimationFrame = (frameTimestamp: number) => {
     const currentCallbacks = animationFrameCallbacks;
     animationFrameCallbacks = [];
-    console.log('currentCallbacks.length', currentCallbacks.length);
     currentCallbacks.forEach((f) => f(frameTimestamp));
     callMicrotasks();
   };
