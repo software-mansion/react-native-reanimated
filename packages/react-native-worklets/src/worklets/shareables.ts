@@ -261,7 +261,7 @@ function cloneWorklet<T extends WorkletFunction>(
   depth: number
 ): ShareableRef<T> {
   if (__DEV__) {
-    // TODO: Restore this
+    // TODO: Restore this once we reimplement JS version checking
     // const babelVersion = (value as WorkletFunctionDev).__initData.version;
     //     if (babelVersion !== undefined && babelVersion !== jsVersion) {
     //       throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).
