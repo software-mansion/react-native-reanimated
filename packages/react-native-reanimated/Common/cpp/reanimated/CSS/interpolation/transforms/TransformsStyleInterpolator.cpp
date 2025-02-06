@@ -141,10 +141,8 @@ folly::dynamic TransformsStyleInterpolator::update(
       keyframe->toOperations.value());
 
   // Convert the result to JSI value
-  // TODO
-  auto updates = folly::dynamic();
-//  auto updates = convertResultToJSI(rt, result);
-//  previousResult_ = std::move(result);
+  auto updates = convertResultToDynamic(result);
+  previousResult_ = std::move(result);
 
   return updates;
 }
