@@ -1,6 +1,5 @@
 'use strict';
 import type { NormalizedCSSTimingFunction } from '../../../easings';
-import type { PlainStyle } from '../../../types';
 
 export type NormalizedSingleCSSTransitionSettings = {
   duration: number;
@@ -9,7 +8,7 @@ export type NormalizedSingleCSSTransitionSettings = {
   allowDiscrete: boolean;
 };
 
-export type NormalizedCSSTransitionPropertyNames = 'all' | (keyof PlainStyle)[];
+export type NormalizedCSSTransitionPropertyNames = 'all' | string[];
 
 export type NormalizedCSSTransitionConfig = {
   properties: NormalizedCSSTransitionPropertyNames;

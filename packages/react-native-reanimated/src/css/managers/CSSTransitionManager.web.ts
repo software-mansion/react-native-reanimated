@@ -1,12 +1,8 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
-import {
-  kebabize,
-  maybeAddSuffixes,
-  parseTimingFunction,
-} from '../platform/web';
+import { maybeAddSuffixes, parseTimingFunction } from '../platform/web';
 import type { CSSTransitionProperties } from '../types';
-import { convertConfigPropertiesToArrays } from '../utils';
+import { convertPropertiesToArrays, kebabizeCamelCase } from '../utils';
 
 export default class CSSTransitionManager {
   private readonly element: ReanimatedHTMLElement;
@@ -42,8 +38,7 @@ export default class CSSTransitionManager {
   }
 
   private setElementAnimation(transitionProperties: CSSTransitionProperties) {
-    const propertiesAsArray =
-      convertConfigPropertiesToArrays(transitionProperties);
+    const propertiesAsArray = convertPropertiesToArrays(transitionProperties);
 
     const maybeDuration = maybeAddSuffixes(
       propertiesAsArray,
@@ -65,7 +60,7 @@ export default class CSSTransitionManager {
 
     if (propertiesAsArray.transitionProperty) {
       this.element.style.transitionProperty =
-        propertiesAsArray.transitionProperty.map(kebabize).join(',');
+        propertiesAsArray.transitionProperty.map(kebabizeCamelCase).join(',');
     }
 
     if (propertiesAsArray.transitionTimingFunction) {
@@ -77,7 +72,7 @@ export default class CSSTransitionManager {
     if (propertiesAsArray.transitionBehavior) {
       // @ts-ignore this is correct
       this.element.style.transitionBehavior =
-        propertiesAsArray.transitionBehavior.map(kebabize).join(',');
+        propertiesAsArray.transitionBehavior.map(kebabizeCamelCase).join(',');
     }
   }
 }

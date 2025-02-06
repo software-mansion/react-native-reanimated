@@ -1,33 +1,34 @@
 'use strict';
+import {
+  ANIMATION_SETTINGS,
+  TRANSITION_PROPS,
+  VALID_PREDEFINED_TIMING_FUNCTIONS,
+  VALID_STEPS_MODIFIERS,
+} from '../constants';
+import type { PredefinedTimingFunction, StepsModifier } from '../easings/types';
 import type {
   AnyRecord,
   CSSAnimationKeyframes,
   CSSAnimationSettingProp,
   CSSKeyframesRule,
   CSSTransitionProp,
+  Repeat,
+  TimeUnit,
 } from '../types';
 import type { ConfigPropertyAlias } from '../types/config';
 
-const ANIMATION_SETTINGS: CSSAnimationSettingProp[] = [
-  'animationDuration',
-  'animationTimingFunction',
-  'animationDelay',
-  'animationIterationCount',
-  'animationDirection',
-  'animationFillMode',
-  'animationPlayState',
-];
-
-const TRANSITION_PROPS: CSSTransitionProp[] = [
-  'transitionProperty',
-  'transitionDuration',
-  'transitionTimingFunction',
-  'transitionDelay',
-  'transitionBehavior',
-];
-
 const ANIMATION_SETTINGS_SET = new Set<string>(ANIMATION_SETTINGS);
 const TRANSITION_PROPS_SET = new Set<string>(TRANSITION_PROPS);
+const VALID_STEPS_MODIFIERS_SET = new Set<string>(VALID_STEPS_MODIFIERS);
+
+export const VALID_PREDEFINED_TIMING_FUNCTIONS_SET = new Set<string>(
+  VALID_PREDEFINED_TIMING_FUNCTIONS
+);
+
+export const isPredefinedTimingFunction = (
+  value: string
+): value is PredefinedTimingFunction =>
+  VALID_PREDEFINED_TIMING_FUNCTIONS_SET.has(value);
 
 export const isAnimationSetting = (
   key: string
@@ -36,21 +37,26 @@ export const isAnimationSetting = (
 export const isTransitionProp = (key: string): key is CSSTransitionProp =>
   TRANSITION_PROPS_SET.has(key);
 
+export const isStepsModifier = (value: string): value is StepsModifier =>
+  VALID_STEPS_MODIFIERS_SET.has(value);
+
+export const isTimeUnit = (value: unknown): value is TimeUnit =>
+  // TODO: implement more strict check
+  typeof value === 'string' && /^-?(\d+)?(\.\d+)?(ms|s)$/.test(value);
+
 export const isNumber = (value: unknown): value is number =>
   typeof value === 'number' && !isNaN(value);
 
-export const isPercentage = (value: string | number): value is `${number}%` => {
-  return typeof value === 'string' && /^-?\d+(\.\d+)?%$/.test(value);
-};
+export const isPercentage = (value: string | number): value is `${number}%` =>
+  typeof value === 'string' && /^-?\d+(\.\d+)?%$/.test(value);
 
 export const isLength = (value: string) =>
   value.endsWith('px') || !isNaN(Number(value));
 
 export const isAngleValue = (
   value: string | number
-): value is `${number}deg` | `${number}rad` => {
-  return typeof value === 'string' && /^-?\d+(\.\d+)?(deg|rad)$/.test(value);
-};
+): value is `${number}deg` | `${number}rad` =>
+  typeof value === 'string' && /^-?\d+(\.\d+)?(deg|rad)$/.test(value);
 
 export const isDefined = <T>(value: T): value is NonNullable<T> =>
   value !== undefined && value !== null;
@@ -62,6 +68,11 @@ export const isRecord = <T extends AnyRecord = AnyRecord>(
 
 export const isNumberArray = (value: unknown): value is number[] =>
   Array.isArray(value) && value.every(isNumber);
+
+export const isArrayOfLength = <T, L extends number>(
+  value: T[],
+  length: L
+): value is Repeat<T, L> => Array.isArray(value) && value.length === length;
 
 export const isCSSKeyframesObject = (
   value: object
