@@ -258,34 +258,38 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
     removeFromUpdatesRegistry(viewTag);
     return;
   }
-// TODO
-//  auto updatedStyle = jsi::Object(rt);
-//  ShadowNode::Shared shadowNode = nullptr;
-//
-//  for (const auto &animation : it->second) {
-//    const auto startTimestamp = animation->getStartTimestamp(timestamp);
-//
-//    jsi::Value style;
-//    const auto &currentState = animation->getState(timestamp);
-//    if (startTimestamp == timestamp ||
-//        (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
+
+  folly::dynamic updatedStyle = folly::dynamic::object;
+  ShadowNode::Shared shadowNode = nullptr;
+
+  for (const auto &animation : it->second) {
+    const auto startTimestamp = animation->getStartTimestamp(timestamp);
+
+    folly::dynamic style;
+    const auto &currentState = animation->getState(timestamp);
+    if (startTimestamp == timestamp ||
+        (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
+        // TODO
 //      style = animation->getBackwardsFillStyle(rt);
-//    } else if (currentState == AnimationProgressState::Finished) {
-//      if (animation->hasForwardsFillMode()) {
+    } else if (currentState == AnimationProgressState::Finished) {
+      if (animation->hasForwardsFillMode()) {
+      // TODO
 //        style = animation->getForwardFillStyle(rt);
-//      }
-//    } else if (currentState != AnimationProgressState::Pending) {
+      }
+    } else if (currentState != AnimationProgressState::Pending) {
+    // TODO
 //      style = animation->getCurrentInterpolationStyle(rt);
-//    }
-//
-//    if (!shadowNode) {
-//      shadowNode = animation->getShadowNode();
-//    }
-//    if (style.isObject()) {
+    }
+
+    if (!shadowNode) {
+      shadowNode = animation->getShadowNode();
+    }
+    if (style.isObject()) {
+    // TODO
 //      updateJSIObject(rt, updatedStyle, style.asObject(rt));
-//    }
-//  }
-//
+    }
+  }
+// TODO
 //  setInUpdatesRegistry(rt, shadowNode, jsi::Value(rt, updatedStyle));
 }
 
