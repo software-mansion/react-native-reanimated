@@ -1,8 +1,12 @@
 import type { NodePath } from '@babel/core';
 import type { CallExpression } from '@babel/types';
-import { isSequenceExpression } from '@babel/types';
+import { isSequenceExpression, isV8IntrinsicIdentifier } from '@babel/types';
 
-import { isGestureHandlerEventCallback } from './gestureHandlerAutoworkletization';
+import {
+  gestureHandlerBuilderMethods,
+  isGestureHandlerEventCallback,
+  isGestureObjectEventCallbackMethod,
+} from './gestureHandlerAutoworkletization';
 import { isLayoutAnimationCallback } from './layoutAnimationAutoworkletization';
 import { processWorkletizableObject } from './objectWorklets';
 import { findReferencedWorklet } from './referencedWorklets';
@@ -17,12 +21,12 @@ import {
 } from './types';
 import { processWorklet } from './workletSubstitution';
 
-const objectHooks = new Set([
+const reanimatedObjectHooks = new Set([
   'useAnimatedGestureHandler',
   'useAnimatedScrollHandler',
 ]);
 
-const functionHooks = new Set([
+const reanimatedFunctionHooks = new Set([
   'useFrameCallback',
   'useAnimatedStyle',
   'useAnimatedProps',
@@ -41,7 +45,7 @@ const functionHooks = new Set([
   'executeOnUIRuntimeSync',
 ]);
 
-const functionArgsToWorkletize = new Map([
+const reanimatedFunctionArgsToWorkletize = new Map([
   ['useAnimatedGestureHandler', [0]],
   ['useFrameCallback', [0]],
   ['useAnimatedStyle', [0]],
@@ -57,7 +61,8 @@ const functionArgsToWorkletize = new Map([
   ['withRepeat', [3]],
   ['runOnUI', [0]],
   ['executeOnUIRuntimeSync', [0]],
-]);
+  ...Array.from(gestureHandlerBuilderMethods).map((name) => [name, [0]]),
+] as [string, number[]][]);
 
 /** @returns `true` if the function was workletized, `false` otherwise. */
 export function processIfAutoworkletizableCallback(
@@ -91,15 +96,21 @@ export function processCalleesAutoworkletizableCallbacks(
     return;
   }
 
-  if (functionHooks.has(name) || objectHooks.has(name)) {
-    const acceptWorkletizableFunction = functionHooks.has(name);
-    const acceptObject = objectHooks.has(name);
-    const argIndices = functionArgsToWorkletize.get(name)!;
+  if (reanimatedFunctionHooks.has(name) || reanimatedObjectHooks.has(name)) {
+    const acceptWorkletizableFunction = reanimatedFunctionHooks.has(name);
+    const acceptObject = reanimatedObjectHooks.has(name);
+    const argIndices = reanimatedFunctionArgsToWorkletize.get(name)!;
     const args = path
       .get('arguments')
       .filter((_, index) => argIndices.includes(index));
 
     processArgs(args, state, acceptWorkletizableFunction, acceptObject);
+  } else if (
+    !isV8IntrinsicIdentifier(callee) &&
+    isGestureObjectEventCallbackMethod(callee)
+  ) {
+    const args = path.get('arguments');
+    processArgs(args, state, true, true);
   }
 }
 
@@ -137,7 +148,7 @@ function findWorklet(
   if (acceptObject && isWorkletizableObjectPath(arg)) {
     return arg;
   }
-  if (arg.isReferencedIdentifier() && arg.isIdentifier()) {
+  if (arg.isIdentifier() && arg.isReferencedIdentifier()) {
     return findReferencedWorklet(
       arg,
       acceptWorkletizableFunction,
