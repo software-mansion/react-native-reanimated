@@ -272,8 +272,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
       style = animation->getBackwardsFillStyle();
     } else if (currentState == AnimationProgressState::Finished) {
       if (animation->hasForwardsFillMode()) {
-      // TODO
-//        style = animation->getForwardFillStyle(rt);
+        style = animation->getForwardFillStyle();
       }
     } else if (currentState != AnimationProgressState::Pending) {
     // TODO

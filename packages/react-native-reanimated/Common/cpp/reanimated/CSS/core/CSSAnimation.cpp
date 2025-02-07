@@ -87,6 +87,11 @@ jsi::Value CSSAnimation::getForwardFillStyle(jsi::Runtime &rt) {
                       : styleInterpolator_.getLastKeyframeValue(rt);
 }
 
+folly::dynamic CSSAnimation::getForwardFillStyle() {
+  return isReversed() ? styleInterpolator_.getFirstKeyframeValue()
+                      : styleInterpolator_.getLastKeyframeValue();
+}
+
 jsi::Value CSSAnimation::resetStyle(jsi::Runtime &rt) {
   return styleInterpolator_.reset(rt, shadowNode_);
 }

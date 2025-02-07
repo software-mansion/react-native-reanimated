@@ -40,6 +40,7 @@ class CSSAnimation {
   jsi::Value getBackwardsFillStyle(jsi::Runtime &rt);
   folly::dynamic getBackwardsFillStyle();
   jsi::Value getForwardFillStyle(jsi::Runtime &rt);
+  folly::dynamic getForwardFillStyle();
   jsi::Value resetStyle(jsi::Runtime &rt);
 
   void run(double timestamp);
