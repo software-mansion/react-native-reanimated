@@ -13,8 +13,6 @@ import { flex } from '@/theme';
 const AnimatedView = createAnimatedComponent(View);
 
 export default function Playground() {
-  console.log(`animation: ${styles.child.animationName[0]} 1s ease`);
-
   return (
     <Screen style={flex.center}>
       <Text>Hello world!</Text>

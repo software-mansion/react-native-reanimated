@@ -32,7 +32,7 @@ class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
   virtual ~ResolvableValueInterpolator() = default;
 
  protected:
-  ValueType interpolate(
+  ValueType interpolateValue(
       double progress,
       const ValueType &fromValue,
       const ValueType &toValue,
