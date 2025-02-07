@@ -20,6 +20,18 @@ jsi::Value TransformsStyleInterpolator::getStyleValue(
       rt, shadowNode->getTag(), propertyPath_);
 }
 
+jsi::Value TransformsStyleInterpolator::getResetStyle(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) const {
+  auto styleValue = getStyleValue(rt, shadowNode);
+
+  if (styleValue.isUndefined()) {
+    return convertResultToJSI(rt, defaultStyleValue_);
+  }
+
+  return styleValue;
+}
+
 jsi::Value TransformsStyleInterpolator::getFirstKeyframeValue(
     jsi::Runtime &rt) const {
   return convertResultToJSI(
@@ -283,13 +295,20 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
 size_t TransformsStyleInterpolator::getIndexOfCurrentKeyframe(
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
   const auto progress = progressProvider->getGlobalProgress();
+
   const auto it = std::lower_bound(
       keyframes_.begin(),
       keyframes_.end(),
       progress,
       [](const std::shared_ptr<TransformKeyframe> &keyframe, double progress) {
-        return keyframe->fromOffset <= progress;
+        return keyframe->toOffset < progress;
       });
+
+  // If we're at the end, return the last valid keyframe index
+  if (it == keyframes_.end()) {
+    return keyframes_.size() - 1;
+  }
+
   return std::distance(keyframes_.begin(), it);
 }
 
