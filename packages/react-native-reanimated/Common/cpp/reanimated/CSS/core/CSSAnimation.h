@@ -37,6 +37,7 @@ class CSSAnimation {
 
   jsi::Value getViewStyle(jsi::Runtime &rt) const;
   jsi::Value getCurrentInterpolationStyle(jsi::Runtime &rt) const;
+  folly::dynamic getCurrentInterpolationStyle() const;
   jsi::Value getBackwardsFillStyle(jsi::Runtime &rt);
   folly::dynamic getBackwardsFillStyle();
   jsi::Value getForwardFillStyle(jsi::Runtime &rt);

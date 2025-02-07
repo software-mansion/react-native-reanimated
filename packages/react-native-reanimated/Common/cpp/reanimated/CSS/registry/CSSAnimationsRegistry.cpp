@@ -275,8 +275,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
         style = animation->getForwardFillStyle();
       }
     } else if (currentState != AnimationProgressState::Pending) {
-    // TODO
-//      style = animation->getCurrentInterpolationStyle(rt);
+      style = animation->getCurrentInterpolationStyle();
     }
 
     if (!shadowNode) {
