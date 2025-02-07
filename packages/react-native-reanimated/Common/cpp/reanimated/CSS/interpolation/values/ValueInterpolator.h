@@ -255,7 +255,7 @@ class ValueInterpolator : public PropertyInterpolator {
   ValueType getFallbackValue(
       const ShadowNode::Shared &shadowNode) const {
     const folly::dynamic &styleValue = getStyleValue(shadowNode);
-    return styleValue.empty() ? defaultStyleValue_
+    return styleValue.isNull() ? defaultStyleValue_
                               : ValueType(styleValue);
   }
 

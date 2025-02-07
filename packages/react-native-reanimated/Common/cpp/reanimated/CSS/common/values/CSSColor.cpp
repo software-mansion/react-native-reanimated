@@ -56,10 +56,10 @@ CSSColor::CSSColor(const folly::dynamic &value)
   if (value.isNumber()) {
 #ifdef ANDROID
     // Android uses signed 32-bit integers for colors
-    auto color = static_cast<int32_t>(value.getInt());
+    auto color = static_cast<int32_t>(value.getDouble());
 #else
     // iOS uses unsigned 32-bit integers for colors
-    auto color = static_cast<unsigned>(value.getInt());
+    auto color = static_cast<unsigned>(value.getDouble());
 #endif
     channels[0] = (color >> 16) & 0xFF; // Red
     channels[1] = (color >> 8) & 0xFF; // Green

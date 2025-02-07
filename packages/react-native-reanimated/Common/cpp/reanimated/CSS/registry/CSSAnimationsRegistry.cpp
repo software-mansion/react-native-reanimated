@@ -190,8 +190,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     }
 
     bool updatesAddedToBatch = false;
-    // TODO
-//    const auto updates = animation->update(rt, timestamp);
+    const auto updates = animation->update(timestamp);
     const auto newState = animation->getState(timestamp);
 
     if (newState == AnimationProgressState::Finished) {
