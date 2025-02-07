@@ -67,6 +67,7 @@ class CSSAnimationsRegistry
   applyViewAnimationsStyle(jsi::Runtime &rt, Tag viewTag, double timestamp);
   void activateDelayedAnimations(double timestamp);
   void handleAnimationsToRevert(jsi::Runtime &rt, double timestamp);
+  void handleAnimationsToRevert(double timestamp);
 
   static bool addStyleUpdates(
       jsi::Runtime &rt,

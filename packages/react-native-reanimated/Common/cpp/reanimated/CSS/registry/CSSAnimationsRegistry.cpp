@@ -97,8 +97,7 @@ void CSSAnimationsRegistry::update(const double timestamp) {
   // Activate all delayed animations that should start now
   activateDelayedAnimations(timestamp);
   // Update styles in the registry for views which animations were reverted
-  // TODO
-//  handleAnimationsToRevert(rt, timestamp);
+  handleAnimationsToRevert(timestamp);
 
   // Iterate over active animations and update them
   for (auto it = runningAnimationsMap_.begin();
@@ -269,6 +268,15 @@ void CSSAnimationsRegistry::handleAnimationsToRevert(
     const double timestamp) {
   for (const auto &[viewTag, _] : animationsToRevertMap_) {
     applyViewAnimationsStyle(rt, viewTag, timestamp);
+  }
+  animationsToRevertMap_.clear();
+}
+
+void CSSAnimationsRegistry::handleAnimationsToRevert(
+    const double timestamp) {
+  for (const auto &[viewTag, _] : animationsToRevertMap_) {
+  // TODO
+//    applyViewAnimationsStyle(rt, viewTag, timestamp);
   }
   animationsToRevertMap_.clear();
 }
