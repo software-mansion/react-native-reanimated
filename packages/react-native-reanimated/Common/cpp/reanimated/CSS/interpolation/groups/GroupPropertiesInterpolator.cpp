@@ -16,6 +16,14 @@ folly::dynamic GroupPropertiesInterpolator::getStyleValue(
       });
 }
 
+folly::dynamic GroupPropertiesInterpolator::getResetStyle(
+    const ShadowNode::Shared &shadowNode) const {
+  return mapInterpolators(
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
+        return interpolator.getResetStyle(shadowNode);
+      });
+}
+
 folly::dynamic GroupPropertiesInterpolator::getFirstKeyframeValue() const {
   return mapInterpolators(
       [&](PropertyInterpolator &interpolator) -> folly::dynamic {

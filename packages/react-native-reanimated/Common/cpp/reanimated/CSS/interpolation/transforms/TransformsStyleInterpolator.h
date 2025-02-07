@@ -33,6 +33,8 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
 
   folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const override;
+  folly::dynamic getResetStyle(
+      const ShadowNode::Shared &shadowNode) const override;
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
 
