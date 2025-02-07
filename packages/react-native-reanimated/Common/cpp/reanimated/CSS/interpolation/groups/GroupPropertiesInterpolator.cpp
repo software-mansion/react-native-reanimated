@@ -55,12 +55,10 @@ jsi::Value GroupPropertiesInterpolator::getFirstKeyframeValue(
 }
 
 folly::dynamic GroupPropertiesInterpolator::getFirstKeyframeValue() const {
-// TODO
-  return folly::dynamic();
-//  return mapInterpolators(
-//      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-//        return interpolator.getFirstKeyframeValue(rt);
-//      });
+  return mapInterpolators(
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
+        return interpolator.getFirstKeyframeValue();
+      });
 }
 
 jsi::Value GroupPropertiesInterpolator::getLastKeyframeValue(
@@ -72,12 +70,10 @@ jsi::Value GroupPropertiesInterpolator::getLastKeyframeValue(
 }
 
 folly::dynamic GroupPropertiesInterpolator::getLastKeyframeValue() const {
-// TODO
-  return folly::dynamic();
-//  return mapInterpolators(
-//      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-//        return interpolator.getLastKeyframeValue(rt);
-//      });
+  return mapInterpolators(
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
+        return interpolator.getLastKeyframeValue();
+      });
 }
 
 jsi::Value GroupPropertiesInterpolator::update(
