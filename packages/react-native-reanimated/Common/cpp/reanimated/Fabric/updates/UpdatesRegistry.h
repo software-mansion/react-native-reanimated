@@ -44,7 +44,7 @@ class UpdatesRegistry {
 #endif
 
   void flushUpdates(jsi::Runtime &rt, UpdatesBatch &updatesBatch, bool merge);
-  void flushCSSUpdates(CSSUpdatesBatch &updatesBatch, bool merge);
+  void flushUpdates(CSSUpdatesBatch &updatesBatch, bool merge);
   void collectProps(PropsMap &propsMap);
 
  protected:
@@ -73,7 +73,7 @@ class UpdatesRegistry {
       jsi::Runtime &rt,
       const UpdatesBatch &updatesBatch,
       bool merge);
-  void flushCSSUpdatesToRegistry(
+  void flushUpdatesToRegistry(
       const CSSUpdatesBatch &updatesBatch,
       bool merge);
   void runMarkedRemovals();

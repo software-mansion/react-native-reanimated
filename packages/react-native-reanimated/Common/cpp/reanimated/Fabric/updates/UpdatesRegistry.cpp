@@ -32,7 +32,7 @@ void UpdatesRegistry::flushUpdates(
   runMarkedRemovals();
 }
 
-void UpdatesRegistry::flushCSSUpdates(
+void UpdatesRegistry::flushUpdates(
     CSSUpdatesBatch &updatesBatch,
     const bool merge) {
   std::lock_guard<std::mutex> lock{mutex_};
@@ -41,7 +41,7 @@ void UpdatesRegistry::flushCSSUpdates(
   cssUpdatesBatch_.clear();
 
   // Store all updates in the registry for later use in the commit hook
-  flushCSSUpdatesToRegistry(copiedUpdatesBatch, merge);
+  flushUpdatesToRegistry(copiedUpdatesBatch, merge);
   // Flush the updates to the updatesBatch used to apply current changes
   for (auto &[shadowNode, props] : copiedUpdatesBatch) {
     updatesBatch.emplace_back(shadowNode, std::move(props));
@@ -119,18 +119,17 @@ void UpdatesRegistry::flushUpdatesToRegistry(
   }
 }
 
-void UpdatesRegistry::flushCSSUpdatesToRegistry(
+void UpdatesRegistry::flushUpdatesToRegistry(
     const CSSUpdatesBatch &updatesBatch,
     const bool merge) {
   for (auto &[shadowNode, props] : updatesBatch) {
     const auto tag = shadowNode->getTag();
-    auto convertedProps = props;
     auto it = updatesRegistry_.find(tag);
 
     if (it == updatesRegistry_.cend() || !merge) {
-      updatesRegistry_[tag] = std::make_pair(shadowNode, convertedProps);
+      updatesRegistry_[tag] = std::make_pair(shadowNode, props);
     } else {
-      it->second.second.update(convertedProps);
+      it->second.second.update(props);
     }
   }
 }
