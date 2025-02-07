@@ -105,8 +105,7 @@ void CSSAnimationsRegistry::update(const double timestamp) {
     const auto viewTag = it->first;
     const std::vector<unsigned> animationIndices = {
         it->second.begin(), it->second.end()};
-        // TODO
-//    updateViewAnimations(rt, viewTag, animationIndices, timestamp, true);
+    updateViewAnimations(viewTag, animationIndices, timestamp, true);
 
     if (runningAnimationsMap_.at(viewTag).empty()) {
       it = runningAnimationsMap_.erase(it);
@@ -170,6 +169,62 @@ void CSSAnimationsRegistry::updateViewAnimations(
   if (hasUpdates) {
     addUpdatesToBatch(rt, shadowNode, jsi::Value(rt, result));
   }
+}
+
+void CSSAnimationsRegistry::updateViewAnimations(
+    const Tag viewTag,
+    const std::vector<unsigned> &animationIndices,
+    const double timestamp,
+    const bool addToBatch) {
+    // TODO
+//  jsi::Object result = jsi::Object(rt);
+//  ShadowNode::Shared shadowNode = nullptr;
+//  bool hasUpdates = false;
+//
+//  for (const auto animationIndex : animationIndices) {
+//    const auto &animation = registry_[viewTag][animationIndex];
+//    if (!shadowNode) {
+//      shadowNode = animation->getShadowNode();
+//    }
+//    if (animation->getState(timestamp) == AnimationProgressState::Pending) {
+//      animation->run(timestamp);
+//    }
+//
+//    bool updatesAddedToBatch = false;
+//    const auto updates = animation->update(rt, timestamp);
+//    const auto newState = animation->getState(timestamp);
+//
+//    if (newState == AnimationProgressState::Finished) {
+//      // Revert changes applied during animation if there is no forwards fill
+//      // mode
+//      if (addToBatch && !animation->hasForwardsFillMode()) {
+//        //  We also have to manually commit style values
+//        // reverting the changes applied by the animation.
+//        hasUpdates =
+//            addStyleUpdates(rt, result, animation->resetStyle(rt), false) ||
+//            hasUpdates;
+//        updatesAddedToBatch = true;
+//        // We want to remove style changes applied by the animation that is
+//        // finished and has no forwards fill mode. We cannot simply remove
+//        // properties from the style in the registry as it may be overridden
+//        // by the next animation. Instead, we are creating the new style
+//        // object without reverted (finished without forwards fill mode)
+//        // animations.
+//        animationsToRevertMap_[viewTag].insert(animationIndex);
+//      }
+//    }
+//
+//    if (addToBatch && !updatesAddedToBatch) {
+//      hasUpdates = addStyleUpdates(rt, result, updates, true) || hasUpdates;
+//    }
+//    if (newState != AnimationProgressState::Running) {
+//      runningAnimationsMap_[viewTag].erase(animationIndex);
+//    }
+//  }
+//
+//  if (hasUpdates) {
+//    addUpdatesToBatch(rt, shadowNode, jsi::Value(rt, result));
+//  }
 }
 
 void CSSAnimationsRegistry::scheduleOrActivateAnimation(

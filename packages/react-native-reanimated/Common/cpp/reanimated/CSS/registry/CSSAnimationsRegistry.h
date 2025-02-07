@@ -58,6 +58,11 @@ class CSSAnimationsRegistry
       const std::vector<unsigned> &animationIndices,
       double timestamp,
       bool addToBatch);
+  void updateViewAnimations(
+      Tag viewTag,
+      const std::vector<unsigned> &animationIndices,
+      double timestamp,
+      bool addToBatch);
   void scheduleOrActivateAnimation(
       jsi::Runtime &rt,
       const std::shared_ptr<CSSAnimation> &animation,
