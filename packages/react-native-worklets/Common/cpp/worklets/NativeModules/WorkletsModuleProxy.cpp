@@ -39,8 +39,8 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           "Reanimated UI runtime",
           true /* supportsLocking */,
           valueUnpackerCode_)) {
-            UIRuntimeDecorator::decorate(uiWorkletRuntime_->getJSIRuntime());
-          }
+  UIRuntimeDecorator::decorate(uiWorkletRuntime_->getJSIRuntime());
+}
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
   jsQueue_->quitSynchronous();
