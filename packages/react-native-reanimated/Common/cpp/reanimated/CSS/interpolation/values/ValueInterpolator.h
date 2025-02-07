@@ -70,6 +70,18 @@ class ValueInterpolator : public PropertyInterpolator {
     }
     return defaultStyleValue_.toJSIValue(rt);
   }
+  
+  folly::dynamic getCurrentValue(
+      const ShadowNode::Shared &shadowNode) const override {
+    if (previousValue_.has_value()) {
+      return previousValue_.value().toDynamic();
+    }
+    auto styleValue = getStyleValue(shadowNode);
+    if (!styleValue.empty()) {
+      return styleValue;
+    }
+    return defaultStyleValue_.toDynamic();
+  }
 
   jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const override {
     return convertOptionalToJSI(rt, keyframes_.front().value);

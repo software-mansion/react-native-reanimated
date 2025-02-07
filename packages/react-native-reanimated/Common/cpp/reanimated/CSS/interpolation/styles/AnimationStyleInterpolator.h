@@ -31,9 +31,7 @@ class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
   
   folly::dynamic getCurrentInterpolationStyle(
       const ShadowNode::Shared &shadowNode) const {
-      // TODO
-        return folly::dynamic();
-//    return getCurrentValue(shadowNode);
+    return getCurrentValue(shadowNode);
   }
 };
 
