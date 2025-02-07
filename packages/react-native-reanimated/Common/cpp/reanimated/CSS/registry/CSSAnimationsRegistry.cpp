@@ -121,7 +121,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
         //  We also have to manually commit style values
         // reverting the changes applied by the animation.
         hasUpdates =
-            addStyleUpdates(rt, result, animation->resetStyle(rt), false) ||
+            addStyleUpdates(rt, result, animation->getResetStyle(rt), false) ||
             hasUpdates;
         updatesAddedToBatch = true;
         // We want to remove style changes applied by the animation that is

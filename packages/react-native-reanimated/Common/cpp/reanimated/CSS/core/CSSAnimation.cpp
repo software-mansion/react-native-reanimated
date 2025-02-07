@@ -23,8 +23,7 @@ CSSAnimation::CSSAnimation(
           config.direction,
           config.easingFunction,
           config.keyframeEasingFunctions)),
-      styleInterpolator_(
-          AnimationStyleInterpolator(progressProvider_, viewStylesRepository)) {
+      styleInterpolator_(AnimationStyleInterpolator(viewStylesRepository)) {
   styleInterpolator_.updateKeyframes(rt, config.keyframesStyle);
 
   if (config.playState == AnimationPlayState::Paused) {

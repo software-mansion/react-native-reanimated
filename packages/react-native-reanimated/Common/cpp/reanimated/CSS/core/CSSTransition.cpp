@@ -109,7 +109,7 @@ jsi::Value CSSTransition::run(
 
 jsi::Value CSSTransition::update(jsi::Runtime &rt, const double timestamp) {
   progressProvider_.update(timestamp);
-  const auto result =
+  auto result =
       styleInterpolator_.interpolate(rt, shadowNode_, progressProvider_);
   // Remove interpolators for which interpolation has finished
   // (we won't need them anymore in the current transition)

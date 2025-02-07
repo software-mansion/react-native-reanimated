@@ -80,7 +80,7 @@ class ValueInterpolator : public PropertyInterpolator {
       const jsi::Value &reversingAdjustedStartValue) override {
     KeyframeType firstKeyframe, lastKeyframe;
 
-    // TODO - check if this
+    // TODO - check if this is correct
     if (!previousValue.isUndefined()) {
       firstKeyframe = {0, ValueType(rt, previousValue)};
     } else {
@@ -100,8 +100,8 @@ class ValueInterpolator : public PropertyInterpolator {
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
-      override {
-    const auto afterIndex = getKeyframeAfterIndex(progressProvider);
+      const override {
+    const auto afterIndex = getIndexOfKeyframeAfterProgress(progressProvider);
     const auto beforeIndex = afterIndex - 1;
 
     const auto &keyframeBefore = keyframes_.at(beforeIndex);
@@ -117,7 +117,7 @@ class ValueInterpolator : public PropertyInterpolator {
       toValue = getFallbackValue(rt, shadowNode);
     }
 
-    const auto keyframeProgress = progressProvider_->getKeyframeProgress(
+    const auto keyframeProgress = progressProvider->getKeyframeProgress(
         keyframeBefore.offset, keyframeAfter.offset);
 
     ValueType result;
@@ -126,7 +126,7 @@ class ValueInterpolator : public PropertyInterpolator {
     } else if (keyframeProgress == 0.0) {
       result = fromValue.value();
     } else {
-      result = interpolateImpl(
+      result = interpolateValue(
           keyframeProgress,
           fromValue.value(),
           toValue.value(),
@@ -165,7 +165,7 @@ class ValueInterpolator : public PropertyInterpolator {
         0, unresolvedValue, unresolvedValue, {.node = shadowNode});
   }
 
-  size_t getKeyframeAfterIndex(
+  size_t getIndexOfKeyframeAfterProgress(
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
     const auto progress = progressProvider->getGlobalProgress();
     const auto index = std::lower_bound(
@@ -175,8 +175,7 @@ class ValueInterpolator : public PropertyInterpolator {
         [](const KeyframeType &keyframe, double progress) {
           return keyframe.offset < progress;
         });
-
-    return std::max(index, 1);
+    return std::distance(keyframes_.begin(), index);
   }
 
   jsi::Value convertOptionalToJSI(
