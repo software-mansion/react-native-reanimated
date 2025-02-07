@@ -222,7 +222,8 @@ class ReanimatedModuleProxy
   void commitUpdates(
     jsi::Runtime &rt,
     const UpdatesBatch &updatesBatch,
-    const CSSUpdatesBatch &transitionsUpdatesBatch
+    const CSSUpdatesBatch &transitionsUpdatesBatch,
+    const CSSUpdatesBatch &animationUpdatesBatch
   );
 
 #ifdef RCT_NEW_ARCH_ENABLED
