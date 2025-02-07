@@ -285,8 +285,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
       shadowNode = animation->getShadowNode();
     }
     if (style.isObject()) {
-    // TODO
-//      updateJSIObject(rt, updatedStyle, style.asObject(rt));
+      updatedStyle.update(style);
     }
   }
 
