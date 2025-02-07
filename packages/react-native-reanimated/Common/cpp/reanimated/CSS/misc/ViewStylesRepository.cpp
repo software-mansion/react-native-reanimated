@@ -103,7 +103,7 @@ folly::dynamic ViewStylesRepository::getStyleProp(
     const PropertyPath &propertyPath) {
   auto animatedValue =
       getPropertyValue(animatedPropsRegistry_->get(tag), propertyPath);
-  if (!animatedValue.empty()) {
+  if (!animatedValue.isNull()) {
     return animatedValue;
   }
 

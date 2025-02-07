@@ -112,12 +112,10 @@ jsi::Value GroupPropertiesInterpolator::reset(
 
 folly::dynamic GroupPropertiesInterpolator::reset(
     const ShadowNode::Shared &shadowNode) {
-    // TODO
-    return folly::dynamic();
-//  return mapInterpolators(
-//      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-//        return interpolator.reset(rt, shadowNode);
-//      });
+  return mapInterpolators(
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
+        return interpolator.reset(shadowNode);
+      });
 }
 
 } // namespace reanimated

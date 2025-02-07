@@ -178,16 +178,14 @@ jsi::Value TransformsStyleInterpolator::reset(
 
 folly::dynamic TransformsStyleInterpolator::reset(
     const ShadowNode::Shared &shadowNode) {
-    // TODO
-    return folly::dynamic();
-//  previousResult_ = std::nullopt;
-//  auto resetStyle = getStyleValue(rt, shadowNode);
-//
-//  if (resetStyle.isUndefined()) {
-//    return convertResultToJSI(rt, defaultStyleValue_);
-//  }
-//
-//  return resetStyle;
+  previousResult_ = std::nullopt;
+  auto resetStyle = getStyleValue(shadowNode);
+
+  if (resetStyle.isNull()) {
+    return convertResultToDynamic(defaultStyleValue_);
+  }
+
+  return resetStyle;
 }
 
 void TransformsStyleInterpolator::updateKeyframes(

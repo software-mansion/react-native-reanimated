@@ -77,7 +77,7 @@ class ValueInterpolator : public PropertyInterpolator {
       return previousValue_.value().toDynamic();
     }
     auto styleValue = getStyleValue(shadowNode);
-    if (!styleValue.empty()) {
+    if (!styleValue.isNull()) {
       return styleValue;
     }
     return defaultStyleValue_.toDynamic();
@@ -229,9 +229,7 @@ class ValueInterpolator : public PropertyInterpolator {
       override {
     previousValue_ = std::nullopt;
     reversingAdjustedStartValue_ = std::nullopt;
-    // TODO
-    return folly::dynamic();
-//    return getCurrentValue(rt, shadowNode);
+    return getCurrentValue(shadowNode);
   }
 
  protected:
