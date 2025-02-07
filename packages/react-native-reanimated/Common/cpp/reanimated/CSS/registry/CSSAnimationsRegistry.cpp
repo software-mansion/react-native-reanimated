@@ -249,6 +249,46 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
   setInUpdatesRegistry(rt, shadowNode, jsi::Value(rt, updatedStyle));
 }
 
+void CSSAnimationsRegistry::applyViewAnimationsStyle(
+    const Tag viewTag,
+    const double timestamp) {
+  const auto it = registry_.find(viewTag);
+  // Remove the style from the registry if there are no animations for the view
+  if (it == registry_.end() || it->second.empty()) {
+    removeFromUpdatesRegistry(viewTag);
+    return;
+  }
+// TODO
+//  auto updatedStyle = jsi::Object(rt);
+//  ShadowNode::Shared shadowNode = nullptr;
+//
+//  for (const auto &animation : it->second) {
+//    const auto startTimestamp = animation->getStartTimestamp(timestamp);
+//
+//    jsi::Value style;
+//    const auto &currentState = animation->getState(timestamp);
+//    if (startTimestamp == timestamp ||
+//        (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
+//      style = animation->getBackwardsFillStyle(rt);
+//    } else if (currentState == AnimationProgressState::Finished) {
+//      if (animation->hasForwardsFillMode()) {
+//        style = animation->getForwardFillStyle(rt);
+//      }
+//    } else if (currentState != AnimationProgressState::Pending) {
+//      style = animation->getCurrentInterpolationStyle(rt);
+//    }
+//
+//    if (!shadowNode) {
+//      shadowNode = animation->getShadowNode();
+//    }
+//    if (style.isObject()) {
+//      updateJSIObject(rt, updatedStyle, style.asObject(rt));
+//    }
+//  }
+//
+//  setInUpdatesRegistry(rt, shadowNode, jsi::Value(rt, updatedStyle));
+}
+
 void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
   while (!delayedAnimationsManager_.empty() &&
          delayedAnimationsManager_.top().timestamp <= timestamp) {
@@ -275,8 +315,7 @@ void CSSAnimationsRegistry::handleAnimationsToRevert(
 void CSSAnimationsRegistry::handleAnimationsToRevert(
     const double timestamp) {
   for (const auto &[viewTag, _] : animationsToRevertMap_) {
-  // TODO
-//    applyViewAnimationsStyle(rt, viewTag, timestamp);
+    applyViewAnimationsStyle(viewTag, timestamp);
   }
   animationsToRevertMap_.clear();
 }

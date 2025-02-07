@@ -63,8 +63,8 @@ class CSSAnimationsRegistry
       const std::shared_ptr<CSSAnimation> &animation,
       double timestamp);
   void removeViewAnimations(Tag viewTag);
-  void
-  applyViewAnimationsStyle(jsi::Runtime &rt, Tag viewTag, double timestamp);
+  void applyViewAnimationsStyle(jsi::Runtime &rt, Tag viewTag, double timestamp);
+  void applyViewAnimationsStyle(Tag viewTag, double timestamp);
   void activateDelayedAnimations(double timestamp);
   void handleAnimationsToRevert(jsi::Runtime &rt, double timestamp);
   void handleAnimationsToRevert(double timestamp);
