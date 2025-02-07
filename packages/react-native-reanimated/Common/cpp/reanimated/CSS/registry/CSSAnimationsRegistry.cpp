@@ -207,7 +207,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
       style = animation->getBackwardsFillStyle(rt);
     } else if (currentState == AnimationProgressState::Finished) {
       if (animation->hasForwardsFillMode()) {
-        style = animation->getForwardFillStyle(rt);
+        style = animation->getForwardsFillStyle(rt);
       }
     } else if (currentState != AnimationProgressState::Pending) {
       style = animation->getCurrentInterpolationStyle(rt);

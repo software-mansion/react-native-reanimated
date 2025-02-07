@@ -17,6 +17,15 @@ jsi::Value GroupPropertiesInterpolator::getStyleValue(
       });
 }
 
+jsi::Value GroupPropertiesInterpolator::getResetStyle(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode) const {
+  return mapInterpolators(
+      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
+        return interpolator.getResetStyle(rt, shadowNode);
+      });
+}
+
 jsi::Value GroupPropertiesInterpolator::getFirstKeyframeValue(
     jsi::Runtime &rt) const {
   return mapInterpolators(

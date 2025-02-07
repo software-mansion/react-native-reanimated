@@ -76,14 +76,13 @@ jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) const {
                       : styleInterpolator_.getFirstKeyframeValue(rt);
 }
 
-jsi::Value CSSAnimation::getForwardFillStyle(jsi::Runtime &rt) const {
+jsi::Value CSSAnimation::getForwardsFillStyle(jsi::Runtime &rt) const {
   return isReversed() ? styleInterpolator_.getFirstKeyframeValue(rt)
                       : styleInterpolator_.getLastKeyframeValue(rt);
 }
 
 jsi::Value CSSAnimation::getResetStyle(jsi::Runtime &rt) const {
-  // TODO
-  return jsi::Value::undefined();
+  return styleInterpolator_.getResetStyle(rt, shadowNode_);
 }
 
 void CSSAnimation::run(const double timestamp) {
