@@ -95,6 +95,16 @@ void UpdatesRegistry::setInUpdatesRegistry(
   updatesRegistry_[tag] = std::make_pair(shadowNode, newProps);
 }
 
+void UpdatesRegistry::setInUpdatesRegistry(
+    const ShadowNode::Shared &shadowNode,
+    const folly::dynamic &props) {
+  const auto tag = shadowNode->getTag();
+#ifdef ANDROID
+  updatePropsToRevert(tag, &props);
+#endif
+  updatesRegistry_[tag] = std::make_pair(shadowNode, props);
+}
+
 void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
 #ifdef ANDROID
   updatePropsToRevert(tag);

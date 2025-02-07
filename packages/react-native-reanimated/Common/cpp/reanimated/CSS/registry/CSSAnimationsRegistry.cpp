@@ -289,8 +289,8 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
 //      updateJSIObject(rt, updatedStyle, style.asObject(rt));
     }
   }
-// TODO
-//  setInUpdatesRegistry(rt, shadowNode, jsi::Value(rt, updatedStyle));
+
+  setInUpdatesRegistry(shadowNode, updatedStyle);
 }
 
 void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
