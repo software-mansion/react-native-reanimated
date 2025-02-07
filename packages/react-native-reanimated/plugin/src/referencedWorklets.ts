@@ -59,6 +59,13 @@ function findReferencedWorkletFromVariableDeclarator(
   if (acceptObject && isWorkletizableObjectPath(worklet)) {
     return worklet;
   }
+  if (worklet.isIdentifier() && worklet.isReferencedIdentifier()) {
+    return findReferencedWorklet(
+      worklet,
+      acceptWorkletizableFunction,
+      acceptObject
+    );
+  }
   return undefined;
 }
 
@@ -92,6 +99,16 @@ function findReferencedWorkletFromAssignmentExpression(
   }
   if (acceptObject && isWorkletizableObjectPath(workletDefinition)) {
     return workletDefinition;
+  }
+  if (
+    workletDefinition.isIdentifier() &&
+    workletDefinition.isReferencedIdentifier()
+  ) {
+    return findReferencedWorklet(
+      workletDefinition,
+      acceptWorkletizableFunction,
+      acceptObject
+    );
   }
   return undefined;
 }
