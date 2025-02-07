@@ -37,9 +37,9 @@ class CSSAnimation {
 
   jsi::Value getViewStyle(jsi::Runtime &rt) const;
   jsi::Value getCurrentInterpolationStyle(jsi::Runtime &rt) const;
-  jsi::Value getBackwardsFillStyle(jsi::Runtime &rt);
-  jsi::Value getForwardFillStyle(jsi::Runtime &rt);
-  jsi::Value resetStyle(jsi::Runtime &rt);
+  jsi::Value getBackwardsFillStyle(jsi::Runtime &rt) const;
+  jsi::Value getForwardFillStyle(jsi::Runtime &rt) const;
+  jsi::Value getResetStyle(jsi::Runtime &rt) const;
 
   void run(double timestamp);
   jsi::Value update(jsi::Runtime &rt, double timestamp);

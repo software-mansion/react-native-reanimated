@@ -9,11 +9,14 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
 
 jsi::Value TransitionStyleInterpolator::getCurrentInterpolationStyle(
     jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) const {
+    const ShadowNode::Shared &shadowNode,
+    const TransitionProgressProvider &progressProvider) const {
   jsi::Object result(rt);
 
-  for (const auto &[propertyName, interpolator] : interpolators_) {
-    jsi::Value value = interpolator->getCurrentValue(rt, shadowNode);
+  for (const auto &[propertyName, progressProvider] : progressProviders_) {
+    const auto interpolator = interpolators_.at(propertyName);
+    const auto value =
+        interpolator->interpolate(rt, shadowNode, progressProvider);
     result.setProperty(rt, propertyName.c_str(), value);
   }
 
@@ -46,30 +49,32 @@ TransitionStyleInterpolator::getReversedPropertyNames(
   return reversedProperties;
 }
 
-jsi::Value TransitionStyleInterpolator::update(
+jsi::Value TransitionStyleInterpolator::interpolate(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode,
-    const std::unordered_set<std::string> &propertiesToRemove) {
+    const TransitionProgressProvider &transitionProgressProvider) const {
   if (interpolators_.empty()) {
     return jsi::Value::undefined();
   }
 
   jsi::Object result(rt);
 
-  for (auto it = interpolators_.begin(); it != interpolators_.end();) {
-    const auto &[propertyName, interpolator] = *it;
-
-    jsi::Value value = interpolator->update(rt, shadowNode);
+  for (const auto &[propertyName, progressProvider] :
+       transitionProgressProvider.getPropertyProgressProviders()) {
+    const auto interpolator = interpolators_.at(propertyName);
+    const auto value =
+        interpolator->interpolate(rt, shadowNode, progressProvider);
     result.setProperty(rt, propertyName.c_str(), value);
-
-    if (propertiesToRemove.find(propertyName) != propertiesToRemove.cend()) {
-      it = interpolators_.erase(it);
-    } else {
-      ++it;
-    }
   }
 
   return result;
+}
+
+void TransitionStyleInterpolator::discardFinishedInterpolators(
+    const TransitionProgressProvider &progressProvider) {
+  for (const auto propertyName : progressProvider.getRemovedProperties()) {
+    interpolators_.erase(propertyName);
+  }
 }
 
 void TransitionStyleInterpolator::discardIrrelevantInterpolators(
@@ -88,37 +93,28 @@ void TransitionStyleInterpolator::discardIrrelevantInterpolators(
 
 void TransitionStyleInterpolator::updateInterpolatedProperties(
     jsi::Runtime &rt,
-    const jsi::Value &oldStyleValue,
-    const jsi::Value &newStyleValue,
-    const jsi::Value &previousValue,
-    const jsi::Value &reversingAdjustedStartValue) {
+    const ChangedProps &changedProps,
+    const jsi::Value &previousValue, // TODO
+    const jsi::Value &reversingAdjustedStartValue /* TODO */) {
   const auto oldPropsObj = changedProps.oldProps.asObject(rt);
   const auto newPropsObj = changedProps.newProps.asObject(rt);
 
   for (const auto &propertyName : changedProps.changedPropertyNames) {
-    auto interpolatorIt = interpolators_.find(propertyName);
+    auto it = interpolators_.find(propertyName);
 
     const auto oldValue = oldPropsObj.getProperty(rt, propertyName.c_str());
     const auto newValue = newPropsObj.getProperty(rt, propertyName.c_str());
 
-    if (interpolatorIt == interpolators_.end()) {
+    if (it == interpolators_.end()) {
       const auto newInterpolator = createPropertyInterpolator(
           propertyName,
           {},
           PROPERTY_INTERPOLATORS_CONFIG,
-          progressProviders.at(propertyName),
           viewStylesRepository_);
-      interpolatorIt =
-          interpolators_.emplace(propertyName, newInterpolator).first;
-    } else {
-      // We have to set the new progress provider when the new transition
-      // starts and the interpolator already exists, because the new property
-      // progress provider was created on the new transition start.
-      interpolatorIt->second->setProgressProvider(
-          progressProviders.at(propertyName));
+      it = interpolators_.emplace(propertyName, newInterpolator).first;
     }
 
-    interpolatorIt->second->updateKeyframesFromStyleChange(
+    it->second->updateKeyframesFromStyleChange(
         rt, oldValue, newValue, previousValue, reversingAdjustedStartValue);
   }
 }

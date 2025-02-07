@@ -20,15 +20,16 @@ class TransitionStyleInterpolator {
 
   jsi::Value getCurrentInterpolationStyle(
       jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const;
+      const ShadowNode::Shared &shadowNode,
+      const TransitionProgressProvider &progressProvider) const;
   std::unordered_set<std::string> getReversedPropertyNames(
       jsi::Runtime &rt,
       const jsi::Value &newPropertyValues) const;
 
-  jsi::Value update(
+  jsi::Value interpolate(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
-      const std::unordered_set<std::string> &propertiesToRemove);
+      const TransitionProgressProvider &progressProvider) const;
 
   void discardIrrelevantInterpolators(
       const std::unordered_set<std::string> &transitionPropertyNames);
