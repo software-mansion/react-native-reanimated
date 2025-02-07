@@ -5,7 +5,7 @@
 namespace worklets {
 
 class UIRuntimeDecorator {
-public:
+ public:
   static void decorate(facebook::jsi::Runtime &uiRuntime);
 };
 
