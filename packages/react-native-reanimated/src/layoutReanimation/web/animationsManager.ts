@@ -6,8 +6,8 @@ import type {
   LayoutAnimationStaticContext,
 } from '../../createAnimatedComponent/commonTypes';
 import { EasingNameSymbol } from '../../Easing';
-import { logger } from '../../logger';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
+import { logger } from '../../WorkletsResolver';
 import { Keyframe } from '../animationBuilder';
 import type { TransitionData } from './animationParser';
 import { makeElementVisible } from './componentStyle';

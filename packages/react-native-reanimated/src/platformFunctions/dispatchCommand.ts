@@ -7,13 +7,13 @@ import type {
   AnimatedRefOnJS,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
-import { logger } from '../logger';
 import {
   isChromeDebugger,
   isFabric,
   isJest,
   shouldBeUseWeb,
 } from '../PlatformChecker';
+import { logger } from '../WorkletsResolver';
 
 type DispatchCommand = <T extends Component>(
   animatedRef: AnimatedRef<T>,

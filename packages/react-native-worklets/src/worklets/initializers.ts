@@ -1,26 +1,22 @@
 'use strict';
-import { registerReanimatedError, reportFatalErrorOnJS } from './errors';
+
+import { reportFatalErrorOnJS } from './errors';
 import {
   DEFAULT_LOGGER_CONFIG,
   logToLogBoxAndConsole,
   registerLoggerConfig,
   replaceLoggerImplementation,
 } from './logger';
+import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
 import {
   isChromeDebugger,
   isJest,
   isWeb,
   shouldBeUseWeb,
 } from './PlatformChecker';
-import type { IReanimatedModule } from './ReanimatedModule';
-import {
-  callMicrotasks,
-  executeOnUIRuntimeSync,
-  runOnJS,
-  runOnUIImmediately,
-  setupMicrotasks,
-} from './threads';
-import { mockedRequestAnimationFrame } from './WorkletsResolver';
+import { executeOnUIRuntimeSync, runOnJS, setupMicrotasks } from './threads';
+import { registerWorkletsError, WorkletsError } from './WorkletsError';
+import type { IWorkletsModule } from './WorkletsModule';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -48,10 +44,10 @@ if (SHOULD_BE_USE_WEB) {
   global._log = console.log;
   global._getAnimationTimestamp = () => performance.now();
 } else {
-  // Register ReanimatedError and logger config in the UI runtime global scope.
+  // Register WorkletsError and logger config in the UI runtime global scope.
   // (we are using `executeOnUIRuntimeSync` here to make sure that the changes
   // are applied before any async operations are executed on the UI runtime)
-  executeOnUIRuntimeSync(registerReanimatedError)();
+  executeOnUIRuntimeSync(registerWorkletsError)();
   executeOnUIRuntimeSync(registerLoggerConfig)(DEFAULT_LOGGER_CONFIG);
   executeOnUIRuntimeSync(overrideLogFunctionImplementation)();
 }
@@ -80,6 +76,7 @@ export function setupCallGuard() {
     reportFatalError: (error: Error) => {
       runOnJS(reportFatalErrorOnJS)({
         message: error.message,
+        moduleName: 'Worklets',
         stack: error.stack,
       });
     },
@@ -146,52 +143,13 @@ export function setupConsole() {
   }
 }
 
-function setupRequestAnimationFrame() {
-  'worklet';
-
-  // Jest mocks requestAnimationFrame API and it does not like if that mock gets overridden
-  // so we avoid doing requestAnimationFrame batching in Jest environment.
-  const nativeRequestAnimationFrame = global.requestAnimationFrame;
-
-  let animationFrameCallbacks: Array<(timestamp: number) => void> = [];
-  let flushRequested = false;
-
-  global.__flushAnimationFrame = (frameTimestamp: number) => {
-    const currentCallbacks = animationFrameCallbacks;
-    animationFrameCallbacks = [];
-    currentCallbacks.forEach((f) => f(frameTimestamp));
-    callMicrotasks();
-  };
-
-  global.requestAnimationFrame = (
-    callback: (timestamp: number) => void
-  ): number => {
-    animationFrameCallbacks.push(callback);
-    if (!flushRequested) {
-      flushRequested = true;
-      nativeRequestAnimationFrame((timestamp) => {
-        flushRequested = false;
-        global.__frameTimestamp = timestamp;
-        global.__flushAnimationFrame(timestamp);
-        global.__frameTimestamp = undefined;
-      });
-    }
-    // Reanimated currently does not support cancelling callbacks requested with
-    // requestAnimationFrame. We return -1 as identifier which isn't in line
-    // with the spec but it should give users better clue in case they actually
-    // attempt to store the value returned from rAF and use it for cancelling.
-    return -1;
-  };
-}
-
-export function initializeUIRuntime(ReanimatedModule: IReanimatedModule) {
+export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
   if (isWeb()) {
     return;
   }
-  if (!ReanimatedModule) {
-    // eslint-disable-next-line reanimated/use-reanimated-error
-    throw new Error(
-      '[Reanimated] Reanimated is trying to initialize the UI runtime without a valid ReanimatedModule'
+  if (!WorkletsModule) {
+    throw new WorkletsError(
+      'Worklets are trying to initialize the UI runtime without a valid WorkletsModule'
     );
   }
   if (IS_JEST) {
@@ -204,13 +162,12 @@ export function initializeUIRuntime(ReanimatedModule: IReanimatedModule) {
     globalThis.requestAnimationFrame = mockedRequestAnimationFrame;
   }
 
-  runOnUIImmediately(() => {
-    'worklet';
-    setupCallGuard();
-    setupConsole();
-    if (!SHOULD_BE_USE_WEB) {
+  if (!SHOULD_BE_USE_WEB) {
+    executeOnUIRuntimeSync(() => {
+      'worklet';
+      setupCallGuard();
+      setupConsole();
       setupMicrotasks();
-      setupRequestAnimationFrame();
-    }
-  })();
+    })();
+  }
 }

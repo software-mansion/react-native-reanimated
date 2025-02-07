@@ -1,13 +1,16 @@
 'use strict';
 import type { Mutable } from './commonTypes';
 import { ReanimatedError } from './errors';
-import { logger } from './logger';
 import { shouldBeUseWeb } from './PlatformChecker';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
-import { shareableMappingCache } from './shareableMappingCache';
-import { makeShareableCloneRecursive } from './shareables';
-import { executeOnUIRuntimeSync, runOnUI } from './threads';
 import { valueSetter } from './valueSetter';
+import {
+  executeOnUIRuntimeSync,
+  logger,
+  makeShareableCloneRecursive,
+  runOnUI,
+  shareableMappingCache,
+} from './WorkletsResolver';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 

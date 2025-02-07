@@ -8,7 +8,7 @@ import type {
 import { registerEventHandler, unregisterEventHandler } from '../../core';
 import { ReanimatedError } from '../../errors';
 import { isJest, shouldBeUseWeb } from '../../PlatformChecker';
-import { runOnUIImmediately } from '../../threads';
+import { runOnUIImmediately } from '../../WorkletsResolver';
 
 type TransitionProgressEvent = {
   closing: number;

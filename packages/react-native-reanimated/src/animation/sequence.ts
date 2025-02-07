@@ -6,7 +6,7 @@ import type {
   ReduceMotion,
   Timestamp,
 } from '../commonTypes';
-import { logger } from '../logger';
+import { logger } from '../WorkletsResolver';
 import type { NextAnimation, SequenceAnimation } from './commonTypes';
 import { defineAnimation, getReduceMotionForAnimation } from './util';
 

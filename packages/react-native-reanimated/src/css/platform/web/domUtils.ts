@@ -1,6 +1,6 @@
 'use strict';
-import { logger } from '../../../logger';
 import { isWindowAvailable } from '../../../PlatformChecker';
+import { logger } from '../../../WorkletsResolver';
 import { ReanimatedError } from '../../errors';
 
 const CSS_ANIMATIONS_STYLE_TAG_ID = 'ReanimatedCSSStyleTag';

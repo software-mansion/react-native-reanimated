@@ -1,7 +1,7 @@
 'use strict';
 
-import { logger } from '../logger';
 import { isChromeDebugger, isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { logger } from '../WorkletsResolver';
 
 type SetGestureState = (handlerTag: number, newState: number) => void;
 

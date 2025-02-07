@@ -5,7 +5,7 @@ import { NativeEventEmitter, Platform } from 'react-native';
 import type { StyleProps } from '../commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
 import NativeReanimatedModule from '../specs/NativeReanimatedModule';
-import { runOnJS, runOnUIImmediately } from '../threads';
+import { runOnJS, runOnUIImmediately } from '../WorkletsResolver';
 import type {
   AnimatedComponentProps,
   IAnimatedComponentInternal,

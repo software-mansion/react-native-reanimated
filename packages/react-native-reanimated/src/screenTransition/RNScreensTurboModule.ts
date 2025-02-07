@@ -1,5 +1,6 @@
 'use strict';
-import { logger } from '../logger';
+
+import { logger } from '../WorkletsResolver';
 import type { RNScreensTurboModuleType } from './commonTypes';
 
 function noopFactory<T>(defaultReturnValue?: T): () => T {

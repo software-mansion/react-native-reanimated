@@ -6,7 +6,7 @@ import type {
 } from './commonTypes';
 import { isSharedValue } from './isSharedValue';
 import { isJest } from './PlatformChecker';
-import { runOnUI } from './threads';
+import { runOnUI } from './WorkletsResolver';
 
 const IS_JEST = isJest();
 

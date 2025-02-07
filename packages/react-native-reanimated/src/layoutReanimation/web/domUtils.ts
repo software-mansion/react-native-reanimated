@@ -1,8 +1,8 @@
 'use strict';
 import { ReanimatedError } from '../../errors';
-import { logger } from '../../logger';
 import { isWindowAvailable } from '../../PlatformChecker';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
+import { logger } from '../../WorkletsResolver';
 import { setElementPosition, snapshots } from './componentStyle';
 import type { AnimationNames } from './config';
 import { Animations } from './config';

@@ -1,8 +1,8 @@
 'use strict';
 import type { AnimatedStyle, StyleProps } from '../../commonTypes';
 import { ReanimatedError } from '../../errors';
-import { logger } from '../../logger';
 import { PropsAllowlists } from '../../propsAllowlists';
+import { logger } from '../../WorkletsResolver';
 import {
   createReactDOMStyle,
   createTextShadowValue,
