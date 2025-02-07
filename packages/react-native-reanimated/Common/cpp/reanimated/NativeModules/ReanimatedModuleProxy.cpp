@@ -838,7 +838,7 @@ void ReanimatedModuleProxy::performOperations() {
 
     shouldUpdateCssAnimations_ = false;
 
-    if (updatesBatch.size() > 0 &&
+    if ((updatesBatch.size() > 0 || transitionUpdatesBatch.size() > 0) &&
         updatesRegistryManager_->shouldReanimatedSkipCommit()) {
       updatesRegistryManager_->pleaseCommitAfterPause();
     }
@@ -881,11 +881,11 @@ void ReanimatedModuleProxy::performOperations() {
   if (!hasLayoutUpdates && !hasPropsToRevert) {
     // If there's no layout props to be updated, we can apply the updates
     // directly onto the components and skip the commit.
-    for (const auto &[shadowNode, props] : updatesBatch) {
-      Tag tag = shadowNode->getTag();
-      synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
-    }
-    return;
+//    for (const auto &[shadowNode, props] : updatesBatch) {
+//      Tag tag = shadowNode->getTag();
+//      synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
+//    }
+//    return;
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -897,7 +897,7 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
-  commitUpdates(rt, updatesBatch);
+  commitUpdates(rt, updatesBatch, transitionUpdatesBatch);
 
   // Clear the entire cache after the commit
   // (we don't know if the view is updated from outside of Reanimated
@@ -915,7 +915,8 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
 
 void ReanimatedModuleProxy::commitUpdates(
     jsi::Runtime &rt,
-    const UpdatesBatch &updatesBatch) {
+    const UpdatesBatch &updatesBatch,
+    const CSSUpdatesBatch &transitionUpdatesBatch) {
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 
@@ -934,6 +935,12 @@ void ReanimatedModuleProxy::commitUpdates(
       propsVector.insert(propsVector.end(), props.begin(), props.end());
     }
   } else {
+    for (auto const &[shadowNode, props] : transitionUpdatesBatch) {
+      SurfaceId surfaceId = shadowNode->getSurfaceId();
+      auto family = &shadowNode->getFamily();
+      react_native_assert(family->getSurfaceId() == surfaceId);
+      propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
+    }
     for (auto const &[shadowNode, props] : updatesBatch) {
       SurfaceId surfaceId = shadowNode->getSurfaceId();
       auto family = &shadowNode->getFamily();

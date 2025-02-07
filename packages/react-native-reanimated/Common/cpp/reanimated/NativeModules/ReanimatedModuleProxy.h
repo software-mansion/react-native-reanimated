@@ -219,7 +219,11 @@ class ReanimatedModuleProxy
 
  private:
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
-  void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
+  void commitUpdates(
+    jsi::Runtime &rt,
+    const UpdatesBatch &updatesBatch,
+    const CSSUpdatesBatch &transitionsUpdatesBatch
+  );
 
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
