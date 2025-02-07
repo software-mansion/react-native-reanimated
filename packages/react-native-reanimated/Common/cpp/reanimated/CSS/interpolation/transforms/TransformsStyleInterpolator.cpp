@@ -19,6 +19,17 @@ folly::dynamic TransformsStyleInterpolator::getStyleValue(
       shadowNode->getTag(), propertyPath_);
 }
 
+folly::dynamic TransformsStyleInterpolator::getResetStyle(
+    const ShadowNode::Shared &shadowNode) const {
+  auto styleValue = getStyleValue(shadowNode);
+
+  if (styleValue.isUndefined()) {
+    return convertResultToDynamic(defaultStyleValue_);
+  }
+
+  return styleValue;
+}
+
 folly::dynamic TransformsStyleInterpolator::getFirstKeyframeValue() const {
   return convertResultToDynamic(
       keyframes_.front()->fromOperations.value_or(defaultStyleValue_));
@@ -29,8 +40,7 @@ folly::dynamic TransformsStyleInterpolator::getLastKeyframeValue() const {
       keyframes_.back()->toOperations.value_or(defaultStyleValue_));
 }
 
-jsi::Value TransformsStyleInterpolator::interpolate(
-    jsi::Runtime &rt,
+folly::dynamic TransformsStyleInterpolator::interpolate(
     const ShadowNode::Shared &shadowNode,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
   const auto currentIndex = getIndexOfCurrentKeyframe(progressProvider);
@@ -301,13 +311,20 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
 size_t TransformsStyleInterpolator::getIndexOfCurrentKeyframe(
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
   const auto progress = progressProvider->getGlobalProgress();
+
   const auto it = std::lower_bound(
       keyframes_.begin(),
       keyframes_.end(),
       progress,
       [](const std::shared_ptr<TransformKeyframe> &keyframe, double progress) {
-        return keyframe->fromOffset <= progress;
+        return keyframe->toOffset < progress;
       });
+
+  // If we're at the end, return the last valid keyframe index
+  if (it == keyframes_.end()) {
+    return keyframes_.size() - 1;
+  }
+
   return std::distance(keyframes_.begin(), it);
 }
 

@@ -48,6 +48,17 @@ class ValueInterpolator : public PropertyInterpolator {
         shadowNode->getTag(), propertyPath_);
   }
 
+  folly::dynamic getResetStyle(
+      const ShadowNode::Shared &shadowNode) const override {
+    auto styleValue = getStyleValue(shadowNode);
+
+    if (styleValue.isUndefined()) {
+      return defaultStyleValue_.toDynamic();
+    }
+
+    return styleValue;
+  }
+
   folly::dynamic getFirstKeyframeValue() const override {
     return convertOptionalToDynamic(keyframes_.front().value);
   }
@@ -99,14 +110,14 @@ class ValueInterpolator : public PropertyInterpolator {
       const ShadowNode::Shared &shadowNode,
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
       const override {
-    const auto afterIndex = getIndexOfKeyframeAfterProgress(progressProvider);
-    const auto beforeIndex = afterIndex - 1;
+    const auto toIndex = getToKeyframeIndex(progressProvider);
+    const auto fromIndex = toIndex - 1;
 
-    const auto &keyframeBefore = keyframes_.at(beforeIndex);
-    const auto &keyframeAfter = keyframes_.at(afterIndex);
+    const auto &fromKeyframe = keyframes_.at(fromIndex);
+    const auto &toKeyframe = keyframes_.at(toIndex);
 
-    std::optional<ValueType> fromValue = keyframeBefore.value;
-    std::optional<ValueType> toValue = keyframeAfter.value;
+    std::optional<ValueType> fromValue = fromKeyframe.value;
+    std::optional<ValueType> toValue = toKeyframe.value;
 
     if (!fromValue.has_value()) {
       fromValue = getFallbackValue(shadowNode);
@@ -116,7 +127,7 @@ class ValueInterpolator : public PropertyInterpolator {
     }
 
     const auto keyframeProgress = progressProvider->getKeyframeProgress(
-        keyframeBefore.offset, keyframeAfter.offset);
+        fromKeyframe.offset, toKeyframe.offset);
 
     ValueType result;
     if (keyframeProgress == 1.0) {
@@ -160,17 +171,24 @@ class ValueInterpolator : public PropertyInterpolator {
         0, unresolvedValue, unresolvedValue, {.node = shadowNode});
   }
 
-  size_t getIndexOfKeyframeAfterProgress(
+  size_t getToKeyframeIndex(
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
     const auto progress = progressProvider->getGlobalProgress();
-    const auto index = std::lower_bound(
+
+    const auto it = std::upper_bound(
         keyframes_.begin(),
         keyframes_.end(),
         progress,
-        [](const KeyframeType &keyframe, double progress) {
-          return keyframe.offset < progress;
+        [](double progress, const KeyframeType &keyframe) {
+          return progress < keyframe.offset;
         });
-    return std::distance(keyframes_.begin(), index);
+
+    // If we're at the end, return the last valid keyframe index
+    if (it == keyframes_.end()) {
+      return keyframes_.size() - 1;
+    }
+
+    return std::distance(keyframes_.begin(), it);
   }
 
   folly::dynamic convertOptionalToDynamic(
