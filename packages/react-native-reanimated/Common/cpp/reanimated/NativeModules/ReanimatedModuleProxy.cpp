@@ -834,6 +834,7 @@ void ReanimatedModuleProxy::performOperations() {
     if (shouldUpdateCssAnimations_) {
       // Update CSS animations and flush updates
       cssAnimationsRegistry_->update(currentCssTimestamp_);
+      // TODO: pass animationUpdatesBatch to commit updates
       cssAnimationsRegistry_->flushUpdates(animationUpdatesBatch, true);
     }
 

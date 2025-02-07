@@ -45,10 +45,24 @@ jsi::Value TransformsStyleInterpolator::getFirstKeyframeValue(
       rt, keyframes_.front()->fromOperations.value_or(defaultStyleValue_));
 }
 
+folly::dynamic TransformsStyleInterpolator::getFirstKeyframeValue() const {
+// TODO
+  return folly::dynamic();
+//  return convertResultToJSI(
+//      rt, keyframes_.front()->fromOperations.value_or(defaultStyleValue_));
+}
+
 jsi::Value TransformsStyleInterpolator::getLastKeyframeValue(
     jsi::Runtime &rt) const {
   return convertResultToJSI(
       rt, keyframes_.back()->toOperations.value_or(defaultStyleValue_));
+}
+
+folly::dynamic TransformsStyleInterpolator::getLastKeyframeValue() const {
+// TODO
+  return folly::dynamic();
+//  return convertResultToJSI(
+//      rt, keyframes_.back()->toOperations.value_or(defaultStyleValue_));
 }
 
 bool TransformsStyleInterpolator::equalsReversingAdjustedStartValue(

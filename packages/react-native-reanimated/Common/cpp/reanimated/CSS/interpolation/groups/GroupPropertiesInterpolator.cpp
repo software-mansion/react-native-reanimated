@@ -54,12 +54,30 @@ jsi::Value GroupPropertiesInterpolator::getFirstKeyframeValue(
       });
 }
 
+folly::dynamic GroupPropertiesInterpolator::getFirstKeyframeValue() const {
+// TODO
+  return folly::dynamic();
+//  return mapInterpolators(
+//      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
+//        return interpolator.getFirstKeyframeValue(rt);
+//      });
+}
+
 jsi::Value GroupPropertiesInterpolator::getLastKeyframeValue(
     jsi::Runtime &rt) const {
   return mapInterpolators(
       rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
         return interpolator.getLastKeyframeValue(rt);
       });
+}
+
+folly::dynamic GroupPropertiesInterpolator::getLastKeyframeValue() const {
+// TODO
+  return folly::dynamic();
+//  return mapInterpolators(
+//      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
+//        return interpolator.getLastKeyframeValue(rt);
+//      });
 }
 
 jsi::Value GroupPropertiesInterpolator::update(

@@ -41,7 +41,9 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
   jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const override;
+  folly::dynamic getFirstKeyframeValue() const override;
   jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const override;
+  folly::dynamic getLastKeyframeValue() const override;
 
   bool equalsReversingAdjustedStartValue(
       jsi::Runtime &rt,
