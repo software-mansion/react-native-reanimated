@@ -1027,6 +1027,17 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       expect(code).toMatchSnapshot();
     });
+
+    it('workletizes referenced callbacks', () => {
+      const input = html`<script>
+        const onStart = () => {};
+        const foo = Gesture.Tap().onStart(onStart);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
+      expect(code).toMatchSnapshot();
+    });
   });
 
   describe('for sequence expressions', () => {
@@ -2062,7 +2073,7 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    it('workletizes assigments that appear after the worklet is used', () => {
+    it('workletizes assignments that appear after the worklet is used', () => {
       const input = html`<script>
         let styleFactory = () => ({});
         animatedStyle = useAnimatedStyle(styleFactory);
@@ -2074,6 +2085,18 @@ describe('babel plugin', () => {
       const { code } = runPlugin(input);
       expect(code).toHaveWorkletData(1);
       expect(code).toContainInWorkletString('AssignmentAfterUse');
+      expect(code).toMatchSnapshot();
+    });
+
+    it('workletizes multiple referencing', () => {
+      const input = html`<script>
+        const secondReference = () => ({});
+        const firstReference = secondReference;
+        const animatedStyle = useAnimatedStyle(firstReference);
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toHaveWorkletData(1);
       expect(code).toMatchSnapshot();
     });
   });
