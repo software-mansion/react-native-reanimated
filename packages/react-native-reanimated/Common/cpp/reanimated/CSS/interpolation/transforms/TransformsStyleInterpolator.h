@@ -57,6 +57,8 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       override;
   jsi::Value reset(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
       override;
+  folly::dynamic reset(const ShadowNode::Shared &shadowNode)
+      override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(

@@ -58,6 +58,8 @@ class PropertyInterpolator {
   virtual jsi::Value reset(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) = 0;
+  virtual folly::dynamic reset(
+      const ShadowNode::Shared &shadowNode) = 0;
 
  protected:
   const PropertyPath propertyPath_;

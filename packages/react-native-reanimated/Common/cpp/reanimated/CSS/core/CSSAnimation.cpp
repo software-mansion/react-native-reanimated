@@ -100,6 +100,10 @@ jsi::Value CSSAnimation::resetStyle(jsi::Runtime &rt) {
   return styleInterpolator_.reset(rt, shadowNode_);
 }
 
+folly::dynamic CSSAnimation::resetStyle() {
+  return styleInterpolator_.reset(shadowNode_);
+}
+
 void CSSAnimation::run(const double timestamp) {
   if (progressProvider_->getState(timestamp) ==
       AnimationProgressState::Finished) {

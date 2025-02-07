@@ -200,10 +200,9 @@ void CSSAnimationsRegistry::updateViewAnimations(
         //  We also have to manually commit style values
         // reverting the changes applied by the animation.
         
-        // TODO
-//        hasUpdates =
-//            addStyleUpdates(rt, result, animation->resetStyle(rt), false) ||
-//            hasUpdates;
+        hasUpdates =
+            addStyleUpdates(result, animation->resetStyle(), false) ||
+            hasUpdates;
         updatesAddedToBatch = true;
         // We want to remove style changes applied by the animation that is
         // finished and has no forwards fill mode. We cannot simply remove
@@ -411,7 +410,7 @@ bool CSSAnimationsRegistry::addStyleUpdates(
     return false;
   }
 
-  bool hasUpdates = false; 
+  bool hasUpdates = false;
   for (const auto& [propertyName, propertyValue] : updates.items()) {
     if (override || !target.at(propertyName).isNull()) {
       target[propertyName] = propertyValue;

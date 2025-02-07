@@ -224,6 +224,15 @@ class ValueInterpolator : public PropertyInterpolator {
     reversingAdjustedStartValue_ = std::nullopt;
     return getCurrentValue(rt, shadowNode);
   }
+  
+  folly::dynamic reset(const ShadowNode::Shared &shadowNode)
+      override {
+    previousValue_ = std::nullopt;
+    reversingAdjustedStartValue_ = std::nullopt;
+    // TODO
+    return folly::dynamic();
+//    return getCurrentValue(rt, shadowNode);
+  }
 
  protected:
   ValueType defaultStyleValue_;
