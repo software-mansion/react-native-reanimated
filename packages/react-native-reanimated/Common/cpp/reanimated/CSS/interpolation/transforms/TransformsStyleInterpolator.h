@@ -29,7 +29,6 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   TransformsStyleInterpolator(
       const PropertyPath &propertyPath,
       const std::shared_ptr<TransformInterpolators> &interpolators,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   folly::dynamic getStyleValue(
@@ -37,7 +36,10 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
 
-  folly::dynamic update(const ShadowNode::Shared &shadowNode) override;
+  folly::dynamic interpolate(
+      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
+      const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
@@ -52,11 +54,6 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   static const TransformOperations defaultStyleValue_;
 
   std::vector<std::shared_ptr<TransformKeyframe>> keyframes_;
-  std::shared_ptr<TransformKeyframe> currentKeyframe_;
-  // Previous interpolation result
-  std::optional<TransformOperations> previousResult_;
-  // For transition interrupting
-  std::optional<TransformOperations> reversingAdjustedStartValue_;
 
   static std::optional<TransformOperations> parseTransformOperations(
       jsi::Runtime &rt,
@@ -80,17 +77,10 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   std::shared_ptr<TransformOperation> getDefaultOperationOfType(
       TransformOperationType type) const;
 
+  size_t getIndexOfCurrentKeyframe(
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
   TransformOperations getFallbackValue(
       const ShadowNode::Shared &shadowNode) const;
-  TransformOperations resolveTransformOperations(
-      const ShadowNode::Shared &shadowNode,
-      const TransformOperations &unresolvedOperations) const;
-  std::shared_ptr<TransformKeyframe> getKeyframeAtIndex(
-      const ShadowNode::Shared &shadowNode,
-      size_t index,
-      int resolveDirection // < 0 - resolve from, > 0 - resolve to
-  ) const;
-  void updateCurrentKeyframe(const ShadowNode::Shared &shadowNode);
   TransformOperations interpolateOperations(
       const ShadowNode::Shared &shadowNode,
       double keyframeProgress,

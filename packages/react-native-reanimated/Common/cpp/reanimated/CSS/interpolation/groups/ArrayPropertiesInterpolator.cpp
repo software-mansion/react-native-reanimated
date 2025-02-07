@@ -6,33 +6,9 @@ namespace reanimated {
 ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
     const InterpolatorFactoriesArray &factories,
     const PropertyPath &propertyPath,
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : GroupPropertiesInterpolator(
-          propertyPath,
-          progressProvider,
-          viewStylesRepository),
+    : GroupPropertiesInterpolator(propertyPath, viewStylesRepository),
       factories_(factories) {}
-
-bool ArrayPropertiesInterpolator::equalsReversingAdjustedStartValue(
-    jsi::Runtime &rt,
-    const jsi::Value &propertyValue) const {
-  const auto propertyValuesArray = propertyValue.asObject(rt).asArray(rt);
-  const auto valuesCount = propertyValuesArray.size(rt);
-
-  if (valuesCount != interpolators_.size()) {
-    return false;
-  }
-
-  for (size_t i = 0; i < valuesCount; ++i) {
-    if (!interpolators_[i]->equalsReversingAdjustedStartValue(
-            rt, propertyValuesArray.getValueAtIndex(rt, i))) {
-      return false;
-    }
-  }
-
-  return true;
-}
 
 void ArrayPropertiesInterpolator::updateKeyframes(
     jsi::Runtime &rt,
@@ -85,21 +61,13 @@ void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
   }
 }
 
-void ArrayPropertiesInterpolator::forEachInterpolator(
-    const std::function<void(PropertyInterpolator &)> &callback) const {
-  for (const auto &interpolator : interpolators_) {
-    callback(*interpolator);
-  }
-}
-
 folly::dynamic ArrayPropertiesInterpolator::mapInterpolators(
     const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
     const {
   auto result = folly::dynamic::array();
 
   for (size_t i = 0; i < interpolators_.size(); ++i) {
-    folly::dynamic value = callback(*interpolators_[i]);
-    result.push_back(value);
+    result.push_back(callback(*interpolators_[i]));
   }
 
   return result;
@@ -116,7 +84,6 @@ void ArrayPropertiesInterpolator::resizeInterpolators(size_t valuesCount) {
         interpolators_.size(),
         propertyPath_,
         factories_,
-        progressProvider_,
         viewStylesRepository_);
     interpolators_.push_back(newInterpolator);
   }

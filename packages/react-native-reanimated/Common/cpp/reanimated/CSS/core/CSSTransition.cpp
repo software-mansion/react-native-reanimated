@@ -109,8 +109,7 @@ folly::dynamic CSSTransition::run(
 
 folly::dynamic CSSTransition::update(const double timestamp) {
   progressProvider_.update(timestamp);
-  const auto result =
-      styleInterpolator_.interpolate(shadowNode_, progressProvider_);
+  auto result = styleInterpolator_.interpolate(shadowNode_, progressProvider_);
   // Remove interpolators for which interpolation has finished
   // (we won't need them anymore in the current transition)
   styleInterpolator_.discardFinishedInterpolators(progressProvider_);
