@@ -269,8 +269,7 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
     const auto &currentState = animation->getState(timestamp);
     if (startTimestamp == timestamp ||
         (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
-        // TODO
-//      style = animation->getBackwardsFillStyle(rt);
+      style = animation->getBackwardsFillStyle();
     } else if (currentState == AnimationProgressState::Finished) {
       if (animation->hasForwardsFillMode()) {
       // TODO
