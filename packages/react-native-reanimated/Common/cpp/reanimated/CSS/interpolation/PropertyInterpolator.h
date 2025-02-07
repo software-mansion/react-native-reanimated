@@ -38,7 +38,8 @@ class PropertyInterpolator {
   virtual jsi::Value interpolate(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider) = 0;
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
+      const = 0;
 
  protected:
   const PropertyPath propertyPath_;

@@ -5,20 +5,8 @@ namespace reanimated {
 
 GroupPropertiesInterpolator::GroupPropertiesInterpolator(
     const PropertyPath &propertyPath,
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : PropertyInterpolator(
-          propertyPath,
-          progressProvider,
-          viewStylesRepository) {}
-
-void GroupPropertiesInterpolator::setProgressProvider(
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
-  PropertyInterpolator::setProgressProvider(progressProvider);
-  forEachInterpolator([&](PropertyInterpolator &interpolator) -> void {
-    interpolator.setProgressProvider(progressProvider);
-  });
-}
+    : PropertyInterpolator(propertyPath, viewStylesRepository) {}
 
 jsi::Value GroupPropertiesInterpolator::getStyleValue(
     jsi::Runtime &rt,
@@ -45,12 +33,13 @@ jsi::Value GroupPropertiesInterpolator::getLastKeyframeValue(
       });
 }
 
-jsi::Value GroupPropertiesInterpolator::update(
+jsi::Value GroupPropertiesInterpolator::interpolate(
     jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) {
+    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
   return mapInterpolators(
       rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-        return interpolator.update(rt, shadowNode);
+        return interpolator.interpolate(rt, shadowNode, progressProvider);
       });
 }
 

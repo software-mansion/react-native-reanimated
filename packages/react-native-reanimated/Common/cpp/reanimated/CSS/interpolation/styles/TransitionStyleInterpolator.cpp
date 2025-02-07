@@ -13,12 +13,14 @@ jsi::Value TransitionStyleInterpolator::getCurrentInterpolationStyle(
     const TransitionProgressProvider &progressProvider) const {
   jsi::Object result(rt);
 
-  for (const auto &[propertyName, progressProvider] : progressProviders_) {
-    const auto interpolator = interpolators_.at(propertyName);
-    const auto value =
-        interpolator->interpolate(rt, shadowNode, progressProvider);
-    result.setProperty(rt, propertyName.c_str(), value);
-  }
+  // TODO - implement
+
+  // for (const auto &[propertyName, progressProvider] : progressProviders_) {
+  //   const auto interpolator = interpolators_.at(propertyName);
+  //   const auto value =
+  //       interpolator->interpolate(rt, shadowNode, progressProvider);
+  //   result.setProperty(rt, propertyName.c_str(), value);
+  // }
 
   return result;
 }
@@ -29,22 +31,24 @@ TransitionStyleInterpolator::getReversedPropertyNames(
     const jsi::Value &newPropertyValues) const {
   std::unordered_set<std::string> reversedProperties;
 
-  const auto propertyValuesObject = newPropertyValues.asObject(rt);
-  const auto propertyNames = propertyValuesObject.getPropertyNames(rt);
-  const auto propertiesCount = propertyNames.size(rt);
+  // TODO - implement
 
-  for (size_t i = 0; i < propertiesCount; ++i) {
-    const auto propertyName =
-        propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto propertyValue = propertyValuesObject.getProperty(
-        rt, jsi::PropNameID::forUtf8(rt, propertyName));
+  // const auto propertyValuesObject = newPropertyValues.asObject(rt);
+  // const auto propertyNames = propertyValuesObject.getPropertyNames(rt);
+  // const auto propertiesCount = propertyNames.size(rt);
 
-    const auto it = interpolators_.find(propertyName);
-    if (it != interpolators_.end() &&
-        it->second->equalsReversingAdjustedStartValue(rt, propertyValue)) {
-      reversedProperties.insert(propertyName);
-    }
-  }
+  // for (size_t i = 0; i < propertiesCount; ++i) {
+  //   const auto propertyName =
+  //       propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+  //   const auto propertyValue = propertyValuesObject.getProperty(
+  //       rt, jsi::PropNameID::forUtf8(rt, propertyName));
+
+  //   const auto it = interpolators_.find(propertyName);
+  //   if (it != interpolators_.end() &&
+  //       it->second->equalsReversingAdjustedStartValue(rt, propertyValue)) {
+  //     reversedProperties.insert(propertyName);
+  //   }
+  // }
 
   return reversedProperties;
 }
@@ -72,7 +76,7 @@ jsi::Value TransitionStyleInterpolator::interpolate(
 
 void TransitionStyleInterpolator::discardFinishedInterpolators(
     const TransitionProgressProvider &progressProvider) {
-  for (const auto propertyName : progressProvider.getRemovedProperties()) {
+  for (const auto &propertyName : progressProvider.getRemovedProperties()) {
     interpolators_.erase(propertyName);
   }
 }
