@@ -91,6 +91,32 @@ void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
   }
 }
 
+void CSSAnimationsRegistry::update(const double timestamp) {
+  std::lock_guard<std::mutex> lock{mutex_};
+
+  // Activate all delayed animations that should start now
+  activateDelayedAnimations(timestamp);
+  // Update styles in the registry for views which animations were reverted
+  // TODO
+//  handleAnimationsToRevert(rt, timestamp);
+
+  // Iterate over active animations and update them
+  for (auto it = runningAnimationsMap_.begin();
+       it != runningAnimationsMap_.end();) {
+    const auto viewTag = it->first;
+    const std::vector<unsigned> animationIndices = {
+        it->second.begin(), it->second.end()};
+        // TODO
+//    updateViewAnimations(rt, viewTag, animationIndices, timestamp, true);
+
+    if (runningAnimationsMap_.at(viewTag).empty()) {
+      it = runningAnimationsMap_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
 void CSSAnimationsRegistry::updateViewAnimations(
     jsi::Runtime &rt,
     const Tag viewTag,

@@ -37,6 +37,7 @@ class CSSAnimationsRegistry
       double timestamp);
 
   void update(jsi::Runtime &rt, double timestamp);
+  void update(double timestamp);
 
  private:
   using Registry =

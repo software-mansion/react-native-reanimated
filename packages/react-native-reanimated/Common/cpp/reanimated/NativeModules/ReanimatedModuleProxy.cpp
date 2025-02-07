@@ -815,6 +815,7 @@ void ReanimatedModuleProxy::performOperations() {
 
   UpdatesBatch updatesBatch;
   CSSUpdatesBatch transitionUpdatesBatch;
+  CSSUpdatesBatch animationUpdatesBatch;
 
   {
     auto lock = updatesRegistryManager_->createLock();
@@ -832,8 +833,8 @@ void ReanimatedModuleProxy::performOperations() {
 
     if (shouldUpdateCssAnimations_) {
       // Update CSS animations and flush updates
-      cssAnimationsRegistry_->update(rt, currentCssTimestamp_);
-      cssAnimationsRegistry_->flushUpdates(rt, updatesBatch, true);
+      cssAnimationsRegistry_->update(currentCssTimestamp_);
+      cssAnimationsRegistry_->flushUpdates(animationUpdatesBatch, true);
     }
 
     shouldUpdateCssAnimations_ = false;
