@@ -21,8 +21,6 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
 
   folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const override;
-  folly::dynamic getCurrentValue(
-      const ShadowNode::Shared &shadowNode) const override;
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
 
