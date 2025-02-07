@@ -3,9 +3,10 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
-import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import { ScrollView, FlatList } from 'react-native';
-import Animated, { useSharedValue, useAnimatedScrollHandler } from '../..';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import { FlatList, ScrollView } from 'react-native';
+
+import Animated, { useAnimatedScrollHandler, useSharedValue } from '../..';
 
 function UseAnimatedScrollHandlerTest() {
   function UseAnimatedScrollHandlerTest1() {

@@ -1,9 +1,9 @@
 'use strict';
 import { withSequence, withTiming } from '../../animation';
 import type {
+  EntryExitAnimationFunction,
   EntryExitAnimationsValues,
   IEntryExitAnimationBuilder,
-  EntryExitAnimationFunction,
 } from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';

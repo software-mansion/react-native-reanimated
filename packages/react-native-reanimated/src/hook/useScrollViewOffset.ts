@@ -1,16 +1,17 @@
 'use strict';
-import { useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+
 import type { SharedValue } from '../commonTypes';
+import type { AnimatedScrollView } from '../component/ScrollView';
+import { isWeb } from '../PlatformChecker';
+import type {
+  AnimatedRef,
+  ReanimatedScrollEvent,
+  RNNativeScrollEvent,
+} from './commonTypes';
 import type { EventHandlerInternal } from './useEvent';
 import { useEvent } from './useEvent';
 import { useSharedValue } from './useSharedValue';
-import type { AnimatedScrollView } from '../component/ScrollView';
-import type {
-  AnimatedRef,
-  RNNativeScrollEvent,
-  ReanimatedScrollEvent,
-} from './commonTypes';
-import { isWeb } from '../PlatformChecker';
 
 const IS_WEB = isWeb();
 

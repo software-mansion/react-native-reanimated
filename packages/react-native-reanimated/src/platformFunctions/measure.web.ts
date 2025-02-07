@@ -1,8 +1,9 @@
 'use strict';
+import type { Component } from 'react';
+
 import type { MeasuredDimensions } from '../commonTypes';
 import type { AnimatedRef } from '../hook/commonTypes';
-import type { Component } from 'react';
-import { logger } from '../logger';
+import { logger } from '../WorkletsResolver';
 
 export function measure<T extends Component>(
   animatedRef: AnimatedRef<T>

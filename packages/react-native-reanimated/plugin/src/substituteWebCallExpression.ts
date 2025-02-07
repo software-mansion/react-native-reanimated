@@ -1,6 +1,6 @@
 import type { NodePath } from '@babel/core';
-import { booleanLiteral, isIdentifier } from '@babel/types';
 import type { CallExpression } from '@babel/types';
+import { booleanLiteral, isIdentifier } from '@babel/types';
 
 export function substituteWebCallExpression(path: NodePath<CallExpression>) {
   const callee = path.node.callee;

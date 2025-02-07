@@ -1,7 +1,8 @@
 'use strict';
 import type { Component } from 'react';
-import { measure } from './measure';
+
 import type { AnimatedRef } from '../hook/commonTypes';
+import { measure } from './measure';
 
 /** An object which contains relative coordinates. */
 export interface ComponentCoords {

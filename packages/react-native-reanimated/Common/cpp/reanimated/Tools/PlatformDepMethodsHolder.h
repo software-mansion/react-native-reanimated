@@ -56,7 +56,7 @@ using ObtainPropFunction =
 #endif // RCT_NEW_ARCH_ENABLED
 
 using RequestRenderFunction =
-    std::function<void(std::function<void(const double)>, jsi::Runtime &)>;
+    std::function<void(std::function<void(const double)>)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =

@@ -1,6 +1,7 @@
 import type { NodePath } from '@babel/core';
+
+import type { ReanimatedPluginPass, WorkletizableObject } from './types';
 import { isWorkletizableFunctionPath } from './types';
-import type { WorkletizableObject, ReanimatedPluginPass } from './types';
 import { processWorklet } from './workletSubstitution';
 
 export function processWorkletizableObject(

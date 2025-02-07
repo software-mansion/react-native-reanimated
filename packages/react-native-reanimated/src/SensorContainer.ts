@@ -1,13 +1,13 @@
 'use strict';
 import type {
-  SensorType,
   SensorConfig,
+  SensorType,
+  SharedValue,
   Value3D,
   ValueRotation,
-  ShareableRef,
-  SharedValue,
 } from './commonTypes';
 import Sensor from './Sensor';
+import type { ShareableRef } from './WorkletsResolver';
 
 export class SensorContainer {
   private nativeSensors: Map<number, Sensor> = new Map();

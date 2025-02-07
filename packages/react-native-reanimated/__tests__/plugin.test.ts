@@ -1,11 +1,13 @@
-import { html } from 'code-tag';
-import plugin from '../plugin';
+import '../plugin/src/jestMatchers';
+
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
 import { strict as assert } from 'assert';
-import '../plugin/src/jestMatchers';
+import { html } from 'code-tag';
+
 import { version as packageVersion } from '../package.json';
+import plugin from '../plugin';
 import type { ReanimatedPluginOptions } from '../plugin/src/types';
 
 const MOCK_LOCATION = '/dev/null';

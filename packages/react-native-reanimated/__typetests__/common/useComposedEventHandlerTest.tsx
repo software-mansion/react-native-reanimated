@@ -3,13 +3,14 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
+import { Text } from 'react-native';
+
+import type { ReanimatedEvent } from '../..';
 import Animated, {
   useAnimatedScrollHandler,
   useComposedEventHandler,
   useEvent,
 } from '../..';
-import { Text } from 'react-native';
-import type { ReanimatedEvent } from '../..';
 
 function useComposedEventHandlerTest() {
   function useComposedEventHandlerTestDifferentHandlers() {

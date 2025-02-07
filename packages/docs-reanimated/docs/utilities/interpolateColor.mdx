@@ -35,6 +35,11 @@ function App() {
 <details>
 <summary>Type definitions</summary>
 
+<!--
+  TODO (OKLAB): Adjust the colorSpace prop once OKLAB support is released officially, like so:
+  colorSpace?: 'RGB' | 'HSV' | 'LAB',
+ -->
+
 ```typescript
 type InterpolationOptions = {
   gamma?: number;
@@ -67,6 +72,11 @@ An array of numbers specifying the input range of the interpolation. Values in t
 An array of output colors values in form of strings (like `'red'`, `'#ff0000'`, `'rgba(255, 0, 0, 0.5)'` etc.). It should have at least the same number of points as the input range.
 
 #### `colorSpace` <Optional />
+
+<!--
+ TODO (OKLAB): Uncomment and replace with the following once OKLAB support is released officialy:
+ The color space to use for interpolation. Can be either `'HSV'`, `'RGB'` or [`'LAB'`](https://en.wikipedia.org/wiki/Oklab_color_space). Defaults to `'RGB'`.
+ -->
 
 The color space to use for interpolation. Can be either `'HSV'` or `'RGB'`. Defaults to `'RGB'`.
 

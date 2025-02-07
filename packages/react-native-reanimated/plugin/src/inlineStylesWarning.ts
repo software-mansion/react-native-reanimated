@@ -1,26 +1,27 @@
 import type { NodePath } from '@babel/core';
 import type {
+  JSXAttribute,
   MemberExpression,
   ObjectExpression,
-  JSXAttribute,
   ObjectProperty,
 } from '@babel/types';
 import {
-  callExpression,
   arrowFunctionExpression,
-  isArrayExpression,
-  isJSXExpressionContainer,
-  identifier,
-  stringLiteral,
+  blockStatement,
+  callExpression,
   expressionStatement,
+  identifier,
+  isArrayExpression,
+  isIdentifier,
+  isJSXExpressionContainer,
   memberExpression,
   returnStatement,
-  blockStatement,
-  isIdentifier,
+  stringLiteral,
 } from '@babel/types';
-import { isRelease } from './utils';
-import type { ReanimatedPluginPass } from './types';
 import { strict as assert } from 'assert';
+
+import type { ReanimatedPluginPass } from './types';
+import { isRelease } from './utils';
 
 function generateInlineStylesWarning(path: NodePath<MemberExpression>) {
   // replaces `sharedvalue.value` with `(()=>{console.warn(require('react-native-reanimated').getUseOfValueInStyleWarning());return sharedvalue.value;})()`

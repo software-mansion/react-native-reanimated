@@ -1,0 +1,81 @@
+---
+sidebar_position: 5
+title: LayoutAnimationConfig
+sidebar_label: Skipping Layout Animations
+---
+
+`LayoutAnimationConfig` is a component that lets you skip entering and exiting animations.
+
+## Reference
+
+```javascript
+import { LayoutAnimationConfig } from 'react-native-reanimated';
+
+function App() {
+  const [show, setShow] = React.useState(true);
+
+  return (
+    // highlight-next-line
+    <LayoutAnimationConfig skipEntering>
+      <View>
+        {show && <Animated.View entering={PinwheelIn} exiting={PinwheelOut} />}
+      </View>
+      // highlight-next-line
+    </LayoutAnimationConfig>
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+interface LayoutAnimationConfigProps {
+  skipEntering?: boolean;
+  skipExiting?: boolean;
+  children: ReactNode;
+}
+```
+
+</details>
+
+### Arguments
+
+#### `skipEntering` <Optional />
+
+A boolean indicating whether children's entering animations should be skipped when `LayoutAnimationConfig` is mounted.
+
+#### `skipExiting` <Optional />
+
+A boolean indicating whether children's exiting animations should be skipped when `LayoutAnimationConfig` is unmounted.
+
+## Example
+
+<Row>
+
+<ThemedVideo
+  sources={{
+    light: '/recordings/layout-animations/layoutconfig_light.mov',
+    dark: '/recordings/layout-animations/layoutconfig_dark.mov',
+  }}
+/>
+
+<div style={{flexGrow: 1}}>
+
+import LayoutAnimationConfigSrc from '!!raw-loader!@site/src/examples/LayoutAnimationConfig';
+
+<CollapsibleCode src={LayoutAnimationConfigSrc} showLines={[29, 46]} />
+
+</div>
+
+</Row>
+
+## Remarks
+
+- You can nest the `LayoutAnimationConfig` component if you want to disable animations on a smaller subset of components.
+
+- If you are working with a `FlatList` and want to skip animations in items when the list is mounted and unmounted you can use `skipEnteringExitingAnimations`. This prop automatically wraps your `FlatList` with `<LayoutAnimationConfig skipEntering skipExiting>`.
+
+## Platform compatibility
+
+<PlatformCompatibility android ios />
