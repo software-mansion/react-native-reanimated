@@ -28,6 +28,13 @@ class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
       const ShadowNode::Shared &shadowNode) const {
     return getCurrentValue(rt, shadowNode);
   }
+  
+  folly::dynamic getCurrentInterpolationStyle(
+      const ShadowNode::Shared &shadowNode) const {
+      // TODO
+        return folly::dynamic();
+//    return getCurrentValue(shadowNode);
+  }
 };
 
 } // namespace reanimated

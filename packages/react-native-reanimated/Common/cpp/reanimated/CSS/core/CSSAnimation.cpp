@@ -73,9 +73,7 @@ jsi::Value CSSAnimation::getCurrentInterpolationStyle(jsi::Runtime &rt) const {
 }
 
 folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
-// TODO
-  return folly::dynamic();
-//  return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
+  return styleInterpolator_.getCurrentInterpolationStyle(shadowNode_);
 }
 
 jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) {
