@@ -216,8 +216,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     }
 
     if (addToBatch && !updatesAddedToBatch) {
-    // TODO
-//      hasUpdates = addStyleUpdates(rt, result, updates, true) || hasUpdates;
+      hasUpdates = addStyleUpdates(result, updates, true) || hasUpdates;
     }
     if (newState != AnimationProgressState::Running) {
       runningAnimationsMap_[viewTag].erase(animationIndex);
@@ -400,6 +399,33 @@ bool CSSAnimationsRegistry::addStyleUpdates(
       hasUpdates = true;
     }
   }
+
+  return hasUpdates;
+}
+
+bool CSSAnimationsRegistry::addStyleUpdates(
+    folly::dynamic &target,
+    const folly::dynamic &updates,
+    bool override) {
+  if (!updates.isObject()) {
+    return false;
+  }
+
+  bool hasUpdates = false;
+  // TODO
+//  const auto updatesObject = updates.asObject(rt);
+//  const auto propertyNames = updatesObject.getPropertyNames(rt);
+//  const auto propertiesCount = propertyNames.size(rt);
+//
+//  for (size_t i = 0; i < propertiesCount; ++i) {
+//    const auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt);
+//    const auto propertyValue = updatesObject.getProperty(rt, propertyName);
+//
+//    if (override || target.getProperty(rt, propertyName).isUndefined()) {
+//      target.setProperty(rt, propertyName, propertyValue);
+//      hasUpdates = true;
+//    }
+//  }
 
   return hasUpdates;
 }

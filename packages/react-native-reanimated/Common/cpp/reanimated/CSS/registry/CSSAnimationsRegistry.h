@@ -79,6 +79,10 @@ class CSSAnimationsRegistry
       jsi::Object &target,
       const jsi::Value &updates,
       bool override);
+  static bool addStyleUpdates(
+      folly::dynamic &target,
+      const folly::dynamic &updates,
+      bool override);
 };
 
 } // namespace reanimated
