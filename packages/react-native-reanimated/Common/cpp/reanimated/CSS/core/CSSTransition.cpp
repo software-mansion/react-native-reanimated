@@ -31,7 +31,8 @@ TransitionProgressState CSSTransition::getState() const {
 }
 
 folly::dynamic CSSTransition::getCurrentInterpolationStyle() const {
-  return styleInterpolator_.getCurrentInterpolationStyle(shadowNode_);
+  return styleInterpolator_.getCurrentInterpolationStyle(
+      shadowNode_, progressProvider_);
 }
 
 PropertyNames CSSTransition::getAllowedProperties(
@@ -98,15 +99,22 @@ folly::dynamic CSSTransition::run(
       changedProps.changedPropertyNames,
       styleInterpolator_.getReversedPropertyNames(rt, changedProps.newProps));
   styleInterpolator_.updateInterpolatedProperties(
-      rt, changedProps, progressProvider_.getPropertyProgressProviders());
+      rt,
+      changedProps,
+      jsi::Value::undefined(), // TODO
+      jsi::Value::undefined()); // TODO
 
   return update(timestamp);
 }
 
 folly::dynamic CSSTransition::update(const double timestamp) {
   progressProvider_.update(timestamp);
-  return styleInterpolator_.update(
-      shadowNode_, progressProvider_.getRemovedProperties());
+  const auto result =
+      styleInterpolator_.interpolate(shadowNode_, progressProvider_);
+  // Remove interpolators for which interpolation has finished
+  // (we won't need them anymore in the current transition)
+  styleInterpolator_.discardFinishedInterpolators(progressProvider_);
+  return result;
 }
 
 void CSSTransition::updateTransitionProperties(

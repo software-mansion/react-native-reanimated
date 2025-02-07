@@ -19,14 +19,15 @@ class TransitionStyleInterpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   folly::dynamic getCurrentInterpolationStyle(
-      const ShadowNode::Shared &shadowNode) const;
+      const ShadowNode::Shared &shadowNode,
+      const TransitionProgressProvider &progressProvider) const;
   std::unordered_set<std::string> getReversedPropertyNames(
       jsi::Runtime &rt,
       const jsi::Value &newPropertyValues) const;
 
-  folly::dynamic update(
+  folly::dynamic interpolate(
       const ShadowNode::Shared &shadowNode,
-      const std::unordered_set<std::string> &propertiesToRemove);
+      const TransitionProgressProvider &progressProvider) const;
 
   void discardIrrelevantInterpolators(
       const std::unordered_set<std::string> &transitionPropertyNames);
