@@ -76,9 +76,7 @@ class ValueInterpolator : public PropertyInterpolator {
   }
 
   folly::dynamic getFirstKeyframeValue() const override {
-    // TODO
-    return folly::dynamic();
-    // return convertOptionalToJSI(rt, keyframes_.front().value);
+     return convertOptionalToDynamic(keyframes_.front().value);
   }
 
   jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const override {
@@ -86,9 +84,7 @@ class ValueInterpolator : public PropertyInterpolator {
   }
 
   folly::dynamic getLastKeyframeValue() const override {
-    // TODO
-    return folly::dynamic();
-    // return convertOptionalToJSI(rt, keyframes_.back().value);
+     return convertOptionalToDynamic(keyframes_.back().value);
   }
 
   bool equalsReversingAdjustedStartValue(
@@ -392,6 +388,11 @@ class ValueInterpolator : public PropertyInterpolator {
       jsi::Runtime &rt,
       const std::optional<ValueType> &value) const {
     return value ? value.value().toJSIValue(rt) : jsi::Value::undefined();
+  }
+  
+  folly::dynamic convertOptionalToDynamic(
+      const std::optional<ValueType> &value) const {
+    return value ? value.value().toDynamic() : folly::dynamic();
   }
 };
 
