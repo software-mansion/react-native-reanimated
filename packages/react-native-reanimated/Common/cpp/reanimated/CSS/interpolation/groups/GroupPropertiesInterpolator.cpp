@@ -5,20 +5,8 @@ namespace reanimated {
 
 GroupPropertiesInterpolator::GroupPropertiesInterpolator(
     const PropertyPath &propertyPath,
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : PropertyInterpolator(
-          propertyPath,
-          progressProvider,
-          viewStylesRepository) {}
-
-void GroupPropertiesInterpolator::setProgressProvider(
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
-  PropertyInterpolator::setProgressProvider(progressProvider);
-  forEachInterpolator([&](PropertyInterpolator &interpolator) -> void {
-    interpolator.setProgressProvider(progressProvider);
-  });
-}
+    : PropertyInterpolator(propertyPath, viewStylesRepository) {}
 
 folly::dynamic GroupPropertiesInterpolator::getStyleValue(
     const ShadowNode::Shared &shadowNode) const {
@@ -42,11 +30,12 @@ folly::dynamic GroupPropertiesInterpolator::getLastKeyframeValue() const {
       });
 }
 
-folly::dynamic GroupPropertiesInterpolator::update(
-    const ShadowNode::Shared &shadowNode) {
+folly::dynamic GroupPropertiesInterpolator::interpolate(
+    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
   return mapInterpolators(
       [&](PropertyInterpolator &interpolator) -> folly::dynamic {
-        return interpolator.update(shadowNode);
+        return interpolator.interpolate(shadowNode, progressProvider);
       });
 }
 
