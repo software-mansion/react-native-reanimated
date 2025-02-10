@@ -123,6 +123,7 @@ import RestoreStateExample from './SharedElementTransitions/RestoreState';
 import TabNavigatorExample from './SharedElementTransitions/TabNavigatorExample';
 import TransitionRestartExample from './SharedElementTransitions/TransitionRestart';
 import SharedStyleExample from './SharedStyleExample';
+import StickyHeaderExample from './StickyHeaderExample';
 import StrictDOMExample from './StrictDOMExample';
 import SvgExample from './SvgExample';
 import SwipeableListExample from './SwipeableListExample';
@@ -372,6 +373,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '𝌍',
     title: 'useScrollViewOffset',
     screen: ScrollViewOffsetExample,
+  },
+  StickyHeaderExample: {
+    icon: '🔝',
+    title: 'Sticky header',
+    screen: StickyHeaderExample,
   },
   DispatchCommandExample: {
     icon: '🫡',
