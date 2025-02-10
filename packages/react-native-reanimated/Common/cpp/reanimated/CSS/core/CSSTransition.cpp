@@ -110,6 +110,9 @@ folly::dynamic CSSTransition::update(const double timestamp) {
   // Remove interpolators for which interpolation has finished
   // (we won't need them anymore in the current transition)
   styleInterpolator_.discardFinishedInterpolators(progressProvider_);
+  // And remove finished progress providers after they were used to calculate
+  // the last frame of the transition
+  progressProvider_.discardFinishedProgressProviders();
   return result;
 }
 
