@@ -53,7 +53,7 @@ class CSSAnimation {
   AnimationFillMode fillMode_;
 
   std::shared_ptr<AnimationProgressProvider> progressProvider_;
-  AnimationStyleInterpolator styleInterpolator_;
+  std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
 };
 
 } // namespace reanimated
