@@ -4,6 +4,7 @@
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/renderer/core/ReactPrimitives.h>
+#include <folly/dynamic.h>
 #endif
 
 #include <string>
@@ -22,6 +23,8 @@ namespace reanimated {
 
 using SynchronouslyUpdateUIPropsFunction =
     std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Object &props)>;
+using SynchronouslyUpdateUIPropsByDynamicFunction =
+    std::function<void(Tag tag, const folly::dynamic &props)>;
 using UpdatePropsFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using RemoveFromPropsRegistryFunction =
@@ -80,6 +83,7 @@ struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef RCT_NEW_ARCH_ENABLED
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
+  SynchronouslyUpdateUIPropsByDynamicFunction synchronouslyUpdateUIPropsByDynamicFunction;
 #else
   UpdatePropsFunction updatePropsFunction;
   ScrollToFunction scrollToFunction;

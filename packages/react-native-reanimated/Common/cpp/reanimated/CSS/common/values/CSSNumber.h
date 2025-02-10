@@ -66,6 +66,7 @@ struct CSSShadowRadiusAndroid
   CSSShadowRadiusAndroid();
   explicit CSSShadowRadiusAndroid(double value);
   explicit CSSShadowRadiusAndroid(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  explicit CSSShadowRadiusAndroid(const folly::dynamic &value);
 };
 
 #endif

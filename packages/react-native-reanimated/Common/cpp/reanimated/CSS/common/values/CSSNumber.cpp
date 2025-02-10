@@ -99,6 +99,12 @@ CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(
   value = std::max(1.0, value);
 }
 
+CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(
+  const folly::dynamic &value)
+  : CSSNumberBase<double, CSSShadowRadiusAndroid>(value) {
+  this->value = std::max(1.0, value.getDouble());
+}
+
 template struct CSSNumberBase<double, CSSShadowRadiusAndroid>;
 
 #endif

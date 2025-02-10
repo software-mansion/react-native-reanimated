@@ -70,6 +70,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           animatedPropsRegistry_)),
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
+      synchronouslyUpdateUIPropsByDynamicFunction_(
+          platformDepMethodsHolder.synchronouslyUpdateUIPropsByDynamicFunction),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(
@@ -682,6 +684,18 @@ bool ReanimatedModuleProxy::isThereAnyLayoutProp(
   return false;
 }
 
+bool ReanimatedModuleProxy::isThereAnyLayoutProp(
+    const folly::dynamic &props) {
+  for (const auto& [propName, propValue] : props.items()) {
+    bool isLayoutProp = nativePropNames_.find(propName.asString()) != nativePropNames_.end();
+    if (isLayoutProp) {
+      return true;
+    }
+  }
+        
+  return false;
+}
+
 jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
     jsi::Runtime &rt,
     const jsi::Value &props) {
@@ -863,7 +877,7 @@ void ReanimatedModuleProxy::performOperations() {
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
 
-  bool hasLayoutUpdates = false;
+  HasLayoutupdates hasLayoutUpdates;
 #ifdef ANDROID
   bool hasPropsToRevert = updatesRegistryManager_->hasPropsToRevert();
 #else
@@ -871,23 +885,50 @@ void ReanimatedModuleProxy::performOperations() {
 #endif
 
   if (!hasPropsToRevert) {
+    for (const auto &[shadowNode, props] : transitionUpdatesBatch) {
+      if (isThereAnyLayoutProp(props)) {
+        hasLayoutUpdates.cssTransition = true;
+        break;
+      }
+    }
     for (const auto &[shadowNode, props] : updatesBatch) {
       if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
-        hasLayoutUpdates = true;
+        hasLayoutUpdates.workletAnimation = true;
+        break;
+      }
+    }
+    for (const auto &[shadowNode, props] : animationUpdatesBatch) {
+      if (isThereAnyLayoutProp(props)) {
+        hasLayoutUpdates.cssAnimation = true;
         break;
       }
     }
   }
 
-  if (!hasLayoutUpdates && !hasPropsToRevert) {
-    // If there's no layout props to be updated, we can apply the updates
-    // directly onto the components and skip the commit.
-    for (const auto &[shadowNode, props] : updatesBatch) {
-      Tag tag = shadowNode->getTag();
-      synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
+  // If there's no layout props to be updated, we can apply the updates
+  // directly onto the components and skip the commit.
+  if (!hasPropsToRevert) {
+    if (!hasLayoutUpdates.cssTransition) {
+      for (const auto &[shadowNode, props] : transitionUpdatesBatch) {
+        Tag tag = shadowNode->getTag();
+        synchronouslyUpdateUIPropsByDynamicFunction_(tag, props);
+      }
     }
-    // TODO: check CSS updates
-//    return;
+    if (!hasLayoutUpdates.workletAnimation) {
+      for (const auto &[shadowNode, props] : updatesBatch) {
+        Tag tag = shadowNode->getTag();
+        synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
+      }
+    }
+    if (!hasLayoutUpdates.cssAnimation) {
+      for (const auto &[shadowNode, props] : animationUpdatesBatch) {
+        Tag tag = shadowNode->getTag();
+        synchronouslyUpdateUIPropsByDynamicFunction_(tag, props);
+      }
+    }
+    if (!hasLayoutUpdates.hasAny()) {
+      return;
+    }
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
