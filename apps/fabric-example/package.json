@@ -18,5 +18,8 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "installConfig": {
+    "selfReferences": false
   }
 }
