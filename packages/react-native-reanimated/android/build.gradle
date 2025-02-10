@@ -346,26 +346,8 @@ android {
                 srcDirs += "src/paper/java"
             }
 
-            // ReanimatedUIManager & ReanimatedUIImplementation
-            if (REACT_NATIVE_MINOR_VERSION <= 74 ) {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/74"
-            } else {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
-            }
-
-            // ReactFeatureFlags
-            if (IS_NEW_ARCHITECTURE_ENABLED) {
-                if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/74"
-                } else {
-                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/latest"
-                }
-            }
-
             // BorderRadiiDrawableUtils
-            if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/74"
-            } else if (REACT_NATIVE_MINOR_VERSION <= 75) {
+            if (REACT_NATIVE_MINOR_VERSION <= 75) {
                 srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/75"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/latest"
@@ -399,7 +381,7 @@ android {
 
 def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
     // If you change the minimal React Native version remember to update Compatibility Table in docs
-    def minimalReactNativeVersion = 74
+    def minimalReactNativeVersion = 75
     onlyIf { REACT_NATIVE_MINOR_VERSION < minimalReactNativeVersion }
     doFirst {
         throw new GradleException("[Reanimated] Unsupported React Native version. Please use $minimalReactNativeVersion. or newer.")
