@@ -3,13 +3,11 @@ env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
   push:
-    branches:
-      - main
     paths:
-      - '.github/workflows/reanimated-apple-validation.yml'
+      - '.github/workflows/reanimated-clang-tidy-lint.yml'
   pull_request:
     paths:
-      - '.github/workflows/reanimated-apple-validation.yml'
+      - '.github/workflows/reanimated-clang-tidy-lint.yml'
   workflow_call:
   workflow_dispatch:
 
