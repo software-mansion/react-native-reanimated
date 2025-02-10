@@ -355,12 +355,12 @@ public class NodesManager implements EventDispatcherListener {
       if (BuildConfig.REANIMATED_PROFILING) {
         Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onEventDispatch");
       }
-    
+
       if (mNativeProxy == null) {
         return;
       }
-      // Events can be dispatched from any thread so we have to make sure handleEvent is run from the
-      // UI thread.
+      // Events can be dispatched from any thread so we have to make sure handleEvent is run from
+      // the UI thread.
       if (UiThreadUtil.isOnUiThread()) {
         handleEvent(event);
         performOperations();
