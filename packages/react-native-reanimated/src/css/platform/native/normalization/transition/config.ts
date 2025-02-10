@@ -64,7 +64,7 @@ export function normalizeCSSTransitionProperties(
   config: CSSTransitionProperties
 ): NormalizedCSSTransitionConfig | null {
   const {
-    transitionProperty,
+    transitionProperty = ['all'],
     transitionDuration,
     transitionTimingFunction,
     transitionDelay,

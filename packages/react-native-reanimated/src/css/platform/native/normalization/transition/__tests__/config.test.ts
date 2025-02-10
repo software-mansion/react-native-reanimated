@@ -253,6 +253,24 @@ describe(normalizeCSSTransitionProperties, () => {
     });
   });
 
+  describe('when there is no transition property', () => {
+    it('uses "all" as a default transition property', () => {
+      const config: CSSTransitionProperties = {};
+
+      expect(normalizeCSSTransitionProperties(config)).toEqual({
+        properties: 'all',
+        settings: {
+          all: {
+            duration: 0,
+            timingFunction: 'ease',
+            delay: 0,
+            allowDiscrete: false,
+          },
+        },
+      });
+    });
+  });
+
   describe('transition shorthand', () => {
     it('properly parses transition shorthand', () => {
       const config: CSSTransitionProperties = {
