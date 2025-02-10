@@ -67,6 +67,16 @@ class ValueInterpolator : public PropertyInterpolator {
     return convertOptionalToDynamic(keyframes_.back().value);
   }
 
+  bool equalsFirstKeyframeValue(
+      jsi::Runtime &rt,
+      const jsi::Value &propertyValue) const override {
+    const auto &firstKeyframeValue = keyframes_.front().value;
+    if (!firstKeyframeValue.has_value()) {
+      return propertyValue.isUndefined();
+    }
+    return firstKeyframeValue.value() == ValueType(rt, propertyValue);
+  }
+
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override {
     const auto parsedKeyframes = parseJSIKeyframes(rt, keyframes);
 
@@ -84,23 +94,22 @@ class ValueInterpolator : public PropertyInterpolator {
 
   void updateKeyframesFromStyleChange(
       jsi::Runtime &rt,
+      // oldStyleValue is either the old style value or the previously
+      // calculated value during the interrupted transition
       const jsi::Value &oldStyleValue,
-      const jsi::Value &newStyleValue,
-      const jsi::Value &previousValue,
-      const jsi::Value &reversingAdjustedStartValue) override {
+      const jsi::Value &newStyleValue) override {
     KeyframeType firstKeyframe, lastKeyframe;
 
-    // TODO - check if this is correct
-    if (!previousValue.isUndefined()) {
-      firstKeyframe = {0, ValueType(rt, previousValue)};
+    if (oldStyleValue.isUndefined()) {
+      firstKeyframe = {0, defaultStyleValue_};
     } else {
-      firstKeyframe = {0, ValueType(rt, reversingAdjustedStartValue)};
+      firstKeyframe = {0, ValueType(rt, oldStyleValue)};
     }
 
-    if (!newStyleValue.isUndefined()) {
-      lastKeyframe = {1, ValueType(rt, newStyleValue)};
-    } else {
+    if (newStyleValue.isUndefined()) {
       lastKeyframe = {1, defaultStyleValue_};
+    } else {
+      lastKeyframe = {1, ValueType(rt, newStyleValue)};
     }
 
     keyframes_ = {firstKeyframe, lastKeyframe};
