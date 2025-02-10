@@ -13,7 +13,7 @@ Props::Shared mergeProps(
     const PropsMap &propsMap,
     const ShadowNodeFamily &family) {
   ReanimatedSystraceSection s("ShadowTreeCloner::mergeProps");
-  
+
   const auto it = propsMap.find(&family);
 
   if (it == propsMap.end()) {
@@ -80,7 +80,7 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
       const auto ancestors = family->getAncestors(oldRootNode);
 
       for (const auto &[parentNode, index] :
-          std::ranges::reverse_view(ancestors)) {
+           std::ranges::reverse_view(ancestors)) {
         const auto parentFamily = &parentNode.get().getFamily();
         auto &affectedChildren = childrenMap[parentFamily];
 

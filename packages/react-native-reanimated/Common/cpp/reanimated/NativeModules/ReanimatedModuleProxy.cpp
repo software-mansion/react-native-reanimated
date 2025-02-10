@@ -733,7 +733,7 @@ bool ReanimatedModuleProxy::handleRawEvent(
     const RawEvent &rawEvent,
     double currentTime) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::handleRawEvent");
-  
+
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
   if (eventTarget == nullptr) {
     // after app reload scrollView is unmounted and its content offset is set
@@ -888,7 +888,8 @@ void ReanimatedModuleProxy::performOperations() {
   if (!hasLayoutUpdates && !hasPropsToRevert) {
     // If there's no layout props to be updated, we can apply the updates
     // directly onto the components and skip the commit.
-    ReanimatedSystraceSection s("ReanimatedModuleProxy::synchronouslyUpdateUIProps");
+    ReanimatedSystraceSection s(
+        "ReanimatedModuleProxy::synchronouslyUpdateUIProps");
     for (const auto &[shadowNode, props] : updatesBatch) {
       Tag tag = shadowNode->getTag();
       synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
