@@ -23,15 +23,14 @@ CSSAnimation::CSSAnimation(
           config.direction,
           config.easingFunction,
           config.keyframeEasingFunctions)),
-      styleInterpolator_(AnimationStyleInterpolator(viewStylesRepository)) {
-  styleInterpolator_.updateKeyframes(rt, config.keyframesStyle);
-
+      styleInterpolator_(config.styleInterpolator) {
   if (config.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }
 }
 
 CSSAnimationId CSSAnimation::getId() const {
+  // TODO - use animationName where possible
   return {shadowNode_->getTag(), index_};
 }
 
@@ -78,7 +77,7 @@ folly::dynamic CSSAnimation::getForwardsFillStyle() const {
 }
 
 folly::dynamic CSSAnimation::getResetStyle() const {
-  return styleInterpolator_.getResetStyle(shadowNode_);
+  return styleInterpolator_->getResetStyle(shadowNode_);
 }
 
 void CSSAnimation::run(const double timestamp) {
@@ -101,7 +100,7 @@ folly::dynamic CSSAnimation::update(const double timestamp) {
     return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
   }
 
-  return styleInterpolator_.interpolate(shadowNode_, progressProvider_);
+  return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
 }
 
 void CSSAnimation::updateSettings(

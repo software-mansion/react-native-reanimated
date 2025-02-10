@@ -3,6 +3,8 @@
 
 #include <reanimated/CSS/config/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
+#include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 
 #include <memory>
 #include <optional>
@@ -18,7 +20,7 @@ enum class AnimationPlayState { Running, Paused };
 using KeyframeEasingFunctions = std::unordered_map<double, EasingFunction>;
 
 struct CSSAnimationConfig {
-  jsi::Value keyframesStyle;
+  std::shared_ptr<AnimationStyleInterpolator> styleInterpolator;
   KeyframeEasingFunctions keyframeEasingFunctions;
   double duration;
   EasingFunction easingFunction;
@@ -39,7 +41,10 @@ struct PartialCSSAnimationSettings {
   std::optional<AnimationPlayState> playState;
 };
 
-jsi::Value getKeyframesStyle(jsi::Runtime &rt, const jsi::Object &config);
+std::shared_ptr<AnimationStyleInterpolator> getStyleInterpolator(
+    jsi::Runtime &rt,
+    const jsi::Object &config,
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry);
 
 KeyframeEasingFunctions getKeyframeTimingFunctions(
     jsi::Runtime &rt,
@@ -55,7 +60,8 @@ AnimationPlayState getPlayState(jsi::Runtime &rt, const jsi::Object &config);
 
 CSSAnimationConfig parseCSSAnimationConfig(
     jsi::Runtime &rt,
-    const jsi::Value &config);
+    const jsi::Value &config,
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry);
 
 PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
     jsi::Runtime &rt,

@@ -3,8 +3,13 @@
 
 namespace reanimated {
 
-jsi::Value getKeyframesStyle(jsi::Runtime &rt, const jsi::Object &config) {
-  return config.getProperty(rt, "keyframesStyle");
+std::shared_ptr<AnimationStyleInterpolator> getStyleInterpolator(
+    jsi::Runtime &rt,
+    const jsi::Object &config,
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry) {
+  const auto animationName =
+      config.getProperty(rt, "animationName").asString(rt).utf8(rt);
+  return keyframesRegistry->get(animationName);
 }
 
 KeyframeEasingFunctions getKeyframeTimingFunctions(
@@ -83,11 +88,12 @@ AnimationPlayState getPlayState(jsi::Runtime &rt, const jsi::Object &config) {
 
 CSSAnimationConfig parseCSSAnimationConfig(
     jsi::Runtime &rt,
-    const jsi::Value &config) {
+    const jsi::Value &config,
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry) {
   const auto &configObj = config.asObject(rt);
 
   return {
-      getKeyframesStyle(rt, configObj),
+      getStyleInterpolator(rt, configObj, keyframesRegistry),
       getKeyframeTimingFunctions(rt, configObj),
       getDuration(rt, configObj),
       getTimingFunction(rt, configObj),

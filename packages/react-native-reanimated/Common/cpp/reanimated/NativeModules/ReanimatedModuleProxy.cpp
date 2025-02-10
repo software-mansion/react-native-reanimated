@@ -61,6 +61,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #else
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
 #endif
+      cssKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
@@ -594,11 +595,27 @@ void ReanimatedModuleProxy::registerCSSAnimations(
 
   for (size_t i = 0; i < animationsCount; ++i) {
     auto animationConfig = animationConfigsArray.getValueAtIndex(rt, i);
+
+    // TODO - remove keyframes when there are no more usages (create registry in
+    // js to track usages)
+    const auto animationName = animationConfig.asObject(rt)
+                                   .getProperty(rt, "animationName")
+                                   .asString(rt)
+                                   .utf8(rt);
+
+    if (!cssKeyframesRegistry_->has(animationName)) {
+      const auto styleInterpolator =
+          std::make_shared<AnimationStyleInterpolator>(viewStylesRepository_);
+      styleInterpolator->updateKeyframes(
+          rt, animationConfig.asObject(rt).getProperty(rt, "keyframesStyle"));
+      cssKeyframesRegistry_->set(animationName, styleInterpolator);
+    }
+
     animations.emplace_back(std::make_shared<CSSAnimation>(
         rt,
         shadowNode,
         i,
-        parseCSSAnimationConfig(rt, animationConfig),
+        parseCSSAnimationConfig(rt, animationConfig, cssKeyframesRegistry_),
         viewStylesRepository_,
         timestamp));
   }
