@@ -31,8 +31,11 @@ class CSSTransition {
       const jsi::Value &newProps);
 
   void updateSettings(const PartialCSSTransitionConfig &config);
-  jsi::Value
-  run(jsi::Runtime &rt, const ChangedProps &changedProps, double timestamp);
+  jsi::Value run(
+      jsi::Runtime &rt,
+      const ChangedProps &changedProps,
+      const jsi::Value &lastUpdateValue,
+      double timestamp);
   jsi::Value update(jsi::Runtime &rt, double timestamp);
 
  private:

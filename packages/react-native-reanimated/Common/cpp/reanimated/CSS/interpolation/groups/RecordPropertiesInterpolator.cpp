@@ -10,6 +10,29 @@ RecordPropertiesInterpolator::RecordPropertiesInterpolator(
     : GroupPropertiesInterpolator(propertyPath, viewStylesRepository),
       factories_(factories) {}
 
+bool RecordPropertiesInterpolator::equalsFirstKeyframeValue(
+    jsi::Runtime &rt,
+    const jsi::Value &propertyValue) const {
+  const auto propertyValuesObject = propertyValue.asObject(rt);
+  const auto propertyNames = propertyValuesObject.getPropertyNames(rt);
+  const auto propertiesCount = propertyNames.size(rt);
+
+  for (size_t i = 0; i < propertiesCount; ++i) {
+    const auto propName =
+        propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    const auto propValue = propertyValuesObject.getProperty(
+        rt, jsi::PropNameID::forUtf8(rt, propName));
+
+    const auto interpolatorIt = interpolators_.find(propName);
+    if (interpolatorIt == interpolators_.end() ||
+        !interpolatorIt->second->equalsFirstKeyframeValue(rt, propValue)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void RecordPropertiesInterpolator::updateKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &keyframes) {
@@ -34,9 +57,7 @@ void RecordPropertiesInterpolator::updateKeyframes(
 void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
     const jsi::Value &oldStyleValue,
-    const jsi::Value &newStyleValue,
-    const jsi::Value &previousValue,
-    const jsi::Value &reversingAdjustedStartValue) {
+    const jsi::Value &newStyleValue) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
   // used  (for now, for simplicity, we only add new ones)
 
@@ -66,11 +87,7 @@ void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
 
     interpolators_.at(propertyName)
         ->updateKeyframesFromStyleChange(
-            rt,
-            getValue(oldStyleObject),
-            getValue(newStyleObject),
-            previousValue,
-            reversingAdjustedStartValue);
+            rt, getValue(oldStyleObject), getValue(newStyleObject));
   }
 }
 

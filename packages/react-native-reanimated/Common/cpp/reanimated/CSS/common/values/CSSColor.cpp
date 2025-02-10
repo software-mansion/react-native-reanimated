@@ -26,6 +26,7 @@ CSSColor::CSSColor(const ColorChannels &colorChannels)
 CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
     : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
   if (jsiValue.isNumber()) {
+    LOG(INFO) << "jsiValue: " << stringifyJSIValue(rt, jsiValue);
 #ifdef ANDROID
     // Android uses signed 32-bit integers for colors
     auto color = static_cast<int32_t>(jsiValue.asNumber());

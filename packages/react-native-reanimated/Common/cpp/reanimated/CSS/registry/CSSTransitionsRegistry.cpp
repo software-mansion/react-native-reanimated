@@ -1,7 +1,11 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 
+#include <worklets/Tools/JSISerializer.h>
+
 namespace reanimated {
+
+using namespace worklets;
 
 CSSTransitionsRegistry::CSSTransitionsRegistry(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
@@ -141,9 +145,12 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
     {
       std::lock_guard<std::mutex> lock{strongThis->mutex_};
 
-      const auto &initialProps =
-          transition->run(rt, changedProps, strongThis->getCurrentTimestamp_());
       const auto &shadowNode = transition->getShadowNode();
+      const auto &lastUpdates =
+          strongThis->getUpdatesFromRegistry(rt, shadowNode->getTag());
+      LOG(INFO) << "lastUpdates: " << stringifyJSIValue(rt, lastUpdates);
+      const auto &initialProps = transition->run(
+          rt, changedProps, lastUpdates, strongThis->getCurrentTimestamp_());
 
       strongThis->setInUpdatesRegistry(rt, shadowNode, initialProps);
       strongThis->scheduleOrActivateTransition(transition);

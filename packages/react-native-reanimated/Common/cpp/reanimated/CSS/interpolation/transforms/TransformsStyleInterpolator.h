@@ -39,6 +39,9 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const ShadowNode::Shared &shadowNode) const override;
   jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const override;
   jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const override;
+  bool equalsFirstKeyframeValue(
+      jsi::Runtime &rt,
+      const jsi::Value &propertyValue) const override;
 
   jsi::Value interpolate(
       jsi::Runtime &rt,
@@ -50,9 +53,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   void updateKeyframesFromStyleChange(
       jsi::Runtime &rt,
       const jsi::Value &oldStyleValue,
-      const jsi::Value &newStyleValue,
-      const jsi::Value &previousValue,
-      const jsi::Value &reversingAdjustedStartValue) override;
+      const jsi::Value &newStyleValue) override;
 
  private:
   const std::shared_ptr<TransformInterpolators> interpolators_;

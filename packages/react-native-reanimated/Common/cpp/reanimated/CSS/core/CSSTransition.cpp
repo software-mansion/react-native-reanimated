@@ -92,6 +92,7 @@ void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
 jsi::Value CSSTransition::run(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
+    const jsi::Value &lastUpdateValue,
     const double timestamp) {
   progressProvider_.runProgressProviders(
       timestamp,
@@ -99,11 +100,7 @@ jsi::Value CSSTransition::run(
       changedProps.changedPropertyNames,
       styleInterpolator_.getReversedPropertyNames(rt, changedProps.newProps));
   styleInterpolator_.updateInterpolatedProperties(
-      rt,
-      changedProps,
-      jsi::Value::undefined(), // TODO
-      jsi::Value::undefined()); // TODO
-
+      rt, changedProps, lastUpdateValue);
   return update(rt, timestamp);
 }
 
