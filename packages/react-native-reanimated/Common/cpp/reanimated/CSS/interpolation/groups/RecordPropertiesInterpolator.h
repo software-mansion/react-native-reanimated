@@ -18,13 +18,15 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~RecordPropertiesInterpolator() = default;
 
+  bool equalsFirstKeyframeValue(
+      jsi::Runtime &rt,
+      const jsi::Value &propertyValue) const override;
+
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
       jsi::Runtime &rt,
       const jsi::Value &oldStyleValue,
-      const jsi::Value &newStyleValue,
-      const jsi::Value &previousValue,
-      const jsi::Value &reversingAdjustedStartValue) override;
+      const jsi::Value &newStyleValue) override;
 
  protected:
   jsi::Value mapInterpolators(

@@ -52,6 +52,7 @@ class UpdatesRegistry {
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       const jsi::Value &props);
+  jsi::Value getUpdatesFromRegistry(jsi::Runtime &rt, const Tag tag) const;
   void setInUpdatesRegistry(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
