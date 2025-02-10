@@ -15,11 +15,12 @@ string(
   APPEND
   CMAKE_CXX_FLAGS
   " -DREACT_NATIVE_MINOR_VERSION=${REACT_NATIVE_MINOR_VERSION}\
-   -DREANIMATED_VERSION=${REANIMATED_VERSION}\
+    -DREANIMATED_PROFILING=${REANIMATED_PROFILING}\
+    -DREANIMATED_VERSION=${REANIMATED_VERSION}\
     -DHERMES_ENABLE_DEBUGGER=${HERMES_ENABLE_DEBUGGER}")
 
 string(APPEND CMAKE_CXX_FLAGS
-       " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all\
+  " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all\
    -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})
@@ -56,4 +57,5 @@ set(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")
 if(NOT ${HAS_EXTERNAL_WORKLETS})
   add_subdirectory("${ANDROID_CPP_DIR}/worklets")
 endif()
+
 add_subdirectory("${ANDROID_CPP_DIR}/reanimated")

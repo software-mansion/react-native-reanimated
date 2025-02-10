@@ -130,6 +130,7 @@ def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.startsWith("0.0.0-") ? 100
 def REANIMATED_VERSION = getReanimatedVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = isReanimatedExampleApp()
+def REANIMATED_PROFILING = isReanimatedExampleApp()
 
 // Set version for prefab
 version REANIMATED_VERSION
@@ -248,6 +249,7 @@ android {
         versionCode 1
         versionName "1.0"
         buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
+        buildConfigField("boolean", "REANIMATED_PROFILING", REANIMATED_PROFILING.toString())
         buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"${REANIMATED_VERSION}\"")
         externalNativeBuild {
             cmake {
@@ -259,6 +261,7 @@ android {
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
+                        "-DREANIMATED_PROFILING=${REANIMATED_PROFILING}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
                         "-DHAS_EXTERNAL_WORKLETS=${hasExternalWorklets}"
                 abiFilters (*reactNativeArchitectures())
