@@ -2,8 +2,8 @@
 import { useEffect, useRef } from 'react';
 
 import { isJest, isWeb } from '../PlatformChecker';
-import { makeShareable } from '../shareables';
 import type { WorkletFunction } from '../WorkletsResolver';
+import { makeShareable } from '../WorkletsResolver';
 import type { DependencyList, ReanimatedEvent } from './commonTypes';
 import { areDependenciesEqual, buildDependencies } from './utils';
 

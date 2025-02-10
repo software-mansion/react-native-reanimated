@@ -12,7 +12,6 @@ import type {
   NormalizedSingleCSSAnimationSettings,
 } from '../../css/platform/native';
 import { ReanimatedError } from '../../errors';
-import { logger } from '../../logger';
 import {
   isChromeDebugger,
   isJest,
@@ -24,7 +23,7 @@ import type {
   ShareableRef,
   WorkletFunction,
 } from '../../WorkletsResolver';
-import { WorkletsModule } from '../../WorkletsResolver';
+import { logger, WorkletsModule } from '../../WorkletsResolver';
 import type { IReanimatedModule } from '../reanimatedModuleProxy';
 import type { WebSensor } from './WebSensor';
 

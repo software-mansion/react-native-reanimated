@@ -9,7 +9,7 @@ import type {
   NestedObjectValues,
   Timestamp,
 } from '../commonTypes';
-import { logger } from '../logger';
+import { logger } from '../WorkletsResolver';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
 import { defineAnimation } from './util';

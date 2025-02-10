@@ -2,6 +2,7 @@
 
 export type {
   IWorkletsModule,
+  LoggerConfig,
   ShareableRef,
   WorkletFunction,
   WorkletFunctionDev,
@@ -10,7 +11,28 @@ export type {
   WorkletStackDetails,
 } from './worklets';
 export {
+  callMicrotasks,
+  createCustomError,
+  createWorkletRuntime,
+  executeOnUIRuntimeSync,
   isWorkletFunction,
+  logger,
+  LogLevel,
+  makeShareable,
+  makeShareableCloneOnUIRecursive,
+  makeShareableCloneRecursive,
   mockedRequestAnimationFrame,
+  registerCustomError,
+  registerLoggerConfig,
+  registerWorkletStackDetails,
+  reportFatalErrorOnJS,
+  runOnJS,
+  runOnRuntime,
+  runOnUI,
+  runOnUIImmediately,
+  setupCallGuard,
+  setupConsole,
+  shareableMappingCache,
+  updateLoggerConfig,
   WorkletsModule,
 } from './worklets';

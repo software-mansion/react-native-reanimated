@@ -8,8 +8,10 @@ import type { ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import { isFabric, isWeb } from '../PlatformChecker';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
-import { shareableMappingCache } from '../shareableMappingCache';
-import { makeShareableCloneRecursive } from '../shareables';
+import {
+  makeShareableCloneRecursive,
+  shareableMappingCache,
+} from '../WorkletsResolver';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
 

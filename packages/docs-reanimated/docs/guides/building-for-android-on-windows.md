@@ -13,6 +13,7 @@ There are many possible errors including, but not limited to:
 - `Task :react-native-reanimated:buildCMakeDebug[x86_64] FAILED`
 - `C/C++: ninja: error: mkdir(...): No such file or directory`
 - `C++ build system [build] failed while executing`
+- `Picked up _JAVA_OPTIONS`
 
 ## What should you definitely not do?
 
@@ -20,7 +21,7 @@ If you stumble across any of the above errors or similar, please don't disable o
 
 ### ❌ Do not disable New Architecture if it's already enabled
 
-Starting from React Native 0.76, New Architecture is enabled by default and the legacy architecture will be removed in a future release of React Native. Disabling it manually by changing `newArchEnabled=...` in `gradle.properties` does not fix the problem, it just postpones it.
+Starting from React Native 0.76, New Architecture is enabled by default. Disabling it manually by changing `newArchEnabled=...` in `gradle.properties` does not fix the problem, it just postpones it as the legacy architecture will be removed in a future release of React Native.
 
 ### ❌ Do not downgrade Android Gradle Plugin
 
@@ -65,7 +66,7 @@ For instance, Reanimated 3.15.x works only with React Native 0.72, 0.73, 0.74 or
 [CMake](https://cmake.org/) is a build system used to compile the C++ part of Reanimated on your machine. Make sure to use CMake `3.22.1` or newer. CMake version can be customized with `CMAKE_VERSION` environmental variable, e.g. using `set CMAKE_VERSION=3.31.1`. If not set, CMake `3.22.1` is used.
 
 :::tip
-CMake will be installed automatically during app build. You can install a specific version CMake directly from Android Studio (Tools &rarr; SDK Manager &rarr; SDK Tools &rarr; CMake).
+CMake will be installed automatically during app build. You can install a specific version of CMake directly from Android Studio (Tools &rarr; SDK Manager &rarr; SDK Tools &rarr; CMake).
 :::
 
 ### ✅ Use appropriate version of Ninja
@@ -75,6 +76,18 @@ CMake will be installed automatically during app build. You can install a specif
 :::tip
 See [this comment on GitHub](https://github.com/ninja-build/ninja/issues/1900#issuecomment-1817532728) for instructions on how to use a different version of Ninja.
 :::
+
+### ✅ Use appropriate version of Android NDK
+
+Android NDK (Native Development Kit) is a set of tools used for building the native part of the app. You should use the same version of NDK as used in the official app template.
+
+:::tip
+Android NDK should be installed automatically during app build. You can install a specific version of Android NDK directly from Android Studio (Tools &rarr; SDK Manager &rarr; SDK Tools &rarr; "NDK (Side by side)").
+:::
+
+### ✅ Make sure `_JAVA_OPTIONS` environmental variable is not set
+
+Some developers stated that unsetting `_JAVA_OPTIONS` environmental variable fixes the errors and makes the build pass.
 
 ### ✅ Enable long paths support in Windows registry
 

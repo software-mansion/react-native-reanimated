@@ -13,7 +13,7 @@ import type { Descriptor } from './hook/commonTypes';
 import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { ReanimatedHTMLElement } from './ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from './ReanimatedModule/js-reanimated';
-import { runOnUIImmediately } from './threads';
+import { runOnUIImmediately } from './WorkletsResolver';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,

@@ -8,6 +8,7 @@
 #include <worklets/NativeModules/WorkletsModuleProxy.h>
 #include <worklets/SharedItems/Shareables.h>
 #include <worklets/Tools/Defs.h>
+#include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
 #ifdef __ANDROID__
 #include <fbjni/fbjni.h>
@@ -37,7 +38,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
           jsScheduler,
           "Reanimated UI runtime",
           true /* supportsLocking */,
-          valueUnpackerCode_)) {}
+          valueUnpackerCode_)) {
+  UIRuntimeDecorator::decorate(uiWorkletRuntime_->getJSIRuntime());
+}
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
   jsQueue_->quitSynchronous();

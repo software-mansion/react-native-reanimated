@@ -21,11 +21,9 @@ import type {
 import { ReduceMotion } from '../commonTypes';
 import type { EasingFunctionFactory } from '../Easing';
 import { ReanimatedError } from '../errors';
-import { logger } from '../logger';
 import { shouldBeUseWeb } from '../PlatformChecker';
 import { ReducedMotionManager } from '../ReducedMotion';
-import { runOnUI } from '../threads';
-import { isWorkletFunction } from '../WorkletsResolver';
+import { isWorkletFunction, logger, runOnUI } from '../WorkletsResolver';
 import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
   AffineMatrix,

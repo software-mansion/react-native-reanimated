@@ -13,7 +13,7 @@ import {
   SensorType,
 } from '../commonTypes';
 import { initializeSensor, registerSensor, unregisterSensor } from '../core';
-import { callMicrotasks } from '../threads';
+import { callMicrotasks } from '../WorkletsResolver';
 
 // euler angles are in order ZXY, z = yaw, x = pitch, y = roll
 // https://github.com/mrdoob/three.js/blob/dev/src/math/Quaternion.js#L237

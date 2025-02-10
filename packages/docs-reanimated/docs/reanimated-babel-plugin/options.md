@@ -68,9 +68,9 @@ Turning on this option suppresses a helpful warning when you use [inline shared 
 ```tsx
 import Animated, {useSharedValue} from 'react-native-reanimated';
 
-function MyView(){
+function MyView() {
   const width = useSharedValue(100);
-  return <Animated.View style={width: width.value}>; // Loss of reactivity when using `width.value` instead of `width`!
+  return <Animated.View style={{ width: width.value }}>; // Loss of reactivity when using `width.value` instead of `width`!
 }
 ```
 
