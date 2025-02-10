@@ -90,8 +90,9 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
 
   for (const auto &propertyName : changedProps.changedPropertyNames) {
     auto it = interpolators_.find(propertyName);
+    const auto shouldCreateInterpolator = it == interpolators_.end();
 
-    if (it == interpolators_.end()) {
+    if (shouldCreateInterpolator) {
       const auto newInterpolator = createPropertyInterpolator(
           propertyName,
           {},
@@ -102,7 +103,9 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
 
     const auto newValue = newPropsObj.getProperty(rt, propertyName.c_str());
 
-    if (lastUpdateValue.isObject()) {
+    // Try to use a value from the last CSS transition update (only if the
+    // interpolator existed - when the transition was interrupted)
+    if (!shouldCreateInterpolator && lastUpdateValue.isObject()) {
       const auto lastUpdateObject = lastUpdateValue.asObject(rt);
       const auto oldValue =
           lastUpdateObject.hasProperty(rt, propertyName.c_str())
