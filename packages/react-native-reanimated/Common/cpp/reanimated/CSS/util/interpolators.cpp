@@ -8,9 +8,9 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     const PropertyPath &propertyPath,
     const InterpolatorFactoriesRecord &factories,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
-  auto factoryIt = factories.find(propertyName);
+  auto it = factories.find(propertyName);
 
-  if (factoryIt == factories.cend()) {
+  if (it == factories.cend()) {
     throw std::invalid_argument(
         "[Reanimated] No interpolator factory found for property: " +
         propertyName);
@@ -19,7 +19,7 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
   PropertyPath newPath = propertyPath;
   newPath.emplace_back(propertyName);
 
-  return factoryIt->second->create(newPath, viewStylesRepository);
+  return it->second->create(newPath, viewStylesRepository);
 }
 
 std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(

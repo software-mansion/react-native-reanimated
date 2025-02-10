@@ -10,6 +10,26 @@ ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
     : GroupPropertiesInterpolator(propertyPath, viewStylesRepository),
       factories_(factories) {}
 
+bool ArrayPropertiesInterpolator::equalsFirstKeyframeValue(
+    jsi::Runtime &rt,
+    const jsi::Value &propertyValue) const {
+  const auto propertyValuesArray = propertyValue.asObject(rt).asArray(rt);
+  const auto valuesCount = propertyValuesArray.size(rt);
+
+  if (valuesCount != interpolators_.size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < valuesCount; ++i) {
+    if (!interpolators_[i]->equalsFirstKeyframeValue(
+            rt, propertyValuesArray.getValueAtIndex(rt, i))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void ArrayPropertiesInterpolator::updateKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &keyframes) {
@@ -27,9 +47,7 @@ void ArrayPropertiesInterpolator::updateKeyframes(
 void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
     const jsi::Value &oldStyleValue,
-    const jsi::Value &newStyleValue,
-    const jsi::Value &previousValue,
-    const jsi::Value &reversingAdjustedStartValue) {
+    const jsi::Value &newStyleValue) {
   auto getArrayFromStyle = [&rt](const jsi::Value &style) {
     if (!style.isObject()) {
       return jsi::Array(rt, 0);
@@ -56,8 +74,7 @@ void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
         ? newStyleArray.getValueAtIndex(rt, i)
         : jsi::Value::undefined();
 
-    interpolators_[i]->updateKeyframesFromStyleChange(
-        rt, oldValue, newValue, previousValue, reversingAdjustedStartValue);
+    interpolators_[i]->updateKeyframesFromStyleChange(rt, oldValue, newValue);
   }
 }
 

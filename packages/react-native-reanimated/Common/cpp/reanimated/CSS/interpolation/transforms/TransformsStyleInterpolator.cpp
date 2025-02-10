@@ -40,6 +40,34 @@ folly::dynamic TransformsStyleInterpolator::getLastKeyframeValue() const {
       keyframes_.back()->toOperations.value_or(defaultStyleValue_));
 }
 
+bool TransformsStyleInterpolator::equalsFirstKeyframeValue(
+    jsi::Runtime &rt,
+    const jsi::Value &propertyValue) const {
+  const auto propertyOperations = parseTransformOperations(rt, propertyValue);
+  const auto &keyframeFromOperations = keyframes_.front()->fromOperations;
+
+  if (!keyframeFromOperations.has_value()) {
+    return !propertyOperations.has_value();
+  } else if (!propertyOperations.has_value()) {
+    return false;
+  }
+
+  const auto &keyframeFromOperationsValue = keyframeFromOperations.value();
+  const auto &propertyOperationsValue = propertyOperations.value();
+
+  if (keyframeFromOperationsValue.size() != propertyOperationsValue.size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < keyframeFromOperationsValue.size(); ++i) {
+    if (*keyframeFromOperationsValue[i] != *propertyOperationsValue[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 folly::dynamic TransformsStyleInterpolator::interpolate(
     const ShadowNode::Shared &shadowNode,
     const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
@@ -103,21 +131,16 @@ void TransformsStyleInterpolator::updateKeyframes(
 void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
     const jsi::Value &oldStyleValue,
-    const jsi::Value &newStyleValue,
-    const jsi::Value &previousValue,
-    const jsi::Value &reversingAdjustedStartValue) {
+    const jsi::Value &newStyleValue) {
   keyframes_.clear();
   keyframes_.reserve(1);
-  // TODO - implement
-
-  // reversingAdjustedStartValue_ = parseTransformOperations(rt, oldStyleValue);
-
-  // const auto fromOperations = previousResult_.value_or(
-  //     reversingAdjustedStartValue_.value_or(TransformOperations{}));
-  // const auto toOperations = parseTransformOperations(rt, newStyleValue)
-  //                               .value_or(TransformOperations{});
-  // keyframes_.push_back(
-  //     createTransformKeyframe(0, 1, fromOperations, toOperations));
+  keyframes_.emplace_back(createTransformKeyframe(
+      0,
+      1,
+      parseTransformOperations(rt, oldStyleValue)
+          .value_or(TransformOperations{}),
+      parseTransformOperations(rt, newStyleValue)
+          .value_or(TransformOperations{})));
 }
 
 std::optional<TransformOperations>

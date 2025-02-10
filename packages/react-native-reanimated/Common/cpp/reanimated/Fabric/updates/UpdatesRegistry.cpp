@@ -66,6 +66,16 @@ void UpdatesRegistry::setInUpdatesRegistry(
   updatesRegistry_[tag] = std::make_pair(shadowNode, props);
 }
 
+jsi::Value UpdatesRegistry::getUpdatesFromRegistry(
+    jsi::Runtime &rt,
+    const Tag tag) const {
+  auto it = updatesRegistry_.find(tag);
+  if (it == updatesRegistry_.cend()) {
+    return jsi::Value::undefined();
+  }
+  return valueFromDynamic(rt, it->second.second);
+}
+
 void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
 #ifdef ANDROID
   updatePropsToRevert(tag);
