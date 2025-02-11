@@ -72,12 +72,7 @@ folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
   return styleInterpolator_.getCurrentInterpolationStyle(shadowNode_);
 }
 
-jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) {
-  return isReversed() ? styleInterpolator_.getLastKeyframeValue(rt)
-                      : styleInterpolator_.getFirstKeyframeValue(rt);
-}
-
-folly::dynamic CSSAnimation::getBackwardsFillStyle() {
+folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
   return isReversed() ? styleInterpolator_.getLastKeyframeValue()
                       : styleInterpolator_.getFirstKeyframeValue();
 }
