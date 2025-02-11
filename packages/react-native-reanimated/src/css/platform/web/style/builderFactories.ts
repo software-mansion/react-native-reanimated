@@ -1,12 +1,14 @@
 'use strict';
+
 import type { AnyRecord } from '../../../types';
 import {
   hasProp,
   isConfigPropertyAlias,
   isDefined,
   isRecord,
+  kebabizeCamelCase,
 } from '../../../utils';
-import { hasSuffix, kebabize } from '../utils';
+import { hasSuffix } from '../utils';
 import type {
   AnyBuilderConfig,
   RuleBuilder,
@@ -201,7 +203,10 @@ const defaultStyleBuildHandler: StyleBuildHandler<AnyRecord> = (
   }
 
   return entries
-    .map(([key, value]) => `${nameAliases[key] ?? kebabize(key)}: ${value}`)
+    .map(
+      ([key, value]) =>
+        `${nameAliases[key] ?? kebabizeCamelCase(key)}: ${value}`
+    )
     .join('; ');
 };
 

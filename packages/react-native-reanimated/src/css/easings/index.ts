@@ -21,9 +21,4 @@ export function linear(...points: ControlPoint[]) {
 
 export { CubicBezierEasing, LinearEasing, StepsEasing };
 
-export type {
-  CSSTimingFunction,
-  NormalizedCSSTimingFunction,
-  ParametrizedTimingFunction,
-  PredefinedTimingFunction,
-} from './types';
+export type * from './types';
