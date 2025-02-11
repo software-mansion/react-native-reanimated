@@ -603,7 +603,7 @@ void ReanimatedModuleProxy::registerCSSAnimations(
         timestamp));
   }
 
-  cssAnimationsRegistry_->set(rt, shadowNode, std::move(animations), timestamp);
+  cssAnimationsRegistry_->set(shadowNode, std::move(animations), timestamp);
   maybeRunCSSLoop();
 }
 
@@ -628,7 +628,7 @@ void ReanimatedModuleProxy::updateCSSAnimations(
   }
 
   cssAnimationsRegistry_->updateSettings(
-      rt, viewTag.asNumber(), updates, getCssTimestamp());
+      viewTag.asNumber(), updates, getCssTimestamp());
   maybeRunCSSLoop();
 }
 

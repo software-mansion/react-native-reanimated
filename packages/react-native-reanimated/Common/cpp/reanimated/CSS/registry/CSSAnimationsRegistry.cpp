@@ -8,7 +8,6 @@ bool CSSAnimationsRegistry::hasUpdates() const {
 }
 
 void CSSAnimationsRegistry::set(
-    jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode,
     std::vector<std::shared_ptr<CSSAnimation>> &&animations,
     const double timestamp) {
@@ -35,7 +34,6 @@ void CSSAnimationsRegistry::remove(const Tag viewTag) {
 }
 
 void CSSAnimationsRegistry::updateSettings(
-    jsi::Runtime &rt,
     const Tag viewTag,
     const SettingsUpdates &settingsUpdates,
     const double timestamp) {

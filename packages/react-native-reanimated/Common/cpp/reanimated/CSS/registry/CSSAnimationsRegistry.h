@@ -25,13 +25,11 @@ class CSSAnimationsRegistry
   bool hasUpdates() const;
 
   void set(
-      jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       std::vector<std::shared_ptr<CSSAnimation>> &&animations,
       double timestamp);
   void remove(Tag viewTag);
   void updateSettings(
-      jsi::Runtime &rt,
       Tag viewTag,
       const SettingsUpdates &settingsUpdates,
       double timestamp);
