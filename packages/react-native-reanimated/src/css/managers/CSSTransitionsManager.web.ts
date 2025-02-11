@@ -1,7 +1,7 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import { maybeAddSuffixes, parseTimingFunction } from '../platform/web';
-import type { CSSTransitionProperties } from '../types';
+import type { CSSTransitionProp, CSSTransitionProperties } from '../types';
 import { convertPropertiesToArrays, kebabizeCamelCase } from '../utils';
 
 export default class CSSTransitionsManager {
@@ -25,54 +25,72 @@ export default class CSSTransitionsManager {
       return;
     }
 
-    this.setElementAnimation(transitionProperties);
+    this.setElementTransition(transitionProperties);
   }
 
   detach() {
+    this.element.style.transition = '';
+    this.element.style.transitionProperty = '';
     this.element.style.transitionDuration = '';
     this.element.style.transitionDelay = '';
-    this.element.style.transitionProperty = '';
     this.element.style.transitionTimingFunction = '';
     // @ts-ignore this is correct
     this.element.style.transitionBehavior = '';
   }
 
-  private setElementAnimation(transitionProperties: CSSTransitionProperties) {
+  private setElementTransition(transitionProperties: CSSTransitionProperties) {
     const propertiesAsArray = convertPropertiesToArrays(transitionProperties);
 
-    const maybeDuration = maybeAddSuffixes(
-      propertiesAsArray,
-      'transitionDuration',
-      'ms'
-    );
-    if (maybeDuration) {
-      this.element.style.transitionDuration = maybeDuration.join(',');
-    }
+    // We have to keep the same order of properties to ensure that transition
+    // are applied properly when the transition shorthand is used with different
+    // transition properties at the same time
+    Object.keys(propertiesAsArray).forEach((key) => {
+      const k = key as CSSTransitionProp;
 
-    const maybeDelay = maybeAddSuffixes(
-      propertiesAsArray,
-      'transitionDelay',
-      'ms'
-    );
-    if (maybeDelay) {
-      this.element.style.transitionDelay = maybeDelay.join(',');
-    }
+      if (!propertiesAsArray[k]) {
+        // @ts-ignore this is correct
+        this.element.style[k] = '';
+        return;
+      }
 
-    if (propertiesAsArray.transitionProperty) {
-      this.element.style.transitionProperty =
-        propertiesAsArray.transitionProperty.map(kebabizeCamelCase).join(',');
-    }
-
-    if (propertiesAsArray.transitionTimingFunction) {
-      this.element.style.transitionTimingFunction = parseTimingFunction(
-        propertiesAsArray.transitionTimingFunction
-      );
-    }
-
-    if (propertiesAsArray.transitionBehavior) {
-      // @ts-ignore this is correct
-      this.element.style.transitionBehavior =
-        propertiesAsArray.transitionBehavior.map(kebabizeCamelCase).join(',');
-    }
+      switch (k) {
+        case 'transition':
+          this.element.style.transition = propertiesAsArray[k].join(',');
+          break;
+        case 'transitionProperty': {
+          this.element.style.transitionProperty = propertiesAsArray[k]
+            .map(kebabizeCamelCase)
+            .join(',');
+          break;
+        }
+        case 'transitionDuration': {
+          const maybeDuration = maybeAddSuffixes(propertiesAsArray, k, 'ms');
+          if (maybeDuration) {
+            this.element.style.transitionDuration = maybeDuration.join(',');
+          }
+          break;
+        }
+        case 'transitionDelay': {
+          const maybeDelay = maybeAddSuffixes(propertiesAsArray, k, 'ms');
+          if (maybeDelay) {
+            this.element.style.transitionDelay = maybeDelay.join(',');
+          }
+          break;
+        }
+        case 'transitionTimingFunction': {
+          this.element.style.transitionTimingFunction = parseTimingFunction(
+            propertiesAsArray[k]
+          );
+          break;
+        }
+        case 'transitionBehavior': {
+          // @ts-ignore this is correct
+          this.element.style.transitionBehavior = propertiesAsArray[k]
+            .map(kebabizeCamelCase)
+            .join(',');
+          break;
+        }
+      }
+    });
   }
 }
