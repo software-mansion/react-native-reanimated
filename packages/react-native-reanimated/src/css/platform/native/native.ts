@@ -21,18 +21,15 @@ export function removeViewStyle(viewTag: number) {
 
 // Keyframes
 
-export function registerCSSAnimationKeyframes(
+export function registerCSSKeyframes(
   animationName: string,
   keyframesConfig: NormalizedCSSAnimationKeyframesConfig
 ) {
-  ReanimatedModule.registerCSSAnimationKeyframes(
-    animationName,
-    keyframesConfig
-  );
+  ReanimatedModule.registerCSSKeyframes(animationName, keyframesConfig);
 }
 
-export function unregisterCSSAnimationKeyframes(animationName: string) {
-  ReanimatedModule.unregisterCSSAnimationKeyframes(animationName);
+export function unregisterCSSKeyframes(animationName: string) {
+  ReanimatedModule.unregisterCSSKeyframes(animationName);
 }
 
 // View animations
