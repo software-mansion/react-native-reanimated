@@ -42,3 +42,29 @@ export function parseBoxShadowString(value: string) {
     return result;
   });
 }
+
+export function splitByComma(str: string) {
+  // split by comma not enclosed in parentheses
+  const parts: string[] = [];
+  let current = '';
+  let depth = 0;
+  for (const char of str) {
+    if (char === '(') {
+      depth++;
+    } else if (char === ')') {
+      depth--;
+    } else if (char === ',' && depth === 0) {
+      parts.push(current.trim());
+      current = '';
+      continue;
+    }
+    current += char;
+  }
+  parts.push(current.trim());
+  return parts;
+}
+
+export function splitByWhitespace(str: string) {
+  // split by whitespace not enclosed in parentheses
+  return str.split(/\s+(?![^()]*\))/);
+}

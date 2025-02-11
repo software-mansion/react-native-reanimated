@@ -2,6 +2,7 @@
 import {
   ANIMATION_SETTINGS,
   TRANSITION_PROPS,
+  VALID_PARAMETRIZED_TIMING_FUNCTIONS,
   VALID_PREDEFINED_TIMING_FUNCTIONS,
   VALID_STEPS_MODIFIERS,
 } from '../constants';
@@ -25,10 +26,18 @@ export const VALID_PREDEFINED_TIMING_FUNCTIONS_SET = new Set<string>(
   VALID_PREDEFINED_TIMING_FUNCTIONS
 );
 
+export const VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET = new Set<string>(
+  VALID_PARAMETRIZED_TIMING_FUNCTIONS
+);
+
 export const isPredefinedTimingFunction = (
   value: string
 ): value is PredefinedTimingFunction =>
   VALID_PREDEFINED_TIMING_FUNCTIONS_SET.has(value);
+
+export const smellsLikeTimingFunction = (value: string) =>
+  VALID_PREDEFINED_TIMING_FUNCTIONS_SET.has(value) ||
+  VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET.has(value.split('(')[0].trim());
 
 export const isAnimationSetting = (
   key: string
