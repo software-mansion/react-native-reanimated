@@ -869,21 +869,11 @@ void ReanimatedModuleProxy::performOperations() {
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
 
-  bool hasLayoutUpdates = false;
 #ifdef ANDROID
   bool hasPropsToRevert = updatesRegistryManager_->hasPropsToRevert();
 #else
   bool hasPropsToRevert = false;
 #endif
-
-  if (!hasPropsToRevert) {
-    for (const auto &[shadowNode, props] : updatesBatch) {
-      if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
-        hasLayoutUpdates = true;
-        break;
-      }
-    }
-  }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
     // It may happen that `performOperations` is called on the UI thread
