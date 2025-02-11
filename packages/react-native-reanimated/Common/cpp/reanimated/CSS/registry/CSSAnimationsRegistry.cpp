@@ -20,9 +20,9 @@ void CSSAnimationsRegistry::set(
   const auto &storedAnimations = registry_[viewTag] = std::move(animations);
 
   for (const auto &animation : storedAnimations) {
-    scheduleOrActivateAnimation(rt, animation, timestamp);
+    scheduleOrActivateAnimation(animation, timestamp);
   }
-  applyViewAnimationsStyle(rt, viewTag, timestamp);
+  applyViewAnimationsStyle(viewTag, timestamp);
 }
 
 void CSSAnimationsRegistry::remove(const Tag viewTag) {
@@ -57,37 +57,13 @@ void CSSAnimationsRegistry::updateSettings(
 
     const auto &animation = it->second[animationIndex];
     animation->updateSettings(updatedSettings, timestamp);
-    scheduleOrActivateAnimation(rt, animation, timestamp);
+    scheduleOrActivateAnimation(animation, timestamp);
     updatedIndices.emplace_back(animationIndex);
   }
 
   if (!updatedIndices.empty()) {
     updateViewAnimations(viewTag, updatedIndices, timestamp, false);
-    applyViewAnimationsStyle(rt, viewTag, timestamp);
-  }
-}
-
-void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  // Activate all delayed animations that should start now
-  activateDelayedAnimations(timestamp);
-  // Update styles in the registry for views which animations were reverted
-  handleAnimationsToRevert(rt, timestamp);
-
-  // Iterate over active animations and update them
-  for (auto it = runningAnimationsMap_.begin();
-       it != runningAnimationsMap_.end();) {
-    const auto viewTag = it->first;
-    const std::vector<unsigned> animationIndices = {
-        it->second.begin(), it->second.end()};
-    updateViewAnimations(viewTag, animationIndices, timestamp, true);
-
-    if (runningAnimationsMap_.at(viewTag).empty()) {
-      it = runningAnimationsMap_.erase(it);
-    } else {
-      ++it;
-    }
+    applyViewAnimationsStyle(viewTag, timestamp);
   }
 }
 
@@ -172,7 +148,6 @@ void CSSAnimationsRegistry::updateViewAnimations(
 }
 
 void CSSAnimationsRegistry::scheduleOrActivateAnimation(
-    jsi::Runtime &rt,
     const std::shared_ptr<CSSAnimation> &animation,
     const double timestamp) {
   const auto id = animation->getId();
@@ -205,47 +180,6 @@ void CSSAnimationsRegistry::removeViewAnimations(const Tag viewTag) {
     delayedAnimationsManager_.remove(animation->getId());
   }
   runningAnimationsMap_.erase(viewTag);
-}
-
-void CSSAnimationsRegistry::applyViewAnimationsStyle(
-    jsi::Runtime &rt,
-    const Tag viewTag,
-    const double timestamp) {
-  const auto it = registry_.find(viewTag);
-  // Remove the style from the registry if there are no animations for the view
-  if (it == registry_.end() || it->second.empty()) {
-    removeFromUpdatesRegistry(viewTag);
-    return;
-  }
-
-  auto updatedStyle = jsi::Object(rt);
-  ShadowNode::Shared shadowNode = nullptr;
-
-  for (const auto &animation : it->second) {
-    const auto startTimestamp = animation->getStartTimestamp(timestamp);
-
-    jsi::Value style;
-    const auto &currentState = animation->getState(timestamp);
-    if (startTimestamp == timestamp ||
-        (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
-      style = animation->getBackwardsFillStyle(rt);
-    } else if (currentState == AnimationProgressState::Finished) {
-      if (animation->hasForwardsFillMode()) {
-        style = animation->getForwardFillStyle(rt);
-      }
-    } else if (currentState != AnimationProgressState::Pending) {
-      style = animation->getCurrentInterpolationStyle(rt);
-    }
-
-    if (!shadowNode) {
-      shadowNode = animation->getShadowNode();
-    }
-    if (style.isObject()) {
-      updateJSIObject(rt, updatedStyle, style.asObject(rt));
-    }
-  }
-
-  setInUpdatesRegistry(rt, shadowNode, jsi::Value(rt, updatedStyle));
 }
 
 void CSSAnimationsRegistry::applyViewAnimationsStyle(
@@ -300,15 +234,6 @@ void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
       runningAnimationsMap_[viewTag].insert(animationIndex);
     }
   }
-}
-
-void CSSAnimationsRegistry::handleAnimationsToRevert(
-    jsi::Runtime &rt,
-    const double timestamp) {
-  for (const auto &[viewTag, _] : animationsToRevertMap_) {
-    applyViewAnimationsStyle(rt, viewTag, timestamp);
-  }
-  animationsToRevertMap_.clear();
 }
 
 void CSSAnimationsRegistry::handleAnimationsToRevert(

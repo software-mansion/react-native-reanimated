@@ -36,7 +36,6 @@ class CSSAnimationsRegistry
       const SettingsUpdates &settingsUpdates,
       double timestamp);
 
-  void update(jsi::Runtime &rt, double timestamp);
   void update(double timestamp);
 
  private:
@@ -58,14 +57,11 @@ class CSSAnimationsRegistry
       double timestamp,
       bool addToBatch);
   void scheduleOrActivateAnimation(
-      jsi::Runtime &rt,
       const std::shared_ptr<CSSAnimation> &animation,
       double timestamp);
   void removeViewAnimations(Tag viewTag);
-  void applyViewAnimationsStyle(jsi::Runtime &rt, Tag viewTag, double timestamp);
   void applyViewAnimationsStyle(Tag viewTag, double timestamp);
   void activateDelayedAnimations(double timestamp);
-  void handleAnimationsToRevert(jsi::Runtime &rt, double timestamp);
   void handleAnimationsToRevert(double timestamp);
 
   static bool addStyleUpdates(
