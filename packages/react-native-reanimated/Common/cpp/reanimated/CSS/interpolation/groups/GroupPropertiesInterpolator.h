@@ -32,12 +32,8 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
 
-  folly::dynamic update(const ShadowNode::Shared &shadowNode)
-      override;
-  jsi::Value reset(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
-      override;
-  folly::dynamic reset(const ShadowNode::Shared &shadowNode)
-      override;
+  folly::dynamic update(const ShadowNode::Shared &shadowNode) override;
+  folly::dynamic reset(const ShadowNode::Shared &shadowNode) override;
 
  protected:
   virtual void forEachInterpolator(

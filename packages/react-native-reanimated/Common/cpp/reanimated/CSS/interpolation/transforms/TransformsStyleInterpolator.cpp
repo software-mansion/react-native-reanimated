@@ -117,19 +117,6 @@ folly::dynamic TransformsStyleInterpolator::update(
   return updates;
 }
 
-jsi::Value TransformsStyleInterpolator::reset(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) {
-  previousResult_ = std::nullopt;
-  auto resetStyle = getStyleValue(rt, shadowNode);
-
-  if (resetStyle.isUndefined()) {
-    return convertResultToJSI(rt, defaultStyleValue_);
-  }
-
-  return resetStyle;
-}
-
 folly::dynamic TransformsStyleInterpolator::reset(
     const ShadowNode::Shared &shadowNode) {
   previousResult_ = std::nullopt;

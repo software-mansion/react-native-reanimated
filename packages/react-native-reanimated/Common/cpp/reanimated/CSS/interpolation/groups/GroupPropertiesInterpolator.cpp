@@ -76,15 +76,6 @@ folly::dynamic GroupPropertiesInterpolator::update(
       });
 }
 
-jsi::Value GroupPropertiesInterpolator::reset(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) {
-  return mapInterpolators(
-      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-        return interpolator.reset(rt, shadowNode);
-      });
-}
-
 folly::dynamic GroupPropertiesInterpolator::reset(
     const ShadowNode::Shared &shadowNode) {
   return mapInterpolators(
