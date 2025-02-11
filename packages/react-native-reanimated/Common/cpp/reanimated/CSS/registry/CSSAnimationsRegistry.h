@@ -53,12 +53,6 @@ class CSSAnimationsRegistry
   DelayedItemsManager<CSSAnimationId> delayedAnimationsManager_;
 
   void updateViewAnimations(
-      jsi::Runtime &rt,
-      Tag viewTag,
-      const std::vector<unsigned> &animationIndices,
-      double timestamp,
-      bool addToBatch);
-  void updateViewAnimations(
       Tag viewTag,
       const std::vector<unsigned> &animationIndices,
       double timestamp,
