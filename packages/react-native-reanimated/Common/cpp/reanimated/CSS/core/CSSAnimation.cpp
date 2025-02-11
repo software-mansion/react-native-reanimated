@@ -11,6 +11,7 @@ CSSAnimation::CSSAnimation(
     const unsigned index,
     const CSSAnimationConfig &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
+    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
     const double timestamp)
     : index_(index),
       shadowNode_(std::move(shadowNode)),
@@ -23,7 +24,7 @@ CSSAnimation::CSSAnimation(
           config.direction,
           config.easingFunction,
           config.keyframeEasingFunctions)),
-      styleInterpolator_(config.styleInterpolator) {
+      styleInterpolator_(keyframesRegistry->get(config.animationName)) {
   if (config.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }
