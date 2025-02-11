@@ -64,10 +64,6 @@ bool CSSAnimation::hasBackwardsFillMode() const {
       fillMode_ == AnimationFillMode::Both;
 }
 
-jsi::Value CSSAnimation::getViewStyle(jsi::Runtime &rt) const {
-  return styleInterpolator_.getStyleValue(rt, shadowNode_);
-}
-
 folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
   return styleInterpolator_.getCurrentInterpolationStyle(shadowNode_);
 }

@@ -35,7 +35,6 @@ class CSSAnimation {
   bool hasForwardsFillMode() const;
   bool hasBackwardsFillMode() const;
 
-  jsi::Value getViewStyle(jsi::Runtime &rt) const;
   folly::dynamic getCurrentInterpolationStyle() const;
   folly::dynamic getBackwardsFillStyle() const;
   folly::dynamic getForwardFillStyle() const;
