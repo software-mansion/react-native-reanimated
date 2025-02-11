@@ -5,6 +5,9 @@
 #include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 
+#include <memory>
+#include <unordered_map>
+
 namespace reanimated {
 
 using KeyframeEasingFunctions = std::unordered_map<double, EasingFunction>;

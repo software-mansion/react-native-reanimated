@@ -7,6 +7,8 @@
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
 
+#include <memory>
+
 namespace reanimated {
 
 enum class AnimationProgressState {
