@@ -850,12 +850,6 @@ void ReanimatedModuleProxy::performOperations() {
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
 
-#ifdef ANDROID
-  bool hasPropsToRevert = updatesRegistryManager_->hasPropsToRevert();
-#else
-  bool hasPropsToRevert = false;
-#endif
-
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
     // It may happen that `performOperations` is called on the UI thread
     // while React Native tries to commit a new tree on the JS thread.
