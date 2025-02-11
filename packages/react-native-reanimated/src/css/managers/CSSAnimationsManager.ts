@@ -9,6 +9,7 @@ import {
   createSingleCSSAnimationProperties,
   getAnimationSettingsUpdates,
   normalizeSingleCSSAnimationSettings,
+  registerCSSAnimationKeyframes,
   registerCSSAnimations,
   unregisterCSSAnimations,
   updateCSSAnimations,
@@ -89,6 +90,12 @@ export default class CSSAnimationsManager {
     }
 
     this.attachedAnimations = processedAnimations;
+    processedAnimations.forEach(({ keyframes }) => {
+      registerCSSAnimationKeyframes(
+        keyframes.name,
+        keyframes.normalizedKeyframes
+      );
+    });
 
     registerCSSAnimations(
       this.shadowNodeWrapper,

@@ -3,18 +3,15 @@
 
 namespace reanimated {
 
-bool CSSKeyframesRegistry::has(const std::string &animationName) const {
-  return interpolators_.find(animationName) != interpolators_.end();
-}
-
-std::shared_ptr<AnimationStyleInterpolator> CSSKeyframesRegistry::get(
+std::shared_ptr<CSSAnimationKeyframesConfig> CSSKeyframesRegistry::get(
     const std::string &animationName) const {
-  if (!has(animationName)) {
+  const auto it = registry_.find(animationName);
+  if (it == registry_.end()) {
     throw std::runtime_error(
-        "[Reanimated] Keyframes for animation `" + animationName +
-        "` not found in the registry.");
+        "[Reanimated] " + animationName +
+        " not found in the keyframes registry.");
   }
-  return interpolators_.at(animationName);
+  return it->second;
 }
 
 void CSSKeyframesRegistry::set(
