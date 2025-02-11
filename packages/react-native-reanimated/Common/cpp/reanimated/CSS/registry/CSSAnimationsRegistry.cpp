@@ -243,33 +243,6 @@ void CSSAnimationsRegistry::handleAnimationsToRevert(
 }
 
 bool CSSAnimationsRegistry::addStyleUpdates(
-    jsi::Runtime &rt,
-    jsi::Object &target,
-    const jsi::Value &updates,
-    bool override) {
-  if (!updates.isObject()) {
-    return false;
-  }
-
-  bool hasUpdates = false;
-  const auto updatesObject = updates.asObject(rt);
-  const auto propertyNames = updatesObject.getPropertyNames(rt);
-  const auto propertiesCount = propertyNames.size(rt);
-
-  for (size_t i = 0; i < propertiesCount; ++i) {
-    const auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt);
-    const auto propertyValue = updatesObject.getProperty(rt, propertyName);
-
-    if (override || target.getProperty(rt, propertyName).isUndefined()) {
-      target.setProperty(rt, propertyName, propertyValue);
-      hasUpdates = true;
-    }
-  }
-
-  return hasUpdates;
-}
-
-bool CSSAnimationsRegistry::addStyleUpdates(
     folly::dynamic &target,
     const folly::dynamic &updates,
     bool override) {

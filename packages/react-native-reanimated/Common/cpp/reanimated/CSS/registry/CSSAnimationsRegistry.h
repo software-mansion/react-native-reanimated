@@ -63,11 +63,6 @@ class CSSAnimationsRegistry
   void handleAnimationsToRevert(double timestamp);
 
   static bool addStyleUpdates(
-      jsi::Runtime &rt,
-      jsi::Object &target,
-      const jsi::Value &updates,
-      bool override);
-  static bool addStyleUpdates(
       folly::dynamic &target,
       const folly::dynamic &updates,
       bool override);
