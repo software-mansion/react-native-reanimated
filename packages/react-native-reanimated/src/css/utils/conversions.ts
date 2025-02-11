@@ -15,14 +15,7 @@ export function convertPropertiesToArrays<T extends AnyRecord>(config: T) {
 }
 
 export function kebabizeCamelCase<T extends string>(property: T) {
-  return property
-    .split('')
-    .map((letter, index) =>
-      letter.toUpperCase() === letter
-        ? `${index !== 0 ? '-' : ''}${letter.toLowerCase()}`
-        : letter
-    )
-    .join('');
+  return property.replace(/[A-Z]/g, (x) => `-${x.toLowerCase()}`);
 }
 
 export function camelizeKebabCase<T extends string>(property: T) {
