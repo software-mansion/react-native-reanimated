@@ -88,7 +88,7 @@ void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
   }
 }
 
-jsi::Value CSSTransition::run(
+folly::dynamic CSSTransition::run(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
     const double timestamp) {
@@ -100,13 +100,7 @@ jsi::Value CSSTransition::run(
   styleInterpolator_.updateInterpolatedProperties(
       rt, changedProps, progressProvider_.getPropertyProgressProviders());
 
-  return update(rt, timestamp);
-}
-
-jsi::Value CSSTransition::update(jsi::Runtime &rt, const double timestamp) {
-  progressProvider_.update(timestamp);
-  return styleInterpolator_.update(
-      rt, shadowNode_, progressProvider_.getRemovedProperties());
+  return update(timestamp);
 }
 
 folly::dynamic CSSTransition::update(const double timestamp) {

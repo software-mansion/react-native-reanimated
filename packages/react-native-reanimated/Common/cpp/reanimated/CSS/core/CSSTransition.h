@@ -31,9 +31,8 @@ class CSSTransition {
       const jsi::Value &newProps);
 
   void updateSettings(const PartialCSSTransitionConfig &config);
-  jsi::Value
+  folly::dynamic
   run(jsi::Runtime &rt, const ChangedProps &changedProps, double timestamp);
-  jsi::Value update(jsi::Runtime &rt, double timestamp);
   folly::dynamic update(double timestamp);
 
  private:
