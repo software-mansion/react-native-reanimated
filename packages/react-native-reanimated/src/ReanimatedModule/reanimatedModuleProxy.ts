@@ -61,12 +61,12 @@ export interface ReanimatedModuleProxy {
 
   removeViewStyle(viewTag: number): void;
 
-  registerCSSAnimationKeyframes(
+  registerCSSKeyframes(
     animationName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ): void;
 
-  unregisterCSSAnimationKeyframes(animationName: string): void;
+  unregisterCSSKeyframes(animationName: string): void;
 
   registerCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,

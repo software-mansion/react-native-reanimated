@@ -580,7 +580,7 @@ void ReanimatedModuleProxy::removeViewStyle(
   staticPropsRegistry_->remove(viewTag.asNumber());
 }
 
-void ReanimatedModuleProxy::registerCSSAnimationKeyframes(
+void ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
     const jsi::Value &keyframesConfig) {
@@ -590,7 +590,7 @@ void ReanimatedModuleProxy::registerCSSAnimationKeyframes(
           rt, keyframesConfig, viewStylesRepository_));
 }
 
-void ReanimatedModuleProxy::unregisterCSSAnimationKeyframes(
+void ReanimatedModuleProxy::unregisterCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName) {
   cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));

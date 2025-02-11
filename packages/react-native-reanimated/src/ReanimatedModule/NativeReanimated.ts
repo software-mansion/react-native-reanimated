@@ -191,18 +191,18 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.removeViewStyle(viewTag);
   }
 
-  registerCSSAnimationKeyframes(
+  registerCSSKeyframes(
     animationName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ) {
-    this.#reanimatedModuleProxy.registerCSSAnimationKeyframes(
+    this.#reanimatedModuleProxy.registerCSSKeyframes(
       animationName,
       keyframesConfig
     );
   }
 
-  unregisterCSSAnimationKeyframes(animationName: string) {
-    this.#reanimatedModuleProxy.unregisterCSSAnimationKeyframes(animationName);
+  unregisterCSSKeyframes(animationName: string) {
+    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName);
   }
 
   registerCSSAnimations(
