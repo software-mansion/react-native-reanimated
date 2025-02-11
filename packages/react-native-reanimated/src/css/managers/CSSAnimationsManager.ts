@@ -10,11 +10,7 @@ import {
   unregisterCSSAnimations,
   updateCSSAnimations,
 } from '../platform/native';
-import { CSSKeyframesRegistry } from '../registry';
-import type {
-  CSSAnimationKeyframes,
-  ExistingCSSAnimationProperties,
-} from '../types';
+import type { CSSAnimationKeyframes, CSSAnimationProperties } from '../types';
 
 export type ProcessedAnimation = {
   normalizedSettings: NormalizedSingleCSSAnimationSettings;
@@ -24,7 +20,6 @@ export type ProcessedAnimation = {
 export default class CSSAnimationsManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
-  static readonly animationKeyframesRegistry = new CSSKeyframesRegistry();
 
   private attachedAnimations: ProcessedAnimation[] = [];
 
@@ -36,17 +31,14 @@ export default class CSSAnimationsManager {
   detach() {
     if (this.attachedAnimations.length > 0) {
       unregisterCSSAnimations(this.viewTag);
-      this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
-        CSSAnimationsManager.animationKeyframesRegistry.remove(
-          name,
-          this.viewTag
-        );
+      this.attachedAnimations.forEach(({ keyframesRule }) => {
+        keyframesRule.unregisterUsage(this.viewTag);
       });
       this.attachedAnimations = [];
     }
   }
 
-  update(animationProperties: ExistingCSSAnimationProperties | null): void {
+  update(animationProperties: CSSAnimationProperties | null): void {
     if (!animationProperties) {
       this.detach();
       return;
@@ -97,21 +89,15 @@ export default class CSSAnimationsManager {
 
     // Register keyframes for all new animations
     processedAnimations.forEach(({ keyframesRule }) => {
-      CSSAnimationsManager.animationKeyframesRegistry.add(
-        keyframesRule,
-        this.viewTag
-      );
+      keyframesRule.registerUsage(this.viewTag);
       newAnimationNames.add(keyframesRule.name);
     });
 
     // Unregister keyframes for all old animations that are no longer attached
     // to the view
-    this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
-      if (!newAnimationNames.has(name)) {
-        CSSAnimationsManager.animationKeyframesRegistry.remove(
-          name,
-          this.viewTag
-        );
+    this.attachedAnimations.forEach(({ keyframesRule }) => {
+      if (!newAnimationNames.has(keyframesRule.name)) {
+        keyframesRule.unregisterUsage(this.viewTag);
       }
     });
 
@@ -129,7 +115,7 @@ export default class CSSAnimationsManager {
   }
 
   private processAnimations(
-    animationProperties: ExistingCSSAnimationProperties
+    animationProperties: CSSAnimationProperties
   ): [ProcessedAnimation[], boolean] {
     const singleAnimationPropertiesArray =
       createSingleCSSAnimationProperties(animationProperties);
