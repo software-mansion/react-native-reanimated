@@ -61,14 +61,6 @@ folly::dynamic GroupPropertiesInterpolator::getFirstKeyframeValue() const {
       });
 }
 
-jsi::Value GroupPropertiesInterpolator::getLastKeyframeValue(
-    jsi::Runtime &rt) const {
-  return mapInterpolators(
-      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-        return interpolator.getLastKeyframeValue(rt);
-      });
-}
-
 folly::dynamic GroupPropertiesInterpolator::getLastKeyframeValue() const {
   return mapInterpolators(
       [&](PropertyInterpolator &interpolator) -> folly::dynamic {

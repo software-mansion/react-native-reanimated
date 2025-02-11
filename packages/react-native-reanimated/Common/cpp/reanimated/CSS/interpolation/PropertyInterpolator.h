@@ -34,7 +34,6 @@ class PropertyInterpolator {
   virtual folly::dynamic getCurrentValue(
       const ShadowNode::Shared &shadowNode) const = 0;
   virtual folly::dynamic getFirstKeyframeValue() const = 0;
-  virtual jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const = 0;
   virtual folly::dynamic getLastKeyframeValue() const = 0;
 
   virtual bool equalsReversingAdjustedStartValue(

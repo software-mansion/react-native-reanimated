@@ -51,12 +51,6 @@ folly::dynamic TransformsStyleInterpolator::getFirstKeyframeValue() const {
   return convertResultToDynamic(keyframes_.front()->fromOperations.value_or(defaultStyleValue_));
 }
 
-jsi::Value TransformsStyleInterpolator::getLastKeyframeValue(
-    jsi::Runtime &rt) const {
-  return convertResultToJSI(
-      rt, keyframes_.back()->toOperations.value_or(defaultStyleValue_));
-}
-
 folly::dynamic TransformsStyleInterpolator::getLastKeyframeValue() const {
   return convertResultToDynamic(keyframes_.back()->toOperations.value_or(defaultStyleValue_));
 }
