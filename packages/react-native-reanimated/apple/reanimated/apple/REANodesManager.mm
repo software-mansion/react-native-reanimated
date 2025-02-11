@@ -161,7 +161,6 @@ using namespace facebook::react;
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTBridge *_bridge;
   REAPerformOperations _performOperations;
-  __weak id<RCTSurfacePresenterStub> _surfacePresenter;
   NSMutableDictionary<NSNumber *, NSMutableDictionary *> *_operationsInBatch;
 #else
   NSMutableArray<REANativeAnimationOp> *_operationsInBatch;
@@ -202,7 +201,6 @@ using namespace facebook::react;
 {
   if ((self = [super init])) {
     _bridge = bridge;
-    _surfacePresenter = surfacePresenter;
     _reanimatedModule = reanimatedModule;
     _wantRunUpdates = NO;
     _onAnimationCallbacks = [NSMutableArray new];
