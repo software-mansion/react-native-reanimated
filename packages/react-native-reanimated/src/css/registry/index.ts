@@ -1,2 +1,2 @@
 'use strict';
-export { default as CSSAnimationKeyframesRegistry } from './CSSAnimationKeyframesRegistry';
+export { default as CSSKeyframesRegistry } from './CSSKeyframesRegistry';

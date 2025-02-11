@@ -12,7 +12,7 @@ import {
  * side only when used for the first time and unregistered when removed from the
  * last view that uses them.
  */
-export default class CSSAnimationKeyframesRegistry {
+export default class CSSKeyframesRegistry {
   private readonly registry_: Map<
     string,
     {

@@ -10,7 +10,7 @@ import {
   unregisterCSSAnimations,
   updateCSSAnimations,
 } from '../platform/native';
-import { CSSAnimationKeyframesRegistry } from '../registry';
+import { CSSKeyframesRegistry } from '../registry';
 import type {
   CSSAnimationKeyframes,
   ExistingCSSAnimationProperties,
@@ -24,8 +24,7 @@ export type ProcessedAnimation = {
 export default class CSSAnimationsManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
-  static readonly animationKeyframesRegistry =
-    new CSSAnimationKeyframesRegistry();
+  static readonly animationKeyframesRegistry = new CSSKeyframesRegistry();
 
   private attachedAnimations: ProcessedAnimation[] = [];
 

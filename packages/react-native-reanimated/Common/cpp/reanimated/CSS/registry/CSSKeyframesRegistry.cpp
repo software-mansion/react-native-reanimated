@@ -1,9 +1,9 @@
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <reanimated/CSS/registry/CSSAnimationKeyframesRegistry.h>
+#include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 
 namespace reanimated {
 
-const CSSAnimationKeyframesConfig &CSSAnimationKeyframesRegistry::get(
+const CSSKeyframesConfig &CSSKeyframesRegistry::get(
     const std::string &animationName) const {
   const auto it = registry_.find(animationName);
   if (it == registry_.end()) {
@@ -14,13 +14,13 @@ const CSSAnimationKeyframesConfig &CSSAnimationKeyframesRegistry::get(
   return it->second;
 }
 
-void CSSAnimationKeyframesRegistry::add(
+void CSSKeyframesRegistry::add(
     const std::string &animationName,
-    CSSAnimationKeyframesConfig &&config) {
+    CSSKeyframesConfig &&config) {
   registry_[animationName] = std::move(config);
 }
 
-void CSSAnimationKeyframesRegistry::remove(const std::string &animationName) {
+void CSSKeyframesRegistry::remove(const std::string &animationName) {
   registry_.erase(animationName);
 }
 

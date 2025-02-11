@@ -174,5 +174,5 @@ describe('CSSAnimationsManager', () => {
     });
   });
 
-  // TODO - adds integration tests for the new CSSAnimationKeyframesRegistry
+  // TODO - adds integration tests for the new CSSKeyframesRegistry
 });
