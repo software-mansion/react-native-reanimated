@@ -121,7 +121,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     const std::vector<unsigned> &animationIndices,
     const double timestamp,
     const bool addToBatch) {
-  jsi::Object result = jsi::Object(rt);
+  folly::dynamic result = folly::dynamic::object;
   ShadowNode::Shared shadowNode = nullptr;
   bool hasUpdates = false;
 
@@ -135,7 +135,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     }
 
     bool updatesAddedToBatch = false;
-    const auto updates = animation->update(rt, timestamp);
+    const auto updates = animation->update(timestamp);
     const auto newState = animation->getState(timestamp);
 
     if (newState == AnimationProgressState::Finished) {
@@ -145,7 +145,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
         //  We also have to manually commit style values
         // reverting the changes applied by the animation.
         hasUpdates =
-            addStyleUpdates(rt, result, animation->resetStyle(rt), false) ||
+            addStyleUpdates(result, animation->resetStyle(), false) ||
             hasUpdates;
         updatesAddedToBatch = true;
         // We want to remove style changes applied by the animation that is
@@ -159,7 +159,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     }
 
     if (addToBatch && !updatesAddedToBatch) {
-      hasUpdates = addStyleUpdates(rt, result, updates, true) || hasUpdates;
+      hasUpdates = addStyleUpdates(result, updates, true) || hasUpdates;
     }
     if (newState != AnimationProgressState::Running) {
       runningAnimationsMap_[viewTag].erase(animationIndex);
@@ -167,7 +167,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
   }
 
   if (hasUpdates) {
-    addUpdatesToBatch(rt, shadowNode, jsi::Value(rt, result));
+    addUpdatesToBatch(shadowNode, result);
   }
 }
 

@@ -112,22 +112,6 @@ void CSSAnimation::run(const double timestamp) {
   progressProvider_->play(timestamp);
 }
 
-jsi::Value CSSAnimation::update(jsi::Runtime &rt, const double timestamp) {
-  progressProvider_->update(timestamp);
-
-  // Check if the animation has not started yet because of the delay
-  // (In general, it shouldn't be activated until the delay has passed but we
-  // add this check to make sure that animation doesn't start with the negative
-  // progress)
-  if (progressProvider_->getState(timestamp) ==
-      AnimationProgressState::Pending) {
-    return hasBackwardsFillMode() ? getBackwardsFillStyle(rt)
-                                  : jsi::Value::undefined();
-  }
-
-  return styleInterpolator_.update(rt, shadowNode_);
-}
-
 folly::dynamic CSSAnimation::update(const double timestamp) {
   progressProvider_->update(timestamp);
 

@@ -96,40 +96,6 @@ bool TransformsStyleInterpolator::equalsReversingAdjustedStartValue(
   return true;
 }
 
-jsi::Value TransformsStyleInterpolator::update(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) {
-  updateCurrentKeyframe(rt, shadowNode);
-
-  // Get or create the current keyframe
-  auto &keyframe = currentKeyframe_;
-  if (!keyframe->fromOperations.has_value() ||
-      !keyframe->toOperations.has_value()) {
-    // If the value is nullopt, we would have to read it from the view style
-    // and build the keyframe again
-    const auto fallbackValue = getFallbackValue(rt, shadowNode);
-    keyframe = createTransformKeyframe(
-        keyframe->fromOffset,
-        keyframe->toOffset,
-        keyframe->fromOperations.value_or(fallbackValue),
-        keyframe->toOperations.value_or(fallbackValue));
-  }
-
-  // Interpolate the current keyframe
-  TransformOperations result = interpolateOperations(
-      shadowNode,
-      progressProvider_->getKeyframeProgress(
-          keyframe->fromOffset, keyframe->toOffset),
-      keyframe->fromOperations.value(),
-      keyframe->toOperations.value());
-
-  // Convert the result to JSI value
-  auto updates = convertResultToJSI(rt, result);
-  previousResult_ = std::move(result);
-
-  return updates;
-}
-
 folly::dynamic TransformsStyleInterpolator::update(
     const ShadowNode::Shared &shadowNode) {
   updateCurrentKeyframe(shadowNode);

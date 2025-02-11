@@ -84,15 +84,6 @@ folly::dynamic GroupPropertiesInterpolator::getLastKeyframeValue() const {
       });
 }
 
-jsi::Value GroupPropertiesInterpolator::update(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) {
-  return mapInterpolators(
-      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-        return interpolator.update(rt, shadowNode);
-      });
-}
-
 folly::dynamic GroupPropertiesInterpolator::update(
     const ShadowNode::Shared &shadowNode) {
   return mapInterpolators(

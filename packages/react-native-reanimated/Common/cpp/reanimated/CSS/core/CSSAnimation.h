@@ -46,7 +46,6 @@ class CSSAnimation {
   folly::dynamic resetStyle();
 
   void run(double timestamp);
-  jsi::Value update(jsi::Runtime &rt, double timestamp);
   folly::dynamic update(double timestamp);
   void updateSettings(
       const PartialCSSAnimationSettings &updatedSettings,

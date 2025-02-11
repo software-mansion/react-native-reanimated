@@ -46,32 +46,6 @@ TransitionStyleInterpolator::getReversedPropertyNames(
   return reversedProperties;
 }
 
-jsi::Value TransitionStyleInterpolator::update(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
-    const std::unordered_set<std::string> &propertiesToRemove) {
-  if (interpolators_.empty()) {
-    return jsi::Value::undefined();
-  }
-
-  jsi::Object result(rt);
-
-  for (auto it = interpolators_.begin(); it != interpolators_.end();) {
-    const auto &[propertyName, interpolator] = *it;
-
-    jsi::Value value = interpolator->update(rt, shadowNode);
-    result.setProperty(rt, propertyName.c_str(), value);
-
-    if (propertiesToRemove.find(propertyName) != propertiesToRemove.cend()) {
-      it = interpolators_.erase(it);
-    } else {
-      ++it;
-    }
-  }
-
-  return result;
-}
-
 folly::dynamic TransitionStyleInterpolator::update(
     const ShadowNode::Shared &shadowNode,
     const std::unordered_set<std::string> &propertiesToRemove) {

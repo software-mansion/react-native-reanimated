@@ -25,10 +25,6 @@ class TransitionStyleInterpolator {
       jsi::Runtime &rt,
       const jsi::Value &newPropertyValues) const;
 
-  jsi::Value update(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      const std::unordered_set<std::string> &propertiesToRemove);
   folly::dynamic update(
       const ShadowNode::Shared &shadowNode,
       const std::unordered_set<std::string> &propertiesToRemove);

@@ -51,8 +51,6 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       jsi::Runtime &rt,
       const jsi::Value &propertyValue) const override;
 
-  jsi::Value update(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
-      override;
   folly::dynamic update(const ShadowNode::Shared &shadowNode)
       override;
   jsi::Value reset(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)

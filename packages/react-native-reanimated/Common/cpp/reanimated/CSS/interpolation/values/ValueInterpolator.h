@@ -153,38 +153,6 @@ class ValueInterpolator : public PropertyInterpolator {
 
     keyframes_ = {firstKeyframe, lastKeyframe};
   }
-
-  jsi::Value update(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
-      override {
-    updateCurrentKeyframes(rt, shadowNode);
-
-    std::optional<ValueType> fromValue = keyframeBefore_.value;
-    std::optional<ValueType> toValue = keyframeAfter_.value;
-
-    if (!fromValue.has_value()) {
-      fromValue = getFallbackValue(rt, shadowNode);
-    }
-    if (!toValue.has_value()) {
-      toValue = getFallbackValue(rt, shadowNode);
-    }
-
-    const auto keyframeProgress = progressProvider_->getKeyframeProgress(
-        keyframeBefore_.offset, keyframeAfter_.offset);
-
-    if (keyframeProgress == 1.0) {
-      previousValue_ = toValue.value();
-    } else if (keyframeProgress == 0.0) {
-      previousValue_ = fromValue.value();
-    } else {
-      previousValue_ = interpolate(
-          keyframeProgress,
-          fromValue.value(),
-          toValue.value(),
-          {.node = shadowNode});
-    }
-
-    return previousValue_.value().toJSIValue(rt);
-  }
   
   folly::dynamic update(const ShadowNode::Shared &shadowNode)
       override {
