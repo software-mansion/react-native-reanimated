@@ -1,7 +1,7 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/config/CSSAnimationKeyframesConfig.h>
+#include <reanimated/CSS/config/CSSKeyframesConfig.h>
 #include <reanimated/CSS/config/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
