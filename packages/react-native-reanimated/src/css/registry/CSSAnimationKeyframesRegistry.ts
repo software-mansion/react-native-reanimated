@@ -48,13 +48,13 @@ export default class CSSAnimationKeyframesRegistry {
     }
 
     const viewTags = entry.viewTags;
-    if (viewTags.size === 1) {
+    viewTags.delete(viewTag);
+
+    if (viewTags.size === 0) {
       this.registry_.delete(animationName);
       // Unregister animation keyframes if there are no more references to them
       // (no more views that have an animation with this name)
       unregisterCSSAnimationKeyframes(animationName);
-    } else {
-      viewTags.delete(viewTag);
     }
   }
 }

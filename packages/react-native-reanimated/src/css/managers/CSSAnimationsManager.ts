@@ -16,7 +16,7 @@ import type {
   ExistingCSSAnimationProperties,
 } from '../types';
 
-type ProcessedAnimation = {
+export type ProcessedAnimation = {
   normalizedSettings: NormalizedSingleCSSAnimationSettings;
   keyframesRule: CSSKeyframesRuleImpl;
 };
@@ -94,13 +94,30 @@ export default class CSSAnimationsManager {
       return;
     }
 
-    this.attachedAnimations = processedAnimations;
+    const newAnimationNames = new Set();
+
+    // Register keyframes for all new animations
     processedAnimations.forEach(({ keyframesRule }) => {
       CSSAnimationsManager.animationKeyframesRegistry.add(
         keyframesRule,
         this.viewTag
       );
+      newAnimationNames.add(keyframesRule.name);
     });
+
+    // Unregister keyframes for all old animations that are no longer attached
+    // to the view
+    this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
+      if (!newAnimationNames.has(name)) {
+        CSSAnimationsManager.animationKeyframesRegistry.remove(
+          name,
+          this.viewTag
+        );
+      }
+    });
+
+    this.attachedAnimations = processedAnimations;
+
     registerCSSAnimations(
       this.shadowNodeWrapper,
       processedAnimations.map(
