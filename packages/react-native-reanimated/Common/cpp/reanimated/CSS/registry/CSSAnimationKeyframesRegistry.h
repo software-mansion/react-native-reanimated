@@ -11,17 +11,14 @@ namespace reanimated {
 
 class CSSKeyframesRegistry {
  public:
-  bool has(const std::string &animationName) const;
-  std::shared_ptr<AnimationStyleInterpolator> get(
+  std::shared_ptr<CSSAnimationKeyframesConfig> get(
       const std::string &animationName) const;
-  void set(
-      const std::string &animationName,
-      const std::shared_ptr<AnimationStyleInterpolator> &interpolator);
+  void add(const CSSAnimationKeyframesConfig &config);
   void remove(const std::string &animationName);
 
  private:
-  std::unordered_map<std::string, std::shared_ptr<AnimationStyleInterpolator>>
-      interpolators_;
+  std::unordered_map<std::string, std::shared_ptr<CSSAnimationKeyframesConfig>>
+      registry_;
 };
 
 } // namespace reanimated

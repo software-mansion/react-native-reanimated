@@ -131,6 +131,12 @@ class ReanimatedModuleProxy
       const jsi::Value &viewStyle) override;
   void removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag) override;
 
+  void registerCSSAnimationKeyframes(jsi::Runtime &rt, const jsi::Value &config)
+      override;
+  void unregisterCSSAnimationKeyframes(
+      jsi::Runtime &rt,
+      const jsi::Value &animationName) override;
+
   void registerCSSAnimations(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
@@ -250,7 +256,7 @@ class ReanimatedModuleProxy
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
-  const std::shared_ptr<CSSKeyframesRegistry> cssKeyframesRegistry_;
+  const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
