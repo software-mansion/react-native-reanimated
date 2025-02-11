@@ -26,8 +26,4 @@ class ReaCompatibility {
       fabricUIManager.getEventDispatcher().removeListener(nodesManager);
     }
   }
-
-  public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
-    fabricUIManager.synchronouslyUpdateViewOnUIThread(viewTag, uiProps);
-  }
 }

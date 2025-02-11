@@ -416,24 +416,7 @@ using namespace facebook::react;
 }
 
 #ifdef RCT_NEW_ARCH_ENABLED
-
-- (void)synchronouslyUpdateViewOnUIThread:(nonnull NSNumber *)viewTag props:(nonnull NSDictionary *)uiProps
-{
-  // adapted from RCTPropsAnimatedNode.m
-  RCTSurfacePresenter *surfacePresenter = _bridge.surfacePresenter ?: _surfacePresenter;
-  RCTComponentViewRegistry *componentViewRegistry = surfacePresenter.mountingManager.componentViewRegistry;
-  REAUIView<RCTComponentViewProtocol> *componentView =
-      [componentViewRegistry findComponentViewWithTag:[viewTag integerValue]];
-
-  NSSet<NSString *> *propKeysManagedByAnimated = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
-  [surfacePresenter synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
-  [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
-
-  // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
-  // so that's why we need to call `finalizeUpdates` here.
-  [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
-}
-
+// nothing
 #else
 
 - (void)updateProps:(nonnull NSDictionary *)props
@@ -482,14 +465,11 @@ using namespace facebook::react;
   }
 
   // TODO: refactor PropsNode to also use this function
-  NSMutableDictionary *uiProps = [NSMutableDictionary new];
   NSMutableDictionary *nativeProps = [NSMutableDictionary new];
   NSMutableDictionary *jsProps = [NSMutableDictionary new];
 
   void (^addBlock)(NSString *key, id obj, BOOL *stop) = ^(NSString *key, id obj, BOOL *stop) {
-    if ([self.uiProps containsObject:key]) {
-      uiProps[key] = obj;
-    } else if ([self.nativeProps containsObject:key]) {
+    if ([self.uiProps containsObject:key] || [self.nativeProps containsObject:key]) {
       nativeProps[key] = obj;
     } else {
       jsProps[key] = obj;
@@ -498,9 +478,6 @@ using namespace facebook::react;
 
   [props enumerateKeysAndObjectsUsingBlock:addBlock];
 
-  if (uiProps.count > 0) {
-    [self.uiManager synchronouslyUpdateViewOnUIThread:viewTag viewName:viewName props:uiProps];
-  }
   if (nativeProps.count > 0) {
     [self enqueueUpdateViewOnNativeThread:viewTag viewName:viewName nativeProps:nativeProps trySynchronously:YES];
   }

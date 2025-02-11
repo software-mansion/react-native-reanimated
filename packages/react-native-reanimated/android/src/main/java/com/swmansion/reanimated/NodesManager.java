@@ -418,20 +418,15 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     // TODO: update PropsNode to use this method instead of its own way of updating props
-    boolean hasUIProps = false;
     boolean hasNativeProps = false;
     boolean hasJSProps = false;
-    JavaOnlyMap newUIProps = new JavaOnlyMap();
     WritableMap newJSProps = Arguments.createMap();
     WritableMap newNativeProps = Arguments.createMap();
 
     for (Map.Entry<String, Object> entry : props.entrySet()) {
       String key = entry.getKey();
       Object value = entry.getValue();
-      if (uiProps.contains(key)) {
-        hasUIProps = true;
-        addProp(newUIProps, key, value);
-      } else if (nativeProps.contains(key)) {
+      if (uiProps.contains(key) || nativeProps.contains(key)) {
         hasNativeProps = true;
         addProp(newNativeProps, key, value);
       } else {
@@ -441,10 +436,6 @@ public class NodesManager implements EventDispatcherListener {
     }
 
     if (viewTag != View.NO_ID) {
-      if (hasUIProps) {
-        mUIImplementation.synchronouslyUpdateViewOnUIThread(
-            viewTag, new ReactStylesDiffMap(newUIProps));
-      }
       if (hasNativeProps) {
         enqueueUpdateViewOnNativeThread(viewTag, newNativeProps, true);
       }
@@ -455,10 +446,6 @@ public class NodesManager implements EventDispatcherListener {
         sendEvent("onReanimatedPropsChange", evt);
       }
     }
-  }
-
-  public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
-    compatibility.synchronouslyUpdateUIProps(viewTag, uiProps);
   }
 
   public String obtainProp(int viewTag, String propName) {
