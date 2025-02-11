@@ -1,3 +1,4 @@
+'use strict';
 import type { CSSKeyframesRuleImpl } from '../models';
 import {
   registerCSSAnimationKeyframes,

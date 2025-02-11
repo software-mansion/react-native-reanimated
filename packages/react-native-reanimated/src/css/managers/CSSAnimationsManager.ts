@@ -36,6 +36,7 @@ export default class CSSAnimationsManager {
 
   detach() {
     if (this.attachedAnimations.length > 0) {
+      unregisterCSSAnimations(this.viewTag);
       this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
         CSSAnimationsManager.animationKeyframesRegistry.remove(
           name,
@@ -43,7 +44,6 @@ export default class CSSAnimationsManager {
         );
       });
       this.attachedAnimations = [];
-      unregisterCSSAnimations(this.viewTag);
     }
   }
 
