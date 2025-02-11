@@ -77,12 +77,7 @@ folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
                       : styleInterpolator_.getFirstKeyframeValue();
 }
 
-jsi::Value CSSAnimation::getForwardFillStyle(jsi::Runtime &rt) {
-  return isReversed() ? styleInterpolator_.getFirstKeyframeValue(rt)
-                      : styleInterpolator_.getLastKeyframeValue(rt);
-}
-
-folly::dynamic CSSAnimation::getForwardFillStyle() {
+folly::dynamic CSSAnimation::getForwardFillStyle() const {
   return isReversed() ? styleInterpolator_.getFirstKeyframeValue()
                       : styleInterpolator_.getLastKeyframeValue();
 }
