@@ -33,21 +33,11 @@ export const ERROR_MESSAGES = {
 function getExpandedConfigProperties(
   config: CSSTransitionProperties
 ): ExpandedConfigProperties {
-  const configEntries = Object.entries(config);
-  const shorthandIndex = config.transition
-    ? configEntries.findIndex(([key]) => key === 'transition')
-    : -1;
   const result: AnyRecord = config.transition
     ? parseTransitionShorthand(config.transition)
     : {};
-  // If there is a shorthand `transition` property, all properties specified
-  // before are ignored and only these specified later are taken into account
-  // and override ones from the shorthand
-  const longhandEntries = config.transition
-    ? configEntries.slice(shorthandIndex + 1)
-    : configEntries;
 
-  for (const [key, value] of longhandEntries) {
+  for (const [key, value] of Object.entries(config)) {
     result[key] = convertPropertyToArray(value);
   }
 

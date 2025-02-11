@@ -5,7 +5,7 @@ import { processColor } from '../../../Colors';
 import type { CSSTimingFunction } from '../../easings';
 import { CubicBezierEasing, LinearEasing, StepsEasing } from '../../easings';
 import { ReanimatedError } from '../../errors';
-import type { AnyRecord, ConvertValuesToArrays } from '../../types';
+import type { ConvertValuesToArrays } from '../../types';
 import { kebabizeCamelCase } from '../../utils';
 
 export function hasSuffix(value: unknown): value is string {
@@ -16,7 +16,7 @@ export function maybeAddSuffix(value: unknown, suffix: string) {
   return hasSuffix(value) ? value : `${String(value)}${suffix}`;
 }
 
-export function maybeAddSuffixes<T extends AnyRecord, K extends keyof T>(
+export function maybeAddSuffixes<T, K extends keyof T>(
   object: ConvertValuesToArrays<T>,
   key: K,
   suffix: string
@@ -25,9 +25,7 @@ export function maybeAddSuffixes<T extends AnyRecord, K extends keyof T>(
     return;
   }
 
-  return object[key].map((value) =>
-    hasSuffix(value) ? String(value) : `${String(value)}${suffix}`
-  );
+  return object[key].map((value) => maybeAddSuffix(value, suffix));
 }
 
 function easingMapper(easing: CSSTimingFunction) {
