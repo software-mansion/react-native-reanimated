@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <reanimated/android/JNIHelper.h>
 #include <reanimated/android/LayoutAnimations.h>
 
@@ -64,6 +65,7 @@ class EventHandler : public HybridClass<EventHandler> {
       jni::alias_ref<JString> eventKey,
       jint emitterReactTag,
       jni::alias_ref<react::WritableMap> event) {
+    ReanimatedSystraceSection s("EventHandler::receiveEvent");
     handler_(eventKey, emitterReactTag, event);
   }
 

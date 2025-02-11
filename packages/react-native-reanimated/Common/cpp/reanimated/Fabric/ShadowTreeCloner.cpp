@@ -1,6 +1,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <ranges>
 #include <utility>
@@ -11,6 +12,8 @@ Props::Shared mergeProps(
     const ShadowNode &shadowNode,
     const PropsMap &propsMap,
     const ShadowNodeFamily &family) {
+  ReanimatedSystraceSection s("ShadowTreeCloner::mergeProps");
+
   const auto it = propsMap.find(&family);
 
   if (it == propsMap.end()) {
@@ -66,21 +69,27 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     const RootShadowNode &oldRootNode,
     const PropsMap &propsMap) {
+  ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
+
   ChildrenMap childrenMap;
 
-  for (auto &[family, _] : propsMap) {
-    const auto ancestors = family->getAncestors(oldRootNode);
+  {
+    ReanimatedSystraceSection s("ShadowTreeCloner::prepareChildrenMap");
 
-    for (const auto &[parentNode, index] :
-         std::ranges::reverse_view(ancestors)) {
-      const auto parentFamily = &parentNode.get().getFamily();
-      auto &affectedChildren = childrenMap[parentFamily];
+    for (auto &[family, _] : propsMap) {
+      const auto ancestors = family->getAncestors(oldRootNode);
 
-      if (affectedChildren.contains(index)) {
-        continue;
+      for (const auto &[parentNode, index] :
+           std::ranges::reverse_view(ancestors)) {
+        const auto parentFamily = &parentNode.get().getFamily();
+        auto &affectedChildren = childrenMap[parentFamily];
+
+        if (affectedChildren.contains(index)) {
+          continue;
+        }
+
+        affectedChildren.insert(index);
       }
-
-      affectedChildren.insert(index);
     }
   }
 
