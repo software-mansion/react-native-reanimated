@@ -220,7 +220,6 @@ class ReanimatedModuleProxy
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
 
 #ifdef RCT_NEW_ARCH_ENABLED
-  bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
   jsi::Value filterNonAnimatableProps(
       jsi::Runtime &rt,
       const jsi::Value &props);

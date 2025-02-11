@@ -668,22 +668,6 @@ void ReanimatedModuleProxy::unregisterCSSTransition(
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
-bool ReanimatedModuleProxy::isThereAnyLayoutProp(
-    jsi::Runtime &rt,
-    const jsi::Object &props) {
-  const jsi::Array propNames = props.getPropertyNames(rt);
-  for (size_t i = 0; i < propNames.size(rt); ++i) {
-    const std::string propName =
-        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    bool isLayoutProp =
-        nativePropNames_.find(propName) != nativePropNames_.end();
-    if (isLayoutProp) {
-      return true;
-    }
-  }
-  return false;
-}
-
 jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
     jsi::Runtime &rt,
     const jsi::Value &props) {
