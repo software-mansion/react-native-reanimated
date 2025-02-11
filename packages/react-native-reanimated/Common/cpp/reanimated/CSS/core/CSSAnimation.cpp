@@ -68,10 +68,6 @@ jsi::Value CSSAnimation::getViewStyle(jsi::Runtime &rt) const {
   return styleInterpolator_.getStyleValue(rt, shadowNode_);
 }
 
-jsi::Value CSSAnimation::getCurrentInterpolationStyle(jsi::Runtime &rt) const {
-  return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
-}
-
 folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
   return styleInterpolator_.getCurrentInterpolationStyle(shadowNode_);
 }
