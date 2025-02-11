@@ -12,7 +12,7 @@ namespace reanimated {
 
 using KeyframeEasingFunctions = std::unordered_map<double, EasingFunction>;
 
-struct CSSAnimationKeyframesConfig {
+struct CSSKeyframesConfig {
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator;
   std::shared_ptr<KeyframeEasingFunctions> keyframeEasingFunctions;
 };
@@ -26,7 +26,7 @@ std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(
     jsi::Runtime &rt,
     const jsi::Object &config);
 
-CSSAnimationKeyframesConfig parseCSSAnimationKeyframesConfig(
+CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
     jsi::Runtime &rt,
     const jsi::Value &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);

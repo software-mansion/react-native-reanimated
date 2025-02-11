@@ -21,7 +21,7 @@ class CSSAnimation {
       jsi::Runtime &rt,
       ShadowNode::Shared shadowNode,
       unsigned index,
-      const CSSAnimationKeyframesConfig &keyframesConfig,
+      const CSSKeyframesConfig &keyframesConfig,
       const CSSAnimationSettings &settings,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       double timestamp);

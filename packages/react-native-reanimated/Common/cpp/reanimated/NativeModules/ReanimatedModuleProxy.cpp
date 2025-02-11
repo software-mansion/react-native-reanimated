@@ -61,8 +61,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #else
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
 #endif
-      cssAnimationKeyframesRegistry_(
-          std::make_shared<CSSAnimationKeyframesRegistry>()),
+      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,

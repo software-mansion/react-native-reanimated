@@ -4,14 +4,14 @@ import {
   registerCSSAnimationKeyframes,
   unregisterCSSAnimationKeyframes,
 } from '../../platform/native';
-import CSSAnimationKeyframesRegistry from '../CSSAnimationKeyframesRegistry';
+import CSSKeyframesRegistry from '../CSSKeyframesRegistry';
 
 jest.mock('../../platform/native/native.ts', () => ({
   registerCSSAnimationKeyframes: jest.fn(),
   unregisterCSSAnimationKeyframes: jest.fn(),
 }));
 
-describe(CSSAnimationKeyframesRegistry, () => {
+describe(CSSKeyframesRegistry, () => {
   // each call to CSSKeyframesRuleImpl creates a new animation, thus,
   // even though the keyframes are the same, the animation name is different
   // and animations are treated as different animations
@@ -24,10 +24,10 @@ describe(CSSAnimationKeyframesRegistry, () => {
   const viewTag1 = 1;
   const viewTag2 = 2;
   const viewTag3 = 3;
-  let registry: CSSAnimationKeyframesRegistry;
+  let registry: CSSKeyframesRegistry;
 
   beforeEach(() => {
-    registry = new CSSAnimationKeyframesRegistry();
+    registry = new CSSKeyframesRegistry();
     jest.clearAllMocks();
   });
 

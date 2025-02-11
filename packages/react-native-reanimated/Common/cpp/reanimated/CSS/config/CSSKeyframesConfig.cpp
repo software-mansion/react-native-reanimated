@@ -1,6 +1,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/config/CSSAnimationKeyframesConfig.h>
+#include <reanimated/CSS/config/CSSKeyframesConfig.h>
 
 namespace reanimated {
 
@@ -39,7 +39,7 @@ std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(
   return std::make_shared<KeyframeEasingFunctions>(result);
 }
 
-CSSAnimationKeyframesConfig parseCSSAnimationKeyframesConfig(
+CSSKeyframesConfig parseCSSAnimationKeyframesConfig(
     jsi::Runtime &rt,
     const jsi::Value &config,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
