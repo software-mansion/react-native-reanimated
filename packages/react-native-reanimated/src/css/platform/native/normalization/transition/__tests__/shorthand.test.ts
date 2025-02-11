@@ -91,7 +91,9 @@ describe(parseTransitionShorthand, () => {
     ] satisfies [string, Partial<ExpandedCSSTransitionConfigProperties>][])(
       '%p',
       (input, expected) => {
-        expect(parseTransitionShorthand(input)).toEqual(withDefaults(expected));
+        expect(parseCSSTransitionShorthand(input)).toEqual(
+          withDefaults(expected)
+        );
       }
     );
   });
@@ -151,7 +153,9 @@ describe(parseTransitionShorthand, () => {
     ] satisfies [string, Partial<ExpandedCSSTransitionConfigProperties>][])(
       '%p',
       (input, expected) => {
-        expect(parseTransitionShorthand(input)).toEqual(withDefaults(expected));
+        expect(parseCSSTransitionShorthand(input)).toEqual(
+          withDefaults(expected)
+        );
       }
     );
   });
@@ -237,7 +241,9 @@ describe(parseTransitionShorthand, () => {
     ] satisfies [string, Partial<ExpandedCSSTransitionConfigProperties>][])(
       '%p',
       (input, expected) => {
-        expect(parseTransitionShorthand(input)).toEqual(withDefaults(expected));
+        expect(parseCSSTransitionShorthand(input)).toEqual(
+          withDefaults(expected)
+        );
       }
     );
   });
