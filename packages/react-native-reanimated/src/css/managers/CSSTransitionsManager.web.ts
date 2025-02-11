@@ -38,7 +38,6 @@ export default class CSSTransitionsManager {
     this.element.style.transitionDuration = '';
     this.element.style.transitionDelay = '';
     this.element.style.transitionTimingFunction = '';
-    // @ts-ignore this is correct
     this.element.style.transitionBehavior = '';
   }
 

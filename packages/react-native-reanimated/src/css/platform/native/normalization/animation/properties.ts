@@ -5,6 +5,13 @@ import type {
 } from '../../../../types';
 import { convertPropertiesToArrays } from '../../../../utils';
 
+function getExpandedConfigProperties(
+  properties: ExistingCSSAnimationProperties
+): ExpandedCSSAnimationConfigProperties {
+  const { animationName: animationNames } =
+    convertPropertiesToArrays(properties);
+}
+
 export function createSingleCSSAnimationProperties(
   properties: ExistingCSSAnimationProperties
 ): SingleCSSAnimationProperties[] {

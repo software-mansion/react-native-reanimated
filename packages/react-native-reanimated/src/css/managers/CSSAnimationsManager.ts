@@ -38,7 +38,7 @@ export default class CSSAnimationsManager {
     }
   }
 
-  update(animationProperties: ExistingCSSAnimationProperties | null): void {
+  update(animationProperties: CSSAnimationProperties | null): void {
     if (!animationProperties) {
       this.detach();
       return;
@@ -98,7 +98,7 @@ export default class CSSAnimationsManager {
   }
 
   private processAnimations(
-    animationProperties: ExistingCSSAnimationProperties
+    animationProperties: CSSAnimationProperties
   ): [ProcessedAnimation[], boolean] {
     const singleAnimationPropertiesArray =
       createSingleCSSAnimationProperties(animationProperties);
