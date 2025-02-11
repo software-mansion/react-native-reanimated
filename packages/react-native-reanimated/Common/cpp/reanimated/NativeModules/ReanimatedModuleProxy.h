@@ -253,7 +253,6 @@ class ReanimatedModuleProxy
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
-  std::unordered_set<std::string> nativePropNames_; // filled by configureProps
   std::unordered_set<std::string>
       animatablePropNames_; // filled by configureProps
   std::shared_ptr<UIManager> uiManager_;
