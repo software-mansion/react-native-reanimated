@@ -39,7 +39,6 @@ class CSSAnimation {
   folly::dynamic getCurrentInterpolationStyle() const;
   folly::dynamic getBackwardsFillStyle() const;
   folly::dynamic getForwardFillStyle() const;
-  jsi::Value resetStyle(jsi::Runtime &rt);
   folly::dynamic resetStyle();
 
   void run(double timestamp);

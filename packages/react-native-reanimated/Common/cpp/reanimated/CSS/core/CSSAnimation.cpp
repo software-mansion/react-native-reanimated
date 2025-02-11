@@ -82,10 +82,6 @@ folly::dynamic CSSAnimation::getForwardFillStyle() const {
                       : styleInterpolator_.getLastKeyframeValue();
 }
 
-jsi::Value CSSAnimation::resetStyle(jsi::Runtime &rt) {
-  return styleInterpolator_.reset(rt, shadowNode_);
-}
-
 folly::dynamic CSSAnimation::resetStyle() {
   return styleInterpolator_.reset(shadowNode_);
 }
