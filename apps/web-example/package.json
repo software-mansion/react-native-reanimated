@@ -32,5 +32,8 @@
     "prettier": "^3.3.3",
     "serve": "^14.2.3",
     "typescript": "~5.3.0"
+  },
+  "installConfig": {
+    "selfReferences": false
   }
 }
