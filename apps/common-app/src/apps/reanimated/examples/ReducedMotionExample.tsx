@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, Button } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withRepeat,
-  useReducedMotion,
-  withDecay,
-  withDelay,
-  withSpring,
-  withSequence,
-  ReduceMotion,
-  ReducedMotionConfig,
-} from 'react-native-reanimated';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
+import Animated, {
+  ReducedMotionConfig,
+  ReduceMotion,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDecay,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 const duration = 2000;
 const toValue = 100;

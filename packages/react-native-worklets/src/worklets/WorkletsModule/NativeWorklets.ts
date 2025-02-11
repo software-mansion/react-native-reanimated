@@ -3,8 +3,9 @@
 
 import { WorkletsTurboModule } from '../../specs';
 import { getValueUnpackerCode } from '../valueUnpacker';
-import type { WorkletsModuleProxy } from './workletsModuleProxy';
+import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type { WorkletsModuleProxy } from './workletsModuleProxy';
 
 export interface IWorkletsModule extends WorkletsModuleProxy {}
 
@@ -21,8 +22,8 @@ class NativeWorklets {
       WorkletsTurboModule?.installTurboModule(valueUnpackerCode);
     }
     if (global.__workletsModuleProxy === undefined) {
-      throw new Error(
-        `[Worklets] Native part of Worklets doesn't seem to be initialized.
+      throw new WorkletsError(
+        `Native part of Worklets doesn't seem to be initialized.
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }

@@ -1,10 +1,10 @@
 import {
   describe,
-  test,
-  render,
   expect,
   mockAnimationTimer,
   recordAnimationUpdates,
+  render,
+  test,
   waitForAnimationUpdates,
 } from '../../ReJest/RuntimeTestsApi';
 import {

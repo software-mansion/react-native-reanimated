@@ -17,8 +17,4 @@ try {
   }
 }
 
-module.exports = {
-  WorkletsModule: worklets.WorkletsModule,
-  isWorkletFunction: worklets.isWorkletFunction,
-  mockedRequestAnimationFrame: worklets.mockedRequestAnimationFrame,
-};
+module.exports = worklets;

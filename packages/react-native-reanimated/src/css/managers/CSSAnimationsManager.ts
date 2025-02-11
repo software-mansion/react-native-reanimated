@@ -6,12 +6,12 @@ import type {
   NormalizedSingleCSSAnimationSettings,
 } from '../platform/native';
 import {
+  createSingleCSSAnimationProperties,
+  getAnimationSettingsUpdates,
+  normalizeSingleCSSAnimationSettings,
   registerCSSAnimations,
   unregisterCSSAnimations,
   updateCSSAnimations,
-  getAnimationSettingsUpdates,
-  createSingleCSSAnimationProperties,
-  normalizeSingleCSSAnimationSettings,
 } from '../platform/native';
 import type {
   CSSAnimationKeyframes,

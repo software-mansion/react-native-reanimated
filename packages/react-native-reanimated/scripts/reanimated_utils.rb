@@ -65,7 +65,7 @@ end
 
 def assert_minimal_react_native_version(config)
       # If you change the minimal React Native version remember to update Compatibility Table in docs
-  minimalReactNativeVersion = 74
+  minimalReactNativeVersion = 75
   if config[:react_native_minor_version] < minimalReactNativeVersion
     raise "[Reanimated] Unsupported React Native version. Please use #{minimalReactNativeVersion} or newer."
   end

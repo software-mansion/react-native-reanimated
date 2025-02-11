@@ -1,16 +1,17 @@
 'use strict';
-import { NativeEventEmitter, Platform } from 'react-native';
 import type { NativeModule } from 'react-native';
-import { shouldBeUseWeb } from '../PlatformChecker';
+import { NativeEventEmitter, Platform } from 'react-native';
+
 import type { StyleProps } from '../commonTypes';
-import { runOnJS, runOnUIImmediately } from '../threads';
+import { shouldBeUseWeb } from '../PlatformChecker';
+import NativeReanimatedModule from '../specs/NativeReanimatedModule';
+import { runOnJS, runOnUIImmediately } from '../WorkletsResolver';
 import type {
   AnimatedComponentProps,
   IAnimatedComponentInternal,
   IJSPropsUpdater,
   InitialComponentProps,
 } from './commonTypes';
-import NativeReanimatedModule from '../specs/NativeReanimatedModule';
 
 interface ListenerData {
   viewTag: number;

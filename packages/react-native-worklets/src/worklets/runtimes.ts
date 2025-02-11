@@ -1,5 +1,5 @@
 'use strict';
-import { ReanimatedError, registerReanimatedError } from './errors';
+
 import { setupCallGuard, setupConsole } from './initializers';
 import { registerLoggerConfig } from './logger';
 import { shouldBeUseWeb } from './PlatformChecker';
@@ -7,8 +7,10 @@ import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
-import type { WorkletRuntime, WorkletFunction } from './WorkletsResolver';
-import { WorkletsModule, isWorkletFunction } from './WorkletsResolver';
+import { isWorkletFunction } from './workletFunction';
+import { registerWorkletsError, WorkletsError } from './WorkletsError';
+import { WorkletsModule } from './WorkletsModule';
+import type { WorkletFunction, WorkletRuntime } from './workletTypes';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -36,12 +38,12 @@ export function createWorkletRuntime(
 ): WorkletRuntime {
   // Assign to a different variable as __reanimatedLoggerConfig is not a captured
   // identifier in the Worklet runtime.
-  const config = __reanimatedLoggerConfig;
+  const config = __workletsLoggerConfig;
   return WorkletsModule.createWorkletRuntime(
     name,
     makeShareableCloneRecursive(() => {
       'worklet';
-      registerReanimatedError();
+      registerWorkletsError();
       registerLoggerConfig(config);
       setupCallGuard();
       setupConsole();
@@ -62,7 +64,7 @@ export function runOnRuntime<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
-    throw new ReanimatedError(
+    throw new WorkletsError(
       'The function passed to `runOnRuntime` is not a worklet.' +
         (_WORKLET
           ? ' Please make sure that `processNestedWorklets` option in Reanimated Babel plugin is enabled.'

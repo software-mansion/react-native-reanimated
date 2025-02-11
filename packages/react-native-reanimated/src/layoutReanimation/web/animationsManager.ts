@@ -1,5 +1,23 @@
 'use strict';
 
+import { LayoutAnimationType } from '../../commonTypes';
+import type {
+  AnimatedComponentProps,
+  LayoutAnimationStaticContext,
+} from '../../createAnimatedComponent/commonTypes';
+import { EasingNameSymbol } from '../../Easing';
+import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
+import { logger } from '../../WorkletsResolver';
+import { Keyframe } from '../animationBuilder';
+import type { TransitionData } from './animationParser';
+import { makeElementVisible } from './componentStyle';
+import {
+  getProcessedConfig,
+  handleExitingAnimation,
+  handleLayoutTransition,
+  maybeModifyStyleForKeyframe,
+  setElementAnimation,
+} from './componentUtils';
 import type {
   AnimationConfig,
   AnimationNames,
@@ -8,29 +26,11 @@ import type {
   KeyframeDefinitions,
 } from './config';
 import { Animations } from './config';
-import type {
-  AnimatedComponentProps,
-  LayoutAnimationStaticContext,
-} from '../../createAnimatedComponent/commonTypes';
 import {
   createAnimationWithInitialValues,
   createCustomKeyFrameAnimation,
 } from './createAnimation';
-import {
-  getProcessedConfig,
-  handleExitingAnimation,
-  handleLayoutTransition,
-  maybeModifyStyleForKeyframe,
-  setElementAnimation,
-} from './componentUtils';
 import { areDOMRectsEqual } from './domUtils';
-import type { TransitionData } from './animationParser';
-import { Keyframe } from '../animationBuilder';
-import { makeElementVisible } from './componentStyle';
-import { EasingNameSymbol } from '../../Easing';
-import { logger } from '../../logger';
-import { LayoutAnimationType } from '../../commonTypes';
-import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 
 function chooseConfig<ComponentProps extends Record<string, unknown>>(
   animationType: LayoutAnimationType,

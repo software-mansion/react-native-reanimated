@@ -1,14 +1,14 @@
 'use strict';
 import { withStyleAnimation } from '../animation/styleAnimation';
-import { LayoutAnimationType } from '../commonTypes';
 import type {
   LayoutAnimation,
   LayoutAnimationStartFunction,
   SharedTransitionAnimationsValues,
   SharedValue,
 } from '../commonTypes';
+import { LayoutAnimationType } from '../commonTypes';
 import { makeMutableUI } from '../mutables';
-import { runOnUIImmediately } from '../threads';
+import { runOnUIImmediately } from '../WorkletsResolver';
 
 const TAG_OFFSET = 1e9;
 

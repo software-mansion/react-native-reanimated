@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -8,8 +10,6 @@ import Animated, {
   SlideOutRight,
   SlideOutUp,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, Text, View } from 'react-native';
-import React, { useState } from 'react';
 
 const AnimatedText = Animated.createAnimatedComponent(Text);
 

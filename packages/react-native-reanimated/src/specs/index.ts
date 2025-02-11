@@ -1,6 +1,6 @@
 'use strict';
 
-import WorkletsTurboModule from './NativeReaWorkletsModule';
 import ReanimatedTurboModule from './NativeReanimatedModule';
+import WorkletsTurboModule from './NativeReaWorkletsModule';
 
-export { WorkletsTurboModule, ReanimatedTurboModule };
+export { ReanimatedTurboModule, WorkletsTurboModule };

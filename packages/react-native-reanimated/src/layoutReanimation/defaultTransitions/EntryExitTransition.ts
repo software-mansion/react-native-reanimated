@@ -1,7 +1,5 @@
 'use strict';
-import { BaseAnimationBuilder } from '../animationBuilder';
 import { withSequence, withTiming } from '../../animation';
-import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
 import type {
   AnimatableValue,
   AnimationObject,
@@ -11,7 +9,9 @@ import type {
   StylePropsWithArrayTransform,
   TransformArrayItem,
 } from '../../commonTypes';
-import { logger } from '../../logger';
+import { logger } from '../../WorkletsResolver';
+import { BaseAnimationBuilder } from '../animationBuilder';
+import { FadeIn, FadeOut } from '../defaultAnimations/Fade';
 
 export class EntryExitTransition
   extends BaseAnimationBuilder

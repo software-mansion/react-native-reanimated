@@ -1,11 +1,10 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   SensorType,
   useAnimatedSensor,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { StyleSheet, View } from 'react-native';
-
-import React from 'react';
 
 const BOX_SIZE = 150;
 

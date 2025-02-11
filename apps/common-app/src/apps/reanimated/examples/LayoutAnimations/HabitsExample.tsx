@@ -1,13 +1,13 @@
 import React from 'react';
-import { Platform, Pressable, StyleSheet, View, Text } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { AnimatedProps } from 'react-native-reanimated';
 import Animated, {
-  FadeInLeft,
-  FadeInDown,
-  ZoomIn,
-  LightSpeedInLeft,
   BounceIn,
+  FadeInDown,
+  FadeInLeft,
   FadeOut,
+  LightSpeedInLeft,
+  ZoomIn,
 } from 'react-native-reanimated';
 
 const data = [

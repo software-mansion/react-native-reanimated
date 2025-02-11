@@ -1,3 +1,5 @@
+import React, { useRef, useState } from 'react';
+import { Button, Dimensions, StyleSheet, Text, View } from 'react-native';
 import type {
   EntryAnimationsValues,
   EntryExitAnimationFunction,
@@ -8,8 +10,6 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import { Button, Dimensions, StyleSheet, Text, View } from 'react-native';
-import React, { useRef, useState } from 'react';
 
 const { width } = Dimensions.get('window');
 

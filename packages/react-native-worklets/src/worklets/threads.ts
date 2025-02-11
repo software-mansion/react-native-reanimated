@@ -4,9 +4,10 @@ import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
 } from './shareables';
-import { ReanimatedError } from './errors';
-import type { WorkletFunction } from './WorkletsResolver';
-import { WorkletsModule, isWorkletFunction } from './WorkletsResolver';
+import { isWorkletFunction } from './workletFunction';
+import { WorkletsError } from './WorkletsError';
+import { WorkletsModule } from './WorkletsModule';
+import type { WorkletFunction } from './workletTypes';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -82,12 +83,12 @@ export function runOnUI<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
-    throw new ReanimatedError(
+    throw new WorkletsError(
       '`runOnUI` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
-    throw new ReanimatedError('`runOnUI` can only be used with worklets.');
+    throw new WorkletsError('`runOnUI` can only be used with worklets.');
   }
   return (...args) => {
     if (IS_JEST) {
@@ -166,12 +167,12 @@ export function runOnUIImmediately<Args extends unknown[], ReturnValue>(
 ): (...args: Args) => void {
   'worklet';
   if (__DEV__ && !SHOULD_BE_USE_WEB && _WORKLET) {
-    throw new ReanimatedError(
+    throw new WorkletsError(
       '`runOnUIImmediately` cannot be called on the UI runtime. Please call the function synchronously or use `queueMicrotask` or `requestAnimationFrame` instead.'
     );
   }
   if (__DEV__ && !SHOULD_BE_USE_WEB && !isWorkletFunction(worklet)) {
-    throw new ReanimatedError(
+    throw new WorkletsError(
       '`runOnUIImmediately` can only be used with worklets.'
     );
   }
