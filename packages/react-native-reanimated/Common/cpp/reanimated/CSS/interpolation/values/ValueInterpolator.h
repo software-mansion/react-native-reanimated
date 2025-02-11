@@ -83,10 +83,6 @@ class ValueInterpolator : public PropertyInterpolator {
     return defaultStyleValue_.toDynamic();
   }
 
-  jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const override {
-    return convertOptionalToJSI(rt, keyframes_.front().value);
-  }
-
   folly::dynamic getFirstKeyframeValue() const override {
      return convertOptionalToDynamic(keyframes_.front().value);
   }

@@ -33,7 +33,6 @@ class PropertyInterpolator {
       const ShadowNode::Shared &shadowNode) const = 0;
   virtual folly::dynamic getCurrentValue(
       const ShadowNode::Shared &shadowNode) const = 0;
-  virtual jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const = 0;
   virtual folly::dynamic getFirstKeyframeValue() const = 0;
   virtual jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const = 0;
   virtual folly::dynamic getLastKeyframeValue() const = 0;

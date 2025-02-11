@@ -47,12 +47,6 @@ folly::dynamic TransformsStyleInterpolator::getCurrentValue(
   return getStyleValue(shadowNode);
 }
 
-jsi::Value TransformsStyleInterpolator::getFirstKeyframeValue(
-    jsi::Runtime &rt) const {
-  return convertResultToJSI(
-      rt, keyframes_.front()->fromOperations.value_or(defaultStyleValue_));
-}
-
 folly::dynamic TransformsStyleInterpolator::getFirstKeyframeValue() const {
   return convertResultToDynamic(keyframes_.front()->fromOperations.value_or(defaultStyleValue_));
 }
