@@ -9,29 +9,28 @@ CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
     ShadowNode::Shared shadowNode,
     const unsigned index,
-    const CSSAnimationConfig &config,
+    const CSSAnimationKeyframesConfig &keyframesConfig,
+    const CSSAnimationSettings &settings,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
-    const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
     const double timestamp)
     : index_(index),
       shadowNode_(std::move(shadowNode)),
-      fillMode_(config.fillMode),
+      fillMode_(settings.fillMode),
       progressProvider_(std::make_shared<AnimationProgressProvider>(
           timestamp,
-          config.duration,
-          config.delay,
-          config.iterationCount,
-          config.direction,
-          config.easingFunction,
-          config.keyframeEasingFunctions)),
-      styleInterpolator_(keyframesRegistry->get(config.animationName)) {
-  if (config.playState == AnimationPlayState::Paused) {
+          settings.duration,
+          settings.delay,
+          settings.iterationCount,
+          settings.direction,
+          settings.easingFunction,
+          keyframesConfig.keyframeEasingFunctions)),
+      styleInterpolator_(keyframesConfig.styleInterpolator) {
+  if (settings.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }
 }
 
 CSSAnimationId CSSAnimation::getId() const {
-  // TODO - use animationName where possible
   return {shadowNode_->getTag(), index_};
 }
 

@@ -1,21 +1,20 @@
 #ifdef RCT_NEW_ARCH_ENABLED
+
 #include <reanimated/CSS/config/CSSAnimationKeyframesConfig.h>
 
 namespace reanimated {
 
-std::string getAnimationName(jsi::Runtime &rt, const jsi::Object &config) {
-  return config.getProperty(rt, "animationName").asString(rt).utf8(rt);
-}
-
 std::shared_ptr<AnimationStyleInterpolator> getStyleInterpolator(
     jsi::Runtime &rt,
-    const jsi::Object &config) {
+    const jsi::Object &config,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
   const auto styleInterpolator =
-      std::make_shared<AnimationStyleInterpolator>(viewStylesRepository_);
-  const auto keyframes = config.getProperty(rt, "keyframes");
+      std::make_shared<AnimationStyleInterpolator>(viewStylesRepository);
+
+  const auto keyframes = config.getProperty(rt, "keyframesStyle");
   styleInterpolator->updateKeyframes(rt, keyframes);
 
-  cssAnimationKeyframesRegistry_->set(animationName, styleInterpolator);
+  return styleInterpolator;
 }
 
 std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(
@@ -37,16 +36,18 @@ std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(
     result[std::stod(offset)] = easingFunction;
   }
 
-  return result;
+  return std::make_shared<KeyframeEasingFunctions>(result);
 }
 
 CSSAnimationKeyframesConfig parseCSSAnimationKeyframesConfig(
     jsi::Runtime &rt,
-    const jsi::Object &config) {
+    const jsi::Value &config,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
+  const auto &configObj = config.asObject(rt);
+
   return {
-      getAnimationName(rt, config),
-      getStyleInterpolator(rt, config),
-      getKeyframeTimingFunctions(rt, config)};
+      getStyleInterpolator(rt, configObj, viewStylesRepository),
+      getKeyframeTimingFunctions(rt, configObj)};
 }
 
 } // namespace reanimated

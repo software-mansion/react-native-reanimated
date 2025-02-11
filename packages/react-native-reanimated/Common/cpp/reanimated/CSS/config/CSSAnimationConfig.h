@@ -1,6 +1,7 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#include <reanimated/CSS/config/CSSAnimationKeyframesConfig.h>
 #include <reanimated/CSS/config/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
@@ -25,6 +26,11 @@ struct CSSAnimationSettings {
   AnimationPlayState playState;
 };
 
+struct CSSAnimationConfig {
+  std::string animationName;
+  CSSAnimationSettings settings;
+};
+
 struct PartialCSSAnimationSettings {
   std::optional<double> duration;
   std::optional<EasingFunction> easingFunction;
@@ -46,6 +52,10 @@ AnimationPlayState getPlayState(jsi::Runtime &rt, const jsi::Object &settings);
 CSSAnimationSettings parseCSSAnimationSettings(
     jsi::Runtime &rt,
     const jsi::Value &settings);
+
+CSSAnimationConfig parseCSSAnimationConfig(
+    jsi::Runtime &rt,
+    const jsi::Value &config);
 
 PartialCSSAnimationSettings parsePartialCSSAnimationSettings(
     jsi::Runtime &rt,

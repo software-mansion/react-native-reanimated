@@ -31,7 +31,7 @@ export type NormalizedCSSKeyframeTimingFunctions = Record<
   NormalizedCSSTimingFunction
 >;
 
-export type NormalizedCSSAnimationKeyframes = {
+export type NormalizedCSSAnimationKeyframesConfig = {
   keyframesStyle: NormalizedCSSKeyframesStyle;
   keyframeTimingFunctions: NormalizedCSSKeyframeTimingFunctions;
 };
@@ -45,6 +45,3 @@ export type NormalizedSingleCSSAnimationSettings = {
   fillMode: CSSAnimationFillMode;
   playState: CSSAnimationPlayState;
 };
-
-export type NormalizedSingleCSSAnimationConfig =
-  NormalizedSingleCSSAnimationSettings & NormalizedCSSAnimationKeyframes;

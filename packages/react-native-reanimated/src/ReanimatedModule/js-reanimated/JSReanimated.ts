@@ -7,9 +7,8 @@ import type {
 } from '../../commonTypes';
 import { SensorType } from '../../commonTypes';
 import type {
-  NormalizedCSSKeyframesStyle,
+  NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../../css/platform/native';
 import { ReanimatedError } from '../../errors';
@@ -285,7 +284,7 @@ class JSReanimated implements IReanimatedModule {
 
   registerCSSAnimationKeyframes(
     _animationName: string,
-    _keyframes: NormalizedCSSKeyframesStyle
+    _keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ): void {
     throw new ReanimatedError(
       '`registerCSSAnimationKeyframes` is not available in JSReanimated.'
@@ -300,7 +299,10 @@ class JSReanimated implements IReanimatedModule {
 
   registerCSSAnimations(
     _shadowNodeWrapper: ShadowNodeWrapper,
-    _animationConfigs: NormalizedSingleCSSAnimationConfig[]
+    _animationConfigs: {
+      name: string;
+      settings: NormalizedSingleCSSAnimationSettings;
+    }[]
   ): void {
     throw new ReanimatedError(
       '`registerCSSAnimations` is not available in JSReanimated.'
