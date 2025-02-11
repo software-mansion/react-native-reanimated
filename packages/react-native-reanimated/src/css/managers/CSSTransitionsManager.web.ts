@@ -4,7 +4,7 @@ import { maybeAddSuffixes, parseTimingFunction } from '../platform/web';
 import type { CSSTransitionProperties } from '../types';
 import { convertPropertiesToArrays, kebabizeCamelCase } from '../utils';
 
-export default class CSSTransitionManager {
+export default class CSSTransitionsManager {
   private readonly element: ReanimatedHTMLElement;
 
   constructor(element: ReanimatedHTMLElement) {

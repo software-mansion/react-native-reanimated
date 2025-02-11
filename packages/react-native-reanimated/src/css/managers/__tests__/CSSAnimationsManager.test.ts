@@ -45,7 +45,7 @@ describe('CSSAnimationsManager', () => {
         expect(registerCSSAnimations).toHaveBeenCalledWith(shadowNodeWrapper, [
           {
             ...new CSSKeyframesRuleImpl(animationProperties.animationName)
-              .normalizedKeyframes,
+              .normalizedKeyframesConfig,
             ...normalizeSingleCSSAnimationSettings(animationProperties),
           },
         ]);

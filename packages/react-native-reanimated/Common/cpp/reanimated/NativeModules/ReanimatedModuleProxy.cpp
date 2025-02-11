@@ -61,7 +61,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #else
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
 #endif
-      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
+      cssAnimationKeyframesRegistry_(
+          std::make_shared<CSSAnimationKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
@@ -582,9 +583,12 @@ void ReanimatedModuleProxy::removeViewStyle(
 
 void ReanimatedModuleProxy::registerCSSAnimationKeyframes(
     jsi::Runtime &rt,
-    const jsi::Value &config) {
+    const jsi::Value &animationName,
+    const jsi::Value &keyframesConfig) {
   cssAnimationKeyframesRegistry_->add(
-      parseCSSAnimationKeyframesConfig(rt, config));
+      animationName.asString(rt).utf8(rt),
+      parseCSSAnimationKeyframesConfig(
+          rt, keyframesConfig, viewStylesRepository_));
 }
 
 void ReanimatedModuleProxy::unregisterCSSAnimationKeyframes(
@@ -607,13 +611,21 @@ void ReanimatedModuleProxy::registerCSSAnimations(
   const auto timestamp = getCssTimestamp();
 
   for (size_t i = 0; i < animationsCount; ++i) {
-    auto animationConfig = animationConfigsArray.getValueAtIndex(rt, i);
+    auto animationConfig =
+        animationConfigsArray.getValueAtIndex(rt, i).asObject(rt);
+    const auto animationName =
+        animationConfig.getProperty(rt, "name").asString(rt).utf8(rt);
+    const auto settings = parseCSSAnimationSettings(
+        rt, animationConfig.getProperty(rt, "settings"));
+    const auto &keyframesConfig =
+        cssAnimationKeyframesRegistry_->get(animationName);
+
     animations.emplace_back(std::make_shared<CSSAnimation>(
         rt,
         shadowNode,
         i,
-        parseCSSAnimationConfig(rt, animationConfig),
-        cssAnimationKeyframesRegistry_,
+        keyframesConfig,
+        settings,
         viewStylesRepository_,
         timestamp));
   }
