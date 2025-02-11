@@ -16,7 +16,6 @@ import type {
   makeShareable as makeShareableType,
   makeShareableCloneOnUIRecursive as makeShareableCloneOnUIRecursiveType,
   makeShareableCloneRecursive as makeShareableCloneRecursiveType,
-  mockedRequestAnimationFrame as mockedRequestAnimationFrameType,
   registerCustomError as registerCustomErrorType,
   registerLoggerConfig as registerLoggerConfigType,
   registerWorkletStackDetails as registerWorkletStackDetailsType,
@@ -52,8 +51,6 @@ import {
   // @ts-expect-error - required for resolving the module
   makeShareableCloneRecursive as ResolvedMakeShareableCloneRecursive,
   // @ts-expect-error - required for resolving the module
-  mockedRequestAnimationFrame as ResolvedMockedRequestAnimationFrame,
-  // @ts-expect-error - required for resolving the module
   registerCustomError as ResolvedRegisterCustomError,
   // @ts-expect-error - required for resolving the module
   registerLoggerConfig as ResolvedRegisterLoggerConfig,
@@ -84,8 +81,6 @@ import {
 export const WorkletsModule = ResolvedWorkletsModule as IWorkletsModule;
 export const isWorkletFunction =
   ResolvedIsWorkletFunction as typeof isWorkletFunctionType;
-export const mockedRequestAnimationFrame =
-  ResolvedMockedRequestAnimationFrame as typeof mockedRequestAnimationFrameType;
 export const createCustomError =
   ResolvedCreateCustomError as typeof createCustomErrorType;
 export const registerCustomError =

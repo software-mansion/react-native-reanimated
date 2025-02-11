@@ -37,6 +37,7 @@ public class WorkletsModule extends NativeReaWorkletsModuleSpec {
 
   private final WorkletsMessageQueueThread mMessageQueueThread = new WorkletsMessageQueueThread();
   private final AndroidUIScheduler mAndroidUIScheduler;
+  private final AnimationFrameQueue mAnimationFrameQueue;
 
   public AndroidUIScheduler getAndroidUIScheduler() {
     return mAndroidUIScheduler;
@@ -53,6 +54,7 @@ public class WorkletsModule extends NativeReaWorkletsModuleSpec {
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
     mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
+    mAnimationFrameQueue = new AnimationFrameQueue(reactContext);
   }
 
   @OptIn(markerClass = FrameworkAPI.class)

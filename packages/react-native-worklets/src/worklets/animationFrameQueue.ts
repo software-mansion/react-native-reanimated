@@ -1,6 +1,6 @@
 'use strict';
 
-import { callMicrotasks } from './WorkletsResolver';
+import { callMicrotasks } from './threads';
 
 export function setupRequestAnimationFrame() {
   'worklet';
@@ -38,4 +38,12 @@ export function setupRequestAnimationFrame() {
     // attempt to store the value returned from rAF and use it for cancelling.
     return -1;
   };
+}
+
+// This is Jest implementation of `requestAnimationFrame` that is required
+// by React Native for test purposes.
+export function mockedRequestAnimationFrame(
+  callback: (timestamp: number) => void
+): ReturnType<typeof setTimeout> {
+  return setTimeout(() => callback(performance.now()), 0);
 }

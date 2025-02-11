@@ -1,5 +1,9 @@
 'use strict';
 
+import {
+  mockedRequestAnimationFrame,
+  setupRequestAnimationFrame,
+} from './animationFrameQueue';
 import { reportFatalErrorOnJS } from './errors';
 import {
   DEFAULT_LOGGER_CONFIG,
@@ -7,7 +11,6 @@ import {
   registerLoggerConfig,
   replaceLoggerImplementation,
 } from './logger';
-import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
 import {
   isChromeDebugger,
   isJest,
@@ -168,6 +171,7 @@ export function initializeUIRuntime(WorkletsModule: IWorkletsModule) {
       setupCallGuard();
       setupConsole();
       setupMicrotasks();
+      setupRequestAnimationFrame();
     })();
   }
 }
