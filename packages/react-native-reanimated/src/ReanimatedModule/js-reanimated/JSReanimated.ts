@@ -7,6 +7,7 @@ import type {
 } from '../../commonTypes';
 import { SensorType } from '../../commonTypes';
 import type {
+  NormalizedCSSKeyframesStyle,
   NormalizedCSSTransitionConfig,
   NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
@@ -279,6 +280,21 @@ class JSReanimated implements IReanimatedModule {
   removeViewStyle(_viewTag: number): void {
     throw new ReanimatedError(
       'removeViewStyle is not available in JSReanimated.'
+    );
+  }
+
+  registerCSSAnimationKeyframes(
+    _animationName: string,
+    _keyframes: NormalizedCSSKeyframesStyle
+  ): void {
+    throw new ReanimatedError(
+      '`registerCSSAnimationKeyframes` is not available in JSReanimated.'
+    );
+  }
+
+  unregisterCSSAnimationKeyframes(_animationName: string): void {
+    throw new ReanimatedError(
+      '`unregisterCSSAnimationKeyframes` is not available in JSReanimated.'
     );
   }
 

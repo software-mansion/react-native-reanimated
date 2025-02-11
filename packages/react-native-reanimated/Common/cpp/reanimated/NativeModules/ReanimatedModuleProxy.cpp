@@ -61,7 +61,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #else
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
 #endif
-      cssKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
+      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
@@ -580,6 +580,19 @@ void ReanimatedModuleProxy::removeViewStyle(
   staticPropsRegistry_->remove(viewTag.asNumber());
 }
 
+void ReanimatedModuleProxy::registerCSSAnimationKeyframes(
+    jsi::Runtime &rt,
+    const jsi::Value &config) {
+  cssAnimationKeyframesRegistry_->add(
+      parseCSSAnimationKeyframesConfig(rt, config));
+}
+
+void ReanimatedModuleProxy::unregisterCSSAnimationKeyframes(
+    jsi::Runtime &rt,
+    const jsi::Value &animationName) {
+  cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));
+}
+
 void ReanimatedModuleProxy::registerCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
@@ -595,27 +608,12 @@ void ReanimatedModuleProxy::registerCSSAnimations(
 
   for (size_t i = 0; i < animationsCount; ++i) {
     auto animationConfig = animationConfigsArray.getValueAtIndex(rt, i);
-
-    // TODO - remove keyframes when there are no more usages (create registry in
-    // js to track usages)
-    const auto animationName = animationConfig.asObject(rt)
-                                   .getProperty(rt, "animationName")
-                                   .asString(rt)
-                                   .utf8(rt);
-
-    if (!cssKeyframesRegistry_->has(animationName)) {
-      const auto styleInterpolator =
-          std::make_shared<AnimationStyleInterpolator>(viewStylesRepository_);
-      styleInterpolator->updateKeyframes(
-          rt, animationConfig.asObject(rt).getProperty(rt, "keyframesStyle"));
-      cssKeyframesRegistry_->set(animationName, styleInterpolator);
-    }
-
     animations.emplace_back(std::make_shared<CSSAnimation>(
         rt,
         shadowNode,
         i,
-        parseCSSAnimationConfig(rt, animationConfig, cssKeyframesRegistry_),
+        parseCSSAnimationConfig(rt, animationConfig),
+        cssAnimationKeyframesRegistry_,
         viewStylesRepository_,
         timestamp));
   }
