@@ -12,7 +12,7 @@ AnimationProgressProvider::AnimationProgressProvider(
     const double iterationCount,
     const AnimationDirection direction,
     EasingFunction easingFunction,
-    std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions)
+    const std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions)
     : RawProgressProvider(timestamp, duration, delay),
       iterationCount_(iterationCount),
       direction_(direction),
