@@ -885,18 +885,6 @@ void ReanimatedModuleProxy::performOperations() {
     }
   }
 
-  if (!hasLayoutUpdates && !hasPropsToRevert) {
-    // If there's no layout props to be updated, we can apply the updates
-    // directly onto the components and skip the commit.
-    ReanimatedSystraceSection s(
-        "ReanimatedModuleProxy::synchronouslyUpdateUIProps");
-    for (const auto &[shadowNode, props] : updatesBatch) {
-      Tag tag = shadowNode->getTag();
-      synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
-    }
-    return;
-  }
-
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
     // It may happen that `performOperations` is called on the UI thread
     // while React Native tries to commit a new tree on the JS thread.
