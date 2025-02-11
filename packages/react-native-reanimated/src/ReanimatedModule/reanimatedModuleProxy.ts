@@ -8,10 +8,8 @@ import type {
   ValueRotation,
 } from '../commonTypes';
 import type {
-  NormalizedCSSAnimationKeyframes,
-  NormalizedCSSKeyframesStyle,
+  NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
 import type { ShareableRef, WorkletFunction } from '../WorkletsResolver';
@@ -65,14 +63,17 @@ export interface ReanimatedModuleProxy {
 
   registerCSSAnimationKeyframes(
     animationName: string,
-    keyframes: NormalizedCSSAnimationKeyframes
+    keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ): void;
 
   unregisterCSSAnimationKeyframes(animationName: string): void;
 
   registerCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
-    animationConfigs: NormalizedSingleCSSAnimationConfig[]
+    animationConfigs: {
+      name: string;
+      settings: NormalizedSingleCSSAnimationSettings;
+    }[]
   ): void;
 
   updateCSSAnimations(

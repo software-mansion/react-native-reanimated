@@ -2,6 +2,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/config/CSSAnimationConfig.h>
+#include <reanimated/CSS/config/CSSAnimationKeyframesConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/progress/KeyframeProgressProvider.h>
 #include <reanimated/CSS/progress/RawProgressProvider.h>
@@ -25,7 +26,7 @@ class AnimationProgressProvider final : public KeyframeProgressProvider,
       double iterationCount,
       AnimationDirection direction,
       EasingFunction easingFunction,
-      std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions);
+      const std::shared_ptr<KeyframeEasingFunctions> &keyframeEasingFunctions);
 
   void setIterationCount(double iterationCount) {
     resetProgress();

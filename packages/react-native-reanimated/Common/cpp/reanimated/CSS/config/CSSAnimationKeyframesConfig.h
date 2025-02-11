@@ -2,22 +2,22 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
 #include <reanimated/CSS/easing/EasingFunctions.h>
+#include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
+#include <reanimated/CSS/misc/ViewStylesRepository.h>
 
 namespace reanimated {
 
 using KeyframeEasingFunctions = std::unordered_map<double, EasingFunction>;
 
 struct CSSAnimationKeyframesConfig {
-  std::string animationName;
   std::shared_ptr<AnimationStyleInterpolator> styleInterpolator;
   std::shared_ptr<KeyframeEasingFunctions> keyframeEasingFunctions;
 };
 
-std::string getAnimationName(jsi::Runtime &rt, const jsi::Object &config);
-
 std::shared_ptr<AnimationStyleInterpolator> getStyleInterpolator(
     jsi::Runtime &rt,
-    const jsi::Object &config);
+    const jsi::Object &config,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
 std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(
     jsi::Runtime &rt,
@@ -25,7 +25,8 @@ std::shared_ptr<KeyframeEasingFunctions> getKeyframeTimingFunctions(
 
 CSSAnimationKeyframesConfig parseCSSAnimationKeyframesConfig(
     jsi::Runtime &rt,
-    const jsi::Object &config);
+    const jsi::Value &config,
+    const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
 } // namespace reanimated
 
