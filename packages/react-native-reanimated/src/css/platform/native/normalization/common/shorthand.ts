@@ -1,57 +1,15 @@
 'use strict';
+import type { ControlPoint, CSSTimingFunction } from '../../../../easings';
+import { cubicBezier, linear, steps } from '../../../../easings';
 import { ReanimatedError } from '../../../../errors';
-import type {
-  ConvertValuesToArraysWithUndefined,
-  CSSTransitionProperties,
-} from '../../../../types';
 import {
-  camelizeKebabCase,
   isArrayOfLength,
   isPercentage,
   isPredefinedTimingFunction,
   isStepsModifier,
-  parseSingleTransitionShorthand,
   splitByComma,
   splitByWhitespace,
 } from '../../../../utils';
-
-export type ExpandedCSSTransitionConfigProperties = Required<
-  ConvertValuesToArraysWithUndefined<
-    Omit<CSSTransitionProperties, 'transition' | 'transitionProperty'>
-  >
-> & {
-  transitionProperty: string[];
-};
-
-export const createEmptyTransitionConfig =
-  (): ExpandedCSSTransitionConfigProperties => ({
-    transitionProperty: [],
-    transitionDuration: [],
-    transitionTimingFunction: [],
-    transitionDelay: [],
-    transitionBehavior: [],
-  });
-
-export function parseTransitionShorthand(value: string) {
-  return splitByComma(value).reduce<ExpandedCSSTransitionConfigProperties>(
-    (acc, part) => {
-      const result = parseSingleTransitionShorthand(part);
-      acc.transitionProperty.push(
-        camelizeKebabCase(result.transitionProperty ?? 'all')
-      );
-      acc.transitionDuration.push(result.transitionDuration);
-      acc.transitionTimingFunction.push(
-        result.transitionTimingFunction
-          ? parseTimingFunction(result.transitionTimingFunction)
-          : undefined
-      );
-      acc.transitionDelay.push(result.transitionDelay);
-      acc.transitionBehavior.push(result.transitionBehavior);
-      return acc;
-    },
-    createEmptyTransitionConfig()
-  );
-}
 
 function asControlPoint(value: string[]): ControlPoint | null {
   const [first, ...rest] = value;
@@ -61,7 +19,7 @@ function asControlPoint(value: string[]): ControlPoint | null {
   return [Number(first), ...rest];
 }
 
-function parseTimingFunction(value: string): CSSTimingFunction {
+export function parseTimingFunction(value: string): CSSTimingFunction {
   if (isPredefinedTimingFunction(value)) {
     return value;
   }
