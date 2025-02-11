@@ -1,6 +1,7 @@
 'use strict';
 import {
   ANIMATION_SETTINGS,
+  CSS_ANIMATION_PREFIX,
   TRANSITION_PROPS,
   VALID_PARAMETRIZED_TIMING_FUNCTIONS,
   VALID_PREDEFINED_TIMING_FUNCTIONS,
@@ -39,6 +40,9 @@ export const isPredefinedTimingFunction = (
 export const smellsLikeTimingFunction = (value: string) =>
   VALID_PREDEFINED_TIMING_FUNCTIONS_SET.has(value) ||
   VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET.has(value.split('(')[0].trim());
+
+export const isAnimationName = (value: string) =>
+  value.startsWith(CSS_ANIMATION_PREFIX);
 
 export const isAnimationSetting = (
   key: string

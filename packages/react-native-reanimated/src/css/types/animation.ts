@@ -36,6 +36,7 @@ export type CSSAnimationDirection =
   | 'alternate-reverse';
 export type CSSAnimationFillMode = 'none' | 'forwards' | 'backwards' | 'both';
 export type CSSAnimationPlayState = 'running' | 'paused';
+export type CSSAnimationShorthand = string;
 
 export type SingleCSSAnimationSettings = {
   animationDuration?: CSSAnimationDuration;
@@ -58,9 +59,10 @@ export type CSSAnimationSettings =
 
 export type CSSAnimationProperties<S extends object = PlainStyle> =
   CSSAnimationSettings & {
-    animationName:
+    animationName?:
       | AddArrayPropertyType<CSSKeyframesRule | CSSAnimationKeyframes<S>>
       | 'none';
+    animation?: CSSAnimationShorthand;
   };
 
 export type ExistingCSSAnimationProperties<S extends object = PlainStyle> =

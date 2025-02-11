@@ -1,4 +1,5 @@
 'use strict';
+import { CSS_ANIMATION_PREFIX } from '../constants';
 import type {
   CSSAnimationKeyframes,
   CSSKeyframesRule,
@@ -33,6 +34,6 @@ export default abstract class CSSKeyframesRuleBase<S extends PlainStyle>
   }
 
   static generateNextKeyframeName() {
-    return `REA-CSS-${currentAnimationID++}`;
+    return `${CSS_ANIMATION_PREFIX}${currentAnimationID++}`;
   }
 }
