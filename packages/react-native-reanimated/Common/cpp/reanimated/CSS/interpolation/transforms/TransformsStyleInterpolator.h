@@ -92,12 +92,6 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const ShadowNode::Shared &shadowNode,
       const TransformOperations &unresolvedOperations) const;
   std::shared_ptr<TransformKeyframe> getKeyframeAtIndex(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      size_t index,
-      int resolveDirection // < 0 - resolve from, > 0 - resolve to
-  ) const;
-  std::shared_ptr<TransformKeyframe> getKeyframeAtIndex(
       const ShadowNode::Shared &shadowNode,
       size_t index,
       int resolveDirection // < 0 - resolve from, > 0 - resolve to
