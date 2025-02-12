@@ -59,10 +59,6 @@ class UpdatesRegistry {
       const ShadowNode::Shared &shadowNode,
       const folly::dynamic &props);
   void setInUpdatesRegistry(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      const jsi::Value &props);
-  void setInUpdatesRegistry(
       const ShadowNode::Shared &shadowNode,
       const folly::dynamic &props);
   void removeFromUpdatesRegistry(Tag tag);

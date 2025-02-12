@@ -84,18 +84,6 @@ void UpdatesRegistry::addUpdatesToBatch(
 }
 
 void UpdatesRegistry::setInUpdatesRegistry(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
-    const jsi::Value &props) {
-  const auto tag = shadowNode->getTag();
-  const auto newProps = dynamicFromValue(rt, props);
-#ifdef ANDROID
-  updatePropsToRevert(tag, &newProps);
-#endif
-  updatesRegistry_[tag] = std::make_pair(shadowNode, newProps);
-}
-
-void UpdatesRegistry::setInUpdatesRegistry(
     const ShadowNode::Shared &shadowNode,
     const folly::dynamic &props) {
   const auto tag = shadowNode->getTag();
