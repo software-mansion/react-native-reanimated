@@ -17,13 +17,6 @@ TransformsStyleInterpolator::TransformsStyleInterpolator(
           viewStylesRepository),
       interpolators_(interpolators) {}
 
-jsi::Value TransformsStyleInterpolator::getStyleValue(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) const {
-  return viewStylesRepository_->getStyleProp(
-      rt, shadowNode->getTag(), propertyPath_);
-}
-
 folly::dynamic TransformsStyleInterpolator::getStyleValue(
     const ShadowNode::Shared &shadowNode) const {
   return viewStylesRepository_->getStyleProp(
@@ -358,14 +351,6 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
 }
 
 TransformOperations TransformsStyleInterpolator::getFallbackValue(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) const {
-  const jsi::Value &styleValue = getStyleValue(rt, shadowNode);
-  return parseTransformOperations(rt, styleValue)
-      .value_or(TransformOperations{});
-}
-
-TransformOperations TransformsStyleInterpolator::getFallbackValue(
     const ShadowNode::Shared &shadowNode) const {
   const auto &styleValue = getStyleValue(shadowNode);
   return parseTransformOperations(styleValue)
@@ -421,7 +406,7 @@ TransformsStyleInterpolator::getKeyframeAtIndex(
 
   // If the operations are not specified, we would have to read the transform
   // value from the view style and create the new keyframe then
-  const auto fallbackValue = getFallbackValue(rt, shadowNode);
+  const auto fallbackValue = getFallbackValue(shadowNode);
   if (resolveDirection < 0) {
     return createTransformKeyframe(
         keyframe->fromOffset,

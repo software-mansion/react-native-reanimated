@@ -23,9 +23,6 @@ class PropertyInterpolator {
   virtual void setProgressProvider(
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider);
 
-  virtual jsi::Value getStyleValue(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const = 0;
   virtual folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const = 0;
   virtual folly::dynamic getCurrentValue(

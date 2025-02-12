@@ -20,15 +20,6 @@ void GroupPropertiesInterpolator::setProgressProvider(
   });
 }
 
-jsi::Value GroupPropertiesInterpolator::getStyleValue(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) const {
-  return mapInterpolators(
-      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-        return interpolator.getStyleValue(rt, shadowNode);
-      });
-}
-
 folly::dynamic GroupPropertiesInterpolator::getStyleValue(
     const ShadowNode::Shared &shadowNode) const {
   return mapInterpolators(

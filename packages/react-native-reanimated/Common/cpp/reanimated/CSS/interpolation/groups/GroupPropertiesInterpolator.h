@@ -19,9 +19,6 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
   void setProgressProvider(const std::shared_ptr<KeyframeProgressProvider>
                                &progressProvider) override;
 
-  jsi::Value getStyleValue(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const override;
   folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const override;
   folly::dynamic getCurrentValue(

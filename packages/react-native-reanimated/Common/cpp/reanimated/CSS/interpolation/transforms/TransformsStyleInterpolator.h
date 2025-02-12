@@ -32,9 +32,6 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  jsi::Value getStyleValue(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const override;
   folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const override;
   folly::dynamic getCurrentValue(
@@ -89,9 +86,6 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   std::shared_ptr<TransformOperation> getDefaultOperationOfType(
       TransformOperationType type) const;
 
-  TransformOperations getFallbackValue(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const;
   TransformOperations getFallbackValue(
       const ShadowNode::Shared &shadowNode) const;
   TransformOperations resolveTransformOperations(

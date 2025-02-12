@@ -44,13 +44,6 @@ class ValueInterpolator : public PropertyInterpolator {
             viewStylesRepository),
         defaultStyleValue_(defaultStyleValue) {}
   virtual ~ValueInterpolator() = default;
-
-  jsi::Value getStyleValue(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const override {
-    return viewStylesRepository_->getStyleProp(
-        rt, shadowNode->getTag(), propertyPath_);
-  }
   
   folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const override {
