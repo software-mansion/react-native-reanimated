@@ -183,14 +183,6 @@ class ValueInterpolator : public PropertyInterpolator {
   ValueKeyframe<AllowedTypes...> keyframeAfter_;
   std::optional<ValueType> previousValue_;
   std::optional<ValueType> reversingAdjustedStartValue_;
-
-  ValueType getFallbackValue(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const {
-    const jsi::Value &styleValue = getStyleValue(rt, shadowNode);
-    return styleValue.isUndefined() ? defaultStyleValue_
-                                    : ValueType(rt, styleValue);
-  }
   
   ValueType getFallbackValue(
       const ShadowNode::Shared &shadowNode) const {
@@ -204,30 +196,6 @@ class ValueInterpolator : public PropertyInterpolator {
       const ShadowNode::Shared &shadowNode) const {
     return interpolate(
         0, unresolvedValue, unresolvedValue, {.node = shadowNode});
-  }
-
-  ValueKeyframe<AllowedTypes...> getKeyframeAtIndex(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      size_t index,
-      bool shouldResolve) const {
-    const auto &keyframe = keyframes_.at(index);
-
-    if (shouldResolve) {
-      const double offset = keyframe.offset;
-      std::optional<ValueType> unresolvedValue;
-
-      if (keyframe.value.has_value()) {
-        unresolvedValue = keyframe.value.value();
-      } else {
-        unresolvedValue = getFallbackValue(rt, shadowNode);
-      }
-
-      return ValueKeyframe<AllowedTypes...>{
-          offset, resolveKeyframeValue(unresolvedValue.value(), shadowNode)};
-    }
-
-    return keyframe;
   }
   
   ValueKeyframe<AllowedTypes...> getKeyframeAtIndex(
