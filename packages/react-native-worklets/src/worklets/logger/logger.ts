@@ -1,6 +1,6 @@
 'use strict';
+import type { LogBoxLogLevel, LogData } from './LogBox';
 import { addLogBoxLog } from './LogBox';
-import type { LogData, LogBoxLogLevel } from './LogBox';
 
 const DOCS_URL =
   'https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration';
@@ -44,7 +44,7 @@ export const DEFAULT_LOGGER_CONFIG: LoggerConfigInternal = {
 
 function formatMessage(message: string) {
   'worklet';
-  return `[Reanimated] ${message}`;
+  return `[Worklets] ${message}`;
 }
 
 function createLog(level: LogBoxLogLevel, message: string): LogData {
@@ -60,7 +60,7 @@ function createLog(level: LogBoxLogLevel, message: string): LogData {
     category: formattedMessage,
     componentStack: [],
     componentStackType: null,
-    // eslint-disable-next-line reanimated/use-reanimated-error
+    // eslint-disable-next-line reanimated/use-worklets-error
     stack: new Error().stack,
   };
 }
@@ -83,7 +83,7 @@ export function logToLogBoxAndConsole(data: LogData) {
  */
 export function registerLoggerConfig(config: LoggerConfigInternal) {
   'worklet';
-  global.__reanimatedLoggerConfig = config;
+  global.__workletsLoggerConfig = config;
 }
 
 /**
@@ -93,7 +93,7 @@ export function registerLoggerConfig(config: LoggerConfigInternal) {
  */
 export function replaceLoggerImplementation(logFunction: LogFunction) {
   'worklet';
-  registerLoggerConfig({ ...global.__reanimatedLoggerConfig, logFunction });
+  registerLoggerConfig({ ...global.__workletsLoggerConfig, logFunction });
 }
 
 /**
@@ -108,7 +108,7 @@ export function replaceLoggerImplementation(logFunction: LogFunction) {
 export function updateLoggerConfig(options?: Partial<LoggerConfig>) {
   'worklet';
   registerLoggerConfig({
-    ...global.__reanimatedLoggerConfig,
+    ...global.__workletsLoggerConfig,
     // Don't reuse previous level and strict values from the global config
     level: options?.level ?? DEFAULT_LOGGER_CONFIG.level,
     strict: options?.strict ?? DEFAULT_LOGGER_CONFIG.strict,
@@ -125,7 +125,7 @@ function handleLog(
   options: LogOptions
 ) {
   'worklet';
-  const config = global.__reanimatedLoggerConfig;
+  const config = global.__workletsLoggerConfig;
   if (
     // Don't log if the log is marked as strict-only and the config doesn't
     // enable strict logging

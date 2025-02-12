@@ -1,20 +1,21 @@
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
-import React from 'react';
+import type { ReanimatedKeyframe } from 'react-native-reanimated/lib/typescript/layoutReanimation/animationBuilder/Keyframe';
+
 import {
-  describe,
-  test,
-  render,
-  expect,
   clearRenderOutput,
+  describe,
+  expect,
   mockAnimationTimer,
   mockWindowDimensions,
   recordAnimationUpdates,
+  render,
+  test,
   unmockAnimationTimer,
   unmockWindowDimensions,
   waitForAnimationUpdates,
 } from '../../../ReJest/RuntimeTestsApi';
-import type { ReanimatedKeyframe } from 'react-native-reanimated/lib/typescript/layoutReanimation/animationBuilder/Keyframe';
 import { Snapshots } from './basic.snapshot.test';
 
 const AnimatedComponent = ({ enteringAnimation }: { enteringAnimation: ReanimatedKeyframe }) => {

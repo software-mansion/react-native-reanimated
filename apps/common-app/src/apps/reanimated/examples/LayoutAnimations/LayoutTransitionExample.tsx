@@ -1,29 +1,29 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  Button,
-  SafeAreaView,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
-import Animated, {
-  LinearTransition,
-  SequencedTransition,
-  FadingTransition,
-  FadeOut,
-  JumpingTransition,
-  CurvedTransition,
-  EntryExitTransition,
-  FlipInEasyX,
-  FlipOutYRight,
-} from 'react-native-reanimated';
-import { createStackNavigator } from '@react-navigation/stack';
 import {
   NavigationContainer,
   NavigationIndependentTree,
 } from '@react-navigation/native';
 import type { StackScreenProps } from '@react-navigation/stack';
+import { createStackNavigator } from '@react-navigation/stack';
+import React, { useState } from 'react';
+import {
+  Button,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import Animated, {
+  CurvedTransition,
+  EntryExitTransition,
+  FadeOut,
+  FadingTransition,
+  FlipInEasyX,
+  FlipOutYRight,
+  JumpingTransition,
+  LinearTransition,
+  SequencedTransition,
+} from 'react-native-reanimated';
 
 interface Item {
   id: number;

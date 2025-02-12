@@ -512,6 +512,7 @@ bool ReanimatedModuleProxy::isAnyHandlerWaitingForEvent(
 void ReanimatedModuleProxy::requestAnimationFrame(
     jsi::Runtime &rt,
     const jsi::Value &callback) {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::requestAnimationFrame");
   frameCallbacks_.push_back(std::make_shared<jsi::Value>(rt, callback));
   maybeRequestRender();
 }
@@ -524,6 +525,7 @@ void ReanimatedModuleProxy::maybeRequestRender() {
 }
 
 void ReanimatedModuleProxy::onRender(double timestampMs) {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::onRender");
   auto callbacks = std::move(frameCallbacks_);
   frameCallbacks_.clear();
   jsi::Runtime &uiRuntime =
@@ -711,6 +713,8 @@ bool ReanimatedModuleProxy::handleEvent(
     const int emitterReactTag,
     const jsi::Value &payload,
     double currentTime) {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::handleEvent");
+
   eventHandlerRegistry_->processEvent(
       workletsModuleProxy_->getUIWorkletRuntime(),
       currentTime,
@@ -728,6 +732,8 @@ bool ReanimatedModuleProxy::handleEvent(
 bool ReanimatedModuleProxy::handleRawEvent(
     const RawEvent &rawEvent,
     double currentTime) {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::handleRawEvent");
+
   const EventTarget *eventTarget = rawEvent.eventTarget.get();
   if (eventTarget == nullptr) {
     // after app reload scrollView is unmounted and its content offset is set
@@ -810,12 +816,16 @@ double ReanimatedModuleProxy::getCssTimestamp() {
 }
 
 void ReanimatedModuleProxy::performOperations() {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
+
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
 
   UpdatesBatch updatesBatch;
 
   {
+    ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
+
     auto lock = updatesRegistryManager_->createLock();
 
     if (shouldUpdateCssAnimations_) {
@@ -842,8 +852,6 @@ void ReanimatedModuleProxy::performOperations() {
       updatesRegistryManager_->pleaseCommitAfterPause();
     }
   }
-
-  ReanimatedSystraceSection s("performOperations");
 
   for (const auto &[shadowNode, props] : updatesBatch) {
     const jsi::Value &nonAnimatableProps = filterNonAnimatableProps(rt, *props);
@@ -880,6 +888,8 @@ void ReanimatedModuleProxy::performOperations() {
   if (!hasLayoutUpdates && !hasPropsToRevert) {
     // If there's no layout props to be updated, we can apply the updates
     // directly onto the components and skip the commit.
+    ReanimatedSystraceSection s(
+        "ReanimatedModuleProxy::synchronouslyUpdateUIProps");
     for (const auto &[shadowNode, props] : updatesBatch) {
       Tag tag = shadowNode->getTag();
       synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
@@ -915,6 +925,8 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
 void ReanimatedModuleProxy::commitUpdates(
     jsi::Runtime &rt,
     const UpdatesBatch &updatesBatch) {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::commitUpdates");
+
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
 

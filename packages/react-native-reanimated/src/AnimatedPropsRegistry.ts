@@ -1,7 +1,7 @@
 'use strict';
 import { ReanimatedError } from './errors';
 import { isFabric } from './PlatformChecker';
-import { runOnUI } from './threads';
+import { runOnUI } from './WorkletsResolver';
 
 let VIEW_TAGS: number[] = [];
 

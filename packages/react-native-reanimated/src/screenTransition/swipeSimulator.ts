@@ -1,11 +1,11 @@
 'use strict';
 import type {
+  LockAxis,
   PanGestureHandlerEventPayload,
   ScreenTransitionConfig,
-  LockAxis,
 } from './commonTypes';
-import { applyStyle, applyStyleForBelowTopScreen } from './styleUpdater';
 import { RNScreensTurboModule } from './RNScreensTurboModule';
+import { applyStyle, applyStyleForBelowTopScreen } from './styleUpdater';
 
 const BASE_VELOCITY = 400;
 const ADDITIONAL_VELOCITY_FACTOR_X = 400;

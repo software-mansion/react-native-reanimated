@@ -1,8 +1,5 @@
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import React from 'react';
+import { StyleSheet } from 'react-native';
 import type {
   GestureStateManager,
   GestureTouchEvent,
@@ -14,9 +11,11 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
-
-import React from 'react';
-import { StyleSheet } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
 function Ball() {
   const isPressed = useSharedValue(false);

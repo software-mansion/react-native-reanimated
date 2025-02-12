@@ -1,11 +1,10 @@
+import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, View } from 'react-native';
-
-import React from 'react';
 
 function makeColor(x: number) {
   'worklet';

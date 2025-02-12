@@ -1,11 +1,11 @@
+import React, { useCallback } from 'react';
+import { Button, StyleSheet, TextInput, View } from 'react-native';
 import Animated, {
   useAnimatedProps,
   useDerivedValue,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, TextInput, View } from 'react-native';
-import React, { useCallback } from 'react';
 
 Animated.addWhitelistedNativeProps({ text: true });
 

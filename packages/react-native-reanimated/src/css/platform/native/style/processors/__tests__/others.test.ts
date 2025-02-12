@@ -1,6 +1,6 @@
 'use strict';
-import { ERROR_MESSAGES, processAspectRatio } from '../others';
 import { ReanimatedError } from '../../../../../errors';
+import { ERROR_MESSAGES, processAspectRatio } from '../others';
 
 describe(processAspectRatio, () => {
   it('returns number as is', () => {

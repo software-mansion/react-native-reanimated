@@ -1,21 +1,22 @@
+import '../types';
+
 import type { ReactElement, ReactNode } from 'react';
 import React, { useRef } from 'react';
-import { StyleSheet, View, Text, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  useAnimatedGestureHandler,
-  measure,
-  withTiming,
-  Easing,
-  useDerivedValue,
-  useAnimatedRef,
-} from 'react-native-reanimated';
-import type { AnimatedRef } from 'react-native-reanimated';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import type { TapGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import { TapGestureHandler } from 'react-native-gesture-handler';
-import '../types';
+import type { AnimatedRef } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  measure,
+  useAnimatedGestureHandler,
+  useAnimatedRef,
+  useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const labels = ['apple', 'banana', 'kiwi', 'milk', 'water'];
 const SECTION_HEADER_HEIGHT = 40;

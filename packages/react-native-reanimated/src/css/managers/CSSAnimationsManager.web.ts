@@ -1,22 +1,21 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
+import CSSKeyframesRuleImpl from '../models/CSSKeyframesRule.web';
+import {
+  configureWebCSSAnimations,
+  insertCSSAnimation,
+  maybeAddSuffixes,
+  parseTimingFunction,
+  processKeyframeDefinitions,
+  removeCSSAnimation,
+} from '../platform/web';
 import type {
   ConvertValuesToArrays,
   CSSAnimationKeyframes,
   CSSAnimationSettings,
   ExistingCSSAnimationProperties,
 } from '../types';
-import CSSKeyframesRuleImpl from '../models/CSSKeyframesRule.web';
-import {
-  configureWebCSSAnimations,
-  removeCSSAnimation,
-  kebabize,
-  maybeAddSuffixes,
-  parseTimingFunction,
-  insertCSSAnimation,
-  processKeyframeDefinitions,
-} from '../platform/web';
-import { convertConfigPropertiesToArrays } from '../utils';
+import { convertPropertiesToArrays, kebabizeCamelCase } from '../utils';
 
 export const isCSSKeyframesRuleImpl = (
   keyframes: ExistingCSSAnimationProperties['animationName']
@@ -57,7 +56,7 @@ export default class CSSAnimationsManager {
     }
 
     const { animationName: definitions, ...animationSettings } =
-      convertConfigPropertiesToArrays(animationProperties);
+      convertPropertiesToArrays(animationProperties);
 
     if (definitions.length === 0) {
       this.detach();
@@ -181,7 +180,7 @@ export default class CSSAnimationsManager {
 
     if (animationSettings.animationDirection) {
       this.element.style.animationDirection =
-        animationSettings.animationDirection.map(kebabize).join(',');
+        animationSettings.animationDirection.map(kebabizeCamelCase).join(',');
     }
 
     if (animationSettings.animationFillMode) {

@@ -1,19 +1,20 @@
 'use strict';
-import type { FlatShareableRef } from './commonTypes';
-import { ReanimatedError, registerWorkletStackDetails } from './errors';
+import { registerWorkletStackDetails } from './errors';
 import { logger } from './logger';
-import { jsVersion } from './platform-specific/jsVersion';
 import { shouldBeUseWeb } from './PlatformChecker';
 import {
   shareableMappingCache,
   shareableMappingFlag,
 } from './shareableMappingCache';
+import { isWorkletFunction } from './workletFunction';
+import { WorkletsError } from './WorkletsError';
+import { WorkletsModule } from './WorkletsModule';
 import type {
+  FlatShareableRef,
   ShareableRef,
   WorkletFunction,
   WorkletFunctionDev,
-} from './WorkletsResolver';
-import { isWorkletFunction, WorkletsModule } from './WorkletsResolver';
+} from './workletTypes';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation
 // where no shareable references are used. Instead, the objects themselves are used
@@ -73,14 +74,14 @@ const INACCESSIBLE_OBJECT = {
             // need to allow for this key to be accessed here.
             return false;
           }
-          throw new ReanimatedError(
+          throw new WorkletsError(
             `Trying to access property \`${String(
               prop
             )}\` of an object which cannot be sent to the UI runtime.`
           );
         },
         set: () => {
-          throw new ReanimatedError(
+          throw new WorkletsError(
             'Trying to write to an object which cannot be sent to the UI runtime.'
           );
         },
@@ -166,7 +167,7 @@ function makeShareableCloneRecursiveNative<T>(
   return inaccessibleObject(value);
 }
 
-interface MakeShareableClone {
+export interface MakeShareableClone {
   <T>(value: T, shouldPersistRemote?: boolean, depth?: number): ShareableRef<T>;
 }
 
@@ -184,7 +185,7 @@ function detectCyclicObject(value: unknown, depth: number) {
     if (depth === DETECT_CYCLIC_OBJECT_DEPTH_THRESHOLD) {
       processedObjectAtThresholdDepth = value;
     } else if (value === processedObjectAtThresholdDepth) {
-      throw new ReanimatedError(
+      throw new WorkletsError(
         'Trying to convert a cyclic object to a shareable. This is not supported.'
       );
     }
@@ -260,12 +261,13 @@ function cloneWorklet<T extends WorkletFunction>(
   depth: number
 ): ShareableRef<T> {
   if (__DEV__) {
-    const babelVersion = (value as WorkletFunctionDev).__initData.version;
-    if (babelVersion !== undefined && babelVersion !== jsVersion) {
-      throw new ReanimatedError(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).        
-See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version\` for more details.
-Offending code was: \`${getWorkletCode(value)}\``);
-    }
+    // TODO: Restore this once we reimplement JS version checking
+    // const babelVersion = (value as WorkletFunctionDev).__initData.version;
+    //     if (babelVersion !== undefined && babelVersion !== jsVersion) {
+    //       throw new Error(`[Reanimated] Mismatch between JavaScript code version and Reanimated Babel plugin version (${jsVersion} vs. ${babelVersion}).
+    // See \`https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-reanimated-babel-plugin-version\` for more details.
+    // Offending code was: \`${getWorkletCode(value)}\``);
+    //     }
     registerWorkletStackDetails(
       value.__workletHash,
       (value as WorkletFunctionDev).__stackDetails!
@@ -373,7 +375,7 @@ function cloneError<T extends Error>(value: T): ShareableRef<T> {
   const handle = makeShareableCloneRecursive({
     __init: () => {
       'worklet';
-      // eslint-disable-next-line reanimated/use-reanimated-error
+      // eslint-disable-next-line reanimated/use-worklets-error
       const error = new Error();
       error.name = name;
       error.message = message;
@@ -409,15 +411,11 @@ function cloneArrayBufferView<T extends ArrayBufferView>(
     __init: () => {
       'worklet';
       if (!VALID_ARRAY_VIEWS_NAMES.includes(typeName)) {
-        throw new ReanimatedError(
-          `[Reanimated] Invalid array view name \`${typeName}\`.`
-        );
+        throw new WorkletsError(`Invalid array view name \`${typeName}\`.`);
       }
       const constructor = global[typeName as keyof typeof global];
       if (constructor === undefined) {
-        throw new ReanimatedError(
-          `[Reanimated] Constructor for \`${typeName}\` not found.`
-        );
+        throw new WorkletsError(`Constructor for \`${typeName}\` not found.`);
       }
       return new constructor(buffer);
     },
@@ -443,6 +441,7 @@ function inaccessibleObject<T extends object>(value: T): ShareableRef<T> {
 
 const WORKLET_CODE_THRESHOLD = 255;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getWorkletCode(value: WorkletFunction) {
   const code = value?.__initData?.code;
   if (!code) {
@@ -494,9 +493,9 @@ function freezeObjectInDev<T extends object>(value: T) {
       },
       set() {
         logger.warn(
-          `Tried to modify key \`${key}\` of an object which has been already passed to a worklet. See 
-https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-modify-key-of-an-object-which-has-been-converted-to-a-shareable 
-for more details.`
+          `Tried to modify key \`${key}\` of an object which has been already passed to a worklet. See
+        https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#tried-to-modify-key-of-an-object-which-has-been-converted-to-a-shareable
+        for more details.`
         );
       },
     });

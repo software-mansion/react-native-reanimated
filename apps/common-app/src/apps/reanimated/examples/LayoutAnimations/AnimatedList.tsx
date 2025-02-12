@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import {
   Button,
-  View,
-  Text,
   ScrollView,
-  TextInput,
   StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 import Animated, {
   Layout,

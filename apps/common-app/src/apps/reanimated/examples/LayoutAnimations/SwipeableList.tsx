@@ -1,6 +1,6 @@
-import Animated, { Layout, ZoomOut } from 'react-native-reanimated';
-import { Button, StyleSheet, Text, View } from 'react-native';
 import React, { useState } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
+import Animated, { Layout, ZoomOut } from 'react-native-reanimated';
 
 const FRUITS = ['banana', 'strawberry', 'apple', 'kiwi', 'orange', 'blueberry'];
 

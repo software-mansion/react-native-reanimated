@@ -1,12 +1,13 @@
 import type { NodePath } from '@babel/core';
 import type { Expression } from '@babel/types';
 import {
-  isIdentifier,
   isCallExpression,
-  isMemberExpression,
   isExpression,
+  isIdentifier,
+  isMemberExpression,
   isNewExpression,
 } from '@babel/types';
+
 import type { WorkletizableFunction } from './types';
 
 const EntryExitAnimations = new Set([

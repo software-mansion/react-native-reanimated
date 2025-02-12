@@ -3,6 +3,14 @@
 
 namespace reanimated {
 
+bool isDiscreteProperty(const std::string &propName) {
+  const auto it = PROPERTY_INTERPOLATORS_CONFIG.find(propName);
+  if (it == PROPERTY_INTERPOLATORS_CONFIG.end()) {
+    return false;
+  }
+  return it->second->isDiscreteProperty();
+}
+
 bool areArraysDifferentRecursive(
     jsi::Runtime &rt,
     const jsi::Array &oldArray,
@@ -126,7 +134,7 @@ std::pair<jsi::Value, jsi::Value> getChangedValueForProp(
     return std::make_pair(jsi::Value::undefined(), jsi::Value::undefined());
   }
 
-  // Check for property existing in only one of the objects
+  // Check if property exists in only one of the objects
   if (oldHasProperty) {
     jsi::Value oldVal = oldObject.getProperty(rt, propName.c_str());
     if (!oldVal.isUndefined()) {
@@ -142,16 +150,19 @@ std::pair<jsi::Value, jsi::Value> getChangedValueForProp(
   return std::make_pair(jsi::Value::undefined(), jsi::Value::undefined());
 }
 
-ChangedProps processPropertyChanges(
+ChangedProps getChangedProps(
     jsi::Runtime &rt,
-    const jsi::Object &oldObject,
-    const jsi::Object &newObject,
-    const PropertyNames &propertyNames) {
+    const jsi::Value &oldProps,
+    const jsi::Value &newProps,
+    const PropertyNames &allowedProperties) {
+  const auto oldObject = oldProps.asObject(rt);
+  const auto newObject = newProps.asObject(rt);
+
   auto oldResult = jsi::Object(rt);
   auto newResult = jsi::Object(rt);
   PropertyNames changedPropertyNames;
 
-  for (const auto &propName : propertyNames) {
+  for (const auto &propName : allowedProperties) {
     const auto [oldChangedProp, newChangedProp] =
         getChangedValueForProp(rt, oldObject, newObject, propName);
 
@@ -173,76 +184,6 @@ ChangedProps processPropertyChanges(
       jsi::Value(rt, oldResult),
       jsi::Value(rt, newResult),
       std::move(changedPropertyNames)};
-}
-
-bool isDiscreteProperty(const std::string &propName) {
-  const auto it = PROPERTY_INTERPOLATORS_CONFIG.find(propName);
-  if (it == PROPERTY_INTERPOLATORS_CONFIG.end()) {
-    return false;
-  }
-  return it->second->isDiscreteProperty();
-}
-
-ChangedProps getChangedProps(
-    jsi::Runtime &rt,
-    const jsi::Value &oldProps,
-    const jsi::Value &newProps,
-    bool allowDiscrete) {
-  const auto &oldObject = oldProps.asObject(rt);
-  const auto &newObject = newProps.asObject(rt);
-
-  const auto oldPropertyNames = oldObject.getPropertyNames(rt);
-  const auto newPropertyNames = newObject.getPropertyNames(rt);
-
-  std::unordered_set<std::string> allPropNames;
-
-  const size_t oldSize = oldPropertyNames.size(rt);
-  const size_t newSize = newPropertyNames.size(rt);
-
-  for (size_t i = 0; i < oldSize; i++) {
-    const auto propName =
-        oldPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    if (allowDiscrete || !isDiscreteProperty(propName)) {
-      allPropNames.insert(propName);
-    }
-  }
-  for (size_t i = 0; i < newSize; i++) {
-    const auto propName =
-        newPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    if (allowDiscrete || !isDiscreteProperty(propName)) {
-      allPropNames.insert(propName);
-    }
-  }
-
-  const PropertyNames propNamesVec(allPropNames.begin(), allPropNames.end());
-
-  return processPropertyChanges(rt, oldObject, newObject, propNamesVec);
-}
-
-ChangedProps getChangedProps(
-    jsi::Runtime &rt,
-    const jsi::Value &oldProps,
-    const jsi::Value &newProps,
-    bool allowDiscrete,
-    const std::optional<PropertyNames> &propertyNames) {
-  if (!propertyNames.has_value()) {
-    return getChangedProps(rt, oldProps, newProps, allowDiscrete);
-  }
-
-  const auto &transitionProperties = propertyNames.value();
-  PropertyNames propNamesVec;
-  propNamesVec.reserve(transitionProperties.size());
-  for (const auto &propName : transitionProperties) {
-    if (allowDiscrete || !isDiscreteProperty(propName)) {
-      propNamesVec.emplace_back(propName);
-    }
-  }
-
-  return processPropertyChanges(
-      rt,
-      oldProps.asObject(rt),
-      newProps.asObject(rt),
-      std::move(propNamesVec));
 }
 
 void updateJSIObject(

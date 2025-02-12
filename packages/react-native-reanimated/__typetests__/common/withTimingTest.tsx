@@ -4,10 +4,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { Button, View } from 'react-native';
+
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
   Easing,
+  useAnimatedStyle,
+  useSharedValue,
   withTiming,
 } from '../..';
 

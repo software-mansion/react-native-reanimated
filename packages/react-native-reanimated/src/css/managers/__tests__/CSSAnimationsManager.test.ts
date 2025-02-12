@@ -1,6 +1,7 @@
 'use strict';
-import CSSAnimationsManager from '../CSSAnimationsManager';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
+import { CSSKeyframesRuleImpl } from '../../models';
+import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
 import {
   registerCSSAnimations,
   unregisterCSSAnimations,
@@ -10,8 +11,7 @@ import type {
   CSSAnimationProperties,
   ExistingCSSAnimationProperties,
 } from '../../types';
-import { CSSKeyframesRuleImpl } from '../../models';
-import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
+import CSSAnimationsManager from '../CSSAnimationsManager';
 
 jest.mock('../../platform/native/native.ts', () => ({
   registerCSSAnimations: jest.fn(),

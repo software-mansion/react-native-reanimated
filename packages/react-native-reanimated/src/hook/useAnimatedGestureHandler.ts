@@ -4,8 +4,8 @@ import type {
   NativeEventWrapper,
   ReanimatedEvent,
 } from './commonTypes';
-import { useHandler } from './useHandler';
 import { useEvent } from './useEvent';
+import { useHandler } from './useHandler';
 
 const EVENT_TYPE = {
   UNDETERMINED: 0,

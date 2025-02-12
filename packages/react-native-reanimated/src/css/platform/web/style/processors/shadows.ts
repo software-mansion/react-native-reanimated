@@ -1,8 +1,9 @@
 'use strict';
 import type { BoxShadowValue, ViewStyle } from 'react-native';
-import type { ValueProcessor } from '../types';
-import { maybeAddSuffix } from '../../utils';
+
 import { parseBoxShadowString } from '../../../../utils';
+import { maybeAddSuffix } from '../../utils';
+import type { ValueProcessor } from '../types';
 
 export const processBoxShadow: ValueProcessor<
   string | ReadonlyArray<BoxShadowValue>

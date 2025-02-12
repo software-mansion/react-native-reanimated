@@ -1,4 +1,5 @@
 'use strict';
 export * from './font';
-export * from './regex';
 export * from './platform';
+export * from './regex';
+export * from './settings';

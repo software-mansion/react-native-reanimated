@@ -1,12 +1,12 @@
 'use strict';
-import type {
-  CSSAnimationIterationCount,
-  CSSAnimationDirection,
-  CSSAnimationPlayState,
-  CSSAnimationFillMode,
-} from '../../../../../types';
 import { cubicBezier } from '../../../../../easings';
 import { ReanimatedError } from '../../../../../errors';
+import type {
+  CSSAnimationDirection,
+  CSSAnimationFillMode,
+  CSSAnimationIterationCount,
+  CSSAnimationPlayState,
+} from '../../../../../types';
 import type { NormalizedSingleCSSAnimationSettings } from '../../../types';
 import {
   VALID_ANIMATION_DIRECTIONS,

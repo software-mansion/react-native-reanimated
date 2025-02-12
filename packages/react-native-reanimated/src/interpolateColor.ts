@@ -1,20 +1,20 @@
 'use strict';
-import culori from './culori';
 import {
+  blue,
+  green,
   hsvToColor,
-  RGBtoHSV,
-  rgbaColor,
+  opacity,
   processColor,
   red,
-  green,
-  blue,
-  opacity,
+  rgbaColor,
+  RGBtoHSV,
 } from './Colors';
-import { makeMutable } from './core';
-import { Extrapolation, interpolate } from './interpolation';
 import type { SharedValue } from './commonTypes';
-import { useSharedValue } from './hook/useSharedValue';
+import { makeMutable } from './core';
+import culori from './culori';
 import { ReanimatedError } from './errors';
+import { useSharedValue } from './hook/useSharedValue';
+import { Extrapolation, interpolate } from './interpolation';
 
 /** @deprecated Please use Extrapolation instead */
 export const Extrapolate = Extrapolation;

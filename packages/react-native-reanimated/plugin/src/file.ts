@@ -1,3 +1,15 @@
+import type { NodePath } from '@babel/core';
+import type {
+  ArrowFunctionExpression,
+  BlockStatement,
+  ClassBody,
+  ObjectExpression,
+  ObjectMethod,
+  Program,
+  Statement,
+  ThisExpression,
+  VariableDeclaration,
+} from '@babel/types';
 import {
   blockStatement,
   booleanLiteral,
@@ -15,24 +27,12 @@ import {
   returnStatement,
 } from '@babel/types';
 
-import type {
-  Program,
-  BlockStatement,
-  VariableDeclaration,
-  ArrowFunctionExpression,
-  ObjectExpression,
-  Statement,
-  ThisExpression,
-  ObjectMethod,
-  ClassBody,
-} from '@babel/types';
-import type { NodePath } from '@babel/core';
+import { contextObjectMarker } from './contextObject';
+import type { ReanimatedPluginPass } from './types';
 import {
   isWorkletizableFunctionPath,
   isWorkletizableObjectPath,
 } from './types';
-import type { ReanimatedPluginPass } from './types';
-import { contextObjectMarker } from './contextObject';
 
 export function processIfWorkletFile(
   path: NodePath<Program>,

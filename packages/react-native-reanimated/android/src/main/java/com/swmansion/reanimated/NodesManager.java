@@ -33,6 +33,7 @@ import com.facebook.react.uimanager.events.Event;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.systrace.Systrace;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
 import com.swmansion.worklets.WorkletsModule;
@@ -285,43 +286,49 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
-    // Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
-
-    double currentFrameTimeMs = frameTimeNanos / 1000000.;
-    if (mSlowAnimationsEnabled) {
-      currentFrameTimeMs =
-          mFirstUptime + (currentFrameTimeMs - mFirstUptime) / mAnimationsDragFactor;
-    }
-
-    if (currentFrameTimeMs > lastFrameTimeMs) {
-      // It is possible for ChoreographerCallback to be executed twice within the same frame
-      // due to frame drops. If this occurs, the additional callback execution should be ignored.
-      lastFrameTimeMs = currentFrameTimeMs;
-
-      while (!mEventQueue.isEmpty()) {
-        CopiedEvent copiedEvent = mEventQueue.poll();
-        handleEvent(
-            copiedEvent.getTargetTag(), copiedEvent.getEventName(), copiedEvent.getPayload());
+    try {
+      if (BuildConfig.REANIMATED_PROFILING) {
+        Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
       }
 
-      if (!mFrameCallbacks.isEmpty()) {
-        List<OnAnimationFrame> frameCallbacks = mFrameCallbacks;
-        mFrameCallbacks = new ArrayList<>(frameCallbacks.size());
-        for (int i = 0, size = frameCallbacks.size(); i < size; i++) {
-          frameCallbacks.get(i).onAnimationFrame(currentFrameTimeMs);
+      double currentFrameTimeMs = frameTimeNanos / 1000000.;
+      if (mSlowAnimationsEnabled) {
+        currentFrameTimeMs =
+            mFirstUptime + (currentFrameTimeMs - mFirstUptime) / mAnimationsDragFactor;
+      }
+
+      if (currentFrameTimeMs > lastFrameTimeMs) {
+        // It is possible for ChoreographerCallback to be executed twice within the same frame
+        // due to frame drops. If this occurs, the additional callback execution should be ignored.
+        lastFrameTimeMs = currentFrameTimeMs;
+
+        while (!mEventQueue.isEmpty()) {
+          CopiedEvent copiedEvent = mEventQueue.poll();
+          handleEvent(
+              copiedEvent.getTargetTag(), copiedEvent.getEventName(), copiedEvent.getPayload());
         }
+
+        if (!mFrameCallbacks.isEmpty()) {
+          List<OnAnimationFrame> frameCallbacks = mFrameCallbacks;
+          mFrameCallbacks = new ArrayList<>(frameCallbacks.size());
+          for (int i = 0, size = frameCallbacks.size(); i < size; i++) {
+            frameCallbacks.get(i).onAnimationFrame(currentFrameTimeMs);
+          }
+        }
+
+        performOperations();
       }
 
-      performOperations();
+      mCallbackPosted.set(false);
+      if (!mFrameCallbacks.isEmpty() || !mEventQueue.isEmpty()) {
+        // enqueue next frame
+        startUpdatingOnAnimationFrame();
+      }
+    } finally {
+      if (BuildConfig.REANIMATED_PROFILING) {
+        Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
+      }
     }
-
-    mCallbackPosted.set(false);
-    if (!mFrameCallbacks.isEmpty() || !mEventQueue.isEmpty()) {
-      // enqueue next frame
-      startUpdatingOnAnimationFrame();
-    }
-
-    // Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
   }
 
   public void enqueueUpdateViewOnNativeThread(
@@ -344,22 +351,32 @@ public class NodesManager implements EventDispatcherListener {
 
   @Override
   public void onEventDispatch(Event event) {
-    if (mNativeProxy == null) {
-      return;
-    }
-    // Events can be dispatched from any thread so we have to make sure handleEvent is run from the
-    // UI thread.
-    if (UiThreadUtil.isOnUiThread()) {
-      handleEvent(event);
-      performOperations();
-    } else {
-      String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
-      int viewTag = event.getViewTag();
-      boolean shouldSaveEvent = mNativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag);
-      if (shouldSaveEvent) {
-        mEventQueue.offer(new CopiedEvent(event));
+    try {
+      if (BuildConfig.REANIMATED_PROFILING) {
+        Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onEventDispatch");
       }
-      startUpdatingOnAnimationFrame();
+
+      if (mNativeProxy == null) {
+        return;
+      }
+      // Events can be dispatched from any thread so we have to make sure handleEvent is run from
+      // the UI thread.
+      if (UiThreadUtil.isOnUiThread()) {
+        handleEvent(event);
+        performOperations();
+      } else {
+        String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
+        int viewTag = event.getViewTag();
+        boolean shouldSaveEvent = mNativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag);
+        if (shouldSaveEvent) {
+          mEventQueue.offer(new CopiedEvent(event));
+        }
+        startUpdatingOnAnimationFrame();
+      }
+    } finally {
+      if (BuildConfig.REANIMATED_PROFILING) {
+        Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
+      }
     }
   }
 

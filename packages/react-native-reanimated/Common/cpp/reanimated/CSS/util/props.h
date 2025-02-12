@@ -20,6 +20,8 @@ struct ChangedProps {
   const PropertyNames changedPropertyNames;
 };
 
+bool isDiscreteProperty(const std::string &propName);
+
 // We need to specify it here because there are 2 methods referencing
 // each other in the recursion and areArraysDifferentRecursive must be
 // aware that getChangedPropsRecursive exists
@@ -32,14 +34,7 @@ ChangedProps getChangedProps(
     jsi::Runtime &rt,
     const jsi::Value &oldProps,
     const jsi::Value &newProps,
-    bool allowDiscrete,
-    const std::optional<PropertyNames> &propertyNames);
-
-ChangedProps getChangedProps(
-    jsi::Runtime &rt,
-    const jsi::Value &oldProps,
-    const jsi::Value &newProps,
-    bool allowDiscrete);
+    const PropertyNames &allowedProperties);
 
 void updateJSIObject(
     jsi::Runtime &rt,

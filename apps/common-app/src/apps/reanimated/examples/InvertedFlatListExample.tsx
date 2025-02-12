@@ -1,10 +1,10 @@
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  useAnimatedScrollHandler,
   interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
 } from 'react-native-reanimated';
 
 const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9];

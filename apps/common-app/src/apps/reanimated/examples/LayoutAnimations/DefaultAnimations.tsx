@@ -1,3 +1,12 @@
+import React, { useState } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import Animated, {
   BounceIn,
   BounceInDown,
@@ -78,15 +87,6 @@ import Animated, {
   ZoomOutRotate,
   ZoomOutUp,
 } from 'react-native-reanimated';
-import React, { useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
 
 interface AnimatedBlockProps {
   name: string;

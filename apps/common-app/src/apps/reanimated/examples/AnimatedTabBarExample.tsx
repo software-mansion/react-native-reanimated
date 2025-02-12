@@ -1,22 +1,22 @@
+import * as shape from 'd3-shape';
 import React from 'react';
+import {
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import Animated, {
-  useSharedValue,
+  Extrapolation,
+  interpolate,
   useAnimatedStyle,
   useDerivedValue,
-  interpolate,
-  Extrapolation,
+  useSharedValue,
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import {
-  Text,
-  View,
-  Dimensions,
-  StyleSheet,
-  TouchableWithoutFeedback,
-} from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import * as shape from 'd3-shape';
 
 const { width, height } = Dimensions.get('window');
 

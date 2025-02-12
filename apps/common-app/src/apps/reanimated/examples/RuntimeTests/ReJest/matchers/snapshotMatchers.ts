@@ -1,9 +1,9 @@
-import { green, red, yellow } from '../utils/stringFormatUtils';
-import type { OperationUpdate, Mismatch } from '../types';
-import { ComparisonMode, isValidPropName } from '../types';
-import { getComparator, getComparisonModeForProp } from './Comparators';
 import type { SingleViewSnapshot } from '../TestRunner/UpdatesContainer';
+import type { Mismatch, OperationUpdate } from '../types';
+import { ComparisonMode, isValidPropName } from '../types';
 import { formatSnapshotMismatch } from '../utils/drawSnapshotTable';
+import { green, red, yellow } from '../utils/stringFormatUtils';
+import { getComparator, getComparisonModeForProp } from './Comparators';
 
 function compareSnapshot(
   expectedSnapshot: OperationUpdate,

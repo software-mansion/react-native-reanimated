@@ -2,11 +2,11 @@ import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import type { WorkletRuntime } from 'react-native-reanimated';
 import Animated, {
-  Easing,
   createWorkletRuntime,
+  Easing,
   runOnJS,
-  runOnUI,
   runOnRuntime,
+  runOnUI,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
