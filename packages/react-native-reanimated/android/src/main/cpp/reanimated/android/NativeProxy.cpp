@@ -470,7 +470,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   return {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
-      // nothing
+  // nothing
 #else
       updatePropsFunction,
       scrollToFunction,
