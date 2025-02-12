@@ -338,7 +338,7 @@ makePlatformDepMethodsHolder(RCTBridge *bridge, REANodesManager *nodesManager, R
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
-      // nothing
+  // nothing
 #else
       updatePropsFunction,
       scrollToFunction,
