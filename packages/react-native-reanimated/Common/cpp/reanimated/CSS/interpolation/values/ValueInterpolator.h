@@ -220,50 +220,6 @@ class ValueInterpolator : public PropertyInterpolator {
 
     return keyframe;
   }
-
-  void updateCurrentKeyframes(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) {
-    const auto progress = progressProvider_->getGlobalProgress();
-    const bool isProgressLessThanHalf = progress < 0.5;
-    const auto prevAfterIndex = keyframeAfterIndex_;
-
-    if (progressProvider_->isFirstUpdate()) {
-      keyframeAfterIndex_ = isProgressLessThanHalf ? 1 : keyframes_.size() - 1;
-    }
-
-    while (keyframeAfterIndex_ < keyframes_.size() - 1 &&
-           keyframes_[keyframeAfterIndex_].offset < progress)
-      ++keyframeAfterIndex_;
-
-    while (keyframeAfterIndex_ > 1 &&
-           keyframes_[keyframeAfterIndex_ - 1].offset >= progress)
-      --keyframeAfterIndex_;
-
-    if (progressProvider_->isFirstUpdate()) {
-      keyframeBefore_ = getKeyframeAtIndex(
-          rt,
-          shadowNode,
-          keyframeAfterIndex_ - 1,
-          Resolvable<ValueType> && isProgressLessThanHalf);
-      keyframeAfter_ = getKeyframeAtIndex(
-          rt,
-          shadowNode,
-          keyframeAfterIndex_,
-          Resolvable<ValueType> && !isProgressLessThanHalf);
-    } else if (keyframeAfterIndex_ != prevAfterIndex) {
-      keyframeBefore_ = getKeyframeAtIndex(
-          rt,
-          shadowNode,
-          keyframeAfterIndex_ - 1,
-          Resolvable<ValueType> && keyframeAfterIndex_ > prevAfterIndex);
-      keyframeAfter_ = getKeyframeAtIndex(
-          rt,
-          shadowNode,
-          keyframeAfterIndex_,
-          Resolvable<ValueType> && keyframeAfterIndex_ < prevAfterIndex);
-    }
-  }
   
   void updateCurrentKeyframes(
       const ShadowNode::Shared &shadowNode) {
@@ -302,12 +258,6 @@ class ValueInterpolator : public PropertyInterpolator {
           keyframeAfterIndex_,
           Resolvable<ValueType> && keyframeAfterIndex_ < prevAfterIndex);
     }
-  }
-
-  jsi::Value convertOptionalToJSI(
-      jsi::Runtime &rt,
-      const std::optional<ValueType> &value) const {
-    return value ? value.value().toJSIValue(rt) : jsi::Value::undefined();
   }
   
   folly::dynamic convertOptionalToDynamic(
