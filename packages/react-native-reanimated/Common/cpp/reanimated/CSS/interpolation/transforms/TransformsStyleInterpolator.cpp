@@ -422,35 +422,6 @@ TransformsStyleInterpolator::getKeyframeAtIndex(
 }
 
 void TransformsStyleInterpolator::updateCurrentKeyframe(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) {
-  const auto progress = progressProvider_->getGlobalProgress();
-  const bool isProgressLessThanHalf = progress < 0.5;
-  const auto prevIndex = keyframeIndex_;
-  if (progressProvider_->isFirstUpdate()) {
-    keyframeIndex_ = isProgressLessThanHalf ? 0 : keyframes_.size() - 1;
-  }
-
-  while (keyframeIndex_ < keyframes_.size() - 1 &&
-         keyframes_[keyframeIndex_ + 1]->fromOffset < progress)
-    ++keyframeIndex_;
-
-  while (keyframeIndex_ > 0 &&
-         keyframes_[keyframeIndex_]->fromOffset >= progress)
-    --keyframeIndex_;
-
-  if (progressProvider_->isFirstUpdate()) {
-    currentKeyframe_ = getKeyframeAtIndex(
-        shadowNode, keyframeIndex_, isProgressLessThanHalf ? -1 : 1);
-  } else if (keyframeIndex_ != prevIndex) {
-    currentKeyframe_ = getKeyframeAtIndex(
-        shadowNode,
-        keyframeIndex_,
-        static_cast<int>(prevIndex - keyframeIndex_));
-  }
-}
-
-void TransformsStyleInterpolator::updateCurrentKeyframe(
     const ShadowNode::Shared &shadowNode) {
   const auto progress = progressProvider_->getGlobalProgress();
   const bool isProgressLessThanHalf = progress < 0.5;

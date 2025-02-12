@@ -97,9 +97,6 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       int resolveDirection // < 0 - resolve from, > 0 - resolve to
   ) const;
   void updateCurrentKeyframe(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode);
-  void updateCurrentKeyframe(
       const ShadowNode::Shared &shadowNode);
   TransformOperations interpolateOperations(
       const ShadowNode::Shared &shadowNode,
