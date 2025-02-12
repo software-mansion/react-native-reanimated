@@ -30,8 +30,8 @@ TransitionProgressState CSSTransition::getState() const {
   return progressProvider_.getState();
 }
 
-jsi::Value CSSTransition::getCurrentInterpolationStyle(jsi::Runtime &rt) const {
-  return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
+folly::dynamic CSSTransition::getCurrentInterpolationStyle() const {
+  return styleInterpolator_.getCurrentInterpolationStyle(shadowNode_);
 }
 
 PropertyNames CSSTransition::getAllowedProperties(

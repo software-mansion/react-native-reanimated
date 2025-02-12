@@ -7,16 +7,15 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : viewStylesRepository_(viewStylesRepository) {}
 
-jsi::Value TransitionStyleInterpolator::getCurrentInterpolationStyle(
-    jsi::Runtime &rt,
+folly::dynamic TransitionStyleInterpolator::getCurrentInterpolationStyle(
     const ShadowNode::Shared &shadowNode) const {
-  jsi::Object result(rt);
-
-  for (const auto &[propertyName, interpolator] : interpolators_) {
-    jsi::Value value = interpolator->getCurrentValue(rt, shadowNode);
-    result.setProperty(rt, propertyName.c_str(), value);
+  folly::dynamic result = folly::dynamic::object;
+        
+  for (const auto& [propertyName, interpolator] : interpolators_) {
+    folly::dynamic value = interpolator->getCurrentValue(shadowNode);
+    result[propertyName] = value;
   }
-
+  
   return result;
 }
 

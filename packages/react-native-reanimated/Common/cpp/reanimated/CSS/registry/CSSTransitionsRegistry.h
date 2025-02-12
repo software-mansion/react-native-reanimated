@@ -30,7 +30,6 @@ class CSSTransitionsRegistry
   void add(const std::shared_ptr<CSSTransition> &transition);
   void remove(Tag viewTag);
   void updateSettings(
-      jsi::Runtime &rt,
       Tag viewTag,
       const PartialCSSTransitionConfig &config);
 

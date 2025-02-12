@@ -656,7 +656,6 @@ void ReanimatedModuleProxy::updateCSSTransition(
     const jsi::Value &viewTag,
     const jsi::Value &configUpdates) {
   cssTransitionsRegistry_->updateSettings(
-      rt,
       viewTag.asNumber(),
       parsePartialCSSTransitionConfig(rt, configUpdates));
   maybeRunCSSLoop();
