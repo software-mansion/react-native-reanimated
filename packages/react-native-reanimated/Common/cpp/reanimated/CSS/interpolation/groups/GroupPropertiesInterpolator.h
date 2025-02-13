@@ -32,10 +32,6 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
  protected:
   virtual void forEachInterpolator(
       const std::function<void(PropertyInterpolator &)> &callback) const = 0;
-  virtual jsi::Value mapInterpolators(
-      jsi::Runtime &rt,
-      const std::function<jsi::Value(PropertyInterpolator &)> &callback)
-      const = 0;
   virtual folly::dynamic mapInterpolators(
       const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
       const = 0;

@@ -103,19 +103,6 @@ void RecordPropertiesInterpolator::forEachInterpolator(
   }
 }
 
-jsi::Value RecordPropertiesInterpolator::mapInterpolators(
-    jsi::Runtime &rt,
-    const std::function<jsi::Value(PropertyInterpolator &)> &callback) const {
-  jsi::Object result(rt);
-
-  for (const auto &[propName, interpolator] : interpolators_) {
-    jsi::Value value = callback(*interpolator);
-    result.setProperty(rt, propName.c_str(), value);
-  }
-
-  return result;
-}
-
 folly::dynamic RecordPropertiesInterpolator::mapInterpolators(
     const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const {
   folly::dynamic result = folly::dynamic::object;
