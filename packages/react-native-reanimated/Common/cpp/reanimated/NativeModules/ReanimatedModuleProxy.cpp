@@ -178,10 +178,7 @@ void ReanimatedModuleProxy::init(
         if (!surfaceId) {
           return;
         }
-        strongThis->uiManager_->getShadowTreeRegistry().visit(
-            *surfaceId, [](const ShadowTree &shadowTree) {
-              shadowTree.notifyDelegatesOfUpdates();
-            });
+        strongThis->flushLayoutAnimations_.insert(*surfaceId);
       };
 
   EndLayoutAnimationFunction endLayoutAnimation =
@@ -196,11 +193,7 @@ void ReanimatedModuleProxy::init(
         if (!surfaceId) {
           return;
         }
-
-        strongThis->uiManager_->getShadowTreeRegistry().visit(
-            *surfaceId, [](const ShadowTree &shadowTree) {
-              shadowTree.notifyDelegatesOfUpdates();
-            });
+        strongThis->flushLayoutAnimations_.insert(*surfaceId);
       };
 
   auto obtainProp = [weakThis = weak_from_this()](
@@ -820,6 +813,15 @@ void ReanimatedModuleProxy::performOperations() {
 
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
+
+  std::set<SurfaceId> flushLayoutAnimations;
+  std::swap(flushLayoutAnimations, flushLayoutAnimations_);
+  for (const auto &surfaceId : flushLayoutAnimations) {
+    uiManager_->getShadowTreeRegistry().visit(
+        surfaceId, [](const ShadowTree &shadowTree) {
+          shadowTree.notifyDelegatesOfUpdates();
+        });
+  }
 
   UpdatesBatch updatesBatch;
 
