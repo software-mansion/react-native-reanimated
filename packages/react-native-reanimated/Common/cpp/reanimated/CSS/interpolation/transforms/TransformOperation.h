@@ -63,9 +63,7 @@ struct TransformOperation {
       const jsi::Value &value);
   static std::shared_ptr<TransformOperation> fromDynamic(
       const folly::dynamic &value);
-  jsi::Value toJSIValue(jsi::Runtime &rt) const;
   folly::dynamic toDynamic() const;
-  virtual jsi::Value valueToJSIValue(jsi::Runtime &rt) const = 0;
   virtual folly::dynamic valueToDynamic() const = 0;
 
   virtual bool canConvertTo(TransformOperationType type) const;
@@ -100,7 +98,6 @@ struct PerspectiveOperation final : public TransformOperationBase<CSSDouble> {
   using TransformOperationBase<CSSDouble>::TransformOperationBase;
   explicit PerspectiveOperation(double value);
   TransformOperationType type() const override;
-  jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic valueToDynamic() const override;
   TransformMatrix toMatrix() const override;
 };
@@ -110,7 +107,6 @@ struct RotateOperation : public TransformOperationBase<CSSAngle> {
   using TransformOperationBase<CSSAngle>::TransformOperationBase;
   explicit RotateOperation(const std::string &value);
   TransformOperationType type() const override;
-  jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic valueToDynamic() const override;
   TransformMatrix toMatrix() const override;
 };
@@ -140,7 +136,6 @@ struct ScaleOperation : public TransformOperationBase<CSSDouble> {
   using TransformOperationBase<CSSDouble>::TransformOperationBase;
   explicit ScaleOperation(double value);
   TransformOperationType type() const override;
-  jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic valueToDynamic() const override;
   bool canConvertTo(TransformOperationType type) const override;
   TransformOperations convertTo(TransformOperationType type) const override;
@@ -165,7 +160,6 @@ struct TranslateOperation : public TransformOperationBase<CSSDimension> {
   explicit TranslateOperation(double value);
   explicit TranslateOperation(const std::string &value);
   bool isRelative() const override;
-  jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic valueToDynamic() const override;
   virtual TransformMatrix toMatrix(double resolvedValue) const = 0;
   TransformMatrix toMatrix() const override;
@@ -187,7 +181,6 @@ struct TranslateYOperation final : public TranslateOperation {
 struct SkewOperation : public TransformOperationBase<CSSAngle> {
   using TransformOperationBase<CSSAngle>::TransformOperationBase;
   explicit SkewOperation(const std::string &value);
-  jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic valueToDynamic() const override;
 };
 
@@ -216,7 +209,6 @@ struct MatrixOperation final
   bool operator==(const TransformOperation &other) const override;
 
   TransformOperationType type() const override;
-  jsi::Value valueToJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic valueToDynamic() const override;
   TransformMatrix toMatrix() const override;
 };

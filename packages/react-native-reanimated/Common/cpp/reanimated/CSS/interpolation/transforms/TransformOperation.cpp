@@ -223,18 +223,6 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
   }
 }
 
-jsi::Value TransformOperation::toJSIValue(jsi::Runtime &rt) const {
-  const auto &value = valueToJSIValue(rt);
-  if (value.isUndefined()) {
-    return jsi::Value::undefined();
-  }
-
-  jsi::Object obj(rt);
-  obj.setProperty(
-      rt, jsi::String::createFromUtf8(rt, getOperationName()), value);
-  return obj;
-}
-
 folly::dynamic TransformOperation::toDynamic() const {
   const auto &value = valueToDynamic();
   return folly::dynamic::object(getOperationName(), value);
@@ -295,10 +283,6 @@ PerspectiveOperation::PerspectiveOperation(double value)
 TransformOperationType PerspectiveOperation::type() const {
   return TransformOperationType::Perspective;
 }
-jsi::Value PerspectiveOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  // Perspective cannot be 0, so we return undefined in this case
-  return value.value != 0 ? value.toJSIValue(rt) : jsi::Value::undefined();
-}
 folly::dynamic PerspectiveOperation::valueToDynamic() const {
   // Perspective cannot be 0, so we return undefined in this case
   return value.value != 0 ? value.toDynamic() : folly::dynamic();
@@ -312,9 +296,6 @@ RotateOperation::RotateOperation(const std::string &value)
     : TransformOperationBase<CSSAngle>(CSSAngle(value)) {}
 TransformOperationType RotateOperation::type() const {
   return TransformOperationType::Rotate;
-}
-jsi::Value RotateOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  return value.toJSIValue(rt);
 }
 folly::dynamic RotateOperation::valueToDynamic() const {
   return value.toDynamic();
@@ -357,9 +338,6 @@ ScaleOperation::ScaleOperation(double value)
     : TransformOperationBase<CSSDouble>(CSSDouble(value)) {}
 TransformOperationType ScaleOperation::type() const {
   return TransformOperationType::Scale;
-}
-jsi::Value ScaleOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  return value.toJSIValue(rt);
 }
 folly::dynamic ScaleOperation::valueToDynamic() const {
   return value.toDynamic();
@@ -407,9 +385,6 @@ TranslateOperation::TranslateOperation(const std::string &value)
 bool TranslateOperation::isRelative() const {
   return value.isRelative;
 }
-jsi::Value TranslateOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  return value.toJSIValue(rt);
-}
 folly::dynamic TranslateOperation::valueToDynamic() const {
   return value.toDynamic();
 }
@@ -442,9 +417,6 @@ TransformMatrix TranslateYOperation::toMatrix(double resolvedValue) const {
 // Skew
 SkewOperation::SkewOperation(const std::string &value)
     : TransformOperationBase<CSSAngle>(CSSAngle(value)) {}
-jsi::Value SkewOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  return value.toJSIValue(rt);
-}
 folly::dynamic SkewOperation::valueToDynamic() const {
   return value.toDynamic();
 }
@@ -577,13 +549,6 @@ bool MatrixOperation::operator==(const TransformOperation &other) const {
   return true;
 }
 
-jsi::Value MatrixOperation::valueToJSIValue(jsi::Runtime &rt) const {
-  if (!std::holds_alternative<TransformMatrix>(value)) {
-    throw std::invalid_argument(
-        "[Reanimated] Cannot convert unprocessed transform operations to the JSI value.");
-  }
-  return std::get<TransformMatrix>(value).toJSIValue(rt);
-}
 folly::dynamic MatrixOperation::valueToDynamic() const {
   if (!std::holds_alternative<TransformMatrix>(value)) {
     throw std::invalid_argument(
