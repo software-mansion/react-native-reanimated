@@ -1,8 +1,12 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
-import { maybeAddSuffixes, parseTimingFunction } from '../platform/web';
+import {
+  maybeAddSuffixes,
+  normalizeCSSTransitionProperties,
+  parseTimingFunction,
+} from '../platform/web';
 import type { CSSTransitionProperties } from '../types';
-import { convertPropertiesToArrays, kebabizeCamelCase } from '../utils';
+import { kebabizeCamelCase } from '../utils';
 
 export default class CSSTransitionsManager {
   private readonly element: ReanimatedHTMLElement;
@@ -25,54 +29,46 @@ export default class CSSTransitionsManager {
       return;
     }
 
-    this.setElementAnimation(transitionProperties);
+    this.setElementTransition(transitionProperties);
   }
 
   detach() {
+    this.element.style.transition = '';
+    this.element.style.transitionProperty = '';
     this.element.style.transitionDuration = '';
     this.element.style.transitionDelay = '';
-    this.element.style.transitionProperty = '';
     this.element.style.transitionTimingFunction = '';
     // @ts-ignore this is correct
     this.element.style.transitionBehavior = '';
   }
 
-  private setElementAnimation(transitionProperties: CSSTransitionProperties) {
-    const propertiesAsArray = convertPropertiesToArrays(transitionProperties);
+  private setElementTransition(transitionProperties: CSSTransitionProperties) {
+    const normalizedProps =
+      normalizeCSSTransitionProperties(transitionProperties);
 
-    const maybeDuration = maybeAddSuffixes(
-      propertiesAsArray,
+    this.element.style.transitionProperty = normalizedProps.transitionProperty
+      .map(kebabizeCamelCase)
+      .join(',');
+
+    this.element.style.transitionDuration = maybeAddSuffixes(
+      normalizedProps,
       'transitionDuration',
       'ms'
-    );
-    if (maybeDuration) {
-      this.element.style.transitionDuration = maybeDuration.join(',');
-    }
+    ).join(',');
 
-    const maybeDelay = maybeAddSuffixes(
-      propertiesAsArray,
+    this.element.style.transitionDelay = maybeAddSuffixes(
+      normalizedProps,
       'transitionDelay',
       'ms'
+    ).join(',');
+
+    this.element.style.transitionTimingFunction = parseTimingFunction(
+      normalizedProps.transitionTimingFunction
     );
-    if (maybeDelay) {
-      this.element.style.transitionDelay = maybeDelay.join(',');
-    }
 
-    if (propertiesAsArray.transitionProperty) {
-      this.element.style.transitionProperty =
-        propertiesAsArray.transitionProperty.map(kebabizeCamelCase).join(',');
-    }
-
-    if (propertiesAsArray.transitionTimingFunction) {
-      this.element.style.transitionTimingFunction = parseTimingFunction(
-        propertiesAsArray.transitionTimingFunction
-      );
-    }
-
-    if (propertiesAsArray.transitionBehavior) {
-      // @ts-ignore this is correct
-      this.element.style.transitionBehavior =
-        propertiesAsArray.transitionBehavior.map(kebabizeCamelCase).join(',');
-    }
+    // @ts-ignore this is correct
+    this.element.style.transitionBehavior = normalizedProps.transitionBehavior
+      .map(kebabizeCamelCase)
+      .join(',');
   }
 }

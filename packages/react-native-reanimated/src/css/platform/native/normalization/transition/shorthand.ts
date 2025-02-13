@@ -5,7 +5,6 @@ import { ReanimatedError } from '../../../../errors';
 import type {
   ConvertValuesToArraysWithUndefined,
   CSSTransitionProperties,
-  SingleCSSTransitionConfig,
 } from '../../../../types';
 import {
   camelizeKebabCase,
@@ -13,17 +12,12 @@ import {
   isPercentage,
   isPredefinedTimingFunction,
   isStepsModifier,
-  isTimeUnit,
-  VALID_PREDEFINED_TIMING_FUNCTIONS_SET,
+  parseSingleTransitionShorthand,
+  splitByComma,
+  splitByWhitespace,
 } from '../../../../utils';
 
-const VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET = new Set<string>([
-  'cubic-bezier',
-  'steps',
-  'linear',
-]);
-
-export type ExpandedConfigProperties = Required<
+export type ExpandedCSSTransitionConfigProperties = Required<
   ConvertValuesToArraysWithUndefined<
     Omit<CSSTransitionProperties, 'transition' | 'transitionProperty'>
   >
@@ -31,107 +25,33 @@ export type ExpandedConfigProperties = Required<
   transitionProperty: string[];
 };
 
+export const createEmptyTransitionConfig =
+  (): ExpandedCSSTransitionConfigProperties => ({
+    transitionProperty: [],
+    transitionDuration: [],
+    transitionTimingFunction: [],
+    transitionDelay: [],
+    transitionBehavior: [],
+  });
+
 export function parseTransitionShorthand(value: string) {
-  return splitByComma(value).reduce<ExpandedConfigProperties>(
+  return splitByComma(value).reduce<ExpandedCSSTransitionConfigProperties>(
     (acc, part) => {
       const result = parseSingleTransitionShorthand(part);
-      acc.transitionProperty.push(result.transitionProperty ?? 'all');
+      acc.transitionProperty.push(
+        camelizeKebabCase(result.transitionProperty ?? 'all')
+      );
       acc.transitionDuration.push(result.transitionDuration);
-      acc.transitionTimingFunction.push(result.transitionTimingFunction);
+      acc.transitionTimingFunction.push(
+        result.transitionTimingFunction
+          ? parseTimingFunction(result.transitionTimingFunction)
+          : undefined
+      );
       acc.transitionDelay.push(result.transitionDelay);
       acc.transitionBehavior.push(result.transitionBehavior);
       return acc;
     },
-    {
-      transitionProperty: [],
-      transitionDuration: [],
-      transitionTimingFunction: [],
-      transitionDelay: [],
-      transitionBehavior: [],
-    }
-  );
-}
-
-type ParsedShorthandSingleTransitionConfig = Omit<
-  SingleCSSTransitionConfig,
-  'transitionProperty'
-> & {
-  transitionProperty?: string;
-};
-
-function parseSingleTransitionShorthand(
-  value: string
-): ParsedShorthandSingleTransitionConfig {
-  const result: ParsedShorthandSingleTransitionConfig = {};
-  const parts = splitByWhitespace(value);
-
-  for (const part of parts) {
-    if (part === 'all') {
-      result.transitionProperty = 'all';
-      continue;
-    }
-    if (part === 'normal' || part === 'allow-discrete') {
-      result.transitionBehavior = part;
-      continue;
-    }
-    if (isTimeUnit(part)) {
-      const timeUnit = part;
-      if (result.transitionDuration === undefined) {
-        result.transitionDuration = timeUnit;
-        continue;
-      }
-      if (result.transitionDelay === undefined) {
-        result.transitionDelay = timeUnit;
-        continue;
-      }
-    }
-    if (
-      result.transitionTimingFunction === undefined &&
-      smellsLikeTimingFunction(part)
-    ) {
-      result.transitionTimingFunction = parseTimingFunction(part);
-      continue;
-    }
-    if (result.transitionProperty === undefined) {
-      result.transitionProperty = camelizeKebabCase(part);
-      continue;
-    }
-    throw new ReanimatedError(`Invalid transition shorthand: ${value}`);
-  }
-
-  return result;
-}
-
-function splitByComma(str: string) {
-  // split by comma not enclosed in parentheses
-  const parts: string[] = [];
-  let current = '';
-  let depth = 0;
-  for (const char of str) {
-    if (char === '(') {
-      depth++;
-    } else if (char === ')') {
-      depth--;
-    } else if (char === ',' && depth === 0) {
-      parts.push(current.trim());
-      current = '';
-      continue;
-    }
-    current += char;
-  }
-  parts.push(current.trim());
-  return parts;
-}
-
-function splitByWhitespace(str: string) {
-  // split by whitespace not enclosed in parentheses
-  return str.split(/\s+(?![^()]*\))/);
-}
-
-function smellsLikeTimingFunction(value: string) {
-  return (
-    VALID_PREDEFINED_TIMING_FUNCTIONS_SET.has(value) ||
-    VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET.has(value.split('(')[0].trim())
+    createEmptyTransitionConfig()
   );
 }
 

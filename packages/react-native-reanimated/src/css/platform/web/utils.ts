@@ -2,10 +2,10 @@
 import type { ColorValue, DimensionValue } from 'react-native';
 
 import { processColor } from '../../../Colors';
-import type { CSSTimingFunction } from '../../easings';
+import type { ParametrizedTimingFunction } from '../../easings';
 import { CubicBezierEasing, LinearEasing, StepsEasing } from '../../easings';
 import { ReanimatedError } from '../../errors';
-import type { AnyRecord, ConvertValuesToArrays } from '../../types';
+import type { AddArrayPropertyType, ConvertValuesToArrays } from '../../types';
 import { kebabizeCamelCase } from '../../utils';
 
 export function hasSuffix(value: unknown): value is string {
@@ -16,21 +16,19 @@ export function maybeAddSuffix(value: unknown, suffix: string) {
   return hasSuffix(value) ? value : `${String(value)}${suffix}`;
 }
 
-export function maybeAddSuffixes<T extends AnyRecord, K extends keyof T>(
+export function maybeAddSuffixes<T, K extends keyof T>(
   object: ConvertValuesToArrays<T>,
   key: K,
   suffix: string
 ) {
   if (!(key in object)) {
-    return;
+    return [];
   }
 
-  return object[key].map((value) =>
-    hasSuffix(value) ? String(value) : `${String(value)}${suffix}`
-  );
+  return object[key].map((value) => maybeAddSuffix(value, suffix));
 }
 
-function easingMapper(easing: CSSTimingFunction) {
+function easingMapper(easing: ParametrizedTimingFunction | string) {
   if (typeof easing === 'string') {
     return easing;
   }
@@ -55,7 +53,7 @@ function easingMapper(easing: CSSTimingFunction) {
 }
 
 export function parseTimingFunction(
-  timingFunction: CSSTimingFunction | CSSTimingFunction[]
+  timingFunction: AddArrayPropertyType<ParametrizedTimingFunction | string>
 ) {
   if (Array.isArray(timingFunction)) {
     return timingFunction.map(easingMapper).join(', ');

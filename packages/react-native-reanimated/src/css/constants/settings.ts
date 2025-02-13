@@ -39,3 +39,9 @@ export const VALID_PREDEFINED_TIMING_FUNCTIONS: PredefinedTimingFunction[] = [
   'step-start',
   'step-end',
 ];
+
+export const VALID_PARAMETRIZED_TIMING_FUNCTIONS: string[] = [
+  'cubic-bezier',
+  'steps',
+  'linear',
+];
