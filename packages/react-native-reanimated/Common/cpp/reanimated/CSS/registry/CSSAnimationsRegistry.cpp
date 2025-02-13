@@ -250,7 +250,7 @@ bool CSSAnimationsRegistry::addStyleUpdates(
 
   bool hasUpdates = false;
   for (const auto &[propertyName, propertyValue] : updates.items()) {
-    if (override || !target.at(propertyName).isNull()) {
+    if (override || target.at(propertyName).isNull()) {
       target[propertyName] = propertyValue;
       hasUpdates = true;
     }
