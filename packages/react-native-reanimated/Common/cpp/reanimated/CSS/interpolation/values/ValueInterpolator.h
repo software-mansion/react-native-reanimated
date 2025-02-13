@@ -44,13 +44,13 @@ class ValueInterpolator : public PropertyInterpolator {
             viewStylesRepository),
         defaultStyleValue_(defaultStyleValue) {}
   virtual ~ValueInterpolator() = default;
-  
+
   folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const override {
     return viewStylesRepository_->getStyleProp(
         shadowNode->getTag(), propertyPath_);
   }
-  
+
   folly::dynamic getCurrentValue(
       const ShadowNode::Shared &shadowNode) const override {
     if (previousValue_.has_value()) {
@@ -64,11 +64,11 @@ class ValueInterpolator : public PropertyInterpolator {
   }
 
   folly::dynamic getFirstKeyframeValue() const override {
-     return convertOptionalToDynamic(keyframes_.front().value);
+    return convertOptionalToDynamic(keyframes_.front().value);
   }
 
   folly::dynamic getLastKeyframeValue() const override {
-     return convertOptionalToDynamic(keyframes_.back().value);
+    return convertOptionalToDynamic(keyframes_.back().value);
   }
 
   bool equalsReversingAdjustedStartValue(
@@ -125,9 +125,8 @@ class ValueInterpolator : public PropertyInterpolator {
 
     keyframes_ = {firstKeyframe, lastKeyframe};
   }
-  
-  folly::dynamic update(const ShadowNode::Shared &shadowNode)
-      override {
+
+  folly::dynamic update(const ShadowNode::Shared &shadowNode) override {
     updateCurrentKeyframes(shadowNode);
 
     std::optional<ValueType> fromValue = keyframeBefore_.value;
@@ -157,9 +156,8 @@ class ValueInterpolator : public PropertyInterpolator {
 
     return previousValue_.value().toDynamic();
   }
-  
-  folly::dynamic reset(const ShadowNode::Shared &shadowNode)
-      override {
+
+  folly::dynamic reset(const ShadowNode::Shared &shadowNode) override {
     previousValue_ = std::nullopt;
     reversingAdjustedStartValue_ = std::nullopt;
     return getCurrentValue(shadowNode);
@@ -183,12 +181,10 @@ class ValueInterpolator : public PropertyInterpolator {
   ValueKeyframe<AllowedTypes...> keyframeAfter_;
   std::optional<ValueType> previousValue_;
   std::optional<ValueType> reversingAdjustedStartValue_;
-  
-  ValueType getFallbackValue(
-      const ShadowNode::Shared &shadowNode) const {
+
+  ValueType getFallbackValue(const ShadowNode::Shared &shadowNode) const {
     const folly::dynamic &styleValue = getStyleValue(shadowNode);
-    return styleValue.isNull() ? defaultStyleValue_
-                              : ValueType(styleValue);
+    return styleValue.isNull() ? defaultStyleValue_ : ValueType(styleValue);
   }
 
   ValueType resolveKeyframeValue(
@@ -197,7 +193,7 @@ class ValueInterpolator : public PropertyInterpolator {
     return interpolate(
         0, unresolvedValue, unresolvedValue, {.node = shadowNode});
   }
-  
+
   ValueKeyframe<AllowedTypes...> getKeyframeAtIndex(
       const ShadowNode::Shared &shadowNode,
       size_t index,
@@ -220,9 +216,8 @@ class ValueInterpolator : public PropertyInterpolator {
 
     return keyframe;
   }
-  
-  void updateCurrentKeyframes(
-      const ShadowNode::Shared &shadowNode) {
+
+  void updateCurrentKeyframes(const ShadowNode::Shared &shadowNode) {
     const auto progress = progressProvider_->getGlobalProgress();
     const bool isProgressLessThanHalf = progress < 0.5;
     const auto prevAfterIndex = keyframeAfterIndex_;
@@ -259,7 +254,7 @@ class ValueInterpolator : public PropertyInterpolator {
           Resolvable<ValueType> && keyframeAfterIndex_ < prevAfterIndex);
     }
   }
-  
+
   folly::dynamic convertOptionalToDynamic(
       const std::optional<ValueType> &value) const {
     return value ? value.value().toDynamic() : folly::dynamic();

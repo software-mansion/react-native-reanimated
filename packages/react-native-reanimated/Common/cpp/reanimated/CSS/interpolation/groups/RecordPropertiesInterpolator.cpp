@@ -104,7 +104,8 @@ void RecordPropertiesInterpolator::forEachInterpolator(
 }
 
 folly::dynamic RecordPropertiesInterpolator::mapInterpolators(
-    const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const {
+    const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
+    const {
   folly::dynamic result = folly::dynamic::object;
 
   for (const auto &[propName, interpolator] : interpolators_) {

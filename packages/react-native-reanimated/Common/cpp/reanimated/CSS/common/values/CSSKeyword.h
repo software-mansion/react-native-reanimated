@@ -17,7 +17,7 @@ class CSSKeywordBase : public CSSBaseValue<CSSValueType::Keyword, TValue> {
   static constexpr bool is_discrete_value = true;
 
   CSSKeywordBase();
-  explicit CSSKeywordBase(const char* value);
+  explicit CSSKeywordBase(const char *value);
   explicit CSSKeywordBase(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit CSSKeywordBase(const folly::dynamic &value);
 

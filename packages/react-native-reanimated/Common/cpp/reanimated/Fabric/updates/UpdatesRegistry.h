@@ -72,9 +72,7 @@ class UpdatesRegistry {
       jsi::Runtime &rt,
       const UpdatesBatch &updatesBatch,
       bool merge);
-  void flushUpdatesToRegistry(
-      const CSSUpdatesBatch &updatesBatch,
-      bool merge);
+  void flushUpdatesToRegistry(const CSSUpdatesBatch &updatesBatch, bool merge);
   void runMarkedRemovals();
 
 #ifdef ANDROID

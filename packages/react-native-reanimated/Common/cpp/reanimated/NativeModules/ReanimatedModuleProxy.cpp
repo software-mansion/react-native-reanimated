@@ -658,8 +658,7 @@ void ReanimatedModuleProxy::updateCSSTransition(
     const jsi::Value &viewTag,
     const jsi::Value &configUpdates) {
   cssTransitionsRegistry_->updateSettings(
-      viewTag.asNumber(),
-      parsePartialCSSTransitionConfig(rt, configUpdates));
+      viewTag.asNumber(), parsePartialCSSTransitionConfig(rt, configUpdates));
   maybeRunCSSLoop();
 }
 
@@ -685,15 +684,15 @@ bool ReanimatedModuleProxy::isThereAnyLayoutProp(
   return false;
 }
 
-bool ReanimatedModuleProxy::isThereAnyLayoutProp(
-    const folly::dynamic &props) {
-  for (const auto& [propName, propValue] : props.items()) {
-    bool isLayoutProp = nativePropNames_.find(propName.asString()) != nativePropNames_.end();
+bool ReanimatedModuleProxy::isThereAnyLayoutProp(const folly::dynamic &props) {
+  for (const auto &[propName, propValue] : props.items()) {
+    bool isLayoutProp =
+        nativePropNames_.find(propName.asString()) != nativePropNames_.end();
     if (isLayoutProp) {
       return true;
     }
   }
-        
+
   return false;
 }
 
@@ -916,7 +915,7 @@ void ReanimatedModuleProxy::performOperations() {
   // directly onto the components and skip the commit.
   if (!hasPropsToRevert && hasLayoutUpdates.hasAny()) {
     ReanimatedSystraceSection s(
-      "ReanimatedModuleProxy::synchronouslyUpdateUIProps");
+        "ReanimatedModuleProxy::synchronouslyUpdateUIProps");
     if (!hasLayoutUpdates.cssTransition) {
       for (const auto &[shadowNode, props] : transitionUpdatesBatch) {
         Tag tag = shadowNode->getTag();
@@ -946,7 +945,8 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
-  commitUpdates(rt, updatesBatch, transitionUpdatesBatch, animationUpdatesBatch);
+  commitUpdates(
+      rt, updatesBatch, transitionUpdatesBatch, animationUpdatesBatch);
 
   // Clear the entire cache after the commit
   // (we don't know if the view is updated from outside of Reanimated

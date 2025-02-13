@@ -1,6 +1,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <reanimated/CSS/common/values/CSSNumber.h>
 #include <folly/json.h>
+#include <reanimated/CSS/common/values/CSSNumber.h>
 
 namespace reanimated {
 
@@ -24,13 +24,13 @@ CSSNumberBase<TValue, TDerived>::CSSNumberBase(
 }
 
 template <typename TValue, typename TDerived>
-CSSNumberBase<TValue, TDerived>::CSSNumberBase(
-    const folly::dynamic &value) {
+CSSNumberBase<TValue, TDerived>::CSSNumberBase(const folly::dynamic &value) {
   if (value.isInt() || value.isDouble()) {
     this->value = static_cast<TValue>(value.getDouble());
   } else {
     throw std::invalid_argument(
-        "[Reanimated] CSSNumberBase: Invalid value type: " + folly::toJson(value));
+        "[Reanimated] CSSNumberBase: Invalid value type: " +
+        folly::toJson(value));
   }
 }
 
@@ -99,9 +99,8 @@ CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(
   value = std::max(1.0, value);
 }
 
-CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(
-  const folly::dynamic &value)
-  : CSSNumberBase<double, CSSShadowRadiusAndroid>(value) {
+CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(const folly::dynamic &value)
+    : CSSNumberBase<double, CSSShadowRadiusAndroid>(value) {
   this->value = std::max(1.0, value.getDouble());
 }
 

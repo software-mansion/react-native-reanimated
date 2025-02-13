@@ -10,12 +10,12 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
 folly::dynamic TransitionStyleInterpolator::getCurrentInterpolationStyle(
     const ShadowNode::Shared &shadowNode) const {
   folly::dynamic result = folly::dynamic::object;
-        
-  for (const auto& [propertyName, interpolator] : interpolators_) {
+
+  for (const auto &[propertyName, interpolator] : interpolators_) {
     folly::dynamic value = interpolator->getCurrentValue(shadowNode);
     result[propertyName] = value;
   }
-  
+
   return result;
 }
 

@@ -1,6 +1,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <reanimated/CSS/common/values/CSSColor.h>
 #include <folly/json.h>
+#include <reanimated/CSS/common/values/CSSColor.h>
 
 namespace reanimated {
 
@@ -67,14 +67,12 @@ CSSColor::CSSColor(const folly::dynamic &value)
     channels[3] = (color >> 24) & 0xFF; // Alpha
     colorType = ColorType::Rgba;
   } else if (
-     value.empty() ||
-      (value.isString() &&
-       value.getString() == "transparent")) {
+      value.empty() ||
+      (value.isString() && value.getString() == "transparent")) {
     colorType = ColorType::Transparent;
   } else {
     throw std::invalid_argument(
-        "[Reanimated] CSSColor: Invalid value type: " +
-        folly::toJson(value));
+        "[Reanimated] CSSColor: Invalid value type: " + folly::toJson(value));
   }
 }
 

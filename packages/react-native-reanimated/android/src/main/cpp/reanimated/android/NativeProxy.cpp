@@ -336,16 +336,16 @@ void NativeProxy::synchronouslyUpdateUIProps(
   method(javaPart_.get(), tag, uiProps);
 }
 
-  void NativeProxy::synchronouslyUpdateUIPropsByDynamic(
+void NativeProxy::synchronouslyUpdateUIPropsByDynamic(
     Tag tag,
     const folly::dynamic &props) {
-    static const auto method =
+  static const auto method =
       getJniMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
-        "synchronouslyUpdateUIProps");
-    jni::local_ref<ReadableMap::javaobject> uiProps =
+          "synchronouslyUpdateUIProps");
+  jni::local_ref<ReadableMap::javaobject> uiProps =
       castReadableMap(ReadableNativeMap::newObjectCxxArgs(props));
-    method(javaPart_.get(), tag, uiProps);
-  }
+  method(javaPart_.get(), tag, uiProps);
+}
 #endif
 
 int NativeProxy::registerSensor(
@@ -470,7 +470,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   auto synchronouslyUpdateUIPropsFunction =
       bindThis(&NativeProxy::synchronouslyUpdateUIProps);
   auto synchronouslyUpdateUIPropsByDynamicFunction =
-    bindThis(&NativeProxy::synchronouslyUpdateUIPropsByDynamic);
+      bindThis(&NativeProxy::synchronouslyUpdateUIPropsByDynamic);
 #else
   auto configurePropsFunction = bindThis(&NativeProxy::configureProps);
 #endif

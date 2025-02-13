@@ -99,8 +99,7 @@ folly::dynamic CSSAnimation::update(const double timestamp) {
   // progress)
   if (progressProvider_->getState(timestamp) ==
       AnimationProgressState::Pending) {
-    return hasBackwardsFillMode() ? getBackwardsFillStyle()
-                                  : folly::dynamic();
+    return hasBackwardsFillMode() ? getBackwardsFillStyle() : folly::dynamic();
   }
 
   return styleInterpolator_.update(shadowNode_);

@@ -3,8 +3,8 @@
 #include <jsi/jsi.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
-#include <react/renderer/core/ReactPrimitives.h>
 #include <folly/dynamic.h>
+#include <react/renderer/core/ReactPrimitives.h>
 #endif
 
 #include <string>
@@ -83,7 +83,8 @@ struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef RCT_NEW_ARCH_ENABLED
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
-  SynchronouslyUpdateUIPropsByDynamicFunction synchronouslyUpdateUIPropsByDynamicFunction;
+  SynchronouslyUpdateUIPropsByDynamicFunction
+      synchronouslyUpdateUIPropsByDynamicFunction;
 #else
   UpdatePropsFunction updatePropsFunction;
   ScrollToFunction scrollToFunction;

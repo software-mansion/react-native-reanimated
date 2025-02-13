@@ -48,7 +48,7 @@ using UpdatesBatch =
     std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>;
 using CSSUpdatesBatch =
     std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
-    
+
 struct HasLayoutupdates {
   bool cssTransition = false;
   bool cssAnimation = false;
@@ -229,11 +229,10 @@ class ReanimatedModuleProxy
  private:
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
   void commitUpdates(
-    jsi::Runtime &rt,
-    const UpdatesBatch &updatesBatch,
-    const CSSUpdatesBatch &transitionsUpdatesBatch,
-    const CSSUpdatesBatch &animationUpdatesBatch
-  );
+      jsi::Runtime &rt,
+      const UpdatesBatch &updatesBatch,
+      const CSSUpdatesBatch &transitionsUpdatesBatch,
+      const CSSUpdatesBatch &animationUpdatesBatch);
 
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
@@ -272,7 +271,8 @@ class ReanimatedModuleProxy
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
-  const SynchronouslyUpdateUIPropsByDynamicFunction synchronouslyUpdateUIPropsByDynamicFunction_;
+  const SynchronouslyUpdateUIPropsByDynamicFunction
+      synchronouslyUpdateUIPropsByDynamicFunction_;
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
   std::unordered_set<std::string>

@@ -1,7 +1,7 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
-#include <reanimated/CSS/common/values/CSSDiscreteArray.h>
 #include <folly/json.h>
+#include <reanimated/CSS/common/values/CSSDiscreteArray.h>
 
 namespace reanimated {
 
@@ -31,8 +31,7 @@ CSSDiscreteArray<TValue>::CSSDiscreteArray(
 }
 
 template <CSSValueDerived TValue>
-CSSDiscreteArray<TValue>::CSSDiscreteArray(
-    const folly::dynamic &value) {
+CSSDiscreteArray<TValue>::CSSDiscreteArray(const folly::dynamic &value) {
   if (!canConstruct(value)) {
     throw std::invalid_argument(
         "[Reanimated] CSSDiscreteArray: Invalid value type: " +
@@ -56,8 +55,7 @@ bool CSSDiscreteArray<TValue>::canConstruct(
 }
 
 template <CSSValueDerived TValue>
-bool CSSDiscreteArray<TValue>::canConstruct(
-    const folly::dynamic &value) {
+bool CSSDiscreteArray<TValue>::canConstruct(const folly::dynamic &value) {
   return value.isArray();
 }
 

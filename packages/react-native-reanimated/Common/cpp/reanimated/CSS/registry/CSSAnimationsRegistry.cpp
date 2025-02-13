@@ -117,9 +117,8 @@ void CSSAnimationsRegistry::updateViewAnimations(
       if (addToBatch && !animation->hasForwardsFillMode()) {
         //  We also have to manually commit style values
         // reverting the changes applied by the animation.
-        
-        hasUpdates =
-            addStyleUpdates(result, animation->resetStyle(), false) ||
+
+        hasUpdates = addStyleUpdates(result, animation->resetStyle(), false) ||
             hasUpdates;
         updatesAddedToBatch = true;
         // We want to remove style changes applied by the animation that is
@@ -234,8 +233,7 @@ void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
   }
 }
 
-void CSSAnimationsRegistry::handleAnimationsToRevert(
-    const double timestamp) {
+void CSSAnimationsRegistry::handleAnimationsToRevert(const double timestamp) {
   for (const auto &[viewTag, _] : animationsToRevertMap_) {
     applyViewAnimationsStyle(viewTag, timestamp);
   }
@@ -251,7 +249,7 @@ bool CSSAnimationsRegistry::addStyleUpdates(
   }
 
   bool hasUpdates = false;
-  for (const auto& [propertyName, propertyValue] : updates.items()) {
+  for (const auto &[propertyName, propertyValue] : updates.items()) {
     if (override || !target.at(propertyName).isNull()) {
       target[propertyName] = propertyValue;
       hasUpdates = true;

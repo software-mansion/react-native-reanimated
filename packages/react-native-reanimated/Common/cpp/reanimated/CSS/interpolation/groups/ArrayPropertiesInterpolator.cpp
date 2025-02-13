@@ -90,7 +90,8 @@ void ArrayPropertiesInterpolator::forEachInterpolator(
 }
 
 folly::dynamic ArrayPropertiesInterpolator::mapInterpolators(
-    const std::function<folly::dynamic(PropertyInterpolator &)> &callback) const {
+    const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
+    const {
   auto result = folly::dynamic::array();
 
   for (size_t i = 0; i < interpolators_.size(); ++i) {

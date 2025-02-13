@@ -32,11 +32,13 @@ folly::dynamic TransformsStyleInterpolator::getCurrentValue(
 }
 
 folly::dynamic TransformsStyleInterpolator::getFirstKeyframeValue() const {
-  return convertResultToDynamic(keyframes_.front()->fromOperations.value_or(defaultStyleValue_));
+  return convertResultToDynamic(
+      keyframes_.front()->fromOperations.value_or(defaultStyleValue_));
 }
 
 folly::dynamic TransformsStyleInterpolator::getLastKeyframeValue() const {
-  return convertResultToDynamic(keyframes_.back()->toOperations.value_or(defaultStyleValue_));
+  return convertResultToDynamic(
+      keyframes_.back()->toOperations.value_or(defaultStyleValue_));
 }
 
 bool TransformsStyleInterpolator::equalsReversingAdjustedStartValue(
@@ -187,7 +189,7 @@ TransformsStyleInterpolator::parseTransformOperations(
 
 std::optional<TransformOperations>
 TransformsStyleInterpolator::parseTransformOperations(
-  const folly::dynamic &values) {
+    const folly::dynamic &values) {
   if (values.empty()) {
     return std::nullopt;
   }
@@ -200,7 +202,8 @@ TransformsStyleInterpolator::parseTransformOperations(
 
   for (size_t i = 0; i < transformsCount; ++i) {
     const auto transform = transformsArray.at(i);
-    transformOperations.emplace_back(TransformOperation::fromDynamic(transform));
+    transformOperations.emplace_back(
+        TransformOperation::fromDynamic(transform));
   }
   return transformOperations;
 }
@@ -353,8 +356,7 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
 TransformOperations TransformsStyleInterpolator::getFallbackValue(
     const ShadowNode::Shared &shadowNode) const {
   const auto &styleValue = getStyleValue(shadowNode);
-  return parseTransformOperations(styleValue)
-      .value_or(TransformOperations{});
+  return parseTransformOperations(styleValue).value_or(TransformOperations{});
 }
 
 std::shared_ptr<TransformOperation>
@@ -481,7 +483,6 @@ folly::dynamic TransformsStyleInterpolator::convertResultToDynamic(
 
   return result;
 }
-
 
 TransformInterpolatorUpdateContext
 TransformsStyleInterpolator::createUpdateContext(

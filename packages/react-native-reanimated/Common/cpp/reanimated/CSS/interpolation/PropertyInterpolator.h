@@ -42,10 +42,8 @@ class PropertyInterpolator {
       const jsi::Value &oldStyleValue,
       const jsi::Value &newStyleValue) = 0;
 
-  virtual folly::dynamic update(
-      const ShadowNode::Shared &shadowNode) = 0;
-  virtual folly::dynamic reset(
-      const ShadowNode::Shared &shadowNode) = 0;
+  virtual folly::dynamic update(const ShadowNode::Shared &shadowNode) = 0;
+  virtual folly::dynamic reset(const ShadowNode::Shared &shadowNode) = 0;
 
  protected:
   const PropertyPath propertyPath_;

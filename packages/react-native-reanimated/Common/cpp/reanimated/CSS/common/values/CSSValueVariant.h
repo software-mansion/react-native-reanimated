@@ -43,10 +43,9 @@ concept can_construct_from_jsi =
  * Checks if type has a constructor from folly::dynamic
  */
 template <typename TValue>
-concept can_construct_from_dynamic =
-    requires(const folly::dynamic &value) {
-      { TValue(value) }; // NOLINT(readability/braces)
-    }; // NOLINT(readability/braces)
+concept can_construct_from_dynamic = requires(const folly::dynamic &value) {
+  { TValue(value) }; // NOLINT(readability/braces)
+}; // NOLINT(readability/braces)
 
 /**
  * Checks whether a type has canConstruct(...) for a a generic value
@@ -68,17 +67,16 @@ static constexpr bool has_can_construct_jsi =
         TCSSValue::canConstruct(rt, std::forward<TValue>(value))
       } -> std::same_as<bool>;
     }; // NOLINT(readability/braces)
-    
+
 /**
  * Checks whether a type has canConstruct(...) for dynamic
  */
 template <typename TCSSValue, typename TValue>
-static constexpr bool has_can_construct_dynamic =
-    requires(TValue &&value) {
-      {
-        TCSSValue::canConstruct(std::forward<TValue>(value))
-      } -> std::same_as<bool>;
-    }; // NOLINT(readability/braces)
+static constexpr bool has_can_construct_dynamic = requires(TValue &&value) {
+  {
+    TCSSValue::canConstruct(std::forward<TValue>(value))
+  } -> std::same_as<bool>;
+}; // NOLINT(readability/braces)
 
 /**
  * CSSValueVariant
@@ -126,7 +124,7 @@ class CSSValueVariant final : public CSSValue {
           stringifyJSIValue(rt, jsiValue));
     }
   }
-  
+
   CSSValueVariant(const folly::dynamic &value)
     requires((can_construct_from_dynamic<AllowedTypes> || ...))
   { // NOLINT(whitespace/braces)
@@ -283,14 +281,16 @@ class CSSValueVariant final : public CSSValue {
     // Try constructing with each allowed type until one succeeds
     return (tryOne.template operator()<AllowedTypes>() || ...);
   }
-  
+
   /**
    * Tries to construct type from a given folly::dynamic
    */
   bool tryConstructFromDynamic(const folly::dynamic &value) {
     auto tryOne = [&]<typename TCSSValue>() -> bool {
       if constexpr (can_construct_from_dynamic<TCSSValue>) {
-        if constexpr (has_can_construct_dynamic<TCSSValue, const folly::dynamic &>) {
+        if constexpr (has_can_construct_dynamic<
+                          TCSSValue,
+                          const folly::dynamic &>) {
           // If the TCSSValue has a canConstruct method, check it first
           if (!TCSSValue::canConstruct(value)) {
             return false;

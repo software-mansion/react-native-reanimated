@@ -96,8 +96,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       size_t index,
       int resolveDirection // < 0 - resolve from, > 0 - resolve to
   ) const;
-  void updateCurrentKeyframe(
-      const ShadowNode::Shared &shadowNode);
+  void updateCurrentKeyframe(const ShadowNode::Shared &shadowNode);
   TransformOperations interpolateOperations(
       const ShadowNode::Shared &shadowNode,
       double keyframeProgress,

@@ -177,10 +177,11 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
     throw std::invalid_argument(
         "[Reanimated] TransformOperation must have exactly one property.");
   }
-  
+
   auto property = obj.items().begin()->second;
   auto propertyName = obj.items().begin()->first.getString();
-  TransformOperationType operationType = getTransformOperationType(propertyName);
+  TransformOperationType operationType =
+      getTransformOperationType(propertyName);
 
   switch (operationType) {
     case TransformOperationType::Perspective:
@@ -219,7 +220,7 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
       return std::make_shared<MatrixOperation>(TransformMatrix(property));
     default:
       throw std::invalid_argument(
-        "[Reanimated] Unknown transform operation: " + property.asString());
+          "[Reanimated] Unknown transform operation: " + property.asString());
   }
 }
 

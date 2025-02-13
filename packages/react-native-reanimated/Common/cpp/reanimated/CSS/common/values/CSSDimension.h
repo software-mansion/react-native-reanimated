@@ -15,12 +15,12 @@ struct CSSDimension
   CSSDimension();
   explicit CSSDimension(double value);
   explicit CSSDimension(double value, bool isRelative);
-  explicit CSSDimension(const char* value);
+  explicit CSSDimension(const char *value);
   explicit CSSDimension(jsi::Runtime &rt, const jsi::Value &jsiValue);
   explicit CSSDimension(const folly::dynamic &value);
 
   static bool canConstruct(const std::string &value);
-  static bool canConstruct(const char* value);
+  static bool canConstruct(const char *value);
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
   static bool canConstruct(const folly::dynamic &value);
 
