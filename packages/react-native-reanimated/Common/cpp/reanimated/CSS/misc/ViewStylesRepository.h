@@ -57,10 +57,6 @@ class ViewStylesRepository {
       CachedShadowNode &cachedNode,
       const ShadowNode::Shared &shadowNode);
 
-  static jsi::Value getPropertyValue(
-      jsi::Runtime &rt,
-      const folly::dynamic &value,
-      const PropertyPath &propertyPath);
   static folly::dynamic getPropertyValue(
       const folly::dynamic &value,
       const PropertyPath &propertyPath);

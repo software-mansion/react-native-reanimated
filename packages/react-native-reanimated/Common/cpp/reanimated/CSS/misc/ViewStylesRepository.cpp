@@ -106,63 +106,6 @@ void ViewStylesRepository::updateCacheIfNeeded(
       newestCloneOfShadowNode->getProps());
 }
 
-jsi::Value ViewStylesRepository::getPropertyValue(
-    jsi::Runtime &rt,
-    const folly::dynamic &value,
-    const PropertyPath &propertyPath) {
-  const folly::dynamic *currentValue = &value;
-
-  for (size_t i = 0; i < propertyPath.size(); ++i) {
-    if (currentValue->isNull() || currentValue->empty()) {
-      return jsi::Value::undefined();
-    }
-
-    const auto &propName = propertyPath[i];
-
-    if (!currentValue->isObject()) {
-      return jsi::Value::undefined();
-    }
-
-    if (propName == "transform") {
-      auto transformIt = currentValue->find("transform");
-      if (transformIt == currentValue->items().end()) {
-        return jsi::Value::undefined();
-      }
-
-      const auto &transform = transformIt->second;
-      if (!transform.isArray()) {
-        return jsi::Value::undefined();
-      }
-
-      if (i + 1 >= propertyPath.size()) {
-        return valueFromDynamic(rt, transform);
-      }
-
-      const std::string &transformPropName = propertyPath[i + 1];
-
-      for (const auto &transformEntry : transform) {
-        if (transformEntry.isObject()) {
-          auto transformPropIt = transformEntry.find(transformPropName);
-          if (transformPropIt != transformEntry.items().end()) {
-            return valueFromDynamic(rt, transformPropIt->second);
-          }
-        }
-      }
-
-      return jsi::Value::undefined();
-    }
-
-    auto propIt = currentValue->find(propName);
-    if (propIt == currentValue->items().end()) {
-      return jsi::Value::undefined();
-    }
-
-    currentValue = &propIt->second;
-  }
-
-  return valueFromDynamic(rt, *currentValue);
-}
-
 folly::dynamic ViewStylesRepository::getPropertyValue(
     const folly::dynamic &value,
     const PropertyPath &propertyPath) {
