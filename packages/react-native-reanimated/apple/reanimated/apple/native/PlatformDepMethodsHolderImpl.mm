@@ -104,17 +104,6 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 #ifdef RCT_NEW_ARCH_ENABLED
 SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(REANodesManager *nodesManager)
 {
-  auto synchronouslyUpdateUIPropsFunction = [nodesManager](jsi::Runtime &rt, Tag tag, const jsi::Object &props) {
-    NSNumber *viewTag = @(tag);
-    NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props);
-    [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
-  };
-  return synchronouslyUpdateUIPropsFunction;
-}
-
-SynchronouslyUpdateUIPropsByDynamicFunction makeSynchronouslyUpdateUIPropsByDynamicFunction(
-    REANodesManager *nodesManager)
-{
   auto synchronouslyUpdateUIPropsFunction = [nodesManager](Tag tag, const folly::dynamic &props) {
     NSNumber *viewTag = @(tag);
     NSDictionary *uiProps = convertDynamicToNSObject(props);
@@ -303,7 +292,6 @@ makePlatformDepMethodsHolder(RCTBridge *bridge, REANodesManager *nodesManager, R
 
 #ifdef RCT_NEW_ARCH_ENABLED
   auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
-  auto synchronouslyUpdateUIPropsByDynamicFunction = makeSynchronouslyUpdateUIPropsByDynamicFunction(nodesManager);
 #endif // RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
@@ -367,7 +355,6 @@ makePlatformDepMethodsHolder(RCTBridge *bridge, REANodesManager *nodesManager, R
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction,
-      synchronouslyUpdateUIPropsByDynamicFunction,
 #else
       updatePropsFunction,
       scrollToFunction,
@@ -398,7 +385,6 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
   auto requestRender = makeRequestRender(nodesManager);
 
   auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
-  auto synchronouslyUpdateUIPropsByDynamicFunction = makeSynchronouslyUpdateUIPropsByDynamicFunction(nodesManager);
 
   auto getAnimationTimestamp = makeGetAnimationTimestamp();
 
@@ -425,7 +411,6 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       synchronouslyUpdateUIPropsFunction,
-      synchronouslyUpdateUIPropsByDynamicFunction,
       getAnimationTimestamp,
       progressLayoutAnimation,
       endLayoutAnimation,
