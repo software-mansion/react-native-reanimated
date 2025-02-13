@@ -52,6 +52,7 @@ class WorkletRuntime : public jsi::HostObject,
         return;
       }
 
+      const auto lock = strongThis->createLock();
       strongThis->runGuarded(shareableWorklet);
     });
   }
@@ -65,6 +66,10 @@ class WorkletRuntime : public jsi::HostObject,
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
 
   std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) override;
+
+  std::unique_lock<std::recursive_mutex> createLock() const {
+    return std::unique_lock<std::recursive_mutex>(*runtimeMutex_);
+  }
 
  private:
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
