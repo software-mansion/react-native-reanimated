@@ -22,11 +22,14 @@ import {
 } from '../common';
 import { normalizeTransitionBehavior } from './settings';
 import type { ExpandedCSSTransitionConfigProperties } from './shorthand';
-import { parseTransitionShorthand } from './shorthand';
+import {
+  createEmptyTransitionConfig,
+  parseTransitionShorthand,
+} from './shorthand';
 
 export const ERROR_MESSAGES = {
   invalidTransitionProperty: (
-    transitionProperty: CSSTransitionProperty | undefined
+    transitionProperty: CSSTransitionProperty | undefined | string[]
   ) => `Invalid transition property "${JSON.stringify(transitionProperty)}"`,
 };
 
@@ -35,7 +38,7 @@ function getExpandedConfigProperties(
 ): ExpandedCSSTransitionConfigProperties {
   const result: AnyRecord = config.transition
     ? parseTransitionShorthand(config.transition)
-    : {};
+    : createEmptyTransitionConfig();
 
   for (const [key, value] of Object.entries(config)) {
     result[key] = convertPropertyToArray(value);
@@ -44,30 +47,53 @@ function getExpandedConfigProperties(
   return result as ExpandedCSSTransitionConfigProperties;
 }
 
-const hasTransitionProperties = (
-  transitionProperty: ExpandedCSSTransitionConfigProperties['transitionProperty']
-): transitionProperty is string[] =>
-  !!transitionProperty?.length &&
-  transitionProperty.some((prop) => prop !== 'none');
+const hasTransition = ({
+  transitionProperty,
+  ...rest
+}: ExpandedCSSTransitionConfigProperties) => {
+  if (transitionProperty.length) {
+    const hasNone = transitionProperty[0] === 'none';
+
+    // We allow either all values to be 'none' or none of them to be 'none'
+    if (transitionProperty.some((prop) => (prop === 'none') !== hasNone)) {
+      throw new ReanimatedError(
+        ERROR_MESSAGES.invalidTransitionProperty(transitionProperty)
+      );
+    }
+
+    return !hasNone;
+  }
+
+  // transitionProperty defaults to 'all' if not specified but there are
+  // other transition properties
+  return Object.values(rest).some((value) => value.length);
+};
 
 export function normalizeCSSTransitionProperties(
   config: CSSTransitionProperties
 ): NormalizedCSSTransitionConfig | null {
+  const expandedProperties = getExpandedConfigProperties(config);
+
+  if (!hasTransition(expandedProperties)) {
+    return null;
+  }
+
   const {
-    transitionProperty = ['all'],
+    transitionProperty,
     transitionDuration,
     transitionTimingFunction,
     transitionDelay,
     transitionBehavior,
-  } = getExpandedConfigProperties(config);
-
-  if (!hasTransitionProperties(transitionProperty)) {
-    return null;
-  }
-
+  } = expandedProperties;
   const specificProperties: string[] = [];
   let allPropertiesTransition = false;
   const settings: Record<string, NormalizedSingleCSSTransitionSettings> = {};
+
+  if (!transitionProperty.length) {
+    // For cases when transition property hasn't been explicitly specified
+    // (e.g. when only the transitionDuration is set)
+    transitionProperty.push('all');
+  }
 
   // Go from the last to the first property to ensure that the last
   // one entry for the same property is used without having to override
@@ -75,12 +101,6 @@ export function normalizeCSSTransitionProperties(
   // occurrence and ignore remaining ones)
   for (let i = transitionProperty.length - 1; i >= 0; i--) {
     const property = transitionProperty[i];
-
-    if (property === 'none') {
-      throw new ReanimatedError(
-        ERROR_MESSAGES.invalidTransitionProperty(config.transitionProperty)
-      );
-    }
     // Continue if there was a prop with the same name specified later
     // (we don't want to override the last occurrence of the property)
     if (settings?.[property]) {
@@ -95,14 +115,14 @@ export function normalizeCSSTransitionProperties(
 
     settings[property] = {
       duration: normalizeDuration(
-        transitionDuration?.[i % transitionDuration.length]
+        transitionDuration[i % transitionDuration.length]
       ),
       timingFunction: normalizeTimingFunction(
-        transitionTimingFunction?.[i % transitionTimingFunction.length]
+        transitionTimingFunction[i % transitionTimingFunction.length]
       ),
-      delay: normalizeDelay(transitionDelay?.[i % transitionDelay.length]),
+      delay: normalizeDelay(transitionDelay[i % transitionDelay.length]),
       allowDiscrete: normalizeTransitionBehavior(
-        transitionBehavior?.[i % transitionBehavior.length]
+        transitionBehavior[i % transitionBehavior.length]
       ),
     };
 
