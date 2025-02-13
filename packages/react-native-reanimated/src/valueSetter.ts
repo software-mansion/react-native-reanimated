@@ -69,6 +69,7 @@ export function valueSetter<Value>(
       if (finished) {
         animation.callback && animation.callback(true /* finished */);
       } else {
+        console.log('wwwww');
         requestAnimationFrame(step);
       }
     };

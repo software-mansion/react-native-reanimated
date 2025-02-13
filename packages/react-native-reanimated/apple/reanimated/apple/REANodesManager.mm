@@ -299,7 +299,7 @@ using namespace facebook::react;
   [self performOperations];
 
   if (_onAnimationCallbacks.count == 0) {
-    [self stopUpdatingOnAnimationFrame];
+   [self stopUpdatingOnAnimationFrame];
   }
 }
 
@@ -307,7 +307,7 @@ using namespace facebook::react;
 {
 #ifdef RCT_NEW_ARCH_ENABLED
   _performOperations(); // calls ReanimatedModuleProxy::performOperations
-  _wantRunUpdates = NO;
+ _wantRunUpdates = NO;
 #else
   if (_operationsInBatch.count != 0) {
     NSMutableArray<REANativeAnimationOp> *copiedOperationsQueue = _operationsInBatch;

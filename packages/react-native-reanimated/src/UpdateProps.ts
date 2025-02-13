@@ -79,12 +79,15 @@ const createUpdatePropsManager = isFabric()
               shadowNodeWrapper: viewDescriptor.shadowNodeWrapper,
               updates,
             });
+            console.log('operations', operations.length);
             if (operations.length === 1) {
+              console.log('qju');
               queueMicrotask(this.flush);
             }
           });
         },
         flush(this: void) {
+          console.log('hejka');
           global._updatePropsFabric!(operations);
           operations.length = 0;
         },

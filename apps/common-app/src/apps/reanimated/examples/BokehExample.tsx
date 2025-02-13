@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
@@ -6,6 +6,7 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
   withTiming,
+  runOnUI,
 } from 'react-native-reanimated';
 
 const { width, height } = Dimensions.get('window');
@@ -43,16 +44,25 @@ function Circle() {
     return () => clearInterval(id);
   });
 
-  const animatedStyle = useAnimatedStyle(
-    () => ({
+  const animatedStyle = useAnimatedStyle(() => {
+    // const counter = { value: 0 };
+    // const callback = () => {
+    //   console.log(_WORKLET, 'huj', counter.value++);
+    //   if (counter.value < 100) {
+    //     requestAnimationFrame(callback);
+    //   }
+    // };
+    // if (_WORKLET) {
+    //   callback();
+    // }
+    return {
       backgroundColor: `hsl(${hue.value},100%,50%)`,
       width: size,
       height: size,
       left: left.value,
       top: top.value,
-    }),
-    []
-  );
+    };
+  }, []);
 
   return <Animated.View style={[styles.circle, { opacity }, animatedStyle]} />;
 }
@@ -72,6 +82,24 @@ function Bokeh({ count }: BokehProps) {
 }
 
 export default function BokehExample() {
+  useEffect(() => {
+    runOnUI(() => {
+      'worklet';
+      const counter = { value: 0 };
+      const callback = () => {
+        console.log(
+          performance.now(),
+          'Hello from the UI thread',
+          counter.value++
+        );
+        if (counter.value < 100) {
+          requestAnimationFrame(callback);
+        }
+      };
+      callback();
+    })();
+  }, []);
+
   return (
     <View style={styles.container}>
       <Bokeh count={100} />

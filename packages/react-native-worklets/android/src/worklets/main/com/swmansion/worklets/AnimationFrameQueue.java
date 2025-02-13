@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+// TODO: Investigate pausing and starting
+// TODO: Slow animations
+
 public class AnimationFrameQueue {
 
   private Long mFirstUptime = SystemClock.uptimeMillis();
@@ -32,6 +35,17 @@ public class AnimationFrameQueue {
             };
   }
 
+    public void requestAnimationFrame(AnimationFrameCallback animationFrameCallback){
+      mFrameCallbacks.add(animationFrameCallback);
+      scheduleQueueExecution();
+    }
+
+      private void scheduleQueueExecution(){
+    if(!mCallbackPosted.getAndSet(true)) {
+      mReactChoreographer.postFrameCallback(ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE, mChoreographerCallback);
+    }
+  }
+
   private void executeQueue(long frameTimeNanos) {
     mCallbackPosted.set(false);
 
@@ -42,6 +56,7 @@ public class AnimationFrameQueue {
     }
 
     if(currentFrameTimeMs <= lastFrameTimeMs) {
+      // TODO: Not sure if we should keep it.
       // It is possible for ChoreographerCallback to be executed twice within the same frame
       // due to frame drops. If this occurs, the additional callback execution should be ignored.
       return;
@@ -59,16 +74,9 @@ public class AnimationFrameQueue {
     }
   }
 
-  public void requestAnimationFrame(AnimationFrameCallback animationFrameCallback){
-      mFrameCallbacks.add(animationFrameCallback);
-      scheduleQueueExecution();
-    }
 
-    private void scheduleQueueExecution(){
-    if(!mCallbackPosted.getAndSet(true)) {
-      mReactChoreographer.postFrameCallback(ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE, mChoreographerCallback);
-    }
-    }
+
+
 
   // public void scrollTo(int viewTag, double x, double y, boolean animated) {
   //   View view;

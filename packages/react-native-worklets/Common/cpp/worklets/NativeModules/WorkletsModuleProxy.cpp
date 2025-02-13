@@ -52,6 +52,7 @@ WorkletsModuleProxy::WorkletsModuleProxy(
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {
+  animationFrameBatchinator_.reset();
   jsQueue_->quitSynchronous();
   uiWorkletRuntime_.reset();
 }
