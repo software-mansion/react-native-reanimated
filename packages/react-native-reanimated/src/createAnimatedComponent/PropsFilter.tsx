@@ -1,7 +1,5 @@
 'use strict';
 
-import { StyleSheet } from 'react-native';
-
 import { initialUpdaterRun } from '../animation';
 import type { StyleProps } from '../commonTypes';
 import { isSharedValue } from '../isSharedValue';
