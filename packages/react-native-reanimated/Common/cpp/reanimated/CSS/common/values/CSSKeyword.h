@@ -12,7 +12,7 @@ namespace reanimated {
 using namespace worklets;
 
 template <typename TValue>
-class CSSKeywordBase : public CSSBaseValue<CSSValueType::Keyword, TValue> {
+class CSSKeywordBase : public CSSSimpleValue<TValue> {
  public:
   static constexpr bool is_discrete_value = true;
 
@@ -22,7 +22,6 @@ class CSSKeywordBase : public CSSBaseValue<CSSValueType::Keyword, TValue> {
 
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
 
-  CSSValueType type() const override;
   jsi::Value toJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
@@ -35,6 +34,7 @@ class CSSKeywordBase : public CSSBaseValue<CSSValueType::Keyword, TValue> {
 
 struct CSSKeyword : public CSSKeywordBase<CSSKeyword> {
   using CSSKeywordBase<CSSKeyword>::CSSKeywordBase;
+  using CSSKeywordBase<CSSKeyword>::canConstruct;
 
   CSSKeyword interpolate(double progress, const CSSKeyword &to) const override;
 
@@ -47,6 +47,7 @@ struct CSSKeyword : public CSSKeywordBase<CSSKeyword> {
 
 struct CSSDisplay : public CSSKeywordBase<CSSDisplay> {
   using CSSKeywordBase<CSSDisplay>::CSSKeywordBase;
+  using CSSKeywordBase<CSSDisplay>::canConstruct;
 
   CSSDisplay interpolate(double progress, const CSSDisplay &to) const override;
 

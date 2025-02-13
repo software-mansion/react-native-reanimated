@@ -7,8 +7,7 @@
 
 namespace reanimated {
 
-struct CSSDimension
-    : public CSSResolvableValue<CSSValueType::Dimension, CSSDimension, double> {
+struct CSSDimension : public CSSResolvableValue<CSSDimension, double> {
   double value;
   bool isRelative;
 

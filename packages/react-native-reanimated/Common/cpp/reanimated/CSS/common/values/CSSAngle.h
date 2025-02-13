@@ -15,7 +15,7 @@ namespace reanimated {
 
 using namespace worklets;
 
-struct CSSAngle : public CSSBaseValue<CSSValueType::Angle, CSSAngle> {
+struct CSSAngle : public CSSSimpleValue<CSSAngle> {
   double value;
 
   CSSAngle();
