@@ -471,18 +471,6 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
   return result;
 }
 
-jsi::Value TransformsStyleInterpolator::convertResultToJSI(
-    jsi::Runtime &rt,
-    const TransformOperations &operations) {
-  jsi::Array result(rt, operations.size());
-
-  for (size_t i = 0; i < operations.size(); ++i) {
-    result.setValueAtIndex(rt, i, operations[i]->toJSIValue(rt));
-  }
-
-  return result;
-}
-
 folly::dynamic TransformsStyleInterpolator::convertResultToDynamic(
     const TransformOperations &operations) {
   auto result = folly::dynamic::array();
