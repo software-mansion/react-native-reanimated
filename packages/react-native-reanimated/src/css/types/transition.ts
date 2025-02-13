@@ -12,7 +12,7 @@ export type CSSTransitionDuration = TimeUnit;
 export type CSSTransitionTimingFunction = CSSTimingFunction;
 export type CSSTransitionDelay = TimeUnit;
 export type CSSTransitionBehavior = 'normal' | 'allow-discrete';
-export type CSSTransition = string;
+export type CSSTransitionShorthand = string;
 
 type SingleCSSTransitionSettings = {
   transitionDuration?: CSSTransitionDuration;
@@ -32,7 +32,7 @@ export type CSSTransitionSettings =
 export type CSSTransitionProperties<S extends object = PlainStyle> =
   CSSTransitionSettings & {
     transitionProperty?: CSSTransitionProperty<S>;
-    transition?: CSSTransition;
+    transition?: CSSTransitionShorthand;
   };
 
 export type CSSTransitionProp = keyof CSSTransitionProperties;

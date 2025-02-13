@@ -1,26 +1,74 @@
-/* eslint-disable perfectionist/sort-objects */
-import React, { useReducer } from 'react';
-import { Button, StyleSheet, View } from 'react-native';
-import Animated, { steps } from 'react-native-reanimated';
+/**
+ * This example is meant to be used for temporary purposes only. Code in this
+ * file should be replaced with the actual example implementation.
+ */
 
-export default function EmptyExample() {
-  const [state, toggleState] = useReducer((s) => !s, false);
+import { useState } from 'react';
+import type { ViewStyle } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+
+import { Button, Screen } from '@/apps/css/components';
+
+const transitionStyles: Array<ViewStyle> = [
+  {
+    transform: [
+      { perspective: 100 },
+      { rotate: '45deg' },
+      { skewX: '45deg' },
+      { rotateX: '45deg' },
+    ],
+  },
+  {
+    backgroundColor: 'blue',
+    borderRadius: 100,
+    opacity: 0.5,
+    transform: [{ translateY: 200 }, { rotate: '45deg' }, { scale: 2 }],
+  },
+  {
+    backgroundColor: 'green',
+    transform: [
+      { perspective: 200 },
+      { rotate: '45deg' },
+      { translateY: 150 },
+      { rotateY: '-25deg' },
+      { rotateX: '35deg' },
+    ],
+    width: 200,
+  },
+];
+
+export default function Playground() {
+  const [state, setState] = useState(0);
+  const stateToStyle = (num: number) => {
+    return transitionStyles[num % transitionStyles.length];
+  };
 
   return (
-    <View style={styles.container}>
-      <Animated.View
-        style={{
-          width: state ? 200 : 100,
-          height: state ? 200 : 100,
-          transform: [{ rotate: state ? '45deg' : '0deg' }],
-          transitionTimingFunction: steps(2), // overridden by the shorthand
-          backgroundColor: 'red',
-          transition: 'transform 2s ease-in',
-          transitionDuration: 1000, // overrides the shorthand
-        }}
-      />
-      <Button title="Toggle width" onPress={toggleState} />
-    </View>
+    <Screen>
+      <View style={styles.container}>
+        <Button
+          title="Change state"
+          onPress={() => {
+            setState(state + 1);
+          }}
+        />
+        <Animated.View
+          style={[
+            {
+              backgroundColor: 'red',
+              height: 65,
+              marginTop: 60,
+              transitionDuration: '0.5s',
+              transitionProperty: 'all',
+              transitionTimingFunction: 'ease-in-out',
+              width: 65,
+            },
+            stateToStyle(state),
+          ]}
+        />
+      </View>
+    </Screen>
   );
 }
 

@@ -21,7 +21,7 @@ import {
   normalizeTimingFunction,
 } from '../common';
 import { normalizeTransitionBehavior } from './settings';
-import type { ExpandedConfigProperties } from './shorthand';
+import type { ExpandedCSSTransitionConfigProperties } from './shorthand';
 import { parseTransitionShorthand } from './shorthand';
 
 export const ERROR_MESSAGES = {
@@ -32,7 +32,7 @@ export const ERROR_MESSAGES = {
 
 function getExpandedConfigProperties(
   config: CSSTransitionProperties
-): ExpandedConfigProperties {
+): ExpandedCSSTransitionConfigProperties {
   const result: AnyRecord = config.transition
     ? parseTransitionShorthand(config.transition)
     : {};
@@ -41,11 +41,11 @@ function getExpandedConfigProperties(
     result[key] = convertPropertyToArray(value);
   }
 
-  return result as ExpandedConfigProperties;
+  return result as ExpandedCSSTransitionConfigProperties;
 }
 
 const hasTransitionProperties = (
-  transitionProperty: ExpandedConfigProperties['transitionProperty']
+  transitionProperty: ExpandedCSSTransitionConfigProperties['transitionProperty']
 ): transitionProperty is string[] =>
   !!transitionProperty?.length &&
   transitionProperty.some((prop) => prop !== 'none');
