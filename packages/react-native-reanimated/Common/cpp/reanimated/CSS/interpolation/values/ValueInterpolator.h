@@ -32,16 +32,13 @@ class ValueInterpolator : public PropertyInterpolator {
 
  public:
   using ValueType = CSSValueVariant<AllowedTypes...>;
+  using KeyframeType = ValueKeyframe<AllowedTypes...>;
 
   explicit ValueInterpolator(
       const PropertyPath &propertyPath,
       const ValueType &defaultStyleValue,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      : PropertyInterpolator(
-            propertyPath,
-            progressProvider,
-            viewStylesRepository),
+      : PropertyInterpolator(propertyPath, viewStylesRepository),
         defaultStyleValue_(defaultStyleValue) {}
   virtual ~ValueInterpolator() = default;
 
@@ -52,17 +49,16 @@ class ValueInterpolator : public PropertyInterpolator {
         rt, shadowNode->getTag(), propertyPath_);
   }
 
-  jsi::Value getCurrentValue(
+  jsi::Value getResetStyle(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override {
-    if (previousValue_.has_value()) {
-      return previousValue_.value().toJSIValue(rt);
-    }
     auto styleValue = getStyleValue(rt, shadowNode);
-    if (!styleValue.isUndefined()) {
-      return styleValue;
+
+    if (styleValue.isUndefined()) {
+      return defaultStyleValue_.toJSIValue(rt);
     }
-    return defaultStyleValue_.toJSIValue(rt);
+
+    return styleValue;
   }
 
   jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const override {
@@ -73,17 +69,17 @@ class ValueInterpolator : public PropertyInterpolator {
     return convertOptionalToJSI(rt, keyframes_.back().value);
   }
 
-  bool equalsReversingAdjustedStartValue(
+  bool equalsFirstKeyframeValue(
       jsi::Runtime &rt,
       const jsi::Value &propertyValue) const override {
-    if (!reversingAdjustedStartValue_.has_value()) {
+    const auto &firstKeyframeValue = keyframes_.front().value;
+    if (!firstKeyframeValue.has_value()) {
       return propertyValue.isUndefined();
     }
-    return reversingAdjustedStartValue_.value() == ValueType(rt, propertyValue);
+    return firstKeyframeValue.value() == ValueType(rt, propertyValue);
   }
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override {
-    keyframeAfterIndex_ = 1;
     const auto parsedKeyframes = parseJSIKeyframes(rt, keyframes);
 
     keyframes_.clear();
@@ -91,49 +87,49 @@ class ValueInterpolator : public PropertyInterpolator {
 
     for (const auto &[offset, value] : parsedKeyframes) {
       if (value.isUndefined()) {
-        keyframes_.push_back(
-            ValueKeyframe<AllowedTypes...>{offset, std::nullopt});
+        keyframes_.emplace_back(offset, std::nullopt);
       } else {
-        keyframes_.push_back(
-            ValueKeyframe<AllowedTypes...>{offset, ValueType(rt, value)});
+        keyframes_.emplace_back(offset, ValueType(rt, value));
       }
     }
   }
 
   void updateKeyframesFromStyleChange(
       jsi::Runtime &rt,
+      // oldStyleValue is either the old style value or the previously
+      // calculated value during the interrupted transition
       const jsi::Value &oldStyleValue,
       const jsi::Value &newStyleValue) override {
-    keyframeAfterIndex_ = 1;
-    ValueKeyframe<AllowedTypes...> firstKeyframe, lastKeyframe;
+    KeyframeType firstKeyframe, lastKeyframe;
 
-    if (!oldStyleValue.isUndefined()) {
-      reversingAdjustedStartValue_ = ValueType(rt, oldStyleValue);
+    if (oldStyleValue.isUndefined()) {
+      firstKeyframe = {0, defaultStyleValue_};
     } else {
-      reversingAdjustedStartValue_ = defaultStyleValue_;
+      firstKeyframe = {0, ValueType(rt, oldStyleValue)};
     }
 
-    if (previousValue_.has_value()) {
-      firstKeyframe = {0, previousValue_};
-    } else {
-      firstKeyframe = {0, reversingAdjustedStartValue_};
-    }
-
-    if (!newStyleValue.isUndefined()) {
-      lastKeyframe = {1, ValueType(rt, newStyleValue)};
-    } else {
+    if (newStyleValue.isUndefined()) {
       lastKeyframe = {1, defaultStyleValue_};
+    } else {
+      lastKeyframe = {1, ValueType(rt, newStyleValue)};
     }
 
     keyframes_ = {firstKeyframe, lastKeyframe};
   }
 
-  jsi::Value update(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
-      override {
-    updateCurrentKeyframes(rt, shadowNode);
+  jsi::Value interpolate(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
+      const override {
+    const auto toIndex = getToKeyframeIndex(progressProvider);
+    const auto fromIndex = toIndex - 1;
 
-    std::optional<ValueType> fromValue = keyframeBefore_.value;
-    std::optional<ValueType> toValue = keyframeAfter_.value;
+    const auto &fromKeyframe = keyframes_.at(fromIndex);
+    const auto &toKeyframe = keyframes_.at(toIndex);
+
+    std::optional<ValueType> fromValue = fromKeyframe.value;
+    std::optional<ValueType> toValue = toKeyframe.value;
 
     if (!fromValue.has_value()) {
       fromValue = getFallbackValue(rt, shadowNode);
@@ -142,35 +138,29 @@ class ValueInterpolator : public PropertyInterpolator {
       toValue = getFallbackValue(rt, shadowNode);
     }
 
-    const auto keyframeProgress = progressProvider_->getKeyframeProgress(
-        keyframeBefore_.offset, keyframeAfter_.offset);
+    const auto keyframeProgress = progressProvider->getKeyframeProgress(
+        fromKeyframe.offset, toKeyframe.offset);
 
+    ValueType result;
     if (keyframeProgress == 1.0) {
-      previousValue_ = toValue.value();
+      result = toValue.value();
     } else if (keyframeProgress == 0.0) {
-      previousValue_ = fromValue.value();
+      result = fromValue.value();
     } else {
-      previousValue_ = interpolate(
+      result = interpolateValue(
           keyframeProgress,
           fromValue.value(),
           toValue.value(),
           {.node = shadowNode});
     }
 
-    return previousValue_.value().toJSIValue(rt);
-  }
-
-  jsi::Value reset(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
-      override {
-    previousValue_ = std::nullopt;
-    reversingAdjustedStartValue_ = std::nullopt;
-    return getCurrentValue(rt, shadowNode);
+    return result.toJSIValue(rt);
   }
 
  protected:
   ValueType defaultStyleValue_;
 
-  virtual ValueType interpolate(
+  virtual ValueType interpolateValue(
       double progress,
       const ValueType &fromValue,
       const ValueType &toValue,
@@ -180,11 +170,6 @@ class ValueInterpolator : public PropertyInterpolator {
 
  private:
   std::vector<ValueKeyframe<AllowedTypes...>> keyframes_;
-  int keyframeAfterIndex_ = 1;
-  ValueKeyframe<AllowedTypes...> keyframeBefore_;
-  ValueKeyframe<AllowedTypes...> keyframeAfter_;
-  std::optional<ValueType> previousValue_;
-  std::optional<ValueType> reversingAdjustedStartValue_;
 
   ValueType getFallbackValue(
       jsi::Runtime &rt,
@@ -197,76 +182,28 @@ class ValueInterpolator : public PropertyInterpolator {
   ValueType resolveKeyframeValue(
       const ValueType &unresolvedValue,
       const ShadowNode::Shared &shadowNode) const {
-    return interpolate(
+    return interpolateValue(
         0, unresolvedValue, unresolvedValue, {.node = shadowNode});
   }
 
-  ValueKeyframe<AllowedTypes...> getKeyframeAtIndex(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      size_t index,
-      bool shouldResolve) const {
-    const auto &keyframe = keyframes_.at(index);
+  size_t getToKeyframeIndex(
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
+    const auto progress = progressProvider->getGlobalProgress();
 
-    if (shouldResolve) {
-      const double offset = keyframe.offset;
-      std::optional<ValueType> unresolvedValue;
+    const auto it = std::upper_bound(
+        keyframes_.begin(),
+        keyframes_.end(),
+        progress,
+        [](double progress, const KeyframeType &keyframe) {
+          return progress < keyframe.offset;
+        });
 
-      if (keyframe.value.has_value()) {
-        unresolvedValue = keyframe.value.value();
-      } else {
-        unresolvedValue = getFallbackValue(rt, shadowNode);
-      }
-
-      return ValueKeyframe<AllowedTypes...>{
-          offset, resolveKeyframeValue(unresolvedValue.value(), shadowNode)};
+    // If we're at the end, return the last valid keyframe index
+    if (it == keyframes_.end()) {
+      return keyframes_.size() - 1;
     }
 
-    return keyframe;
-  }
-
-  void updateCurrentKeyframes(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) {
-    const auto progress = progressProvider_->getGlobalProgress();
-    const bool isProgressLessThanHalf = progress < 0.5;
-    const auto prevAfterIndex = keyframeAfterIndex_;
-
-    if (progressProvider_->isFirstUpdate()) {
-      keyframeAfterIndex_ = isProgressLessThanHalf ? 1 : keyframes_.size() - 1;
-    }
-
-    while (keyframeAfterIndex_ < keyframes_.size() - 1 &&
-           keyframes_[keyframeAfterIndex_].offset < progress)
-      ++keyframeAfterIndex_;
-
-    while (keyframeAfterIndex_ > 1 &&
-           keyframes_[keyframeAfterIndex_ - 1].offset >= progress)
-      --keyframeAfterIndex_;
-
-    if (progressProvider_->isFirstUpdate()) {
-      keyframeBefore_ = getKeyframeAtIndex(
-          rt,
-          shadowNode,
-          keyframeAfterIndex_ - 1,
-          Resolvable<ValueType> && isProgressLessThanHalf);
-      keyframeAfter_ = getKeyframeAtIndex(
-          rt,
-          shadowNode,
-          keyframeAfterIndex_,
-          Resolvable<ValueType> && !isProgressLessThanHalf);
-    } else if (keyframeAfterIndex_ != prevAfterIndex) {
-      keyframeBefore_ = getKeyframeAtIndex(
-          rt,
-          shadowNode,
-          keyframeAfterIndex_ - 1,
-          Resolvable<ValueType> && keyframeAfterIndex_ > prevAfterIndex);
-      keyframeAfter_ = getKeyframeAtIndex(
-          rt,
-          shadowNode,
-          keyframeAfterIndex_,
-          Resolvable<ValueType> && keyframeAfterIndex_ < prevAfterIndex);
-    }
+    return std::distance(keyframes_.begin(), it);
   }
 
   jsi::Value convertOptionalToJSI(

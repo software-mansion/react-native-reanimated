@@ -18,21 +18,19 @@ class ResolvableValueInterpolator : public ValueInterpolator<AllowedTypes...> {
   ResolvableValueInterpolator(
       const PropertyPath &propertyPath,
       const ValueType &defaultStyleValue,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       RelativeTo relativeTo,
       std::string relativeProperty)
       : ValueInterpolator<AllowedTypes...>(
             propertyPath,
             defaultStyleValue,
-            progressProvider,
             viewStylesRepository),
         relativeTo_(relativeTo),
         relativeProperty_(std::move(relativeProperty)) {}
   virtual ~ResolvableValueInterpolator() = default;
 
  protected:
-  ValueType interpolate(
+  ValueType interpolateValue(
       double progress,
       const ValueType &fromValue,
       const ValueType &toValue,

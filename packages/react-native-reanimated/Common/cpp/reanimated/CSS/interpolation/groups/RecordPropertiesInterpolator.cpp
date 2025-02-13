@@ -6,15 +6,11 @@ namespace reanimated {
 RecordPropertiesInterpolator::RecordPropertiesInterpolator(
     const InterpolatorFactoriesRecord &factories,
     const PropertyPath &propertyPath,
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : GroupPropertiesInterpolator(
-          propertyPath,
-          progressProvider,
-          viewStylesRepository),
+    : GroupPropertiesInterpolator(propertyPath, viewStylesRepository),
       factories_(factories) {}
 
-bool RecordPropertiesInterpolator::equalsReversingAdjustedStartValue(
+bool RecordPropertiesInterpolator::equalsFirstKeyframeValue(
     jsi::Runtime &rt,
     const jsi::Value &propertyValue) const {
   const auto propertyValuesObject = propertyValue.asObject(rt);
@@ -29,8 +25,7 @@ bool RecordPropertiesInterpolator::equalsReversingAdjustedStartValue(
 
     const auto interpolatorIt = interpolators_.find(propName);
     if (interpolatorIt == interpolators_.end() ||
-        !interpolatorIt->second->equalsReversingAdjustedStartValue(
-            rt, propValue)) {
+        !interpolatorIt->second->equalsFirstKeyframeValue(rt, propValue)) {
       return false;
     }
   }
@@ -96,13 +91,6 @@ void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
   }
 }
 
-void RecordPropertiesInterpolator::forEachInterpolator(
-    const std::function<void(PropertyInterpolator &)> &callback) const {
-  for (const auto &[propName, interpolator] : interpolators_) {
-    callback(*interpolator);
-  }
-}
-
 jsi::Value RecordPropertiesInterpolator::mapInterpolators(
     jsi::Runtime &rt,
     const std::function<jsi::Value(PropertyInterpolator &)> &callback) const {
@@ -120,11 +108,7 @@ void RecordPropertiesInterpolator::maybeCreateInterpolator(
     const std::string &propertyName) {
   if (interpolators_.find(propertyName) == interpolators_.end()) {
     const auto newInterpolator = createPropertyInterpolator(
-        propertyName,
-        propertyPath_,
-        factories_,
-        progressProvider_,
-        viewStylesRepository_);
+        propertyName, propertyPath_, factories_, viewStylesRepository_);
     interpolators_.emplace(propertyName, newInterpolator);
   }
 }

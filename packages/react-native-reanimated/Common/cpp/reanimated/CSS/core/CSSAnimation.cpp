@@ -23,8 +23,7 @@ CSSAnimation::CSSAnimation(
           config.direction,
           config.easingFunction,
           config.keyframeEasingFunctions)),
-      styleInterpolator_(
-          AnimationStyleInterpolator(progressProvider_, viewStylesRepository)) {
+      styleInterpolator_(AnimationStyleInterpolator(viewStylesRepository)) {
   styleInterpolator_.updateKeyframes(rt, config.keyframesStyle);
 
   if (config.playState == AnimationPlayState::Paused) {
@@ -69,21 +68,21 @@ jsi::Value CSSAnimation::getViewStyle(jsi::Runtime &rt) const {
 }
 
 jsi::Value CSSAnimation::getCurrentInterpolationStyle(jsi::Runtime &rt) const {
-  return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
+  return styleInterpolator_.interpolate(rt, shadowNode_, progressProvider_);
 }
 
-jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) {
+jsi::Value CSSAnimation::getBackwardsFillStyle(jsi::Runtime &rt) const {
   return isReversed() ? styleInterpolator_.getLastKeyframeValue(rt)
                       : styleInterpolator_.getFirstKeyframeValue(rt);
 }
 
-jsi::Value CSSAnimation::getForwardFillStyle(jsi::Runtime &rt) {
+jsi::Value CSSAnimation::getForwardsFillStyle(jsi::Runtime &rt) const {
   return isReversed() ? styleInterpolator_.getFirstKeyframeValue(rt)
                       : styleInterpolator_.getLastKeyframeValue(rt);
 }
 
-jsi::Value CSSAnimation::resetStyle(jsi::Runtime &rt) {
-  return styleInterpolator_.reset(rt, shadowNode_);
+jsi::Value CSSAnimation::getResetStyle(jsi::Runtime &rt) const {
+  return styleInterpolator_.getResetStyle(rt, shadowNode_);
 }
 
 void CSSAnimation::run(const double timestamp) {
@@ -107,7 +106,7 @@ jsi::Value CSSAnimation::update(jsi::Runtime &rt, const double timestamp) {
                                   : jsi::Value::undefined();
   }
 
-  return styleInterpolator_.update(rt, shadowNode_);
+  return styleInterpolator_.interpolate(rt, shadowNode_, progressProvider_);
 }
 
 void CSSAnimation::updateSettings(

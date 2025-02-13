@@ -29,26 +29,25 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   TransformsStyleInterpolator(
       const PropertyPath &propertyPath,
       const std::shared_ptr<TransformInterpolators> &interpolators,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
   jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
-  jsi::Value getCurrentValue(
+  jsi::Value getResetStyle(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const override;
   jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const override;
   jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const override;
-
-  bool equalsReversingAdjustedStartValue(
+  bool equalsFirstKeyframeValue(
       jsi::Runtime &rt,
       const jsi::Value &propertyValue) const override;
 
-  jsi::Value update(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
-      override;
-  jsi::Value reset(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
-      override;
+  jsi::Value interpolate(
+      jsi::Runtime &rt,
+      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
+      const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
@@ -60,13 +59,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   const std::shared_ptr<TransformInterpolators> interpolators_;
   static const TransformOperations defaultStyleValue_;
 
-  size_t keyframeIndex_ = 0;
   std::vector<std::shared_ptr<TransformKeyframe>> keyframes_;
-  std::shared_ptr<TransformKeyframe> currentKeyframe_;
-  // Previous interpolation result
-  std::optional<TransformOperations> previousResult_;
-  // For transition interrupting
-  std::optional<TransformOperations> reversingAdjustedStartValue_;
 
   static std::optional<TransformOperations> parseTransformOperations(
       jsi::Runtime &rt,
@@ -88,21 +81,11 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   std::shared_ptr<TransformOperation> getDefaultOperationOfType(
       TransformOperationType type) const;
 
+  size_t getIndexOfCurrentKeyframe(
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const;
   TransformOperations getFallbackValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const;
-  TransformOperations resolveTransformOperations(
-      const ShadowNode::Shared &shadowNode,
-      const TransformOperations &unresolvedOperations) const;
-  std::shared_ptr<TransformKeyframe> getKeyframeAtIndex(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      size_t index,
-      int resolveDirection // < 0 - resolve from, > 0 - resolve to
-  ) const;
-  void updateCurrentKeyframe(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode);
   TransformOperations interpolateOperations(
       const ShadowNode::Shared &shadowNode,
       double keyframeProgress,

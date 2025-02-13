@@ -13,14 +13,12 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     const std::string &propertyName,
     const PropertyPath &propertyPath,
     const InterpolatorFactoriesRecord &factories,
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
 std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     size_t arrayIndex,
     const PropertyPath &propertyPath,
     const InterpolatorFactoriesArray &factories,
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
 } // namespace reanimated

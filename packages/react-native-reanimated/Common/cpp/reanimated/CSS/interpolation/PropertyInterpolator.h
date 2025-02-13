@@ -17,22 +17,17 @@ class PropertyInterpolator {
  public:
   explicit PropertyInterpolator(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
-
-  virtual void setProgressProvider(
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider);
 
   virtual jsi::Value getStyleValue(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const = 0;
-  virtual jsi::Value getCurrentValue(
+  virtual jsi::Value getResetStyle(
       jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const = 0;
   virtual jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const = 0;
   virtual jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const = 0;
-
-  virtual bool equalsReversingAdjustedStartValue(
+  virtual bool equalsFirstKeyframeValue(
       jsi::Runtime &rt,
       const jsi::Value &propertyValue) const = 0;
 
@@ -44,17 +39,15 @@ class PropertyInterpolator {
       const jsi::Value &oldStyleValue,
       const jsi::Value &newStyleValue) = 0;
 
-  virtual jsi::Value update(
+  virtual jsi::Value interpolate(
       jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) = 0;
-  virtual jsi::Value reset(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) = 0;
+      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
+      const = 0;
 
  protected:
   const PropertyPath propertyPath_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-  std::shared_ptr<KeyframeProgressProvider> progressProvider_;
 };
 
 class PropertyInterpolatorFactory {
@@ -67,7 +60,6 @@ class PropertyInterpolatorFactory {
 
   virtual std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       const = 0;
 };

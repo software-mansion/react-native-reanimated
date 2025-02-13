@@ -141,9 +141,11 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
     {
       std::lock_guard<std::mutex> lock{strongThis->mutex_};
 
-      const auto &initialProps =
-          transition->run(rt, changedProps, strongThis->getCurrentTimestamp_());
       const auto &shadowNode = transition->getShadowNode();
+      const auto &lastUpdates =
+          strongThis->getUpdatesFromRegistry(rt, shadowNode->getTag());
+      const auto &initialProps = transition->run(
+          rt, changedProps, lastUpdates, strongThis->getCurrentTimestamp_());
 
       strongThis->setInUpdatesRegistry(rt, shadowNode, initialProps);
       strongThis->scheduleOrActivateTransition(transition);

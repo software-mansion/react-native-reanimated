@@ -31,7 +31,8 @@ TransitionProgressState CSSTransition::getState() const {
 }
 
 jsi::Value CSSTransition::getCurrentInterpolationStyle(jsi::Runtime &rt) const {
-  return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
+  return styleInterpolator_.getCurrentInterpolationStyle(
+      rt, shadowNode_, progressProvider_);
 }
 
 PropertyNames CSSTransition::getAllowedProperties(
@@ -91,6 +92,7 @@ void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
 jsi::Value CSSTransition::run(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
+    const jsi::Value &lastUpdateValue,
     const double timestamp) {
   progressProvider_.runProgressProviders(
       timestamp,
@@ -98,15 +100,21 @@ jsi::Value CSSTransition::run(
       changedProps.changedPropertyNames,
       styleInterpolator_.getReversedPropertyNames(rt, changedProps.newProps));
   styleInterpolator_.updateInterpolatedProperties(
-      rt, changedProps, progressProvider_.getPropertyProgressProviders());
-
+      rt, changedProps, lastUpdateValue);
   return update(rt, timestamp);
 }
 
 jsi::Value CSSTransition::update(jsi::Runtime &rt, const double timestamp) {
   progressProvider_.update(timestamp);
-  return styleInterpolator_.update(
-      rt, shadowNode_, progressProvider_.getRemovedProperties());
+  auto result =
+      styleInterpolator_.interpolate(rt, shadowNode_, progressProvider_);
+  // Remove interpolators for which interpolation has finished
+  // (we won't need them anymore in the current transition)
+  styleInterpolator_.discardFinishedInterpolators(progressProvider_);
+  // And remove finished progress providers after they were used to calculate
+  // the last frame of the transition
+  progressProvider_.discardFinishedProgressProviders();
+  return result;
 }
 
 void CSSTransition::updateTransitionProperties(

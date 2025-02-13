@@ -7,19 +7,6 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : viewStylesRepository_(viewStylesRepository) {}
 
-jsi::Value TransitionStyleInterpolator::getCurrentInterpolationStyle(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) const {
-  jsi::Object result(rt);
-
-  for (const auto &[propertyName, interpolator] : interpolators_) {
-    jsi::Value value = interpolator->getCurrentValue(rt, shadowNode);
-    result.setProperty(rt, propertyName.c_str(), value);
-  }
-
-  return result;
-}
-
 std::unordered_set<std::string>
 TransitionStyleInterpolator::getReversedPropertyNames(
     jsi::Runtime &rt,
@@ -38,7 +25,9 @@ TransitionStyleInterpolator::getReversedPropertyNames(
 
     const auto it = interpolators_.find(propertyName);
     if (it != interpolators_.end() &&
-        it->second->equalsReversingAdjustedStartValue(rt, propertyValue)) {
+        // First keyframe value of the previous transition is the reversing
+        // adjusted start value
+        it->second->equalsFirstKeyframeValue(rt, propertyValue)) {
       reversedProperties.insert(propertyName);
     }
   }
@@ -46,30 +35,42 @@ TransitionStyleInterpolator::getReversedPropertyNames(
   return reversedProperties;
 }
 
-jsi::Value TransitionStyleInterpolator::update(
+jsi::Value TransitionStyleInterpolator::getCurrentInterpolationStyle(
     jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode,
-    const std::unordered_set<std::string> &propertiesToRemove) {
+    const TransitionProgressProvider &transitionProgressProvider) const {
+  return mapInterpolators(
+      rt,
+      transitionProgressProvider,
+      [&](const std::shared_ptr<PropertyInterpolator> &interpolator,
+          const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
+        return interpolator->interpolate(rt, shadowNode, progressProvider);
+      });
+}
+
+jsi::Value TransitionStyleInterpolator::interpolate(
+    jsi::Runtime &rt,
+    const ShadowNode::Shared &shadowNode,
+    const TransitionProgressProvider &transitionProgressProvider) const {
   if (interpolators_.empty()) {
     return jsi::Value::undefined();
   }
 
-  jsi::Object result(rt);
+  return mapInterpolators(
+      rt,
+      transitionProgressProvider,
+      [&](const std::shared_ptr<PropertyInterpolator> &interpolator,
+          const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
+        return interpolator->interpolate(rt, shadowNode, progressProvider);
+      });
+}
 
-  for (auto it = interpolators_.begin(); it != interpolators_.end();) {
-    const auto &[propertyName, interpolator] = *it;
-
-    jsi::Value value = interpolator->update(rt, shadowNode);
-    result.setProperty(rt, propertyName.c_str(), value);
-
-    if (propertiesToRemove.find(propertyName) != propertiesToRemove.cend()) {
-      it = interpolators_.erase(it);
-    } else {
-      ++it;
-    }
+void TransitionStyleInterpolator::discardFinishedInterpolators(
+    const TransitionProgressProvider &transitionProgressProvider) {
+  for (const auto &propertyName :
+       transitionProgressProvider.getRemovedProperties()) {
+    interpolators_.erase(propertyName);
   }
-
-  return result;
 }
 
 void TransitionStyleInterpolator::discardIrrelevantInterpolators(
@@ -89,36 +90,55 @@ void TransitionStyleInterpolator::discardIrrelevantInterpolators(
 void TransitionStyleInterpolator::updateInterpolatedProperties(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
-    const TransitionPropertyProgressProviders &progressProviders) {
+    const jsi::Value &lastUpdateValue) {
   const auto oldPropsObj = changedProps.oldProps.asObject(rt);
   const auto newPropsObj = changedProps.newProps.asObject(rt);
 
   for (const auto &propertyName : changedProps.changedPropertyNames) {
-    auto interpolatorIt = interpolators_.find(propertyName);
+    auto it = interpolators_.find(propertyName);
+    const auto shouldCreateInterpolator = it == interpolators_.end();
 
-    const auto oldValue = oldPropsObj.getProperty(rt, propertyName.c_str());
-    const auto newValue = newPropsObj.getProperty(rt, propertyName.c_str());
-
-    if (interpolatorIt == interpolators_.end()) {
+    if (shouldCreateInterpolator) {
       const auto newInterpolator = createPropertyInterpolator(
           propertyName,
           {},
           PROPERTY_INTERPOLATORS_CONFIG,
-          progressProviders.at(propertyName),
           viewStylesRepository_);
-      interpolatorIt =
-          interpolators_.emplace(propertyName, newInterpolator).first;
-    } else {
-      // We have to set the new progress provider when the new transition
-      // starts and the interpolator already exists, because the new property
-      // progress provider was created on the new transition start.
-      interpolatorIt->second->setProgressProvider(
-          progressProviders.at(propertyName));
+      it = interpolators_.emplace(propertyName, newInterpolator).first;
     }
 
-    interpolatorIt->second->updateKeyframesFromStyleChange(
-        rt, oldValue, newValue);
+    const auto newValue = newPropsObj.getProperty(rt, propertyName.c_str());
+
+    // Try to use a value from the last CSS transition update (only if the
+    // interpolator existed - when the transition was interrupted)
+    if (!shouldCreateInterpolator && lastUpdateValue.isObject()) {
+      const auto lastUpdateObject = lastUpdateValue.asObject(rt);
+      const auto oldValue =
+          lastUpdateObject.hasProperty(rt, propertyName.c_str())
+          ? lastUpdateObject.getProperty(rt, propertyName.c_str())
+          : oldPropsObj.getProperty(rt, propertyName.c_str());
+      it->second->updateKeyframesFromStyleChange(rt, oldValue, newValue);
+    } else {
+      const auto oldValue = oldPropsObj.getProperty(rt, propertyName.c_str());
+      it->second->updateKeyframesFromStyleChange(rt, oldValue, newValue);
+    }
   }
+}
+
+jsi::Value TransitionStyleInterpolator::mapInterpolators(
+    jsi::Runtime &rt,
+    const TransitionProgressProvider &transitionProgressProvider,
+    const MapInterpolatorsCallback &callback) const {
+  jsi::Object result(rt);
+
+  for (const auto &[propertyName, progressProvider] :
+       transitionProgressProvider.getPropertyProgressProviders()) {
+    const auto value =
+        callback(interpolators_.at(propertyName), progressProvider);
+    result.setProperty(rt, propertyName.c_str(), value);
+  }
+
+  return result;
 }
 
 } // namespace reanimated

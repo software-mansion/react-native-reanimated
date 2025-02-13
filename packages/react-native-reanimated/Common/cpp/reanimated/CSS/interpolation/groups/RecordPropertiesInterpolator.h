@@ -15,11 +15,10 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
   RecordPropertiesInterpolator(
       const InterpolatorFactoriesRecord &factories,
       const PropertyPath &propertyPath,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~RecordPropertiesInterpolator() = default;
 
-  bool equalsReversingAdjustedStartValue(
+  bool equalsFirstKeyframeValue(
       jsi::Runtime &rt,
       const jsi::Value &propertyValue) const override;
 
@@ -30,8 +29,6 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
       const jsi::Value &newStyleValue) override;
 
  protected:
-  void forEachInterpolator(const std::function<void(PropertyInterpolator &)>
-                               &callback) const override;
   jsi::Value mapInterpolators(
       jsi::Runtime &rt,
       const std::function<jsi::Value(PropertyInterpolator &)> &callback)
