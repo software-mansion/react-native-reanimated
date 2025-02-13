@@ -49,7 +49,7 @@ using UpdatesBatch =
 using CSSUpdatesBatch =
     std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
 
-struct HasLayoutupdates {
+struct HasLayoutUpdates {
   bool cssTransition = false;
   bool cssAnimation = false;
   bool workletAnimation = false;

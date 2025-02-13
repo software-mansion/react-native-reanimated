@@ -861,7 +861,7 @@ void ReanimatedModuleProxy::performOperations() {
 
     shouldUpdateCssAnimations_ = false;
 
-    if ((updatesBatch.size() > 0 || transitionUpdatesBatch.size() > 0) &&
+    if ((updatesBatch.size() > 0 || transitionUpdatesBatch.size() > 0 || animationUpdatesBatch.size() > 0) &&
         updatesRegistryManager_->shouldReanimatedSkipCommit()) {
       updatesRegistryManager_->pleaseCommitAfterPause();
     }
@@ -883,7 +883,7 @@ void ReanimatedModuleProxy::performOperations() {
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
 
-  HasLayoutupdates hasLayoutUpdates;
+  HasLayoutUpdates hasLayoutUpdates;
 #ifdef ANDROID
   bool hasPropsToRevert = updatesRegistryManager_->hasPropsToRevert();
 #else
