@@ -1,3 +1,4 @@
+'use strict';
 import type { StyleProp } from 'react-native';
 import { StyleSheet } from 'react-native';
 
