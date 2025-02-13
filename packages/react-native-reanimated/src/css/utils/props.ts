@@ -5,7 +5,6 @@ import type {
   CSSAnimationProperties,
   CSSStyle,
   CSSTransitionProperties,
-  ExistingCSSAnimationProperties,
   PlainStyle,
 } from '../types';
 import {
@@ -17,14 +16,10 @@ import {
 
 export function filterCSSAndStyleProperties<S extends AnyRecord>(
   style: CSSStyle<S>
-): [
-  ExistingCSSAnimationProperties | null,
-  CSSTransitionProperties | null,
-  PlainStyle,
-] {
+): [CSSAnimationProperties | null, CSSTransitionProperties | null, PlainStyle] {
   let animationName: CSSAnimationProperties['animationName'] | null = null;
-  const animationProperties: Partial<CSSAnimationProperties> = {};
-  let transitionProperties: Partial<CSSTransitionProperties> = {};
+  const animationProperties: CSSAnimationProperties = {};
+  let transitionProperties: CSSTransitionProperties = {};
   const filteredStyle: AnyRecord = {};
 
   for (const [prop, value] of Object.entries(style)) {
@@ -61,7 +56,7 @@ export function filterCSSAndStyleProperties<S extends AnyRecord>(
     ? ({
         ...animationProperties,
         animationName,
-      } as ExistingCSSAnimationProperties)
+      } as CSSAnimationProperties)
     : null;
 
   // Return transitionProperties only if the transitionProperty is present

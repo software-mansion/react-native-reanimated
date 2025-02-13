@@ -1,61 +1,102 @@
 'use strict';
+import { ReanimatedError } from '../errors';
 import type { CSSKeyframesRuleImpl } from '../models';
-import {
-  registerCSSKeyframes,
-  unregisterCSSKeyframes,
-} from '../platform/native';
+import { unregisterCSSKeyframes } from '../platform/native';
 
-/**
- * This class is responsible for managing the registry of CSS animation
- * keyframes. It keeps track of views that use specific animations and handles
- * native-side registration. Animation keyframes are registered on the native
- * side only when used for the first time and unregistered when removed from the
- * last view that uses them.
- */
+// TODO - add comment
 export default class CSSKeyframesRegistry {
-  private readonly registry_: Map<
+  private readonly cleanupInterval_: number;
+  private readonly usageRegistry_: Map<string, Set<number>>;
+  private readonly keyframesRegistry_: Map<
     string,
-    {
-      keyframesRule: CSSKeyframesRuleImpl;
-      viewTags: Set<number>;
-    }
-  > = new Map();
+    WeakRef<CSSKeyframesRuleImpl>
+  >;
 
-  has(animationName: string) {
-    return this.registry_.has(animationName);
+  // We will loop only over unused animations in the cleanup loop to optimize
+  // the cleanup process.
+  private unusedAnimationNames_: Set<string>;
+
+  private cleanupIntervalId_: NodeJS.Timeout | null;
+
+  constructor(cleanupInterval = 5000) {
+    this.cleanupInterval_ = cleanupInterval;
+    this.keyframesRegistry_ = new Map();
+    this.usageRegistry_ = new Map();
+    this.unusedAnimationNames_ = new Set();
+    this.cleanupIntervalId_ = null;
   }
 
-  add(keyframesRule: CSSKeyframesRuleImpl, viewTag: number) {
-    if (this.has(keyframesRule.name)) {
-      this.registry_.get(keyframesRule.name)!.viewTags.add(viewTag);
-    } else {
-      this.registry_.set(keyframesRule.name, {
-        keyframesRule,
-        viewTags: new Set([viewTag]),
-      });
-      // Register animation keyframes only if they are not already registered
-      // (when they are added for the first time)
-      registerCSSKeyframes(
-        keyframesRule.name,
-        keyframesRule.normalizedKeyframesConfig
+  getByName(name: string) {
+    this.assertExists(name);
+    return this.keyframesRegistry_.get(name)?.deref() as CSSKeyframesRuleImpl;
+  }
+
+  registerKeyframes(keyframesRule: CSSKeyframesRuleImpl) {
+    this.keyframesRegistry_.set(keyframesRule.name, new WeakRef(keyframesRule));
+    this.unusedAnimationNames_.add(keyframesRule.name);
+    this.maybeStartCleanupLoop();
+  }
+
+  registerUsage(animationName: string, viewTag: number) {
+    this.assertExists(animationName);
+
+    if (!this.usageRegistry_.has(animationName)) {
+      this.usageRegistry_.set(animationName, new Set());
+      this.unusedAnimationNames_.delete(animationName);
+    }
+
+    this.usageRegistry_.get(animationName)?.add(viewTag);
+  }
+
+  unregisterUsage(animationName: string, viewTag: number) {
+    if (!this.usageRegistry_.has(animationName)) {
+      return;
+    }
+
+    this.usageRegistry_.get(animationName)?.delete(viewTag);
+
+    if (this.usageRegistry_.get(animationName)?.size === 0) {
+      this.usageRegistry_.delete(animationName);
+      this.unusedAnimationNames_.add(animationName);
+      this.maybeStartCleanupLoop();
+    }
+  }
+
+  private assertExists(name: string) {
+    if (!this.keyframesRegistry_.has(name)) {
+      throw new ReanimatedError(
+        `Animation with name ${name} is not registered. Make sure that the animation exists before attempting to use it.`
       );
     }
   }
 
-  remove(animationName: string, viewTag: number) {
-    const entry = this.registry_.get(animationName);
-    if (!entry) {
-      return;
+  private cleanup() {
+    for (const animationName of this.unusedAnimationNames_) {
+      const keyframesRule = this.keyframesRegistry_.get(animationName)?.deref();
+      if (!keyframesRule) {
+        this.keyframesRegistry_.delete(animationName);
+        this.unusedAnimationNames_.delete(animationName);
+        // Unregister native keyframes object if JS instance was garbage collected.
+        unregisterCSSKeyframes(animationName);
+      }
     }
 
-    const viewTags = entry.viewTags;
-    viewTags.delete(viewTag);
+    if (
+      this.cleanupIntervalId_ !== null &&
+      this.unusedAnimationNames_.size === 0
+    ) {
+      // Stop the cleanup loop if there are no more unused animations.
+      clearInterval(this.cleanupIntervalId_);
+      this.cleanupIntervalId_ = null;
+    }
+  }
 
-    if (viewTags.size === 0) {
-      this.registry_.delete(animationName);
-      // Unregister animation keyframes if there are no more references to them
-      // (no more views that have an animation with this name)
-      unregisterCSSKeyframes(animationName);
+  private maybeStartCleanupLoop() {
+    if (!this.cleanupIntervalId_) {
+      this.cleanupIntervalId_ = setInterval(
+        this.cleanup.bind(this),
+        this.cleanupInterval_
+      );
     }
   }
 }

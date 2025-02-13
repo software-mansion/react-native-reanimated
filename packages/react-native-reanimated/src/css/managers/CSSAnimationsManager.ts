@@ -10,11 +10,7 @@ import {
   unregisterCSSAnimations,
   updateCSSAnimations,
 } from '../platform/native';
-import { CSSKeyframesRegistry } from '../registry';
-import type {
-  CSSAnimationKeyframes,
-  ExistingCSSAnimationProperties,
-} from '../types';
+import type { CSSAnimationKeyframes, CSSAnimationProperties } from '../types';
 
 export type ProcessedAnimation = {
   normalizedSettings: NormalizedSingleCSSAnimationSettings;
@@ -24,7 +20,6 @@ export type ProcessedAnimation = {
 export default class CSSAnimationsManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
-  static readonly animationKeyframesRegistry = new CSSKeyframesRegistry();
 
   private attachedAnimations: ProcessedAnimation[] = [];
 
@@ -36,24 +31,26 @@ export default class CSSAnimationsManager {
   detach() {
     if (this.attachedAnimations.length > 0) {
       unregisterCSSAnimations(this.viewTag);
-      this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
-        CSSAnimationsManager.animationKeyframesRegistry.remove(
-          name,
-          this.viewTag
-        );
+      this.attachedAnimations.forEach(({ keyframesRule }) => {
+        keyframesRule.unregisterUsage(this.viewTag);
       });
       this.attachedAnimations = [];
     }
   }
 
-  update(animationProperties: ExistingCSSAnimationProperties | null): void {
+  update(animationProperties: CSSAnimationProperties | null): void {
     if (!animationProperties) {
       this.detach();
       return;
     }
 
-    const [processedAnimations, areAllEqual] =
-      this.processAnimations(animationProperties);
+    const processResult = this.processAnimations(animationProperties);
+    if (!processResult) {
+      this.detach();
+      return;
+    }
+
+    const [processedAnimations, areAllEqual] = processResult;
 
     // Attach new animations if there are no attached animations or if
     // the array of animations is different (e.g. length or order)
@@ -97,21 +94,15 @@ export default class CSSAnimationsManager {
 
     // Register keyframes for all new animations
     processedAnimations.forEach(({ keyframesRule }) => {
-      CSSAnimationsManager.animationKeyframesRegistry.add(
-        keyframesRule,
-        this.viewTag
-      );
+      keyframesRule.registerUsage(this.viewTag);
       newAnimationNames.add(keyframesRule.name);
     });
 
     // Unregister keyframes for all old animations that are no longer attached
     // to the view
-    this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
-      if (!newAnimationNames.has(name)) {
-        CSSAnimationsManager.animationKeyframesRegistry.remove(
-          name,
-          this.viewTag
-        );
+    this.attachedAnimations.forEach(({ keyframesRule }) => {
+      if (!newAnimationNames.has(keyframesRule.name)) {
+        keyframesRule.unregisterUsage(this.viewTag);
       }
     });
 
@@ -129,33 +120,37 @@ export default class CSSAnimationsManager {
   }
 
   private processAnimations(
-    animationProperties: ExistingCSSAnimationProperties
-  ): [ProcessedAnimation[], boolean] {
+    animationProperties: CSSAnimationProperties
+  ): [ProcessedAnimation[], boolean] | null {
     const singleAnimationPropertiesArray =
       createSingleCSSAnimationProperties(animationProperties);
+    if (!singleAnimationPropertiesArray) {
+      return null;
+    }
+
     let areAllEqual =
       this.attachedAnimations.length === singleAnimationPropertiesArray.length;
 
     const processedAnimations = singleAnimationPropertiesArray.map(
       (properties, i) => {
-        const keyframes = properties.animationName;
+        const animationName = properties.animationName;
         let keyframesRule: CSSKeyframesRuleImpl;
 
-        if (keyframes instanceof CSSKeyframesRuleImpl) {
+        if (animationName instanceof CSSKeyframesRuleImpl) {
           // If the instance of the CSSKeyframesRule class was passed, we can just compare
           // references to the instance (css.keyframes() call should be memoized in order
           // to preserve the same animation. If used inline, it will restart the animation
           // on every component re-render)
-          keyframesRule = keyframes;
+          keyframesRule = animationName;
           if (
             areAllEqual &&
-            keyframes !== this.attachedAnimations[i]?.keyframesRule
+            animationName !== this.attachedAnimations[i]?.keyframesRule
           ) {
             areAllEqual = false;
           }
         } else if (
           this.attachedAnimations[i]?.keyframesRule.cssText !==
-          JSON.stringify(keyframes)
+          JSON.stringify(animationName)
         ) {
           // If the keyframes are not an instance of the CSSKeyframesRule class (e.g. someone
           // passes a keyframes object inline in the component's style without using css.keyframes()
@@ -163,7 +158,7 @@ export default class CSSAnimationsManager {
           // In this case, we need to compare the stringified keyframes of the old and the new
           // animation configuration object to determine if the animation has changed.
           keyframesRule = new CSSKeyframesRuleImpl(
-            keyframes as CSSAnimationKeyframes
+            animationName as CSSAnimationKeyframes
           );
           areAllEqual = false;
         } else {

@@ -356,7 +356,7 @@ function Example<S>({
   return (
     <VerticalExampleCard
       code={stringifyConfig(animation)}
-      collapsedCode={stringifyConfig(animation.animationName, true)}
+      collapsedCode={stringifyConfig(animation.animationName ?? 'none', true)}
       {...cardProps}>
       {renderExample(animation, style)}
     </VerticalExampleCard>
