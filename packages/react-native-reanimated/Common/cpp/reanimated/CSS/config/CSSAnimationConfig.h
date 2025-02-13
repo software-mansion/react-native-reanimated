@@ -1,6 +1,7 @@
 #pragma once
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#include <reanimated/CSS/config/CSSKeyframesConfig.h>
 #include <reanimated/CSS/config/common.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
 
@@ -15,11 +16,7 @@ enum class AnimationDirection { Normal, Reverse, Alternate, AlternateReverse };
 enum class AnimationFillMode { None, Forwards, Backwards, Both };
 enum class AnimationPlayState { Running, Paused };
 
-using KeyframeEasingFunctions = std::unordered_map<double, EasingFunction>;
-
-struct CSSAnimationConfig {
-  jsi::Value keyframesStyle;
-  KeyframeEasingFunctions keyframeEasingFunctions;
+struct CSSAnimationSettings {
   double duration;
   EasingFunction easingFunction;
   double delay;
@@ -27,6 +24,11 @@ struct CSSAnimationConfig {
   AnimationDirection direction;
   AnimationFillMode fillMode;
   AnimationPlayState playState;
+};
+
+struct CSSAnimationConfig {
+  std::string animationName;
+  CSSAnimationSettings settings;
 };
 
 struct PartialCSSAnimationSettings {
@@ -39,19 +41,17 @@ struct PartialCSSAnimationSettings {
   std::optional<AnimationPlayState> playState;
 };
 
-jsi::Value getKeyframesStyle(jsi::Runtime &rt, const jsi::Object &config);
+double getIterationCount(jsi::Runtime &rt, const jsi::Object &settings);
 
-KeyframeEasingFunctions getKeyframeTimingFunctions(
+AnimationDirection getDirection(jsi::Runtime &rt, const jsi::Object &settings);
+
+AnimationFillMode getFillMode(jsi::Runtime &rt, const jsi::Object &settings);
+
+AnimationPlayState getPlayState(jsi::Runtime &rt, const jsi::Object &settings);
+
+CSSAnimationSettings parseCSSAnimationSettings(
     jsi::Runtime &rt,
-    const jsi::Object &config);
-
-double getIterationCount(jsi::Runtime &rt, const jsi::Object &config);
-
-AnimationDirection getDirection(jsi::Runtime &rt, const jsi::Object &config);
-
-AnimationFillMode getFillMode(jsi::Runtime &rt, const jsi::Object &config);
-
-AnimationPlayState getPlayState(jsi::Runtime &rt, const jsi::Object &config);
+    const jsi::Value &settings);
 
 CSSAnimationConfig parseCSSAnimationConfig(
     jsi::Runtime &rt,

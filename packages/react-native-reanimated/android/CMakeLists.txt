@@ -20,7 +20,7 @@ string(
     -DHERMES_ENABLE_DEBUGGER=${HERMES_ENABLE_DEBUGGER}")
 
 string(APPEND CMAKE_CXX_FLAGS
-  " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all\
+       " -fexceptions -fno-omit-frame-pointer -frtti -fstack-protector-all\
    -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
 
 if(${IS_NEW_ARCHITECTURE_ENABLED})

@@ -2,8 +2,8 @@
 import type { ShadowNodeWrapper, StyleProps } from '../../../commonTypes';
 import { ReanimatedModule } from '../../../ReanimatedModule';
 import type {
+  NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from './types';
 
@@ -19,9 +19,27 @@ export function removeViewStyle(viewTag: number) {
 
 // ANIMATIONS
 
+// Keyframes
+
+export function registerCSSKeyframes(
+  animationName: string,
+  keyframesConfig: NormalizedCSSAnimationKeyframesConfig
+) {
+  ReanimatedModule.registerCSSKeyframes(animationName, keyframesConfig);
+}
+
+export function unregisterCSSKeyframes(animationName: string) {
+  ReanimatedModule.unregisterCSSKeyframes(animationName);
+}
+
+// View animations
+
 export function registerCSSAnimations(
   shadowNodeWrapper: ShadowNodeWrapper,
-  animationConfigs: NormalizedSingleCSSAnimationConfig[]
+  animationConfigs: {
+    name: string;
+    settings: NormalizedSingleCSSAnimationSettings;
+  }[]
 ) {
   ReanimatedModule.registerCSSAnimations(shadowNodeWrapper, animationConfigs);
 }

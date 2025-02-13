@@ -7,7 +7,7 @@ import {
   updateCSSTransition,
 } from '../../platform/native/native';
 import type { CSSTransitionProperties } from '../../types';
-import CSSTransitionManager from '../CSSTransitionManager';
+import CSSTransitionsManager from '../CSSTransitionsManager';
 
 jest.mock('../../platform/native/native.ts', () => ({
   registerCSSTransition: jest.fn(),
@@ -15,14 +15,14 @@ jest.mock('../../platform/native/native.ts', () => ({
   updateCSSTransition: jest.fn(),
 }));
 
-describe('CSSTransitionManager', () => {
-  let manager: CSSTransitionManager;
+describe('CSSTransitionsManager', () => {
+  let manager: CSSTransitionsManager;
   const viewTag = 1;
   const shadowNodeWrapper = {} as ShadowNodeWrapper;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    manager = new CSSTransitionManager(shadowNodeWrapper, viewTag);
+    manager = new CSSTransitionsManager(shadowNodeWrapper, viewTag);
   });
 
   describe('update', () => {

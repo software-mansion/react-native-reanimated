@@ -12,7 +12,7 @@ import { isDefined, isNumber } from '../../../../utils';
 import { SEPARATELY_INTERPOLATED_ARRAY_PROPERTIES } from '../../config';
 import styleBuilder from '../../styleBuilder';
 import type {
-  NormalizedCSSAnimationKeyframes,
+  NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSKeyframesStyle,
   NormalizedCSSKeyframeTimingFunctions,
 } from '../../types';
@@ -130,7 +130,7 @@ function processStyleProperties<S extends AnyRecord>(
 
 export function normalizeAnimationKeyframes(
   keyframes: CSSAnimationKeyframes
-): NormalizedCSSAnimationKeyframes {
+): NormalizedCSSAnimationKeyframesConfig {
   const keyframesStyle: NormalizedCSSKeyframesStyle = {};
   const timingFunctions: NormalizedCSSKeyframeTimingFunctions = {};
 
