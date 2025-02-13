@@ -4,4 +4,3 @@ export {
   normalizeDuration,
   normalizeTimingFunction,
 } from './settings';
-export * from './shorthand';
