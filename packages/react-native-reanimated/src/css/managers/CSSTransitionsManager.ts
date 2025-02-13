@@ -38,8 +38,6 @@ export default class CSSTransitionsManager {
   }
 
   update(transitionProperties: CSSTransitionProperties | null): void {
-    console.log(transitionProperties);
-
     if (!transitionProperties) {
       this.detach();
       return;

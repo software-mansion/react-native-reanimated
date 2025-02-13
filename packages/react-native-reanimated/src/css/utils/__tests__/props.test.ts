@@ -113,6 +113,21 @@ describe(filterCSSAndStyleProperties, () => {
       ]);
     });
 
+    it('ignores all transition settings before transition shorthand', () => {
+      const config: CSSStyle = {
+        transitionProperty: 'width',
+        transitionDuration: '5s',
+        transitionTimingFunction: 'ease-out',
+        transition: 'opacity 2s ease-in',
+      };
+
+      expect(filterCSSAndStyleProperties(config)).toEqual([
+        expect.any(Object),
+        { transition: 'opacity 2s ease-in' },
+        expect.any(Object),
+      ]);
+    });
+
     describe('transition settings', () => {
       it.each([
         ['transitionProperty', 'opacity'],

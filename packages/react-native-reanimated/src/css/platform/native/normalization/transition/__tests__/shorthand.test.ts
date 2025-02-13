@@ -1,7 +1,7 @@
 'use strict';
 import { cubicBezier, linear, steps } from '../../../../../easings';
-import type { ExpandedCSSTransitionConfigProperties } from '../../transition/shorthand';
-import { parseTransitionShorthand } from '../../transition/shorthand';
+import type { ExpandedCSSTransitionConfigProperties } from '../shorthand';
+import { parseTransitionShorthand } from '../shorthand';
 
 describe(parseTransitionShorthand, () => {
   const emptyResult: ExpandedCSSTransitionConfigProperties = {

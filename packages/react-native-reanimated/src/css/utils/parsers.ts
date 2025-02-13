@@ -1,9 +1,9 @@
 'use strict';
 import type { BoxShadowValue } from 'react-native';
 
-import { isLength, isTimeUnit, smellsLikeTimingFunction } from './guards';
 import { ReanimatedError } from '../errors';
-import { SingleCSSTransitionConfig } from '../types';
+import type { SingleCSSTransitionConfig } from '../types';
+import { isLength, isTimeUnit, smellsLikeTimingFunction } from './guards';
 
 const LENGTH_MAPPINGS = [
   'offsetX',
