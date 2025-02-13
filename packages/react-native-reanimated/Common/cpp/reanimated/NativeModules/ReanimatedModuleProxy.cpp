@@ -699,12 +699,13 @@ jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
     const folly::dynamic &props) {
   jsi::Object nonAnimatableProps(rt);
   bool hasAnyNonAnimatableProp = false;
-    for (const auto& [propName, propValue] : props.items()) {
-      if (!collection::contains(animatablePropNames_, propName.c_str())) {
-        hasAnyNonAnimatableProp = true;
-        nonAnimatableProps.setProperty(rt, propName.c_str(), jsi::valueFromDynamic(rt, propValue));
-      }
+  for (const auto &[propName, propValue] : props.items()) {
+    if (!collection::contains(animatablePropNames_, propName.c_str())) {
+      hasAnyNonAnimatableProp = true;
+      nonAnimatableProps.setProperty(
+          rt, propName.c_str(), jsi::valueFromDynamic(rt, propValue));
     }
+  }
   if (!hasAnyNonAnimatableProp) {
     return jsi::Value::undefined();
   }
