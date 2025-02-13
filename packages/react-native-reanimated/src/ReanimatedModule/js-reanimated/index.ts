@@ -159,7 +159,14 @@ const updatePropsDOM = (
 
   for (const key in domStyle) {
     if (isAnimatedProps) {
-      (component as HTMLElement).setAttribute(key, domStyle[key]);
+      // We need to explicitly set the 'text' property on input component because React Native's
+      // internal _valueTracker (https://github.com/facebook/react/blob/main/packages/react-dom-bindings/src/client/inputValueTracking.js)
+      // prevents updates when only modifying attributes.
+      if ((component as HTMLElement).nodeName === 'INPUT' && key === 'text') {
+        (component as HTMLInputElement).value = domStyle[key] as string;
+      } else {
+        (component as HTMLElement).setAttribute(key, domStyle[key]);
+      }
     } else {
       (component.style as StyleProps)[key] = domStyle[key];
     }
