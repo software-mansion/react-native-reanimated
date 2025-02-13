@@ -63,7 +63,7 @@ function asControlPoint(value: string[]): ControlPoint | null {
   return [Number(first), ...rest];
 }
 
-export function parseTimingFunction(value: string): CSSTimingFunction {
+function parseTimingFunction(value: string): CSSTimingFunction {
   if (isPredefinedTimingFunction(value)) {
     return value;
   }
