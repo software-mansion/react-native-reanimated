@@ -5,7 +5,8 @@ import { processColor } from '../../../Colors';
 import type { CSSTimingFunction } from '../../easings';
 import { CubicBezierEasing, LinearEasing, StepsEasing } from '../../easings';
 import { ReanimatedError } from '../../errors';
-import type { ConvertValuesToArrays } from '../../types';
+import type { AnyRecord, ConvertValuesToArrays } from '../../types';
+import { kebabizeCamelCase } from '../../utils';
 
 export function hasSuffix(value: unknown): value is string {
   return typeof value === 'string' && isNaN(parseInt(value[value.length - 1]));
@@ -15,7 +16,7 @@ export function maybeAddSuffix(value: unknown, suffix: string) {
   return hasSuffix(value) ? value : `${String(value)}${suffix}`;
 }
 
-export function maybeAddSuffixes<T, K extends keyof T>(
+export function maybeAddSuffixes<T extends AnyRecord, K extends keyof T>(
   object: ConvertValuesToArrays<T>,
   key: K,
   suffix: string
@@ -29,24 +30,13 @@ export function maybeAddSuffixes<T, K extends keyof T>(
   );
 }
 
-export function kebabize<T extends string>(property: T) {
-  return property
-    .split('')
-    .map((letter, index) =>
-      letter.toUpperCase() === letter
-        ? `${index !== 0 ? '-' : ''}${letter.toLowerCase()}`
-        : letter
-    )
-    .join('');
-}
-
 function easingMapper(easing: CSSTimingFunction) {
   if (typeof easing === 'string') {
     return easing;
   }
 
   if (easing instanceof StepsEasing) {
-    return `steps(${easing.stepsNumber}, ${kebabize(easing.modifier)})`;
+    return `steps(${easing.stepsNumber}, ${kebabizeCamelCase(easing.modifier)})`;
   }
 
   if (easing instanceof CubicBezierEasing) {

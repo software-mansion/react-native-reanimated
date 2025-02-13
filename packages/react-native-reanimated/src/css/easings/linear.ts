@@ -51,7 +51,9 @@ export class LinearEasing implements ParametrizedTimingFunction {
     if (points.length < 2) {
       throw new ReanimatedError(ERROR_MESSAGES.invalidPointsCount());
     }
-    this.points = points;
+    this.points = points.map((p) =>
+      Array.isArray(p) && p.length === 1 ? p[0] : p
+    );
   }
 
   toString(): string {
