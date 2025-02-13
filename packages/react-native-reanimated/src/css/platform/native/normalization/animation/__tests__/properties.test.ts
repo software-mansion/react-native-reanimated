@@ -56,6 +56,12 @@ describe(createSingleCSSAnimationProperties, () => {
         },
       ]);
     });
+
+    it('returns an empty array if there is neither animationName nor animation', () => {
+      const config: CSSAnimationProperties = {};
+
+      expect(createSingleCSSAnimationProperties(config)).toEqual([]);
+    });
   });
 
   describe('when the config is an array of animations', () => {

@@ -1,2 +1,2 @@
 'use strict';
-export const CSS_ANIMATION_PREFIX = 'REA-CSS-';
+export const ANIMATION_NAME_PREFIX = 'REA-CSS-';

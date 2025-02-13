@@ -9,31 +9,6 @@ jest.mock('../../platform/native/native', () => ({
 
 describe(filterCSSAndStyleProperties, () => {
   describe('animation config', () => {
-    it('returns null if there is no animationName', () => {
-      const style: CSSStyle = {
-        transitionProperty: 'opacity',
-        animationDuration: 100,
-      };
-
-      expect(filterCSSAndStyleProperties(style)).toEqual([
-        null,
-        expect.any(Object),
-        expect.any(Object),
-      ]);
-    });
-
-    it('returns null if the animationName is an empty object', () => {
-      const style: CSSStyle = {
-        animationName: {},
-        animationDuration: 100,
-      };
-      expect(filterCSSAndStyleProperties(style)).toEqual([
-        null,
-        expect.any(Object),
-        expect.any(Object),
-      ]);
-    });
-
     it('returns null if animationName is an empty keyframes object created with css.keyframes', () => {
       const style: CSSStyle = {
         animationName: css.keyframes({}),

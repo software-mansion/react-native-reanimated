@@ -14,6 +14,8 @@ export interface CSSKeyframesRule {
   readonly cssRules: CSSAnimationKeyframes;
   readonly cssText: string;
   readonly name: string;
+
+  toString(): string;
 }
 
 export type CSSAnimationKeyframeSelector = string | number;
@@ -71,7 +73,5 @@ export type ExistingCSSAnimationProperties<S extends object = PlainStyle> =
       CSSKeyframesRule | CSSAnimationKeyframes<S>
     >;
   };
-
-export type CSSAnimationSettingProp = keyof CSSAnimationSettings;
 
 export type CSSAnimationProp = keyof CSSAnimationProperties;

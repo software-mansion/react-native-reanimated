@@ -10,10 +10,7 @@ import {
   unregisterCSSAnimations,
   updateCSSAnimations,
 } from '../platform/native';
-import type {
-  CSSAnimationKeyframes,
-  ExistingCSSAnimationProperties,
-} from '../types';
+import type { CSSAnimationKeyframes, CSSAnimationProperties } from '../types';
 
 export type ProcessedAnimation = {
   normalizedSettings: NormalizedSingleCSSAnimationSettings;
@@ -45,11 +42,6 @@ export default class CSSAnimationsManager {
     }
 
     const processResult = this.processAnimations(animationProperties);
-    if (!processResult) {
-      this.detach();
-      return;
-    }
-
     const [processedAnimations, areAllEqual] = processResult;
 
     // Attach new animations if there are no attached animations or if
@@ -104,12 +96,9 @@ export default class CSSAnimationsManager {
 
   private processAnimations(
     animationProperties: CSSAnimationProperties
-  ): [ProcessedAnimation[], boolean] | null {
+  ): [ProcessedAnimation[], boolean] {
     const singleAnimationPropertiesArray =
       createSingleCSSAnimationProperties(animationProperties);
-    if (!singleAnimationPropertiesArray) {
-      return null;
-    }
 
     let areAllEqual =
       this.attachedAnimations.length === singleAnimationPropertiesArray.length;

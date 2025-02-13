@@ -27,7 +27,7 @@ function getExpandedConfigProperties(
 
 export function createSingleCSSAnimationProperties(
   properties: CSSAnimationProperties
-): SingleCSSAnimationProperties[] | null {
+): SingleCSSAnimationProperties[] {
   const {
     animationName,
     animationDuration,

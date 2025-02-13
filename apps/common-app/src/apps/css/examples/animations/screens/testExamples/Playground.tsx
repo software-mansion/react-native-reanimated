@@ -12,20 +12,39 @@ import { flex } from '@/theme';
 
 const AnimatedView = createAnimatedComponent(View);
 
+const jump = css.keyframes({
+  from: {
+    transform: [{ translateY: 0 }],
+  },
+  to: {
+    transform: [{ translateY: 100 }],
+  },
+});
+
+const color = css.keyframes({
+  from: {
+    backgroundColor: 'red',
+  },
+  to: {
+    backgroundColor: 'blue',
+  },
+});
+
 export default function Playground() {
   return (
     <Screen style={flex.center}>
       <Text>Hello world!</Text>
-      <AnimatedView style={styles.parent}>
-        <View style={styles.row}>
-          <View style={[flex.grow, { backgroundColor: 'blue' }]} />
-          <View style={[flex.grow, { backgroundColor: 'lightblue' }]} />
-          <View style={[flex.grow, { backgroundColor: 'skyblue' }]} />
-          <View style={[flex.grow, { backgroundColor: 'powderblue' }]} />
-        </View>
-
-        <AnimatedView style={styles.child} />
-      </AnimatedView>
+      <AnimatedView
+        style={[
+          styles.parent,
+          {
+            animation: `
+              ${jump} 1s infinite alternate cubic-bezier(0,-0.54,1,-0.5), 
+              ${color} 1s infinite
+            `,
+          },
+        ]}
+      />
     </Screen>
   );
 }
@@ -81,33 +100,33 @@ const styles = css.create({
     width: 20,
   },
   parent: {
-    animationDuration: '10s',
-    animationIterationCount: 'infinite',
-    animationName: [
-      css.keyframes({
-        0: {
-          width: 200,
-        },
-        0.5: {
-          width: 350,
-        },
-        1: {
-          width: 200,
-        },
-      }),
-      css.keyframes({
-        '50%': { height: 200 },
-      }),
-      css.keyframes({
-        from: {
-          transform: [{ rotate: '0deg' }],
-        },
-        to: {
-          transform: [{ rotate: '360deg' }],
-        },
-      }),
-    ],
-    animationTimingFunction: 'linear',
+    // animationDuration: '10s',
+    // animationIterationCount: 'infinite',
+    // animationName: [
+    //   css.keyframes({
+    //     0: {
+    //       width: 200,
+    //     },
+    //     0.5: {
+    //       width: 350,
+    //     },
+    //     1: {
+    //       width: 200,
+    //     },
+    //   }),
+    //   css.keyframes({
+    //     '50%': { height: 200 },
+    //   }),
+    //   css.keyframes({
+    //     from: {
+    //       transform: [{ rotate: '0deg' }],
+    //     },
+    //     to: {
+    //       transform: [{ rotate: '360deg' }],
+    //     },
+    //   }),
+    // ],
+    // animationTimingFunction: 'linear',
     backgroundColor: 'gray',
     height: 65,
     width: 200,
