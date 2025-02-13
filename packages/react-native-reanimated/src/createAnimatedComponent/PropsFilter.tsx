@@ -15,7 +15,7 @@ import type {
   IPropsFilter,
 } from './commonTypes';
 import { getInlineStyle, hasInlineStyles } from './InlinePropManager';
-import { has } from './utils';
+import { flattenArray, has } from './utils';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -35,9 +35,7 @@ export class PropsFilter implements IPropsFilter {
       const value = inputProps[key];
       if (key === 'style') {
         const styleProp = inputProps.style;
-        const styles = Array.isArray(styleProp)
-            ? styleProp as Array<StyleProps>
-            : styleProp ? [styleProp] : [];
+        const styles = flattenArray<StyleProps>(styleProp ?? []);
         const processedStyle: StyleProps[] = styles.map((style) => {
           if (style && style.viewDescriptors) {
             // this is how we recognize styles returned by useAnimatedStyle
@@ -56,7 +54,7 @@ export class PropsFilter implements IPropsFilter {
           }
         });
         // keep styles as they were passed by the user
-        // it will help other libs to correctly interpret styles
+        // it will help other libs to interpret styles correctly
         props[key] = processedStyle;
       } else if (key === 'animatedProps') {
         const animatedProp = inputProps.animatedProps as Partial<
