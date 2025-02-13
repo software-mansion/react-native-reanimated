@@ -30,8 +30,8 @@ TransitionProgressState CSSTransition::getState() const {
   return progressProvider_.getState();
 }
 
-jsi::Value CSSTransition::getCurrentInterpolationStyle(jsi::Runtime &rt) const {
-  return styleInterpolator_.getCurrentInterpolationStyle(rt, shadowNode_);
+folly::dynamic CSSTransition::getCurrentInterpolationStyle() const {
+  return styleInterpolator_.getCurrentInterpolationStyle(shadowNode_);
 }
 
 PropertyNames CSSTransition::getAllowedProperties(
@@ -88,7 +88,7 @@ void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
   }
 }
 
-jsi::Value CSSTransition::run(
+folly::dynamic CSSTransition::run(
     jsi::Runtime &rt,
     const ChangedProps &changedProps,
     const double timestamp) {
@@ -100,13 +100,13 @@ jsi::Value CSSTransition::run(
   styleInterpolator_.updateInterpolatedProperties(
       rt, changedProps, progressProvider_.getPropertyProgressProviders());
 
-  return update(rt, timestamp);
+  return update(timestamp);
 }
 
-jsi::Value CSSTransition::update(jsi::Runtime &rt, const double timestamp) {
+folly::dynamic CSSTransition::update(const double timestamp) {
   progressProvider_.update(timestamp);
   return styleInterpolator_.update(
-      rt, shadowNode_, progressProvider_.getRemovedProperties());
+      shadowNode_, progressProvider_.getRemovedProperties());
 }
 
 void CSSTransition::updateTransitionProperties(

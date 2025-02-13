@@ -189,6 +189,9 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
       jsi::Runtime &rt,
       Tag viewTag,
       const jsi::Object &props);
+  void synchronouslyUpdateUIPropsByDynamic(
+      Tag viewTag,
+      const folly::dynamic &props);
 #endif
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setupLayoutAnimations();

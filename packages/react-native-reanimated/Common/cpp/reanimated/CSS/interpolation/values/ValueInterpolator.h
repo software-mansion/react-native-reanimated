@@ -45,32 +45,30 @@ class ValueInterpolator : public PropertyInterpolator {
         defaultStyleValue_(defaultStyleValue) {}
   virtual ~ValueInterpolator() = default;
 
-  jsi::Value getStyleValue(
-      jsi::Runtime &rt,
+  folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const override {
     return viewStylesRepository_->getStyleProp(
-        rt, shadowNode->getTag(), propertyPath_);
+        shadowNode->getTag(), propertyPath_);
   }
 
-  jsi::Value getCurrentValue(
-      jsi::Runtime &rt,
+  folly::dynamic getCurrentValue(
       const ShadowNode::Shared &shadowNode) const override {
     if (previousValue_.has_value()) {
-      return previousValue_.value().toJSIValue(rt);
+      return previousValue_.value().toDynamic();
     }
-    auto styleValue = getStyleValue(rt, shadowNode);
-    if (!styleValue.isUndefined()) {
+    auto styleValue = getStyleValue(shadowNode);
+    if (!styleValue.isNull()) {
       return styleValue;
     }
-    return defaultStyleValue_.toJSIValue(rt);
+    return defaultStyleValue_.toDynamic();
   }
 
-  jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const override {
-    return convertOptionalToJSI(rt, keyframes_.front().value);
+  folly::dynamic getFirstKeyframeValue() const override {
+    return convertOptionalToDynamic(keyframes_.front().value);
   }
 
-  jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const override {
-    return convertOptionalToJSI(rt, keyframes_.back().value);
+  folly::dynamic getLastKeyframeValue() const override {
+    return convertOptionalToDynamic(keyframes_.back().value);
   }
 
   bool equalsReversingAdjustedStartValue(
@@ -128,18 +126,17 @@ class ValueInterpolator : public PropertyInterpolator {
     keyframes_ = {firstKeyframe, lastKeyframe};
   }
 
-  jsi::Value update(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
-      override {
-    updateCurrentKeyframes(rt, shadowNode);
+  folly::dynamic update(const ShadowNode::Shared &shadowNode) override {
+    updateCurrentKeyframes(shadowNode);
 
     std::optional<ValueType> fromValue = keyframeBefore_.value;
     std::optional<ValueType> toValue = keyframeAfter_.value;
 
     if (!fromValue.has_value()) {
-      fromValue = getFallbackValue(rt, shadowNode);
+      fromValue = getFallbackValue(shadowNode);
     }
     if (!toValue.has_value()) {
-      toValue = getFallbackValue(rt, shadowNode);
+      toValue = getFallbackValue(shadowNode);
     }
 
     const auto keyframeProgress = progressProvider_->getKeyframeProgress(
@@ -157,14 +154,13 @@ class ValueInterpolator : public PropertyInterpolator {
           {.node = shadowNode});
     }
 
-    return previousValue_.value().toJSIValue(rt);
+    return previousValue_.value().toDynamic();
   }
 
-  jsi::Value reset(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
-      override {
+  folly::dynamic reset(const ShadowNode::Shared &shadowNode) override {
     previousValue_ = std::nullopt;
     reversingAdjustedStartValue_ = std::nullopt;
-    return getCurrentValue(rt, shadowNode);
+    return getCurrentValue(shadowNode);
   }
 
  protected:
@@ -186,12 +182,9 @@ class ValueInterpolator : public PropertyInterpolator {
   std::optional<ValueType> previousValue_;
   std::optional<ValueType> reversingAdjustedStartValue_;
 
-  ValueType getFallbackValue(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) const {
-    const jsi::Value &styleValue = getStyleValue(rt, shadowNode);
-    return styleValue.isUndefined() ? defaultStyleValue_
-                                    : ValueType(rt, styleValue);
+  ValueType getFallbackValue(const ShadowNode::Shared &shadowNode) const {
+    const folly::dynamic &styleValue = getStyleValue(shadowNode);
+    return styleValue.isNull() ? defaultStyleValue_ : ValueType(styleValue);
   }
 
   ValueType resolveKeyframeValue(
@@ -202,7 +195,6 @@ class ValueInterpolator : public PropertyInterpolator {
   }
 
   ValueKeyframe<AllowedTypes...> getKeyframeAtIndex(
-      jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       size_t index,
       bool shouldResolve) const {
@@ -215,7 +207,7 @@ class ValueInterpolator : public PropertyInterpolator {
       if (keyframe.value.has_value()) {
         unresolvedValue = keyframe.value.value();
       } else {
-        unresolvedValue = getFallbackValue(rt, shadowNode);
+        unresolvedValue = getFallbackValue(shadowNode);
       }
 
       return ValueKeyframe<AllowedTypes...>{
@@ -225,9 +217,7 @@ class ValueInterpolator : public PropertyInterpolator {
     return keyframe;
   }
 
-  void updateCurrentKeyframes(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) {
+  void updateCurrentKeyframes(const ShadowNode::Shared &shadowNode) {
     const auto progress = progressProvider_->getGlobalProgress();
     const bool isProgressLessThanHalf = progress < 0.5;
     const auto prevAfterIndex = keyframeAfterIndex_;
@@ -246,33 +236,28 @@ class ValueInterpolator : public PropertyInterpolator {
 
     if (progressProvider_->isFirstUpdate()) {
       keyframeBefore_ = getKeyframeAtIndex(
-          rt,
           shadowNode,
           keyframeAfterIndex_ - 1,
           Resolvable<ValueType> && isProgressLessThanHalf);
       keyframeAfter_ = getKeyframeAtIndex(
-          rt,
           shadowNode,
           keyframeAfterIndex_,
           Resolvable<ValueType> && !isProgressLessThanHalf);
     } else if (keyframeAfterIndex_ != prevAfterIndex) {
       keyframeBefore_ = getKeyframeAtIndex(
-          rt,
           shadowNode,
           keyframeAfterIndex_ - 1,
           Resolvable<ValueType> && keyframeAfterIndex_ > prevAfterIndex);
       keyframeAfter_ = getKeyframeAtIndex(
-          rt,
           shadowNode,
           keyframeAfterIndex_,
           Resolvable<ValueType> && keyframeAfterIndex_ < prevAfterIndex);
     }
   }
 
-  jsi::Value convertOptionalToJSI(
-      jsi::Runtime &rt,
+  folly::dynamic convertOptionalToDynamic(
       const std::optional<ValueType> &value) const {
-    return value ? value.value().toJSIValue(rt) : jsi::Value::undefined();
+    return value ? value.value().toDynamic() : folly::dynamic();
   }
 };
 

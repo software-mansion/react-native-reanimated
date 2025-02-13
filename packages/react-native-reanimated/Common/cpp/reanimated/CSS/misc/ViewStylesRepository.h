@@ -42,9 +42,7 @@ class ViewStylesRepository {
   jsi::Value getParentNodeProp(
       const ShadowNode::Shared &shadowNode,
       const std::string &propName);
-  jsi::Value getViewStyle(jsi::Runtime &rt, Tag tag);
-  jsi::Value
-  getStyleProp(jsi::Runtime &rt, Tag tag, const PropertyPath &propertyPath);
+  folly::dynamic getStyleProp(Tag tag, const PropertyPath &propertyPath);
 
   void clearNodesCache();
 
@@ -59,8 +57,7 @@ class ViewStylesRepository {
       CachedShadowNode &cachedNode,
       const ShadowNode::Shared &shadowNode);
 
-  static jsi::Value getPropertyValue(
-      jsi::Runtime &rt,
+  static folly::dynamic getPropertyValue(
       const folly::dynamic &value,
       const PropertyPath &propertyPath);
 };

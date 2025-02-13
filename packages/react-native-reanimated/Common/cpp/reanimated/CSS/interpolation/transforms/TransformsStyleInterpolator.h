@@ -32,23 +32,19 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  jsi::Value getStyleValue(
-      jsi::Runtime &rt,
+  folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const override;
-  jsi::Value getCurrentValue(
-      jsi::Runtime &rt,
+  folly::dynamic getCurrentValue(
       const ShadowNode::Shared &shadowNode) const override;
-  jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const override;
-  jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const override;
+  folly::dynamic getFirstKeyframeValue() const override;
+  folly::dynamic getLastKeyframeValue() const override;
 
   bool equalsReversingAdjustedStartValue(
       jsi::Runtime &rt,
       const jsi::Value &propertyValue) const override;
 
-  jsi::Value update(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
-      override;
-  jsi::Value reset(jsi::Runtime &rt, const ShadowNode::Shared &shadowNode)
-      override;
+  folly::dynamic update(const ShadowNode::Shared &shadowNode) override;
+  folly::dynamic reset(const ShadowNode::Shared &shadowNode) override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
@@ -71,6 +67,8 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   static std::optional<TransformOperations> parseTransformOperations(
       jsi::Runtime &rt,
       const jsi::Value &values);
+  static std::optional<TransformOperations> parseTransformOperations(
+      const folly::dynamic &values);
   std::shared_ptr<TransformKeyframe> createTransformKeyframe(
       double fromOffset,
       double toOffset,
@@ -89,28 +87,23 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
       TransformOperationType type) const;
 
   TransformOperations getFallbackValue(
-      jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode) const;
   TransformOperations resolveTransformOperations(
       const ShadowNode::Shared &shadowNode,
       const TransformOperations &unresolvedOperations) const;
   std::shared_ptr<TransformKeyframe> getKeyframeAtIndex(
-      jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       size_t index,
       int resolveDirection // < 0 - resolve from, > 0 - resolve to
   ) const;
-  void updateCurrentKeyframe(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode);
+  void updateCurrentKeyframe(const ShadowNode::Shared &shadowNode);
   TransformOperations interpolateOperations(
       const ShadowNode::Shared &shadowNode,
       double keyframeProgress,
       const TransformOperations &fromOperations,
       const TransformOperations &toOperations) const;
 
-  static jsi::Value convertResultToJSI(
-      jsi::Runtime &rt,
+  static folly::dynamic convertResultToDynamic(
       const TransformOperations &operations);
   TransformInterpolatorUpdateContext createUpdateContext(
       const ShadowNode::Shared &shadowNode) const;

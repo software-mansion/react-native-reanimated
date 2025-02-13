@@ -23,10 +23,9 @@ class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
             progressProvider,
             viewStylesRepository) {}
 
-  jsi::Value getCurrentInterpolationStyle(
-      jsi::Runtime &rt,
+  folly::dynamic getCurrentInterpolationStyle(
       const ShadowNode::Shared &shadowNode) const {
-    return getCurrentValue(rt, shadowNode);
+    return getCurrentValue(shadowNode);
   }
 };
 

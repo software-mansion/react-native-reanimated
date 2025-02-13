@@ -122,3 +122,34 @@ static id convertJSIValueToObjCObject(jsi::Runtime &runtime, const jsi::Value &v
 
   throw std::runtime_error("[Reanimated] Unsupported jsi::Value kind.");
 }
+
+static id convertDynamicToNSObject(const folly::dynamic &value)
+{
+  if (value.isNull()) {
+    return [NSNull null];
+  } else if (value.isBool()) {
+    return [NSNumber numberWithBool:value.asBool()];
+  } else if (value.isInt()) {
+    return [NSNumber numberWithLong:value.asInt()];
+  } else if (value.isDouble()) {
+    return [NSNumber numberWithDouble:value.asDouble()];
+  } else if (value.isString()) {
+    return [NSString stringWithUTF8String:value.asString().c_str()];
+  } else if (value.isArray()) {
+    NSMutableArray *array = [NSMutableArray arrayWithCapacity:value.size()];
+    for (const auto &elem : value) {
+      [array addObject:convertDynamicToNSObject(elem)];
+    }
+    return array;
+  } else if (value.isObject()) {
+    NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
+    for (const auto &pair : value.items()) {
+      NSString *key = [NSString stringWithUTF8String:pair.first.c_str()];
+      id object = convertDynamicToNSObject(pair.second);
+      [dictionary setObject:object forKey:key];
+    }
+    return dictionary;
+  } else {
+    return nil;
+  }
+}

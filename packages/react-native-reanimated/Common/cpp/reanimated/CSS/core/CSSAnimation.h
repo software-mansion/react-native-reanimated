@@ -35,14 +35,13 @@ class CSSAnimation {
   bool hasForwardsFillMode() const;
   bool hasBackwardsFillMode() const;
 
-  jsi::Value getViewStyle(jsi::Runtime &rt) const;
-  jsi::Value getCurrentInterpolationStyle(jsi::Runtime &rt) const;
-  jsi::Value getBackwardsFillStyle(jsi::Runtime &rt);
-  jsi::Value getForwardFillStyle(jsi::Runtime &rt);
-  jsi::Value resetStyle(jsi::Runtime &rt);
+  folly::dynamic getCurrentInterpolationStyle() const;
+  folly::dynamic getBackwardsFillStyle() const;
+  folly::dynamic getForwardFillStyle() const;
+  folly::dynamic resetStyle();
 
   void run(double timestamp);
-  jsi::Value update(jsi::Runtime &rt, double timestamp);
+  folly::dynamic update(double timestamp);
   void updateSettings(
       const PartialCSSAnimationSettings &updatedSettings,
       double timestamp);

@@ -7,14 +7,13 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : viewStylesRepository_(viewStylesRepository) {}
 
-jsi::Value TransitionStyleInterpolator::getCurrentInterpolationStyle(
-    jsi::Runtime &rt,
+folly::dynamic TransitionStyleInterpolator::getCurrentInterpolationStyle(
     const ShadowNode::Shared &shadowNode) const {
-  jsi::Object result(rt);
+  folly::dynamic result = folly::dynamic::object;
 
   for (const auto &[propertyName, interpolator] : interpolators_) {
-    jsi::Value value = interpolator->getCurrentValue(rt, shadowNode);
-    result.setProperty(rt, propertyName.c_str(), value);
+    folly::dynamic value = interpolator->getCurrentValue(shadowNode);
+    result[propertyName] = value;
   }
 
   return result;
@@ -46,21 +45,19 @@ TransitionStyleInterpolator::getReversedPropertyNames(
   return reversedProperties;
 }
 
-jsi::Value TransitionStyleInterpolator::update(
-    jsi::Runtime &rt,
+folly::dynamic TransitionStyleInterpolator::update(
     const ShadowNode::Shared &shadowNode,
     const std::unordered_set<std::string> &propertiesToRemove) {
   if (interpolators_.empty()) {
-    return jsi::Value::undefined();
+    return folly::dynamic();
   }
 
-  jsi::Object result(rt);
+  folly::dynamic result = folly::dynamic::object;
 
   for (auto it = interpolators_.begin(); it != interpolators_.end();) {
     const auto &[propertyName, interpolator] = *it;
 
-    jsi::Value value = interpolator->update(rt, shadowNode);
-    result.setProperty(rt, propertyName.c_str(), value);
+    result[propertyName] = interpolator->update(shadowNode);
 
     if (propertiesToRemove.find(propertyName) != propertiesToRemove.cend()) {
       it = interpolators_.erase(it);

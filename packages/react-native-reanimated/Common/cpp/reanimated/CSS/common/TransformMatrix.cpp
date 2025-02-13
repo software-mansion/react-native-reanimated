@@ -48,6 +48,17 @@ TransformMatrix::TransformMatrix(jsi::Runtime &rt, const jsi::Value &value) {
   }
 }
 
+TransformMatrix::TransformMatrix(const folly::dynamic &array) {
+  if (!array.isArray() || array.size() != 16) {
+    throw std::invalid_argument(
+        "[Reanimated] Matrix array should have 16 elements");
+  }
+
+  for (size_t i = 0; i < 16; ++i) {
+    matrix_[i / 4][i % 4] = array.at(i).getDouble();
+  }
+}
+
 TransformMatrix TransformMatrix::Identity() {
   return TransformMatrix({{// clang-format off
       {1, 0, 0, 0},

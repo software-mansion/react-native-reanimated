@@ -104,9 +104,9 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 #ifdef RCT_NEW_ARCH_ENABLED
 SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(REANodesManager *nodesManager)
 {
-  auto synchronouslyUpdateUIPropsFunction = [nodesManager](jsi::Runtime &rt, Tag tag, const jsi::Object &props) {
+  auto synchronouslyUpdateUIPropsFunction = [nodesManager](Tag tag, const folly::dynamic &props) {
     NSNumber *viewTag = @(tag);
-    NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props);
+    NSDictionary *uiProps = convertDynamicToNSObject(props);
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
   return synchronouslyUpdateUIPropsFunction;

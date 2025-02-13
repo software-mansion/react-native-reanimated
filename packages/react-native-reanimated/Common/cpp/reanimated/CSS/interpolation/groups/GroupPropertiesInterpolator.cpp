@@ -20,55 +20,49 @@ void GroupPropertiesInterpolator::setProgressProvider(
   });
 }
 
-jsi::Value GroupPropertiesInterpolator::getStyleValue(
-    jsi::Runtime &rt,
+folly::dynamic GroupPropertiesInterpolator::getStyleValue(
     const ShadowNode::Shared &shadowNode) const {
   return mapInterpolators(
-      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-        return interpolator.getStyleValue(rt, shadowNode);
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
+        return interpolator.getStyleValue(shadowNode);
       });
 }
 
-jsi::Value GroupPropertiesInterpolator::getCurrentValue(
-    jsi::Runtime &rt,
+folly::dynamic GroupPropertiesInterpolator::getCurrentValue(
     const ShadowNode::Shared &shadowNode) const {
   return mapInterpolators(
-      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-        return interpolator.getCurrentValue(rt, shadowNode);
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
+        return interpolator.getCurrentValue(shadowNode);
       });
 }
 
-jsi::Value GroupPropertiesInterpolator::getFirstKeyframeValue(
-    jsi::Runtime &rt) const {
+folly::dynamic GroupPropertiesInterpolator::getFirstKeyframeValue() const {
   return mapInterpolators(
-      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-        return interpolator.getFirstKeyframeValue(rt);
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
+        return interpolator.getFirstKeyframeValue();
       });
 }
 
-jsi::Value GroupPropertiesInterpolator::getLastKeyframeValue(
-    jsi::Runtime &rt) const {
+folly::dynamic GroupPropertiesInterpolator::getLastKeyframeValue() const {
   return mapInterpolators(
-      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-        return interpolator.getLastKeyframeValue(rt);
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
+        return interpolator.getLastKeyframeValue();
       });
 }
 
-jsi::Value GroupPropertiesInterpolator::update(
-    jsi::Runtime &rt,
+folly::dynamic GroupPropertiesInterpolator::update(
     const ShadowNode::Shared &shadowNode) {
   return mapInterpolators(
-      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-        return interpolator.update(rt, shadowNode);
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
+        return interpolator.update(shadowNode);
       });
 }
 
-jsi::Value GroupPropertiesInterpolator::reset(
-    jsi::Runtime &rt,
+folly::dynamic GroupPropertiesInterpolator::reset(
     const ShadowNode::Shared &shadowNode) {
   return mapInterpolators(
-      rt, [&](PropertyInterpolator &interpolator) -> jsi::Value {
-        return interpolator.reset(rt, shadowNode);
+      [&](PropertyInterpolator &interpolator) -> folly::dynamic {
+        return interpolator.reset(shadowNode);
       });
 }
 

@@ -37,7 +37,6 @@ void CSSTransitionsRegistry::remove(const Tag viewTag) {
 }
 
 void CSSTransitionsRegistry::updateSettings(
-    jsi::Runtime &rt,
     const Tag viewTag,
     const PartialCSSTransitionConfig &config) {
   std::lock_guard<std::mutex> lock{mutex_};
@@ -48,12 +47,12 @@ void CSSTransitionsRegistry::updateSettings(
   // Replace style overrides with the new ones if transition properties were
   // updated (we want to keep overrides only for transitioned properties)
   if (config.properties.has_value()) {
-    const auto &currentStyle = transition->getCurrentInterpolationStyle(rt);
-    setInUpdatesRegistry(rt, transition->getShadowNode(), currentStyle);
+    const auto &currentStyle = transition->getCurrentInterpolationStyle();
+    setInUpdatesRegistry(transition->getShadowNode(), currentStyle);
   }
 }
 
-void CSSTransitionsRegistry::update(jsi::Runtime &rt, const double timestamp) {
+void CSSTransitionsRegistry::update(const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   // Activate all delayed transitions that should start now
@@ -65,9 +64,9 @@ void CSSTransitionsRegistry::update(jsi::Runtime &rt, const double timestamp) {
     const auto &viewTag = *it;
     const auto &transition = registry_.at(viewTag);
 
-    const jsi::Value &updates = transition->update(rt, timestamp);
-    if (!updates.isUndefined()) {
-      addUpdatesToBatch(rt, transition->getShadowNode(), updates);
+    const folly::dynamic &updates = transition->update(timestamp);
+    if (!updates.empty()) {
+      addUpdatesToBatch(transition->getShadowNode(), updates);
     }
 
     // We remove transition from running and schedule it when animation of one
@@ -145,7 +144,7 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
           transition->run(rt, changedProps, strongThis->getCurrentTimestamp_());
       const auto &shadowNode = transition->getShadowNode();
 
-      strongThis->setInUpdatesRegistry(rt, shadowNode, initialProps);
+      strongThis->setInUpdatesRegistry(shadowNode, initialProps);
       strongThis->scheduleOrActivateTransition(transition);
     }
   };
