@@ -112,7 +112,8 @@ SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(REANod
   return synchronouslyUpdateUIPropsFunction;
 }
 
-SynchronouslyUpdateUIPropsByDynamicFunction makeSynchronouslyUpdateUIPropsByDynamicFunction(REANodesManager *nodesManager)
+SynchronouslyUpdateUIPropsByDynamicFunction makeSynchronouslyUpdateUIPropsByDynamicFunction(
+    REANodesManager *nodesManager)
 {
   auto synchronouslyUpdateUIPropsFunction = [nodesManager](Tag tag, const folly::dynamic &props) {
     NSNumber *viewTag = @(tag);
