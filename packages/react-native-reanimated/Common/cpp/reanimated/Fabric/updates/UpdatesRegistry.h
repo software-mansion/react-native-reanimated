@@ -18,10 +18,7 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-using UpdatesBatch =
-    std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>;
-using CSSUpdatesBatch =
-    std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
+using UpdatesBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
 using RegistryMap =
     std::unordered_map<Tag, std::pair<ShadowNode::Shared, folly::dynamic>>;
 
@@ -43,18 +40,13 @@ class UpdatesRegistry {
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
 #endif
 
-  void flushUpdates(jsi::Runtime &rt, UpdatesBatch &updatesBatch, bool merge);
-  void flushUpdates(CSSUpdatesBatch &updatesBatch, bool merge);
+  void flushUpdates(UpdatesBatch &updatesBatch, bool merge);
   void collectProps(PropsMap &propsMap);
 
  protected:
   mutable std::mutex mutex_;
   std::unordered_set<Tag> tagsToRemove_;
 
-  void addUpdatesToBatch(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode,
-      const jsi::Value &props);
   void addUpdatesToBatch(
       const ShadowNode::Shared &shadowNode,
       const folly::dynamic &props);
@@ -65,14 +57,9 @@ class UpdatesRegistry {
 
  private:
   UpdatesBatch updatesBatch_;
-  CSSUpdatesBatch cssUpdatesBatch_;
   RegistryMap updatesRegistry_;
 
-  void flushUpdatesToRegistry(
-      jsi::Runtime &rt,
-      const UpdatesBatch &updatesBatch,
-      bool merge);
-  void flushUpdatesToRegistry(const CSSUpdatesBatch &updatesBatch, bool merge);
+  void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch, bool merge);
   void runMarkedRemovals();
 
 #ifdef ANDROID

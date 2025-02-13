@@ -44,19 +44,7 @@ namespace reanimated {
 
 using namespace facebook;
 
-using UpdatesBatch =
-    std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>;
-using CSSUpdatesBatch =
-    std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
-
-struct HasLayoutUpdates {
-  bool cssTransition = false;
-  bool cssAnimation = false;
-  bool workletAnimation = false;
-  bool hasAny() {
-    return cssTransition || cssAnimation || workletAnimation;
-  }
-};
+using UpdatesBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
 
 class ReanimatedModuleProxy
     : public ReanimatedModuleProxySpec,
@@ -228,18 +216,14 @@ class ReanimatedModuleProxy
 
  private:
   void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
-  void commitUpdates(
-      jsi::Runtime &rt,
-      const UpdatesBatch &updatesBatch,
-      const CSSUpdatesBatch &transitionsUpdatesBatch,
-      const CSSUpdatesBatch &animationUpdatesBatch);
+  void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
 
 #ifdef RCT_NEW_ARCH_ENABLED
   bool isThereAnyLayoutProp(jsi::Runtime &rt, const jsi::Object &props);
   bool isThereAnyLayoutProp(const folly::dynamic &props);
   jsi::Value filterNonAnimatableProps(
       jsi::Runtime &rt,
-      const jsi::Value &props);
+      const folly::dynamic &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
   const bool isBridgeless_;
@@ -271,8 +255,6 @@ class ReanimatedModuleProxy
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
-  const SynchronouslyUpdateUIPropsByDynamicFunction
-      synchronouslyUpdateUIPropsByDynamicFunction_;
 
   std::unordered_set<std::string> nativePropNames_; // filled by configureProps
   std::unordered_set<std::string>

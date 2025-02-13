@@ -14,31 +14,12 @@ folly::dynamic UpdatesRegistry::get(const Tag tag) const {
 }
 
 void UpdatesRegistry::flushUpdates(
-    jsi::Runtime &rt,
     UpdatesBatch &updatesBatch,
     const bool merge) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   auto copiedUpdatesBatch = std::move(updatesBatch_);
   updatesBatch_.clear();
-
-  // Store all updates in the registry for later use in the commit hook
-  flushUpdatesToRegistry(rt, copiedUpdatesBatch, merge);
-  // Flush the updates to the updatesBatch used to apply current changes
-  for (auto &[shadowNode, props] : copiedUpdatesBatch) {
-    updatesBatch.emplace_back(shadowNode, std::move(props));
-  }
-  // Remove all tags scheduled for removal
-  runMarkedRemovals();
-}
-
-void UpdatesRegistry::flushUpdates(
-    CSSUpdatesBatch &updatesBatch,
-    const bool merge) {
-  std::lock_guard<std::mutex> lock{mutex_};
-
-  auto copiedUpdatesBatch = std::move(cssUpdatesBatch_);
-  cssUpdatesBatch_.clear();
 
   // Store all updates in the registry for later use in the commit hook
   flushUpdatesToRegistry(copiedUpdatesBatch, merge);
@@ -70,17 +51,9 @@ void UpdatesRegistry::collectProps(PropsMap &propsMap) {
 }
 
 void UpdatesRegistry::addUpdatesToBatch(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
-    const jsi::Value &props) {
-  updatesBatch_.emplace_back(
-      shadowNode, std::make_unique<jsi::Value>(rt, props));
-}
-
-void UpdatesRegistry::addUpdatesToBatch(
     const ShadowNode::Shared &shadowNode,
     const folly::dynamic &props) {
-  cssUpdatesBatch_.emplace_back(shadowNode, props);
+  updatesBatch_.emplace_back(shadowNode, props);
 }
 
 void UpdatesRegistry::setInUpdatesRegistry(
@@ -101,24 +74,7 @@ void UpdatesRegistry::removeFromUpdatesRegistry(const Tag tag) {
 }
 
 void UpdatesRegistry::flushUpdatesToRegistry(
-    jsi::Runtime &rt,
     const UpdatesBatch &updatesBatch,
-    const bool merge) {
-  for (auto &[shadowNode, props] : updatesBatch) {
-    const auto tag = shadowNode->getTag();
-    auto convertedProps = dynamicFromValue(rt, *props);
-    auto it = updatesRegistry_.find(tag);
-
-    if (it == updatesRegistry_.cend() || !merge) {
-      updatesRegistry_[tag] = std::make_pair(shadowNode, convertedProps);
-    } else {
-      it->second.second.update(convertedProps);
-    }
-  }
-}
-
-void UpdatesRegistry::flushUpdatesToRegistry(
-    const CSSUpdatesBatch &updatesBatch,
     const bool merge) {
   for (auto &[shadowNode, props] : updatesBatch) {
     const auto tag = shadowNode->getTag();

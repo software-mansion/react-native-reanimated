@@ -70,8 +70,6 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           animatedPropsRegistry_)),
       synchronouslyUpdateUIPropsFunction_(
           platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
-      synchronouslyUpdateUIPropsByDynamicFunction_(
-          platformDepMethodsHolder.synchronouslyUpdateUIPropsByDynamicFunction),
 #else
       obtainPropFunction_(platformDepMethodsHolder.obtainPropFunction),
       configurePropsPlatformFunction_(
@@ -698,21 +696,15 @@ bool ReanimatedModuleProxy::isThereAnyLayoutProp(const folly::dynamic &props) {
 
 jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
     jsi::Runtime &rt,
-    const jsi::Value &props) {
+    const folly::dynamic &props) {
   jsi::Object nonAnimatableProps(rt);
   bool hasAnyNonAnimatableProp = false;
-  const jsi::Object &propsObject = props.asObject(rt);
-  const jsi::Array &propNames = propsObject.getPropertyNames(rt);
-  for (size_t i = 0; i < propNames.size(rt); ++i) {
-    const std::string &propName =
-        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    if (!collection::contains(animatablePropNames_, propName)) {
-      hasAnyNonAnimatableProp = true;
-      const auto &propNameStr = propName.c_str();
-      const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
-      nonAnimatableProps.setProperty(rt, propNameStr, propValue);
+    for (const auto& [propName, propValue] : props.items()) {
+      if (!collection::contains(animatablePropNames_, propName.c_str())) {
+        hasAnyNonAnimatableProp = true;
+        nonAnimatableProps.setProperty(rt, propName.c_str(), jsi::valueFromDynamic(rt, propValue));
+      }
     }
-  }
   if (!hasAnyNonAnimatableProp) {
     return jsi::Value::undefined();
   }
@@ -834,9 +826,6 @@ void ReanimatedModuleProxy::performOperations() {
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
 
   UpdatesBatch updatesBatch;
-  CSSUpdatesBatch transitionUpdatesBatch;
-  CSSUpdatesBatch animationUpdatesBatch;
-
   {
     ReanimatedSystraceSection s2("ReanimatedModuleProxy::flushUpdates");
 
@@ -847,28 +836,28 @@ void ReanimatedModuleProxy::performOperations() {
 
       // Update CSS transitions and flush updates
       cssTransitionsRegistry_->update(currentCssTimestamp_);
-      cssTransitionsRegistry_->flushUpdates(transitionUpdatesBatch, false);
+      cssTransitionsRegistry_->flushUpdates(updatesBatch, false);
     }
 
     // Flush all animated props updates
-    animatedPropsRegistry_->flushUpdates(rt, updatesBatch, true);
+    animatedPropsRegistry_->flushUpdates(updatesBatch, true);
 
     if (shouldUpdateCssAnimations_) {
       // Update CSS animations and flush updates
       cssAnimationsRegistry_->update(currentCssTimestamp_);
-      cssAnimationsRegistry_->flushUpdates(animationUpdatesBatch, true);
+      cssAnimationsRegistry_->flushUpdates(updatesBatch, true);
     }
 
     shouldUpdateCssAnimations_ = false;
 
-    if ((updatesBatch.size() > 0 || transitionUpdatesBatch.size() > 0 || animationUpdatesBatch.size() > 0) &&
+    if ((updatesBatch.size() > 0) &&
         updatesRegistryManager_->shouldReanimatedSkipCommit()) {
       updatesRegistryManager_->pleaseCommitAfterPause();
     }
   }
 
   for (const auto &[shadowNode, props] : updatesBatch) {
-    const jsi::Value &nonAnimatableProps = filterNonAnimatableProps(rt, *props);
+    const jsi::Value &nonAnimatableProps = filterNonAnimatableProps(rt, props);
     if (nonAnimatableProps.isUndefined()) {
       continue;
     }
@@ -883,7 +872,7 @@ void ReanimatedModuleProxy::performOperations() {
     jsPropsUpdater.call(rt, viewTag, nonAnimatableProps);
   }
 
-  HasLayoutUpdates hasLayoutUpdates;
+  bool hasLayoutUpdates = false;
 #ifdef ANDROID
   bool hasPropsToRevert = updatesRegistryManager_->hasPropsToRevert();
 #else
@@ -891,21 +880,9 @@ void ReanimatedModuleProxy::performOperations() {
 #endif
 
   if (!hasPropsToRevert) {
-    for (const auto &[shadowNode, props] : transitionUpdatesBatch) {
-      if (isThereAnyLayoutProp(props)) {
-        hasLayoutUpdates.cssTransition = true;
-        break;
-      }
-    }
     for (const auto &[shadowNode, props] : updatesBatch) {
-      if (isThereAnyLayoutProp(rt, props->asObject(rt))) {
-        hasLayoutUpdates.workletAnimation = true;
-        break;
-      }
-    }
-    for (const auto &[shadowNode, props] : animationUpdatesBatch) {
       if (isThereAnyLayoutProp(props)) {
-        hasLayoutUpdates.cssAnimation = true;
+        hasLayoutUpdates = true;
         break;
       }
     }
@@ -913,26 +890,12 @@ void ReanimatedModuleProxy::performOperations() {
 
   // If there's no layout props to be updated, we can apply the updates
   // directly onto the components and skip the commit.
-  if (!hasPropsToRevert && hasLayoutUpdates.hasAny()) {
+  if (!hasLayoutUpdates && !hasPropsToRevert) {
     ReanimatedSystraceSection s(
         "ReanimatedModuleProxy::synchronouslyUpdateUIProps");
-    if (!hasLayoutUpdates.cssTransition) {
-      for (const auto &[shadowNode, props] : transitionUpdatesBatch) {
-        Tag tag = shadowNode->getTag();
-        synchronouslyUpdateUIPropsByDynamicFunction_(tag, props);
-      }
-    }
-    if (!hasLayoutUpdates.workletAnimation) {
-      for (const auto &[shadowNode, props] : updatesBatch) {
-        Tag tag = shadowNode->getTag();
-        synchronouslyUpdateUIPropsFunction_(rt, tag, props->asObject(rt));
-      }
-    }
-    if (!hasLayoutUpdates.cssAnimation) {
-      for (const auto &[shadowNode, props] : animationUpdatesBatch) {
-        Tag tag = shadowNode->getTag();
-        synchronouslyUpdateUIPropsByDynamicFunction_(tag, props);
-      }
+    for (const auto &[shadowNode, props] : updatesBatch) {
+      Tag tag = shadowNode->getTag();
+      synchronouslyUpdateUIPropsFunction_(tag, props);
     }
   }
 
@@ -945,8 +908,7 @@ void ReanimatedModuleProxy::performOperations() {
     return;
   }
 
-  commitUpdates(
-      rt, updatesBatch, transitionUpdatesBatch, animationUpdatesBatch);
+  commitUpdates(rt, updatesBatch);
 
   // Clear the entire cache after the commit
   // (we don't know if the view is updated from outside of Reanimated
@@ -964,9 +926,7 @@ void ReanimatedModuleProxy::requestFlushRegistry() {
 
 void ReanimatedModuleProxy::commitUpdates(
     jsi::Runtime &rt,
-    const UpdatesBatch &updatesBatch,
-    const CSSUpdatesBatch &transitionUpdatesBatch,
-    const CSSUpdatesBatch &animationUpdatesBatch) {
+    const UpdatesBatch &updatesBatch) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::commitUpdates");
   react_native_assert(uiManager_ != nullptr);
   const auto &shadowTreeRegistry = uiManager_->getShadowTreeRegistry();
@@ -986,19 +946,7 @@ void ReanimatedModuleProxy::commitUpdates(
       propsVector.insert(propsVector.end(), props.begin(), props.end());
     }
   } else {
-    for (auto const &[shadowNode, props] : transitionUpdatesBatch) {
-      SurfaceId surfaceId = shadowNode->getSurfaceId();
-      auto family = &shadowNode->getFamily();
-      react_native_assert(family->getSurfaceId() == surfaceId);
-      propsMapBySurface[surfaceId][family].emplace_back(std::move(props));
-    }
     for (auto const &[shadowNode, props] : updatesBatch) {
-      SurfaceId surfaceId = shadowNode->getSurfaceId();
-      auto family = &shadowNode->getFamily();
-      react_native_assert(family->getSurfaceId() == surfaceId);
-      propsMapBySurface[surfaceId][family].emplace_back(rt, std::move(*props));
-    }
-    for (auto const &[shadowNode, props] : animationUpdatesBatch) {
       SurfaceId surfaceId = shadowNode->getSurfaceId();
       auto family = &shadowNode->getFamily();
       react_native_assert(family->getSurfaceId() == surfaceId);
