@@ -1,5 +1,6 @@
 'use strict';
 import { ReanimatedError } from '../../../../errors';
+import { CSSKeyframesRuleImpl } from '../../../../models';
 import type {
   ConvertValuesToArraysWithUndefined,
   CSSAnimationProperties,
@@ -16,14 +17,22 @@ import {
 import { parseTimingFunction } from '../common';
 
 export type ExpandedCSSAnimationConfigProperties = Required<
-  ConvertValuesToArraysWithUndefined<
-    Omit<CSSAnimationProperties, 'animation' | 'animationName'>
-  >
-> & {
-  animationName: string[];
-};
+  ConvertValuesToArraysWithUndefined<Omit<CSSAnimationProperties, 'animation'>>
+>;
 
-export function parseCSSAnimationShorthand(value: string) {
+export const createEmptyAnimationConfig =
+  (): ExpandedCSSAnimationConfigProperties => ({
+    animationName: [],
+    animationDuration: [],
+    animationTimingFunction: [],
+    animationDelay: [],
+    animationIterationCount: [],
+    animationDirection: [],
+    animationFillMode: [],
+    animationPlayState: [],
+  });
+
+export function parseAnimationShorthand(value: string) {
   return splitByComma(value).reduce<ExpandedCSSAnimationConfigProperties>(
     (acc, part) => {
       const result = parseSingleAnimationShorthand(part);
@@ -42,30 +51,14 @@ export function parseCSSAnimationShorthand(value: string) {
       acc.animationPlayState.push(result.animationPlayState);
       return acc;
     },
-    {
-      animationName: [],
-      animationDuration: [],
-      animationTimingFunction: [],
-      animationDelay: [],
-      animationIterationCount: [],
-      animationDirection: [],
-      animationFillMode: [],
-      animationPlayState: [],
-    }
+    createEmptyAnimationConfig()
   );
 }
 
-type ParsedShorthandSingleAnimationConfig = Omit<
-  SingleCSSAnimationProperties,
-  'animationName'
-> & {
-  animationName?: string;
-};
-
 function parseSingleAnimationShorthand(
   value: string
-): ParsedShorthandSingleAnimationConfig {
-  const result: ParsedShorthandSingleAnimationConfig = {};
+): SingleCSSAnimationProperties {
+  const result: Partial<SingleCSSAnimationProperties> = {};
   const parts = splitByWhitespace(value);
 
   for (const part of parts) {
@@ -114,11 +107,15 @@ function parseSingleAnimationShorthand(
       continue;
     }
     if (result.animationName === undefined && isAnimationName(part)) {
-      result.animationName = part;
+      result.animationName = CSSKeyframesRuleImpl.getByName(part);
       continue;
     }
     throw new ReanimatedError(`Invalid animation shorthand: ${value}`);
   }
 
-  return result;
+  if (!result.animationName) {
+    throw new ReanimatedError(`Invalid animation shorthand: ${value}`);
+  }
+
+  return result as SingleCSSAnimationProperties;
 }

@@ -26,6 +26,11 @@ export default class CSSKeyframesRegistry {
     this.cleanupIntervalId_ = null;
   }
 
+  getByName(name: string) {
+    this.assertExists(name);
+    return this.keyframesRegistry_.get(name)?.deref() as CSSKeyframesRuleImpl;
+  }
+
   registerKeyframes(keyframesRule: CSSKeyframesRuleImpl) {
     this.keyframesRegistry_.set(keyframesRule.name, new WeakRef(keyframesRule));
     this.unusedAnimationNames_.add(keyframesRule.name);
@@ -33,11 +38,7 @@ export default class CSSKeyframesRegistry {
   }
 
   registerUsage(animationName: string, viewTag: number) {
-    if (!this.keyframesRegistry_.has(animationName)) {
-      throw new ReanimatedError(
-        `Animation with name ${animationName} is not registered. Make sure that the animation exists before attempting to use it.`
-      );
-    }
+    this.assertExists(animationName);
 
     if (!this.usageRegistry_.has(animationName)) {
       this.usageRegistry_.set(animationName, new Set());
@@ -58,6 +59,14 @@ export default class CSSKeyframesRegistry {
       this.usageRegistry_.delete(animationName);
       this.unusedAnimationNames_.add(animationName);
       this.maybeStartCleanupLoop();
+    }
+  }
+
+  private assertExists(name: string) {
+    if (!this.keyframesRegistry_.has(name)) {
+      throw new ReanimatedError(
+        `Animation with name ${name} is not registered. Make sure that the animation exists before attempting to use it.`
+      );
     }
   }
 

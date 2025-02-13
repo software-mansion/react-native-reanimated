@@ -29,4 +29,8 @@ export default class CSSKeyframesRuleImpl<
   unregisterUsage(viewTag: number) {
     CSSKeyframesRuleImpl.keyframesRegistry.unregisterUsage(this.name, viewTag);
   }
+
+  static getByName(name: string) {
+    return CSSKeyframesRuleImpl.keyframesRegistry.getByName(name);
+  }
 }
