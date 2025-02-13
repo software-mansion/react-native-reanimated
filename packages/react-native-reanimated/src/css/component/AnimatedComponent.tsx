@@ -17,7 +17,7 @@ import { isFabric, isWeb, shouldBeUseWeb } from '../../PlatformChecker';
 import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
-import { filterNonCSSStyles } from './utils';
+import { filterNonCSSStyleProps } from './utils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_WEB = isWeb();
@@ -183,7 +183,7 @@ export default class AnimatedComponent<
         {...this.props}
         {...props}
         {...platformProps}
-        style={filterNonCSSStyles([this.props.style, props?.style])}
+        style={filterNonCSSStyleProps([this.props.style, props?.style])}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
         ref={this._setComponentRef as (ref: Component) => void}
