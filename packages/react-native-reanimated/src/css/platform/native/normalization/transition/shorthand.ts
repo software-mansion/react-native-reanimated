@@ -1,4 +1,6 @@
 'use strict';
+import type { ControlPoint, CSSTimingFunction } from '../../../../easings';
+import { cubicBezier, linear, steps } from '../../../../easings';
 import { ReanimatedError } from '../../../../errors';
 import type {
   ConvertValuesToArraysWithUndefined,

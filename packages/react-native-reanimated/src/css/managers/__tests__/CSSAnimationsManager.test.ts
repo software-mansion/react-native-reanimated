@@ -7,10 +7,7 @@ import {
   unregisterCSSAnimations,
   updateCSSAnimations,
 } from '../../platform/native/native';
-import type {
-  CSSAnimationProperties,
-  ExistingCSSAnimationProperties,
-} from '../../types';
+import type { CSSAnimationProperties } from '../../types';
 import type { ProcessedAnimation } from '../CSSAnimationsManager';
 import CSSAnimationsManager from '../CSSAnimationsManager';
 
@@ -56,14 +53,14 @@ describe('CSSAnimationsManager', () => {
       });
 
       it('updates an existing animation if keyframes are the same and animation settings are different', () => {
-        const animationProperties: ExistingCSSAnimationProperties = {
+        const animationProperties: CSSAnimationProperties = {
           animationName: {
             from: { opacity: 0 },
           },
           animationDuration: '2s',
           animationDelay: '1s',
         };
-        const newAnimationConfig: ExistingCSSAnimationProperties = {
+        const newAnimationConfig: CSSAnimationProperties = {
           animationName: {
             from: { opacity: 0 },
           },
@@ -89,13 +86,13 @@ describe('CSSAnimationsManager', () => {
       });
 
       it('attaches a new animation if keyframes are different', () => {
-        const animationProperties: ExistingCSSAnimationProperties = {
+        const animationProperties: CSSAnimationProperties = {
           animationName: {
             from: { opacity: 0 },
           },
           animationDuration: '2s',
         };
-        const newAnimationConfig: ExistingCSSAnimationProperties = {
+        const newAnimationConfig: CSSAnimationProperties = {
           animationName: {
             from: { opacity: 1 },
           },
@@ -114,7 +111,7 @@ describe('CSSAnimationsManager', () => {
       });
 
       it('detaches an existing animation if the new config is empty', () => {
-        const animationProperties: ExistingCSSAnimationProperties = {
+        const animationProperties: CSSAnimationProperties = {
           animationName: {
             from: { opacity: 0 },
           },

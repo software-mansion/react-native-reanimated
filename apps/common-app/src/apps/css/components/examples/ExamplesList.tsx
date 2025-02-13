@@ -92,12 +92,15 @@ function Example<P extends AnyRecord>({
   return (
     <CardComponent
       code={stringifyConfig(animation)}
-      collapsedCode={stringifyConfig(animation.animationName, denseCode)}
       collapsedExampleHeight={collapsedExampleHeight}
       description={description}
       minExampleHeight={minExampleHeight}
       showRestartButton={showRestartButton}
-      title={title}>
+      title={title}
+      collapsedCode={stringifyConfig(
+        animation.animationName ?? 'none',
+        denseCode
+      )}>
       {renderExample({ animation, ...userProps })}
     </CardComponent>
   );

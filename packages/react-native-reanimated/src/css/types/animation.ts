@@ -65,6 +65,13 @@ export type CSSAnimationProperties<S extends object = PlainStyle> =
     animation?: CSSAnimationShorthand;
   };
 
+export type ExistingCSSAnimationProperties<S extends object = PlainStyle> =
+  CSSAnimationProperties<S> & {
+    animationName: AddArrayPropertyType<
+      CSSKeyframesRule | CSSAnimationKeyframes<S>
+    >;
+  };
+
 export type CSSAnimationSettingProp = keyof CSSAnimationSettings;
 
 export type CSSAnimationProp = keyof CSSAnimationProperties;

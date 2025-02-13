@@ -44,8 +44,13 @@ export default class CSSAnimationsManager {
       return;
     }
 
-    const [processedAnimations, areAllEqual] =
-      this.processAnimations(animationProperties);
+    const processResult = this.processAnimations(animationProperties);
+    if (!processResult) {
+      this.detach();
+      return;
+    }
+
+    const [processedAnimations, areAllEqual] = processResult;
 
     // Attach new animations if there are no attached animations or if
     // the array of animations is different (e.g. length or order)
@@ -99,32 +104,36 @@ export default class CSSAnimationsManager {
 
   private processAnimations(
     animationProperties: CSSAnimationProperties
-  ): [ProcessedAnimation[], boolean] {
+  ): [ProcessedAnimation[], boolean] | null {
     const singleAnimationPropertiesArray =
       createSingleCSSAnimationProperties(animationProperties);
+    if (!singleAnimationPropertiesArray) {
+      return null;
+    }
+
     let areAllEqual =
       this.attachedAnimations.length === singleAnimationPropertiesArray.length;
 
     const processedAnimations = singleAnimationPropertiesArray.map(
       (properties, i) => {
-        const keyframes = properties.animationName;
+        const animationName = properties.animationName;
         let keyframesRule: CSSKeyframesRuleImpl;
 
-        if (keyframes instanceof CSSKeyframesRuleImpl) {
+        if (animationName instanceof CSSKeyframesRuleImpl) {
           // If the instance of the CSSKeyframesRule class was passed, we can just compare
           // references to the instance (css.keyframes() call should be memoized in order
           // to preserve the same animation. If used inline, it will restart the animation
           // on every component re-render)
-          keyframesRule = keyframes;
+          keyframesRule = animationName;
           if (
             areAllEqual &&
-            keyframes !== this.attachedAnimations[i]?.keyframesRule
+            animationName !== this.attachedAnimations[i]?.keyframesRule
           ) {
             areAllEqual = false;
           }
         } else if (
           this.attachedAnimations[i]?.keyframesRule.cssText !==
-          JSON.stringify(keyframes)
+          JSON.stringify(animationName)
         ) {
           // If the keyframes are not an instance of the CSSKeyframesRule class (e.g. someone
           // passes a keyframes object inline in the component's style without using css.keyframes()
@@ -132,7 +141,7 @@ export default class CSSAnimationsManager {
           // In this case, we need to compare the stringified keyframes of the old and the new
           // animation configuration object to determine if the animation has changed.
           keyframesRule = new CSSKeyframesRuleImpl(
-            keyframes as CSSAnimationKeyframes
+            animationName as CSSAnimationKeyframes
           );
           areAllEqual = false;
         } else {

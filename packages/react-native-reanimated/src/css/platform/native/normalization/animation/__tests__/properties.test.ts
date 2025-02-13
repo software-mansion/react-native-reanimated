@@ -1,13 +1,13 @@
 'use strict';
 import { cubicBezier } from '../../../../../easings';
-import type { ExistingCSSAnimationProperties } from '../../../../../types';
+import type { CSSAnimationProperties } from '../../../../../types';
 import { createSingleCSSAnimationProperties } from '../properties';
 
 describe(createSingleCSSAnimationProperties, () => {
   describe('when there is only a single animation in properties', () => {
     it('returns properties of a single animation', () => {
       const animationTimingFunction = cubicBezier(0.4, 0, 0.2, 1);
-      const config: ExistingCSSAnimationProperties = {
+      const config: CSSAnimationProperties = {
         animationName: {
           from: { opacity: 1, animationTimingFunction: 'linear' },
           to: { opacity: 0.5 },
@@ -39,7 +39,7 @@ describe(createSingleCSSAnimationProperties, () => {
     });
 
     it('returns undefined for unspecified properties', () => {
-      const config: ExistingCSSAnimationProperties = {
+      const config: CSSAnimationProperties = {
         animationName: { from: { opacity: 1 }, to: { opacity: 0.5 } },
       };
 
@@ -61,7 +61,7 @@ describe(createSingleCSSAnimationProperties, () => {
   describe('when the config is an array of animations', () => {
     it('uses provided properties if each animation is provided different values', () => {
       const bezier = cubicBezier(0.4, 0, 0.2, 1);
-      const config: ExistingCSSAnimationProperties = {
+      const config: CSSAnimationProperties = {
         animationName: [
           { from: { opacity: 1 }, to: { opacity: 0.5 } },
           { from: { opacity: 0.5 }, to: { opacity: 1 } },
@@ -106,7 +106,7 @@ describe(createSingleCSSAnimationProperties, () => {
     });
 
     it('uses the same property value if only one value is provided and undefined for unspecified properties', () => {
-      const config: ExistingCSSAnimationProperties = {
+      const config: CSSAnimationProperties = {
         animationName: [
           { from: { opacity: 1 }, to: { opacity: 0.5 } },
           { from: { opacity: 0.5 }, to: { opacity: 1 } },
@@ -148,7 +148,7 @@ describe(createSingleCSSAnimationProperties, () => {
     });
 
     it('cycles through the provided values if there are more animations than values', () => {
-      const config: ExistingCSSAnimationProperties = {
+      const config: CSSAnimationProperties = {
         animationName: [
           { from: { opacity: 1 }, to: { opacity: 0.5 } },
           { from: { width: '100%' }, to: { width: '50%' } },
