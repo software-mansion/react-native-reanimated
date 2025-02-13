@@ -37,7 +37,7 @@ export class PropsFilter implements IPropsFilter {
         const styleProp = inputProps.style;
         const styles = Array.isArray(styleProp)
             ? styleProp as Array<StyleProps>
-            : [];
+            : styleProp ? [styleProp] : [];
         const processedStyle: StyleProps[] = styles.map((style) => {
           if (style && style.viewDescriptors) {
             // this is how we recognize styles returned by useAnimatedStyle
