@@ -243,14 +243,15 @@ void CSSAnimationsRegistry::handleAnimationsToRevert(const double timestamp) {
 bool CSSAnimationsRegistry::addStyleUpdates(
     folly::dynamic &target,
     const folly::dynamic &updates,
-    bool override) {
+    bool shouldOverride) {
   if (!updates.isObject()) {
     return false;
   }
 
   bool hasUpdates = false;
   for (const auto &[propertyName, propertyValue] : updates.items()) {
-    if (override || target.at(propertyName).isNull()) {
+    if (shouldOverride || !target.count(propertyName) ||
+        target.at(propertyName).isNull()) {
       target[propertyName] = propertyValue;
       hasUpdates = true;
     }

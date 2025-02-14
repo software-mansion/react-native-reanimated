@@ -65,7 +65,7 @@ class CSSAnimationsRegistry
   static bool addStyleUpdates(
       folly::dynamic &target,
       const folly::dynamic &updates,
-      bool override);
+      bool shouldOverride);
 };
 
 } // namespace reanimated
