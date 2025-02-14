@@ -4,15 +4,15 @@
   "description": "The React Native multithreading library",
   "scripts": {
     "build": "bob build",
+    "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib",
     "format": "yarn format:js && yarn format:common && yarn format:android:java",
-    "format:js": "prettier --write --list-different src",
-    "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:android:java": "node ../../scripts/format-java.js",
+    "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
+    "format:js": "prettier --write --list-different src",
     "lint": "yarn lint:js && yarn lint:android",
-    "lint:js": "eslint src && yarn prettier --check src",
     "lint:android": "./android/gradlew -p android spotlessCheck -q",
-    "type:check": "yarn tsc --noEmit",
-    "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib"
+    "lint:js": "eslint src && yarn prettier --check src",
+    "type:check": "yarn tsc --noEmit"
   },
   "repository": {
     "type": "git",
