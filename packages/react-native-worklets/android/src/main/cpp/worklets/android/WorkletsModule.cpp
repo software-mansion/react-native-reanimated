@@ -83,6 +83,7 @@ void WorkletsModule::requestAnimationFrame(
 }
 
 void WorkletsModule::invalidateCpp() {
+  javaPart_.reset();
   workletsModuleProxy_.reset();
 }
 
