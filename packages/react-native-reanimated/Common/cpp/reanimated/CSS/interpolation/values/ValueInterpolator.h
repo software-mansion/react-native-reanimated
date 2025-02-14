@@ -85,9 +85,9 @@ class ValueInterpolator : public PropertyInterpolator {
 
     for (const auto &[offset, value] : parsedKeyframes) {
       if (value.isUndefined()) {
-        keyframes_.emplace_back(offset, std::nullopt);
+        keyframes_.push_back(KeyframeType{offset, std::nullopt});
       } else {
-        keyframes_.emplace_back(offset, ValueType(rt, value));
+        keyframes_.push_back(KeyframeType{offset, ValueType(rt, value)});
       }
     }
   }
@@ -171,13 +171,6 @@ class ValueInterpolator : public PropertyInterpolator {
   ValueType getFallbackValue(const ShadowNode::Shared &shadowNode) const {
     const auto styleValue = getStyleValue(shadowNode);
     return styleValue.isNull() ? defaultStyleValue_ : ValueType(styleValue);
-  }
-
-  ValueType resolveKeyframeValue(
-      const ValueType &unresolvedValue,
-      const ShadowNode::Shared &shadowNode) const {
-    return interpolateValue(
-        0, unresolvedValue, unresolvedValue, {.node = shadowNode});
   }
 
   size_t getToKeyframeIndex(
