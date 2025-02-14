@@ -696,14 +696,19 @@ bool ReanimatedModuleProxy::isThereAnyLayoutProp(const folly::dynamic &props) {
 
 jsi::Value ReanimatedModuleProxy::filterNonAnimatableProps(
     jsi::Runtime &rt,
-    const folly::dynamic &props) {
+    const jsi::Value &props) {
   jsi::Object nonAnimatableProps(rt);
   bool hasAnyNonAnimatableProp = false;
-  for (const auto &[propName, propValue] : props.items()) {
-    if (!collection::contains(animatablePropNames_, propName.c_str())) {
+  const jsi::Object &propsObject = props.asObject(rt);
+  const jsi::Array &propNames = propsObject.getPropertyNames(rt);
+  for (size_t i = 0; i < propNames.size(rt); ++i) {
+    const std::string &propName =
+        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
+    if (!collection::contains(animatablePropNames_, propName)) {
       hasAnyNonAnimatableProp = true;
-      nonAnimatableProps.setProperty(
-          rt, propName.c_str(), jsi::valueFromDynamic(rt, propValue));
+      const auto &propNameStr = propName.c_str();
+      const jsi::Value &propValue = propsObject.getProperty(rt, propNameStr);
+      nonAnimatableProps.setProperty(rt, propNameStr, propValue);
     }
   }
   if (!hasAnyNonAnimatableProp) {
@@ -857,12 +862,11 @@ void ReanimatedModuleProxy::performOperations() {
     }
   }
 
-  for (const auto &[shadowNode, props] : updatesBatch) {
-    const jsi::Value &nonAnimatableProps = filterNonAnimatableProps(rt, props);
+  for (const auto &[viewTag, props] : animatedPropsRegistry_->getJSIUpdates()) {
+    const jsi::Value &nonAnimatableProps = filterNonAnimatableProps(rt, *props);
     if (nonAnimatableProps.isUndefined()) {
       continue;
     }
-    Tag viewTag = shadowNode->getTag();
     jsi::Value maybeJSPropsUpdater =
         rt.global().getProperty(rt, "updateJSProps");
     assert(

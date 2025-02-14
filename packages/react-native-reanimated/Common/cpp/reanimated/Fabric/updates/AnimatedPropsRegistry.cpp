@@ -3,6 +3,10 @@
 
 namespace reanimated {
 
+JSIUpdates AnimatedPropsRegistry::getJSIUpdates() {
+  return std::move(jsiUpdates_);
+}
+
 SurfaceId AnimatedPropsRegistry::update(
     jsi::Runtime &rt,
     const jsi::Value &operations) {
@@ -16,6 +20,7 @@ SurfaceId AnimatedPropsRegistry::update(
 
     const jsi::Value &updates = item.getProperty(rt, "updates");
     addUpdatesToBatch(shadowNode, jsi::dynamicFromValue(rt, updates));
+    jsiUpdates_.emplace_back(shadowNode->getTag(), std::make_unique<jsi::Value>(rt, updates));
     surfaceId = shadowNode->getSurfaceId();
   }
 

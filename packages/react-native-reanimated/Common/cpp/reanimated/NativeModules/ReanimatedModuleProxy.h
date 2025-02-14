@@ -223,7 +223,7 @@ class ReanimatedModuleProxy
   bool isThereAnyLayoutProp(const folly::dynamic &props);
   jsi::Value filterNonAnimatableProps(
       jsi::Runtime &rt,
-      const folly::dynamic &props);
+      const jsi::Value &props);
 #endif // RCT_NEW_ARCH_ENABLED
 
   const bool isBridgeless_;
