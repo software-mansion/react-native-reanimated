@@ -233,9 +233,11 @@ export function tryActivateLayoutTransition<
     ?.presetName;
   const exitingAnimation = (props.layout as CustomConfig).exitingV?.presetName;
 
+  const deltaX = (snapshot.width - rect.width) / 2;
+  const deltaY = (snapshot.height - rect.height) / 2;
   const transitionData: TransitionData = {
-    translateX: snapshot.x - rect.x,
-    translateY: snapshot.y - rect.y,
+    translateX: snapshot.x - rect.x + deltaX,
+    translateY: snapshot.y - rect.y + deltaY,
     scaleX: snapshot.width / rect.width,
     scaleY: snapshot.height / rect.height,
     reversed: false, // This field is used only in `SequencedTransition`, so by default it will be false
