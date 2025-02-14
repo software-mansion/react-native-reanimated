@@ -89,14 +89,14 @@ void ArrayPropertiesInterpolator::forEachInterpolator(
   }
 }
 
-jsi::Value ArrayPropertiesInterpolator::mapInterpolators(
-    jsi::Runtime &rt,
-    const std::function<jsi::Value(PropertyInterpolator &)> &callback) const {
-  jsi::Array result(rt, interpolators_.size());
+folly::dynamic ArrayPropertiesInterpolator::mapInterpolators(
+    const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
+    const {
+  auto result = folly::dynamic::array();
 
   for (size_t i = 0; i < interpolators_.size(); ++i) {
-    jsi::Value value = callback(*interpolators_[i]);
-    result.setValueAtIndex(rt, i, value);
+    folly::dynamic value = callback(*interpolators_[i]);
+    result.push_back(value);
   }
 
   return result;
