@@ -8,9 +8,6 @@ using namespace facebook;
 
 namespace reanimated {
 
-using RequestAnimationFrameFunction =
-    std::function<void(jsi::Runtime &, const jsi::Value &)>;
-
 class UIRuntimeDecorator {
  public:
   static void decorate(
@@ -24,7 +21,6 @@ class UIRuntimeDecorator {
       const UpdatePropsFunction updateProps,
       const MeasureFunction measure,
       const DispatchCommandFunction dispatchCommand,
-      const RequestAnimationFrameFunction requestAnimationFrame,
       const GetAnimationTimestampFunction getAnimationTimestamp,
       const SetGestureStateFunction setGestureState,
       const ProgressLayoutAnimationFunction progressLayoutAnimation,

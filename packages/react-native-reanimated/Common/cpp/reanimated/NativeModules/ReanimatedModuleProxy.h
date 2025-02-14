@@ -215,7 +215,6 @@ class ReanimatedModuleProxy
   void requestFlushRegistry();
 
  private:
-  void requestAnimationFrame(jsi::Runtime &rt, const jsi::Value &callback);
   void commitUpdates(jsi::Runtime &rt, const UpdatesBatch &updatesBatch);
 
 #ifdef RCT_NEW_ARCH_ENABLED

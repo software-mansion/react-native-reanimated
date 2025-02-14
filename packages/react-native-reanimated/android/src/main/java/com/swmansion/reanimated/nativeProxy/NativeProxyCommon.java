@@ -81,6 +81,7 @@ public abstract class NativeProxyCommon {
       firstUptime = SystemClock.uptimeMillis();
     }
     mNodesManager.enableSlowAnimations(slowAnimationsEnabled, ANIMATIONS_DRAG_FACTOR);
+    mWorkletsModule.toggleSlowAnimations();
   }
 
   private void addDevMenuOption() {

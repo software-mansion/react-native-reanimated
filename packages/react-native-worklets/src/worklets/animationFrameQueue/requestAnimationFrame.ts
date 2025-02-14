@@ -1,6 +1,6 @@
 'use strict';
 
-import { callMicrotasks } from './WorkletsResolver';
+import { callMicrotasks } from '../threads';
 
 export function setupRequestAnimationFrame() {
   'worklet';

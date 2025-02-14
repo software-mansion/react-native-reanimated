@@ -3,6 +3,7 @@ package com.swmansion.worklets;
 import androidx.annotation.OptIn;
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.queue.MessageQueueThread;
@@ -16,7 +17,7 @@ import java.util.Objects;
  * @noinspection JavaJniMissingFunction
  */
 @ReactModule(name = WorkletsModule.NAME)
-public class WorkletsModule extends NativeWorkletsModuleSpec {
+public class WorkletsModule extends NativeWorkletsModuleSpec implements LifecycleEventListener {
   static {
     SoLoader.loadLibrary("worklets");
   }
@@ -32,6 +33,8 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
 
   private final WorkletsMessageQueueThread mMessageQueueThread = new WorkletsMessageQueueThread();
   private final AndroidUIScheduler mAndroidUIScheduler;
+  private final AnimationFrameQueue mAnimationFrameQueue;
+  private boolean mSlowAnimationsEnabled;
 
   public AndroidUIScheduler getAndroidUIScheduler() {
     return mAndroidUIScheduler;
@@ -48,6 +51,7 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   public WorkletsModule(ReactApplicationContext reactContext) {
     super(reactContext);
     mAndroidUIScheduler = new AndroidUIScheduler(reactContext);
+    mAnimationFrameQueue = new AnimationFrameQueue(reactContext);
   }
 
   @OptIn(markerClass = FrameworkAPI.class)
@@ -67,6 +71,16 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
     return true;
   }
 
+  public void requestAnimationFrame(AnimationFrameCallback animationFrameCallback) {
+    mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback);
+  }
+
+  public void toggleSlowAnimations() {
+    final int ANIMATIONS_DRAG_FACTOR = 10;
+    mSlowAnimationsEnabled = !mSlowAnimationsEnabled;
+    mAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, ANIMATIONS_DRAG_FACTOR);
+  }
+
   public void invalidate() {
     // We have to destroy extra runtimes when invalidate is called. If we clean
     // it up later instead there's a chance the runtime will retain references
@@ -77,4 +91,17 @@ public class WorkletsModule extends NativeWorkletsModuleSpec {
   }
 
   private native void invalidateCpp();
+
+  @Override
+  public void onHostResume() {
+    mAnimationFrameQueue.resume();
+  }
+
+  @Override
+  public void onHostPause() {
+    mAnimationFrameQueue.pause();
+  }
+
+  @Override
+  public void onHostDestroy() {}
 }

@@ -1,7 +1,7 @@
 /* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 
-import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
+import { mockedRequestAnimationFrame } from '../animationFrameQueue/mockedRequestAnimationFrame';
 import { isJest } from '../PlatformChecker';
 import { WorkletsError } from '../WorkletsError';
 import type { ShareableRef, WorkletRuntime } from '../workletTypes';
