@@ -13,7 +13,6 @@ export interface CSSKeyframeRule<S extends PlainStyle = PlainStyle> {
 export interface CSSKeyframesRule {
   readonly cssRules: CSSAnimationKeyframes;
   readonly cssText: string;
-  readonly length: number;
   readonly name: string;
 }
 

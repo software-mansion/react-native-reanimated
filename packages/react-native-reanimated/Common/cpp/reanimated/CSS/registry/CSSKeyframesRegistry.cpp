@@ -3,7 +3,7 @@
 
 namespace reanimated {
 
-const CSSKeyframesConfig &CSSKeyframesRegistry::get(
+const std::shared_ptr<CSSKeyframes> &CSSKeyframesRegistry::get(
     const std::string &animationName) const {
   const auto it = registry_.find(animationName);
   if (it == registry_.end()) {
@@ -14,13 +14,12 @@ const CSSKeyframesConfig &CSSKeyframesRegistry::get(
   return it->second;
 }
 
-void CSSKeyframesRegistry::add(
-    const std::string &animationName,
-    CSSKeyframesConfig &&config) {
-  registry_[animationName] = std::move(config);
+void CSSKeyframesRegistry::add(const std::shared_ptr<CSSKeyframes> &rule) {
+  registry_[rule->getAnimationName()] = rule;
 }
 
 void CSSKeyframesRegistry::remove(const std::string &animationName) {
+  LOG(INFO) << "Removing keyframes for animation: " << animationName;
   registry_.erase(animationName);
 }
 

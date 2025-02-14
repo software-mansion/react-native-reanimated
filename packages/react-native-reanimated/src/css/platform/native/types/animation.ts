@@ -45,3 +45,9 @@ export type NormalizedSingleCSSAnimationSettings = {
   fillMode: CSSAnimationFillMode;
   playState: CSSAnimationPlayState;
 };
+
+// HOST OBJECTS
+
+export type CSSKeyframesHostObject = {
+  name: string;
+};

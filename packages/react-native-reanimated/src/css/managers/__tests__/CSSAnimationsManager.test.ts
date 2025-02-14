@@ -19,7 +19,6 @@ jest.mock('../../platform/native/native.ts', () => ({
   unregisterCSSAnimations: jest.fn(),
   updateCSSAnimations: jest.fn(),
   registerCSSKeyframes: jest.fn(),
-  unregisterCSSKeyframes: jest.fn(),
 }));
 
 describe('CSSAnimationsManager', () => {

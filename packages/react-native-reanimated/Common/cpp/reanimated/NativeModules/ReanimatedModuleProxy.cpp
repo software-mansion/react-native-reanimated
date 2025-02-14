@@ -61,7 +61,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #else
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
 #endif
-      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
+      cssKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
@@ -580,20 +580,27 @@ void ReanimatedModuleProxy::removeViewStyle(
   staticPropsRegistry_->remove(viewTag.asNumber());
 }
 
-void ReanimatedModuleProxy::registerCSSKeyframes(
+jsi::Value ReanimatedModuleProxy::registerCSSKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &animationName,
     const jsi::Value &keyframesConfig) {
-  cssAnimationKeyframesRegistry_->add(
-      animationName.asString(rt).utf8(rt),
-      parseCSSAnimationKeyframesConfig(
-          rt, keyframesConfig, viewStylesRepository_));
-}
+  const auto parsedConfig = parseCSSAnimationKeyframesConfig(
+      rt, animationName, keyframesConfig, viewStylesRepository_);
 
-void ReanimatedModuleProxy::unregisterCSSKeyframes(
-    jsi::Runtime &rt,
-    const jsi::Value &animationName) {
-  cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));
+  const auto cleanupCallback =
+      [weakThis = weak_from_this()](const std::string &removedAnimationName) {
+        LOG(INFO) << "Cleanup callback: " << removedAnimationName;
+        auto strongThis = weakThis.lock();
+        if (strongThis) {
+          strongThis->cssKeyframesRegistry_->remove(removedAnimationName);
+        }
+      };
+
+  const auto keyframes =
+      std::make_shared<CSSKeyframesImpl>(parsedConfig, cleanupCallback);
+  cssKeyframesRegistry_->add(keyframes);
+
+  return jsi::Object::createFromHostObject(rt, keyframes);
 }
 
 void ReanimatedModuleProxy::registerCSSAnimations(
@@ -616,14 +623,13 @@ void ReanimatedModuleProxy::registerCSSAnimations(
         animationConfig.getProperty(rt, "name").asString(rt).utf8(rt);
     const auto settings = parseCSSAnimationSettings(
         rt, animationConfig.getProperty(rt, "settings"));
-    const auto &keyframesConfig =
-        cssAnimationKeyframesRegistry_->get(animationName);
+    const auto &keyframes = cssKeyframesRegistry_->get(animationName);
 
     animations.emplace_back(std::make_shared<CSSAnimation>(
         rt,
         shadowNode,
         i,
-        keyframesConfig,
+        keyframes,
         settings,
         viewStylesRepository_,
         timestamp));

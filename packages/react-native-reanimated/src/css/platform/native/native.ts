@@ -25,11 +25,7 @@ export function registerCSSKeyframes(
   animationName: string,
   keyframesConfig: NormalizedCSSAnimationKeyframesConfig
 ) {
-  ReanimatedModule.registerCSSKeyframes(animationName, keyframesConfig);
-}
-
-export function unregisterCSSKeyframes(animationName: string) {
-  ReanimatedModule.unregisterCSSKeyframes(animationName);
+  return ReanimatedModule.registerCSSKeyframes(animationName, keyframesConfig);
 }
 
 // View animations

@@ -5,6 +5,7 @@
 #include <reanimated/CSS/easing/EasingFunctions.h>
 #include <reanimated/CSS/interpolation/styles/AnimationStyleInterpolator.h>
 #include <reanimated/CSS/progress/AnimationProgressProvider.h>
+#include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 
 #include <memory>
 #include <string>
@@ -21,7 +22,7 @@ class CSSAnimation {
       jsi::Runtime &rt,
       ShadowNode::Shared shadowNode,
       unsigned index,
-      const CSSKeyframesConfig &keyframesConfig,
+      const std::shared_ptr<CSSKeyframes> &keyframes,
       const CSSAnimationSettings &settings,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       double timestamp);

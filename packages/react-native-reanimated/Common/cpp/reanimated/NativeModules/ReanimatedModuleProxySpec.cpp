@@ -148,19 +148,8 @@ static jsi::Value REANIMATED_SPEC_PREFIX(registerCSSKeyframes)(
     TurboModule &turboModule,
     const jsi::Value *args,
     size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
+  return static_cast<ReanimatedModuleProxySpec *>(&turboModule)
       ->registerCSSKeyframes(rt, std::move(args[0]), std::move(args[1]));
-  return jsi::Value::undefined();
-}
-
-static jsi::Value REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)(
-    jsi::Runtime &rt,
-    TurboModule &turboModule,
-    const jsi::Value *args,
-    size_t) {
-  static_cast<ReanimatedModuleProxySpec *>(&turboModule)
-      ->unregisterCSSKeyframes(rt, std::move(args[0]));
-  return jsi::Value::undefined();
 }
 
 static jsi::Value REANIMATED_SPEC_PREFIX(registerCSSAnimations)(
@@ -262,8 +251,6 @@ ReanimatedModuleProxySpec::ReanimatedModuleProxySpec(
 
   methodMap_["registerCSSKeyframes"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSKeyframes)};
-  methodMap_["unregisterCSSKeyframes"] =
-      MethodMetadata{1, REANIMATED_SPEC_PREFIX(unregisterCSSKeyframes)};
 
   methodMap_["registerCSSAnimations"] =
       MethodMetadata{2, REANIMATED_SPEC_PREFIX(registerCSSAnimations)};

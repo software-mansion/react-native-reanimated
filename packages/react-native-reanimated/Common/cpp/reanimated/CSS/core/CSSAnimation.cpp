@@ -9,7 +9,7 @@ CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
     ShadowNode::Shared shadowNode,
     const unsigned index,
-    const CSSKeyframesConfig &keyframesConfig,
+    const std::shared_ptr<CSSKeyframes> &keyframes,
     const CSSAnimationSettings &settings,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const double timestamp)
@@ -23,8 +23,8 @@ CSSAnimation::CSSAnimation(
           settings.iterationCount,
           settings.direction,
           settings.easingFunction,
-          keyframesConfig.keyframeEasingFunctions)),
-      styleInterpolator_(keyframesConfig.styleInterpolator) {
+          keyframes->getKeyframeEasingFunctions())),
+      styleInterpolator_(keyframes->getStyleInterpolator()) {
   if (settings.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }
