@@ -13,9 +13,8 @@ namespace reanimated {
 using JSIUpdates = std::vector<std::pair<Tag, std::unique_ptr<jsi::Value>>>;
 
 class AnimatedPropsRegistry : public UpdatesRegistry {
-
   JSIUpdates jsiUpdates_;
-  
+
  public:
   JSIUpdates getJSIUpdates();
   SurfaceId update(jsi::Runtime &rt, const jsi::Value &operations);
