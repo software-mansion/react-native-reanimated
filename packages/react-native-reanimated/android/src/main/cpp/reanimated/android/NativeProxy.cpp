@@ -324,19 +324,6 @@ inline jni::local_ref<ReadableMap::javaobject> castReadableMap(
 }
 
 void NativeProxy::synchronouslyUpdateUIProps(
-    jsi::Runtime &rt,
-    Tag tag,
-    const jsi::Object &props) {
-  static const auto method =
-      getJniMethod<void(int, jni::local_ref<ReadableMap::javaobject>)>(
-          "synchronouslyUpdateUIProps");
-  jni::local_ref<ReadableMap::javaobject> uiProps =
-      castReadableMap(ReadableNativeMap::newObjectCxxArgs(
-          jsi::dynamicFromValue(rt, jsi::Value(rt, props))));
-  method(javaPart_.get(), tag, uiProps);
-}
-
-void NativeProxy::synchronouslyUpdateUIPropsByDynamic(
     Tag tag,
     const folly::dynamic &props) {
   static const auto method =
@@ -469,8 +456,6 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 #ifdef RCT_NEW_ARCH_ENABLED
   auto synchronouslyUpdateUIPropsFunction =
       bindThis(&NativeProxy::synchronouslyUpdateUIProps);
-  auto synchronouslyUpdateUIPropsByDynamicFunction =
-      bindThis(&NativeProxy::synchronouslyUpdateUIPropsByDynamic);
 #else
   auto configurePropsFunction = bindThis(&NativeProxy::configureProps);
 #endif
@@ -505,7 +490,6 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
       requestRender,
 #ifdef RCT_NEW_ARCH_ENABLED
       synchronouslyUpdateUIPropsFunction,
-      synchronouslyUpdateUIPropsByDynamicFunction,
 #else
       updatePropsFunction,
       scrollToFunction,
