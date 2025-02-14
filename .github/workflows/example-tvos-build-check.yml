@@ -62,7 +62,7 @@ jobs:
         run: yarn build
 
       - name: Use external worklets
-        if: ${{ inputs.use-external-worklets == 'true' }}
+        if: ${{ inputs.use-external-worklets }}
         working-directory: ${{ env.COMMON_APP_DIR }}
         run: yarn add react-native-worklets@workspace:"*"
 
