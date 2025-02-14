@@ -24,7 +24,6 @@ void CSSKeyframesRegistry::add(const std::weak_ptr<CSSKeyframes> &rule) {
 }
 
 void CSSKeyframesRegistry::remove(const std::string &animationName) {
-  LOG(INFO) << "Removing keyframes for animation: " << animationName;
   registry_.erase(animationName);
 }
 

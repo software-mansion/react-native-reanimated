@@ -5,6 +5,9 @@
 #include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 
 #include <functional>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace reanimated {
 
@@ -17,8 +20,6 @@ class CSSKeyframesImpl : public jsi::HostObject, public CSSKeyframes {
       CleanupCallback &&cleanupCallback);
 
   ~CSSKeyframesImpl();
-
-  jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &name) override;
 
   const std::string &getAnimationName() const override;
   const std::shared_ptr<KeyframeEasingFunctions> &getKeyframeEasingFunctions()

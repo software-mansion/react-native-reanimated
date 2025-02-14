@@ -10,9 +10,7 @@ CSSKeyframesImpl::CSSKeyframesImpl(
     : animationName_(config.animationName),
       styleInterpolator_(config.styleInterpolator),
       keyframeEasingFunctions_(config.keyframeEasingFunctions),
-      cleanupCallback_(std::move(cleanupCallback)) {
-  LOG(INFO) << "Constructor called for: " << animationName_;
-}
+      cleanupCallback_(std::move(cleanupCallback)) {}
 
 CSSKeyframesImpl::~CSSKeyframesImpl() {
   cleanupCallback_(animationName_);
@@ -30,17 +28,6 @@ CSSKeyframesImpl::getKeyframeEasingFunctions() const {
 const std::shared_ptr<AnimationStyleInterpolator> &
 CSSKeyframesImpl::getStyleInterpolator() const {
   return styleInterpolator_;
-}
-
-jsi::Value CSSKeyframesImpl::get(
-    jsi::Runtime &rt,
-    const jsi::PropNameID &name) {
-  const auto propName = name.utf8(rt);
-
-  if (propName == "animationName") {
-    return jsi::String::createFromUtf8(rt, animationName_);
-  }
-  return jsi::Value::undefined();
 }
 
 } // namespace reanimated

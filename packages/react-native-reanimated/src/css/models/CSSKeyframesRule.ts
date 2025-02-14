@@ -14,6 +14,9 @@ export default class CSSKeyframesRuleImpl<
   S extends PlainStyle = PlainStyle,
 > extends CSSKeyframesRuleBase<S> {
   private normalizedKeyframes_: NormalizedCSSAnimationKeyframesConfig;
+  // For now, this object is used only for object cleanup in cpp
+  // (we may add a possibility to modify the cpp keyframes object
+  // in the future, as we can do in the web animations api)
   private hostObject_: CSSKeyframesHostObject;
 
   constructor(keyframes: CSSAnimationKeyframes<S>) {
@@ -23,7 +26,6 @@ export default class CSSKeyframesRuleImpl<
       this.name,
       this.normalizedKeyframes_
     );
-    console.log('hostObject_', this.hostObject_.animationName);
   }
 
   get normalizedKeyframesConfig(): NormalizedCSSAnimationKeyframesConfig {

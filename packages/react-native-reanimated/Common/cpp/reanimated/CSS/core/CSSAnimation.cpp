@@ -18,9 +18,11 @@ CSSAnimation::CSSAnimation(
       fillMode_(settings.fillMode) {
   auto keyframesLocked = keyframes.lock();
   if (!keyframesLocked) {
-    throw std::runtime_error("Failed to lock keyframes weak_ptr");
+    throw std::runtime_error(
+        "[Reanimated] Failed to lock keyframes weak_ptr in CSSAnimation");
   }
 
+  styleInterpolator_ = keyframesLocked->getStyleInterpolator();
   progressProvider_ = std::make_shared<AnimationProgressProvider>(
       timestamp,
       settings.duration,
@@ -29,8 +31,6 @@ CSSAnimation::CSSAnimation(
       settings.direction,
       settings.easingFunction,
       keyframesLocked->getKeyframeEasingFunctions());
-
-  styleInterpolator_ = keyframesLocked->getStyleInterpolator();
 
   if (settings.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);

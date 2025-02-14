@@ -4,6 +4,7 @@
 #include <jsi/jsi.h>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace reanimated {
