@@ -42,7 +42,8 @@ template <>
 class TransformOperationInterpolator<PerspectiveOperation>
     : public TransformInterpolatorBase<PerspectiveOperation> {
  public:
-    using TransformInterpolatorBase<PerspectiveOperation>::TransformInterpolatorBase;
+  using TransformInterpolatorBase<
+      PerspectiveOperation>::TransformInterpolatorBase;
 
   PerspectiveOperation interpolate(
       double progress,
