@@ -19,7 +19,6 @@ enum class CSSValueType {
   Dimension,
   Number,
   Array,
-  TransformOrigin,
   Empty
 };
 
@@ -76,10 +75,6 @@ struct CSSResolvableValue : public CSSValue {
   virtual std::optional<TResolved> resolve(
       const CSSResolvableValueInterpolationContext &context) const = 0;
 };
-
-inline bool isDiscrete(const CSSValue &value) {
-  return value.type() == CSSValueType::Keyword;
-}
 
 // clang-format off
 template <typename TCSSValue>
