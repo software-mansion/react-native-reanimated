@@ -666,22 +666,6 @@ void ReanimatedModuleProxy::unregisterCSSTransition(
   cssTransitionsRegistry_->remove(viewTag.asNumber());
 }
 
-bool ReanimatedModuleProxy::isThereAnyLayoutProp(
-    jsi::Runtime &rt,
-    const jsi::Object &props) {
-  const jsi::Array propNames = props.getPropertyNames(rt);
-  for (size_t i = 0; i < propNames.size(rt); ++i) {
-    const std::string propName =
-        propNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    bool isLayoutProp =
-        nativePropNames_.find(propName) != nativePropNames_.end();
-    if (isLayoutProp) {
-      return true;
-    }
-  }
-  return false;
-}
-
 bool ReanimatedModuleProxy::isThereAnyLayoutProp(const folly::dynamic &props) {
   for (const auto &[propName, propValue] : props.items()) {
     bool isLayoutProp =
@@ -893,15 +877,16 @@ void ReanimatedModuleProxy::performOperations() {
     }
   }
 
-  // If there's no layout props to be updated, we can apply the updates
-  // directly onto the components and skip the commit.
   if (!hasLayoutUpdates && !hasPropsToRevert) {
+    // If there's no layout props to be updated, we can apply the updates
+    // directly onto the components and skip the commit.
     ReanimatedSystraceSection s(
         "ReanimatedModuleProxy::synchronouslyUpdateUIProps");
     for (const auto &[shadowNode, props] : updatesBatch) {
       Tag tag = shadowNode->getTag();
       synchronouslyUpdateUIPropsFunction_(tag, props);
     }
+    return;
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
