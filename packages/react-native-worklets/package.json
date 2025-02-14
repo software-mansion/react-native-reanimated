@@ -4,11 +4,13 @@
   "description": "The React Native multithreading library",
   "scripts": {
     "build": "bob build",
-    "format": "yarn format:js && yarn format:common",
+    "format": "yarn format:js && yarn format:common && yarn format:android:java",
     "format:js": "prettier --write --list-different src",
     "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
-    "lint": "yarn lint:js",
+    "format:android:java": "node ../../scripts/format-java.js",
+    "lint": "yarn lint:js && yarn lint:android",
     "lint:js": "eslint src && yarn prettier --check src",
+    "lint:android": "./android/gradlew -p android spotlessCheck -q",
     "type:check": "yarn tsc --noEmit",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib"
   },
@@ -34,6 +36,7 @@
     "@types/jest": "^29.5.5",
     "@types/react": "^18.2.44",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "clang-format-node": "^1.3.1",
     "eslint": "^8.57.0",
     "eslint-plugin-reanimated": "workspace:*",
     "madge": "^5.0.1",
@@ -88,8 +91,5 @@
     "android": {
       "javaPackageName": "com.swmansion.worklets"
     }
-  },
-  "dependencies": {
-    "clang-format-node": "^1.3.1"
   }
 }
