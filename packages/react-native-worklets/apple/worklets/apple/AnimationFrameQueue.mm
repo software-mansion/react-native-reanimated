@@ -1,7 +1,7 @@
 #import <worklets/apple/AnimationFrameQueue.h>
 #import <worklets/apple/SlowAnimations.h>
 
-@implementation AnimationFrameQueue{
+@implementation AnimationFrameQueue {
   /* DisplayLink is thread safe. */
   WorkletsDisplayLink *displayLink_;
   std::vector<std::function<void(double)>> frameCallbacks_;
@@ -12,7 +12,8 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 #pragma mark-- public
 
-- (instancetype)init{
+- (instancetype)init
+{
   displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:@selector(executeQueue:)];
 #if TARGET_OS_OSX
   // nothing
@@ -33,28 +34,32 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   [self scheduleQueueExecution];
 }
 
-- (void)invalidate{
+- (void)invalidate
+{
   [displayLink_ invalidate];
 }
 
 #pragma mark-- private
 
-- (void)scheduleQueueExecution{
+- (void)scheduleQueueExecution
+{
   [displayLink_ setPaused:FALSE];
 }
 
-- (void)executeQueue:(WorkletsDisplayLink*)displayLink{
+- (void)executeQueue:(WorkletsDisplayLink *)displayLink
+{
   auto frameCallbacks = [self pullCallbacks];
   [displayLink_ setPaused:TRUE];
-  
+
   auto targetTimestamp = worklets::calculateTimestampWithSlowAnimations(displayLink.targetTimestamp);
-  
+
   for (auto callback : frameCallbacks) {
     callback(targetTimestamp);
   }
 }
 
-- (std::vector<std::function<void(double)>>)pullCallbacks{
+- (std::vector<std::function<void(double)>>)pullCallbacks
+{
   std::lock_guard<std::mutex> lock(callbacksMutex_);
   auto frameCallbacks = std::move(frameCallbacks_);
   frameCallbacks_.clear();
