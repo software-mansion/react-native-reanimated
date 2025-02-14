@@ -27,13 +27,13 @@ class CSSKeyframes {
 
 class CSSKeyframesRegistry {
  public:
-  const std::shared_ptr<CSSKeyframes> &get(
+  const std::weak_ptr<CSSKeyframes> &get(
       const std::string &animationName) const;
-  void add(const std::shared_ptr<CSSKeyframes> &rule);
+  void add(const std::weak_ptr<CSSKeyframes> &rule);
   void remove(const std::string &animationName);
 
  private:
-  std::unordered_map<std::string, std::shared_ptr<CSSKeyframes>> registry_;
+  std::unordered_map<std::string, std::weak_ptr<CSSKeyframes>> registry_;
 };
 
 } // namespace reanimated

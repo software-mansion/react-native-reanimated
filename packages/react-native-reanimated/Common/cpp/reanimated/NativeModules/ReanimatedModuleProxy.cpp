@@ -600,7 +600,7 @@ jsi::Value ReanimatedModuleProxy::registerCSSKeyframes(
       std::make_shared<CSSKeyframesImpl>(parsedConfig, cleanupCallback);
   cssKeyframesRegistry_->add(keyframes);
 
-  return jsi::Object::createFromHostObject(rt, keyframes);
+  return jsi::Object::createFromHostObject(rt, std::move(keyframes));
 }
 
 void ReanimatedModuleProxy::registerCSSAnimations(

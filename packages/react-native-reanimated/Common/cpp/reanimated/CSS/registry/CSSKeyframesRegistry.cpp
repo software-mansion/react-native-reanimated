@@ -3,7 +3,7 @@
 
 namespace reanimated {
 
-const std::shared_ptr<CSSKeyframes> &CSSKeyframesRegistry::get(
+const std::weak_ptr<CSSKeyframes> &CSSKeyframesRegistry::get(
     const std::string &animationName) const {
   const auto it = registry_.find(animationName);
   if (it == registry_.end()) {
@@ -14,8 +14,13 @@ const std::shared_ptr<CSSKeyframes> &CSSKeyframesRegistry::get(
   return it->second;
 }
 
-void CSSKeyframesRegistry::add(const std::shared_ptr<CSSKeyframes> &rule) {
-  registry_[rule->getAnimationName()] = rule;
+void CSSKeyframesRegistry::add(const std::weak_ptr<CSSKeyframes> &rule) {
+  if (auto sharedRule = rule.lock()) {
+    registry_[sharedRule->getAnimationName()] = rule;
+  } else {
+    throw std::runtime_error(
+        "[Reanimated] Cannot add expired keyframes rule to registry");
+  }
 }
 
 void CSSKeyframesRegistry::remove(const std::string &animationName) {

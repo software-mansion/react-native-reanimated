@@ -9,22 +9,29 @@ CSSAnimation::CSSAnimation(
     jsi::Runtime &rt,
     ShadowNode::Shared shadowNode,
     const unsigned index,
-    const std::shared_ptr<CSSKeyframes> &keyframes,
+    const std::weak_ptr<CSSKeyframes> &keyframes,
     const CSSAnimationSettings &settings,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
     const double timestamp)
     : index_(index),
       shadowNode_(std::move(shadowNode)),
-      fillMode_(settings.fillMode),
-      progressProvider_(std::make_shared<AnimationProgressProvider>(
-          timestamp,
-          settings.duration,
-          settings.delay,
-          settings.iterationCount,
-          settings.direction,
-          settings.easingFunction,
-          keyframes->getKeyframeEasingFunctions())),
-      styleInterpolator_(keyframes->getStyleInterpolator()) {
+      fillMode_(settings.fillMode) {
+  auto keyframesLocked = keyframes.lock();
+  if (!keyframesLocked) {
+    throw std::runtime_error("Failed to lock keyframes weak_ptr");
+  }
+
+  progressProvider_ = std::make_shared<AnimationProgressProvider>(
+      timestamp,
+      settings.duration,
+      settings.delay,
+      settings.iterationCount,
+      settings.direction,
+      settings.easingFunction,
+      keyframesLocked->getKeyframeEasingFunctions());
+
+  styleInterpolator_ = keyframesLocked->getStyleInterpolator();
+
   if (settings.playState == AnimationPlayState::Paused) {
     progressProvider_->pause(timestamp);
   }
