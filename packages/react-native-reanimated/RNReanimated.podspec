@@ -153,4 +153,9 @@ Pod::Spec.new do |s|
   else
     install_modules_dependencies_legacy(s)
   end
+  s.dependency 'React-jsi'
+  using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
+  if using_hermes && !$config[:is_tvos_target]
+    s.dependency 'React-hermes'
+  end
 end
