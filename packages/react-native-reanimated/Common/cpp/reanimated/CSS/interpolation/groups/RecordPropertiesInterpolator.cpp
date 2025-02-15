@@ -78,7 +78,7 @@ void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
 folly::dynamic RecordPropertiesInterpolator::mapInterpolators(
     const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
     const {
-  folly::dynamic result = folly::dynamic::object();
+  folly::dynamic result = folly::dynamic::object;
 
   for (const auto &pair : interpolators_) {
     result[pair.first] = callback(*pair.second);
