@@ -19,7 +19,7 @@ void CSSKeyframesRegistry::add(const std::weak_ptr<CSSKeyframes> &rule) {
     registry_[sharedRule->getAnimationName()] = rule;
   } else {
     throw std::runtime_error(
-        "[Reanimated] Cannot add expired keyframes rule to registry");
+        "[Reanimated] Cannot add non-existent keyframes rule to registry");
   }
 }
 
