@@ -63,17 +63,17 @@ bool CSSAnimation::hasBackwardsFillMode() const {
 }
 
 folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
-  return styleInterpolator_.interpolate(shadowNode_, progressProvider_);
+  return styleInterpolator_->interpolate(shadowNode_, progressProvider_);
 }
 
 folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
-  return isReversed() ? styleInterpolator_.getLastKeyframeValue()
-                      : styleInterpolator_.getFirstKeyframeValue();
+  return isReversed() ? styleInterpolator_->getLastKeyframeValue()
+                      : styleInterpolator_->getFirstKeyframeValue();
 }
 
 folly::dynamic CSSAnimation::getForwardsFillStyle() const {
-  return isReversed() ? styleInterpolator_.getFirstKeyframeValue()
-                      : styleInterpolator_.getLastKeyframeValue();
+  return isReversed() ? styleInterpolator_->getFirstKeyframeValue()
+                      : styleInterpolator_->getLastKeyframeValue();
 }
 
 folly::dynamic CSSAnimation::getResetStyle() const {
