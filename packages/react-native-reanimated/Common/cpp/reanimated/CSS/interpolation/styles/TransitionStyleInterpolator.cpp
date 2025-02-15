@@ -103,7 +103,7 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
 folly::dynamic TransitionStyleInterpolator::mapInterpolators(
     const TransitionProgressProvider &transitionProgressProvider,
     const MapInterpolatorsCallback &callback) const {
-  folly::dynamic result = folly::dynamic::object();
+  folly::dynamic result = folly::dynamic::object;
 
   for (const auto &[propertyName, progressProvider] :
        transitionProgressProvider.getPropertyProgressProviders()) {

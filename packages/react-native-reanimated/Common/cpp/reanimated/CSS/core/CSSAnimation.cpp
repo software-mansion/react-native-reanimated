@@ -67,12 +67,12 @@ folly::dynamic CSSAnimation::getCurrentInterpolationStyle() const {
   return styleInterpolator_.interpolate(shadowNode_, progressProvider_);
 }
 
-folly::dynamic CSSAnimation::getBackwardsFillStyle() const const {
+folly::dynamic CSSAnimation::getBackwardsFillStyle() const {
   return isReversed() ? styleInterpolator_.getLastKeyframeValue()
                       : styleInterpolator_.getFirstKeyframeValue();
 }
 
-folly::dynamic CSSAnimation::getForwardsFillStyle() const const {
+folly::dynamic CSSAnimation::getForwardsFillStyle() const {
   return isReversed() ? styleInterpolator_.getFirstKeyframeValue()
                       : styleInterpolator_.getLastKeyframeValue();
 }
