@@ -25,7 +25,6 @@ class CSSKeywordBase : public CSSBaseValue<CSSValueType::Keyword, TValue> {
   static bool canConstruct(const folly::dynamic &value);
 
   CSSValueType type() const override;
-  jsi::Value toJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
 

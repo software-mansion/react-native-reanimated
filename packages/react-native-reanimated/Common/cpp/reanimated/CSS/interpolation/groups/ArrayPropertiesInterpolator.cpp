@@ -11,18 +11,18 @@ ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
       factories_(factories) {}
 
 bool ArrayPropertiesInterpolator::equalsFirstKeyframeValue(
-    jsi::Runtime &rt,
-    const jsi::Value &propertyValue) const {
-  const auto propertyValuesArray = propertyValue.asObject(rt).asArray(rt);
-  const auto valuesCount = propertyValuesArray.size(rt);
+    const folly::dynamic &propertyValue) const {
+  if (!propertyValue.isArray()) {
+    return false;
+  }
 
+  const auto valuesCount = propertyValue.size();
   if (valuesCount != interpolators_.size()) {
     return false;
   }
 
   for (size_t i = 0; i < valuesCount; ++i) {
-    if (!interpolators_[i]->equalsFirstKeyframeValue(
-            rt, propertyValuesArray.getValueAtIndex(rt, i))) {
+    if (!interpolators_[i]->equalsFirstKeyframeValue(propertyValue[i])) {
       return false;
     }
   }
@@ -39,42 +39,30 @@ void ArrayPropertiesInterpolator::updateKeyframes(
   resizeInterpolators(valuesCount);
 
   for (size_t i = 0; i < valuesCount; ++i) {
-    const jsi::Value &valueKeyframes = keyframesArray.getValueAtIndex(rt, i);
-    interpolators_[i]->updateKeyframes(rt, valueKeyframes);
+    interpolators_[i]->updateKeyframes(
+        rt, keyframesArray.getValueAtIndex(rt, i));
   }
 }
 
 void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
-    jsi::Runtime &rt,
-    const jsi::Value &oldStyleValue,
-    const jsi::Value &newStyleValue) {
-  auto getArrayFromStyle = [&rt](const jsi::Value &style) {
-    if (!style.isObject()) {
-      return jsi::Array(rt, 0);
-    }
-    auto obj = style.asObject(rt);
-    return obj.isArray(rt) ? obj.asArray(rt) : jsi::Array(rt, 0);
-  };
+    const folly::dynamic &oldStyleValue,
+    const folly::dynamic &newStyleValue) {
+  const folly::dynamic empty = folly::dynamic::array();
+  const auto oldStyleArray = !oldStyleValue.empty() ? oldStyleValue : empty;
+  const auto newStyleArray = !newStyleValue.empty() ? newStyleValue : empty;
 
-  const auto oldStyleArray = getArrayFromStyle(oldStyleValue);
-  const auto newStyleArray = getArrayFromStyle(newStyleValue);
-
-  const size_t valuesCount =
-      std::max(oldStyleArray.size(rt), newStyleArray.size(rt));
+  const size_t oldSize = oldStyleArray.size();
+  const size_t newSize = newStyleArray.size();
+  const size_t valuesCount = std::max(oldSize, newSize);
 
   resizeInterpolators(valuesCount);
 
   for (size_t i = 0; i < valuesCount; ++i) {
     // These index checks ensure that interpolation works between 2 arrays
     // with different lengths
-    const auto oldValue = oldStyleArray.size(rt) > i
-        ? oldStyleArray.getValueAtIndex(rt, i)
-        : jsi::Value::undefined();
-    const auto newValue = newStyleArray.size(rt) > i
-        ? newStyleArray.getValueAtIndex(rt, i)
-        : jsi::Value::undefined();
-
-    interpolators_[i]->updateKeyframesFromStyleChange(rt, oldValue, newValue);
+    interpolators_[i]->updateKeyframesFromStyleChange(
+        i < oldSize ? oldStyleArray.at(i) : empty,
+        i < newSize ? newStyleArray.at(i) : empty);
   }
 }
 

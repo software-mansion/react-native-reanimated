@@ -26,15 +26,13 @@ class CSSTransition {
   TransitionProgressState getState() const;
   folly::dynamic getCurrentInterpolationStyle() const;
   PropertyNames getAllowedProperties(
-      jsi::Runtime &rt,
-      const jsi::Value &oldProps,
-      const jsi::Value &newProps);
+      const folly::dynamic &oldProps,
+      const folly::dynamic &newProps);
 
   void updateSettings(const PartialCSSTransitionConfig &config);
   folly::dynamic run(
-      jsi::Runtime &rt,
       const ChangedProps &changedProps,
-      const jsi::Value &lastUpdateValue,
+      const folly::dynamic &lastUpdateValue,
       double timestamp);
   folly::dynamic update(double timestamp);
 
@@ -47,7 +45,7 @@ class CSSTransition {
   TransitionStyleInterpolator styleInterpolator_;
 
   void updateTransitionProperties(const TransitionProperties &properties);
-  bool isAllowedProperty(const std::string &propName) const;
+  bool isAllowedProperty(const std::string &propertyName) const;
 };
 
 } // namespace reanimated

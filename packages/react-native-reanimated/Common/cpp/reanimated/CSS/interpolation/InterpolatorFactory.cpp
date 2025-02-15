@@ -29,10 +29,6 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
       return CSSValueType::Empty;
     }
 
-    jsi::Value toJSIValue(jsi::Runtime &rt) const override {
-      return jsi::Object(rt);
-    }
-
     folly::dynamic toDynamic() const override {
       return folly::dynamic::object;
     }
@@ -68,10 +64,6 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
   struct EmptyArrayValue : public CSSValue {
     CSSValueType type() const override {
       return CSSValueType::Empty;
-    }
-
-    jsi::Value toJSIValue(jsi::Runtime &rt) const override {
-      return jsi::Array(rt, 0);
     }
 
     folly::dynamic toDynamic() const override {
@@ -115,10 +107,6 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
   struct EmptyTransformsValue : public CSSValue {
     CSSValueType type() const override {
       return CSSValueType::Empty;
-    }
-
-    jsi::Value toJSIValue(jsi::Runtime &rt) const override {
-      return getIdentityMatrix().toJSIValue(rt);
     }
 
     folly::dynamic toDynamic() const override {

@@ -25,7 +25,6 @@ struct CSSAngle : public CSSBaseValue<CSSValueType::Angle, CSSAngle> {
 
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
 
-  jsi::Value toJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
   CSSAngle interpolate(double progress, const CSSAngle &to) const override;

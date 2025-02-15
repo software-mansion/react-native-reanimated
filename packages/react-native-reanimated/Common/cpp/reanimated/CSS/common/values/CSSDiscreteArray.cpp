@@ -60,15 +60,6 @@ bool CSSDiscreteArray<TValue>::canConstruct(const folly::dynamic &value) {
 }
 
 template <CSSValueDerived TValue>
-jsi::Value CSSDiscreteArray<TValue>::toJSIValue(jsi::Runtime &rt) const {
-  jsi::Array array(rt, values.size());
-  for (size_t i = 0; i < values.size(); i++) {
-    array.setValueAtIndex(rt, i, values[i].toJSIValue(rt));
-  }
-  return array;
-}
-
-template <CSSValueDerived TValue>
 folly::dynamic CSSDiscreteArray<TValue>::toDynamic() const {
   folly::dynamic array = folly::dynamic::array;
   for (const auto &value : values) {

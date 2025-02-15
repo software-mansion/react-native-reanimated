@@ -3,13 +3,9 @@
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <worklets/Tools/JSISerializer.h>
-
 #include <string>
 
 namespace reanimated {
-
-using namespace worklets;
 
 struct CSSBoolean : public CSSBaseValue<CSSValueType::Boolean, CSSBoolean> {
   bool value;
@@ -22,7 +18,6 @@ struct CSSBoolean : public CSSBaseValue<CSSValueType::Boolean, CSSBoolean> {
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
   static bool canConstruct(const folly::dynamic &value);
 
-  jsi::Value toJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
   CSSBoolean interpolate(double progress, const CSSBoolean &to) const override;

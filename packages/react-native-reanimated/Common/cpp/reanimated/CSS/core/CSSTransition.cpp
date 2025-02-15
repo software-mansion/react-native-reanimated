@@ -31,14 +31,12 @@ TransitionProgressState CSSTransition::getState() const {
 }
 
 folly::dynamic CSSTransition::getCurrentInterpolationStyle() const {
-  return styleInterpolator_.getCurrentInterpolationStyle(
-      shadowNode_, progressProvider_);
+  return styleInterpolator_.interpolate(shadowNode_, progressProvider_);
 }
 
 PropertyNames CSSTransition::getAllowedProperties(
-    jsi::Runtime &rt,
-    const jsi::Value &oldProps,
-    const jsi::Value &newProps) {
+    const folly::dynamic &oldProps,
+    const folly::dynamic &newProps) {
   if (!oldProps.isObject() || !newProps.isObject()) {
     return {};
   }
@@ -61,21 +59,13 @@ PropertyNames CSSTransition::getAllowedProperties(
   // Process all properties from both old and new props
   std::unordered_set<std::string> allAllowedProps;
 
-  auto processProps = [&](const jsi::Object &propsObj) {
-    const auto &propertyNames = propsObj.getPropertyNames(rt);
-    const size_t size = propertyNames.size(rt);
-
-    for (size_t i = 0; i < size; i++) {
-      const auto &propertyName =
-          propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-      if (isAllowedProperty(propertyName)) {
-        allAllowedProps.insert(propertyName);
+  for (const auto &props : {oldProps, newProps}) {
+    for (const auto &propertyName : props.keys()) {
+      if (isAllowedProperty(propertyName.asString())) {
+        allAllowedProps.insert(propertyName.asString());
       }
     }
-  };
-
-  processProps(oldProps.asObject(rt));
-  processProps(newProps.asObject(rt));
+  }
 
   return {allAllowedProps.begin(), allAllowedProps.end()};
 }
@@ -90,17 +80,16 @@ void CSSTransition::updateSettings(const PartialCSSTransitionConfig &config) {
 }
 
 folly::dynamic CSSTransition::run(
-    jsi::Runtime &rt,
     const ChangedProps &changedProps,
-    const jsi::Value &lastUpdateValue,
+    const folly::dynamic &lastUpdateValue,
     const double timestamp) {
   progressProvider_.runProgressProviders(
       timestamp,
       settings_,
       changedProps.changedPropertyNames,
-      styleInterpolator_.getReversedPropertyNames(rt, changedProps.newProps));
+      styleInterpolator_.getReversedPropertyNames(changedProps.newProps));
   styleInterpolator_.updateInterpolatedProperties(
-      rt, changedProps, lastUpdateValue);
+      changedProps, lastUpdateValue);
   return update(timestamp);
 }
 
@@ -132,13 +121,13 @@ void CSSTransition::updateTransitionProperties(
   progressProvider_.discardIrrelevantProgressProviders(transitionPropertyNames);
 }
 
-bool CSSTransition::isAllowedProperty(const std::string &propName) const {
-  if (!isDiscreteProperty(propName)) {
+bool CSSTransition::isAllowedProperty(const std::string &propertyName) const {
+  if (!isDiscreteProperty(propertyName)) {
     return true;
   }
 
   const auto &propertySettings =
-      getTransitionPropertySettings(settings_, propName);
+      getTransitionPropertySettings(settings_, propertyName);
 
   if (!propertySettings.has_value()) {
     return false;

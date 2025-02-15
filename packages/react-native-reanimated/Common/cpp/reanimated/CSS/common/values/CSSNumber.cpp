@@ -48,11 +48,6 @@ bool CSSNumberBase<TValue, TDerived>::canConstruct(
 }
 
 template <typename TValue, typename TDerived>
-jsi::Value CSSNumberBase<TValue, TDerived>::toJSIValue(jsi::Runtime &rt) const {
-  return jsi::Value(static_cast<double>(value));
-}
-
-template <typename TValue, typename TDerived>
 folly::dynamic CSSNumberBase<TValue, TDerived>::toDynamic() const {
   return value;
 }

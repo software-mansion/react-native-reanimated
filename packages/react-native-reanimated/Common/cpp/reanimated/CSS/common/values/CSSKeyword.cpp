@@ -55,11 +55,6 @@ CSSValueType CSSKeywordBase<TValue>::type() const {
 }
 
 template <typename TValue>
-jsi::Value CSSKeywordBase<TValue>::toJSIValue(jsi::Runtime &rt) const {
-  return jsi::String::createFromUtf8(rt, value);
-}
-
-template <typename TValue>
 folly::dynamic CSSKeywordBase<TValue>::toDynamic() const {
   return value;
 }
