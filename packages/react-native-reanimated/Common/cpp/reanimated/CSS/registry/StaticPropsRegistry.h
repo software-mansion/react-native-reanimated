@@ -11,10 +11,8 @@ namespace reanimated {
 using namespace facebook;
 using namespace react;
 
-using PropsObserver = std::function<void(
-    jsi::Runtime &rt,
-    const jsi::Value &oldProps,
-    const jsi::Value &newProps)>;
+using PropsObserver = std::function<
+    void(const folly::dynamic &oldProps, const folly::dynamic &newProps)>;
 
 class StaticPropsRegistry {
  public:
@@ -32,10 +30,9 @@ class StaticPropsRegistry {
   std::unordered_map<Tag, PropsObserver> observers_;
 
   void notifyObservers(
-      jsi::Runtime &rt,
       Tag viewTag,
-      const jsi::Value &oldProps,
-      const jsi::Value &newProps);
+      const folly::dynamic &oldProps,
+      const folly::dynamic &newProps);
 };
 
 } // namespace reanimated

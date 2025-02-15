@@ -54,13 +54,13 @@ CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
 CSSColor::CSSColor(const folly::dynamic &value)
     : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
   if (value.isNumber()) {
-#ifdef ANDROID
-    // Android uses signed 32-bit integers for colors
-    auto color = static_cast<int32_t>(value.getDouble());
-#else
-    // iOS uses unsigned 32-bit integers for colors
-    auto color = static_cast<unsigned>(value.getDouble());
-#endif
+    double numberValue = value.asDouble();
+    uint32_t color;
+    if (numberValue < 0) {
+      color = static_cast<int32_t>(numberValue);
+    } else {
+      color = static_cast<uint32_t>(numberValue);
+    }
     channels[0] = (color >> 16) & 0xFF; // Red
     channels[1] = (color >> 8) & 0xFF; // Green
     channels[2] = color & 0xFF; // Blue
@@ -84,15 +84,6 @@ bool CSSColor::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
 bool CSSColor::canConstruct(const folly::dynamic &value) {
   // TODO - improve canConstruct check and add check for string correctness
   return value.isNumber() || value.isString();
-}
-
-jsi::Value CSSColor::toJSIValue(jsi::Runtime &rt) const {
-  if (colorType == ColorType::Transparent) {
-    return 0x00000000;
-  }
-  return {
-      (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) |
-      channels[2]};
 }
 
 folly::dynamic CSSColor::toDynamic() const {

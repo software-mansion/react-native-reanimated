@@ -140,11 +140,6 @@ class CSSValueVariant final : public CSSValue {
     return false;
   }
 
-  jsi::Value toJSIValue(jsi::Runtime &rt) const override {
-    return std::visit(
-        [&rt](const auto &v) { return v.toJSIValue(rt); }, storage_);
-  }
-
   folly::dynamic toDynamic() const override {
     return std::visit([](const auto &v) { return v.toDynamic(); }, storage_);
   }

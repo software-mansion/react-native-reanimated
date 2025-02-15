@@ -23,7 +23,7 @@ folly::dynamic TransformsStyleInterpolator::getResetStyle(
     const ShadowNode::Shared &shadowNode) const {
   auto styleValue = getStyleValue(shadowNode);
 
-  if (styleValue.isUndefined()) {
+  if (!styleValue.isArray()) {
     return convertResultToDynamic(defaultStyleValue_);
   }
 
@@ -41,9 +41,8 @@ folly::dynamic TransformsStyleInterpolator::getLastKeyframeValue() const {
 }
 
 bool TransformsStyleInterpolator::equalsFirstKeyframeValue(
-    jsi::Runtime &rt,
-    const jsi::Value &propertyValue) const {
-  const auto propertyOperations = parseTransformOperations(rt, propertyValue);
+    const folly::dynamic &propertyValue) const {
+  const auto propertyOperations = parseTransformOperations(propertyValue);
   const auto &keyframeFromOperations = keyframes_.front()->fromOperations;
 
   if (!keyframeFromOperations.has_value()) {
@@ -129,18 +128,15 @@ void TransformsStyleInterpolator::updateKeyframes(
 }
 
 void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
-    jsi::Runtime &rt,
-    const jsi::Value &oldStyleValue,
-    const jsi::Value &newStyleValue) {
+    const folly::dynamic &oldStyleValue,
+    const folly::dynamic &newStyleValue) {
   keyframes_.clear();
   keyframes_.reserve(1);
   keyframes_.emplace_back(createTransformKeyframe(
       0,
       1,
-      parseTransformOperations(rt, oldStyleValue)
-          .value_or(TransformOperations{}),
-      parseTransformOperations(rt, newStyleValue)
-          .value_or(TransformOperations{})));
+      parseTransformOperations(oldStyleValue).value_or(TransformOperations{}),
+      parseTransformOperations(newStyleValue).value_or(TransformOperations{})));
 }
 
 std::optional<TransformOperations>
@@ -370,7 +366,8 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
     const TransformOperations &toOperations) const {
   TransformOperations result;
   result.reserve(fromOperations.size());
-  const auto transformUpdateContext = createUpdateContext(shadowNode);
+  const auto transformUpdateContext = TransformInterpolatorUpdateContext(
+      shadowNode, viewStylesRepository_, interpolators_);
 
   for (size_t i = 0; i < fromOperations.size(); ++i) {
     const auto &fromOperation = fromOperations[i];
@@ -394,13 +391,6 @@ folly::dynamic TransformsStyleInterpolator::convertResultToDynamic(
   }
 
   return result;
-}
-
-TransformInterpolatorUpdateContext
-TransformsStyleInterpolator::createUpdateContext(
-    const ShadowNode::Shared &shadowNode) const {
-  return TransformInterpolatorUpdateContext{
-      shadowNode, viewStylesRepository_, interpolators_};
 }
 
 } // namespace reanimated

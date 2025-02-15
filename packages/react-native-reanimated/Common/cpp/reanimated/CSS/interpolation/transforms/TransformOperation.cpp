@@ -105,63 +105,60 @@ std::shared_ptr<TransformOperation> TransformOperation::fromJSIValue(
         "[Reanimated] TransformOperation must have exactly one property.");
   }
 
-  std::string property =
+  const auto propertyName =
       propertyNames.getValueAtIndex(rt, 0).asString(rt).utf8(rt);
-  TransformOperationType operationType = getTransformOperationType(property);
+  const auto propertyValue =
+      obj.getProperty(rt, jsi::PropNameID::forUtf8(rt, propertyName));
+  TransformOperationType operationType =
+      getTransformOperationType(propertyName);
 
   switch (operationType) {
     case TransformOperationType::Perspective:
-      return std::make_shared<PerspectiveOperation>(
-          obj.getProperty(rt, "perspective").asNumber());
+      return std::make_shared<PerspectiveOperation>(propertyValue.asNumber());
     case TransformOperationType::Rotate:
       return std::make_shared<RotateOperation>(
-          obj.getProperty(rt, "rotate").asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     case TransformOperationType::RotateX:
       return std::make_shared<RotateXOperation>(
-          obj.getProperty(rt, "rotateX").asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     case TransformOperationType::RotateY:
       return std::make_shared<RotateYOperation>(
-          obj.getProperty(rt, "rotateY").asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     case TransformOperationType::RotateZ:
       return std::make_shared<RotateZOperation>(
-          obj.getProperty(rt, "rotateZ").asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     case TransformOperationType::Scale:
-      return std::make_shared<ScaleOperation>(
-          obj.getProperty(rt, "scale").asNumber());
+      return std::make_shared<ScaleOperation>(propertyValue.asNumber());
     case TransformOperationType::ScaleX:
-      return std::make_shared<ScaleXOperation>(
-          obj.getProperty(rt, "scaleX").asNumber());
+      return std::make_shared<ScaleXOperation>(propertyValue.asNumber());
     case TransformOperationType::ScaleY:
-      return std::make_shared<ScaleYOperation>(
-          obj.getProperty(rt, "scaleY").asNumber());
+      return std::make_shared<ScaleYOperation>(propertyValue.asNumber());
     case TransformOperationType::TranslateX: {
-      const auto &property = obj.getProperty(rt, "translateX");
-      if (property.isNumber()) {
-        return std::make_shared<TranslateXOperation>(property.asNumber());
+      if (propertyValue.isNumber()) {
+        return std::make_shared<TranslateXOperation>(propertyValue.asNumber());
       }
       return std::make_shared<TranslateXOperation>(
-          property.asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     }
     case TransformOperationType::TranslateY: {
-      const auto &property = obj.getProperty(rt, "translateY");
-      if (property.isNumber()) {
-        return std::make_shared<TranslateYOperation>(property.asNumber());
+      if (propertyValue.isNumber()) {
+        return std::make_shared<TranslateYOperation>(propertyValue.asNumber());
       }
       return std::make_shared<TranslateYOperation>(
-          property.asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     }
     case TransformOperationType::SkewX:
       return std::make_shared<SkewXOperation>(
-          obj.getProperty(rt, "skewX").asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     case TransformOperationType::SkewY:
       return std::make_shared<SkewYOperation>(
-          obj.getProperty(rt, "skewY").asString(rt).utf8(rt));
+          propertyValue.asString(rt).utf8(rt));
     case TransformOperationType::Matrix:
       return std::make_shared<MatrixOperation>(
-          TransformMatrix(rt, obj.getProperty(rt, "matrix")));
+          TransformMatrix(rt, propertyValue));
     default:
       throw std::invalid_argument(
-          "[Reanimated] Unknown transform operation: " + property);
+          "[Reanimated] Unknown transform operation: " + propertyName);
   }
 }
 
@@ -178,49 +175,49 @@ std::shared_ptr<TransformOperation> TransformOperation::fromDynamic(
         "[Reanimated] TransformOperation must have exactly one property.");
   }
 
-  auto property = obj.items().begin()->second;
   auto propertyName = obj.items().begin()->first.getString();
+  auto propertyValue = obj.items().begin()->second;
   TransformOperationType operationType =
       getTransformOperationType(propertyName);
 
   switch (operationType) {
     case TransformOperationType::Perspective:
-      return std::make_shared<PerspectiveOperation>(property.getDouble());
+      return std::make_shared<PerspectiveOperation>(propertyValue.getDouble());
     case TransformOperationType::Rotate:
-      return std::make_shared<RotateOperation>(property.getString());
+      return std::make_shared<RotateOperation>(propertyValue.getString());
     case TransformOperationType::RotateX:
-      return std::make_shared<RotateXOperation>(property.getString());
+      return std::make_shared<RotateXOperation>(propertyValue.getString());
     case TransformOperationType::RotateY:
-      return std::make_shared<RotateYOperation>(property.getString());
+      return std::make_shared<RotateYOperation>(propertyValue.getString());
     case TransformOperationType::RotateZ:
-      return std::make_shared<RotateZOperation>(property.getString());
+      return std::make_shared<RotateZOperation>(propertyValue.getString());
     case TransformOperationType::Scale:
-      return std::make_shared<ScaleOperation>(property.getDouble());
+      return std::make_shared<ScaleOperation>(propertyValue.getDouble());
     case TransformOperationType::ScaleX:
-      return std::make_shared<ScaleXOperation>(property.getDouble());
+      return std::make_shared<ScaleXOperation>(propertyValue.getDouble());
     case TransformOperationType::ScaleY:
-      return std::make_shared<ScaleYOperation>(property.getDouble());
+      return std::make_shared<ScaleYOperation>(propertyValue.getDouble());
     case TransformOperationType::TranslateX: {
-      if (property.isNumber()) {
-        return std::make_shared<TranslateXOperation>(property.getDouble());
+      if (propertyValue.isNumber()) {
+        return std::make_shared<TranslateXOperation>(propertyValue.getDouble());
       }
-      return std::make_shared<TranslateXOperation>(property.getString());
+      return std::make_shared<TranslateXOperation>(propertyValue.getString());
     }
     case TransformOperationType::TranslateY: {
-      if (property.isNumber()) {
-        return std::make_shared<TranslateYOperation>(property.getDouble());
+      if (propertyValue.isNumber()) {
+        return std::make_shared<TranslateYOperation>(propertyValue.getDouble());
       }
-      return std::make_shared<TranslateYOperation>(property.getString());
+      return std::make_shared<TranslateYOperation>(propertyValue.getString());
     }
     case TransformOperationType::SkewX:
-      return std::make_shared<SkewXOperation>(property.getString());
+      return std::make_shared<SkewXOperation>(propertyValue.getString());
     case TransformOperationType::SkewY:
-      return std::make_shared<SkewYOperation>(property.getString());
+      return std::make_shared<SkewYOperation>(propertyValue.getString());
     case TransformOperationType::Matrix:
-      return std::make_shared<MatrixOperation>(TransformMatrix(property));
+      return std::make_shared<MatrixOperation>(TransformMatrix(propertyValue));
     default:
       throw std::invalid_argument(
-          "[Reanimated] Unknown transform operation: " + property.asString());
+          "[Reanimated] Unknown transform operation: " + propertyName);
   }
 }
 

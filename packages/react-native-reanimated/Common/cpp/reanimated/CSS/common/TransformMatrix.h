@@ -62,7 +62,6 @@ class TransformMatrix {
 #endif // NDEBUG
 
   std::string toString() const;
-  jsi::Value toJSIValue(jsi::Runtime &rt) const;
   folly::dynamic toDynamic() const;
 
   bool isSingular() const;

@@ -9,25 +9,22 @@ TransitionStyleInterpolator::TransitionStyleInterpolator(
 
 std::unordered_set<std::string>
 TransitionStyleInterpolator::getReversedPropertyNames(
-    jsi::Runtime &rt,
-    const jsi::Value &newPropertyValues) const {
+    const folly::dynamic &newPropertyValues) const {
   std::unordered_set<std::string> reversedProperties;
 
-  const auto propertyValuesObject = newPropertyValues.asObject(rt);
-  const auto propertyNames = propertyValuesObject.getPropertyNames(rt);
-  const auto propertiesCount = propertyNames.size(rt);
+  if (!newPropertyValues.isObject()) {
+    return reversedProperties;
+  }
 
-  for (size_t i = 0; i < propertiesCount; ++i) {
-    const auto propertyName =
-        propertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto propertyValue = propertyValuesObject.getProperty(
-        rt, jsi::PropNameID::forUtf8(rt, propertyName));
+  for (const auto &pair : newPropertyValues.items()) {
+    const auto propertyName = pair.first.getString();
+    const auto &propertyValue = pair.second;
 
     const auto it = interpolators_.find(propertyName);
     if (it != interpolators_.end() &&
         // First keyframe value of the previous transition is the reversing
         // adjusted start value
-        it->second->equalsFirstKeyframeValue(rt, propertyValue)) {
+        it->second->equalsFirstKeyframeValue(propertyValue)) {
       reversedProperties.insert(propertyName);
     }
   }
@@ -35,24 +32,11 @@ TransitionStyleInterpolator::getReversedPropertyNames(
   return reversedProperties;
 }
 
-folly::dynamic TransitionStyleInterpolator::getCurrentInterpolationStyle(
-    const ShadowNode::Shared &shadowNode,
-    const TransitionProgressProvider &transitionProgressProvider) const {
-  return mapInterpolators(
-      [&](const std::shared_ptr<PropertyInterpolator> &interpolator,
-          const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
-        return interpolator->interpolate(shadowNode, progressProvider);
-      });
-}
-
 folly::dynamic TransitionStyleInterpolator::interpolate(
     const ShadowNode::Shared &shadowNode,
     const TransitionProgressProvider &transitionProgressProvider) const {
-  if (interpolators_.empty()) {
-    return folly::dynamic();
-  }
-
   return mapInterpolators(
+      transitionProgressProvider,
       [&](const std::shared_ptr<PropertyInterpolator> &interpolator,
           const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
         return interpolator->interpolate(shadowNode, progressProvider);
@@ -82,11 +66,10 @@ void TransitionStyleInterpolator::discardIrrelevantInterpolators(
 }
 
 void TransitionStyleInterpolator::updateInterpolatedProperties(
-    jsi::Runtime &rt,
     const ChangedProps &changedProps,
-    const jsi::Value &lastUpdateValue) {
-  const auto oldPropsObj = changedProps.oldProps.asObject(rt);
-  const auto newPropsObj = changedProps.newProps.asObject(rt);
+    const folly::dynamic &lastUpdateValue) {
+  const auto &oldPropsObj = changedProps.oldProps;
+  const auto &newPropsObj = changedProps.newProps;
 
   for (const auto &propertyName : changedProps.changedPropertyNames) {
     auto it = interpolators_.find(propertyName);
@@ -101,27 +84,26 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
       it = interpolators_.emplace(propertyName, newInterpolator).first;
     }
 
-    const auto newValue = newPropsObj.getProperty(rt, propertyName.c_str());
+    const auto &newValue = newPropsObj[propertyName];
 
     // Try to use a value from the last CSS transition update (only if the
     // interpolator existed - when the transition was interrupted)
     if (!shouldCreateInterpolator && lastUpdateValue.isObject()) {
-      const auto lastUpdateObject = lastUpdateValue.asObject(rt);
-      const auto oldValue =
-          lastUpdateObject.hasProperty(rt, propertyName.c_str())
-          ? lastUpdateObject.getProperty(rt, propertyName.c_str())
-          : oldPropsObj.getProperty(rt, propertyName.c_str());
-      it->second->updateKeyframesFromStyleChange(rt, oldValue, newValue);
+      const auto oldValue = lastUpdateValue.count(propertyName) > 0
+          ? lastUpdateValue[propertyName]
+          : oldPropsObj[propertyName];
+      it->second->updateKeyframesFromStyleChange(oldValue, newValue);
     } else {
-      const auto oldValue = oldPropsObj.getProperty(rt, propertyName.c_str());
-      it->second->updateKeyframesFromStyleChange(rt, oldValue, newValue);
+      it->second->updateKeyframesFromStyleChange(
+          oldPropsObj[propertyName], newValue);
     }
   }
 }
 
 folly::dynamic TransitionStyleInterpolator::mapInterpolators(
+    const TransitionProgressProvider &transitionProgressProvider,
     const MapInterpolatorsCallback &callback) const {
-  folly::dynamic result;
+  folly::dynamic result = folly::dynamic::object();
 
   for (const auto &[propertyName, progressProvider] :
        transitionProgressProvider.getPropertyProgressProviders()) {

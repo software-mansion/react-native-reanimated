@@ -38,8 +38,7 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
   bool equalsFirstKeyframeValue(
-      jsi::Runtime &rt,
-      const jsi::Value &propertyValue) const override;
+      const folly::dynamic &propertyValue) const override;
 
   folly::dynamic interpolate(
       const ShadowNode::Shared &shadowNode,
@@ -48,9 +47,8 @@ class TransformsStyleInterpolator final : public PropertyInterpolator {
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
-      jsi::Runtime &rt,
-      const jsi::Value &oldStyleValue,
-      const jsi::Value &newStyleValue) override;
+      const folly::dynamic &oldStyleValue,
+      const folly::dynamic &newStyleValue) override;
 
  private:
   const std::shared_ptr<TransformInterpolators> interpolators_;
