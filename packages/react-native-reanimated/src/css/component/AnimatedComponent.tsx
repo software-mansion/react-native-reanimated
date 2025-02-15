@@ -189,7 +189,7 @@ export default class AnimatedComponent<
         {...this.props}
         {...props}
         {...platformProps}
-        style={filterNonCSSStyleProps([this.props.style, props?.style])}
+        style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
         ref={this._setComponentRef as (ref: Component) => void}
