@@ -8,8 +8,8 @@ CSSKeyframesImpl::CSSKeyframesImpl(
     const CSSKeyframesConfig &config,
     CleanupCallback &&cleanupCallback)
     : animationName_(config.animationName),
-      styleInterpolator_(config.styleInterpolator),
       keyframeEasingFunctions_(config.keyframeEasingFunctions),
+      styleInterpolator_(config.styleInterpolator),
       cleanupCallback_(std::move(cleanupCallback)) {}
 
 CSSKeyframesImpl::~CSSKeyframesImpl() {
