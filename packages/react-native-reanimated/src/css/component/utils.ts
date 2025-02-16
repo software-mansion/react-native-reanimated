@@ -5,7 +5,13 @@ import { StyleSheet } from 'react-native';
 import type { AnyRecord, CSSStyle, PlainStyle } from '../types';
 import { isCSSStyleProp } from '../utils/guards';
 
-export function filterNonCSSStyleProps(props: StyleProp<CSSStyle>): PlainStyle {
+export function filterNonCSSStyleProps(
+  props: StyleProp<CSSStyle> | undefined
+): PlainStyle | undefined {
+  if (!props) {
+    return undefined;
+  }
+
   const flattened = StyleSheet.flatten(props);
   return Object.entries(flattened).reduce<AnyRecord>((acc, [key, value]) => {
     if (!isCSSStyleProp(key)) {

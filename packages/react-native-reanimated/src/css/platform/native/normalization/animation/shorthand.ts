@@ -1,6 +1,5 @@
 'use strict';
 import { ReanimatedError } from '../../../../errors';
-import { CSSKeyframesRuleImpl } from '../../../../models';
 import type {
   ConvertValuesToArraysWithUndefined,
   CSSAnimationProperties,
@@ -101,13 +100,12 @@ function parseSingleAnimationShorthand(
       result.animationTimingFunction = parseTimingFunction(part);
       continue;
     }
-    // TODO - improve this isNumber check here
     if (result.animationIterationCount === undefined && isNumber(+part)) {
       result.animationIterationCount = parseFloat(part);
       continue;
     }
     if (result.animationName === undefined && isAnimationName(part)) {
-      result.animationName = CSSKeyframesRuleImpl.getByName(part);
+      result.animationName = part;
       continue;
     }
     throw new ReanimatedError(`Invalid animation shorthand: ${value}`);

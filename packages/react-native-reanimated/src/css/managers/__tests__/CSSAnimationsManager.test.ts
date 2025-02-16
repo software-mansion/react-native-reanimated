@@ -140,14 +140,14 @@ describe('CSSAnimationsManager', () => {
     it('detaches all animations attached to the view', () => {
       const attachedAnimations: ProcessedAnimation[] = [
         {
-          keyframesRule: new CSSKeyframesRuleImpl({
+          animationName: new CSSKeyframesRuleImpl({
             from: { opacity: 1 },
             to: { opacity: 0.5 },
           }),
           normalizedSettings: normalizeSingleCSSAnimationSettings({}),
         },
         {
-          keyframesRule: new CSSKeyframesRuleImpl({
+          animationName: new CSSKeyframesRuleImpl({
             from: { opacity: 0 },
             to: { opacity: 1 },
           }),
@@ -169,6 +169,4 @@ describe('CSSAnimationsManager', () => {
       expect(updateCSSAnimations).not.toHaveBeenCalled();
     });
   });
-
-  // TODO - adds integration tests for the new CSSKeyframesRegistry
 });
