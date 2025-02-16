@@ -23,14 +23,12 @@ class PropertyInterpolator {
   virtual void setProgressProvider(
       const std::shared_ptr<KeyframeProgressProvider> &progressProvider);
 
-  virtual jsi::Value getStyleValue(
-      jsi::Runtime &rt,
+  virtual folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const = 0;
-  virtual jsi::Value getCurrentValue(
-      jsi::Runtime &rt,
+  virtual folly::dynamic getCurrentValue(
       const ShadowNode::Shared &shadowNode) const = 0;
-  virtual jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const = 0;
-  virtual jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const = 0;
+  virtual folly::dynamic getFirstKeyframeValue() const = 0;
+  virtual folly::dynamic getLastKeyframeValue() const = 0;
 
   virtual bool equalsReversingAdjustedStartValue(
       jsi::Runtime &rt,
@@ -44,12 +42,8 @@ class PropertyInterpolator {
       const jsi::Value &oldStyleValue,
       const jsi::Value &newStyleValue) = 0;
 
-  virtual jsi::Value update(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) = 0;
-  virtual jsi::Value reset(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) = 0;
+  virtual folly::dynamic update(const ShadowNode::Shared &shadowNode) = 0;
+  virtual folly::dynamic reset(const ShadowNode::Shared &shadowNode) = 0;
 
  protected:
   const PropertyPath propertyPath_;

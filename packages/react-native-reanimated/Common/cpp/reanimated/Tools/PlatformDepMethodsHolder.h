@@ -3,6 +3,7 @@
 #include <jsi/jsi.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#include <folly/dynamic.h>
 #include <react/renderer/core/ReactPrimitives.h>
 #endif
 

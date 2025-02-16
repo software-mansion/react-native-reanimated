@@ -44,8 +44,7 @@ namespace reanimated {
 
 using namespace facebook;
 
-using UpdatesBatch =
-    std::vector<std::pair<ShadowNode::Shared, std::unique_ptr<jsi::Value>>>;
+using UpdatesBatch = std::vector<std::pair<ShadowNode::Shared, folly::dynamic>>;
 
 class ReanimatedModuleProxy
     : public ReanimatedModuleProxySpec,
