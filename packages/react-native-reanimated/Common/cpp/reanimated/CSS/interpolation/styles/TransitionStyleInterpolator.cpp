@@ -71,6 +71,8 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
   const auto &oldPropsObj = changedProps.oldProps;
   const auto &newPropsObj = changedProps.newProps;
 
+  const auto empty = folly::dynamic();
+
   for (const auto &propertyName : changedProps.changedPropertyNames) {
     auto it = interpolators_.find(propertyName);
     const auto shouldCreateInterpolator = it == interpolators_.end();
@@ -84,19 +86,15 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
       it = interpolators_.emplace(propertyName, newInterpolator).first;
     }
 
-    const auto &newValue = newPropsObj[propertyName];
+    // Use the last update value as the oldValue only if the existing
+    // interpolator is updated (no new interpolator was created)
+    const auto &oldValue =
+        !shouldCreateInterpolator && lastUpdateValue.isObject()
+        ? lastUpdateValue.getDefault(propertyName, empty)
+        : oldPropsObj.getDefault(propertyName, empty);
+    const auto &newValue = newPropsObj.getDefault(propertyName, empty);
 
-    // Try to use a value from the last CSS transition update (only if the
-    // interpolator existed - when the transition was interrupted)
-    if (!shouldCreateInterpolator && lastUpdateValue.isObject()) {
-      const auto oldValue = lastUpdateValue.count(propertyName) > 0
-          ? lastUpdateValue[propertyName]
-          : oldPropsObj[propertyName];
-      it->second->updateKeyframesFromStyleChange(oldValue, newValue);
-    } else {
-      it->second->updateKeyframesFromStyleChange(
-          oldPropsObj[propertyName], newValue);
-    }
+    it->second->updateKeyframesFromStyleChange(oldValue, newValue);
   }
 }
 

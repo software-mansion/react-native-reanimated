@@ -69,6 +69,9 @@ class ValueInterpolator : public PropertyInterpolator {
 
   bool equalsFirstKeyframeValue(
       const folly::dynamic &propertyValue) const override {
+    if (keyframes_.empty()) {
+      return false;
+    }
     const auto &firstKeyframeValue = keyframes_.front().value;
     if (!firstKeyframeValue.has_value()) {
       return propertyValue.isNull();
