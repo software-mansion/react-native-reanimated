@@ -1,8 +1,9 @@
 'use strict';
 import type { PredefinedTimingFunction, StepsModifier } from '../easings';
-import type { CSSAnimationSettingProp, CSSTransitionProp } from '../types';
+import type { CSSAnimationProp, CSSTransitionProp } from '../types';
 
-export const ANIMATION_SETTINGS: CSSAnimationSettingProp[] = [
+export const ANIMATION_PROPS: CSSAnimationProp[] = [
+  'animationName',
   'animationDuration',
   'animationTimingFunction',
   'animationDelay',
@@ -10,6 +11,7 @@ export const ANIMATION_SETTINGS: CSSAnimationSettingProp[] = [
   'animationDirection',
   'animationFillMode',
   'animationPlayState',
+  'animation',
 ];
 
 export const TRANSITION_PROPS: CSSTransitionProp[] = [

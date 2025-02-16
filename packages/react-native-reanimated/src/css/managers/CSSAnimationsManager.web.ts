@@ -12,13 +12,13 @@ import {
 import type {
   ConvertValuesToArrays,
   CSSAnimationKeyframes,
+  CSSAnimationProperties,
   CSSAnimationSettings,
-  ExistingCSSAnimationProperties,
 } from '../types';
 import { convertPropertiesToArrays, kebabizeCamelCase } from '../utils';
 
 export const isCSSKeyframesRuleImpl = (
-  keyframes: ExistingCSSAnimationProperties['animationName']
+  keyframes: CSSAnimationProperties['animationName']
 ): keyframes is CSSKeyframesRuleImpl =>
   typeof keyframes === 'object' && 'processedKeyframes' in keyframes;
 
@@ -41,11 +41,11 @@ export default class CSSAnimationsManager {
     this.element = element;
   }
 
-  attach(animationProperties: ExistingCSSAnimationProperties | null) {
+  attach(animationProperties: CSSAnimationProperties | null) {
     this.update(animationProperties);
   }
 
-  update(animationProperties: ExistingCSSAnimationProperties | null) {
+  update(animationProperties: CSSAnimationProperties | null) {
     if (!animationProperties) {
       this.detach();
       return;

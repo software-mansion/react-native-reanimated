@@ -1,15 +1,35 @@
 'use strict';
 import type {
-  ExistingCSSAnimationProperties,
+  AnyRecord,
+  CSSAnimationProperties,
   SingleCSSAnimationProperties,
 } from '../../../../types';
-import { convertPropertiesToArrays } from '../../../../utils';
+import { convertPropertyToArray } from '../../../../utils';
+import type { ExpandedCSSAnimationConfigProperties } from './shorthand';
+import {
+  createEmptyAnimationConfig,
+  parseAnimationShorthand,
+} from './shorthand';
+
+function getExpandedConfigProperties(
+  config: CSSAnimationProperties
+): ExpandedCSSAnimationConfigProperties {
+  const result: AnyRecord = config.animation
+    ? parseAnimationShorthand(config.animation)
+    : createEmptyAnimationConfig();
+
+  for (const [key, value] of Object.entries(config)) {
+    result[key] = convertPropertyToArray(value);
+  }
+
+  return result as ExpandedCSSAnimationConfigProperties;
+}
 
 export function createSingleCSSAnimationProperties(
-  properties: ExistingCSSAnimationProperties
+  properties: CSSAnimationProperties
 ): SingleCSSAnimationProperties[] {
   const {
-    animationName: animationNames,
+    animationName,
     animationDuration,
     animationTimingFunction,
     animationDelay,
@@ -17,22 +37,28 @@ export function createSingleCSSAnimationProperties(
     animationDirection,
     animationFillMode,
     animationPlayState,
-  } = convertPropertiesToArrays(properties);
+  } = getExpandedConfigProperties(properties);
+  const result: SingleCSSAnimationProperties[] = [];
 
-  return animationNames.map((animationName, index) => {
-    return {
-      animationName,
-      animationDuration: animationDuration?.[index % animationDuration.length],
+  for (let i = 0; i < animationName.length; i++) {
+    const keyframes = animationName[i];
+    if (!keyframes || keyframes === 'none') {
+      continue;
+    }
+
+    result.push({
+      animationName: keyframes,
+      animationDuration: animationDuration?.[i % animationDuration.length],
       animationTimingFunction:
-        animationTimingFunction?.[index % animationTimingFunction.length],
-      animationDelay: animationDelay?.[index % animationDelay.length],
+        animationTimingFunction?.[i % animationTimingFunction.length],
+      animationDelay: animationDelay?.[i % animationDelay.length],
       animationIterationCount:
-        animationIterationCount?.[index % animationIterationCount.length],
-      animationDirection:
-        animationDirection?.[index % animationDirection.length],
-      animationFillMode: animationFillMode?.[index % animationFillMode.length],
-      animationPlayState:
-        animationPlayState?.[index % animationPlayState.length],
-    };
-  });
+        animationIterationCount?.[i % animationIterationCount.length],
+      animationDirection: animationDirection?.[i % animationDirection.length],
+      animationFillMode: animationFillMode?.[i % animationFillMode.length],
+      animationPlayState: animationPlayState?.[i % animationPlayState.length],
+    });
+  }
+
+  return result;
 }

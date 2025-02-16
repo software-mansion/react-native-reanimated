@@ -14,6 +14,8 @@ export interface CSSKeyframesRule {
   readonly cssRules: CSSAnimationKeyframes;
   readonly cssText: string;
   readonly name: string;
+
+  toString(): string;
 }
 
 export type CSSAnimationKeyframeSelector = string | number;
@@ -25,6 +27,10 @@ export type CSSAnimationKeyframes<S extends object = PlainStyle> = Record<
   CSSAnimationKeyframeSelector,
   CSSAnimationKeyframeBlock<S>
 >;
+export type CSSAnimationName<S extends object = PlainStyle> =
+  | CSSKeyframesRule
+  | CSSAnimationKeyframes<S>
+  | string;
 export type CSSAnimationDuration = TimeUnit;
 export type CSSAnimationTimingFunction = CSSTimingFunction;
 export type CSSAnimationDelay = TimeUnit;
@@ -36,6 +42,7 @@ export type CSSAnimationDirection =
   | 'alternate-reverse';
 export type CSSAnimationFillMode = 'none' | 'forwards' | 'backwards' | 'both';
 export type CSSAnimationPlayState = 'running' | 'paused';
+export type CSSAnimationShorthand = string;
 
 export type SingleCSSAnimationSettings = {
   animationDuration?: CSSAnimationDuration;
@@ -50,7 +57,7 @@ export type SingleCSSAnimationSettings = {
 
 export type SingleCSSAnimationProperties<S extends object = PlainStyle> =
   SingleCSSAnimationSettings & {
-    animationName: CSSKeyframesRule | CSSAnimationKeyframes<S>;
+    animationName: CSSAnimationName<S>;
   };
 
 export type CSSAnimationSettings =
@@ -58,18 +65,8 @@ export type CSSAnimationSettings =
 
 export type CSSAnimationProperties<S extends object = PlainStyle> =
   CSSAnimationSettings & {
-    animationName:
-      | AddArrayPropertyType<CSSKeyframesRule | CSSAnimationKeyframes<S>>
-      | 'none';
+    animationName?: AddArrayPropertyType<CSSAnimationName<S>>;
+    animation?: CSSAnimationShorthand;
   };
-
-export type ExistingCSSAnimationProperties<S extends object = PlainStyle> =
-  CSSAnimationProperties<S> & {
-    animationName: AddArrayPropertyType<
-      CSSKeyframesRule | CSSAnimationKeyframes<S>
-    >;
-  };
-
-export type CSSAnimationSettingProp = keyof CSSAnimationSettings;
 
 export type CSSAnimationProp = keyof CSSAnimationProperties;

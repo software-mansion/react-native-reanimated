@@ -1,5 +1,6 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
+import { ReanimatedError } from '../errors';
 import { CSSKeyframesRuleImpl } from '../models';
 import type { NormalizedSingleCSSAnimationSettings } from '../platform/native';
 import {
@@ -10,14 +11,11 @@ import {
   unregisterCSSAnimations,
   updateCSSAnimations,
 } from '../platform/native';
-import type {
-  CSSAnimationKeyframes,
-  ExistingCSSAnimationProperties,
-} from '../types';
+import type { CSSAnimationKeyframes, CSSAnimationProperties } from '../types';
 
 export type ProcessedAnimation = {
   normalizedSettings: NormalizedSingleCSSAnimationSettings;
-  keyframesRule: CSSKeyframesRuleImpl;
+  animationName: CSSKeyframesRuleImpl | string;
 };
 
 export default class CSSAnimationsManager {
@@ -38,14 +36,14 @@ export default class CSSAnimationsManager {
     }
   }
 
-  update(animationProperties: ExistingCSSAnimationProperties | null): void {
+  update(animationProperties: CSSAnimationProperties | null): void {
     if (!animationProperties) {
       this.detach();
       return;
     }
 
-    const [processedAnimations, areAllEqual] =
-      this.processAnimations(animationProperties);
+    const processResult = this.processAnimations(animationProperties);
+    const [processedAnimations, areAllEqual] = processResult;
 
     // Attach new animations if there are no attached animations or if
     // the array of animations is different (e.g. length or order)
@@ -88,66 +86,95 @@ export default class CSSAnimationsManager {
     this.attachedAnimations = processedAnimations;
     registerCSSAnimations(
       this.shadowNodeWrapper,
-      processedAnimations.map(
-        ({ keyframesRule: { name }, normalizedSettings }) => ({
-          name,
-          settings: normalizedSettings,
-        })
-      )
+      processedAnimations.map(({ animationName, normalizedSettings }) => ({
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        name: animationName.toString(),
+        settings: normalizedSettings,
+      }))
     );
   }
 
   private processAnimations(
-    animationProperties: ExistingCSSAnimationProperties
+    animationProperties: CSSAnimationProperties
   ): [ProcessedAnimation[], boolean] {
     const singleAnimationPropertiesArray =
       createSingleCSSAnimationProperties(animationProperties);
+
     let areAllEqual =
       this.attachedAnimations.length === singleAnimationPropertiesArray.length;
 
     const processedAnimations = singleAnimationPropertiesArray.map(
       (properties, i) => {
-        const keyframes = properties.animationName;
-        let keyframesRule: CSSKeyframesRuleImpl;
+        const animationName = properties.animationName;
+        const attachedAnimationName = this.attachedAnimations[i]?.animationName;
+        let processedAnimationName = attachedAnimationName;
 
-        if (keyframes instanceof CSSKeyframesRuleImpl) {
+        // KeyframesRule instance or animation shorthand string
+        if (
+          animationName instanceof CSSKeyframesRuleImpl ||
+          typeof animationName === 'string' // for animation shorthand
+        ) {
           // If the instance of the CSSKeyframesRule class was passed, we can just compare
           // references to the instance (css.keyframes() call should be memoized in order
           // to preserve the same animation. If used inline, it will restart the animation
-          // on every component re-render)
-          keyframesRule = keyframes;
+          // on every component re-render). The same applies to the animation name string.
+          processedAnimationName = animationName;
           if (
             areAllEqual &&
-            keyframes !== this.attachedAnimations[i]?.keyframesRule
+            !this.isSameAnimation(animationName, attachedAnimationName)
           ) {
             areAllEqual = false;
           }
-        } else if (
-          this.attachedAnimations[i]?.keyframesRule.cssText !==
-          JSON.stringify(keyframes)
-        ) {
-          // If the keyframes are not an instance of the CSSKeyframesRule class (e.g. someone
-          // passes a keyframes object inline in the component's style without using css.keyframes()
-          // function), we don't want to restart the animation on every component re-render.
-          // In this case, we need to compare the stringified keyframes of the old and the new
-          // animation configuration object to determine if the animation has changed.
-          keyframesRule = new CSSKeyframesRuleImpl(
-            keyframes as CSSAnimationKeyframes
+        }
+        // Inline keyframes object
+        else if (typeof animationName === 'object') {
+          if (
+            // If the animation shorthand was replaced with the inline keyframes object
+            !(attachedAnimationName instanceof CSSKeyframesRuleImpl) ||
+            // or if the stringified keyframes object is different from the attached one
+            attachedAnimationName?.cssText !== JSON.stringify(animationName)
+          ) {
+            processedAnimationName = new CSSKeyframesRuleImpl(
+              animationName as CSSAnimationKeyframes
+            );
+            areAllEqual = false;
+          }
+        }
+        // Otherwise, keyframes are invalid
+        else {
+          throw new ReanimatedError(
+            `Invalid animation keyframes object for animation: ${JSON.stringify(
+              animationName
+            )}. Please provide a valid keyframes object or a valid animation name string.`
           );
-          areAllEqual = false;
-        } else {
-          // Otherwise, if keyframes are the same, we can just use the existing keyframes rule
-          // instance
-          keyframesRule = this.attachedAnimations[i]?.keyframesRule;
         }
 
         return {
           normalizedSettings: normalizeSingleCSSAnimationSettings(properties),
-          keyframesRule,
+          animationName: processedAnimationName,
         };
       }
     );
 
     return [processedAnimations, areAllEqual];
+  }
+
+  private isSameAnimation(
+    animationName: CSSKeyframesRuleImpl | string,
+    attachedAnimationName: CSSKeyframesRuleImpl | string | undefined
+  ) {
+    if (!attachedAnimationName) {
+      return false;
+    }
+
+    return (
+      this.getNameString(animationName) ===
+      this.getNameString(attachedAnimationName)
+    );
+  }
+
+  private getNameString(animationName: CSSKeyframesRuleImpl | string) {
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+    return animationName.toString(); // this is fine, since the CSSKeyframesRuleImpl implements toString()
   }
 }

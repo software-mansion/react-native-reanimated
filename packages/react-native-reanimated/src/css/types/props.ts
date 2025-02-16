@@ -20,8 +20,8 @@ type PickStyleProps<P> = Pick<
 >;
 
 export type CSSStyle<S extends AnyRecord = PlainStyle> = S &
-  Partial<CSSAnimationProperties<S>> &
-  Partial<CSSTransitionProperties<S>>;
+  CSSAnimationProperties<S> &
+  CSSTransitionProperties<S>;
 
 type CSSStyleProps<P extends object> = {
   [K in keyof PickStyleProps<P>]: P[K] extends StyleProp<infer U>

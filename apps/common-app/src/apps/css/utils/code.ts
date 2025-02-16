@@ -109,13 +109,17 @@ const stringifyConfigObject = <T extends AnyRecord>(
 };
 
 export const stringifyConfig = <T extends AnyRecord>(
-  object: 'none' | T,
+  object: T | string | undefined,
   dense = false,
   depth = 0
 ): string => {
-  return object === 'none'
-    ? 'none'
-    : stringifyConfigObject(object, dense, depth);
+  if (!object) {
+    return 'none';
+  }
+  if (typeof object === 'string') {
+    return object;
+  }
+  return stringifyConfigObject(object, dense, depth);
 };
 
 export const getCodeWithOverrides = <C extends AnyRecord, O extends AnyRecord>(

@@ -48,4 +48,6 @@ export type NormalizedSingleCSSAnimationSettings = {
 
 // HOST OBJECTS
 
-export type CSSKeyframesHostObject = Record<string, never>; // Placeholder type as we don't need any properties from the host object for now
+export type CSSKeyframesHostObject = {
+  addCleanupCallback: (callback: () => void) => void;
+};

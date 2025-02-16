@@ -474,7 +474,7 @@ type DefaultStyle = ViewStyle & ImageStyle & TextStyle;
 // Ideally we want AnimatedStyle to not be generic, but there are
 // so many dependencies on it being generic that it's not feasible at the moment.
 export type AnimatedStyle<Style = DefaultStyle> =
-  | (Style & Partial<CSSAnimationProperties> & Partial<CSSTransitionProperties>) // TODO - maybe add css animation config somewhere else
+  | (Style & CSSAnimationProperties & CSSTransitionProperties) // TODO - maybe add css animation config somewhere else
   | MaybeSharedValueRecursive<Style>;
 
 export type AnimatedTransform = MaybeSharedValueRecursive<
