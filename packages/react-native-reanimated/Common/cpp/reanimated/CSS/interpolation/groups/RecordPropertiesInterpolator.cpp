@@ -10,7 +10,7 @@ RecordPropertiesInterpolator::RecordPropertiesInterpolator(
     : GroupPropertiesInterpolator(propertyPath, viewStylesRepository),
       factories_(factories) {}
 
-bool RecordPropertiesInterpolator::equalsFirstKeyframeValue(
+bool RecordPropertiesInterpolator::equalsReversingAdjustedStartValue(
     const folly::dynamic &propertyValue) const {
   for (const auto &pair : propertyValue.items()) {
     const auto &propName = pair.first.asString();
@@ -18,7 +18,7 @@ bool RecordPropertiesInterpolator::equalsFirstKeyframeValue(
 
     const auto it = interpolators_.find(propName);
     if (it == interpolators_.end() ||
-        !it->second->equalsFirstKeyframeValue(propValue)) {
+        !it->second->equalsReversingAdjustedStartValue(propValue)) {
       return false;
     }
   }
@@ -49,20 +49,23 @@ void RecordPropertiesInterpolator::updateKeyframes(
 
 void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
     const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue) {
+    const folly::dynamic &newStyleValue,
+    const folly::dynamic &lastUpdateValue) {
   // TODO - maybe add a possibility to remove interpolators that are no longer
   // used  (for now, for simplicity, we only add new ones)
   const folly::dynamic empty = folly::dynamic::object();
-  const folly::dynamic &oldStyle =
+  const folly::dynamic &oldStyleObject =
       !oldStyleValue.empty() ? oldStyleValue : empty;
-  const folly::dynamic &newStyle =
+  const folly::dynamic &newStyleObject =
       !newStyleValue.empty() ? newStyleValue : empty;
+  const folly::dynamic &lastUpdateObject =
+      !lastUpdateValue.empty() ? lastUpdateValue : empty;
 
   std::unordered_set<std::string> propertyNamesSet;
-  for (const auto &key : oldStyle.keys()) {
+  for (const auto &key : oldStyleObject.keys()) {
     propertyNamesSet.insert(key.asString());
   }
-  for (const auto &key : newStyle.keys()) {
+  for (const auto &key : newStyleObject.keys()) {
     propertyNamesSet.insert(key.asString());
   }
 
@@ -70,8 +73,9 @@ void RecordPropertiesInterpolator::updateKeyframesFromStyleChange(
     maybeCreateInterpolator(propertyName);
     interpolators_.at(propertyName)
         ->updateKeyframesFromStyleChange(
-            oldStyle.getDefault(propertyName, empty),
-            newStyle.getDefault(propertyName, empty));
+            oldStyleObject.getDefault(propertyName, empty),
+            newStyleObject.getDefault(propertyName, empty),
+            lastUpdateObject.getDefault(propertyName, empty));
   }
 }
 

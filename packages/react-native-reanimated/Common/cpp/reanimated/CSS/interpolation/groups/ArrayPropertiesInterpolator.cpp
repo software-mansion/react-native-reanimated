@@ -10,7 +10,7 @@ ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
     : GroupPropertiesInterpolator(propertyPath, viewStylesRepository),
       factories_(factories) {}
 
-bool ArrayPropertiesInterpolator::equalsFirstKeyframeValue(
+bool ArrayPropertiesInterpolator::equalsReversingAdjustedStartValue(
     const folly::dynamic &propertyValue) const {
   if (!propertyValue.isArray()) {
     return false;
@@ -22,7 +22,8 @@ bool ArrayPropertiesInterpolator::equalsFirstKeyframeValue(
   }
 
   for (size_t i = 0; i < valuesCount; ++i) {
-    if (!interpolators_[i]->equalsFirstKeyframeValue(propertyValue[i])) {
+    if (!interpolators_[i]->equalsReversingAdjustedStartValue(
+            propertyValue[i])) {
       return false;
     }
   }
@@ -46,10 +47,13 @@ void ArrayPropertiesInterpolator::updateKeyframes(
 
 void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
     const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue) {
+    const folly::dynamic &newStyleValue,
+    const folly::dynamic &lastUpdateValue) {
   const folly::dynamic empty = folly::dynamic::array();
   const auto oldStyleArray = !oldStyleValue.empty() ? oldStyleValue : empty;
   const auto newStyleArray = !newStyleValue.empty() ? newStyleValue : empty;
+  const auto lastUpdateArray =
+      !lastUpdateValue.empty() ? lastUpdateValue : empty;
 
   const size_t oldSize = oldStyleArray.size();
   const size_t newSize = newStyleArray.size();
@@ -62,7 +66,8 @@ void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
     // with different lengths
     interpolators_[i]->updateKeyframesFromStyleChange(
         i < oldSize ? oldStyleArray.at(i) : empty,
-        i < newSize ? newStyleArray.at(i) : empty);
+        i < newSize ? newStyleArray.at(i) : empty,
+        i < valuesCount ? lastUpdateArray.at(i) : empty);
   }
 }
 

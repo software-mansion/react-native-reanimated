@@ -40,26 +40,27 @@ folly::dynamic TransformsStyleInterpolator::getLastKeyframeValue() const {
       keyframes_.back()->toOperations.value_or(defaultStyleValue_));
 }
 
-bool TransformsStyleInterpolator::equalsFirstKeyframeValue(
+bool TransformsStyleInterpolator::equalsReversingAdjustedStartValue(
     const folly::dynamic &propertyValue) const {
   const auto propertyOperations = parseTransformOperations(propertyValue);
-  const auto &keyframeFromOperations = keyframes_.front()->fromOperations;
 
-  if (!keyframeFromOperations.has_value()) {
+  if (!reversingAdjustedStartValue_.has_value()) {
     return !propertyOperations.has_value();
   } else if (!propertyOperations.has_value()) {
     return false;
   }
 
-  const auto &keyframeFromOperationsValue = keyframeFromOperations.value();
+  const auto &reversingAdjustedOperationsValue =
+      reversingAdjustedStartValue_.value();
   const auto &propertyOperationsValue = propertyOperations.value();
 
-  if (keyframeFromOperationsValue.size() != propertyOperationsValue.size()) {
+  if (reversingAdjustedOperationsValue.size() !=
+      propertyOperationsValue.size()) {
     return false;
   }
 
-  for (size_t i = 0; i < keyframeFromOperationsValue.size(); ++i) {
-    if (*keyframeFromOperationsValue[i] != *propertyOperationsValue[i]) {
+  for (size_t i = 0; i < reversingAdjustedOperationsValue.size(); ++i) {
+    if (*reversingAdjustedOperationsValue[i] != *propertyOperationsValue[i]) {
       return false;
     }
   }
@@ -129,13 +130,23 @@ void TransformsStyleInterpolator::updateKeyframes(
 
 void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
     const folly::dynamic &oldStyleValue,
-    const folly::dynamic &newStyleValue) {
+    const folly::dynamic &newStyleValue,
+    const folly::dynamic &lastUpdateValue) {
+  if (oldStyleValue.isNull()) {
+    reversingAdjustedStartValue_ = std::nullopt;
+  } else {
+    reversingAdjustedStartValue_ = parseTransformOperations(oldStyleValue);
+  }
+
+  const auto &prevStyleValue =
+      lastUpdateValue.isNull() ? oldStyleValue : lastUpdateValue;
+
   keyframes_.clear();
   keyframes_.reserve(1);
   keyframes_.emplace_back(createTransformKeyframe(
       0,
       1,
-      parseTransformOperations(oldStyleValue).value_or(TransformOperations{}),
+      parseTransformOperations(prevStyleValue).value_or(TransformOperations{}),
       parseTransformOperations(newStyleValue).value_or(TransformOperations{})));
 }
 

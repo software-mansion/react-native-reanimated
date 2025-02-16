@@ -25,7 +25,7 @@ class PropertyInterpolator {
       const ShadowNode::Shared &shadowNode) const = 0;
   virtual folly::dynamic getFirstKeyframeValue() const = 0;
   virtual folly::dynamic getLastKeyframeValue() const = 0;
-  virtual bool equalsFirstKeyframeValue(
+  virtual bool equalsReversingAdjustedStartValue(
       const folly::dynamic &propertyValue) const = 0;
 
   virtual void updateKeyframes(
@@ -33,7 +33,8 @@ class PropertyInterpolator {
       const jsi::Value &keyframes) = 0;
   virtual void updateKeyframesFromStyleChange(
       const folly::dynamic &oldStyleValue,
-      const folly::dynamic &newStyleValue) = 0;
+      const folly::dynamic &newStyleValue,
+      const folly::dynamic &lastUpdateValue) = 0;
 
   virtual folly::dynamic interpolate(
       const ShadowNode::Shared &shadowNode,

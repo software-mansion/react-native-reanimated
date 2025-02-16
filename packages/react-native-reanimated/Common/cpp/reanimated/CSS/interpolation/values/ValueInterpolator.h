@@ -67,16 +67,12 @@ class ValueInterpolator : public PropertyInterpolator {
     return convertOptionalToDynamic(keyframes_.back().value);
   }
 
-  bool equalsFirstKeyframeValue(
+  bool equalsReversingAdjustedStartValue(
       const folly::dynamic &propertyValue) const override {
-    if (keyframes_.empty()) {
-      return false;
-    }
-    const auto &firstKeyframeValue = keyframes_.front().value;
-    if (!firstKeyframeValue.has_value()) {
+    if (!reversingAdjustedStartValue_.has_value()) {
       return propertyValue.isNull();
     }
-    return firstKeyframeValue.value() == ValueType(propertyValue);
+    return reversingAdjustedStartValue_.value() == ValueType(propertyValue);
   }
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override {
@@ -95,16 +91,23 @@ class ValueInterpolator : public PropertyInterpolator {
   }
 
   void updateKeyframesFromStyleChange(
-      // oldStyleValue is either the old style value or the previously
-      // calculated value during the interrupted transition
       const folly::dynamic &oldStyleValue,
-      const folly::dynamic &newStyleValue) override {
+      const folly::dynamic &newStyleValue,
+      const folly::dynamic &lastUpdateValue) override {
     KeyframeType firstKeyframe, lastKeyframe;
 
     if (oldStyleValue.isNull()) {
-      firstKeyframe = {0, defaultStyleValue_};
+      reversingAdjustedStartValue_ = std::nullopt;
     } else {
+      reversingAdjustedStartValue_ = ValueType(oldStyleValue);
+    }
+
+    if (!lastUpdateValue.isNull()) {
+      firstKeyframe = {0, ValueType(lastUpdateValue)};
+    } else if (!oldStyleValue.isNull()) {
       firstKeyframe = {0, ValueType(oldStyleValue)};
+    } else {
+      firstKeyframe = {0, defaultStyleValue_};
     }
 
     if (newStyleValue.isNull()) {
@@ -167,6 +170,7 @@ class ValueInterpolator : public PropertyInterpolator {
 
  private:
   std::vector<ValueKeyframe<AllowedTypes...>> keyframes_;
+  std::optional<ValueType> reversingAdjustedStartValue_;
 
   ValueType getFallbackValue(const ShadowNode::Shared &shadowNode) const {
     const auto styleValue = getStyleValue(shadowNode);

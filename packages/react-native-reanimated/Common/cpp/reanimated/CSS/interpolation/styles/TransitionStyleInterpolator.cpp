@@ -24,7 +24,7 @@ TransitionStyleInterpolator::getReversedPropertyNames(
     if (it != interpolators_.end() &&
         // First keyframe value of the previous transition is the reversing
         // adjusted start value
-        it->second->equalsFirstKeyframeValue(propertyValue)) {
+        it->second->equalsReversingAdjustedStartValue(propertyValue)) {
       reversedProperties.insert(propertyName);
     }
   }
@@ -86,15 +86,15 @@ void TransitionStyleInterpolator::updateInterpolatedProperties(
       it = interpolators_.emplace(propertyName, newInterpolator).first;
     }
 
-    // Use the last update value as the oldValue only if the existing
-    // interpolator is updated (no new interpolator was created)
-    const auto &oldValue =
-        !shouldCreateInterpolator && lastUpdateValue.isObject()
-        ? lastUpdateValue.getDefault(propertyName, empty)
-        : oldPropsObj.getDefault(propertyName, empty);
+    const auto &oldValue = oldPropsObj.getDefault(propertyName, empty);
     const auto &newValue = newPropsObj.getDefault(propertyName, empty);
+    // Pass lastValue only if the interpolator is updated (no new interpolator
+    // was created), otherwise pass an empty value
+    const auto &lastValue = !shouldCreateInterpolator
+        ? lastUpdateValue.getDefault(propertyName, empty)
+        : empty;
 
-    it->second->updateKeyframesFromStyleChange(oldValue, newValue);
+    it->second->updateKeyframesFromStyleChange(oldValue, newValue, lastValue);
   }
 }
 

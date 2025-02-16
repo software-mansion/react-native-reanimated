@@ -18,13 +18,14 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~RecordPropertiesInterpolator() = default;
 
-  bool equalsFirstKeyframeValue(
+  bool equalsReversingAdjustedStartValue(
       const folly::dynamic &propertyValue) const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
       const folly::dynamic &oldStyleValue,
-      const folly::dynamic &newStyleValue) override;
+      const folly::dynamic &newStyleValue,
+      const folly::dynamic &lastUpdateValue) override;
 
  protected:
   folly::dynamic mapInterpolators(
