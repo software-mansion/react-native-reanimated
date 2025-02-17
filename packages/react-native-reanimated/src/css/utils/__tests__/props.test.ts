@@ -3,6 +3,10 @@ import { css } from '../../stylesheet';
 import type { CSSStyle, CSSTransitionProperty } from '../../types';
 import { filterCSSAndStyleProperties } from '../props';
 
+jest.mock('../../platform/native/native', () => ({
+  registerCSSKeyframes: jest.fn(),
+}));
+
 describe(filterCSSAndStyleProperties, () => {
   describe('animation config', () => {
     it('returns null if there is no animationName', () => {

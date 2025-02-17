@@ -195,14 +195,10 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     animationName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig
   ) {
-    this.#reanimatedModuleProxy.registerCSSKeyframes(
+    return this.#reanimatedModuleProxy.registerCSSKeyframes(
       animationName,
       keyframesConfig
     );
-  }
-
-  unregisterCSSKeyframes(animationName: string) {
-    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName);
   }
 
   registerCSSAnimations(

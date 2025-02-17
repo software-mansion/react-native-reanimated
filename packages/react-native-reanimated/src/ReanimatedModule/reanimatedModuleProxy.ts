@@ -8,6 +8,7 @@ import type {
   ValueRotation,
 } from '../commonTypes';
 import type {
+  CSSKeyframesHostObject,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
   NormalizedSingleCSSAnimationSettings,
@@ -64,9 +65,7 @@ export interface ReanimatedModuleProxy {
   registerCSSKeyframes(
     animationName: string,
     keyframesConfig: NormalizedCSSAnimationKeyframesConfig
-  ): void;
-
-  unregisterCSSKeyframes(animationName: string): void;
+  ): CSSKeyframesHostObject;
 
   registerCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,

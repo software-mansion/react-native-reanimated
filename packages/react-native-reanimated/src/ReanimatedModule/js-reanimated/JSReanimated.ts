@@ -7,6 +7,7 @@ import type {
 } from '../../commonTypes';
 import { SensorType } from '../../commonTypes';
 import type {
+  CSSKeyframesHostObject,
   NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
   NormalizedSingleCSSAnimationSettings,
@@ -285,15 +286,9 @@ class JSReanimated implements IReanimatedModule {
   registerCSSKeyframes(
     _animationName: string,
     _keyframesConfig: NormalizedCSSAnimationKeyframesConfig
-  ): void {
+  ): CSSKeyframesHostObject {
     throw new ReanimatedError(
       '`registerCSSKeyframes` is not available in JSReanimated.'
-    );
-  }
-
-  unregisterCSSKeyframes(_animationName: string): void {
-    throw new ReanimatedError(
-      '`unregisterCSSKeyframes` is not available in JSReanimated.'
     );
   }
 

@@ -9,7 +9,7 @@ import {
 import type { CSSTransitionProperties } from '../../types';
 import CSSTransitionsManager from '../CSSTransitionsManager';
 
-jest.mock('../../platform/native/native.ts', () => ({
+jest.mock('../../platform/native/native', () => ({
   registerCSSTransition: jest.fn(),
   unregisterCSSTransition: jest.fn(),
   updateCSSTransition: jest.fn(),

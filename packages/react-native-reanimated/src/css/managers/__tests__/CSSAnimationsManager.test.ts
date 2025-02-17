@@ -14,12 +14,11 @@ import type {
 import type { ProcessedAnimation } from '../CSSAnimationsManager';
 import CSSAnimationsManager from '../CSSAnimationsManager';
 
-jest.mock('../../platform/native/native.ts', () => ({
+jest.mock('../../platform/native/native', () => ({
   registerCSSAnimations: jest.fn(),
   unregisterCSSAnimations: jest.fn(),
   updateCSSAnimations: jest.fn(),
   registerCSSKeyframes: jest.fn(),
-  unregisterCSSKeyframes: jest.fn(),
 }));
 
 describe('CSSAnimationsManager', () => {

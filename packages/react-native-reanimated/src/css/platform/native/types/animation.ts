@@ -45,3 +45,9 @@ export type NormalizedSingleCSSAnimationSettings = {
   fillMode: CSSAnimationFillMode;
   playState: CSSAnimationPlayState;
 };
+
+// HOST OBJECTS
+
+/** Placeholder type as we don't need any properties from the host object for now */
+export type CSSKeyframesHostObject = Record<string, never> &
+  'CSSKeyframesHostObject';

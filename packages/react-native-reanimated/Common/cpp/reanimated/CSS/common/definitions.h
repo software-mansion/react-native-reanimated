@@ -4,6 +4,7 @@
 #include <jsi/jsi.h>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace reanimated {
@@ -20,6 +21,7 @@ using PropertyPath = std::vector<std::string>;
 using TransitionProperties = std::optional<PropertyNames>;
 
 using EasingFunction = std::function<double(double)>;
+using KeyframeEasingFunctions = std::unordered_map<double, EasingFunction>;
 using ColorChannels = std::array<uint8_t, 4>;
 using Vec16Array = std::array<double, 16>;
 using Matrix4x4 = std::array<std::array<double, 4>, 4>;
