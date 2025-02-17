@@ -81,7 +81,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}/macos
         run: |
           bundle install
-          bundle exec pod install
+          bundle exec pod update
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}
