@@ -3,6 +3,8 @@ require "json"
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
 
+ios_min_version = '13.4'
+
 Pod::Spec.new do |s|
   s.name         = "RNWorklets"
   s.version      = package["version"]
@@ -10,7 +12,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/software-mansion/react-native-reanimated"
   s.license      = package["license"]
   s.authors      = { "author" => "author@domain.com" }
-  s.platforms    = { :ios => min_ios_version_supported }
+  s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.source_files = "apple/*.{h,m,mm,cpp}"
