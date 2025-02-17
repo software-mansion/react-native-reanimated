@@ -17,7 +17,7 @@ enum class ColorType {
   Transparent,
 };
 
-struct CSSColor : public CSSBaseValue<CSSValueType::Color, CSSColor> {
+struct CSSColor : public CSSSimpleValue<CSSColor> {
   ColorChannels channels;
   ColorType colorType;
 
@@ -29,8 +29,10 @@ struct CSSColor : public CSSBaseValue<CSSValueType::Color, CSSColor> {
   explicit CSSColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
   explicit CSSColor(const ColorChannels &colorChannels);
   explicit CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  explicit CSSColor(const folly::dynamic &value);
 
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  static bool canConstruct(const folly::dynamic &value);
 
   jsi::Value toJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic toDynamic() const override;

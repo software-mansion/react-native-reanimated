@@ -32,9 +32,8 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
  protected:
   void forEachInterpolator(const std::function<void(PropertyInterpolator &)>
                                &callback) const override;
-  jsi::Value mapInterpolators(
-      jsi::Runtime &rt,
-      const std::function<jsi::Value(PropertyInterpolator &)> &callback)
+  folly::dynamic mapInterpolators(
+      const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
       const override;
 
   void maybeCreateInterpolator(const std::string &propertyName);

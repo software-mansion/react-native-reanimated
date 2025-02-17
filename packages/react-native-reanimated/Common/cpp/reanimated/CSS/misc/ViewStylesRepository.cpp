@@ -67,35 +67,16 @@ jsi::Value ViewStylesRepository::getParentNodeProp(
   return getNodeProp(parentNode, propName);
 }
 
-jsi::Value ViewStylesRepository::getViewStyle(jsi::Runtime &rt, const Tag tag) {
-  const auto animatedStyle = animatedPropsRegistry_->get(tag);
-  const auto staticStyle = staticPropsRegistry_->get(tag);
-
-  if (animatedStyle.empty() && staticStyle.empty()) {
-    return jsi::Value::undefined();
-  }
-  if (animatedStyle.empty()) {
-    return valueFromDynamic(rt, staticStyle);
-  }
-  if (staticStyle.empty()) {
-    return valueFromDynamic(rt, animatedStyle);
-  }
-
-  const auto mergedStyle = folly::dynamic::merge(staticStyle, animatedStyle);
-  return valueFromDynamic(rt, mergedStyle);
-}
-
-jsi::Value ViewStylesRepository::getStyleProp(
-    jsi::Runtime &rt,
+folly::dynamic ViewStylesRepository::getStyleProp(
     const Tag tag,
     const PropertyPath &propertyPath) {
   auto animatedValue =
-      getPropertyValue(rt, animatedPropsRegistry_->get(tag), propertyPath);
-  if (!animatedValue.isUndefined()) {
+      getPropertyValue(animatedPropsRegistry_->get(tag), propertyPath);
+  if (!animatedValue.isNull()) {
     return animatedValue;
   }
 
-  return getPropertyValue(rt, staticPropsRegistry_->get(tag), propertyPath);
+  return getPropertyValue(staticPropsRegistry_->get(tag), propertyPath);
 }
 
 void ViewStylesRepository::clearNodesCache() {
@@ -125,36 +106,35 @@ void ViewStylesRepository::updateCacheIfNeeded(
       newestCloneOfShadowNode->getProps());
 }
 
-jsi::Value ViewStylesRepository::getPropertyValue(
-    jsi::Runtime &rt,
+folly::dynamic ViewStylesRepository::getPropertyValue(
     const folly::dynamic &value,
     const PropertyPath &propertyPath) {
   const folly::dynamic *currentValue = &value;
 
   for (size_t i = 0; i < propertyPath.size(); ++i) {
     if (currentValue->isNull() || currentValue->empty()) {
-      return jsi::Value::undefined();
+      return folly::dynamic();
     }
 
     const auto &propName = propertyPath[i];
 
     if (!currentValue->isObject()) {
-      return jsi::Value::undefined();
+      return folly::dynamic();
     }
 
     if (propName == "transform") {
       auto transformIt = currentValue->find("transform");
       if (transformIt == currentValue->items().end()) {
-        return jsi::Value::undefined();
+        return folly::dynamic();
       }
 
       const auto &transform = transformIt->second;
       if (!transform.isArray()) {
-        return jsi::Value::undefined();
+        return folly::dynamic();
       }
 
       if (i + 1 >= propertyPath.size()) {
-        return valueFromDynamic(rt, transform);
+        return transform;
       }
 
       const std::string &transformPropName = propertyPath[i + 1];
@@ -163,23 +143,23 @@ jsi::Value ViewStylesRepository::getPropertyValue(
         if (transformEntry.isObject()) {
           auto transformPropIt = transformEntry.find(transformPropName);
           if (transformPropIt != transformEntry.items().end()) {
-            return valueFromDynamic(rt, transformPropIt->second);
+            return transformPropIt->second;
           }
         }
       }
 
-      return jsi::Value::undefined();
+      return folly::dynamic();
     }
 
     auto propIt = currentValue->find(propName);
     if (propIt == currentValue->items().end()) {
-      return jsi::Value::undefined();
+      return folly::dynamic();
     }
 
     currentValue = &propIt->second;
   }
 
-  return valueFromDynamic(rt, *currentValue);
+  return *currentValue;
 }
 
 } // namespace reanimated
