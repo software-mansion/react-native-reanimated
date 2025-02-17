@@ -590,9 +590,10 @@ jsi::Value ReanimatedModuleProxy::registerCSSKeyframes(
   const auto cleanupCallback =
       [weakThis = weak_from_this()](const std::string &removedAnimationName) {
         auto strongThis = weakThis.lock();
-        if (strongThis) {
-          strongThis->cssKeyframesRegistry_->remove(removedAnimationName);
+        if (!strongThis) {
+        	return;
         }
+        strongThis->cssKeyframesRegistry_->remove(removedAnimationName);
       };
 
   const auto keyframes =
