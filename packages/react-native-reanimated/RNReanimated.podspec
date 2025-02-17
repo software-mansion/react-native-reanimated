@@ -21,48 +21,6 @@ compilation_metadata_dir = "CompilationDatabase"
 # We want generate the metadata only within the monorepo of Reanimated.
 compilation_metadata_generation_flag = $config[:is_reanimated_example_app] ? "-gen-cdb-fragment-path #{compilation_metadata_dir}" : ''
 
-def self.install_modules_dependencies_legacy(s)
-  using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
-  s.dependency "React-Core"
-  if $new_arch_enabled
-    s.dependency "React-RCTFabric"
-    s.dependency "ReactCodegen"
-  end
-  s.dependency "RCT-Folly"
-  s.dependency "RCTRequired"
-  s.dependency "RCTTypeSafety"
-  s.dependency 'FBLazyVector'
-  s.dependency 'React-Core'
-  s.dependency 'React-CoreModules'
-  s.dependency 'React-Core/DevSupport'
-  if !$config[:is_tvos_target]
-    s.dependency 'React-RCTActionSheet'
-  end
-  s.dependency 'React-RCTNetwork'
-  s.dependency 'React-RCTAnimation'
-  s.dependency 'React-RCTLinking'
-  s.dependency 'React-RCTBlob'
-  s.dependency 'React-RCTSettings'
-  s.dependency 'React-RCTText'
-  s.dependency 'React-RCTImage'
-  s.dependency 'React-Core/RCTWebSocket'
-  s.dependency 'React-cxxreact'
-  s.dependency 'React-jsi'
-  s.dependency 'React-jsiexecutor'
-  s.dependency 'React-jsinspector'
-  s.dependency 'Yoga'
-  s.dependency 'DoubleConversion'
-  s.dependency 'glog'
-  if using_hermes && !$config[:is_tvos_target]
-    s.dependency 'React-hermes'
-    s.dependency 'hermes-engine'
-  end
-  s.dependency 'React-callinvoker'
-  if !$new_arch_enabled
-    s.dependency 'React-RCTAppDelegate'
-  end
-end
-
 Pod::Spec.new do |s|
 
   s.name         = "RNReanimated"
@@ -143,12 +101,9 @@ Pod::Spec.new do |s|
     "OTHER_CFLAGS" => "$(inherited) #{folly_flags} #{fabric_flags} #{example_flag} #{version_flags} #{debug_flag} #{compilation_metadata_generation_flag}"
   }
   s.requires_arc = true
-  s.dependency "ReactCommon/turbomodule/core"
-  if defined?(install_modules_dependencies()) != nil
-    install_modules_dependencies(s)
-  else
-    install_modules_dependencies_legacy(s)
-  end
+
+  install_modules_dependencies(s)
+
   s.dependency 'React-jsi'
   using_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
   if using_hermes && !$config[:is_tvos_target]
