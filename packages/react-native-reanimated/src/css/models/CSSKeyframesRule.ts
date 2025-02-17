@@ -14,15 +14,20 @@ export default class CSSKeyframesRuleImpl<
   S extends PlainStyle = PlainStyle,
 > extends CSSKeyframesRuleBase<S> {
   private normalizedKeyframes_: NormalizedCSSAnimationKeyframesConfig;
-  // For now, this object is used only for object cleanup in cpp
-  // (we may add a possibility to modify the cpp keyframes object
-  // in the future, as we can do in the web animations api)
-  private hostObject_: CSSKeyframesHostObject;
+  /**
+   * Host object used for cleanup in C++.
+   *
+   * @remarks
+   *   Currently only used for object cleanup in C++. In the future, we may add
+   *   support for modifying the C++ keyframes object, similar to the Web
+   *   Animations API.
+   */
+  #hostObject: CSSKeyframesHostObject;
 
   constructor(keyframes: CSSAnimationKeyframes<S>) {
     super(keyframes);
     this.normalizedKeyframes_ = normalizeAnimationKeyframes(keyframes);
-    this.hostObject_ = registerCSSKeyframes(
+    this.#hostObject = registerCSSKeyframes(
       this.name,
       this.normalizedKeyframes_
     );

@@ -591,7 +591,7 @@ jsi::Value ReanimatedModuleProxy::registerCSSKeyframes(
       [weakThis = weak_from_this()](const std::string &removedAnimationName) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
-        	return;
+          return;
         }
         strongThis->cssKeyframesRegistry_->remove(removedAnimationName);
       };
