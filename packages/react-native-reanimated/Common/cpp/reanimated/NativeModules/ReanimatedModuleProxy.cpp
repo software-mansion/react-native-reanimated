@@ -233,7 +233,7 @@ jsi::Value ReanimatedModuleProxy::createWorkletRuntime(
       workletsModuleProxy_->getJSQueue(),
       workletsModuleProxy_->getJSScheduler(),
       name.asString(rt).utf8(rt),
-      false /* supportsLocking */,
+      true /* supportsLocking */,
       valueUnpackerCode_);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Reanimated] Initializer must be a worklet.");
