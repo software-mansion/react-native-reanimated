@@ -4,14 +4,14 @@
 
 namespace reanimated {
 
-template <typename TValue, typename TDerived>
-CSSNumberBase<TValue, TDerived>::CSSNumberBase() : value(0) {}
+template <typename TDerived, typename TValue>
+CSSNumberBase<TDerived, TValue>::CSSNumberBase() : value(0) {}
 
-template <typename TValue, typename TDerived>
-CSSNumberBase<TValue, TDerived>::CSSNumberBase(TValue value) : value(value) {}
+template <typename TDerived, typename TValue>
+CSSNumberBase<TDerived, TValue>::CSSNumberBase(TValue value) : value(value) {}
 
-template <typename TValue, typename TDerived>
-CSSNumberBase<TValue, TDerived>::CSSNumberBase(
+template <typename TDerived, typename TValue>
+CSSNumberBase<TDerived, TValue>::CSSNumberBase(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
   if (jsiValue.isNumber()) {
@@ -23,8 +23,8 @@ CSSNumberBase<TValue, TDerived>::CSSNumberBase(
   }
 }
 
-template <typename TValue, typename TDerived>
-CSSNumberBase<TValue, TDerived>::CSSNumberBase(const folly::dynamic &value) {
+template <typename TDerived, typename TValue>
+CSSNumberBase<TDerived, TValue>::CSSNumberBase(const folly::dynamic &value) {
   if (value.isInt() || value.isDouble()) {
     this->value = static_cast<TValue>(value.getDouble());
   } else {
@@ -34,44 +34,44 @@ CSSNumberBase<TValue, TDerived>::CSSNumberBase(const folly::dynamic &value) {
   }
 }
 
-template <typename TValue, typename TDerived>
-bool CSSNumberBase<TValue, TDerived>::canConstruct(
+template <typename TDerived, typename TValue>
+bool CSSNumberBase<TDerived, TValue>::canConstruct(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
   return jsiValue.isNumber();
 }
 
-template <typename TValue, typename TDerived>
-bool CSSNumberBase<TValue, TDerived>::canConstruct(
+template <typename TDerived, typename TValue>
+bool CSSNumberBase<TDerived, TValue>::canConstruct(
     const folly::dynamic &value) {
   return value.isInt() || value.isDouble();
 }
 
-template <typename TValue, typename TDerived>
-jsi::Value CSSNumberBase<TValue, TDerived>::toJSIValue(jsi::Runtime &rt) const {
+template <typename TDerived, typename TValue>
+jsi::Value CSSNumberBase<TDerived, TValue>::toJSIValue(jsi::Runtime &rt) const {
   return jsi::Value(static_cast<double>(value));
 }
 
-template <typename TValue, typename TDerived>
-folly::dynamic CSSNumberBase<TValue, TDerived>::toDynamic() const {
+template <typename TDerived, typename TValue>
+folly::dynamic CSSNumberBase<TDerived, TValue>::toDynamic() const {
   return value;
 }
 
-template <typename TValue, typename TDerived>
-std::string CSSNumberBase<TValue, TDerived>::toString() const {
+template <typename TDerived, typename TValue>
+std::string CSSNumberBase<TDerived, TValue>::toString() const {
   return std::to_string(value);
 }
 
-template <typename TValue, typename TDerived>
-TDerived CSSNumberBase<TValue, TDerived>::interpolate(
+template <typename TDerived, typename TValue>
+TDerived CSSNumberBase<TDerived, TValue>::interpolate(
     double progress,
     const TDerived &other) const {
   return TDerived(value + progress * (other.value - value));
 }
 
-template <typename TValue, typename TDerived>
-bool CSSNumberBase<TValue, TDerived>::operator==(
-    const CSSNumberBase<TValue, TDerived> &other) const {
+template <typename TDerived, typename TValue>
+bool CSSNumberBase<TDerived, TValue>::operator==(
+    const CSSNumberBase<TDerived, TValue> &other) const {
   return value == other.value;
 }
 
@@ -81,30 +81,30 @@ CSSInteger CSSInteger::interpolate(double progress, const CSSInteger &other)
       static_cast<int>(std::round(value + progress * (other.value - value))));
 }
 
-template struct CSSNumberBase<double, CSSDouble>;
-template struct CSSNumberBase<int, CSSInteger>;
+template struct CSSNumberBase<CSSDouble, double>;
+template struct CSSNumberBase<CSSInteger, int>;
 
 #ifdef ANDROID
 
 CSSShadowRadiusAndroid::CSSShadowRadiusAndroid()
-    : CSSNumberBase<double, CSSShadowRadiusAndroid>(1.0) {}
+    : CSSNumberBase<CSSShadowRadiusAndroid, double>(1.0) {}
 
 CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(const double value)
-    : CSSNumberBase<double, CSSShadowRadiusAndroid>(std::max(1.0, value)) {}
+    : CSSNumberBase<CSSShadowRadiusAndroid, double>(std::max(1.0, value)) {}
 
 CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue)
-    : CSSNumberBase<double, CSSShadowRadiusAndroid>(rt, jsiValue) {
+    : CSSNumberBase<CSSShadowRadiusAndroid, double>(rt, jsiValue) {
   value = std::max(1.0, value);
 }
 
 CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(const folly::dynamic &value)
-    : CSSNumberBase<double, CSSShadowRadiusAndroid>(value) {
+    : CSSNumberBase<CSSShadowRadiusAndroid, double>(value) {
   this->value = std::max(1.0, value.getDouble());
 }
 
-template struct CSSNumberBase<double, CSSShadowRadiusAndroid>;
+template struct CSSNumberBase<CSSShadowRadiusAndroid, double>;
 
 #endif
 
