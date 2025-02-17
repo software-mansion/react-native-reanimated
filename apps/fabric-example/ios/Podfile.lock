@@ -1725,7 +1725,9 @@ PODS:
     - React-Fabric
     - React-featureflags
     - React-graphics
+    - React-hermes
     - React-ImageManager
+    - React-jsi
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1748,7 +1750,9 @@ PODS:
     - React-Fabric
     - React-featureflags
     - React-graphics
+    - React-hermes
     - React-ImageManager
+    - React-jsi
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1770,7 +1774,9 @@ PODS:
     - React-Fabric
     - React-featureflags
     - React-graphics
+    - React-hermes
     - React-ImageManager
+    - React-jsi
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1791,7 +1797,9 @@ PODS:
     - React-Fabric
     - React-featureflags
     - React-graphics
+    - React-hermes
     - React-ImageManager
+    - React-jsi
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1813,7 +1821,9 @@ PODS:
     - React-Fabric
     - React-featureflags
     - React-graphics
+    - React-hermes
     - React-ImageManager
+    - React-jsi
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -2222,15 +2232,14 @@ SPEC CHECKSUMS:
   ReactCodegen: fb0e9f2e0250e084c8b127547b88488a0cd392a6
   ReactCommon: f4a0a4c9bd9e6b4706d9e77a13a5dc1c3d7aa2a4
   RNCAsyncStorage: 73773ca1dd29378bf0fe8dd7d67870d422e2fc05
-  RNCClipboard: 43008eed69827e56e1fbeb06473208fdebed8f5f
   RNCMaskedView: 308c763227e237d4d260bd8841870e099572bb3e
   RNFlashList: b799a0cdd1189c1f5064331548400dd79a7e3047
   RNGestureHandler: 70069ab3e0431b03f6e465b65745f87a1a02c6c0
-  RNReanimated: 537897c4ac8d319041d74cd19b633a694fff3895
+  RNReanimated: edeedd49ab72722d8a62c5ad3ac896afa68ab0f2
   RNScreens: 5d61e452b51e7c23b3fcb9f16c4967d683a60a9d
   RNSVG: 2089e8b3a145acb2f392017279790f007f934567
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Yoga: dd05f79b1943c96893294ee5040576aa6e8a8d82
+  Yoga: 0c8754b0ea9edb13b6ce6b60f0f69eb5f164f16a
 
 PODFILE CHECKSUM: 4a9e0af2552a3fcd2303b56ad75e373f8bae65b9
 
