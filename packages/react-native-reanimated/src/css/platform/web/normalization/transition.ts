@@ -1,6 +1,8 @@
 'use strict';
+import { DEFAULT_TRANSITION_PROPERTIES } from '../../../constants';
 import type {
   AnyRecord,
+  ConvertValuesToArrays,
   CSSTransitionProp,
   CSSTransitionProperties,
 } from '../../../types';
@@ -25,29 +27,30 @@ const createEmptyTransitionConfig =
   });
 
 function parseTransitionShorthand(value: string) {
+  const defaultEntries = Object.entries(DEFAULT_TRANSITION_PROPERTIES);
+
   return splitByComma(value).reduce<ExpandedCSSTransitionConfigProperties>(
     (acc, part) => {
       const result = parseSingleTransitionShorthand(part);
-      acc.transitionProperty.push(result.transitionProperty ?? 'all');
-      acc.transitionDuration.push(
-        result.transitionDuration ? String(result.transitionDuration) : '0s'
-      );
-      acc.transitionTimingFunction.push(
-        result.transitionTimingFunction ?? 'ease'
-      );
-      acc.transitionDelay.push(
-        result.transitionDelay ? String(result.transitionDelay) : '0s'
-      );
-      acc.transitionBehavior.push(result.transitionBehavior ?? 'normal');
+
+      defaultEntries.forEach(([propertyName, defaultValue]) => {
+        const k = propertyName as keyof typeof result;
+        acc[k].push(String(result[k] ?? defaultValue));
+      });
+
       return acc;
     },
     createEmptyTransitionConfig()
   );
 }
 
+type NormalizedCSSTransitionProperties = ConvertValuesToArrays<
+  Omit<CSSTransitionProperties, 'transition'>
+>;
+
 export function normalizeCSSTransitionProperties(
   config: CSSTransitionProperties
-): ExpandedCSSTransitionConfigProperties {
+): NormalizedCSSTransitionProperties {
   const result: AnyRecord = config.transition
     ? parseTransitionShorthand(config.transition)
     : createEmptyTransitionConfig();
@@ -56,5 +59,5 @@ export function normalizeCSSTransitionProperties(
     result[key] = convertPropertyToArray(value);
   }
 
-  return result as ExpandedCSSTransitionConfigProperties;
+  return result as NormalizedCSSTransitionProperties;
 }

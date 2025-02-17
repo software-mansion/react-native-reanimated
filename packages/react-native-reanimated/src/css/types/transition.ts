@@ -21,7 +21,7 @@ type SingleCSSTransitionSettings = {
   transitionBehavior?: CSSTransitionBehavior;
 };
 
-export type SingleCSSTransitionConfig<S extends object = PlainStyle> =
+export type SingleCSSTransitionProperties<S extends object = PlainStyle> =
   SingleCSSTransitionSettings & {
     transitionProperty?: CSSTransitionProperty<S>;
   };
