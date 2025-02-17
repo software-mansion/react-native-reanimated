@@ -2,8 +2,17 @@
 import type { BoxShadowValue } from 'react-native';
 
 import { ReanimatedError } from '../errors';
-import type { SingleCSSTransitionConfig } from '../types';
-import { isLength, isTimeUnit, smellsLikeTimingFunction } from './guards';
+import type {
+  SingleCSSAnimationProperties,
+  SingleCSSTransitionProperties,
+} from '../types';
+import {
+  isAnimationName,
+  isLength,
+  isNumber,
+  isTimeUnit,
+  smellsLikeTimingFunction,
+} from './guards';
 
 const LENGTH_MAPPINGS = [
   'offsetX',
@@ -71,8 +80,8 @@ export function splitByWhitespace(str: string) {
   return str.split(/\s+(?![^()]*\))/);
 }
 
-type ParsedShorthandSingleTransitionConfig = Omit<
-  SingleCSSTransitionConfig,
+export type ParsedShorthandSingleTransitionConfig = Omit<
+  SingleCSSTransitionProperties,
   'transitionProperty' | 'transitionTimingFunction'
 > & {
   transitionProperty?: string;
@@ -117,6 +126,78 @@ export function parseSingleTransitionShorthand(
       continue;
     }
     throw new ReanimatedError(`Invalid transition shorthand: ${value}`);
+  }
+
+  return result;
+}
+
+type ParsedShorthandSingleAnimationConfig = Omit<
+  SingleCSSAnimationProperties,
+  'animationName' | 'animationTimingFunction'
+> & {
+  animationName?: string;
+  animationTimingFunction?: string;
+};
+
+export function parseSingleAnimationShorthand(
+  value: string
+): ParsedShorthandSingleAnimationConfig {
+  const result: ParsedShorthandSingleAnimationConfig = {};
+  const parts = splitByWhitespace(value);
+
+  for (const part of parts) {
+    switch (part) {
+      case 'normal':
+      case 'reverse':
+      case 'alternate':
+      case 'alternate-reverse':
+        result.animationDirection = part;
+        continue;
+      case 'none':
+      case 'forwards':
+      case 'backwards':
+      case 'both':
+        result.animationFillMode = part;
+        continue;
+      case 'infinite':
+        result.animationIterationCount = part;
+        continue;
+      case 'running':
+      case 'paused':
+        result.animationPlayState = part;
+        continue;
+    }
+    if (isTimeUnit(part)) {
+      const timeUnit = part;
+      if (result.animationDuration === undefined) {
+        result.animationDuration = timeUnit;
+        continue;
+      }
+      if (result.animationDelay === undefined) {
+        result.animationDelay = timeUnit;
+        continue;
+      }
+    }
+    if (
+      result.animationTimingFunction === undefined &&
+      smellsLikeTimingFunction(part)
+    ) {
+      result.animationTimingFunction = part;
+      continue;
+    }
+    if (result.animationIterationCount === undefined && isNumber(+part)) {
+      result.animationIterationCount = parseFloat(part);
+      continue;
+    }
+    if (result.animationName === undefined && isAnimationName(part)) {
+      result.animationName = part;
+      continue;
+    }
+    throw new ReanimatedError(`Invalid animation shorthand: ${value}`);
+  }
+
+  if (!result.animationName) {
+    throw new ReanimatedError(`Invalid animation shorthand: ${value}`);
   }
 
   return result;

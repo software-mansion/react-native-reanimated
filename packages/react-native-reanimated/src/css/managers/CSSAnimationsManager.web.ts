@@ -1,20 +1,17 @@
 'use strict';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import CSSKeyframesRuleImpl from '../models/CSSKeyframesRule.web';
+import type { NormalizedCSSAnimationProperties } from '../platform/web';
 import {
   configureWebCSSAnimations,
   insertCSSAnimation,
   maybeAddSuffixes,
+  normalizeCSSAnimationProperties,
   parseTimingFunction,
   processKeyframeDefinitions,
   removeCSSAnimation,
 } from '../platform/web';
-import type {
-  ConvertValuesToArrays,
-  CSSAnimationKeyframes,
-  CSSAnimationProperties,
-  CSSAnimationSettings,
-} from '../types';
+import type { CSSAnimationKeyframes, CSSAnimationProperties } from '../types';
 import { convertPropertiesToArrays, kebabizeCamelCase } from '../utils';
 
 export const isCSSKeyframesRuleImpl = (
@@ -26,8 +23,6 @@ type ProcessedAnimation = {
   keyframesRule: CSSKeyframesRuleImpl;
   removable: boolean;
 };
-
-type ProcessedSettings = ConvertValuesToArrays<CSSAnimationSettings>;
 
 export default class CSSAnimationsManager {
   private readonly element: ReanimatedHTMLElement;
@@ -51,10 +46,10 @@ export default class CSSAnimationsManager {
       return;
     }
 
-    const { animationName: definitions, ...animationSettings } =
-      convertPropertiesToArrays(animationProperties);
+    const normalizedProps =
+      normalizeCSSAnimationProperties(animationProperties);
 
-    if (definitions.length === 0) {
+    if (normalizedProps.animationName.length === 0) {
       this.detach();
       return;
     }
@@ -145,47 +140,37 @@ export default class CSSAnimationsManager {
   }
 
   private setElementAnimations(
-    animationNames: string[],
-    animationSettings: ProcessedSettings
+    animationProperties: NormalizedCSSAnimationProperties
   ) {
-    this.element.style.animationName = animationNames.join(',');
+    this.element.style.animationName =
+      animationProperties.animationName.join(',');
 
     this.element.style.animationDuration = maybeAddSuffixes(
-      animationSettings,
+      animationProperties,
       'animationDuration',
       'ms'
     ).join(',');
 
     this.element.style.animationDelay = maybeAddSuffixes(
-      animationSettings,
+      animationProperties,
       'animationDelay',
       'ms'
     ).join(',');
 
-    if (animationSettings.animationIterationCount) {
-      this.element.style.animationIterationCount =
-        animationSettings.animationIterationCount.join(',');
-    }
+    this.element.style.animationIterationCount =
+      animationProperties.animationIterationCount.join(',');
 
-    if (animationSettings.animationDirection) {
-      this.element.style.animationDirection =
-        animationSettings.animationDirection.map(kebabizeCamelCase).join(',');
-    }
+    this.element.style.animationDirection =
+      animationProperties.animationDirection.map(kebabizeCamelCase).join(',');
 
-    if (animationSettings.animationFillMode) {
-      this.element.style.animationFillMode =
-        animationSettings.animationFillMode.join(',');
-    }
+    this.element.style.animationFillMode =
+      animationProperties.animationFillMode.join(',');
 
-    if (animationSettings.animationPlayState) {
-      this.element.style.animationPlayState =
-        animationSettings.animationPlayState.join(',');
-    }
+    this.element.style.animationPlayState =
+      animationProperties.animationPlayState.join(',');
 
-    if (animationSettings.animationTimingFunction) {
-      this.element.style.animationTimingFunction = parseTimingFunction(
-        animationSettings.animationTimingFunction
-      );
-    }
+    this.element.style.animationTimingFunction = parseTimingFunction(
+      animationProperties.animationTimingFunction
+    );
   }
 }
