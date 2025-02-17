@@ -33,7 +33,7 @@ using namespace worklets;
 
 // Checks whether a type has canConstruct(...) for a generic value
 template <typename TCSSValue, typename TValue>
-concept HasCanConstruct = requires(TValue &&value) {
+concept ValueConstructibleCSSValue = requires(TValue &&value) {
   {
     TCSSValue::canConstruct(std::forward<TValue>(value))
   } -> std::same_as<bool>;
@@ -41,7 +41,7 @@ concept HasCanConstruct = requires(TValue &&value) {
 
 // Checks whether a type can be constructed from a jsi::Value
 template <typename TCSSValue>
-concept CanConstructFromJSIValue =
+concept JSIConstructibleCSSValue =
     requires(jsi::Runtime &rt, const jsi::Value &value) {
       { TCSSValue::canConstruct(rt, value) } -> std::same_as<bool>;
       { TCSSValue(rt, value) } -> std::same_as<TCSSValue>;
@@ -49,7 +49,7 @@ concept CanConstructFromJSIValue =
 
 // Checks whether a type can be constructed from a folly::dynamic
 template <typename TCSSValue>
-concept CanConstructFromDynamic = requires(const folly::dynamic &value) {
+concept DynamicConstructibleCSSValue = requires(const folly::dynamic &value) {
   { TCSSValue::canConstruct(value) } -> std::same_as<bool>;
   { TCSSValue(value) } -> std::same_as<TCSSValue>;
 }; // NOLINT(readability/braces)
@@ -65,10 +65,10 @@ class CSSValueVariant final : public CSSValue {
       (CSSValueDerived<AllowedTypes> && ...),
       "CSSValueVariant accepts only CSSValue-derived types");
   static_assert(
-      (CanConstructFromJSIValue<AllowedTypes> && ...),
+      (JSIConstructibleCSSValue<AllowedTypes> && ...),
       "CSSValueVariant accepts only types that can be constructed from a jsi::Value");
   static_assert(
-      (CanConstructFromDynamic<AllowedTypes> && ...),
+      (DynamicConstructibleCSSValue<AllowedTypes> && ...),
       "CSSValueVariant accepts only types that can be constructed from a folly::dynamic");
 
  public:
@@ -109,10 +109,8 @@ class CSSValueVariant final : public CSSValue {
     }
   }
 
-  CSSValueVariant(const folly::dynamic &value)
-    requires((can_construct_from_dynamic<AllowedTypes> || ...))
-  { // NOLINT(whitespace/braces)
-    if (!tryConstructFromDynamic(value)) {
+  CSSValueVariant(const folly::dynamic &value) {
+    if (!tryConstruct(value)) {
       throw std::runtime_error(
           "[Reanimated] No compatible type found for construction from: " +
           folly::toJson(value));
@@ -224,7 +222,7 @@ class CSSValueVariant final : public CSSValue {
   bool tryConstruct(TValue &&value) {
     auto tryOne = [&]<typename TCSSValue>() -> bool {
       if constexpr (std::is_constructible_v<TCSSValue, TValue>) {
-        if constexpr (HasCanConstruct<TCSSValue, TValue>) {
+        if constexpr (ValueConstructibleCSSValue<TCSSValue, TValue>) {
           // For construction from a non-jsi::Value, we perform a runtime
           // canConstruct check only if the type has a canConstruct method.
           // (this is needed e.g. when different CSS value types can be
@@ -266,23 +264,17 @@ class CSSValueVariant final : public CSSValue {
   /**
    * Tries to construct type from a given folly::dynamic
    */
-  bool tryConstructFromDynamic(const folly::dynamic &value) {
+  bool tryConstruct(const folly::dynamic &value) {
     auto tryOne = [&]<typename TCSSValue>() -> bool {
-      if constexpr (can_construct_from_dynamic<TCSSValue>) {
-        if constexpr (has_can_construct_dynamic<
-                          TCSSValue,
-                          const folly::dynamic &>) {
-          // If the TCSSValue has a canConstruct method, check it first
-          if (!TCSSValue::canConstruct(value)) {
-            return false;
-          }
-        }
-        storage_ = TCSSValue(value);
-        return true;
+      // We have to check in a runtime if the type can be constructed from the
+      // provided folly::dynamic. The first match will be used to construct the
+      // CSS value.
+      if (!TCSSValue::canConstruct(value)) {
+        return false;
       }
-      return false;
+      storage_ = TCSSValue(value);
+      return true;
     };
-
     // Try constructing with each allowed type until one succeeds
     return (tryOne.template operator()<AllowedTypes>() || ...);
   }

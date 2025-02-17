@@ -24,7 +24,7 @@ CSSNumberBase<TDerived, TValue>::CSSNumberBase(
 }
 
 template <typename TDerived, typename TValue>
-CSSNumberBase<TValue, TDerived>::CSSNumberBase(const folly::dynamic &value) {
+CSSNumberBase<TDerived, TValue>::CSSNumberBase(const folly::dynamic &value) {
   if (value.isInt() || value.isDouble()) {
     this->value = static_cast<TValue>(value.getDouble());
   } else {
@@ -100,7 +100,7 @@ CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(
 }
 
 CSSShadowRadiusAndroid::CSSShadowRadiusAndroid(const folly::dynamic &value)
-    : CSSNumberBase<double, CSSShadowRadiusAndroid>(value) {
+    : CSSNumberBase<CSSShadowRadiusAndroid, double>(value) {
   this->value = std::max(1.0, value.getDouble());
 }
 
