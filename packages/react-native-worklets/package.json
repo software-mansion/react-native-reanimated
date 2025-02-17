@@ -5,12 +5,14 @@
   "scripts": {
     "build": "bob build",
     "circular-dependency-check": "yarn madge --extensions js,jsx,ts,tsx --circular src lib",
-    "format": "yarn format:js && yarn format:common && yarn format:android:java",
+    "format": "yarn format:js && yarn format:common && yarn format:android:java && yarn format:apple",
     "format:android:java": "node ../../scripts/format-java.js",
+    "format:apple": "find apple -iname \"*.h\" -o -iname \"*.m\" -o -iname \"*.mm\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:js": "prettier --write --list-different src",
-    "lint": "yarn lint:js && yarn lint:android",
+    "lint": "yarn lint:js && yarn lint:android && yarn lint:apple",
     "lint:android": "./android/gradlew -p android spotlessCheck -q",
+    "lint:apple": "yarn format:apple --dry-run -Werror",
     "lint:js": "eslint src && yarn prettier --check src",
     "type:check": "yarn tsc --noEmit"
   },
