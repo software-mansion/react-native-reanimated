@@ -1620,7 +1620,9 @@ PODS:
     - React-Fabric
     - React-featureflags
     - React-graphics
+    - React-hermes
     - React-ImageManager
+    - React-jsi
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1643,7 +1645,9 @@ PODS:
     - React-Fabric
     - React-featureflags
     - React-graphics
+    - React-hermes
     - React-ImageManager
+    - React-jsi
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1665,7 +1669,9 @@ PODS:
     - React-Fabric
     - React-featureflags
     - React-graphics
+    - React-hermes
     - React-ImageManager
+    - React-jsi
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1686,7 +1692,9 @@ PODS:
     - React-Fabric
     - React-featureflags
     - React-graphics
+    - React-hermes
     - React-ImageManager
+    - React-jsi
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1708,7 +1716,9 @@ PODS:
     - React-Fabric
     - React-featureflags
     - React-graphics
+    - React-hermes
     - React-ImageManager
+    - React-jsi
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -2056,11 +2066,11 @@ SPEC CHECKSUMS:
   RNCMaskedView: 6d4bf14f158d1a93484edf30850cbbd7ccbb8668
   RNFlashList: 9843320e0885ed1b494ea72ab0febfd3beb3dab0
   RNGestureHandler: 8b33b2c5688a54fcce223d184753757da498235c
-  RNReanimated: 33b68f6cf45ff999826c655cb9b200c00be35d1c
+  RNReanimated: 5a3bc0ab5f04e0a6a71ca17de2302f7d47045ac5
   RNScreens: 81237378a6d7921fb2dbb6a6c6c45c3d8cc696bb
   RNSVG: 515a902fc18a375907eb4c3abec0b803fbfa37ef
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Yoga: dd05f79b1943c96893294ee5040576aa6e8a8d82
+  Yoga: 0c8754b0ea9edb13b6ce6b60f0f69eb5f164f16a
 
 PODFILE CHECKSUM: f6c84e0ec8eddea6d3ee15329987727bd1e6ff08
 

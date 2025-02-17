@@ -1863,13 +1863,12 @@ SPEC CHECKSUMS:
   ReactCodegen: c2ae27c327f7a6c76707e674aa7beb355622d02c
   ReactCommon: 33aa3e538f80f05a4d91150f7d704f1accf9b2ec
   RNCAsyncStorage: c91d753ede6dc21862c4922cd13f98f7cfde578e
-  RNCClipboard: ee059e6006b137e369caed5eb852b4aad9f5d886
   RNCPicker: d8662eb6615e3401acb590c44b97b2af3beb1e53
   RNGestureHandler: 8c8722468ee6ced80a0723943c894798d2613a81
-  RNReanimated: 5e21c891ee78aa03ffbd0ce2c8d15a7c263f499f
+  RNReanimated: 3d557e6830d6e11affbe10fbcc99db775c298fa5
   RNSVG: 46769c92d1609e617dbf9326ad8a0cff912d0982
   SocketRocket: 9ee265c4b5ae2382d18e4ee1d2dd2d7af0ff1ab5
-  Yoga: 209f62622a01344dbb9fa8d348610eaeb7df2cca
+  Yoga: 446e6f351a519539ff00a1159fe41e589aab1b94
 
 PODFILE CHECKSUM: 8d50cc2acc9f6a6b1a12bd9106b86385ad72266f
 
