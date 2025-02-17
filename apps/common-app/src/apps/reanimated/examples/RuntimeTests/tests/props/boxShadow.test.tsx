@@ -7,16 +7,8 @@ import type { AnimatableValue } from 'react-native-reanimated';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { DefaultStyle } from 'react-native-reanimated/lib/typescript/hook/commonTypes';
 
-import {
-  describe,
-  expect,
-  getTestComponent,
-  render,
-  test,
-  useTestRef,
-  wait,
-} from '@/apps/reanimated/examples/RuntimeTests/ReJest/RuntimeTestsApi';
-import { ComparisonMode } from '@/apps/reanimated/examples/RuntimeTests/ReJest/types';
+import { describe, expect, getTestComponent, render, test, useTestRef, wait } from '../../ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '../../ReJest/types';
 
 describe.skip('animation of BoxShadow', () => {
   enum Component {
