@@ -1,7 +1,6 @@
-import Animated, { PinwheelOut } from 'react-native-reanimated';
-import { Button, StyleSheet, View } from 'react-native';
-
 import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
+import Animated, { PinwheelOut } from 'react-native-reanimated';
 
 export default function DeleteAncestorOfExiting() {
   const [outer, setOuter] = React.useState(false);

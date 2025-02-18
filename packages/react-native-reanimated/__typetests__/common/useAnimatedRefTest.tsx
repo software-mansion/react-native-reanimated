@@ -4,8 +4,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Ref } from 'react';
 import React, { forwardRef, useRef } from 'react';
-import type { ViewProps, ImageProps } from 'react-native';
-import { View, Text, Image, ScrollView, FlatList } from 'react-native';
+import type { ImageProps, ViewProps } from 'react-native';
+import { FlatList, Image, ScrollView, Text, View } from 'react-native';
+
 import Animated, { useAnimatedRef } from '../..';
 
 function UseAnimatedRefTest() {

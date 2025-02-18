@@ -1,11 +1,11 @@
 'use strict';
-import { isWorkletFunction } from './commonTypes';
 import type { WorkletFunction } from './commonTypes';
+import { isWorkletFunction } from './commonTypes';
 import { ReanimatedError, registerReanimatedError } from './errors';
 import { setupCallGuard, setupConsole } from './initializers';
 import { registerLoggerConfig } from './logger';
-import { ReanimatedModule } from './ReanimatedModule';
 import { shouldBeUseWeb } from './PlatformChecker';
+import { ReanimatedModule } from './ReanimatedModule';
 import {
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,

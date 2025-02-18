@@ -1,8 +1,8 @@
 'use strict';
-import { getValueUnpackerCode } from '../valueUnpacker';
-import { WorkletsTurboModule } from '../../specs';
-import { ReanimatedError } from '../../errors';
 import type { IWorkletsModule } from '../../commonTypes';
+import { ReanimatedError } from '../../errors';
+import { WorkletsTurboModule } from '../../specs';
+import { getValueUnpackerCode } from '../valueUnpacker';
 import type { WorkletsModuleProxy } from './workletsModuleProxy';
 
 export function createNativeWorkletsModule(): IWorkletsModule {

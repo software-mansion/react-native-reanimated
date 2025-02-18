@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+
 import {
   describe,
-  test,
   expect,
   mockAnimationTimer,
   recordAnimationUpdates,
   render,
+  test,
   waitForAnimationUpdates,
 } from '../../../ReJest/RuntimeTestsApi';
 import { MatrixSnapshots } from './withTiming.snapshot';

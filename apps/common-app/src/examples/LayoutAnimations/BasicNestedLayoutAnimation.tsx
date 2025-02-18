@@ -1,12 +1,11 @@
+import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   FadeInLeft,
   FadeInUp,
   FadeOutDown,
   FadeOutRight,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, View } from 'react-native';
-
-import React from 'react';
 
 export default function BasicNestedLayoutAnimation() {
   const [visible, setVisible] = React.useState(true);

@@ -1,3 +1,5 @@
+import React, { useEffect } from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   FadeInLeft,
@@ -7,8 +9,6 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, View } from 'react-native';
-import React, { useEffect } from 'react';
 
 export default function BasicNestedAnimation() {
   const sv = useSharedValue(0);

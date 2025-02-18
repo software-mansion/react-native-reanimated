@@ -1,7 +1,6 @@
-import React from 'react';
-
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, StyleSheet, Button } from 'react-native';
+import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   BounceInDown,
   FadeIn,

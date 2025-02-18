@@ -1,17 +1,17 @@
 import React from 'react';
-import { StyleSheet, View, Text, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import type { SharedValue } from 'react-native-reanimated';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  useAnimatedGestureHandler,
-  scrollTo,
-  useDerivedValue,
-  useAnimatedRef,
-} from 'react-native-reanimated';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import { PanGestureHandler } from 'react-native-gesture-handler';
+import type { SharedValue } from 'react-native-reanimated';
+import Animated, {
+  scrollTo,
+  useAnimatedGestureHandler,
+  useAnimatedRef,
+  useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+} from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const indices = [0, 1, 2, 3];

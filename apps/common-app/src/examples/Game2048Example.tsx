@@ -1,13 +1,12 @@
-import type { ColorValue } from 'react-native';
-import { Text, StyleSheet, View, Alert } from 'react-native';
-import Animated, { LinearTransition, ZoomIn } from 'react-native-reanimated';
-
 import React from 'react';
+import type { ColorValue } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
+import Animated, { LinearTransition, ZoomIn } from 'react-native-reanimated';
 
 const N = 4;
 const TILE_SIZE = 72;

@@ -4,7 +4,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { Button } from 'react-native';
-import { useSharedValue, useDerivedValue } from '../..';
+
+import { useDerivedValue, useSharedValue } from '../..';
 
 function UseDerivedValueTestOldAPI() {
   const progress = useSharedValue(0);

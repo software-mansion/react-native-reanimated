@@ -1,5 +1,6 @@
-import { makeMutable } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
+import { makeMutable } from 'react-native-reanimated';
+
 import type { SharedValueSnapshot, TestValue } from '../types';
 import { SyncUIRunner } from '../utils/SyncUIRunner';
 

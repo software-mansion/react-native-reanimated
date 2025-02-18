@@ -1,3 +1,5 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedProps,
   useSharedValue,
@@ -5,9 +7,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Circle, Svg } from 'react-native-svg';
-import { StyleSheet, View } from 'react-native';
-
-import React from 'react';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 

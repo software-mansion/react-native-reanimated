@@ -12,8 +12,8 @@ import {
 import Animated, {
   CurvedTransition,
   EntryExitTransition,
-  FadeOut,
   FadeIn,
+  FadeOut,
   FadingTransition,
   JumpingTransition,
   LayoutAnimationConfig,

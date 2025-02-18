@@ -1,11 +1,10 @@
+import React from 'react';
+import { Button, StyleSheet, TextInput, View } from 'react-native';
 import Animated, {
   dispatchCommand,
   runOnUI,
   useAnimatedRef,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, TextInput, View } from 'react-native';
-
-import React from 'react';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 

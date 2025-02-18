@@ -1,6 +1,7 @@
 import type { Component } from 'react';
 import { findNodeHandle } from 'react-native';
 import { getViewProp } from 'react-native-reanimated';
+
 import type { ComponentRef, ValidPropNames } from './types';
 
 export class TestComponent {

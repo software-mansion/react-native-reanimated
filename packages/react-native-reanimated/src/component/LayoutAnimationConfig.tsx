@@ -1,4 +1,5 @@
 'use strict';
+import type { ReactNode } from 'react';
 import React, {
   Children,
   Component,
@@ -6,7 +7,7 @@ import React, {
   useEffect,
   useRef,
 } from 'react';
-import type { ReactNode } from 'react';
+
 import { setShouldAnimateExitingForTag } from '../core';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 

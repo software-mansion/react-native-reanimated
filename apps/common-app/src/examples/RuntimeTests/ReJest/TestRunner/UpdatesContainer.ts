@@ -1,7 +1,8 @@
 import { makeMutable } from 'react-native-reanimated';
+
+import type { TestComponent } from '../TestComponent';
 import type { Operation, OperationUpdate } from '../types';
 import { isValidPropName } from '../types';
-import type { TestComponent } from '../TestComponent';
 import { SyncUIRunner } from '../utils/SyncUIRunner';
 import { convertDecimalColor } from '../utils/util';
 

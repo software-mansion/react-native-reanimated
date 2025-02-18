@@ -1,19 +1,19 @@
 'use strict';
-import { isWorkletFunction } from './commonTypes';
 import type {
-  ShareableRef,
   FlatShareableRef,
+  ShareableRef,
   WorkletFunction,
   WorkletFunctionDev,
 } from './commonTypes';
-import { shouldBeUseWeb } from './PlatformChecker';
+import { isWorkletFunction } from './commonTypes';
 import { ReanimatedError, registerWorkletStackDetails } from './errors';
+import { logger } from './logger';
 import { jsVersion } from './platform-specific/jsVersion';
+import { shouldBeUseWeb } from './PlatformChecker';
 import {
   shareableMappingCache,
   shareableMappingFlag,
 } from './shareableMappingCache';
-import { logger } from './logger';
 import { WorkletsModule } from './worklets';
 
 // for web/chrome debugger/jest environments this file provides a stub implementation

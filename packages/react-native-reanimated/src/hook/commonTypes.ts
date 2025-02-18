@@ -1,21 +1,22 @@
 'use strict';
 import type { Component, MutableRefObject } from 'react';
 import type {
-  AnimatedPropsAdapterFunction,
-  ShadowNodeWrapper,
-  SharedValue,
-  WorkletFunction,
-  AnimatedStyle,
-} from '../commonTypes';
-import type {
   ImageStyle,
+  NativeScrollEvent,
   NativeSyntheticEvent,
   TextStyle,
   ViewStyle,
-  NativeScrollEvent,
 } from 'react-native';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
+
+import type {
+  AnimatedPropsAdapterFunction,
+  AnimatedStyle,
+  ShadowNodeWrapper,
+  SharedValue,
+  WorkletFunction,
+} from '../commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
+import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 
 export type DependencyList = Array<unknown> | undefined;
 

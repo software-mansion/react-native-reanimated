@@ -1,9 +1,10 @@
-import { View, StyleSheet, Text, Pressable } from 'react-native';
 import type { ReactNode } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
-import { runTests, configure } from './RuntimeTestsApi';
-import { RenderLock } from './utils/SyncUIRunner';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
+
+import { configure, runTests } from './RuntimeTestsApi';
+import { RenderLock } from './utils/SyncUIRunner';
 
 export class ErrorBoundary extends React.Component<
   { children: React.JSX.Element | Array<React.JSX.Element> },

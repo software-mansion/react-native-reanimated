@@ -1,5 +1,13 @@
 'use strict';
+import type { IReanimatedModule } from './commonTypes';
 import { registerReanimatedError, reportFatalErrorOnJS } from './errors';
+import {
+  DEFAULT_LOGGER_CONFIG,
+  logToLogBoxAndConsole,
+  registerLoggerConfig,
+  replaceLoggerImplementation,
+} from './logger';
+import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
 import {
   isChromeDebugger,
   isJest,
@@ -7,20 +15,12 @@ import {
   shouldBeUseWeb,
 } from './PlatformChecker';
 import {
-  runOnJS,
-  setupMicrotasks,
   callMicrotasks,
-  runOnUIImmediately,
   executeOnUIRuntimeSync,
+  runOnJS,
+  runOnUIImmediately,
+  setupMicrotasks,
 } from './threads';
-import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
-import {
-  DEFAULT_LOGGER_CONFIG,
-  logToLogBoxAndConsole,
-  registerLoggerConfig,
-  replaceLoggerImplementation,
-} from './logger';
-import type { IReanimatedModule } from './commonTypes';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();

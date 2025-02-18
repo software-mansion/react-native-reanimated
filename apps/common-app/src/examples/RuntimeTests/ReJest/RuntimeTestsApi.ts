@@ -1,8 +1,9 @@
 import type { Component, ReactElement } from 'react';
-import { TestRunner } from './TestRunner/TestRunner';
-import type { TestComponent } from './TestComponent';
 import type { SharedValue } from 'react-native-reanimated';
-import type { TestConfiguration, TestValue, MaybeAsync } from './types';
+
+import type { TestComponent } from './TestComponent';
+import { TestRunner } from './TestRunner/TestRunner';
+import type { MaybeAsync, TestConfiguration, TestValue } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
 
 export { Presets } from './Presets';
