@@ -3,12 +3,11 @@ import type { ViewStyle } from 'react-native';
 import { Pressable, Text, View } from 'react-native';
 
 import Animated, {
+  getAnimatedStyle,
   interpolate,
   interpolateColor,
   useAnimatedStyle,
-  useSharedValue,
-  getAnimatedStyle
-} from '../src';
+  useSharedValue} from '../src';
 import { processBoxShadow } from '../src/processBoxShadow';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
