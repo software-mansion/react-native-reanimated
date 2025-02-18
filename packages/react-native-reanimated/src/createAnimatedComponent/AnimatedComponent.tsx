@@ -460,10 +460,12 @@ export default class AnimatedComponent
       filteredProps.entering &&
       !getReducedMotionFromConfig(filteredProps.entering as CustomConfig)
     ) {
-      filteredProps.style = {
-        ...(filteredProps.style ?? {}),
-        visibility: 'hidden', // Hide component until `componentDidMount` triggers
-      };
+      filteredProps.style = Array.isArray(filteredProps.style)
+        ? filteredProps.style.concat([{ visibility: 'hidden' }])
+        : {
+            ...(filteredProps.style ?? {}),
+            visibility: 'hidden', // Hide component until `componentDidMount` triggers
+        };
     }
 
     const platformProps = Platform.select({
