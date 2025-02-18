@@ -74,8 +74,8 @@ const EXAMPLES: Array<ExampleProps> = [
     transitionStyles: [
       { left: 0, transform: [{ translateX: 0 }] },
       { left: '100%', transform: [{ translateX: '-100%' }] },
-      { left: 1, transform: [{ translateX: 0 }] },
-      { left: '99%', transform: [{ translateX: '-100%' }] },
+      { left: 1, transform: [{ translateX: '1%' }] },
+      { left: '99%', transform: [{ translateX: '-99%' }] },
     ],
   },
 ];

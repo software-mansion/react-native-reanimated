@@ -69,13 +69,6 @@ bool CSSDimension::canConstruct(const folly::dynamic &value) {
       (value.isString() && canConstruct(value.getString()));
 }
 
-jsi::Value CSSDimension::toJSIValue(jsi::Runtime &rt) const {
-  if (isRelative) {
-    return jsi::String::createFromUtf8(rt, std::to_string(value * 100) + "%");
-  }
-  return {value};
-}
-
 folly::dynamic CSSDimension::toDynamic() const {
   if (isRelative) {
     return std::to_string(value * 100) + "%";

@@ -262,14 +262,6 @@ std::string TransformMatrix::toString() const {
   return result;
 }
 
-jsi::Value TransformMatrix::toJSIValue(jsi::Runtime &rt) const {
-  jsi::Array result(rt, 16);
-  for (size_t i = 0; i < 16; ++i) {
-    result.setValueAtIndex(rt, i, matrix_[i / 4][i % 4]);
-  }
-  return result;
-}
-
 folly::dynamic TransformMatrix::toDynamic() const {
   folly::dynamic result = folly::dynamic::array;
   for (size_t i = 0; i < 16; ++i) {

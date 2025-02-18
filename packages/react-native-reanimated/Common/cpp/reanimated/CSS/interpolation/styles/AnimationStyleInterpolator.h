@@ -3,7 +3,6 @@
 
 #include <reanimated/CSS/config/PropertyInterpolatorsConfig.h>
 #include <reanimated/CSS/interpolation/groups/RecordPropertiesInterpolator.h>
-#include <reanimated/CSS/progress/AnimationProgressProvider.h>
 
 #include <memory>
 
@@ -15,18 +14,11 @@ namespace reanimated {
 class AnimationStyleInterpolator : public RecordPropertiesInterpolator {
  public:
   explicit AnimationStyleInterpolator(
-      const std::shared_ptr<AnimationProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       : RecordPropertiesInterpolator(
             PROPERTY_INTERPOLATORS_CONFIG,
             {},
-            progressProvider,
             viewStylesRepository) {}
-
-  folly::dynamic getCurrentInterpolationStyle(
-      const ShadowNode::Shared &shadowNode) const {
-    return getCurrentValue(shadowNode);
-  }
 };
 
 } // namespace reanimated

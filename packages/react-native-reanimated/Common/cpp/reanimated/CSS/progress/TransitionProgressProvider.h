@@ -64,6 +64,7 @@ class TransitionProgressProvider final {
   TransitionPropertyProgressProviders getPropertyProgressProviders() const;
   std::unordered_set<std::string> getRemovedProperties() const;
 
+  void discardFinishedProgressProviders();
   void discardIrrelevantProgressProviders(
       const std::unordered_set<std::string> &transitionPropertyNames);
   void runProgressProviders(

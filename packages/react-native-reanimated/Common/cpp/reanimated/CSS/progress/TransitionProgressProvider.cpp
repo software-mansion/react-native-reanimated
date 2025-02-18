@@ -113,6 +113,17 @@ TransitionProgressProvider::getRemovedProperties() const {
   return removedProperties_;
 }
 
+void TransitionProgressProvider::discardFinishedProgressProviders() {
+  for (auto it = propertyProgressProviders_.begin();
+       it != propertyProgressProviders_.end();) {
+    if (it->second->getState() == TransitionProgressState::Finished) {
+      it = propertyProgressProviders_.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
 void TransitionProgressProvider::discardIrrelevantProgressProviders(
     const std::unordered_set<std::string> &transitionPropertyNames) {
   for (auto it = propertyProgressProviders_.begin();
@@ -175,19 +186,14 @@ void TransitionProgressProvider::runProgressProviders(
 }
 
 void TransitionProgressProvider::update(const double timestamp) {
-  auto it = propertyProgressProviders_.begin();
   removedProperties_.clear();
 
-  while (it != propertyProgressProviders_.end()) {
-    const auto &propertyProgressProvider = it->second;
+  for (const auto &[propertyName, propertyProgressProvider] :
+       propertyProgressProviders_) {
     propertyProgressProvider->update(timestamp);
-
     if (propertyProgressProvider->getState() ==
         TransitionProgressState::Finished) {
-      removedProperties_.insert(it->first);
-      it = propertyProgressProviders_.erase(it);
-    } else {
-      ++it;
+      removedProperties_.insert(propertyName);
     }
   }
 }

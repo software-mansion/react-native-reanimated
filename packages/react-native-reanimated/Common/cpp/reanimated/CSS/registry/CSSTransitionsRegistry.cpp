@@ -118,9 +118,7 @@ void CSSTransitionsRegistry::scheduleOrActivateTransition(
 
 PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
   return [weakThis = weak_from_this(), viewTag](
-             jsi::Runtime &rt,
-             const jsi::Value &oldProps,
-             const jsi::Value &newProps) {
+             const folly::dynamic &oldProps, const folly::dynamic &newProps) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -128,10 +126,10 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
 
     const auto &transition = strongThis->registry_.at(viewTag);
     const auto allowedProperties =
-        transition->getAllowedProperties(rt, oldProps, newProps);
+        transition->getAllowedProperties(oldProps, newProps);
 
     const auto changedProps =
-        getChangedProps(rt, oldProps, newProps, allowedProperties);
+        getChangedProps(oldProps, newProps, allowedProperties);
 
     if (changedProps.changedPropertyNames.empty()) {
       return;
@@ -140,11 +138,13 @@ PropsObserver CSSTransitionsRegistry::createPropsObserver(const Tag viewTag) {
     {
       std::lock_guard<std::mutex> lock{strongThis->mutex_};
 
-      const auto &initialProps =
-          transition->run(rt, changedProps, strongThis->getCurrentTimestamp_());
       const auto &shadowNode = transition->getShadowNode();
+      const auto &lastUpdates =
+          strongThis->getUpdatesFromRegistry(shadowNode->getTag());
+      const auto &transitionStartStyle = transition->run(
+          changedProps, lastUpdates, strongThis->getCurrentTimestamp_());
 
-      strongThis->setInUpdatesRegistry(shadowNode, initialProps);
+      strongThis->setInUpdatesRegistry(shadowNode, transitionStartStyle);
       strongThis->scheduleOrActivateTransition(transition);
     }
   };
