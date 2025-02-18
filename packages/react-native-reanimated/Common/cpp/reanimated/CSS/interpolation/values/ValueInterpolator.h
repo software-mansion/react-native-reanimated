@@ -32,16 +32,13 @@ class ValueInterpolator : public PropertyInterpolator {
 
  public:
   using ValueType = CSSValueVariant<AllowedTypes...>;
+  using KeyframeType = ValueKeyframe<AllowedTypes...>;
 
   explicit ValueInterpolator(
       const PropertyPath &propertyPath,
       const ValueType &defaultStyleValue,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-      : PropertyInterpolator(
-            propertyPath,
-            progressProvider,
-            viewStylesRepository),
+      : PropertyInterpolator(propertyPath, viewStylesRepository),
         defaultStyleValue_(defaultStyleValue) {}
   virtual ~ValueInterpolator() = default;
 
@@ -51,16 +48,15 @@ class ValueInterpolator : public PropertyInterpolator {
         shadowNode->getTag(), propertyPath_);
   }
 
-  folly::dynamic getCurrentValue(
+  folly::dynamic getResetStyle(
       const ShadowNode::Shared &shadowNode) const override {
-    if (previousValue_.has_value()) {
-      return previousValue_.value().toDynamic();
-    }
     auto styleValue = getStyleValue(shadowNode);
-    if (!styleValue.isNull()) {
-      return styleValue;
+
+    if (styleValue.isNull()) {
+      return defaultStyleValue_.toDynamic();
     }
-    return defaultStyleValue_.toDynamic();
+
+    return styleValue;
   }
 
   folly::dynamic getFirstKeyframeValue() const override {
@@ -72,16 +68,14 @@ class ValueInterpolator : public PropertyInterpolator {
   }
 
   bool equalsReversingAdjustedStartValue(
-      jsi::Runtime &rt,
-      const jsi::Value &propertyValue) const override {
+      const folly::dynamic &propertyValue) const override {
     if (!reversingAdjustedStartValue_.has_value()) {
-      return propertyValue.isUndefined();
+      return propertyValue.isNull();
     }
-    return reversingAdjustedStartValue_.value() == ValueType(rt, propertyValue);
+    return reversingAdjustedStartValue_.value() == ValueType(propertyValue);
   }
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override {
-    keyframeAfterIndex_ = 1;
     const auto parsedKeyframes = parseJSIKeyframes(rt, keyframes);
 
     keyframes_.clear();
@@ -89,48 +83,54 @@ class ValueInterpolator : public PropertyInterpolator {
 
     for (const auto &[offset, value] : parsedKeyframes) {
       if (value.isUndefined()) {
-        keyframes_.push_back(
-            ValueKeyframe<AllowedTypes...>{offset, std::nullopt});
+        keyframes_.push_back(KeyframeType{offset, std::nullopt});
       } else {
-        keyframes_.push_back(
-            ValueKeyframe<AllowedTypes...>{offset, ValueType(rt, value)});
+        keyframes_.push_back(KeyframeType{offset, ValueType(rt, value)});
       }
     }
   }
 
   void updateKeyframesFromStyleChange(
-      jsi::Runtime &rt,
-      const jsi::Value &oldStyleValue,
-      const jsi::Value &newStyleValue) override {
-    keyframeAfterIndex_ = 1;
-    ValueKeyframe<AllowedTypes...> firstKeyframe, lastKeyframe;
+      const folly::dynamic &oldStyleValue,
+      const folly::dynamic &newStyleValue,
+      const folly::dynamic &lastUpdateValue) override {
+    KeyframeType firstKeyframe, lastKeyframe;
 
-    if (!oldStyleValue.isUndefined()) {
-      reversingAdjustedStartValue_ = ValueType(rt, oldStyleValue);
+    if (oldStyleValue.isNull()) {
+      reversingAdjustedStartValue_ = std::nullopt;
     } else {
-      reversingAdjustedStartValue_ = defaultStyleValue_;
+      reversingAdjustedStartValue_ = ValueType(oldStyleValue);
     }
 
-    if (previousValue_.has_value()) {
-      firstKeyframe = {0, previousValue_};
+    if (!lastUpdateValue.isNull()) {
+      firstKeyframe = {0, ValueType(lastUpdateValue)};
+    } else if (!oldStyleValue.isNull()) {
+      firstKeyframe = {0, ValueType(oldStyleValue)};
     } else {
-      firstKeyframe = {0, reversingAdjustedStartValue_};
+      firstKeyframe = {0, defaultStyleValue_};
     }
 
-    if (!newStyleValue.isUndefined()) {
-      lastKeyframe = {1, ValueType(rt, newStyleValue)};
-    } else {
+    if (newStyleValue.isNull()) {
       lastKeyframe = {1, defaultStyleValue_};
+    } else {
+      lastKeyframe = {1, ValueType(newStyleValue)};
     }
 
     keyframes_ = {firstKeyframe, lastKeyframe};
   }
 
-  folly::dynamic update(const ShadowNode::Shared &shadowNode) override {
-    updateCurrentKeyframes(shadowNode);
+  folly::dynamic interpolate(
+      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
+      const override {
+    const auto toIndex = getToKeyframeIndex(progressProvider);
+    const auto fromIndex = toIndex - 1;
 
-    std::optional<ValueType> fromValue = keyframeBefore_.value;
-    std::optional<ValueType> toValue = keyframeAfter_.value;
+    const auto &fromKeyframe = keyframes_.at(fromIndex);
+    const auto &toKeyframe = keyframes_.at(toIndex);
+
+    std::optional<ValueType> fromValue = fromKeyframe.value;
+    std::optional<ValueType> toValue = toKeyframe.value;
 
     if (!fromValue.has_value()) {
       fromValue = getFallbackValue(shadowNode);
@@ -139,34 +139,28 @@ class ValueInterpolator : public PropertyInterpolator {
       toValue = getFallbackValue(shadowNode);
     }
 
-    const auto keyframeProgress = progressProvider_->getKeyframeProgress(
-        keyframeBefore_.offset, keyframeAfter_.offset);
+    const auto keyframeProgress = progressProvider->getKeyframeProgress(
+        fromKeyframe.offset, toKeyframe.offset);
 
     if (keyframeProgress == 1.0) {
-      previousValue_ = toValue.value();
-    } else if (keyframeProgress == 0.0) {
-      previousValue_ = fromValue.value();
-    } else {
-      previousValue_ = interpolate(
-          keyframeProgress,
-          fromValue.value(),
-          toValue.value(),
-          {.node = shadowNode});
+      return toValue.value().toDynamic();
+    }
+    if (keyframeProgress == 0.0) {
+      return fromValue.value().toDynamic();
     }
 
-    return previousValue_.value().toDynamic();
-  }
-
-  folly::dynamic reset(const ShadowNode::Shared &shadowNode) override {
-    previousValue_ = std::nullopt;
-    reversingAdjustedStartValue_ = std::nullopt;
-    return getCurrentValue(shadowNode);
+    return interpolateValue(
+               keyframeProgress,
+               fromValue.value(),
+               toValue.value(),
+               {.node = shadowNode})
+        .toDynamic();
   }
 
  protected:
   ValueType defaultStyleValue_;
 
-  virtual ValueType interpolate(
+  virtual ValueType interpolateValue(
       double progress,
       const ValueType &fromValue,
       const ValueType &toValue,
@@ -176,83 +170,31 @@ class ValueInterpolator : public PropertyInterpolator {
 
  private:
   std::vector<ValueKeyframe<AllowedTypes...>> keyframes_;
-  int keyframeAfterIndex_ = 1;
-  ValueKeyframe<AllowedTypes...> keyframeBefore_;
-  ValueKeyframe<AllowedTypes...> keyframeAfter_;
-  std::optional<ValueType> previousValue_;
   std::optional<ValueType> reversingAdjustedStartValue_;
 
   ValueType getFallbackValue(const ShadowNode::Shared &shadowNode) const {
-    const folly::dynamic &styleValue = getStyleValue(shadowNode);
+    const auto styleValue = getStyleValue(shadowNode);
     return styleValue.isNull() ? defaultStyleValue_ : ValueType(styleValue);
   }
 
-  ValueType resolveKeyframeValue(
-      const ValueType &unresolvedValue,
-      const ShadowNode::Shared &shadowNode) const {
-    return interpolate(
-        0, unresolvedValue, unresolvedValue, {.node = shadowNode});
-  }
+  size_t getToKeyframeIndex(
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
+    const auto progress = progressProvider->getGlobalProgress();
 
-  ValueKeyframe<AllowedTypes...> getKeyframeAtIndex(
-      const ShadowNode::Shared &shadowNode,
-      size_t index,
-      bool shouldResolve) const {
-    const auto &keyframe = keyframes_.at(index);
+    const auto it = std::upper_bound(
+        keyframes_.begin(),
+        keyframes_.end(),
+        progress,
+        [](double progress, const KeyframeType &keyframe) {
+          return progress < keyframe.offset;
+        });
 
-    if (shouldResolve) {
-      const double offset = keyframe.offset;
-      std::optional<ValueType> unresolvedValue;
-
-      if (keyframe.value.has_value()) {
-        unresolvedValue = keyframe.value.value();
-      } else {
-        unresolvedValue = getFallbackValue(shadowNode);
-      }
-
-      return ValueKeyframe<AllowedTypes...>{
-          offset, resolveKeyframeValue(unresolvedValue.value(), shadowNode)};
+    // If we're at the end, return the last valid keyframe index
+    if (it == keyframes_.end()) {
+      return keyframes_.size() - 1;
     }
 
-    return keyframe;
-  }
-
-  void updateCurrentKeyframes(const ShadowNode::Shared &shadowNode) {
-    const auto progress = progressProvider_->getGlobalProgress();
-    const bool isProgressLessThanHalf = progress < 0.5;
-    const auto prevAfterIndex = keyframeAfterIndex_;
-
-    if (progressProvider_->isFirstUpdate()) {
-      keyframeAfterIndex_ = isProgressLessThanHalf ? 1 : keyframes_.size() - 1;
-    }
-
-    while (keyframeAfterIndex_ < keyframes_.size() - 1 &&
-           keyframes_[keyframeAfterIndex_].offset < progress)
-      ++keyframeAfterIndex_;
-
-    while (keyframeAfterIndex_ > 1 &&
-           keyframes_[keyframeAfterIndex_ - 1].offset >= progress)
-      --keyframeAfterIndex_;
-
-    if (progressProvider_->isFirstUpdate()) {
-      keyframeBefore_ = getKeyframeAtIndex(
-          shadowNode,
-          keyframeAfterIndex_ - 1,
-          Resolvable<ValueType> && isProgressLessThanHalf);
-      keyframeAfter_ = getKeyframeAtIndex(
-          shadowNode,
-          keyframeAfterIndex_,
-          Resolvable<ValueType> && !isProgressLessThanHalf);
-    } else if (keyframeAfterIndex_ != prevAfterIndex) {
-      keyframeBefore_ = getKeyframeAtIndex(
-          shadowNode,
-          keyframeAfterIndex_ - 1,
-          Resolvable<ValueType> && keyframeAfterIndex_ > prevAfterIndex);
-      keyframeAfter_ = getKeyframeAtIndex(
-          shadowNode,
-          keyframeAfterIndex_,
-          Resolvable<ValueType> && keyframeAfterIndex_ < prevAfterIndex);
-    }
+    return std::distance(keyframes_.begin(), it);
   }
 
   folly::dynamic convertOptionalToDynamic(

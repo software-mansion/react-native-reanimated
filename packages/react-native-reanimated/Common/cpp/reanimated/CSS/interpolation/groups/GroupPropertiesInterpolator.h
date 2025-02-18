@@ -13,25 +13,21 @@ class GroupPropertiesInterpolator : public PropertyInterpolator {
  public:
   GroupPropertiesInterpolator(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
-
-  void setProgressProvider(const std::shared_ptr<KeyframeProgressProvider>
-                               &progressProvider) override;
 
   folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const override;
-  folly::dynamic getCurrentValue(
+  folly::dynamic getResetStyle(
       const ShadowNode::Shared &shadowNode) const override;
   folly::dynamic getFirstKeyframeValue() const override;
   folly::dynamic getLastKeyframeValue() const override;
 
-  folly::dynamic update(const ShadowNode::Shared &shadowNode) override;
-  folly::dynamic reset(const ShadowNode::Shared &shadowNode) override;
+  folly::dynamic interpolate(
+      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
+      const override;
 
  protected:
-  virtual void forEachInterpolator(
-      const std::function<void(PropertyInterpolator &)> &callback) const = 0;
   virtual folly::dynamic mapInterpolators(
       const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
       const = 0;

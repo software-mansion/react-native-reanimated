@@ -18,27 +18,33 @@ class TransitionStyleInterpolator {
   TransitionStyleInterpolator(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  folly::dynamic getCurrentInterpolationStyle(
-      const ShadowNode::Shared &shadowNode) const;
   std::unordered_set<std::string> getReversedPropertyNames(
-      jsi::Runtime &rt,
-      const jsi::Value &newPropertyValues) const;
+      const folly::dynamic &newPropertyValues) const;
 
-  folly::dynamic update(
+  folly::dynamic interpolate(
       const ShadowNode::Shared &shadowNode,
-      const std::unordered_set<std::string> &propertiesToRemove);
+      const TransitionProgressProvider &transitionProgressProvider) const;
 
+  void discardFinishedInterpolators(
+      const TransitionProgressProvider &transitionProgressProvider);
   void discardIrrelevantInterpolators(
       const std::unordered_set<std::string> &transitionPropertyNames);
   void updateInterpolatedProperties(
-      jsi::Runtime &rt,
       const ChangedProps &changedProps,
-      const TransitionPropertyProgressProviders &propertyProgressProviders);
+      const folly::dynamic &lastUpdateValue);
 
  private:
+  using MapInterpolatorsCallback = std::function<folly::dynamic(
+      const std::shared_ptr<PropertyInterpolator> &,
+      const std::shared_ptr<KeyframeProgressProvider> &)>;
+
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
 
   PropertyInterpolatorsRecord interpolators_;
+
+  folly::dynamic mapInterpolators(
+      const TransitionProgressProvider &transitionProgressProvider,
+      const MapInterpolatorsCallback &callback) const;
 };
 
 } // namespace reanimated

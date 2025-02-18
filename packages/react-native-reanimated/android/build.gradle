@@ -263,7 +263,8 @@ android {
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DREANIMATED_PROFILING=${REANIMATED_PROFILING}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
-                        "-DHAS_EXTERNAL_WORKLETS=${hasExternalWorklets}"
+                        "-DHAS_EXTERNAL_WORKLETS=${hasExternalWorklets}",
+                        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
                 abiFilters (*reactNativeArchitectures())
                 if(hasExternalWorklets){
                     targets("reanimated")

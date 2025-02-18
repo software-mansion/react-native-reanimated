@@ -12,24 +12,17 @@ bool isDiscreteProperty(const std::string &propName) {
 }
 
 bool areArraysDifferentRecursive(
-    jsi::Runtime &rt,
-    const jsi::Array &oldArray,
-    const jsi::Array &newArray) {
-  const auto oldArraySize = oldArray.size(rt);
-  const auto newArraySize = newArray.size(rt);
-
-  if (oldArraySize != newArraySize) {
+    const folly::dynamic &oldArray,
+    const folly::dynamic &newArray) {
+  if (oldArray.size() != newArray.size()) {
     return true;
   }
 
-  for (size_t i = 0; i < oldArraySize; i++) {
-    const auto oldValue = oldArray.getValueAtIndex(rt, i);
-    const auto newValue = newArray.getValueAtIndex(rt, i);
-
+  for (size_t i = 0; i < oldArray.size(); i++) {
     const auto [oldChangedProp, newChangedProp] =
-        getChangedPropsRecursive(rt, oldValue, newValue);
+        getChangedPropsRecursive(oldArray[i], newArray[i]);
 
-    if (!oldChangedProp.isUndefined() || !newChangedProp.isUndefined()) {
+    if (!oldChangedProp.isNull() || !newChangedProp.isNull()) {
       return true;
     }
   }
@@ -37,143 +30,118 @@ bool areArraysDifferentRecursive(
   return false;
 }
 
-std::pair<jsi::Value, jsi::Value> getChangedPropsRecursive(
-    jsi::Runtime &rt,
-    const jsi::Value &oldProp,
-    const jsi::Value &newProp) {
+std::pair<folly::dynamic, folly::dynamic> getChangedPropsRecursive(
+    const folly::dynamic &oldProp,
+    const folly::dynamic &newProp) {
   if (!oldProp.isObject() || !newProp.isObject()) {
     // Primitive values comparison
-    if (!jsi::Value::strictEquals(rt, oldProp, newProp)) {
-      return {jsi::Value(rt, oldProp), jsi::Value(rt, newProp)};
+    if (oldProp != newProp) {
+      return {oldProp, newProp};
     }
-    return {jsi::Value::undefined(), jsi::Value::undefined()};
+    return {folly::dynamic(), folly::dynamic()};
   }
 
-  const auto oldObj = oldProp.asObject(rt);
-  const auto newObj = newProp.asObject(rt);
-
-  if (oldObj.isArray(rt) && newObj.isArray(rt)) {
+  if (oldProp.isArray() && newProp.isArray()) {
     // Arrays comparison
-    if (areArraysDifferentRecursive(
-            rt, oldObj.asArray(rt), newObj.asArray(rt))) {
-      return {jsi::Value(rt, oldObj), jsi::Value(rt, newObj)};
+    if (areArraysDifferentRecursive(oldProp, newProp)) {
+      return {oldProp, newProp};
     }
-    return {jsi::Value::undefined(), jsi::Value::undefined()};
+    return {folly::dynamic(), folly::dynamic()};
   }
 
-  auto oldResult = jsi::Object(rt);
-  auto newResult = jsi::Object(rt);
+  folly::dynamic oldResult = folly::dynamic::object;
+  folly::dynamic newResult = folly::dynamic::object;
   bool oldHasChanges = false;
   bool newHasChanges = false;
 
-  const auto newPropertyNames = newObj.getPropertyNames(rt);
-  const auto oldPropertyNames = oldObj.getPropertyNames(rt);
-
-  // Diff on objects
-  for (size_t i = 0; i < oldPropertyNames.size(rt); i++) {
-    const auto propName =
-        oldPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-
-    if (!newObj.hasProperty(rt, propName.c_str())) {
-      const auto oldValue = oldObj.getProperty(rt, propName.c_str());
-      if (!oldValue.isUndefined()) {
-        oldResult.setProperty(rt, propName.c_str(), oldValue);
-        oldHasChanges = true;
-      }
+  // Check for removed properties
+  for (const auto &item : oldProp.items()) {
+    const auto &propName = item.first.asString();
+    if (!newProp.count(propName)) {
+      const auto &oldValue = item.second;
+      oldResult[propName] = oldValue;
+      oldHasChanges = true;
     }
   }
 
-  for (size_t i = 0; i < newPropertyNames.size(rt); i++) {
-    const auto propName =
-        newPropertyNames.getValueAtIndex(rt, i).asString(rt).utf8(rt);
-    const auto newValue = newObj.getProperty(rt, propName.c_str());
+  // Check for new and changed properties
+  for (const auto &item : newProp.items()) {
+    const auto &propName = item.first.asString();
+    const auto &newValue = item.second;
 
-    if (oldObj.hasProperty(rt, propName.c_str())) {
-      const auto oldValue = oldObj.getProperty(rt, propName.c_str());
+    if (oldProp.count(propName)) {
+      const auto &oldValue = oldProp[propName];
+      auto [oldChangedProp, newChangedProp] =
+          getChangedPropsRecursive(oldValue, newValue);
 
-      if (!oldValue.isUndefined() && !newValue.isUndefined()) {
-        auto [oldChangedProp, newChangedProp] =
-            getChangedPropsRecursive(rt, oldValue, newValue);
-
-        if (!oldChangedProp.isUndefined() && !newChangedProp.isUndefined()) {
-          oldResult.setProperty(rt, propName.c_str(), oldChangedProp);
-          newResult.setProperty(rt, propName.c_str(), newChangedProp);
-          oldHasChanges = true;
-          newHasChanges = true;
-        }
+      if (!oldChangedProp.isNull() && !newChangedProp.isNull()) {
+        oldResult[propName] = std::move(oldChangedProp);
+        newResult[propName] = std::move(newChangedProp);
+        oldHasChanges = true;
+        newHasChanges = true;
       }
-    } else if (!newValue.isUndefined()) {
-      newResult.setProperty(rt, propName.c_str(), newValue);
+    } else {
+      newResult[propName] = newValue;
       newHasChanges = true;
     }
   }
 
-  return std::make_pair(
-      oldHasChanges ? jsi::Value(rt, oldResult) : jsi::Value::undefined(),
-      newHasChanges ? jsi::Value(rt, newResult) : jsi::Value::undefined());
+  return {
+      oldHasChanges ? std::move(oldResult) : folly::dynamic(),
+      newHasChanges ? std::move(newResult) : folly::dynamic()};
 }
 
-std::pair<jsi::Value, jsi::Value> getChangedValueForProp(
-    jsi::Runtime &rt,
-    const jsi::Object &oldObject,
-    const jsi::Object &newObject,
+std::pair<folly::dynamic, folly::dynamic> getChangedValueForProp(
+    const folly::dynamic &oldObject,
+    const folly::dynamic &newObject,
     const std::string &propName) {
-  const bool oldHasProperty = oldObject.hasProperty(rt, propName.c_str());
-  const bool newHasProperty = newObject.hasProperty(rt, propName.c_str());
+  const bool oldHasProperty = oldObject.count(propName);
+  const bool newHasProperty = newObject.count(propName);
 
   if (oldHasProperty && newHasProperty) {
-    const auto oldVal = oldObject.getProperty(rt, propName.c_str());
-    const auto newVal = newObject.getProperty(rt, propName.c_str());
+    const auto &oldVal = oldObject[propName];
+    const auto &newVal = newObject[propName];
 
     if (oldVal.isObject() && newVal.isObject()) {
-      return getChangedPropsRecursive(rt, oldVal, newVal);
-    } else if (!jsi::Value::strictEquals(rt, oldVal, newVal)) {
-      return std::make_pair(jsi::Value(rt, oldVal), jsi::Value(rt, newVal));
+      return getChangedPropsRecursive(oldVal, newVal);
+    } else if (oldVal != newVal) {
+      return {oldVal, newVal};
     }
 
-    return std::make_pair(jsi::Value::undefined(), jsi::Value::undefined());
+    return {folly::dynamic(), folly::dynamic()};
   }
 
-  // Check if property exists in only one of the objects
   if (oldHasProperty) {
-    jsi::Value oldVal = oldObject.getProperty(rt, propName.c_str());
-    if (!oldVal.isUndefined()) {
-      return std::make_pair(jsi::Value(rt, oldVal), jsi::Value::undefined());
-    }
+    const auto &oldVal = oldObject[propName];
+    return {oldVal, folly::dynamic()};
   } else if (newHasProperty) {
-    jsi::Value newVal = newObject.getProperty(rt, propName.c_str());
-    if (!newVal.isUndefined()) {
-      return std::make_pair(jsi::Value::undefined(), jsi::Value(rt, newVal));
-    }
+    const auto &newVal = newObject[propName];
+    return {folly::dynamic(), newVal};
   }
 
-  return std::make_pair(jsi::Value::undefined(), jsi::Value::undefined());
+  return {folly::dynamic(), folly::dynamic()};
 }
 
 ChangedProps getChangedProps(
-    jsi::Runtime &rt,
-    const jsi::Value &oldProps,
-    const jsi::Value &newProps,
+    const folly::dynamic &oldProps,
+    const folly::dynamic &newProps,
     const PropertyNames &allowedProperties) {
-  const auto oldObject = oldProps.asObject(rt);
-  const auto newObject = newProps.asObject(rt);
-
-  auto oldResult = jsi::Object(rt);
-  auto newResult = jsi::Object(rt);
+  folly::dynamic oldResult = folly::dynamic::object;
+  folly::dynamic newResult = folly::dynamic::object;
   PropertyNames changedPropertyNames;
 
   for (const auto &propName : allowedProperties) {
     const auto [oldChangedProp, newChangedProp] =
-        getChangedValueForProp(rt, oldObject, newObject, propName);
+        getChangedValueForProp(oldProps, newProps, propName);
 
-    const auto hasOldChangedProp = !oldChangedProp.isUndefined();
-    const auto hasNewChangedProp = !newChangedProp.isUndefined();
+    const auto hasOldChangedProp = !oldChangedProp.isNull();
+    const auto hasNewChangedProp = !newChangedProp.isNull();
 
     if (hasOldChangedProp) {
-      oldResult.setProperty(rt, propName.c_str(), oldChangedProp);
+      oldResult[propName] = std::move(oldChangedProp);
     }
     if (hasNewChangedProp) {
-      newResult.setProperty(rt, propName.c_str(), newChangedProp);
+      newResult[propName] = std::move(newChangedProp);
     }
     if (hasOldChangedProp || hasNewChangedProp) {
       changedPropertyNames.push_back(propName);
@@ -181,22 +149,9 @@ ChangedProps getChangedProps(
   }
 
   return {
-      jsi::Value(rt, oldResult),
-      jsi::Value(rt, newResult),
+      std::move(oldResult),
+      std::move(newResult),
       std::move(changedPropertyNames)};
-}
-
-void updateJSIObject(
-    jsi::Runtime &rt,
-    const jsi::Object &target,
-    const jsi::Object &source) {
-  const auto propertyNames = source.getPropertyNames(rt);
-  const auto propertiesCount = propertyNames.size(rt);
-
-  for (size_t i = 0; i < propertiesCount; ++i) {
-    const auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt);
-    target.setProperty(rt, propertyName, source.getProperty(rt, propertyName));
-  }
 }
 
 } // namespace reanimated

@@ -16,20 +16,15 @@ class RecordInterpolatorFactory : public PropertyInterpolatorFactory {
 
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       const override {
     return std::make_shared<RecordPropertiesInterpolator>(
-        factories_, propertyPath, progressProvider, viewStylesRepository);
+        factories_, propertyPath, viewStylesRepository);
   }
 
  private:
   // Helper private type just for a default value
   struct EmptyObjectValue : public CSSValue {
-    jsi::Value toJSIValue(jsi::Runtime &rt) const override {
-      return jsi::Object(rt);
-    }
-
     folly::dynamic toDynamic() const override {
       return folly::dynamic::object;
     }
@@ -54,20 +49,15 @@ class ArrayInterpolatorFactory : public PropertyInterpolatorFactory {
 
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       const override {
     return std::make_shared<ArrayPropertiesInterpolator>(
-        factories_, propertyPath, progressProvider, viewStylesRepository);
+        factories_, propertyPath, viewStylesRepository);
   }
 
  private:
   // Helper private type just for a default value
   struct EmptyArrayValue : public CSSValue {
-    jsi::Value toJSIValue(jsi::Runtime &rt) const override {
-      return jsi::Array(rt, 0);
-    }
-
     folly::dynamic toDynamic() const override {
       return folly::dynamic::array;
     }
@@ -93,11 +83,10 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
 
   std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       const override {
     return std::make_shared<TransformsStyleInterpolator>(
-        propertyPath, interpolators_, progressProvider, viewStylesRepository);
+        propertyPath, interpolators_, viewStylesRepository);
   }
 
  private:
@@ -108,10 +97,6 @@ class TransformsInterpolatorFactory : public PropertyInterpolatorFactory {
 
   // Helper private type just for a default value
   struct EmptyTransformsValue : public CSSValue {
-    jsi::Value toJSIValue(jsi::Runtime &rt) const override {
-      return getIdentityMatrix().toJSIValue(rt);
-    }
-
     folly::dynamic toDynamic() const override {
       return getIdentityMatrix().toDynamic();
     }

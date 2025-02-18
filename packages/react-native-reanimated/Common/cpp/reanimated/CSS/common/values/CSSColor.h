@@ -34,7 +34,6 @@ struct CSSColor : public CSSSimpleValue<CSSColor> {
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
   static bool canConstruct(const folly::dynamic &value);
 
-  jsi::Value toJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic toDynamic() const override;
   std::string toString() const override;
   CSSColor interpolate(double progress, const CSSColor &to) const override;
