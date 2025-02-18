@@ -71,6 +71,8 @@ Pod::Spec.new do |s|
     gcc_debug_definitions << " HERMES_ENABLE_DEBUGGER=1"
   end
 
+  external_worklets_header_path = $config[:has_external_worklets] ? "\"$(PODS_ROOT)/Headers/Public/RNWorklets\"" : ''
+
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
     "DEFINES_MODULE" => "YES",
@@ -83,6 +85,7 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/DoubleConversion"',
       '"$(PODS_ROOT)/Headers/Private/React-Core"',
       '"$(PODS_ROOT)/Headers/Private/Yoga"',
+      external_worklets_header_path,
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
@@ -98,6 +101,7 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/RCT-Folly"',
       '"$(PODS_ROOT)/Headers/Public/React-hermes"',
       '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
+      external_worklets_header_path,
       "\"$(PODS_ROOT)/#{$config[:react_native_common_dir]}\"",
       "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/apple\"",
       "\"$(PODS_ROOT)/#{$config[:react_native_reanimated_dir_from_pods_root]}/Common/cpp\"",

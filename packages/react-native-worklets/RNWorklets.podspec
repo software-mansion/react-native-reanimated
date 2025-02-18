@@ -1,7 +1,9 @@
 require "json"
+require_relative './scripts/worklets_utils'
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
-folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
+$worklets_config = find_config()
+worklets_assert_minimal_react_native_version($worklets_config)
 
 ios_min_version = '13.4'
 
@@ -48,9 +50,21 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/DoubleConversion"',
       '"$(PODS_ROOT)/Headers/Private/React-Core"',
       '"$(PODS_ROOT)/Headers/Private/Yoga"',
+      "\"$(PODS_ROOT)/#{$worklets_config[:react_native_common_dir]}\"",
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
+  }
+  s.xcconfig = {
+    "HEADER_SEARCH_PATHS" => [
+      '"$(PODS_ROOT)/boost"',
+      '"$(PODS_ROOT)/boost-for-react-native"',
+      '"$(PODS_ROOT)/glog"',
+      '"$(PODS_ROOT)/RCT-Folly"',
+      '"$(PODS_ROOT)/Headers/Public/React-hermes"',
+      '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
+      "\"$(PODS_ROOT)/#{$worklets_config[:react_native_common_dir]}\"",
+    ].join(' '),
   }
   
 end
