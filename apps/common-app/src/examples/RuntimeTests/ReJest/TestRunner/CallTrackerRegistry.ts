@@ -1,4 +1,5 @@
 import { makeMutable } from 'react-native-reanimated';
+
 import type { TrackerCallCount } from '../types';
 
 let callCallTrackerRegistryJS: Record<string, number> = {};

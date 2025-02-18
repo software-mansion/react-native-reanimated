@@ -1,3 +1,5 @@
+import React from 'react';
+import { SafeAreaView, StyleSheet, Text } from 'react-native';
 import Animated, {
   clamp,
   measure,
@@ -5,9 +7,6 @@ import Animated, {
   useAnimatedStyle,
   useScrollViewOffset,
 } from 'react-native-reanimated';
-import { SafeAreaView, StyleSheet, Text } from 'react-native';
-
-import React from 'react';
 
 export default function ArticleProgressExample() {
   const scrollViewRef = useAnimatedRef<Animated.ScrollView>();

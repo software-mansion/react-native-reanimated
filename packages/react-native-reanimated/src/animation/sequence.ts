@@ -1,14 +1,14 @@
 'use strict';
-import { defineAnimation, getReduceMotionForAnimation } from './util';
-import type { NextAnimation, SequenceAnimation } from './commonTypes';
 import type {
-  Animation,
   AnimatableValue,
+  Animation,
   AnimationObject,
   ReduceMotion,
   Timestamp,
 } from '../commonTypes';
 import { logger } from '../logger';
+import type { NextAnimation, SequenceAnimation } from './commonTypes';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 /**
  * Lets you run animations in a sequence.

@@ -1,10 +1,11 @@
 'use strict';
 import { useEffect } from 'react';
+
 import type { WorkletFunction } from '../commonTypes';
 import { startMapper, stopMapper } from '../core';
+import { shouldBeUseWeb } from '../PlatformChecker';
 import type { DependencyList } from './commonTypes';
 import { useSharedValue } from './useSharedValue';
-import { shouldBeUseWeb } from '../PlatformChecker';
 
 /**
  * Lets you to respond to changes in a [shared

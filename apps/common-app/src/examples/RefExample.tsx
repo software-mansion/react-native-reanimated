@@ -1,11 +1,11 @@
+import type { RefObject } from 'react';
+import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, View } from 'react-native';
-import type { RefObject } from 'react';
-import React from 'react';
 
 export type ChildHandle = {
   toggleState: () => void;

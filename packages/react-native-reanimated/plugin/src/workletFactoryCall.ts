@@ -1,6 +1,7 @@
 import type { NodePath } from '@babel/core';
-import { callExpression } from '@babel/types';
 import type { CallExpression } from '@babel/types';
+import { callExpression } from '@babel/types';
+
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { makeWorkletFactory } from './workletFactory';
 

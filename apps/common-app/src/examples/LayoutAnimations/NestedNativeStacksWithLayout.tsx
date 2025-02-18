@@ -1,9 +1,8 @@
-import Animated, { SlideOutLeft, SlideOutRight } from 'react-native-reanimated';
-import { Button, StyleSheet, View } from 'react-native';
-
-import React from 'react';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
+import Animated, { SlideOutLeft, SlideOutRight } from 'react-native-reanimated';
 
 type ParamList = {
   First?: React.Component;

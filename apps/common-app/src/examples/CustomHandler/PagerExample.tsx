@@ -1,11 +1,11 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import PagerView from 'react-native-pager-view';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   useDerivedValue,
   useSharedValue,
 } from 'react-native-reanimated';
-import PagerView from 'react-native-pager-view';
 
 import { AnimatedText } from './AnimatedText';
 import { Pagination } from './Pagination';

@@ -1,3 +1,11 @@
+import React from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+  PanGestureHandler,
+} from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
   runOnUI,
@@ -10,15 +18,6 @@ import Animated, {
   useScrollViewOffset,
   useSharedValue,
 } from 'react-native-reanimated';
-import { Button, Text, View, StyleSheet } from 'react-native';
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-  PanGestureHandler,
-} from 'react-native-gesture-handler';
-
-import React from 'react';
 
 function RunOnUIDemo() {
   const someWorklet = (x: number) => {

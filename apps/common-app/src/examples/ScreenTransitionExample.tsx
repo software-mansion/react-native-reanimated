@@ -1,11 +1,11 @@
-import React from 'react';
-import { View, StyleSheet, Button } from 'react-native';
-import type { NativeStackScreenProps } from 'react-native-screens/native-stack';
-import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 import type { ParamListBase } from '@react-navigation/native';
+import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import type { AnimatedScreenTransition } from 'react-native-reanimated';
 import { ScreenTransition } from 'react-native-reanimated';
 import { GestureDetectorProvider } from 'react-native-screens/gesture-handler';
+import type { NativeStackScreenProps } from 'react-native-screens/native-stack';
+import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 
 function MainScreen({ navigation }: NativeStackScreenProps<ParamListBase>) {
   return (

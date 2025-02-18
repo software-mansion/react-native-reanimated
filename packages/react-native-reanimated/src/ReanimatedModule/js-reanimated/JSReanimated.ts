@@ -1,11 +1,4 @@
 'use strict';
-import {
-  isChromeDebugger,
-  isJest,
-  isWeb,
-  isWindowAvailable,
-} from '../../PlatformChecker';
-import { SensorType } from '../../commonTypes';
 import type {
   IReanimatedModule,
   IWorkletsModule,
@@ -14,12 +7,19 @@ import type {
   ValueRotation,
   WorkletFunction,
 } from '../../commonTypes';
-import type { WebSensor } from './WebSensor';
-import { mockedRequestAnimationFrame } from '../../mockedRequestAnimationFrame';
-import type { WorkletRuntime } from '../../runtimes';
-import { logger } from '../../logger';
+import { SensorType } from '../../commonTypes';
 import { ReanimatedError } from '../../errors';
+import { logger } from '../../logger';
+import { mockedRequestAnimationFrame } from '../../mockedRequestAnimationFrame';
+import {
+  isChromeDebugger,
+  isJest,
+  isWeb,
+  isWindowAvailable,
+} from '../../PlatformChecker';
+import type { WorkletRuntime } from '../../runtimes';
 import { WorkletsModule } from '../../worklets';
+import type { WebSensor } from './WebSensor';
 
 export function createJSReanimatedModule(): IReanimatedModule {
   return new JSReanimated();

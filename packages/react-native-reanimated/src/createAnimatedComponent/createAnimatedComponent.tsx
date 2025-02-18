@@ -1,4 +1,7 @@
 'use strict';
+import '../layoutReanimation/animationsManager';
+
+import invariant from 'invariant';
 import type {
   Component,
   ComponentClass,
@@ -7,52 +10,51 @@ import type {
   MutableRefObject,
 } from 'react';
 import React from 'react';
+import type { FlatList, FlatListProps } from 'react-native';
 import { Platform } from 'react-native';
-import '../layoutReanimation/animationsManager';
-import invariant from 'invariant';
-import { adaptViewConfig } from '../ConfigHelper';
-import { findHostInstance } from '../platform-specific/findHostInstance';
-import { enableLayoutAnimations } from '../core';
-import { SharedTransition } from '../layoutReanimation';
-import { LayoutAnimationType } from '../commonTypes';
-import type { StyleProps, ShadowNodeWrapper } from '../commonTypes';
-import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { removeFromPropsRegistry } from '../PropsRegistry';
+
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
+import type { ShadowNodeWrapper, StyleProps } from '../commonTypes';
+import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
+import { adaptViewConfig } from '../ConfigHelper';
+import { enableLayoutAnimations } from '../core';
+import { ReanimatedError } from '../errors';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
 import type { AnimateProps } from '../helperTypes';
-import JSPropsUpdater from './JSPropsUpdater';
-import type {
-  AnimatedComponentProps,
-  AnimatedProps,
-  InitialComponentProps,
-  AnimatedComponentRef,
-  IAnimatedComponentInternal,
-  ViewInfo,
-  INativeEventsManager,
-  NestedArray,
-} from './commonTypes';
-import { flattenArray } from './utils';
-import setAndForwardRef from './setAndForwardRef';
-import { isFabric, isJest, isWeb, shouldBeUseWeb } from '../PlatformChecker';
-import { InlinePropManager } from './InlinePropManager';
-import { PropsFilter } from './PropsFilter';
+import { SharedTransition } from '../layoutReanimation';
 import {
-  startWebLayoutAnimation,
-  tryActivateLayoutTransition,
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
   saveSnapshot,
+  startWebLayoutAnimation,
+  tryActivateLayoutTransition,
 } from '../layoutReanimation/web';
-import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type { CustomConfig } from '../layoutReanimation/web/config';
-import type { FlatList, FlatListProps } from 'react-native';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
-import { getViewInfo } from './getViewInfo';
-import { NativeEventsManager } from './NativeEventsManager';
+import { findHostInstance } from '../platform-specific/findHostInstance';
+import { isFabric, isJest, isWeb, shouldBeUseWeb } from '../PlatformChecker';
+import { removeFromPropsRegistry } from '../PropsRegistry';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
-import { ReanimatedError } from '../errors';
+import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
+import type {
+  AnimatedComponentProps,
+  AnimatedComponentRef,
+  AnimatedProps,
+  IAnimatedComponentInternal,
+  INativeEventsManager,
+  InitialComponentProps,
+  NestedArray,
+  ViewInfo,
+} from './commonTypes';
+import { getViewInfo } from './getViewInfo';
+import { InlinePropManager } from './InlinePropManager';
+import JSPropsUpdater from './JSPropsUpdater';
+import { NativeEventsManager } from './NativeEventsManager';
+import { PropsFilter } from './PropsFilter';
+import setAndForwardRef from './setAndForwardRef';
+import { flattenArray } from './utils';
 
 const IS_WEB = isWeb();
 const IS_JEST = isJest();

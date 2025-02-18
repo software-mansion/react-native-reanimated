@@ -1,4 +1,7 @@
 'use strict';
+import type { ParamListBase } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, {
   createContext,
   useCallback,
@@ -6,18 +9,13 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Layout,
   SharedTransition,
   SharedTransitionType,
   withSpring,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, View, Text } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
-import type { ParamListBase } from '@react-navigation/native';
 
 const Stack = createNativeStackNavigator();
 const Context = createContext({

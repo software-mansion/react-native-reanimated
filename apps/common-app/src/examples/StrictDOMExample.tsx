@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { css, html } from 'react-strict-dom';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -7,7 +7,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { css, html } from 'react-strict-dom';
 
 const animated = {
   html: {

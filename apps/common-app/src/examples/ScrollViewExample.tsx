@@ -1,7 +1,6 @@
-import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
-import { StyleSheet, Text } from 'react-native';
-
 import React from 'react';
+import { StyleSheet, Text } from 'react-native';
+import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 
 export default function ScrollViewExample() {
   const scrollHandler = useAnimatedScrollHandler((event) => {

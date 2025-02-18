@@ -1,6 +1,6 @@
-import Animated, { Layout } from 'react-native-reanimated';
-import { Button, StyleSheet, Text, View } from 'react-native';
 import React, { useState } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
+import Animated, { Layout } from 'react-native-reanimated';
 
 function Box({ label, state }: { label: string; state: boolean }) {
   const ind = label.charCodeAt(0) - 'A'.charCodeAt(0);

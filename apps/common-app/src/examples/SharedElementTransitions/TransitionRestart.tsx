@@ -1,9 +1,9 @@
-import * as React from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
-import { View, Button, StyleSheet } from 'react-native';
 import type { ParamListBase } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as React from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   SharedTransition,
   SharedTransitionType,

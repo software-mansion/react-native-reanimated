@@ -1,7 +1,9 @@
-import * as React from 'react';
-import { TouchableNativeFeedback, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as React from 'react';
+import { StyleSheet, TouchableNativeFeedback } from 'react-native';
+import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
   useAnimatedGestureHandler,
@@ -9,8 +11,6 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import { PanGestureHandler } from 'react-native-gesture-handler';
 
 type ParamList = {
   Screen1?: object;
@@ -18,6 +18,7 @@ type ParamList = {
 };
 
 const photo = require('./assets/image.jpg');
+
 const Stack = createNativeStackNavigator<ParamList>();
 
 interface CardProps {

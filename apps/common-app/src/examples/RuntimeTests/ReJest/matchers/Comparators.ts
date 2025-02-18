@@ -1,4 +1,5 @@
 import { isColor, processColor } from 'react-native-reanimated';
+
 import type { TestValue, ValidPropNames } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
 

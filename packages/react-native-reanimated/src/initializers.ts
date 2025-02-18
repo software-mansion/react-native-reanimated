@@ -1,21 +1,26 @@
 'use strict';
+import type { IReanimatedModule } from './commonTypes';
 import { registerReanimatedError, reportFatalErrorOnJS } from './errors';
-import { isChromeDebugger, isJest, shouldBeUseWeb } from './PlatformChecker';
-import {
-  runOnJS,
-  setupMicrotasks,
-  callMicrotasks,
-  runOnUIImmediately,
-  executeOnUIRuntimeSync,
-} from './threads';
-import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
 import {
   DEFAULT_LOGGER_CONFIG,
   logToLogBoxAndConsole,
   registerLoggerConfig,
   replaceLoggerImplementation,
 } from './logger';
-import type { IReanimatedModule } from './commonTypes';
+import { mockedRequestAnimationFrame } from './mockedRequestAnimationFrame';
+import {
+  isChromeDebugger,
+  isJest,
+  isWeb,
+  shouldBeUseWeb,
+} from './PlatformChecker';
+import {
+  callMicrotasks,
+  executeOnUIRuntimeSync,
+  runOnJS,
+  runOnUIImmediately,
+  setupMicrotasks,
+} from './threads';
 
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -180,6 +185,9 @@ function setupRequestAnimationFrame() {
 }
 
 export function initializeUIRuntime(ReanimatedModule: IReanimatedModule) {
+  if (isWeb()) {
+    return;
+  }
   if (!ReanimatedModule) {
     // eslint-disable-next-line reanimated/use-reanimated-error
     throw new Error(

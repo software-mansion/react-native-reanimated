@@ -1,12 +1,12 @@
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withClamp,
-} from 'react-native-reanimated';
-import type { ViewStyle } from 'react-native';
-import { View, Text, Button, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
+import type { ViewStyle } from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withClamp,
+  withSpring,
+} from 'react-native-reanimated';
 
 const VIOLET = '#b58df1';
 const BORDER_WIDTH = 4;

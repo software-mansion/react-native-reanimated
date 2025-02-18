@@ -1,12 +1,11 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
   withSpring,
 } from 'react-native-reanimated';
-import { StyleSheet, View } from 'react-native';
-
-import React from 'react';
 
 const ROWS = 23;
 const COLS = 12;

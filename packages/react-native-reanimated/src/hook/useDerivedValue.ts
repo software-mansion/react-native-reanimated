@@ -1,10 +1,11 @@
 'use strict';
 import { useEffect, useRef } from 'react';
+
 import { initialUpdaterRun } from '../animation';
 import type { SharedValue, WorkletFunction } from '../commonTypes';
 import { makeMutable, startMapper, stopMapper } from '../core';
-import type { DependencyList } from './commonTypes';
 import { shouldBeUseWeb } from '../PlatformChecker';
+import type { DependencyList } from './commonTypes';
 
 export interface DerivedValue<Value = unknown>
   extends Readonly<Omit<SharedValue<Value>, 'set'>> {

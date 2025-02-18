@@ -1,15 +1,15 @@
 'use strict';
-import { ReanimatedModule } from './ReanimatedModule';
 import type {
   SensorConfig,
+  ShareableRef,
   SharedValue,
   Value3D,
   ValueRotation,
-  ShareableRef,
   WorkletFunction,
 } from './commonTypes';
 import { SensorType } from './commonTypes';
 import { makeMutable } from './mutables';
+import { ReanimatedModule } from './ReanimatedModule';
 
 function initSensorData(
   sensorType: SensorType

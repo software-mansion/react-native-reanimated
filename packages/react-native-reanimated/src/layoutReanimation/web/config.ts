@@ -39,7 +39,6 @@ import {
   StretchOutData,
 } from './animation/Stretch.web';
 import { ZoomIn, ZoomInData, ZoomOut, ZoomOutData } from './animation/Zoom.web';
-
 import type { AnimationData, AnimationStyle } from './animationParser';
 
 export type AnimationCallback = ((finished: boolean) => void) | null;
