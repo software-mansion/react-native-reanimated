@@ -16,16 +16,14 @@ TransitionStyleInterpolator::getReversedPropertyNames(
     return reversedProperties;
   }
 
-  for (const auto &pair : newPropertyValues.items()) {
-    const auto propertyName = pair.first.getString();
-    const auto &propertyValue = pair.second;
-
-    const auto it = interpolators_.find(propertyName);
+  for (const auto &[propertyName, propertyValue] : newPropertyValues.items()) {
+    const auto propertyNameStr = propertyName.getString();
+    const auto it = interpolators_.find(propertyNameStr);
     if (it != interpolators_.end() &&
         // First keyframe value of the previous transition is the reversing
         // adjusted start value
         it->second->equalsReversingAdjustedStartValue(propertyValue)) {
-      reversedProperties.insert(propertyName);
+      reversedProperties.insert(propertyNameStr);
     }
   }
 

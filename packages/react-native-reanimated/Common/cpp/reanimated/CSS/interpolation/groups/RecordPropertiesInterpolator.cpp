@@ -12,11 +12,9 @@ RecordPropertiesInterpolator::RecordPropertiesInterpolator(
 
 bool RecordPropertiesInterpolator::equalsReversingAdjustedStartValue(
     const folly::dynamic &propertyValue) const {
-  for (const auto &pair : propertyValue.items()) {
-    const auto &propName = pair.first.asString();
-    const auto &propValue = pair.second;
+  for (const auto &[propName, propValue] : propertyValue.items()) {
+    const auto it = interpolators_.find(propName.getString());
 
-    const auto it = interpolators_.find(propName);
     if (it == interpolators_.end() ||
         !it->second->equalsReversingAdjustedStartValue(propValue)) {
       return false;
@@ -84,8 +82,8 @@ folly::dynamic RecordPropertiesInterpolator::mapInterpolators(
     const {
   folly::dynamic result = folly::dynamic::object;
 
-  for (const auto &pair : interpolators_) {
-    result[pair.first] = callback(*pair.second);
+  for (const auto &[propertyName, interpolator] : interpolators_) {
+    result[propertyName] = callback(*interpolator);
   }
 
   return result;
