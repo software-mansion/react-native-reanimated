@@ -48,6 +48,7 @@ let id = 0;
 const IS_WEB = isWeb();
 const IS_JEST = isJest();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
+const IS_FABRIC = isFabric();
 
 if (IS_WEB) {
   configureWebLayoutAnimations();
@@ -100,7 +101,7 @@ export default class AnimatedComponent
       !entering ||
       getReducedMotionFromConfig(entering as CustomConfig) ||
       skipEntering ||
-      !isFabric()
+      !IS_FABRIC
     ) {
       return;
     }
@@ -186,7 +187,7 @@ export default class AnimatedComponent
         this._componentDOMRef as ReanimatedHTMLElement,
         LayoutAnimationType.EXITING
       );
-    } else if (exiting && !IS_WEB && !isFabric()) {
+    } else if (exiting && !IS_WEB && !IS_FABRIC) {
       const reduceMotionInExiting =
         'getReduceMotion' in exiting &&
         typeof exiting.getReduceMotion === 'function'
@@ -211,7 +212,7 @@ export default class AnimatedComponent
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.remove(viewTag);
       }
-      if (isFabric()) {
+      if (IS_FABRIC) {
         removeFromPropsRegistry(viewTag);
       }
     }
@@ -406,7 +407,7 @@ export default class AnimatedComponent
       if (sharedTransitionTag) {
         this._configureSharedTransition();
       }
-      if (exiting && isFabric()) {
+      if (exiting && IS_FABRIC) {
         const reduceMotionInExiting =
           'getReduceMotion' in exiting &&
           typeof exiting.getReduceMotion === 'function'
@@ -422,7 +423,7 @@ export default class AnimatedComponent
       }
 
       const skipEntering = this.context?.current;
-      if (entering && !isFabric() && !skipEntering && !IS_WEB) {
+      if (entering && !IS_FABRIC && !skipEntering && !IS_WEB) {
         updateLayoutAnimations(
           tag,
           LayoutAnimationType.ENTERING,
@@ -473,7 +474,7 @@ export default class AnimatedComponent
 
     const skipEntering = this.context?.current;
     const nativeID =
-      skipEntering || !isFabric() ? undefined : `${this.reanimatedID}`;
+      skipEntering || !IS_FABRIC ? undefined : `${this.reanimatedID}`;
 
     const jestProps = IS_JEST
       ? {
