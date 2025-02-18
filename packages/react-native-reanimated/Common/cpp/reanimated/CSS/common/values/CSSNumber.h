@@ -12,8 +12,8 @@ namespace reanimated {
 
 using namespace worklets;
 
-template <typename TValue, typename TDerived>
-struct CSSNumberBase : public CSSBaseValue<CSSValueType::Number, TDerived> {
+template <typename TDerived, typename TValue>
+struct CSSNumberBase : public CSSSimpleValue<TDerived> {
   TValue value;
 
   CSSNumberBase();
@@ -29,26 +29,26 @@ struct CSSNumberBase : public CSSBaseValue<CSSValueType::Number, TDerived> {
   std::string toString() const override;
   TDerived interpolate(double progress, const TDerived &other) const override;
 
-  bool operator==(const CSSNumberBase<TValue, TDerived> &other) const;
+  bool operator==(const CSSNumberBase<TDerived, TValue> &other) const;
 };
 
 #ifndef NDEBUG
 
-template <typename TValue, typename TDerived>
+template <typename TDerived, typename TValue>
 std::ostream &operator<<(
     std::ostream &os,
-    const CSSNumberBase<TValue, TDerived> &numberValue) {
+    const CSSNumberBase<TDerived, TValue> &numberValue) {
   os << "CSSNumberBase(" << numberValue.toString() << ")";
   return os;
 }
 
 #endif // NDEBUG
 
-struct CSSDouble : public CSSNumberBase<double, CSSDouble> {
+struct CSSDouble : public CSSNumberBase<CSSDouble, double> {
   // Inherit all constructors from the base class
   using CSSNumberBase::CSSNumberBase;
 };
-struct CSSInteger : public CSSNumberBase<int, CSSInteger> {
+struct CSSInteger : public CSSNumberBase<CSSInteger, int> {
   // Inherit all constructors from the base class
   using CSSNumberBase::CSSNumberBase;
 
@@ -62,7 +62,7 @@ struct CSSInteger : public CSSNumberBase<int, CSSInteger> {
 // custom value that will never be smaller than 1
 
 struct CSSShadowRadiusAndroid
-    : public CSSNumberBase<double, CSSShadowRadiusAndroid> {
+    : public CSSNumberBase<CSSShadowRadiusAndroid, double> {
   CSSShadowRadiusAndroid();
   explicit CSSShadowRadiusAndroid(double value);
   explicit CSSShadowRadiusAndroid(jsi::Runtime &rt, const jsi::Value &jsiValue);

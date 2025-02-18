@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-var-requires */
 /*
  * This script is a wrapper for gradle & spotlessApply to make
