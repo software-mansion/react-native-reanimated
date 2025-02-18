@@ -3,6 +3,8 @@ import type {
   LayoutAnimationBatchItem,
   LayoutAnimationFunction,
   LayoutAnimationType,
+  ProgressAnimationCallback,
+  SharedTransitionAnimationsFunction,
 } from './commonTypes';
 import {
   configureLayoutAnimationBatch,
