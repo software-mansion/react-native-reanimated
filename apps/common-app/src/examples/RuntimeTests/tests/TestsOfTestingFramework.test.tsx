@@ -1,28 +1,29 @@
 import React, { useEffect } from 'react';
-import { View, Text } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, FadeIn, runOnUI } from 'react-native-reanimated';
+import { Text, View } from 'react-native';
+import Animated, { FadeIn, runOnUI, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+
 import {
-  describe,
-  test,
-  expect,
-  render,
-  useTestRef,
-  getTestComponent,
-  wait,
-  mockAnimationTimer,
-  recordAnimationUpdates,
   callTracker,
-  getTrackerCallCount,
-  registerValue,
-  getRegisteredValue,
-  Presets,
   callTrackerFn,
-  notify,
-  waitForNotify,
   clearRenderOutput,
+  describe,
+  expect,
+  getRegisteredValue,
+  getTestComponent,
+  getTrackerCallCount,
+  mockAnimationTimer,
+  notify,
+  Presets,
+  recordAnimationUpdates,
+  registerValue,
+  render,
+  test,
+  useTestRef,
+  wait,
+  waitForNotify,
 } from '../ReJest/RuntimeTestsApi';
-import { Snapshots } from './TestsOfTestingFramework.snapshot';
 import { ComparisonMode } from '../ReJest/types';
+import { Snapshots } from './TestsOfTestingFramework.snapshot';
 
 const AnimatedComponent = () => {
   const widthSV = useSharedValue(0);

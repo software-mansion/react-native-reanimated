@@ -1,11 +1,11 @@
 'use strict';
 import type {
   AnimatableValue,
-  AnimationObject,
   Animation,
+  AnimationObject,
   ReduceMotion,
-  Timestamp,
   RequiredKeys,
+  Timestamp,
 } from '../../commonTypes';
 import { isWeb } from '../../PlatformChecker';
 

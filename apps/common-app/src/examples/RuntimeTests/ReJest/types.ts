@@ -1,5 +1,5 @@
 import type { Component, Dispatch, MutableRefObject, ReactNode, SetStateAction } from 'react';
-import type { AnimatedStyle, StyleProps, LayoutAnimationStartFunction } from 'react-native-reanimated';
+import type { AnimatedStyle, LayoutAnimationStartFunction, StyleProps } from 'react-native-reanimated';
 
 export type CallTracker = {
   UICallsCount: number;

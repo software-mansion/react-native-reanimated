@@ -1,12 +1,13 @@
 'use strict';
 import type {
-  ViewStyle,
+  ImageStyle,
   TextStyle,
   TransformsStyle,
-  ImageStyle,
+  ViewStyle,
 } from 'react-native';
-import type { WorkletsModuleProxy } from './worklets';
+
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
+import type { WorkletsModuleProxy } from './worklets';
 
 export interface IWorkletsModule extends WorkletsModuleProxy {}
 

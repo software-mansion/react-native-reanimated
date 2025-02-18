@@ -1,15 +1,16 @@
 'use strict';
 import { useEffect, useRef } from 'react';
-import {
-  makeMutable,
-  subscribeForKeyboardEvents,
-  unsubscribeFromKeyboardEvents,
-} from '../core';
+
 import type {
   AnimatedKeyboardInfo,
   AnimatedKeyboardOptions,
 } from '../commonTypes';
 import { KeyboardState } from '../commonTypes';
+import {
+  makeMutable,
+  subscribeForKeyboardEvents,
+  unsubscribeFromKeyboardEvents,
+} from '../core';
 
 /**
  * Lets you synchronously get the position and state of the keyboard.

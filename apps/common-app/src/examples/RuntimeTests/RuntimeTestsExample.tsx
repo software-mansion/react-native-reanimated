@@ -1,6 +1,7 @@
 import React from 'react';
-import RuntimeTestsRunner from './ReJest/RuntimeTestsRunner';
+
 import { describe } from './ReJest/RuntimeTestsApi';
+import RuntimeTestsRunner from './ReJest/RuntimeTestsRunner';
 
 export default function RuntimeTestsExample() {
   return (

@@ -7,19 +7,19 @@ import {
   isGestureHandlerEventCallback,
   isGestureObjectEventCallbackMethod,
 } from './gestureHandlerAutoworkletization';
+import { isLayoutAnimationCallback } from './layoutAnimationAutoworkletization';
+import { processWorkletizableObject } from './objectWorklets';
+import { findReferencedWorklet } from './referencedWorklets';
+import type {
+  ReanimatedPluginPass,
+  WorkletizableFunction,
+  WorkletizableObject,
+} from './types';
 import {
   isWorkletizableFunctionPath,
   isWorkletizableObjectPath,
 } from './types';
-import type {
-  WorkletizableFunction,
-  WorkletizableObject,
-  ReanimatedPluginPass,
-} from './types';
 import { processWorklet } from './workletSubstitution';
-import { isLayoutAnimationCallback } from './layoutAnimationAutoworkletization';
-import { findReferencedWorklet } from './referencedWorklets';
-import { processWorkletizableObject } from './objectWorklets';
 
 const reanimatedObjectHooks = new Set([
   'useAnimatedGestureHandler',

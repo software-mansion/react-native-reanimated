@@ -1,11 +1,10 @@
 import React from 'react';
-
+import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, Text, View } from 'react-native';
 
 export default function ScrollViewOffsetExample() {
   const aref = useAnimatedRef<Animated.ScrollView>();

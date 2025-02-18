@@ -6,25 +6,25 @@
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 
 import type {
-  StyleProps,
-  MeasuredDimensions,
-  MapperRegistry,
-  ShareableRef,
-  ShadowNodeWrapper,
   FlatShareableRef,
+  MapperRegistry,
+  MeasuredDimensions,
+  ShadowNodeWrapper,
+  ShareableRef,
+  StyleProps,
 } from './commonTypes';
-import type { AnimatedStyle } from './helperTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
-import type { ReanimatedModuleProxy } from './ReanimatedModule';
-import type { WorkletsModuleProxy } from './worklets';
-import type { SensorContainer } from './SensorContainer';
+import type { AnimatedStyle } from './helperTypes';
+import type { callGuardDEV } from './initializers';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
-import type { UpdatePropsManager } from './UpdateProps';
-import type { callGuardDEV } from './initializers';
+import type { LoggerConfigInternal } from './logger';
+import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { WorkletRuntime } from './runtimes';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
-import type { LoggerConfigInternal } from './logger';
+import type { SensorContainer } from './SensorContainer';
+import type { UpdatePropsManager } from './UpdateProps';
+import type { WorkletsModuleProxy } from './worklets';
 
 declare global {
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;

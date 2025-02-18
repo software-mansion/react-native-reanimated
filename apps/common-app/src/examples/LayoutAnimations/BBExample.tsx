@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   BounceIn,
@@ -7,7 +8,6 @@ import Animated, {
   LinearTransition,
   RotateOutDownLeft,
 } from 'react-native-reanimated';
-import React, { useState } from 'react';
 
 export default function BBExample() {
   const [show, setShow] = useState(true);

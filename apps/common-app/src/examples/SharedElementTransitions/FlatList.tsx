@@ -1,18 +1,18 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import type {
-  TouchableWithoutFeedbackProps,
   ListRenderItemInfo,
+  TouchableWithoutFeedbackProps,
 } from 'react-native';
 import {
-  View,
   Button,
   FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
+  View,
 } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Animated from 'react-native-reanimated';
 
 type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;

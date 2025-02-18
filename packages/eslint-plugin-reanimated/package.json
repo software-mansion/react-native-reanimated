@@ -8,7 +8,7 @@
     "test": "yarn jest",
     "bundle": "yarn esbuild ./public/index.js --external:espree --external:@typescript-eslint --platform=node --bundle --outfile=./index.js",
     "build": "yarn tsc && yarn bundle && rm -rf ./public/* && yarn format",
-    "lint": "eslint --max-warnings=0 .",
+    "lint": "eslint --max-warnings=0 src",
     "format": "prettier --write --list-different ."
   },
   "devDependencies": {

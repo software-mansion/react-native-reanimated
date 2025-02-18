@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Button, StyleSheet } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
 import { runOnUI } from 'react-native-reanimated';
 
 function shortOffender() {

@@ -1,19 +1,20 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Easing as EasingRN } from 'react-native';
+import { Easing as EasingRN, StyleSheet, View } from 'react-native';
 import type { EasingFunction, EasingFunctionFactory } from 'react-native-reanimated';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+
 import {
   describe,
-  test,
   expect,
   mockAnimationTimer,
   recordAnimationUpdates,
   render,
-  wait,
+  test,
   unmockAnimationTimer,
+  wait,
 } from '../../../ReJest/RuntimeTestsApi';
-import { EasingSnapshots } from './withTiming.snapshot';
 import { ErrorBoundary } from '../../../ReJest/RuntimeTestsRunner';
+import { EasingSnapshots } from './withTiming.snapshot';
 
 const ActiveAnimatedComponent = ({ easing }: { easing: EasingFunction | EasingFunctionFactory | undefined }) => {
   const widthSV = useSharedValue(0);

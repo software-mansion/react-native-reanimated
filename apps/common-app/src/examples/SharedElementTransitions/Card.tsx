@@ -1,10 +1,10 @@
-import * as React from 'react';
-import { View, TouchableNativeFeedback, StyleSheet } from 'react-native';
 import type {
   NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as React from 'react';
+import { StyleSheet, TouchableNativeFeedback, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 type ParamList = {

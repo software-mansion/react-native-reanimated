@@ -1,8 +1,8 @@
 'use strict';
-import { shouldBeUseWeb } from './PlatformChecker';
 import type { Mutable } from './commonTypes';
 import { ReanimatedError } from './errors';
 import { logger } from './logger';
+import { shouldBeUseWeb } from './PlatformChecker';
 import { isFirstReactRender, isReactRendering } from './reactUtils';
 import { shareableMappingCache } from './shareableMappingCache';
 import { makeShareableCloneRecursive } from './shareables';

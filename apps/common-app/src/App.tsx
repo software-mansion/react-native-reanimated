@@ -1,5 +1,15 @@
 import './types';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { HeaderBackButtonProps } from '@react-navigation/elements';
+import { HeaderBackButton } from '@react-navigation/elements';
+import type { NavigationState, PathConfigMap } from '@react-navigation/native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import { createStackNavigator } from '@react-navigation/stack';
+import React, { useCallback } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -15,19 +25,9 @@ import {
   GestureHandlerRootView,
   RectButton,
 } from 'react-native-gesture-handler';
-import type { HeaderBackButtonProps } from '@react-navigation/elements';
-import { HeaderBackButton } from '@react-navigation/elements';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type { NavigationState, PathConfigMap } from '@react-navigation/native';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import type { StackNavigationProp } from '@react-navigation/stack';
-import { createStackNavigator } from '@react-navigation/stack';
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { EXAMPLES } from './examples';
-import React, { useCallback } from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
+
+import { EXAMPLES } from './examples';
 
 function isFabric(): boolean {
   return !!(global as Record<string, unknown>)._IS_FABRIC;

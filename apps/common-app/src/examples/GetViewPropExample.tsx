@@ -1,4 +1,5 @@
-import { StyleSheet, View, Button } from 'react-native';
+import React, { useEffect } from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   getViewProp,
   useAnimatedRef,
@@ -7,8 +8,6 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-
-import React, { useEffect } from 'react';
 
 export default function GetViewPropExample() {
   const sv = useSharedValue(0);

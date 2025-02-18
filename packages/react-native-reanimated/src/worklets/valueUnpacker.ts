@@ -1,8 +1,8 @@
 /* eslint-disable reanimated/use-reanimated-error */
 'use strict';
-import { shouldBeUseWeb } from '../PlatformChecker';
-import { isWorkletFunction } from '../commonTypes';
 import type { WorkletFunction } from '../commonTypes';
+import { isWorkletFunction } from '../commonTypes';
+import { shouldBeUseWeb } from '../PlatformChecker';
 
 function valueUnpacker(
   objectToUnpack: any,
