@@ -52,32 +52,51 @@ void ArrayPropertiesInterpolator::updateKeyframesFromStyleChange(
     jsi::Runtime &rt,
     const jsi::Value &oldStyleValue,
     const jsi::Value &newStyleValue) {
-  const size_t valuesCount = newStyleValue.isObject()
-      ? newStyleValue.asObject(rt).asArray(rt).size(rt)
-      : oldStyleValue.asObject(rt).asArray(rt).size(rt);
+  auto getArrayFromStyle = [&rt](const jsi::Value &style) {
+    if (!style.isObject()) {
+      return jsi::Array(rt, 0);
+    }
+    auto obj = style.asObject(rt);
+    return obj.isArray(rt) ? obj.asArray(rt) : jsi::Array(rt, 0);
+  };
+
+  const auto oldStyleArray = getArrayFromStyle(oldStyleValue);
+  const auto newStyleArray = getArrayFromStyle(newStyleValue);
+
+  const size_t valuesCount =
+      std::max(oldStyleArray.size(rt), newStyleArray.size(rt));
 
   resizeInterpolators(valuesCount);
 
   for (size_t i = 0; i < valuesCount; ++i) {
-    interpolators_[i]->updateKeyframesFromStyleChange(
-        rt,
-        oldStyleValue.isObject()
-            ? oldStyleValue.asObject(rt).asArray(rt).getValueAtIndex(rt, i)
-            : jsi::Value::undefined(),
-        newStyleValue.isObject()
-            ? newStyleValue.asObject(rt).asArray(rt).getValueAtIndex(rt, i)
-            : jsi::Value::undefined());
+    // These index checks ensure that interpolation works between 2 arrays
+    // with different lengths
+    const auto oldValue = oldStyleArray.size(rt) > i
+        ? oldStyleArray.getValueAtIndex(rt, i)
+        : jsi::Value::undefined();
+    const auto newValue = newStyleArray.size(rt) > i
+        ? newStyleArray.getValueAtIndex(rt, i)
+        : jsi::Value::undefined();
+
+    interpolators_[i]->updateKeyframesFromStyleChange(rt, oldValue, newValue);
   }
 }
 
-jsi::Value ArrayPropertiesInterpolator::mapInterpolators(
-    jsi::Runtime &rt,
-    const std::function<jsi::Value(PropertyInterpolator &)> &callback) const {
-  jsi::Array result(rt, interpolators_.size());
+void ArrayPropertiesInterpolator::forEachInterpolator(
+    const std::function<void(PropertyInterpolator &)> &callback) const {
+  for (const auto &interpolator : interpolators_) {
+    callback(*interpolator);
+  }
+}
+
+folly::dynamic ArrayPropertiesInterpolator::mapInterpolators(
+    const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
+    const {
+  auto result = folly::dynamic::array();
 
   for (size_t i = 0; i < interpolators_.size(); ++i) {
-    jsi::Value value = callback(*interpolators_[i]);
-    result.setValueAtIndex(rt, i, value);
+    folly::dynamic value = callback(*interpolators_[i]);
+    result.push_back(value);
   }
 
   return result;

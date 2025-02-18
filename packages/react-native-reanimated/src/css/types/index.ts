@@ -1,7 +1,7 @@
 'use strict';
-export * from './common';
 export * from './animation';
-export * from './transition';
+export * from './common';
+export * from './config';
 export * from './helpers';
 export * from './props';
-export * from './config';
+export * from './transition';

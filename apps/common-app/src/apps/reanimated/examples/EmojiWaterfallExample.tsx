@@ -1,3 +1,5 @@
+import React, { useContext, useMemo } from 'react';
+import { Button, Dimensions, StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
@@ -6,8 +8,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Button, Dimensions, StyleSheet, View } from 'react-native';
-import React, { useContext, useMemo } from 'react';
 
 const { width, height } = Dimensions.get('screen');
 

@@ -60,7 +60,7 @@ describe(filterCSSAndStyleProperties, () => {
     describe('animation settings', () => {
       it.each([
         ['animationDuration', '2s'],
-        ['animationTimingFunction', 'easeInOut'],
+        ['animationTimingFunction', 'ease-in-out'],
         ['animationDelay', '1s'],
         ['animationIterationCount', 5],
         ['animationDirection', 'reverse'],
@@ -117,7 +117,7 @@ describe(filterCSSAndStyleProperties, () => {
       it.each([
         ['transitionProperty', 'opacity'],
         ['transitionDuration', '2s'],
-        ['transitionTimingFunction', 'easeInOut'],
+        ['transitionTimingFunction', 'ease-in-out'],
         ['transitionDelay', '1s'],
       ])(`returns %p setting`, (key, value) => {
         const style: CSSStyle = {

@@ -17,7 +17,7 @@ const square: CSSAnimationKeyframes = {
   },
   '50%': {
     transform: [{ translateX: 80 }, { translateY: 80 }],
-    animationTimingFunction: 'easeInOut',
+    animationTimingFunction: 'ease-in-out',
   },
   '75%': {
     transform: [{ translateX: -80 }, { translateY: 80 }],

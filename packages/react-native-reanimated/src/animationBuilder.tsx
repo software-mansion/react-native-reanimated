@@ -6,7 +6,7 @@ import type {
   StyleProps,
 } from './commonTypes';
 import type { NestedArray } from './createAnimatedComponent/commonTypes';
-import { logger } from './logger';
+import { logger } from './WorkletsResolver';
 
 const mockTargetValues: LayoutAnimationsValues = {
   targetOriginX: 0,

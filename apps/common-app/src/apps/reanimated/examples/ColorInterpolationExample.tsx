@@ -1,20 +1,19 @@
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  interpolateColor,
-  isColor,
-} from 'react-native-reanimated';
+import React, { useEffect, useState } from 'react';
 import {
-  StyleSheet,
-  TextInput,
-  View,
-  Text,
   Button,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
-
-import React, { useEffect, useState } from 'react';
+import Animated, {
+  interpolateColor,
+  isColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 function DefaultInterpolation({
   color1,
@@ -37,7 +36,7 @@ function DefaultInterpolation({
 
   return (
     <View>
-      <Text>Default:</Text>
+      <Text style={styles.text}>Default:</Text>
       <View style={styles.colorContainer}>
         <Animated.View style={[styles.bigbox, animatedStyle]} />
         <Button
@@ -72,7 +71,7 @@ function ColorInterpolation({
 
   return (
     <View>
-      <Text>{title}:</Text>
+      <Text style={styles.text}>{title}:</Text>
       <View style={styles.colorContainer}>
         <View style={[styles.box, { backgroundColor: color1 }]} />
         <View style={styles.spacer} />
@@ -139,6 +138,11 @@ function hsvStarInterpolation(
   return interpolateColor(progress, [0, 1], [color1, color2], 'HSV');
 }
 
+function oklabInterpolation(color1: string, color2: string, progress: number) {
+  'worklet';
+  return interpolateColor(progress, [0, 1], [color1, color2], 'LAB');
+}
+
 export default function ColorInterpolationExample() {
   const [color1, setColor1] = useState('#ff0000');
   const [color2, setColor2] = useState('#00ffff');
@@ -163,11 +167,13 @@ export default function ColorInterpolationExample() {
     <ScrollView style={styles.container}>
       <TextInput
         value={color1Text}
+        style={styles.text}
         onChangeText={onChangeColor1}
         autoCapitalize="none"
       />
       <TextInput
         value={color2Text}
+        style={styles.text}
         onChangeText={onChangeColor2}
         autoCapitalize="none"
       />
@@ -196,6 +202,12 @@ export default function ColorInterpolationExample() {
         interpolateFunction={hsvStarInterpolation}
         title="HSV*"
       />
+      <ColorInterpolation
+        color1={color1}
+        color2={color2}
+        interpolateFunction={oklabInterpolation}
+        title="OK L*a*b*"
+      />
     </ScrollView>
   );
 }
@@ -219,5 +231,9 @@ const styles = StyleSheet.create({
   },
   spacer: {
     width: 10,
+  },
+  text: {
+    color: 'black',
+    fontWeight: 'bold',
   },
 });

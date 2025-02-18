@@ -1,21 +1,22 @@
 'use strict';
+import type { MutableRefObject, Ref } from 'react';
 import React, { Component } from 'react';
-import type { MutableRefObject, Ref, RefObject } from 'react';
+import type { StyleProp } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
+
+import type { ShadowNodeWrapper } from '../../commonTypes';
 import type {
   AnimatedComponentRef,
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
+import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
+import setAndForwardRef from '../../createAnimatedComponent/setAndForwardRef';
+import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
+import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { isFabric, isWeb, shouldBeUseWeb } from '../../PlatformChecker';
+import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
-import { Platform, StyleSheet } from 'react-native';
-import type { StyleProp } from 'react-native';
-import { findHostInstance } from '../../platform-specific/findHostInstance';
-import { ReanimatedError } from '../errors';
-import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
-import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
-import type { ShadowNodeWrapper } from '../../commonTypes';
-import setAndForwardRef from '../../createAnimatedComponent/setAndForwardRef';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_WEB = isWeb();
@@ -38,6 +39,8 @@ export default class AnimatedComponent<
   _viewInfo?: ViewInfo;
   _planStyle: CSSStyle = {};
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
+  // Used only on web
+  _componentDOMRef: HTMLElement | null = null;
 
   constructor(ChildComponent: AnyComponent, props: P) {
     super(props);
@@ -57,19 +60,18 @@ export default class AnimatedComponent<
       return this._viewInfo;
     }
 
-    let viewTag: number | HTMLElement | null;
+    let viewTag: number | typeof this._componentRef;
     let viewName: string | null;
     let shadowNodeWrapper: ShadowNodeWrapper | null = null;
     let viewConfig;
+    let DOMElement: HTMLElement | null = null;
 
     if (SHOULD_BE_USE_WEB) {
       // At this point we assume that `_setComponentRef` was already called and `_component` is set.
       // `this._component` on web represents HTMLElement of our component, that's why we use casting
       // TODO - implement a valid solution later on - this is a temporary fix
-      viewTag =
-        this._componentRef && 'elementRef' in this._componentRef
-          ? (this._componentRef.elementRef as RefObject<HTMLElement>).current
-          : (this._componentRef as HTMLElement);
+      viewTag = this._componentRef;
+      DOMElement = this._componentDOMRef;
       viewName = null;
       shadowNodeWrapper = null;
       viewConfig = null;
@@ -95,6 +97,10 @@ export default class AnimatedComponent<
         : null;
     }
     this._viewInfo = { viewTag, viewName, shadowNodeWrapper, viewConfig };
+    if (DOMElement) {
+      this._viewInfo.DOMElement = DOMElement;
+    }
+
     return this._viewInfo;
   }
 
@@ -123,6 +129,14 @@ export default class AnimatedComponent<
     // Otherwise, we animate the component itself.
     if (componentRef && componentRef.getAnimatableRef) {
       return componentRef.getAnimatableRef();
+    }
+    // Case for SVG components on Web
+    if (SHOULD_BE_USE_WEB) {
+      if (componentRef && componentRef.elementRef) {
+        this._componentDOMRef = componentRef.elementRef.current;
+      } else {
+        this._componentDOMRef = ref as HTMLElement;
+      }
     }
     return componentRef;
   };

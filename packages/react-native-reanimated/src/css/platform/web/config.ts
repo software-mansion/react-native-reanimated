@@ -1,8 +1,12 @@
 'use strict';
+import type { PlainStyle } from '../../types';
+import type { StyleBuilderConfig } from './style';
 import {
+  boxShadowBuilder,
   processBoxShadow,
   processColor,
   processFilter,
+  processFontVariant,
   processFontWeight,
   processMarginHorizontal,
   processMarginVertical,
@@ -10,12 +14,8 @@ import {
   processPaddingVertical,
   processTransform,
   processTransformOrigin,
-  boxShadowBuilder,
   textShadowBuilder,
-  processFontVariant,
 } from './style';
-import type { StyleBuilderConfig } from './style';
-import type { PlainStyle } from '../../types';
 
 const colorAttributes = { process: processColor };
 
@@ -103,7 +103,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   overflow: true,
   zIndex: true,
   aspectRatio: true,
-  boxSizing: false, // TODO
+  boxSizing: true,
 
   /** Appearance */
   // COLORS
@@ -125,7 +125,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   borderStartColor: { as: 'borderLeftColor' },
   borderBlockColor: colorAttributes,
   // Other
-  outlineColor: false, // TODO
+  outlineColor: colorAttributes,
   shadowColor: boxShadowBuilder,
   overlayColor: colorAttributes,
   tintColor: colorAttributes,
@@ -178,9 +178,9 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   borderStyle: true,
 
   // OUTLINES
-  outlineOffset: false, // TODO
-  outlineStyle: false, // TODO
-  outlineWidth: false, // TODO
+  outlineOffset: 'px',
+  outlineStyle: true,
+  outlineWidth: 'px',
 
   // TRANSFORMS
   transformOrigin: { process: processTransformOrigin },
@@ -195,7 +195,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   // OTHERS
   backfaceVisibility: true,
   opacity: true,
-  mixBlendMode: false, // TODO
+  mixBlendMode: true,
   experimental_backgroundImage: false, // TODO
 
   /** Typography */

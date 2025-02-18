@@ -1,6 +1,7 @@
+import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
-import { View, Button, Text } from 'react-native';
-import { render, fireEvent } from '@testing-library/react-native';
+import { Button, Text, View } from 'react-native';
+
 import { useSharedValue } from '../src';
 
 const ViewTestComponent = () => {

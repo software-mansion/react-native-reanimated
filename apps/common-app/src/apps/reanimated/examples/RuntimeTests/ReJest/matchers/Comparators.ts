@@ -1,4 +1,5 @@
 import { isColor, processColor } from 'react-native-reanimated';
+
 import type { TestValue, ValidPropNames } from '../types';
 import { ComparisonMode, isValidPropName } from '../types';
 
@@ -113,6 +114,7 @@ export function getComparisonModeForProp(prop: ValidPropNames): ComparisonMode {
     top: ComparisonMode.PIXEL,
     left: ComparisonMode.PIXEL,
     backgroundColor: ComparisonMode.COLOR,
+    boxShadow: ComparisonMode.ARRAY,
   };
   return propToComparisonModeDict[prop];
 }

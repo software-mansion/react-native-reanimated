@@ -7,19 +7,21 @@
 
 namespace reanimated {
 
-struct CSSDimension
-    : public CSSResolvableValue<CSSValueType::Dimension, CSSDimension, double> {
+struct CSSDimension : public CSSResolvableValue<CSSDimension, double> {
   double value;
   bool isRelative;
 
   CSSDimension();
   explicit CSSDimension(double value);
   explicit CSSDimension(double value, bool isRelative);
-  explicit CSSDimension(const std::string &value);
+  explicit CSSDimension(const char *value);
   explicit CSSDimension(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  explicit CSSDimension(const folly::dynamic &value);
 
   static bool canConstruct(const std::string &value);
+  static bool canConstruct(const char *value);
   static bool canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue);
+  static bool canConstruct(const folly::dynamic &value);
 
   jsi::Value toJSIValue(jsi::Runtime &rt) const override;
   folly::dynamic toDynamic() const override;

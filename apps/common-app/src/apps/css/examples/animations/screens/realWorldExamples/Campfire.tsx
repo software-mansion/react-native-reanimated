@@ -121,7 +121,7 @@ const styles = css.create({
   flame: {
     animationDuration: ANIMATION_DURATION,
     animationIterationCount: 'infinite',
-    animationTimingFunction: 'easeIn',
+    animationTimingFunction: 'ease-in',
     backgroundColor: COLORS.yellow,
     borderRadius: radius.md,
     position: 'absolute',

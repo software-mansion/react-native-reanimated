@@ -1,18 +1,18 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions, Text } from 'react-native';
-import type { SharedValue } from 'react-native-reanimated';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  useAnimatedScrollHandler,
-  useAnimatedRef,
-  scrollTo,
-  useAnimatedGestureHandler,
-  Extrapolation,
-  interpolate,
-} from 'react-native-reanimated';
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import type { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import { PanGestureHandler } from 'react-native-gesture-handler';
+import type { SharedValue } from 'react-native-reanimated';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  scrollTo,
+  useAnimatedGestureHandler,
+  useAnimatedRef,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 
 const data = [
   { artist: 'Nirvana', song: 'Smells Like Teen Spirit' },

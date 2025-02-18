@@ -18,15 +18,13 @@ class TransitionStyleInterpolator {
   TransitionStyleInterpolator(
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  jsi::Value getCurrentInterpolationStyle(
-      jsi::Runtime &rt,
+  folly::dynamic getCurrentInterpolationStyle(
       const ShadowNode::Shared &shadowNode) const;
   std::unordered_set<std::string> getReversedPropertyNames(
       jsi::Runtime &rt,
       const jsi::Value &newPropertyValues) const;
 
-  jsi::Value update(
-      jsi::Runtime &rt,
+  folly::dynamic update(
       const ShadowNode::Shared &shadowNode,
       const std::unordered_set<std::string> &propertiesToRemove);
 

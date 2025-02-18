@@ -2,10 +2,10 @@
 import { ReanimatedError } from '../../../../errors';
 import type { TransformsArray } from '../../../../types';
 import {
-  isPercentage,
-  isNumber,
   isAngleValue,
+  isNumber,
   isNumberArray,
+  isPercentage,
 } from '../../../../utils';
 import type { ValueProcessor } from '../types';
 

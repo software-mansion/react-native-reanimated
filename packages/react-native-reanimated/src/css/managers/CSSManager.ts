@@ -1,16 +1,16 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import { adaptViewConfig } from '../../ConfigHelper';
+import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
 import {
   removeViewStyle,
   setViewStyle,
   styleBuilder,
 } from '../platform/native';
-import type { ViewInfo } from '../../createAnimatedComponent/commonTypes';
-import CSSTransitionManager from './CSSTransitionManager';
-import CSSAnimationsManager from './CSSAnimationsManager';
 import type { CSSStyle } from '../types';
 import { filterCSSAndStyleProperties } from '../utils';
+import CSSAnimationsManager from './CSSAnimationsManager';
+import CSSTransitionManager from './CSSTransitionManager';
 
 export default class CSSManager {
   private readonly viewTag: number;

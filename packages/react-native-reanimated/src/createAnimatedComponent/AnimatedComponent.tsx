@@ -1,45 +1,47 @@
 'use strict';
-import React from 'react';
-import type { Component } from 'react';
 import '../layoutReanimation/animationsManager';
-import { adaptViewConfig } from '../ConfigHelper';
-import { enableLayoutAnimations } from '../core';
-import { SharedTransition } from '../layoutReanimation';
-import { LayoutAnimationType } from '../commonTypes';
-import type { StyleProps } from '../commonTypes';
+
+import type { Component } from 'react';
+import React from 'react';
+import { Platform } from 'react-native';
+
 import { removeFromPropsRegistry } from '../AnimatedPropsRegistry';
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
+import type { StyleProps } from '../commonTypes';
+import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
-import JSPropsUpdater from './JSPropsUpdater';
-import type {
-  AnimatedComponentProps,
-  AnimatedProps,
-  InitialComponentProps,
-  AnimatedComponentRef,
-  IAnimatedComponentInternal,
-  INativeEventsManager,
-  NestedArray,
-  AnyComponent,
-} from './commonTypes';
-import { filterStyles, flattenArray } from './utils';
-import { isFabric, isJest, isWeb, shouldBeUseWeb } from '../PlatformChecker';
-import { InlinePropManager } from './InlinePropManager';
-import { PropsFilter } from './PropsFilter';
+import { adaptViewConfig } from '../ConfigHelper';
+import { enableLayoutAnimations } from '../core';
+import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
+import { SharedTransition } from '../layoutReanimation';
 import {
-  startWebLayoutAnimation,
-  tryActivateLayoutTransition,
   configureWebLayoutAnimations,
   getReducedMotionFromConfig,
   saveSnapshot,
+  startWebLayoutAnimation,
+  tryActivateLayoutTransition,
 } from '../layoutReanimation/web';
-import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type { CustomConfig } from '../layoutReanimation/web/config';
 import { addHTMLMutationObserver } from '../layoutReanimation/web/domUtils';
-import { NativeEventsManager } from './NativeEventsManager';
-import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
-import { Platform } from 'react-native';
+import { isFabric, isJest, isWeb, shouldBeUseWeb } from '../PlatformChecker';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
+import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
+import type {
+  AnimatedComponentProps,
+  AnimatedComponentRef,
+  AnimatedProps,
+  AnyComponent,
+  IAnimatedComponentInternal,
+  INativeEventsManager,
+  InitialComponentProps,
+  NestedArray,
+} from './commonTypes';
+import { InlinePropManager } from './InlinePropManager';
+import JSPropsUpdater from './JSPropsUpdater';
+import { NativeEventsManager } from './NativeEventsManager';
+import { PropsFilter } from './PropsFilter';
+import { filterStyles, flattenArray } from './utils';
 
 let id = 0;
 
@@ -127,8 +129,8 @@ export default class AnimatedComponent
     }
 
     if (IS_WEB) {
-      if (this.props.exiting) {
-        saveSnapshot(this._componentRef as HTMLElement);
+      if (this.props.exiting && this._componentDOMRef) {
+        saveSnapshot(this._componentDOMRef);
       }
 
       if (
@@ -144,11 +146,11 @@ export default class AnimatedComponent
       if (!skipEntering) {
         startWebLayoutAnimation(
           this.props,
-          this._componentRef as ReanimatedHTMLElement,
+          this._componentDOMRef as ReanimatedHTMLElement,
           LayoutAnimationType.ENTERING
         );
-      } else {
-        (this._componentRef as HTMLElement).style.visibility = 'initial';
+      } else if (this._componentDOMRef) {
+        this._componentDOMRef.style.visibility = 'initial';
       }
     }
 
@@ -173,7 +175,7 @@ export default class AnimatedComponent
 
     if (
       IS_WEB &&
-      this._componentRef &&
+      this._componentDOMRef &&
       exiting &&
       !getReducedMotionFromConfig(exiting as CustomConfig)
     ) {
@@ -181,7 +183,7 @@ export default class AnimatedComponent
 
       startWebLayoutAnimation(
         this.props,
-        this._componentRef as ReanimatedHTMLElement,
+        this._componentDOMRef as ReanimatedHTMLElement,
         LayoutAnimationType.EXITING
       );
     } else if (exiting && !IS_WEB && !isFabric()) {
@@ -320,8 +322,8 @@ export default class AnimatedComponent
     this._attachAnimatedStyles();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 
-    if (IS_WEB && this.props.exiting) {
-      saveSnapshot(this._componentRef as HTMLElement);
+    if (IS_WEB && this.props.exiting && this._componentDOMRef) {
+      saveSnapshot(this._componentDOMRef);
     }
 
     // Snapshot won't be undefined because it comes from getSnapshotBeforeUpdate method
@@ -333,7 +335,7 @@ export default class AnimatedComponent
     ) {
       tryActivateLayoutTransition(
         this.props,
-        this._componentRef as ReanimatedHTMLElement,
+        this._componentDOMRef as ReanimatedHTMLElement,
         snapshot
       );
     }
@@ -392,16 +394,6 @@ export default class AnimatedComponent
     this._sharedElementTransition = sharedElementTransition;
   }
 
-  _resolveComponentRef = (ref: Component | HTMLElement | null) => {
-    const componentRef = ref as AnimatedComponentRef;
-    // Component can specify ref which should be animated when animated version of the component is created.
-    // Otherwise, we animate the component itself.
-    if (componentRef && componentRef.getAnimatableRef) {
-      return componentRef.getAnimatableRef();
-    }
-    return componentRef;
-  };
-
   _onSetLocalRef() {
     const tag = this.getComponentViewTag();
 
@@ -444,11 +436,8 @@ export default class AnimatedComponent
   // It is called before the component gets rerendered. This way we can access components' position before it changed
   // and later on, in componentDidUpdate, calculate translation for layout transition.
   getSnapshotBeforeUpdate() {
-    if (
-      IS_WEB &&
-      (this._componentRef as HTMLElement)?.getBoundingClientRect !== undefined
-    ) {
-      return (this._componentRef as HTMLElement).getBoundingClientRect();
+    if (IS_WEB && this._componentDOMRef?.getBoundingClientRect !== undefined) {
+      return this._componentDOMRef.getBoundingClientRect();
     }
 
     return null;

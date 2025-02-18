@@ -4,7 +4,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import type { ViewStyle } from 'react-native';
-import { View, ScrollView, FlatList } from 'react-native';
+import { FlatList, ScrollView, View } from 'react-native';
+
 import Animated from '../..';
 
 function AnimatedComponentPropsTest() {

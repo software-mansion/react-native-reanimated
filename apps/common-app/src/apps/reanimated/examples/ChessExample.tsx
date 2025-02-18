@@ -1,17 +1,16 @@
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
 import Animated, {
   clamp,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from 'react-native-gesture-handler';
-import { StyleSheet, View } from 'react-native';
-
-import React from 'react';
 
 const N = 8; // number of rows and cols
 const FIELD_SIZE = 40; // size of a single field in pixels

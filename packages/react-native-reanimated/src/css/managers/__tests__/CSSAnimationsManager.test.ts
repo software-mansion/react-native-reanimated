@@ -1,6 +1,7 @@
 'use strict';
-import CSSAnimationsManager from '../CSSAnimationsManager';
 import type { ShadowNodeWrapper } from '../../../commonTypes';
+import { CSSKeyframesRuleImpl } from '../../models';
+import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
 import {
   registerCSSAnimations,
   unregisterCSSAnimations,
@@ -10,8 +11,7 @@ import type {
   CSSAnimationProperties,
   ExistingCSSAnimationProperties,
 } from '../../types';
-import { CSSKeyframesRuleImpl } from '../../models';
-import { normalizeSingleCSSAnimationSettings } from '../../platform/native';
+import CSSAnimationsManager from '../CSSAnimationsManager';
 
 jest.mock('../../platform/native/native.ts', () => ({
   registerCSSAnimations: jest.fn(),
@@ -67,7 +67,7 @@ describe('CSSAnimationsManager', () => {
             from: { opacity: 0 },
           },
           animationDuration: '3s',
-          animationTimingFunction: 'easeIn',
+          animationTimingFunction: 'ease-in',
         };
 
         manager.update(animationProperties);
@@ -80,7 +80,7 @@ describe('CSSAnimationsManager', () => {
         expect(updateCSSAnimations).toHaveBeenCalledWith(viewTag, [
           {
             index: 0,
-            settings: { duration: 3000, timingFunction: 'easeIn', delay: 0 },
+            settings: { duration: 3000, timingFunction: 'ease-in', delay: 0 },
           },
         ]);
         expect(registerCSSAnimations).toHaveBeenCalledTimes(1);

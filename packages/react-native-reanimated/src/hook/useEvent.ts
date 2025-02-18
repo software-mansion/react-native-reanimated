@@ -1,5 +1,6 @@
 'use strict';
 import { useRef } from 'react';
+
 import { WorkletEventHandler } from '../WorkletEventHandler';
 import type { IWorkletEventHandler, ReanimatedEvent } from './commonTypes';
 

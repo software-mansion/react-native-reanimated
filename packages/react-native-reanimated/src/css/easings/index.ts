@@ -10,7 +10,7 @@ export function cubicBezier(x1: number, y1: number, x2: number, y2: number) {
 
 export function steps(
   stepsNumber: number,
-  modifier: StepsModifier = 'jumpEnd'
+  modifier: StepsModifier = 'jump-end'
 ) {
   return new StepsEasing(stepsNumber, modifier);
 }
@@ -21,9 +21,4 @@ export function linear(...points: ControlPoint[]) {
 
 export { CubicBezierEasing, LinearEasing, StepsEasing };
 
-export type {
-  ParametrizedTimingFunction,
-  CSSTimingFunction,
-  NormalizedCSSTimingFunction,
-  PredefinedTimingFunction,
-} from './types';
+export type * from './types';

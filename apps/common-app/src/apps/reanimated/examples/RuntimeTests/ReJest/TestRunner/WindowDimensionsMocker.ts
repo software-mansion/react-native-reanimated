@@ -1,10 +1,11 @@
-import { SyncUIRunner } from '../utils/SyncUIRunner';
 import type {
+  LayoutAnimation,
   LayoutAnimationStartFunction,
   LayoutAnimationType,
   SharedTransitionAnimationsValues,
-  LayoutAnimation,
 } from 'react-native-reanimated';
+
+import { SyncUIRunner } from '../utils/SyncUIRunner';
 
 export class WindowDimensionsMocker {
   public async unmockWindowDimensions() {

@@ -1,9 +1,9 @@
 import type { BabelFile, NodePath } from '@babel/core';
 import type {
   ArrowFunctionExpression,
-  Node as BabelNode,
   FunctionDeclaration,
   FunctionExpression,
+  Node as BabelNode,
   ObjectExpression,
   ObjectMethod,
 } from '@babel/types';

@@ -26,7 +26,7 @@ export default function AnimationPlayState() {
             transform: [{ translateX: '-100%' }],
           },
         },
-        animationTimingFunction: 'easeInOut',
+        animationTimingFunction: 'ease-in-out',
       }}
       cards={[
         {

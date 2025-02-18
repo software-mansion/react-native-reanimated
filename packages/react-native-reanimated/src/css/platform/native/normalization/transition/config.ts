@@ -1,13 +1,13 @@
 'use strict';
 import { ReanimatedError } from '../../../../errors';
 import type {
-  PlainStyle,
+  AnyRecord,
   CSSTransitionProperties,
   CSSTransitionProperty,
 } from '../../../../types';
 import {
   areArraysEqual,
-  convertConfigPropertiesToArrays,
+  convertPropertyToArray,
   deepEqual,
 } from '../../../../utils';
 import type {
@@ -16,11 +16,13 @@ import type {
   NormalizedSingleCSSTransitionSettings,
 } from '../../types';
 import {
+  normalizeDelay,
   normalizeDuration,
   normalizeTimingFunction,
-  normalizeDelay,
 } from '../common';
 import { normalizeTransitionBehavior } from './settings';
+import type { ExpandedConfigProperties } from './shorthand';
+import { parseTransitionShorthand } from './shorthand';
 
 export const ERROR_MESSAGES = {
   invalidTransitionProperty: (
@@ -28,8 +30,35 @@ export const ERROR_MESSAGES = {
   ) => `Invalid transition property "${JSON.stringify(transitionProperty)}"`,
 };
 
-const hasNoTransitionProperties = (properties: string[]) =>
-  properties.length === 0 || properties.every((prop) => prop === 'none');
+function getExpandedConfigProperties(
+  config: CSSTransitionProperties
+): ExpandedConfigProperties {
+  const configEntries = Object.entries(config);
+  const shorthandIndex = config.transition
+    ? configEntries.findIndex(([key]) => key === 'transition')
+    : -1;
+  const result: AnyRecord = config.transition
+    ? parseTransitionShorthand(config.transition)
+    : {};
+  // If there is a shorthand `transition` property, all properties specified
+  // before are ignored and only these specified later are taken into account
+  // and override ones from the shorthand
+  const longhandEntries = config.transition
+    ? configEntries.slice(shorthandIndex + 1)
+    : configEntries;
+
+  for (const [key, value] of longhandEntries) {
+    result[key] = convertPropertyToArray(value);
+  }
+
+  return result as ExpandedConfigProperties;
+}
+
+const hasTransitionProperties = (
+  transitionProperty: ExpandedConfigProperties['transitionProperty']
+): transitionProperty is string[] =>
+  !!transitionProperty?.length &&
+  transitionProperty.some((prop) => prop !== 'none');
 
 export function normalizeCSSTransitionProperties(
   config: CSSTransitionProperties
@@ -39,18 +68,21 @@ export function normalizeCSSTransitionProperties(
     transitionDuration,
     transitionTimingFunction,
     transitionDelay,
-  } = convertConfigPropertiesToArrays(config);
+    transitionBehavior,
+  } = getExpandedConfigProperties(config);
 
-  if (hasNoTransitionProperties(transitionProperty)) {
+  if (!hasTransitionProperties(transitionProperty)) {
     return null;
   }
 
-  const specificProperties: (keyof PlainStyle)[] = [];
+  const specificProperties: string[] = [];
   let allPropertiesTransition = false;
   const settings: Record<string, NormalizedSingleCSSTransitionSettings> = {};
 
   // Go from the last to the first property to ensure that the last
-  // one overrides previous ones in case of duplicate properties
+  // one entry for the same property is used without having to override
+  // it multiple times if specified more than once (we just take the last
+  // occurrence and ignore remaining ones)
   for (let i = transitionProperty.length - 1; i >= 0; i--) {
     const property = transitionProperty[i];
 
@@ -59,6 +91,8 @@ export function normalizeCSSTransitionProperties(
         ERROR_MESSAGES.invalidTransitionProperty(config.transitionProperty)
       );
     }
+    // Continue if there was a prop with the same name specified later
+    // (we don't want to override the last occurrence of the property)
     if (settings?.[property]) {
       continue;
     }
@@ -77,6 +111,9 @@ export function normalizeCSSTransitionProperties(
         transitionTimingFunction?.[i % transitionTimingFunction.length]
       ),
       delay: normalizeDelay(transitionDelay?.[i % transitionDelay.length]),
+      allowDiscrete: normalizeTransitionBehavior(
+        transitionBehavior?.[i % transitionBehavior.length]
+      ),
     };
 
     // 'all' transition property overrides all properties before it,
@@ -89,7 +126,6 @@ export function normalizeCSSTransitionProperties(
   return {
     properties: allPropertiesTransition ? 'all' : specificProperties.reverse(),
     settings,
-    allowDiscrete: normalizeTransitionBehavior(config.transitionBehavior),
   };
 }
 
@@ -126,10 +162,6 @@ export function getNormalizedCSSTransitionConfigUpdates(
         break;
       }
     }
-  }
-
-  if (oldConfig.allowDiscrete !== newConfig.allowDiscrete) {
-    configUpdates.allowDiscrete = newConfig.allowDiscrete;
   }
 
   return configUpdates;

@@ -1,6 +1,6 @@
 'use strict';
-import type { PlainStyle, TimeUnit } from './common';
 import type { CSSTimingFunction } from '../easings';
+import type { PlainStyle, TimeUnit } from './common';
 import type { AddArrayPropertyTypes } from './helpers';
 
 export type CSSTransitionProperty<S extends object = PlainStyle> =
@@ -11,12 +11,14 @@ export type CSSTransitionProperty<S extends object = PlainStyle> =
 export type CSSTransitionDuration = TimeUnit;
 export type CSSTransitionTimingFunction = CSSTimingFunction;
 export type CSSTransitionDelay = TimeUnit;
-export type CSSTransitionBehavior = 'normal' | 'allowDiscrete';
+export type CSSTransitionBehavior = 'normal' | 'allow-discrete';
+export type CSSTransition = string;
 
 type SingleCSSTransitionSettings = {
   transitionDuration?: CSSTransitionDuration;
   transitionTimingFunction?: CSSTransitionTimingFunction;
   transitionDelay?: CSSTransitionDelay;
+  transitionBehavior?: CSSTransitionBehavior;
 };
 
 export type SingleCSSTransitionConfig<S extends object = PlainStyle> =
@@ -25,14 +27,12 @@ export type SingleCSSTransitionConfig<S extends object = PlainStyle> =
   };
 
 export type CSSTransitionSettings =
-  AddArrayPropertyTypes<SingleCSSTransitionSettings> & {
-    transitionBehavior?: CSSTransitionBehavior;
-  };
+  AddArrayPropertyTypes<SingleCSSTransitionSettings>;
 
 export type CSSTransitionProperties<S extends object = PlainStyle> =
-  AddArrayPropertyTypes<SingleCSSTransitionSettings> & {
+  CSSTransitionSettings & {
     transitionProperty?: CSSTransitionProperty<S>;
-    transitionBehavior?: CSSTransitionBehavior;
+    transition?: CSSTransition;
   };
 
 export type CSSTransitionProp = keyof CSSTransitionProperties;

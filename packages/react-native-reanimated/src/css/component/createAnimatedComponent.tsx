@@ -1,13 +1,14 @@
 'use strict';
-import React from 'react';
+import invariant from 'invariant';
 import type {
-  FunctionComponent,
+  Component,
   ComponentClass,
   ComponentType,
-  Component,
+  FunctionComponent,
 } from 'react';
+import React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
-import invariant from 'invariant';
+
 import type { CSSProps } from '../types';
 import type { AnimatedComponentProps } from './AnimatedComponent';
 import AnimatedComponentImpl from './AnimatedComponent';
@@ -56,7 +57,7 @@ export default function createAnimatedComponent<P extends object>(
     }
   }
 
-  return React.forwardRef<Component>((props, ref) => {
+  const animatedComponent = React.forwardRef<Component>((props, ref) => {
     return (
       <AnimatedComponent
         {...props}
@@ -64,4 +65,9 @@ export default function createAnimatedComponent<P extends object>(
       />
     );
   });
+
+  animatedComponent.displayName =
+    Component.displayName || Component.name || 'Component';
+
+  return animatedComponent;
 }

@@ -1,31 +1,37 @@
 'use strict';
+import type React from 'react';
+
 import type {
-  Value3D,
-  ValueRotation,
-  ShareableRef,
   LayoutAnimationBatchItem,
-  IReanimatedModule,
-  IWorkletsModule,
-  WorkletFunction,
   ShadowNodeWrapper,
   StyleProps,
+  Value3D,
+  ValueRotation,
 } from '../commonTypes';
-import { checkCppVersion } from '../platform-specific/checkCppVersion';
-import { jsVersion } from '../platform-specific/jsVersion';
-import { isFabric, isWeb } from '../PlatformChecker';
-import type React from 'react';
-import { getShadowNodeWrapperFromRef } from '../fabricUtils';
-import { ReanimatedTurboModule } from '../specs';
-import { ReanimatedError } from '../errors';
-import { WorkletsModule } from '../worklets';
-import type { ReanimatedModuleProxy } from './reanimatedModuleProxy';
 import type {
   NormalizedCSSTransitionConfig,
   NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
+import { ReanimatedError, registerReanimatedError } from '../errors';
+import { getShadowNodeWrapperFromRef } from '../fabricUtils';
+import { checkCppVersion } from '../platform-specific/checkCppVersion';
+import { jsVersion } from '../platform-specific/jsVersion';
+import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
+import { setupRequestAnimationFrame } from '../requestAnimationFrame';
+import { ReanimatedTurboModule } from '../specs';
+import type {
+  IWorkletsModule,
+  ShareableRef,
+  WorkletFunction,
+} from '../WorkletsResolver';
+import { executeOnUIRuntimeSync, WorkletsModule } from '../WorkletsResolver';
+import type {
+  IReanimatedModule,
+  ReanimatedModuleProxy,
+} from './reanimatedModuleProxy';
 
-const IS_WEB = isWeb();
+const IS_WEB = shouldBeUseWeb();
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
@@ -76,6 +82,11 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
       checkCppVersion();
     }
     this.#reanimatedModuleProxy = global.__reanimatedModuleProxy;
+    executeOnUIRuntimeSync(function initializeUI() {
+      'worklet';
+      registerReanimatedError();
+      setupRequestAnimationFrame();
+    })();
   }
 
   registerSensor(

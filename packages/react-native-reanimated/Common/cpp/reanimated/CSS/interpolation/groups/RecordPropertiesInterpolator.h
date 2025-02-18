@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_set>
 
 namespace reanimated {
 
@@ -29,10 +30,13 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
       const jsi::Value &newStyleValue) override;
 
  protected:
-  jsi::Value mapInterpolators(
-      jsi::Runtime &rt,
-      const std::function<jsi::Value(PropertyInterpolator &)> &callback)
+  void forEachInterpolator(const std::function<void(PropertyInterpolator &)>
+                               &callback) const override;
+  folly::dynamic mapInterpolators(
+      const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
       const override;
+
+  void maybeCreateInterpolator(const std::string &propertyName);
 
  private:
   const InterpolatorFactoriesRecord &factories_;

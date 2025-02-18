@@ -2,11 +2,12 @@ import type { ParamListBase } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import { StyleSheet, TouchableNativeFeedback, View, Text } from 'react-native';
+import { StyleSheet, Text, TouchableNativeFeedback, View } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 const firstPhoto = require('./assets/doge.jpg');
 const secondPhoto = require('./assets/angry-doge.jpg');
+
 const Stack = createNativeStackNavigator();
 
 interface DogeProps {

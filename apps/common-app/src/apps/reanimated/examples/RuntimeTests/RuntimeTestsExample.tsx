@@ -1,6 +1,7 @@
 import React from 'react';
-import RuntimeTestsRunner from './ReJest/RuntimeTestsRunner';
+
 import { describe } from './ReJest/RuntimeTestsApi';
+import RuntimeTestsRunner from './ReJest/RuntimeTestsRunner';
 
 export default function RuntimeTestsExample() {
   return (
@@ -51,6 +52,14 @@ export default function RuntimeTestsExample() {
             require('./tests/core/useDerivedValue/chain.test');
 
             require('./tests/core/useSharedValue/animationsCompilerApi.test');
+
+            require('./tests/core/onLayout.test');
+          },
+        },
+        {
+          testSuiteName: 'props',
+          importTest: () => {
+            require('./tests/props/boxShadow.test');
           },
         },
         {

@@ -17,7 +17,7 @@ export default function App() {
             animationName: grow,
             animationDuration: '1s',
             animationIterationCount: 'infinite',
-            animationTimingFunction: 'easeInOut',
+            animationTimingFunction: 'ease-in-out',
             // highlight-next-line
             animationDirection: 'alternate',
           },

@@ -1,12 +1,12 @@
 'use strict';
-import type {
-  CSSAnimationIterationCount,
-  CSSAnimationDirection,
-  CSSAnimationPlayState,
-  CSSAnimationFillMode,
-} from '../../../../../types';
 import { cubicBezier } from '../../../../../easings';
 import { ReanimatedError } from '../../../../../errors';
+import type {
+  CSSAnimationDirection,
+  CSSAnimationFillMode,
+  CSSAnimationIterationCount,
+  CSSAnimationPlayState,
+} from '../../../../../types';
 import type { NormalizedSingleCSSAnimationSettings } from '../../../types';
 import {
   VALID_ANIMATION_DIRECTIONS,
@@ -35,7 +35,7 @@ describe(normalizeDirection, () => {
   });
 
   describe('when invalid value is passed', () => {
-    it.each(['invalid', 'normal ', 'alternate-reverse'])(
+    it.each(['invalid', 'normal ', 'alternateReverse'])(
       'throws an error for %p',
       (direction) => {
         const value = direction as CSSAnimationDirection;
@@ -202,7 +202,7 @@ describe(getAnimationSettingsUpdates, () => {
       { playState: 'paused' },
       {
         duration: 2000,
-        timingFunction: 'easeIn',
+        timingFunction: 'ease-in',
         direction: 'reverse',
         iterationCount: 2,
         fillMode: 'forwards',

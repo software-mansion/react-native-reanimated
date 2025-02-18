@@ -164,6 +164,13 @@ function parsePercentage(str: string): number {
   return int / 100;
 }
 
+export function clampRGBA(RGBA: ParsedColorArray): void {
+  'worklet';
+  for (let i = 0; i < 4; i++) {
+    RGBA[i] = Math.max(0, Math.min(RGBA[i], 1));
+  }
+}
+
 const names: Record<string, number> = makeShareable({
   transparent: 0x00000000,
 
@@ -348,6 +355,10 @@ export const ColorProperties = makeShareable([
   'stopColor',
   'stroke',
 ]);
+
+const NestedColorProperties = makeShareable({
+  boxShadow: 'color',
+});
 
 // // ts-prune-ignore-next Exported for the purpose of tests only
 export function normalizeColor(color: unknown): number | null {
@@ -675,6 +686,19 @@ export function processColorsInProps(props: StyleProps) {
   for (const key in props) {
     if (ColorProperties.includes(key)) {
       props[key] = processColor(props[key]);
+    } else if (
+      NestedColorProperties[key as keyof typeof NestedColorProperties]
+    ) {
+      const propGroupList = props[key] as StyleProps[];
+      for (const propGroup of propGroupList) {
+        const nestedPropertyName =
+          NestedColorProperties[key as keyof typeof NestedColorProperties];
+        if (propGroup[nestedPropertyName] !== undefined) {
+          propGroup[nestedPropertyName] = processColor(
+            propGroup[nestedPropertyName]
+          );
+        }
+      }
     }
   }
 }

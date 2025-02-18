@@ -1,6 +1,6 @@
 'use strict';
-import { isWeb, isWindowAvailable } from './PlatformChecker';
 import { makeMutable } from './mutables';
+import { isWeb, isWindowAvailable } from './PlatformChecker';
 
 type localGlobal = typeof global & Record<string, unknown>;
 

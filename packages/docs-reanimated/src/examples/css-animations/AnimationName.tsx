@@ -37,7 +37,7 @@ export default function App() {
             // highlight-next-line
             animationName: march,
             animationDuration: '2.5s',
-            animationTimingFunction: 'easeInOut',
+            animationTimingFunction: 'ease-in-out',
             animationIterationCount: 'infinite',
             animationDirection: 'alternate',
           },

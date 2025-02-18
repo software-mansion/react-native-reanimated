@@ -1,4 +1,7 @@
 'use strict';
+import { IS_ANDROID } from '../../constants';
+import type { PlainStyle } from '../../types';
+import type { StyleBuilderConfig } from './style';
 import {
   processAspectRatio,
   processBoxShadow,
@@ -11,9 +14,6 @@ import {
   processTransform,
   processTransformOrigin,
 } from './style';
-import type { StyleBuilderConfig } from './style';
-import type { PlainStyle } from '../../types';
-import { IS_ANDROID } from '../../constants';
 
 const colorAttributes = { process: processColor };
 
@@ -102,7 +102,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   overflow: true,
   zIndex: true,
   aspectRatio: { process: processAspectRatio },
-  boxSizing: false, // TODO
+  boxSizing: false, // web only
 
   /** Appearance */
   // COLORS
@@ -124,7 +124,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   borderStartColor: colorAttributes,
   borderBlockColor: colorAttributes,
   // Other
-  outlineColor: false, // TODO
+  outlineColor: colorAttributes,
   shadowColor: colorAttributes,
   overlayColor: IS_ANDROID ? colorAttributes : false,
   tintColor: colorAttributes,
@@ -177,9 +177,9 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   borderStyle: true,
 
   // OUTLINES
-  outlineOffset: false, // TODO
-  outlineStyle: false, // TODO
-  outlineWidth: false, // TODO
+  outlineOffset: true,
+  outlineStyle: true,
+  outlineWidth: true,
 
   // TRANSFORMS
   transformOrigin: { process: processTransformOrigin },
@@ -194,7 +194,7 @@ export const PROPERTIES_CONFIG: StyleBuilderConfig<PlainStyle> = {
   // OTHERS
   backfaceVisibility: true,
   opacity: true,
-  mixBlendMode: false, // TODO
+  mixBlendMode: true,
   experimental_backgroundImage: false, // TODO
 
   /** Typography */

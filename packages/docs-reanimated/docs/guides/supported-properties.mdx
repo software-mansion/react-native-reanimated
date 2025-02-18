@@ -78,6 +78,7 @@ Not all CSS properties are available and animatable in React Native. The followi
 | overflow                | <Yes/>  | <Yes/> | <Yes/> |
 | zIndex                  | <Yes/>  | <Yes/> | <Yes/> |
 | aspectRatio             | <Yes/>  | <Yes/> | <Yes/> |
+| boxSizing               | <No/>   | <No/>  | <Yes/> |
 | backgroundColor         | <Yes/>  | <Yes/> | <Yes/> |
 | color                   | <Yes/>  | <Yes/> | <Yes/> |
 | textDecorationColor     | <No/>   | <Yes/> | <Yes/> |
@@ -92,6 +93,7 @@ Not all CSS properties are available and animatable in React Native. The followi
 | borderLeftColor         | <Yes/>  | <Yes/> | <Yes/> |
 | borderStartColor        | <Yes/>  | <Yes/> | <Yes/> |
 | borderBlockColor        | <Yes/>  | <Yes/> | <Yes/> |
+| outlineColor            | <Yes/>  | <Yes/> | <Yes/> |
 | shadowColor             | <Yes/>  | <Yes/> | <Yes/> |
 | overlayColor            | <No/>   | <No/>  | <No/>  |
 | tintColor               | <Yes/>  | <Yes/> | <No/>  |
@@ -124,6 +126,9 @@ Not all CSS properties are available and animatable in React Native. The followi
 | borderRightWidth        | <Yes/>  | <Yes/> | <Yes/> |
 | borderCurve             | <No/>   | <No/>  | <No/>  |
 | borderStyle             | <Yes/>  | <Yes/> | <Yes/> |
+| outlineOffset           | <Yes/>  | <Yes/> | <Yes/> |
+| outlineStyle            | <Yes/>  | <Yes/> | <Yes/> |
+| outlineWidth            | <Yes/>  | <Yes/> | <Yes/> |
 | transformOrigin         | <Yes/>  | <Yes/> | <Yes/> |
 | transform               | <Yes/>  | <Yes/> | <Yes/> |
 | transformMatrix         | <No/>   | <No/>  | <No/>  |
@@ -134,6 +139,7 @@ Not all CSS properties are available and animatable in React Native. The followi
 | translateY              | <No/>   | <No/>  | <No/>  |
 | backfaceVisibility      | <Yes/>  | <Yes/> | <Yes/> |
 | opacity                 | <Yes/>  | <Yes/> | <Yes/> |
+| mixBlendMode            | <Yes/>  | <Yes/> | <Yes/> |
 | fontFamily              | <Yes/>  | <Yes/> | <Yes/> |
 | fontSize                | <Yes/>  | <Yes/> | <Yes/> |
 | fontStyle               | <Yes/>  | <Yes/> | <Yes/> |
@@ -182,3 +188,72 @@ Yoga calculates borders in different ways for numeric values and relative (%) va
 ### flexBasis
 
 Even though changes of this property are calculated properly during the animation, they aren't applied to the view. Other flex properties, such as `flexGrow` and `flexShrink` work fine, so they could be used for animations.
+
+### Animating text shadow styles
+
+On the web, all text shadow styles (i.e. `textShadowColor`, `textShadowOffset`, `textShadowRadius`) need to be specified in the animation keyframes to preserve the style during animation.
+
+iOS and Android text shadow styles doesn't have this limitations and work as intended.
+
+So, for example, if we want to have a shadow color and animate the shadow radius, we can't specify `textShadowColor` just in the element style but we also have to add it to every keyframe of the animation, even though only the `textShadowRadius` is the style we want to animate. Consider this:
+
+```jsx
+<Animated.Text
+  style={{
+    animationName: {
+      from: {
+        textShadowRadius: 8, // while the shadow radius correctly animates from 8 ✅
+      },
+      to: {
+        textShadowRadius: 16, // to 16 ✅
+      },
+    },
+    textShadowColor: 'red', // 🚨 the shadow color would be overridden in the animation keyframes
+    // that means the shadow would be black!
+  }}>
+  Reanimated
+</Animated.Text>
+```
+
+To mitigate this limitation, you need to specify the `textShadowColor` in every keyframe definition:
+
+```jsx
+<Animated.Text
+  style={{
+    animationName: {
+      from: {
+        textShadowColor: 'red', // shadows starts 'red'
+        textShadowRadius: 8,
+      },
+      to: {
+        textShadowColor: 'red', // and keeps being 'red' throughout the animation
+        textShadowRadius: 16,
+      },
+    },
+  }}>
+  Reanimated
+</Animated.Text>
+```
+
+<details>
+<summary>Why do I need this?</summary>
+
+In CSS the `text-shadow` is a single property but in React Native that's three separate properties for color, offset and radius. Because of that Reanimated has to provide these default values to every keyframe definition:
+
+```json
+{
+  "textShadowColor": "#000",
+  "textShadowRadius": 0,
+  "textShadowOffset": { "width": 0, "height": 0 }
+}
+```
+
+and the shadow styles aren't inherited from the style object provided to the element. To retain the styles in an animation you need to override these styles to achieve your expected result.
+
+</details>
+
+### Animating box shadow styles
+
+Similarly to the text shadow styles - all shadow styles (i.e. `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`) need to be specified in the animation keyframes to preserve the style during animation on the Web. Keep in mind that `shadowOffset`, `shadowOpacity`, `shadowRadius` style properties [aren't implemented on Android in React Native](https://reactnative.dev/docs/shadow-props#props) so they also can't be animated.
+
+We highly recommend to use [the `boxShadow` property](https://reactnative.dev/blog/2024/10/23/release-0.76-new-architecture#boxshadow) which doesn't have this limitation and also works on Android.

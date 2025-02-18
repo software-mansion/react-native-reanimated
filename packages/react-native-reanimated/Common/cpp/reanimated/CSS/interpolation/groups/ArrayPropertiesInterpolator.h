@@ -4,6 +4,7 @@
 #include <reanimated/CSS/interpolation/groups/GroupPropertiesInterpolator.h>
 #include <reanimated/CSS/util/interpolators.h>
 
+#include <algorithm>
 #include <memory>
 
 namespace reanimated {
@@ -28,9 +29,10 @@ class ArrayPropertiesInterpolator : public GroupPropertiesInterpolator {
       const jsi::Value &newStyleValue) override;
 
  protected:
-  jsi::Value mapInterpolators(
-      jsi::Runtime &rt,
-      const std::function<jsi::Value(PropertyInterpolator &)> &callback)
+  void forEachInterpolator(const std::function<void(PropertyInterpolator &)>
+                               &callback) const override;
+  folly::dynamic mapInterpolators(
+      const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
       const override;
 
  private:

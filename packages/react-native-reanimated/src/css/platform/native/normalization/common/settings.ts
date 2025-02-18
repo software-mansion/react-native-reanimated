@@ -1,4 +1,9 @@
 'use strict';
+import {
+  MILLISECONDS_REGEX,
+  SECONDS_REGEX,
+  VALID_PREDEFINED_TIMING_FUNCTIONS,
+} from '../../../../constants';
 import type {
   CSSTimingFunction,
   NormalizedCSSTimingFunction,
@@ -6,18 +11,7 @@ import type {
 } from '../../../../easings';
 import { ReanimatedError } from '../../../../errors';
 import type { TimeUnit } from '../../../../types';
-import { MILLISECONDS_REGEX, SECONDS_REGEX } from '../../../../constants/regex';
-
-export const VALID_PREDEFINED_TIMING_FUNCTIONS =
-  new Set<PredefinedTimingFunction>([
-    'linear',
-    'ease',
-    'easeIn',
-    'easeOut',
-    'easeInOut',
-    'stepStart',
-    'stepEnd',
-  ]);
+import { isPredefinedTimingFunction } from '../../../../utils';
 
 export const ERROR_MESSAGES = {
   invalidDelay: (timeUnit: TimeUnit) =>
@@ -27,9 +21,7 @@ export const ERROR_MESSAGES = {
   negativeDuration: (duration: TimeUnit) =>
     `Duration cannot be negative, received "${duration}".`,
   invalidPredefinedTimingFunction: (timingFunction: PredefinedTimingFunction) =>
-    `Invalid predefined timing function "${timingFunction}". Supported values are: ${Array.from(
-      VALID_PREDEFINED_TIMING_FUNCTIONS
-    ).join(', ')}.`,
+    `Invalid predefined timing function "${timingFunction}". Supported values are: ${VALID_PREDEFINED_TIMING_FUNCTIONS.join(', ')}.`,
   invalidParametrizedTimingFunction: (timingFunction: CSSTimingFunction) =>
     `Invalid parametrized timing function "${timingFunction?.toString()}".`,
 };
@@ -67,7 +59,7 @@ export function normalizeTimingFunction(
   timingFunction: CSSTimingFunction = 'ease'
 ): NormalizedCSSTimingFunction {
   if (typeof timingFunction === 'string') {
-    if (!VALID_PREDEFINED_TIMING_FUNCTIONS.has(timingFunction)) {
+    if (!isPredefinedTimingFunction(timingFunction)) {
       throw new ReanimatedError(
         ERROR_MESSAGES.invalidPredefinedTimingFunction(timingFunction)
       );

@@ -4,6 +4,8 @@
 #include <reanimated/CSS/common/values/CSSValue.h>
 #include <worklets/Tools/JSISerializer.h>
 
+#include <folly/json.h>
+
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -13,6 +15,7 @@
 namespace reanimated {
 
 using namespace worklets;
+
 /**
  * Macro to check if two lambda parameters have the same reference-removed type.
  *
@@ -28,35 +31,28 @@ using namespace worklets;
   using R = std::remove_reference_t<decltype(rhs)>; \
   if constexpr (std::is_same_v<L, R>) // NOLINT(readability/braces)
 
-/**
- * Checks if type has a constructor from jsi::Value
- */
-template <typename TValue>
-concept can_construct_from_jsi =
-    requires(jsi::Runtime &rt, const jsi::Value &value) {
-      { TValue(rt, value) }; // NOLINT(readability/braces)
-    }; // NOLINT(readability/braces)
-
-/**
- * Checks whether a type has canConstruct(...) for a a generic value
- */
+// Checks whether a type has canConstruct(...) for a generic value
 template <typename TCSSValue, typename TValue>
-static constexpr bool has_can_construct = requires(TValue &&value) {
+concept ValueConstructibleCSSValue = requires(TValue &&value) {
   {
     TCSSValue::canConstruct(std::forward<TValue>(value))
   } -> std::same_as<bool>;
 }; // NOLINT(readability/braces)
 
-/**
- * Checks whether a type has canConstruct(...) for jsi::Value
- */
-template <typename TCSSValue, typename TValue>
-static constexpr bool has_can_construct_jsi =
-    requires(jsi::Runtime &rt, TValue &&value) {
-      {
-        TCSSValue::canConstruct(rt, std::forward<TValue>(value))
-      } -> std::same_as<bool>;
+// Checks whether a type can be constructed from a jsi::Value
+template <typename TCSSValue>
+concept JSIConstructibleCSSValue =
+    requires(jsi::Runtime &rt, const jsi::Value &value) {
+      { TCSSValue::canConstruct(rt, value) } -> std::same_as<bool>;
+      { TCSSValue(rt, value) } -> std::same_as<TCSSValue>;
     }; // NOLINT(readability/braces)
+
+// Checks whether a type can be constructed from a folly::dynamic
+template <typename TCSSValue>
+concept DynamicConstructibleCSSValue = requires(const folly::dynamic &value) {
+  { TCSSValue::canConstruct(value) } -> std::same_as<bool>;
+  { TCSSValue(value) } -> std::same_as<TCSSValue>;
+}; // NOLINT(readability/braces)
 
 /**
  * CSSValueVariant
@@ -65,6 +61,16 @@ static constexpr bool has_can_construct_jsi =
  */
 template <typename... AllowedTypes>
 class CSSValueVariant final : public CSSValue {
+  static_assert(
+      (CSSValueDerived<AllowedTypes> && ...),
+      "CSSValueVariant accepts only CSSValue-derived types");
+  static_assert(
+      (JSIConstructibleCSSValue<AllowedTypes> && ...),
+      "CSSValueVariant accepts only types that can be constructed from a jsi::Value");
+  static_assert(
+      (DynamicConstructibleCSSValue<AllowedTypes> && ...),
+      "CSSValueVariant accepts only types that can be constructed from a folly::dynamic");
+
  public:
   CSSValueVariant() = default;
 
@@ -95,13 +101,19 @@ class CSSValueVariant final : public CSSValue {
    * Construct from jsi::Value if it matches any AllowedType's constructor
    * (chooses the first one that matches)
    */
-  CSSValueVariant(jsi::Runtime &rt, const jsi::Value &jsiValue)
-    requires((can_construct_from_jsi<AllowedTypes> || ...))
-  { // NOLINT(whitespace/braces)
+  CSSValueVariant(jsi::Runtime &rt, const jsi::Value &jsiValue) {
     if (!tryConstruct(rt, jsiValue)) {
       throw std::runtime_error(
           "[Reanimated] No compatible type found for construction from: " +
           stringifyJSIValue(rt, jsiValue));
+    }
+  }
+
+  CSSValueVariant(const folly::dynamic &value) {
+    if (!tryConstruct(value)) {
+      throw std::runtime_error(
+          "[Reanimated] No compatible type found for construction from: " +
+          folly::toJson(value));
     }
   }
 
@@ -126,10 +138,6 @@ class CSSValueVariant final : public CSSValue {
       return *this == *o;
     }
     return false;
-  }
-
-  CSSValueType type() const override {
-    return std::visit([](const auto &v) { return v.type(); }, storage_);
   }
 
   jsi::Value toJSIValue(jsi::Runtime &rt) const override {
@@ -214,8 +222,12 @@ class CSSValueVariant final : public CSSValue {
   bool tryConstruct(TValue &&value) {
     auto tryOne = [&]<typename TCSSValue>() -> bool {
       if constexpr (std::is_constructible_v<TCSSValue, TValue>) {
-        if constexpr (has_can_construct<TCSSValue, TValue>) {
-          // If the TCSSValue has a canConstruct method, check it first
+        if constexpr (ValueConstructibleCSSValue<TCSSValue, TValue>) {
+          // For construction from a non-jsi::Value, we perform a runtime
+          // canConstruct check only if the type has a canConstruct method.
+          // (this is needed e.g. when different CSS value types can be
+          // constructed from the same value type, like CSSDimension and
+          // CSSKeyword)
           if (!TCSSValue::canConstruct(std::forward<TValue>(value))) {
             return false;
           }
@@ -235,19 +247,34 @@ class CSSValueVariant final : public CSSValue {
    */
   bool tryConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
     auto tryOne = [&]<typename TCSSValue>() -> bool {
-      if constexpr (can_construct_from_jsi<TCSSValue>) {
-        if constexpr (has_can_construct_jsi<TCSSValue, const jsi::Value &>) {
-          // If the TCSSValue has a canConstruct method, check it first
-          if (!TCSSValue::canConstruct(rt, jsiValue)) {
-            return false;
-          }
-        }
-        storage_ = TCSSValue(rt, jsiValue);
-        return true;
+      // We have to check in a runtime if the type can be constructed from the
+      // provided jsi::Value. The first match will be used to construct the
+      // CSS value.
+      if (!TCSSValue::canConstruct(rt, jsiValue)) {
+        return false;
       }
-      return false;
+      storage_ = TCSSValue(rt, jsiValue);
+      return true;
     };
 
+    // Try constructing with each allowed type until one succeeds
+    return (tryOne.template operator()<AllowedTypes>() || ...);
+  }
+
+  /**
+   * Tries to construct type from a given folly::dynamic
+   */
+  bool tryConstruct(const folly::dynamic &value) {
+    auto tryOne = [&]<typename TCSSValue>() -> bool {
+      // We have to check in a runtime if the type can be constructed from the
+      // provided folly::dynamic. The first match will be used to construct the
+      // CSS value.
+      if (!TCSSValue::canConstruct(value)) {
+        return false;
+      }
+      storage_ = TCSSValue(value);
+      return true;
+    };
     // Try constructing with each allowed type until one succeeds
     return (tryOne.template operator()<AllowedTypes>() || ...);
   }

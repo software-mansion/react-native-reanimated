@@ -6,6 +6,7 @@ import type {
   ObjectExpression,
   Program,
 } from '@babel/types';
+
 import {
   processCalleesAutoworkletizableCallbacks,
   processIfAutoworkletizableCallback,

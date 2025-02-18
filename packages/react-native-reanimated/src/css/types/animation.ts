@@ -1,6 +1,6 @@
 'use strict';
-import type { PlainStyle, TimeUnit } from './common';
 import type { CSSTimingFunction } from '../easings';
+import type { PlainStyle, TimeUnit } from './common';
 import type { AddArrayPropertyType, AddArrayPropertyTypes } from './helpers';
 
 export type CSSRuleList<S extends PlainStyle> = CSSKeyframeRule<S>[];
@@ -34,7 +34,7 @@ export type CSSAnimationDirection =
   | 'normal'
   | 'reverse'
   | 'alternate'
-  | 'alternateReverse';
+  | 'alternate-reverse';
 export type CSSAnimationFillMode = 'none' | 'forwards' | 'backwards' | 'both';
 export type CSSAnimationPlayState = 'running' | 'paused';
 

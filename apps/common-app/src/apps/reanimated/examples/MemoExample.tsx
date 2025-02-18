@@ -1,14 +1,14 @@
 import React, { memo } from 'react';
-import { View, StyleSheet, Button } from 'react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
+import { Button, StyleSheet, View } from 'react-native';
 import type {
   AnimatedStyle,
   EventHandlerProcessed,
+} from 'react-native-reanimated';
+import Animated, {
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
 } from 'react-native-reanimated';
 
 const MemoizedComponent = memo<{

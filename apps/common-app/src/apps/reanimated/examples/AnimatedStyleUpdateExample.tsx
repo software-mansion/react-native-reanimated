@@ -1,11 +1,11 @@
+import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
+  Easing,
+  useAnimatedStyle,
   useSharedValue,
   withTiming,
-  useAnimatedStyle,
-  Easing,
 } from 'react-native-reanimated';
-import { View, Button, StyleSheet } from 'react-native';
-import React from 'react';
 
 export default function AnimatedStyleUpdateExample() {
   const randomWidth = useSharedValue(10);
