@@ -255,7 +255,8 @@ android {
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
-                        "-DREANIMATED_VERSION=${REANIMATED_VERSION}"
+                        "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
+                        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
                 abiFilters (*reactNativeArchitectures())
                 targets("reanimated", "worklets")
             }
