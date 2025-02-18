@@ -92,7 +92,8 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
         throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
       }
     } else {
-      UIManager uiManager = Objects.requireNonNull(UIManagerHelper.getUIManager(reactCtx, UIManagerType.DEFAULT));
+      UIManager uiManager =
+          Objects.requireNonNull(UIManagerHelper.getUIManager(reactCtx, UIManagerType.DEFAULT));
       uiManager.addUIManagerEventListener(this);
       mUnsubscribe =
           Utils.combineRunnables(mUnsubscribe, () -> uiManager.removeUIManagerEventListener(this));
