@@ -55,12 +55,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef RCT_NEW_ARCH_ENABLED
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
-#ifdef ANDROID
       updatesRegistryManager_(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
-#else
-      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
-#endif
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
@@ -128,17 +124,6 @@ void ReanimatedModuleProxy::init(
     }
 
     strongThis->animatedPropsRegistry_->update(rt, operations);
-  };
-
-  auto removeFromPropsRegistry = [weakThis = weak_from_this()](
-                                     jsi::Runtime &rt,
-                                     const jsi::Value &viewTags) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-
-    strongThis->animatedPropsRegistry_->remove(rt, viewTags);
   };
 
   auto measure = [weakThis = weak_from_this()](
@@ -221,7 +206,6 @@ void ReanimatedModuleProxy::init(
   UIRuntimeDecorator::decorate(
       uiRuntime,
 #ifdef RCT_NEW_ARCH_ENABLED
-      removeFromPropsRegistry,
       obtainProp,
       updateProps,
       measure,
@@ -804,6 +788,28 @@ double ReanimatedModuleProxy::getCssTimestamp() {
   return currentCssTimestamp_;
 }
 
+std::string format(bool b){
+  return b ? "✅" : "❌";
+}
+
+std::function<std::string()> ReanimatedModuleProxy::createRegistriesLeakCheck(){
+  return [weakThis=weak_from_this()](){
+    auto strongThis = weakThis.lock();
+    if (!strongThis){
+      return std::string("");
+    }
+    
+    std::string result = "";
+    
+    result += "AnimatedPropsRegistry: " + format(strongThis->animatedPropsRegistry_->empty());
+    result += "\nCSSAnimationsRegistry: " + format(strongThis->cssAnimationsRegistry_->empty());
+    result += "\nCSSTransitionsRegistry: " + format(strongThis->cssTransitionsRegistry_->empty());
+    result += "\nStaticPropsRegistry: " + format(strongThis->staticPropsRegistry_->empty()) + "\n";
+    
+    return result;
+  };
+}
+
 void ReanimatedModuleProxy::performOperations() {
   jsi::Runtime &rt =
       workletsModuleProxy_->getUIWorkletRuntime()->getJSIRuntime();
@@ -935,6 +941,7 @@ void ReanimatedModuleProxy::commitUpdates(
       propsMapBySurface[surfaceId][family].emplace_back(rt, std::move(*props));
     }
   }
+  std::vector<Tag> tagsToRemove;
 
   for (auto const &[surfaceId, propsMap] : propsMapBySurface) {
     shadowTreeRegistry.visit(surfaceId, [&](ShadowTree const &shadowTree) {
@@ -946,7 +953,7 @@ void ReanimatedModuleProxy::commitUpdates(
             }
 
             auto rootNode =
-                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap);
+                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap, tagsToRemove);
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.
@@ -974,6 +981,12 @@ void ReanimatedModuleProxy::commitUpdates(
     // so we have to clear the entire cache)
     viewStylesRepository_->clearNodesCache();
   }
+  
+  if (!tagsToRemove.empty()){
+    auto lock = updatesRegistryManager_->createLock();
+    updatesRegistryManager_->removeBatch(tagsToRemove);
+  }
+  
 }
 
 void ReanimatedModuleProxy::dispatchCommand(

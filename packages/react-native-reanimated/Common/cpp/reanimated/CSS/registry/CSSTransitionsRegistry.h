@@ -29,6 +29,8 @@ class CSSTransitionsRegistry
 
   void add(const std::shared_ptr<CSSTransition> &transition);
   void remove(Tag viewTag);
+  void removeBatch(const std::vector<Tag>& tagsToRemove) override;
+        bool empty();
   void updateSettings(
       jsi::Runtime &rt,
       Tag viewTag,

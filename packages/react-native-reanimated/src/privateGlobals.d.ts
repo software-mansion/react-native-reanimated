@@ -70,7 +70,6 @@ declare global {
         }[]
       ) => void)
     | undefined;
-  var _removeFromPropsRegistry: (viewTags: number[]) => void | undefined;
   var _measurePaper:
     | ((viewTag: number | null) => MeasuredDimensions)
     | undefined;

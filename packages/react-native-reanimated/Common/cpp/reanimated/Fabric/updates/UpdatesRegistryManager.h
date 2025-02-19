@@ -15,12 +15,9 @@ namespace reanimated {
 
 class UpdatesRegistryManager {
  public:
-  UpdatesRegistryManager();
 
-#ifdef ANDROID
   explicit UpdatesRegistryManager(
       const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry);
-#endif
 
   std::lock_guard<std::mutex> createLock() const;
 
@@ -35,6 +32,13 @@ class UpdatesRegistryManager {
   void pleaseCommitAfterPause();
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
+  
+  void removeBatch(const std::vector<Tag>& tags){
+    for (auto& registry: registries_){
+      registry->removeBatch(tags);
+    }
+    staticPropsRegistry_->removeBatch(tags);
+  }
 
   PropsMap collectProps();
 
@@ -50,10 +54,10 @@ class UpdatesRegistryManager {
   std::atomic<bool> isPaused_;
   std::atomic<bool> shouldCommitAfterPause_;
   std::vector<std::shared_ptr<UpdatesRegistry>> registries_;
+  const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;
-  const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
 
   static void addToPropsMap(
       PropsMap &propsMap,

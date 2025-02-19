@@ -22,17 +22,6 @@ SurfaceId AnimatedPropsRegistry::update(
   return surfaceId;
 }
 
-void AnimatedPropsRegistry::remove(
-    jsi::Runtime &rt,
-    const jsi::Value &viewTags) {
-  auto viewTagsArray = viewTags.asObject(rt).asArray(rt);
-
-  for (size_t i = 0, length = viewTagsArray.size(rt); i < length; ++i) {
-    tagsToRemove_.insert(
-        static_cast<Tag>(viewTagsArray.getValueAtIndex(rt, i).asNumber()));
-  }
-}
-
 } // namespace reanimated
 
 #endif // RCT_NEW_ARCH_ENABLED

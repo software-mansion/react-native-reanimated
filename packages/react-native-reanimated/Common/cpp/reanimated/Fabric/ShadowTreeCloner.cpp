@@ -65,11 +65,15 @@ ShadowNode::Unshared cloneShadowTreeWithNewPropsRecursive(
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     const RootShadowNode &oldRootNode,
-    const PropsMap &propsMap) {
+    const PropsMap &propsMap,
+    std::vector<Tag> &tagsToRemove) {
   ChildrenMap childrenMap;
 
   for (auto &[family, _] : propsMap) {
     const auto ancestors = family->getAncestors(oldRootNode);
+    if (ancestors.empty()){
+      tagsToRemove.push_back(family->getTag());
+    }
 
     for (const auto &[parentNode, index] :
          std::ranges::reverse_view(ancestors)) {

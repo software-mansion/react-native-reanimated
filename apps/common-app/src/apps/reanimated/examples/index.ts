@@ -44,6 +44,7 @@ import ExtrapolationExample from './ExtrapolationExample';
 import FlatListExample from './SharedElementTransitions/FlatList';
 import FlatListSkipEnteringExiting from './LayoutAnimations/FlatListSkipEnteringExiting';
 import FrameCallbackExample from './FrameCallbackExample';
+import FreezeExample from './FreezeExample';
 import GalleryExample from './SharedElementTransitions/Gallery';
 import Game2048Example from './Game2048Example';
 import GestureHandlerExample from './GestureHandlerExample';
@@ -155,6 +156,11 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '⚙️',
     title: 'RuntimeTestsExample',
     screen: RuntimeTestsExample,
+  },
+  ReactFreeze: {
+    icon: '❄️',
+    title: 'React freeze',
+    screen: FreezeExample,
   },
   WorkletRuntimeExample: {
     icon: '🏃‍♂️',

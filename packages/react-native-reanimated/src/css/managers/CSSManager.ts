@@ -58,7 +58,6 @@ export default class CSSManager {
   }
 
   detach(): void {
-    this.CSSAnimationsManager.detach();
     this.cssTransitionManager.detach();
     removeViewStyle(this.viewTag);
   }

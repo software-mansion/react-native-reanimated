@@ -43,10 +43,13 @@ class UpdatesRegistry {
 
   void flushUpdates(jsi::Runtime &rt, UpdatesBatch &updatesBatch, bool merge);
   void collectProps(PropsMap &propsMap);
+  virtual void removeBatch(const std::vector<Tag>& tagsToRemove);
+  bool empty();
+  virtual ~UpdatesRegistry(){}
 
  protected:
   mutable std::mutex mutex_;
-  std::unordered_set<Tag> tagsToRemove_;
+  RegistryMap updatesRegistry_;
 
   void addUpdatesToBatch(
       jsi::Runtime &rt,
@@ -60,13 +63,11 @@ class UpdatesRegistry {
 
  private:
   UpdatesBatch updatesBatch_;
-  RegistryMap updatesRegistry_;
 
   void flushUpdatesToRegistry(
       jsi::Runtime &rt,
       const UpdatesBatch &updatesBatch,
       bool merge);
-  void runMarkedRemovals();
 
 #ifdef ANDROID
   PropsToRevertMap propsToRevertMap_;

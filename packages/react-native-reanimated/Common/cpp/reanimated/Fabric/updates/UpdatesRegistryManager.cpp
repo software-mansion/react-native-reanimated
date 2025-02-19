@@ -4,8 +4,6 @@
 
 namespace reanimated {
 
-UpdatesRegistryManager::UpdatesRegistryManager() = default;
-
 std::lock_guard<std::mutex> UpdatesRegistryManager::createLock() const {
   return std::lock_guard<std::mutex>{mutex_};
 }
@@ -50,11 +48,11 @@ PropsMap UpdatesRegistryManager::collectProps() {
   return propsMap;
 }
 
-#ifdef ANDROID
-
 UpdatesRegistryManager::UpdatesRegistryManager(
     const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
     : staticPropsRegistry_(staticPropsRegistry) {}
+
+#ifdef ANDROID
 
 bool UpdatesRegistryManager::hasPropsToRevert() {
   for (auto &registry : registries_) {

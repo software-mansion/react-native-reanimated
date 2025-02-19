@@ -15,9 +15,7 @@ class UIRuntimeDecorator {
  public:
   static void decorate(
       jsi::Runtime &uiRuntime,
-#ifdef RCT_NEW_ARCH_ENABLED
-      const RemoveFromPropsRegistryFunction removeFromPropsRegistry,
-#else
+#ifndef RCT_NEW_ARCH_ENABLED
       const ScrollToFunction scrollTo,
 #endif
       const ObtainPropFunction obtainPropFunction,

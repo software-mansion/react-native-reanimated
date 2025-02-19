@@ -7,7 +7,6 @@ import { enableLayoutAnimations } from '../core';
 import { SharedTransition } from '../layoutReanimation';
 import { LayoutAnimationType } from '../commonTypes';
 import type { StyleProps } from '../commonTypes';
-import { removeFromPropsRegistry } from '../AnimatedPropsRegistry';
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
@@ -208,9 +207,6 @@ export default class AnimatedComponent
       }
       if (this.props.animatedProps?.viewDescriptors) {
         this.props.animatedProps.viewDescriptors.remove(viewTag);
-      }
-      if (isFabric()) {
-        removeFromPropsRegistry(viewTag);
       }
     }
   }

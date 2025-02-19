@@ -30,6 +30,7 @@ class CSSAnimationsRegistry
       std::vector<std::shared_ptr<CSSAnimation>> &&animations,
       double timestamp);
   void remove(Tag viewTag);
+  void removeBatch(const std::vector<Tag>& tagsToRemove) override;
   void updateSettings(
       jsi::Runtime &rt,
       Tag viewTag,
@@ -37,6 +38,7 @@ class CSSAnimationsRegistry
       double timestamp);
 
   void update(jsi::Runtime &rt, double timestamp);
+        bool empty();
 
  private:
   using Registry =
