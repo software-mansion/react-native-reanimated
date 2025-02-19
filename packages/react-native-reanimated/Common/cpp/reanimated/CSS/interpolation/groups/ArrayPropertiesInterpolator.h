@@ -14,23 +14,19 @@ class ArrayPropertiesInterpolator : public GroupPropertiesInterpolator {
   ArrayPropertiesInterpolator(
       const InterpolatorFactoriesArray &factories,
       const PropertyPath &propertyPath,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~ArrayPropertiesInterpolator() = default;
 
   bool equalsReversingAdjustedStartValue(
-      jsi::Runtime &rt,
-      const jsi::Value &propertyValue) const override;
+      const folly::dynamic &propertyValue) const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
-      jsi::Runtime &rt,
-      const jsi::Value &oldStyleValue,
-      const jsi::Value &newStyleValue) override;
+      const folly::dynamic &oldStyleValue,
+      const folly::dynamic &newStyleValue,
+      const folly::dynamic &lastUpdateValue) override;
 
  protected:
-  void forEachInterpolator(const std::function<void(PropertyInterpolator &)>
-                               &callback) const override;
   folly::dynamic mapInterpolators(
       const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
       const override;

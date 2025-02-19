@@ -21,10 +21,6 @@ bool CSSBoolean::canConstruct(const folly::dynamic &value) {
   return value.isBool();
 }
 
-jsi::Value CSSBoolean::toJSIValue(jsi::Runtime &rt) const {
-  return {value};
-}
-
 folly::dynamic CSSBoolean::toDynamic() const {
   return {value};
 }

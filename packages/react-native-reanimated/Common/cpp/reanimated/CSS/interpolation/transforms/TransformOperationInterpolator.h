@@ -42,9 +42,8 @@ template <>
 class TransformOperationInterpolator<PerspectiveOperation>
     : public TransformInterpolatorBase<PerspectiveOperation> {
  public:
-  TransformOperationInterpolator(
-      std::shared_ptr<PerspectiveOperation> defaultOperation)
-      : TransformInterpolatorBase<PerspectiveOperation>(defaultOperation) {}
+  using TransformInterpolatorBase<
+      PerspectiveOperation>::TransformInterpolatorBase;
 
   PerspectiveOperation interpolate(
       double progress,
@@ -58,9 +57,7 @@ template <>
 class TransformOperationInterpolator<MatrixOperation>
     : public TransformInterpolatorBase<MatrixOperation> {
  public:
-  TransformOperationInterpolator(
-      std::shared_ptr<MatrixOperation> defaultOperation)
-      : TransformInterpolatorBase<MatrixOperation>(defaultOperation) {}
+  using TransformInterpolatorBase<MatrixOperation>::TransformInterpolatorBase;
 
   MatrixOperation interpolate(
       double progress,

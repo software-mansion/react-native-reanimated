@@ -29,7 +29,6 @@ struct CSSValue {
 
   virtual ~CSSValue() = default;
 
-  virtual jsi::Value toJSIValue(jsi::Runtime &rt) const = 0;
   virtual folly::dynamic toDynamic() const = 0;
   virtual std::string toString() const = 0;
 };
