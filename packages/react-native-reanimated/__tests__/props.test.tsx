@@ -7,7 +7,7 @@ import Animated, {
   interpolate,
   interpolateColor,
   useAnimatedStyle,
-  useSharedValue
+  useSharedValue,
 } from '../src';
 import { processBoxShadow } from '../src/processBoxShadow';
 
@@ -88,9 +88,9 @@ describe('Test of boxShadow prop', () => {
 
     expect(pressable.props.style).toEqual([
       {
-        boxShadow: '0px 4px 10px 0px rgba(255, 0, 0, 1)'
+        boxShadow: '0px 4px 10px 0px rgba(255, 0, 0, 1)',
       },
-      getDefaultStyle()
+      getDefaultStyle(),
     ]);
     expect(pressable).toHaveAnimatedStyle(style);
     fireEvent.press(pressable);
@@ -117,9 +117,9 @@ describe('Test of boxShadow prop', () => {
 
     expect(pressable.props.style).toEqual([
       {
-        boxShadow: '0px 4px 10px 0px rgba(255, 0, 0, 1)'
+        boxShadow: '0px 4px 10px 0px rgba(255, 0, 0, 1)',
       },
-      getDefaultStyle()
+      getDefaultStyle(),
     ]);
 
     const unprocessedStyle = getAnimatedStyle(pressable) as ViewStyle;

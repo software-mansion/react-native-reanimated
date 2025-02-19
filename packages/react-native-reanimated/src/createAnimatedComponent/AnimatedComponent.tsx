@@ -465,7 +465,7 @@ export default class AnimatedComponent
         : {
             ...(filteredProps.style ?? {}),
             visibility: 'hidden', // Hide component until `componentDidMount` triggers
-        };
+          };
     }
 
     const platformProps = Platform.select({
