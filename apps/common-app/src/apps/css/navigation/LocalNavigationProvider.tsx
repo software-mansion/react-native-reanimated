@@ -26,7 +26,7 @@ export function LocalNavigationProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const ref = useRef<NavigationProp<ReactNavigation.RootParamList>>();
+  const ref = useRef<NavigationProp<ReactNavigation.RootParamList>>(null);
   const value = useMemo(() => ref, [ref]);
 
   return (
