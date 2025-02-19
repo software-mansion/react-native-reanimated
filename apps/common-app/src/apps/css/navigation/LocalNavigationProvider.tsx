@@ -30,8 +30,6 @@ export function LocalNavigationProvider({
   const value = useMemo(() => ref, [ref]);
 
   return (
-    <LocalNavigationContext.Provider value={value}>
-      {children}
-    </LocalNavigationContext.Provider>
+    <LocalNavigationContext value={value}>{children}</LocalNavigationContext>
   );
 }
