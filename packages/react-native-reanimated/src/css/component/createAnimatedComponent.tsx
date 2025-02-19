@@ -44,7 +44,7 @@ export default function createAnimatedComponent<P extends object>(
   invariant(
     typeof Component !== 'function' ||
       (Component.prototype && Component.prototype.isReactComponent),
-    `Looks like you're passing a function component \`${Component.name}\` to \`createAnimatedComponent\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
+    `Looks like you're passing a function component \`${Component.name}\` to \`createAnimatedComponent\` function which supports only class components. Please use a class component instead.`
   );
 
   class AnimatedComponent extends AnimatedComponentImpl {
@@ -57,14 +57,15 @@ export default function createAnimatedComponent<P extends object>(
     }
   }
 
-  const animatedComponent = React.forwardRef<Component>((props, ref) => {
+  // TODO: fix type
+  const animatedComponent = (
+    props: AnimatedComponentProps,
+    ref: React.RefObject<AnimatedComponent>
+  ) => {
     return (
-      <AnimatedComponent
-        {...props}
-        {...(ref === null ? null : { forwardedRef: ref })}
-      />
+      <AnimatedComponent {...props} {...(ref === null ? null : { ref: ref })} />
     );
-  });
+  };
 
   animatedComponent.displayName =
     Component.displayName || Component.name || 'Component';

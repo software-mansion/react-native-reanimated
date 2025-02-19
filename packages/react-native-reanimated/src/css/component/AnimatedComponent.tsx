@@ -10,7 +10,7 @@ import type {
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
 import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
-import setAndForwardRef from '../../createAnimatedComponent/setAndForwardRef';
+import setAndPassRef from '../../createAnimatedComponent/setAndPassRef';
 import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
 import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { isFabric, isWeb, shouldBeUseWeb } from '../../PlatformChecker';
@@ -104,9 +104,9 @@ export default class AnimatedComponent<
     return this._viewInfo;
   }
 
-  _setComponentRef = setAndForwardRef<Component | HTMLElement>({
-    getForwardedRef: () =>
-      this.props.forwardedRef as MutableRefObject<
+  _setComponentRef = setAndPassRef<Component | HTMLElement>({
+    getRef: () =>
+      this.props.ref as MutableRefObject<
         Component<Record<string, unknown>, Record<string, unknown>, unknown>
       >,
     setLocalRef: (ref) => {

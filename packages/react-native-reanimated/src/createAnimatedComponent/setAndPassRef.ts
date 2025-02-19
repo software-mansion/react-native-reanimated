@@ -15,8 +15,8 @@ import type { MutableRefObject } from 'react';
  *
  * Class MyView extends React.Component { _nativeRef = null;
  *
- *     _setNativeRef = setAndForwardRef({
- *       getForwardedRef: () => this.props.forwardedRef,
+ *     _setNativeRef = setAndPassRef({
+ *       getRef: () => this.props.ref,
  *       setLocalRef: ref => {
  *         this._nativeRef = ref;
  *       },
@@ -28,36 +28,36 @@ import type { MutableRefObject } from 'react';
  *
  * }
  *
- * Const MyViewWithRef = React.forwardRef((props, ref) => ( <MyView {...props}
- * forwardedRef={ref} /> ));
+ * Const MyViewWithRef = (props, ref) => ( <MyView {...props} ref={ref} /> );
  *
  * Module.exports = MyViewWithRef;
  */
 /* eslint-enable */
 
-type ForwardedRef<T> = () => MutableRefObject<T> | ((ref: T) => void);
+// TODO: fix types and namign
+type Ref<T> = () => MutableRefObject<T> | ((ref: T) => void);
 
-function setAndForwardRef<T>({
-  getForwardedRef,
+function setAndPassRef<T>({
+  getRef,
   setLocalRef,
 }: {
-  getForwardedRef: ForwardedRef<T>;
+  getRef: Ref<T>;
   setLocalRef: (ref: T) => void;
 }): (ref: T) => void {
-  return function forwardRef(ref: T) {
-    const forwardedRef = getForwardedRef();
+  return function ref(ref: T) {
+    const reference = getRef();
 
     setLocalRef(ref);
 
     // Forward to user ref prop (if one has been specified)
-    if (typeof forwardedRef === 'function') {
+    if (typeof reference === 'function') {
       // Handle function-based refs. String-based refs are handled as functions.
-      forwardedRef(ref);
-    } else if (typeof forwardedRef === 'object' && forwardedRef) {
+      reference(ref);
+    } else if (typeof reference === 'object' && reference) {
       // Handle createRef-based refs
-      forwardedRef.current = ref;
+      reference.current = ref;
     }
   };
 }
 
-export default setAndForwardRef;
+export default setAndPassRef;
