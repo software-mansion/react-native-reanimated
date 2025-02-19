@@ -527,3 +527,7 @@ afterEvaluate {
       throw GradleScriptException("[Reanimated] Unknown JS runtime ${JS_RUNTIME}.")
     }
 }
+
+tasks.withType(JavaCompile).configureEach {
+  options.compilerArgs << "-Xlint:all" << "-Werror"
+}

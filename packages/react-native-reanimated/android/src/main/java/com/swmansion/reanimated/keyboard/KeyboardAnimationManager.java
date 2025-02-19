@@ -4,11 +4,6 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentHashMap;
 
-@FunctionalInterface
-interface NotifyAboutKeyboardChangeFunction {
-  void call();
-}
-
 public class KeyboardAnimationManager {
   private int mNextListenerId = 0;
   private final ConcurrentHashMap<Integer, KeyboardWorkletWrapper> mListeners =

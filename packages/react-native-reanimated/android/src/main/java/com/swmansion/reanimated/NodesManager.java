@@ -350,6 +350,7 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   @Override
+  @SuppressWarnings("rawtypes")
   public void onEventDispatch(Event event) {
     try {
       if (BuildConfig.REANIMATED_PROFILING) {
@@ -380,6 +381,7 @@ public class NodesManager implements EventDispatcherListener {
     }
   }
 
+  @SuppressWarnings("rawtypes")
   private void handleEvent(Event event) {
     event.dispatch(mCustomEventHandler);
   }
