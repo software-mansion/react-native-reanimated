@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import { View, Text, Button } from 'react-native';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -11,6 +11,7 @@ import Animated, {
   withTiming,
   withDelay,
   Easing,
+  css,
 } from 'react-native-reanimated';
 import { DropContext } from '@/App';
 
@@ -195,7 +196,7 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = css.create({
   container: {
     flex: 1,
     alignItems: 'center',
