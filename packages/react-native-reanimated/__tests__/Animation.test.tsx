@@ -67,7 +67,7 @@ describe('Tests of animations', () => {
     const { getByTestId } = render(<AnimatedComponent />);
     const view = getByTestId('view');
     const button = getByTestId('button');
-    expect(view.props.style.width).toBe(0);
+    expect(view.props.style).toEqual([getDefaultStyle(), { width: 0 }]);
     expect(view).toHaveAnimatedStyle(style);
     fireEvent.press(button);
     jest.advanceTimersByTime(600);
@@ -92,7 +92,7 @@ describe('Tests of animations', () => {
     const view = getByTestId('view');
     const button = getByTestId('button');
 
-    expect(view.props.style.width).toBe(0);
+    expect(view.props.style).toEqual([getDefaultStyle(), { width: 0 }]);
     expect(view).toHaveAnimatedStyle(style);
 
     fireEvent.press(button);
