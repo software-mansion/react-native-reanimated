@@ -32,7 +32,7 @@ const PlaygroundChart: React.FC<{
   bezierHandlesMoveHandler,
   bezierControlsValues,
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const { windowWidth } = useScreenSize();
   const isMobile = ExecutionEnvironment.canUseViewport && windowWidth < 768;
