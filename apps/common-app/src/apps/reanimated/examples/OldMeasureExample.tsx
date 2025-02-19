@@ -1,4 +1,4 @@
-import '../types';
+import '../../../types';
 
 import type { ReactElement, ReactNode } from 'react';
 import React, { useRef } from 'react';

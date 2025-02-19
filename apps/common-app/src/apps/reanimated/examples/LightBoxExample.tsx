@@ -1,4 +1,4 @@
-import '../types';
+import '../../../types';
 
 import { useHeaderHeight } from '@react-navigation/elements';
 import type { Component } from 'react';

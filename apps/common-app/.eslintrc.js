@@ -17,7 +17,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['./src/examples/RuntimeTests/tests/**'],
+      files: ['./src/apps/reanimated/examples/RuntimeTests/tests/**'],
       rules: {
         'no-template-curly-in-string': 'off',
         'no-inline-styles/no-inline-styles': 'off',
