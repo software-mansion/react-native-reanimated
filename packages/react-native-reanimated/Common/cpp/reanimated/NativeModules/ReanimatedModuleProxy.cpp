@@ -55,8 +55,12 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef RCT_NEW_ARCH_ENABLED
       animatedPropsRegistry_(std::make_shared<AnimatedPropsRegistry>()),
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
+#ifdef ANDROID
       updatesRegistryManager_(
           std::make_shared<UpdatesRegistryManager>(staticPropsRegistry_)),
+#else
+      updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
+#endif
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
