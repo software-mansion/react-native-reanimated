@@ -1,5 +1,4 @@
 import React, {
-  forwardRef,
   memo,
   useCallback,
   useImperativeHandle,
@@ -140,87 +139,86 @@ type ExampleProps = {
     config: CSSTransitionProperties,
     style: StyleProps
   ) => JSX.Element;
+  ref: React.Ref<ExampleRef>;
 };
 
-const Example = memo(
-  forwardRef(function Example(
-    {
-      displayStyleChanges,
-      item,
-      renderExample,
-      transitionProperties,
-      transitionStyles,
-    }: ExampleProps,
-    ref: React.Ref<ExampleRef>
-  ) {
-    const [key, setKey] = useState(0);
-    const [currentStyleIndex, setCurrentStyleIndex] = useState(0);
-    const [showStyleChange, setShowStyleChange] = useState(false);
-    const styleChangeCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+const Example = memo(function Example(
+  {
+    displayStyleChanges,
+    item,
+    renderExample,
+    transitionProperties,
+    transitionStyles,
+  }: ExampleProps,
+  ref: React.Ref<ExampleRef>
+) {
+  const [key, setKey] = useState(0);
+  const [currentStyleIndex, setCurrentStyleIndex] = useState(0);
+  const [showStyleChange, setShowStyleChange] = useState(false);
+  const styleChangeCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const debouncedStyleIndex = useDebounce(currentStyleIndex, 500);
-    const currentTransitionStyle = transitionStyles[currentStyleIndex];
+  const debouncedStyleIndex = useDebounce(currentStyleIndex, 500);
+  const currentTransitionStyle = transitionStyles[currentStyleIndex];
 
-    const handlePress = useStableCallback(() => {
-      const nextIndex = (currentStyleIndex + 1) % transitionStyles.length;
-      setCurrentStyleIndex(nextIndex);
+  const handlePress = useStableCallback(() => {
+    const nextIndex = (currentStyleIndex + 1) % transitionStyles.length;
+    setCurrentStyleIndex(nextIndex);
 
-      setTimeout(() => {
-        if (displayStyleChanges) {
-          setShowStyleChange(true);
-          clearTimeout(styleChangeCloseTimeoutRef.current!);
-          styleChangeCloseTimeoutRef.current = setTimeout(() => {
-            setShowStyleChange(false);
-          }, getTimeout(item));
-        }
-      }, 0);
-    });
-
-    useImperativeHandle(
-      ref,
-      () => ({
-        reset: () => {
-          setCurrentStyleIndex(0);
+    setTimeout(() => {
+      if (displayStyleChanges) {
+        setShowStyleChange(true);
+        clearTimeout(styleChangeCloseTimeoutRef.current!);
+        styleChangeCloseTimeoutRef.current = setTimeout(() => {
           setShowStyleChange(false);
-          setKey((prevKey) => prevKey + 1);
-        },
-        run: handlePress,
-      }),
-      [handlePress]
-    );
+        }, getTimeout(item));
+      }
+    }, 0);
+  });
 
-    const { label, ...rest } = item;
+  useImperativeHandle(
+    ref,
+    () => ({
+      reset: () => {
+        setCurrentStyleIndex(0);
+        setShowStyleChange(false);
+        setKey((prevKey) => prevKey + 1);
+      },
+      run: handlePress,
+    }),
+    [handlePress]
+  );
 
-    return (
-      <Animated.View layout={LinearTransition} style={{ overflow: 'hidden' }}>
-        <View style={styles.exampleRow}>
-          <View style={styles.labelWrapper}>
-            <Text style={styles.label} variant="label2">
-              {label}
-            </Text>
-          </View>
-          <View key={key} style={styles.example}>
-            {renderExample(
-              {
-                transitionProperty: 'all',
-                ...transitionProperties,
-                ...rest,
-              },
-              currentTransitionStyle
-            )}
-          </View>
-          <Button size="small" title="Run" onPress={handlePress} />
+  const { label, ...rest } = item;
+
+  return (
+    <Animated.View layout={LinearTransition} style={{ overflow: 'hidden' }}>
+      <View style={styles.exampleRow}>
+        <View style={styles.labelWrapper}>
+          <Text style={styles.label} variant="label2">
+            {label}
+          </Text>
         </View>
-        {displayStyleChanges && showStyleChange && (
-          <TransitionStyleChange
-            activeStyleIndex={debouncedStyleIndex}
-            transitionStyles={transitionStyles}
-          />
-        )}
-      </Animated.View>
-    );
-  })
-);
+        <View key={key} style={styles.example}>
+          {renderExample(
+            {
+              transitionProperty: 'all',
+              ...transitionProperties,
+              ...rest,
+            },
+            currentTransitionStyle
+          )}
+        </View>
+        <Button size="small" title="Run" onPress={handlePress} />
+      </View>
+      {displayStyleChanges && showStyleChange && (
+        <TransitionStyleChange
+          activeStyleIndex={debouncedStyleIndex}
+          transitionStyles={transitionStyles}
+        />
+      )}
+    </Animated.View>
+  );
+});
 
 const styles = StyleSheet.create({
   cardFooter: {
