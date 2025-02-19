@@ -123,6 +123,7 @@ export interface IAnimatedComponentInternal {
    * It is not related to event handling.
    */
   getComponentViewTag: () => number;
+  hasAnimatedRef: () => boolean;
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];
