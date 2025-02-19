@@ -30,6 +30,8 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
   }, [skipValueRef]);
 
   return (
+    // TODO: remove
+    // @ts-ignore
     <SkipEnteringContext value={skipValueRef}>
       {props.children}
     </SkipEnteringContext>
