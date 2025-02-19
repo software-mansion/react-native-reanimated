@@ -30,9 +30,9 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
   }, [skipValueRef]);
 
   return (
-    <SkipEnteringContext.Provider value={skipValueRef}>
+    <SkipEnteringContext value={skipValueRef}>
       {props.children}
-    </SkipEnteringContext.Provider>
+    </SkipEnteringContext>
   );
 }
 
