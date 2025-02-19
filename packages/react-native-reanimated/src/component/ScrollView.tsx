@@ -1,6 +1,6 @@
 'use strict';
-import type { ForwardedRef } from 'react';
-import React, { forwardRef } from 'react';
+import type { Ref } from 'react';
+import React from 'react';
 import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native';
 
@@ -23,32 +23,33 @@ interface AnimatedScrollViewComplement extends ScrollView {
 
 const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
 
-export const AnimatedScrollView = forwardRef(
-  (props: AnimatedScrollViewProps, ref: ForwardedRef<AnimatedScrollView>) => {
-    const { scrollViewOffset, ...restProps } = props;
-    const animatedRef = (
-      ref === null
-        ? // eslint-disable-next-line react-hooks/rules-of-hooks
-          useAnimatedRef<ScrollView>()
-        : ref
-    ) as AnimatedRef<AnimatedScrollView>;
+export const AnimatedScrollView = (
+  props: AnimatedScrollViewProps,
+  ref: Ref<AnimatedScrollView>
+) => {
+  const { scrollViewOffset, ...restProps } = props;
+  const animatedRef = (
+    ref === null
+      ? // eslint-disable-next-line react-hooks/rules-of-hooks
+        useAnimatedRef<ScrollView>()
+      : ref
+  ) as AnimatedRef<AnimatedScrollView>;
 
-    if (scrollViewOffset) {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      useScrollViewOffset(animatedRef, scrollViewOffset);
-    }
-
-    // Set default scrollEventThrottle, because user expects
-    // to have continuous scroll events.
-    // We set it to 1 so we have peace until
-    // there are 960 fps screens.
-    if (!('scrollEventThrottle' in restProps)) {
-      restProps.scrollEventThrottle = 1;
-    }
-
-    return <AnimatedScrollViewComponent ref={animatedRef} {...restProps} />;
+  if (scrollViewOffset) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useScrollViewOffset(animatedRef, scrollViewOffset);
   }
-);
+
+  // Set default scrollEventThrottle, because user expects
+  // to have continuous scroll events.
+  // We set it to 1 so we have peace until
+  // there are 960 fps screens.
+  if (!('scrollEventThrottle' in restProps)) {
+    restProps.scrollEventThrottle = 1;
+  }
+
+  return <AnimatedScrollViewComponent ref={animatedRef} {...restProps} />;
+};
 
 export type AnimatedScrollView = AnimatedScrollViewComplement &
   typeof AnimatedScrollViewComponent;
