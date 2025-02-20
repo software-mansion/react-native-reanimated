@@ -1,0 +1,80 @@
+#include <jsi/jsi.h>
+#include <worklets/AnimationFrameQueue/AnimationFrameBatchinator.h>
+#include <worklets/SharedItems/Shareables.h>
+
+#include <atomic>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <utility>
+#include <vector>
+
+namespace worklets {
+
+void AnimationFrameBatchinator::addToBatch(
+    const facebook::jsi::Value &callback) {
+  {
+    std::lock_guard<std::mutex> lock(callbacksMutex_);
+    callbacks_.push_back(
+        std::make_shared<const facebook::jsi::Value>(*uiRuntime_, callback));
+  }
+  flush();
+}
+
+AnimationFrameBatchinator::JsiRequestAnimationFrame
+AnimationFrameBatchinator::getJsiRequestAnimationFrame() {
+  return [weakThis = weak_from_this()](
+             facebook::jsi::Runtime &rt, const facebook::jsi::Value &callback) {
+    const auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return;
+    }
+
+    strongThis->addToBatch(callback);
+  };
+}
+
+void AnimationFrameBatchinator::flush() {
+  if (flushRequested_.exchange(true)) {
+    return;
+  }
+
+  const auto requestAnimationFrame = weakRequestAnimationFrame_.lock();
+  if (!requestAnimationFrame) {
+    callbacks_.clear();
+    flushRequested_ = false;
+  }
+
+  requestAnimationFrame->operator()(
+      [weakThis = weak_from_this()](double timestampMs) {
+        const auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+
+        auto callbacks = strongThis->pullCallbacks();
+        strongThis->flushRequested_ = false;
+
+        auto &uiRuntime = *(strongThis->uiRuntime_);
+        for (auto &callback : callbacks) {
+          runOnRuntimeGuarded(uiRuntime, *callback, timestampMs);
+        }
+      });
+}
+
+std::vector<std::shared_ptr<const facebook::jsi::Value>>
+AnimationFrameBatchinator::pullCallbacks() {
+  std::lock_guard<std::mutex> lock(callbacksMutex_);
+  auto callbacks = std::move(callbacks_);
+  callbacks_.clear();
+  return callbacks;
+}
+
+AnimationFrameBatchinator::AnimationFrameBatchinator(
+    facebook::jsi::Runtime &uiRuntime,
+    std::weak_ptr<std::function<void(std::function<void(const double)>)>>
+        weakRequestAnimationFrame)
+    : uiRuntime_(&uiRuntime),
+      weakRequestAnimationFrame_(std::move(weakRequestAnimationFrame)) {}
+
+} // namespace worklets

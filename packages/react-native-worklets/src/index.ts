@@ -21,7 +21,6 @@ export {
   makeShareable,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
-  mockedRequestAnimationFrame,
   registerCustomError,
   registerLoggerConfig,
   registerWorkletStackDetails,
