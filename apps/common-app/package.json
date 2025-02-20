@@ -30,7 +30,7 @@
     "d3-shape": "^3.2.0",
     "eslint-plugin-reanimated": "workspace:*",
     "react": "^19.0.0",
-    "react-native-gesture-handler": "2.23.1",
+    "react-native-gesture-handler": "^2.24.0",
     "react-native-pager-view": "6.6.1",
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.2.0",
