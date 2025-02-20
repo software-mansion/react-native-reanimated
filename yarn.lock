@@ -18233,7 +18233,6 @@ __metadata:
     eslint-plugin-reanimated: "workspace:*"
     eslint-plugin-standard: "npm:^5.0.0"
     eslint-plugin-tsdoc: "npm:^0.2.17"
-    invariant: "npm:^2.2.4"
     jest: "npm:^29.0.0"
     madge: "npm:^5.0.1"
     prettier: "npm:^3.3.3"
