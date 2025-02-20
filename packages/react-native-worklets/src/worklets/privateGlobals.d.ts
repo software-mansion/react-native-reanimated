@@ -22,7 +22,6 @@ declare global {
     nativeStateSource?: object
   ) => FlatShareableRef<T>;
   var __callMicrotasks: () => void;
-  var _maybeFlushUIUpdatesQueue: () => void;
   var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
   var __ErrorUtils: {
@@ -38,4 +37,5 @@ declare global {
     runtime: WorkletRuntime,
     worklet: ShareableRef<() => void>
   ) => void;
+  var _microTaskQueueFinalizers: (() => void)[];
 }

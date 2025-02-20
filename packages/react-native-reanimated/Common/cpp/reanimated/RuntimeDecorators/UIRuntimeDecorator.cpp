@@ -57,8 +57,19 @@ void UIRuntimeDecorator::decorate(
       uiRuntime, "_notifyAboutEnd", endLayoutAnimation);
 
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
-  jsi_utils::installJsiFunction(
-      uiRuntime, "_maybeFlushUIUpdatesQueue", maybeFlushUIUpdatesQueue);
+
+  uiRuntime.global()
+      .getProperty(uiRuntime, "_microtaskQueueFinalizers")
+      .asObject(uiRuntime)
+      .asArray(uiRuntime)
+      .getPropertyAsFunction(uiRuntime, "push")
+      .call(
+          uiRuntime,
+          jsi::Function::createFromHostFunction(
+              uiRuntime,
+              jsi::PropNameID::forAscii(uiRuntime, "_maybeFlushUIUpdatesQueue"),
+              0,
+              jsi_utils::createHostFunction(maybeFlushUIUpdatesQueue)));
 
   jsi_utils::installJsiFunction(
       uiRuntime, "_obtainPropFabric", obtainPropFunction);
