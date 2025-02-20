@@ -12,7 +12,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "react": "18.3.1",
+    "react": "19.0.0",
     "react-native": "npm:react-native-tvos@0.77.0-0",
     "react-native-reanimated": "workspace:*",
     "react-native-worklets": "workspace:*"
