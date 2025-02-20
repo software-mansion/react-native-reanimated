@@ -75,15 +75,20 @@ export function createAnimatedComponent(
     }
   }
 
-  // TODO: Refactor to ref
-  const animatedComponent = React.forwardRef<Component>((props, ref) => {
+  const animatedComponent = ({
+    ref,
+    ...props
+  }: {
+    ref: React.Ref<Component>;
+    props: AnimatedComponentProps<InitialComponentProps>;
+  }) => {
     return (
       <AnimatedComponent
         {...props}
         {...(ref === null ? null : { forwardedRef: ref })}
       />
     );
-  });
+  };
 
   animatedComponent.displayName =
     Component.displayName || Component.name || 'Component';

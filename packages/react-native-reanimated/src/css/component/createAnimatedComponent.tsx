@@ -67,7 +67,7 @@ export default function createAnimatedComponent<P extends object>(
     return (
       <AnimatedComponent
         {...props}
-        {...(ref === null ? null : { passedRef: ref })}
+        {...(ref === null ? null : { forwarded: ref })}
       />
     );
   };

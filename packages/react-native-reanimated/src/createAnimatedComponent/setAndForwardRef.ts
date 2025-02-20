@@ -34,13 +34,13 @@ import type { MutableRefObject } from 'react';
  */
 /* eslint-enable */
 
-type ForwardedRef<T> = () => MutableRefObject<T> | ((ref: T) => void);
+type Ref<T> = () => MutableRefObject<T> | ((ref: T) => void);
 
 function setAndForwardRef<T>({
   getForwardedRef,
   setLocalRef,
 }: {
-  getForwardedRef: ForwardedRef<T>;
+  getForwardedRef: Ref<T>;
   setLocalRef: (ref: T) => void;
 }): (ref: T) => void {
   return function forwardRef(ref: T) {

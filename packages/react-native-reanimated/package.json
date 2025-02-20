@@ -120,7 +120,7 @@
     "@types/invariant": "^2.2.35",
     "@types/jest": "^29.5.13",
     "@types/node": "^18.0.0",
-    "@types/react": "^18.0.26",
+    "@types/react": "^19.0.0",
     "@types/react-test-renderer": "^17.0.0-0",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",

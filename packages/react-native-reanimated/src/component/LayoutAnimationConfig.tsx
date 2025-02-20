@@ -30,8 +30,8 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
   }, [skipValueRef]);
 
   return (
-    // TODO: remove
     // @ts-ignore
+    // For some reason TS doesn't like that we use Context as a provider, but React 19 says it's fine
     <SkipEnteringContext value={skipValueRef}>
       {props.children}
     </SkipEnteringContext>
