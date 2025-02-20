@@ -11,9 +11,10 @@
   "dependencies": {
     "common-app": "workspace:*",
     "react": "18.3.1",
-    "react-native": "0.78.0",
+    "react-native": "0.75.4",
     "react-native-macos": "^0.75.13",
-    "react-native-reanimated": "workspace:*"
+    "react-native-reanimated": "workspace:*",
+    "react-native-screens": "4.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
