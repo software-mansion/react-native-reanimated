@@ -61,6 +61,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #else
       updatesRegistryManager_(std::make_shared<UpdatesRegistryManager>()),
 #endif
+      cssAnimationKeyframesRegistry_(std::make_shared<CSSKeyframesRegistry>()),
       cssAnimationsRegistry_(std::make_shared<CSSAnimationsRegistry>()),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           staticPropsRegistry_,
@@ -567,6 +568,22 @@ void ReanimatedModuleProxy::removeViewStyle(
   staticPropsRegistry_->remove(viewTag.asNumber());
 }
 
+void ReanimatedModuleProxy::registerCSSKeyframes(
+    jsi::Runtime &rt,
+    const jsi::Value &animationName,
+    const jsi::Value &keyframesConfig) {
+  cssAnimationKeyframesRegistry_->add(
+      animationName.asString(rt).utf8(rt),
+      parseCSSAnimationKeyframesConfig(
+          rt, keyframesConfig, viewStylesRepository_));
+}
+
+void ReanimatedModuleProxy::unregisterCSSKeyframes(
+    jsi::Runtime &rt,
+    const jsi::Value &animationName) {
+  cssAnimationKeyframesRegistry_->remove(animationName.asString(rt).utf8(rt));
+}
+
 void ReanimatedModuleProxy::registerCSSAnimations(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper,
@@ -581,12 +598,21 @@ void ReanimatedModuleProxy::registerCSSAnimations(
   const auto timestamp = getCssTimestamp();
 
   for (size_t i = 0; i < animationsCount; ++i) {
-    auto animationConfig = animationConfigsArray.getValueAtIndex(rt, i);
+    auto animationConfig =
+        animationConfigsArray.getValueAtIndex(rt, i).asObject(rt);
+    const auto animationName =
+        animationConfig.getProperty(rt, "name").asString(rt).utf8(rt);
+    const auto settings = parseCSSAnimationSettings(
+        rt, animationConfig.getProperty(rt, "settings"));
+    const auto &keyframesConfig =
+        cssAnimationKeyframesRegistry_->get(animationName);
+
     animations.emplace_back(std::make_shared<CSSAnimation>(
         rt,
         shadowNode,
         i,
-        parseCSSAnimationConfig(rt, animationConfig),
+        keyframesConfig,
+        settings,
         viewStylesRepository_,
         timestamp));
   }

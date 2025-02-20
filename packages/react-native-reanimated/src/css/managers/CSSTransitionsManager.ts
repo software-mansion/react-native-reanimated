@@ -12,7 +12,7 @@ import {
 } from '../platform/native/native';
 import type { CSSTransitionProperties } from '../types';
 
-export default class CSSTransitionManager {
+export default class CSSTransitionsManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
 
