@@ -2,7 +2,7 @@ require "json"
 require_relative './scripts/worklets_utils'
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
-$worklets_config = find_config()
+$worklets_config = worklets_find_config()
 worklets_assert_minimal_react_native_version($worklets_config)
 
 ios_min_version = '13.4'
