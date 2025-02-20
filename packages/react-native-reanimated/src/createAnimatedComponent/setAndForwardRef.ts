@@ -1,8 +1,7 @@
 'use strict';
+// TODO: refactor to ref
 /** Imported from react-native */
-
 import type { MutableRefObject } from 'react';
-
 /* eslint-disable */
 /**
  * This is a helper function for when a component needs to be able to forward a
@@ -15,8 +14,8 @@ import type { MutableRefObject } from 'react';
  *
  * Class MyView extends React.Component { _nativeRef = null;
  *
- *     _setNativeRef = setAndPassRef({
- *       getRef: () => this.props.ref,
+ *     _setNativeRef = setAndForwardRef({
+ *       getForwardedRef: () => this.props.forwardedRef,
  *       setLocalRef: ref => {
  *         this._nativeRef = ref;
  *       },
@@ -28,36 +27,36 @@ import type { MutableRefObject } from 'react';
  *
  * }
  *
- * Const MyViewWithRef = (props, ref) => ( <MyView {...props} ref={ref} /> );
+ * Const MyViewWithRef = React.forwardRef((props, ref) => ( <MyView {...props}
+ * forwardedRef={ref} /> ));
  *
  * Module.exports = MyViewWithRef;
  */
 /* eslint-enable */
 
-// TODO: fix types and namign
-type Ref<T> = () => MutableRefObject<T> | ((ref: T) => void);
+type ForwardedRef<T> = () => MutableRefObject<T> | ((ref: T) => void);
 
-function setAndPassRef<T>({
-  getRef,
+function setAndForwardRef<T>({
+  getForwardedRef,
   setLocalRef,
 }: {
-  getRef: Ref<T>;
+  getForwardedRef: ForwardedRef<T>;
   setLocalRef: (ref: T) => void;
 }): (ref: T) => void {
-  return function ref(ref: T) {
-    const reference = getRef();
+  return function forwardRef(ref: T) {
+    const forwardedRef = getForwardedRef();
 
     setLocalRef(ref);
 
     // Forward to user ref prop (if one has been specified)
-    if (typeof reference === 'function') {
+    if (typeof forwardedRef === 'function') {
       // Handle function-based refs. String-based refs are handled as functions.
-      reference(ref);
-    } else if (typeof reference === 'object' && reference) {
+      forwardedRef(ref);
+    } else if (typeof forwardedRef === 'object' && forwardedRef) {
       // Handle createRef-based refs
-      reference.current = ref;
+      forwardedRef.current = ref;
     }
   };
 }
 
-export default setAndPassRef;
+export default setAndForwardRef;
