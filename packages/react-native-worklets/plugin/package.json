@@ -29,6 +29,6 @@
     "format": "prettier --write --list-different src",
     "watch": "tsc-watch --onSuccess \"yarn bundle\"",
     "lint": "eslint --max-warnings=0 src",
-    "type:check:src": "tsc --noEmit"
+    "type:check": "tsc --noEmit"
   }
 }

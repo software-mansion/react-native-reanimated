@@ -26,8 +26,9 @@ jobs:
       group: babel-plugin-static-check-${{ github.ref }}
       cancel-in-progress: true
     env:
-      REANIMATED_DIR: packages/react-native-reanimated
       EXAMPLE_DIR: apps/fabric-example
+      WORKLETS_DIR: packages/react-native-worklets
+      PLUGIN_DIR: packages/react-native-worklets/plugin
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,8 +41,8 @@ jobs:
 
       - name: Install monorepo dependencies
         run: yarn install --immutable
-      - name: Build Reanimated
-        working-directory: ${{ env.REANIMATED_DIR }}
+      - name: Build Worklets
+        working-directory: ${{ env.WORKLETS_DIR }}
         run: yarn build
 
       - name: Diff
@@ -51,14 +52,14 @@ jobs:
         if: failure() && steps.diff.outcome == 'failure'
         run: git diff
       - name: Check types
-        working-directory: ${{ env.REANIMATED_DIR }}
-        run: yarn type:check:plugin
+        working-directory: ${{ env.PLUGIN_DIR }}
+        run: yarn type:check
       - name: Lint and format
-        working-directory: ${{ env.REANIMATED_DIR }}
-        run: yarn lint:plugin
+        working-directory: ${{ env.PLUGIN_DIR }}
+        run: yarn lint
       - name: Test
-        working-directory: ${{ env.REANIMATED_DIR }}
+        working-directory: ${{ env.WORKLETS_DIR }}
         run: yarn jest plugin
       - name: Check Example App bundling
         working-directory: ${{ env.EXAMPLE_DIR }}
-        run: yarn && yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='/dev/null' --dev=true --platform='ios'
+        run: yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='/dev/null' --dev=true --platform='ios'
