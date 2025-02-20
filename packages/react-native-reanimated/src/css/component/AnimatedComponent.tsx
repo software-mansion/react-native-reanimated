@@ -1,21 +1,22 @@
 'use strict';
-import React, { Component } from 'react';
 import type { MutableRefObject, Ref } from 'react';
+import React, { Component } from 'react';
+import type { StyleProp } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
+
+import type { ShadowNodeWrapper } from '../../commonTypes';
 import type {
   AnimatedComponentRef,
   ViewInfo,
 } from '../../createAnimatedComponent/commonTypes';
+import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
+import setAndForwardRef from '../../createAnimatedComponent/setAndForwardRef';
+import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
+import { findHostInstance } from '../../platform-specific/findHostInstance';
 import { isFabric, isWeb, shouldBeUseWeb } from '../../PlatformChecker';
+import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
-import { Platform, StyleSheet } from 'react-native';
-import type { StyleProp } from 'react-native';
-import { findHostInstance } from '../../platform-specific/findHostInstance';
-import { ReanimatedError } from '../errors';
-import { getViewInfo } from '../../createAnimatedComponent/getViewInfo';
-import { getShadowNodeWrapperFromRef } from '../../fabricUtils';
-import type { ShadowNodeWrapper } from '../../commonTypes';
-import setAndForwardRef from '../../createAnimatedComponent/setAndForwardRef';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_WEB = isWeb();

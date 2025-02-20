@@ -11,18 +11,6 @@ namespace reanimated {
 
 using namespace facebook;
 
-enum class CSSValueType {
-  Angle,
-  Boolean,
-  Color,
-  Keyword,
-  Dimension,
-  Number,
-  Array,
-  TransformOrigin,
-  Empty
-};
-
 enum class RelativeTo {
   Parent,
   Self,
@@ -36,38 +24,27 @@ struct CSSResolvableValueInterpolationContext {
 };
 
 struct CSSValue {
+  // This field should be overridden in discrete value types
+  static constexpr bool is_discrete_value = false;
+
   virtual ~CSSValue() = default;
 
-  virtual CSSValueType type() const = 0;
-
-  virtual jsi::Value toJSIValue(jsi::Runtime &rt) const = 0;
   virtual folly::dynamic toDynamic() const = 0;
   virtual std::string toString() const = 0;
 };
 
-template <CSSValueType TValueType, typename TDerived>
-struct CSSBaseValue : public CSSValue {
+// Base for leaf values that can be interpolated without resolution
+template <typename TDerived>
+struct CSSSimpleValue : public CSSValue {
   static constexpr bool is_resolvable_value = false;
-  static constexpr bool is_discrete_value = false;
-
-  CSSValueType type() const override {
-    return TValueType;
-  }
 
   virtual TDerived interpolate(double progress, const TDerived &to) const = 0;
 };
 
-template <
-    CSSValueType TValueType,
-    typename TDerived,
-    typename TResolved = TDerived>
+// Base for leaf values that need resolution before interpolation
+template <typename TDerived, typename TResolved = TDerived>
 struct CSSResolvableValue : public CSSValue {
   static constexpr bool is_resolvable_value = true;
-  static constexpr bool is_discrete_value = false;
-
-  CSSValueType type() const override {
-    return TValueType;
-  }
 
   virtual TDerived interpolate(
       double progress,
@@ -77,23 +54,24 @@ struct CSSResolvableValue : public CSSValue {
       const CSSResolvableValueInterpolationContext &context) const = 0;
 };
 
-inline bool isDiscrete(const CSSValue &value) {
-  return value.type() == CSSValueType::Keyword;
-}
-
-// clang-format off
+// Checks if a type is a resolvable value that needs resolution before
+// interpolation
 template <typename TCSSValue>
 concept Resolvable = requires {
   { TCSSValue::is_resolvable_value } -> std::convertible_to<bool>;
   requires TCSSValue::is_resolvable_value == true;
 };
 
+// Checks if a type is a discrete value
 template <typename TCSSValue>
 concept Discrete = requires {
   { TCSSValue::is_discrete_value } -> std::convertible_to<bool>;
   requires TCSSValue::is_discrete_value == true;
 };
-// clang-format on
+
+// Check if a type is derived from CSSValue
+template <typename TCSSValue>
+concept CSSValueDerived = std::is_base_of_v<CSSValue, TCSSValue>;
 
 } // namespace reanimated
 

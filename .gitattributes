@@ -2,4 +2,4 @@
 /.yarn/releases/* binary=true
 /.yarn/plugins/**/* binary=true
 /packages/eslint-plugin-reanimated/index.js linguist-generated=true
-/packages/eslint-plugin-reanimated/types linguist-generated=true
+/packages/eslint-plugin-reanimated/types/**/* linguist-generated=true

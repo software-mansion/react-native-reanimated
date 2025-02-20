@@ -1,12 +1,11 @@
+import React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import type { FrameInfo } from 'react-native-reanimated';
 import Animated, {
   useAnimatedStyle,
   useFrameCallback,
   useSharedValue,
 } from 'react-native-reanimated';
-import { Button, StyleSheet, View } from 'react-native';
-
-import React from 'react';
 
 export default function FrameCallbackExample() {
   const limit = 200;

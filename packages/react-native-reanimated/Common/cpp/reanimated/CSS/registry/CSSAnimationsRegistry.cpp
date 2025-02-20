@@ -8,7 +8,6 @@ bool CSSAnimationsRegistry::hasUpdates() const {
 }
 
 void CSSAnimationsRegistry::set(
-    jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode,
     std::vector<std::shared_ptr<CSSAnimation>> &&animations,
     const double timestamp) {
@@ -20,9 +19,9 @@ void CSSAnimationsRegistry::set(
   const auto &storedAnimations = registry_[viewTag] = std::move(animations);
 
   for (const auto &animation : storedAnimations) {
-    scheduleOrActivateAnimation(rt, animation, timestamp);
+    scheduleOrActivateAnimation(animation, timestamp);
   }
-  applyViewAnimationsStyle(rt, viewTag, timestamp);
+  applyViewAnimationsStyle(viewTag, timestamp);
 }
 
 void CSSAnimationsRegistry::remove(const Tag viewTag) {
@@ -46,7 +45,6 @@ void CSSAnimationsRegistry::removeBatch(const std::vector<Tag>& tagsToRemove){
 }
 
 void CSSAnimationsRegistry::updateSettings(
-    jsi::Runtime &rt,
     const Tag viewTag,
     const SettingsUpdates &settingsUpdates,
     const double timestamp) {
@@ -68,23 +66,23 @@ void CSSAnimationsRegistry::updateSettings(
 
     const auto &animation = it->second[animationIndex];
     animation->updateSettings(updatedSettings, timestamp);
-    scheduleOrActivateAnimation(rt, animation, timestamp);
+    scheduleOrActivateAnimation(animation, timestamp);
     updatedIndices.emplace_back(animationIndex);
   }
 
   if (!updatedIndices.empty()) {
-    updateViewAnimations(rt, viewTag, updatedIndices, timestamp, false);
-    applyViewAnimationsStyle(rt, viewTag, timestamp);
+    updateViewAnimations(viewTag, updatedIndices, timestamp, false);
+    applyViewAnimationsStyle(viewTag, timestamp);
   }
 }
 
-void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
+void CSSAnimationsRegistry::update(const double timestamp) {
   std::lock_guard<std::mutex> lock{mutex_};
 
   // Activate all delayed animations that should start now
   activateDelayedAnimations(timestamp);
   // Update styles in the registry for views which animations were reverted
-  handleAnimationsToRevert(rt, timestamp);
+  handleAnimationsToRevert(timestamp);
 
   // Iterate over active animations and update them
   for (auto it = runningAnimationsMap_.begin();
@@ -92,7 +90,7 @@ void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
     const auto viewTag = it->first;
     const std::vector<unsigned> animationIndices = {
         it->second.begin(), it->second.end()};
-    updateViewAnimations(rt, viewTag, animationIndices, timestamp, true);
+    updateViewAnimations(viewTag, animationIndices, timestamp, true);
 
     if (runningAnimationsMap_.at(viewTag).empty()) {
       it = runningAnimationsMap_.erase(it);
@@ -103,12 +101,11 @@ void CSSAnimationsRegistry::update(jsi::Runtime &rt, const double timestamp) {
 }
 
 void CSSAnimationsRegistry::updateViewAnimations(
-    jsi::Runtime &rt,
     const Tag viewTag,
     const std::vector<unsigned> &animationIndices,
     const double timestamp,
     const bool addToBatch) {
-  jsi::Object result = jsi::Object(rt);
+  folly::dynamic result = folly::dynamic::object;
   ShadowNode::Shared shadowNode = nullptr;
   bool hasUpdates = false;
 
@@ -122,7 +119,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     }
 
     bool updatesAddedToBatch = false;
-    const auto updates = animation->update(rt, timestamp);
+    const auto updates = animation->update(timestamp);
     const auto newState = animation->getState(timestamp);
 
     if (newState == AnimationProgressState::Finished) {
@@ -131,8 +128,9 @@ void CSSAnimationsRegistry::updateViewAnimations(
       if (addToBatch && !animation->hasForwardsFillMode()) {
         //  We also have to manually commit style values
         // reverting the changes applied by the animation.
+
         hasUpdates =
-            addStyleUpdates(rt, result, animation->resetStyle(rt), false) ||
+            addStyleUpdates(result, animation->getResetStyle(), false) ||
             hasUpdates;
         updatesAddedToBatch = true;
         // We want to remove style changes applied by the animation that is
@@ -146,7 +144,7 @@ void CSSAnimationsRegistry::updateViewAnimations(
     }
 
     if (addToBatch && !updatesAddedToBatch) {
-      hasUpdates = addStyleUpdates(rt, result, updates, true) || hasUpdates;
+      hasUpdates = addStyleUpdates(result, updates, true) || hasUpdates;
     }
     if (newState != AnimationProgressState::Running) {
       runningAnimationsMap_[viewTag].erase(animationIndex);
@@ -154,12 +152,11 @@ void CSSAnimationsRegistry::updateViewAnimations(
   }
 
   if (hasUpdates) {
-    addUpdatesToBatch(rt, shadowNode, jsi::Value(rt, result));
+    addUpdatesToBatch(shadowNode, result);
   }
 }
 
 void CSSAnimationsRegistry::scheduleOrActivateAnimation(
-    jsi::Runtime &rt,
     const std::shared_ptr<CSSAnimation> &animation,
     const double timestamp) {
   const auto id = animation->getId();
@@ -195,7 +192,6 @@ void CSSAnimationsRegistry::removeViewAnimations(const Tag viewTag) {
 }
 
 void CSSAnimationsRegistry::applyViewAnimationsStyle(
-    jsi::Runtime &rt,
     const Tag viewTag,
     const double timestamp) {
   const auto it = registry_.find(viewTag);
@@ -205,34 +201,34 @@ void CSSAnimationsRegistry::applyViewAnimationsStyle(
     return;
   }
 
-  auto updatedStyle = jsi::Object(rt);
+  folly::dynamic updatedStyle = folly::dynamic::object;
   ShadowNode::Shared shadowNode = nullptr;
 
   for (const auto &animation : it->second) {
     const auto startTimestamp = animation->getStartTimestamp(timestamp);
 
-    jsi::Value style;
+    folly::dynamic style;
     const auto &currentState = animation->getState(timestamp);
     if (startTimestamp == timestamp ||
         (startTimestamp > timestamp && animation->hasBackwardsFillMode())) {
-      style = animation->getBackwardsFillStyle(rt);
+      style = animation->getBackwardsFillStyle();
     } else if (currentState == AnimationProgressState::Finished) {
       if (animation->hasForwardsFillMode()) {
-        style = animation->getForwardFillStyle(rt);
+        style = animation->getForwardsFillStyle();
       }
     } else if (currentState != AnimationProgressState::Pending) {
-      style = animation->getCurrentInterpolationStyle(rt);
+      style = animation->getCurrentInterpolationStyle();
     }
 
     if (!shadowNode) {
       shadowNode = animation->getShadowNode();
     }
     if (style.isObject()) {
-      updateJSIObject(rt, updatedStyle, style.asObject(rt));
+      updatedStyle.update(style);
     }
   }
 
-  setInUpdatesRegistry(rt, shadowNode, jsi::Value(rt, updatedStyle));
+  setInUpdatesRegistry(shadowNode, updatedStyle);
 }
 
 void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
@@ -249,35 +245,26 @@ void CSSAnimationsRegistry::activateDelayedAnimations(const double timestamp) {
   }
 }
 
-void CSSAnimationsRegistry::handleAnimationsToRevert(
-    jsi::Runtime &rt,
-    const double timestamp) {
+void CSSAnimationsRegistry::handleAnimationsToRevert(const double timestamp) {
   for (const auto &[viewTag, _] : animationsToRevertMap_) {
-    applyViewAnimationsStyle(rt, viewTag, timestamp);
+    applyViewAnimationsStyle(viewTag, timestamp);
   }
   animationsToRevertMap_.clear();
 }
 
 bool CSSAnimationsRegistry::addStyleUpdates(
-    jsi::Runtime &rt,
-    jsi::Object &target,
-    const jsi::Value &updates,
-    bool override) {
+    folly::dynamic &target,
+    const folly::dynamic &updates,
+    bool shouldOverride) {
   if (!updates.isObject()) {
     return false;
   }
 
   bool hasUpdates = false;
-  const auto updatesObject = updates.asObject(rt);
-  const auto propertyNames = updatesObject.getPropertyNames(rt);
-  const auto propertiesCount = propertyNames.size(rt);
-
-  for (size_t i = 0; i < propertiesCount; ++i) {
-    const auto propertyName = propertyNames.getValueAtIndex(rt, i).asString(rt);
-    const auto propertyValue = updatesObject.getProperty(rt, propertyName);
-
-    if (override || target.getProperty(rt, propertyName).isUndefined()) {
-      target.setProperty(rt, propertyName, propertyValue);
+  for (const auto &[propertyName, propertyValue] : updates.items()) {
+    if (shouldOverride || !target.count(propertyName) ||
+        target.at(propertyName).isNull()) {
+      target[propertyName] = propertyValue;
       hasUpdates = true;
     }
   }

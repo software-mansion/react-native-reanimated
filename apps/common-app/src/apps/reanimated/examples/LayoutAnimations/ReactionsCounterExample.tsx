@@ -1,3 +1,11 @@
+import React from 'react';
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import type {
   EntryAnimationsValues,
   ExitAnimationsValues,
@@ -8,15 +16,6 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native';
-
-import React from 'react';
 
 const BACKGROUND_COLOR_OFF = '#2F3136';
 const BORDER_COLOR_OFF = '#42454A';

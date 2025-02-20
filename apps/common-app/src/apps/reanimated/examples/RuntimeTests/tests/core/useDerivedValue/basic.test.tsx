@@ -1,25 +1,26 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
-  withTiming,
   useDerivedValue,
+  useSharedValue,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
-import { ComparisonMode } from '../../../ReJest/types';
+
 import {
   describe,
-  test,
   expect,
-  render,
-  useTestRef,
   getTestComponent,
-  recordAnimationUpdates,
   mockAnimationTimer,
+  recordAnimationUpdates,
+  render,
+  test,
   unmockAnimationTimer,
+  useTestRef,
   waitForAnimationUpdates,
 } from '../../../ReJest/RuntimeTestsApi';
+import { ComparisonMode } from '../../../ReJest/types';
 import { BasicSnapshots } from './useDerivedValue.snapshot';
 
 const WIDTH_COMPONENT = 'WidthComponent';

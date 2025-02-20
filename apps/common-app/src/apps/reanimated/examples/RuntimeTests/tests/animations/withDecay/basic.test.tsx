@@ -1,15 +1,16 @@
-import { View, StyleSheet } from 'react-native';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import type { WithDecayConfig } from 'react-native-reanimated';
 import Animated, { useAnimatedStyle, withDecay } from 'react-native-reanimated';
-import React from 'react';
+
 import {
   describe,
-  test,
-  render,
+  expect,
   mockAnimationTimer,
   recordAnimationUpdates,
+  render,
+  test,
   unmockAnimationTimer,
-  expect,
   waitForAnimationUpdates,
 } from '../../../ReJest/RuntimeTestsApi';
 import { Snapshots } from './basic.snapshot';

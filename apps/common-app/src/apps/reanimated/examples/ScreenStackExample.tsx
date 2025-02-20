@@ -1,5 +1,3 @@
-import * as React from 'react';
-import { Button, StyleSheet, View } from 'react-native';
 import {
   NavigationContainer,
   NavigationIndependentTree,
@@ -7,6 +5,8 @@ import {
 } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as React from 'react';
+import { Button, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,

@@ -117,9 +117,12 @@ const notCapturedIdentifiers = [
   'HermesInternal',
 
   // Reanimated
-  '_WORKLET',
   'ReanimatedError',
-  '__reanimatedLoggerConfig',
+
+  // Worklets
+  '_WORKLET',
+  'WorkletsError',
+  '__workletsLoggerConfig',
 ];
 
 /**

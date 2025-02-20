@@ -1,6 +1,6 @@
 import { runOnJS } from 'react-native-reanimated';
 
-const notificationRegistry: Record<string, boolean> = {};
+let notificationRegistry: Record<string, boolean> = {};
 function notifyJS(name: string) {
   notificationRegistry[name] = true;
 }
@@ -24,5 +24,9 @@ export class NotificationRegistry {
         }
       }, 10);
     });
+  }
+
+  public resetRegistry() {
+    notificationRegistry = {};
   }
 }

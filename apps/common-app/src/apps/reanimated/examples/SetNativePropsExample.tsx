@@ -1,8 +1,4 @@
-import Animated, {
-  runOnJS,
-  setNativeProps,
-  useAnimatedRef,
-} from 'react-native-reanimated';
+import React from 'react';
 import { Button, StyleSheet } from 'react-native';
 import {
   Gesture,
@@ -10,8 +6,11 @@ import {
   GestureHandlerRootView,
   TextInput,
 } from 'react-native-gesture-handler';
-
-import React from 'react';
+import Animated, {
+  runOnJS,
+  setNativeProps,
+  useAnimatedRef,
+} from 'react-native-reanimated';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 

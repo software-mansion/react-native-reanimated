@@ -1,17 +1,19 @@
 import type { Component, MutableRefObject, ReactElement } from 'react';
 import { useRef } from 'react';
-import type { MaybeAsync, TestCase, TestConfiguration, TestSuite, TestValue } from '../types';
-import { TestComponent } from '../TestComponent';
+
 import { Matchers } from '../matchers/Matchers';
-import { assertTestCase, assertTestSuite } from './Asserts';
+import { TestComponent } from '../TestComponent';
+import type { MaybeAsync, TestCase, TestConfiguration, TestSuite, TestValue } from '../types';
 import { RenderLock } from '../utils/SyncUIRunner';
-import { ValueRegistry } from './ValueRegistry';
-import { TestSummaryLogger } from './TestSummaryLogger';
-import { WindowDimensionsMocker } from './WindowDimensionsMocker';
 import { AnimationUpdatesRecorder } from './AnimationUpdatesRecorder';
+import { assertTestCase, assertTestSuite } from './Asserts';
 import { CallTrackerRegistry } from './CallTrackerRegistry';
 import { NotificationRegistry } from './NotificationRegistry';
 import { TestSuiteBuilder } from './TestSuiteBuilder';
+import { TestSummaryLogger } from './TestSummaryLogger';
+import { ValueRegistry } from './ValueRegistry';
+import { WindowDimensionsMocker } from './WindowDimensionsMocker';
+
 export { Presets } from '../Presets';
 
 export class TestRunner {
@@ -127,6 +129,7 @@ export class TestRunner {
 
   private async runTestCase(testSuite: TestSuite, testCase: TestCase) {
     this._callTrackerRegistry.resetRegistry();
+    this._notificationRegistry.resetRegistry();
     this._currentTestCase = testCase;
 
     if (testSuite.beforeEach) {

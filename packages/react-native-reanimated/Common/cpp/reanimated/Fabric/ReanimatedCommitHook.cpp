@@ -3,6 +3,7 @@
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
 #include <reanimated/Fabric/ReanimatedCommitShadowNode.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <react/renderer/core/ComponentDescriptor.h>
 
@@ -53,6 +54,8 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     ShadowTree const &,
     RootShadowNode::Shared const &,
     RootShadowNode::Unshared const &newRootShadowNode) noexcept {
+  ReanimatedSystraceSection s("ReanimatedCommitHook::shadowTreeWillCommit");
+
   maybeInitializeLayoutAnimations(newRootShadowNode->getSurfaceId());
 
   auto reaShadowNode =

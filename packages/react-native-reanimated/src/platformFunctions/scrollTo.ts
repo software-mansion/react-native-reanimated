@@ -1,18 +1,19 @@
 'use strict';
+import type { Component } from 'react';
+
+import type {
+  AnimatedRef,
+  AnimatedRefOnJS,
+  AnimatedRefOnUI,
+} from '../hook/commonTypes';
 import {
   isChromeDebugger,
   isFabric,
   isJest,
   shouldBeUseWeb,
 } from '../PlatformChecker';
+import { logger } from '../WorkletsResolver';
 import { dispatchCommand } from './dispatchCommand';
-import type {
-  AnimatedRef,
-  AnimatedRefOnJS,
-  AnimatedRefOnUI,
-} from '../hook/commonTypes';
-import type { Component } from 'react';
-import { logger } from '../logger';
 
 type ScrollTo = <T extends Component>(
   animatedRef: AnimatedRef<T>,

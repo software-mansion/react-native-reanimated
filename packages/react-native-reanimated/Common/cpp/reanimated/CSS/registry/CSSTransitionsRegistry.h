@@ -31,12 +31,9 @@ class CSSTransitionsRegistry
   void remove(Tag viewTag);
   void removeBatch(const std::vector<Tag>& tagsToRemove) override;
         bool empty();
-  void updateSettings(
-      jsi::Runtime &rt,
-      Tag viewTag,
-      const PartialCSSTransitionConfig &config);
+  void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
 
-  void update(jsi::Runtime &rt, double timestamp);
+  void update(double timestamp);
 
  private:
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;

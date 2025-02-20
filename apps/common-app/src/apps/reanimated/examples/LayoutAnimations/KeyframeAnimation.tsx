@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Button, StyleSheet, Pressable } from 'react-native';
-import Animated, { Keyframe, Easing } from 'react-native-reanimated';
+import { Button, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 
 export default function KeyframeExample() {
   const [visible, setVisible] = useState(true);

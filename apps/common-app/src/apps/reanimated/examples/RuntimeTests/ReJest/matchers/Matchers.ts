@@ -1,16 +1,16 @@
+import type { SingleViewSnapshot } from '../TestRunner/UpdatesContainer';
 import type { TestCase, TestValue } from '../types';
 import type { AsyncMatcher, AsyncMatcherArguments, Matcher, SyncMatcherArguments } from './rawMatchers';
 import {
-  toBeMatcher,
-  toBeWithinRangeMatcher,
+  toBeCalledJSMatcher,
   toBeCalledMatcher,
   toBeCalledUIMatcher,
-  toBeCalledJSMatcher,
-  toThrowMatcher,
+  toBeMatcher,
   toBeNullableMatcher,
+  toBeWithinRangeMatcher,
+  toThrowMatcher,
 } from './rawMatchers';
 import { compareSnapshots } from './snapshotMatchers';
-import type { SingleViewSnapshot } from '../TestRunner/UpdatesContainer';
 
 export class Matchers {
   private _negation = false;

@@ -1,17 +1,17 @@
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
+import React, { useRef } from 'react';
 import {
-  SafeAreaView,
-  View,
-  StyleSheet,
   Platform,
+  SafeAreaView,
+  StyleSheet,
   Text,
   TouchableOpacity,
+  View,
 } from 'react-native';
-import React, { useRef } from 'react';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
 const NAVY = '#001A72';
 const LIGHT_NAVY = '#C1C6E5';

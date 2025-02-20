@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import { useSharedValue } from 'react-native-reanimated';
-import { describe, test, expect, render, registerValue, getRegisteredValue } from '../../../ReJest/RuntimeTestsApi';
+
+import { describe, expect, getRegisteredValue, registerValue, render, test } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 import { ProgressBar } from './components';
 

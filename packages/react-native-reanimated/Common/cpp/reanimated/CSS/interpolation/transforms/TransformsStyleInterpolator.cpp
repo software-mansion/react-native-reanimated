@@ -9,64 +9,58 @@ const TransformOperations TransformsStyleInterpolator::defaultStyleValue_ = {
 TransformsStyleInterpolator::TransformsStyleInterpolator(
     const PropertyPath &propertyPath,
     const std::shared_ptr<TransformInterpolators> &interpolators,
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
-    : PropertyInterpolator(
-          propertyPath,
-          progressProvider,
-          viewStylesRepository),
+    : PropertyInterpolator(propertyPath, viewStylesRepository),
       interpolators_(interpolators) {}
 
-jsi::Value TransformsStyleInterpolator::getStyleValue(
-    jsi::Runtime &rt,
+folly::dynamic TransformsStyleInterpolator::getStyleValue(
     const ShadowNode::Shared &shadowNode) const {
   return viewStylesRepository_->getStyleProp(
-      rt, shadowNode->getTag(), propertyPath_);
+      shadowNode->getTag(), propertyPath_);
 }
 
-jsi::Value TransformsStyleInterpolator::getCurrentValue(
-    jsi::Runtime &rt,
+folly::dynamic TransformsStyleInterpolator::getResetStyle(
     const ShadowNode::Shared &shadowNode) const {
-  if (previousResult_.has_value()) {
-    return convertResultToJSI(rt, previousResult_.value());
+  auto styleValue = getStyleValue(shadowNode);
+
+  if (!styleValue.isArray()) {
+    return convertResultToDynamic(defaultStyleValue_);
   }
-  return getStyleValue(rt, shadowNode);
+
+  return styleValue;
 }
 
-jsi::Value TransformsStyleInterpolator::getFirstKeyframeValue(
-    jsi::Runtime &rt) const {
-  return convertResultToJSI(
-      rt, keyframes_.front()->fromOperations.value_or(defaultStyleValue_));
+folly::dynamic TransformsStyleInterpolator::getFirstKeyframeValue() const {
+  return convertResultToDynamic(
+      keyframes_.front()->fromOperations.value_or(defaultStyleValue_));
 }
 
-jsi::Value TransformsStyleInterpolator::getLastKeyframeValue(
-    jsi::Runtime &rt) const {
-  return convertResultToJSI(
-      rt, keyframes_.back()->toOperations.value_or(defaultStyleValue_));
+folly::dynamic TransformsStyleInterpolator::getLastKeyframeValue() const {
+  return convertResultToDynamic(
+      keyframes_.back()->toOperations.value_or(defaultStyleValue_));
 }
 
 bool TransformsStyleInterpolator::equalsReversingAdjustedStartValue(
-    jsi::Runtime &rt,
-    const jsi::Value &propertyValue) const {
-  const auto &reversingAdjustedOperations = reversingAdjustedStartValue_;
-  const auto parsedOperations = parseTransformOperations(rt, propertyValue);
+    const folly::dynamic &propertyValue) const {
+  const auto propertyOperations = parseTransformOperations(propertyValue);
 
-  if (!reversingAdjustedOperations.has_value()) {
-    return !parsedOperations.has_value();
-  } else if (!parsedOperations.has_value()) {
+  if (!reversingAdjustedStartValue_.has_value()) {
+    return !propertyOperations.has_value();
+  } else if (!propertyOperations.has_value()) {
     return false;
   }
 
   const auto &reversingAdjustedOperationsValue =
-      reversingAdjustedOperations.value();
-  const auto &parsedOperationsValue = parsedOperations.value();
+      reversingAdjustedStartValue_.value();
+  const auto &propertyOperationsValue = propertyOperations.value();
 
-  if (reversingAdjustedOperationsValue.size() != parsedOperationsValue.size()) {
+  if (reversingAdjustedOperationsValue.size() !=
+      propertyOperationsValue.size()) {
     return false;
   }
 
   for (size_t i = 0; i < reversingAdjustedOperationsValue.size(); ++i) {
-    if (*reversingAdjustedOperationsValue[i] != *parsedOperationsValue[i]) {
+    if (*reversingAdjustedOperationsValue[i] != *propertyOperationsValue[i]) {
       return false;
     }
   }
@@ -74,18 +68,18 @@ bool TransformsStyleInterpolator::equalsReversingAdjustedStartValue(
   return true;
 }
 
-jsi::Value TransformsStyleInterpolator::update(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) {
-  updateCurrentKeyframe(rt, shadowNode);
+folly::dynamic TransformsStyleInterpolator::interpolate(
+    const ShadowNode::Shared &shadowNode,
+    const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
+  const auto currentIndex = getIndexOfCurrentKeyframe(progressProvider);
 
   // Get or create the current keyframe
-  auto &keyframe = currentKeyframe_;
+  auto keyframe = keyframes_.at(currentIndex);
   if (!keyframe->fromOperations.has_value() ||
       !keyframe->toOperations.has_value()) {
     // If the value is nullopt, we would have to read it from the view style
     // and build the keyframe again
-    const auto fallbackValue = getFallbackValue(rt, shadowNode);
+    const auto fallbackValue = getFallbackValue(shadowNode);
     keyframe = createTransformKeyframe(
         keyframe->fromOffset,
         keyframe->toOffset,
@@ -96,36 +90,17 @@ jsi::Value TransformsStyleInterpolator::update(
   // Interpolate the current keyframe
   TransformOperations result = interpolateOperations(
       shadowNode,
-      progressProvider_->getKeyframeProgress(
+      progressProvider->getKeyframeProgress(
           keyframe->fromOffset, keyframe->toOffset),
       keyframe->fromOperations.value(),
       keyframe->toOperations.value());
 
-  // Convert the result to JSI value
-  auto updates = convertResultToJSI(rt, result);
-  previousResult_ = std::move(result);
-
-  return updates;
-}
-
-jsi::Value TransformsStyleInterpolator::reset(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) {
-  previousResult_ = std::nullopt;
-  auto resetStyle = getStyleValue(rt, shadowNode);
-
-  if (resetStyle.isUndefined()) {
-    return convertResultToJSI(rt, defaultStyleValue_);
-  }
-
-  return resetStyle;
+  return convertResultToDynamic(result);
 }
 
 void TransformsStyleInterpolator::updateKeyframes(
     jsi::Runtime &rt,
     const jsi::Value &keyframes) {
-  keyframeIndex_ = 0;
-
   // Step 1: Parse keyframes
   const auto parsedKeyframes = parseJSIKeyframes(rt, keyframes);
 
@@ -154,21 +129,25 @@ void TransformsStyleInterpolator::updateKeyframes(
 }
 
 void TransformsStyleInterpolator::updateKeyframesFromStyleChange(
-    jsi::Runtime &rt,
-    const jsi::Value &oldStyleValue,
-    const jsi::Value &newStyleValue) {
-  keyframeIndex_ = 0;
+    const folly::dynamic &oldStyleValue,
+    const folly::dynamic &newStyleValue,
+    const folly::dynamic &lastUpdateValue) {
+  if (oldStyleValue.isNull()) {
+    reversingAdjustedStartValue_ = std::nullopt;
+  } else {
+    reversingAdjustedStartValue_ = parseTransformOperations(oldStyleValue);
+  }
+
+  const auto &prevStyleValue =
+      lastUpdateValue.isNull() ? oldStyleValue : lastUpdateValue;
+
   keyframes_.clear();
   keyframes_.reserve(1);
-
-  reversingAdjustedStartValue_ = parseTransformOperations(rt, oldStyleValue);
-
-  const auto fromOperations = previousResult_.value_or(
-      reversingAdjustedStartValue_.value_or(TransformOperations{}));
-  const auto toOperations = parseTransformOperations(rt, newStyleValue)
-                                .value_or(TransformOperations{});
-  keyframes_.push_back(
-      createTransformKeyframe(0, 1, fromOperations, toOperations));
+  keyframes_.emplace_back(createTransformKeyframe(
+      0,
+      1,
+      parseTransformOperations(prevStyleValue).value_or(TransformOperations{}),
+      parseTransformOperations(newStyleValue).value_or(TransformOperations{})));
 }
 
 std::optional<TransformOperations>
@@ -189,6 +168,27 @@ TransformsStyleInterpolator::parseTransformOperations(
     const auto transform = transformsArray.getValueAtIndex(rt, i);
     transformOperations.emplace_back(
         TransformOperation::fromJSIValue(rt, transform));
+  }
+  return transformOperations;
+}
+
+std::optional<TransformOperations>
+TransformsStyleInterpolator::parseTransformOperations(
+    const folly::dynamic &values) {
+  if (values.empty()) {
+    return std::nullopt;
+  }
+
+  const auto transformsArray = values;
+  const auto transformsCount = transformsArray.size();
+
+  TransformOperations transformOperations;
+  transformOperations.reserve(transformsCount);
+
+  for (size_t i = 0; i < transformsCount; ++i) {
+    const auto transform = transformsArray.at(i);
+    transformOperations.emplace_back(
+        TransformOperation::fromDynamic(transform));
   }
   return transformOperations;
 }
@@ -338,107 +338,36 @@ TransformsStyleInterpolator::createTransformInterpolationPair(
   return std::make_pair(fromOperationsResult, toOperationsResult);
 }
 
+size_t TransformsStyleInterpolator::getIndexOfCurrentKeyframe(
+    const std::shared_ptr<KeyframeProgressProvider> &progressProvider) const {
+  const auto progress = progressProvider->getGlobalProgress();
+
+  const auto it = std::lower_bound(
+      keyframes_.begin(),
+      keyframes_.end(),
+      progress,
+      [](const std::shared_ptr<TransformKeyframe> &keyframe, double progress) {
+        return keyframe->toOffset < progress;
+      });
+
+  // If we're at the end, return the last valid keyframe index
+  if (it == keyframes_.end()) {
+    return keyframes_.size() - 1;
+  }
+
+  return std::distance(keyframes_.begin(), it);
+}
+
 TransformOperations TransformsStyleInterpolator::getFallbackValue(
-    jsi::Runtime &rt,
     const ShadowNode::Shared &shadowNode) const {
-  const jsi::Value &styleValue = getStyleValue(rt, shadowNode);
-  return parseTransformOperations(rt, styleValue)
-      .value_or(TransformOperations{});
+  const auto &styleValue = getStyleValue(shadowNode);
+  return parseTransformOperations(styleValue).value_or(TransformOperations{});
 }
 
 std::shared_ptr<TransformOperation>
 TransformsStyleInterpolator::getDefaultOperationOfType(
     const TransformOperationType type) const {
   return interpolators_->at(type)->getDefaultOperation();
-}
-
-TransformOperations TransformsStyleInterpolator::resolveTransformOperations(
-    const ShadowNode::Shared &shadowNode,
-    const TransformOperations &unresolvedOperations) const {
-  return interpolateOperations(
-      shadowNode, 0, unresolvedOperations, unresolvedOperations);
-}
-
-std::shared_ptr<TransformKeyframe>
-TransformsStyleInterpolator::getKeyframeAtIndex(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode,
-    const size_t index,
-    const int resolveDirection) const {
-  const auto &keyframe = keyframes_.at(index);
-
-  if (resolveDirection == 0) {
-    return keyframe;
-  }
-
-  auto &unresolvedOperations =
-      resolveDirection < 0 ? keyframe->fromOperations : keyframe->toOperations;
-
-  // If keyframe operations are specified, we can just create a keyframe with
-  // the resolved operations
-  if (unresolvedOperations.has_value()) {
-    if (resolveDirection < 0) {
-      return std::make_shared<TransformKeyframe>(TransformKeyframe{
-          keyframe->fromOffset,
-          keyframe->toOffset,
-          resolveTransformOperations(shadowNode, unresolvedOperations.value()),
-          keyframe->toOperations});
-    } else {
-      return std::make_shared<TransformKeyframe>(TransformKeyframe{
-          keyframe->fromOffset,
-          keyframe->toOffset,
-          keyframe->fromOperations,
-          resolveTransformOperations(
-              shadowNode, unresolvedOperations.value())});
-    }
-  }
-
-  // If the operations are not specified, we would have to read the transform
-  // value from the view style and create the new keyframe then
-  const auto fallbackValue = getFallbackValue(rt, shadowNode);
-  if (resolveDirection < 0) {
-    return createTransformKeyframe(
-        keyframe->fromOffset,
-        keyframe->toOffset,
-        resolveTransformOperations(shadowNode, fallbackValue),
-        keyframe->toOperations);
-  } else {
-    return createTransformKeyframe(
-        keyframe->fromOffset,
-        keyframe->toOffset,
-        keyframe->fromOperations,
-        resolveTransformOperations(shadowNode, fallbackValue));
-  }
-}
-
-void TransformsStyleInterpolator::updateCurrentKeyframe(
-    jsi::Runtime &rt,
-    const ShadowNode::Shared &shadowNode) {
-  const auto progress = progressProvider_->getGlobalProgress();
-  const bool isProgressLessThanHalf = progress < 0.5;
-  const auto prevIndex = keyframeIndex_;
-  if (progressProvider_->isFirstUpdate()) {
-    keyframeIndex_ = isProgressLessThanHalf ? 0 : keyframes_.size() - 1;
-  }
-
-  while (keyframeIndex_ < keyframes_.size() - 1 &&
-         keyframes_[keyframeIndex_ + 1]->fromOffset < progress)
-    ++keyframeIndex_;
-
-  while (keyframeIndex_ > 0 &&
-         keyframes_[keyframeIndex_]->fromOffset >= progress)
-    --keyframeIndex_;
-
-  if (progressProvider_->isFirstUpdate()) {
-    currentKeyframe_ = getKeyframeAtIndex(
-        rt, shadowNode, keyframeIndex_, isProgressLessThanHalf ? -1 : 1);
-  } else if (keyframeIndex_ != prevIndex) {
-    currentKeyframe_ = getKeyframeAtIndex(
-        rt,
-        shadowNode,
-        keyframeIndex_,
-        static_cast<int>(prevIndex - keyframeIndex_));
-  }
 }
 
 TransformOperations TransformsStyleInterpolator::interpolateOperations(
@@ -448,7 +377,8 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
     const TransformOperations &toOperations) const {
   TransformOperations result;
   result.reserve(fromOperations.size());
-  const auto transformUpdateContext = createUpdateContext(shadowNode);
+  const auto transformUpdateContext = TransformInterpolatorUpdateContext{
+      shadowNode, viewStylesRepository_, interpolators_};
 
   for (size_t i = 0; i < fromOperations.size(); ++i) {
     const auto &fromOperation = fromOperations[i];
@@ -463,23 +393,15 @@ TransformOperations TransformsStyleInterpolator::interpolateOperations(
   return result;
 }
 
-jsi::Value TransformsStyleInterpolator::convertResultToJSI(
-    jsi::Runtime &rt,
+folly::dynamic TransformsStyleInterpolator::convertResultToDynamic(
     const TransformOperations &operations) {
-  jsi::Array result(rt, operations.size());
+  auto result = folly::dynamic::array();
 
   for (size_t i = 0; i < operations.size(); ++i) {
-    result.setValueAtIndex(rt, i, operations[i]->toJSIValue(rt));
+    result.push_back(operations[i]->toDynamic());
   }
 
   return result;
-}
-
-TransformInterpolatorUpdateContext
-TransformsStyleInterpolator::createUpdateContext(
-    const ShadowNode::Shared &shadowNode) const {
-  return TransformInterpolatorUpdateContext{
-      shadowNode, viewStylesRepository_, interpolators_};
 }
 
 } // namespace reanimated

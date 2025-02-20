@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -5,8 +7,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Dimensions, StyleSheet, View } from 'react-native';
-import React, { useState } from 'react';
 
 const { width, height } = Dimensions.get('window');
 

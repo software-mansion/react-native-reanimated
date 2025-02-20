@@ -25,19 +25,17 @@ class CSSAnimationsRegistry
   bool hasUpdates() const;
 
   void set(
-      jsi::Runtime &rt,
       const ShadowNode::Shared &shadowNode,
       std::vector<std::shared_ptr<CSSAnimation>> &&animations,
       double timestamp);
   void remove(Tag viewTag);
   void removeBatch(const std::vector<Tag>& tagsToRemove) override;
   void updateSettings(
-      jsi::Runtime &rt,
       Tag viewTag,
       const SettingsUpdates &settingsUpdates,
       double timestamp);
 
-  void update(jsi::Runtime &rt, double timestamp);
+  void update(double timestamp);
         bool empty();
 
  private:
@@ -54,26 +52,22 @@ class CSSAnimationsRegistry
   DelayedItemsManager<CSSAnimationId> delayedAnimationsManager_;
 
   void updateViewAnimations(
-      jsi::Runtime &rt,
       Tag viewTag,
       const std::vector<unsigned> &animationIndices,
       double timestamp,
       bool addToBatch);
   void scheduleOrActivateAnimation(
-      jsi::Runtime &rt,
       const std::shared_ptr<CSSAnimation> &animation,
       double timestamp);
   void removeViewAnimations(Tag viewTag);
-  void
-  applyViewAnimationsStyle(jsi::Runtime &rt, Tag viewTag, double timestamp);
+  void applyViewAnimationsStyle(Tag viewTag, double timestamp);
   void activateDelayedAnimations(double timestamp);
-  void handleAnimationsToRevert(jsi::Runtime &rt, double timestamp);
+  void handleAnimationsToRevert(double timestamp);
 
   static bool addStyleUpdates(
-      jsi::Runtime &rt,
-      jsi::Object &target,
-      const jsi::Value &updates,
-      bool override);
+      folly::dynamic &target,
+      const folly::dynamic &updates,
+      bool shouldOverride);
 };
 
 } // namespace reanimated

@@ -1,21 +1,22 @@
 {
   "name": "react-native-reanimated",
-  "version": "4.0.0-beta.1",
+  "version": "4.0.0-beta.2",
   "description": "More powerful alternative to Animated library for React Native.",
   "scripts": {
     "test": "jest",
     "lint": "yarn lint:js && yarn lint:plugin && yarn lint:common && yarn lint:android && yarn lint:apple",
-    "lint:js": "eslint --ext '.js,.ts,.tsx' src __tests__ __typetests__ && yarn prettier --check src __tests__ __typetests__",
+    "lint:js": "eslint src __tests__ __typetests__ && yarn prettier --check src __tests__ __typetests__",
     "lint:plugin": "cd plugin && yarn lint",
     "lint:android": "./scripts/validate-android.sh && ./android/gradlew -p android spotlessCheck -q && ./scripts/cpplint.sh android/src && yarn format:android:cpp --dry-run -Werror && yarn lint:cmake",
     "lint:common": "./scripts/validate-common.sh && ./scripts/cpplint.sh Common && yarn format:common --dry-run -Werror",
+    "lint:clang-tidy": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs ./scripts/clang-tidy-lint.sh",
     "lint:apple": "./scripts/validate-apple.sh && yarn format:apple --dry-run -Werror",
     "lint:cmake": "find ./android -type d \\( -name build -o -name .cxx \\) -prune -o -type f -name 'CMakeLists.txt' -print | xargs ./scripts/lint-cmake.sh",
     "format": "yarn format:js && yarn format:plugin && yarn format:apple && yarn format:android:java && yarn format:android:cpp && yarn format:android:cmake && yarn format:common",
     "format:js": "prettier --write --list-different src __tests__ __typetests__",
     "format:plugin": "cd plugin && yarn format",
     "format:apple": "find apple -iname \"*.h\" -o -iname \"*.m\" -o -iname \"*.mm\" -o -iname \"*.cpp\" | xargs clang-format -i",
-    "format:android:java": "node ./scripts/format-java.js",
+    "format:android:java": "node ../../scripts/format-java.js",
     "format:android:cpp": "find android/src -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
     "format:android:cmake": "find ./android -type d \\( -name build -o -name .cxx \\) -prune -o -type f -name 'CMakeLists.txt' -print | xargs ./scripts/format-cmake.sh",
     "format:common": "find Common -iname \"*.h\" -o -iname \"*.cpp\" | xargs clang-format -i",
@@ -123,7 +124,7 @@
     "axios": "^1.7.4",
     "babel-eslint": "^10.1.0",
     "babel-plugin-module-resolver": "^5.0.0",
-    "clang-format-node": "^1.2.4",
+    "clang-format-node": "^1.3.1",
     "code-tag": "^1.1.0",
     "cspell": "^8.8.0",
     "eslint": "^8.57.0",
@@ -176,9 +177,13 @@
     }
   },
   "sideEffects": [
+    "./src/layoutReanimation/animationsManager.ts",
     "./lib/module/layoutReanimation/animationsManager.js",
+    "./src/core.ts",
     "./lib/module/core.js",
+    "./src/initializers.ts",
     "./lib/module/initializers.js",
+    "./src/index.ts",
     "./lib/module/index.js"
   ]
 }

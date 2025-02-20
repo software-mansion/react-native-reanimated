@@ -1,10 +1,11 @@
 /* eslint-disable reanimated/use-reanimated-error */
 'use strict';
 
-import type { ShareableRef, WorkletRuntime } from '../workletTypes';
-import type { IWorkletsModule } from './workletsModuleProxy';
 import { mockedRequestAnimationFrame } from '../mockedRequestAnimationFrame';
 import { isJest } from '../PlatformChecker';
+import { WorkletsError } from '../WorkletsError';
+import type { ShareableRef, WorkletRuntime } from '../workletTypes';
+import type { IWorkletsModule } from './workletsModuleProxy';
 
 export function createJSWorkletsModule(): IWorkletsModule {
   return new JSWorklets();
@@ -20,8 +21,8 @@ const requestAnimationFrameImpl =
 
 class JSWorklets implements IWorkletsModule {
   makeShareableClone<TValue>(): ShareableRef<TValue> {
-    throw new Error(
-      '[Worklets] makeShareableClone should never be called in JSWorklets.'
+    throw new WorkletsError(
+      'makeShareableClone should never be called in JSWorklets.'
     );
   }
 
@@ -34,8 +35,8 @@ class JSWorklets implements IWorkletsModule {
   }
 
   executeOnUIRuntimeSync<T, R>(_shareable: ShareableRef<T>): R {
-    throw new Error(
-      '`executeOnUIRuntimeSync` is not available in JSReanimated.'
+    throw new WorkletsError(
+      '`executeOnUIRuntimeSync` is not available in JSWorklets.'
     );
   }
 
@@ -43,10 +44,14 @@ class JSWorklets implements IWorkletsModule {
     _name: string,
     _initializer: ShareableRef<() => void>
   ): WorkletRuntime {
-    throw new Error('createWorkletRuntime is not available in JSReanimated.');
+    throw new WorkletsError(
+      'createWorkletRuntime is not available in JSWorklets.'
+    );
   }
 
   scheduleOnRuntime() {
-    throw new Error('scheduleOnRuntime is not available in JSReanimated.');
+    throw new WorkletsError(
+      'scheduleOnRuntime is not available in JSWorklets.'
+    );
   }
 }

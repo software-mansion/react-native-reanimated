@@ -5,13 +5,12 @@ namespace reanimated {
 
 std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     const std::string &propertyName,
-    const std::vector<std::string> &propertyPath,
+    const PropertyPath &propertyPath,
     const InterpolatorFactoriesRecord &factories,
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
-  auto factoryIt = factories.find(propertyName);
+  auto it = factories.find(propertyName);
 
-  if (factoryIt == factories.cend()) {
+  if (it == factories.cend()) {
     throw std::invalid_argument(
         "[Reanimated] No interpolator factory found for property: " +
         propertyName);
@@ -20,21 +19,19 @@ std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
   PropertyPath newPath = propertyPath;
   newPath.emplace_back(propertyName);
 
-  return factoryIt->second->create(
-      newPath, progressProvider, viewStylesRepository);
+  return it->second->create(newPath, viewStylesRepository);
 }
 
 std::shared_ptr<PropertyInterpolator> createPropertyInterpolator(
     size_t arrayIndex,
-    const std::vector<std::string> &propertyPath,
+    const PropertyPath &propertyPath,
     const InterpolatorFactoriesArray &factories,
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository) {
   PropertyPath newPath = propertyPath;
   newPath.emplace_back(std::to_string(arrayIndex));
 
   return factories[arrayIndex % factories.size()]->create(
-      newPath, progressProvider, viewStylesRepository);
+      newPath, viewStylesRepository);
 }
 
 } // namespace reanimated

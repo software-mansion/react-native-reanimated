@@ -1,21 +1,22 @@
 import React from 'react';
 import { Dimensions, StyleSheet } from 'react-native';
-import Animated, {
-  useSharedValue,
-  cancelAnimation,
-  interpolate,
-  Extrapolation,
-  withSpring,
-} from 'react-native-reanimated';
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
-import Weave from './Weave';
-import { initialSideWidth, initialWaveCenter } from './WeaveHelpers';
+import Animated, {
+  cancelAnimation,
+  Extrapolation,
+  interpolate,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
+
 import Content from './Content';
 import LiquidButton from './LiquidButton';
+import Weave from './Weave';
+import { initialSideWidth, initialWaveCenter } from './WeaveHelpers';
 
 export const assets = [
   require('./assets/firstPageImage.png'),

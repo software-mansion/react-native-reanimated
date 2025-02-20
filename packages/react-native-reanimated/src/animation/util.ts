@@ -1,46 +1,44 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
-import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type { ParsedColorArray } from '../Colors';
 import {
-  isColor,
+  clampRGBA,
   convertToRGBA,
+  isColor,
   rgbaArrayToRGBAColor,
   toGammaSpace,
   toLinearSpace,
-  clampRGBA,
 } from '../Colors';
-import { ReduceMotion } from '../commonTypes';
 import type {
-  SharedValue,
   AnimatableValue,
+  AnimatableValueObject,
   Animation,
   AnimationObject,
-  Timestamp,
-  AnimatableValueObject,
   EasingFunction,
+  SharedValue,
+  Timestamp,
 } from '../commonTypes';
+import { ReduceMotion } from '../commonTypes';
+import type { EasingFunctionFactory } from '../Easing';
+import { ReanimatedError } from '../errors';
+import { shouldBeUseWeb } from '../PlatformChecker';
+import { ReducedMotionManager } from '../ReducedMotion';
+import { isWorkletFunction, logger, runOnUI } from '../WorkletsResolver';
+import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
-  AffineMatrixFlat,
   AffineMatrix,
+  AffineMatrixFlat,
 } from './transformationMatrix/matrixUtils';
 import {
-  flatten,
-  multiplyMatrices,
-  scaleMatrix,
   addMatrices,
   decomposeMatrixIntoMatricesAndAngles,
-  isAffineMatrixFlat,
-  subtractMatrices,
+  flatten,
   getRotationMatrix,
+  isAffineMatrixFlat,
+  multiplyMatrices,
+  scaleMatrix,
+  subtractMatrices,
 } from './transformationMatrix/matrixUtils';
-import { shouldBeUseWeb } from '../PlatformChecker';
-import type { EasingFunctionFactory } from '../Easing';
-import { ReducedMotionManager } from '../ReducedMotion';
-import { logger } from '../logger';
-import { ReanimatedError } from '../errors';
-import { runOnUI } from '../threads';
-import { isWorkletFunction } from '../WorkletsResolver';
 
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();

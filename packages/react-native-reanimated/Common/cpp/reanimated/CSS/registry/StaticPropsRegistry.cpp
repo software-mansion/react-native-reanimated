@@ -12,7 +12,7 @@ void StaticPropsRegistry::set(
   } else {
     const auto newProps = dynamicFromValue(rt, props);
     if (has(viewTag)) {
-      notifyObservers(rt, viewTag, valueFromDynamic(rt, get(viewTag)), props);
+      notifyObservers(viewTag, get(viewTag), newProps);
     }
     registry_[viewTag] = newProps;
   }
@@ -59,13 +59,12 @@ void StaticPropsRegistry::removeObserver(const Tag viewTag) {
 }
 
 void StaticPropsRegistry::notifyObservers(
-    jsi::Runtime &rt,
     const Tag viewTag,
-    const jsi::Value &oldProps,
-    const jsi::Value &newProps) {
+    const folly::dynamic &oldProps,
+    const folly::dynamic &newProps) {
   auto observerIt = observers_.find(viewTag);
   if (observerIt != observers_.end()) {
-    observerIt->second(rt, oldProps, newProps);
+    observerIt->second(oldProps, newProps);
   }
 }
 

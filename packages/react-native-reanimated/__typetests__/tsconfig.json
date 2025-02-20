@@ -1,4 +1,4 @@
 {
   "extends": "../../../tsconfig.json",
-  "include": ["legacy", "common", "72plus"]
+  "include": ["common"]
 }

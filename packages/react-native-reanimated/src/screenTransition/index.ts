@@ -1,12 +1,12 @@
 'use strict';
 
 export {
-  startScreenTransition,
   finishScreenTransition,
+  startScreenTransition,
 } from './animationManager';
-export { ScreenTransition } from './presets';
 export type {
   AnimatedScreenTransition,
   GoBackGesture,
   ScreenTransitionConfig,
 } from './commonTypes';
+export { ScreenTransition } from './presets';

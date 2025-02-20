@@ -6,16 +6,9 @@ namespace reanimated {
 
 PropertyInterpolator::PropertyInterpolator(
     const PropertyPath &propertyPath,
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : propertyPath_(propertyPath),
-      viewStylesRepository_(viewStylesRepository),
-      progressProvider_(progressProvider) {}
-
-void PropertyInterpolator::setProgressProvider(
-    const std::shared_ptr<KeyframeProgressProvider> &progressProvider) {
-  progressProvider_ = progressProvider;
-}
+      viewStylesRepository_(viewStylesRepository) {}
 
 bool PropertyInterpolatorFactory::isDiscreteProperty() const {
   return false;

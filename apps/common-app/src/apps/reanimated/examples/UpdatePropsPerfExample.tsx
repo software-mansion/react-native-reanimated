@@ -1,10 +1,10 @@
+import React, { useEffect, useRef } from 'react';
+import { Animated as RNAnimated, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { Animated as RNAnimated, View, StyleSheet } from 'react-native';
-import React, { useEffect, useRef } from 'react';
 
 const N = 1500;
 const array = Array(N).fill(0);

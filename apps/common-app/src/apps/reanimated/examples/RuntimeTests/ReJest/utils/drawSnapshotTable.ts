@@ -1,8 +1,9 @@
 import { isColor } from 'react-native-reanimated';
-import { ComparisonMode, isValidPropName } from '../types';
-import type { Mismatch, TestValue } from '../types';
-import { green, red, color, getColorSquare } from './stringFormatUtils';
+
 import { getComparator, getComparisonModeForProp } from '../matchers/Comparators';
+import type { Mismatch, TestValue } from '../types';
+import { ComparisonMode, isValidPropName } from '../types';
+import { color, getColorSquare, green, red } from './stringFormatUtils';
 
 const VALUE_COLUMN_WIDTH = 15;
 const INDEX_COLUMN_WIDTH = 7;

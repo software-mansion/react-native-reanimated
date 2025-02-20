@@ -1,4 +1,12 @@
 'use strict';
+import type {
+  AnimatableValue,
+  Animation,
+  AnimationCallback,
+  EasingFunction,
+  ReduceMotion,
+  Timestamp,
+} from '../commonTypes';
 import type { EasingFunctionFactory } from '../Easing';
 import { Easing } from '../Easing';
 import {
@@ -6,14 +14,6 @@ import {
   defineAnimation,
   getReduceMotionForAnimation,
 } from './util';
-import type {
-  Animation,
-  AnimationCallback,
-  Timestamp,
-  AnimatableValue,
-  ReduceMotion,
-  EasingFunction,
-} from '../commonTypes';
 
 /**
  * The timing animation configuration.
