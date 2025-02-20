@@ -1,6 +1,11 @@
 'use strict';
 import invariant from 'invariant';
-import type { ComponentClass, ComponentType, FunctionComponent } from 'react';
+import type {
+  Component,
+  ComponentClass,
+  ComponentType,
+  FunctionComponent,
+} from 'react';
 import React from 'react';
 import type { FlatList, FlatListProps } from 'react-native';
 
@@ -70,12 +75,15 @@ export function createAnimatedComponent(
     }
   }
 
-  const animatedComponent = (
-    props: AnimatedComponentProps<InitialComponentProps>,
-    ref: React.RefObject<AnimatedComponent>
-  ) => {
-    return <AnimatedComponent {...props} ref={ref} />;
-  };
+  // TODO: Refactor to ref
+  const animatedComponent = React.forwardRef<Component>((props, ref) => {
+    return (
+      <AnimatedComponent
+        {...props}
+        {...(ref === null ? null : { forwardedRef: ref })}
+      />
+    );
+  });
 
   animatedComponent.displayName =
     Component.displayName || Component.name || 'Component';
