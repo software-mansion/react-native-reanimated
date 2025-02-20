@@ -1,18 +1,19 @@
-import * as React from 'react';
-import { View, Text, Button } from 'react-native';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Freeze } from 'react-freeze';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as React from 'react';
 import { useEffect, useState } from 'react';
+import { Freeze } from 'react-freeze';
+import { Button, Text, View } from 'react-native';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withDelay,
-  Easing,
   css,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
 } from 'react-native-reanimated';
+
 import { DropContext } from '@/App';
 
 type RootStackParamList = {
