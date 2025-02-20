@@ -80,8 +80,8 @@ const SCREENS = [
 ];
 
 function Navigator() {
-  return <CSSApp />;
   if (IS_MACOS) {
+    return <ReanimatedApp />;
   }
 
   const Drawer = createDrawerNavigator();

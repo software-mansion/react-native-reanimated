@@ -59,11 +59,10 @@ export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps>
 
   setShouldAnimateExiting() {
     if (Children.count(this.props.children) === 1) {
-      console.log(this);
-      // console.log(findNodeHandle(this)); // TODO - fix error: "TypeError: property is not writable"
-      // if (tag) {
-      //   setShouldAnimateExitingForTag(tag, !this.props.skipExiting);
-      // }
+      const tag = findNodeHandle(this);
+      if (tag) {
+        setShouldAnimateExitingForTag(tag, !this.props.skipExiting);
+      }
     }
   }
 

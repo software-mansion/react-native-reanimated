@@ -6583,7 +6583,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:*, @types/react@npm:^18.0.26, @types/react@npm:^18.2.6":
+"@types/react@npm:*":
   version: 18.3.8
   resolution: "@types/react@npm:18.3.8"
   dependencies:
@@ -6601,16 +6601,6 @@ __metadata:
     "@types/scheduler": "npm:^0.16"
     csstype: "npm:^3.0.2"
   checksum: 10/ff6827d45032b6efc9ae0b4e56b3ee708fd131595988a4aba205f4424267cea7a9e2a9d15138d6a26eb4bb8273880eaf1b942e3396bacf0ecff8cf223381d185
-  languageName: node
-  linkType: hard
-
-"@types/react@npm:^18.2.44":
-  version: 18.3.13
-  resolution: "@types/react@npm:18.3.13"
-  dependencies:
-    "@types/prop-types": "npm:*"
-    csstype: "npm:^3.0.2"
-  checksum: 10/4f2b851cabdb68430b50998ad18f206edaea5b3c651d92e3573d86b7ac740224a91b7ca63176fa70e1defc78459faf518e5d2f58e1ba2839b1f12365dab70de2
   languageName: node
   linkType: hard
 
@@ -9079,7 +9069,7 @@ __metadata:
     patch-package: "npm:^8.0.0"
     prettier: "npm:^3.3.3"
     react: "npm:^19.0.0"
-    react-native: "npm:^0.78.0"
+    react-native: "npm:0.78.0"
     react-native-gesture-handler: "npm:^2.24.0"
     react-native-monorepo-tools: "npm:^1.2.1"
     react-native-pager-view: "npm:6.6.1"
@@ -11803,7 +11793,7 @@ __metadata:
   dependencies:
     common-app: "workspace:*"
     prettier: "npm:^3.3.3"
-    react-native: "npm:^0.78.0"
+    react-native: "npm:0.78.0"
   languageName: unknown
   linkType: soft
 
@@ -15194,7 +15184,7 @@ __metadata:
     common-app: "workspace:*"
     prettier: "npm:^3.3.3"
     react: "npm:19.0.0"
-    react-native: "npm:^0.78.0"
+    react-native: "npm:0.78.0"
     react-native-macos: "npm:^0.75.13"
     react-native-reanimated: "workspace:*"
   languageName: unknown
@@ -18218,7 +18208,7 @@ __metadata:
     "@types/invariant": "npm:^2.2.35"
     "@types/jest": "npm:^29.5.13"
     "@types/node": "npm:^18.0.0"
-    "@types/react": "npm:^18.0.26"
+    "@types/react": "npm:^19.0.0"
     "@types/react-test-renderer": "npm:^17.0.0-0"
     "@typescript-eslint/eslint-plugin": "npm:^6.19.0"
     "@typescript-eslint/parser": "npm:^6.19.0"
@@ -18248,7 +18238,7 @@ __metadata:
     madge: "npm:^5.0.1"
     prettier: "npm:^3.3.3"
     react: "npm:19.0.0"
-    react-native: "npm:^0.78.0"
+    react-native: "npm:0.78.0"
     react-native-builder-bob: "npm:0.33.1"
     react-native-gesture-handler: "npm:^2.24.0"
     react-native-web: "npm:0.19.11"
@@ -18360,7 +18350,7 @@ __metadata:
     "@react-native-community/cli": "npm:15.0.1"
     "@react-native/eslint-config": "npm:0.76.5"
     "@types/jest": "npm:^29.5.5"
-    "@types/react": "npm:^18.2.44"
+    "@types/react": "npm:^19.0.0"
     "@typescript-eslint/eslint-plugin": "npm:^6.19.0"
     clang-format-node: "npm:^1.3.1"
     eslint: "npm:^8.57.0"
@@ -18368,7 +18358,7 @@ __metadata:
     madge: "npm:^5.0.1"
     prettier: "npm:^3.3.3"
     react: "npm:19.0.0"
-    react-native: "npm:^0.78.0"
+    react-native: "npm:0.78.0"
     react-native-builder-bob: "npm:0.33.1"
     typescript: "npm:~5.3.0"
   peerDependencies:
@@ -18378,7 +18368,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native@npm:^0.78.0":
+"react-native@npm:0.78.0":
   version: 0.78.0
   resolution: "react-native@npm:0.78.0"
   dependencies:
@@ -20746,14 +20736,14 @@ __metadata:
     "@react-native/eslint-config": "npm:0.77.0"
     "@react-native/metro-config": "npm:0.77.0"
     "@react-native/typescript-config": "npm:0.77.0"
-    "@types/react": "npm:^18.2.6"
+    "@types/react": "npm:^19.0.0"
     "@types/react-test-renderer": "npm:^18.0.0"
     babel-jest: "npm:^29.6.3"
     eslint: "npm:^8.57.0"
     jest: "npm:^29.6.3"
     prettier: "npm:^3.3.3"
     react: "npm:19.0.0"
-    react-native: "npm:^0.78.0"
+    react-native: "npm:0.78.0"
     react-native-reanimated: "workspace:*"
     react-test-renderer: "npm:18.3.1"
     typescript: "npm:~5.3.0"
@@ -21427,7 +21417,7 @@ __metadata:
     expo: "npm:^52.0.4"
     prettier: "npm:^3.3.3"
     react-dom: "npm:19.0.0"
-    react-native: "npm:^0.78.0"
+    react-native: "npm:0.78.0"
     react-native-web: "npm:0.19.13"
     serve: "npm:^14.2.3"
   languageName: unknown
