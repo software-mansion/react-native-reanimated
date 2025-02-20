@@ -32,7 +32,7 @@ export default function App() {
     <SafeAreaProvider>
       <GestureHandlerRootView style={flex.fill}>
         <NavigationContainer
-          // initialState={navigationState}
+          initialState={navigationState}
           linking={{
             getPathFromState: (state, options) =>
               getPathFromState(state, options).replace(/%2F/g, '/'),
@@ -80,7 +80,7 @@ const SCREENS = [
 ];
 
 function Navigator() {
-  return <ReanimatedApp />;
+  return <CSSApp />;
   if (IS_MACOS) {
   }
 
