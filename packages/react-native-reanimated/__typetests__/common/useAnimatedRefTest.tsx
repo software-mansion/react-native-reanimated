@@ -40,9 +40,9 @@ function UseAnimatedRefTest() {
     const Component = (props: ViewProps) => {
       return <View {...props} />;
     };
-    const AnimatedComponent = Animated.createAnimatedComponent(Component);
+    const AnimatedRefComponent = Animated.createAnimatedComponent(Component);
     const animatedRef = useAnimatedRef<React.Component<ViewProps>>();
-    return <AnimatedComponent ref={animatedRef} />;
+    return <AnimatedRefComponent ref={animatedRef} />;
   }
 
   function UseAnimatedRefTestView() {

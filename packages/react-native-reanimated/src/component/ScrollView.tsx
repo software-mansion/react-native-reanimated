@@ -23,10 +23,10 @@ interface AnimatedScrollViewComplement extends ScrollView {
 
 const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
 
-export const AnimatedScrollView = (
-  props: AnimatedScrollViewProps,
-  ref: Ref<AnimatedScrollView>
-) => {
+export const AnimatedScrollView = ({
+  ref,
+  ...props
+}: { ref: Ref<AnimatedScrollView> } & AnimatedScrollViewProps) => {
   const { scrollViewOffset, ...restProps } = props;
   const animatedRef = (
     ref === null
