@@ -1,10 +1,7 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../commonTypes';
 import { CSSKeyframesRuleImpl } from '../models';
-import type {
-  NormalizedSingleCSSAnimationConfig,
-  NormalizedSingleCSSAnimationSettings,
-} from '../platform/native';
+import type { NormalizedSingleCSSAnimationSettings } from '../platform/native';
 import {
   createSingleCSSAnimationProperties,
   getAnimationSettingsUpdates,
@@ -13,19 +10,21 @@ import {
   unregisterCSSAnimations,
   updateCSSAnimations,
 } from '../platform/native';
+import { CSSKeyframesRegistry } from '../registry';
 import type {
   CSSAnimationKeyframes,
   ExistingCSSAnimationProperties,
 } from '../types';
 
-type ProcessedAnimation = {
-  normalizedConfig: NormalizedSingleCSSAnimationConfig;
-  keyframes: CSSKeyframesRuleImpl;
+export type ProcessedAnimation = {
+  normalizedSettings: NormalizedSingleCSSAnimationSettings;
+  keyframesRule: CSSKeyframesRuleImpl;
 };
 
 export default class CSSAnimationsManager {
   private readonly viewTag: number;
   private readonly shadowNodeWrapper: ShadowNodeWrapper;
+  static readonly animationKeyframesRegistry = new CSSKeyframesRegistry();
 
   private attachedAnimations: ProcessedAnimation[] = [];
 
@@ -36,8 +35,14 @@ export default class CSSAnimationsManager {
 
   detach() {
     if (this.attachedAnimations.length > 0) {
-      this.attachedAnimations = [];
       unregisterCSSAnimations(this.viewTag);
+      this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
+        CSSAnimationsManager.animationKeyframesRegistry.remove(
+          name,
+          this.viewTag
+        );
+      });
+      this.attachedAnimations = [];
     }
   }
 
@@ -61,24 +66,24 @@ export default class CSSAnimationsManager {
 
     // Update existing animations if all animations are the same but some
     // of the animation settings are different
-    const configUpdates: {
+    const settingsUpdates: {
       index: number;
       settings: Partial<NormalizedSingleCSSAnimationSettings>;
     }[] = [];
 
     for (let i = 0; i < processedAnimations.length; i++) {
       const updates = getAnimationSettingsUpdates(
-        this.attachedAnimations[i].normalizedConfig,
-        processedAnimations[i].normalizedConfig
+        this.attachedAnimations[i].normalizedSettings,
+        processedAnimations[i].normalizedSettings
       );
       if (Object.keys(updates).length > 0) {
-        this.attachedAnimations[i].normalizedConfig =
-          processedAnimations[i].normalizedConfig;
-        configUpdates.push({ index: i, settings: updates });
+        this.attachedAnimations[i].normalizedSettings =
+          processedAnimations[i].normalizedSettings;
+        settingsUpdates.push({ index: i, settings: updates });
       }
     }
-    if (configUpdates.length > 0) {
-      updateCSSAnimations(this.viewTag, configUpdates);
+    if (settingsUpdates.length > 0) {
+      updateCSSAnimations(this.viewTag, settingsUpdates);
     }
   }
 
@@ -88,11 +93,38 @@ export default class CSSAnimationsManager {
       return;
     }
 
+    const newAnimationNames = new Set();
+
+    // Register keyframes for all new animations
+    processedAnimations.forEach(({ keyframesRule }) => {
+      CSSAnimationsManager.animationKeyframesRegistry.add(
+        keyframesRule,
+        this.viewTag
+      );
+      newAnimationNames.add(keyframesRule.name);
+    });
+
+    // Unregister keyframes for all old animations that are no longer attached
+    // to the view
+    this.attachedAnimations.forEach(({ keyframesRule: { name } }) => {
+      if (!newAnimationNames.has(name)) {
+        CSSAnimationsManager.animationKeyframesRegistry.remove(
+          name,
+          this.viewTag
+        );
+      }
+    });
+
     this.attachedAnimations = processedAnimations;
 
     registerCSSAnimations(
       this.shadowNodeWrapper,
-      processedAnimations.map(({ normalizedConfig }) => normalizedConfig)
+      processedAnimations.map(
+        ({ keyframesRule: { name }, normalizedSettings }) => ({
+          name,
+          settings: normalizedSettings,
+        })
+      )
     );
   }
 
@@ -110,42 +142,39 @@ export default class CSSAnimationsManager {
         let keyframesRule: CSSKeyframesRuleImpl;
 
         if (keyframes instanceof CSSKeyframesRuleImpl) {
-          // If the instance od the CSSKeyframesRule class was passed, we can just compare
+          // If the instance of the CSSKeyframesRule class was passed, we can just compare
           // references to the instance (css.keyframes() call should be memoized in order
           // to preserve the same animation. If used inline, it will restart the animation
           // on every component re-render)
           keyframesRule = keyframes;
           if (
             areAllEqual &&
-            keyframes !== this.attachedAnimations[i]?.keyframes
+            keyframes !== this.attachedAnimations[i]?.keyframesRule
           ) {
             areAllEqual = false;
           }
-        } else {
+        } else if (
+          this.attachedAnimations[i]?.keyframesRule.cssText !==
+          JSON.stringify(keyframes)
+        ) {
           // If the keyframes are not an instance of the CSSKeyframesRule class (e.g. someone
           // passes a keyframes object inline in the component's style without using css.keyframes()
           // function), we don't want to restart the animation on every component re-render.
-          // In this case, we need to create a new instance of the CSSKeyframesRule class
-          // and compare the cssText property (stringified keyframes) of the old and the new
-          // instances.
+          // In this case, we need to compare the stringified keyframes of the old and the new
+          // animation configuration object to determine if the animation has changed.
           keyframesRule = new CSSKeyframesRuleImpl(
             keyframes as CSSAnimationKeyframes
           );
-          if (
-            areAllEqual &&
-            keyframesRule.cssText !==
-              this.attachedAnimations[i]?.keyframes.cssText
-          ) {
-            areAllEqual = false;
-          }
+          areAllEqual = false;
+        } else {
+          // Otherwise, if keyframes are the same, we can just use the existing keyframes rule
+          // instance
+          keyframesRule = this.attachedAnimations[i]?.keyframesRule;
         }
 
         return {
-          normalizedConfig: {
-            ...normalizeSingleCSSAnimationSettings(properties),
-            ...keyframesRule.normalizedKeyframes,
-          },
-          keyframes: keyframesRule,
+          normalizedSettings: normalizeSingleCSSAnimationSettings(properties),
+          keyframesRule,
         };
       }
     );
