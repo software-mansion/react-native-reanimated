@@ -112,7 +112,7 @@ inline jsi::Value apply(
 // and returns the string
 template <typename... Args>
 inline jsi::Value apply(
-                        jsi::Runtime &rt,
+    jsi::Runtime &rt,
     std::function<std::string(Args...)> function,
     std::tuple<Args...> args) {
   return jsi::String::createFromUtf8(rt, std::apply(function, std::move(args)));
@@ -145,7 +145,8 @@ jsi::HostFunctionType createHostFunction(Fun function) {
 // returns a function with JSI calling convention
 // from a native function `function` returning a string
 template <typename... Args>
-jsi::HostFunctionType createHostFunction(std::function<std::string(Args...)> function) {
+jsi::HostFunctionType createHostFunction(
+    std::function<std::string(Args...)> function) {
   return [function](
              jsi::Runtime &rt,
              const jsi::Value &,
