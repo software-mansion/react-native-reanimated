@@ -62,4 +62,6 @@ jobs:
         run: yarn jest plugin
       - name: Check Example App bundling
         working-directory: ${{ env.EXAMPLE_DIR }}
-        run: yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='/dev/null' --dev=true --platform='ios'
+        run: |
+          yarn workspace react-native-reanimated build
+          yarn react-native bundle --reset-cache --entry-file='App.tsx' --bundle-output='/dev/null' --dev=true --platform='ios'
