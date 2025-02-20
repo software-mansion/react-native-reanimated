@@ -7805,9 +7805,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"babel-plugin-reanimated@workspace:packages/react-native-reanimated/plugin":
+"babel-plugin-reanimated@workspace:packages/react-native-worklets/plugin":
   version: 0.0.0-use.local
-  resolution: "babel-plugin-reanimated@workspace:packages/react-native-reanimated/plugin"
+  resolution: "babel-plugin-reanimated@workspace:packages/react-native-worklets/plugin"
   dependencies:
     "@babel/cli": "npm:^7.20.0"
     "@babel/core": "npm:^7.25.2"
