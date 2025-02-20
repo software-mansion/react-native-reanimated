@@ -58,7 +58,7 @@ export default class CSSManager {
   }
 
   detach(): void {
-    this.cssTransitionManager.detach();
+    this.cssTransitionsManager.detach();
     removeViewStyle(this.viewTag);
   }
 }
