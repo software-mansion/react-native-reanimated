@@ -62,7 +62,7 @@ function TabSelector<T extends string>({
             acc + (width + (tabWidths.value[index + 1] ?? 0)) / 2 + TABS_GAP,
           0
         );
-      // scrollTo(scrollViewRef, offset, 0, true);
+      scrollTo(scrollViewRef, offset, 0, true);
     })();
   }, [activeTabIndex, scrollViewRef, tabWidths]);
 
