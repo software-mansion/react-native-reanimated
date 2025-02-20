@@ -15,7 +15,7 @@ export function removeFromPropsRegistry(viewTag: number) {
 const IS_FABRIC = isFabric();
 
 function flush() {
-  if (__DEV__ && IS_FABRIC) {
+  if (__DEV__ && !IS_FABRIC) {
     throw new ReanimatedError(
       'AnimatedPropsRegistry is only available on Fabric.'
     );

@@ -135,6 +135,7 @@ const notCapturedIdentifiers = [
 // eslint-disable-next-line camelcase
 const notCapturedIdentifiers_DEPRECATED = [
   // Reanimated
+  '_IS_FABRIC',
   '_log',
   '_toString',
   '_scheduleHostFunctionOnJS',
