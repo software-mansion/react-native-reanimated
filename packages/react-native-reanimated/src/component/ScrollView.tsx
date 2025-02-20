@@ -1,5 +1,4 @@
 'use strict';
-import type { Ref } from 'react';
 import React from 'react';
 import type { ScrollViewProps } from 'react-native';
 import { ScrollView } from 'react-native';
@@ -13,7 +12,7 @@ import { useAnimatedRef, useScrollViewOffset } from '../hook';
 export interface AnimatedScrollViewProps
   extends AnimatedProps<ScrollViewProps> {
   scrollViewOffset?: SharedValue<number>;
-  ref?: Ref<AnimatedScrollView> | null;
+  ref?: AnimatedRef<AnimatedScrollView> | null;
 }
 
 // Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
@@ -24,11 +23,11 @@ interface AnimatedScrollViewComplement extends ScrollView {
 
 const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
 
-export const AnimatedScrollView = ({
+export function AnimatedScrollView({
   scrollViewOffset,
   ref,
   ...restProps
-}: AnimatedScrollViewProps) => {
+}: AnimatedScrollViewProps) {
   const animatedRef = (
     ref === null
       ? // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -50,7 +49,7 @@ export const AnimatedScrollView = ({
   }
 
   return <AnimatedScrollViewComponent ref={animatedRef} {...restProps} />;
-};
+}
 
 export type AnimatedScrollView = AnimatedScrollViewComplement &
   typeof AnimatedScrollViewComponent;
