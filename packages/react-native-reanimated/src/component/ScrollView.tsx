@@ -23,11 +23,10 @@ interface AnimatedScrollViewComplement extends ScrollView {
 
 const AnimatedScrollViewComponent = createAnimatedComponent(ScrollView);
 
-export const AnimatedScrollView = ({
-  ref,
-  ...props
-}: { ref: Ref<AnimatedScrollView> } & AnimatedScrollViewProps) => {
-  const { scrollViewOffset, ...restProps } = props;
+export const AnimatedScrollView = (
+  props: { ref: Ref<AnimatedScrollView> } & AnimatedScrollViewProps
+) => {
+  const { scrollViewOffset, ref, ...restProps } = props;
   const animatedRef = (
     ref === null
       ? // eslint-disable-next-line react-hooks/rules-of-hooks
