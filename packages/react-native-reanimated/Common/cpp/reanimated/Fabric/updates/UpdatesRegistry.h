@@ -42,9 +42,9 @@ class UpdatesRegistry {
 
   void flushUpdates(UpdatesBatch &updatesBatch, bool merge);
   void collectProps(PropsMap &propsMap);
-  virtual void removeBatch(const std::vector<Tag>& tagsToRemove);
+  virtual void removeBatch(const std::vector<Tag> &tagsToRemove);
   bool empty();
-  virtual ~UpdatesRegistry(){}
+  virtual ~UpdatesRegistry() {}
 
  protected:
   mutable std::mutex mutex_;

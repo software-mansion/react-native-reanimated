@@ -25,12 +25,14 @@ void RNRuntimeDecorator::decorate(
 
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, reanimatedModuleProxy->getJSLogger());
-  
+
 #endif // NDEBUG
-  
+
 #ifdef IS_REANIMATED_EXAMPLE_APP
   jsi_utils::installJsiFunction(
-                                rnRuntime, "_registriesLeakCheck", reanimatedModuleProxy->createRegistriesLeakCheck());
+      rnRuntime,
+      "_registriesLeakCheck",
+      reanimatedModuleProxy->createRegistriesLeakCheck());
 #endif
   injectReanimatedCppVersion(rnRuntime);
 

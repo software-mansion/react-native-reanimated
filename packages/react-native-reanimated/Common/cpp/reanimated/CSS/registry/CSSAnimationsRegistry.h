@@ -29,14 +29,14 @@ class CSSAnimationsRegistry
       std::vector<std::shared_ptr<CSSAnimation>> &&animations,
       double timestamp);
   void remove(Tag viewTag);
-  void removeBatch(const std::vector<Tag>& tagsToRemove) override;
+  void removeBatch(const std::vector<Tag> &tagsToRemove) override;
   void updateSettings(
       Tag viewTag,
       const SettingsUpdates &settingsUpdates,
       double timestamp);
 
   void update(double timestamp);
-        bool empty();
+  bool empty();
 
  private:
   using Registry =

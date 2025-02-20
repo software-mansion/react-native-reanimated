@@ -797,24 +797,29 @@ double ReanimatedModuleProxy::getCssTimestamp() {
   return currentCssTimestamp_;
 }
 
-std::string format(bool b){
+std::string format(bool b) {
   return b ? "✅" : "❌";
 }
 
-std::function<std::string()> ReanimatedModuleProxy::createRegistriesLeakCheck(){
-  return [weakThis=weak_from_this()](){
+std::function<std::string()>
+ReanimatedModuleProxy::createRegistriesLeakCheck() {
+  return [weakThis = weak_from_this()]() {
     auto strongThis = weakThis.lock();
-    if (!strongThis){
+    if (!strongThis) {
       return std::string("");
     }
-    
+
     std::string result = "";
-    
-    result += "AnimatedPropsRegistry: " + format(strongThis->animatedPropsRegistry_->empty());
-    result += "\nCSSAnimationsRegistry: " + format(strongThis->cssAnimationsRegistry_->empty());
-    result += "\nCSSTransitionsRegistry: " + format(strongThis->cssTransitionsRegistry_->empty());
-    result += "\nStaticPropsRegistry: " + format(strongThis->staticPropsRegistry_->empty()) + "\n";
-    
+
+    result += "AnimatedPropsRegistry: " +
+        format(strongThis->animatedPropsRegistry_->empty());
+    result += "\nCSSAnimationsRegistry: " +
+        format(strongThis->cssAnimationsRegistry_->empty());
+    result += "\nCSSTransitionsRegistry: " +
+        format(strongThis->cssTransitionsRegistry_->empty());
+    result += "\nStaticPropsRegistry: " +
+        format(strongThis->staticPropsRegistry_->empty()) + "\n";
+
     return result;
   };
 }
@@ -964,8 +969,8 @@ void ReanimatedModuleProxy::commitUpdates(
               return nullptr;
             }
 
-            auto rootNode =
-                cloneShadowTreeWithNewProps(oldRootShadowNode, propsMap, tagsToRemove);
+            auto rootNode = cloneShadowTreeWithNewProps(
+                oldRootShadowNode, propsMap, tagsToRemove);
 
             // Mark the commit as Reanimated commit so that we can distinguish
             // it in ReanimatedCommitHook.
@@ -993,12 +998,11 @@ void ReanimatedModuleProxy::commitUpdates(
     // so we have to clear the entire cache)
     viewStylesRepository_->clearNodesCache();
   }
-  
-  if (!tagsToRemove.empty()){
+
+  if (!tagsToRemove.empty()) {
     auto lock = updatesRegistryManager_->createLock();
     updatesRegistryManager_->removeBatch(tagsToRemove);
   }
-  
 }
 
 void ReanimatedModuleProxy::dispatchCommand(

@@ -94,14 +94,14 @@ void UpdatesRegistry::flushUpdatesToRegistry(
   }
 }
 
-void UpdatesRegistry::removeBatch(const std::vector<Tag>& tagsToRemove){
+void UpdatesRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
   std::unique_lock<std::mutex> l(mutex_);
-  for (const auto& tag : tagsToRemove) {
+  for (const auto &tag : tagsToRemove) {
     updatesRegistry_.erase(tag);
   }
 }
 
-bool UpdatesRegistry::empty(){
+bool UpdatesRegistry::empty() {
   return updatesRegistry_.empty();
 }
 

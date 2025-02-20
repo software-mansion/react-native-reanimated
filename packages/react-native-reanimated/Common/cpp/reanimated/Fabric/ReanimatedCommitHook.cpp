@@ -82,7 +82,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     updatesRegistryManager_->cancelCommitAfterPause();
     std::vector<Tag> tagsToRemove;
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap, tagsToRemove);
-    if (!tagsToRemove.empty()){
+    if (!tagsToRemove.empty()) {
       updatesRegistryManager_->removeBatch(tagsToRemove);
     }
     // If the commit comes from React Native then pause commits from
