@@ -87,12 +87,13 @@ function App() {
     width: sv.value,
   }));
 
-  // highlight-next-line
   return (
     <Animated.View
       style={[
+        // highlight-start
         animatedStyles, // ⚠️ overrides the static style width
         { width: 100 },
+        // highlight-end
       ]}
     />
   );
