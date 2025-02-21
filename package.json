@@ -6,7 +6,7 @@
     "packages": [
       "packages/react-native-reanimated",
       "packages/eslint-plugin-reanimated",
-      "packages/react-native-reanimated/plugin",
+      "packages/react-native-worklets/plugin",
       "packages/react-native-worklets",
       "apps/common-app",
       "apps/fabric-example",

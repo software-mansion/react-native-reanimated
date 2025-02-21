@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 print() {
   echo "    [PRECOMMIT]: $1" >&2
@@ -48,15 +48,22 @@ fi
 # TypeScript counterparts were changed. It also adds the output file to the commit
 # if the built file differs from currently staged one.
 print "Checking for changes in Reanimated Babel plugin source files..."
-PLUGIN_PATH="$REANIMATED_PATH/plugin"
+PLUGIN_PATH="packages/react-native-worklets/plugin"
 if echo "$STAGED_FILES" | grep -E "$PLUGIN_PATH" >/dev/null; then
   print "Changes spotted. Building Reanimated Babel plugin files..."
 
   yarn workspace babel-plugin-reanimated build
 
-  PLUGIN_OUTPUT_PATH="$PLUGIN_PATH/index.js"
-  if git status -u | grep -E "$PLUGIN_OUTPUT_PATH" --silent; then
-    git add "$PLUGIN_PATH"
+  PLUGIN_OUTPUT_PATHS=("$PLUGIN_PATH/index.js" "$REANIMATED_PATH/plugin/index.js")
+  HAS_COMMITTED_CHANGES=false
+  for PLUGIN_OUTPUT_PATH in "${PLUGIN_OUTPUT_PATHS[@]}"; do
+    if git status -u | grep -E "$PLUGIN_OUTPUT_PATH" --silent; then
+      git add "$PLUGIN_PATH"
+      HAS_COMMITTED_CHANGES=true
+    fi
+  done
+
+  if [ "$HAS_COMMITTED_CHANGES" = true ]; then
     print "Non-committed changes were automatically added to the commit."
   else
     print "All Babel plugin files were already committed."

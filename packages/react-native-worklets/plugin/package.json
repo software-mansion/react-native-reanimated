@@ -24,11 +24,11 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {
-    "build": "yarn tsc && yarn bundle && yarn format",
+    "build": "yarn tsc && yarn bundle && yarn format && cp -f index.js index.js.map ../../react-native-reanimated/plugin",
     "bundle": "node bundle.js",
     "format": "prettier --write --list-different src",
     "watch": "tsc-watch --onSuccess \"yarn bundle\"",
     "lint": "eslint --max-warnings=0 src",
-    "type:check:src": "tsc --noEmit"
+    "type:check": "tsc --noEmit"
   }
 }

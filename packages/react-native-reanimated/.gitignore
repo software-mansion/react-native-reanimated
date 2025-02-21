@@ -58,8 +58,7 @@ react-native-reanimated-tests.js
 .settings/
 
 # plugin
-plugin/build/plugin.js.map
-plugin/types
+plugin/index.js.map
 
 # yarn
 **/.yarn/*
