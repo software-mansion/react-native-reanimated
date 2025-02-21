@@ -142,16 +142,13 @@ type ExampleProps = {
   ref: React.Ref<ExampleRef>;
 };
 
-const Example = memo(function Example(
-  {
-    displayStyleChanges,
-    item,
-    renderExample,
-    transitionProperties,
-    transitionStyles,
-  }: ExampleProps,
-  ref: React.Ref<ExampleRef>
-) {
+const Example = memo(function Example({
+  displayStyleChanges,
+  item,
+  renderExample,
+  transitionProperties,
+  transitionStyles,
+}: ExampleProps) {
   const [key, setKey] = useState(0);
   const [currentStyleIndex, setCurrentStyleIndex] = useState(0);
   const [showStyleChange, setShowStyleChange] = useState(false);

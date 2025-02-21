@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 
 export default function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>(undefined);
 
   useEffect(() => {
-    clearTimeout(debounceTimeoutRef.current as unknown as number | undefined);
+    clearTimeout(debounceTimeoutRef.current);
     debounceTimeoutRef.current = setTimeout(() => {
       setDebouncedValue(value);
     }, delay);

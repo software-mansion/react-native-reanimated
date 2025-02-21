@@ -2,7 +2,7 @@ import '../types';
 
 import { useHeaderHeight } from '@react-navigation/elements';
 import type { Component } from 'react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, Image, Platform, StyleSheet, View } from 'react-native';
 import {
   PanGestureHandler,
