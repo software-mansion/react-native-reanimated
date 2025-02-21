@@ -77,7 +77,7 @@ import AnimatingStylesSrc from '!!raw-loader!@site/src/examples/AnimatingStyles'
 
 ## Remarks
 
-- Animated styles (also inline) take precedence over React Native's static styles. All values that are specified in animated styles override values from static styles.
+- Animated styles take precedence over React Native's static styles. All values specified in animated styles override values from static styles.
 
 <Indent>
 
@@ -101,7 +101,9 @@ function App() {
 
 </Indent>
 
-- Animated styles (also inline) don't follow the order in which they are specified in the style array. The last updated animated style is the one that takes effect.
+- Animated styles don't follow the order in which they are specified in the style array. The last updated animated style is the one that takes effect.
+
+- Removing the animated style from the view doesn't unset values that were applied in the animated style. To unset these values, you need to manually set them to `undefined` in the animated style.
 
 - Mutating shared values in `useAnimatedStyle`'s callback is an undefined behavior which may lead to infinite loops.
 
