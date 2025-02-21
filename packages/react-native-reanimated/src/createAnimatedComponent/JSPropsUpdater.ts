@@ -3,7 +3,7 @@ import type { NativeModule } from 'react-native';
 import { NativeEventEmitter, Platform } from 'react-native';
 
 import type { StyleProps } from '../commonTypes';
-import { shouldBeUseWeb } from '../PlatformChecker';
+import { isFabric, shouldBeUseWeb } from '../PlatformChecker';
 import NativeReanimatedModule from '../specs/NativeReanimatedModule';
 import { runOnJS, runOnUIImmediately } from '../WorkletsResolver';
 import type {
@@ -147,7 +147,7 @@ type JSPropsUpdaterOptions =
 let JSPropsUpdater: JSPropsUpdaterOptions;
 if (SHOULD_BE_USE_WEB) {
   JSPropsUpdater = JSPropsUpdaterWeb;
-} else if (global._IS_FABRIC) {
+} else if (isFabric()) {
   JSPropsUpdater = JSPropsUpdaterFabric;
 } else {
   JSPropsUpdater = JSPropsUpdaterPaper;

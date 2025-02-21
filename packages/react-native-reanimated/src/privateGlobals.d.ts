@@ -23,7 +23,6 @@ import type { UpdatePropsManager } from './UpdateProps';
 declare global {
   var __DISALLOW_WORKLETS_IMPORT: boolean | undefined;
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
-  var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_JS: string | undefined;
   var __reanimatedModuleProxy: ReanimatedModuleProxy | undefined;
@@ -88,4 +87,5 @@ declare global {
     shadowNodeWrapper: ShadowNodeWrapper,
     propName: string
   ) => string;
+  var RN$Bridgeless: boolean | undefined;
 }

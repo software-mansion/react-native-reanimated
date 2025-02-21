@@ -35,7 +35,7 @@ export function shouldBeUseWeb() {
 }
 
 export function isFabric() {
-  return !!(global as localGlobal)._IS_FABRIC;
+  return !!globalThis.RN$Bridgeless;
 }
 
 export function isWindowAvailable() {

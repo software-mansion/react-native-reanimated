@@ -38,4 +38,5 @@ declare global {
     runtime: WorkletRuntime,
     worklet: ShareableRef<() => void>
   ) => void;
+  var RN$Bridgeless: boolean | undefined;
 }

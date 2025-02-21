@@ -39,11 +39,13 @@ function findHostInstanceFastPath(maybeNativeRef: HostInstance | undefined) {
   return undefined;
 }
 
+const IS_FABRIC = isFabric();
+
 function resolveFindHostInstance_DEPRECATED() {
   if (findHostInstance_DEPRECATED !== undefined) {
     return;
   }
-  if (isFabric()) {
+  if (IS_FABRIC) {
     try {
       const ReactFabric = require('react-native/Libraries/Renderer/shims/ReactFabric');
       // Since RN 0.77 ReactFabric exports findHostInstance_DEPRECATED in default object so we're trying to
@@ -86,7 +88,7 @@ export function findHostInstance(
     a valid React ref.
   */
   return findHostInstance_DEPRECATED(
-    !isFabric() || (component as IAnimatedComponentInternal).hasAnimatedRef()
+    !IS_FABRIC || (component as IAnimatedComponentInternal).hasAnimatedRef()
       ? (component as IAnimatedComponentInternal)._componentRef
       : component
   );
