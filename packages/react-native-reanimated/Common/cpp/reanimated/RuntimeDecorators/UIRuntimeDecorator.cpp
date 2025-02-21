@@ -22,8 +22,6 @@ void UIRuntimeDecorator::decorate(
     const ProgressLayoutAnimationFunction progressLayoutAnimation,
     const EndLayoutAnimationFunction endLayoutAnimation,
     const MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueue) {
-  uiRuntime.global().setProperty(uiRuntime, "_UI", true);
-
 #ifdef RCT_NEW_ARCH_ENABLED
   jsi_utils::installJsiFunction(uiRuntime, "_updatePropsFabric", updateProps);
   jsi_utils::installJsiFunction(

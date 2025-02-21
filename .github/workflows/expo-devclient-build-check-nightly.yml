@@ -35,6 +35,11 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 17
+      - uses: ruby/setup-ruby@v1
+        if: ${{ matrix.platform == 'iOS' }}
+        with:
+          ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
       - name: Create Expo app (Paper)
         if: ${{ matrix.react-native-architecture == 'Paper' }}
         run: npx create-expo-app@latest ${{ env.APP_NAME }}

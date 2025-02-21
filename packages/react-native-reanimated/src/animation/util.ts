@@ -1,44 +1,44 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
-import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type { ParsedColorArray } from '../Colors';
 import {
-  isColor,
+  clampRGBA,
   convertToRGBA,
+  isColor,
   rgbaArrayToRGBAColor,
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import { ReduceMotion, isWorkletFunction } from '../commonTypes';
 import type {
-  SharedValue,
   AnimatableValue,
+  AnimatableValueObject,
   Animation,
   AnimationObject,
-  Timestamp,
-  AnimatableValueObject,
   EasingFunction,
+  SharedValue,
+  Timestamp,
 } from '../commonTypes';
+import { ReduceMotion } from '../commonTypes';
+import type { EasingFunctionFactory } from '../Easing';
+import { ReanimatedError } from '../errors';
+import { shouldBeUseWeb } from '../PlatformChecker';
+import { ReducedMotionManager } from '../ReducedMotion';
+import { isWorkletFunction, logger, runOnUI } from '../WorkletsResolver';
+import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
-  AffineMatrixFlat,
   AffineMatrix,
+  AffineMatrixFlat,
 } from './transformationMatrix/matrixUtils';
 import {
-  flatten,
-  multiplyMatrices,
-  scaleMatrix,
   addMatrices,
   decomposeMatrixIntoMatricesAndAngles,
-  isAffineMatrixFlat,
-  subtractMatrices,
+  flatten,
   getRotationMatrix,
+  isAffineMatrixFlat,
+  multiplyMatrices,
+  scaleMatrix,
+  subtractMatrices,
 } from './transformationMatrix/matrixUtils';
-import { shouldBeUseWeb } from '../PlatformChecker';
-import type { EasingFunctionFactory } from '../Easing';
-import { ReducedMotionManager } from '../ReducedMotion';
-import { logger } from '../logger';
-import { ReanimatedError } from '../errors';
-import { runOnUI } from '../threads';
 
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -263,6 +263,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       res.push(animation[i].current);
     });
 
+    // We need to clamp the res values to make sure they are in the correct RGBA range
+    clampRGBA(res as ParsedColorArray);
+
     animation.current = rgbaArrayToRGBAColor(
       toGammaSpace(res as ParsedColorArray)
     );
@@ -282,6 +285,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       finished = finished && result;
       res.push(animation[i].current);
     });
+
+    // We need to clamp the res values to make sure they are in the correct RGBA range
+    clampRGBA(res as ParsedColorArray);
 
     animation.current = rgbaArrayToRGBAColor(
       toGammaSpace(res as ParsedColorArray)
@@ -394,8 +400,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
         previousAnimation ? previousAnimation[i] : undefined
       );
     });
-
-    animation.current = value;
+    animation.current = [...value];
   };
 
   const arrayOnFrame = (

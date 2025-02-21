@@ -25,6 +25,8 @@ jobs:
             { version: '0.75', architecture: 'Fabric' },
             { version: '0.76', architecture: 'Paper' },
             { version: '0.76', architecture: 'Fabric' },
+            { version: '0.77', architecture: 'Paper' },
+            { version: '0.77', architecture: 'Fabric' },
           ]
       fail-fast: false
     env:
@@ -44,6 +46,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+      - uses: ruby/setup-ruby@v1
+        if: ${{ matrix.platform == 'iOS' }}
+        with:
+          ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
       - name:
           Setup Yarn
           # Sometimes `npx @react-native-community/cli init` fails at random.

@@ -1,20 +1,19 @@
 'use strict';
 
+import { initialUpdaterRun } from '../animation';
 import type { StyleProps } from '../commonTypes';
 import { isSharedValue } from '../isSharedValue';
 import { isChromeDebugger } from '../PlatformChecker';
 import { WorkletEventHandler } from '../WorkletEventHandler';
-import { initialUpdaterRun } from '../animation';
-import { hasInlineStyles, getInlineStyle } from './InlinePropManager';
 import type {
   AnimatedComponentProps,
   AnimatedProps,
-  InitialComponentProps,
   IAnimatedComponentInternal,
+  InitialComponentProps,
   IPropsFilter,
 } from './commonTypes';
+import { getInlineStyle, hasInlineStyles } from './InlinePropManager';
 import { flattenArray, has } from './utils';
-import { StyleSheet } from 'react-native';
 
 function dummyListener() {
   // empty listener we use to assign to listener properties for which animated
@@ -52,7 +51,9 @@ export class PropsFilter implements IPropsFilter {
             return style;
           }
         });
-        props[key] = StyleSheet.flatten(processedStyle);
+        // keep styles as they were passed by the user
+        // it will help other libs to interpret styles correctly
+        props[key] = processedStyle;
       } else if (key === 'animatedProps') {
         const animatedProp = inputProps.animatedProps as Partial<
           AnimatedComponentProps<AnimatedProps>

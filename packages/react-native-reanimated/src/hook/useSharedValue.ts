@@ -1,5 +1,6 @@
 'use strict';
 import { useEffect, useState } from 'react';
+
 import { cancelAnimation } from '../animation';
 import type { SharedValue } from '../commonTypes';
 import { makeMutable } from '../core';

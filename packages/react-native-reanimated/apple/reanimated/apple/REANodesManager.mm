@@ -242,13 +242,6 @@ using namespace facebook::react;
   }];
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
-- (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
-{
-  _surfacePresenter = surfacePresenter;
-}
-#endif // RCT_NEW_ARCH_ENABLED
-
 - (void)operationsBatchDidComplete
 {
   if (![[self getDisplayLink] isPaused]) {

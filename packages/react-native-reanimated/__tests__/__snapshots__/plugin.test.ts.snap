@@ -2648,8 +2648,8 @@ var foo = function () {
 `;
 
 exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `
-"var _worklet_13539781966089_init_data = {
-  code: "function null1(){console.log('onBegin');}",
+"var _worklet_2359797567586_init_data = {
+  code: "function null1(_event,_success){console.log('onEnd');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
@@ -2660,22 +2660,22 @@ var _worklet_16446448315454_init_data = {
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
-var _worklet_16462958026656_init_data = {
-  code: "function null3(_event,_success){console.log('onEnd');}",
+var _worklet_13974752356811_init_data = {
+  code: "function null3(){console.log('onBegin');}",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\"",
   version: "x.y.z"
 };
 var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
   var _e = [new global.Error(), 1, -27];
-  var null1 = function null1() {
+  var null3 = function null3() {
     console.log('onBegin');
   };
-  null1.__closure = {};
-  null1.__workletHash = 13539781966089;
-  null1.__initData = _worklet_13539781966089_init_data;
-  null1.__stackDetails = _e;
-  return null1;
+  null3.__closure = {};
+  null3.__workletHash = 13974752356811;
+  null3.__initData = _worklet_13974752356811_init_data;
+  null3.__stackDetails = _e;
+  return null3;
 }()).onStart(function () {
   var _e = [new global.Error(), 1, -27];
   var null2 = function null2(_event) {
@@ -2688,15 +2688,34 @@ var foo = Gesture.Tap().numberOfTaps(2).onBegin(function () {
   return null2;
 }()).onEnd(function () {
   var _e = [new global.Error(), 1, -27];
-  var null3 = function null3(_event, _success) {
+  var null1 = function null1(_event, _success) {
     console.log('onEnd');
   };
-  null3.__closure = {};
-  null3.__workletHash = 16462958026656;
-  null3.__initData = _worklet_16462958026656_init_data;
-  null3.__stackDetails = _e;
-  return null3;
+  null1.__closure = {};
+  null1.__workletHash = 2359797567586;
+  null1.__initData = _worklet_2359797567586_init_data;
+  null1.__stackDetails = _e;
+  return null1;
 }());"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes referenced callbacks 1`] = `
+"var _worklet_8764176270806_init_data = {
+  code: "function onStart_null1(){}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var onStart = function () {
+  const _e = [new global.Error(), 1, -27];
+  const onStart = function () {};
+  onStart.__closure = {};
+  onStart.__workletHash = 8764176270806;
+  onStart.__initData = _worklet_8764176270806_init_data;
+  onStart.__stackDetails = _e;
+  return onStart;
+}();
+var foo = Gesture.Tap().onStart(onStart);"
 `;
 
 exports[`babel plugin for referenced worklets prefers AssignmentExpression over VariableDeclarator 1`] = `
@@ -2978,7 +2997,7 @@ handler = {
 var scrollHandler = useAnimatedScrollHandler(handler);"
 `;
 
-exports[`babel plugin for referenced worklets workletizes assigments that appear after the worklet is used 1`] = `
+exports[`babel plugin for referenced worklets workletizes assignments that appear after the worklet is used 1`] = `
 "var styleFactory = function styleFactory() {
   return {};
 };
@@ -3046,6 +3065,28 @@ function outerScope() {
     animatedStyle = useAnimatedStyle(styleFactory);
   }
 }"
+`;
+
+exports[`babel plugin for referenced worklets workletizes multiple referencing 1`] = `
+"var _worklet_12252375123771_init_data = {
+  code: "function secondReference_null1(){return{};}",
+  location: "/dev/null",
+  sourceMap: "\\"mock source map\\"",
+  version: "x.y.z"
+};
+var secondReference = function () {
+  const _e = [new global.Error(), 1, -27];
+  const secondReference = function () {
+    return {};
+  };
+  secondReference.__closure = {};
+  secondReference.__workletHash = 12252375123771;
+  secondReference.__initData = _worklet_12252375123771_init_data;
+  secondReference.__stackDetails = _e;
+  return secondReference;
+}();
+var firstReference = secondReference;
+var animatedStyle = useAnimatedStyle(firstReference);"
 `;
 
 exports[`babel plugin for sequence expressions supports SequenceExpression 1`] = `

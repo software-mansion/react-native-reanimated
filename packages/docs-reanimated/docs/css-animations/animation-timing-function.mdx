@@ -1,0 +1,198 @@
+---
+sidebar_position: 4
+---
+
+# animationTimingFunction
+
+`animationTimingFunction` lets you adjust how intermediate values are calculated during the transition. It can be specified for the entire animation or for each keyframe separately. Defaults to `ease`.
+
+import AnimationTimingFunctionBasic from '@site/src/examples/css-animations/AnimationTimingFunctionBasic';
+import AnimationTimingFunctionBasicSrc from '!!raw-loader!@site/src/examples/css-animations/AnimationTimingFunctionBasic';
+
+<InteractiveExample
+  src={AnimationTimingFunctionBasicSrc}
+  component={AnimationTimingFunctionBasic}
+/>
+
+## Reference
+
+```javascript
+function App() {
+  return (
+    <Animated.View
+      style={{
+        animationName: {
+          to: {
+            transform: [{ translateY: 200 }],
+          },
+        },
+        animationDuration: '3s',
+        // highlight-next-line
+        animationTimingFunction: 'ease-out',
+      }}
+    />
+  );
+}
+```
+
+<details>
+<summary>Type definitions</summary>
+
+```typescript
+type NormalizedCubicBezierEasing = {
+  name: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+};
+type NormalizedLinearEasing = {
+  name: string;
+  points: Point[];
+};
+type NormalizedStepsEasing = {
+  name: string;
+  points: Point[];
+};
+
+type ControlPoint = number | [number, ...Percentage[]];
+
+type StepsModifier =
+  | 'jump-start'
+  | 'start'
+  | 'jump-end'
+  | 'end'
+  | 'jump-none'
+  | 'jump-both';
+
+type NormalizedCSSTimingFunction =
+  | PredefinedTimingFunction
+  | NormalizedCubicBezierEasing
+  | NormalizedLinearEasing
+  | NormalizedStepsEasing;
+
+type PredefinedTimingFunction =
+  | 'linear'
+  | 'ease'
+  | 'ease-in'
+  | 'ease-out'
+  | 'ease-in-out'
+  | 'step-start'
+  | 'step-end';
+
+interface ParametrizedTimingFunction {
+  toString(): string;
+  normalize(): NormalizedCSSTimingFunction;
+}
+
+type CSSTimingFunction = PredefinedTimingFunction | ParametrizedTimingFunction;
+type CSSAnimationTimingFunction = CSSTimingFunction | CSSTimingFunction[];
+```
+
+</details>
+
+### Values
+
+Easings control the pacing of animations and transitions.
+
+#### `<predefined timing function>`
+
+A string representing a predefined timing function. Available functions:
+
+- `linear` - a constant speed from start to finish,
+- `ease` - starts slow, speeds up, then slows down,
+- `ease-in` - starts slow and accelerates,
+- `ease-out` - starts quickly and decelerates,
+- `ease-in-out` - starts slowly, speeds up, and then slows down again.
+- `step-start` - jumps instantly at the start,
+- `step-end` - jumps instantly at the end.
+
+```typescript
+animationTimingFunction: 'linear',
+```
+
+#### `<parametrized timing function>`
+
+A returned object from parametrized timing functions. Available functions:
+
+- `cubicBezier(x1: number, y1: number, x2: number, y2: number)` - a Bézier curve to shape the progress of an animation. It is defined by two control points (x1, y1, x2, y2) that mathematically describe the curve.
+
+<Indent>
+
+```typescript
+import { cubicBezier } from 'react-native-reanimated';
+
+animationTimingFunction: cubicBezier(0.25, 0.1, 0.5, 2),
+```
+
+</Indent>
+
+- `linear(...points: ControlPoint[])` - a simple polygonal chain that always starts at an x-value of 0 and ends at an x-value of 1. You can either specify the points' y and x coordinates or leave the x coordinates to be inferred.
+
+<Indent>
+
+```typescript
+import { linear } from 'react-native-reanimated';
+
+animationTimingFunction: linear(0, [0.25, '75%'], 1),
+```
+
+</Indent>
+
+- `steps(stepsNumber: number, modifier?: StepsModifier)` - creates an easing function that makes given number of even steps over increasing y-values. The second argument is a modifier that adds jumps before or after the steps. Modifier defaults to `jump-end`.
+  - `jump-start` - a left-continuous function, where the first jump occurs at the start of the transition,
+  - `jump-end` - a right-continuous function, where the final jump occurs at the end of the transition,
+  - `jump-none` - no jump on either end. Maintaining a hold at both the 0% and 100% points, each for 1/n of the total duration,
+  - `jump-both` - adds pauses at both the 0% and 100% points, introducing an additional step during the transition,
+  - `start` - an alias for `jump-start`,
+  - `end` - an alias for `jump-end`,
+
+<Indent>
+
+```typescript
+import { steps } from 'react-native-reanimated';
+
+animationTimingFunction: steps(4, 'jump-end'),
+```
+
+</Indent>
+
+#### `<timing function[]>`
+
+An array of timing functions. The order in this array corresponds to the array of style properties passed to the [`animationName`](/docs/next/css-animations/animation-name).
+
+```javascript
+// highlight-next-line
+animationTimingFunction: ['linear', steps(60, 'jump-none'), 'ease-in-out'];
+transitionProperty: [bounceIn, move, slide];
+```
+
+In the following example, the `bounceIn` keyframe will be animated using `linear` easing, `move` will use the `steps` timing function, and `slide` will be animated using `ease-in-out` easing.
+
+## Remarks
+
+- If no subsequent keyframe specifies that property, the timing function applies until the end of the animation.
+
+- A timing function specified in the last keyframe (`100%`, `to`, or `1`) is ignored since there is no subsequent keyframe.
+
+<Indent>
+
+```typescript
+const square: CSSAnimationKeyframes = {
+  '0%': {
+    transform: [{ translateX: 0 }],
+    animationTimingFunction: cubicBezier(0.25, 0.1, 0.26, 1.53),
+  },
+  '100%': {
+    transform: [{ translateX: -80 }],
+    // highlight-next-line
+    animationTimingFunction: 'linear', // 🚨 this will be ignored
+  },
+};
+```
+
+</Indent>
+
+## Platform compatibility
+
+<PlatformCompatibility android ios web />

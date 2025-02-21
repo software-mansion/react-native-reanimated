@@ -1,11 +1,12 @@
 import type { NodePath } from '@babel/core';
+import type { Binding } from '@babel/traverse';
 import type { AssignmentExpression, Identifier } from '@babel/types';
+
+import type { WorkletizableFunction, WorkletizableObject } from './types';
 import {
   isWorkletizableFunctionPath,
   isWorkletizableObjectPath,
 } from './types';
-import type { WorkletizableFunction, WorkletizableObject } from './types';
-import type { Binding } from '@babel/traverse';
 
 export function findReferencedWorklet(
   workletIdentifier: NodePath<Identifier>,
@@ -59,6 +60,13 @@ function findReferencedWorkletFromVariableDeclarator(
   if (acceptObject && isWorkletizableObjectPath(worklet)) {
     return worklet;
   }
+  if (worklet.isIdentifier() && worklet.isReferencedIdentifier()) {
+    return findReferencedWorklet(
+      worklet,
+      acceptWorkletizableFunction,
+      acceptObject
+    );
+  }
   return undefined;
 }
 
@@ -92,6 +100,16 @@ function findReferencedWorkletFromAssignmentExpression(
   }
   if (acceptObject && isWorkletizableObjectPath(workletDefinition)) {
     return workletDefinition;
+  }
+  if (
+    workletDefinition.isIdentifier() &&
+    workletDefinition.isReferencedIdentifier()
+  ) {
+    return findReferencedWorklet(
+      workletDefinition,
+      acceptWorkletizableFunction,
+      acceptObject
+    );
   }
   return undefined;
 }

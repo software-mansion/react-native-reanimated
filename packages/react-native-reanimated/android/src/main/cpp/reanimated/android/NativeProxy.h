@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <reanimated/android/JNIHelper.h>
 #include <reanimated/android/LayoutAnimations.h>
 
@@ -64,6 +65,7 @@ class EventHandler : public HybridClass<EventHandler> {
       jni::alias_ref<JString> eventKey,
       jint emitterReactTag,
       jni::alias_ref<react::WritableMap> event) {
+    ReanimatedSystraceSection s("EventHandler::receiveEvent");
     handler_(eventKey, emitterReactTag, event);
   }
 
@@ -141,7 +143,8 @@ class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
   std::function<void(int, int)> callback_;
 };
 
-class NativeProxy : public jni::HybridClass<NativeProxy> {
+class NativeProxy : public jni::HybridClass<NativeProxy>,
+                    std::enable_shared_from_this<NativeProxy> {
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/NativeProxy;";
@@ -182,10 +185,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 #endif // RCT_NEW_ARCH_ENABLED
   void installJSIBindings();
 #ifdef RCT_NEW_ARCH_ENABLED
-  void synchronouslyUpdateUIProps(
-      jsi::Runtime &rt,
-      Tag viewTag,
-      const jsi::Object &props);
+  void synchronouslyUpdateUIProps(Tag viewTag, const folly::dynamic &props);
 #endif
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setupLayoutAnimations();
@@ -196,7 +196,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const int emitterReactTag);
   void performOperations();
   bool getIsReducedMotion();
-  void requestRender(std::function<void(double)> onRender, jsi::Runtime &rt);
+  void requestRender(std::function<void(double)> onRender);
   void registerEventHandler();
   void maybeFlushUIUpdatesQueue();
   void setGestureState(int handlerTag, int newState);
@@ -251,6 +251,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   template <class TReturn, class... TParams>
   std::function<TReturn(TParams...)> bindThis(
       TReturn (NativeProxy::*methodPtr)(TParams...)) {
+    // It's probably safe to pass `this` as reference here...
     return [this, methodPtr](TParams &&...args) {
       return (this->*methodPtr)(std::forward<TParams>(args)...);
     };

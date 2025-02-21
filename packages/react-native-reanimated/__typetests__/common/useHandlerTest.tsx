@@ -3,9 +3,10 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
-import type { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import Animated, { useEvent, useHandler } from '../..';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+
 import type { ReanimatedEvent } from '../..';
+import Animated, { useEvent, useHandler } from '../..';
 
 function UseHandlerTest() {
   function UseHandlerTest1() {

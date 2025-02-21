@@ -13,17 +13,17 @@
   },
   "dependencies": {
     "react": "18.3.1",
-    "react-native": "npm:react-native-tvos@0.76.0-0",
+    "react-native": "npm:react-native-tvos@0.77.0-0",
     "react-native-reanimated": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
     "@babel/runtime": "^7.25.0",
-    "@react-native/babel-preset": "0.76.1",
-    "@react-native/eslint-config": "0.76.1",
-    "@react-native/metro-config": "0.76.1",
-    "@react-native/typescript-config": "0.76.1",
+    "@react-native/babel-preset": "0.77.0",
+    "@react-native/eslint-config": "0.77.0",
+    "@react-native/metro-config": "0.77.0",
+    "@react-native/typescript-config": "0.77.0",
     "@types/react": "^18.2.6",
     "@types/react-test-renderer": "^18.0.0",
     "babel-jest": "^29.6.3",
@@ -35,5 +35,8 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "installConfig": {
+    "selfReferences": false
   }
 }

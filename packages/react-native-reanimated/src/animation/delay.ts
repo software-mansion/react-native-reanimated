@@ -1,13 +1,13 @@
 'use strict';
-import { defineAnimation, getReduceMotionForAnimation } from './util';
 import type {
-  Animation,
-  Timestamp,
   AnimatableValue,
+  Animation,
   AnimationObject,
   ReduceMotion,
+  Timestamp,
 } from '../commonTypes';
 import type { DelayAnimation } from './commonTypes';
+import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 // TODO TYPESCRIPT This is a temporary type to get rid of .d.ts file.
 type withDelayType = <T extends AnimatableValue>(
