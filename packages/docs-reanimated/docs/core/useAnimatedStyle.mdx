@@ -77,6 +77,32 @@ import AnimatingStylesSrc from '!!raw-loader!@site/src/examples/AnimatingStyles'
 
 ## Remarks
 
+- Animated styles (also inline) take precedence over React Native's static styles. All values that are specified in animated styles override values from static styles.
+
+<Indent>
+
+```jsx
+function App() {
+  const animatedStyles = useAnimatedStyle(() => ({
+    width: sv.value,
+  }));
+
+  // highlight-next-line
+  return (
+    <Animated.View
+      style={[
+        animatedStyles, // ⚠️ overrides the static style width
+        { width: 100 },
+      ]}
+    />
+  );
+}
+```
+
+</Indent>
+
+- Animated styles (also inline) don't follow the order in which they are specified in the style array. The last updated animated style is the one that takes effect.
+
 - Mutating shared values in `useAnimatedStyle`'s callback is an undefined behavior which may lead to infinite loops.
 
 <Indent>
