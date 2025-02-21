@@ -28,7 +28,7 @@ void RNRuntimeDecorator::decorate(
 
 #endif // NDEBUG
 
-#ifdef IS_REANIMATED_EXAMPLE_APP
+#if defined(IS_REANIMATED_EXAMPLE_APP) && defined(RCT_NEW_ARCH_ENABLED)
   jsi_utils::installJsiFunction(
       rnRuntime,
       "_registriesLeakCheck",
