@@ -25,8 +25,6 @@ class UISchedulerWrapper : public UIScheduler {
       androidUiScheduler_->cthis()->scheduleTriggerOnUI();
     }
   }
-
-  ~UISchedulerWrapper() {}
 };
 
 AndroidUIScheduler::AndroidUIScheduler(
@@ -41,6 +39,9 @@ jni::local_ref<AndroidUIScheduler::jhybriddata> AndroidUIScheduler::initHybrid(
 }
 
 void AndroidUIScheduler::triggerUI() {
+  if(!uiScheduler_){
+    return;
+  }
   uiScheduler_->triggerUI();
 }
 
