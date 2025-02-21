@@ -1,9 +1,7 @@
 'use strict';
 import '../layoutReanimation/animationsManager';
 
-import type { Component } from 'react';
-import React from 'react';
-import { Platform } from 'react-native';
+import type React from 'react';
 
 import { getReduceMotionFromConfig } from '../animation/util';
 import { maybeBuild } from '../animationBuilder';
@@ -341,7 +339,7 @@ export default class AnimatedComponent
     const filtered = filterStyles(flattenArray(props.style ?? []));
     this._prevAnimatedStyles = this._animatedStyles;
     this._animatedStyles = filtered.animatedStyles;
-    this._planStyle = filtered.plainStyle;
+    this._cssStyle = filtered.cssStyle;
   }
 
   _configureLayoutTransition() {
@@ -464,11 +462,6 @@ export default class AnimatedComponent
           };
     }
 
-    const platformProps = Platform.select({
-      web: {},
-      default: { collapsable: false },
-    });
-
     const skipEntering = this.context?.current;
     const nativeID =
       skipEntering || !isFabric() ? undefined : `${this.reanimatedID}`;
@@ -480,18 +473,10 @@ export default class AnimatedComponent
         }
       : {};
 
-    const ChildComponent = this.ChildComponent;
-
-    return (
-      <ChildComponent
-        nativeID={nativeID}
-        {...filteredProps}
-        {...jestProps}
-        // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
-        // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
-        ref={this._setComponentRef as (ref: Component) => void}
-        {...platformProps}
-      />
-    );
+    return super.render({
+      nativeID,
+      ...filteredProps,
+      ...jestProps,
+    });
   }
 }

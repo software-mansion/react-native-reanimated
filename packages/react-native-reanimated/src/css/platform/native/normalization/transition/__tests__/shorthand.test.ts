@@ -1,10 +1,10 @@
 'use strict';
 import { cubicBezier, linear, steps } from '../../../../../easings';
-import type { ExpandedConfigProperties } from '../shorthand';
+import type { ExpandedCSSTransitionConfigProperties } from '../shorthand';
 import { parseTransitionShorthand } from '../shorthand';
 
 describe(parseTransitionShorthand, () => {
-  const emptyResult: ExpandedConfigProperties = {
+  const emptyResult: ExpandedCSSTransitionConfigProperties = {
     transitionProperty: [],
     transitionDuration: [],
     transitionTimingFunction: [],
@@ -13,8 +13,8 @@ describe(parseTransitionShorthand, () => {
   };
 
   const withDefaults = (
-    result: Partial<ExpandedConfigProperties>
-  ): ExpandedConfigProperties => ({
+    result: Partial<ExpandedCSSTransitionConfigProperties>
+  ): ExpandedCSSTransitionConfigProperties => ({
     ...emptyResult,
     ...result,
   });
@@ -88,7 +88,7 @@ describe(parseTransitionShorthand, () => {
           transitionTimingFunction: ['ease-out'],
         },
       ],
-    ] satisfies [string, Partial<ExpandedConfigProperties>][])(
+    ] satisfies [string, Partial<ExpandedCSSTransitionConfigProperties>][])(
       '%p',
       (input, expected) => {
         expect(parseTransitionShorthand(input)).toEqual(withDefaults(expected));
@@ -148,7 +148,7 @@ describe(parseTransitionShorthand, () => {
           transitionBehavior: ['allow-discrete', undefined, 'allow-discrete'],
         },
       ],
-    ] satisfies [string, Partial<ExpandedConfigProperties>][])(
+    ] satisfies [string, Partial<ExpandedCSSTransitionConfigProperties>][])(
       '%p',
       (input, expected) => {
         expect(parseTransitionShorthand(input)).toEqual(withDefaults(expected));
@@ -234,7 +234,7 @@ describe(parseTransitionShorthand, () => {
           transitionBehavior: ['allow-discrete', undefined],
         },
       ],
-    ] satisfies [string, Partial<ExpandedConfigProperties>][])(
+    ] satisfies [string, Partial<ExpandedCSSTransitionConfigProperties>][])(
       '%p',
       (input, expected) => {
         expect(parseTransitionShorthand(input)).toEqual(withDefaults(expected));

@@ -20,16 +20,7 @@ export default class CSSManager {
   }
 
   attach(style: CSSStyle): void {
-    const [animationConfig, transitionConfig] =
-      filterCSSAndStyleProperties(style);
-
-    if (animationConfig) {
-      this.animationsManager.attach(animationConfig);
-    }
-
-    if (transitionConfig) {
-      this.transitionsManager.attach(transitionConfig);
-    }
+    this.update(style);
   }
 
   update(style: CSSStyle): void {
