@@ -1,5 +1,5 @@
 'use strict';
-import type { MutableRefObject, Ref } from 'react';
+import type { Ref, RefObject } from 'react';
 import React, { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
@@ -107,7 +107,7 @@ export default class AnimatedComponent<
   // TODO: refactor to ref
   _setComponentRef = setAndForwardRef<Component | HTMLElement>({
     getForwardedRef: () =>
-      this.props.forwardedRef as MutableRefObject<
+      this.props.forwardedRef as RefObject<
         Component<Record<string, unknown>, Record<string, unknown>, unknown>
       >,
     setLocalRef: (ref) => {

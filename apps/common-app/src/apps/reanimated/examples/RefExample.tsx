@@ -11,7 +11,7 @@ export type ChildHandle = {
   toggleState: () => void;
 };
 
-const Child = (ref: RefObject<ChildHandle>) => {
+const Child = ({ ref }: { ref: RefObject<ChildHandle> | null }) => {
   const [state, setState] = React.useState(0);
 
   const toggleState = () => {

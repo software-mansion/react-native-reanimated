@@ -124,7 +124,10 @@ function Section({
       />
       <View>
         {React.Children.map(children, (element) =>
-          React.cloneElement(element as ReactElement, { ref: aref })
+          React.cloneElement(
+            element as ReactElement<{ ref: AnimatedRef<React.Component> }>,
+            { ref: aref }
+          )
         )}
       </View>
     </Animated.View>

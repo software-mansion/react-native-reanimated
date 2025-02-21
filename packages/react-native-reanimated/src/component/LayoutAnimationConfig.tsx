@@ -12,7 +12,7 @@ import { setShouldAnimateExitingForTag } from '../core';
 import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 
 export const SkipEnteringContext =
-  createContext<React.MutableRefObject<boolean> | null>(null);
+  createContext<React.RefObject<boolean> | null>(null);
 
 // skipEntering - don't animate entering of children on wrapper mount
 // skipExiting - don't animate exiting of children on wrapper unmount
@@ -30,8 +30,6 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
   }, [skipValueRef]);
 
   return (
-    // @ts-ignore
-    // For some reason TS doesn't like that we use Context as a provider, but React 19 says it's fine
     <SkipEnteringContext value={skipValueRef}>
       {props.children}
     </SkipEnteringContext>
@@ -56,11 +54,7 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
  */
 export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps> {
   getMaybeWrappedChildren() {
-    return Children.count(this.props.children) > 1 && this.props.skipExiting
-      ? Children.map(this.props.children, (child) => (
-          <LayoutAnimationConfig skipExiting>{child}</LayoutAnimationConfig>
-        ))
-      : this.props.children;
+    return this.props.children;
   }
 
   setShouldAnimateExiting() {
