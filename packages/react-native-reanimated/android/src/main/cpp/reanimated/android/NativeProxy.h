@@ -184,9 +184,6 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
   // std::shared_ptr<EventListener> eventListener_;
 #endif // RCT_NEW_ARCH_ENABLED
   void installJSIBindings();
-#ifdef RCT_NEW_ARCH_ENABLED
-  void synchronouslyUpdateUIProps(Tag viewTag, const folly::dynamic &props);
-#endif
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setupLayoutAnimations();
 

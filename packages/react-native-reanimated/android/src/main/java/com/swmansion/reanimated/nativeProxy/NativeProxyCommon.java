@@ -9,7 +9,6 @@ import com.facebook.proguard.annotations.DoNotStrip;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableArray;
-import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
@@ -127,11 +126,6 @@ public abstract class NativeProxyCommon {
   @DoNotStrip
   public void updateProps(int viewTag, Map<String, Object> props) {
     mNodesManager.updateProps(viewTag, props);
-  }
-
-  @DoNotStrip
-  public void synchronouslyUpdateUIProps(int viewTag, ReadableMap uiProps) {
-    mNodesManager.synchronouslyUpdateUIProps(viewTag, uiProps);
   }
 
   @DoNotStrip
