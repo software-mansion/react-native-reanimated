@@ -20,7 +20,6 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
  public:
   JSIUpdates getJSIUpdates();
   SurfaceId update(jsi::Runtime &rt, const jsi::Value &operations);
-  void remove(jsi::Runtime &rt, const jsi::Value &viewTags);
 };
 
 } // namespace reanimated

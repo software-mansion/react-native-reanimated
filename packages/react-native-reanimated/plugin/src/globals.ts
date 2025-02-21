@@ -144,7 +144,6 @@ const notCapturedIdentifiers_DEPRECATED = [
   '_makeShareableClone',
   '_updatePropsPaper',
   '_updatePropsFabric',
-  '_removeFromPropsRegistry',
   '_measurePaper',
   '_measureFabric',
   '_scrollToPaper',

@@ -35,7 +35,7 @@ class UpdatesRegistryManager {
   void pleaseCommitAfterPause();
   bool shouldCommitAfterPause();
   void cancelCommitAfterPause();
-
+  void removeBatch(const std::vector<Tag> &tags);
   PropsMap collectProps();
 
 #ifdef ANDROID
