@@ -3,6 +3,8 @@
 #include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 
+#include <utility>
+
 namespace reanimated {
 
 template <typename TValue>
@@ -45,11 +47,6 @@ bool CSSKeywordBase<TValue>::canConstruct(
 template <typename TValue>
 bool CSSKeywordBase<TValue>::canConstruct(const folly::dynamic &value) {
   return value.isString();
-}
-
-template <typename TValue>
-jsi::Value CSSKeywordBase<TValue>::toJSIValue(jsi::Runtime &rt) const {
-  return jsi::String::createFromUtf8(rt, value);
 }
 
 template <typename TValue>

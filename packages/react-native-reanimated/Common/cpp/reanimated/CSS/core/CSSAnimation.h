@@ -21,7 +21,8 @@ class CSSAnimation {
       jsi::Runtime &rt,
       ShadowNode::Shared shadowNode,
       unsigned index,
-      const CSSAnimationConfig &config,
+      const CSSKeyframesConfig &keyframesConfig,
+      const CSSAnimationSettings &settings,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       double timestamp);
 
@@ -37,8 +38,8 @@ class CSSAnimation {
 
   folly::dynamic getCurrentInterpolationStyle() const;
   folly::dynamic getBackwardsFillStyle() const;
-  folly::dynamic getForwardFillStyle() const;
-  folly::dynamic resetStyle();
+  folly::dynamic getForwardsFillStyle() const;
+  folly::dynamic getResetStyle() const;
 
   void run(double timestamp);
   folly::dynamic update(double timestamp);
@@ -52,7 +53,7 @@ class CSSAnimation {
   AnimationFillMode fillMode_;
 
   std::shared_ptr<AnimationProgressProvider> progressProvider_;
-  AnimationStyleInterpolator styleInterpolator_;
+  std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
 };
 
 } // namespace reanimated

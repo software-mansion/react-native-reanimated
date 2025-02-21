@@ -9,8 +9,8 @@ import type {
   ValueRotation,
 } from '../commonTypes';
 import type {
+  NormalizedCSSAnimationKeyframesConfig,
   NormalizedCSSTransitionConfig,
-  NormalizedSingleCSSAnimationConfig,
   NormalizedSingleCSSAnimationSettings,
 } from '../css/platform/native';
 import { ReanimatedError, registerReanimatedError } from '../errors';
@@ -192,9 +192,26 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.removeViewStyle(viewTag);
   }
 
+  registerCSSKeyframes(
+    animationName: string,
+    keyframesConfig: NormalizedCSSAnimationKeyframesConfig
+  ) {
+    this.#reanimatedModuleProxy.registerCSSKeyframes(
+      animationName,
+      keyframesConfig
+    );
+  }
+
+  unregisterCSSKeyframes(animationName: string) {
+    this.#reanimatedModuleProxy.unregisterCSSKeyframes(animationName);
+  }
+
   registerCSSAnimations(
     shadowNodeWrapper: ShadowNodeWrapper,
-    animationConfigs: NormalizedSingleCSSAnimationConfig[]
+    animationConfigs: {
+      name: string;
+      settings: NormalizedSingleCSSAnimationSettings;
+    }[]
   ) {
     this.#reanimatedModuleProxy.registerCSSAnimations(
       shadowNodeWrapper,
