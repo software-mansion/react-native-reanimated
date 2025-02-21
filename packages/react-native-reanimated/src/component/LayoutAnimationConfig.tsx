@@ -54,7 +54,11 @@ function SkipEntering(props: { shouldSkip: boolean; children: ReactNode }) {
  */
 export class LayoutAnimationConfig extends Component<LayoutAnimationConfigProps> {
   getMaybeWrappedChildren() {
-    return this.props.children;
+    return Children.count(this.props.children) > 1 && this.props.skipExiting
+      ? Children.map(this.props.children, (child) => (
+          <LayoutAnimationConfig skipExiting>{child}</LayoutAnimationConfig>
+        ))
+      : this.props.children;
   }
 
   setShouldAnimateExiting() {

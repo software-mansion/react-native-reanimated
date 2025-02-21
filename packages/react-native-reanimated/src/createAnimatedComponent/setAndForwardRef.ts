@@ -1,8 +1,6 @@
 'use strict';
-
-import { RefObject } from 'react';
-
 /** Imported from react-native */
+import type { RefObject } from 'react';
 /* eslint-disable */
 /**
  * This is a helper function for when a component needs to be able to forward a
