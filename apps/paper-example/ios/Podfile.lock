@@ -1608,7 +1608,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated (3.17.0-rc.1):
+  - RNReanimated (3.17.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1630,10 +1630,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated (= 3.17.0-rc.1)
-    - RNReanimated/worklets (= 3.17.0-rc.1)
+    - RNReanimated/reanimated (= 3.17.0)
+    - RNReanimated/worklets (= 3.17.0)
     - Yoga
-  - RNReanimated/reanimated (3.17.0-rc.1):
+  - RNReanimated/reanimated (3.17.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1655,9 +1655,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/reanimated/apple (= 3.17.0-rc.1)
+    - RNReanimated/reanimated/apple (= 3.17.0)
     - Yoga
-  - RNReanimated/reanimated/apple (3.17.0-rc.1):
+  - RNReanimated/reanimated/apple (3.17.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1680,7 +1680,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNReanimated/worklets (3.17.0-rc.1):
+  - RNReanimated/worklets (3.17.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1702,9 +1702,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNReanimated/worklets/apple (= 3.17.0-rc.1)
+    - RNReanimated/worklets/apple (= 3.17.0)
     - Yoga
-  - RNReanimated/worklets/apple (3.17.0-rc.1):
+  - RNReanimated/worklets/apple (3.17.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2066,7 +2066,7 @@ SPEC CHECKSUMS:
   RNCMaskedView: 6d4bf14f158d1a93484edf30850cbbd7ccbb8668
   RNFlashList: 9843320e0885ed1b494ea72ab0febfd3beb3dab0
   RNGestureHandler: 8b33b2c5688a54fcce223d184753757da498235c
-  RNReanimated: 5a3bc0ab5f04e0a6a71ca17de2302f7d47045ac5
+  RNReanimated: 63359489e8cada8a836f402026b98fba4e27a4bc
   RNScreens: 81237378a6d7921fb2dbb6a6c6c45c3d8cc696bb
   RNSVG: 515a902fc18a375907eb4c3abec0b803fbfa37ef
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
