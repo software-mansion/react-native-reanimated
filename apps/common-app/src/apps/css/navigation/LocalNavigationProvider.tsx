@@ -1,12 +1,12 @@
 import type { NavigationProp, NavigationState } from '@react-navigation/native';
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import { createContext, useContext, useMemo, useRef } from 'react';
 
-const LocalNavigationContext = createContext<MutableRefObject<
+const LocalNavigationContext = createContext<RefObject<
   | ({
       getState(): NavigationState | undefined;
     } & Omit<NavigationProp<ReactNavigation.RootParamList>, 'getState'>)
-  | undefined
+  | null
 > | null>(null);
 
 export function useLocalNavigationRef() {
