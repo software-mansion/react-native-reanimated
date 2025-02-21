@@ -1,6 +1,9 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSKeyword.h>
+
+#include <utility>
 
 namespace reanimated {
 
@@ -8,8 +11,7 @@ template <typename TValue>
 CSSKeywordBase<TValue>::CSSKeywordBase() : value("") {}
 
 template <typename TValue>
-CSSKeywordBase<TValue>::CSSKeywordBase(const std::string &value)
-    : value(value) {}
+CSSKeywordBase<TValue>::CSSKeywordBase(const char *value) : value(value) {}
 
 template <typename TValue>
 CSSKeywordBase<TValue>::CSSKeywordBase(
@@ -25,6 +27,17 @@ CSSKeywordBase<TValue>::CSSKeywordBase(
 }
 
 template <typename TValue>
+CSSKeywordBase<TValue>::CSSKeywordBase(const folly::dynamic &value) {
+  if (value.isString()) {
+    this->value = value.getString();
+  } else {
+    throw std::invalid_argument(
+        "[Reanimated] CSSKeywordBase: Invalid value type: " +
+        folly::toJson(value));
+  }
+}
+
+template <typename TValue>
 bool CSSKeywordBase<TValue>::canConstruct(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
@@ -32,13 +45,8 @@ bool CSSKeywordBase<TValue>::canConstruct(
 }
 
 template <typename TValue>
-CSSValueType CSSKeywordBase<TValue>::type() const {
-  return CSSValueType::Keyword;
-}
-
-template <typename TValue>
-jsi::Value CSSKeywordBase<TValue>::toJSIValue(jsi::Runtime &rt) const {
-  return jsi::String::createFromUtf8(rt, value);
+bool CSSKeywordBase<TValue>::canConstruct(const folly::dynamic &value) {
+  return value.isString();
 }
 
 template <typename TValue>

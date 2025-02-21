@@ -11,10 +11,10 @@ CSSDimension::CSSDimension(const double value)
 CSSDimension::CSSDimension(const double value, const bool isRelative)
     : value(value), isRelative(isRelative) {}
 
-CSSDimension::CSSDimension(const std::string &value) {
+CSSDimension::CSSDimension(const char *value) {
   if (!canConstruct(value)) {
     throw std::invalid_argument(
-        "[Reanimated] CSSDimension: Invalid value: " + value);
+        "[Reanimated] CSSDimension: Invalid value: " + std::string(value));
   }
 
   std::string str = value;
@@ -36,8 +36,27 @@ CSSDimension::CSSDimension(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   }
 }
 
+CSSDimension::CSSDimension(const folly::dynamic &value) {
+  if (value.isNumber()) {
+    this->value = value.getDouble();
+    this->isRelative = false;
+  } else if (value.isString()) {
+    std::string strValue = value.getString();
+    *this =
+        CSSDimension(strValue.c_str()); // Delegate to the string constructor
+  } else {
+    throw std::runtime_error(
+        "[Reanimated] CSSDimension: Unsupported value type");
+  }
+}
+
 bool CSSDimension::canConstruct(const std::string &value) {
   return !value.empty() && value.back() == '%';
+}
+
+bool CSSDimension::canConstruct(const char *value) {
+  auto str = std::string(value);
+  return !str.empty() && str.back() == '%';
 }
 
 bool CSSDimension::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
@@ -45,11 +64,9 @@ bool CSSDimension::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
       (jsiValue.isString() && canConstruct(jsiValue.getString(rt).utf8(rt)));
 }
 
-jsi::Value CSSDimension::toJSIValue(jsi::Runtime &rt) const {
-  if (isRelative) {
-    return jsi::String::createFromUtf8(rt, std::to_string(value * 100) + "%");
-  }
-  return {value};
+bool CSSDimension::canConstruct(const folly::dynamic &value) {
+  return value.isNumber() ||
+      (value.isString() && canConstruct(value.getString()));
 }
 
 folly::dynamic CSSDimension::toDynamic() const {

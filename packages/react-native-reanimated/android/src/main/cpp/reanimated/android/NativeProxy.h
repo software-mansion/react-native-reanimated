@@ -185,10 +185,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>,
 #endif // RCT_NEW_ARCH_ENABLED
   void installJSIBindings();
 #ifdef RCT_NEW_ARCH_ENABLED
-  void synchronouslyUpdateUIProps(
-      jsi::Runtime &rt,
-      Tag viewTag,
-      const jsi::Object &props);
+  void synchronouslyUpdateUIProps(Tag viewTag, const folly::dynamic &props);
 #endif
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setupLayoutAnimations();

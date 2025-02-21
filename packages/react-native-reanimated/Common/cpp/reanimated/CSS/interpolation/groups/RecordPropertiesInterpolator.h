@@ -15,26 +15,21 @@ class RecordPropertiesInterpolator : public GroupPropertiesInterpolator {
   RecordPropertiesInterpolator(
       const InterpolatorFactoriesRecord &factories,
       const PropertyPath &propertyPath,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
   virtual ~RecordPropertiesInterpolator() = default;
 
   bool equalsReversingAdjustedStartValue(
-      jsi::Runtime &rt,
-      const jsi::Value &propertyValue) const override;
+      const folly::dynamic &propertyValue) const override;
 
   void updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) override;
   void updateKeyframesFromStyleChange(
-      jsi::Runtime &rt,
-      const jsi::Value &oldStyleValue,
-      const jsi::Value &newStyleValue) override;
+      const folly::dynamic &oldStyleValue,
+      const folly::dynamic &newStyleValue,
+      const folly::dynamic &lastUpdateValue) override;
 
  protected:
-  void forEachInterpolator(const std::function<void(PropertyInterpolator &)>
-                               &callback) const override;
-  jsi::Value mapInterpolators(
-      jsi::Runtime &rt,
-      const std::function<jsi::Value(PropertyInterpolator &)> &callback)
+  folly::dynamic mapInterpolators(
+      const std::function<folly::dynamic(PropertyInterpolator &)> &callback)
       const override;
 
   void maybeCreateInterpolator(const std::string &propertyName);

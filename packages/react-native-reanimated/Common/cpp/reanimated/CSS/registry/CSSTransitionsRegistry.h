@@ -29,12 +29,9 @@ class CSSTransitionsRegistry
 
   void add(const std::shared_ptr<CSSTransition> &transition);
   void remove(Tag viewTag);
-  void updateSettings(
-      jsi::Runtime &rt,
-      Tag viewTag,
-      const PartialCSSTransitionConfig &config);
+  void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
 
-  void update(jsi::Runtime &rt, double timestamp);
+  void update(double timestamp);
 
  private:
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;

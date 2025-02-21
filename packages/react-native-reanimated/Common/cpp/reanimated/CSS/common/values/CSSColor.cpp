@@ -1,4 +1,5 @@
 #ifdef RCT_NEW_ARCH_ENABLED
+#include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSColor.h>
 
 namespace reanimated {
@@ -26,13 +27,13 @@ CSSColor::CSSColor(const ColorChannels &colorChannels)
 CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
     : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
   if (jsiValue.isNumber()) {
-#ifdef ANDROID
-    // Android uses signed 32-bit integers for colors
-    auto color = static_cast<int32_t>(jsiValue.asNumber());
-#else
-    // iOS uses unsigned 32-bit integers for colors
-    auto color = static_cast<unsigned>(jsiValue.asNumber());
-#endif
+    double numberValue = jsiValue.asNumber();
+    uint32_t color;
+    if (numberValue < 0) {
+      color = static_cast<int32_t>(numberValue);
+    } else {
+      color = static_cast<uint32_t>(numberValue);
+    }
     channels[0] = (color >> 16) & 0xFF; // Red
     channels[1] = (color >> 8) & 0xFF; // Green
     channels[2] = color & 0xFF; // Blue
@@ -50,18 +51,39 @@ CSSColor::CSSColor(jsi::Runtime &rt, const jsi::Value &jsiValue)
   }
 }
 
+CSSColor::CSSColor(const folly::dynamic &value)
+    : channels{0, 0, 0, 0}, colorType(ColorType::Transparent) {
+  if (value.isNumber()) {
+    double numberValue = value.asDouble();
+    uint32_t color;
+    if (numberValue < 0) {
+      color = static_cast<int32_t>(numberValue);
+    } else {
+      color = static_cast<uint32_t>(numberValue);
+    }
+    channels[0] = (color >> 16) & 0xFF; // Red
+    channels[1] = (color >> 8) & 0xFF; // Green
+    channels[2] = color & 0xFF; // Blue
+    channels[3] = (color >> 24) & 0xFF; // Alpha
+    colorType = ColorType::Rgba;
+  } else if (
+      value.empty() ||
+      (value.isString() && value.getString() == "transparent")) {
+    colorType = ColorType::Transparent;
+  } else {
+    throw std::invalid_argument(
+        "[Reanimated] CSSColor: Invalid value type: " + folly::toJson(value));
+  }
+}
+
 bool CSSColor::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   // TODO - improve canConstruct check and add check for string correctness
   return jsiValue.isNumber() || jsiValue.isString();
 }
 
-jsi::Value CSSColor::toJSIValue(jsi::Runtime &rt) const {
-  if (colorType == ColorType::Transparent) {
-    return 0x00000000;
-  }
-  return {
-      (channels[3] << 24) | (channels[0] << 16) | (channels[1] << 8) |
-      channels[2]};
+bool CSSColor::canConstruct(const folly::dynamic &value) {
+  // TODO - improve canConstruct check and add check for string correctness
+  return value.isNumber() || value.isString();
 }
 
 folly::dynamic CSSColor::toDynamic() const {

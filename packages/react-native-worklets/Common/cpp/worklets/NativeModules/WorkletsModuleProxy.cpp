@@ -104,7 +104,7 @@ jsi::Value WorkletsModuleProxy::createWorkletRuntime(
       jsQueue_,
       jsScheduler_,
       name.asString(rt).utf8(rt),
-      false /* supportsLocking */,
+      true /* supportsLocking */,
       valueUnpackerCode_);
   auto initializerShareable = extractShareableOrThrow<ShareableWorklet>(
       rt, initializer, "[Reanimated] Initializer must be a worklet.");

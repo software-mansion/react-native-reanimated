@@ -24,16 +24,17 @@ class CSSTransition {
   ShadowNode::Shared getShadowNode() const;
   double getMinDelay(double timestamp) const;
   TransitionProgressState getState() const;
-  jsi::Value getCurrentInterpolationStyle(jsi::Runtime &rt) const;
+  folly::dynamic getCurrentInterpolationStyle() const;
   PropertyNames getAllowedProperties(
-      jsi::Runtime &rt,
-      const jsi::Value &oldProps,
-      const jsi::Value &newProps);
+      const folly::dynamic &oldProps,
+      const folly::dynamic &newProps);
 
   void updateSettings(const PartialCSSTransitionConfig &config);
-  jsi::Value
-  run(jsi::Runtime &rt, const ChangedProps &changedProps, double timestamp);
-  jsi::Value update(jsi::Runtime &rt, double timestamp);
+  folly::dynamic run(
+      const ChangedProps &changedProps,
+      const folly::dynamic &lastUpdateValue,
+      double timestamp);
+  folly::dynamic update(double timestamp);
 
  private:
   const ShadowNode::Shared shadowNode_;
@@ -44,7 +45,7 @@ class CSSTransition {
   TransitionStyleInterpolator styleInterpolator_;
 
   void updateTransitionProperties(const TransitionProperties &properties);
-  bool isAllowedProperty(const std::string &propName) const;
+  bool isAllowedProperty(const std::string &propertyName) const;
 };
 
 } // namespace reanimated

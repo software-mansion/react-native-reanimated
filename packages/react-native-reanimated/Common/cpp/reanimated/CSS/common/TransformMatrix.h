@@ -34,6 +34,7 @@ class TransformMatrix {
   explicit TransformMatrix(const Vec16Array &matrix);
   explicit TransformMatrix(const Matrix4x4 &matrix);
   explicit TransformMatrix(jsi::Runtime &rt, const jsi::Value &value);
+  explicit TransformMatrix(const folly::dynamic &value);
 
   static TransformMatrix Identity();
   static TransformMatrix Perspective(double value);
@@ -61,7 +62,6 @@ class TransformMatrix {
 #endif // NDEBUG
 
   std::string toString() const;
-  jsi::Value toJSIValue(jsi::Runtime &rt) const;
   folly::dynamic toDynamic() const;
 
   bool isSingular() const;

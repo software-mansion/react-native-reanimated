@@ -9,11 +9,12 @@ std::optional<CSSTransitionPropertySettings> getTransitionPropertySettings(
   // Try to use property specific settings first
   const auto &propIt = propertiesSettings.find(propName);
   if (propIt != propertiesSettings.end()) {
-    return propertiesSettings.at(propName);
+    return propIt->second;
   }
   // Fallback to "all" settings if no property specific settings are available
-  if (propertiesSettings.find("all") != propertiesSettings.end()) {
-    return propertiesSettings.at("all");
+  const auto &allIt = propertiesSettings.find("all");
+  if (allIt != propertiesSettings.end()) {
+    return allIt->second;
   }
   // Or return nullopt if no settings are available
   return std::nullopt;

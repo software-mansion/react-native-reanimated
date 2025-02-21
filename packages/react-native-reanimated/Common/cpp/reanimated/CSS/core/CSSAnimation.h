@@ -21,7 +21,8 @@ class CSSAnimation {
       jsi::Runtime &rt,
       ShadowNode::Shared shadowNode,
       unsigned index,
-      const CSSAnimationConfig &config,
+      const CSSKeyframesConfig &keyframesConfig,
+      const CSSAnimationSettings &settings,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository,
       double timestamp);
 
@@ -35,14 +36,13 @@ class CSSAnimation {
   bool hasForwardsFillMode() const;
   bool hasBackwardsFillMode() const;
 
-  jsi::Value getViewStyle(jsi::Runtime &rt) const;
-  jsi::Value getCurrentInterpolationStyle(jsi::Runtime &rt) const;
-  jsi::Value getBackwardsFillStyle(jsi::Runtime &rt);
-  jsi::Value getForwardFillStyle(jsi::Runtime &rt);
-  jsi::Value resetStyle(jsi::Runtime &rt);
+  folly::dynamic getCurrentInterpolationStyle() const;
+  folly::dynamic getBackwardsFillStyle() const;
+  folly::dynamic getForwardsFillStyle() const;
+  folly::dynamic getResetStyle() const;
 
   void run(double timestamp);
-  jsi::Value update(jsi::Runtime &rt, double timestamp);
+  folly::dynamic update(double timestamp);
   void updateSettings(
       const PartialCSSAnimationSettings &updatedSettings,
       double timestamp);
@@ -53,7 +53,7 @@ class CSSAnimation {
   AnimationFillMode fillMode_;
 
   std::shared_ptr<AnimationProgressProvider> progressProvider_;
-  AnimationStyleInterpolator styleInterpolator_;
+  std::shared_ptr<AnimationStyleInterpolator> styleInterpolator_;
 };
 
 } // namespace reanimated

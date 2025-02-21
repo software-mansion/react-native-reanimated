@@ -1,5 +1,6 @@
 #ifdef RCT_NEW_ARCH_ENABLED
 
+#include <folly/json.h>
 #include <reanimated/CSS/common/values/CSSDiscreteArray.h>
 
 namespace reanimated {
@@ -30,6 +31,22 @@ CSSDiscreteArray<TValue>::CSSDiscreteArray(
 }
 
 template <CSSValueDerived TValue>
+CSSDiscreteArray<TValue>::CSSDiscreteArray(const folly::dynamic &value) {
+  if (!canConstruct(value)) {
+    throw std::invalid_argument(
+        "[Reanimated] CSSDiscreteArray: Invalid value type: " +
+        folly::toJson(value));
+  }
+
+  const auto &array = value;
+  values.reserve(array.size());
+
+  for (size_t i = 0; i < array.size(); i++) {
+    values.emplace_back(array.at(i));
+  }
+}
+
+template <CSSValueDerived TValue>
 bool CSSDiscreteArray<TValue>::canConstruct(
     jsi::Runtime &rt,
     const jsi::Value &jsiValue) {
@@ -38,12 +55,8 @@ bool CSSDiscreteArray<TValue>::canConstruct(
 }
 
 template <CSSValueDerived TValue>
-jsi::Value CSSDiscreteArray<TValue>::toJSIValue(jsi::Runtime &rt) const {
-  jsi::Array array(rt, values.size());
-  for (size_t i = 0; i < values.size(); i++) {
-    array.setValueAtIndex(rt, i, values[i].toJSIValue(rt));
-  }
-  return array;
+bool CSSDiscreteArray<TValue>::canConstruct(const folly::dynamic &value) {
+  return value.isArray();
 }
 
 template <CSSValueDerived TValue>

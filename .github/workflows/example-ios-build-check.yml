@@ -66,8 +66,12 @@ jobs:
         run: yarn build
 
       - name: Use external worklets
-        if: ${{ inputs.use-external-worklets == 'true' }}
+        if: ${{ inputs.use-external-worklets }}
         working-directory: ${{ env.COMMON_APP_DIR }}
+        run: yarn add react-native-worklets@workspace:"*"
+      - name: Use external worklets
+        if: ${{ inputs.use-external-worklets }}
+        working-directory: ${{ env.WORKING_DIRECTORY }}
         run: yarn add react-native-worklets@workspace:"*"
 
       # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
@@ -75,7 +79,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
         run: |
           bundle install
-          bundle exec pod install
+          bundle exec pod update
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}

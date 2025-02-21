@@ -17,44 +17,33 @@ class PropertyInterpolator {
  public:
   explicit PropertyInterpolator(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository);
 
-  virtual void setProgressProvider(
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider);
-
-  virtual jsi::Value getStyleValue(
-      jsi::Runtime &rt,
+  virtual folly::dynamic getStyleValue(
       const ShadowNode::Shared &shadowNode) const = 0;
-  virtual jsi::Value getCurrentValue(
-      jsi::Runtime &rt,
+  virtual folly::dynamic getResetStyle(
       const ShadowNode::Shared &shadowNode) const = 0;
-  virtual jsi::Value getFirstKeyframeValue(jsi::Runtime &rt) const = 0;
-  virtual jsi::Value getLastKeyframeValue(jsi::Runtime &rt) const = 0;
-
+  virtual folly::dynamic getFirstKeyframeValue() const = 0;
+  virtual folly::dynamic getLastKeyframeValue() const = 0;
   virtual bool equalsReversingAdjustedStartValue(
-      jsi::Runtime &rt,
-      const jsi::Value &propertyValue) const = 0;
+      const folly::dynamic &propertyValue) const = 0;
 
   virtual void updateKeyframes(
       jsi::Runtime &rt,
       const jsi::Value &keyframes) = 0;
   virtual void updateKeyframesFromStyleChange(
-      jsi::Runtime &rt,
-      const jsi::Value &oldStyleValue,
-      const jsi::Value &newStyleValue) = 0;
+      const folly::dynamic &oldStyleValue,
+      const folly::dynamic &newStyleValue,
+      const folly::dynamic &lastUpdateValue) = 0;
 
-  virtual jsi::Value update(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) = 0;
-  virtual jsi::Value reset(
-      jsi::Runtime &rt,
-      const ShadowNode::Shared &shadowNode) = 0;
+  virtual folly::dynamic interpolate(
+      const ShadowNode::Shared &shadowNode,
+      const std::shared_ptr<KeyframeProgressProvider> &progressProvider)
+      const = 0;
 
  protected:
   const PropertyPath propertyPath_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;
-  std::shared_ptr<KeyframeProgressProvider> progressProvider_;
 };
 
 class PropertyInterpolatorFactory {
@@ -67,7 +56,6 @@ class PropertyInterpolatorFactory {
 
   virtual std::shared_ptr<PropertyInterpolator> create(
       const PropertyPath &propertyPath,
-      const std::shared_ptr<KeyframeProgressProvider> &progressProvider,
       const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
       const = 0;
 };
