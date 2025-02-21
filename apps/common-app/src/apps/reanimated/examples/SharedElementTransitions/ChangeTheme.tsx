@@ -285,7 +285,7 @@ export default function ReducedMotionSharedExample() {
   const toggleModals = useCallback(() => setModals((m) => !m), []);
 
   return (
-    <Context.Provider
+    <Context
       value={{
         theme,
         disabled,
@@ -315,7 +315,7 @@ export default function ReducedMotionSharedExample() {
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
-    </Context.Provider>
+    </Context>
   );
 }
 

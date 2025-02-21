@@ -1,5 +1,4 @@
 'use strict';
-import invariant from 'invariant';
 import type {
   Component,
   ComponentClass,
@@ -59,12 +58,6 @@ export function createAnimatedComponent(
   options?: Options<InitialComponentProps>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
-  invariant(
-    typeof Component !== 'function' ||
-      (Component.prototype && Component.prototype.isReactComponent),
-    `Looks like you're passing a function component \`${Component.name}\` to \`createAnimatedComponent\` function which supports only class components. Please wrap your function component with \`React.forwardRef()\` or use a class component instead.`
-  );
-
   class AnimatedComponent extends AnimatedComponentImpl {
     static displayName = `AnimatedComponent(${
       Component.displayName || Component.name || 'Component'
@@ -75,14 +68,20 @@ export function createAnimatedComponent(
     }
   }
 
-  const animatedComponent = React.forwardRef<Component>((props, ref) => {
+  const animatedComponent = ({
+    ref,
+    ...props
+  }: {
+    ref: React.Ref<Component>;
+    props: AnimatedComponentProps<InitialComponentProps>;
+  }) => {
     return (
       <AnimatedComponent
         {...props}
         {...(ref === null ? null : { forwardedRef: ref })}
       />
     );
-  });
+  };
 
   animatedComponent.displayName =
     Component.displayName || Component.name || 'Component';
