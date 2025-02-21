@@ -37,5 +37,5 @@ declare global {
     runtime: WorkletRuntime,
     worklet: ShareableRef<() => void>
   ) => void;
-  var _microTaskQueueFinalizers: (() => void)[];
+  var _microtaskQueueFinalizers: (() => void)[];
 }

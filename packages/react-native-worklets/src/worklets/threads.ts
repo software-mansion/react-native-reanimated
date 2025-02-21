@@ -23,7 +23,7 @@ export function setupMicrotasks() {
   global.queueMicrotask = (callback: () => void) => {
     microtasksQueue.push(callback);
   };
-  global._microTaskQueueFinalizers = [];
+  global._microtaskQueueFinalizers = [];
 
   global.__callMicrotasks = () => {
     if (isExecutingMicrotasksQueue) {
@@ -36,7 +36,7 @@ export function setupMicrotasks() {
         microtasksQueue[index]();
       }
       microtasksQueue = [];
-      global._microTaskQueueFinalizers.forEach((finalizer) => finalizer());
+      global._microtaskQueueFinalizers.forEach((finalizer) => finalizer());
     } finally {
       isExecutingMicrotasksQueue = false;
     }

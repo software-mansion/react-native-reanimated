@@ -58,13 +58,16 @@ void UIRuntimeDecorator::decorate(
 
   jsi_utils::installJsiFunction(uiRuntime, "_setGestureState", setGestureState);
 
-  uiRuntime.global()
-      .getProperty(uiRuntime, "_microtaskQueueFinalizers")
-      .asObject(uiRuntime)
-      .asArray(uiRuntime)
-      .getPropertyAsFunction(uiRuntime, "push")
-      .call(
+  const auto microtaskQueueFinalizers =
+      uiRuntime.global()
+          .getProperty(uiRuntime, "_microtaskQueueFinalizers")
+          .asObject(uiRuntime)
+          .asArray(uiRuntime);
+
+  microtaskQueueFinalizers.getPropertyAsFunction(uiRuntime, "push")
+      .callWithThis(
           uiRuntime,
+          microtaskQueueFinalizers,
           jsi::Function::createFromHostFunction(
               uiRuntime,
               jsi::PropNameID::forAscii(uiRuntime, "_maybeFlushUIUpdatesQueue"),
