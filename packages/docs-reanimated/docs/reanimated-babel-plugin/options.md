@@ -20,6 +20,8 @@ interface ReanimatedPluginOptions {
   globals?: string[];
   substituteWebPlatformChecks?: boolean;
   disableSourceMaps?: boolean;
+  extraPlugins?: string[];
+  extraPresets?: string[];
 }
 ```
 
@@ -199,3 +201,11 @@ This option can also be useful for Web apps. In Reanimated, we have numerous che
 Defaults to `false`.
 
 This option turns off the source map generation for worklets. Mostly used for testing purposes.
+
+### extraPlugins
+
+This is a list of Babel plugins that will be used when transforming the code with Reanimated Babel Plugin.
+
+### extraPresets
+
+This is a list of Babel presets that will be used when transforming the code with Reanimated Babel Plugin.
