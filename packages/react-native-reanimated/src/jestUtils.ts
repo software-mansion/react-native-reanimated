@@ -91,7 +91,7 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
 
   const inlineStyles = getStylesFromObject(jestInlineStyles);
 
-  currentStyle = isEmpty(jestAnimatedStyleValue as object)
+  currentStyle = isEmpty(jestAnimatedStyleValue as object | undefined)
     ? { ...inlineStyles }
     : { ...jestAnimatedStyleValue };
 
