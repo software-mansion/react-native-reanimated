@@ -34,8 +34,8 @@
     "react-native-pager-view": "6.6.1",
     "react-native-reanimated": "workspace:*",
     "react-native-safe-area-context": "5.2.0",
-    "react-native-screens": "4.9.0-beta.0",
-    "react-native-svg": "patch:react-native-svg@npm%3A15.11.1#~/.yarn/patches/react-native-svg-npm-15.11.1-74e70f03d8.patch",
+    "react-native-screens": "4.9.0",
+    "react-native-svg": "15.11.2",
     "react-strict-dom": "0.0.27"
   },
   "devDependencies": {
