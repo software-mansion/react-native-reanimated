@@ -213,6 +213,11 @@ void NativeProxy::registerEventHandler() {
 }
 
 void NativeProxy::maybeFlushUIUpdatesQueue() {
+  // Module might be already destroyed.
+  if (!javaPart_) {
+    return;
+  }
+
   static const auto method = getJniMethod<void()>("maybeFlushUIUpdatesQueue");
   method(javaPart_.get());
 }
