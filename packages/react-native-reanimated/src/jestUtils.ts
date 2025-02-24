@@ -29,7 +29,8 @@ const defaultFramerateConfig = {
   fps: 60,
 };
 
-const isEmpty = (obj: object | undefined) => !obj || Object.keys(obj).length === 0;
+const isEmpty = (obj: object | undefined) =>
+  !obj || Object.keys(obj).length === 0;
 const getStylesFromObject = (obj: object) => {
   return obj === undefined
     ? {}
