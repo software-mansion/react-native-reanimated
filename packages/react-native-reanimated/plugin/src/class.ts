@@ -37,7 +37,6 @@ import { workletTransformSync } from './transform';
 import type { ReanimatedPluginPass } from './types';
 import { workletClassFactorySuffix } from './types';
 import { replaceWithFactoryCall } from './utils';
-import { workletTransformSync } from './transform';
 
 const classWorkletMarker = '__workletClass';
 

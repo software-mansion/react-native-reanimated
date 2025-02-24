@@ -36,7 +36,6 @@ import { workletTransformSync } from './transform';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
-import { workletTransformSync } from './transform';
 
 const MOCK_SOURCE_MAP = 'mock source map';
 

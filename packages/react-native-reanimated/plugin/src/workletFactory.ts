@@ -46,7 +46,6 @@ import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 import { buildWorkletString } from './workletStringCode';
-import { workletTransformSync } from './transform';
 
 const REAL_VERSION = require('../../package.json').version;
 
