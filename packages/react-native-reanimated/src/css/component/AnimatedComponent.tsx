@@ -1,5 +1,5 @@
 'use strict';
-import type { MutableRefObject, Ref } from 'react';
+import type { ComponentProps, MutableRefObject, Ref } from 'react';
 import React, { Component } from 'react';
 import type { StyleProp } from 'react-native';
 import { Platform, StyleSheet } from 'react-native';
@@ -17,9 +17,11 @@ import { isFabric, isWeb, shouldBeUseWeb } from '../../PlatformChecker';
 import { ReanimatedError } from '../errors';
 import { CSSManager } from '../managers';
 import type { AnyComponent, AnyRecord, CSSStyle, PlainStyle } from '../types';
+import { filterNonCSSStyleProps } from './utils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_WEB = isWeb();
+const IS_FABRIC = isFabric();
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
@@ -37,7 +39,7 @@ export default class AnimatedComponent<
   _CSSManager?: CSSManager;
 
   _viewInfo?: ViewInfo;
-  _planStyle: CSSStyle = {};
+  _cssStyle: CSSStyle = {}; // RN style object with Reanimated CSS properties
   _componentRef: AnimatedComponentRef | HTMLElement | null = null;
   _hasAnimatedRef = false;
   // Used only on web
@@ -97,7 +99,7 @@ export default class AnimatedComponent<
       viewTag = viewInfo.viewTag;
       viewName = viewInfo.viewName;
       viewConfig = viewInfo.viewConfig;
-      shadowNodeWrapper = isFabric()
+      shadowNodeWrapper = IS_FABRIC
         ? getShadowNodeWrapperFromRef(this, hostInstance)
         : null;
     }
@@ -148,15 +150,15 @@ export default class AnimatedComponent<
   };
 
   _updateStyles(props: P) {
-    this._planStyle = StyleSheet.flatten(props.style) ?? {};
+    this._cssStyle = StyleSheet.flatten(props.style) ?? {};
   }
 
   componentDidMount() {
     this._updateStyles(this.props);
 
-    if (isFabric() || IS_WEB) {
+    if (IS_FABRIC || IS_WEB) {
       this._CSSManager = new CSSManager(this._getViewInfo());
-      this._CSSManager?.attach(this._planStyle);
+      this._CSSManager?.attach(this._cssStyle);
     }
   }
 
@@ -168,14 +170,14 @@ export default class AnimatedComponent<
     this._updateStyles(nextProps);
 
     if (this._CSSManager) {
-      this._CSSManager.update(this._planStyle);
+      this._CSSManager.update(this._cssStyle);
     }
 
     // TODO - maybe check if the render is necessary instead of always returning true
     return true;
   }
 
-  render() {
+  render(props?: ComponentProps<AnyComponent>) {
     const { ChildComponent } = this;
 
     const platformProps = Platform.select({
@@ -186,7 +188,9 @@ export default class AnimatedComponent<
     return (
       <ChildComponent
         {...this.props}
+        {...props}
         {...platformProps}
+        style={filterNonCSSStyleProps(props?.style ?? this.props.style)}
         // Casting is used here, because ref can be null - in that case it cannot be assigned to HTMLElement.
         // After spending some time trying to figure out what to do with this problem, we decided to leave it this way
         ref={this._setComponentRef as (ref: Component) => void}

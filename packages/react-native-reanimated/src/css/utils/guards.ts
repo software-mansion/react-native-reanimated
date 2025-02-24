@@ -2,6 +2,7 @@
 import {
   ANIMATION_SETTINGS,
   TRANSITION_PROPS,
+  VALID_PARAMETRIZED_TIMING_FUNCTIONS,
   VALID_PREDEFINED_TIMING_FUNCTIONS,
   VALID_STEPS_MODIFIERS,
 } from '../constants';
@@ -11,6 +12,7 @@ import type {
   CSSAnimationKeyframes,
   CSSAnimationSettingProp,
   CSSKeyframesRule,
+  CSSStyleProp,
   CSSTransitionProp,
   Repeat,
   TimeUnit,
@@ -25,10 +27,18 @@ export const VALID_PREDEFINED_TIMING_FUNCTIONS_SET = new Set<string>(
   VALID_PREDEFINED_TIMING_FUNCTIONS
 );
 
+export const VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET = new Set<string>(
+  VALID_PARAMETRIZED_TIMING_FUNCTIONS
+);
+
 export const isPredefinedTimingFunction = (
   value: string
 ): value is PredefinedTimingFunction =>
   VALID_PREDEFINED_TIMING_FUNCTIONS_SET.has(value);
+
+export const smellsLikeTimingFunction = (value: string) =>
+  VALID_PREDEFINED_TIMING_FUNCTIONS_SET.has(value) ||
+  VALID_PARAMETRIZED_TIMING_FUNCTIONS_SET.has(value.split('(')[0].trim());
 
 export const isAnimationSetting = (
   key: string
@@ -40,9 +50,13 @@ export const isTransitionProp = (key: string): key is CSSTransitionProp =>
 export const isStepsModifier = (value: string): value is StepsModifier =>
   VALID_STEPS_MODIFIERS_SET.has(value);
 
+export const isCSSStyleProp = (key: string): key is CSSStyleProp =>
+  isTransitionProp(key) || isAnimationSetting(key) || key === 'animationName';
+
 export const isTimeUnit = (value: unknown): value is TimeUnit =>
   // TODO: implement more strict check
-  typeof value === 'string' && /^-?(\d+)?(\.\d+)?(ms|s)$/.test(value);
+  typeof value === 'string' &&
+  (/^-?(\d+)?(\.\d+)?(ms|s)$/.test(value) || value === '0');
 
 export const isNumber = (value: unknown): value is number =>
   typeof value === 'number' && !isNaN(value);
