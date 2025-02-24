@@ -20,4 +20,7 @@ declare global {
    * Reanimated UI runtime.
    */
   var _WORKLET_RUNTIME: ArrayBuffer;
+
+  /** @deprecated Don't use. */
+  var _IS_FABRIC: boolean | undefined;
 }

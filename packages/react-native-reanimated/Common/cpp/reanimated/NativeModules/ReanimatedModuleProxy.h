@@ -13,6 +13,7 @@
 #include <reanimated/CSS/core/CSSTransition.h>
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/CSS/registry/CSSAnimationsRegistry.h>
+#include <reanimated/CSS/registry/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registry/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registry/StaticPropsRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
@@ -129,6 +130,13 @@ class ReanimatedModuleProxy
       const jsi::Value &viewTag,
       const jsi::Value &viewStyle) override;
   void removeViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag) override;
+
+  void registerCSSKeyframes(
+      jsi::Runtime &rt,
+      const jsi::Value &animationName,
+      const jsi::Value &keyframesConfig) override;
+  void unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName)
+      override;
 
   void registerCSSAnimations(
       jsi::Runtime &rt,
@@ -249,6 +257,7 @@ class ReanimatedModuleProxy
   const std::shared_ptr<AnimatedPropsRegistry> animatedPropsRegistry_;
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<UpdatesRegistryManager> updatesRegistryManager_;
+  const std::shared_ptr<CSSKeyframesRegistry> cssAnimationKeyframesRegistry_;
   const std::shared_ptr<CSSAnimationsRegistry> cssAnimationsRegistry_;
   const std::shared_ptr<CSSTransitionsRegistry> cssTransitionsRegistry_;
   const std::shared_ptr<ViewStylesRepository> viewStylesRepository_;

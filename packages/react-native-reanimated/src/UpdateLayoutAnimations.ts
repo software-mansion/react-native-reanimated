@@ -12,6 +12,8 @@ import {
 } from './core';
 import { isFabric, shouldBeUseWeb } from './PlatformChecker';
 
+const IS_FABRIC = isFabric();
+
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
   // When a stack is rerendered we reconfigure all the shared elements.
@@ -27,7 +29,7 @@ function createUpdateManager() {
         animations.push(batchItem);
       }
       if (animations.length + deferredAnimations.length === 1) {
-        isFabric() ? this.flush() : setImmediate(this.flush);
+        IS_FABRIC ? this.flush() : setImmediate(this.flush);
       }
     },
     flush(this: void) {
