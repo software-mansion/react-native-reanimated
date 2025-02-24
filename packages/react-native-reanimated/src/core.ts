@@ -3,6 +3,7 @@ import {
   controlEdgeToEdgeValues,
   isEdgeToEdge,
 } from 'react-native-is-edge-to-edge';
+
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
