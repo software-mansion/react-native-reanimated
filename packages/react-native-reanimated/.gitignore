@@ -68,3 +68,13 @@ plugin/types
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# library bundle
+*.tgz
+
+# Worklets code (duplicated)
+apple/worklets
+Common/cpp/worklets
+android/src/worklets
+android/src/main/cpp/worklets
+src/worklets

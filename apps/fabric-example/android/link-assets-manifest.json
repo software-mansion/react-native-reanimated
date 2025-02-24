@@ -40,6 +40,14 @@
     {
       "path": "assets/fonts/Poppins/Poppins-Thin.ttf",
       "sha1": "09ba4dcd5509c8085bf88c665dcc51cbdfced27b"
+    },
+    {
+      "path": "assets/fonts/UbuntuMono/UFL.txt",
+      "sha1": "72062da2045ec80b124ba50d667306ef4396763c"
+    },
+    {
+      "path": "assets/fonts/UbuntuMono/UbuntuMono-Regular.ttf",
+      "sha1": "e17c11971f57bd8dfab74b9a0881c71a78bd7940"
     }
   ]
 }

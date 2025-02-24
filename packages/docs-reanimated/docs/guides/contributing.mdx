@@ -25,7 +25,6 @@ The React Native Reanimated repository is a monorepo with the following structur
 ```
 ├── apps
 │   ├── common-app // shared source code of example apps
-│   ├── paper-example // React Native app wrapper running the Old Architecture for shared examples
 │   ├── fabric-example // React Native app wrapper running the New Architecture for shared examples
 │   ├── macos-example // React Native for MacOS app wrapper for shared example code
 │   ├── next-example // Next.js wrapper for shared example code
@@ -34,6 +33,7 @@ The React Native Reanimated repository is a monorepo with the following structur
 └── packages
     ├── docs-reanimated // documentation described further in Helping with documentation
     ├── eslint-plugin-reanimated // source of eslint plugin
+    ├── react-native-worklets // source of worklets package
     └── react-native-reanimated
         ├── android // source code of Android native implementation
         ├── apple // source code of iOS native implementation
@@ -215,7 +215,19 @@ We have shared code of example app, that is run on different platforms and archi
 - `packages/react-native-reanimated/android/src/main/java/com/swmansion/reanimated` &ndash; containing source code related to Android native part of Reanimated features
 - `packages/react-native-reanimated/apple` &ndash; containing source code related to iOS native part of Reanimated features
 
-Our workflow usually starts from editing `apps/common-app/src/examples/EmptyExample.tsx` with testing example for our new feature or a bug. This is the part that we often attach to PR so other developers can test the same use-case (remember not to commit your changes from `EmptyExample` file!). Next, we run the `apps/paper-example` (or `apps/fabric-example` depending on the architecture) app and start development.
+We use two separate example apps depending on the feature or a bug we're currently working on. If the code relates to CSS Animations then we start from editing
+
+```
+apps/common-app/src/apps/css/examples/animations/screens/testExamples/Playground.tsx
+```
+
+For other features like worklet API, Layout Animations and Shared Element Transitions we would usually start from editing
+
+```
+apps/common-app/src/apps/reanimated/examples/EmptyExample.tsx
+```
+
+This is the part that we often attach to PR so other developers can test the same use-case (remember not to commit your changes from `Playground`/`EmptyExample` file!). Next, we run the `apps/fabric-example` app and start development.
 
 :::info
 
@@ -228,10 +240,10 @@ If you want to implement a new feature or fix a bug, but still are unsure after 
 To start with, let's install all dependencies:
 
 1. `yarn && yarn build`
-2. `cd apps/paper-example`
+2. `cd apps/fabric-example`
 3. `yarn start` &ndash; make sure to start metro bundler before building the app in Android Studio.
 
-and open `react-native-reanimated/apps/paper-example/android` with Android Studio.
+and open `react-native-reanimated/apps/fabric-example/android` with Android Studio.
 
 <img src={useBaseUrl('/img/contributing/android_studio.png')} />
 
@@ -242,10 +254,10 @@ The native source code of Reanimated can be found in `react-native-reanimated` m
 To begin with, let's install all the necessary dependencies:
 
 1. `yarn && yarn build`
-2. `(cd apps/paper-example/ios && bundle install && bundle exec pod install)` &ndash; install Pods for iOS
-3. `cd apps/paper-example && yarn start` &ndash; make sure to start metro bundler before building the app in Xcode.
+2. `(cd apps/fabric-example/ios && bundle install && bundle exec pod install)` &ndash; install Pods for iOS
+3. `cd apps/fabric-example && yarn start` &ndash; make sure to start metro bundler before building the app in Xcode.
 
-and open `react-native-reanimated/apps/paper-example/ios/ReanimatedExample.xcworkspace` with Xcode.
+and open `react-native-reanimated/apps/fabric-example/ios/ReanimatedExample.xcworkspace` with Xcode.
 
 <img src={useBaseUrl('/img/contributing/xcode.png')} />
 

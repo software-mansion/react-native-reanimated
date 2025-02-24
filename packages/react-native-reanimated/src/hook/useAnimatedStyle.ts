@@ -2,16 +2,26 @@
 import type { MutableRefObject } from 'react';
 import { useEffect, useRef } from 'react';
 
-import { makeShareable, startMapper, stopMapper } from '../core';
-import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
 import { initialUpdaterRun } from '../animation';
-import { useSharedValue } from './useSharedValue';
-import {
-  buildWorkletsHash,
-  isAnimated,
-  shallowEqual,
-  validateAnimatedStyles,
-} from './utils';
+import type {
+  AnimatedPropsAdapterFunction,
+  AnimatedPropsAdapterWorklet,
+  AnimatedStyle,
+  AnimationObject,
+  NestedObjectValues,
+  SharedValue,
+  StyleProps,
+  Timestamp,
+} from '../commonTypes';
+import { makeShareable, startMapper, stopMapper } from '../core';
+import { ReanimatedError } from '../errors';
+import { isJest, shouldBeUseWeb } from '../PlatformChecker';
+import { processBoxShadow } from '../processBoxShadow';
+import updateProps, { updatePropsJestWrapper } from '../UpdateProps';
+import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
+import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
+import type { WorkletFunction } from '../WorkletsResolver';
+import { isWorkletFunction } from '../WorkletsResolver';
 import type {
   AnimatedStyleHandle,
   DefaultStyle,
@@ -19,22 +29,13 @@ import type {
   Descriptor,
   JestAnimatedStyleHandle,
 } from './commonTypes';
-import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
-import { makeViewDescriptorsSet } from '../ViewDescriptorsSet';
-import { isJest, shouldBeUseWeb } from '../PlatformChecker';
-import type {
-  AnimationObject,
-  Timestamp,
-  NestedObjectValues,
-  SharedValue,
-  StyleProps,
-  WorkletFunction,
-  AnimatedPropsAdapterFunction,
-  AnimatedPropsAdapterWorklet,
-  AnimatedStyle,
-} from '../commonTypes';
-import { isWorkletFunction } from '../commonTypes';
-import { ReanimatedError } from '../errors';
+import { useSharedValue } from './useSharedValue';
+import {
+  buildWorkletsHash,
+  isAnimated,
+  shallowEqual,
+  validateAnimatedStyles,
+} from './utils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
@@ -119,7 +120,8 @@ function runAnimations(
   timestamp: Timestamp,
   key: number | string,
   result: AnimatedStyle<any>,
-  animationsActive: SharedValue<boolean>
+  animationsActive: SharedValue<boolean>,
+  forceCopyAnimation?: boolean
 ): boolean {
   'worklet';
   if (!animationsActive.value) {
@@ -128,9 +130,17 @@ function runAnimations(
   if (Array.isArray(animation)) {
     result[key] = [];
     let allFinished = true;
+    forceCopyAnimation = key === 'boxShadow';
     animation.forEach((entry, index) => {
       if (
-        !runAnimations(entry, timestamp, index, result[key], animationsActive)
+        !runAnimations(
+          entry,
+          timestamp,
+          index,
+          result[key],
+          animationsActive,
+          forceCopyAnimation
+        )
       ) {
         allFinished = false;
       }
@@ -150,7 +160,16 @@ function runAnimations(
         animation.callback && animation.callback(true /* finished */);
       }
     }
-    result[key] = animation.current;
+    /*
+     * If `animation.current` is a boxShadow object, spread its properties into a new object
+     * to avoid modifying the original reference. This ensures when `newValues` has a nested color prop, it stays unparsed
+     * in rgba format, allowing the animation to run correctly.
+     */
+    if (forceCopyAnimation) {
+      result[key] = { ...animation.current };
+    } else {
+      result[key] = animation.current;
+    }
     return finished;
   } else if (typeof animation === 'object') {
     result[key] = {};
@@ -162,7 +181,8 @@ function runAnimations(
           timestamp,
           k,
           result[key],
-          animationsActive
+          animationsActive,
+          forceCopyAnimation
         )
       ) {
         allFinished = false;
@@ -191,6 +211,9 @@ function styleUpdater(
   let hasAnimations = false;
   let frameTimestamp: number | undefined;
   let hasNonAnimatedValues = false;
+  if (typeof newValues.boxShadow === 'string') {
+    processBoxShadow(newValues);
+  }
   for (const key in newValues) {
     const value = newValues[key];
     if (isAnimated(value)) {
@@ -226,7 +249,21 @@ function styleUpdater(
           animationsActive
         );
         if (finished) {
-          last[propName] = updates[propName];
+          /**
+           * If the animated prop is an array, we need to directly set each
+           * property (manually spread it). This prevents issues where the color
+           * prop might be incorrectly linked with its `toValue` and `current`
+           * states, causing abrupt transitions or 'jumps' in animation states.
+           */
+          if (Array.isArray(updates[propName])) {
+            updates[propName].forEach((obj: StyleProps) => {
+              for (const prop in obj) {
+                last[propName][prop] = obj[prop];
+              }
+            });
+          } else {
+            last[propName] = updates[propName];
+          }
           delete animations[propName];
         } else {
           allFinished = false;

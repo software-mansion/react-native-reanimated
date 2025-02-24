@@ -31,5 +31,8 @@
     "next-compose-plugins": "^2.2.1",
     "prettier": "^3.3.3",
     "start-server-and-test": "^2.0.1"
+  },
+  "installConfig": {
+    "selfReferences": false
   }
 }

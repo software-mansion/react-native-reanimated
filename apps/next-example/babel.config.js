@@ -5,7 +5,7 @@ module.exports = {
     [
       'module-resolver',
       {
-        extensions: ['.js', '.ts', '.tsx', '.jsx'],
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
         alias: {
           'react-native': '../../node_modules/react-native-web',
           // Uncomment this if you want fast-refresh to work with reanimated:
