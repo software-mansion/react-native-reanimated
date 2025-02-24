@@ -1,4 +1,9 @@
 'use strict';
+import {
+  controlEdgeToEdgeValues,
+  isEdgeToEdge,
+} from 'react-native-is-edge-to-edge';
+
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
@@ -27,6 +32,7 @@ export {
   runOnUI,
 } from './WorkletsResolver';
 
+const EDGE_TO_EDGE = isEdgeToEdge();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 /** @returns `true` in Reanimated 3, doesn't exist in Reanimated 2 or 1 */
@@ -116,12 +122,21 @@ export function subscribeForKeyboardEvents(
     global.__flushAnimationFrame(now);
     global.__frameTimestamp = undefined;
   }
+
+  if (__DEV__) {
+    controlEdgeToEdgeValues({
+      isStatusBarTranslucentAndroid: options.isStatusBarTranslucentAndroid,
+      isNavigationBarTranslucentAndroid:
+        options.isNavigationBarTranslucentAndroid,
+    });
+  }
+
   return ReanimatedModule.subscribeForKeyboardEvents(
     makeShareableCloneRecursive(
       handleAndFlushAnimationFrame as WorkletFunction
     ),
-    options.isStatusBarTranslucentAndroid ?? false,
-    options.isNavigationBarTranslucentAndroid ?? false
+    EDGE_TO_EDGE || (options.isStatusBarTranslucentAndroid ?? false),
+    EDGE_TO_EDGE || (options.isNavigationBarTranslucentAndroid ?? false)
   );
 }
 
