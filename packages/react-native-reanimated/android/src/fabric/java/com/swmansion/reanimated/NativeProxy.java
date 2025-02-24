@@ -29,11 +29,6 @@ public class NativeProxy extends NativeProxyCommon {
       ReactApplicationContext context, WorkletsModule workletsModule) {
     super(context);
     ReactFeatureFlagsWrapper.enableMountHooks();
-<<<<<<<< HEAD:packages/react-native-reanimated/android/src/reactNativeVersionPatch/NativeProxyFabric/73/com/swmansion/reanimated/NativeProxy.java
-    CallInvokerHolderImpl callInvokerHolder =
-        (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
-========
->>>>>>>> main:packages/react-native-reanimated/android/src/fabric/java/com/swmansion/reanimated/NativeProxy.java
 
     FabricUIManager fabricUIManager =
         (FabricUIManager) UIManagerHelper.getUIManager(context, UIManagerType.FABRIC);
