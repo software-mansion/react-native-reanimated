@@ -39,7 +39,7 @@ jni::local_ref<AndroidUIScheduler::jhybriddata> AndroidUIScheduler::initHybrid(
 }
 
 void AndroidUIScheduler::triggerUI() {
-  if(!uiScheduler_){
+  if (!uiScheduler_) {
     return;
   }
   uiScheduler_->triggerUI();
