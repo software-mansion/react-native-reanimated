@@ -672,7 +672,7 @@ void LayoutAnimationsProxy::startEnteringAnimation(
               finalView,
               current,
 #if REACT_NATIVE_MINOR_VERSION >= 78
-              mutation.parentTag,
+                mutation.parentTag,
 #else
               parent,
 #endif // REACT_NATIVE_MINOR_VERSION >= 78
