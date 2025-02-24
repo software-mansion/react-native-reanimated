@@ -87,6 +87,12 @@ def resolveReactNativeDirectory() {
     )
 }
 
+def getWorkletsVersion() {
+    def inputFile = file(projectDir.path + '/../package.json')
+    def json = new JsonSlurper().parseText(inputFile.text)
+    return json.version
+}
+
 def toPlatformFileString(String path) {
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
         path = path.replace(File.separatorChar, '/' as char)
@@ -105,8 +111,12 @@ file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { rea
 
 def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.startsWith("0.0.0-") ? 1000 : REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
+def WORKLETS_VERSION = getWorkletsVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = isReanimatedExampleApp()
+
+// Set version for prefab
+version WORKLETS_VERSION
 
 def workletsPrefabHeadersDir = project.file("$buildDir/prefab-headers/worklets")
 
@@ -204,7 +214,7 @@ android {
         minSdkVersion safeExtGet("minSdkVersion", 23)
         targetSdkVersion safeExtGet("targetSdkVersion", 34)
         versionCode 1
-        versionName REANIMATED_VERSION
+        versionName WORKLETS_VERSION
 
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
