@@ -9,7 +9,6 @@
       "packages/react-native-reanimated/plugin",
       "packages/react-native-worklets",
       "apps/common-app",
-      "apps/paper-example",
       "apps/fabric-example",
       "apps/macos-example",
       "apps/tvos-example",
@@ -25,7 +24,9 @@
   },
   "devDependencies": {
     "eslint": "^8.57.0",
+    "eslint-config-standard": "^17.1.0",
     "eslint-plugin-jsdoc": "^50.2.2",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "prettier": "^3.3.3",

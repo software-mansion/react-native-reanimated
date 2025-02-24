@@ -1,7 +1,11 @@
 require "json"
+require_relative './scripts/worklets_utils'
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
-folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
+$worklets_config = worklets_find_config()
+worklets_assert_minimal_react_native_version($worklets_config)
+
+ios_min_version = '13.4'
 
 Pod::Spec.new do |s|
   s.name         = "RNWorklets"
@@ -10,7 +14,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/software-mansion/react-native-reanimated"
   s.license      = package["license"]
   s.authors      = { "author" => "author@domain.com" }
-  s.platforms    = { :ios => min_ios_version_supported }
+  s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.source_files = "apple/*.{h,m,mm,cpp}"
@@ -30,35 +34,37 @@ Pod::Spec.new do |s|
     end
   end
 
-  # Use install_modules_dependencies helper to install the dependencies if React Native version >=0.71.0.
-  # See https://github.com/facebook/react-native/blob/febf6b7f33fdb4904669f99d795eba4c0f95d7bf/scripts/cocoapods/new_architecture.rb#L79.
-  if respond_to?(:install_modules_dependencies, true)
-    install_modules_dependencies(s)
-  else
-    s.dependency "React-Core"
-
-    # Don't install the dependencies when we run `pod install` in the old architecture.
-    if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
-      s.compiler_flags = folly_compiler_flags + " -DRCT_NEW_ARCH_ENABLED=1"
-      s.pod_target_xcconfig    = {
-          "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\"",
-          "OTHER_CPLUSPLUSFLAGS" => "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1",
-          "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
-      }
-      s.dependency "React-Codegen"
-      s.dependency "RCT-Folly"
-      s.dependency "RCTRequired"
-      s.dependency "RCTTypeSafety"
-      s.dependency "ReactCommon/turbomodule/core"
-    end
-  end
+  # Use install_modules_dependencies helper to install the dependencies.
+  # See https://github.com/facebook/react-native/blob/c925872e72d2422be46670777bfa2111e13c9e4c/packages/react-native/scripts/cocoapods/new_architecture.rb#L71.
+  install_modules_dependencies(s)
   
   s.pod_target_xcconfig = {
     "USE_HEADERMAP" => "YES",
     "DEFINES_MODULE" => "YES",
-    "HEADER_SEARCH_PATHS" => '"$(PODS_TARGET_SRCROOT)/ReactCommon" "$(PODS_TARGET_SRCROOT)" "$(PODS_ROOT)/RCT-Folly" "$(PODS_ROOT)/boost" "$(PODS_ROOT)/boost-for-react-native" "$(PODS_ROOT)/DoubleConversion" "$(PODS_ROOT)/Headers/Private/React-Core" "$(PODS_ROOT)/Headers/Private/Yoga"',
+    "HEADER_SEARCH_PATHS" => [
+      '"$(PODS_TARGET_SRCROOT)/ReactCommon"',
+      '"$(PODS_TARGET_SRCROOT)"',
+      '"$(PODS_ROOT)/RCT-Folly"',
+      '"$(PODS_ROOT)/boost"',
+      '"$(PODS_ROOT)/boost-for-react-native"',
+      '"$(PODS_ROOT)/DoubleConversion"',
+      '"$(PODS_ROOT)/Headers/Private/React-Core"',
+      '"$(PODS_ROOT)/Headers/Private/Yoga"',
+      "\"$(PODS_ROOT)/#{$worklets_config[:react_native_common_dir]}\"",
+    ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
+  }
+  s.xcconfig = {
+    "HEADER_SEARCH_PATHS" => [
+      '"$(PODS_ROOT)/boost"',
+      '"$(PODS_ROOT)/boost-for-react-native"',
+      '"$(PODS_ROOT)/glog"',
+      '"$(PODS_ROOT)/RCT-Folly"',
+      '"$(PODS_ROOT)/Headers/Public/React-hermes"',
+      '"$(PODS_ROOT)/Headers/Public/hermes-engine"',
+      "\"$(PODS_ROOT)/#{$worklets_config[:react_native_common_dir]}\"",
+    ].join(' '),
   }
   
 end

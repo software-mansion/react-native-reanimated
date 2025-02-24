@@ -1,6 +1,6 @@
 'use strict';
-import type { TransitionData } from '../animationParser';
 import { Easing } from '../../../Easing';
+import type { TransitionData } from '../animationParser';
 
 export function JumpingTransition(
   name: string,

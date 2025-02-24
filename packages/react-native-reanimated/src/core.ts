@@ -1,12 +1,8 @@
 'use strict';
-
 import {
   controlEdgeToEdgeValues,
   isEdgeToEdge,
 } from 'react-native-is-edge-to-edge';
-
-import { ReanimatedModule } from './ReanimatedModule';
-import { isWeb, shouldBeUseWeb, isFabric } from './PlatformChecker';
 import type {
   AnimatedKeyboardOptions,
   LayoutAnimationBatchItem,
@@ -15,19 +11,25 @@ import type {
   SharedValue,
   Value3D,
   ValueRotation,
-  WorkletFunction,
 } from './commonTypes';
-import { makeShareableCloneRecursive } from './shareables';
-import { initializeUIRuntime } from './initializers';
-import { SensorContainer } from './SensorContainer';
 import { ReanimatedError } from './errors';
+import { isFabric, shouldBeUseWeb } from './PlatformChecker';
+import { ReanimatedModule } from './ReanimatedModule';
+import { SensorContainer } from './SensorContainer';
+import type { WorkletFunction } from './WorkletsResolver';
+import { makeShareableCloneRecursive } from './WorkletsResolver';
 
 export { startMapper, stopMapper } from './mappers';
-export { runOnJS, runOnUI, executeOnUIRuntimeSync } from './threads';
-export { createWorkletRuntime, runOnRuntime } from './runtimes';
-export type { WorkletRuntime } from './runtimes';
-export { makeShareable, makeShareableCloneRecursive } from './shareables';
 export { makeMutable } from './mutables';
+export {
+  createWorkletRuntime,
+  executeOnUIRuntimeSync,
+  makeShareable,
+  makeShareableCloneRecursive,
+  runOnJS,
+  runOnRuntime,
+  runOnUI,
+} from './WorkletsResolver';
 
 const EDGE_TO_EDGE = isEdgeToEdge();
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -168,10 +170,6 @@ export function initializeSensor(
 export function unregisterSensor(sensorId: number): void {
   const sensorContainer = getSensorContainer();
   return sensorContainer.unregisterSensor(sensorId);
-}
-
-if (!isWeb()) {
-  initializeUIRuntime(ReanimatedModule);
 }
 
 type FeaturesConfig = {

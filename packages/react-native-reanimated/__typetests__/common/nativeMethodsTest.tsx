@@ -3,13 +3,14 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useRef } from 'react';
+
 import type Animated from '../..';
 import {
-  useAnimatedRef,
   dispatchCommand,
   measure,
   scrollTo,
   setGestureState,
+  useAnimatedRef,
 } from '../..';
 
 function NativeMethodsTest() {

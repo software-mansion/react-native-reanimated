@@ -1,13 +1,8 @@
 <img src="https://user-images.githubusercontent.com/16062886/117443145-ff868480-af37-11eb-8680-648bccf0d0ce.png" alt="React Native Reanimated by Software Mansion" width="100%">
 
-### React Native's Animated library reimplemented
+### Create smooth animations with an excellent developer experience.
 
-> Reanimated 3 is here! Check out our [documentation page](https://docs.swmansion.com/react-native-reanimated/) for more information
-
-React Native Reanimated provides a more comprehensive,
-low-level abstraction for the Animated library API on which to build,
-allowing for much greater flexibility, especially when it comes to 
-gesture-based interactions.
+> Reanimated 4 is here! Check out our [documentation page](https://docs.swmansion.com/react-native-reanimated/) for more information
 
 ### Nightly CI state
 
@@ -25,9 +20,11 @@ gesture-based interactions.
 
 Check out the [installation](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#installation) section of our docs for the detailed installation instructions.
 
-## Fabric
+## Compatibility
 
-'react-native-reanimated' works with Fabric (the New Architecture). Instructions on how to run Fabric Example within this repo can be found in the [FabricExample README](apps/fabric-example/README.md).
+React Native Reanimated 4.x supports only the [New React Native architecture](https://reactnative.dev/architecture/landing-page) and three latest React Native versions.
+
+If your app still runs on the old architecture, please consider adopting the New Architecture or stay with latest 3.x release.
 
 ## Documentation
 
@@ -36,7 +33,7 @@ Check out our dedicated documentation page for info about this library, API refe
 ## Examples
 
 The source code for the example (showcase) app is under the [`apps/common-app`](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/common-app/) directory.
-If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Check [Example README](apps/paper-example/README.md) for installation instructions.
+If you want to play with the API but don't feel like trying it on a real app, you can run the example project. Check [Example README](apps/fabric-example/README.md) for installation instructions.
 
 ## License
 

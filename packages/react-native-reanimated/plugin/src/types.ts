@@ -1,9 +1,9 @@
 import type { BabelFile, NodePath } from '@babel/core';
 import type {
   ArrowFunctionExpression,
-  Node as BabelNode,
   FunctionDeclaration,
   FunctionExpression,
+  Node as BabelNode,
   ObjectExpression,
   ObjectMethod,
 } from '@babel/types';
@@ -23,6 +23,8 @@ export interface ReanimatedPluginOptions {
   globals?: string[];
   substituteWebPlatformChecks?: boolean;
   disableSourceMaps?: boolean;
+  extraPlugins?: string[];
+  extraPresets?: string[];
 }
 
 export interface ReanimatedPluginPass {

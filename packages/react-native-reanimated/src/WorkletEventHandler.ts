@@ -1,10 +1,11 @@
 'use strict';
 import type { NativeSyntheticEvent } from 'react-native';
+
 import { registerEventHandler, unregisterEventHandler } from './core';
 import type {
   EventPayload,
-  ReanimatedEvent,
   IWorkletEventHandler,
+  ReanimatedEvent,
 } from './hook/commonTypes';
 import { shouldBeUseWeb } from './PlatformChecker';
 

@@ -5,6 +5,7 @@
 import React from 'react';
 import type { FlatListProps } from 'react-native';
 import { FlatList } from 'react-native';
+
 import Animated, { useAnimatedProps } from '../..';
 
 function UseAnimatedPropsTest() {

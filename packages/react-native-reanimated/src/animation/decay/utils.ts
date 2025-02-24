@@ -1,11 +1,11 @@
 'use strict';
 import type {
   AnimatableValue,
-  AnimationObject,
   Animation,
+  AnimationObject,
   ReduceMotion,
-  Timestamp,
   RequiredKeys,
+  Timestamp,
 } from '../../commonTypes';
 import { isWeb } from '../../PlatformChecker';
 
@@ -18,7 +18,7 @@ export interface DecayAnimation extends Animation<DecayAnimation> {
   startTimestamp: Timestamp;
   initialVelocity: number;
   velocity: number;
-  current: AnimatableValue;
+  current: AnimatableValue | undefined;
 }
 
 export interface InnerDecayAnimation

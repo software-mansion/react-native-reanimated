@@ -1,5 +1,5 @@
-import { transformSync } from '@babel/core';
 import type { PluginItem, TransformOptions } from '@babel/core';
+import { transformSync } from '@babel/core';
 
 export function workletTransformSync(
   code: string,

@@ -2,10 +2,10 @@ import type { NodePath } from '@babel/core';
 import generate from '@babel/generator';
 import traverse from '@babel/traverse';
 import type {
-  File as BabelFile,
   CallExpression,
   ClassBody,
   ClassDeclaration,
+  File as BabelFile,
   FunctionDeclaration,
   Identifier,
   Program,
@@ -32,10 +32,11 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
+
+import { workletTransformSync } from './transform';
 import type { ReanimatedPluginPass } from './types';
 import { workletClassFactorySuffix } from './types';
 import { replaceWithFactoryCall } from './utils';
-import { workletTransformSync } from './transform';
 
 const classWorkletMarker = '__workletClass';
 
@@ -96,7 +97,9 @@ function getPolyfilledAst(
       '@babel/plugin-transform-class-properties',
       '@babel/plugin-transform-classes',
       '@babel/plugin-transform-unicode-regex',
+      ...(state.opts.extraPlugins ?? []),
     ],
+    extraPresets: state.opts.extraPresets,
     filename: state.file.opts.filename,
     ast: true,
     babelrc: false,
