@@ -66,9 +66,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 - (std::vector<std::function<void(double)>>)pullCallbacks
 {
   std::lock_guard<std::mutex> lock(callbacksMutex_);
-  auto frameCallbacks = std::move(frameCallbacks_);
-  frameCallbacks_.clear();
-  return frameCallbacks;
+  return std::move(frameCallbacks_);
 }
 
 @end

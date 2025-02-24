@@ -65,9 +65,7 @@ void AnimationFrameBatchinator::flush() {
 std::vector<std::shared_ptr<const facebook::jsi::Value>>
 AnimationFrameBatchinator::pullCallbacks() {
   std::lock_guard<std::mutex> lock(callbacksMutex_);
-  auto callbacks = std::move(callbacks_);
-  callbacks_.clear();
-  return callbacks;
+  return std::move(callbacks_);
 }
 
 AnimationFrameBatchinator::AnimationFrameBatchinator(
