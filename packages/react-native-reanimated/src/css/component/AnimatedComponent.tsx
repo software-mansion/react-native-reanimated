@@ -21,6 +21,7 @@ import { filterNonCSSStyleProps } from './utils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_WEB = isWeb();
+const IS_FABRIC = isFabric();
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
@@ -98,7 +99,7 @@ export default class AnimatedComponent<
       viewTag = viewInfo.viewTag;
       viewName = viewInfo.viewName;
       viewConfig = viewInfo.viewConfig;
-      shadowNodeWrapper = isFabric()
+      shadowNodeWrapper = IS_FABRIC
         ? getShadowNodeWrapperFromRef(this, hostInstance)
         : null;
     }
@@ -155,7 +156,7 @@ export default class AnimatedComponent<
   componentDidMount() {
     this._updateStyles(this.props);
 
-    if (isFabric() || IS_WEB) {
+    if (IS_FABRIC || IS_WEB) {
       this._CSSManager = new CSSManager(this._getViewInfo());
       this._CSSManager?.attach(this._cssStyle);
     }

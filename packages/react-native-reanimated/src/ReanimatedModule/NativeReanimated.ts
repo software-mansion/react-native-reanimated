@@ -32,6 +32,7 @@ import type {
 } from './reanimatedModuleProxy';
 
 const IS_WEB = shouldBeUseWeb();
+const IS_FABRIC = isFabric();
 
 export function createNativeReanimatedModule(): IReanimatedModule {
   return new NativeReanimatedModule();
@@ -73,7 +74,7 @@ class NativeReanimatedModule implements IReanimatedModule {
 See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (!isFabric() && !IS_WEB) {
+    if (!IS_FABRIC && !IS_WEB) {
       throw new ReanimatedError(
         'Reanimated 4 supports only the React Native New Architecture and web.'
       );
@@ -130,7 +131,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     callback?: (result: T) => void
   ) {
     let shadowNodeWrapper;
-    if (isFabric()) {
+    if (IS_FABRIC) {
       shadowNodeWrapper = getShadowNodeWrapperFromRef(
         component as React.Component
       );
