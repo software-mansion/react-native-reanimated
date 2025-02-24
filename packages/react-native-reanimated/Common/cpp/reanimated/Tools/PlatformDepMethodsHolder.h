@@ -3,6 +3,7 @@
 #include <jsi/jsi.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
+#include <folly/dynamic.h>
 #include <react/renderer/core/ReactPrimitives.h>
 #endif
 
@@ -21,7 +22,7 @@ namespace reanimated {
 #ifdef RCT_NEW_ARCH_ENABLED
 
 using SynchronouslyUpdateUIPropsFunction =
-    std::function<void(jsi::Runtime &rt, Tag tag, const jsi::Object &props)>;
+    std::function<void(Tag tag, const folly::dynamic &props)>;
 using UpdatePropsFunction =
     std::function<void(jsi::Runtime &rt, const jsi::Value &operations)>;
 using RemoveFromPropsRegistryFunction =
@@ -56,7 +57,7 @@ using ObtainPropFunction =
 #endif // RCT_NEW_ARCH_ENABLED
 
 using RequestRenderFunction =
-    std::function<void(std::function<void(const double)>, jsi::Runtime &)>;
+    std::function<void(std::function<void(const double)>)>;
 using GetAnimationTimestampFunction = std::function<double(void)>;
 
 using ProgressLayoutAnimationFunction =

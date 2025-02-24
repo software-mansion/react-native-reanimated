@@ -6,38 +6,28 @@
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 
 import type {
-  StyleProps,
-  MeasuredDimensions,
   MapperRegistry,
-  ShareableRef,
+  MeasuredDimensions,
   ShadowNodeWrapper,
-  FlatShareableRef,
+  StyleProps,
 } from './commonTypes';
-import type { AnimatedStyle } from './helperTypes';
 import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
-import type { NativeReanimatedModule } from './NativeReanimated/NativeReanimated';
-import type { SensorContainer } from './SensorContainer';
+import type { AnimatedStyle } from './helperTypes';
 import type { LayoutAnimationsManager } from './layoutReanimation/animationsManager';
 import type { ProgressTransitionRegister } from './layoutReanimation/sharedTransitions';
-import type { UpdatePropsManager } from './UpdateProps';
-import type { callGuardDEV } from './initializers';
-import type { WorkletRuntime } from './runtimes';
+import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
-import type { LoggerConfigInternal } from './logger';
+import type { SensorContainer } from './SensorContainer';
+import type { UpdatePropsManager } from './UpdateProps';
 
 declare global {
+  var __DISALLOW_WORKLETS_IMPORT: boolean | undefined;
   var _REANIMATED_IS_REDUCED_MOTION: boolean | undefined;
   var _IS_FABRIC: boolean | undefined;
   var _REANIMATED_VERSION_CPP: string | undefined;
   var _REANIMATED_VERSION_JS: string | undefined;
-  var __reanimatedModuleProxy: NativeReanimatedModule | undefined;
-  var __callGuardDEV: typeof callGuardDEV | undefined;
-  var evalWithSourceMap:
-    | ((js: string, sourceURL: string, sourceMap: string) => any)
-    | undefined;
-  var evalWithSourceUrl: ((js: string, sourceURL: string) => any) | undefined;
+  var __reanimatedModuleProxy: ReanimatedModuleProxy | undefined;
   var _log: (value: unknown) => void;
-  var _toString: (value: unknown) => string;
   var _notifyAboutProgress: (
     tag: number,
     value: Record<string, unknown>,
@@ -45,16 +35,6 @@ declare global {
   ) => void;
   var _notifyAboutEnd: (tag: number, removeView: boolean) => void;
   var _setGestureState: (handlerTag: number, newState: number) => void;
-  var _makeShareableClone: <T>(
-    value: T,
-    nativeStateSource?: object
-  ) => FlatShareableRef<T>;
-  var _scheduleHostFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
-  var _scheduleRemoteFunctionOnJS: (fun: (...args: A) => R, args?: A) => void;
-  var _scheduleOnRuntime: (
-    runtime: WorkletRuntime,
-    worklet: ShareableRef<() => void>
-  ) => void;
   var _updatePropsPaper:
     | ((
         operations: {
@@ -94,20 +74,10 @@ declare global {
         args: Array<unknown>
       ) => void)
     | undefined;
-  var _getAnimationTimestamp: () => number;
-  var __ErrorUtils: {
-    reportFatalError: (error: Error) => void;
-  };
   var _frameCallbackRegistry: FrameCallbackRegistryUI;
   var console: Console;
-  var __frameTimestamp: number | undefined;
-  var __flushAnimationFrame: (timestamp: number) => void;
-  var __workletsCache: Map<string, any>;
-  var __handleCache: WeakMap<object, any>;
-  var __callMicrotasks: () => void;
   var __mapperRegistry: MapperRegistry;
   var __sensorContainer: SensorContainer;
-  var _maybeFlushUIUpdatesQueue: () => void;
   var LayoutAnimationsManager: LayoutAnimationsManager;
   var UpdatePropsManager: UpdatePropsManager;
   var ProgressTransitionRegister: ProgressTransitionRegister;
@@ -118,5 +88,4 @@ declare global {
     shadowNodeWrapper: ShadowNodeWrapper,
     propName: string
   ) => string;
-  var __reanimatedLoggerConfig: LoggerConfigInternal;
 }

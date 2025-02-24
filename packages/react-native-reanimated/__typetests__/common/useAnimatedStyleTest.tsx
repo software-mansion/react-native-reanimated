@@ -3,7 +3,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
-import Animated, { useSharedValue, useAnimatedStyle } from '../..';
+
+import Animated, { useAnimatedStyle, useSharedValue } from '../..';
 
 function UseAnimatedStyleTest() {
   function UseAnimatedStyleTest1() {
@@ -17,7 +18,7 @@ function UseAnimatedStyleTest() {
   }
 
   function UseAnimatedStyleTest2() {
-    const sv = useSharedValue(true);
+    const sv = useSharedValue('0');
     // @ts-expect-error properly detects illegal type
     const animatedStyle = useAnimatedStyle(() => {
       return {
@@ -36,7 +37,7 @@ function UseAnimatedStyleTest() {
   }
 
   function UseAnimatedStyleTest4() {
-    const sv = useSharedValue({ width: true });
+    const sv = useSharedValue({ width: '0' });
     // @ts-expect-error properly detects illegal type
     const animatedStyle = useAnimatedStyle(() => {
       return sv.value;

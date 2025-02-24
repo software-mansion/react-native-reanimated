@@ -1,22 +1,22 @@
 'use strict';
 import { withTiming } from '../../animation';
+import { getReduceMotionFromConfig } from '../../animation/util';
 import type {
+  CustomProgressAnimation,
+  LayoutAnimationsOptions,
+  ProgressAnimation,
   SharedTransitionAnimationsFunction,
   SharedTransitionAnimationsValues,
-  CustomProgressAnimation,
-  ProgressAnimation,
-  LayoutAnimationsOptions,
-} from '../animationBuilder/commonTypes';
+  StyleProps,
+} from '../../commonTypes';
 import {
   LayoutAnimationType,
+  ReduceMotion,
   SharedTransitionType,
-} from '../animationBuilder/commonTypes';
-import type { StyleProps } from '../../commonTypes';
-import { ReduceMotion } from '../../commonTypes';
-import { ProgressTransitionManager } from './ProgressTransitionManager';
-import { updateLayoutAnimations } from '../../UpdateLayoutAnimations';
-import { getReduceMotionFromConfig } from '../../animation/util';
+} from '../../commonTypes';
 import { ReanimatedError } from '../../errors';
+import { updateLayoutAnimations } from '../../UpdateLayoutAnimations';
+import { ProgressTransitionManager } from './ProgressTransitionManager';
 
 const SUPPORTED_PROPS = [
   'width',

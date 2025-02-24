@@ -1,17 +1,17 @@
 'use strict';
-import { NativeEventEmitter, Platform } from 'react-native';
-import { findNodeHandle } from '../platformFunctions/findNodeHandle';
 import type { NativeModule } from 'react-native';
-import { shouldBeUseWeb } from '../PlatformChecker';
+import { NativeEventEmitter, Platform } from 'react-native';
+
 import type { StyleProps } from '../commonTypes';
-import { runOnJS, runOnUIImmediately } from '../threads';
+import { shouldBeUseWeb } from '../PlatformChecker';
+import NativeReanimatedModule from '../specs/NativeReanimatedModule';
+import { runOnJS, runOnUIImmediately } from '../WorkletsResolver';
 import type {
   AnimatedComponentProps,
   IAnimatedComponentInternal,
   IJSPropsUpdater,
   InitialComponentProps,
 } from './commonTypes';
-import NativeReanimatedModule from '../specs/NativeReanimatedModule';
 
 interface ListenerData {
   viewTag: number;
@@ -22,7 +22,7 @@ const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 
 class JSPropsUpdaterPaper implements IJSPropsUpdater {
   private static _tagToComponentMapping = new Map();
-  private _reanimatedEventEmitter: NativeEventEmitter;
+  _reanimatedEventEmitter: NativeEventEmitter;
 
   constructor() {
     this._reanimatedEventEmitter = new NativeEventEmitter(
@@ -39,7 +39,7 @@ class JSPropsUpdaterPaper implements IJSPropsUpdater {
     > &
       IAnimatedComponentInternal
   ) {
-    const viewTag = findNodeHandle(animatedComponent);
+    const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterPaper._tagToComponentMapping.set(viewTag, animatedComponent);
     if (JSPropsUpdaterPaper._tagToComponentMapping.size === 1) {
       const listener = (data: ListenerData) => {
@@ -61,7 +61,7 @@ class JSPropsUpdaterPaper implements IJSPropsUpdater {
     > &
       IAnimatedComponentInternal
   ) {
-    const viewTag = findNodeHandle(animatedComponent);
+    const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterPaper._tagToComponentMapping.delete(viewTag);
     if (JSPropsUpdaterPaper._tagToComponentMapping.size === 0) {
       this._reanimatedEventEmitter.removeAllListeners(
@@ -101,7 +101,7 @@ class JSPropsUpdaterFabric implements IJSPropsUpdater {
     if (!JSPropsUpdaterFabric.isInitialized) {
       return;
     }
-    const viewTag = findNodeHandle(animatedComponent);
+    const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterFabric._tagToComponentMapping.set(viewTag, animatedComponent);
   }
 
@@ -114,7 +114,7 @@ class JSPropsUpdaterFabric implements IJSPropsUpdater {
     if (!JSPropsUpdaterFabric.isInitialized) {
       return;
     }
-    const viewTag = findNodeHandle(animatedComponent);
+    const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterFabric._tagToComponentMapping.delete(viewTag);
   }
 }

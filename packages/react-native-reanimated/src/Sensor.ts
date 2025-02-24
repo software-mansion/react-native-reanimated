@@ -1,14 +1,14 @@
 'use strict';
-import NativeReanimatedModule from './NativeReanimated';
 import type {
   SensorConfig,
   SharedValue,
   Value3D,
   ValueRotation,
-  ShareableRef,
 } from './commonTypes';
 import { SensorType } from './commonTypes';
 import { makeMutable } from './mutables';
+import { ReanimatedModule } from './ReanimatedModule';
+import type { ShareableRef, WorkletFunction } from './WorkletsResolver';
 
 function initSensorData(
   sensorType: SensorType
@@ -52,11 +52,11 @@ export default class Sensor {
   ) {
     const config = this.config;
     const sensorType = this.sensorType;
-    this.sensorId = NativeReanimatedModule.registerSensor(
+    this.sensorId = ReanimatedModule.registerSensor(
       sensorType,
       config.interval === 'auto' ? -1 : config.interval,
       config.iosReferenceFrame,
-      eventHandler
+      eventHandler as ShareableRef<WorkletFunction>
     );
     return this.sensorId !== -1;
   }
@@ -75,7 +75,7 @@ export default class Sensor {
 
   unregister() {
     if (this.sensorId !== null && this.sensorId !== -1) {
-      NativeReanimatedModule.unregisterSensor(this.sensorId);
+      ReanimatedModule.unregisterSensor(this.sensorId);
     }
     this.sensorId = null;
   }

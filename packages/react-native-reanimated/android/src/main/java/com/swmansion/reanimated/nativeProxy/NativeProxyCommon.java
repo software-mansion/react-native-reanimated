@@ -13,7 +13,6 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableNativeArray;
 import com.facebook.soloader.SoLoader;
 import com.swmansion.common.GestureHandlerStateManager;
-import com.swmansion.reanimated.AndroidUIScheduler;
 import com.swmansion.reanimated.BuildConfig;
 import com.swmansion.reanimated.DevMenuUtils;
 import com.swmansion.reanimated.NativeProxy;
@@ -26,6 +25,7 @@ import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.layoutReanimation.LayoutAnimations;
 import com.swmansion.reanimated.sensor.ReanimatedSensorContainer;
 import com.swmansion.reanimated.sensor.ReanimatedSensorType;
+import com.swmansion.worklets.WorkletsModule;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -33,14 +33,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * @noinspection JavaJniMissingFunction
+ */
 public abstract class NativeProxyCommon {
   static {
     SoLoader.loadLibrary("reanimated");
   }
 
+  protected final WorkletsModule mWorkletsModule;
   protected NodesManager mNodesManager;
   protected final WeakReference<ReactApplicationContext> mContext;
-  protected final AndroidUIScheduler mAndroidUIScheduler;
   private final ReanimatedSensorContainer reanimatedSensorContainer;
   private final GestureHandlerStateManager gestureHandlerStateManager;
   private final KeyboardAnimationManager keyboardAnimationManager;
@@ -50,7 +53,8 @@ public abstract class NativeProxyCommon {
   protected String cppVersion = null;
 
   protected NativeProxyCommon(ReactApplicationContext context) {
-    mAndroidUIScheduler = new AndroidUIScheduler(context);
+    mWorkletsModule =
+        Objects.requireNonNull(context.getNativeModule(ReanimatedModule.class)).getWorkletsModule();
     mContext = new WeakReference<>(context);
     reanimatedSensorContainer = new ReanimatedSensorContainer(mContext);
     keyboardAnimationManager = new KeyboardAnimationManager(mContext);
@@ -70,10 +74,6 @@ public abstract class NativeProxyCommon {
   }
 
   protected native void installJSIBindings();
-
-  public AndroidUIScheduler getAndroidUIScheduler() {
-    return mAndroidUIScheduler;
-  }
 
   private void toggleSlowAnimations() {
     slowAnimationsEnabled = !slowAnimationsEnabled;
@@ -219,10 +219,6 @@ public abstract class NativeProxyCommon {
   }
 
   protected abstract HybridData getHybridData();
-
-  public void invalidate() {
-    mAndroidUIScheduler.deactivate();
-  }
 
   public void prepareLayoutAnimations(LayoutAnimations layoutAnimations) {
     if (Utils.isChromeDebugger) {

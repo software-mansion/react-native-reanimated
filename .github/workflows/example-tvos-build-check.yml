@@ -9,8 +9,7 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
-      - packages/react-native-reanimated/TVOSExample/package.json
-      - packages/react-native-reanimated/TVOSExample/ios/**
+      - packages/react-native-worklets/**
   merge_group:
     branches:
       - main
@@ -23,10 +22,19 @@ on:
       - packages/react-native-reanimated/scripts/reanimated_utils.rb
       - packages/react-native-reanimated/apple/**
       - packages/react-native-reanimated/Common/**
-      - packages/react-native-reanimated/TVOSExample/package.json
-      - packages/react-native-reanimated/TVOSExample/ios/**
+      - packages/react-native-worklets/**
   workflow_call:
+    inputs:
+      use-external-worklets:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
+    inputs:
+      use-external-worklets:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -34,30 +42,40 @@ jobs:
     runs-on: macos-14
     env:
       WORKING_DIRECTORY: apps/tvos-example
+      COMMON_APP_DIR: apps/common-app
+      REANIMATED_DIR: packages/react-native-reanimated
     concurrency:
-      group: tvos-${{ github.ref }}
+      group: tvos-${{ github.ref }}-${{ inputs.use-external-worklets }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3' # Not needed with a `.ruby-version` or `.tool-versions`
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
-      # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
-      - name: Install Reanimated node_modules
-        working-directory: packages/react-native-reanimated
-        run: yarn install --immutable
+      - name: Build Reanimated package
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: yarn build
 
-      - name: Install app node_modules
+      - name: Use external worklets
+        if: ${{ inputs.use-external-worklets }}
+        working-directory: ${{ env.COMMON_APP_DIR }}
+        run: yarn add react-native-worklets@workspace:"*"
+      - name: Use external worklets
+        if: ${{ inputs.use-external-worklets }}
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn install --immutable
+        run: yarn add react-native-worklets@workspace:"*"
 
       - name: Install Pods
         working-directory: ${{ env.WORKING_DIRECTORY }}/ios
         run: |
           bundle install
-          bundle exec pod install
+          bundle exec pod update
 
       - name: Build app
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn react-native-tvos run-ios --no-packager --scheme TVOSExample-tvOS --simulator "Apple TV"
+        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
+        run: xcodebuild -workspace TVOSExample.xcworkspace -configuration Debug -scheme TVOSExample -destination "generic/platform=tvOS Simulator" -quiet

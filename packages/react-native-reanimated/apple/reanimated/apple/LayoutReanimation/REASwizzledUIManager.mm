@@ -159,11 +159,7 @@ std::atomic<bool> hasPendingBlocks;
   }
 
   RCTUIManager *originalSelf = (RCTUIManager *)self;
-#if REACT_NATIVE_MINOR_VERSION >= 73
   NSPointerArray *affectedShadowViews = [NSPointerArray weakObjectsPointerArray];
-#else
-  NSHashTable<RCTShadowView *> *affectedShadowViews = [NSHashTable weakObjectsHashTable];
-#endif
   [rootShadowView layoutWithAffectedShadowViews:affectedShadowViews];
 
   if (!affectedShadowViews.count) {
@@ -189,12 +185,11 @@ std::atomic<bool> hasPendingBlocks;
     for (RCTShadowView *shadowView in affectedShadowViews) {
       reactTags[index] = shadowView.reactTag;
       RCTLayoutMetrics layoutMetrics = shadowView.layoutMetrics;
-      frameDataArray[index++] = (RCTFrameData){
-          layoutMetrics.frame,
-          layoutMetrics.layoutDirection,
-          shadowView.isNewView,
-          shadowView.superview.isNewView,
-          layoutMetrics.displayType};
+      frameDataArray[index++] = (RCTFrameData){layoutMetrics.frame,
+                                               layoutMetrics.layoutDirection,
+                                               shadowView.isNewView,
+                                               shadowView.superview.isNewView,
+                                               layoutMetrics.displayType};
     }
   }
 

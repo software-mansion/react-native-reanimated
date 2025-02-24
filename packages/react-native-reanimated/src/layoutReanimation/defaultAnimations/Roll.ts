@@ -1,11 +1,11 @@
 'use strict';
+import type {
+  EntryExitAnimationFunction,
+  EntryExitAnimationsValues,
+  IEntryExitAnimationBuilder,
+} from '../../commonTypes';
 import type { BaseAnimationBuilder } from '../animationBuilder';
 import { ComplexAnimationBuilder } from '../animationBuilder';
-import type {
-  EntryExitAnimationsValues,
-  EntryExitAnimationFunction,
-  IEntryExitAnimationBuilder,
-} from '../animationBuilder/commonTypes';
 
 /**
  * Roll from left animation. You can modify the behavior by chaining methods

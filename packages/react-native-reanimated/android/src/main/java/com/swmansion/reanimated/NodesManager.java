@@ -30,10 +30,13 @@ import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.uimanager.UIManagerReanimatedHelper;
 import com.facebook.react.uimanager.common.UIManagerType;
 import com.facebook.react.uimanager.events.Event;
+import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.uimanager.events.EventDispatcherListener;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.facebook.systrace.Systrace;
 import com.swmansion.reanimated.layoutReanimation.AnimationsManager;
 import com.swmansion.reanimated.nativeProxy.NoopEventHandler;
+import com.swmansion.worklets.WorkletsModule;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -93,6 +96,7 @@ public class NodesManager implements EventDispatcherListener {
     void onAnimationFrame(double timestampMs);
   }
 
+  private final WorkletsModule mWorkletsModule;
   private final AnimationsManager mAnimationManager;
   private final UIImplementation mUIImplementation;
   private final DeviceEventManagerModule.RCTDeviceEventEmitter mEventEmitter;
@@ -109,6 +113,7 @@ public class NodesManager implements EventDispatcherListener {
   public Set<String> uiProps = Collections.emptySet();
   public Set<String> nativeProps = Collections.emptySet();
   private ReaCompatibility compatibility;
+  private @Nullable Runnable mUnsubscribe = null;
 
   public NativeProxy getNativeProxy() {
     return mNativeProxy;
@@ -129,12 +134,20 @@ public class NodesManager implements EventDispatcherListener {
       mNativeProxy.invalidate();
       mNativeProxy = null;
     }
+
+    if (compatibility != null) {
+      compatibility.unregisterFabricEventListener(this);
+    }
+
+    if (mUnsubscribe != null) {
+      mUnsubscribe.run();
+      mUnsubscribe = null;
+    }
   }
 
-  public void initWithContext(
-      ReactApplicationContext reactApplicationContext, String valueUnpackerCode) {
-    mNativeProxy = new NativeProxy(reactApplicationContext, valueUnpackerCode);
-    mAnimationManager.setAndroidUIScheduler(getNativeProxy().getAndroidUIScheduler());
+  public void initWithContext(ReactApplicationContext reactApplicationContext) {
+    mNativeProxy = new NativeProxy(reactApplicationContext, mWorkletsModule);
+    mAnimationManager.setAndroidUIScheduler(mWorkletsModule.getAndroidUIScheduler());
     compatibility = new ReaCompatibility(reactApplicationContext);
     compatibility.registerFabricEventListener(this);
   }
@@ -152,8 +165,9 @@ public class NodesManager implements EventDispatcherListener {
   private Queue<NativeUpdateOperation> mOperationsInBatch = new LinkedList<>();
   private boolean mTryRunBatchUpdatesSynchronously = false;
 
-  public NodesManager(ReactContext context) {
+  public NodesManager(ReactContext context, WorkletsModule workletsModule) {
     mContext = context;
+    mWorkletsModule = workletsModule;
     int uiManagerType =
         BuildConfig.IS_NEW_ARCHITECTURE_ENABLED ? UIManagerType.FABRIC : UIManagerType.DEFAULT;
     mUIManager = UIManagerHelper.getUIManager(context, uiManagerType);
@@ -174,16 +188,20 @@ public class NodesManager implements EventDispatcherListener {
           }
         };
 
-    // We register as event listener at the end, because we pass `this` and we haven't finished
-    // constructing an object yet.
-    // This lead to a crash described in
-    // https://github.com/software-mansion/react-native-reanimated/issues/604 which was caused by
-    // Nodes Manager being constructed on UI thread and registering for events.
-    // Events are handled in the native modules thread in the `onEventDispatch()` method.
-    // This method indirectly uses `mChoreographerCallback` which was created after event
-    // registration, creating race condition
-    Objects.requireNonNull(UIManagerHelper.getEventDispatcher(context, uiManagerType))
-        .addListener(this);
+    if (!BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
+      // We register as event listener at the end, because we pass `this` and we haven't finished
+      // constructing an object yet.
+      // This lead to a crash described in
+      // https://github.com/software-mansion/react-native-reanimated/issues/604 which was caused by
+      // Nodes Manager being constructed on UI thread and registering for events.
+      // Events are handled in the native modules thread in the `onEventDispatch()` method.
+      // This method indirectly uses `mChoreographerCallback` which was created after event
+      // registration, creating race condition
+      EventDispatcher eventDispatcher =
+          Objects.requireNonNull(UIManagerHelper.getEventDispatcher(context, uiManagerType));
+      eventDispatcher.addListener(this);
+      mUnsubscribe = () -> eventDispatcher.removeListener(this);
+    }
 
     mAnimationManager = new AnimationsManager(mContext, mUIManager);
   }
@@ -268,43 +286,49 @@ public class NodesManager implements EventDispatcherListener {
   }
 
   private void onAnimationFrame(long frameTimeNanos) {
-    // Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
-
-    double currentFrameTimeMs = frameTimeNanos / 1000000.;
-    if (mSlowAnimationsEnabled) {
-      currentFrameTimeMs =
-          mFirstUptime + (currentFrameTimeMs - mFirstUptime) / mAnimationsDragFactor;
-    }
-
-    if (currentFrameTimeMs > lastFrameTimeMs) {
-      // It is possible for ChoreographerCallback to be executed twice within the same frame
-      // due to frame drops. If this occurs, the additional callback execution should be ignored.
-      lastFrameTimeMs = currentFrameTimeMs;
-
-      while (!mEventQueue.isEmpty()) {
-        CopiedEvent copiedEvent = mEventQueue.poll();
-        handleEvent(
-            copiedEvent.getTargetTag(), copiedEvent.getEventName(), copiedEvent.getPayload());
+    try {
+      if (BuildConfig.REANIMATED_PROFILING) {
+        Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onAnimationFrame");
       }
 
-      if (!mFrameCallbacks.isEmpty()) {
-        List<OnAnimationFrame> frameCallbacks = mFrameCallbacks;
-        mFrameCallbacks = new ArrayList<>(frameCallbacks.size());
-        for (int i = 0, size = frameCallbacks.size(); i < size; i++) {
-          frameCallbacks.get(i).onAnimationFrame(currentFrameTimeMs);
+      double currentFrameTimeMs = frameTimeNanos / 1000000.;
+      if (mSlowAnimationsEnabled) {
+        currentFrameTimeMs =
+            mFirstUptime + (currentFrameTimeMs - mFirstUptime) / mAnimationsDragFactor;
+      }
+
+      if (currentFrameTimeMs > lastFrameTimeMs) {
+        // It is possible for ChoreographerCallback to be executed twice within the same frame
+        // due to frame drops. If this occurs, the additional callback execution should be ignored.
+        lastFrameTimeMs = currentFrameTimeMs;
+
+        while (!mEventQueue.isEmpty()) {
+          CopiedEvent copiedEvent = mEventQueue.poll();
+          handleEvent(
+              copiedEvent.getTargetTag(), copiedEvent.getEventName(), copiedEvent.getPayload());
         }
+
+        if (!mFrameCallbacks.isEmpty()) {
+          List<OnAnimationFrame> frameCallbacks = mFrameCallbacks;
+          mFrameCallbacks = new ArrayList<>(frameCallbacks.size());
+          for (int i = 0, size = frameCallbacks.size(); i < size; i++) {
+            frameCallbacks.get(i).onAnimationFrame(currentFrameTimeMs);
+          }
+        }
+
+        performOperations();
       }
 
-      performOperations();
+      mCallbackPosted.set(false);
+      if (!mFrameCallbacks.isEmpty() || !mEventQueue.isEmpty()) {
+        // enqueue next frame
+        startUpdatingOnAnimationFrame();
+      }
+    } finally {
+      if (BuildConfig.REANIMATED_PROFILING) {
+        Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
+      }
     }
-
-    mCallbackPosted.set(false);
-    if (!mFrameCallbacks.isEmpty() || !mEventQueue.isEmpty()) {
-      // enqueue next frame
-      startUpdatingOnAnimationFrame();
-    }
-
-    // Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
   }
 
   public void enqueueUpdateViewOnNativeThread(
@@ -327,22 +351,32 @@ public class NodesManager implements EventDispatcherListener {
 
   @Override
   public void onEventDispatch(Event event) {
-    if (mNativeProxy == null) {
-      return;
-    }
-    // Events can be dispatched from any thread so we have to make sure handleEvent is run from the
-    // UI thread.
-    if (UiThreadUtil.isOnUiThread()) {
-      handleEvent(event);
-      performOperations();
-    } else {
-      String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
-      int viewTag = event.getViewTag();
-      boolean shouldSaveEvent = mNativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag);
-      if (shouldSaveEvent) {
-        mEventQueue.offer(new CopiedEvent(event));
+    try {
+      if (BuildConfig.REANIMATED_PROFILING) {
+        Systrace.beginSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE, "onEventDispatch");
       }
-      startUpdatingOnAnimationFrame();
+
+      if (mNativeProxy == null) {
+        return;
+      }
+      // Events can be dispatched from any thread so we have to make sure handleEvent is run from
+      // the UI thread.
+      if (UiThreadUtil.isOnUiThread()) {
+        handleEvent(event);
+        performOperations();
+      } else {
+        String eventName = mCustomEventNamesResolver.resolveCustomEventName(event.getEventName());
+        int viewTag = event.getViewTag();
+        boolean shouldSaveEvent = mNativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag);
+        if (shouldSaveEvent) {
+          mEventQueue.offer(new CopiedEvent(event));
+        }
+        startUpdatingOnAnimationFrame();
+      }
+    } finally {
+      if (BuildConfig.REANIMATED_PROFILING) {
+        Systrace.endSection(Systrace.TRACE_TAG_REACT_JAVA_BRIDGE);
+      }
     }
   }
 

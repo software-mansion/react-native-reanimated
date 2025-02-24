@@ -1,43 +1,44 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 'use strict';
-import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type { ParsedColorArray } from '../Colors';
 import {
-  isColor,
+  clampRGBA,
   convertToRGBA,
+  isColor,
   rgbaArrayToRGBAColor,
   toGammaSpace,
   toLinearSpace,
 } from '../Colors';
-import { ReduceMotion, isWorkletFunction } from '../commonTypes';
 import type {
-  SharedValue,
   AnimatableValue,
+  AnimatableValueObject,
   Animation,
   AnimationObject,
-  Timestamp,
-  AnimatableValueObject,
   EasingFunction,
+  SharedValue,
+  Timestamp,
 } from '../commonTypes';
+import { ReduceMotion } from '../commonTypes';
+import type { EasingFunctionFactory } from '../Easing';
+import { ReanimatedError } from '../errors';
+import { shouldBeUseWeb } from '../PlatformChecker';
+import { ReducedMotionManager } from '../ReducedMotion';
+import { isWorkletFunction, logger, runOnUI } from '../WorkletsResolver';
+import type { HigherOrderAnimation, StyleLayoutAnimation } from './commonTypes';
 import type {
-  AffineMatrixFlat,
   AffineMatrix,
+  AffineMatrixFlat,
 } from './transformationMatrix/matrixUtils';
 import {
-  flatten,
-  multiplyMatrices,
-  scaleMatrix,
   addMatrices,
   decomposeMatrixIntoMatricesAndAngles,
-  isAffineMatrixFlat,
-  subtractMatrices,
+  flatten,
   getRotationMatrix,
+  isAffineMatrixFlat,
+  multiplyMatrices,
+  scaleMatrix,
+  subtractMatrices,
 } from './transformationMatrix/matrixUtils';
-import { shouldBeUseWeb } from '../PlatformChecker';
-import type { EasingFunctionFactory } from '../Easing';
-import { ReducedMotionManager } from '../ReducedMotion';
-import { logger } from '../logger';
-import { ReanimatedError } from '../errors';
 
 let IN_STYLE_UPDATER = false;
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
@@ -262,6 +263,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       res.push(animation[i].current);
     });
 
+    // We need to clamp the res values to make sure they are in the correct RGBA range
+    clampRGBA(res as ParsedColorArray);
+
     animation.current = rgbaArrayToRGBAColor(
       toGammaSpace(res as ParsedColorArray)
     );
@@ -281,6 +285,9 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
       finished = finished && result;
       res.push(animation[i].current);
     });
+
+    // We need to clamp the res values to make sure they are in the correct RGBA range
+    clampRGBA(res as ParsedColorArray);
 
     animation.current = rgbaArrayToRGBAColor(
       toGammaSpace(res as ParsedColorArray)
@@ -393,8 +400,7 @@ function decorateAnimation<T extends AnimationObject | StyleLayoutAnimation>(
         previousAnimation ? previousAnimation[i] : undefined
       );
     });
-
-    animation.current = value;
+    animation.current = [...value];
   };
 
   const arrayOnFrame = (
@@ -534,7 +540,8 @@ export function defineAnimation<
 }
 
 /**
- * Lets you cancel a running animation paired to a shared value.
+ * Lets you cancel a running animation paired to a shared value. The
+ * cancellation is asynchronous.
  *
  * @param sharedValue - The shared value of a running animation that you want to
  *   cancel.
@@ -543,5 +550,12 @@ export function defineAnimation<
 export function cancelAnimation<T>(sharedValue: SharedValue<T>): void {
   'worklet';
   // setting the current value cancels the animation if one is currently running
-  sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+  if (_WORKLET) {
+    sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+  } else {
+    runOnUI(() => {
+      'worklet';
+      sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+    })();
+  }
 }

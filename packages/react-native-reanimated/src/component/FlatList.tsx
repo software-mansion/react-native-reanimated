@@ -7,12 +7,12 @@ import type {
   ViewStyle,
 } from 'react-native';
 import { FlatList } from 'react-native';
-import { AnimatedView } from './View';
+
+import type { AnimatedStyle, ILayoutAnimationBuilder } from '../commonTypes';
 import { createAnimatedComponent } from '../createAnimatedComponent';
-import type { ILayoutAnimationBuilder } from '../layoutReanimation/animationBuilder/commonTypes';
-import { LayoutAnimationConfig } from './LayoutAnimationConfig';
-import type { AnimatedStyle } from '../commonTypes';
 import type { AnimatedProps } from '../helperTypes';
+import { LayoutAnimationConfig } from './LayoutAnimationConfig';
+import { AnimatedView } from './View';
 
 const AnimatedFlatList = createAnimatedComponent(FlatList);
 

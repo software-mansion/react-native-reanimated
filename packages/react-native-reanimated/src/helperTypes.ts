@@ -8,16 +8,15 @@ This will not be easy though!
 */
 
 import type { RegisteredStyle, StyleProp } from 'react-native';
+
 import type {
   AnimatedStyle,
+  EntryExitAnimationFunction,
+  LayoutAnimationFunction,
   SharedValue,
   TransformArrayItem,
 } from './commonTypes';
 import type { BaseAnimationBuilder } from './layoutReanimation/animationBuilder/BaseAnimationBuilder';
-import type {
-  EntryExitAnimationFunction,
-  LayoutAnimationFunction,
-} from './layoutReanimation/animationBuilder/commonTypes';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import type { SharedTransition } from './layoutReanimation/sharedTransitions';
 

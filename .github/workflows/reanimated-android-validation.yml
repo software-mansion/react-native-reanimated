@@ -34,6 +34,8 @@ jobs:
     concurrency:
       group: validate-java-${{ github.ref }}
       cancel-in-progress: true
+    env:
+      REANIMATED_DIR: packages/react-native-reanimated
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -55,12 +57,17 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install cpplint==1.6.1
+          pip install cmakelang==0.6.13
+
       - name: Clear annotations
         run: .github/workflows/helper/clear-annotations.sh
 
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+      - name: Build Reanimated package
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: yarn build
 
       - name: Lint Android
-        working-directory: packages/react-native-reanimated
+        working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn lint:android

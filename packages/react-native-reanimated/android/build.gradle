@@ -109,11 +109,6 @@ def getReanimatedVersion() {
     return json.version
 }
 
-def getReanimatedMajorVersion() {
-    def (major, minor, patch) = getReanimatedVersion().tokenize('.')
-    return major.toInteger()
-}
-
 def toPlatformFileString(String path) {
   if (Os.isFamily(Os.FAMILY_WINDOWS)) {
       path = path.replace(File.separatorChar, '/' as char)
@@ -133,8 +128,12 @@ file("$reactNativeRootDir/ReactAndroid/gradle.properties").withInputStream { rea
 def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.startsWith("0.0.0-") ? 1000 : REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def REANIMATED_VERSION = getReanimatedVersion()
-def REANIMATED_MAJOR_VERSION = getReanimatedMajorVersion()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
+def IS_REANIMATED_EXAMPLE_APP = isReanimatedExampleApp()
+def REANIMATED_PROFILING = isReanimatedExampleApp()
+
+// Set version for prefab
+version REANIMATED_VERSION
 
 // We download various C++ open-source dependencies into downloads.
 // We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
@@ -146,6 +145,8 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 
 def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
 def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
+
+def hasExternalWorklets = rootProject.subprojects.find { it.name == 'react-native-worklets' } != null
 
 def workletsPrefabHeadersDir = project.file("$buildDir/prefab-headers/worklets")
 def reanimatedPrefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
@@ -196,9 +197,9 @@ buildscript {
         }
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:7.3.1"
-        classpath "de.undercouch:gradle-download-task:5.0.1"
-        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.11.0"
+        classpath "com.android.tools.build:gradle:8.2.1"
+        classpath "de.undercouch:gradle-download-task:5.6.0"
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.25.0"
     }
 }
 
@@ -211,7 +212,7 @@ apply plugin: "maven-publish"
 apply plugin: "de.undercouch.download"
 
 android {
-    compileSdkVersion safeExtGet("compileSdkVersion", 30)
+    compileSdkVersion safeExtGet("compileSdkVersion", 34)
 
     def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
     if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
@@ -232,8 +233,10 @@ android {
     }
 
     prefab {
-        worklets {
-            headers workletsPrefabHeadersDir.absolutePath
+        if (!hasExternalWorklets) {
+            worklets {
+                headers workletsPrefabHeadersDir.absolutePath
+            }
         }
         reanimated {
             headers reanimatedPrefabHeadersDir.absolutePath
@@ -241,11 +244,12 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion safeExtGet("minSdkVersion", 16)
-        targetSdkVersion safeExtGet("targetSdkVersion", 30)
+        minSdkVersion safeExtGet("minSdkVersion", 23)
+        targetSdkVersion safeExtGet("targetSdkVersion", 34)
         versionCode 1
         versionName "1.0"
         buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
+        buildConfigField("boolean", "REANIMATED_PROFILING", REANIMATED_PROFILING.toString())
         buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"${REANIMATED_VERSION}\"")
         externalNativeBuild {
             cmake {
@@ -256,9 +260,17 @@ android {
                         "-DJS_RUNTIME=${JS_RUNTIME}",
                         "-DJS_RUNTIME_DIR=${jsRuntimeDir}",
                         "-DIS_NEW_ARCHITECTURE_ENABLED=${IS_NEW_ARCHITECTURE_ENABLED}",
-                        "-DIS_REANIMATED_EXAMPLE_APP=${isReanimatedExampleApp()}",
-                        "-DREANIMATED_VERSION=${REANIMATED_VERSION}"
+                        "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
+                        "-DREANIMATED_PROFILING=${REANIMATED_PROFILING}",
+                        "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
+                        "-DHAS_EXTERNAL_WORKLETS=${hasExternalWorklets}",
+                        "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
                 abiFilters (*reactNativeArchitectures())
+                if(hasExternalWorklets){
+                    targets("reanimated")
+                } else {
+                    targets("reanimated", "worklets")
+                }
             }
         }
 
@@ -340,70 +352,24 @@ android {
     }
     sourceSets.main {
         java {
+            if(hasExternalWorklets){
+                srcDirs += "src/externalWorklets/with"
+            } else {
+                srcDirs += "src/worklets/main"
+                srcDirs += "src/externalWorklets/without"
+                if(!IS_NEW_ARCHITECTURE_ENABLED){
+                    srcDirs += "src/externalWorklets/withoutPaper"
+                }
+            }
+
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 srcDirs += "src/fabric/java"
             } else {
                 srcDirs += "src/paper/java"
             }
 
-            // messageQueueThread
-            if (REANIMATED_MAJOR_VERSION > 2) {
-                if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/72"
-                } else {
-                    srcDirs += "src/reactNativeVersionPatch/messageQueueThread/latest"
-                }
-            }
-
-            // ReanimatedUIManager & ReanimatedUIImplementation
-            if (REACT_NATIVE_MINOR_VERSION <= 73) {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/73"
-            } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/74"
-            } else {
-                srcDirs += "src/reactNativeVersionPatch/ReanimatedUIManager/latest"
-            }
-
-            // ReactHost
-            if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                srcDirs += "src/reactNativeVersionPatch/ReactHost/72"
-            } else {
-                srcDirs += "src/reactNativeVersionPatch/ReactHost/latest"
-            }
-
-            // ReactFeatureFlags
-            if (IS_NEW_ARCHITECTURE_ENABLED) {
-                if (REACT_NATIVE_MINOR_VERSION <= 72) {
-                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/72"
-                } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/74"
-                } else {
-                    srcDirs += "src/reactNativeVersionPatch/ReactFeatureFlagsWrapper/latest"
-                }
-            }
-
-            if (IS_NEW_ARCHITECTURE_ENABLED) {
-                // RuntimeExecutor and CallInvokerHolder
-                if (REACT_NATIVE_MINOR_VERSION <= 73) {
-                    srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/73"
-                } else if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/74"
-                } else {
-                    srcDirs += "src/reactNativeVersionPatch/NativeProxyFabric/latest"
-                }
-            } else {
-                // CallInvokerHolder
-                if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                    srcDirs += "src/reactNativeVersionPatch/NativeProxyPaper/74"
-                } else {
-                    srcDirs += "src/reactNativeVersionPatch/NativeProxyPaper/latest"
-                }
-            }
-
             // BorderRadiiDrawableUtils
-            if (REACT_NATIVE_MINOR_VERSION <= 74) {
-                srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/74"
-            } else if (REACT_NATIVE_MINOR_VERSION <= 75) {
+            if (REACT_NATIVE_MINOR_VERSION <= 75) {
                 srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/75"
             } else {
                 srcDirs += "src/reactNativeVersionPatch/BorderRadiiDrawableUtils/latest"
@@ -420,7 +386,7 @@ android {
     tasks.withType(ExternalNativeBuildJsonTask) {
         compileTask ->
             compileTask.doLast {
-                if (!isReanimatedExampleApp()) {
+                if (!IS_REANIMATED_EXAMPLE_APP) {
                     return
                 }
                 def monorepoDir = new File("${project.projectDir}/../../..")
@@ -435,29 +401,22 @@ android {
     }
 }
 
-def assertLatestReactNativeWithNewArchitecture = task assertLatestReactNativeWithNewArchitectureTask {
-    onlyIf { IS_NEW_ARCHITECTURE_ENABLED && REANIMATED_MAJOR_VERSION == 3 && REACT_NATIVE_MINOR_VERSION < 74 }
-    doFirst {
-        // If you change the minimal React Native version remember to update Compatibility Table in docs
-        throw new GradleException(
-            "[Reanimated] Outdated version of React Native for New Architecture. Reanimated " + REANIMATED_VERSION + " supports the New Architecture on React Native 0.74.0+. See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#outdated-version-of-react-native-for-new-architecture for more information."
-        )
-    }
-}
-
 def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
-    onlyIf { REACT_NATIVE_MINOR_VERSION < 71 }
+    // If you change the minimal React Native version remember to update Compatibility Table in docs
+    def minimalReactNativeVersion = 75
+    onlyIf { REACT_NATIVE_MINOR_VERSION < minimalReactNativeVersion }
     doFirst {
-        // If you change the minimal React Native version remember to update Compatibility Table in docs
-        throw new GradleException("[Reanimated] Unsupported React Native version. Please use 0.71 or newer.")
+        throw new GradleException("[Reanimated] Unsupported React Native version. Please use $minimalReactNativeVersion. or newer.")
     }
 }
 
-task prepareWorkletsHeadersForPrefabs(type: Copy) {
-    from("$projectDir/src/main/cpp")
-    from("$projectDir/../Common/cpp")
-    include("worklets/**/*.h")
-    into(workletsPrefabHeadersDir)
+if (!hasExternalWorklets) {
+    task prepareWorkletsHeadersForPrefabs(type: Copy) {
+        from("$projectDir/src/main/cpp")
+        from("$projectDir/../Common/cpp")
+        include("worklets/**/*.h")
+        into(workletsPrefabHeadersDir)
+    }
 }
 
 task prepareReanimatedHeadersForPrefabs(type: Copy) {
@@ -468,7 +427,7 @@ task prepareReanimatedHeadersForPrefabs(type: Copy) {
 }
 
 tasks.preBuild {
-    dependsOn assertLatestReactNativeWithNewArchitecture, assertMinimalReactNativeVersion
+    dependsOn assertMinimalReactNativeVersion
 }
 
 task cleanCmakeCache() {
@@ -486,14 +445,18 @@ task printVersions {
 task createNativeDepsDirectories() {
     downloadsDir.mkdirs()
     thirdPartyNdkDir.mkdirs()
-    workletsPrefabHeadersDir.mkdirs()
+    if (!hasExternalWorklets) {
+        workletsPrefabHeadersDir.mkdirs()
+    }
     reanimatedPrefabHeadersDir.mkdirs()
 }
 
 task packageNdkLibs(type: Copy) {
     from("$buildDir/reanimated-ndk/all")
+    if (!hasExternalWorklets) {
+        include("**/libworklets.so")
+    }
     include("**/libreanimated.so")
-    include("**/libworklets.so")
     into("$projectDir/src/main/jniLibs")
 }
 
@@ -520,6 +483,10 @@ dependencies {
     if (JS_RUNTIME == "hermes") {
         implementation "com.facebook.react:hermes-android" // version substituted by RNGP
     }
+ 
+    if (hasExternalWorklets) {
+        implementation project(":react-native-worklets")
+    }
 }
 
 def nativeBuildDependsOn(dependsOnTask) {
@@ -534,7 +501,9 @@ def nativeBuildDependsOn(dependsOnTask) {
 }
 
 afterEvaluate {
-    preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
+    if (!hasExternalWorklets) {
+        preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
+    }
     preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
 
     tasks.forEach({ task ->

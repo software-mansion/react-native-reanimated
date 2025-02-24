@@ -1,18 +1,19 @@
 /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 'use strict';
 import type { MutableRefObject } from 'react';
+
 import { processColorsInProps } from './Colors';
 import type {
+  AnimatedStyle,
   ShadowNodeWrapper,
   StyleProps,
-  AnimatedStyle,
 } from './commonTypes';
-import type { Descriptor } from './hook/commonTypes';
-import type { ReanimatedHTMLElement } from './js-reanimated';
-import { _updatePropsJS } from './js-reanimated';
-import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
-import { runOnUIImmediately } from './threads';
 import { ReanimatedError } from './errors';
+import type { Descriptor } from './hook/commonTypes';
+import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
+import type { ReanimatedHTMLElement } from './ReanimatedModule/js-reanimated';
+import { _updatePropsJS } from './ReanimatedModule/js-reanimated';
+import { runOnUIImmediately } from './WorkletsResolver';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,
@@ -32,6 +33,11 @@ if (shouldBeUseWeb()) {
   updateProps = (viewDescriptors, updates) => {
     'worklet';
     processColorsInProps(updates);
+    if (updates.transformOrigin) {
+      if (!Array.isArray(updates.transformOrigin)) {
+        throw new ReanimatedError('Please use transformOrigin in array form');
+      }
+    }
     global.UpdatePropsManager.update(viewDescriptors, updates);
   };
 }

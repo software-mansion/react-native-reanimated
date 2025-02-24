@@ -7,25 +7,22 @@
 #import <React/RCTSurfacePresenter.h>
 #import <React/RCTSurfacePresenterBridgeAdapter.h>
 #import <React/RCTSurfaceView.h>
-#if REACT_NATIVE_MINOR_VERSION < 73
-#import <React/RCTRuntimeExecutorFromBridge.h>
-#endif // REACT_NATIVE_MINOR_VERSION < 73
-#endif // RCT_NEW_ARCH_ENABLED
-
-#ifdef RCT_NEW_ARCH_ENABLED
-#import <reanimated/apple/Fabric/REAInitializerRCTFabricSurface.h>
+#if REACT_NATIVE_MINOR_VERSION >= 75
+#import <React/RCTCallInvoker.h>
+#endif // REACT_NATIVE_MINOR_VERSION >= 75
 #endif // RCT_NEW_ARCH_ENABLED
 
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
-#import <reanimated/Tools/SingleInstanceChecker.h>
 #import <reanimated/apple/REAModule.h>
 #import <reanimated/apple/REANodesManager.h>
 #import <reanimated/apple/REAUIKit.h>
 #import <reanimated/apple/native/NativeProxy.h>
 
 #import <worklets/Tools/ReanimatedJSIUtils.h>
+#import <worklets/Tools/SingleInstanceChecker.h>
 #import <worklets/WorkletRuntime/WorkletRuntime.h>
 #import <worklets/WorkletRuntime/WorkletRuntimeCollector.h>
+#import <worklets/apple/WorkletsModule.h>
 
 #if __has_include(<UIKit/UIAccessibility.h>)
 #import <UIKit/UIAccessibility.h>
@@ -38,13 +35,17 @@ using namespace reanimated;
 - (void *)runtime;
 @end
 
+#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
+// nothing
+#else // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
 @interface RCTBridge (RCTTurboModule)
 - (std::shared_ptr<facebook::react::CallInvoker>)jsCallInvoker;
 - (void)_tryAndHandleError:(dispatch_block_t)block;
 @end
+#endif // RCT_NEW_ARCH_ENABLED
 
 #ifdef RCT_NEW_ARCH_ENABLED
-static __strong REAInitializerRCTFabricSurface *reaSurface;
+// nothing
 #else
 typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 #endif // RCT_NEW_ARCH_ENABLED
@@ -52,7 +53,6 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
 @implementation REAModule {
 #ifdef RCT_NEW_ARCH_ENABLED
   __weak RCTSurfacePresenter *_surfacePresenter;
-  std::weak_ptr<NativeReanimatedModule> weakNativeReanimatedModule_;
 #else
   NSMutableArray<AnimatedOperation> *_operations;
 #endif // RCT_NEW_ARCH_ENABLED
@@ -60,13 +60,12 @@ typedef void (^AnimatedOperation)(REANodesManager *nodesManager);
   SingleInstanceChecker<REAModule> singleInstanceChecker_;
 #endif // NDEBUG
   bool hasListeners;
-  bool _isBridgeless;
 }
 
 @synthesize moduleRegistry = _moduleRegistry;
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-@synthesize runtimeExecutor = _runtimeExecutor;
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
+@synthesize callInvoker = _callInvoker;
+#endif // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
 
 RCT_EXPORT_MODULE(ReanimatedModule);
 
@@ -98,45 +97,14 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (std::shared_ptr<UIManager>)getUIManager
 {
+  react_native_assert(_surfacePresenter != nil);
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
   return scheduler.uiManager;
 }
 
-- (void)injectDependencies:(jsi::Runtime &)runtime
+- (void)attachReactEventListener:(const std::shared_ptr<ReanimatedModuleProxy>)reanimatedModuleProxy
 {
-  const auto &uiManager = [self getUIManager];
-  react_native_assert(uiManager.get() != nil);
-  if (auto nativeReanimatedModule = weakNativeReanimatedModule_.lock()) {
-    nativeReanimatedModule->initializeFabric(uiManager);
-  }
-}
-
-#pragma mark-- Initialize
-
-- (void)installReanimatedAfterReload
-{
-  // called from REAInitializerRCTFabricSurface::start
-  __weak __typeof__(self) weakSelf = self;
-  _surfacePresenter = self.bridge.surfacePresenter;
-  [_nodesManager setSurfacePresenter:_surfacePresenter];
-
-  // to avoid deadlock we can't use Executor from React Native
-  // but we can create own and use it because initialization is already synchronized
-  react_native_assert(self.bridge != nil);
-  RCTRuntimeExecutorFromBridge(self.bridge)(^(jsi::Runtime &runtime) {
-    if (__typeof__(self) strongSelf = weakSelf) {
-      [strongSelf injectDependencies:runtime];
-    }
-  });
-}
-
-- (void)handleJavaScriptDidLoadNotification:(NSNotification *)notification
-{
-  [self attachReactEventListener];
-}
-
-- (void)attachReactEventListener
-{
+  std::weak_ptr<ReanimatedModuleProxy> reanimatedModuleProxyWeak = reanimatedModuleProxy;
   RCTScheduler *scheduler = [_surfacePresenter scheduler];
   __weak __typeof__(self) weakSelf = self;
   _surfacePresenter.runtimeExecutor(^(jsi::Runtime &runtime) {
@@ -144,19 +112,20 @@ RCT_EXPORT_MODULE(ReanimatedModule);
     if (strongSelf == nil) {
       return;
     }
-    if (auto nativeReanimatedModule = strongSelf->weakNativeReanimatedModule_.lock()) {
-      auto eventListener =
-          std::make_shared<facebook::react::EventListener>([nativeReanimatedModule](const RawEvent &rawEvent) {
-            if (!RCTIsMainQueue()) {
-              // event listener called on the JS thread, let's ignore this event
-              // as we cannot safely access worklet runtime here
-              // and also we don't care about topLayout events
-              return false;
-            }
-            return nativeReanimatedModule->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
-          });
-      [scheduler addEventListener:eventListener];
-    }
+    auto eventListener =
+        std::make_shared<facebook::react::EventListener>([reanimatedModuleProxyWeak](const RawEvent &rawEvent) {
+          if (!RCTIsMainQueue()) {
+            // event listener called on the JS thread, let's ignore this event
+            // as we cannot safely access worklet runtime here
+            // and also we don't care about topLayout events
+            return false;
+          }
+          if (const auto reanimatedModuleProxy = reanimatedModuleProxyWeak.lock()) {
+            return reanimatedModuleProxy->handleRawEvent(rawEvent, CACurrentMediaTime() * 1000);
+          }
+          return false;
+        });
+    [scheduler addEventListener:eventListener];
   });
 }
 
@@ -169,38 +138,13 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 - (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
 {
   _surfacePresenter = surfacePresenter;
-  _isBridgeless = true;
 }
 
 - (void)setBridge:(RCTBridge *)bridge
 {
   [super setBridge:bridge];
-  // only within the first loading `self.bridge.surfacePresenter` exists
-  // during the reload `self.bridge.surfacePresenter` is null
-  if (self.bridge.surfacePresenter) {
-    _surfacePresenter = self.bridge.surfacePresenter;
-  }
-
-  [self setReaSurfacePresenter];
-
   _nodesManager = [[REANodesManager alloc] initWithModule:self bridge:bridge surfacePresenter:_surfacePresenter];
-
-  [[NSNotificationCenter defaultCenter] addObserver:self
-                                           selector:@selector(handleJavaScriptDidLoadNotification:)
-                                               name:RCTJavaScriptDidLoadNotification
-                                             object:nil];
-
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
-}
-
-- (void)setReaSurfacePresenter
-{
-  if (reaSurface == nil) {
-    // we need only one instance because SurfacePresenter is the same during the application lifetime
-    reaSurface = [[REAInitializerRCTFabricSurface alloc] init];
-    [_surfacePresenter registerSurface:reaSurface];
-  }
-  reaSurface.reaModule = self;
 }
 
 #else // RCT_NEW_ARCH_ENABLED
@@ -278,40 +222,35 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   }
 }
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)valueUnpackerCode)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
-  if (_isBridgeless) {
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-    RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
-    auto &rnRuntime = *(jsi::Runtime *)cxxBridge.runtime;
-    auto executorFunction = ([executor = _runtimeExecutor](std::function<void(jsi::Runtime & runtime)> &&callback) {
-      // Convert to Objective-C block so it can be captured properly.
-      __block auto callbackBlock = callback;
+  WorkletsModule *workletsModule = [_moduleRegistry moduleForName:"WorkletsModule"];
 
-      [executor execute:^(jsi::Runtime &runtime) {
-        callbackBlock(runtime);
-      }];
-    });
-    auto nativeReanimatedModule = reanimated::createReanimatedModuleBridgeless(
-        _moduleRegistry, rnRuntime, std::string([valueUnpackerCode UTF8String]), executorFunction);
-    [self attachReactEventListener];
-    [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
-#else // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-    [NSException raise:@"Missing bridge" format:@"[Reanimated] Failed to obtain the bridge."];
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-  } else {
-    facebook::jsi::Runtime *jsiRuntime = [self.bridge respondsToSelector:@selector(runtime)]
-        ? reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime)
-        : nullptr;
+#if defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
+  auto jsCallInvoker = _callInvoker.callInvoker;
+#else // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
+  auto jsCallInvoker = self.bridge.jsCallInvoker;
+#endif // defined(RCT_NEW_ARCH_ENABLED) && REACT_NATIVE_MINOR_VERSION >= 75
+  auto jsiRuntime = reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
+  auto isBridgeless = ![self.bridge isKindOfClass:[RCTCxxBridge class]];
 
-    if (jsiRuntime) {
-      auto nativeReanimatedModule = reanimated::createReanimatedModule(
-          self, self.bridge, self.bridge.jsCallInvoker, std::string([valueUnpackerCode UTF8String]));
-      jsi::Runtime &rnRuntime = *jsiRuntime;
+  assert(jsiRuntime != nullptr);
 
-      [self commonInit:nativeReanimatedModule withRnRuntime:rnRuntime];
-    }
-  }
+  auto reanimatedModuleProxy =
+      reanimated::createReanimatedModule(self, self.bridge, jsCallInvoker, workletsModule, isBridgeless);
+
+  auto &uiRuntime = [workletsModule getWorkletsModuleProxy]->getUIWorkletRuntime() -> getJSIRuntime();
+
+  jsi::Runtime &rnRuntime = *jsiRuntime;
+  WorkletRuntimeCollector::install(rnRuntime);
+  RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, reanimatedModuleProxy);
+#ifdef RCT_NEW_ARCH_ENABLED
+  [self attachReactEventListener:reanimatedModuleProxy];
+  const auto &uiManager = [self getUIManager];
+  react_native_assert(uiManager.get() != nil);
+  reanimatedModuleProxy->initializeFabric(uiManager);
+#endif // RCT_NEW_ARCH_ENABLED
+
   return @YES;
 }
 
@@ -322,19 +261,5 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (nonnull NSString *)
   return std::make_shared<facebook::react::NativeReanimatedModuleSpecJSI>(params);
 }
 #endif // RCT_NEW_ARCH_ENABLED
-
-- (void)commonInit:(std::shared_ptr<NativeReanimatedModule>)nativeReanimatedModule
-     withRnRuntime:(jsi::Runtime &)rnRuntime
-{
-  WorkletRuntimeCollector::install(rnRuntime);
-  RNRuntimeDecorator::decorate(rnRuntime, nativeReanimatedModule);
-#ifdef RCT_NEW_ARCH_ENABLED
-  weakNativeReanimatedModule_ = nativeReanimatedModule;
-  if (self->_surfacePresenter != nil) {
-    // reload, uiManager is null right now, we need to wait for `installReanimatedAfterReload`
-    [self injectDependencies:rnRuntime];
-  }
-#endif // RCT_NEW_ARCH_ENABLED
-}
 
 @end

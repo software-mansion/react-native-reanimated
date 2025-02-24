@@ -10,9 +10,7 @@
 #import <reanimated/apple/keyboardObserver/REAKeyboardEventObserver.h>
 #import <reanimated/apple/native/NativeMethods.h>
 #import <reanimated/apple/native/NativeProxy.h>
-#import <reanimated/apple/native/REAIOSUIScheduler.h>
 #import <reanimated/apple/native/REAJSIUtils.h>
-#import <reanimated/apple/native/REAMessageThread.h>
 #import <reanimated/apple/sensor/ReanimatedSensorContainer.h>
 
 #ifndef NDEBUG
@@ -20,6 +18,7 @@
 #endif
 
 #import <worklets/WorkletRuntime/ReanimatedRuntime.h>
+#import <worklets/apple/WorkletsMessageThread.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTBridge+Private.h>
@@ -70,7 +69,7 @@ SetGestureStateFunction makeSetGestureStateFunction(RCTBridge *bridge)
   return setGestureStateFunction;
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
 SetGestureStateFunction makeSetGestureStateFunctionBridgeless(RCTModuleRegistry *moduleRegistry)
 {
   id<RNGestureHandlerStateManager> gestureHandlerStateManager = nil;
@@ -82,11 +81,11 @@ SetGestureStateFunction makeSetGestureStateFunctionBridgeless(RCTModuleRegistry 
   };
   return setGestureStateFunction;
 }
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#endif // RCT_NEW_ARCH_ENABLED
 
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 {
-  auto requestRender = [nodesManager](std::function<void(double)> onRender, jsi::Runtime &rt) {
+  auto requestRender = [nodesManager](std::function<void(double)> onRender) {
     [nodesManager postOnAnimation:^(READisplayLink *displayLink) {
 #if !TARGET_OS_OSX
       auto targetTimestamp = displayLink.targetTimestamp;
@@ -94,9 +93,7 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
       // TODO macOS targetTimestamp isn't available on macOS
       auto targetTimestamp = displayLink.timestamp + displayLink.duration;
 #endif
-      double frameTimestamp =
-
-          (targetTimestamp)*1000;
+      const double frameTimestamp = calculateTimestampWithSlowAnimations(targetTimestamp) * 1000;
       onRender(frameTimestamp);
     }];
   };
@@ -107,9 +104,9 @@ RequestRenderFunction makeRequestRender(REANodesManager *nodesManager)
 #ifdef RCT_NEW_ARCH_ENABLED
 SynchronouslyUpdateUIPropsFunction makeSynchronouslyUpdateUIPropsFunction(REANodesManager *nodesManager)
 {
-  auto synchronouslyUpdateUIPropsFunction = [nodesManager](jsi::Runtime &rt, Tag tag, const jsi::Object &props) {
+  auto synchronouslyUpdateUIPropsFunction = [nodesManager](Tag tag, const folly::dynamic &props) {
     NSNumber *viewTag = @(tag);
-    NSDictionary *uiProps = convertJSIObjectToNSDictionary(rt, props);
+    NSDictionary *uiProps = convertDynamicToNSObject(props);
     [nodesManager synchronouslyUpdateViewOnUIThread:viewTag props:uiProps];
   };
   return synchronouslyUpdateUIPropsFunction;
@@ -379,7 +376,7 @@ makePlatformDepMethodsHolder(RCTBridge *bridge, REANodesManager *nodesManager, R
   return platformDepMethodsHolder;
 }
 
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#ifdef RCT_NEW_ARCH_ENABLED
 PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
     RCTModuleRegistry *moduleRegistry,
     REANodesManager *nodesManager,
@@ -426,6 +423,6 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolderBridgeless(
   };
   return platformDepMethodsHolder;
 }
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
+#endif // RCT_NEW_ARCH_ENABLED
 
 } // namespace reanimated

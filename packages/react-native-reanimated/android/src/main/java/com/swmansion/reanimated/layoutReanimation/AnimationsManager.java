@@ -22,8 +22,8 @@ import com.facebook.react.uimanager.PixelUtil;
 import com.facebook.react.uimanager.ReactStylesDiffMap;
 import com.facebook.react.uimanager.RootView;
 import com.facebook.react.uimanager.ViewManager;
-import com.swmansion.reanimated.AndroidUIScheduler;
 import com.swmansion.reanimated.Utils;
+import com.swmansion.worklets.AndroidUIScheduler;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +32,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 public class AnimationsManager implements ViewHierarchyObserver {
-  private WeakReference<AndroidUIScheduler> mWeakAndroidUIScheduler;
+  private WeakReference<AndroidUIScheduler> mWeakAndroidUIScheduler = new WeakReference<>(null);
   private ReactContext mContext;
   private UIManager mUIManager;
   private NativeMethodsHolder mNativeMethodsHolder;
@@ -105,6 +105,8 @@ public class AnimationsManager implements ViewHierarchyObserver {
     AndroidUIScheduler androidUIScheduler = mWeakAndroidUIScheduler.get();
     if (androidUIScheduler != null) {
       androidUIScheduler.triggerUI();
+    } else {
+      return;
     }
     int tag = view.getId();
     HashMap<String, Object> targetValues = after.toTargetMap();

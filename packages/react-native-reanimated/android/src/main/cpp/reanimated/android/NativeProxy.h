@@ -1,26 +1,23 @@
 #pragma once
 
-#include <reanimated/NativeModules/NativeReanimatedModule.h>
-#include <reanimated/android/AndroidUIScheduler.h>
+#include <reanimated/NativeModules/ReanimatedModuleProxy.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <reanimated/android/JNIHelper.h>
 #include <reanimated/android/LayoutAnimations.h>
 
-#include <worklets/Tools/UIScheduler.h>
+#include <worklets/android/WorkletsModule.h>
 
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <react/jni/CxxModuleWrapper.h>
-#include <react/jni/JMessageQueueThread.h>
 #include <react/jni/JavaScriptExecutorHolder.h>
 #include <react/jni/WritableNativeMap.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #include <react/fabric/JFabricUIManager.h>
-#include <react/renderer/scheduler/Scheduler.h>
-#if REACT_NATIVE_MINOR_VERSION >= 74
 #include <react/jni/JRuntimeExecutor.h>
-#endif // REACT_NATIVE_MINOR_VERSION >= 74
+#include <react/renderer/scheduler/Scheduler.h>
 #endif // RCT_NEW_ARCH_ENABLED
 
 #include <memory>
@@ -68,6 +65,7 @@ class EventHandler : public HybridClass<EventHandler> {
       jni::alias_ref<JString> eventKey,
       jint emitterReactTag,
       jni::alias_ref<react::WritableMap> event) {
+    ReanimatedSystraceSection s("EventHandler::receiveEvent");
     handler_(eventKey, emitterReactTag, event);
   }
 
@@ -145,36 +143,26 @@ class KeyboardWorkletWrapper : public HybridClass<KeyboardWorkletWrapper> {
   std::function<void(int, int)> callback_;
 };
 
-class NativeProxy : public jni::HybridClass<NativeProxy> {
+class NativeProxy : public jni::HybridClass<NativeProxy>,
+                    std::enable_shared_from_this<NativeProxy> {
  public:
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/NativeProxy;";
   static jni::local_ref<jhybriddata> initHybrid(
       jni::alias_ref<jhybridobject> jThis,
+      jni::alias_ref<WorkletsModule::javaobject> jWorkletsModule,
       jlong jsContext,
       jni::alias_ref<facebook::react::CallInvokerHolder::javaobject>
           jsCallInvokerHolder,
-      jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
       jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      const bool isBridgeless
 #ifdef RCT_NEW_ARCH_ENABLED
+      ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager,
+          fabricUIManager
 #endif
-      const std::string &valueUnpackerCode);
+  );
 
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-  static jni::local_ref<jhybriddata> initHybridBridgeless(
-      jni::alias_ref<jhybridobject> jThis,
-      jlong jsContext,
-      jni::alias_ref<react::JRuntimeExecutor::javaobject> runtimeExecutorHolder,
-      jni::alias_ref<AndroidUIScheduler::javaobject> androidUiScheduler,
-      jni::alias_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager,
-      const std::string &valueUnpackerCode);
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
   static void registerNatives();
 
   ~NativeProxy();
@@ -183,7 +171,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   friend HybridBase;
   jni::global_ref<NativeProxy::javaobject> javaPart_;
   jsi::Runtime *rnRuntime_;
-  std::shared_ptr<NativeReanimatedModule> nativeReanimatedModule_;
+  std::shared_ptr<WorkletsModuleProxy> workletsModuleProxy_;
+  std::shared_ptr<ReanimatedModuleProxy> reanimatedModuleProxy_;
   jni::global_ref<LayoutAnimations::javaobject> layoutAnimations_;
 #ifndef NDEBUG
   void checkJavaVersion(jsi::Runtime &);
@@ -196,10 +185,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 #endif // RCT_NEW_ARCH_ENABLED
   void installJSIBindings();
 #ifdef RCT_NEW_ARCH_ENABLED
-  void synchronouslyUpdateUIProps(
-      jsi::Runtime &rt,
-      Tag viewTag,
-      const jsi::Object &props);
+  void synchronouslyUpdateUIProps(Tag viewTag, const folly::dynamic &props);
 #endif
   PlatformDepMethodsHolder getPlatformDependentMethods();
   void setupLayoutAnimations();
@@ -210,7 +196,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
       const int emitterReactTag);
   void performOperations();
   bool getIsReducedMotion();
-  void requestRender(std::function<void(double)> onRender, jsi::Runtime &rt);
+  void requestRender(std::function<void(double)> onRender);
   void registerEventHandler();
   void maybeFlushUIUpdatesQueue();
   void setGestureState(int handlerTag, int newState);
@@ -257,7 +243,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   /***
    * Wraps a method of `NativeProxy` in a function object capturing `this`
    * @tparam TReturn return type of passed method
-   * @tparam TParams paramater types of passed method
+   * @tparam TParams parameter types of passed method
    * @param methodPtr pointer to method to be wrapped
    * @return a function object with the same signature as the method, calling
    * that method on `this`
@@ -265,6 +251,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
   template <class TReturn, class... TParams>
   std::function<TReturn(TParams...)> bindThis(
       TReturn (NativeProxy::*methodPtr)(TParams...)) {
+    // It's probably safe to pass `this` as reference here...
     return [this, methodPtr](TParams &&...args) {
       return (this->*methodPtr)(std::forward<TParams>(args)...);
     };
@@ -277,34 +264,24 @@ class NativeProxy : public jni::HybridClass<NativeProxy> {
 
   explicit NativeProxy(
       jni::alias_ref<NativeProxy::jhybridobject> jThis,
+      const std::shared_ptr<WorkletsModuleProxy> &workletsModuleProxy,
       jsi::Runtime *rnRuntime,
       const std::shared_ptr<facebook::react::CallInvoker> &jsCallInvoker,
-      const std::shared_ptr<UIScheduler> &uiScheduler,
       jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
+      const bool isBridgeless
 #ifdef RCT_NEW_ARCH_ENABLED
+      ,
       jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager,
+          fabricUIManager
 #endif
-      const std::string &valueUnpackerCode);
-
-#if REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED)
-  explicit NativeProxy(
-      jni::alias_ref<NativeProxy::jhybridobject> jThis,
-      jsi::Runtime *rnRuntime,
-      RuntimeExecutor runtimeExecutor,
-      const std::shared_ptr<UIScheduler> &uiScheduler,
-      jni::global_ref<LayoutAnimations::javaobject> layoutAnimations,
-      jni::alias_ref<JavaMessageQueueThread::javaobject> messageQueueThread,
-      jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
-          fabricUIManager,
-      const std::string &valueUnpackerCode);
-#endif // REACT_NATIVE_MINOR_VERSION >= 74 && defined(RCT_NEW_ARCH_ENABLED
+  );
 
 #ifdef RCT_NEW_ARCH_ENABLED
   void commonInit(jni::alias_ref<facebook::react::JFabricUIManager::javaobject>
                       &fabricUIManager);
 #endif // RCT_NEW_ARCH_ENABLED
+
+  void invalidateCpp();
 };
 
 } // namespace reanimated

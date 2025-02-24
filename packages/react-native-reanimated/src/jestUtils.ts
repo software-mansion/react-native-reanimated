@@ -2,14 +2,15 @@
 'use strict';
 
 import type { ReactTestInstance } from 'react-test-renderer';
+
 import type {
   AnimatedComponentProps,
   IAnimatedComponentInternal,
   InitialComponentProps,
 } from './createAnimatedComponent/commonTypes';
-import { isJest } from './PlatformChecker';
-import type { DefaultStyle } from './hook/commonTypes';
 import { ReanimatedError } from './errors';
+import type { DefaultStyle } from './hook/commonTypes';
+import { isJest } from './PlatformChecker';
 
 declare global {
   namespace jest {
@@ -61,8 +62,6 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
         ...style,
       };
     });
-
-    return currentStyle;
   }
 
   const jestInlineStyles = component.props.jestInlineStyle as JestInlineStyle;
@@ -83,7 +82,6 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
     }
 
     currentStyle = {
-      ...styleObject,
       ...currentStyle,
       ...jestAnimatedStyleValue,
     };
@@ -93,9 +91,9 @@ const getCurrentStyle = (component: TestComponent): DefaultStyle => {
 
   const inlineStyles = getStylesFromObject(jestInlineStyles);
 
-  currentStyle = isEmpty(jestAnimatedStyleValue as object | undefined)
-    ? { ...styleObject, ...inlineStyles }
-    : { ...styleObject, ...jestAnimatedStyleValue };
+  currentStyle = isEmpty(jestAnimatedStyleValue as object)
+    ? { ...inlineStyles }
+    : { ...jestAnimatedStyleValue };
 
   return currentStyle;
 };

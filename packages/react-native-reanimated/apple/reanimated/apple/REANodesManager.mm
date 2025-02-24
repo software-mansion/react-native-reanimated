@@ -242,13 +242,6 @@ using namespace facebook::react;
   }];
 }
 
-#ifdef RCT_NEW_ARCH_ENABLED
-- (void)setSurfacePresenter:(id<RCTSurfacePresenterStub>)surfacePresenter
-{
-  _surfacePresenter = surfacePresenter;
-}
-#endif // RCT_NEW_ARCH_ENABLED
-
 - (void)operationsBatchDidComplete
 {
   if (![[self getDisplayLink] isPaused]) {
@@ -313,7 +306,7 @@ using namespace facebook::react;
 - (void)performOperations
 {
 #ifdef RCT_NEW_ARCH_ENABLED
-  _performOperations(); // calls NativeReanimatedModule::performOperations
+  _performOperations(); // calls ReanimatedModuleProxy::performOperations
   _wantRunUpdates = NO;
 #else
   if (_operationsInBatch.count != 0) {

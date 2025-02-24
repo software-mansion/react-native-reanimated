@@ -2,8 +2,8 @@ import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
 import { traverse } from '@babel/core';
 import generate from '@babel/generator';
 import type {
-  File as BabelFile,
   ExpressionStatement,
+  File as BabelFile,
   FunctionDeclaration,
   Identifier,
   VariableDeclaration,
@@ -31,6 +31,8 @@ import {
 import { strict as assert } from 'assert';
 import * as convertSourceMap from 'convert-source-map';
 import * as fs from 'fs';
+
+import { workletTransformSync } from './transform';
 import type { ReanimatedPluginPass, WorkletizableFunction } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';

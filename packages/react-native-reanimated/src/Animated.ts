@@ -1,33 +1,32 @@
 'use strict';
-import type { Extrapolate as _Extrapolate } from './interpolateColor';
 import type {
-  SharedValue as _SharedValue,
   AnimatedTransform as _AnimatedTransform,
   AnimateStyle as _AnimateStyle,
-  StylesOrDefault as _StylesOrDefault,
   EasingFunction as _EasingFunction,
+  SharedValue as _SharedValue,
+  StylesOrDefault as _StylesOrDefault,
 } from './commonTypes';
-import type { DerivedValue as _DerivedValue } from './hook/useDerivedValue';
+import type { FlatListPropsWithLayout as _FlatListPropsWithLayout } from './component/FlatList';
+import type { AnimatedScrollViewProps as _AnimatedScrollViewProps } from './component/ScrollView';
 import type {
-  TransformStyleTypes as _TransformStyleTypes,
   Adaptable as _Adaptable,
   AdaptTransforms as _AdaptTransforms,
   AnimateProps as _AnimateProps,
+  TransformStyleTypes as _TransformStyleTypes,
 } from './helperTypes';
+import type { DerivedValue as _DerivedValue } from './hook/useDerivedValue';
+import type { Extrapolate as _Extrapolate } from './interpolateColor';
 
-import type { AnimatedScrollViewProps as _AnimatedScrollViewProps } from './component/ScrollView';
-import type { FlatListPropsWithLayout as _FlatListPropsWithLayout } from './component/FlatList';
-
-export { createAnimatedComponent } from './createAnimatedComponent';
+export { ReanimatedFlatList as FlatList } from './component/FlatList';
+export { AnimatedImage as Image } from './component/Image';
+export { AnimatedScrollView as ScrollView } from './component/ScrollView';
 export { AnimatedText as Text } from './component/Text';
 export { AnimatedView as View } from './component/View';
-export { AnimatedScrollView as ScrollView } from './component/ScrollView';
-export { AnimatedImage as Image } from './component/Image';
-export { ReanimatedFlatList as FlatList } from './component/FlatList';
 export {
   addWhitelistedNativeProps,
   addWhitelistedUIProps,
 } from './ConfigHelper';
+export { createAnimatedComponent } from './createAnimatedComponent';
 /**
  * @deprecated Please import `Extrapolate` directly from
  *   `react-native-reanimated` instead of `Animated` namespace.

@@ -2,25 +2,19 @@
 /* eslint-disable */
 
 import type { ShadowNodeWrapper } from './commonTypes';
+import {
+  findHostInstance,
+  HostInstance,
+} from './platform-specific/findHostInstance';
 
-let findHostInstance_DEPRECATED: (ref: unknown) => void;
 let getInternalInstanceHandleFromPublicInstance: (ref: unknown) => {
   stateNode: { node: unknown };
 };
 
 export function getShadowNodeWrapperFromRef(
-  ref: React.Component
+  ref: React.Component,
+  hostInstance?: HostInstance
 ): ShadowNodeWrapper {
-  // load findHostInstance_DEPRECATED lazily because it may not be available before render
-  if (findHostInstance_DEPRECATED === undefined) {
-    try {
-      findHostInstance_DEPRECATED =
-        require('react-native/Libraries/Renderer/shims/ReactFabric').findHostInstance_DEPRECATED;
-    } catch (e) {
-      findHostInstance_DEPRECATED = (_ref: unknown) => null;
-    }
-  }
-
   if (getInternalInstanceHandleFromPublicInstance === undefined) {
     try {
       getInternalInstanceHandleFromPublicInstance =
@@ -33,6 +27,7 @@ export function getShadowNodeWrapperFromRef(
     }
   }
 
+  // TODO: Clean this up since 0.74 is the minimum supported version now.
   // taken from https://github.com/facebook/react-native/commit/803bb16531697233686efd475f004c1643e03617#diff-d8172256c6d63b5d32db10e54d7b10f37a26b337d5280d89f5bfd7bcea778292R196
   // @ts-ignore some weird stuff on RN 0.74 - see examples with scrollView
   const scrollViewRef = ref?.getScrollResponder?.()?.getNativeScrollRef?.();
@@ -49,9 +44,9 @@ export function getShadowNodeWrapperFromRef(
   } else if (textInputRef) {
     resolvedRef = textInputRef;
   } else {
-    resolvedRef = getInternalInstanceHandleFromPublicInstance(
-      findHostInstance_DEPRECATED(ref)
-    ).stateNode.node;
+    const instance = hostInstance ?? findHostInstance(ref);
+    resolvedRef =
+      getInternalInstanceHandleFromPublicInstance(instance).stateNode.node;
   }
 
   return resolvedRef;

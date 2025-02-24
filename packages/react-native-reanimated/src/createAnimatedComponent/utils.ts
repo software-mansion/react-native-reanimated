@@ -1,4 +1,6 @@
 'use strict';
+import type { StyleProps } from '../commonTypes';
+import type { CSSStyle } from '../css';
 import type { NestedArray } from './commonTypes';
 
 export function flattenArray<T>(array: NestedArray<T>): T[] {
@@ -33,3 +35,27 @@ export const has = <K extends string>(
   }
   return false;
 };
+
+export function filterStyles(styles: StyleProps[] | undefined): {
+  cssStyle: CSSStyle;
+  animatedStyles: StyleProps[];
+} {
+  if (!styles) {
+    return { animatedStyles: [], cssStyle: {} };
+  }
+
+  return styles.reduce<{
+    cssStyle: CSSStyle;
+    animatedStyles: StyleProps[];
+  }>(
+    ({ animatedStyles, cssStyle }, style) => {
+      if (style?.viewDescriptors) {
+        animatedStyles.push(style);
+      } else {
+        cssStyle = { ...cssStyle, ...style } as CSSStyle;
+      }
+      return { animatedStyles, cssStyle };
+    },
+    { animatedStyles: [], cssStyle: {} }
+  );
+}

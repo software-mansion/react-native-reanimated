@@ -1,6 +1,9 @@
 'use strict';
-import type { ReduceMotion, StyleProps } from '../../commonTypes';
-import type { LayoutAnimationType } from '../animationBuilder/commonTypes';
+import type {
+  LayoutAnimationType,
+  ReduceMotion,
+  StyleProps,
+} from '../../commonTypes';
 import {
   BounceIn,
   BounceInData,
@@ -36,7 +39,6 @@ import {
   StretchOutData,
 } from './animation/Stretch.web';
 import { ZoomIn, ZoomInData, ZoomOut, ZoomOutData } from './animation/Zoom.web';
-
 import type { AnimationData, AnimationStyle } from './animationParser';
 
 export type AnimationCallback = ((finished: boolean) => void) | null;

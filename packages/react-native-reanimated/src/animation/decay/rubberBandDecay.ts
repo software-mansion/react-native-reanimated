@@ -1,5 +1,5 @@
 'use strict';
-import type { RubberBandDecayConfig, InnerDecayAnimation } from './utils';
+import type { InnerDecayAnimation, RubberBandDecayConfig } from './utils';
 import { SLOPE_FACTOR, VELOCITY_EPS } from './utils';
 
 const DERIVATIVE_EPS = 0.1;
