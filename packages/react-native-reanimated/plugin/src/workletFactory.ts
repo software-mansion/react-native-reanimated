@@ -80,7 +80,8 @@ export function makeWorkletFactory(
     '(' + (fun.isObjectMethod() ? 'function ' : '') + codeObject.code + '\n)';
 
   const transformed = workletTransformSync(codeObject.code, {
-    extraPlugins,
+    extraPlugins: [...extraPlugins, ...(state.opts.extraPlugins ?? [])],
+    extraPresets: state.opts.extraPresets,
     filename: state.file.opts.filename,
     ast: true,
     babelrc: false,
