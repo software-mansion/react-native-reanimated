@@ -14,7 +14,7 @@
     "react-native": "0.75.4",
     "react-native-macos": "^0.75.13",
     "react-native-reanimated": "workspace:*",
-    "react-native-screens": "4.5.0"
+    "react-native-screens": "4.9.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

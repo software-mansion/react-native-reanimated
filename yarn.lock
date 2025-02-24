@@ -9190,8 +9190,8 @@ __metadata:
     react-native-pager-view: "npm:6.6.1"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.2.0"
-    react-native-screens: "npm:4.9.0-beta.0"
-    react-native-svg: "patch:react-native-svg@npm%3A15.11.1#~/.yarn/patches/react-native-svg-npm-15.11.1-74e70f03d8.patch"
+    react-native-screens: "npm:^4.9.0"
+    react-native-svg: "npm:15.11.2"
     react-strict-dom: "npm:0.0.27"
     react-test-renderer: "npm:^19.0.0"
     typescript: "npm:~5.3.0"
@@ -15302,7 +15302,7 @@ __metadata:
     react-native: "npm:0.75.4"
     react-native-macos: "npm:^0.75.13"
     react-native-reanimated: "workspace:*"
-    react-native-screens: "npm:4.5.0"
+    react-native-screens: "npm:^4.9.0"
   languageName: unknown
   linkType: soft
 
@@ -18379,35 +18379,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-screens@npm:4.5.0":
-  version: 4.5.0
-  resolution: "react-native-screens@npm:4.5.0"
+"react-native-screens@npm:^4.9.0":
+  version: 4.9.0
+  resolution: "react-native-screens@npm:4.9.0"
   dependencies:
     react-freeze: "npm:^1.0.0"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/e9f56b52989aab7e58ed6a3930632d00c5ab94365e5a591cfc0187ffa742870b3eadb1d1832ff4cc6a7a3b8b77fce0a022ab781a72866539e830dc43b380ac60
+  checksum: 10/705475d6f99acfcf4c2d8f011b2c453f412f882affef638dd2da33391a0d7401d10fe919d31f04fab8625b3aa3c33c39c3a6e685449bc47449856abafa02caec
   languageName: node
   linkType: hard
 
-"react-native-screens@npm:4.9.0-beta.0":
-  version: 4.9.0-beta.0
-  resolution: "react-native-screens@npm:4.9.0-beta.0"
-  dependencies:
-    react-freeze: "npm:^1.0.0"
-    warn-once: "npm:^0.1.0"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/63bfd5221493ade2ebeff2c1653e84667630132d926a56f18cd4d68052d7e9ea54c2cc41ea86faadbfc777d331d849cfceba364601ea8cabbe16811f9375343c
-  languageName: node
-  linkType: hard
-
-"react-native-svg@npm:15.11.1":
-  version: 15.11.1
-  resolution: "react-native-svg@npm:15.11.1"
+"react-native-svg@npm:15.11.2":
+  version: 15.11.2
+  resolution: "react-native-svg@npm:15.11.2"
   dependencies:
     css-select: "npm:^5.1.0"
     css-tree: "npm:^1.1.3"
@@ -18415,21 +18402,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/fcec888f1a472a5a6b6cb6438e6fe3c044be57f08ee8969c393c739edea5364f6d2187983e17b28fffc48b1f275f686b4bcca24359e7f4fa378299dea18fbc20
-  languageName: node
-  linkType: hard
-
-"react-native-svg@patch:react-native-svg@npm%3A15.11.1#~/.yarn/patches/react-native-svg-npm-15.11.1-74e70f03d8.patch":
-  version: 15.11.1
-  resolution: "react-native-svg@patch:react-native-svg@npm%3A15.11.1#~/.yarn/patches/react-native-svg-npm-15.11.1-74e70f03d8.patch::version=15.11.1&hash=a9f2aa"
-  dependencies:
-    css-select: "npm:^5.1.0"
-    css-tree: "npm:^1.1.3"
-    warn-once: "npm:0.1.1"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10/2b73ad54a76d321586c34a457921e87001c39d91c3406c5356d7d915559faa44a423fe7a12aaed5e57322ca5db4d3fef4af98d5a9f1dde8fffa553effd8fe3e3
+  checksum: 10/bab86df8fdd4f500ad3f242558726693b0409b5e9b2a97cb3e9b5c1dfdcef01fe73fd36f01926ef20b19f99928b6ab1fb9e942bbeb1308aab27aa0d6c4877a5e
   languageName: node
   linkType: hard
 
