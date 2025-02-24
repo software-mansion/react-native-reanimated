@@ -21,6 +21,7 @@ import { filterNonCSSStyleProps } from './utils';
 
 const SHOULD_BE_USE_WEB = shouldBeUseWeb();
 const IS_WEB = isWeb();
+const IS_FABRIC = isFabric();
 
 export type AnimatedComponentProps = Record<string, unknown> & {
   ref?: Ref<Component>;
@@ -98,7 +99,7 @@ export default class AnimatedComponent<
       viewTag = viewInfo.viewTag;
       viewName = viewInfo.viewName;
       viewConfig = viewInfo.viewConfig;
-      shadowNodeWrapper = isFabric()
+      shadowNodeWrapper = IS_FABRIC
         ? getShadowNodeWrapperFromRef(this, hostInstance)
         : null;
     }

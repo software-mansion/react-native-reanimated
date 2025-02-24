@@ -25,8 +25,6 @@ class UISchedulerWrapper : public UIScheduler {
       androidUiScheduler_->cthis()->scheduleTriggerOnUI();
     }
   }
-
-  ~UISchedulerWrapper() {}
 };
 
 AndroidUIScheduler::AndroidUIScheduler(
@@ -41,6 +39,9 @@ jni::local_ref<AndroidUIScheduler::jhybriddata> AndroidUIScheduler::initHybrid(
 }
 
 void AndroidUIScheduler::triggerUI() {
+  if (!uiScheduler_) {
+    return;
+  }
   uiScheduler_->triggerUI();
 }
 
@@ -50,10 +51,16 @@ void AndroidUIScheduler::scheduleTriggerOnUI() {
   method(javaPart_.get());
 }
 
+void AndroidUIScheduler::invalidate() {
+  javaPart_ = nullptr;
+  uiScheduler_.reset();
+}
+
 void AndroidUIScheduler::registerNatives() {
   registerHybrid({
       makeNativeMethod("initHybrid", AndroidUIScheduler::initHybrid),
       makeNativeMethod("triggerUI", AndroidUIScheduler::triggerUI),
+      makeNativeMethod("invalidate", AndroidUIScheduler::invalidate),
   });
 }
 

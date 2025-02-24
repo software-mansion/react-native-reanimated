@@ -23,6 +23,8 @@ export interface ReanimatedPluginOptions {
   globals?: string[];
   substituteWebPlatformChecks?: boolean;
   disableSourceMaps?: boolean;
+  extraPlugins?: string[];
+  extraPresets?: string[];
 }
 
 export interface ReanimatedPluginPass {
