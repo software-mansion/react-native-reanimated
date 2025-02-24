@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 'use strict';
 import type { MutableRefObject } from 'react';
+import { runOnUIImmediately } from 'react-native-worklets';
 
 import { processColorsInProps } from './Colors';
 import type {
@@ -13,7 +14,6 @@ import type { Descriptor } from './hook/commonTypes';
 import { isFabric, isJest, shouldBeUseWeb } from './PlatformChecker';
 import type { ReanimatedHTMLElement } from './ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from './ReanimatedModule/js-reanimated';
-import { runOnUIImmediately } from './WorkletsResolver';
 
 let updateProps: (
   viewDescriptors: ViewDescriptorsWrapper,

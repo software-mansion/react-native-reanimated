@@ -7,6 +7,7 @@ import type {
   TextStyle,
   ViewStyle,
 } from 'react-native';
+import type { WorkletFunction } from 'react-native-worklets';
 
 import type {
   AnimatedPropsAdapterFunction,
@@ -16,7 +17,6 @@ import type {
 } from '../commonTypes';
 import type { ReanimatedHTMLElement } from '../ReanimatedModule/js-reanimated';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
-import type { WorkletFunction } from '../WorkletsResolver';
 
 export type DependencyList = Array<unknown> | undefined;
 

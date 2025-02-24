@@ -146,9 +146,6 @@ def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
 def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
 
-def hasExternalWorklets = rootProject.subprojects.find { it.name == 'react-native-worklets' } != null
-
-def workletsPrefabHeadersDir = project.file("$buildDir/prefab-headers/worklets")
 def reanimatedPrefabHeadersDir = project.file("$buildDir/prefab-headers/reanimated")
 
 def JS_RUNTIME = {
@@ -233,11 +230,6 @@ android {
     }
 
     prefab {
-        if (!hasExternalWorklets) {
-            worklets {
-                headers workletsPrefabHeadersDir.absolutePath
-            }
-        }
         reanimated {
             headers reanimatedPrefabHeadersDir.absolutePath
         }
@@ -263,14 +255,9 @@ android {
                         "-DIS_REANIMATED_EXAMPLE_APP=${IS_REANIMATED_EXAMPLE_APP}",
                         "-DREANIMATED_PROFILING=${REANIMATED_PROFILING}",
                         "-DREANIMATED_VERSION=${REANIMATED_VERSION}",
-                        "-DHAS_EXTERNAL_WORKLETS=${hasExternalWorklets}",
                         "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
                 abiFilters (*reactNativeArchitectures())
-                if(hasExternalWorklets){
-                    targets("reanimated")
-                } else {
-                    targets("reanimated", "worklets")
-                }
+                targets("reanimated")
             }
         }
 
@@ -352,16 +339,6 @@ android {
     }
     sourceSets.main {
         java {
-            if(hasExternalWorklets){
-                srcDirs += "src/externalWorklets/with"
-            } else {
-                srcDirs += "src/worklets/main"
-                srcDirs += "src/externalWorklets/without"
-                if(!IS_NEW_ARCHITECTURE_ENABLED){
-                    srcDirs += "src/externalWorklets/withoutPaper"
-                }
-            }
-
             if (IS_NEW_ARCHITECTURE_ENABLED) {
                 srcDirs += "src/fabric/java"
             } else {
@@ -410,15 +387,6 @@ def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
     }
 }
 
-if (!hasExternalWorklets) {
-    task prepareWorkletsHeadersForPrefabs(type: Copy) {
-        from("$projectDir/src/main/cpp")
-        from("$projectDir/../Common/cpp")
-        include("worklets/**/*.h")
-        into(workletsPrefabHeadersDir)
-    }
-}
-
 task prepareReanimatedHeadersForPrefabs(type: Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
@@ -445,17 +413,11 @@ task printVersions {
 task createNativeDepsDirectories() {
     downloadsDir.mkdirs()
     thirdPartyNdkDir.mkdirs()
-    if (!hasExternalWorklets) {
-        workletsPrefabHeadersDir.mkdirs()
-    }
     reanimatedPrefabHeadersDir.mkdirs()
 }
 
 task packageNdkLibs(type: Copy) {
     from("$buildDir/reanimated-ndk/all")
-    if (!hasExternalWorklets) {
-        include("**/libworklets.so")
-    }
     include("**/libreanimated.so")
     into("$projectDir/src/main/jniLibs")
 }
@@ -484,9 +446,7 @@ dependencies {
         implementation "com.facebook.react:hermes-android" // version substituted by RNGP
     }
  
-    if (hasExternalWorklets) {
-        implementation project(":react-native-worklets")
-    }
+    implementation project(":react-native-worklets")
 }
 
 def nativeBuildDependsOn(dependsOnTask) {
@@ -501,9 +461,6 @@ def nativeBuildDependsOn(dependsOnTask) {
 }
 
 afterEvaluate {
-    if (!hasExternalWorklets) {
-        preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
-    }
     preBuild.dependsOn(prepareReanimatedHeadersForPrefabs)
 
     tasks.forEach({ task ->

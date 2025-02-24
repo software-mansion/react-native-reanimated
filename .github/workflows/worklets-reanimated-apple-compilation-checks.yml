@@ -26,17 +26,11 @@ jobs:
   ios-with-external-worklets-build:
     if: github.repository == 'software-mansion/react-native-reanimated'
     uses: ./.github/workflows/example-ios-build-check.yml
-    with:
-      use-external-worklets: true
 
   macos-with-external-worklets-build:
     if: github.repository == 'software-mansion/react-native-reanimated'
     uses: ./.github/workflows/example-macos-build-check.yml
-    with:
-      use-external-worklets: true
 
   tvos-with-external-worklets-build:
     if: github.repository == 'software-mansion/react-native-reanimated'
     uses: ./.github/workflows/example-tvos-build-check.yml
-    with:
-      use-external-worklets: true

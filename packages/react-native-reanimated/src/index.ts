@@ -291,6 +291,6 @@ export {
   ScreenTransition,
   startScreenTransition,
 } from './screenTransition';
-export type { WorkletRuntime } from './WorkletsResolver';
-export { LogLevel as ReanimatedLogLevel } from './WorkletsResolver';
-export { isWorkletFunction } from './WorkletsResolver';
+export type { WorkletRuntime } from 'react-native-worklets';
+export { LogLevel as ReanimatedLogLevel } from 'react-native-worklets';
+export { isWorkletFunction } from 'react-native-worklets';

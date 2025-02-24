@@ -1,4 +1,6 @@
 'use strict';
+import type { ShareableRef, WorkletFunction } from 'react-native-worklets';
+
 import type {
   SensorConfig,
   SharedValue,
@@ -8,7 +10,6 @@ import type {
 import { SensorType } from './commonTypes';
 import { makeMutable } from './mutables';
 import { ReanimatedModule } from './ReanimatedModule';
-import type { ShareableRef, WorkletFunction } from './WorkletsResolver';
 
 function initSensorData(
   sensorType: SensorType

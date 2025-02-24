@@ -30,17 +30,7 @@ on:
       - apps/macos-example/ios/**
       - apps/macos-example/macos/**
   workflow_call:
-    inputs:
-      use-external-worklets:
-        required: false
-        type: boolean
-        default: false
   workflow_dispatch:
-    inputs:
-      use-external-worklets:
-        required: false
-        type: boolean
-        default: false
 
 jobs:
   build:
@@ -51,7 +41,7 @@ jobs:
       COMMON_APP_DIR: apps/common-app
       REANIMATED_DIR: packages/react-native-reanimated
     concurrency:
-      group: macos-${{ github.ref }}-${{ inputs.use-external-worklets }}
+      group: macos-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -67,15 +57,6 @@ jobs:
       - name: Build Reanimated package
         working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn build
-
-      - name: Use external worklets
-        if: ${{ inputs.use-external-worklets }}
-        working-directory: ${{ env.COMMON_APP_DIR }}
-        run: yarn add react-native-worklets@workspace:"*"
-      - name: Use external worklets
-        if: ${{ inputs.use-external-worklets }}
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn add react-native-worklets@workspace:"*"
 
       - name: Install Pods
         working-directory: ${{ env.WORKING_DIRECTORY }}/macos

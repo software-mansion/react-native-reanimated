@@ -28,17 +28,7 @@ on:
       - apps/fabric-example/package.json
       - apps/fabric-example/ios/**
   workflow_call:
-    inputs:
-      use-external-worklets:
-        required: false
-        type: boolean
-        default: false
   workflow_dispatch:
-    inputs:
-      use-external-worklets:
-        required: false
-        type: boolean
-        default: false
 
 jobs:
   build:
@@ -49,7 +39,7 @@ jobs:
       COMMON_APP_DIR: apps/common-app
       REANIMATED_DIR: packages/react-native-reanimated
     concurrency:
-      group: ios-${{ github.ref }}-${{ inputs.use-external-worklets }}
+      group: ios-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -64,15 +54,6 @@ jobs:
       - name: Build Reanimated package
         working-directory: ${{ env.REANIMATED_DIR }}
         run: yarn build
-
-      - name: Use external worklets
-        if: ${{ inputs.use-external-worklets }}
-        working-directory: ${{ env.COMMON_APP_DIR }}
-        run: yarn add react-native-worklets@workspace:"*"
-      - name: Use external worklets
-        if: ${{ inputs.use-external-worklets }}
-        working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: yarn add react-native-worklets@workspace:"*"
 
       # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install Pods

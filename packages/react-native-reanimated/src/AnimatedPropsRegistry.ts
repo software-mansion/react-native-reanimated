@@ -1,7 +1,8 @@
 'use strict';
+import { runOnUI } from 'react-native-worklets';
+
 import { ReanimatedError } from './errors';
 import { isFabric } from './PlatformChecker';
-import { runOnUI } from './WorkletsResolver';
 
 let VIEW_TAGS: number[] = [];
 
