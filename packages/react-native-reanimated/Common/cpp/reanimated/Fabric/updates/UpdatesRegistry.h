@@ -40,12 +40,13 @@ class UpdatesRegistry {
   void collectPropsToRevert(PropsToRevertMap &propsToRevertMap);
 #endif
 
-  void flushUpdates(UpdatesBatch &updatesBatch, bool merge);
-  void collectProps(PropsMap &propsMap);
+  void flushUpdates(UpdatesBatch &updatesBatch);
+  virtual void collectProps(PropsMap &propsMap);
 
  protected:
   mutable std::mutex mutex_;
   std::unordered_set<Tag> tagsToRemove_;
+  RegistryMap updatesRegistry_;
 
   void addUpdatesToBatch(
       const ShadowNode::Shared &shadowNode,
@@ -58,9 +59,8 @@ class UpdatesRegistry {
 
  private:
   UpdatesBatch updatesBatch_;
-  RegistryMap updatesRegistry_;
 
-  void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch, bool merge);
+  void flushUpdatesToRegistry(const UpdatesBatch &updatesBatch);
   void runMarkedRemovals();
 
 #ifdef ANDROID

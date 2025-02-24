@@ -34,6 +34,10 @@ folly::dynamic CSSTransition::getCurrentInterpolationStyle() const {
   return styleInterpolator_.interpolate(shadowNode_, progressProvider_);
 }
 
+TransitionProperties CSSTransition::getProperties() const {
+  return properties_;
+}
+
 PropertyNames CSSTransition::getAllowedProperties(
     const folly::dynamic &oldProps,
     const folly::dynamic &newProps) {

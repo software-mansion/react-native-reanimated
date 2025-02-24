@@ -30,6 +30,7 @@ class CSSTransitionsRegistry
   void add(const std::shared_ptr<CSSTransition> &transition);
   void remove(Tag viewTag);
   void updateSettings(Tag viewTag, const PartialCSSTransitionConfig &config);
+  void collectProps(PropsMap &propsMap) override;
 
   void update(double timestamp);
 
@@ -48,6 +49,9 @@ class CSSTransitionsRegistry
   void scheduleOrActivateTransition(
       const std::shared_ptr<CSSTransition> &transition);
   PropsObserver createPropsObserver(Tag viewTag);
+  void updateInUpdatesRegistry(
+      const std::shared_ptr<CSSTransition> &transition,
+      const folly::dynamic &updates);
 };
 
 } // namespace reanimated
