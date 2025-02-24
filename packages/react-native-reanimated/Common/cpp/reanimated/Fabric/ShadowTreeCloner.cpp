@@ -80,6 +80,8 @@ RootShadowNode::Unshared cloneShadowTreeWithNewProps(
     for (auto &[family, _] : propsMap) {
       const auto ancestors = family->getAncestors(oldRootNode);
       if (ancestors.empty()) {
+        // no ancestors means that there is no shadowNode from
+        // this family in the ShadowTree - we can safely cleanup the registry
         tagsToRemove.push_back(family->getTag());
       }
 

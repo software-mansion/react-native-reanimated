@@ -51,8 +51,8 @@ void CSSTransitionsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
   }
 }
 
-bool CSSTransitionsRegistry::empty() {
-  return UpdatesRegistry::empty() && registry_.empty() &&
+bool CSSTransitionsRegistry::isEmpty() {
+  return UpdatesRegistry::isEmpty() && registry_.empty() &&
       runningTransitionTags_.empty();
 }
 

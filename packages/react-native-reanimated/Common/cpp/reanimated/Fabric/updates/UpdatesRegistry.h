@@ -43,7 +43,7 @@ class UpdatesRegistry {
   void flushUpdates(UpdatesBatch &updatesBatch, bool merge);
   void collectProps(PropsMap &propsMap);
   virtual void removeBatch(const std::vector<Tag> &tagsToRemove);
-  bool empty();
+  bool isEmpty();
   virtual ~UpdatesRegistry() {}
 
  protected:

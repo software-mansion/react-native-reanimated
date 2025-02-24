@@ -40,7 +40,7 @@ void StaticPropsRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
   }
 }
 
-bool StaticPropsRegistry::empty() {
+bool StaticPropsRegistry::isEmpty() {
   return registry_.empty() && observers_.empty();
 }
 

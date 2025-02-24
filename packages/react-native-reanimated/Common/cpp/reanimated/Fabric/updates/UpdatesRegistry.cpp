@@ -101,7 +101,7 @@ void UpdatesRegistry::removeBatch(const std::vector<Tag> &tagsToRemove) {
   }
 }
 
-bool UpdatesRegistry::empty() {
+bool UpdatesRegistry::isEmpty() {
   return updatesRegistry_.empty();
 }
 

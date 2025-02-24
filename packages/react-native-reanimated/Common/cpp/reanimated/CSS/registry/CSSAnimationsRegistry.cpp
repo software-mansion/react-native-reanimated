@@ -272,8 +272,8 @@ bool CSSAnimationsRegistry::addStyleUpdates(
   return hasUpdates;
 }
 
-bool CSSAnimationsRegistry::empty() {
-  return UpdatesRegistry::empty() && registry_.empty() &&
+bool CSSAnimationsRegistry::isEmpty() {
+  return UpdatesRegistry::isEmpty() && registry_.empty() &&
       runningAnimationsMap_.empty() && animationsToRevertMap_.empty();
 }
 

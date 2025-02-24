@@ -823,33 +823,6 @@ double ReanimatedModuleProxy::getCssTimestamp() {
   return currentCssTimestamp_;
 }
 
-std::string format(bool b) {
-  return b ? "✅" : "❌";
-}
-
-std::function<std::string()>
-ReanimatedModuleProxy::createRegistriesLeakCheck() {
-  return [weakThis = weak_from_this()]() {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return std::string("");
-    }
-
-    std::string result = "";
-
-    result += "AnimatedPropsRegistry: " +
-        format(strongThis->animatedPropsRegistry_->empty());
-    result += "\nCSSAnimationsRegistry: " +
-        format(strongThis->cssAnimationsRegistry_->empty());
-    result += "\nCSSTransitionsRegistry: " +
-        format(strongThis->cssTransitionsRegistry_->empty());
-    result += "\nStaticPropsRegistry: " +
-        format(strongThis->staticPropsRegistry_->empty()) + "\n";
-
-    return result;
-  };
-}
-
 void ReanimatedModuleProxy::performOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performOperations");
 
@@ -1138,6 +1111,37 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxy() {
         workletsModuleProxy_->getUIScheduler());
   }
 }
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
+
+std::string format(bool b) {
+  return b ? "✅" : "❌";
+}
+
+std::function<std::string()>
+ReanimatedModuleProxy::createRegistriesLeakCheck() {
+  return [weakThis = weak_from_this()]() {
+    auto strongThis = weakThis.lock();
+    if (!strongThis) {
+      return std::string("");
+    }
+
+    std::string result = "";
+
+    result += "AnimatedPropsRegistry: " +
+        format(strongThis->animatedPropsRegistry_->isEmpty());
+    result += "\nCSSAnimationsRegistry: " +
+        format(strongThis->cssAnimationsRegistry_->isEmpty());
+    result += "\nCSSTransitionsRegistry: " +
+        format(strongThis->cssTransitionsRegistry_->isEmpty());
+    result += "\nStaticPropsRegistry: " +
+        format(strongThis->staticPropsRegistry_->isEmpty()) + "\n";
+
+    return result;
+  };
+}
+
+#endif // IS_REANIMATED_EXAMPLE_APP
 
 #endif // RCT_NEW_ARCH_ENABLED
 

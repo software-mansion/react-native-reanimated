@@ -14,7 +14,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { DropContext } from '@/App';
+import { NukeContext } from '@/App';
 
 type RootStackParamList = {
   screen1: undefined;
@@ -95,7 +95,7 @@ const AnimatedStyleAnimation = () => {
 };
 
 function HomeScreen() {
-  const drop = React.useContext(DropContext);
+  const nuke = React.useContext(NukeContext);
   const navigation = useNavigation<FirstScreenProp>();
   const [freezed, setFreezed] = useState(false);
   const isFocused = useIsFocused();
@@ -117,7 +117,7 @@ function HomeScreen() {
           }}
           title="Go to screen 1"
         />
-        <Button onPress={drop} title="Check for registry leaks" />
+        <Button onPress={nuke} title="Check for registry leaks" />
         <AnimatedSwitch />
         <CSSAnimation />
         <CSSTransition />
@@ -128,7 +128,7 @@ function HomeScreen() {
 }
 
 function Screen1() {
-  const drop = React.useContext(DropContext);
+  const nuke = React.useContext(NukeContext);
   const navigation = useNavigation<FirstScreenProp>();
   return (
     <View style={styles.container}>
@@ -137,7 +137,7 @@ function Screen1() {
         onPress={() => navigation.navigate('screen2')}
         title="Go to screen 2"
       />
-      <Button onPress={drop} title="Check for registry leaks" />
+      <Button onPress={nuke} title="Check for registry leaks" />
       <Button onPress={() => navigation.goBack()} title="Go Back" />
     </View>
   );

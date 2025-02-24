@@ -1,19 +1,16 @@
 import { useContext, useEffect, useState } from 'react';
 import { Button, Text, View } from 'react-native';
 
-import { DropContext } from '@/App';
+import { NukeContext } from '@/App';
 
 function registriesLeakCheck(): string {
-  if ('_registriesLeakCheck' in global) {
-    // eslint-disable-next-line no-underscore-dangle
-    return (global._registriesLeakCheck as () => string)();
-  }
-  return '';
+  // eslint-disable-next-line no-underscore-dangle
+  return global._registriesLeakCheck() ?? '';
 }
 
 export function LeakCheck() {
   const [leakCheck, setLeakCheck] = useState('');
-  const goBack = useContext(DropContext);
+  const goBack = useContext(NukeContext);
 
   useEffect(() => {
     setTimeout(() => setLeakCheck(registriesLeakCheck()), 100);

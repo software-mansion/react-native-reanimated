@@ -25,7 +25,6 @@ void RNRuntimeDecorator::decorate(
 
 #ifndef NDEBUG
   checkJSVersion(rnRuntime, reanimatedModuleProxy->getJSLogger());
-
 #endif // NDEBUG
 
 #if defined(IS_REANIMATED_EXAMPLE_APP) && defined(RCT_NEW_ARCH_ENABLED)
@@ -33,7 +32,7 @@ void RNRuntimeDecorator::decorate(
       rnRuntime,
       "_registriesLeakCheck",
       reanimatedModuleProxy->createRegistriesLeakCheck());
-#endif
+#endif // defined(IS_REANIMATED_EXAMPLE_APP) && defined(RCT_NEW_ARCH_ENABLED)
   injectReanimatedCppVersion(rnRuntime);
 
   rnRuntime.global().setProperty(

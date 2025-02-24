@@ -17,18 +17,18 @@ import { IS_MACOS, IS_WEB, isFabric, noop } from '@/utils';
 import { CSSApp, ReanimatedApp } from './apps';
 import { LeakCheck } from './components/LeakCheck';
 
-export const DropContext = createContext<() => void>(() => '');
+export const NukeContext = createContext<() => void>(() => '');
 
 export default function App() {
-  const [droped, setNuked] = useState(false);
+  const [nuked, setNuked] = useState(false);
   const { isReady, navigationState, updateNavigationState } =
     useNavigationState();
 
-  if (droped) {
+  if (nuked) {
     return (
-      <DropContext.Provider value={() => setNuked(false)}>
+      <NukeContext.Provider value={() => setNuked(false)}>
         <LeakCheck />
-      </DropContext.Provider>
+      </NukeContext.Provider>
     );
   }
 
@@ -41,7 +41,7 @@ export default function App() {
   }
 
   return (
-    <DropContext.Provider value={() => setNuked(true)}>
+    <NukeContext.Provider value={() => setNuked(true)}>
       <SafeAreaProvider>
         <GestureHandlerRootView style={flex.fill}>
           <NavigationContainer
@@ -78,7 +78,7 @@ export default function App() {
           </NavigationContainer>
         </GestureHandlerRootView>
       </SafeAreaProvider>
-    </DropContext.Provider>
+    </NukeContext.Provider>
   );
 }
 

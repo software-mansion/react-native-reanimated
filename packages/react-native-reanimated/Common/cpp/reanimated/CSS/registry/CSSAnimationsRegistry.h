@@ -36,7 +36,7 @@ class CSSAnimationsRegistry
       double timestamp);
 
   void update(double timestamp);
-  bool empty();
+  bool isEmpty();
 
  private:
   using Registry =
