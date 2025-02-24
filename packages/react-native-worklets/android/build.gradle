@@ -87,22 +87,6 @@ def resolveReactNativeDirectory() {
     )
 }
 
-def getPlaygroundAppName() { // only for the development
-    String playgroundAppName = ""
-    try {
-        rootProject.getSubprojects().forEach({project ->
-            if (project.plugins.hasPlugin("com.android.application")) {
-                var projectCatalogAbsolutePath = project.projectDir.toString().replace("/android/app", "")
-                var slashPosition = projectCatalogAbsolutePath.lastIndexOf("/")
-                playgroundAppName = projectCatalogAbsolutePath.substring(slashPosition + 1)
-            }
-        })
-    } catch (_) {
-        throw new GradleException("[Reanimated] Couldn't determine playground app name.")
-    }
-    return playgroundAppName
-}
-
 def toPlatformFileString(String path) {
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
         path = path.replace(File.separatorChar, '/' as char)
@@ -123,17 +107,6 @@ def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
 def REACT_NATIVE_MINOR_VERSION = REACT_NATIVE_VERSION.startsWith("0.0.0-") ? 1000 : REACT_NATIVE_VERSION.split("\\.")[1].toInteger()
 def IS_NEW_ARCHITECTURE_ENABLED = isNewArchitectureEnabled()
 def IS_REANIMATED_EXAMPLE_APP = isReanimatedExampleApp()
-
-// We download various C++ open-source dependencies into downloads.
-// We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
-// After that we build native code from src/main/jni with module path pointing at third-party-ndk.
-
-def customDownloadsDir = System.getenv("REACT_NATIVE_DOWNLOADS_DIR")
-def downloadsDir = customDownloadsDir ? new File(customDownloadsDir) : new File("$buildDir/downloads")
-def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
-
-def reactNativeThirdParty = new File("$reactNativeRootDir/ReactAndroid/src/main/jni/third-party")
-def reactNativeAndroidDownloadDir = new File("$reactNativeRootDir/ReactAndroid/build/downloads")
 
 def workletsPrefabHeadersDir = project.file("$buildDir/prefab-headers/worklets")
 
@@ -178,11 +151,6 @@ buildscript {
   // Buildscript is evaluated before everything else so we can't use getExtOrDefault
   def kotlin_version = rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : project.properties["Worklets_kotlinVersion"]
 
-  // repositories {
-  //   google()
-  //   mavenCentral()
-  // }
-
     repositories {
         google()
         mavenCentral()
@@ -194,8 +162,8 @@ buildscript {
         classpath "com.android.tools.build:gradle:8.2.1"
         classpath "de.undercouch:gradle-download-task:5.6.0"
         classpath "com.diffplug.spotless:spotless-plugin-gradle:6.25.0"
-            // noinspection DifferentKotlinGradleVersion
-      classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // noinspection DifferentKotlinGradleVersion
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
@@ -211,10 +179,7 @@ apply plugin: "de.undercouch.download"
 android {
     compileSdkVersion safeExtGet("compileSdkVersion", 34)
 
-    def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
-    if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
-        namespace "com.swmansion.worklets"
-    }
+    namespace "com.swmansion.worklets"
 
     if (rootProject.hasProperty("ndkPath")) {
         ndkPath rootProject.ext.ndkPath
@@ -230,17 +195,22 @@ android {
     }
 
     prefab {
-            worklets {
-                headers workletsPrefabHeadersDir.absolutePath
-            }
+        worklets {
+            headers workletsPrefabHeadersDir.absolutePath
+        }
     }
 
     defaultConfig {
         minSdkVersion safeExtGet("minSdkVersion", 23)
         targetSdkVersion safeExtGet("targetSdkVersion", 34)
         versionCode 1
-        versionName "1.0"
+        versionName REANIMATED_VERSION
+
+        buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
+        buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
+        buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
         buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", IS_NEW_ARCHITECTURE_ENABLED.toString())
+
         externalNativeBuild {
             cmake {
                 arguments "-DANDROID_STL=c++_shared",
@@ -256,10 +226,6 @@ android {
                 targets("worklets")
             }
         }
-
-        buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
-        buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
-        buildConfigField("int", "REACT_NATIVE_MINOR_VERSION", REACT_NATIVE_MINOR_VERSION.toString())
 
         consumerProguardFiles 'proguard-rules.pro'
     }
@@ -321,14 +287,6 @@ android {
                 "**/libv8executor.so",
         ]
     }
-    tasks.withType(JavaCompile) {
-        compileTask ->
-            compileTask.dependsOn(packageNdkLibs)
-    }
-    configurations {
-        extractHeaders
-        extractSO
-    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -346,24 +304,22 @@ android {
     }
 }
 
-def assertMinimalReactNativeVersion = task assertMinimalReactNativeVersionTask {
+task assertMinimalReactNativeVersionTask {
     // If you change the minimal React Native version remember to update Compatibility Table in docs
     def minimalReactNativeVersion = 75
     onlyIf { REACT_NATIVE_MINOR_VERSION < minimalReactNativeVersion }
     doFirst {
-        throw new GradleException("[Reanimated] Unsupported React Native version. Please use $minimalReactNativeVersion. or newer.")
+        throw new GradleException("[Reanimated] Unsupported React Native version. Please use $minimalReactNativeVersion or newer.")
     }
 }
+
+preBuild.dependsOn(assertMinimalReactNativeVersionTask)
 
 task prepareWorkletsHeadersForPrefabs(type: Copy) {
     from("$projectDir/src/main/cpp")
     from("$projectDir/../Common/cpp")
     include("worklets/**/*.h")
     into(workletsPrefabHeadersDir)
-}
-
-tasks.preBuild {
-    dependsOn assertMinimalReactNativeVersion
 }
 
 task cleanCmakeCache() {
@@ -373,34 +329,8 @@ task cleanCmakeCache() {
     }
 }
 
-task printVersions {
-    println "Android gradle plugin: ${Version.ANDROID_GRADLE_PLUGIN_VERSION}"
-    println "Gradle: ${project.gradle.gradleVersion}"
-}
-
-task createNativeDepsDirectories() {
-    downloadsDir.mkdirs()
-    thirdPartyNdkDir.mkdirs()
-    workletsPrefabHeadersDir.mkdirs()
-}
-
-task packageNdkLibs(type: Copy) {
-    from("$buildDir/worklets-ndk/all")
-    include("**/libworklets.so")
-    into("$projectDir/src/main/jniLibs")
-}
-
 repositories {
     mavenCentral()
-    mavenLocal()
-    maven {
-        // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-        url "$reactNativeRootDir/android"
-    }
-    maven {
-        // Android JSC is installed from npm
-        url "$reactNativeRootDir/../jsc-android/dist"
-    }
     google()
 }
 
@@ -415,38 +345,15 @@ dependencies {
     }
 }
 
-def nativeBuildDependsOn(dependsOnTask) {
-    def buildTasks = tasks.findAll({ task -> (
-            !task.name.contains("Clean")
-                    && (task.name.contains("externalNative")
-                    || task.name.contains("CMake")
-                    || task.name.contains("generateJsonModel")
-            )
-    ) })
-    buildTasks.forEach { task -> task.dependsOn(dependsOnTask) }
-}
-
 afterEvaluate {
     preBuild.dependsOn(prepareWorkletsHeadersForPrefabs)
 
-    tasks.forEach({ task ->
-        if (task.name.contains("JniLibFolders")) {
-            task.dependsOn(packageNdkLibs)
-        }
-    })
-
-    if (JS_RUNTIME == "hermes") {
-        // Do nothing
-    } else if (JS_RUNTIME == "v8") {
+    if (JS_RUNTIME == "v8") {
         def buildTasks = tasks.findAll({ task ->
             !task.name.contains("Clean") && (task.name.contains("externalNative") || task.name.contains("CMake") || task.name.startsWith("generateJsonModel")) })
         buildTasks.forEach { task ->
             def buildType = task.name.endsWith('Debug') ? 'Debug' : 'Release'
             task.dependsOn(":react-native-v8:copy${buildType}JniLibsProjectOnly")
         }
-    } else if (JS_RUNTIME == "jsc") {
-        // Do nothing
-    } else {
-        throw GradleScriptException("[Reanimated] Unknown JS runtime ${JS_RUNTIME}.")
     }
 }
