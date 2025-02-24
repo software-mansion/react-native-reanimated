@@ -41,7 +41,7 @@ class UpdatesRegistry {
 #endif
 
   void flushUpdates(UpdatesBatch &updatesBatch);
-  virtual void collectProps(PropsMap &propsMap);
+  void collectProps(PropsMap &propsMap);
 
  protected:
   mutable std::mutex mutex_;
