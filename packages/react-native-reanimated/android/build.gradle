@@ -275,12 +275,12 @@ android {
     }
     sourceSets.main {
         java {
-            if(hasExternalWorklets){
+            if (hasExternalWorklets) {
                 srcDirs += "src/externalWorklets/with"
             } else {
                 srcDirs += "src/worklets/main"
                 srcDirs += "src/externalWorklets/without"
-                if(!IS_NEW_ARCHITECTURE_ENABLED){
+                if (!IS_NEW_ARCHITECTURE_ENABLED) {
                     srcDirs += "src/externalWorklets/withoutPaper"
                 }
             }
